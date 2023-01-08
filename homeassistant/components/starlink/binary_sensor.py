@@ -12,9 +12,12 @@ from .const import DOMAIN
 from .coordinator import StarlinkUpdateCoordinator
 from .entity import StarlinkBinarySensorEntity, StarlinkBinarySensorEntityDescription
 
+# This stores device_class overrides for alert types that we know aren't "problems".
 DEVICE_CLASS_OVERRIDES = {
     "alert_is_heating": BinarySensorDeviceClass.HEAT,
     "alert_install_pending": BinarySensorDeviceClass.UPDATE,
+    "alert_roaming": None,
+    "alert_is_power_save_idle": None,
 }
 
 
@@ -43,14 +46,15 @@ async def async_setup_entry(
             )
         )
 
+    # Add extra data not found in AlertDict
     entities.append(
         StarlinkBinarySensorEntity(
             coordinator=coordinator,
             description=StarlinkBinarySensorEntityDescription(
                 key="currently_obstructed",
                 name="Currently obstructed",
-                device_class=BinarySensorDeviceClass.PROBLEM,
-                value_fn=lambda data: data[0]["currently_obstructed"],
+                device_class=BinarySensorDeviceClass.CONNECTIVITY,
+                value_fn=lambda data: not data[0]["currently_obstructed"],
             ),
         )
     )
