@@ -391,7 +391,7 @@ class SonosDiscoveryManager:
             elif uid not in self.data.discovered:
                 if self.is_device_invisible(discovered_ip):
                     return
-                await self.async_add_speaker(SoCo(discovered_ip))
+                await self.async_subscribe_to_zone_updates(discovered_ip)
             elif boot_seqnum and boot_seqnum > self.data.boot_counts[uid]:
                 self.data.boot_counts[uid] = boot_seqnum
                 async_dispatcher_send(self.hass, f"{SONOS_REBOOTED}-{uid}")
