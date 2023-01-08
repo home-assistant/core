@@ -22,7 +22,7 @@
                     "password": "Contrase\u00f1a",
                     "username": "Nombre de usuario"
                 },
-                "description": "Por favor, proporciona tu nombre de usuario y contrase\u00f1a de la aplicaci\u00f3n SwitchBot. Estos datos no se guardar\u00e1n y solo se utilizar\u00e1n para recuperar la clave de cifrado de tu cerradura."
+                "description": "Por favor, proporciona tu nombre de usuario y contrase\u00f1a de la aplicaci\u00f3n SwitchBot. Estos datos no se guardar\u00e1n y solo se utilizar\u00e1n para recuperar la clave de cifrado de su cerradura. Los nombres de usuario y las contrase\u00f1as distinguen entre may\u00fasculas y min\u00fasculas."
             },
             "lock_choose_method": {
                 "description": "Se puede configurar una cerradura SwitchBot en Home Assistant de dos maneras diferentes. \n\nPuedes introducir la identificaci\u00f3n de la clave y la clave de cifrado t\u00fa mismo, o Home Assistant puede importarlos desde tu cuenta de SwitchBot.",
