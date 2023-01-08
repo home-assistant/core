@@ -162,7 +162,7 @@ class BaseHaScanner(ABC):
                     "advertisement_data": device_adv[1],
                     "details": device_adv[0].details,
                 }
-                for device_adv in advertisement_data
+                for device_adv in device_adv_datas
             ],
         }
 
