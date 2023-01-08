@@ -1,16 +1,25 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana"
+            "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana",
+            "reauth_successful": "Ponowne uwierzytelnianie przebieg\u0142o pomy\u015blnie"
         },
         "error": {
-            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_auth": "Nieprawid\u0142owe uwierzytelnienie"
         },
         "step": {
             "api_key": {
                 "data": {
                     "api_key": "Klucz API"
                 }
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "Klucz API"
+                },
+                "description": "Podaj nowy klucz api dla PI-Hole spod adresu",
+                "title": "Ponowne uwierzytelnienie integracji PI-Hole"
             },
             "user": {
                 "data": {

@@ -3,6 +3,7 @@
         "error": {
             "cannot_connect": "No se pudo conectar",
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
+            "no_appliances": "No se encontraron dispositivos compatibles",
             "unknown": "Error inesperado"
         },
         "step": {
