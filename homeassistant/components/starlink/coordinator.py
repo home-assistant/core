@@ -5,7 +5,14 @@ from datetime import timedelta
 import logging
 
 import async_timeout
-from starlink_grpc import ChannelContext, GrpcError, StatusDict, status_data
+from starlink_grpc import (
+    AlertDict,
+    ChannelContext,
+    GrpcError,
+    ObstructionDict,
+    StatusDict,
+    status_data,
+)
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -13,7 +20,9 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 _LOGGER = logging.getLogger(__name__)
 
 
-class StarlinkUpdateCoordinator(DataUpdateCoordinator[StatusDict]):
+class StarlinkUpdateCoordinator(
+    DataUpdateCoordinator[tuple[StatusDict, ObstructionDict, AlertDict]]
+):
     """Coordinates updates between all Starlink sensors defined in this file."""
 
     def __init__(self, hass: HomeAssistant, name: str, url: str) -> None:
@@ -27,12 +36,12 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StatusDict]):
             update_interval=timedelta(seconds=5),
         )
 
-    async def _async_update_data(self) -> StatusDict:
+    async def _async_update_data(self) -> tuple[StatusDict, ObstructionDict, AlertDict]:
         async with async_timeout.timeout(4):
             try:
                 status = await self.hass.async_add_executor_job(
                     status_data, self.channel_context
                 )
-                return status[0]
+                return status
             except GrpcError as exc:
                 raise UpdateFailed from exc
