@@ -23,7 +23,7 @@ from .const import CONNECTED_PLC_DEVICES, CONNECTED_TO_ROUTER, DOMAIN
 from .entity import DevoloEntity
 
 
-def _is_connected_to_router(entity: DevoloBinarySensorEntity[LogicalNetwork]) -> bool:
+def _is_connected_to_router(entity: DevoloBinarySensorEntity) -> bool:
     """Check, if device is attached to the router."""
     return all(
         device.attached_to_router

@@ -4,7 +4,11 @@ from __future__ import annotations
 from typing import TypeVar, Union
 
 from devolo_plc_api.device import Device
-from devolo_plc_api.device_api import ConnectedStationInfo, NeighborAPInfo
+from devolo_plc_api.device_api import (
+    ConnectedStationInfo,
+    NeighborAPInfo,
+    WifiGuestAccessGet,
+)
 from devolo_plc_api.plcnet_api import LogicalNetwork
 
 from homeassistant.config_entries import ConfigEntry
@@ -22,6 +26,8 @@ _DataT = TypeVar(
         LogicalNetwork,
         list[ConnectedStationInfo],
         list[NeighborAPInfo],
+        WifiGuestAccessGet,
+        bool,
     ],
 )
 
