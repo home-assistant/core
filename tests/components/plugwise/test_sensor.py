@@ -2,7 +2,6 @@
 
 from unittest.mock import MagicMock
 
-from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
 
@@ -112,8 +111,7 @@ async def test_p1_3ph_dsmr_sensor_entities(
     assert float(state.state) == 2080.0
 
     state = hass.states.get("sensor.p1_voltage_phase_one")
-    assert state
-    assert state.state == STATE_OFF
+    assert not state
 
 
 async def test_stretch_sensor_entities(
