@@ -119,10 +119,11 @@ class HaBleakScannerWrapper(BaseBleakScanner):
     def register_detection_callback(
         self, callback: AdvertisementDataCallback | None
     ) -> None:
-        """Register a callback that is called when a device is discovered or has a property changed.
+        """Register a detection callback.
 
-        This method takes the callback and registers it with the long running
-        scanner.
+        The callback is called when a device is discovered or has a property changed.
+
+        This method takes the callback and registers it with the long running sscanner.
         """
         self._advertisement_data_callback = callback
         self._setup_detection_callback()
@@ -154,7 +155,9 @@ def _rssi_sorter_with_connection_failure_penalty(
     connection_failure_count: dict[BaseHaScanner, int],
     rssi_diff: int,
 ) -> float:
-    """Get a sorted list of scanner, device, advertisement data adjusting for previous connection failures.
+    """Get a sorted list of scanner, device, advertisement data.
+
+    Adjusting for previous connection failures.
 
     When a connection fails, we want to try the next best adapter so we
     apply a penalty to the RSSI value to make it less likely to be chosen
@@ -227,7 +230,10 @@ class HaBleakClientWrapper(BleakClient):
         """Set the disconnect callback."""
         self.__disconnected_callback = callback
         if self._backend:
-            self._backend.set_disconnected_callback(callback, **kwargs)  # type: ignore[arg-type]
+            self._backend.set_disconnected_callback(
+                callback,  # type: ignore[arg-type]
+                **kwargs,
+            )
 
     async def connect(self, **kwargs: Any) -> bool:
         """Connect to the specified GATT server."""
@@ -294,15 +300,14 @@ class HaBleakClientWrapper(BleakClient):
         that has a free connection slot.
         """
         address = self.__address
-        scanner_device_advertisement_datas = manager.async_get_scanner_discovered_devices_and_advertisement_data_by_address(
+        scanner_device_advertisement_datas = manager.async_get_scanner_discovered_devices_and_advertisement_data_by_address(  # noqa: E501
             address, True
         )
         sorted_scanner_device_advertisement_datas = sorted(
             scanner_device_advertisement_datas,
-            key=lambda scanner_device_advertisement_data: scanner_device_advertisement_data[
-                2
-            ].rssi
-            or NO_RSSI_VALUE,
+            key=lambda scanner_device_advertisement_data: (
+                scanner_device_advertisement_data[2].rssi or NO_RSSI_VALUE
+            ),
             reverse=True,
         )
 
