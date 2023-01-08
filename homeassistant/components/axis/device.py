@@ -9,8 +9,8 @@ import axis
 from axis.configuration import Configuration
 from axis.errors import Unauthorized
 from axis.event_stream import OPERATION_INITIALIZED
-from axis.mqtt import mqtt_json_to_event
 from axis.streammanager import SIGNAL_PLAYING, STATE_STOPPED
+from axis.vapix.interfaces.mqtt import mqtt_json_to_event
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN

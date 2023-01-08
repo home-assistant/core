@@ -409,6 +409,10 @@ def test_get_unit_system_invalid(key: str) -> None:
         (SensorDeviceClass.GAS, UnitOfVolume.CUBIC_FEET, UnitOfVolume.CUBIC_METERS),
         (SensorDeviceClass.GAS, UnitOfVolume.CUBIC_METERS, None),
         (SensorDeviceClass.GAS, "very_much", None),
+        # Test pressure conversion
+        (SensorDeviceClass.PRESSURE, UnitOfPressure.PSI, UnitOfPressure.KPA),
+        (SensorDeviceClass.PRESSURE, UnitOfPressure.BAR, None),
+        (SensorDeviceClass.PRESSURE, "very_much", None),
         # Test speed conversion
         (
             SensorDeviceClass.SPEED,
@@ -482,6 +486,10 @@ def test_get_metric_converted_unit_(
         (SensorDeviceClass.GAS, UnitOfVolume.CUBIC_METERS, UnitOfVolume.CUBIC_FEET),
         (SensorDeviceClass.GAS, UnitOfVolume.CUBIC_FEET, None),
         (SensorDeviceClass.GAS, "very_much", None),
+        # Test pressure conversion
+        (SensorDeviceClass.PRESSURE, UnitOfPressure.BAR, UnitOfPressure.PSI),
+        (SensorDeviceClass.PRESSURE, UnitOfPressure.PSI, None),
+        (SensorDeviceClass.PRESSURE, "very_much", None),
         # Test speed conversion
         (
             SensorDeviceClass.SPEED,

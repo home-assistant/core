@@ -657,7 +657,10 @@ class SonosSpeaker:
             return
         if "BattChg" not in battery_dict:
             _LOGGER.debug(
-                "Unknown device properties update for %s (%s), please report an issue: '%s'",
+                (
+                    "Unknown device properties update for %s (%s),"
+                    " please report an issue: '%s'"
+                ),
                 self.zone_name,
                 self.model_name,
                 more_info,
@@ -1047,7 +1050,8 @@ class SonosSpeaker:
         speakers_set = {s for s in speakers if s.soco_snapshot}
         if missing_snapshots := set(speakers) - speakers_set:
             raise HomeAssistantError(
-                f"Restore failed, speakers are missing snapshots: {[s.zone_name for s in missing_snapshots]}"
+                "Restore failed, speakers are missing snapshots:"
+                f" {[s.zone_name for s in missing_snapshots]}"
             )
 
         if with_group:

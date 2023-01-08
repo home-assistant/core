@@ -7,7 +7,7 @@ from .backports.enum import StrEnum
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2023
-MINOR_VERSION: Final = 1
+MINOR_VERSION: Final = 2
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -256,6 +256,7 @@ CONF_UNIT_SYSTEM: Final = "unit_system"
 CONF_UNTIL: Final = "until"
 CONF_URL: Final = "url"
 CONF_USERNAME: Final = "username"
+CONF_UUID: Final = "uuid"
 CONF_VALUE_TEMPLATE: Final = "value_template"
 CONF_VARIABLES: Final = "variables"
 CONF_VERIFY_SSL: Final = "verify_ssl"
@@ -722,6 +723,7 @@ class UnitOfVolume(StrEnum):
     """Volume units."""
 
     CUBIC_FEET = "ft³"
+    CENTUM_CUBIC_FEET = "CCF"
     CUBIC_METERS = "m³"
     LITERS = "L"
     MILLILITERS = "mL"
@@ -749,9 +751,19 @@ VOLUME_GALLONS: Final = "gal"
 VOLUME_FLUID_OUNCE: Final = "fl. oz."
 """Deprecated: please use UnitOfVolume.FLUID_OUNCES"""
 
+
 # Volume Flow Rate units
+class UnitOfVolumeFlowRate(StrEnum):
+    """Volume flow rate units."""
+
+    CUBIC_METERS_PER_HOUR = "m³/h"
+    CUBIC_FEET_PER_MINUTE = "ft³/m"
+
+
 VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR: Final = "m³/h"
+"""Deprecated: please use UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR"""
 VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE: Final = "ft³/m"
+"""Deprecated: please use UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE"""
 
 # Area units
 AREA_SQUARE_METERS: Final = "m²"
@@ -767,6 +779,7 @@ class UnitOfMass(StrEnum):
     MICROGRAMS = "µg"
     OUNCES = "oz"
     POUNDS = "lb"
+    STONES = "st"
 
 
 MASS_GRAMS: Final = "g"

@@ -15,6 +15,9 @@
                 },
                 "description": "Vyberte adresu zmluvy, ktor\u00fa chcete prida\u0165.",
                 "title": "Vyberte svoju dohodu"
+            },
+            "pick_implementation": {
+                "title": "V\u00fdber klienta na overenie"
             }
         }
     }

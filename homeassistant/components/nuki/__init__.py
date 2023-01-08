@@ -101,7 +101,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except RequestException as err:
         raise exceptions.ConfigEntryNotReady from err
 
-    async def async_update_data():
+    async def async_update_data() -> None:
         """Fetch data from Nuki bridge."""
         try:
             # Note: asyncio.TimeoutError and aiohttp.ClientError are already
@@ -161,7 +161,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class NukiEntity(CoordinatorEntity):
+class NukiEntity(CoordinatorEntity[DataUpdateCoordinator[None]]):
     """An entity using CoordinatorEntity.
 
     The CoordinatorEntity class provides:

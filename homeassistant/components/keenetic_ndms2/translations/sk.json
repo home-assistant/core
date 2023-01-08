@@ -25,6 +25,7 @@
         "step": {
             "user": {
                 "data": {
+                    "consider_home": "Zv\u00e1\u017ete intervaly v dom\u00e1cnosti",
                     "include_arp": "Pou\u017ei\u0165 \u00fadaje ARP (ignorovan\u00e9, ak sa pou\u017e\u00edvaj\u00fa \u00fadaje hotspotu)",
                     "include_associated": "Pou\u017ei\u0165 \u00fadaje o pridru\u017een\u00ed WiFi AP (ignorovan\u00e9, ak sa pou\u017e\u00edvaj\u00fa \u00fadaje hotspotu)",
                     "interfaces": "Vyberte rozhrania na skenovanie",

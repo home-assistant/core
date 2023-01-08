@@ -47,7 +47,7 @@
                 "data": {
                     "select_device": "Dispositivo Miio"
                 },
-                "description": "Selecciona el dispositivo Xiaomi Miio para configurarlo."
+                "description": "Selecciona el dispositivo Xiaomi Miio para configurar."
             }
         }
     },

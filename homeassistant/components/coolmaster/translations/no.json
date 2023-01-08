@@ -13,9 +13,10 @@
                     "heat": "St\u00f8tt varmemodus",
                     "heat_cool": "St\u00f8tter automatisk varme/kj\u00f8l-modus",
                     "host": "Vert",
-                    "off": "Kan sl\u00e5s av"
+                    "off": "Kan sl\u00e5s av",
+                    "swing_support": "Kontroller svingmodus"
                 },
-                "title": "Konfigurer informasjonen om CoolMasterNet-tilkoblingen."
+                "title": "Sett opp tilkoblingsdetaljer for CoolMasterNet."
             }
         }
     }

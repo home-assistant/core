@@ -211,3 +211,30 @@ async def test_entry_unload_not_connected(hass, mock_rpc_device, monkeypatch):
 
     assert not mock_stop_scanner.call_count
     assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_entry_unload_not_connected_but_we_with_we_are(
+    hass, mock_rpc_device, monkeypatch
+):
+    """Test entry unload when not connected but we think we are still connected."""
+    with patch(
+        "homeassistant.components.shelly.coordinator.async_stop_scanner",
+        side_effect=DeviceConnectionError,
+    ) as mock_stop_scanner:
+
+        entry = await init_integration(
+            hass, 2, options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE}
+        )
+        entity_id = "switch.test_switch_0"
+
+        assert entry.state is ConfigEntryState.LOADED
+        assert hass.states.get(entity_id).state is STATE_ON
+        assert not mock_stop_scanner.call_count
+
+        monkeypatch.setattr(mock_rpc_device, "connected", False)
+
+        await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert not mock_stop_scanner.call_count
+    assert entry.state is ConfigEntryState.LOADED

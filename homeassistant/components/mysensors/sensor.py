@@ -122,10 +122,11 @@ SENSORS: dict[str, SensorEntityDescription] = {
         icon="mdi:white-balance-sunny",
     ),
     "V_FLOW": SensorEntityDescription(
+        # The documentation on this measurement is inconsistent.
+        # Better not to set a device class here yet.
         key="V_FLOW",
         native_unit_of_measurement=UnitOfLength.METERS,
         icon="mdi:gauge",
-        device_class=SensorDeviceClass.DISTANCE,
     ),
     "V_VOLUME": SensorEntityDescription(
         key="V_VOLUME",

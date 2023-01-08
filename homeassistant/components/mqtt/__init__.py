@@ -240,8 +240,10 @@ def _filter_entry_config(hass: HomeAssistant, entry: ConfigEntry) -> None:
     }
     if entry.data.keys() != filtered_data.keys():
         _LOGGER.warning(
-            "The following unsupported configuration options were removed from the "
-            "MQTT config entry: %s",
+            (
+                "The following unsupported configuration options were removed from the "
+                "MQTT config entry: %s"
+            ),
             entry.data.keys() - filtered_data.keys(),
         )
         hass.config_entries.async_update_entry(entry, data=filtered_data)
@@ -329,8 +331,10 @@ async def async_fetch_config(
             override[CONF_CLIENT_KEY] = "-----PRIVATE KEY-----"
         if override:
             _LOGGER.warning(
-                "Deprecated configuration settings found in configuration.yaml. "
-                "These settings from your configuration entry will override: %s",
+                (
+                    "Deprecated configuration settings found in configuration.yaml. "
+                    "These settings from your configuration entry will override: %s"
+                ),
                 override,
             )
         # Register a repair issue
@@ -389,16 +393,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 msg_topic = valid_publish_topic(rendered_topic)
             except (jinja2.TemplateError, TemplateError) as exc:
                 _LOGGER.error(
-                    "Unable to publish: rendering topic template of %s "
-                    "failed because %s",
+                    (
+                        "Unable to publish: rendering topic template of %s "
+                        "failed because %s"
+                    ),
                     msg_topic_template,
                     exc,
                 )
                 return
             except vol.Invalid as err:
                 _LOGGER.error(
-                    "Unable to publish: topic template '%s' produced an "
-                    "invalid topic '%s' after rendering (%s)",
+                    (
+                        "Unable to publish: topic template '%s' produced an "
+                        "invalid topic '%s' after rendering (%s)"
+                    ),
                     msg_topic_template,
                     rendered_topic,
                     err,
@@ -412,8 +420,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 ).async_render()
             except (jinja2.TemplateError, TemplateError) as exc:
                 _LOGGER.error(
-                    "Unable to publish to %s: rendering payload template of "
-                    "%s failed because %s",
+                    (
+                        "Unable to publish to %s: rendering payload template of "
+                        "%s failed because %s"
+                    ),
                     msg_topic,
                     payload_template,
                     exc,

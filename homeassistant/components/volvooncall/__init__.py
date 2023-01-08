@@ -239,7 +239,7 @@ class VolvoData:
             raise InvalidAuth from exc
 
 
-class VolvoUpdateCoordinator(DataUpdateCoordinator):
+class VolvoUpdateCoordinator(DataUpdateCoordinator[None]):
     """Volvo coordinator."""
 
     def __init__(self, hass: HomeAssistant, volvo_data: VolvoData) -> None:
@@ -254,14 +254,14 @@ class VolvoUpdateCoordinator(DataUpdateCoordinator):
 
         self.volvo_data = volvo_data
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> None:
         """Fetch data from API endpoint."""
 
         async with async_timeout.timeout(10):
             await self.volvo_data.update()
 
 
-class VolvoEntity(CoordinatorEntity):
+class VolvoEntity(CoordinatorEntity[VolvoUpdateCoordinator]):
     """Base class for all VOC entities."""
 
     def __init__(

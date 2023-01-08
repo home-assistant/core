@@ -3,7 +3,15 @@
         "abort": {
             "single_instance_allowed": "U\u017e je nakonfigurovan\u00fd. Mo\u017en\u00e1 len jedna konfigur\u00e1cia."
         },
+        "error": {
+            "invalid_discovery_topic": "Neplatn\u00fd Discovery topic prefix."
+        },
         "step": {
+            "config": {
+                "data": {
+                    "discovery_prefix": "Discovery topic prefix"
+                }
+            },
             "confirm": {
                 "description": "Chcete nastavi\u0165 Tasmotu?"
             }

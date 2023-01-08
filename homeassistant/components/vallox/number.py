@@ -11,7 +11,7 @@ from homeassistant.components.number import (
     NumberEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -80,7 +80,7 @@ NUMBER_ENTITIES: tuple[ValloxNumberEntityDescription, ...] = (
         name="Supply air temperature (Home)",
         metric_key="A_CYC_HOME_AIR_TEMP_TARGET",
         device_class=NumberDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         icon="mdi:thermometer",
         native_min_value=5.0,
         native_max_value=25.0,
@@ -91,7 +91,7 @@ NUMBER_ENTITIES: tuple[ValloxNumberEntityDescription, ...] = (
         name="Supply air temperature (Away)",
         metric_key="A_CYC_AWAY_AIR_TEMP_TARGET",
         device_class=NumberDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         icon="mdi:thermometer",
         native_min_value=5.0,
         native_max_value=25.0,
@@ -102,7 +102,7 @@ NUMBER_ENTITIES: tuple[ValloxNumberEntityDescription, ...] = (
         name="Supply air temperature (Boost)",
         metric_key="A_CYC_BOOST_AIR_TEMP_TARGET",
         device_class=NumberDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         icon="mdi:thermometer",
         native_min_value=5.0,
         native_max_value=25.0,

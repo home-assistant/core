@@ -30,11 +30,10 @@ from homeassistant.auth import (
     providers as auth_providers,
 )
 from homeassistant.auth.permissions import system_policies
-from homeassistant.components import device_automation, recorder
+from homeassistant.components import device_automation
 from homeassistant.components.device_automation import (  # noqa: F401
     _async_get_device_automation_capabilities as async_get_device_automation_capabilities,
 )
-from homeassistant.components.mqtt.models import ReceiveMessage
 from homeassistant.config import async_process_component_config
 from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
@@ -372,6 +371,10 @@ def async_mock_intent(hass, intent_typ):
 @ha.callback
 def async_fire_mqtt_message(hass, topic, payload, qos=0, retain=False):
     """Fire the MQTT message."""
+    # Local import to avoid processing MQTT modules when running a testcase
+    # which does not use MQTT.
+    from homeassistant.components.mqtt.models import ReceiveMessage
+
     if isinstance(payload, str):
         payload = payload.encode("utf-8")
     msg = ReceiveMessage(topic, payload, qos, retain)
@@ -966,11 +969,15 @@ def assert_setup_component(count, domain=None):
     ), f"setup_component failed, expected {count} got {res_len}: {res}"
 
 
-SetupRecorderInstanceT = Callable[..., Awaitable[recorder.Recorder]]
+SetupRecorderInstanceT = Callable[..., Awaitable[Any]]
 
 
 def init_recorder_component(hass, add_config=None, db_url="sqlite://"):
     """Initialize the recorder."""
+    # Local import to avoid processing recorder and SQLite modules when running a
+    # testcase which does not use the recorder.
+    from homeassistant.components import recorder
+
     config = dict(add_config) if add_config else {}
     if recorder.CONF_DB_URL not in config:
         config[recorder.CONF_DB_URL] = db_url
@@ -1165,13 +1172,13 @@ def mock_storage(data=None):
 
         # Route through original load so that we trigger migration
         loaded = await orig_load(store)
-        _LOGGER.info("Loading data for %s: %s", store.key, loaded)
+        _LOGGER.debug("Loading data for %s: %s", store.key, loaded)
         return loaded
 
-    def mock_write_data(store, path, data_to_write):
+    async def mock_write_data(store, path, data_to_write):
         """Mock version of write data."""
         # To ensure that the data can be serialized
-        _LOGGER.info("Writing data to %s: %s", store.key, data_to_write)
+        _LOGGER.debug("Writing data to %s: %s", store.key, data_to_write)
         raise_contains_mocks(data_to_write)
         data[store.key] = json.loads(json.dumps(data_to_write, cls=store._encoder))
 
@@ -1184,7 +1191,7 @@ def mock_storage(data=None):
         side_effect=mock_async_load,
         autospec=True,
     ), patch(
-        "homeassistant.helpers.storage.Store._write_data",
+        "homeassistant.helpers.storage.Store._async_write_data",
         side_effect=mock_write_data,
         autospec=True,
     ), patch(
@@ -1301,6 +1308,38 @@ def assert_lists_same(a, b):
         assert i in b
     for i in b:
         assert i in a
+
+
+_SENTINEL = object()
+
+
+class _HA_ANY:
+    """A helper object that compares equal to everything.
+
+    Based on unittest.mock.ANY, but modified to not show up in pytest's equality
+    assertion diffs.
+    """
+
+    _other = _SENTINEL
+
+    def __eq__(self, other):
+        """Test equal."""
+        self._other = other
+        return True
+
+    def __ne__(self, other):
+        """Test not equal."""
+        self._other = other
+        return False
+
+    def __repr__(self):
+        """Return repr() other to not show up in pytest quality diffs."""
+        if self._other is _SENTINEL:
+            return "<ANY>"
+        return repr(self._other)
+
+
+ANY = _HA_ANY()
 
 
 def raise_contains_mocks(val):

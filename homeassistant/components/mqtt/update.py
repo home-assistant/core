@@ -54,7 +54,7 @@ CONF_TITLE = "title"
 PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
     {
         vol.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_DEVICE_CLASS): vol.Any(DEVICE_CLASSES_SCHEMA, None),
         vol.Optional(CONF_ENTITY_PICTURE): cv.string,
         vol.Optional(CONF_LATEST_VERSION_TEMPLATE): cv.template,
         vol.Optional(CONF_LATEST_VERSION_TOPIC): valid_subscribe_topic,
@@ -177,20 +177,29 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
                 json_payload = json_loads(payload)
                 if isinstance(json_payload, dict):
                     _LOGGER.debug(
-                        "JSON payload detected after processing payload '%s' on topic %s",
+                        (
+                            "JSON payload detected after processing payload '%s' on"
+                            " topic %s"
+                        ),
                         json_payload,
                         msg.topic,
                     )
                 else:
                     _LOGGER.debug(
-                        "Non-dictionary JSON payload detected after processing payload '%s' on topic %s",
+                        (
+                            "Non-dictionary JSON payload detected after processing"
+                            " payload '%s' on topic %s"
+                        ),
                         payload,
                         msg.topic,
                     )
                     json_payload = {"installed_version": payload}
             except JSON_DECODE_EXCEPTIONS:
                 _LOGGER.debug(
-                    "No valid (JSON) payload detected after processing payload '%s' on topic %s",
+                    (
+                        "No valid (JSON) payload detected after processing payload '%s'"
+                        " on topic %s"
+                    ),
                     payload,
                     msg.topic,
                 )

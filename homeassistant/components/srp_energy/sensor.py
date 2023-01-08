@@ -11,7 +11,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENERGY_KILO_WATT_HOUR
+from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -91,7 +91,7 @@ class SrpEntity(SensorEntity):
         self._name = SENSOR_NAME
         self.type = SENSOR_TYPE
         self.coordinator = coordinator
-        self._unit_of_measurement = ENERGY_KILO_WATT_HOUR
+        self._unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
         self._state = None
 
     @property

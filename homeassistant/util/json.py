@@ -84,7 +84,10 @@ def save_json(
             dump = _orjson_default_encoder
             json_data = _orjson_default_encoder(data)
     except TypeError as error:
-        msg = f"Failed to serialize to JSON: {filename}. Bad data at {format_unserializable_data(find_paths_unserializable_data(data, dump=dump))}"
+        formatted_data = format_unserializable_data(
+            find_paths_unserializable_data(data, dump=dump)
+        )
+        msg = f"Failed to serialize to JSON: {filename}. Bad data at {formatted_data}"
         _LOGGER.error(msg)
         raise SerializationError(msg) from error
 

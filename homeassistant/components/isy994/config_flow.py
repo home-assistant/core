@@ -1,4 +1,4 @@
-"""Config flow for Universal Devices ISY994 integration."""
+"""Config flow for Universal Devices ISY/IoX integration."""
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -79,7 +79,7 @@ async def validate_input(
         port = host.port or HTTPS_PORT
         session = aiohttp_client.async_get_clientsession(hass)
     else:
-        _LOGGER.error("The isy994 host value in configuration is invalid")
+        _LOGGER.error("The ISY/IoX host value in configuration is invalid")
         raise InvalidHost
 
     # Connect to ISY controller.
@@ -114,12 +114,12 @@ async def validate_input(
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Universal Devices ISY994."""
+    """Handle a config flow for Universal Devices ISY/IoX."""
 
     VERSION = 1
 
     def __init__(self) -> None:
-        """Initialize the isy994 config flow."""
+        """Initialize the ISY/IoX config flow."""
         self.discovered_conf: dict[str, str] = {}
         self._existing_entry: config_entries.ConfigEntry | None = None
 
@@ -200,9 +200,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         raise AbortFlow("already_configured")
 
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
-        """Handle a discovered isy994 via dhcp."""
+        """Handle a discovered ISY/IoX device via dhcp."""
         friendly_name = discovery_info.hostname
-        if friendly_name.startswith("polisy"):
+        if friendly_name.startswith("polisy") or friendly_name.startswith("eisy"):
             url = f"http://{discovery_info.ip}:8080"
         else:
             url = f"http://{discovery_info.ip}"
@@ -221,7 +221,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_user()
 
     async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
-        """Handle a discovered isy994."""
+        """Handle a discovered ISY/IoX Device."""
         friendly_name = discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME]
         url = discovery_info.ssdp_location
         assert isinstance(url, str)
@@ -300,7 +300,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle a option flow for isy994."""
+    """Handle a option flow for ISY/IoX."""
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""

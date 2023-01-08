@@ -1,0 +1,10 @@
+{
+    "state": {
+        "_": {
+            "idle": "Siaga",
+            "off": "Diakui",
+            "on": "Aktif"
+        }
+    },
+    "title": "Siaga"
+}

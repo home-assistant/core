@@ -1,4 +1,4 @@
-"""Constants for the ISY994 Platform."""
+"""Constants for the ISY Platform."""
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
@@ -33,8 +33,6 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     STATE_UNLOCKED,
     UV_INDEX,
-    VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE,
-    VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
     Platform,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -50,6 +48,7 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfTime,
     UnitOfVolume,
+    UnitOfVolumeFlowRate,
     UnitOfVolumetricFlux,
 )
 
@@ -77,6 +76,7 @@ KEY_STATUS = "status"
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.CLIMATE,
     Platform.COVER,
     Platform.FAN,
@@ -190,6 +190,14 @@ NODE_FILTERS: dict[Platform, dict[str, list[str]]] = {
         ],  # Does a startswith() match; include the dot
         FILTER_ZWAVE_CAT: (["104", "112", "138"] + list(map(str, range(148, 180)))),
     },
+    Platform.BUTTON: {
+        # No devices automatically sorted as buttons at this time. Query buttons added elsewhere.
+        FILTER_UOM: [],
+        FILTER_STATES: [],
+        FILTER_NODE_DEF_ID: [],
+        FILTER_INSTEON_TYPE: [],
+        FILTER_ZWAVE_CAT: [],
+    },
     Platform.SENSOR: {
         # This is just a more-readable way of including MOST uoms between 1-100
         # (Remember that range() is non-inclusive of the stop value)
@@ -292,13 +300,13 @@ NODE_FILTERS: dict[Platform, dict[str, list[str]]] = {
 }
 
 UOM_FRIENDLY_NAME = {
-    "1": "A",
+    "1": UnitOfElectricCurrent.AMPERE,
     UOM_ON_OFF: "",  # Binary, no unit
-    "3": f"btu/{UnitOfTime.HOURS}",
+    "3": UnitOfPower.BTU_PER_HOUR,
     "4": UnitOfTemperature.CELSIUS,
     "5": UnitOfLength.CENTIMETERS,
     "6": UnitOfVolume.CUBIC_FEET,
-    "7": VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE,
+    "7": UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
     "8": UnitOfVolume.CUBIC_METERS,
     "9": UnitOfTime.DAYS,
     "10": UnitOfTime.DAYS,
@@ -320,7 +328,7 @@ UOM_FRIENDLY_NAME = {
     "28": UnitOfMass.KILOGRAMS,
     "29": "kV",
     "30": UnitOfPower.KILO_WATT,
-    "31": "kPa",
+    "31": UnitOfPressure.KPA,
     "32": UnitOfSpeed.KILOMETERS_PER_HOUR,
     "33": UnitOfEnergy.KILO_WATT_HOUR,
     "34": "liedu",
@@ -328,7 +336,7 @@ UOM_FRIENDLY_NAME = {
     "36": LIGHT_LUX,
     "37": "mercalli",
     "38": UnitOfLength.METERS,
-    "39": VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
+    "39": UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
     "40": UnitOfSpeed.METERS_PER_SECOND,
     "41": UnitOfElectricCurrent.MILLIAMPERE,
     "42": UnitOfTime.MILLISECONDS,

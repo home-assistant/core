@@ -63,6 +63,7 @@
                 "description": "Skupiny v\u00e1m umo\u017e\u0148uj\u00fa vytvori\u0165 nov\u00fa entitu, ktor\u00e1 predstavuje viacero ent\u00edt rovnak\u00e9ho typu.",
                 "menu_options": {
                     "binary_sensor": "Skupina sn\u00edma\u010d",
+                    "cover": "Skupina roliet",
                     "fan": "Skupina ventil\u00e1tor",
                     "light": "Skupina osvetlenie",
                     "lock": "Skupina z\u00e1mok",

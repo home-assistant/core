@@ -16,6 +16,7 @@
             "external_gateway": "Extern\u00e1 br\u00e1na",
             "local_user": "Miestny pou\u017e\u00edvate\u013e",
             "lsc": "LSC",
+            "myself": "Ja s\u00e1m",
             "rain": "D\u00e1\u017e\u010f",
             "saac": "SAAC",
             "security": "Bezpe\u010dnos\u0165",
@@ -38,7 +39,8 @@
         },
         "overkiz__three_way_handle_direction": {
             "closed": "Zatvoren\u00e9",
-            "open": "Otvori\u0165"
+            "open": "Otvori\u0165",
+            "tilt": "Naklonenie"
         }
     }
 }

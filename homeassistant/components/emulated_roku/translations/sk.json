@@ -6,6 +6,7 @@
         "step": {
             "user": {
                 "data": {
+                    "advertise_ip": "Ozn\u00e1menie IP adresy",
                     "advertise_port": "Port odosielania",
                     "host_ip": "IP adresa hostite\u013ea",
                     "listen_port": "Port prij\u00edmania",

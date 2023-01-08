@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "Setup SwitchBee integration with Home Assistant.",
+        "description": "Set up SwitchBee integration with Home Assistant.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "username": "[%key:common::config_flow::data::username%]",

@@ -20,6 +20,7 @@
             },
             "sas": {
                 "data": {
+                    "event_hub_namespace": "Oblas\u0165 n\u00e1zvov centra udalost\u00ed",
                     "event_hub_sas_key": "K\u013e\u00fa\u010d SAS hub udalost\u00ed",
                     "event_hub_sas_policy": "Pravidl\u00e1 SAS hubu udalost\u00ed"
                 },

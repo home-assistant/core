@@ -73,6 +73,7 @@ httplib2>=0.19.0
 # want to ensure we have wheels built.
 grpcio==1.51.1
 grpcio-status==1.51.1
+grpcio-reflection==1.51.1
 
 # libcst >=0.4.0 requires a newer Rust than we currently have available,
 # thus our wheels builds fail. This pins it to the last working version,
@@ -101,7 +102,7 @@ regex==2021.8.28
 # requirements so we can directly link HA versions to these library versions.
 anyio==3.6.2
 h11==0.14.0
-httpcore==0.16.2
+httpcore==0.16.3
 
 # Ensure we have a hyperframe version that works in Python 3.10
 # 5.2.0 fixed a collections abc deprecation

@@ -29,6 +29,12 @@
                     "90 min": "90 \u043c\u0438\u043d\u0443\u0442\u0438",
                     "off": "\u0418\u0437\u043a\u043b."
                 }
+            },
+            "zone_surr_decoder_type": {
+                "state": {
+                    "dolby_pl": "Dolby ProLogic",
+                    "dolby_surround": "Dolby Surround"
+                }
             }
         }
     }

@@ -85,7 +85,10 @@ class Secrets:
                     _LOGGER.setLevel(logging.DEBUG)
                 else:
                     _LOGGER.error(
-                        "Error in secrets.yaml: 'logger: debug' expected, but 'logger: %s' found",
+                        (
+                            "Error in secrets.yaml: 'logger: debug' expected, but"
+                            " 'logger: %s' found"
+                        ),
                         logger,
                     )
                 del secrets["logger"]
@@ -142,7 +145,7 @@ class SafeLineLoader(yaml.SafeLoader):
 
     def get_stream_name(self) -> str:
         """Get the name of the stream."""
-        return self.stream.name or ""
+        return getattr(self.stream, "name", "")
 
 
 LoaderType = Union[SafeLineLoader, SafeLoader]

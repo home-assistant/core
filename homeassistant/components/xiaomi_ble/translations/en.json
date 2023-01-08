@@ -14,7 +14,7 @@
         "flow_title": "{name}",
         "step": {
             "bluetooth_confirm": {
-                "description": "Do you want to setup {name}?"
+                "description": "Do you want to set up {name}?"
             },
             "confirm_slow": {
                 "description": "There hasn't been a broadcast from this device in the last minute so we aren't sure if this device uses encryption or not. This may be because the device uses a slow broadcast interval. Confirm to add this device anyway, then the next time a broadcast is received you will be prompted to enter its bindkey if it's needed."
@@ -35,7 +35,7 @@
                 "data": {
                     "address": "Device"
                 },
-                "description": "Choose a device to setup"
+                "description": "Choose a device to set up"
             }
         }
     }

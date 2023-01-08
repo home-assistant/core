@@ -7,9 +7,13 @@ import logging
 
 from goodwe import Inverter, InverterError
 
-from homeassistant.components.number import NumberEntity, NumberEntityDescription
+from homeassistant.components.number import (
+    NumberDeviceClass,
+    NumberEntity,
+    NumberEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, POWER_WATT
+from homeassistant.const import PERCENTAGE, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -42,7 +46,8 @@ NUMBERS = (
         name="Grid export limit",
         icon="mdi:transmission-tower",
         entity_category=EntityCategory.CONFIG,
-        native_unit_of_measurement=POWER_WATT,
+        device_class=NumberDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
         native_step=100,
         native_min_value=0,
         native_max_value=10000,

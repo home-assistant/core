@@ -17,7 +17,11 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DATA_GIGABYTES, SIGNAL_STRENGTH_DECIBELS, UnitOfDataRate
+from homeassistant.const import (
+    SIGNAL_STRENGTH_DECIBELS,
+    UnitOfDataRate,
+    UnitOfInformation,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -217,7 +221,8 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         key="gb_sent",
         name="GB sent",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=DATA_GIGABYTES,
+        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:upload",
         value_fn=_retrieve_gb_sent_state,
     ),
@@ -225,7 +230,8 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         key="gb_received",
         name="GB received",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=DATA_GIGABYTES,
+        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:download",
         value_fn=_retrieve_gb_received_state,
     ),

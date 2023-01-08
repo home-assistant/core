@@ -65,7 +65,8 @@ async def _async_set_value(entity: TextEntity, service_call: ServiceCall) -> Non
     value = service_call.data[ATTR_VALUE]
     if len(value) < entity.min:
         raise ValueError(
-            f"Value {value} for {entity.name} is too short (minimum length {entity.min})"
+            f"Value {value} for {entity.name} is too short (minimum length"
+            f" {entity.min})"
         )
     if len(value) > entity.max:
         raise ValueError(

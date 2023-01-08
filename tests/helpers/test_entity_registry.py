@@ -136,6 +136,7 @@ def test_get_or_create_updates_data(registry):
         "light.hue_5678",
         "5678",
         "hue",
+        aliases=set(),
         area_id=None,
         capabilities={"new-max": 150},
         config_entry_id=new_config_entry.entry_id,
@@ -179,6 +180,7 @@ def test_get_or_create_updates_data(registry):
         "light.hue_5678",
         "5678",
         "hue",
+        aliases=set(),
         area_id=None,
         capabilities=None,
         config_entry_id=None,
@@ -253,6 +255,7 @@ async def test_loading_saving_data(hass, registry):
     )
     registry.async_update_entity(
         orig_entry2.entity_id,
+        aliases={"initial_alias_1", "initial_alias_2"},
         area_id="mock-area-id",
         device_class="user-class",
         name="User Name",
@@ -663,9 +666,10 @@ async def test_update_entity(registry):
     )
 
     for attr_name, new_value in (
-        ("name", "new name"),
-        ("icon", "new icon"),
+        ("aliases", {"alias_1", "alias_2"}),
         ("disabled_by", er.RegistryEntryDisabler.USER),
+        ("icon", "new icon"),
+        ("name", "new name"),
     ):
         changes = {attr_name: new_value}
         updated_entry = registry.async_update_entity(entry.entity_id, **changes)

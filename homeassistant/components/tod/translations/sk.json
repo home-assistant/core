@@ -7,7 +7,8 @@
                     "before_time": "\u010cas vypnutia",
                     "name": "N\u00e1zov"
                 },
-                "description": "Vytvorte bin\u00e1rny senzor, ktor\u00fd sa zap\u00edna alebo vyp\u00edna v z\u00e1vislosti od \u010dasu."
+                "description": "Vytvorte bin\u00e1rny senzor, ktor\u00fd sa zap\u00edna alebo vyp\u00edna v z\u00e1vislosti od \u010dasu.",
+                "title": "Pridanie sn\u00edma\u010da denn\u00e9ho \u010dasu"
             }
         }
     },
@@ -20,5 +21,6 @@
                 }
             }
         }
-    }
+    },
+    "title": "Sn\u00edma\u010d dennej doby"
 }

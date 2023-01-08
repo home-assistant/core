@@ -68,7 +68,7 @@ async def async_validate_trigger_config(
         # Only call the dynamic validator if the relevant config entry is loaded
         registry = dr.async_get(hass)
         if not (device := registry.async_get(config[CONF_DEVICE_ID])):
-            raise InvalidDeviceAutomationConfig
+            return config
 
         device_config_entry = None
         for entry_id in device.config_entries:
@@ -80,7 +80,7 @@ async def async_validate_trigger_config(
             break
 
         if not device_config_entry:
-            raise InvalidDeviceAutomationConfig
+            return config
 
         if not await hass.config_entries.async_wait_component(device_config_entry):
             return config

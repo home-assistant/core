@@ -1,0 +1,104 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
+        },
+        "error": {
+            "invalid_api_key": "Nieprawid\u0142owy klucz API",
+            "no_sensors_near_coordinates": "Nie znaleziono sensor\u00f3w w pobli\u017cu wsp\u00f3\u0142rz\u0119dnych (w okre\u015blonej odleg\u0142o\u015bci)",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "step": {
+            "by_coordinates": {
+                "data": {
+                    "distance": "Promie\u0144 wyszukiwania",
+                    "latitude": "Szeroko\u015b\u0107 geograficzna",
+                    "longitude": "D\u0142ugo\u015b\u0107 geograficzna"
+                },
+                "data_description": {
+                    "distance": "Promie\u0144 okr\u0119gu (w kilometrach) do przeszukania",
+                    "latitude": "Szeroko\u015b\u0107 geograficzna, wok\u00f3\u0142 kt\u00f3rej nale\u017cy szuka\u0107 sensor\u00f3w",
+                    "longitude": "D\u0142ugo\u015b\u0107 geograficzna, wok\u00f3\u0142 kt\u00f3rej nale\u017cy szuka\u0107 sensor\u00f3w"
+                },
+                "description": "Wyszukaj sensory PurpleAir w okre\u015blonej odleg\u0142o\u015bci od szeroko\u015bci/d\u0142ugo\u015bci geograficznej."
+            },
+            "choose_sensor": {
+                "data": {
+                    "sensor_index": "Sensor"
+                },
+                "data_description": {
+                    "sensor_index": "Sensory do \u015bledzenia"
+                },
+                "description": "Kt\u00f3re z pobliskich sensor\u00f3w chcesz \u015bledzi\u0107?"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "Klucz API"
+                },
+                "data_description": {
+                    "api_key": "Tw\u00f3j klucz API PurpleAir (je\u015bli masz zar\u00f3wno klucze do odczytu, jak i zapisu, u\u017cyj klucza do odczytu)"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "Klucz API"
+                },
+                "data_description": {
+                    "api_key": "Tw\u00f3j klucz API PurpleAir (je\u015bli masz zar\u00f3wno klucze do odczytu, jak i zapisu, u\u017cyj klucza do odczytu)"
+                }
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
+        },
+        "error": {
+            "invalid_api_key": "Nieprawid\u0142owy klucz API",
+            "no_sensors_near_coordinates": "Nie znaleziono sensor\u00f3w w pobli\u017cu wsp\u00f3\u0142rz\u0119dnych (w okre\u015blonej odleg\u0142o\u015bci)",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "step": {
+            "add_sensor": {
+                "data": {
+                    "distance": "Promie\u0144 wyszukiwania",
+                    "latitude": "Szeroko\u015b\u0107 geograficzna",
+                    "longitude": "D\u0142ugo\u015b\u0107 geograficzna"
+                },
+                "data_description": {
+                    "distance": "Promie\u0144 okr\u0119gu (w kilometrach) do przeszukania",
+                    "latitude": "Szeroko\u015b\u0107 geograficzna, wok\u00f3\u0142 kt\u00f3rej nale\u017cy szuka\u0107 sensor\u00f3w",
+                    "longitude": "D\u0142ugo\u015b\u0107 geograficzna, wok\u00f3\u0142 kt\u00f3rej nale\u017cy szuka\u0107 sensor\u00f3w"
+                },
+                "description": "Wyszukaj sensory PurpleAir w okre\u015blonej odleg\u0142o\u015bci od szeroko\u015bci/d\u0142ugo\u015bci geograficznej.",
+                "title": "Dodaj sensor"
+            },
+            "choose_sensor": {
+                "data": {
+                    "sensor_index": "Sensor"
+                },
+                "data_description": {
+                    "sensor_index": "Sensory do \u015bledzenia"
+                },
+                "description": "Kt\u00f3re z pobliskich sensor\u00f3w chcesz \u015bledzi\u0107?",
+                "title": "Wybierz sensor do dodania"
+            },
+            "init": {
+                "menu_options": {
+                    "add_sensor": "Dodaj sensor",
+                    "remove_sensor": "Usu\u0144 sensor"
+                }
+            },
+            "remove_sensor": {
+                "data": {
+                    "sensor_device_id": "Nazwa sensora"
+                },
+                "data_description": {
+                    "sensor_device_id": "Sensor do usuni\u0119cia"
+                },
+                "title": "Usu\u0144 sensor"
+            }
+        }
+    }
+}

@@ -1,7 +1,7 @@
 """Tests for Google Assistant SDK."""
 import http
 import time
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 import aiohttp
 import pytest
@@ -10,7 +10,7 @@ from homeassistant.components.google_assistant_sdk import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from .conftest import ComponentSetup
+from .conftest import ComponentSetup, ExpectedCredentials
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -97,9 +97,16 @@ async def test_expired_token_refresh_failure(
     assert entries[0].state is expected_state
 
 
+@pytest.mark.parametrize(
+    "configured_language_code,expected_language_code",
+    [("", "en-US"), ("en-US", "en-US"), ("es-ES", "es-ES")],
+    ids=["default", "english", "spanish"],
+)
 async def test_send_text_command(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
+    configured_language_code: str,
+    expected_language_code: str,
 ) -> None:
     """Test service call send_text_command calls TextAssistant."""
     await setup_integration()
@@ -107,18 +114,23 @@ async def test_send_text_command(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.LOADED
+    if configured_language_code:
+        entries[0].options = {"language_code": configured_language_code}
 
     command = "turn on home assistant unsupported device"
     with patch(
-        "homeassistant.components.google_assistant_sdk.helpers.TextAssistant.assist"
-    ) as mock_assist_call:
+        "homeassistant.components.google_assistant_sdk.helpers.TextAssistant"
+    ) as mock_text_assistant:
         await hass.services.async_call(
             DOMAIN,
             "send_text_command",
             {"command": command},
             blocking=True,
         )
-    mock_assist_call.assert_called_once_with(command)
+    mock_text_assistant.assert_called_once_with(
+        ExpectedCredentials(), expected_language_code
+    )
+    mock_text_assistant.assert_has_calls([call().__enter__().assist(command)])
 
 
 @pytest.mark.parametrize(

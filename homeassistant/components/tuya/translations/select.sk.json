@@ -109,11 +109,22 @@
             "small": "Mal\u00fd"
         },
         "tuya__vacuum_mode": {
+            "bow": "Obl\u00fak",
             "chargego": "N\u00e1vrat do doku",
+            "left_bow": "Obl\u00fak v\u013eavo",
+            "left_spiral": "\u0160pir\u00e1la v\u013eavo",
             "mop": "Mop",
             "part": "\u010cas\u0165",
+            "partial_bow": "Obl\u00fak \u010diasto\u010dne",
             "pick_zone": "Vyberte z\u00f3nu",
+            "point": "Bod",
+            "pose": "Poz\u00edcia",
             "random": "N\u00e1hodn\u00fd",
+            "right_bow": "Obl\u00fak vpravo",
+            "right_spiral": "\u0160pir\u00e1la vpravo",
+            "single": "Raz",
+            "smart": "Smart",
+            "spiral": "\u0160pir\u00e1la",
             "standby": "Pohotovostn\u00fd re\u017eim",
             "wall_follow": "Sledovanie steny",
             "zone": "Z\u00f3na"

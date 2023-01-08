@@ -52,6 +52,7 @@
             "options_digital": {
                 "data": {
                     "name": "N\u00e1zov (volite\u013en\u00fd)",
+                    "poll_interval": "Interval po\u017eiadaviek (v min\u00fatach)",
                     "type": "Typ sn\u00edma\u010da"
                 },
                 "description": "mo\u017enosti {zone}",
@@ -88,7 +89,9 @@
             "options_misc": {
                 "data": {
                     "api_host": "Prep\u00edsanie adresy URL hostite\u013ea API",
-                    "discovery": "Reagovanie na po\u017eiadavky na zis\u0165ovanie vo va\u0161ej sieti"
+                    "blink": "LED panel blik\u00e1 pri zmene stavu odosielania",
+                    "discovery": "Reagovanie na po\u017eiadavky na zis\u0165ovanie vo va\u0161ej sieti",
+                    "override_api_host": "Prep\u00edsanie predvolenej adresy URL hostite\u013esk\u00e9ho panela rozhrania API aplik\u00e1cie Home Assistant"
                 },
                 "description": "Vyberte po\u017eadovan\u00e9 spr\u00e1vanie pre v\u00e1\u0161 panel",
                 "title": "Konfigur\u00e1cia r\u00f4zne"

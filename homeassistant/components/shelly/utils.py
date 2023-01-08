@@ -408,3 +408,9 @@ def brightness_to_percentage(brightness: int) -> int:
 def percentage_to_brightness(percentage: int) -> int:
     """Convert percentage to brightness level."""
     return round(255 * percentage / 100)
+
+
+def mac_address_from_name(name: str) -> str | None:
+    """Convert a name to a mac address."""
+    mac = name.partition(".")[0].partition("-")[-1]
+    return mac.upper() if len(mac) == 12 else None
