@@ -1,6 +1,7 @@
 {
   "domain": "rainbird",
   "name": "Rain Bird",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/rainbird",
   "requirements": ["pyrainbird==1.1.0"],
   "codeowners": ["@konikvranik", "@allenporter"],

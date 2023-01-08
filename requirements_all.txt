@@ -794,6 +794,9 @@ goalzero==0.2.1
 # homeassistant.components.goodwe
 goodwe==0.2.18
 
+# homeassistant.components.google_mail
+google-api-python-client==2.71.0
+
 # homeassistant.components.google_pubsub
 google-cloud-pubsub==2.13.11
 
@@ -864,6 +867,9 @@ hass-nabucasa==0.61.0
 # homeassistant.components.splunk
 hass_splunk==0.1.1
 
+# homeassistant.components.conversation
+hassil==0.2.3
+
 # homeassistant.components.tasmota
 hatasmota==0.6.2
 
@@ -896,6 +902,9 @@ holidays==0.18.0
 
 # homeassistant.components.frontend
 home-assistant-frontend==20230104.0
+
+# homeassistant.components.conversation
+home-assistant-intents==0.0.1
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -937,7 +946,7 @@ ibm-watson==5.2.2
 ibmiotf==0.3.4
 
 # homeassistant.components.local_calendar
-ical==4.2.8
+ical==4.2.9
 
 # homeassistant.components.ping
 icmplib==3.0
@@ -1352,7 +1361,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.13
 
 # homeassistant.components.plugwise
-plugwise==0.25.14
+plugwise==0.27.0
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -2374,6 +2383,9 @@ starline==0.1.5
 
 # homeassistant.components.starlingbank
 starlingbank==3.2
+
+# homeassistant.components.starlink
+starlink-grpc-core==1.1.1
 
 # homeassistant.components.statsd
 statsd==3.2.1

@@ -285,8 +285,13 @@ class WasherDryerTimeClass(RestoreSensor):
 
         if machine_state is MachineState.RunningMainCycle:
             self._running = True
-            self._attr_native_value = now + timedelta(
+            new_timestamp = now + timedelta(
                 seconds=int(self._wd.get_attribute("Cavity_TimeStatusEstTimeRemaining"))
             )
 
-            self._async_write_ha_state()
+            if isinstance(self._attr_native_value, datetime) and abs(
+                new_timestamp - self._attr_native_value
+            ) > timedelta(seconds=60):
+
+                self._attr_native_value = new_timestamp
+                self._async_write_ha_state()
