@@ -91,15 +91,13 @@ async def async_setup_entry(
     """Set up the platform for LD2410BLE."""
     data: LD2410BLEData = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        [
-            LD2410BLESensor(
-                data.coordinator,
-                data.device,
-                entry.title,
-                description,
-            )
-            for description in SENSOR_DESCRIPTIONS
-        ]
+        LD2410BLESensor(
+            data.coordinator,
+            data.device,
+            entry.title,
+            description,
+        )
+        for description in SENSOR_DESCRIPTIONS
     )
 
 
