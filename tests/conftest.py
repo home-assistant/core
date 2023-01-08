@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import AsyncGenerator, Callable, Generator
 from contextlib import asynccontextmanager
+import datetime
 import functools
 import gc
 import itertools
@@ -80,7 +81,7 @@ asyncio.set_event_loop_policy = lambda policy: None
 
 def _utcnow():
     """Make utcnow patchable by freezegun."""
-    return dt_util.dt.datetime.now(dt_util.UTC)
+    return datetime.datetime.now(datetime.timezone.utc)
 
 
 dt_util.utcnow = _utcnow
