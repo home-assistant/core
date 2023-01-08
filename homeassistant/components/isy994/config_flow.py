@@ -34,6 +34,7 @@ from .const import (
     DOMAIN,
     HTTP_PORT,
     HTTPS_PORT,
+    ISY_CONF_UUID,
     ISY_URL_POSTFIX,
     SCHEME_HTTP,
     SCHEME_HTTPS,
@@ -110,7 +111,10 @@ async def validate_input(
         raise CannotConnect
 
     # Return info that you want to store in the config entry.
-    return {"title": f"{isy_conf['name']} ({host.hostname})", "uuid": isy_conf["uuid"]}
+    return {
+        "title": f"{isy_conf['name']} ({host.hostname})",
+        ISY_CONF_UUID: isy_conf[ISY_CONF_UUID],
+    }
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -151,7 +155,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
             if not errors:
-                await self.async_set_unique_id(info["uuid"], raise_on_progress=False)
+                await self.async_set_unique_id(
+                    info[ISY_CONF_UUID], raise_on_progress=False
+                )
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=info["title"], data=user_input)
 

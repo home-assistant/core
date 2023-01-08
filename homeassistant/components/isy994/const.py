@@ -104,6 +104,16 @@ ISY994_NODES = "isy994_nodes"
 ISY994_PROGRAMS = "isy994_programs"
 ISY994_VARIABLES = "isy994_variables"
 
+ISY_CONF_NETWORKING = "Networking Module"
+ISY_CONF_UUID = "uuid"
+ISY_CONF_NAME = "name"
+ISY_CONF_MODEL = "model"
+ISY_CONF_FIRMWARE = "firmware"
+
+ISY_CONN_PORT = "port"
+ISY_CONN_ADDRESS = "addr"
+ISY_CONN_TLS = "tls"
+
 FILTER_UOM = "uom"
 FILTER_STATES = "states"
 FILTER_NODE_DEF_ID = "node_def_id"

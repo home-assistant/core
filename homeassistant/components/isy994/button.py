@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from pyisy import ISY
-from pyisy.constants import PROTO_INSTEON
+from pyisy.constants import PROTO_INSTEON, PROTO_NETWORK_RESOURCE
 from pyisy.nodes import Node
 
 from homeassistant.components.button import ButtonEntity
@@ -12,7 +12,18 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN as ISY994_DOMAIN, ISY994_ISY, ISY994_NODES
+from . import _async_isy_to_configuration_url
+from .const import (
+    DOMAIN as ISY994_DOMAIN,
+    ISY994_ISY,
+    ISY994_NODES,
+    ISY_CONF_FIRMWARE,
+    ISY_CONF_MODEL,
+    ISY_CONF_NAME,
+    ISY_CONF_NETWORKING,
+    ISY_CONF_UUID,
+    MANUFACTURER,
+)
 
 
 async def async_setup_entry(
@@ -23,12 +34,21 @@ async def async_setup_entry(
     """Set up ISY/IoX button from config entry."""
     hass_isy_data = hass.data[ISY994_DOMAIN][config_entry.entry_id]
     isy: ISY = hass_isy_data[ISY994_ISY]
-    uuid = isy.configuration["uuid"]
-    entities: list[ISYNodeQueryButtonEntity | ISYNodeBeepButtonEntity] = []
+    uuid = isy.configuration[ISY_CONF_UUID]
+    entities: list[
+        ISYNodeQueryButtonEntity
+        | ISYNodeBeepButtonEntity
+        | ISYNetworkResourceButtonEntity
+    ] = []
     for node in hass_isy_data[ISY994_NODES][Platform.BUTTON]:
         entities.append(ISYNodeQueryButtonEntity(node, f"{uuid}_{node.address}"))
         if node.protocol == PROTO_INSTEON:
             entities.append(ISYNodeBeepButtonEntity(node, f"{uuid}_{node.address}"))
+
+    for node in hass_isy_data[ISY994_NODES][PROTO_NETWORK_RESOURCE]:
+        entities.append(
+            ISYNetworkResourceButtonEntity(node, f"{uuid}_{PROTO_NETWORK_RESOURCE}")
+        )
 
     # Add entity to query full system
     entities.append(ISYNodeQueryButtonEntity(isy, uuid))
@@ -80,3 +100,38 @@ class ISYNodeBeepButtonEntity(ButtonEntity):
     async def async_press(self) -> None:
         """Press the button."""
         await self._node.beep()
+
+
+class ISYNetworkResourceButtonEntity(ButtonEntity):
+    """Representation of an ISY/IoX Network Resource button entity."""
+
+    _attr_should_poll = False
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_has_entity_name = True
+
+    def __init__(self, node: Node, base_unique_id: str) -> None:
+        """Initialize a beep Insteon device button entity."""
+        self._node = node
+
+        # Entity class attributes
+        self._attr_name = node.name
+        self._attr_unique_id = f"{base_unique_id}_{node.address}"
+        url = _async_isy_to_configuration_url(node.isy)
+        self._attr_device_info = DeviceInfo(
+            identifiers={
+                (
+                    ISY994_DOMAIN,
+                    f"{node.isy.configuration[ISY_CONF_UUID]}_{PROTO_NETWORK_RESOURCE}",
+                )
+            },
+            manufacturer=MANUFACTURER,
+            name=f"{node.isy.configuration[ISY_CONF_NAME]} {ISY_CONF_NETWORKING}",
+            model=node.isy.configuration[ISY_CONF_MODEL],
+            sw_version=node.isy.configuration[ISY_CONF_FIRMWARE],
+            configuration_url=url,
+            via_device=(ISY994_DOMAIN, node.isy.configuration[ISY_CONF_UUID]),
+        )
+
+    async def async_press(self) -> None:
+        """Press the button."""
+        await self._node.run()
