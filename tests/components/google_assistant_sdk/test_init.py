@@ -157,9 +157,8 @@ async def test_send_text_commands(
             blocking=True,
         )
     mock_text_assistant.assert_called_once_with(ExpectedCredentials(), "en-US")
-    mock_text_assistant.assert_has_calls(
-        [call().__enter__().assist(command1), call().__enter__().assist(command2)]
-    )
+    mock_text_assistant.assert_has_calls([call().__enter__().assist(command1)])
+    mock_text_assistant.assert_has_calls([call().__enter__().assist(command2)])
 
 
 @pytest.mark.parametrize(
