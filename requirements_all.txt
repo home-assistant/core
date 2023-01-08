@@ -159,7 +159,7 @@ aioecowitt==2022.11.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==13.0.3
+aioesphomeapi==13.0.4
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -946,7 +946,7 @@ ibm-watson==5.2.2
 ibmiotf==0.3.4
 
 # homeassistant.components.local_calendar
-ical==4.2.8
+ical==4.2.9
 
 # homeassistant.components.ping
 icmplib==3.0
