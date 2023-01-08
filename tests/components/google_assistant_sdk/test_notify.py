@@ -42,9 +42,11 @@ async def test_broadcast_no_targets(
             notify.DOMAIN,
             DOMAIN,
             {notify.ATTR_MESSAGE: message},
+            blocking=True,
         )
-        await hass.async_block_till_done()
-    mock_text_assistant.assert_called_once_with(ExpectedCredentials(), language_code)
+    mock_text_assistant.assert_called_once_with(
+        ExpectedCredentials(), language_code, audio_out=False
+    )
     mock_text_assistant.assert_has_calls([call().__enter__().assist(expected_command)])
 
 
@@ -84,14 +86,14 @@ async def test_broadcast_one_target(
 
     with patch(
         "homeassistant.components.google_assistant_sdk.helpers.TextAssistant.assist",
-        return_value=["text_response", None],
+        return_value=["text_response", None, b""],
     ) as mock_assist_call:
         await hass.services.async_call(
             notify.DOMAIN,
             DOMAIN,
             {notify.ATTR_MESSAGE: message, notify.ATTR_TARGET: [target]},
+            blocking=True,
         )
-        await hass.async_block_till_done()
     mock_assist_call.assert_called_once_with(expected_command)
 
 
@@ -108,14 +110,14 @@ async def test_broadcast_two_targets(
     expected_command2 = "broadcast to master bedroom time for dinner"
     with patch(
         "homeassistant.components.google_assistant_sdk.helpers.TextAssistant.assist",
-        return_value=["text_response", None],
+        return_value=["text_response", None, b""],
     ) as mock_assist_call:
         await hass.services.async_call(
             notify.DOMAIN,
             DOMAIN,
             {notify.ATTR_MESSAGE: message, notify.ATTR_TARGET: [target1, target2]},
+            blocking=True,
         )
-        await hass.async_block_till_done()
     mock_assist_call.assert_has_calls(
         [call(expected_command1), call(expected_command2)]
     )
@@ -129,14 +131,14 @@ async def test_broadcast_empty_message(
 
     with patch(
         "homeassistant.components.google_assistant_sdk.helpers.TextAssistant.assist",
-        return_value=["text_response", None],
+        return_value=["text_response", None, b""],
     ) as mock_assist_call:
         await hass.services.async_call(
             notify.DOMAIN,
             DOMAIN,
             {notify.ATTR_MESSAGE: ""},
+            blocking=True,
         )
-        await hass.async_block_till_done()
     mock_assist_call.assert_not_called()
 
 

@@ -28,7 +28,9 @@ DEFAULT_LANGUAGE_CODES = {
 }
 
 
-async def async_send_text_commands(commands: list[str], hass: HomeAssistant) -> None:
+async def _async_send_text_commands(
+    hass: HomeAssistant, commands: list[str], audio_out: bool
+) -> bytes | None:
     """Send text commands to Google Assistant Service."""
     # There can only be 1 entry (config_flow has single_instance_allowed)
     entry: ConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
@@ -43,10 +45,28 @@ async def async_send_text_commands(commands: list[str], hass: HomeAssistant) -> 
 
     credentials = Credentials(session.token[CONF_ACCESS_TOKEN])
     language_code = entry.options.get(CONF_LANGUAGE_CODE, default_language_code(hass))
-    with TextAssistant(credentials, language_code) as assistant:
+    with TextAssistant(credentials, language_code, audio_out=audio_out) as assistant:
         for command in commands:
-            text_response = assistant.assist(command)[0]
+            resp = assistant.assist(command)
+            text_response = resp[0]
             _LOGGER.debug("command: %s\nresponse: %s", command, text_response)
+            audio_response = resp[2]
+            if audio_out:
+                assert len(commands) == 1
+                return audio_response
+    return None
+
+
+async def async_send_text_commands(hass: HomeAssistant, commands: list[str]) -> None:
+    """Send text commands to Google Assistant Service."""
+    await _async_send_text_commands(hass, commands, False)
+
+
+async def async_send_text_command_with_audio(
+    hass: HomeAssistant, command: str
+) -> bytes | None:
+    """Send a text command to Google Assistant Service and return the audio response."""
+    return await _async_send_text_commands(hass, [command], True)
 
 
 def default_language_code(hass: HomeAssistant):

@@ -88,7 +88,7 @@ async def async_setup_service(hass: HomeAssistant) -> None:
     async def send_text_command(call: ServiceCall) -> None:
         """Send a text command to Google Assistant SDK."""
         command: str = call.data[SERVICE_SEND_TEXT_COMMAND_FIELD_COMMAND]
-        await async_send_text_commands([command], hass)
+        await async_send_text_commands(hass, [command])
 
     hass.services.async_register(
         DOMAIN,

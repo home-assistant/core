@@ -129,7 +129,7 @@ async def test_send_text_command(
             blocking=True,
         )
     mock_text_assistant.assert_called_once_with(
-        ExpectedCredentials(), expected_language_code
+        ExpectedCredentials(), expected_language_code, audio_out=False
     )
     mock_text_assistant.assert_has_calls([call().__enter__().assist(command)])
 
