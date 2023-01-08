@@ -225,15 +225,18 @@ class BluetoothManager:
         results: list[tuple[BaseHaScanner, BLEDevice, AdvertisementData]] = []
         for type_ in types_:
             for scanner in self._get_scanners_by_type(type_):
-                if device_advertisement_data := scanner.discovered_devices_and_advertisement_data.get(
+                if adv_data := scanner.discovered_devices_and_advertisement_data.get(
                     address
                 ):
-                    results.append((scanner, *device_advertisement_data))
+                    results.append((scanner, *adv_data))
         return results
 
     @hass_callback
     def _async_all_discovered_addresses(self, connectable: bool) -> Iterable[str]:
-        """Return all of discovered addresses from all the scanners including duplicates."""
+        """Return all of discovered addresses.
+
+        Include addresses from all the scanners including duplicates.
+        """
         yield from itertools.chain.from_iterable(
             scanner.discovered_devices_and_advertisement_data
             for scanner in self._get_scanners_by_type(True)
@@ -281,9 +284,9 @@ class BluetoothManager:
                     #
                     # For non-connectable devices we also check the device has exceeded
                     # the advertising interval before we mark it as unavailable
-                    # since it may have gone to sleep and since we do not need an active connection
-                    # to it we can only determine its availability by the lack of advertisements
-                    #
+                    # since it may have gone to sleep and since we do not need an active
+                    # connection to it we can only determine its availability
+                    # by the lack of advertisements
                     if advertising_interval := intervals.get(address):
                         time_since_seen = monotonic_now - all_history[address].time
                         if time_since_seen <= advertising_interval:
@@ -335,7 +338,8 @@ class BluetoothManager:
         if (new.rssi or NO_RSSI_VALUE) - RSSI_SWITCH_THRESHOLD > (
             old.rssi or NO_RSSI_VALUE
         ):
-            # If new advertisement is RSSI_SWITCH_THRESHOLD more, the new one is preferred
+            # If new advertisement is RSSI_SWITCH_THRESHOLD more,
+            # the new one is preferred.
             if debug:
                 _LOGGER.debug(
                     (
@@ -381,19 +385,21 @@ class BluetoothManager:
 
         source = service_info.source
         debug = _LOGGER.isEnabledFor(logging.DEBUG)
-        # This logic is complex due to the many combinations of scanners that are supported.
+        # This logic is complex due to the many combinations of scanners
+        # that are supported.
         #
         # We need to handle multiple connectable and non-connectable scanners
         # and we need to handle the case where a device is connectable on one scanner
         # but not on another.
         #
-        # The device may also be connectable only by a scanner that has worse signal strength
-        # than a non-connectable scanner.
+        # The device may also be connectable only by a scanner that has worse
+        # signal strength than a non-connectable scanner.
         #
-        # all_history - the history of all advertisements from all scanners with the best
-        #               advertisement from each scanner
-        # connectable_history - the history of all connectable advertisements from all scanners
-        #                       with the best advertisement from each connectable scanner
+        # all_history - the history of all advertisements from all scanners with the
+        #               best advertisement from each scanner
+        # connectable_history - the history of all connectable advertisements from all
+        #                       scanners with the best advertisement from each
+        #                       connectable scanner
         #
         if (
             (old_service_info := all_history.get(address))
