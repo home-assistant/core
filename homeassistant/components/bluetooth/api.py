@@ -13,7 +13,7 @@ from home_assistant_bluetooth import BluetoothServiceInfoBleak
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 
-from .base_scanner import BaseHaScanner
+from .base_scanner import BaseHaScanner, BluetoothScannerDevice
 from .const import DATA_MANAGER
 from .manager import BluetoothManager
 from .match import BluetoothCallbackMatcher
@@ -27,7 +27,6 @@ from .wrappers import HaBleakScannerWrapper
 
 if TYPE_CHECKING:
     from bleak.backends.device import BLEDevice
-    from bleak.backends.scanner import AdvertisementData
 
 
 def _get_manager(hass: HomeAssistant) -> BluetoothManager:
@@ -95,15 +94,11 @@ def async_ble_device_from_address(
 
 
 @hass_callback
-def async_get_discovered_devices_and_advertisement_data_by_address(
+def async_scanner_devices_by_address(
     hass: HomeAssistant, address: str, connectable: bool = True
-) -> list[tuple[BLEDevice, AdvertisementData]]:
-    """Return all discovered [BLEDevice, AdvertisementData] tuples for an address."""
-    return _get_manager(
-        hass
-    ).async_get_discovered_devices_and_advertisement_data_by_address(
-        address, connectable
-    )
+) -> list[BluetoothScannerDevice]:
+    """Return all discovered BluetoothScannerDevice for an address."""
+    return _get_manager(hass).async_scanner_devices_by_address(address, connectable)
 
 
 @hass_callback

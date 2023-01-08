@@ -4,6 +4,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
+from dataclasses import dataclass
 import datetime
 from datetime import timedelta
 import logging
@@ -37,6 +38,15 @@ from .models import HaBluetoothConnector
 
 MONOTONIC_TIME: Final = monotonic_time_coarse
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class BluetoothScannerDevice:
+    """Data for a bluetooth device from a given scanner."""
+
+    scanner: BaseHaScanner
+    ble_device: BLEDevice
+    advertisement: AdvertisementData
 
 
 class BaseHaScanner(ABC):
