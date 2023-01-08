@@ -34,6 +34,7 @@ from .const import (
     DOMAIN,
     HTTP_PORT,
     HTTPS_PORT,
+    ISY_CONF_NAME,
     ISY_CONF_UUID,
     ISY_URL_POSTFIX,
     SCHEME_HTTP,
@@ -107,12 +108,12 @@ async def validate_input(
         isy_conf = Configuration(xml=isy_conf_xml)
     except ISYResponseParseError as error:
         raise CannotConnect from error
-    if not isy_conf or "name" not in isy_conf or not isy_conf["name"]:
+    if not isy_conf or ISY_CONF_NAME not in isy_conf or not isy_conf[ISY_CONF_NAME]:
         raise CannotConnect
 
     # Return info that you want to store in the config entry.
     return {
-        "title": f"{isy_conf['name']} ({host.hostname})",
+        "title": f"{isy_conf[ISY_CONF_NAME]} ({host.hostname})",
         ISY_CONF_UUID: isy_conf[ISY_CONF_UUID],
     }
 
