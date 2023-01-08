@@ -129,11 +129,6 @@ class AxisNetworkDevice:
         return f"axis_reachable_{self.unique_id}"
 
     @property
-    def signal_new_event(self):
-        """Device specific event to signal new device event available."""
-        return f"axis_new_event_{self.unique_id}"
-
-    @property
     def signal_new_address(self):
         """Device specific event to signal a change in device address."""
         return f"axis_new_address_{self.unique_id}"
