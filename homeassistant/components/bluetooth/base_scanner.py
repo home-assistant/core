@@ -145,7 +145,7 @@ class BaseHaScanner(ABC):
 
     async def async_diagnostics(self) -> dict[str, Any]:
         """Return diagnostic information about the scanner."""
-        advertisement_data = self.discovered_devices_and_advertisement_data.values()
+        device_adv_datas = self.discovered_devices_and_advertisement_data.values()
         return {
             "name": self.name,
             "start_time": self._start_time,
