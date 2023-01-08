@@ -3,6 +3,7 @@
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "no_appliances": "Keine unterst\u00fctzten Ger\u00e4te gefunden",
             "unknown": "Unerwarteter Fehler"
         },
         "step": {
