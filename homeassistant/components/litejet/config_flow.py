@@ -59,12 +59,9 @@ class LiteJetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             port = user_input[CONF_PORT]
 
-            await self.async_set_unique_id(port)
-            self._abort_if_unique_id_configured()
-
             try:
-                system = pylitejet.LiteJet(port)
-                system.close()
+                system = await pylitejet.open(port)
+                await system.close()
             except SerialException:
                 errors[CONF_PORT] = "open_failed"
             else:
