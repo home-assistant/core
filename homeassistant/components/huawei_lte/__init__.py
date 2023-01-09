@@ -365,9 +365,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             ):
                 if not entity_entry.unique_id.startswith("None-"):
                     continue
-                new_unique_id = (
-                    f"{serial_number}-{entity_entry.unique_id.split('-', 1)[1]}"
-                )
+                new_unique_id = entity_entry.unique_id.removeprefix("None-")
+                new_unique_id = f"{serial_number}-{new_unique_id}"
                 ent_reg.async_update_entity(
                     entity_entry.entity_id, new_unique_id=new_unique_id
                 )
