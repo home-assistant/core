@@ -210,6 +210,7 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
             )
             return
 
+        # Fake turn off
         if self._speeds is not None and percentage == 0 and "off" in self._speeds.range:
             self._send_command(
                 [
@@ -239,7 +240,7 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
         if self._switch is not None:
             self._send_command([{"code": self._switch, "value": False}])
 
-        # Fake turn on
+        # Fake turn off
         if (
             self._switch is None
             and self._speeds is not None
