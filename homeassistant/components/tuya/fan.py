@@ -210,7 +210,6 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
             )
             return
 
-        # Fake turn off
         if self._speeds is not None and percentage == 0 and "off" in self._speeds.range:
             self._send_command(
                 [
@@ -288,6 +287,7 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
         if preset_mode is not None and self._presets is not None:
             commands.append({"code": self._presets.dpcode, "value": preset_mode})
 
+        # Fake turn on
         if (
             self._switch is None
             and percentage is None
