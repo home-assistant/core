@@ -162,7 +162,7 @@ class HueSceneEntity(HueSceneEntityBase):
             )
 
         await self.bridge.async_request_call(
-            self.controller.recall,
+            self.controller.scene.recall,
             self.resource.id,
             dynamic=dynamic,
             duration=transition,
@@ -204,7 +204,7 @@ class HueSmartSceneEntity(HueSceneEntityBase):
         """Activate Hue Smart scene."""
 
         await self.bridge.async_request_call(
-            self.controller.recall,
+            self.controller.smart_scene.recall,
             self.resource.id,
         )
 
