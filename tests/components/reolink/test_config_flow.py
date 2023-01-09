@@ -40,7 +40,7 @@ def get_mock_info(error=None, host_data_return=True, user_level="admin"):
     host_mock.nvr_name = TEST_NVR_NAME
     host_mock.port = TEST_PORT
     host_mock.use_https = TEST_USE_HTTPS
-    host.is_admin = user_level=="admin"
+    host_mock.is_admin = user_level=="admin"
     host_mock.user_level = user_level
     return host_mock
 
