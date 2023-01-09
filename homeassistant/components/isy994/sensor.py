@@ -35,6 +35,7 @@ from .const import (
     _LOGGER,
     DOMAIN as ISY994_DOMAIN,
     ISY994_NODES,
+    ISY994_VARIABLES,
     ISY_CONF_UUID,
     SENSOR_AUX,
     UOM_DOUBLE_TEMP,
@@ -43,7 +44,7 @@ from .const import (
     UOM_ON_OFF,
     UOM_TO_STATES,
 )
-from .entity import ISYNodeEntity
+from .entity import ISYEntity, ISYNodeEntity
 from .helpers import convert_isy_value_to_hass, migrate_old_unique_ids
 
 # Disable general purpose and redundant sensors by default
@@ -110,7 +111,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the ISY sensor platform."""
     hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
-    entities: list[ISYSensorEntity] = []
+    entities: list[ISYSensorEntity | ISYSensorVariableEntity] = []
 
     for node in hass_isy_data[ISY994_NODES][Platform.SENSOR]:
         _LOGGER.debug("Loading %s", node.name)
@@ -130,6 +131,9 @@ async def async_setup_entry(
     for node in aux_nodes:
         # Any node in SENSOR_AUX can potentially have communication errors
         entities.append(ISYAuxSensorEntity(node, PROP_COMMS_ERROR, False))
+
+    for vname, vobj in hass_isy_data[ISY994_VARIABLES][Platform.SENSOR]:
+        entities.append(ISYSensorVariableEntity(vname, vobj))
 
     await migrate_old_unique_ids(hass, Platform.SENSOR, entities)
     async_add_entities(entities)
@@ -260,3 +264,35 @@ class ISYAuxSensorEntity(ISYSensorEntity):
         base_name = self._name or str(self._node.name)
         name = COMMAND_FRIENDLY_NAME.get(self._control, self._control)
         return f"{base_name} {name.replace('_', ' ').title()}"
+
+
+class ISYSensorVariableEntity(ISYEntity, SensorEntity):
+    """Representation of an ISY variable as a sensor device."""
+
+    # Depreceted sensors, will be removed in 2023.5.0
+    _attr_entity_registry_enabled_default = False
+
+    def __init__(self, vname: str, vobj: object) -> None:
+        """Initialize the ISY binary sensor program."""
+        super().__init__(vobj)
+        self._name = vname
+
+    @property
+    def native_value(self) -> float | int | None:
+        """Return the state of the variable."""
+        return convert_isy_value_to_hass(self._node.status, "", self._node.prec)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Get the state attributes for the device."""
+        return {
+            "init_value": convert_isy_value_to_hass(
+                self._node.init, "", self._node.prec
+            ),
+            "last_edited": self._node.last_edited,
+        }
+
+    @property
+    def icon(self) -> str:
+        """Return the icon."""
+        return "mdi:counter"

@@ -1,4 +1,4 @@
-"""GoodWe PV inverter numeric settings entities."""
+"""Support for ISY number entities."""
 from __future__ import annotations
 
 from typing import Any
@@ -9,7 +9,9 @@ from pyisy.variables import Variable
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -40,7 +42,7 @@ async def async_setup_entry(
     uuid = isy.configuration[ISY_CONF_UUID]
     entities: list[ISYVariableNumberEntity] = []
 
-    for node, enable_by_default in hass_isy_data[ISY994_VARIABLES]:
+    for node, enable_by_default in hass_isy_data[ISY994_VARIABLES][Platform.NUMBER]:
         step = 10 ** (-1 * node.prec)
         min_max = ISY_MAX_SIZE / (10**node.prec)
         description = NumberEntityDescription(
@@ -127,6 +129,7 @@ class ISYVariableNumberEntity(NumberEntity):
             sw_version=config[ISY_CONF_FIRMWARE],
             configuration_url=url,
             via_device=(ISY994_DOMAIN, config[ISY_CONF_UUID]),
+            entry_type=DeviceEntryType.SERVICE,
         )
 
     async def async_added_to_hass(self) -> None:
