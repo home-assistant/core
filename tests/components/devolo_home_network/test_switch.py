@@ -139,6 +139,7 @@ async def test_update_enable_guest_wifi(hass: HomeAssistant, mock_device: MockDe
     async_fire_time_changed(
         hass, dt.utcnow() + timedelta(seconds=REQUEST_REFRESH_DEFAULT_COOLDOWN)
     )
+    await hass.async_block_till_done()
 
     # Switch on
     mock_device.device.async_get_wifi_guest_access.return_value = WifiGuestAccessGet(
@@ -160,6 +161,7 @@ async def test_update_enable_guest_wifi(hass: HomeAssistant, mock_device: MockDe
     async_fire_time_changed(
         hass, dt.utcnow() + timedelta(seconds=REQUEST_REFRESH_DEFAULT_COOLDOWN)
     )
+    await hass.async_block_till_done()
 
     # Device unavailable
     mock_device.device.async_get_wifi_guest_access.side_effect = DeviceUnavailable()
@@ -221,6 +223,7 @@ async def test_update_enable_leds(hass: HomeAssistant, mock_device: MockDevice):
     async_fire_time_changed(
         hass, dt.utcnow() + timedelta(seconds=REQUEST_REFRESH_DEFAULT_COOLDOWN)
     )
+    await hass.async_block_till_done()
 
     # Switch on
     mock_device.device.async_get_led_setting.return_value = True
@@ -240,6 +243,7 @@ async def test_update_enable_leds(hass: HomeAssistant, mock_device: MockDevice):
     async_fire_time_changed(
         hass, dt.utcnow() + timedelta(seconds=REQUEST_REFRESH_DEFAULT_COOLDOWN)
     )
+    await hass.async_block_till_done()
 
     # Device unavailable
     mock_device.device.async_get_led_setting.side_effect = DeviceUnavailable()
