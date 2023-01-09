@@ -11,13 +11,6 @@
             "validate_verification_code": "No se ha podido verificar el c\u00f3digo de verificaci\u00f3n, int\u00e9ntalo de nuevo"
         },
         "step": {
-            "reauth": {
-                "data": {
-                    "password": "Contrase\u00f1a"
-                },
-                "description": "La contrase\u00f1a introducida anteriormente para {username} ya no funciona. Actualiza tu contrase\u00f1a para seguir usando esta integraci\u00f3n.",
-                "title": "Volver a autenticar la integraci\u00f3n"
-            },
             "reauth_confirm": {
                 "data": {
                     "password": "Contrase\u00f1a"

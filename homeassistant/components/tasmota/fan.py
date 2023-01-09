@@ -65,6 +65,7 @@ class TasmotaFan(
     """Representation of a Tasmota fan."""
 
     _attr_supported_features = FanEntityFeature.SET_SPEED
+    _fan_speed = tasmota_const.FAN_SPEED_MEDIUM
     _tasmota_entity: tasmota_fan.TasmotaFan
 
     def __init__(self, **kwds: Any) -> None:
@@ -84,6 +85,9 @@ class TasmotaFan(
     def fan_state_updated(self, state: int, **kwargs: Any) -> None:
         """Handle state updates."""
         self._state = state
+        if self._state is not None and self._state != 0:
+            # Store the last known fan speed
+            self._fan_speed = state
         self.async_write_ha_state()
 
     @property
@@ -121,7 +125,7 @@ class TasmotaFan(
         await self.async_set_percentage(
             percentage
             or ordered_list_item_to_percentage(
-                ORDERED_NAMED_FAN_SPEEDS, tasmota_const.FAN_SPEED_MEDIUM
+                ORDERED_NAMED_FAN_SPEEDS, self._fan_speed
             )
         )
 

@@ -6,10 +6,8 @@ import platform
 from yalexs_ble import local_name_is_unique
 
 from homeassistant.components.bluetooth import (
-    BluetoothScanningMode,
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
-    async_process_advertisements,
 )
 from homeassistant.components.bluetooth.match import (
     ADDRESS,
@@ -17,8 +15,6 @@ from homeassistant.components.bluetooth.match import (
     BluetoothCallbackMatcher,
 )
 from homeassistant.core import HomeAssistant, callback
-
-from .const import DEVICE_TIMEOUT
 
 
 def bluetooth_callback_matcher(
@@ -49,21 +45,6 @@ def async_find_existing_service_info(
         ) or device.address == address:
             return service_info
     return None
-
-
-async def async_get_service_info(
-    hass: HomeAssistant, local_name: str, address: str
-) -> BluetoothServiceInfoBleak:
-    """Wait for the service info for the given local_name and address."""
-    if service_info := async_find_existing_service_info(hass, local_name, address):
-        return service_info
-    return await async_process_advertisements(
-        hass,
-        lambda service_info: True,
-        bluetooth_callback_matcher(local_name, address),
-        BluetoothScanningMode.ACTIVE,
-        DEVICE_TIMEOUT,
-    )
 
 
 def short_address(address: str) -> str:

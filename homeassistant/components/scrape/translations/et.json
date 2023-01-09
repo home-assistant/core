@@ -3,34 +3,47 @@
         "abort": {
             "already_configured": "Kasutaja on juba seadistatud"
         },
+        "error": {
+            "resource_error": "Rest p\u00e4ringu andmeid ei saanud v\u00e4rskendada. Kontrolli oma s\u00e4tteid"
+        },
         "step": {
-            "user": {
+            "sensor": {
                 "data": {
                     "attribute": "Atribuut",
-                    "authentication": "Tuvastamine",
                     "device_class": "Seadme klass",
-                    "headers": "P\u00e4ised",
                     "index": "Indeks",
                     "name": "Nimi",
-                    "password": "Salas\u00f5na",
-                    "resource": "Resurss",
                     "select": "Vali",
                     "state_class": "Oleku klass",
                     "unit_of_measurement": "M\u00f5\u00f5t\u00fchik",
-                    "username": "Kasutajanimi",
-                    "value_template": "V\u00e4\u00e4rtuse mall",
-                    "verify_ssl": "Kontrolli SSL serti"
+                    "value_template": "V\u00e4\u00e4rtuse mall"
                 },
                 "data_description": {
                     "attribute": "Hangi valitud sildi atribuudi v\u00e4\u00e4rtus",
-                    "authentication": "HTTP-autentimise t\u00fc\u00fcp. Kas basic v\u00f5i digest",
                     "device_class": "Anduri t\u00fc\u00fcp/klass ikooni seadmiseks kasutajaliideses",
-                    "headers": "Veebip\u00e4ringu jaoks kasutatavad p\u00e4ised",
                     "index": "M\u00e4\u00e4rab, milliseid CSS selektoriga tagastatud elemente kasutada.",
-                    "resource": "V\u00e4\u00e4rtust sisaldava veebisaidi URL",
                     "select": "M\u00e4\u00e4rab, millist silti otsida. Lisateavet leiad Beautifulsoup CSS-i valijatest",
                     "state_class": "Anduri oleku klass",
-                    "value_template": "M\u00e4\u00e4rab malli anduri oleku saamiseks",
+                    "unit_of_measurement": "Vali temperatuuri m\u00f5\u00f5tmine v\u00f5i loo oma",
+                    "value_template": "M\u00e4\u00e4rab malli anduri oleku saamiseks"
+                }
+            },
+            "user": {
+                "data": {
+                    "authentication": "Vali tuvastusmeetod",
+                    "headers": "P\u00e4ised",
+                    "method": "Meetod",
+                    "password": "Salas\u00f5na",
+                    "resource": "Resurss",
+                    "timeout": "Ajal\u00f5pp",
+                    "username": "Kasutajanimi",
+                    "verify_ssl": "Kontrolli SSL serti"
+                },
+                "data_description": {
+                    "authentication": "HTTP-autentimise t\u00fc\u00fcp. Kas basic v\u00f5i digest",
+                    "headers": "Veebip\u00e4ringu jaoks kasutatavad p\u00e4ised",
+                    "resource": "V\u00e4\u00e4rtust sisaldava veebisaidi URL",
+                    "timeout": "Veebilehe ajal\u00f5pp",
                     "verify_ssl": "Lubab/keelab SSL/TLS-sertifikaadi kontrollimise, n\u00e4iteks kui see on ise allkirjastatud"
                 }
             }
@@ -44,34 +57,73 @@
     },
     "options": {
         "step": {
-            "init": {
+            "add_sensor": {
                 "data": {
-                    "attribute": "Atribuut",
-                    "authentication": "Tuvastamine",
-                    "device_class": "Seadme klss",
-                    "headers": "P\u00e4ised",
+                    "attribute": "Attribuut",
+                    "device_class": "Seadme klass",
                     "index": "Indeks",
                     "name": "<Empty>",
-                    "password": "Salas\u00f5na",
-                    "resource": "Resurss",
+                    "select": "Vali",
+                    "state_class": "Olekuklass",
+                    "unit_of_measurement": "M\u00f5\u00f5t\u00fchik",
+                    "value_template": "V\u00e4\u00e4rtuse mall"
+                },
+                "data_description": {
+                    "attribute": "Hangi valitud m\u00e4rgise attribuudi v\u00e4\u00e4rtus",
+                    "device_class": "Kuvatava ikooni t\u00fc\u00fcp/klass",
+                    "index": "M\u00e4\u00e4rab milliseid CSS m\u00e4rgise esitatud elemente kasutada.",
+                    "select": "Valib otsitava m\u00e4rgise. T\u00e4psem teave Beatifulsoup CSS valikutes.",
+                    "state_class": "Anduri olekuklass",
+                    "unit_of_measurement": "Vali temperatuuri m\u00f5\u00f5tmine v\u00f5i loo uus",
+                    "value_template": "M\u00e4\u00e4rab malli anduri v\u00e4\u00e4rtuse jaoks"
+                }
+            },
+            "edit_sensor": {
+                "data": {
+                    "attribute": "Attribuut",
+                    "device_class": "Seadme klass",
+                    "index": "Indeks",
+                    "name": "<Empty>",
                     "select": "Vali",
                     "state_class": "Oleku klass",
                     "unit_of_measurement": "M\u00f5\u00f5t\u00fchik",
+                    "value_template": "V\u00e4\u00e4rtuse mall"
+                },
+                "data_description": {
+                    "attribute": "Hangi valitud kirje v\u00e4\u00e4rtus",
+                    "device_class": "Kuvatav ikoon anduri t\u00fc\u00fcbi/klassi alusel",
+                    "index": "M\u00e4\u00e4rab milliseid elemente CSS valikutest kasutada",
+                    "select": "M\u00e4\u00e4rab mida otsida. Lisateave Beatifulsoap CSS valikutest.",
+                    "state_class": "Anduri oleku klass",
+                    "unit_of_measurement": "Vali temperatuuri olem v\u00f5i loo uus",
+                    "value_template": "M\u00e4\u00e4rab anduri oleku malli"
+                }
+            },
+            "init": {
+                "menu_options": {
+                    "add_sensor": "Lisa andur",
+                    "remove_sensor": "Eemalda andur",
+                    "resource": "Seadista resurss",
+                    "select_edit_sensor": "Seadista andur"
+                }
+            },
+            "resource": {
+                "data": {
+                    "authentication": "Vali tuvastusmeetod",
+                    "headers": "P\u00e4ised",
+                    "method": "Meetod",
+                    "password": "<Empty>",
+                    "resource": "Resurss",
+                    "timeout": "Ajal\u00f5pp",
                     "username": "<Empty>",
-                    "value_template": "V\u00e4\u00e4rtuse mall",
                     "verify_ssl": "<Empty>"
                 },
                 "data_description": {
-                    "attribute": "Hangi valitud elemendi atribuudi v\u00e4\u00e4rtus",
-                    "authentication": "HTTP kasutaja tuvastamise meetod; algeline v\u00f5i muu",
-                    "device_class": "Kasutajaliidesesse lisatava anduri ikooni t\u00fc\u00fcp/klass",
-                    "headers": "Veebip\u00e4ringus kasutatav p\u00e4is",
-                    "index": "M\u00e4\u00e4rab milline element tagastatakse kasutatava CSS valiku alusel",
-                    "resource": "Veebilehe URL ei sisalda soovitud v\u00e4\u00e4rtusi",
-                    "select": "M\u00e4\u00e4rab otsitava v\u00f5tmes\u00f5na. Vaata Beatifulsoup CSS valimeid",
-                    "state_class": "Anduri olekuklass",
-                    "value_template": "M\u00e4\u00e4rab anduri oleku saamiseks vajaliku malli",
-                    "verify_ssl": "Lubab v\u00f5i keelab SSL/TLS serdi tuvastamise n\u00e4iteks juhul kui sert on ise allkirjastatud"
+                    "authentication": "HTTP tuvastusmeetod- kas tavaline v\u00f5i k\u00fcsitlus",
+                    "headers": "Veebip\u00e4ringus kasutatavad p\u00e4ised",
+                    "resource": "V\u00e4\u00e4rtust sisaldava veebilehe aadress",
+                    "timeout": "Veebi\u00fchenduse ajal\u00f5pp",
+                    "verify_ssl": "Keelab/lubab SSL/TLS serdi kontrolli n\u00e4iteks ise loodud sert"
                 }
             }
         }

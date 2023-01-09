@@ -25,5 +25,106 @@
             "off": "Off"
         }
     },
+    "state_attributes": {
+        "_": {
+            "aux_heat": {
+                "name": "Aux heat"
+            },
+            "current_humidity": {
+                "name": "Current humidity"
+            },
+            "current_temperature": {
+                "name": "Current temperature"
+            },
+            "fan_mode": {
+                "name": "Fan mode",
+                "state": {
+                    "auto": "Auto",
+                    "diffuse": "Diffuse",
+                    "focus": "Focus",
+                    "high": "High",
+                    "low": "Low",
+                    "medium": "Medium",
+                    "middle": "Middle",
+                    "off": "Off",
+                    "on": "On",
+                    "top": "Top"
+                }
+            },
+            "fan_modes": {
+                "name": "Fan modes"
+            },
+            "humidity": {
+                "name": "Target humidity"
+            },
+            "hvac_action": {
+                "name": "Current action",
+                "state": {
+                    "cooling": "Cooling",
+                    "drying": "Drying",
+                    "fan": "Fan",
+                    "heating": "Heating",
+                    "idle": "Idle",
+                    "off": "Off"
+                }
+            },
+            "hvac_modes": {
+                "name": "HVAC modes"
+            },
+            "max_humidity": {
+                "name": "Max target humidity"
+            },
+            "max_temp": {
+                "name": "Max target temperature"
+            },
+            "min_humidity": {
+                "name": "Min target humidity"
+            },
+            "min_temp": {
+                "name": "Min target temperature"
+            },
+            "preset_mode": {
+                "name": "Preset",
+                "state": {
+                    "activity": "Activity",
+                    "away": "Away",
+                    "boost": "Boost",
+                    "comfort": "Comfort",
+                    "eco": "Eco",
+                    "home": "Home",
+                    "none": "None",
+                    "sleep": "Sleep"
+                }
+            },
+            "preset_modes": {
+                "name": "Presets"
+            },
+            "swing_mode": {
+                "name": "Swing mode",
+                "state": {
+                    "both": "Both",
+                    "horizontal": "Horizontal",
+                    "off": "Off",
+                    "on": "On",
+                    "vertical": "Vertical"
+                }
+            },
+            "swing_modes": {
+                "name": "Swing modes"
+            },
+            "target_temp_high": {
+                "name": "Upper target temperature"
+            },
+            "target_temp_low": {
+                "name": "Lower target temperature"
+            },
+            "target_temp_step": {
+                "name": "Target temperature step"
+            },
+            "temperature": {
+                "name": "Target temperature"
+            }
+        }
+    },
     "title": "Climate"
 }

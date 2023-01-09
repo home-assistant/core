@@ -8,10 +8,11 @@
             "bad_birth": "Ung\u00fcltiges \u201eBirth\u201c-Thema",
             "bad_certificate": "Das CA-Zertifikat ist ung\u00fcltig",
             "bad_client_cert": "Ung\u00fcltiges Client-Zertifikat. Stelle sicher, dass eine PEM-codierte Datei bereitgestellt wird",
-            "bad_client_cert_key": "Client-Zertifikat und privates Zertifikat sind kein g\u00fcltiges Paar",
+            "bad_client_cert_key": "Client-Zertifikat und privater Schl\u00fcssel sind kein g\u00fcltiges Paar",
             "bad_client_key": "Ung\u00fcltiger privater Schl\u00fcssel. Stelle sicher, dass eine PEM-codierte Datei ohne Passwort bereitgestellt wird",
             "bad_discovery_prefix": "Ung\u00fcltiges Discovery-Pr\u00e4fix",
             "bad_will": "Ung\u00fcltiges \u201eWill\u201c-Thema",
+            "bad_ws_headers": "Bereitstellung g\u00fcltiger HTTP-Header als JSON-Objekt",
             "cannot_connect": "Verbindung fehlgeschlagen",
             "invalid_inclusion": "Das Client-Zertifikat und der private Schl\u00fcssel m\u00fcssen gemeinsam konfiguriert werden"
         },
@@ -24,7 +25,6 @@
                     "client_cert": "Client-Zertifikatsdatei hochladen",
                     "client_id": "Client-ID (leer lassen, um eine zuf\u00e4llig generierte zu erhalten)",
                     "client_key": "Private Schl\u00fcsseldatei hochladen",
-                    "discovery": "Suche aktivieren",
                     "keepalive": "Die Zeit zwischen dem Senden von Keep-Alive-Nachrichten",
                     "password": "Passwort",
                     "port": "Port",
@@ -32,7 +32,10 @@
                     "set_ca_cert": "Validierung des Broker-Zertifikats",
                     "set_client_cert": "Ein Client-Zertifikat verwenden",
                     "tls_insecure": "Validierung des Broker-Zertifikats ignorieren",
-                    "username": "Benutzername"
+                    "transport": "MQTT-Transport",
+                    "username": "Benutzername",
+                    "ws_headers": "WebSocket Header im JSON-Format",
+                    "ws_path": "WebSocket Pfad"
                 },
                 "description": "Bitte gib die Verbindungsinformationen deines MQTT-Brokers ein."
             },
@@ -41,7 +44,7 @@
                     "discovery": "Suche aktivieren"
                 },
                 "description": "M\u00f6chtest du Home Assistant so konfigurieren, dass er eine Verbindung mit dem MQTT-Broker herstellt, der vom Supervisor Add-on {addon} bereitgestellt wird?",
-                "title": "MQTT Broker per Supervisor add-on"
+                "title": "MQTT Broker per Supervisor Add-on"
             }
         }
     },
@@ -73,7 +76,7 @@
             "title": "Deine manuell konfigurierte(n) MQTT-{platform}(en) erfordert Aufmerksamkeit"
         },
         "deprecated_yaml_broker_settings": {
-            "description": "Die folgenden Einstellungen in \u201econfiguration.yaml\u201c wurden in den MQTT-Konfigurationseintrag migriert und \u00fcberschreiben nun die Einstellungen in \u201econfiguration.yaml\u201c:\n\u201e{deprecated_settings}\u201c \n\nBitte entferne diese Einstellungen aus \u201econfiguration.yaml\u201c und starte Home Assistant neu, um dieses Problem zu beheben. Weitere Informationen findest du in der [Dokumentation]( {more_info_url} ).",
+            "description": "Die folgenden Einstellungen in \u201econfiguration.yaml\u201c wurden in den MQTT-Konfigurationseintrag migriert und \u00fcberschreiben nun die Einstellungen in \u201econfiguration.yaml\u201c:\n\u201e{deprecated_settings}\u201c \n\nBitte entferne diese Einstellungen aus \u201econfiguration.yaml\u201c und starte Home Assistant neu, um dieses Problem zu beheben. Weitere Informationen findest du in der [Dokumentation]({more_info_url}).",
             "title": "Veraltete MQTT-Einstellungen in \u201econfiguration.yaml\u201c gefunden"
         }
     },
@@ -82,10 +85,11 @@
             "bad_birth": "Ung\u00fcltiges \u201eBirth\u201c-Thema",
             "bad_certificate": "Das CA-Zertifikat ist ung\u00fcltig",
             "bad_client_cert": "Ung\u00fcltiges Client-Zertifikat. Stelle sicher, dass eine PEM-codierte Datei bereitgestellt wird",
-            "bad_client_cert_key": "Client-Zertifikat und privates Zertifikat sind kein g\u00fcltiges Paar",
+            "bad_client_cert_key": "Client-Zertifikat und privater Schl\u00fcssel sind kein g\u00fcltiges Paar",
             "bad_client_key": "Ung\u00fcltiger privater Schl\u00fcssel. Stelle sicher, dass eine PEM-codierte Datei ohne Passwort bereitgestellt wird",
             "bad_discovery_prefix": "Ung\u00fcltiges Discovery-Pr\u00e4fix",
             "bad_will": "Ung\u00fcltiges \u201eWill\u201c-Thema",
+            "bad_ws_headers": "Bereitstellung g\u00fcltiger HTTP-Header als JSON-Objekt",
             "cannot_connect": "Verbindung fehlgeschlagen",
             "invalid_inclusion": "Das Client-Zertifikat und der private Schl\u00fcssel m\u00fcssen gemeinsam konfiguriert werden"
         },
@@ -105,7 +109,10 @@
                     "set_ca_cert": "Validierung des Broker-Zertifikats",
                     "set_client_cert": "Ein Client-Zertifikat verwenden",
                     "tls_insecure": "Validierung des Broker-Zertifikats ignorieren",
-                    "username": "Benutzername"
+                    "transport": "MQTT-Transport",
+                    "username": "Benutzername",
+                    "ws_headers": "WebSocket Header im JSON-Format",
+                    "ws_path": "WebSocket Pfad"
                 },
                 "description": "Bitte gib die Verbindungsinformationen deines MQTT-Brokers ein.",
                 "title": "Broker-Optionen"

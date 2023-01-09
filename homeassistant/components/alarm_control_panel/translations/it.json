@@ -29,7 +29,7 @@
         "_": {
             "armed": "Attivo",
             "armed_away": "Attivo fuori casa",
-            "armed_custom_bypass": "Attivo con bypass personalizzato",
+            "armed_custom_bypass": "Attivo con esclusione personalizzata",
             "armed_home": "Attivo in casa",
             "armed_night": "Attivo Notte",
             "armed_vacation": "Attivo in vacanza",

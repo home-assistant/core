@@ -34,6 +34,7 @@ async def async_connect_scanner(
 ) -> CALLBACK_TYPE:
     """Connect scanner."""
     device = coordinator.device
+    entry = coordinator.entry
     source = format_mac(coordinator.mac).upper()
     new_info_callback = async_get_advertisement_callback(hass)
     connector = HaBluetoothConnector(
@@ -42,7 +43,9 @@ async def async_connect_scanner(
         source=source,
         can_connect=lambda: False,
     )
-    scanner = ShellyBLEScanner(hass, source, new_info_callback, connector, False)
+    scanner = ShellyBLEScanner(
+        hass, source, entry.title, new_info_callback, connector, False
+    )
     unload_callbacks = [
         async_register_scanner(hass, scanner, False),
         scanner.async_setup(),

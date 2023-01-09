@@ -2,10 +2,13 @@
     "config": {
         "abort": {
             "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
+            "reauth_successful": "Op\u00e4tovn\u00e9 overenie bolo \u00faspe\u0161n\u00e9",
+            "reauth_unsuccessful": "Op\u00e4tovn\u00e1 autentifik\u00e1cia bola ne\u00faspe\u0161n\u00e1, odstr\u00e1\u0148te integr\u00e1ciu a znova ju nastavte.",
             "unsupported_firmware": "Zariadenie pou\u017e\u00edva nepodporovan\u00fa verziu firmv\u00e9ru."
         },
         "error": {
             "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "firmware_not_fully_provisioned": "Zariadenie nie je plne zabezpe\u010den\u00e9. Kontaktujte podporu spolo\u010dnosti Shelly",
             "invalid_auth": "Neplatn\u00e9 overenie",
             "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
         },
@@ -20,7 +23,16 @@
                     "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
                 }
             },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Heslo",
+                    "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
+                }
+            },
             "user": {
+                "data": {
+                    "host": "Hostite\u013e"
+                },
                 "description": "Pred nastaven\u00edm musia by\u0165 zariadenia nap\u00e1jan\u00e9 z bat\u00e9rie zobuden\u00e9. Zobu\u010fte zariadenie pomocou tla\u010didla na \u0148om."
             }
         }
@@ -45,6 +57,19 @@
             "single_long": "{subtype} stla\u010den\u00e9 raz a potom dlho",
             "single_push": "{subtype} stla\u010den\u00e9 raz",
             "triple": "{subtype} stla\u010den\u00e9 trikr\u00e1t"
+        }
+    },
+    "options": {
+        "abort": {
+            "ble_unsupported": "Podpora Bluetooth vy\u017eaduje verziu firmv\u00e9ru {ble_min_version} alebo nov\u0161iu."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "ble_scanner_mode": "Re\u017eim skenovania Bluetooth"
+                },
+                "description": "Bluetooth skenovanie m\u00f4\u017ee by\u0165 akt\u00edvne alebo pas\u00edvne. Ke\u010f je akt\u00edvna, Shelly po\u017eaduje \u00fadaje z bl\u00edzkych zariaden\u00ed; s pas\u00edvnym, Shelly prij\u00edma nevy\u017eiadan\u00e9 d\u00e1ta z okolit\u00fdch zariaden\u00ed."
+            }
         }
     }
 }

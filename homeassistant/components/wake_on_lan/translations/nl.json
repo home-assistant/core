@@ -1,0 +1,8 @@
+{
+    "issues": {
+        "moved_yaml": {
+            "description": "De configuratie van Wake on LAN met YAML is verplaatst naar de integratiesleutel.\n\nDe bestaande YAML configuratie zal nog voor 2 versies werken.\n\nMigreer je YAML configuratie naar de integratiesleutel zoals is aangeven in de documentatie.",
+            "title": "De Wake on Lan YAML configuratie is verplaatst"
+        }
+    }
+}

@@ -86,7 +86,7 @@ async def test_litter_robot_sensor(
     assert sensor.attributes["device_class"] == SensorDeviceClass.TIMESTAMP
     sensor = hass.states.get("sensor.test_status_code")
     assert sensor.state == "dfs"
-    assert sensor.attributes["device_class"] == "litterrobot__status_code"
+    assert sensor.attributes["device_class"] == SensorDeviceClass.ENUM
     sensor = hass.states.get("sensor.test_litter_level")
     assert sensor.state == "70.0"
     assert sensor.attributes["unit_of_measurement"] == PERCENTAGE

@@ -434,9 +434,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         ):
             profiles.apply_default(light.entity_id, light.is_on, params)
 
-        legacy_supported_color_modes = (
-            light._light_internal_supported_color_modes  # pylint: disable=protected-access
-        )
+        # pylint: disable=protected-access
+        legacy_supported_color_modes = light._light_internal_supported_color_modes
         supported_color_modes = light.supported_color_modes
 
         # If a color temperature is specified, emulate it if not supported by the light
@@ -504,8 +503,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 params[ATTR_RGBW_COLOR] = color_util.color_rgb_to_rgbw(*rgb_color)
             elif ColorMode.RGBWW in supported_color_modes:
                 # https://github.com/python/mypy/issues/13673
-                params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(  # type: ignore[call-arg]
-                    *rgb_color, light.min_color_temp_kelvin, light.max_color_temp_kelvin
+                params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(
+                    *rgb_color,  # type: ignore[call-arg]
+                    light.min_color_temp_kelvin,
+                    light.max_color_temp_kelvin,
                 )
             elif ColorMode.HS in supported_color_modes:
                 params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
@@ -793,7 +794,7 @@ class LightEntity(ToggleEntity):
     _attr_rgbw_color: tuple[int, int, int, int] | None = None
     _attr_rgbww_color: tuple[int, int, int, int, int] | None = None
     _attr_supported_color_modes: set[ColorMode] | set[str] | None = None
-    _attr_supported_features: int = 0
+    _attr_supported_features: LightEntityFeature = LightEntityFeature(0)
     _attr_xy_color: tuple[float, float] | None = None
 
     @property
@@ -1060,6 +1061,6 @@ class LightEntity(ToggleEntity):
         return self._attr_supported_color_modes
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> LightEntityFeature:
         """Flag supported features."""
         return self._attr_supported_features

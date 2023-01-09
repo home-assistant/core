@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Account is al geconfigureerd",
             "already_configured_account": "Account is al geconfigureerd",
             "already_configured_device": "Apparaat is al geconfigureerd",
             "no_devices_found": "Geen apparaten gevonden op het netwerk",
@@ -21,23 +20,11 @@
                     "email": "E-mail"
                 }
             },
-            "local": {
-                "data": {
-                    "host": "IP-adres"
-                }
-            },
             "local_pick": {
                 "data": {
                     "device": "Apparaat",
                     "host": "IP-adres"
                 }
-            },
-            "reauth": {
-                "data": {
-                    "access_token": "Toegangstoken",
-                    "email": "E-mail"
-                },
-                "description": "Voer uw Awair-ontwikkelaarstoegangstoken opnieuw in."
             },
             "reauth_confirm": {
                 "data": {
@@ -46,13 +33,10 @@
                 }
             },
             "user": {
-                "data": {
-                    "access_token": "Toegangstoken",
-                    "email": "E-mail"
-                },
                 "description": "U moet zich registreren voor een Awair-toegangstoken voor ontwikkelaars op: https://developer.getawair.com/onboard/login",
                 "menu_options": {
-                    "cloud": "Verbinden via de cloud"
+                    "cloud": "Verbinden via de cloud",
+                    "local": "Lokaal verbinden (aanbevolen)"
                 }
             }
         }

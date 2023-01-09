@@ -146,7 +146,7 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
         """Turn the device off."""
         self._send_command([{"code": self._switch_dpcode, "value": False}])
 
-    def set_humidity(self, humidity):
+    def set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
         if self._set_humidity is None:
             raise RuntimeError(

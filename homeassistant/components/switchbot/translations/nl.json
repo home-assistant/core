@@ -7,23 +7,31 @@
             "switchbot_unsupported_type": "Niet-ondersteund Switchbot-type.",
             "unknown": "Onverwachte fout"
         },
+        "error": {
+            "auth_failed": "Authenticatie mislukt"
+        },
         "flow_title": "{name}",
         "step": {
             "confirm": {
                 "description": "Wilt u {name} instellen?"
             },
+            "lock_auth": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "username": "Gebruikersnaam"
+                }
+            },
+            "lock_chose_method": {
+                "description": "Kies configuratiemethode, informatie kan gevonden worden in de documentatie.",
+                "menu_options": {
+                    "lock_auth": "SwitchBot app gebruikersnaam en wachtwoord",
+                    "lock_key": "Slot encryptiesleutel"
+                }
+            },
             "password": {
                 "data": {
                     "password": "Wachtwoord"
                 }
-            },
-            "user": {
-                "data": {
-                    "mac": "MAC-adres apparaat",
-                    "name": "Naam",
-                    "password": "Wachtwoord"
-                },
-                "title": "Switchbot-apparaat instellen"
             }
         }
     },
@@ -31,10 +39,7 @@
         "step": {
             "init": {
                 "data": {
-                    "retry_count": "Aantal herhalingen",
-                    "retry_timeout": "Time-out tussen nieuwe pogingen",
-                    "scan_timeout": "Hoe lang te scannen voor advertentiegegevens",
-                    "update_time": "Tijd tussen updates (seconden)"
+                    "retry_count": "Aantal herhalingen"
                 }
             }
         }

@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import collections
-import copy
 import json
 from typing import Any
 
@@ -25,10 +24,9 @@ from .core.const import (
     CONF_FLOWCONTROL,
     CONF_RADIO_TYPE,
     DOMAIN,
-    EZSP_OVERWRITE_EUI64,
     RadioType,
 )
-from .radio_manager import ZhaRadioManager
+from .radio_manager import HARDWARE_DISCOVERY_SCHEMA, ZhaRadioManager
 
 CONF_MANUAL_PATH = "Enter Manually"
 SUPPORTED_PORT_SETTINGS = (
@@ -54,14 +52,6 @@ UPLOADED_BACKUP_FILE = "uploaded_backup_file"
 DEFAULT_ZHA_ZEROCONF_PORT = 6638
 ESPHOME_API_PORT = 6053
 
-HARDWARE_DISCOVERY_SCHEMA = vol.Schema(
-    {
-        vol.Required("name"): str,
-        vol.Required("port"): dict,
-        vol.Required("radio_type"): str,
-    }
-)
-
 
 def _format_backup_choice(
     backup: zigpy.backups.NetworkBackup, *, pan_ids: bool = True
@@ -78,33 +68,6 @@ def _format_backup_choice(
     ).lower()
 
     return f"{dt.as_local(backup.backup_time).strftime('%c')} ({identifier})"
-
-
-def _allow_overwrite_ezsp_ieee(
-    backup: zigpy.backups.NetworkBackup,
-) -> zigpy.backups.NetworkBackup:
-    """Return a new backup with the flag to allow overwriting the EZSP EUI64."""
-    new_stack_specific = copy.deepcopy(backup.network_info.stack_specific)
-    new_stack_specific.setdefault("ezsp", {})[EZSP_OVERWRITE_EUI64] = True
-
-    return backup.replace(
-        network_info=backup.network_info.replace(stack_specific=new_stack_specific)
-    )
-
-
-def _prevent_overwrite_ezsp_ieee(
-    backup: zigpy.backups.NetworkBackup,
-) -> zigpy.backups.NetworkBackup:
-    """Return a new backup without the flag to allow overwriting the EZSP EUI64."""
-    if "ezsp" not in backup.network_info.stack_specific:
-        return backup
-
-    new_stack_specific = copy.deepcopy(backup.network_info.stack_specific)
-    new_stack_specific.setdefault("ezsp", {}).pop(EZSP_OVERWRITE_EUI64, None)
-
-    return backup.replace(
-        network_info=backup.network_info.replace(stack_specific=new_stack_specific)
-    )
 
 
 class BaseZhaFlow(FlowHandler):
@@ -323,7 +286,7 @@ class BaseZhaFlow(FlowHandler):
     async def async_step_form_new_network(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Form a brand new network."""
+        """Form a brand-new network."""
         await self._radio_mgr.async_form_network()
         return await self._async_create_radio_entry()
 
@@ -407,46 +370,14 @@ class BaseZhaFlow(FlowHandler):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Confirm restore for EZSP radios that require permanent IEEE writes."""
-        assert self._radio_mgr.chosen_backup is not None
-
-        if self._radio_mgr.radio_type != RadioType.ezsp:
-            await self._radio_mgr.restore_backup(self._radio_mgr.chosen_backup)
-            return await self._async_create_radio_entry()
-
-        # We have no way to partially load network settings if no network is formed
-        if self._radio_mgr.current_settings is None:
-            # Since we are going to be restoring the backup anyways, write it to the
-            # radio without overwriting the IEEE but don't take a backup with these
-            # temporary settings
-            temp_backup = _prevent_overwrite_ezsp_ieee(self._radio_mgr.chosen_backup)
-            await self._radio_mgr.restore_backup(temp_backup, create_new=False)
-            await self._radio_mgr.async_load_network_settings()
-
-            assert self._radio_mgr.current_settings is not None
-
-        if (
-            self._radio_mgr.current_settings.node_info.ieee
-            == self._radio_mgr.chosen_backup.node_info.ieee
-            or not self._radio_mgr.current_settings.network_info.metadata["ezsp"][
-                "can_write_custom_eui64"
-            ]
-        ):
-            # No point in prompting the user if the backup doesn't have a new IEEE
-            # address or if there is no way to overwrite the IEEE address a second time
-            await self._radio_mgr.restore_backup(self._radio_mgr.chosen_backup)
-
+        call_step_2 = await self._radio_mgr.async_restore_backup_step_1()
+        if not call_step_2:
             return await self._async_create_radio_entry()
 
         if user_input is not None:
-            backup = self._radio_mgr.chosen_backup
-
-            if user_input[OVERWRITE_COORDINATOR_IEEE]:
-                backup = _allow_overwrite_ezsp_ieee(backup)
-
-            # If the user declined to overwrite the IEEE *and* we wrote the backup to
-            # their empty radio above, restoring it again would be redundant.
-            await self._radio_mgr.restore_backup(backup)
-
+            await self._radio_mgr.async_restore_backup_step_2(
+                user_input[OVERWRITE_COORDINATOR_IEEE]
+            )
             return await self._async_create_radio_entry()
 
         return self.async_show_form(
@@ -491,7 +422,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Handle a zha config flow start."""
+        """Handle a ZHA config flow start."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 

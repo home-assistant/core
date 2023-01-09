@@ -7,13 +7,13 @@ import bleak
 from bleak.backends.device import BLEDevice
 import bleak_retry_connector
 
-from homeassistant.components.bluetooth.models import (
-    HaBleakClientWrapper,
-    HaBleakScannerWrapper,
-)
 from homeassistant.components.bluetooth.usage import (
     install_multiple_bleak_catcher,
     uninstall_multiple_bleak_catcher,
+)
+from homeassistant.components.bluetooth.wrappers import (
+    HaBleakClientWrapper,
+    HaBleakScannerWrapper,
 )
 
 from . import _get_manager

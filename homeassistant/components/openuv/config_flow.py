@@ -20,6 +20,10 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaFlowFormStep,
+    SchemaOptionsFlowHandler,
+)
 
 from .const import (
     CONF_FROM_WINDOW,
@@ -34,6 +38,21 @@ STEP_REAUTH_SCHEMA = vol.Schema(
         vol.Required(CONF_API_KEY): str,
     }
 )
+
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Optional(
+            CONF_FROM_WINDOW, description={"suggested_value": DEFAULT_FROM_WINDOW}
+        ): vol.Coerce(float),
+        vol.Optional(
+            CONF_TO_WINDOW, description={"suggested_value": DEFAULT_TO_WINDOW}
+        ): vol.Coerce(float),
+    }
+)
+
+OPTIONS_FLOW = {
+    "init": SchemaFlowFormStep(OPTIONS_SCHEMA),
+}
 
 
 @dataclass
@@ -116,9 +135,9 @@ class OpenUvFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OpenUvOptionsFlowHandler:
+    def async_get_options_flow(config_entry: ConfigEntry) -> SchemaOptionsFlowHandler:
         """Define the config flow to handle options."""
-        return OpenUvOptionsFlowHandler(config_entry)
+        return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
@@ -168,42 +187,3 @@ class OpenUvFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         return await self._async_verify(data, "user", self.step_user_schema)
-
-
-class OpenUvOptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle a OpenUV options flow."""
-
-    def __init__(self, entry: ConfigEntry) -> None:
-        """Initialize."""
-        self.entry = entry
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Manage the options."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_FROM_WINDOW,
-                        description={
-                            "suggested_value": self.entry.options.get(
-                                CONF_FROM_WINDOW, DEFAULT_FROM_WINDOW
-                            )
-                        },
-                    ): vol.Coerce(float),
-                    vol.Optional(
-                        CONF_TO_WINDOW,
-                        description={
-                            "suggested_value": self.entry.options.get(
-                                CONF_FROM_WINDOW, DEFAULT_TO_WINDOW
-                            )
-                        },
-                    ): vol.Coerce(float),
-                }
-            ),
-        )

@@ -24,11 +24,6 @@
                 }
             },
             "user": {
-                "data": {
-                    "password": "Kata Sandi",
-                    "pin": "Kode PIN",
-                    "username": "Nama Pengguna"
-                },
                 "menu_options": {
                     "cloud": "Risco Cloud (disarankan)",
                     "local": "Panel Risco Lokal (lanjutan)"

@@ -7,18 +7,32 @@
         "error": {
             "cannot_connect": "Impossibile connettersi",
             "file_not_found": "Il file `.knxkeys` specificato non \u00e8 stato trovato nel percorso config/.storage/knx/",
+            "invalid_backbone_key": "Chiave backbone non valida. Previsti 32 numeri esadecimali.",
             "invalid_individual_address": "Il valore non corrisponde al modello per l'indirizzo individuale KNX. 'area.line.device'",
             "invalid_ip_address": "Indirizzo IPv4 non valido.",
             "invalid_signature": "La password per decifrare il file `.knxkeys` \u00e8 errata.",
+            "keyfile_invalid_signature": "La password per decifrare il file `.knxkeys` \u00e8 errata.",
+            "keyfile_no_backbone_key": "Il file `.knxkeys` non contiene una chiave backbone per l'instradamento sicuro.",
+            "keyfile_no_tunnel_for_host": "Il file `.knxkeys` non contiene le credenziali per l'host `{host}`.",
+            "keyfile_not_found": "Il file `.knxkeys` specificato non \u00e8 stato trovato nel percorso config/.storage/knx/",
             "no_router_discovered": "Non \u00e8 stato rilevato alcun router KNXnet/IP nella rete.",
-            "no_tunnel_discovered": "Impossibile trovare un server di tunneling KNX sulla rete."
+            "no_tunnel_discovered": "Impossibile trovare un server di tunneling KNX sulla rete.",
+            "unsupported_tunnel_type": "Il tipo di tunnel selezionato non \u00e8 supportato dal gateway."
         },
         "step": {
             "connection_type": {
                 "data": {
                     "connection_type": "Tipo di connessione KNX"
                 },
-                "description": "Inserisci il tipo di connessione che dovremmo usare per la tua connessione KNX. \n AUTOMATICO - L'integrazione si occupa della connettivit\u00e0 al tuo bus KNX eseguendo una scansione del gateway. \n TUNNELING - L'integrazione si collegher\u00e0 al tuo bus KNX tramite tunneling. \n ROUTING - L'integrazione si connetter\u00e0 al tuo bus KNX tramite instradamento."
+                "description": "Inserisci il tipo di connessione che dovremmo usare per la tua connessione KNX. \n AUTOMATICO - L'integrazione si occupa della connettivit\u00e0 al tuo bus KNX eseguendo una scansione del gateway. \n TUNNELING - L'integrazione si collegher\u00e0 al tuo bus KNX tramite tunneling. \n ROUTING - L'integrazione si connetter\u00e0 al tuo bus KNX tramite instradamento.",
+                "title": "Connessione KNX"
+            },
+            "knxkeys_tunnel_select": {
+                "data": {
+                    "user_id": "`Automatico` utilizzer\u00e0 il primo punto finale di tunnel libero."
+                },
+                "description": "Selezionare il tunnel utilizzato per la connessione.",
+                "title": "Punto finale del tunnel"
             },
             "manual_tunnel": {
                 "data": {
@@ -34,20 +48,32 @@
                     "port": "Porta del dispositivo di tunneling KNX/IP.",
                     "route_back": "Abilitare se il server di tunneling KNXnet/IP \u00e8 protetto da NAT. Si applica solo alle connessioni UDP."
                 },
-                "description": "Inserisci le informazioni di connessione del tuo dispositivo di tunneling."
+                "description": "Inserisci le informazioni di connessione del tuo dispositivo di tunneling.",
+                "title": "Impostazioni del tunnel"
             },
             "routing": {
                 "data": {
                     "individual_address": "Indirizzo individuale",
                     "local_ip": "IP locale di Home Assistant",
                     "multicast_group": "Gruppo multicast",
-                    "multicast_port": "Porta multicast"
+                    "multicast_port": "Porta multicast",
+                    "routing_secure": "Utilizzare KNX IP Secure"
                 },
                 "data_description": {
                     "individual_address": "Indirizzo KNX che deve essere utilizzato da Home Assistant, ad es. `0.0.4`",
                     "local_ip": "Lascia vuoto per usare il rilevamento automatico."
                 },
-                "description": "Configura le opzioni di instradamento."
+                "description": "Configura le opzioni di instradamento.",
+                "title": "Instradamento"
+            },
+            "secure_key_source": {
+                "description": "Seleziona come vuoi configurare KNX/IP Secure.",
+                "menu_options": {
+                    "secure_knxkeys": "Usa un file `.knxkeys` contenente le chiavi di sicurezza IP",
+                    "secure_routing_manual": "Configurare manualmente la chiave backbone IP secure",
+                    "secure_tunnel_manual": "Configura manualmente le credenziali di protezione IP"
+                },
+                "title": "Sicurezza IP KNX"
             },
             "secure_knxkeys": {
                 "data": {
@@ -58,20 +84,20 @@
                     "knxkeys_filename": "Il file dovrebbe trovarsi nella directory di configurazione in '.storage/knx/'.\nNel sistema operativo Home Assistant questa sarebbe '/config/.storage/knx/'\nEsempio: 'my_project.knxkeys'",
                     "knxkeys_password": "Questo \u00e8 stato impostato durante l'esportazione del file da ETS."
                 },
-                "description": "Inserisci le informazioni per il tuo file `.knxkeys`."
+                "description": "Inserisci le informazioni per il tuo file `.knxkeys`.",
+                "title": "File chiave"
             },
-            "secure_manual": {
+            "secure_routing_manual": {
                 "data": {
-                    "device_authentication": "Password di autenticazione del dispositivo",
-                    "user_id": "ID utente",
-                    "user_password": "Password utente"
+                    "backbone_key": "Chiave backbone",
+                    "sync_latency_tolerance": "Tolleranza alla latenza di rete"
                 },
                 "data_description": {
-                    "device_authentication": "Questo \u00e8 impostato nel pannello 'IP' dell'interfaccia in ETS.",
-                    "user_id": "Questo \u00e8 spesso il tunnel numero +1. Quindi \"Tunnel 2\" avrebbe l'ID utente \"3\".",
-                    "user_password": "Password per la connessione specifica del tunnel impostata nel pannello 'Propriet\u00e0' del tunnel in ETS."
+                    "backbone_key": "Pu\u00f2 essere visualizzato nel rapporto \"Sicurezza\" di un progetto ETS. Eg. '00112233445566778899AABBCCDDEEFF'",
+                    "sync_latency_tolerance": "Il valore predefinito \u00e8 1000."
                 },
-                "description": "Inserisci le tue informazioni di sicurezza IP."
+                "description": "Inserisci le tue informazioni di sicurezza IP.",
+                "title": "Instradamento sicuro"
             },
             "secure_tunnel_manual": {
                 "data": {
@@ -84,27 +110,15 @@
                     "user_id": "Questo \u00e8 spesso il tunnel numero +1. Quindi \"Tunnel 2\" avrebbe l'ID utente \"3\".",
                     "user_password": "Password per la connessione specifica del tunnel impostata nel pannello 'Propriet\u00e0' del tunnel in ETS."
                 },
-                "description": "Inserisci le tue informazioni di sicurezza IP."
-            },
-            "secure_tunneling": {
-                "description": "Seleziona come vuoi configurare KNX/IP Secure.",
-                "menu_options": {
-                    "secure_knxkeys": "Utilizza un file `.knxkeys` contenente chiavi di sicurezza IP",
-                    "secure_manual": "Configura manualmente le chiavi di sicurezza IP",
-                    "secure_tunnel_manual": "Configura manualmente le chiavi di sicurezza IP"
-                }
+                "description": "Inserisci le tue informazioni di sicurezza IP.",
+                "title": "Tunnelling sicuro"
             },
             "tunnel": {
                 "data": {
                     "gateway": "Connessione tunnel KNX"
                 },
-                "description": "Seleziona un gateway dall'elenco."
-            },
-            "type": {
-                "data": {
-                    "connection_type": "Tipo di connessione KNX"
-                },
-                "description": "Inserisci il tipo di connessione che dovremmo usare per la tua connessione KNX.\n AUTOMATICO - L'integrazione si occupa della connettivit\u00e0 al tuo Bus KNX eseguendo una scansione del gateway.\n TUNNELING - L'integrazione si collegher\u00e0 al bus KNX tramite tunnel.\n ROUTING - L'integrazione si collegher\u00e0 al bus KNX tramite instradamento."
+                "description": "Seleziona un gateway dall'elenco.",
+                "title": "Tunnel"
             }
         }
     },
@@ -112,11 +126,17 @@
         "error": {
             "cannot_connect": "Impossibile connettersi",
             "file_not_found": "Il file `.knxkeys` specificato non \u00e8 stato trovato nel percorso config/.storage/knx/",
+            "invalid_backbone_key": "Chiave backbone non valida. Previsti 32 numeri esadecimali.",
             "invalid_individual_address": "Il valore non corrisponde al modello per l'indirizzo individuale KNX. 'area.line.device'",
             "invalid_ip_address": "Indirizzo IPv4 non valido.",
             "invalid_signature": "La password per decifrare il file `.knxkeys` \u00e8 errata.",
+            "keyfile_invalid_signature": "La password per decifrare il file `.knxkeys` \u00e8 errata.",
+            "keyfile_no_backbone_key": "Il file `.knxkeys` non contiene una chiave backbone per l'instradamento sicuro.",
+            "keyfile_no_tunnel_for_host": "Il file `.knxkeys` non contiene le credenziali per l'host `{host}`.",
+            "keyfile_not_found": "Il file `.knxkeys` specificato non \u00e8 stato trovato nel percorso config/.storage/knx/",
             "no_router_discovered": "Non \u00e8 stato rilevato alcun router KNXnet/IP nella rete.",
-            "no_tunnel_discovered": "Impossibile trovare un server di tunneling KNX sulla rete."
+            "no_tunnel_discovered": "Impossibile trovare un server di tunneling KNX sulla rete.",
+            "unsupported_tunnel_type": "Il tipo di tunnel selezionato non \u00e8 supportato dal gateway."
         },
         "step": {
             "communication_settings": {
@@ -127,32 +147,22 @@
                 "data_description": {
                     "rate_limit": "Numero massimo di telegrammi in uscita al secondo.\n'0' per disabilitare il limite. Consigliato: 0 o da 20 a 40",
                     "state_updater": "Impostazione predefinita per la lettura degli stati dal bus KNX. Quando disabilitato, Home Assistant non recuperer\u00e0 attivamente gli stati delle entit\u00e0 dal bus KNX. Pu\u00f2 essere sovrascritto dalle opzioni dell'entit\u00e0 `sync_state`."
-                }
+                },
+                "title": "Impostazioni di comunicazione"
             },
             "connection_type": {
                 "data": {
                     "connection_type": "Tipo di connessione KNX"
                 },
-                "description": "Inserisci il tipo di connessione che dovremmo usare per la tua connessione KNX. \n AUTOMATICO - L'integrazione si occupa della connettivit\u00e0 al tuo bus KNX eseguendo una scansione del gateway. \n TUNNELING - L'integrazione si collegher\u00e0 al tuo bus KNX tramite tunneling. \n ROUTING - L'integrazione si connetter\u00e0 al tuo bus KNX tramite instradamento."
+                "description": "Inserisci il tipo di connessione che dovremmo usare per la tua connessione KNX. \n AUTOMATICO - L'integrazione si occupa della connettivit\u00e0 al tuo bus KNX eseguendo una scansione del gateway. \n TUNNELING - L'integrazione si collegher\u00e0 al tuo bus KNX tramite tunneling. \n ROUTING - L'integrazione si connetter\u00e0 al tuo bus KNX tramite instradamento.",
+                "title": "Connessione KNX"
             },
-            "init": {
+            "knxkeys_tunnel_select": {
                 "data": {
-                    "connection_type": "Tipo di connessione KNX",
-                    "individual_address": "Indirizzo individuale predefinito",
-                    "local_ip": "IP locale di Home Assistant",
-                    "multicast_group": "Gruppo multicast",
-                    "multicast_port": "Porta multicast",
-                    "rate_limit": "Limite di tariffa",
-                    "state_updater": "Aggiornatore di stato"
+                    "user_id": "`Automatico` utilizzer\u00e0 il primo punto finale di tunnel libero."
                 },
-                "data_description": {
-                    "individual_address": "Indirizzo KNX che deve essere utilizzato da Home Assistant, ad es. `0.0.4`",
-                    "local_ip": "Usa `0.0.0.0` per il rilevamento automatico.",
-                    "multicast_group": "Utilizzato per l'instradamento e il rilevamento. Predefinito: `224.0.23.12`",
-                    "multicast_port": "Utilizzato per l'instradamento e il rilevamento. Predefinito: `3671`",
-                    "rate_limit": "Numero massimo di telegrammi in uscita al secondo.\n Consigliato: da 20 a 40",
-                    "state_updater": "Impostazione predefinita per la lettura degli stati dal bus KNX. Se disabilitata Home Assistant non recuperer\u00e0 attivamente gli stati delle entit\u00e0 dal bus KNX. Pu\u00f2 essere sovrascritta dalle opzioni dell'entit\u00e0 `sync_state`."
-                }
+                "description": "Selezionare il tunnel utilizzato per la connessione.",
+                "title": "Punto finale del tunnel"
             },
             "manual_tunnel": {
                 "data": {
@@ -168,26 +178,39 @@
                     "port": "Porta del dispositivo di tunneling KNX/IP.",
                     "route_back": "Abilitare se il server di tunneling KNXnet/IP \u00e8 protetto da NAT. Si applica solo alle connessioni UDP."
                 },
-                "description": "Inserisci le informazioni di connessione del tuo dispositivo di tunneling."
+                "description": "Inserisci le informazioni di connessione del tuo dispositivo di tunneling.",
+                "title": "Impostazioni del tunnel"
             },
             "options_init": {
                 "menu_options": {
                     "communication_settings": "Impostazioni di comunicazione",
                     "connection_type": "Configura interfaccia KNX"
-                }
+                },
+                "title": "Impostazioni KNX"
             },
             "routing": {
                 "data": {
                     "individual_address": "Indirizzo individuale",
                     "local_ip": "IP locale di Home Assistant",
                     "multicast_group": "Gruppo multicast",
-                    "multicast_port": "Porta multicast"
+                    "multicast_port": "Porta multicast",
+                    "routing_secure": "Utilizzare KNX IP Secure"
                 },
                 "data_description": {
                     "individual_address": "Indirizzo KNX che deve essere utilizzato da Home Assistant, ad es. `0.0.4`",
                     "local_ip": "Lascia vuoto per usare il rilevamento automatico."
                 },
-                "description": "Configura le opzioni di instradamento."
+                "description": "Configura le opzioni di instradamento.",
+                "title": "Instradamento"
+            },
+            "secure_key_source": {
+                "description": "Seleziona come vuoi configurare KNX/IP Secure.",
+                "menu_options": {
+                    "secure_knxkeys": "Usa un file `.knxkeys` contenente le chiavi di sicurezza IP",
+                    "secure_routing_manual": "Configurare manualmente la chiave backbone IP secure",
+                    "secure_tunnel_manual": "Configura manualmente le credenziali di protezione IP"
+                },
+                "title": "Sicurezza IP KNX"
             },
             "secure_knxkeys": {
                 "data": {
@@ -198,7 +221,20 @@
                     "knxkeys_filename": "Il file dovrebbe trovarsi nella directory di configurazione in '.storage/knx/'.\nNel sistema operativo Home Assistant questa sarebbe '/config/.storage/knx/'\nEsempio: 'my_project.knxkeys'",
                     "knxkeys_password": "Questo \u00e8 stato impostato durante l'esportazione del file da ETS."
                 },
-                "description": "Inserisci le informazioni per il tuo file `.knxkeys`."
+                "description": "Inserisci le informazioni per il tuo file `.knxkeys`.",
+                "title": "File chiave"
+            },
+            "secure_routing_manual": {
+                "data": {
+                    "backbone_key": "Chiave backbone",
+                    "sync_latency_tolerance": "Tolleranza alla latenza di rete"
+                },
+                "data_description": {
+                    "backbone_key": "Pu\u00f2 essere visualizzato nel rapporto \"Sicurezza\" di un progetto ETS. Eg. '00112233445566778899AABBCCDDEEFF'",
+                    "sync_latency_tolerance": "Il valore predefinito \u00e8 1000."
+                },
+                "description": "Inserisci le tue informazioni di sicurezza IP.",
+                "title": "Instradamento sicuro"
             },
             "secure_tunnel_manual": {
                 "data": {
@@ -211,27 +247,15 @@
                     "user_id": "Questo \u00e8 spesso il tunnel numero +1. Quindi \"Tunnel 2\" avrebbe l'ID utente \"3\".",
                     "user_password": "Password per la connessione specifica del tunnel impostata nel pannello 'Propriet\u00e0' del tunnel in ETS."
                 },
-                "description": "Inserisci le tue informazioni di sicurezza IP."
-            },
-            "secure_tunneling": {
-                "description": "Seleziona come vuoi configurare KNX/IP Secure.",
-                "menu_options": {
-                    "secure_knxkeys": "Utilizza un file `.knxkeys` contenente chiavi di sicurezza IP",
-                    "secure_tunnel_manual": "Configura manualmente le chiavi di sicurezza IP"
-                }
+                "description": "Inserisci le tue informazioni di sicurezza IP.",
+                "title": "Tunnelling sicuro"
             },
             "tunnel": {
                 "data": {
-                    "gateway": "Connessione tunnel KNX",
-                    "host": "Host",
-                    "port": "Porta",
-                    "tunneling_type": "Tipo tunnel KNX"
+                    "gateway": "Connessione tunnel KNX"
                 },
-                "data_description": {
-                    "host": "Indirizzo IP del dispositivo di tunneling KNX/IP.",
-                    "port": "Porta del dispositivo di tunneling KNX/IP."
-                },
-                "description": "Seleziona un gateway dall'elenco."
+                "description": "Seleziona un gateway dall'elenco.",
+                "title": "Tunnel"
             }
         }
     }

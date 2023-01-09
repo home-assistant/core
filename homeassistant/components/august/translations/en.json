@@ -24,7 +24,7 @@
                     "username": "Username"
                 },
                 "description": "If the Login Method is 'email', Username is the email address. If the Login Method is 'phone', Username is the phone number in the format '+NNNNNNNNN'.",
-                "title": "Setup an August account"
+                "title": "Set up an August account"
             },
             "validation": {
                 "data": {

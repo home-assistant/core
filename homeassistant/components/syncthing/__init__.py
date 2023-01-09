@@ -153,7 +153,10 @@ class SyncthingClient:
                     )
             except aiosyncthing.exceptions.SyncthingError:
                 _LOGGER.info(
-                    "The syncthing server '%s' is not available. Sleeping %i seconds and retrying",
+                    (
+                        "The syncthing server '%s' is not available. Sleeping %i"
+                        " seconds and retrying"
+                    ),
                     self._client.url,
                     RECONNECT_INTERVAL.total_seconds(),
                 )

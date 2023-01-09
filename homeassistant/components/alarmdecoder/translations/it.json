@@ -38,7 +38,7 @@
             "arm_settings": {
                 "data": {
                     "alt_night_mode": "Modalit\u00e0 notturna alternativa",
-                    "auto_bypass": "Bypass automatico all'attivazione",
+                    "auto_bypass": "Esclusione automatica all'attivazione",
                     "code_arm_required": "Codice richiesto per l'attivazione"
                 },
                 "title": "Configura AlarmDecoder"

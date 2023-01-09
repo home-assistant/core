@@ -245,7 +245,7 @@ class DenonDevice(MediaPlayerEntity):
         return self._mediainfo
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         if self._mediasource in MEDIA_MODES.values():
             return SUPPORT_DENON | SUPPORT_MEDIA_MODES

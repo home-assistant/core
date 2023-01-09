@@ -13,10 +13,5 @@
                 }
             }
         }
-    },
-    "issues": {
-        "deprecated_yaml": {
-            "title": "De Simplepush YAML-configuratie wordt verwijderd"
-        }
     }
 }

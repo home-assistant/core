@@ -11,7 +11,7 @@
         "step": {
             "confirm": {
                 "description": "Vols configurar {name} ({host})?",
-                "title": "Configura SiteSage Emonitor"
+                "title": "Configuraci\u00f3 de SiteSage Emonitor"
             },
             "user": {
                 "data": {

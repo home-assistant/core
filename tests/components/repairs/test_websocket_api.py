@@ -1,9 +1,11 @@
 """Test the repairs websocket API."""
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 from unittest.mock import ANY, AsyncMock, Mock
 
+from aiohttp import ClientSession, ClientWebSocketResponse
 from freezegun import freeze_time
 import pytest
 import voluptuous as vol
@@ -75,6 +77,7 @@ async def create_issues(hass, ws_client, issues=None):
 EXPECTED_DATA = {
     "issue_1": None,
     "issue_2": {"blah": "bleh"},
+    "abort_issue1": None,
 }
 
 
@@ -101,6 +104,16 @@ class MockFixFlow(RepairsFlow):
         return self.async_show_form(step_id="custom_step", data_schema=vol.Schema({}))
 
 
+class MockFixFlowAbort(RepairsFlow):
+    """Handler for an issue fixing flow that aborts."""
+
+    async def async_step_init(
+        self, user_input: dict[str, str] | None = None
+    ) -> data_entry_flow.FlowResult:
+        """Handle the first step of a fix flow."""
+        return self.async_abort(reason="not_given")
+
+
 @pytest.fixture(autouse=True)
 async def mock_repairs_integration(hass):
     """Mock a repairs integration."""
@@ -110,6 +123,8 @@ async def mock_repairs_integration(hass):
         assert issue_id in EXPECTED_DATA
         assert data == EXPECTED_DATA[issue_id]
 
+        if issue_id == "abort_issue1":
+            return MockFixFlowAbort()
         return MockFixFlow()
 
     mock_platform(
@@ -491,3 +506,64 @@ async def test_list_issues(hass: HomeAssistant, hass_storage, hass_ws_client) ->
             for issue in issues
         ]
     }
+
+
+async def test_fix_issue_aborted(
+    hass: HomeAssistant,
+    hass_client: Callable[..., Awaitable[ClientSession]],
+    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
+) -> None:
+    """Test we can fix an issue."""
+    assert await async_setup_component(hass, "http", {})
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    ws_client = await hass_ws_client(hass)
+    client = await hass_client()
+
+    await create_issues(
+        hass,
+        ws_client,
+        issues=[
+            {
+                **DEFAULT_ISSUES[0],
+                "domain": "fake_integration",
+                "issue_id": "abort_issue1",
+            }
+        ],
+    )
+
+    await ws_client.send_json({"id": 3, "type": "repairs/list_issues"})
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 1
+
+    first_issue = msg["result"]["issues"][0]
+
+    assert first_issue["domain"] == "fake_integration"
+    assert first_issue["issue_id"] == "abort_issue1"
+
+    resp = await client.post(
+        "/api/repairs/issues/fix",
+        json={"handler": "fake_integration", "issue_id": "abort_issue1"},
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    flow_id = data["flow_id"]
+    assert data == {
+        "type": "abort",
+        "flow_id": flow_id,
+        "handler": "fake_integration",
+        "reason": "not_given",
+        "description_placeholders": None,
+        "result": None,
+    }
+
+    await ws_client.send_json({"id": 4, "type": "repairs/list_issues"})
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 1
+    assert msg["result"]["issues"][0] == first_issue

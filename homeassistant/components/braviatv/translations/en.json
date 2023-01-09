@@ -19,11 +19,25 @@
                     "pin": "PIN Code",
                     "use_psk": "Use PSK authentication"
                 },
-                "description": "Enter the PIN code shown on the Sony Bravia TV. \n\nIf the PIN code is not shown, you have to unregister Home Assistant on your TV, go to: Settings -> Network -> Remote device settings -> Deregister remote device. \n\nYou can use PSK (Pre-Shared-Key) instead of PIN. PSK is a user-defined secret key used for access control. This authentication method is recommended as more stable. To enable PSK on your TV, go to: Settings -> Network -> Home Network Setup -> IP Control. Then check \u00abUse PSK authentication\u00bb box and enter your PSK instead of PIN.",
+                "description": "Make sure that \u00abControl remotely\u00bb is enabled on your TV, go to: \nSettings -> Network -> Remote device settings -> Control remotely. \n\nThere are two authorization methods: PIN code or PSK (Pre-Shared Key). \nAuthorization via PSK is recommended as more stable.",
                 "title": "Authorize Sony Bravia TV"
             },
             "confirm": {
-                "description": "Do you want to start set up?"
+                "description": "Do you want to start setup?"
+            },
+            "pin": {
+                "data": {
+                    "pin": "PIN Code"
+                },
+                "description": "Enter the PIN code shown on the Sony Bravia TV. \n\nIf the PIN code is not shown, you have to unregister Home Assistant on your TV, go to: Settings -> Network -> Remote device settings -> Deregister remote device.",
+                "title": "Authorize Sony Bravia TV"
+            },
+            "psk": {
+                "data": {
+                    "pin": "PSK"
+                },
+                "description": "To set up PSK on your TV, go to: Settings -> Network -> Home Network Setup -> IP Control. Set \u00abAuthentication\u00bb to \u00abNormal and Pre-Shared Key\u00bb or \u00abPre-Shared Key\u00bb and define your Pre-Shared-Key string (e.g. sony). \n\nThen enter your PSK here.",
+                "title": "Authorize Sony Bravia TV"
             },
             "reauth_confirm": {
                 "data": {

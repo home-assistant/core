@@ -1,7 +1,7 @@
 """Manage the Silicon Labs Multiprotocol add-on."""
 from __future__ import annotations
 
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 import asyncio
 import dataclasses
 import logging
@@ -17,6 +17,8 @@ from homeassistant.components.hassio import (
     AddonState,
     is_hassio,
 )
+from homeassistant.components.zha import DOMAIN as ZHA_DOMAIN
+from homeassistant.components.zha.radio_manager import ZhaMultiPANMigrationHelper
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import (
     AbortFlow,
@@ -61,7 +63,7 @@ class SerialPortSettings:
     flow_control: bool
 
 
-def get_zigbee_socket(hass, addon_info: AddonInfo) -> str:
+def get_zigbee_socket(hass: HomeAssistant, addon_info: AddonInfo) -> str:
     """Return the zigbee socket.
 
     Raises AddonError on error
@@ -69,7 +71,7 @@ def get_zigbee_socket(hass, addon_info: AddonInfo) -> str:
     return f"socket://{addon_info.hostname}:9999"
 
 
-class BaseMultiPanFlow(FlowHandler):
+class BaseMultiPanFlow(FlowHandler, ABC):
     """Support configuring the Silicon Labs Multiprotocol add-on."""
 
     def __init__(self) -> None:
@@ -77,6 +79,7 @@ class BaseMultiPanFlow(FlowHandler):
         # If we install the add-on we should uninstall it on entry remove.
         self.install_task: asyncio.Task | None = None
         self.start_task: asyncio.Task | None = None
+        self._zha_migration_mgr: ZhaMultiPANMigrationHelper | None = None
 
     @property
     @abstractmethod
@@ -86,6 +89,22 @@ class BaseMultiPanFlow(FlowHandler):
     @abstractmethod
     async def _async_serial_port_settings(self) -> SerialPortSettings:
         """Return the radio serial port settings."""
+
+    @abstractmethod
+    async def _async_zha_physical_discovery(self) -> dict[str, Any]:
+        """Return ZHA discovery data when multiprotocol FW is not used.
+
+        Passed to ZHA do determine if the ZHA config entry is connected to the radio
+        being migrated.
+        """
+
+    @abstractmethod
+    def _hardware_name(self) -> str:
+        """Return the name of the hardware."""
+
+    @abstractmethod
+    def _zha_name(self) -> str:
+        """Return the ZHA name."""
 
     async def async_step_install_addon(
         self, user_input: dict[str, Any] | None = None
@@ -217,7 +236,16 @@ class OptionsFlowHandler(BaseMultiPanFlow, config_entries.OptionsFlow):
         if not is_hassio(self.hass):
             return self.async_abort(reason="not_hassio")
 
-        return await self.async_step_on_supervisor()
+        return self.async_abort(
+            reason="disabled_due_to_bug",
+            description_placeholders={
+                "url": "https://developers.home-assistant.io/blog/2022/12/08/multi-pan-rollback"
+            },
+        )
+
+        # pylint: disable=unreachable
+
+        return await self.async_step_on_supervisor()  # type: ignore[unreachable]
 
     async def async_step_on_supervisor(
         self, user_input: dict[str, Any] | None = None
@@ -239,6 +267,7 @@ class OptionsFlowHandler(BaseMultiPanFlow, config_entries.OptionsFlow):
                 data_schema=vol.Schema(
                     {vol.Required(CONF_ENABLE_MULTI_PAN, default=False): bool}
                 ),
+                description_placeholders={"hardware_name": self._hardware_name()},
             )
         if not user_input[CONF_ENABLE_MULTI_PAN]:
             return self.async_create_entry(title="", data={})
@@ -260,6 +289,29 @@ class OptionsFlowHandler(BaseMultiPanFlow, config_entries.OptionsFlow):
             **dataclasses.asdict(serial_port_settings),
         }
 
+        # Initiate ZHA migration
+        zha_entries = self.hass.config_entries.async_entries(ZHA_DOMAIN)
+
+        if zha_entries:
+            zha_migration_mgr = ZhaMultiPANMigrationHelper(self.hass, zha_entries[0])
+            migration_data = {
+                "new_discovery_info": {
+                    "name": self._zha_name(),
+                    "port": {
+                        "path": get_zigbee_socket(self.hass, addon_info),
+                    },
+                    "radio_type": "ezsp",
+                },
+                "old_discovery_info": await self._async_zha_physical_discovery(),
+            }
+            _LOGGER.debug("Starting ZHA migration with: %s", migration_data)
+            try:
+                if await zha_migration_mgr.async_initiate_migration(migration_data):
+                    self._zha_migration_mgr = zha_migration_mgr
+            except Exception as err:
+                _LOGGER.exception("Unexpected exception during ZHA migration")
+                raise AbortFlow("zha_migration_failed") from err
+
         if new_addon_config != addon_config:
             # Copy the add-on config to keep the objects separate.
             self.original_addon_config = dict(addon_config)
@@ -276,6 +328,14 @@ class OptionsFlowHandler(BaseMultiPanFlow, config_entries.OptionsFlow):
         self.hass.async_create_task(
             self.hass.config_entries.async_reload(self.config_entry.entry_id)
         )
+
+        # Finish ZHA migration if needed
+        if self._zha_migration_mgr:
+            try:
+                await self._zha_migration_mgr.async_finish_migration()
+            except Exception as err:
+                _LOGGER.exception("Unexpected exception during ZHA migration")
+                raise AbortFlow("zha_migration_failed") from err
 
         return self.async_create_entry(title="", data={})
 

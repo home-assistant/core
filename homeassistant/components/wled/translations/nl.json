@@ -22,6 +22,16 @@
             }
         }
     },
+    "entity": {
+        "select": {
+            "live_override": {
+                "state": {
+                    "0": "Uit",
+                    "1": "Aan"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {

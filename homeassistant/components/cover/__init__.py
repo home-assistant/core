@@ -218,7 +218,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class CoverEntityDescription(EntityDescription):
     """A class that describes cover entities."""
 
-    device_class: CoverDeviceClass | str | None = None
+    device_class: CoverDeviceClass | None = None
 
 
 class CoverEntity(Entity):
@@ -227,12 +227,12 @@ class CoverEntity(Entity):
     entity_description: CoverEntityDescription
     _attr_current_cover_position: int | None = None
     _attr_current_cover_tilt_position: int | None = None
-    _attr_device_class: CoverDeviceClass | str | None
+    _attr_device_class: CoverDeviceClass | None
     _attr_is_closed: bool | None
     _attr_is_closing: bool | None = None
     _attr_is_opening: bool | None = None
     _attr_state: None = None
-    _attr_supported_features: CoverEntityFeature | int | None
+    _attr_supported_features: CoverEntityFeature | None
 
     _cover_is_last_toggle_direction_open = True
 
@@ -253,7 +253,7 @@ class CoverEntity(Entity):
         return self._attr_current_cover_tilt_position
 
     @property
-    def device_class(self) -> CoverDeviceClass | str | None:
+    def device_class(self) -> CoverDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
             return self._attr_device_class
@@ -292,7 +292,7 @@ class CoverEntity(Entity):
         return data
 
     @property
-    def supported_features(self) -> CoverEntityFeature | int:
+    def supported_features(self) -> CoverEntityFeature:
         """Flag supported features."""
         if self._attr_supported_features is not None:
             return self._attr_supported_features

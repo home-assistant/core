@@ -16,7 +16,7 @@ import zigpy.types
 from homeassistant import config_entries
 from homeassistant.components import ssdp, usb, zeroconf
 from homeassistant.components.ssdp import ATTR_UPNP_MANUFACTURER_URL, ATTR_UPNP_SERIAL
-from homeassistant.components.zha import config_flow
+from homeassistant.components.zha import config_flow, radio_manager
 from homeassistant.components.zha.core.const import (
     CONF_BAUDRATE,
     CONF_FLOWCONTROL,
@@ -1024,7 +1024,7 @@ async def test_hardware_invalid_data(hass, data):
 def test_allow_overwrite_ezsp_ieee():
     """Test modifying the backup to allow bellows to override the IEEE address."""
     backup = zigpy.backups.NetworkBackup()
-    new_backup = config_flow._allow_overwrite_ezsp_ieee(backup)
+    new_backup = radio_manager._allow_overwrite_ezsp_ieee(backup)
 
     assert backup != new_backup
     assert new_backup.network_info.stack_specific["ezsp"][EZSP_OVERWRITE_EUI64] is True
@@ -1034,7 +1034,7 @@ def test_prevent_overwrite_ezsp_ieee():
     """Test modifying the backup to prevent bellows from overriding the IEEE address."""
     backup = zigpy.backups.NetworkBackup()
     backup.network_info.stack_specific["ezsp"] = {EZSP_OVERWRITE_EUI64: True}
-    new_backup = config_flow._prevent_overwrite_ezsp_ieee(backup)
+    new_backup = radio_manager._prevent_overwrite_ezsp_ieee(backup)
 
     assert backup != new_backup
     assert not new_backup.network_info.stack_specific.get("ezsp", {}).get(
@@ -1131,7 +1131,7 @@ def test_parse_uploaded_backup(process_mock):
     assert backup == parsed_backup
 
 
-@patch("homeassistant.components.zha.config_flow._allow_overwrite_ezsp_ieee")
+@patch("homeassistant.components.zha.radio_manager._allow_overwrite_ezsp_ieee")
 async def test_formation_strategy_restore_manual_backup_non_ezsp(
     allow_overwrite_ieee_mock, pick_radio, mock_app, hass
 ):
@@ -1163,7 +1163,7 @@ async def test_formation_strategy_restore_manual_backup_non_ezsp(
     assert result3["data"][CONF_RADIO_TYPE] == "znp"
 
 
-@patch("homeassistant.components.zha.config_flow._allow_overwrite_ezsp_ieee")
+@patch("homeassistant.components.zha.radio_manager._allow_overwrite_ezsp_ieee")
 async def test_formation_strategy_restore_manual_backup_overwrite_ieee_ezsp(
     allow_overwrite_ieee_mock, pick_radio, mock_app, backup, hass
 ):
@@ -1203,7 +1203,7 @@ async def test_formation_strategy_restore_manual_backup_overwrite_ieee_ezsp(
     assert result4["data"][CONF_RADIO_TYPE] == "ezsp"
 
 
-@patch("homeassistant.components.zha.config_flow._allow_overwrite_ezsp_ieee")
+@patch("homeassistant.components.zha.radio_manager._allow_overwrite_ezsp_ieee")
 async def test_formation_strategy_restore_manual_backup_ezsp(
     allow_overwrite_ieee_mock, pick_radio, mock_app, hass
 ):
@@ -1391,7 +1391,7 @@ async def test_formation_strategy_restore_automatic_backup_non_ezsp(
     assert result3["data"][CONF_RADIO_TYPE] == "znp"
 
 
-@patch("homeassistant.components.zha.config_flow._allow_overwrite_ezsp_ieee")
+@patch("homeassistant.components.zha.radio_manager._allow_overwrite_ezsp_ieee")
 async def test_ezsp_restore_without_settings_change_ieee(
     allow_overwrite_ieee_mock, pick_radio, mock_app, backup, hass
 ):

@@ -41,13 +41,36 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "license_plate": {
+                "state": {
+                    "none": "Nincs"
+                }
+            }
+        }
+    },
     "issues": {
+        "deprecate_smart_sensor": {
+            "description": "Az intelligens \u00e9szlel\u00e9sek egys\u00e9ges \"Detected Object\" \u00e9rz\u00e9kel\u0151je elavult. Hely\u00e9t az egyes intelligens \u00e9szlel\u00e9si t\u00edpusokhoz tartoz\u00f3 egyedi intelligens \u00e9szlel\u00e9si bin\u00e1ris \u00e9rz\u00e9kel\u0151k vett\u00e9k \u00e1t.\n\nAz al\u00e1bbiakban az \u00e9szlelt automatiz\u00e1ci\u00f3k vagy szkriptek tal\u00e1lhat\u00f3k, amelyek egy vagy t\u00f6bb elavult entit\u00e1st haszn\u00e1lnak:\n{items}\nA fenti lista hi\u00e1nyos lehet, \u00e9s nem tartalmazza a kezel\u0151fel\u00fcleten bel\u00fcli sablonokat. K\u00e9rj\u00fck, ennek megfelel\u0151en friss\u00edtse a sablonokat, automatiz\u00e1l\u00e1sokat vagy szkripteket.",
+            "title": "Az intelligens \u00e9rz\u00e9kel\u00e9si \u00e9rz\u00e9kel\u0151 elavult"
+        },
+        "deprecated_service_set_doorbell_message": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Az `unifiprotect.set_doorbell_message` szolg\u00e1ltat\u00e1s elavultt\u00e1 v\u00e1lt a minden egyes Doorbell eszk\u00f6zh\u00f6z hozz\u00e1adott \u00faj Doorbell sz\u00f6veges entit\u00e1s jav\u00e1ra. A v2023.3.0 verzi\u00f3ban elt\u00e1vol\u00edt\u00e1sra ker\u00fcl. K\u00e9rj\u00fck, friss\u00edtse a [`text.set_value` szolg\u00e1ltat\u00e1s]({link}) haszn\u00e1lat\u00e1ra.",
+                        "title": "set_doorbell_message elavult"
+                    }
+                }
+            },
+            "title": "set_doorbell_message elavult"
+        },
         "ea_setup_failed": {
             "description": "Az UniFi Protect {version}. verzi\u00f3j\u00e1t haszn\u00e1lja, amely egy korai hozz\u00e1f\u00e9r\u00e9s\u0171 verzi\u00f3. Helyrehozhatatlan hiba t\u00f6rt\u00e9nt az integr\u00e1ci\u00f3 bet\u00f6lt\u00e9se k\u00f6zben. K\u00e9rem, [haszn\u00e1ljon stabil verzi\u00f3t](https://www.home-assistant.io/integrations/unifiprotect#downgrading-unifi-protect) az integr\u00e1ci\u00f3 tov\u00e1bbi haszn\u00e1lat\u00e1hoz.\n\nHiba: {error}",
             "title": "Be\u00e1ll\u00edt\u00e1si hiba a korai hozz\u00e1f\u00e9r\u00e9s\u0171 verzi\u00f3 haszn\u00e1lat\u00e1val"
         },
         "ea_warning": {
-            "description": "\u00d6n az UniFi Protect {version} verzi\u00f3j\u00e1t haszn\u00e1lja. A korai hozz\u00e1f\u00e9r\u00e9s\u0171 verzi\u00f3kat Home Assistant nem t\u00e1mogatja, \u00e9s az UniFi Protect integr\u00e1ci\u00f3ja le\u00e1llhat, vagy nem az elv\u00e1rt m\u00f3don m\u0171k\u00f6dhet.",
             "fix_flow": {
                 "step": {
                     "confirm": {
@@ -64,16 +87,12 @@
         }
     },
     "options": {
-        "error": {
-            "invalid_mac_list": "Egy list\u00e1ra van sz\u00fcks\u00e9g, melyben a MAC-c\u00edmek vessz\u0151vel vannak elv\u00e1lasztva"
-        },
         "step": {
             "init": {
                 "data": {
                     "all_updates": "Val\u00f3s idej\u0171 m\u00e9r\u0151sz\u00e1mok (FIGYELEM: nagym\u00e9rt\u00e9kben n\u00f6veli a CPU terhel\u00e9st)",
                     "allow_ea": "A Protect korai hozz\u00e1f\u00e9r\u00e9s\u0171 verzi\u00f3inak enged\u00e9lyez\u00e9se (FIGYELMEZTET\u00c9S: Az integr\u00e1ci\u00f3t nem t\u00e1mogatottk\u00e9nt jel\u00f6li meg)",
                     "disable_rtsp": "Az RTSP adatfolyam letilt\u00e1sa",
-                    "ignored_devices": "A figyelmen k\u00edv\u00fcl hagyand\u00f3 eszk\u00f6z\u00f6k MAC-c\u00edm\u00e9nek vessz\u0151vel elv\u00e1lasztott list\u00e1ja",
                     "max_media": "A m\u00e9diab\u00f6ng\u00e9sz\u0151be bet\u00f6ltend\u0151 esem\u00e9nyek maxim\u00e1lis sz\u00e1ma (n\u00f6veli a RAM-haszn\u00e1latot)",
                     "override_connection_host": "Kapcsolat c\u00edm\u00e9nek fel\u00fclb\u00edr\u00e1l\u00e1sa"
                 },

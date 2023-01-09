@@ -1,16 +1,25 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El servei ja est\u00e0 configurat"
+            "already_configured": "El servei ja est\u00e0 configurat",
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
         },
         "error": {
-            "cannot_connect": "Ha fallat la connexi\u00f3"
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
         },
         "step": {
             "api_key": {
                 "data": {
                     "api_key": "Clau API"
                 }
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "Clau API"
+                },
+                "description": "Introdueix una nova clau API per a PI-Hole a {host}/{location}",
+                "title": "Reautenticaci\u00f3 de la integraci\u00f3 PI-Hole"
             },
             "user": {
                 "data": {
@@ -24,6 +33,12 @@
                     "verify_ssl": "Verifica el certificat SSL"
                 }
             }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "La configuraci\u00f3 de PI-Hole mitjan\u00e7ant YAML s'eliminar\u00e0 de Home Assistant.\n\nLa configuraci\u00f3 YAML existent s'ha importat autom\u00e0ticament a la interf\u00edcie d'usuari.\n\nElimina la configuraci\u00f3 YAML de PI-Hole del fitxer configuration.yaml i reinicia Home Assistant per solucionar aquest problema.",
+            "title": "S'est\u00e0 eliminant la configuraci\u00f3 YAML del PI-Hole"
         }
     }
 }

@@ -26,16 +26,6 @@
             }
         }
     },
-    "issues": {
-        "deprecated_yaml": {
-            "description": "Radarr'\u0131n YAML kullan\u0131larak yap\u0131land\u0131r\u0131lmas\u0131 kald\u0131r\u0131l\u0131yor. \n\n Mevcut YAML yap\u0131land\u0131rman\u0131z otomatik olarak kullan\u0131c\u0131 aray\u00fcz\u00fcne aktar\u0131ld\u0131. \n\n Radarr YAML yap\u0131land\u0131rmas\u0131n\u0131 configuration.yaml dosyan\u0131zdan kald\u0131r\u0131n ve bu sorunu gidermek i\u00e7in Home Assistant'\u0131 yeniden ba\u015flat\u0131n.",
-            "title": "Radarr YAML yap\u0131land\u0131rmas\u0131 kald\u0131r\u0131l\u0131yor"
-        },
-        "removed_attributes": {
-            "description": "Film sayma sens\u00f6r\u00fcn\u00fcn dikkatli bir \u015fekilde devre d\u0131\u015f\u0131 b\u0131rak\u0131lmas\u0131nda baz\u0131 \u00f6nemli de\u011fi\u015fiklikler yap\u0131ld\u0131. \n\n Bu sens\u00f6r, b\u00fcy\u00fck veritabanlar\u0131nda sorunlara neden olabilir. Hala kullanmak istiyorsan\u0131z, bunu yapabilirsiniz. \n\n Film adlar\u0131 art\u0131k film sens\u00f6r\u00fcne \u00f6znitelik olarak dahil edilmemektedir. \n\n Yakla\u015fan kald\u0131r\u0131ld\u0131. Takvim \u00f6\u011feleri olmas\u0131 gerekti\u011fi gibi modernize ediliyor. Disk alan\u0131 art\u0131k her klas\u00f6r i\u00e7in bir tane olmak \u00fczere farkl\u0131 sens\u00f6rlere b\u00f6l\u00fcnm\u00fc\u015ft\u00fcr. \n\n Otomasyonlar i\u00e7in ger\u00e7ek de\u011feri olmad\u0131\u011f\u0131 i\u00e7in durum ve komutlar kald\u0131r\u0131ld\u0131.",
-            "title": "Radarr entegrasyonundaki de\u011fi\u015fiklikler"
-        }
-    },
     "options": {
         "step": {
             "init": {

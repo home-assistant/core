@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9"
+        },
+        "step": {
+            "setup_serial_manual_path": {
+                "data": {
+                    "device": "Cesta k zariadeniu USB"
+                }
+            },
+            "user": {
+                "data": {
+                    "device": "Vyberte zariadenie"
+                }
+            }
+        }
+    }
+}

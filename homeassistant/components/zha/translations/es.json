@@ -64,35 +64,12 @@
                 "description": "Tu copia de seguridad tiene una direcci\u00f3n IEEE diferente a la de tu radio. Para que tu red funcione correctamente, tambi\u00e9n debes cambiar la direcci\u00f3n IEEE de tu radio. \n\nEsta es una operaci\u00f3n permanente.",
                 "title": "Sobrescribir la direcci\u00f3n IEEE de la radio"
             },
-            "pick_radio": {
-                "data": {
-                    "radio_type": "Tipo de Radio"
-                },
-                "description": "Selecciona el tipo de tu radio Zigbee",
-                "title": "Tipo de Radio"
-            },
-            "port_config": {
-                "data": {
-                    "baudrate": "velocidad del puerto",
-                    "flow_control": "control de flujo de datos",
-                    "path": "Ruta del dispositivo serie"
-                },
-                "description": "Introduce los ajustes espec\u00edficos del puerto",
-                "title": "Configuraci\u00f3n"
-            },
             "upload_manual_backup": {
                 "data": {
                     "uploaded_backup_file": "Subir un archivo"
                 },
                 "description": "Restaura la configuraci\u00f3n de tu red desde un archivo JSON de copia de seguridad subido. Puedes descargar uno de una instalaci\u00f3n diferente de ZHA desde **Configuraci\u00f3n de red**, o usar un archivo `coordinator_backup.json` de Zigbee2MQTT.",
                 "title": "Subir una copia de seguridad manual"
-            },
-            "user": {
-                "data": {
-                    "path": "Ruta del Dispositivo Serie"
-                },
-                "description": "Selecciona puerto serie para radio Zigbee",
-                "title": "ZHA"
             }
         }
     },

@@ -43,7 +43,7 @@ def normalize_yaml_files(check_dict):
     return [key.replace(root, "...") for key in sorted(check_dict["yaml_files"].keys())]
 
 
-def test_bad_core_config(mock_is_file, loop):
+def test_bad_core_config(mock_is_file, event_loop):
     """Test a bad core config setup."""
     files = {YAML_CONFIG_FILE: BAD_CORE_CONFIG}
     with patch_yaml_files(files):
@@ -52,7 +52,7 @@ def test_bad_core_config(mock_is_file, loop):
         assert res["except"]["homeassistant"][1] == {"unit_system": "bad"}
 
 
-def test_config_platform_valid(mock_is_file, loop):
+def test_config_platform_valid(mock_is_file, event_loop):
     """Test a valid platform setup."""
     files = {YAML_CONFIG_FILE: BASE_CONFIG + "light:\n  platform: demo"}
     with patch_yaml_files(files):
@@ -65,7 +65,7 @@ def test_config_platform_valid(mock_is_file, loop):
         assert len(res["yaml_files"]) == 1
 
 
-def test_component_platform_not_found(mock_is_file, loop):
+def test_component_platform_not_found(mock_is_file, event_loop):
     """Test errors if component or platform not found."""
     # Make sure they don't exist
     files = {YAML_CONFIG_FILE: BASE_CONFIG + "beer:"}
@@ -96,7 +96,7 @@ def test_component_platform_not_found(mock_is_file, loop):
         assert len(res["yaml_files"]) == 1
 
 
-def test_secrets(mock_is_file, loop):
+def test_secrets(mock_is_file, event_loop):
     """Test secrets config checking method."""
     secrets_path = get_test_config_dir("secrets.yaml")
 
@@ -127,7 +127,7 @@ def test_secrets(mock_is_file, loop):
         ]
 
 
-def test_package_invalid(mock_is_file, loop):
+def test_package_invalid(mock_is_file, event_loop):
     """Test an invalid package."""
     files = {
         YAML_CONFIG_FILE: BASE_CONFIG + ("  packages:\n    p1:\n" '      group: ["a"]')
@@ -145,7 +145,7 @@ def test_package_invalid(mock_is_file, loop):
         assert len(res["yaml_files"]) == 1
 
 
-def test_bootstrap_error(loop):
+def test_bootstrap_error(event_loop):
     """Test a valid platform setup."""
     files = {YAML_CONFIG_FILE: BASE_CONFIG + "automation: !include no.yaml"}
     with patch_yaml_files(files):

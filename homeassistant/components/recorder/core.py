@@ -319,10 +319,12 @@ class Recorder(threading.Thread):
         if size <= MAX_QUEUE_BACKLOG:
             return
         _LOGGER.error(
-            "The recorder backlog queue reached the maximum size of %s events; "
-            "usually, the system is CPU bound, I/O bound, or the database "
-            "is corrupt due to a disk problem; The recorder will stop "
-            "recording events to avoid running out of memory",
+            (
+                "The recorder backlog queue reached the maximum size of %s events; "
+                "usually, the system is CPU bound, I/O bound, or the database "
+                "is corrupt due to a disk problem; The recorder will stop "
+                "recording events to avoid running out of memory"
+            ),
             MAX_QUEUE_BACKLOG,
         )
         self._async_stop_queue_watcher_and_event_listener()
@@ -375,13 +377,8 @@ class Recorder(threading.Thread):
         # Unknown what it is.
         return True
 
-    def do_adhoc_statistics(self, **kwargs: Any) -> None:
-        """Trigger an adhoc statistics run."""
-        if not (start := kwargs.get("start")):
-            start = statistics.get_start_time()
-        self.queue_task(StatisticsTask(start))
-
-    def _empty_queue(self, event: Event) -> None:
+    @callback
+    def _async_empty_queue(self, event: Event) -> None:
         """Empty the queue if its still present at final write."""
 
         # If the queue is full of events to be processed because
@@ -415,7 +412,7 @@ class Recorder(threading.Thread):
     def async_register(self) -> None:
         """Post connection initialize."""
         bus = self.hass.bus
-        bus.async_listen_once(EVENT_HOMEASSISTANT_FINAL_WRITE, self._empty_queue)
+        bus.async_listen_once(EVENT_HOMEASSISTANT_FINAL_WRITE, self._async_empty_queue)
         bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_shutdown)
         async_at_started(self.hass, self._async_hass_started)
 
@@ -479,7 +476,7 @@ class Recorder(threading.Thread):
         Short term statistics run every 5 minutes
         """
         start = statistics.get_start_time()
-        self.queue_task(StatisticsTask(start))
+        self.queue_task(StatisticsTask(start, True))
 
     @callback
     def async_adjust_statistics(
@@ -597,16 +594,14 @@ class Recorder(threading.Thread):
             self.hass.add_job(self.async_connection_failed)
             return
 
-        schema_status = migration.validate_db_schema(self.hass, self.get_session)
+        schema_status = migration.validate_db_schema(self.hass, self, self.get_session)
         if schema_status is None:
             # Give up if we could not validate the schema
             self.hass.add_job(self.async_connection_failed)
             return
         self.schema_version = schema_status.current_version
 
-        schema_is_valid = migration.schema_is_valid(schema_status)
-
-        if schema_is_valid:
+        if schema_status.valid:
             self._setup_run()
         else:
             self.migration_in_progress = True
@@ -614,8 +609,8 @@ class Recorder(threading.Thread):
 
         self.hass.add_job(self.async_connection_success)
 
-        if self.migration_is_live or schema_is_valid:
-            # If the migrate is live or the schema is current, we need to
+        if self.migration_is_live or schema_status.valid:
+            # If the migrate is live or the schema is valid, we need to
             # wait for startup to complete. If its not live, we need to continue
             # on.
             self.hass.add_job(self.async_set_db_ready)
@@ -632,7 +627,7 @@ class Recorder(threading.Thread):
                 self.hass.add_job(self.async_set_db_ready)
                 return
 
-        if not schema_is_valid:
+        if not schema_status.valid:
             if self._migrate_schema_and_setup_run(schema_status):
                 self.schema_version = SCHEMA_VERSION
                 if not self._event_listener:
@@ -643,8 +638,10 @@ class Recorder(threading.Thread):
             else:
                 persistent_notification.create(
                     self.hass,
-                    "The database migration failed, check [the logs](/config/logs)."
-                    "Database Migration Failed",
+                    (
+                        "The database migration failed, check [the logs](/config/logs)."
+                        "Database Migration Failed"
+                    ),
                     "recorder_database_migration",
                 )
                 self.hass.add_job(self.async_set_db_ready)
@@ -730,7 +727,12 @@ class Recorder(threading.Thread):
         """Migrate schema to the latest version."""
         persistent_notification.create(
             self.hass,
-            "System performance will temporarily degrade during the database upgrade. Do not power down or restart the system until the upgrade completes. Integrations that read the database, such as logbook and history, may return inconsistent results until the upgrade completes.",
+            (
+                "System performance will temporarily degrade during the database"
+                " upgrade. Do not power down or restart the system until the upgrade"
+                " completes. Integrations that read the database, such as logbook and"
+                " history, may return inconsistent results until the upgrade completes."
+            ),
             "Database upgrade in progress",
             "recorder_database_migration",
         )
@@ -1020,6 +1022,10 @@ class Recorder(threading.Thread):
         self.event_session = self.get_session()
         self.event_session.expire_on_commit = False
 
+    def _post_schema_migration(self, old_version: int, new_version: int) -> None:
+        """Run post schema migration tasks."""
+        migration.post_schema_migration(self.event_session, old_version, new_version)
+
     def _send_keep_alive(self) -> None:
         """Send a keep alive to keep the db connection open."""
         assert self.event_session is not None
@@ -1193,7 +1199,7 @@ class Recorder(threading.Thread):
         while start < last_period:
             end = start + timedelta(minutes=5)
             _LOGGER.debug("Compiling missing statistics for %s-%s", start, end)
-            self.queue_task(StatisticsTask(start))
+            self.queue_task(StatisticsTask(start, end >= last_period))
             start = end
 
     def _end_session(self) -> None:

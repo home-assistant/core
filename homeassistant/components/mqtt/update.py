@@ -54,7 +54,7 @@ CONF_TITLE = "title"
 PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
     {
         vol.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_DEVICE_CLASS): vol.Any(DEVICE_CLASSES_SCHEMA, None),
         vol.Optional(CONF_ENTITY_PICTURE): cv.string,
         vol.Optional(CONF_LATEST_VERSION_TEMPLATE): cv.template,
         vol.Optional(CONF_LATEST_VERSION_TOPIC): valid_subscribe_topic,
@@ -76,7 +76,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT update through configuration.yaml and dynamically through MQTT discovery."""
+    """Set up MQTT update through YAML and through MQTT discovery."""
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -172,17 +172,34 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
                 )
                 return
 
-            json_payload = {}
+            json_payload: Any | dict = {}
             try:
                 json_payload = json_loads(payload)
-                _LOGGER.debug(
-                    "JSON payload detected after processing payload '%s' on topic %s",
-                    json_payload,
-                    msg.topic,
-                )
+                if isinstance(json_payload, dict):
+                    _LOGGER.debug(
+                        (
+                            "JSON payload detected after processing payload '%s' on"
+                            " topic %s"
+                        ),
+                        json_payload,
+                        msg.topic,
+                    )
+                else:
+                    _LOGGER.debug(
+                        (
+                            "Non-dictionary JSON payload detected after processing"
+                            " payload '%s' on topic %s"
+                        ),
+                        payload,
+                        msg.topic,
+                    )
+                    json_payload = {"installed_version": payload}
             except JSON_DECODE_EXCEPTIONS:
                 _LOGGER.debug(
-                    "No valid (JSON) payload detected after processing payload '%s' on topic %s",
+                    (
+                        "No valid (JSON) payload detected after processing payload '%s'"
+                        " on topic %s"
+                    ),
                     payload,
                     msg.topic,
                 )
@@ -253,9 +270,9 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
         get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> UpdateEntityFeature:
         """Return the list of supported features."""
-        support = 0
+        support = UpdateEntityFeature(0)
 
         if self._config.get(CONF_COMMAND_TOPIC) is not None:
             support |= UpdateEntityFeature.INSTALL

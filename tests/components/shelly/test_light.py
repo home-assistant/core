@@ -383,3 +383,60 @@ async def test_rpc_device_switch_type_lights_mode(hass, mock_rpc_device, monkeyp
     )
     mock_rpc_device.mock_update()
     assert hass.states.get("light.test_switch_0").state == STATE_OFF
+
+
+async def test_rpc_light(hass, mock_rpc_device, monkeypatch):
+    """Test RPC light."""
+    entity_id = f"{LIGHT_DOMAIN}.test_light_0"
+    monkeypatch.delitem(mock_rpc_device.status, "switch:0")
+    await init_integration(hass, 2)
+
+    # Turn on
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    mock_rpc_device.call_rpc.assert_called_once_with("Light.Set", {"id": 0, "on": True})
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_BRIGHTNESS] == 135
+
+    # Turn off
+    mock_rpc_device.call_rpc.reset_mock()
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "light:0", "output", False)
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    mock_rpc_device.mock_update()
+    mock_rpc_device.call_rpc.assert_called_once_with(
+        "Light.Set", {"id": 0, "on": False}
+    )
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
+
+    # Turn on, brightness = 33
+    mock_rpc_device.call_rpc.reset_mock()
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 33},
+        blocking=True,
+    )
+
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "light:0", "output", True)
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "light:0", "brightness", 13)
+    mock_rpc_device.mock_update()
+
+    mock_rpc_device.call_rpc.assert_called_once_with(
+        "Light.Set", {"id": 0, "on": True, "brightness": 13}
+    )
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_BRIGHTNESS] == 33

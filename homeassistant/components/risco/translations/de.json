@@ -24,14 +24,9 @@
                 }
             },
             "user": {
-                "data": {
-                    "password": "Passwort",
-                    "pin": "PIN-Code",
-                    "username": "Benutzername"
-                },
                 "menu_options": {
-                    "cloud": "Risco-Cloud (empfohlen)",
-                    "local": "Lokales Risco-Panel (fortgeschritten)"
+                    "cloud": "Risco Cloud (empfohlen)",
+                    "local": "Lokales Risco Panel (fortgeschritten)"
                 }
             }
         }

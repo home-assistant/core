@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "no_plants": "Ingen planter er funnet p\u00e5 denne kontoen"
+            "no_plants": "Ingen anlegg funnet p\u00e5 denne kontoen"
         },
         "error": {
             "invalid_auth": "Ugyldig godkjenning"
@@ -9,9 +9,9 @@
         "step": {
             "plant": {
                 "data": {
-                    "plant_id": "Plante"
+                    "plant_id": "Anlegg"
                 },
-                "title": "Velg din plante"
+                "title": "Velg ditt anlegg"
             },
             "user": {
                 "data": {

@@ -33,7 +33,7 @@
                 "data": {
                     "host": "Host"
                 },
-                "description": "Before set up, battery-powered devices must be woken up, you can now wake the device up using a button on it."
+                "description": "Before setup, battery-powered devices must be woken up, you can now wake the device up using a button on it."
             }
         }
     },

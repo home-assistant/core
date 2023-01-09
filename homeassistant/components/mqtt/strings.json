@@ -27,7 +27,10 @@
           "tls_insecure": "Ignore broker certificate validation",
           "protocol": "MQTT protocol",
           "set_ca_cert": "Broker certificate validation",
-          "set_client_cert": "Use a client certificate"
+          "set_client_cert": "Use a client certificate",
+          "transport": "MQTT transport",
+          "ws_headers": "WebSocket headers in JSON format",
+          "ws_path": "WebSocket path"
         }
       },
       "hassio_confirm": {
@@ -49,7 +52,8 @@
       "bad_certificate": "The CA certificate is invalid",
       "bad_client_cert": "Invalid client certificate, ensure a PEM coded file is supplied",
       "bad_client_key": "Invalid private key, ensure a PEM coded file is supplied without password",
-      "bad_client_cert_key": "Client certificate and private are no valid pair",
+      "bad_client_cert_key": "Client certificate and private key are not a valid pair",
+      "bad_ws_headers": "Supply valid HTTP headers as a JSON object",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_inclusion": "The client certificate and private key must be configurered together"
     }
@@ -95,7 +99,10 @@
           "tls_insecure": "[%key:component::mqtt::config::step::broker::data::tls_insecure%]",
           "protocol": "[%key:component::mqtt::config::step::broker::data::protocol%]",
           "set_ca_cert": "[%key:component::mqtt::config::step::broker::data::set_ca_cert%]",
-          "set_client_cert": "[%key:component::mqtt::config::step::broker::data::set_client_cert%]"
+          "set_client_cert": "[%key:component::mqtt::config::step::broker::data::set_client_cert%]",
+          "transport": "[%key:component::mqtt::config::step::broker::data::transport%]",
+          "ws_headers": "[%key:component::mqtt::config::step::broker::data::ws_headers%]",
+          "ws_path": "[%key:component::mqtt::config::step::broker::data::ws_path%]"
         }
       },
       "options": {
@@ -125,6 +132,7 @@
       "bad_client_cert": "[%key:component::mqtt::config::error::bad_client_cert%]",
       "bad_client_key": "[%key:component::mqtt::config::error::bad_client_key%]",
       "bad_client_cert_key": "[%key:component::mqtt::config::error::bad_client_cert_key%]",
+      "bad_ws_headers": "[%key:component::mqtt::config::error::bad_ws_headers%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_inclusion": "[%key:component::mqtt::config::error::invalid_inclusion%]"
     }

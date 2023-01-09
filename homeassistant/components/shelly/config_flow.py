@@ -30,7 +30,7 @@ from .const import (
     LOGGER,
     BLEScannerMode,
 )
-from .coordinator import get_entry_data
+from .coordinator import async_reconnect_soon, get_entry_data
 from .utils import (
     get_block_device_name,
     get_block_device_sleep_period,
@@ -41,6 +41,7 @@ from .utils import (
     get_rpc_device_name,
     get_rpc_device_sleep_period,
     get_ws_context,
+    mac_address_from_name,
 )
 
 HOST_SCHEMA: Final = vol.Schema({vol.Required(CONF_HOST): str})
@@ -51,6 +52,8 @@ BLE_SCANNER_OPTIONS = [
     selector.SelectOptionDict(value=BLEScannerMode.ACTIVE, label="Active"),
     selector.SelectOptionDict(value=BLEScannerMode.PASSIVE, label="Passive"),
 ]
+
+INTERNAL_WIFI_AP_IP = "192.168.33.1"
 
 
 async def validate_input(
@@ -210,11 +213,35 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="credentials", data_schema=vol.Schema(schema), errors=errors
         )
 
+    async def _async_discovered_mac(self, mac: str, host: str) -> None:
+        """Abort and reconnect soon if the device with the mac address is already configured."""
+        if (
+            current_entry := await self.async_set_unique_id(mac)
+        ) and current_entry.data[CONF_HOST] == host:
+            await async_reconnect_soon(self.hass, current_entry)
+        if host == INTERNAL_WIFI_AP_IP:
+            # If the device is broadcasting the internal wifi ap ip
+            # we can't connect to it, so we should not update the
+            # entry with the new host as it will be unreachable
+            #
+            # This is a workaround for a bug in the firmware 0.12 (and older?)
+            # which should be removed once the firmware is fixed
+            # and the old version is no longer in use
+            self._abort_if_unique_id_configured()
+        else:
+            self._abort_if_unique_id_configured({CONF_HOST: host})
+
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
         host = discovery_info.host
+        # First try to get the mac address from the name
+        # so we can avoid making another connection to the
+        # device if we already have it configured
+        if mac := mac_address_from_name(discovery_info.name):
+            await self._async_discovered_mac(mac, host)
+
         try:
             self.info = await self._async_get_info(host)
         except DeviceConnectionError:
@@ -222,10 +249,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except FirmwareUnsupported:
             return self.async_abort(reason="unsupported_firmware")
 
-        await self.async_set_unique_id(self.info["mac"])
-        self._abort_if_unique_id_configured({CONF_HOST: host})
-        self.host = host
+        if not mac:
+            # We could not get the mac address from the name
+            # so need to check here since we just got the info
+            await self._async_discovered_mac(self.info["mac"], host)
 
+        self.host = host
         self.context.update(
             {
                 "title_placeholders": {"name": discovery_info.name.split(".")[0]},
@@ -341,7 +370,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         cls, config_entry: config_entries.ConfigEntry
     ) -> bool:
         """Return options flow support for this handler."""
-        return config_entry.data.get("gen") == 2
+        return config_entry.data.get("gen") == 2 and not config_entry.data.get(
+            CONF_SLEEP_PERIOD
+        )
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):

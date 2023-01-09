@@ -29,5 +29,44 @@
                 }
             }
         }
+    },
+    "entity": {
+        "select": {
+            "horizontalswing": {
+                "state": {
+                    "fixedcenter": "\u56fa\u5b9a\u4e2d",
+                    "fixedcenterleft": "\u56fa\u5b9a\u4e2d\u5de6",
+                    "fixedcenterright": "\u56fa\u5b9a\u4e2d\u53f3",
+                    "fixedleft": "\u56fa\u5b9a\u5de6",
+                    "fixedleftright": "\u56fa\u5b9a\u5de6\u53f3",
+                    "fixedright": "\u56fa\u5b9a\u53f3",
+                    "rangecenter": "\u7bc4\u570d\u4e2d",
+                    "rangefull": "\u5168\u7bc4\u570d",
+                    "stopped": "\u505c\u6b62"
+                }
+            },
+            "light": {
+                "state": {
+                    "dim": "\u5fae\u5149",
+                    "off": "\u95dc\u9589",
+                    "on": "\u958b\u555f"
+                }
+            }
+        },
+        "sensor": {
+            "sensitivity": {
+                "state": {
+                    "n": "\u6b63\u5e38",
+                    "s": "\u654f\u611f"
+                }
+            },
+            "smart_type": {
+                "state": {
+                    "feelslike": "\u9ad4\u611f",
+                    "humidity": "\u6fd5\u5ea6",
+                    "temperature": "\u6eab\u5ea6"
+                }
+            }
+        }
     }
 }

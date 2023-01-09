@@ -13,7 +13,10 @@ from homeassistant.components.sensor import (
     DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     STATE_CLASSES_SCHEMA,
+    SensorDeviceClass,
 )
+from homeassistant.components.sensor.helpers import async_parse_date_datetime
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ATTRIBUTE,
     CONF_AUTHENTICATION,
@@ -134,9 +137,49 @@ async def async_setup_platform(
                 sensor_config,
                 sensor_config[CONF_NAME],
                 sensor_config.get(CONF_UNIQUE_ID),
-                sensor_config.get(CONF_SELECT),
+                sensor_config[CONF_SELECT],
                 sensor_config.get(CONF_ATTRIBUTE),
                 sensor_config[CONF_INDEX],
+                value_template,
+            )
+        )
+
+    async_add_entities(entities)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the Scrape sensor entry."""
+    entities: list = []
+
+    coordinator: ScrapeCoordinator = hass.data[DOMAIN][entry.entry_id]
+    config = dict(entry.options)
+    for sensor in config["sensor"]:
+        sensor_config: ConfigType = vol.Schema(
+            TEMPLATE_SENSOR_BASE_SCHEMA.schema, extra=vol.ALLOW_EXTRA
+        )(sensor)
+
+        name: str = sensor_config[CONF_NAME]
+        select: str = sensor_config[CONF_SELECT]
+        attr: str | None = sensor_config.get(CONF_ATTRIBUTE)
+        index: int = int(sensor_config[CONF_INDEX])
+        value_string: str | None = sensor_config.get(CONF_VALUE_TEMPLATE)
+        unique_id: str = sensor_config[CONF_UNIQUE_ID]
+
+        value_template: Template | None = (
+            Template(value_string, hass) if value_string is not None else None
+        )
+        entities.append(
+            ScrapeSensor(
+                hass,
+                coordinator,
+                sensor_config,
+                name,
+                unique_id,
+                select,
+                attr,
+                index,
                 value_template,
             )
         )
@@ -154,7 +197,7 @@ class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], TemplateSensor):
         config: ConfigType,
         name: str,
         unique_id: str | None,
-        select: str | None,
+        select: str,
         attr: str | None,
         index: int,
         value_template: Template | None,
@@ -205,12 +248,19 @@ class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], TemplateSensor):
         """Update state from the rest data."""
         value = self._extract_value()
 
-        if self._value_template is not None:
-            self._attr_native_value = (
-                self._value_template.async_render_with_possible_json_value(value, None)
-            )
-        else:
+        if (template := self._value_template) is not None:
+            value = template.async_render_with_possible_json_value(value, None)
+
+        if self.device_class not in {
+            SensorDeviceClass.DATE,
+            SensorDeviceClass.TIMESTAMP,
+        }:
             self._attr_native_value = value
+            return
+
+        self._attr_native_value = async_parse_date_datetime(
+            value, self.entity_id, self.device_class
+        )
 
     @callback
     def _handle_coordinator_update(self) -> None:

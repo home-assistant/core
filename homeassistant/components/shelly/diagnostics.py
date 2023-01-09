@@ -1,10 +1,12 @@
 """Diagnostics support for Shelly."""
 from __future__ import annotations
 
+from homeassistant.components.bluetooth import async_scanner_by_source
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import format_mac
 
 from .coordinator import get_entry_data
 
@@ -19,6 +21,7 @@ async def async_get_config_entry_diagnostics(
 
     device_settings: str | dict = "not initialized"
     device_status: str | dict = "not initialized"
+    bluetooth: str | dict = "not initialized"
     if shelly_entry_data.block:
         block_coordinator = shelly_entry_data.block
         assert block_coordinator
@@ -68,6 +71,12 @@ async def async_get_config_entry_diagnostics(
                 if k in ["sys", "wifi"]
             }
 
+        source = format_mac(rpc_coordinator.mac).upper()
+        if scanner := async_scanner_by_source(hass, source):
+            bluetooth = {
+                "scanner": await scanner.async_diagnostics(),
+            }
+
     if isinstance(device_status, dict):
         device_status = async_redact_data(device_status, ["ssid"])
 
@@ -76,4 +85,5 @@ async def async_get_config_entry_diagnostics(
         "device_info": device_info,
         "device_settings": device_settings,
         "device_status": device_status,
+        "bluetooth": bluetooth,
     }

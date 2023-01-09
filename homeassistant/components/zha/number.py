@@ -8,9 +8,9 @@ from typing import TYPE_CHECKING, Any, TypeVar
 import zigpy.exceptions
 from zigpy.zcl.foundation import Status
 
-from homeassistant.components.number import NumberEntity
+from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import Platform, UnitOfMass
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
@@ -448,11 +448,13 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
             _LOGGER.debug("read value=%s", value)
 
 
-@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"lumi.motion.ac02"})
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="opple_cluster", models={"lumi.motion.ac02", "lumi.motion.agl04"}
+)
 class AqaraMotionDetectionInterval(
     ZHANumberConfigurationEntity, id_suffix="detection_interval"
 ):
-    """Representation of a ZHA on off transition time configuration entity."""
+    """Representation of a ZHA motion detection interval configuration entity."""
 
     _attr_native_min_value: float = 2
     _attr_native_max_value: float = 65535
@@ -575,7 +577,7 @@ class TimerDurationMinutes(ZHANumberConfigurationEntity, id_suffix="timer_durati
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names="ikea_airpurifier")
 class FilterLifeTime(ZHANumberConfigurationEntity, id_suffix="filter_life_time"):
-    """Representation of a ZHA timer duration configuration entity."""
+    """Representation of a ZHA filter lifetime configuration entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon: str = ICONS[14]
@@ -834,3 +836,32 @@ class InovelliDefaultAllLEDOffIntensity(
     _attr_native_max_value: float = 100
     _zcl_attribute: str = "led_intensity_when_off"
     _attr_name: str = "Default all LED off intensity"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
+class AqaraPetFeederServingSize(ZHANumberConfigurationEntity, id_suffix="serving_size"):
+    """Aqara pet feeder serving size configuration entity."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_native_min_value: float = 1
+    _attr_native_max_value: float = 10
+    _zcl_attribute: str = "serving_size"
+    _attr_name: str = "Serving to dispense"
+    _attr_mode: NumberMode = NumberMode.BOX
+    _attr_icon: str = "mdi:counter"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
+class AqaraPetFeederPortionWeight(
+    ZHANumberConfigurationEntity, id_suffix="portion_weight"
+):
+    """Aqara pet feeder portion weight configuration entity."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_native_min_value: float = 1
+    _attr_native_max_value: float = 100
+    _zcl_attribute: str = "portion_weight"
+    _attr_name: str = "Portion weight"
+    _attr_mode: NumberMode = NumberMode.BOX
+    _attr_native_unit_of_measurement: str = UnitOfMass.GRAMS
+    _attr_icon: str = "mdi:weight-gram"

@@ -1,6 +1,7 @@
 """The Shelly integration."""
 from __future__ import annotations
 
+import contextlib
 from typing import Any, Final
 
 import aioshelly
@@ -97,7 +98,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # value, so if host isn't present, config entry will not be configured.
     if not entry.data.get(CONF_HOST):
         LOGGER.warning(
-            "The config entry %s probably comes from a custom integration, please remove it if you want to use core Shelly integration",
+            (
+                "The config entry %s probably comes from a custom integration, please"
+                " remove it if you want to use core Shelly integration"
+            ),
             entry.title,
         )
         return False
@@ -311,7 +315,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry, platforms
         ):
             if shelly_entry_data.rpc:
-                await shelly_entry_data.rpc.shutdown()
+                with contextlib.suppress(DeviceConnectionError):
+                    # If the device is restarting or has gone offline before
+                    # the ping/pong timeout happens, the shutdown command
+                    # will fail, but we don't care since we are unloading
+                    # and if we setup again, we will fix anything that is
+                    # in an inconsistent state at that time.
+                    await shelly_entry_data.rpc.shutdown()
             get_entry_data(hass).pop(entry.entry_id)
 
         return unload_ok

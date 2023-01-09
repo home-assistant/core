@@ -10,7 +10,7 @@
         "step": {
             "reauth_confirm": {
                 "data": {
-                    "api_key": "Chave API"
+                    "api_key": "Chave da API"
                 },
                 "description": "Insira novamente a chave de API para {latitude} , {longitude} .",
                 "title": "Reautenticar Integra\u00e7\u00e3o"

@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "no_devices_found": "Aucun appareil trouv\u00e9 sur le r\u00e9seau",
             "single_instance_allowed": "D\u00e9j\u00e0 configur\u00e9. Une seule configuration possible."
         },
         "error": {
@@ -10,28 +9,15 @@
             "malformed_url": "URL mal form\u00e9e",
             "no_still_image_or_stream_url": "Vous devez au moins renseigner une URL d'image fixe ou de flux",
             "relative_url": "Les URL relatives ne sont pas autoris\u00e9es",
-            "stream_file_not_found": "Fichier non trouv\u00e9 lors de la tentative de connexion au flux (ffmpeg est-il install\u00e9\u00a0?)",
-            "stream_http_not_found": "Erreur\u00a0404 (introuvable) lors de la tentative de connexion au flux",
             "stream_io_error": "Erreur d'entr\u00e9e/sortie lors de la tentative de connexion au flux. Mauvais protocole de transport RTSP\u00a0?",
             "stream_no_route_to_host": "Impossible de trouver l'h\u00f4te lors de la tentative de connexion au flux",
-            "stream_no_video": "Le flux ne contient pas de vid\u00e9o",
             "stream_not_permitted": "Op\u00e9ration non autoris\u00e9e lors de la tentative de connexion au flux. Mauvais protocole de transport RTSP\u00a0?",
-            "stream_unauthorised": "\u00c9chec de l'autorisation lors de la tentative de connexion au flux",
             "template_error": "Erreur lors du rendu du mod\u00e8le. Consultez le journal pour plus d'informations.",
             "timeout": "D\u00e9lai d'attente expir\u00e9 lors du chargement de l'URL",
             "unable_still_load": "Impossible de charger une image valide depuis l'URL d'image fixe (cela pourrait \u00eatre d\u00fb \u00e0 un h\u00f4te ou \u00e0 une URL non valide, ou \u00e0 un \u00e9chec de l'authentification).  Consultez le journal pour plus d'informations.",
             "unknown": "Erreur inattendue"
         },
         "step": {
-            "confirm": {
-                "description": "Voulez-vous commencer la configuration\u00a0?"
-            },
-            "content_type": {
-                "data": {
-                    "content_type": "Type de contenu"
-                },
-                "description": "Sp\u00e9cifiez le type de contenu du flux."
-            },
             "user": {
                 "data": {
                     "authentication": "Authentification",
@@ -47,6 +33,9 @@
                 "description": "Saisissez les param\u00e8tres de connexion \u00e0 la cam\u00e9ra."
             },
             "user_confirm_still": {
+                "data": {
+                    "confirmed_ok": "Cette image semble conforme."
+                },
                 "title": "Aper\u00e7u"
             }
         }
@@ -58,13 +47,9 @@
             "malformed_url": "URL mal form\u00e9e",
             "no_still_image_or_stream_url": "Vous devez au moins renseigner une URL d'image fixe ou de flux",
             "relative_url": "Les URL relatives ne sont pas autoris\u00e9es",
-            "stream_file_not_found": "Fichier non trouv\u00e9 lors de la tentative de connexion au flux (ffmpeg est-il install\u00e9\u00a0?)",
-            "stream_http_not_found": "Erreur\u00a0404 (introuvable) lors de la tentative de connexion au flux",
             "stream_io_error": "Erreur d'entr\u00e9e/sortie lors de la tentative de connexion au flux. Mauvais protocole de transport RTSP\u00a0?",
             "stream_no_route_to_host": "Impossible de trouver l'h\u00f4te lors de la tentative de connexion au flux",
-            "stream_no_video": "Le flux ne contient pas de vid\u00e9o",
             "stream_not_permitted": "Op\u00e9ration non autoris\u00e9e lors de la tentative de connexion au flux. Mauvais protocole de transport RTSP\u00a0?",
-            "stream_unauthorised": "\u00c9chec de l'autorisation lors de la tentative de connexion au flux",
             "template_error": "Erreur lors du rendu du mod\u00e8le. Consultez le journal pour plus d'informations.",
             "timeout": "D\u00e9lai d'attente expir\u00e9 lors du chargement de l'URL",
             "unable_still_load": "Impossible de charger une image valide depuis l'URL d'image fixe (cela pourrait \u00eatre d\u00fb \u00e0 un h\u00f4te ou \u00e0 une URL non valide, ou \u00e0 un \u00e9chec de l'authentification).  Consultez le journal pour plus d'informations.",
@@ -72,13 +57,10 @@
         },
         "step": {
             "confirm_still": {
-                "title": "Aper\u00e7u"
-            },
-            "content_type": {
                 "data": {
-                    "content_type": "Type de contenu"
+                    "confirmed_ok": "Cette image semble conforme."
                 },
-                "description": "Sp\u00e9cifiez le type de contenu du flux."
+                "title": "Aper\u00e7u"
             },
             "init": {
                 "data": {

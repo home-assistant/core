@@ -167,7 +167,9 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required("device"): vol.In(
                         {
-                            key: f"{key} ({formatted_category(discovery.description.category)})"
+                            key: (
+                                f"{key} ({formatted_category(discovery.description.category)})"
+                            )
                             for key, discovery in self.devices.items()
                         }
                     )
@@ -232,7 +234,10 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             # This can happen if the TXT record is received after the PTR record
             # we will wait for the next update in this case
             _LOGGER.debug(
-                "HomeKit device %s: id not exposed; TXT record may have not yet been received",
+                (
+                    "HomeKit device %s: id not exposed; TXT record may have not yet"
+                    " been received"
+                ),
                 properties,
             )
             return self.async_abort(reason="invalid_properties")
@@ -291,7 +296,10 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 await pairing.list_accessories_and_characteristics()
             except AuthenticationError:
                 _LOGGER.debug(
-                    "%s (%s - %s) is unpaired. Removing invalid pairing for this device",
+                    (
+                        "%s (%s - %s) is unpaired. Removing invalid pairing for this"
+                        " device"
+                    ),
                     name,
                     model,
                     hkid,
@@ -299,9 +307,11 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.hass.config_entries.async_remove(existing.entry_id)
             else:
                 _LOGGER.debug(
-                    "%s (%s - %s) claims to be unpaired but isn't. "
-                    "It's implementation of HomeKit is defective "
-                    "or a zeroconf relay is broadcasting stale data",
+                    (
+                        "%s (%s - %s) claims to be unpaired but isn't. "
+                        "It's implementation of HomeKit is defective "
+                        "or a zeroconf relay is broadcasting stale data"
+                    ),
                     name,
                     model,
                     hkid,
@@ -420,6 +430,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Should never call this step without setting self.hkid
         assert self.hkid
+        description_placeholders = {}
 
         errors = {}
 
@@ -465,10 +476,11 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="accessory_not_found_error")
             except InsecureSetupCode:
                 errors["pairing_code"] = "insecure_setup_code"
-            except Exception:  # pylint: disable=broad-except
+            except Exception as err:  # pylint: disable=broad-except
                 _LOGGER.exception("Pairing attempt failed with an unhandled exception")
                 self.finish_pairing = None
                 errors["pairing_code"] = "pairing_failed"
+                description_placeholders["error"] = str(err)
 
         if not self.finish_pairing:
             # Its possible that the first try may have been busy so
@@ -496,11 +508,12 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 # TLV error, usually not in pairing mode
                 _LOGGER.exception("Pairing communication failed")
                 return await self.async_step_protocol_error()
-            except Exception:  # pylint: disable=broad-except
+            except Exception as err:  # pylint: disable=broad-except
                 _LOGGER.exception("Pairing attempt failed with an unhandled exception")
                 errors["pairing_code"] = "pairing_failed"
+                description_placeholders["error"] = str(err)
 
-        return self._async_step_pair_show_form(errors)
+        return self._async_step_pair_show_form(errors, description_placeholders)
 
     async def async_step_busy_error(
         self, user_input: dict[str, Any] | None = None
@@ -531,7 +544,9 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     @callback
     def _async_step_pair_show_form(
-        self, errors: dict[str, str] | None = None
+        self,
+        errors: dict[str, str] | None = None,
+        description_placeholders: dict[str, str] | None = None,
     ) -> FlowResult:
         assert self.category
 
@@ -547,7 +562,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="pair",
             errors=errors or {},
-            description_placeholders=placeholders,
+            description_placeholders=placeholders | (description_placeholders or {}),
             data_schema=vol.Schema(schema),
         )
 
@@ -578,6 +593,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             accessories_state.config_num,
             accessories_state.accessories.serialize(),
             serialize_broadcast_key(accessories_state.broadcast_key),
+            accessories_state.state_num,
         )
 
         return self.async_create_entry(title=name, data=pairing_data)

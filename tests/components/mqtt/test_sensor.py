@@ -52,7 +52,6 @@ from .test_common import (
     help_test_entity_id_update_subscriptions,
     help_test_reload_with_config,
     help_test_reloadable,
-    help_test_reloadable_late,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
@@ -72,11 +71,6 @@ from tests.common import (
 DEFAULT_CONFIG = {
     mqtt.DOMAIN: {sensor.DOMAIN: {"name": "test", "state_topic": "test-topic"}}
 }
-
-# Test deprecated YAML configuration under the platform key
-# Scheduled to be removed in HA core 2022.12
-DEFAULT_CONFIG_LEGACY = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
-DEFAULT_CONFIG_LEGACY[sensor.DOMAIN]["platform"] = mqtt.DOMAIN
 
 
 @pytest.fixture(autouse=True)
@@ -416,7 +410,7 @@ async def test_setting_sensor_bad_last_reset_via_mqtt_message(
 
 
 async def test_setting_sensor_empty_last_reset_via_mqtt_message(
-    hass, caplog, mqtt_mock_entry_with_yaml_config
+    hass, mqtt_mock_entry_with_yaml_config
 ):
     """Test the setting of the last_reset property via MQTT."""
     assert await async_setup_component(
@@ -440,7 +434,6 @@ async def test_setting_sensor_empty_last_reset_via_mqtt_message(
     async_fire_mqtt_message(hass, "last-reset-topic", "")
     state = hass.states.get("sensor.test")
     assert state.attributes.get("last_reset") is None
-    assert "Ignoring empty last_reset message" in caplog.text
 
 
 async def test_setting_sensor_last_reset_via_mqtt_json_message(
@@ -696,6 +689,11 @@ async def test_valid_device_class(hass, mqtt_mock_entry_with_yaml_config):
                         "device_class": "temperature",
                     },
                     {"name": "Test 2", "state_topic": "test-topic"},
+                    {
+                        "name": "Test 3",
+                        "state_topic": "test-topic",
+                        "device_class": None,
+                    },
                 ]
             }
         },
@@ -706,6 +704,8 @@ async def test_valid_device_class(hass, mqtt_mock_entry_with_yaml_config):
     state = hass.states.get("sensor.test_1")
     assert state.attributes["device_class"] == "temperature"
     state = hass.states.get("sensor.test_2")
+    assert "device_class" not in state.attributes
+    state = hass.states.get("sensor.test_3")
     assert "device_class" not in state.attributes
 
 
@@ -745,6 +745,11 @@ async def test_valid_state_class(hass, mqtt_mock_entry_with_yaml_config):
                         "state_class": "measurement",
                     },
                     {"name": "Test 2", "state_topic": "test-topic"},
+                    {
+                        "name": "Test 3",
+                        "state_topic": "test-topic",
+                        "state_class": None,
+                    },
                 ]
             }
         },
@@ -755,6 +760,8 @@ async def test_valid_state_class(hass, mqtt_mock_entry_with_yaml_config):
     state = hass.states.get("sensor.test_1")
     assert state.attributes["state_class"] == "measurement"
     state = hass.states.get("sensor.test_2")
+    assert "state_class" not in state.attributes
+    state = hass.states.get("sensor.test_3")
     assert "state_class" not in state.attributes
 
 
@@ -1110,15 +1117,6 @@ async def test_reloadable(hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_pa
     )
 
 
-# Test deprecated YAML configuration under the platform key
-# Scheduled to be removed in HA core 2022.12
-async def test_reloadable_late(hass, mqtt_client_mock, caplog, tmp_path):
-    """Test reloading the MQTT platform with late entry setup."""
-    domain = sensor.DOMAIN
-    config = DEFAULT_CONFIG_LEGACY[domain]
-    await help_test_reloadable_late(hass, caplog, tmp_path, domain, config)
-
-
 async def test_cleanup_triggers_and_restoring_state(
     hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path, freezer
 ):
@@ -1162,14 +1160,6 @@ async def test_cleanup_triggers_and_restoring_state(
     )
     await hass.async_block_till_done()
 
-    assert "Clean up expire after trigger for sensor.test1" in caplog.text
-    assert "Clean up expire after trigger for sensor.test2" not in caplog.text
-    assert (
-        "State recovered after reload for sensor.test1, remaining time before expiring"
-        in caplog.text
-    )
-    assert "State recovered after reload for sensor.test2" not in caplog.text
-
     state = hass.states.get("sensor.test1")
     assert state.state == "38"  # 100 °F -> 38 °C
 
@@ -1186,7 +1176,7 @@ async def test_cleanup_triggers_and_restoring_state(
 
 
 async def test_skip_restoring_state_with_over_due_expire_trigger(
-    hass, mqtt_mock_entry_with_yaml_config, caplog, freezer
+    hass, mqtt_mock_entry_with_yaml_config, freezer
 ):
     """Test restoring a state with over due expire timer."""
 
@@ -1210,7 +1200,8 @@ async def test_skip_restoring_state_with_over_due_expire_trigger(
     )
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
-    assert "Skip state recovery after reload for sensor.test3" in caplog.text
+    state = hass.states.get("sensor.test3")
+    assert state.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(
@@ -1258,16 +1249,3 @@ async def test_unload_entry(hass, mqtt_mock_entry_with_yaml_config, tmp_path):
     await help_test_unload_config_entry_with_platform(
         hass, mqtt_mock_entry_with_yaml_config, tmp_path, domain, config
     )
-
-
-# Test deprecated YAML configuration under the platform key
-# Scheduled to be removed in HA core 2022.12
-async def test_setup_with_legacy_schema(hass, mqtt_mock_entry_with_yaml_config):
-    """Test a setup with deprecated yaml platform schema."""
-    domain = sensor.DOMAIN
-    config = copy.deepcopy(DEFAULT_CONFIG_LEGACY[domain])
-    config["name"] = "test"
-    assert await async_setup_component(hass, domain, {domain: config})
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
-    assert hass.states.get(f"{domain}.test") is not None

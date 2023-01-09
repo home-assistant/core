@@ -42,13 +42,13 @@ from .const import (
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
+    DEFAULT_OPTIMISTIC,
 )
 from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
     async_setup_entry_helper,
-    async_setup_platform_helper,
     warn_for_legacy_schema,
 )
 from .models import MqttCommandTemplate, MqttValueTemplate, ReceiveMessage
@@ -85,7 +85,6 @@ TILT_PAYLOAD = "tilt"
 COVER_PAYLOAD = "cover"
 
 DEFAULT_NAME = "MQTT Cover"
-DEFAULT_OPTIMISTIC = False
 DEFAULT_PAYLOAD_CLOSE = "CLOSE"
 DEFAULT_PAYLOAD_OPEN = "OPEN"
 DEFAULT_PAYLOAD_STOP = "STOP"
@@ -121,7 +120,8 @@ def validate_options(config: ConfigType) -> ConfigType:
     """
     if CONF_SET_POSITION_TOPIC in config and CONF_GET_POSITION_TOPIC not in config:
         raise vol.Invalid(
-            f"'{CONF_SET_POSITION_TOPIC}' must be set together with '{CONF_GET_POSITION_TOPIC}'."
+            f"'{CONF_SET_POSITION_TOPIC}' must be set together with"
+            f" '{CONF_GET_POSITION_TOPIC}'."
         )
 
     # if templates are set make sure the topic for the template is also set
@@ -133,22 +133,26 @@ def validate_options(config: ConfigType) -> ConfigType:
 
     if CONF_GET_POSITION_TEMPLATE in config and CONF_GET_POSITION_TOPIC not in config:
         raise vol.Invalid(
-            f"'{CONF_GET_POSITION_TEMPLATE}' must be set together with '{CONF_GET_POSITION_TOPIC}'."
+            f"'{CONF_GET_POSITION_TEMPLATE}' must be set together with"
+            f" '{CONF_GET_POSITION_TOPIC}'."
         )
 
     if CONF_SET_POSITION_TEMPLATE in config and CONF_SET_POSITION_TOPIC not in config:
         raise vol.Invalid(
-            f"'{CONF_SET_POSITION_TEMPLATE}' must be set together with '{CONF_SET_POSITION_TOPIC}'."
+            f"'{CONF_SET_POSITION_TEMPLATE}' must be set together with"
+            f" '{CONF_SET_POSITION_TOPIC}'."
         )
 
     if CONF_TILT_COMMAND_TEMPLATE in config and CONF_TILT_COMMAND_TOPIC not in config:
         raise vol.Invalid(
-            f"'{CONF_TILT_COMMAND_TEMPLATE}' must be set together with '{CONF_TILT_COMMAND_TOPIC}'."
+            f"'{CONF_TILT_COMMAND_TEMPLATE}' must be set together with"
+            f" '{CONF_TILT_COMMAND_TOPIC}'."
         )
 
     if CONF_TILT_STATUS_TEMPLATE in config and CONF_TILT_STATUS_TOPIC not in config:
         raise vol.Invalid(
-            f"'{CONF_TILT_STATUS_TEMPLATE}' must be set together with '{CONF_TILT_STATUS_TOPIC}'."
+            f"'{CONF_TILT_STATUS_TEMPLATE}' must be set together with"
+            f" '{CONF_TILT_STATUS_TOPIC}'."
         )
 
     return config
@@ -157,7 +161,7 @@ def validate_options(config: ConfigType) -> ConfigType:
 _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
     {
         vol.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_DEVICE_CLASS): vol.Any(DEVICE_CLASSES_SCHEMA, None),
         vol.Optional(CONF_GET_POSITION_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
@@ -205,10 +209,9 @@ PLATFORM_SCHEMA_MODERN = vol.All(
     validate_options,
 )
 
-# Configuring MQTT Covers under the cover platform key is deprecated in HA Core 2022.6
+# Configuring MQTT Covers under the cover platform key was deprecated in HA Core 2022.6
+# Setup for the legacy YAML format was removed in HA Core 2022.12
 PLATFORM_SCHEMA = vol.All(
-    cv.PLATFORM_SCHEMA.extend(_PLATFORM_SCHEMA_BASE.schema),
-    validate_options,
     warn_for_legacy_schema(cover.DOMAIN),
 )
 
@@ -219,29 +222,12 @@ DISCOVERY_SCHEMA = vol.All(
 )
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up MQTT covers configured under the fan platform key (deprecated)."""
-    # Deprecated in HA Core 2022.6
-    await async_setup_platform_helper(
-        hass,
-        cover.DOMAIN,
-        discovery_info or config,
-        async_add_entities,
-        _async_setup_entity,
-    )
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT cover through configuration.yaml and dynamically through MQTT discovery."""
+    """Set up MQTT cover through YAML and through MQTT discovery."""
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -407,7 +393,10 @@ class MqttCover(MqttEntity, CoverEntity):
                 self._state = STATE_CLOSED
             else:
                 _LOGGER.warning(
-                    "Payload is not supported (e.g. open, closed, opening, closing, stopped): %s",
+                    (
+                        "Payload is not supported (e.g. open, closed, opening, closing,"
+                        " stopped): %s"
+                    ),
                     payload,
                 )
                 return
@@ -433,7 +422,8 @@ class MqttCover(MqttEntity, CoverEntity):
             if payload_dict and isinstance(payload_dict, dict):
                 if "position" not in payload_dict:
                     _LOGGER.warning(
-                        "Template (position_template) returned JSON without position attribute"
+                        "Template (position_template) returned JSON without position"
+                        " attribute"
                     )
                     return
                 if "tilt_position" in payload_dict:
@@ -535,9 +525,9 @@ class MqttCover(MqttEntity, CoverEntity):
         return self._config.get(CONF_DEVICE_CLASS)
 
     @property
-    def supported_features(self) -> CoverEntityFeature | int:
+    def supported_features(self) -> CoverEntityFeature:
         """Flag supported features."""
-        supported_features = 0
+        supported_features = CoverEntityFeature(0)
         if self._config.get(CONF_COMMAND_TOPIC) is not None:
             if self._config.get(CONF_PAYLOAD_OPEN) is not None:
                 supported_features |= CoverEntityFeature.OPEN
@@ -666,7 +656,8 @@ class MqttCover(MqttEntity, CoverEntity):
         tilt = kwargs[ATTR_TILT_POSITION]
         percentage_tilt = tilt
         tilt = self.find_in_range_from_percent(tilt)
-        # Handover the tilt after calculated from percent would make it more consistent with receiving templates
+        # Handover the tilt after calculated from percent would make it more
+        # consistent with receiving templates
         variables = {
             "tilt_position": percentage_tilt,
             "entity_id": self.entity_id,
@@ -739,8 +730,8 @@ class MqttCover(MqttEntity, CoverEntity):
         """Find the 0-100% value within the specified range."""
         # the range of motion as defined by the min max values
         if range_type == COVER_PAYLOAD:
-            max_range = self._config[CONF_POSITION_OPEN]
-            min_range = self._config[CONF_POSITION_CLOSED]
+            max_range: int = self._config[CONF_POSITION_OPEN]
+            min_range: int = self._config[CONF_POSITION_CLOSED]
         else:
             max_range = self._config[CONF_TILT_MAX]
             min_range = self._config[CONF_TILT_MIN]
@@ -767,8 +758,8 @@ class MqttCover(MqttEntity, CoverEntity):
         returning the offset
         """
         if range_type == COVER_PAYLOAD:
-            max_range = self._config[CONF_POSITION_OPEN]
-            min_range = self._config[CONF_POSITION_CLOSED]
+            max_range: int = self._config[CONF_POSITION_OPEN]
+            min_range: int = self._config[CONF_POSITION_CLOSED]
         else:
             max_range = self._config[CONF_TILT_MAX]
             min_range = self._config[CONF_TILT_MIN]

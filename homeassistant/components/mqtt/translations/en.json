@@ -8,10 +8,11 @@
             "bad_birth": "Invalid birth topic",
             "bad_certificate": "The CA certificate is invalid",
             "bad_client_cert": "Invalid client certificate, ensure a PEM coded file is supplied",
-            "bad_client_cert_key": "Client certificate and private are no valid pair",
+            "bad_client_cert_key": "Client certificate and private key are not a valid pair",
             "bad_client_key": "Invalid private key, ensure a PEM coded file is supplied without password",
             "bad_discovery_prefix": "Invalid discovery prefix",
             "bad_will": "Invalid will topic",
+            "bad_ws_headers": "Supply valid HTTP headers as a JSON object",
             "cannot_connect": "Failed to connect",
             "invalid_inclusion": "The client certificate and private key must be configurered together"
         },
@@ -24,7 +25,6 @@
                     "client_cert": "Upload client certificate file",
                     "client_id": "Client ID (leave empty to randomly generated one)",
                     "client_key": "Upload private key file",
-                    "discovery": "Enable discovery",
                     "keepalive": "The time between sending keep alive messages",
                     "password": "Password",
                     "port": "Port",
@@ -32,7 +32,10 @@
                     "set_ca_cert": "Broker certificate validation",
                     "set_client_cert": "Use a client certificate",
                     "tls_insecure": "Ignore broker certificate validation",
-                    "username": "Username"
+                    "transport": "MQTT transport",
+                    "username": "Username",
+                    "ws_headers": "WebSocket headers in JSON format",
+                    "ws_path": "WebSocket path"
                 },
                 "description": "Please enter the connection information of your MQTT broker."
             },
@@ -82,10 +85,11 @@
             "bad_birth": "Invalid birth topic",
             "bad_certificate": "The CA certificate is invalid",
             "bad_client_cert": "Invalid client certificate, ensure a PEM coded file is supplied",
-            "bad_client_cert_key": "Client certificate and private are no valid pair",
+            "bad_client_cert_key": "Client certificate and private key are not a valid pair",
             "bad_client_key": "Invalid private key, ensure a PEM coded file is supplied without password",
             "bad_discovery_prefix": "Invalid discovery prefix",
             "bad_will": "Invalid will topic",
+            "bad_ws_headers": "Supply valid HTTP headers as a JSON object",
             "cannot_connect": "Failed to connect",
             "invalid_inclusion": "The client certificate and private key must be configurered together"
         },
@@ -105,7 +109,10 @@
                     "set_ca_cert": "Broker certificate validation",
                     "set_client_cert": "Use a client certificate",
                     "tls_insecure": "Ignore broker certificate validation",
-                    "username": "Username"
+                    "transport": "MQTT transport",
+                    "username": "Username",
+                    "ws_headers": "WebSocket headers in JSON format",
+                    "ws_path": "WebSocket path"
                 },
                 "description": "Please enter the connection information of your MQTT broker.",
                 "title": "Broker options"

@@ -5,7 +5,7 @@ import asyncio
 from collections import OrderedDict
 from collections.abc import Awaitable, Callable, Collection
 from contextlib import contextmanager
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import functools as ft
 from io import StringIO
 import json
@@ -22,7 +22,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F401
 import voluptuous as vol
 
-from homeassistant import auth, config_entries, core as ha, loader
+from homeassistant import auth, bootstrap, config_entries, core as ha, loader
 from homeassistant.auth import (
     auth_store,
     models as auth_models,
@@ -30,11 +30,10 @@ from homeassistant.auth import (
     providers as auth_providers,
 )
 from homeassistant.auth.permissions import system_policies
-from homeassistant.components import device_automation, recorder
+from homeassistant.components import device_automation
 from homeassistant.components.device_automation import (  # noqa: F401
     _async_get_device_automation_capabilities as async_get_device_automation_capabilities,
 )
-from homeassistant.components.mqtt.models import ReceiveMessage
 from homeassistant.config import async_process_component_config
 from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
@@ -160,7 +159,7 @@ def get_test_home_assistant():
 
 
 # pylint: disable=protected-access
-async def async_test_home_assistant(loop, load_registries=True):
+async def async_test_home_assistant(event_loop, load_registries=True):
     """Return a Home Assistant object pointing at test config dir."""
     hass = ha.HomeAssistant()
     store = auth_store.AuthStore(hass)
@@ -289,6 +288,7 @@ async def async_test_home_assistant(loop, load_registries=True):
     hass.config.units = METRIC_SYSTEM
     hass.config.media_dirs = {"local": get_test_config_dir("media")}
     hass.config.skip_pip = True
+    hass.config.skip_pip_packages = []
 
     hass.config_entries = config_entries.ConfigEntries(
         hass,
@@ -306,6 +306,7 @@ async def async_test_home_assistant(loop, load_registries=True):
             issue_registry.async_load(hass),
         )
         await hass.async_block_till_done()
+        hass.data[bootstrap.DATA_REGISTRIES_LOADED] = None
 
     hass.state = ha.CoreState.running
 
@@ -370,6 +371,10 @@ def async_mock_intent(hass, intent_typ):
 @ha.callback
 def async_fire_mqtt_message(hass, topic, payload, qos=0, retain=False):
     """Fire the MQTT message."""
+    # Local import to avoid processing MQTT modules when running a testcase
+    # which does not use MQTT.
+    from homeassistant.components.mqtt.models import ReceiveMessage
+
     if isinstance(payload, str):
         payload = payload.encode("utf-8")
     msg = ReceiveMessage(topic, payload, qos, retain)
@@ -380,16 +385,58 @@ fire_mqtt_message = threadsafe_callback_factory(async_fire_mqtt_message)
 
 
 @ha.callback
-def async_fire_time_changed(
-    hass: HomeAssistant, datetime_: datetime = None, fire_all: bool = False
+def async_fire_time_changed_exact(
+    hass: HomeAssistant, datetime_: datetime | None = None, fire_all: bool = False
 ) -> None:
-    """Fire a time changed event."""
+    """Fire a time changed event at an exact microsecond.
+
+    Consider that it is not possible to actually achieve an exact
+    microsecond in production as the event loop is not precise enough.
+    If your code relies on this level of precision, consider a different
+    approach, as this is only for testing.
+    """
     if datetime_ is None:
-        utc_datetime = date_util.utcnow()
+        utc_datetime = datetime.now(timezone.utc)
     else:
         utc_datetime = date_util.as_utc(datetime_)
-    timestamp = date_util.utc_to_timestamp(utc_datetime)
 
+    _async_fire_time_changed(hass, utc_datetime, fire_all)
+
+
+@ha.callback
+def async_fire_time_changed(
+    hass: HomeAssistant, datetime_: datetime | None = None, fire_all: bool = False
+) -> None:
+    """Fire a time changed event.
+
+    This function will add up to 0.5 seconds to the time to ensure that
+    it accounts for the accidental synchronization avoidance code in repeating
+    listeners.
+
+    As asyncio is cooperative, we can't guarantee that the event loop will
+    run an event at the exact time we want. If you need to fire time changed
+    for an exact microsecond, use async_fire_time_changed_exact.
+    """
+    if datetime_ is None:
+        utc_datetime = datetime.now(timezone.utc)
+    else:
+        utc_datetime = date_util.as_utc(datetime_)
+
+    if utc_datetime.microsecond < 500000:
+        # Allow up to 500000 microseconds to be added to the time
+        # to handle update_coordinator's and
+        # async_track_time_interval's
+        # staggering to avoid thundering herd.
+        utc_datetime = utc_datetime.replace(microsecond=500000)
+
+    _async_fire_time_changed(hass, utc_datetime, fire_all)
+
+
+@ha.callback
+def _async_fire_time_changed(
+    hass: HomeAssistant, utc_datetime: datetime | None, fire_all: bool
+) -> None:
+    timestamp = date_util.utc_to_timestamp(utc_datetime)
     for task in list(hass.loop._scheduled):
         if not isinstance(task, asyncio.TimerHandle):
             continue
@@ -922,11 +969,15 @@ def assert_setup_component(count, domain=None):
     ), f"setup_component failed, expected {count} got {res_len}: {res}"
 
 
-SetupRecorderInstanceT = Callable[..., Awaitable[recorder.Recorder]]
+SetupRecorderInstanceT = Callable[..., Awaitable[Any]]
 
 
 def init_recorder_component(hass, add_config=None, db_url="sqlite://"):
     """Initialize the recorder."""
+    # Local import to avoid processing recorder and SQLite modules when running a
+    # testcase which does not use the recorder.
+    from homeassistant.components import recorder
+
     config = dict(add_config) if add_config else {}
     if recorder.CONF_DB_URL not in config:
         config[recorder.CONF_DB_URL] = db_url
@@ -1070,6 +1121,11 @@ class MockEntity(entity.Entity):
         return self._handle("supported_features")
 
     @property
+    def translation_key(self):
+        """Return the translation key."""
+        return self._handle("translation_key")
+
+    @property
     def unique_id(self):
         """Return the unique ID of the entity."""
         return self._handle("unique_id")
@@ -1116,13 +1172,13 @@ def mock_storage(data=None):
 
         # Route through original load so that we trigger migration
         loaded = await orig_load(store)
-        _LOGGER.info("Loading data for %s: %s", store.key, loaded)
+        _LOGGER.debug("Loading data for %s: %s", store.key, loaded)
         return loaded
 
-    def mock_write_data(store, path, data_to_write):
+    async def mock_write_data(store, path, data_to_write):
         """Mock version of write data."""
         # To ensure that the data can be serialized
-        _LOGGER.info("Writing data to %s: %s", store.key, data_to_write)
+        _LOGGER.debug("Writing data to %s: %s", store.key, data_to_write)
         raise_contains_mocks(data_to_write)
         data[store.key] = json.loads(json.dumps(data_to_write, cls=store._encoder))
 
@@ -1135,7 +1191,7 @@ def mock_storage(data=None):
         side_effect=mock_async_load,
         autospec=True,
     ), patch(
-        "homeassistant.helpers.storage.Store._write_data",
+        "homeassistant.helpers.storage.Store._async_write_data",
         side_effect=mock_write_data,
         autospec=True,
     ), patch(
@@ -1252,6 +1308,38 @@ def assert_lists_same(a, b):
         assert i in b
     for i in b:
         assert i in a
+
+
+_SENTINEL = object()
+
+
+class _HA_ANY:
+    """A helper object that compares equal to everything.
+
+    Based on unittest.mock.ANY, but modified to not show up in pytest's equality
+    assertion diffs.
+    """
+
+    _other = _SENTINEL
+
+    def __eq__(self, other):
+        """Test equal."""
+        self._other = other
+        return True
+
+    def __ne__(self, other):
+        """Test not equal."""
+        self._other = other
+        return False
+
+    def __repr__(self):
+        """Return repr() other to not show up in pytest quality diffs."""
+        if self._other is _SENTINEL:
+            return "<ANY>"
+        return repr(self._other)
+
+
+ANY = _HA_ANY()
 
 
 def raise_contains_mocks(val):

@@ -32,7 +32,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_platform,
+    issue_registry as ir,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.util.dt import utcnow
@@ -429,6 +433,20 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
 
     async def async_set_doorbell_message(self, message: str, duration: str) -> None:
         """Set LCD Message on Doorbell display."""
+
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            "deprecated_service_set_doorbell_message",
+            breaks_in_ha_version="2023.3.0",
+            is_fixable=True,
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_placeholders={
+                "link": "https://www.home-assistant.io/integrations/text#service-textset_value"
+            },
+            translation_key="deprecated_service_set_doorbell_message",
+        )
 
         if self.entity_description.device_class != DEVICE_CLASS_LCD_MESSAGE:
             raise HomeAssistantError("Not a doorbell text select entity")

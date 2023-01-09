@@ -1,4 +1,4 @@
-"""Support for Insteon Thermostats via ISY994 Platform."""
+"""Support for Insteon Thermostats via ISY Platform."""
 from __future__ import annotations
 
 from typing import Any
@@ -19,7 +19,6 @@ from pyisy.nodes import Node
 from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
-    DOMAIN as CLIMATE,
     FAN_AUTO,
     FAN_OFF,
     FAN_ON,
@@ -32,8 +31,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     PRECISION_TENTHS,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    Platform,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -61,19 +60,19 @@ from .helpers import convert_isy_value_to_hass, migrate_old_unique_ids
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the ISY994 thermostat platform."""
+    """Set up the ISY thermostat platform."""
     entities = []
 
     hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
-    for node in hass_isy_data[ISY994_NODES][CLIMATE]:
+    for node in hass_isy_data[ISY994_NODES][Platform.CLIMATE]:
         entities.append(ISYThermostatEntity(node))
 
-    await migrate_old_unique_ids(hass, CLIMATE, entities)
+    await migrate_old_unique_ids(hass, Platform.CLIMATE, entities)
     async_add_entities(entities)
 
 
 class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
-    """Representation of an ISY994 thermostat entity."""
+    """Representation of an ISY thermostat entity."""
 
     _attr_hvac_modes = ISY_HVAC_MODES
     _attr_precision = PRECISION_TENTHS
@@ -103,10 +102,10 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
         if not (uom := self._node.aux_properties.get(PROP_UOM)):
             return self.hass.config.units.temperature_unit
         if uom.value == UOM_ISY_CELSIUS:
-            return TEMP_CELSIUS
+            return UnitOfTemperature.CELSIUS
         if uom.value == UOM_ISY_FAHRENHEIT:
-            return TEMP_FAHRENHEIT
-        return TEMP_FAHRENHEIT
+            return UnitOfTemperature.FAHRENHEIT
+        return UnitOfTemperature.FAHRENHEIT
 
     @property
     def current_humidity(self) -> int | None:

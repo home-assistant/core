@@ -47,7 +47,32 @@
                 "data": {
                     "select_device": "Dispositivo Miio"
                 },
-                "description": "Selecciona el dispositivo Xiaomi Miio para configurarlo."
+                "description": "Selecciona el dispositivo Xiaomi Miio para configurar."
+            }
+        }
+    },
+    "entity": {
+        "select": {
+            "display_orientation": {
+                "state": {
+                    "forward": "Adelante",
+                    "left": "Izquierda",
+                    "right": "Derecha"
+                }
+            },
+            "led_brightness": {
+                "state": {
+                    "bright": "Brillo",
+                    "dim": "Atenuar",
+                    "off": "Apagado"
+                }
+            },
+            "ptc_level": {
+                "state": {
+                    "high": "Alto",
+                    "low": "Bajo",
+                    "medium": "Medio"
+                }
             }
         }
     },
