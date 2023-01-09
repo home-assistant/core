@@ -83,6 +83,11 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 placeholders["error"] = str(err)
                 errors[CONF_HOST] = "unknown"
 
+            if not host.api.is_admin:
+                errors[CONF_USERNAME] = "not_admin"
+                placeholders["username"] = host.api.username
+                placeholders["user_level"] = host.api.user_level
+
             if not errors:
                 user_input[CONF_PORT] = host.api.port
                 user_input[CONF_USE_HTTPS] = host.api.use_https

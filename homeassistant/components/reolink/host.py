@@ -68,6 +68,13 @@ class ReolinkHost:
         if self._api.mac_address is None:
             return False
 
+        if not self._api.is_admin:
+            _LOGGER.warning(
+                'User %s has authorisation level "%s". Only admin users can change camera settings! Not everything will work.',
+                self._api.username,
+                self._api.user_level,
+            )
+
         enable_onvif = None
         enable_rtmp = None
         enable_rtsp = None

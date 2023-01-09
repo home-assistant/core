@@ -24,7 +24,7 @@ TEST_NVR_NAME = "test_reolink_name"
 TEST_USE_HTTPS = True
 
 
-def get_mock_info(error=None, host_data_return=True):
+def get_mock_info(error=None, host_data_return=True, user_level="admin"):
     """Return a mock gateway info instance."""
     host_mock = Mock()
     if error is None:
@@ -40,6 +40,7 @@ def get_mock_info(error=None, host_data_return=True):
     host_mock.nvr_name = TEST_NVR_NAME
     host_mock.port = TEST_PORT
     host_mock.use_https = TEST_USE_HTTPS
+    host_mock.user_level = user_level
     return host_mock
 
 
@@ -110,7 +111,22 @@ async def test_config_flow_errors(hass):
 
     assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {"host": "cannot_connect"}
+    assert result["errors"] == {CONF_HOST: "cannot_connect"}
+
+    host_mock = get_mock_info(user_level="guest")
+    with patch("homeassistant.components.reolink.host.Host", return_value=host_mock):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: TEST_USERNAME,
+                CONF_PASSWORD: TEST_PASSWORD,
+                CONF_HOST: TEST_HOST,
+            },
+        )
+
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {CONF_USERNAME: "not_admin"}
 
     host_mock = get_mock_info(error=json.JSONDecodeError("test_error", "test", 1))
     with patch("homeassistant.components.reolink.host.Host", return_value=host_mock):
@@ -125,7 +141,7 @@ async def test_config_flow_errors(hass):
 
     assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {"host": "unknown"}
+    assert result["errors"] == {CONF_HOST: "unknown"}
 
     host_mock = get_mock_info(error=CredentialsInvalidError("Test error"))
     with patch("homeassistant.components.reolink.host.Host", return_value=host_mock):
@@ -140,7 +156,7 @@ async def test_config_flow_errors(hass):
 
     assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {"host": "invalid_auth"}
+    assert result["errors"] == {CONF_HOST: "invalid_auth"}
 
     host_mock = get_mock_info(error=ApiError("Test error"))
     with patch("homeassistant.components.reolink.host.Host", return_value=host_mock):
@@ -155,7 +171,7 @@ async def test_config_flow_errors(hass):
 
     assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {"host": "api_error"}
+    assert result["errors"] == {CONF_HOST: "api_error"}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
