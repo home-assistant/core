@@ -149,11 +149,11 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return conn
 
     @staticmethod
-    def _logout(conn: Connection) -> None:
+    def _disconnect(conn: Connection) -> None:
         try:
-            conn.user_session.user.logout()  # type: ignore[union-attr]
+            conn.close()
         except Exception:  # pylint: disable=broad-except
-            _LOGGER.debug("Could not logout", exc_info=True)
+            _LOGGER.debug("Disconnect error", exc_info=True)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -207,7 +207,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         info, wlan_settings = await self.hass.async_add_executor_job(
             get_device_info, conn
         )
-        await self.hass.async_add_executor_job(self._logout, conn)
+        await self.hass.async_add_executor_job(self._disconnect, conn)
 
         user_input.update(
             {
@@ -301,7 +301,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         conn = await self._try_connect(new_data, errors)
         if conn:
-            await self.hass.async_add_executor_job(self._logout, conn)
+            await self.hass.async_add_executor_job(self._disconnect, conn)
         if errors:
             return await self._async_show_reauth_form(
                 user_input=user_input, errors=errors
