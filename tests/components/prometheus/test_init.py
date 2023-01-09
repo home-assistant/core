@@ -75,7 +75,7 @@ class FilterTest:
 
 
 @pytest.fixture(name="client")
-async def setup_prometheus_client(hass, hass_client, namespace, custom_labels={}):
+async def setup_prometheus_client(hass, hass_client, namespace, custom_labels):
     """Initialize an hass_client with Prometheus component."""
     # Reset registry
     prometheus_client.REGISTRY = prometheus_client.CollectorRegistry(auto_describe=True)
@@ -83,7 +83,9 @@ async def setup_prometheus_client(hass, hass_client, namespace, custom_labels={}
     prometheus_client.PlatformCollector(registry=prometheus_client.REGISTRY)
     prometheus_client.GCCollector(registry=prometheus_client.REGISTRY)
 
-    config = {custom_labels: custom_labels}
+    config = {}
+    if custom_labels is not None:
+        config[prometheus.CONF_CUSTOM_LABELS] = custom_labels
     if namespace is not None:
         config[prometheus.CONF_PROM_NAMESPACE] = namespace
     assert await async_setup_component(
@@ -92,6 +94,11 @@ async def setup_prometheus_client(hass, hass_client, namespace, custom_labels={}
     await hass.async_block_till_done()
 
     return await hass_client()
+
+
+@pytest.fixture(name="custom_labels")
+def custom_labels():
+    return None
 
 
 async def generate_latest_metrics(client):
@@ -883,18 +890,22 @@ async def test_disabling_entity(
         'friendly_name="Outside Humidity"} 1.0' in body
     )
 
-@pytest.mark.parametrize("namespace", [None])
-@pytest.mark.parametrize("custom_labels", {"area_name": "{{ area_name(state.entity_id) }}"})
+
+@pytest.mark.parametrize(
+    "namespace, custom_labels", [(None, {"object_id": "{{ state.object_id }}"})]
+)
 async def test_custom_labels(client, sensor_entities):
-    """Test prometheus metrics view."""
+    """Test custom_labels setting."""
+
     body = await generate_latest_metrics(client)
 
     assert (
         'homeassistant_sensor_temperature_celsius{domain="sensor",'
         'entity="sensor.outside_temperature",'
         'friendly_name="Outside Temperature",'
-        'area_name="Garage"} 15.6' in body
+        'object_id="outside_temperature"} 15.6' in body
     )
+
 
 @pytest.fixture(name="registry")
 def entity_registry_fixture(hass):
@@ -1581,9 +1592,7 @@ async def test_full_config(hass, mock_client):
                 "exclude_entity_globs": ["climate.excluded_*"],
                 "exclude_entities": ["fake.time_excluded"],
             },
-            "custom_labels": {
-                "area_name": "{{ area_name(state.entity_id) }}"
-            }
+            "custom_labels": {"area_name": "{{ area_name(state.entity_id) }}"},
         }
     }
     assert await async_setup_component(hass, prometheus.DOMAIN, config)
