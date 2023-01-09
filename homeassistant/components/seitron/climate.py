@@ -57,7 +57,7 @@ class SeitronClimate(CoordinatorEntity, ClimateEntity):
         """Initialize an Seitron climate device."""
         super().__init__(coordinator)
         self._thermostat = thermostat
-        self._attr_name = thermostat.name
+        self._attr_has_entity_name = True
         self._attr_unique_id = thermostat.gmac
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, thermostat.gmac)},
