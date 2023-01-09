@@ -44,6 +44,7 @@ class IslamicPrayerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, datetim
             longitude=self.hass.config.longitude,
             calculation_method=self.calc_method,
             date=str(dt_util.now().date()),
+            iso8601=True,
         )
         return calc.fetch_prayer_times()
 
@@ -113,8 +114,11 @@ class IslamicPrayerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, datetim
             raise UpdateFailed from err
 
         prayer_times_info: dict[str, datetime] = {}
+        # remove date key introduced in version 0.0.8
+        if "date" in prayer_times:
+            del prayer_times["date"]
         for prayer, time in prayer_times.items():
-            if prayer_time := dt_util.parse_datetime(f"{dt_util.now().date()} {time}"):
+            if prayer_time := dt_util.parse_datetime(time):
                 prayer_times_info[prayer] = dt_util.as_utc(prayer_time)
 
         self.async_schedule_future_update(prayer_times_info["Midnight"])

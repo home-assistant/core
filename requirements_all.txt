@@ -1388,7 +1388,7 @@ poolsense==0.0.8
 praw==7.5.0
 
 # homeassistant.components.islamic_prayer_times
-prayer_times_calculator==0.0.6
+prayer_times_calculator==0.0.8
 
 # homeassistant.components.progettihwsw
 progettihwsw==0.1.1
