@@ -1,6 +1,7 @@
 """Support for Nee-Vo Tank Monitors."""
 from __future__ import annotations
 
+from contextlib import suppress
 import logging
 
 from pyneevo.tank import Tank
@@ -79,13 +80,8 @@ class NeeVoSensor(NeeVoEntity, SensorEntity):
     @property
     def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        unit_of_measurement = self.entity_description.native_unit_of_measurement
         if self.entity_description.key == "tank_last_pressure":
             if self._neevo.tank_last_pressure_unit is not None:
-                try:
-                    unit_of_measurement = UnitOfPressure(
-                        self._neevo.tank_last_pressure_unit
-                    )
-                except TypeError:
-                    unit_of_measurement = None
-        return unit_of_measurement
+                with suppress(TypeError):
+                    return UnitOfPressure(self._neevo.tank_last_pressure_unit)
+        return super().native_unit_of_measurement
