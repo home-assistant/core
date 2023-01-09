@@ -217,7 +217,7 @@ class HueSmartSceneEntity(HueSceneEntityBase):
             "name": self.resource.metadata.name,
             "is_active": self.is_active,
         }
-        if self.resource.active_timeslot:
+        if self.is_active and self.resource.active_timeslot:
             res["active_timeslot_id"] = self.resource.active_timeslot.timeslot_id
             res["active_timeslot_name"] = self.resource.active_timeslot.weekday.value
             # lookup active scene in timeslot
