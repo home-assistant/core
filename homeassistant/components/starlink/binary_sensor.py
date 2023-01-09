@@ -1,4 +1,4 @@
-"""Contains sensors exposed by the Starlink integration."""
+"""Contains binary sensors exposed by the Starlink integration."""
 
 from __future__ import annotations
 
