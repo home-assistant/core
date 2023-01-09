@@ -54,7 +54,7 @@ class BaseServiceInfo:
 
 
 class FlowError(HomeAssistantError):
-    """Error while configuring an account."""
+    """Base class for data entry errors."""
 
 
 class UnknownHandler(FlowError):
@@ -156,7 +156,7 @@ class FlowManager(abc.ABC):
     async def async_finish_flow(
         self, flow: FlowHandler, result: FlowResult
     ) -> FlowResult:
-        """Finish a config flow and add an entry."""
+        """Finish a data entry flow."""
 
     async def async_post_init(self, flow: FlowHandler, result: FlowResult) -> None:
         """Entry has finished executing its first step asynchronously."""
@@ -206,7 +206,7 @@ class FlowManager(abc.ABC):
     async def async_init(
         self, handler: str, *, context: dict[str, Any] | None = None, data: Any = None
     ) -> FlowResult:
-        """Start a configuration flow."""
+        """Start a data entry flow."""
         if context is None:
             context = {}
         flow = await self.async_create_flow(handler, context=context, data=data)
@@ -229,7 +229,7 @@ class FlowManager(abc.ABC):
     async def async_configure(
         self, flow_id: str, user_input: dict | None = None
     ) -> FlowResult:
-        """Continue a configuration flow."""
+        """Continue a data entry flow."""
         if (flow := self._progress.get(flow_id)) is None:
             raise UnknownFlow
 
@@ -314,7 +314,7 @@ class FlowManager(abc.ABC):
         try:
             flow.async_remove()
         except Exception as err:  # pylint: disable=broad-except
-            _LOGGER.exception("Error removing %s config flow: %s", flow.handler, err)
+            _LOGGER.exception("Error removing %s flow: %s", flow.handler, err)
 
     async def _async_handle_step(
         self, flow: FlowHandler, step_id: str, user_input: dict | BaseServiceInfo | None
@@ -371,7 +371,7 @@ class FlowManager(abc.ABC):
 
 
 class FlowHandler:
-    """Handle the configuration flow of a component."""
+    """Handle a data entry flow."""
 
     # Set by flow manager
     cur_step: FlowResult | None = None
@@ -462,7 +462,7 @@ class FlowHandler:
         description: str | None = None,
         description_placeholders: Mapping[str, str] | None = None,
     ) -> FlowResult:
-        """Finish config flow and create a config entry."""
+        """Finish flow."""
         flow_result = FlowResult(
             version=self.VERSION,
             type=FlowResultType.CREATE_ENTRY,
@@ -484,7 +484,7 @@ class FlowHandler:
         reason: str,
         description_placeholders: Mapping[str, str] | None = None,
     ) -> FlowResult:
-        """Abort the config flow."""
+        """Abort the flow."""
         return _create_abort_data(
             self.flow_id, self.handler, reason, description_placeholders
         )
@@ -569,7 +569,7 @@ class FlowHandler:
 
     @callback
     def async_remove(self) -> None:
-        """Notification that the config flow has been removed."""
+        """Notification that the flow has been removed."""
 
 
 @callback
