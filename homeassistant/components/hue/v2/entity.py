@@ -139,11 +139,15 @@ class HueBaseEntity(Entity):
         if event_type == EventType.RESOURCE_DELETED:
             # remove any services created for zones/rooms
             # regular devices are removed automatically by the logic in device.py.
-            if resource.type in [ResourceTypes.ROOM, ResourceTypes.ZONE]:
+            if resource.type in (ResourceTypes.ROOM, ResourceTypes.ZONE):
                 dev_reg = async_get_device_registry(self.hass)
                 if device := dev_reg.async_get_device({(DOMAIN, resource.id)}):
                     dev_reg.async_remove_device(device.id)
-            if resource.type in [ResourceTypes.GROUPED_LIGHT, ResourceTypes.SCENE]:
+            if resource.type in (
+                ResourceTypes.GROUPED_LIGHT,
+                ResourceTypes.SCENE,
+                ResourceTypes.SMART_SCENE,
+            ):
                 ent_reg = async_get_entity_registry(self.hass)
                 ent_reg.async_remove(self.entity_id)
             return
