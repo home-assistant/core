@@ -42,9 +42,7 @@ async def async_setup_entry(
         description = NumberEntityDescription(
             key=node.address,
             name=node.name,
-            icon="mdi:counter",
             entity_registry_enabled_default=enable_by_default,
-            native_unit_of_measurement=None,
             native_step=step,
             native_min_value=-min_max,
             native_max_value=min_max,
@@ -52,9 +50,7 @@ async def async_setup_entry(
         description_init = NumberEntityDescription(
             key=f"{node.address}_init",
             name=f"{node.name} Initial Value",
-            icon="mdi:counter",
             entity_registry_enabled_default=False,
-            native_unit_of_measurement=None,
             native_step=step,
             native_min_value=-min_max,
             native_max_value=min_max,
