@@ -58,7 +58,6 @@ SENSOR_TYPES = {
         key="signal",
         name="signal strength",
         native_unit_of_measurement=PERCENTAGE,
-        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "ssid": SensorEntityDescription(
