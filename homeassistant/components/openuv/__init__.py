@@ -45,6 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data.get(CONF_LONGITUDE, hass.config.longitude),
         altitude=entry.data.get(CONF_ELEVATION, hass.config.elevation),
         session=websession,
+        check_status_before_request=True,
     )
 
     async def async_update_protection_data() -> dict[str, Any]:
