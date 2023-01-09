@@ -22,7 +22,7 @@ class HassConstructorFormatChecker(BaseChecker):  # type: ignore[misc]
     options = ()
 
     def visit_functiondef(self, node: nodes.FunctionDef) -> None:
-        """Check for improperly typed `__init__` definitions.."""
+        """Check for improperly typed `__init__` definitions."""
         if not node.is_method() or node.name != "__init__":
             return
 
