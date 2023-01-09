@@ -64,6 +64,7 @@ CYCLE_FUNC = [
     (WasherDryer.get_cycle_status_washing, "cycle_washing"),
 ]
 
+DOOR_OPEN = "door_open"
 ICON_D = "mdi:tumble-dryer"
 ICON_W = "mdi:washing-machine"
 
@@ -74,7 +75,7 @@ def washer_state(washer: WasherDryer) -> str | None:
     """Determine correct states for a washer."""
 
     if washer.get_attribute("Cavity_OpStatusDoorOpen") == "1":
-        return "door_open"
+        return DOOR_OPEN
 
     machine_state = washer.get_machine_state()
 
@@ -107,9 +108,9 @@ SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
         translation_key="whirlpool_machine",
         device_class=SensorDeviceClass.ENUM,
         options=(
-            [value for index, value in MACHINE_STATE.items()]
-            + [value for index, value in CYCLE_FUNC]
-            + ["door_open"]
+            list(MACHINE_STATE.values())
+            + [value for _, value in CYCLE_FUNC]
+            + [DOOR_OPEN]
         ),
         value_fn=washer_state,
     ),
@@ -118,7 +119,7 @@ SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
         name="Detergent Level",
         translation_key="whirlpool_tank",
         device_class=SensorDeviceClass.ENUM,
-        options=[value for index, value in TANK_FILL.items()],
+        options=list(TANK_FILL.values()),
         value_fn=lambda WasherDryer: TANK_FILL[
             WasherDryer.get_attribute("WashCavity_OpStatusBulkDispense1Level")
         ],
