@@ -82,7 +82,10 @@ class NeeVoSensor(NeeVoEntity, SensorEntity):
         unit_of_measurement = self.entity_description.native_unit_of_measurement
         if self.entity_description.key == "tank_last_pressure":
             if self._neevo.tank_last_pressure_unit is not None:
-                unit_of_measurement = UnitOfPressure[
-                    self._neevo.tank_last_pressure_unit.upper()
-                ]
+                try:
+                    unit_of_measurement = UnitOfPressure(
+                        self._neevo.tank_last_pressure_unit
+                    )
+                except TypeError:
+                    unit_of_measurement = None
         return unit_of_measurement
