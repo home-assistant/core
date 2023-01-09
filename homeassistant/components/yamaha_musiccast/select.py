@@ -9,7 +9,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN, MusicCastCapabilityEntity, MusicCastDataUpdateCoordinator
-from .const import TRANSLATION_KEY_MAPPING
+from .const import (
+    STATE_ZONE_SLEEP_MAPPING,
+    TRANSLATION_KEY_MAPPING,
+    ZONE_SLEEP_STATE_MAPPING,
+)
 
 
 async def async_setup_entry(
@@ -47,7 +51,7 @@ class SelectableCapapility(MusicCastCapabilityEntity, SelectEntity):
         # If the translation key is "zone_sleep", we need to translate
         # Home Assistant state back to the MusicCast value
         if self.translation_key == "zone_sleep":
-            value = value.replace("_", " ")
+            value = STATE_ZONE_SLEEP_MAPPING[value]
         await self.capability.set(value)
 
     @property
@@ -61,9 +65,7 @@ class SelectableCapapility(MusicCastCapabilityEntity, SelectEntity):
         # If the translation key is "zone_sleep", we need to translate
         # the options to make them compatible with Home Assistant
         if self.translation_key == "zone_sleep":
-            return [
-                value.replace(" ", "_") for value in self.capability.options.values()
-            ]
+            return list(ZONE_SLEEP_STATE_MAPPING.values())
         return list(self.capability.options.values())
 
     @property
@@ -74,6 +76,6 @@ class SelectableCapapility(MusicCastCapabilityEntity, SelectEntity):
         if (
             value := self.capability.current
         ) is not None and self.translation_key == "zone_sleep":
-            return value.replace(" ", "_")
+            return ZONE_SLEEP_STATE_MAPPING[value]
 
         return value
