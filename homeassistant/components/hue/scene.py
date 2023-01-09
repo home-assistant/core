@@ -156,7 +156,7 @@ class HueSceneEntity(HueSceneEntityBase):
 
         if speed is not None:
             await self.bridge.async_request_call(
-                self.controller.update,
+                self.controller.scene.update,
                 self.resource.id,
                 HueScenePut(speed=speed / 100),
             )
