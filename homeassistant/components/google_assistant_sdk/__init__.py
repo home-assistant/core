@@ -25,8 +25,8 @@ SERVICE_SEND_TEXT_COMMAND = "send_text_command"
 SERVICE_SEND_TEXT_COMMAND_FIELD_COMMAND = "command"
 SERVICE_SEND_TEXT_COMMAND_SCHEMA = vol.All(
     {
-        vol.Required(SERVICE_SEND_TEXT_COMMAND_FIELD_COMMAND): vol.Any(
-            vol.All(str, vol.Length(min=1)), [vol.All(str, vol.Length(min=1))]
+        vol.Required(SERVICE_SEND_TEXT_COMMAND_FIELD_COMMAND): vol.All(
+            cv.ensure_list, [vol.All(str, vol.Length(min=1))]
         ),
     },
 )
@@ -87,9 +87,7 @@ async def async_setup_service(hass: HomeAssistant) -> None:
 
     async def send_text_command(call: ServiceCall) -> None:
         """Send a text command to Google Assistant SDK."""
-        commands = call.data[SERVICE_SEND_TEXT_COMMAND_FIELD_COMMAND]
-        if not isinstance(commands, list):
-            commands = [commands]
+        commands: list[str] = call.data[SERVICE_SEND_TEXT_COMMAND_FIELD_COMMAND]
         await async_send_text_commands(commands, hass)
 
     hass.services.async_register(
