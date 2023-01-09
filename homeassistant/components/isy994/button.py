@@ -9,6 +9,7 @@ from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -131,6 +132,7 @@ class ISYNetworkResourceButtonEntity(ButtonEntity):
             sw_version=config[ISY_CONF_FIRMWARE],
             configuration_url=url,
             via_device=(ISY994_DOMAIN, config[ISY_CONF_UUID]),
+            entry_type=DeviceEntryType.SERVICE,
         )
 
     async def async_press(self) -> None:
