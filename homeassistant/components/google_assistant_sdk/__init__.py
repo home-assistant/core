@@ -18,7 +18,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_LANGUAGE_CODE, DOMAIN
+from .const import CONF_ENABLE_CONVERSATION_AGENT, CONF_LANGUAGE_CODE, DOMAIN
 from .helpers import async_send_text_commands, default_language_code
 
 SERVICE_SEND_TEXT_COMMAND = "send_text_command"
@@ -60,8 +60,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = session
 
     await async_setup_service(hass)
-    agent = GoogleAssistantConversationAgent(hass, entry)
-    conversation.async_set_agent(hass, agent)
+
+    entry.async_on_unload(entry.add_update_listener(update_listener))
+    await update_listener(hass, entry)
 
     return True
 
@@ -95,6 +96,15 @@ async def async_setup_service(hass: HomeAssistant) -> None:
         send_text_command,
         schema=SERVICE_SEND_TEXT_COMMAND_SCHEMA,
     )
+
+
+async def update_listener(hass, entry):
+    """Handle options update."""
+    if entry.options.get(CONF_ENABLE_CONVERSATION_AGENT, False):
+        agent = GoogleAssistantConversationAgent(hass, entry)
+        conversation.async_set_agent(hass, agent)
+    else:
+        conversation.async_set_agent(hass, None)
 
 
 class GoogleAssistantConversationAgent(conversation.AbstractConversationAgent):

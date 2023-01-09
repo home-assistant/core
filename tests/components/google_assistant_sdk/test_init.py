@@ -189,6 +189,15 @@ async def test_conversation_agent(
 
     assert await async_setup_component(hass, "conversation", {})
 
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    entry = entries[0]
+    assert entry.state is ConfigEntryState.LOADED
+    hass.config_entries.async_update_entry(
+        entry, options={"enable_conversation_agent": True}
+    )
+    await hass.async_block_till_done()
+
     text1 = "tell me a joke"
     text2 = "tell me another one"
     with patch(
@@ -228,6 +237,10 @@ async def test_conversation_agent_refresh_token(
     assert len(entries) == 1
     entry = entries[0]
     assert entry.state is ConfigEntryState.LOADED
+    hass.config_entries.async_update_entry(
+        entry, options={"enable_conversation_agent": True}
+    )
+    await hass.async_block_till_done()
 
     text1 = "tell me a joke"
     text2 = "tell me another one"
