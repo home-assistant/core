@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pyisy.constants import COMMAND_FRIENDLY_NAME
+from pyisy.constants import COMMAND_FRIENDLY_NAME, PROTO_NETWORK_RESOURCE
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -23,7 +23,14 @@ import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.service import entity_service_call
 
-from .const import _LOGGER, DOMAIN, ISY994_ISY
+from .const import (
+    _LOGGER,
+    DOMAIN,
+    ISY994_ISY,
+    ISY_CONF_NAME,
+    ISY_CONF_NETWORKING,
+    ISY_CONF_UUID,
+)
 from .util import unique_ids_for_config_entry_id
 
 # Common Services for All Platforms:
@@ -194,7 +201,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
                 _LOGGER.debug(
                     "Requesting query of device %s on ISY %s",
                     address,
-                    isy.configuration["uuid"],
+                    isy.configuration[ISY_CONF_UUID],
                 )
                 await isy.query(address)
                 async_log_deprecated_service_call(
@@ -204,13 +211,13 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
                     alternate_target=entity_registry.async_get_entity_id(
                         Platform.BUTTON,
                         DOMAIN,
-                        f"{isy.configuration['uuid']}_{address}_query",
+                        f"{isy.configuration[ISY_CONF_UUID]}_{address}_query",
                     ),
                     breaks_in_ha_version="2023.5.0",
                 )
                 return
             _LOGGER.debug(
-                "Requesting system query of ISY %s", isy.configuration["uuid"]
+                "Requesting system query of ISY %s", isy.configuration[ISY_CONF_UUID]
             )
             await isy.query()
             async_log_deprecated_service_call(
@@ -218,7 +225,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
                 call=service,
                 alternate_service="button.press",
                 alternate_target=entity_registry.async_get_entity_id(
-                    Platform.BUTTON, DOMAIN, f"{isy.configuration['uuid']}_query"
+                    Platform.BUTTON, DOMAIN, f"{isy.configuration[ISY_CONF_UUID]}_query"
                 ),
                 breaks_in_ha_version="2023.5.0",
             )
@@ -231,9 +238,9 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
 
         for config_entry_id in hass.data[DOMAIN]:
             isy = hass.data[DOMAIN][config_entry_id][ISY994_ISY]
-            if isy_name and isy_name != isy.configuration["name"]:
+            if isy_name and isy_name != isy.configuration[ISY_CONF_NAME]:
                 continue
-            if not hasattr(isy, "networking") or isy.networking is None:
+            if isy.networking is None or not isy.configuration[ISY_CONF_NETWORKING]:
                 continue
             command = None
             if address:
@@ -242,6 +249,18 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
                 command = isy.networking.get_by_name(name)
             if command is not None:
                 await command.run()
+                entity_registry = er.async_get(hass)
+                async_log_deprecated_service_call(
+                    hass,
+                    call=service,
+                    alternate_service="button.press",
+                    alternate_target=entity_registry.async_get_entity_id(
+                        Platform.BUTTON,
+                        DOMAIN,
+                        f"{isy.configuration[ISY_CONF_UUID]}_{PROTO_NETWORK_RESOURCE}_{address}",
+                    ),
+                    breaks_in_ha_version="2023.5.0",
+                )
                 return
         _LOGGER.error(
             "Could not run network resource command; not found or enabled on the ISY"
