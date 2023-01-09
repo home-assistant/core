@@ -1,7 +1,7 @@
 {
+  "after_dependencies": ["hassio"],
   "codeowners": ["@home-assistant/core"],
   "config_flow": false,
-  "dependencies": ["homeassistant_hardware"],
   "documentation": "https://www.home-assistant.io/integrations/otbr",
   "domain": "otbr",
   "integration_type": "system",

@@ -1,35 +1,42 @@
 """The Open Thread Border Router integration."""
 from __future__ import annotations
 
+import dataclasses
 from http import HTTPStatus
 from json import JSONDecodeError
 
 import aiohttp
 import voluptuous as vol
 
-from homeassistant.components.hassio import AddonError, AddonInfo, AddonManager
-from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
-    get_addon_manager,
-)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import ConfigType
 
+from .const import DOMAIN
 from .models import OperationalDataSet, ThreadState
 
-DOMAIN = "otbr"
 
-DATA_ADDON_MANAGER = "silabs_multiprotocol_addon_manager"
+@dataclasses.dataclass
+class OTBRData:
+    """Container for OTBR data."""
+
+    host: str
+    port: str
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up Open Thread Border Router."""
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up an Open Thread Border Router config entry."""
+
+    hass.data[DOMAIN] = OTBRData(entry.data["host"], entry.data["port"])
 
     return True
 
 
-REST_API_PORT = 8081
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    hass.data.pop(DOMAIN)
+    return True
 
 
 class ThreadNetworkActiveError(HomeAssistantError):
@@ -42,16 +49,11 @@ class NoDatasetError(HomeAssistantError):
 
 async def _async_get_thread_rest_service_url(hass) -> str:
     """Return Thread REST API URL."""
-    addon_manager: AddonManager = get_addon_manager(hass)
-    try:
-        addon_info: AddonInfo = await addon_manager.async_get_addon_info()
-    except (KeyError, AddonError) as err:
-        raise HomeAssistantError from err
-
-    if not addon_info.hostname:
+    otbr_data: OTBRData | None = hass.data.get(DOMAIN)
+    if not otbr_data:
         raise HomeAssistantError
 
-    return f"http://{addon_info.hostname}:{REST_API_PORT}"
+    return f"http://{otbr_data.host}:{otbr_data.port}"
 
 
 def _raise_for_status(response: aiohttp.ClientResponse) -> None:
