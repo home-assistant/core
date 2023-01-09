@@ -74,11 +74,8 @@ class AxisBinarySensor(AxisEventBase, BinarySensorEntity):
         self._attr_is_on = event.is_tripped
 
     @callback
-    def update_callback(self, no_delay=False):
-        """Update the sensor's state, if needed.
-
-        Parameter no_delay is True when device_event_reachable is sent.
-        """
+    def update_callback(self):
+        """Update the sensor's state, if needed."""
         self._attr_is_on = self.event.is_tripped
 
         @callback
@@ -91,7 +88,7 @@ class AxisBinarySensor(AxisEventBase, BinarySensorEntity):
             self.cancel_scheduled_update()
             self.cancel_scheduled_update = None
 
-        if self.is_on or self.device.option_trigger_time == 0 or no_delay:
+        if self.is_on or self.device.option_trigger_time == 0:
             self.async_write_ha_state()
             return
 

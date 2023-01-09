@@ -46,18 +46,21 @@ class AxisEntityBase(Entity):
         """Subscribe device events."""
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, self.device.signal_reachable, self.update_callback
+                self.hass,
+                self.device.signal_reachable,
+                self.async_signal_reachable_callback,
             )
         )
 
-    @property
-    def available(self) -> bool:
-        """Return True if device is available."""
-        return self.device.available
+    @callback
+    def update_callback(self) -> None:
+        """Update the entities state."""
+        self.async_write_ha_state()
 
     @callback
-    def update_callback(self, no_delay=None) -> None:
-        """Update the entities state."""
+    def async_signal_reachable_callback(self) -> None:
+        """Call when device connection state change."""
+        self._attr_available = self.device.available
         self.async_write_ha_state()
 
 
