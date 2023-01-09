@@ -270,7 +270,7 @@ aiosenseme==0.6.1
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==5.2.0
+aioshelly==5.2.1
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -2128,7 +2128,7 @@ pytrafikverket==0.2.2
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.6.0
+pyunifiprotect==4.6.1
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
