@@ -92,5 +92,6 @@ FAKE_SCENE = {
     },
     "palette": {"color": [], "color_temperature": [], "dimming": []},
     "speed": 0.5,
+    "auto_dynamic": False,
     "type": "scene",
 }
