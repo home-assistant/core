@@ -31,6 +31,13 @@
           "transport": "MQTT transport",
           "ws_headers": "WebSocket headers in JSON format",
           "ws_path": "WebSocket path"
+        },
+        "data_options": {
+          "set_ca_cert": {
+            "off": "Off",
+            "auto": "Auto",
+            "custom": "Custom"
+          }
         }
       },
       "hassio_confirm": {
@@ -103,6 +110,13 @@
           "transport": "[%key:component::mqtt::config::step::broker::data::transport%]",
           "ws_headers": "[%key:component::mqtt::config::step::broker::data::ws_headers%]",
           "ws_path": "[%key:component::mqtt::config::step::broker::data::ws_path%]"
+        },
+        "data_options": {
+          "set_ca_cert": {
+            "off": "[%key:component::mqtt::config::step::broker::data_options::set_ca_cert::off%]",
+            "auto": "[%key:component::mqtt::config::step::broker::data_options::set_ca_cert::auto%]",
+            "custom": "[%key:component::mqtt::config::step::broker::data_options::set_ca_cert::custom%]"
+          }
         }
       },
       "options": {

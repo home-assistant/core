@@ -37,6 +37,13 @@
                     "ws_headers": "WebSocket headers in JSON format",
                     "ws_path": "WebSocket path"
                 },
+                "data_options": {
+                    "set_ca_cert": {
+                        "off": "Off",
+                        "auto": "Auto",
+                        "custom": "Custom"
+                    }
+                },
                 "description": "Please enter the connection information of your MQTT broker."
             },
             "hassio_confirm": {
@@ -113,6 +120,13 @@
                     "username": "Username",
                     "ws_headers": "WebSocket headers in JSON format",
                     "ws_path": "WebSocket path"
+                },
+                "data_options": {
+                    "set_ca_cert": {
+                        "off": "Off",
+                        "auto": "Auto",
+                        "custom": "Custom"
+                    }
                 },
                 "description": "Please enter the connection information of your MQTT broker.",
                 "title": "Broker options"
