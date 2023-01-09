@@ -224,7 +224,6 @@
     "auto_dynamic": false,
     "type": "scene"
   },
-
   {
     "id": "redacted-8abe5a3e-94c8-4058-908f-56241818509a",
     "type": "smart_scene",
@@ -344,7 +343,6 @@
     },
     "state": "active"
   },
-
   {
     "id": "3ff06175-29e8-44a8-8fe7-af591b0025da",
     "id_v1": "/sensors/50",
