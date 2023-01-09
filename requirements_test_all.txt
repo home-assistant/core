@@ -1475,7 +1475,7 @@ pytrafikverket==0.2.2
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.5.2
+pyunifiprotect==4.6.0
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
