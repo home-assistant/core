@@ -100,13 +100,12 @@ async def async_setup_service(hass: HomeAssistant) -> None:
 class GoogleAssistantConversationAgent(conversation.AbstractConversationAgent):
     """Google Assistant SDK conversation agent."""
 
-    assistant: TextAssistant
-    session: OAuth2Session
-
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the agent."""
         self.hass = hass
         self.entry = entry
+        self.assistant: TextAssistant | None = None
+        self.session: OAuth2Session | None = None
 
     @property
     def attribution(self):
@@ -124,13 +123,16 @@ class GoogleAssistantConversationAgent(conversation.AbstractConversationAgent):
         language: str | None = None,
     ) -> conversation.ConversationResult | None:
         """Process a sentence."""
-        if not self.session:
-            self.session = self.hass.data[DOMAIN].get(self.entry.entry_id)
-        if not self.session.valid_token:
-            await self.session.async_ensure_token_valid()
+        if self.session:
+            session = self.session
+        else:
+            session = self.hass.data[DOMAIN].get(self.entry.entry_id)
+            self.session = session
+        if not session.valid_token:
+            await session.async_ensure_token_valid()
             self.assistant = None
         if not self.assistant:
-            credentials = Credentials(self.session.token[CONF_ACCESS_TOKEN])
+            credentials = Credentials(session.token[CONF_ACCESS_TOKEN])
             language_code = self.entry.options.get(
                 CONF_LANGUAGE_CODE, default_language_code(self.hass)
             )
