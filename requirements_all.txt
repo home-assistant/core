@@ -184,7 +184,7 @@ aiohomekit==2.4.3
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==4.5.0
+aiohue==4.6.1
 
 # homeassistant.components.imap
 aioimaplib==1.0.1
@@ -1979,7 +1979,7 @@ pystiebeleltron==0.0.1.dev2
 pysuez==0.1.19
 
 # homeassistant.components.switchbee
-pyswitchbee==1.7.3
+pyswitchbee==1.7.19
 
 # homeassistant.components.syncthru
 pysyncthru==0.7.10
@@ -2288,7 +2288,7 @@ sendgrid==6.8.2
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
-sense_energy==0.11.0
+sense_energy==0.11.1
 
 # homeassistant.components.sensirion_ble
 sensirion-ble==0.0.1
