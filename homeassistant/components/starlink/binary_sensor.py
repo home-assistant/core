@@ -65,7 +65,7 @@ class StarlinkBinarySensorEntity(StarlinkEntity, BinarySensorEntity):
 
     @property
     def is_on(self) -> bool | None:
-        """Calculate the dinary sensor value from the entity description."""
+        """Calculate the binary sensor value from the entity description."""
         return self.entity_description.value_fn(self.coordinator.data)
 
 
