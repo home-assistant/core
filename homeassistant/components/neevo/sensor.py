@@ -35,7 +35,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         icon="mdi:gauge",
         native_unit_of_measurement=UnitOfPressure.KPA,
         state_class=SensorStateClass.MEASUREMENT,
-        entity_registry_enabled_default=False,
     ),
 )
 
