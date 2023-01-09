@@ -71,6 +71,10 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 host = await async_obtain_host_settings(self.hass, user_input)
+                if not host.api.is_admin:
+                    errors[CONF_USERNAME] = "not_admin"
+                    placeholders["username"] = host.api.username
+                    placeholders["user_level"] = host.api.user_level
             except CannotConnect:
                 errors[CONF_HOST] = "cannot_connect"
             except CredentialsInvalidError:
@@ -82,11 +86,6 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 placeholders["error"] = str(err)
                 errors[CONF_HOST] = "unknown"
-
-            if not host.api.is_admin:
-                errors[CONF_USERNAME] = "not_admin"
-                placeholders["username"] = host.api.username
-                placeholders["user_level"] = host.api.user_level
 
             if not errors:
                 user_input[CONF_PORT] = host.api.port
