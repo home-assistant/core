@@ -56,6 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinators: dict[str, OpenUvCoordinator] = {
         coordinator_name: OpenUvCoordinator(
             hass,
+            entry=entry,
             name=coordinator_name,
             latitude=client.latitude,
             longitude=client.longitude,
