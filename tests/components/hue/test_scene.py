@@ -52,6 +52,7 @@ async def test_scene(hass, mock_bridge_v2, v2_resources_test_data):
     assert test_entity.attributes["name"] == "Smart Test Scene"
     assert test_entity.attributes["active_timeslot_id"] == 1
     assert test_entity.attributes["active_timeslot_name"] == "wednesday"
+    assert test_entity.attributes["active_scene"] == "Regular Test Scene"
     assert test_entity.attributes["is_active"] is False
 
     # scene entities should have be assigned to the room/zone device/service

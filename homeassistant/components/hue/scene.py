@@ -220,4 +220,16 @@ class HueSmartSceneEntity(HueSceneEntityBase):
         if self.resource.active_timeslot:
             res["active_timeslot_id"] = self.resource.active_timeslot.timeslot_id
             res["active_timeslot_name"] = self.resource.active_timeslot.weekday.value
+            # lookup active scene in timeslot
+            active_scene = None
+            count = 0
+            for day_timeslot in self.resource.week_timeslots:
+                for timeslot in day_timeslot.timeslots:
+                    if count != self.resource.active_timeslot.timeslot_id:
+                        count += 1
+                        continue
+                    active_scene = self.controller.get(timeslot.target.rid)
+                    break
+            if active_scene is not None:
+                res["active_scene"] = active_scene.metadata.name
         return res
