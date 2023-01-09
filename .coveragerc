@@ -562,6 +562,8 @@ omit =
     homeassistant/components/ifttt/const.py
     homeassistant/components/iglo/light.py
     homeassistant/components/ihc/*
+    homeassistant/components/imap/__init__.py
+    homeassistant/components/imap/coordinator.py
     homeassistant/components/imap/sensor.py
     homeassistant/components/imap_email_content/sensor.py
     homeassistant/components/incomfort/*

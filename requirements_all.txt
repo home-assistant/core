@@ -184,7 +184,7 @@ aiohomekit==2.4.3
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==4.5.0
+aiohue==4.6.1
 
 # homeassistant.components.imap
 aioimaplib==1.0.1
@@ -395,7 +395,7 @@ aurorapy==0.2.7
 # avion==0.10
 
 # homeassistant.components.axis
-axis==45
+axis==46
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.7.0
@@ -1738,7 +1738,7 @@ pylibrespot-java==0.1.1
 pylitejet==0.3.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2022.12.0
+pylitterbot==2023.1.0
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.17.1
