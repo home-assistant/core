@@ -267,8 +267,8 @@ send_program_command:
       selector:
         text:
 run_network_resource:
-  name: Run network resource
-  description: Run a network resource on the ISY.
+  name: Run network resource (Deprecated)
+  description: "Run a network resource on the ISY.  Deprecated: Use Network Resource button entity."
   fields:
     address:
       name: Address
