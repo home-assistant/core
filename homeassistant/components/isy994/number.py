@@ -22,7 +22,7 @@ ISY_CONF_FIRMWARE = "firmware"
 ISY_CONF_MODEL = "model"
 ISY_CONF_NAME = "name"
 
-ISY_MAX_SIZE = (2**32) / 2
+ISY_MAX_SIZE = (2**32) / 2  # 32-bit signed integer
 
 
 async def async_setup_entry(
@@ -37,23 +37,27 @@ async def async_setup_entry(
     entities: list[ISYVariableNumberEntity] = []
 
     for node, enable_by_default in hass_isy_data[ISY994_VARIABLES]:
+        step = 10 ** (-1 * node.prec)
+        min_max = ISY_MAX_SIZE / (10**node.prec)
         description = NumberEntityDescription(
             key=node.address,
             name=node.name,
             icon="mdi:counter",
+            entity_registry_enabled_default=enable_by_default,
             native_unit_of_measurement=None,
-            native_step=10 ** (-1 * node.prec),
-            native_min_value=-ISY_MAX_SIZE / (10**node.prec),
-            native_max_value=ISY_MAX_SIZE / (10**node.prec),
+            native_step=step,
+            native_min_value=-min_max,
+            native_max_value=min_max,
         )
         description_init = NumberEntityDescription(
             key=f"{node.address}_init",
             name=f"{node.name} Initial Value",
             icon="mdi:counter",
+            entity_registry_enabled_default=False,
             native_unit_of_measurement=None,
-            native_step=10 ** (-1 * node.prec),
-            native_min_value=-ISY_MAX_SIZE / (10**node.prec),
-            native_max_value=ISY_MAX_SIZE / (10**node.prec),
+            native_step=step,
+            native_min_value=-min_max,
+            native_max_value=min_max,
             entity_category=EntityCategory.CONFIG,
         )
 
@@ -62,7 +66,6 @@ async def async_setup_entry(
                 node,
                 unique_id=f"{uuid}_{node.address}",
                 description=description,
-                enable_by_default=enable_by_default,
             )
         )
         entities.append(
@@ -70,7 +73,6 @@ async def async_setup_entry(
                 node=node,
                 unique_id=f"{uuid}_{node.address}_init",
                 description=description_init,
-                enable_by_default=False,
                 init_entity=True,
             )
         )
@@ -92,7 +94,6 @@ class ISYVariableNumberEntity(NumberEntity):
         node: Variable,
         unique_id: str,
         description: NumberEntityDescription,
-        enable_by_default: bool,
         init_entity: bool = False,
     ) -> None:
         """Initialize the ISY binary sensor program."""
@@ -104,24 +105,24 @@ class ISYVariableNumberEntity(NumberEntity):
         # Two entities are created for each variable, one for current value and one for initial.
         # Initial value entities are disabled by default
         self._init_entity = init_entity
-        self._attr_entity_registry_enabled_default = enable_by_default
 
         self._attr_unique_id = unique_id
 
         url = _async_isy_to_configuration_url(node.isy)
+        config = node.isy.configuration
         self._attr_device_info = DeviceInfo(
             identifiers={
                 (
                     ISY994_DOMAIN,
-                    f"{node.isy.configuration[ISY_CONF_UUID]}_variables",
+                    f"{config[ISY_CONF_UUID]}_variables",
                 )
             },
             manufacturer=MANUFACTURER,
-            name=f"{node.isy.configuration[ISY_CONF_NAME]} Variables",
-            model=node.isy.configuration[ISY_CONF_MODEL],
-            sw_version=node.isy.configuration[ISY_CONF_FIRMWARE],
+            name=f"{config[ISY_CONF_NAME]} Variables",
+            model=config[ISY_CONF_MODEL],
+            sw_version=config[ISY_CONF_FIRMWARE],
             configuration_url=url,
-            via_device=(ISY994_DOMAIN, node.isy.configuration[ISY_CONF_UUID]),
+            via_device=(ISY994_DOMAIN, config[ISY_CONF_UUID]),
         )
 
     async def async_added_to_hass(self) -> None:
