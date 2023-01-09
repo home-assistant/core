@@ -32,7 +32,7 @@ async def get_diagnostics_for_config_entry(
     hass: HomeAssistant,
     hass_client: TestClientGenerator,
     config_entry: ConfigEntry,
-) -> Any:
+) -> dict[str, Any]:
     """Return the diagnostics config entry for the specified domain."""
     data = await _get_diagnostics_for_config_entry(hass, hass_client, config_entry)
     return data["data"]
@@ -60,7 +60,7 @@ async def get_diagnostics_for_device(
     hass_client: TestClientGenerator,
     config_entry: ConfigEntry,
     device: DeviceEntry,
-) -> Any:
+) -> dict[str, Any]:
     """Return the diagnostics for the specified device."""
     data = await _get_diagnostics_for_device(hass, hass_client, config_entry, device)
     return data["data"]
