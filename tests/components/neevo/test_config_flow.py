@@ -1,90 +1,133 @@
 """Test the Nee-Vo Tank Monitoring config flow."""
 from unittest.mock import patch
 
+from pyneevo import NeeVoApiInterface
 from pyneevo.errors import InvalidCredentialsError, PyNeeVoError
 
-from homeassistant import config_entries
 from homeassistant.components.neevo.const import DOMAIN
-from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.data_entry_flow import FlowResultType
 
+from tests.common import MockConfigEntry
 
-async def test_form(hass: HomeAssistant) -> None:
-    """Test we get the form."""
+
+async def test_bad_credentials(hass):
+    """Test when provided credentials are rejected."""
+
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["errors"] is None
+    assert result["step_id"] == SOURCE_USER
 
     with patch(
-        "homeassistant.components.neevo.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.neevo.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(
+        "pyneevo.NeeVoApiInterface.login",
+        side_effect=InvalidCredentialsError(),
+    ), patch("homeassistant.components.neevo.async_setup", return_value=True), patch(
+        "homeassistant.components.neevo.async_setup_entry", return_value=True
+    ):
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
+            user_input={
+                CONF_EMAIL: "admin@localhost.com",
+                CONF_PASSWORD: "password0",
             },
         )
-        await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Name of the device"
-    assert result2["data"] == {
-        "host": "1.1.1.1",
-        "username": "test-username",
-        "password": "test-password",
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {
+            "base": "invalid_auth",
+        }
+
+
+async def test_generic_error_from_library(hass):
+    """Test when connection fails."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == SOURCE_USER
+
+    with patch("pyneevo.NeeVoApiInterface.login", side_effect=PyNeeVoError(),), patch(
+        "homeassistant.components.neevo.async_setup", return_value=True
+    ), patch("homeassistant.components.neevo.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_EMAIL: "admin@localhost.com",
+                CONF_PASSWORD: "password0",
+            },
+        )
+
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {
+            "base": "cannot_connect",
+        }
+
+
+async def test_auth_worked(hass):
+    """Test when provided credentials are accepted."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == SOURCE_USER
+
+    with patch(
+        "pyneevo.NeeVoApiInterface.login",
+        return_value=NeeVoApiInterface,
+    ), patch("homeassistant.components.neevo.async_setup", return_value=True), patch(
+        "homeassistant.components.neevo.async_setup_entry", return_value=True
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_EMAIL: "admin@localhost.com",
+                CONF_PASSWORD: "password0",
+            },
+        )
+
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["data"] == {
+            CONF_EMAIL: "admin@localhost.com",
+            CONF_PASSWORD: "password0",
+        }
+
+
+async def test_already_configured(hass):
+    """Test when provided credentials are already configured."""
+    config = {
+        CONF_EMAIL: "admin@localhost.com",
+        CONF_PASSWORD: "password0",
     }
-    assert len(mock_setup_entry.mock_calls) == 1
+    MockConfigEntry(
+        domain=DOMAIN, data=config, unique_id="admin@localhost.com"
+    ).add_to_hass(hass)
 
-
-async def test_form_invalid_auth(hass: HomeAssistant) -> None:
-    """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == SOURCE_USER
 
     with patch(
-        "homeassistant.components.neevo.config_flow.PlaceholderHub.authenticate",
-        side_effect=InvalidCredentialsError,
+        "pyneevo.NeeVoApiInterface.login",
+        return_value=NeeVoApiInterface,
+    ), patch("homeassistant.components.neevo.async_setup", return_value=True), patch(
+        "homeassistant.components.neevo.async_setup_entry", return_value=True
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
+            user_input={
+                CONF_EMAIL: "admin@localhost.com",
+                CONF_PASSWORD: "password0",
             },
         )
 
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_auth"}
-
-
-async def test_form_cannot_connect(hass: HomeAssistant) -> None:
-    """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.neevo.config_flow.PlaceholderHub.authenticate",
-        side_effect=PyNeeVoError,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-            },
-        )
-
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
