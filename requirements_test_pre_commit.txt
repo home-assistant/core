@@ -11,7 +11,7 @@ flake8==6.0.0
 isort==5.11.4
 mccabe==0.7.0
 pycodestyle==2.10.0
-pydocstyle==6.1.1
+pydocstyle==6.2.3
 pyflakes==3.0.1
 pyupgrade==3.3.1
 yamllint==1.28.0

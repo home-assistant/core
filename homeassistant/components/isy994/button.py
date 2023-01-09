@@ -40,12 +40,13 @@ async def async_setup_entry(
         | ISYNodeBeepButtonEntity
         | ISYNetworkResourceButtonEntity
     ] = []
-    for node in hass_isy_data[ISY994_NODES][Platform.BUTTON]:
+    nodes: dict = hass_isy_data[ISY994_NODES]
+    for node in nodes[Platform.BUTTON]:
         entities.append(ISYNodeQueryButtonEntity(node, f"{uuid}_{node.address}"))
         if node.protocol == PROTO_INSTEON:
             entities.append(ISYNodeBeepButtonEntity(node, f"{uuid}_{node.address}"))
 
-    for node in hass_isy_data[ISY994_NODES][PROTO_NETWORK_RESOURCE]:
+    for node in nodes[PROTO_NETWORK_RESOURCE]:
         entities.append(
             ISYNetworkResourceButtonEntity(node, f"{uuid}_{PROTO_NETWORK_RESOURCE}")
         )
@@ -106,30 +107,30 @@ class ISYNetworkResourceButtonEntity(ButtonEntity):
     """Representation of an ISY/IoX Network Resource button entity."""
 
     _attr_should_poll = False
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_has_entity_name = True
 
     def __init__(self, node: Node, base_unique_id: str) -> None:
-        """Initialize a beep Insteon device button entity."""
+        """Initialize an ISY network resource button entity."""
         self._node = node
 
         # Entity class attributes
         self._attr_name = node.name
         self._attr_unique_id = f"{base_unique_id}_{node.address}"
         url = _async_isy_to_configuration_url(node.isy)
+        config = node.isy.configuration
         self._attr_device_info = DeviceInfo(
             identifiers={
                 (
                     ISY994_DOMAIN,
-                    f"{node.isy.configuration[ISY_CONF_UUID]}_{PROTO_NETWORK_RESOURCE}",
+                    f"{config[ISY_CONF_UUID]}_{PROTO_NETWORK_RESOURCE}",
                 )
             },
             manufacturer=MANUFACTURER,
-            name=f"{node.isy.configuration[ISY_CONF_NAME]} {ISY_CONF_NETWORKING}",
-            model=node.isy.configuration[ISY_CONF_MODEL],
-            sw_version=node.isy.configuration[ISY_CONF_FIRMWARE],
+            name=f"{config[ISY_CONF_NAME]} {ISY_CONF_NETWORKING}",
+            model=config[ISY_CONF_MODEL],
+            sw_version=config[ISY_CONF_FIRMWARE],
             configuration_url=url,
-            via_device=(ISY994_DOMAIN, node.isy.configuration[ISY_CONF_UUID]),
+            via_device=(ISY994_DOMAIN, config[ISY_CONF_UUID]),
         )
 
     async def async_press(self) -> None:
