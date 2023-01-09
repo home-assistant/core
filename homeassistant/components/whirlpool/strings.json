@@ -19,13 +19,13 @@
     "sensor": {
       "whirlpool_machine": {
         "state": {
-          "standby": "Standby",
+          "standby": "[%key:common::state::standby%]",
           "setting": "Setting",
           "delay_countdown": "Delay Countdown",
           "delay_paused": "Delay Paused",
           "smart_delay": "Smart Delay",
           "smart_grid_pause": "Smart Delay",
-          "pause": "Pause",
+          "pause": "[%key:common::state::paused%]",
           "running_maincycle": "Running Maincycle",
           "running_postcycle": "Running Postcycle",
           "exception": "Exception",
@@ -54,7 +54,7 @@
           "25%": "25%",
           "50%": "50%",
           "100%": "100%",
-          "active": "Active"
+          "active": "[%key:common::state::active%]"
         }
       }
     }
