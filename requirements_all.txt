@@ -2288,7 +2288,7 @@ sendgrid==6.8.2
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
-sense_energy==0.11.0
+sense_energy==0.11.1
 
 # homeassistant.components.sensirion_ble
 sensirion-ble==0.0.1
