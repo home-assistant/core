@@ -29,7 +29,7 @@ def async_get_calendar_event_from_pickup_event(
         description=f"Pickup types: {pickup_type_string}",
         location=pickup_event.area_name,
         start=pickup_event.date,
-        end=pickup_event.date,
+        end=pickup_event.date + datetime.timedelta(days=1),
     )
 
 
