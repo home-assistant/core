@@ -7,7 +7,7 @@
             "api_error": "API error occurred: {error}",
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
-            "not_admin": "User needs to be admin, '{username}' has authorisation level '{user_level}'",
+            "not_admin": "User needs to be admin, {username} has authorisation level {user_level}",
             "unknown": "Unexpected error: {error}"
         },
         "step": {
