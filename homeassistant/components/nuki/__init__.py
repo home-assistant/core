@@ -33,7 +33,7 @@ from .helpers import parse_id
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.LOCK]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.LOCK, Platform.SENSOR]
 UPDATE_INTERVAL = timedelta(seconds=30)
 
 

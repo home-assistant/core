@@ -227,7 +227,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT cover through configuration.yaml and dynamically through MQTT discovery."""
+    """Set up MQTT cover through YAML and through MQTT discovery."""
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -656,7 +656,8 @@ class MqttCover(MqttEntity, CoverEntity):
         tilt = kwargs[ATTR_TILT_POSITION]
         percentage_tilt = tilt
         tilt = self.find_in_range_from_percent(tilt)
-        # Handover the tilt after calculated from percent would make it more consistent with receiving templates
+        # Handover the tilt after calculated from percent would make it more
+        # consistent with receiving templates
         variables = {
             "tilt_position": percentage_tilt,
             "entity_id": self.entity_id,

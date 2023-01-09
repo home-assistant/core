@@ -1128,7 +1128,12 @@ async def test_service_executed_with_subservices(hass):
         call2 = hass.services.async_call(
             "test", "inner", blocking=True, context=call.context
         )
-        await asyncio.wait([call1, call2])
+        await asyncio.wait(
+            [
+                hass.async_create_task(call1),
+                hass.async_create_task(call2),
+            ]
+        )
         calls.append(call)
 
     hass.services.async_register("test", "outer", handle_outer)
