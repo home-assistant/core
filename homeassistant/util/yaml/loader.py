@@ -18,7 +18,9 @@ try:
     HAS_C_LOADER = True
 except ImportError:
     HAS_C_LOADER = False
-    from yaml import SafeLoader as FastestAvailableSafeLoader  # type: ignore[assignment]
+    from yaml import (  # type: ignore[assignment]
+        SafeLoader as FastestAvailableSafeLoader,
+    )
 
 from homeassistant.exceptions import HomeAssistantError
 
@@ -132,10 +134,14 @@ class SafeLineLoader(yaml.SafeLoader):
         super().__init__(stream)
         self.secrets = secrets
 
-    def compose_node(self, parent: yaml.nodes.Node, index: int) -> yaml.nodes.Node:  # type: ignore[override]
+    def compose_node(  # type: ignore[override]
+        self, parent: yaml.nodes.Node, index: int
+    ) -> yaml.nodes.Node:
         """Annotate a node with the first line it was seen."""
         last_line: int = self.line
-        node: yaml.nodes.Node = super().compose_node(parent, index)  # type: ignore[assignment]
+        node: yaml.nodes.Node = super().compose_node(  # type: ignore[assignment]
+            parent, index
+        )
         node.__line__ = last_line + 1  # type: ignore[attr-defined]
         return node
 
@@ -226,7 +232,9 @@ def _add_reference(obj: _DictT, loader: LoaderType, node: yaml.nodes.Node) -> _D
     ...
 
 
-def _add_reference(obj, loader: LoaderType, node: yaml.nodes.Node):  # type: ignore[no-untyped-def]
+def _add_reference(  # type: ignore[no-untyped-def]
+    obj, loader: LoaderType, node: yaml.nodes.Node
+):
     """Add file reference information to an object."""
     if isinstance(obj, list):
         obj = NodeListClass(obj)
@@ -337,7 +345,9 @@ def _ordered_dict(loader: LoaderType, node: yaml.nodes.MappingNode) -> OrderedDi
             fname = loader.get_stream_name()
             raise yaml.MarkedYAMLError(
                 context=f'invalid key: "{key}"',
-                context_mark=yaml.Mark(fname, 0, line, -1, None, None),  # type: ignore[arg-type]
+                context_mark=yaml.Mark(
+                    fname, 0, line, -1, None, None  # type: ignore[arg-type]
+                ),
             ) from exc
 
         if key in seen:

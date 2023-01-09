@@ -159,7 +159,7 @@ aioecowitt==2022.11.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==13.0.3
+aioesphomeapi==13.0.4
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -395,7 +395,7 @@ aurorapy==0.2.7
 # avion==0.10
 
 # homeassistant.components.axis
-axis==45
+axis==46
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.7.0
@@ -751,7 +751,7 @@ gTTS==2.2.4
 gassist-text==0.0.7
 
 # homeassistant.components.google
-gcal-sync==4.1.0
+gcal-sync==4.1.1
 
 # homeassistant.components.geniushub
 geniushub-client==0.6.30
@@ -793,6 +793,9 @@ goalzero==0.2.1
 
 # homeassistant.components.goodwe
 goodwe==0.2.18
+
+# homeassistant.components.google_mail
+google-api-python-client==2.71.0
 
 # homeassistant.components.google_pubsub
 google-cloud-pubsub==2.13.11
@@ -864,6 +867,9 @@ hass-nabucasa==0.61.0
 # homeassistant.components.splunk
 hass_splunk==0.1.1
 
+# homeassistant.components.conversation
+hassil==0.2.3
+
 # homeassistant.components.tasmota
 hatasmota==0.6.2
 
@@ -896,6 +902,9 @@ holidays==0.18.0
 
 # homeassistant.components.frontend
 home-assistant-frontend==20230104.0
+
+# homeassistant.components.conversation
+home-assistant-intents==0.0.1
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -937,7 +946,7 @@ ibm-watson==5.2.2
 ibmiotf==0.3.4
 
 # homeassistant.components.local_calendar
-ical==4.2.8
+ical==4.2.9
 
 # homeassistant.components.ping
 icmplib==3.0
@@ -1352,7 +1361,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.13
 
 # homeassistant.components.plugwise
-plugwise==0.25.14
+plugwise==0.27.0
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1684,7 +1693,7 @@ pyirishrail==0.0.2
 pyiss==1.0.1
 
 # homeassistant.components.isy994
-pyisy==3.0.11
+pyisy==3.0.12
 
 # homeassistant.components.itach
 pyitachip2ir==0.0.7
@@ -1729,7 +1738,7 @@ pylibrespot-java==0.1.1
 pylitejet==0.3.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2022.12.0
+pylitterbot==2023.1.0
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.17.1
@@ -2119,7 +2128,7 @@ pytrafikverket==0.2.2
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.5.2
+pyunifiprotect==4.6.0
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -2203,7 +2212,7 @@ renault-api==0.1.11
 reolink-aio==0.1.3
 
 # homeassistant.components.python_script
-restrictedpython==5.2
+restrictedpython==6.0
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
@@ -2333,7 +2342,7 @@ smhi-pkg==1.0.16
 snapcast==2.3.0
 
 # homeassistant.components.sonos
-soco==0.28.1
+soco==0.29.0
 
 # homeassistant.components.solaredge_local
 solaredge-local==0.2.0
@@ -2374,6 +2383,9 @@ starline==0.1.5
 
 # homeassistant.components.starlingbank
 starlingbank==3.2
+
+# homeassistant.components.starlink
+starlink-grpc-core==1.1.1
 
 # homeassistant.components.statsd
 statsd==3.2.1

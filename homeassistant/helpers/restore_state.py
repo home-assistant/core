@@ -303,7 +303,9 @@ class RestoreEntity(Entity):
         """Get data stored for an entity, if any."""
         if self.hass is None or self.entity_id is None:
             # Return None if this entity isn't added to hass yet
-            _LOGGER.warning("Cannot get last state. Entity not added to hass")  # type: ignore[unreachable]
+            _LOGGER.warning(  # type: ignore[unreachable]
+                "Cannot get last state. Entity not added to hass"
+            )
             return None
         data = await RestoreStateData.async_get_instance(self.hass)
         if self.entity_id not in data.last_states:

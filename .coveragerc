@@ -561,6 +561,8 @@ omit =
     homeassistant/components/ifttt/const.py
     homeassistant/components/iglo/light.py
     homeassistant/components/ihc/*
+    homeassistant/components/imap/__init__.py
+    homeassistant/components/imap/coordinator.py
     homeassistant/components/imap/sensor.py
     homeassistant/components/imap_email_content/sensor.py
     homeassistant/components/incomfort/*
@@ -596,6 +598,7 @@ omit =
     homeassistant/components/iss/sensor.py
     homeassistant/components/isy994/__init__.py
     homeassistant/components/isy994/binary_sensor.py
+    homeassistant/components/isy994/button.py
     homeassistant/components/isy994/climate.py
     homeassistant/components/isy994/cover.py
     homeassistant/components/isy994/entity.py
@@ -869,6 +872,7 @@ omit =
     homeassistant/components/nuki/binary_sensor.py
     homeassistant/components/nuki/const.py
     homeassistant/components/nuki/lock.py
+    homeassistant/components/nuki/sensor.py
     homeassistant/components/nut/diagnostics.py
     homeassistant/components/nx584/alarm_control_panel.py
     homeassistant/components/nzbget/coordinator.py
@@ -1215,6 +1219,9 @@ omit =
     homeassistant/components/squeezebox/__init__.py
     homeassistant/components/squeezebox/browse_media.py
     homeassistant/components/squeezebox/media_player.py
+    homeassistant/components/starlink/coordinator.py
+    homeassistant/components/starlink/entity.py
+    homeassistant/components/starlink/sensor.py
     homeassistant/components/starline/__init__.py
     homeassistant/components/starline/account.py
     homeassistant/components/starline/binary_sensor.py

@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
+from homeassistant.helpers.entity_registry import async_get
 
 from tests.common import MockConfigEntry
 
@@ -92,6 +93,38 @@ async def test_p1_dsmr_sensor_entities(
     state = hass.states.get("sensor.p1_gas_consumed_cumulative")
     assert state
     assert float(state.state) == 584.85
+
+
+async def test_p1_3ph_dsmr_sensor_entities(
+    hass: HomeAssistant, mock_smile_p1_2: MagicMock, init_integration: MockConfigEntry
+) -> None:
+    """Test creation of power related sensor entities."""
+    state = hass.states.get("sensor.p1_electricity_phase_one_consumed")
+    assert state
+    assert float(state.state) == 1763.0
+
+    state = hass.states.get("sensor.p1_electricity_phase_two_consumed")
+    assert state
+    assert float(state.state) == 1703.0
+
+    state = hass.states.get("sensor.p1_electricity_phase_three_consumed")
+    assert state
+    assert float(state.state) == 2080.0
+
+    entity_id = "sensor.p1_voltage_phase_one"
+    state = hass.states.get(entity_id)
+    assert not state
+
+    entity_registry = async_get(hass)
+    entity_registry.async_update_entity(entity_id=entity_id, disabled_by=None)
+    await hass.async_block_till_done()
+
+    await hass.config_entries.async_reload(init_integration.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.p1_voltage_phase_one")
+    assert state
+    assert float(state.state) == 233.2
 
 
 async def test_stretch_sensor_entities(
