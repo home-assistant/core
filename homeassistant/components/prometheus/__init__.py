@@ -5,6 +5,7 @@ import string
 
 from aiohttp import web
 import prometheus_client
+from homeassistant.helpers.template import Template, attach
 import voluptuous as vol
 
 from homeassistant import core as hacore
@@ -22,6 +23,7 @@ from homeassistant.components.humidifier import ATTR_AVAILABLE_MODES, ATTR_HUMID
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_CLASS,
+    ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_MODE,
     ATTR_TEMPERATURE,
@@ -39,7 +41,12 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entityfilter, state as state_helper
+from homeassistant.helpers import (
+    area_registry,
+    entityfilter,
+    entity_registry,
+    state as state_helper,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from homeassistant.helpers.entity_values import EntityValues
@@ -58,6 +65,7 @@ CONF_COMPONENT_CONFIG_GLOB = "component_config_glob"
 CONF_COMPONENT_CONFIG_DOMAIN = "component_config_domain"
 CONF_DEFAULT_METRIC = "default_metric"
 CONF_OVERRIDE_METRIC = "override_metric"
+CONF_CUSTOM_LABELS = "custom_labels"
 COMPONENT_CONFIG_SCHEMA_ENTRY = vol.Schema(
     {vol.Optional(CONF_OVERRIDE_METRIC): cv.string}
 )
@@ -81,6 +89,9 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_COMPONENT_CONFIG_DOMAIN, default={}): vol.Schema(
                     {cv.string: COMPONENT_CONFIG_SCHEMA_ENTRY}
                 ),
+                vol.Optional(CONF_CUSTOM_LABELS, default={}): vol.Schema(
+                    {cv.string: cv.template}
+                ),
             }
         )
     },
@@ -103,6 +114,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         conf[CONF_COMPONENT_CONFIG_DOMAIN],
         conf[CONF_COMPONENT_CONFIG_GLOB],
     )
+    custom_labels = conf.get(CONF_CUSTOM_LABELS)
+    attach(hass, custom_labels)
 
     metrics = PrometheusMetrics(
         prometheus_client,
@@ -112,6 +125,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         component_config,
         override_metric,
         default_metric,
+        custom_labels,
     )
 
     hass.bus.listen(EVENT_STATE_CHANGED, metrics.handle_state_changed)
@@ -133,6 +147,7 @@ class PrometheusMetrics:
         component_config,
         override_metric,
         default_metric,
+        custom_labels,
     ):
         """Initialize Prometheus Metrics."""
         self.prometheus_cli = prometheus_cli
@@ -154,6 +169,7 @@ class PrometheusMetrics:
             self.metrics_prefix = ""
         self._metrics = {}
         self._climate_units = climate_units
+        self._custom_labels = custom_labels
 
     def handle_state_changed(self, event):
         """Listen for new messages on the bus, and add them to Prometheus."""
@@ -254,7 +270,9 @@ class PrometheusMetrics:
                 pass
 
     def _metric(self, metric, factory, documentation, extra_labels=None):
-        labels = ["entity", "friendly_name", "domain"]
+        labels = ["entity", "friendly_name", "domain"] + list(
+            self._custom_labels.keys()
+        )
         if extra_labels is not None:
             labels.extend(extra_labels)
 
@@ -296,13 +314,16 @@ class PrometheusMetrics:
             value = 0
         return value
 
-    @staticmethod
-    def _labels(state):
+    def _labels(self, state):
+        custom_labels = {
+            key: template.render(state=state)
+            for key, template in self._custom_labels.items()
+        }
         return {
             "entity": state.entity_id,
             "domain": state.domain,
             "friendly_name": state.attributes.get(ATTR_FRIENDLY_NAME),
-        }
+        } | custom_labels
 
     def _battery(self, state):
         if "battery_level" in state.attributes:
