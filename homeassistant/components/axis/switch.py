@@ -42,11 +42,13 @@ class AxisSwitch(AxisEventBase, SwitchEntity):
 
         if event.id and device.api.vapix.ports[event.id].name:
             self._attr_name = device.api.vapix.ports[event.id].name
+        self._attr_is_on = event.is_tripped
 
-    @property
-    def is_on(self) -> bool:
-        """Return true if event is active."""
-        return self.event.is_tripped
+    @callback
+    def async_event_callback(self, event: Event) -> None:
+        """Update light state."""
+        self._attr_is_on = event.is_tripped
+        self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""

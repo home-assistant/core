@@ -1,6 +1,7 @@
 """Support for Axis binary sensors."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import timedelta
 
 from axis.models.event import Event, EventGroup, EventOperation, EventTopic
@@ -68,15 +69,15 @@ class AxisBinarySensor(AxisEventBase, BinarySensorEntity):
     def __init__(self, event: Event, device: AxisNetworkDevice) -> None:
         """Initialize the Axis binary sensor."""
         super().__init__(event, device)
-        self.cancel_scheduled_update = None
+        self.cancel_scheduled_update: Callable[[], None] | None = None
 
         self._attr_device_class = DEVICE_CLASS.get(self.event.group)
         self._attr_is_on = event.is_tripped
 
     @callback
-    def update_callback(self):
+    def async_event_callback(self, event: Event) -> None:
         """Update the sensor's state, if needed."""
-        self._attr_is_on = self.event.is_tripped
+        self._attr_is_on = event.is_tripped
 
         @callback
         def scheduled_update(now):

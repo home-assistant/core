@@ -55,6 +55,7 @@ class AxisLight(AxisEventBase, LightEntity):
 
         light_type = device.api.vapix.light_control[self.light_id].light_type
         self._attr_name = f"{light_type} {self.event_type} {event.id}"
+        self._attr_is_on = event.is_tripped
 
         self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
         self._attr_color_mode = ColorMode.BRIGHTNESS
@@ -75,10 +76,11 @@ class AxisLight(AxisEventBase, LightEntity):
         )
         self.max_intensity = max_intensity["data"]["ranges"][0]["high"]
 
-    @property
-    def is_on(self) -> bool:
-        """Return true if light is on."""
-        return self.event.is_tripped
+    @callback
+    def async_event_callback(self, event: Event) -> None:
+        """Update light state."""
+        self._attr_is_on = event.is_tripped
+        self.async_write_ha_state()
 
     @property
     def brightness(self) -> int:

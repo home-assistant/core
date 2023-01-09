@@ -1,5 +1,7 @@
 """Base classes for Axis entities."""
 
+from abc import abstractmethod
+
 from axis.models.event import Event, EventTopic
 
 from homeassistant.core import callback
@@ -53,11 +55,6 @@ class AxisEntityBase(Entity):
         )
 
     @callback
-    def update_callback(self) -> None:
-        """Update the entities state."""
-        self.async_write_ha_state()
-
-    @callback
     def async_signal_reachable_callback(self) -> None:
         """Call when device connection state change."""
         self._attr_available = self.device.available
@@ -81,10 +78,9 @@ class AxisEventBase(AxisEntityBase):
         self._attr_device_class = event.group.value
 
     @callback
-    def async_event_callback(self, event) -> None:
+    @abstractmethod
+    def async_event_callback(self, event: Event) -> None:
         """Update the entities state."""
-        self.event = event
-        self.update_callback()
 
     async def async_added_to_hass(self) -> None:
         """Subscribe sensors events."""
