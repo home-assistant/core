@@ -58,8 +58,8 @@ SENSOR_TYPES = {
         key="signal",
         name="signal strength",
         native_unit_of_measurement=PERCENTAGE,
-        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:wifi",
     ),
     "ssid": SensorEntityDescription(
         key="ssid",
@@ -432,7 +432,7 @@ class NetgearRouterSensorEntity(NetgearRouterCoordinatorEntity, RestoreSensor):
             if sensor_data is not None:
                 self._value = sensor_data.native_value
             else:
-                self.schedule_update_ha_state()
+                self.coordinator.async_request_refresh()
 
     @callback
     def async_update_device(self) -> None:

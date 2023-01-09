@@ -611,8 +611,8 @@ def sun(
     # Special case: before sunrise OR after sunset
     # This will handle the very rare case in the polar region when the sun rises/sets
     # but does not set/rise.
-    # However this entire condition does not handle those full days of darkness or light,
-    # the following should be used instead:
+    # However this entire condition does not handle those full days of darkness
+    # or light, the following should be used instead:
     #
     #    condition:
     #      condition: state

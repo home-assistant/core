@@ -38,7 +38,10 @@ def find_supported_scaling_factor(
 
 
 def scale_jpeg_camera_image(cam_image: Image, width: int, height: int) -> bytes:
-    """Scale a camera image as close as possible to one of the supported scaling factors."""
+    """Scale a camera image.
+
+    Scale as close as possible to one of the supported scaling factors.
+    """
     turbo_jpeg = TurboJPEGSingleton.instance()
     if not turbo_jpeg:
         return cam_image.content

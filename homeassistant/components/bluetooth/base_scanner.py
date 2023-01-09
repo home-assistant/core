@@ -4,6 +4,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
+from dataclasses import dataclass
 import datetime
 from datetime import timedelta
 import logging
@@ -37,6 +38,15 @@ from .models import HaBluetoothConnector
 
 MONOTONIC_TIME: Final = monotonic_time_coarse
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class BluetoothScannerDevice:
+    """Data for a bluetooth device from a given scanner."""
+
+    scanner: BaseHaScanner
+    ble_device: BLEDevice
+    advertisement: AdvertisementData
 
 
 class BaseHaScanner(ABC):
@@ -107,7 +117,8 @@ class BaseHaScanner(ABC):
     def _async_scanner_watchdog(self, now: datetime.datetime) -> None:
         """Check if the scanner is running.
 
-        Override this method if you need to do something else when the watchdog is triggered.
+        Override this method if you need to do something else when the watchdog
+        is triggered.
         """
         if self._async_watchdog_triggered():
             _LOGGER.info(
@@ -144,6 +155,7 @@ class BaseHaScanner(ABC):
 
     async def async_diagnostics(self) -> dict[str, Any]:
         """Return diagnostic information about the scanner."""
+        device_adv_datas = self.discovered_devices_and_advertisement_data.values()
         return {
             "name": self.name,
             "start_time": self._start_time,
@@ -160,7 +172,7 @@ class BaseHaScanner(ABC):
                     "advertisement_data": device_adv[1],
                     "details": device_adv[0].details,
                 }
-                for device_adv in self.discovered_devices_and_advertisement_data.values()
+                for device_adv in device_adv_datas
             ],
         }
 
@@ -258,9 +270,10 @@ class BaseHaRemoteScanner(BaseHaScanner):
     @property
     def discovered_devices(self) -> list[BLEDevice]:
         """Return a list of discovered devices."""
+        device_adv_datas = self._discovered_device_advertisement_datas.values()
         return [
             device_advertisement_data[0]
-            for device_advertisement_data in self._discovered_device_advertisement_datas.values()
+            for device_advertisement_data in device_adv_datas
         ]
 
     @property

@@ -268,6 +268,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="voltage_phase_two",
@@ -275,6 +276,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="voltage_phase_three",
@@ -282,6 +284,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="gas_consumed_interval",

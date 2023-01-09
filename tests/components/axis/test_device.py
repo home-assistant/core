@@ -4,7 +4,6 @@ from unittest import mock
 from unittest.mock import Mock, patch
 
 import axis as axislib
-from axis.event_stream import OPERATION_INITIALIZED
 import pytest
 import respx
 
@@ -461,21 +460,6 @@ async def test_device_unknown_error(hass):
     with patch.object(axis, "get_axis_device", side_effect=Exception):
         await setup_axis_integration(hass)
     assert hass.data[AXIS_DOMAIN] == {}
-
-
-async def test_new_event_sends_signal(hass):
-    """Make sure that new event send signal."""
-    entry = Mock()
-    entry.data = ENTRY_CONFIG
-
-    axis_device = axis.device.AxisNetworkDevice(hass, entry, Mock())
-
-    with patch.object(axis.device, "async_dispatcher_send") as mock_dispatch_send:
-        axis_device.async_event_callback(action=OPERATION_INITIALIZED, event_id="event")
-        await hass.async_block_till_done()
-
-    assert len(mock_dispatch_send.mock_calls) == 1
-    assert len(mock_dispatch_send.mock_calls[0]) == 3
 
 
 async def test_shutdown():
