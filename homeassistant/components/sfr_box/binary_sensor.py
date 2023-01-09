@@ -16,7 +16,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -30,9 +29,7 @@ _T = TypeVar("_T")
 class SFRBoxBinarySensorMixin(Generic[_T]):
     """Mixin for SFR Box sensors."""
 
-    value_fn: Callable[[_T], StateType]
-    on_value: str
-    off_value: str
+    value_fn: Callable[[_T], bool | None]
 
 
 @dataclass
@@ -48,9 +45,7 @@ DSL_SENSOR_TYPES: tuple[SFRBoxBinarySensorEntityDescription[DslInfo], ...] = (
         name="Status",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
-        on_value="up",
-        off_value="down",
-        value_fn=lambda x: x.status,
+        value_fn=lambda x: x.status == "up",
     ),
 )
 
@@ -94,7 +89,4 @@ class SFRBoxBinarySensor(
     @property
     def is_on(self) -> bool | None:
         """Return the native value of the device."""
-        value = self.entity_description.value_fn(self.coordinator.data)
-        if value == self.entity_description.on_value:
-            return True
-        return value == self.entity_description.off_value or None
+        return self.entity_description.value_fn(self.coordinator.data)
