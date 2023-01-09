@@ -23,11 +23,9 @@ PLATFORMS: list[Platform] = [Platform.CLIMATE]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up seitron from a config entry."""
-    _LOGGER.info("Init: setup: EntryId %s", entry.entry_id)
 
     async def _async_update_data():
         """Update data via library."""
-        _LOGGER.info("Init: Coordinator callback")
         async with async_timeout.timeout(20):
             await seitron_gw.update()
         return seitron_gw
@@ -39,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_method=_async_update_data,
         update_interval=timedelta(seconds=60),
     )
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+
     _LOGGER.info("Init: setup: Coordinator published")
 
     implementation = (
@@ -55,6 +53,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     seitron_gw = SeitronGateway(http_client=seitron_http_client)
 
     await coordinator.async_config_entry_first_refresh()
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

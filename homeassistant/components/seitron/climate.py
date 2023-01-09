@@ -17,9 +17,11 @@ from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemper
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
-from .api import AsyncSeitronAuth
 from .const import DOMAIN  # seitron
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,7 +33,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the seitron climate entities from a config entry."""
-    coordinator: AsyncSeitronAuth = hass.data[DOMAIN][entry.entry_id]
+    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     # coordinator.data is a SeitronGateway
     async_add_entities(
         SeitronClimate(coordinator, thermostat)
@@ -78,7 +80,6 @@ class SeitronClimate(CoordinatorEntity, ClimateEntity):
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        _LOGGER.info("Climate: getting temp")
         return self._thermostat.temp_curr
 
     @property
