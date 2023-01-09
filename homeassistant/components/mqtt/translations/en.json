@@ -37,13 +37,6 @@
                     "ws_headers": "WebSocket headers in JSON format",
                     "ws_path": "WebSocket path"
                 },
-                "data_options": {
-                    "set_ca_cert": {
-                        "off": "Off",
-                        "auto": "Auto",
-                        "custom": "Custom"
-                    }
-                },
                 "description": "Please enter the connection information of your MQTT broker."
             },
             "hassio_confirm": {
@@ -53,6 +46,13 @@
                 "description": "Do you want to configure Home Assistant to connect to the MQTT broker provided by the add-on {addon}?",
                 "title": "MQTT Broker via Home Assistant add-on"
             }
+        }
+    },
+    "data_options": {
+        "set_ca_cert": {
+            "off": "Off",
+            "auto": "Auto",
+            "custom": "Custom"
         }
     },
     "device_automation": {
@@ -120,13 +120,6 @@
                     "username": "Username",
                     "ws_headers": "WebSocket headers in JSON format",
                     "ws_path": "WebSocket path"
-                },
-                "data_options": {
-                    "set_ca_cert": {
-                        "off": "Off",
-                        "auto": "Auto",
-                        "custom": "Custom"
-                    }
                 },
                 "description": "Please enter the connection information of your MQTT broker.",
                 "title": "Broker options"

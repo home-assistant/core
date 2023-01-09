@@ -134,12 +134,6 @@ def gen_data_entry_schema(
                 vol.Optional("description"): cv.string_with_no_html,
                 vol.Optional("data"): {str: cv.string_with_no_html},
                 vol.Optional("data_description"): {str: cv.string_with_no_html},
-                vol.Optional("data_options"): cv.schema_with_slug_keys(
-                    cv.schema_with_slug_keys(
-                        cv.string_with_no_html, slug_validator=lowercase_validator
-                    ),
-                    slug_validator=vol.Any("_", cv.slug),
-                ),
                 vol.Optional("menu_options"): {str: cv.string_with_no_html},
             }
         },
@@ -221,6 +215,12 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                 integration=integration,
                 flow_title=UNDEFINED,
                 require_step_title=False,
+            ),
+            vol.Optional("data_options"): cv.schema_with_slug_keys(
+                cv.schema_with_slug_keys(
+                    cv.string_with_no_html, slug_validator=lowercase_validator
+                ),
+                slug_validator=vol.Any("_", cv.slug),
             ),
             vol.Optional("device_automation"): {
                 vol.Optional("action_type"): {str: cv.string_with_no_html},
