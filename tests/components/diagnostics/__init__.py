@@ -9,18 +9,18 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.setup import async_setup_component
 
-from tests.conftest import TestClientGenerator
+from tests.typing import ClientSessionGenerator
 
 
 async def _get_diagnostics_for_config_entry(
     hass: HomeAssistant,
-    hass_client: TestClientGenerator,
+    hass_client: ClientSessionGenerator,
     config_entry: ConfigEntry,
 ) -> dict[str, Any]:
     """Return the diagnostics config entry for the specified domain."""
     assert await async_setup_component(hass, "diagnostics", {})
 
-    client: TestClient = await hass_client()
+    client = await hass_client()
     response = await client.get(
         f"/api/diagnostics/config_entry/{config_entry.entry_id}"
     )
