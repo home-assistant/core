@@ -17,10 +17,7 @@ from sqlalchemy.sql.expression import literal
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.sql.selectable import Subquery
 
-from homeassistant.components.websocket_api import (
-    COMPRESSED_STATE_LAST_UPDATED,
-    COMPRESSED_STATE_STATE,
-)
+from homeassistant.const import COMPRESSED_STATE_LAST_UPDATED, COMPRESSED_STATE_STATE
 from homeassistant.core import HomeAssistant, State, split_entity_id
 import homeassistant.util.dt as dt_util
 

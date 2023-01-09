@@ -7,10 +7,16 @@ from typing import Any, Final
 
 import voluptuous as vol
 
+from homeassistant.const import (
+    COMPRESSED_STATE_ATTRIBUTES,
+    COMPRESSED_STATE_CONTEXT,
+    COMPRESSED_STATE_LAST_CHANGED,
+    COMPRESSED_STATE_LAST_UPDATED,
+    COMPRESSED_STATE_STATE,
+)
 from homeassistant.core import Event, State
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import JSON_DUMP
-import homeassistant.util.dt as dt_util
 from homeassistant.util.json import (
     find_paths_unserializable_data,
     format_unserializable_data,
@@ -18,13 +24,6 @@ from homeassistant.util.json import (
 from homeassistant.util.yaml.loader import JSON_TYPE
 
 from . import const
-from .const import (
-    COMPRESSED_STATE_ATTRIBUTES,
-    COMPRESSED_STATE_CONTEXT,
-    COMPRESSED_STATE_LAST_CHANGED,
-    COMPRESSED_STATE_LAST_UPDATED,
-    COMPRESSED_STATE_STATE,
-)
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -129,13 +128,14 @@ def _state_diff_event(event: Event) -> dict:
     if (event_old_state := event.data["old_state"]) is None:
         return {
             ENTITY_EVENT_ADD: {
-                event_new_state.entity_id: compressed_state_dict_add(event_new_state)
+                event_new_state.entity_id: event_new_state.as_compressed_state()
             }
         }
     assert isinstance(event_old_state, State)
     return _state_diff(event_old_state, event_new_state)
 
 
+@lru_cache(maxsize=64)
 def _state_diff(
     old_state: State, new_state: State
 ) -> dict[str, dict[str, dict[str, dict[str, str | list[str]]]]]:
@@ -145,13 +145,9 @@ def _state_diff(
     if old_state.state != new_state.state:
         additions[COMPRESSED_STATE_STATE] = new_state.state
     if old_state.last_changed != new_state.last_changed:
-        additions[COMPRESSED_STATE_LAST_CHANGED] = dt_util.utc_to_timestamp(
-            new_state.last_changed
-        )
+        additions[COMPRESSED_STATE_LAST_CHANGED] = new_state.last_changed.timestamp()
     elif old_state.last_updated != new_state.last_updated:
-        additions[COMPRESSED_STATE_LAST_UPDATED] = dt_util.utc_to_timestamp(
-            new_state.last_updated
-        )
+        additions[COMPRESSED_STATE_LAST_UPDATED] = new_state.last_updated.timestamp()
     if old_state.context.parent_id != new_state.context.parent_id:
         additions.setdefault(COMPRESSED_STATE_CONTEXT, {})[
             "parent_id"
@@ -172,30 +168,6 @@ def _state_diff(
     if removed := set(old_attributes).difference(new_state.attributes):
         diff[STATE_DIFF_REMOVALS] = {COMPRESSED_STATE_ATTRIBUTES: removed}
     return {ENTITY_EVENT_CHANGE: {new_state.entity_id: diff}}
-
-
-def compressed_state_dict_add(state: State) -> dict[str, Any]:
-    """Build a compressed dict of a state for adds.
-
-    Omits the lu (last_updated) if it matches (lc) last_changed.
-
-    Sends c (context) as a string if it only contains an id.
-    """
-    if state.context.parent_id is None and state.context.user_id is None:
-        context: dict[str, Any] | str = state.context.id
-    else:
-        context = state.context.as_dict()
-    compressed_state: dict[str, Any] = {
-        COMPRESSED_STATE_STATE: state.state,
-        COMPRESSED_STATE_ATTRIBUTES: state.attributes,
-        COMPRESSED_STATE_CONTEXT: context,
-        COMPRESSED_STATE_LAST_CHANGED: dt_util.utc_to_timestamp(state.last_changed),
-    }
-    if state.last_changed != state.last_updated:
-        compressed_state[COMPRESSED_STATE_LAST_UPDATED] = dt_util.utc_to_timestamp(
-            state.last_updated
-        )
-    return compressed_state
 
 
 def message_to_json(message: dict[str, Any]) -> str:
