@@ -21,54 +21,17 @@ from .const import DOMAIN
 from .coordinator import StarlinkUpdateCoordinator
 from .entity import StarlinkEntity
 
-# This stores device_class overrides for alert types that we know aren't "problems".
-DEVICE_CLASS_OVERRIDES = {
-    "alert_is_heating": BinarySensorDeviceClass.HEAT,
-    "alert_install_pending": BinarySensorDeviceClass.UPDATE,
-    "alert_roaming": None,
-    "alert_is_power_save_idle": None,
-}
-
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up all binary sensors for this entry."""
-    coordinator: StarlinkUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    alerts = coordinator.data[2]
-    entities = []
+    coordinator = hass.data[DOMAIN][entry.entry_id]
 
-    # Alerts may change over time, so we want to find available alerts and register them.
-    for key, _ in alerts.items():
-        entities.append(
-            StarlinkBinarySensorEntity(
-                coordinator=coordinator,
-                description=StarlinkBinarySensorEntityDescription(
-                    key=key,
-                    name=key.removeprefix("alert_").replace("_", " ").capitalize(),
-                    device_class=DEVICE_CLASS_OVERRIDES.get(
-                        key, BinarySensorDeviceClass.PROBLEM
-                    ),
-                    entity_category=EntityCategory.DIAGNOSTIC,
-                    value_fn=lambda data, key=key: data[2][key],  # type:ignore[misc]
-                ),
-            )
-        )
-
-    # Add extra data not found in AlertDict
-    entities.append(
-        StarlinkBinarySensorEntity(
-            coordinator=coordinator,
-            description=StarlinkBinarySensorEntityDescription(
-                key="currently_obstructed",
-                name="Currently obstructed",
-                device_class=BinarySensorDeviceClass.CONNECTIVITY,
-                value_fn=lambda data: not data[0]["currently_obstructed"],
-            ),
-        )
+    async_add_entities(
+        StarlinkBinarySensorEntity(coordinator, description)
+        for description in BINARY_SENSORS
     )
-
-    async_add_entities(entities)
 
 
 @dataclass
@@ -104,3 +67,73 @@ class StarlinkBinarySensorEntity(StarlinkEntity, BinarySensorEntity):
     def is_on(self) -> bool | None:
         """Calculate the dinary sensor value from the entity description."""
         return self.entity_description.value_fn(self.coordinator.data)
+
+
+BINARY_SENSORS = [
+    StarlinkBinarySensorEntityDescription(
+        key="roaming",
+        name="Roaming mode",
+        value_fn=lambda data: data[2]["alert_roaming"],
+    ),
+    StarlinkBinarySensorEntityDescription(
+        key="currently_obstructed",
+        name="Obstructed",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        value_fn=lambda data: not data[0]["currently_obstructed"],
+    ),
+    StarlinkBinarySensorEntityDescription(
+        key="install_pending",
+        name="Update pending",
+        device_class=BinarySensorDeviceClass.UPDATE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data[2]["alert_install_pending"],
+    ),
+    StarlinkBinarySensorEntityDescription(
+        key="heating",
+        name="Is heating",
+        device_class=BinarySensorDeviceClass.HEAT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data[2]["alert_is_heating"],
+    ),
+    StarlinkBinarySensorEntityDescription(
+        key="power_save_idle",
+        name="Is idle",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data[2]["alert_is_heating"],
+    ),
+    StarlinkBinarySensorEntityDescription(
+        key="mast_near_vertical",
+        name="Mast near vertical",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data[2]["alert_mast_not_near_vertical"],
+    ),
+    StarlinkBinarySensorEntityDescription(
+        key="motors_stuck",
+        name="Motors stuck",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data[2]["alert_motors_stuck"],
+    ),
+    StarlinkBinarySensorEntityDescription(
+        key="slow_ethernet",
+        name="Ethernet speeds",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data[2]["alert_slow_ethernet_speeds"],
+    ),
+    StarlinkBinarySensorEntityDescription(
+        key="thermal_throttle",
+        name="Thermal throttle",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data[2]["alert_thermal_throttle"],
+    ),
+    StarlinkBinarySensorEntityDescription(
+        key="unexpected_location",
+        name="Unexpected location",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data[2]["alert_unexpected_location"],
+    ),
+]
