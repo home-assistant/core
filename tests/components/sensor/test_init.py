@@ -32,6 +32,7 @@ from homeassistant.const import (
     VOLUME_CUBIC_METERS,
     VOLUME_FLUID_OUNCE,
     VOLUME_LITERS,
+    UnitOfEnergy,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, State
@@ -500,6 +501,32 @@ async def test_custom_unit(
             1000,
             SensorDeviceClass.DISTANCE,
         ),
+        # Energy
+        (
+            UnitOfEnergy.KILO_WATT_HOUR,
+            UnitOfEnergy.MEGA_WATT_HOUR,
+            UnitOfEnergy.MEGA_WATT_HOUR,
+            1000,
+            1.0,
+            SensorDeviceClass.ENERGY,
+        ),
+        (
+            UnitOfEnergy.GIGA_JOULE,
+            UnitOfEnergy.MEGA_WATT_HOUR,
+            UnitOfEnergy.MEGA_WATT_HOUR,
+            1000,
+            278,
+            SensorDeviceClass.ENERGY,
+        ),
+        (
+            UnitOfEnergy.KILO_WATT_HOUR,
+            "BTU",
+            UnitOfEnergy.KILO_WATT_HOUR,
+            1000,
+            1000,
+            SensorDeviceClass.ENERGY,
+        ),
+        # Pressure
         # Smaller to larger unit, InHg is ~33x larger than hPa -> 1 more decimal
         (
             PRESSURE_HPA,
