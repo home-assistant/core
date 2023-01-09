@@ -3,7 +3,7 @@
   "name": "Hunter Hydrawise",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/hydrawise",
-  "requirements": ["hydrawiser==0.2", "pydrawise==2023.1.2"],
+  "requirements": ["hydrawiser==0.2", "pydrawise==2023.1.4"],
   "codeowners": ["@dknowles", "@ptcryan"],
   "iot_class": "cloud_polling",
   "loggers": ["hydrawiser"]
