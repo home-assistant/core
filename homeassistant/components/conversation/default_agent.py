@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
+from pathlib import Path
 import re
 from typing import Any
 
@@ -10,6 +11,7 @@ from hassil.intents import Intents, SlotList, TextSlotList
 from hassil.recognize import recognize
 from hassil.util import merge_dict
 from home_assistant_intents import get_intents
+import yaml
 
 from homeassistant import core, setup
 from homeassistant.helpers import area_registry, entity_registry, intent
@@ -147,6 +149,29 @@ class DefaultAgent(AbstractConversationAgent):
 
                 # Will need to recreate graph
                 intents_changed = True
+                _LOGGER.info(
+                    "Loaded intents component=%s, language=%s", component, language
+                )
+
+            # Check for custom sentences
+            custom_sentences_path = Path(
+                self.hass.config.path("custom_sentences", component, f"{language}.yaml")
+            )
+            if custom_sentences_path.exists():
+                with custom_sentences_path.open(
+                    encoding="utf-8"
+                ) as custom_sentences_file:
+                    # Merge custom sentences
+                    merge_dict(intents_dict, yaml.safe_load(custom_sentences_file))
+
+                    # Will need to recreate graph
+                    intents_changed = True
+                    _LOGGER.info(
+                        "Loaded custom sentences component=%s, language=%s, path=%s",
+                        component,
+                        language,
+                        custom_sentences_path,
+                    )
 
         if not intents_dict:
             return None
