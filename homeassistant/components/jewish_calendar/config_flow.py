@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 from typing import Any
+import zoneinfo
 
 import voluptuous as vol
 
@@ -110,7 +111,11 @@ class JewishCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
                     ): int,
                     vol.Optional(
                         CONF_TIME_ZONE, default=self.hass.config.time_zone
-                    ): str,
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=sorted(zoneinfo.available_timezones()),
+                        )
+                    ),
                 }
             ),
             errors=errors,
