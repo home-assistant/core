@@ -76,8 +76,9 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Send the turn off command to the ISY light device."""
+        self._raise_if_disabled()
         self._last_brightness = self.brightness
-        if self.check_disabled() and not await self._node.turn_off():
+        if not await self._node.turn_off():
             _LOGGER.debug("Unable to turn off light")
 
     @callback
@@ -93,12 +94,13 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
 
     async def async_turn_on(self, brightness: int | None = None, **kwargs: Any) -> None:
         """Send the turn on command to the ISY light device."""
+        self._raise_if_disabled()
         if self._restore_light_state and brightness is None and self._last_brightness:
             brightness = self._last_brightness
         # Special Case for ISY Z-Wave Devices using % instead of 0-255:
         if brightness is not None and self._node.uom == UOM_PERCENTAGE:
             brightness = round(brightness * 100.0 / 255.0)
-        if self.check_disabled() and not await self._node.turn_on(val=brightness):
+        if not await self._node.turn_on(val=brightness):
             _LOGGER.debug("Unable to turn on light")
 
     @property

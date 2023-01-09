@@ -70,21 +70,24 @@ class ISYCoverEntity(ISYNodeEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Send the open cover command to the ISY cover device."""
+        self._raise_if_disabled()
         val = 100 if self._node.uom == UOM_BARRIER else None
-        if self.check_disabled() and not await self._node.turn_on(val=val):
+        if not await self._node.turn_on(val=val):
             _LOGGER.error("Unable to open the cover")
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Send the close cover command to the ISY cover device."""
-        if self.check_disabled() and not await self._node.turn_off():
+        self._raise_if_disabled()
+        if not await self._node.turn_off():
             _LOGGER.error("Unable to close the cover")
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
+        self._raise_if_disabled()
         position = kwargs[ATTR_POSITION]
         if self._node.uom == UOM_8_BIT_RANGE:
             position = round(position * 255.0 / 100.0)
-        if self.check_disabled() and not await self._node.turn_on(val=position):
+        if not await self._node.turn_on(val=position):
             _LOGGER.error("Unable to set cover position")
 
 

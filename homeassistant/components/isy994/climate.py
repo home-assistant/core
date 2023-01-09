@@ -193,6 +193,7 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
+        self._raise_if_disabled()
         target_temp = kwargs.get(ATTR_TEMPERATURE)
         target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
         target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
@@ -201,11 +202,11 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
                 target_temp_high = target_temp
             if self.hvac_mode == HVACMode.HEAT:
                 target_temp_low = target_temp
-        if target_temp_low is not None and self.check_disabled():
+        if target_temp_low is not None:
             await self._node.set_climate_setpoint_heat(int(target_temp_low))
             # Presumptive setting--event stream will correct if cmd fails:
             self._target_temp_low = target_temp_low
-        if target_temp_high is not None and self.check_disabled():
+        if target_temp_high is not None:
             await self._node.set_climate_setpoint_cool(int(target_temp_high))
             # Presumptive setting--event stream will correct if cmd fails:
             self._target_temp_high = target_temp_high
@@ -214,17 +215,17 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         _LOGGER.debug("Requested fan mode %s", fan_mode)
-        if self.check_disabled():
-            await self._node.set_fan_mode(HA_FAN_TO_ISY.get(fan_mode))
-            # Presumptive setting--event stream will correct if cmd fails:
-            self._fan_mode = fan_mode
-            self.async_write_ha_state()
+        self._raise_if_disabled()
+        await self._node.set_fan_mode(HA_FAN_TO_ISY.get(fan_mode))
+        # Presumptive setting--event stream will correct if cmd fails:
+        self._fan_mode = fan_mode
+        self.async_write_ha_state()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         _LOGGER.debug("Requested operation mode %s", hvac_mode)
-        if self.check_disabled():
-            await self._node.set_climate_mode(HA_HVAC_TO_ISY.get(hvac_mode))
-            # Presumptive setting--event stream will correct if cmd fails:
-            self._hvac_mode = hvac_mode
-            self.async_write_ha_state()
+        self._raise_if_disabled()
+        await self._node.set_climate_mode(HA_HVAC_TO_ISY.get(hvac_mode))
+        # Presumptive setting--event stream will correct if cmd fails:
+        self._hvac_mode = hvac_mode
+        self.async_write_ha_state()

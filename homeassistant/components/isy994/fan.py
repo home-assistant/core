@@ -69,14 +69,13 @@ class ISYFanEntity(ISYNodeEntity, FanEntity):
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set node to speed percentage for the ISY fan device."""
+        self._raise_if_disabled()
         if percentage == 0:
             await self._node.turn_off()
             return
 
         isy_speed = math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
-
-        if self.check_disabled():
-            await self._node.turn_on(val=isy_speed)
+        await self._node.turn_on(val=isy_speed)
 
     async def async_turn_on(
         self,
@@ -89,8 +88,8 @@ class ISYFanEntity(ISYNodeEntity, FanEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Send the turn off command to the ISY fan device."""
-        if self.check_disabled():
-            await self._node.turn_off()
+        self._raise_if_disabled()
+        await self._node.turn_off()
 
 
 class ISYFanProgramEntity(ISYProgramEntity, FanEntity):

@@ -197,7 +197,7 @@ class ISYNodeEntity(ISYEntity):
 
     async def async_get_zwave_parameter(self, parameter: Any) -> None:
         """Respond to an entity service command to request a Z-Wave device parameter from the ISY."""
-        if not hasattr(self._node, "protocol") or self._node.protocol != PROTO_ZWAVE:
+        if self._node.protocol != PROTO_ZWAVE:
             raise HomeAssistantError(
                 "Invalid service call: cannot request Z-Wave Parameter for non-Z-Wave"
                 f" device {self.entity_id}"
@@ -208,7 +208,7 @@ class ISYNodeEntity(ISYEntity):
         self, parameter: Any, value: Any | None, size: int | None
     ) -> None:
         """Respond to an entity service command to set a Z-Wave device parameter via the ISY."""
-        if not hasattr(self._node, "protocol") or self._node.protocol != PROTO_ZWAVE:
+        if self._node.protocol != PROTO_ZWAVE:
             raise HomeAssistantError(
                 "Invalid service call: cannot set Z-Wave Parameter for non-Z-Wave"
                 f" device {self.entity_id}"
@@ -220,13 +220,12 @@ class ISYNodeEntity(ISYEntity):
         """Respond to an entity service command to rename a node on the ISY."""
         await self._node.rename(name)
 
-    def check_disabled(self) -> bool:
+    def _raise_if_disabled(self) -> None:
         """Error if a device is attempted to be controlled while disabled in the ISY."""
         if not getattr(self._node, "enabled", True):
             raise HomeAssistantError(
                 f"Attempted to send command to device disabled in ISY. Use isy994.send_node_command to enable {self.entity_id}"
             )
-        return True
 
 
 class ISYProgramEntity(ISYEntity):

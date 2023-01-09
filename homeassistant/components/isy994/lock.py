@@ -46,12 +46,14 @@ class ISYLockEntity(ISYNodeEntity, LockEntity):
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Send the lock command to the ISY device."""
-        if self.check_disabled() and not await self._node.secure_lock():
+        self._raise_if_disabled()
+        if not await self._node.secure_lock():
             _LOGGER.error("Unable to lock device")
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Send the unlock command to the ISY device."""
-        if self.check_disabled() and not await self._node.secure_unlock():
+        self._raise_if_disabled()
+        if not await self._node.secure_unlock():
             _LOGGER.error("Unable to lock device")
 
 

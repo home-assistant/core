@@ -73,7 +73,7 @@ class ISYNodeButtonEntity(ButtonEntity):
             identifiers={(ISY994_DOMAIN, base_unique_id)}
         )
 
-    def check_disabled(self) -> bool:
+    def _raise_if_disabled(self) -> bool:
         """Warn the user if the device is disabled in the ISY."""
         if not getattr(self._node, "enabled", True):
             raise HomeAssistantError(
@@ -97,8 +97,8 @@ class ISYNodeQueryButtonEntity(ISYNodeButtonEntity):
 
     async def async_press(self) -> None:
         """Press the button."""
-        if self.check_disabled():
-            await self._node.query()
+        self._raise_if_disabled()
+        await self._node.query()
 
 
 class ISYNodeBeepButtonEntity(ISYNodeButtonEntity):
@@ -119,8 +119,8 @@ class ISYNodeBeepButtonEntity(ISYNodeButtonEntity):
 
     async def async_press(self) -> None:
         """Press the button."""
-        if self.check_disabled():
-            await self._node.beep()
+        self._raise_if_disabled()
+        await self._node.beep()
 
 
 class ISYNetworkResourceButtonEntity(ButtonEntity):
