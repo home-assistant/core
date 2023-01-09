@@ -1212,7 +1212,7 @@ class State:
             context: dict[str, Any] | str = state_context.id
         else:
             context = state_context.as_dict()
-        compressed_state = self._as_compressed_state = {
+        compressed_state = {
             COMPRESSED_STATE_STATE: self.state,
             COMPRESSED_STATE_ATTRIBUTES: self.attributes,
             COMPRESSED_STATE_CONTEXT: context,
@@ -1222,6 +1222,7 @@ class State:
             compressed_state[COMPRESSED_STATE_LAST_UPDATED] = dt_util.utc_to_timestamp(
                 self.last_updated
             )
+        self._as_compressed_state = compressed_state
         return compressed_state
 
     @classmethod
