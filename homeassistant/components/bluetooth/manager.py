@@ -29,7 +29,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.dt import monotonic_time_coarse
 
 from .advertisement_tracker import AdvertisementTracker
-from .base_scanner import BaseHaScanner
+from .base_scanner import BaseHaScanner, BluetoothScannerDevice
 from .const import (
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
     UNAVAILABLE_TRACK_SECONDS,
@@ -217,18 +217,22 @@ class BluetoothManager:
         uninstall_multiple_bleak_catcher()
 
     @hass_callback
-    def async_get_scanner_discovered_devices_and_advertisement_data_by_address(
+    def async_scanner_devices_by_address(
         self, address: str, connectable: bool
-    ) -> list[tuple[BaseHaScanner, BLEDevice, AdvertisementData]]:
-        """Get scanner, devices, and advertisement_data by address."""
-        types_ = (True,) if connectable else (True, False)
-        results: list[tuple[BaseHaScanner, BLEDevice, AdvertisementData]] = []
-        for type_ in types_:
-            for scanner in self._get_scanners_by_type(type_):
-                devices_and_adv_data = scanner.discovered_devices_and_advertisement_data
-                if device_adv_data := devices_and_adv_data.get(address):
-                    results.append((scanner, *device_adv_data))
-        return results
+    ) -> list[BluetoothScannerDevice]:
+        """Get BluetoothScannerDevice by address."""
+        scanners = self._get_scanners_by_type(True)
+        if not connectable:
+            scanners.extend(self._get_scanners_by_type(False))
+        return [
+            BluetoothScannerDevice(scanner, *device_adv)
+            for scanner in scanners
+            if (
+                device_adv := scanner.discovered_devices_and_advertisement_data.get(
+                    address
+                )
+            )
+        ]
 
     @hass_callback
     def _async_all_discovered_addresses(self, connectable: bool) -> Iterable[str]:
