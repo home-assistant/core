@@ -73,8 +73,7 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 host = await async_obtain_host_settings(self.hass, user_input)
                 if not host.api.is_admin:
                     errors[CONF_USERNAME] = "not_admin"
-                    placeholders["username"] = host.api.username
-                    placeholders["user_level"] = host.api.user_level
+                    placeholders["error"] = f"User {host.api.username} has authorisation level {host.api.user_level}, admin required"
             except CannotConnect:
                 errors[CONF_HOST] = "cannot_connect"
             except CredentialsInvalidError:

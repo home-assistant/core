@@ -4,14 +4,15 @@
             "already_configured": "Device is already configured"
         },
         "error": {
-            "api_error": "API error occurred: {error}",
+            "api_error": "API error occurred",
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
-            "not_admin": "User needs to be admin, {username} has authorisation level {user_level}",
-            "unknown": "Unexpected error: {error}"
+            "not_admin": "User needs to be admin",
+            "unknown": "Unexpected error"
         },
         "step": {
             "user": {
+                "description": "{error}",
                 "data": {
                     "host": "Host",
                     "password": "Password",
