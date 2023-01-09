@@ -2,8 +2,8 @@
   "codeowners": ["@home-assistant/core"],
   "config_flow": false,
   "dependencies": ["homeassistant_hardware"],
-  "documentation": "https://www.home-assistant.io/integrations/thread",
-  "domain": "thread",
+  "documentation": "https://www.home-assistant.io/integrations/otbr",
+  "domain": "otbr",
   "integration_type": "system",
   "iot_class": "local_polling",
   "name": "Thread"

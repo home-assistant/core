@@ -1,10 +1,10 @@
-"""Test the Thread integration."""
+"""Test the Open Thread Border Router integration."""
 
 from http import HTTPStatus
 
 import pytest
 
-from homeassistant.components import thread
+from homeassistant.components import otbr
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
@@ -19,7 +19,7 @@ async def test_setup(
 ):
     """Test we can setup the Thread integration."""
 
-    assert await async_setup_component(hass, thread.DOMAIN, {})
+    assert await async_setup_component(hass, otbr.DOMAIN, {})
 
 
 async def test_get_thread_state(
@@ -29,7 +29,7 @@ async def test_get_thread_state(
 
     aioclient_mock.get(f"{BASE_URL}/node/state", text="0")
 
-    assert await thread.async_get_thread_state(hass) == thread.ThreadState.DISABLED
+    assert await otbr.async_get_thread_state(hass) == otbr.ThreadState.DISABLED
 
 
 async def test_set_thread_state(
@@ -39,8 +39,8 @@ async def test_set_thread_state(
 
     aioclient_mock.post(f"{BASE_URL}/node/state", text="0")
 
-    await thread.async_set_thread_state(hass, thread.ThreadState.ROUTER)
-    assert 3 == thread.ThreadState.ROUTER.value
+    await otbr.async_set_thread_state(hass, otbr.ThreadState.ROUTER)
+    assert 3 == otbr.ThreadState.ROUTER.value
     assert aioclient_mock.call_count == 1
     assert aioclient_mock.mock_calls[-1][0] == "POST"
     assert aioclient_mock.mock_calls[-1][1].path == "/node/state"
@@ -82,12 +82,12 @@ async def test_get_active_dataset(
 
     aioclient_mock.get(f"{BASE_URL}/node/dataset/active", json=mock_response)
 
-    active_timestamp = thread.models.Timestamp(
+    active_timestamp = otbr.models.Timestamp(
         mock_response["ActiveTimestamp"]["Authoritative"],
         mock_response["ActiveTimestamp"]["Seconds"],
         mock_response["ActiveTimestamp"]["Ticks"],
     )
-    security_policy = thread.models.SecurityPolicy(
+    security_policy = otbr.models.SecurityPolicy(
         mock_response["SecurityPolicy"]["AutonomousEnrollment"],
         mock_response["SecurityPolicy"]["CommercialCommissioning"],
         mock_response["SecurityPolicy"]["ExternalCommissioning"],
@@ -100,8 +100,8 @@ async def test_get_active_dataset(
         mock_response["SecurityPolicy"]["TobleLink"],
     )
 
-    active_dataset = await thread.async_get_active_dataset(hass)
-    assert active_dataset == thread.OperationalDataSet(
+    active_dataset = await otbr.async_get_active_dataset(hass)
+    assert active_dataset == otbr.OperationalDataSet(
         active_timestamp,
         mock_response["ChannelMask"],
         mock_response["Channel"],
@@ -124,7 +124,7 @@ async def test_get_active_dataset_empty(
     """Test async_get_active_dataset."""
 
     aioclient_mock.get(f"{BASE_URL}/node/dataset/active", status=HTTPStatus.NO_CONTENT)
-    assert await thread.async_get_active_dataset(hass) is None
+    assert await otbr.async_get_active_dataset(hass) is None
 
 
 async def test_get_active_dataset_tlvs(
@@ -140,7 +140,7 @@ async def test_get_active_dataset_tlvs(
 
     aioclient_mock.get(f"{BASE_URL}/node/dataset/active", text=mock_response)
 
-    assert await thread.async_get_active_dataset_tlvs(hass) == bytes.fromhex(
+    assert await otbr.async_get_active_dataset_tlvs(hass) == bytes.fromhex(
         mock_response
     )
 
@@ -151,7 +151,7 @@ async def test_get_active_dataset_tlvs_empty(
     """Test async_get_active_dataset_tlvs."""
 
     aioclient_mock.get(f"{BASE_URL}/node/dataset/active", status=HTTPStatus.NO_CONTENT)
-    assert await thread.async_get_active_dataset_tlvs(hass) is None
+    assert await otbr.async_get_active_dataset_tlvs(hass) is None
 
 
 async def test_create_active_dataset(
@@ -161,22 +161,22 @@ async def test_create_active_dataset(
 
     aioclient_mock.post(f"{BASE_URL}/node/dataset/active", status=HTTPStatus.ACCEPTED)
 
-    await thread.async_create_active_dataset(hass, thread.OperationalDataSet())
+    await otbr.async_create_active_dataset(hass, otbr.OperationalDataSet())
     assert aioclient_mock.call_count == 1
     assert aioclient_mock.mock_calls[-1][0] == "POST"
     assert aioclient_mock.mock_calls[-1][1].path == "/node/dataset/active"
     assert aioclient_mock.mock_calls[-1][2] == {}
 
-    await thread.async_create_active_dataset(
-        hass, thread.OperationalDataSet(network_name="OpenThread HA")
+    await otbr.async_create_active_dataset(
+        hass, otbr.OperationalDataSet(network_name="OpenThread HA")
     )
     assert aioclient_mock.call_count == 2
     assert aioclient_mock.mock_calls[-1][0] == "POST"
     assert aioclient_mock.mock_calls[-1][1].path == "/node/dataset/active"
     assert aioclient_mock.mock_calls[-1][2] == {"NetworkName": "OpenThread HA"}
 
-    await thread.async_create_active_dataset(
-        hass, thread.OperationalDataSet(network_name="OpenThread HA", channel=15)
+    await otbr.async_create_active_dataset(
+        hass, otbr.OperationalDataSet(network_name="OpenThread HA", channel=15)
     )
     assert aioclient_mock.call_count == 3
     assert aioclient_mock.mock_calls[-1][0] == "POST"
@@ -194,8 +194,8 @@ async def test_create_active_dataset_thread_active(
 
     aioclient_mock.post(f"{BASE_URL}/node/dataset/active", status=HTTPStatus.CONFLICT)
 
-    with pytest.raises(thread.ThreadNetworkActiveError):
-        await thread.async_create_active_dataset(hass, thread.OperationalDataSet())
+    with pytest.raises(otbr.ThreadNetworkActiveError):
+        await otbr.async_create_active_dataset(hass, otbr.OperationalDataSet())
 
 
 async def test_set_active_dataset(
@@ -205,22 +205,22 @@ async def test_set_active_dataset(
 
     aioclient_mock.put(f"{BASE_URL}/node/dataset/active", status=HTTPStatus.ACCEPTED)
 
-    await thread.async_set_active_dataset(hass, thread.OperationalDataSet())
+    await otbr.async_set_active_dataset(hass, otbr.OperationalDataSet())
     assert aioclient_mock.call_count == 1
     assert aioclient_mock.mock_calls[-1][0] == "PUT"
     assert aioclient_mock.mock_calls[-1][1].path == "/node/dataset/active"
     assert aioclient_mock.mock_calls[-1][2] == {}
 
-    await thread.async_set_active_dataset(
-        hass, thread.OperationalDataSet(network_name="OpenThread HA")
+    await otbr.async_set_active_dataset(
+        hass, otbr.OperationalDataSet(network_name="OpenThread HA")
     )
     assert aioclient_mock.call_count == 2
     assert aioclient_mock.mock_calls[-1][0] == "PUT"
     assert aioclient_mock.mock_calls[-1][1].path == "/node/dataset/active"
     assert aioclient_mock.mock_calls[-1][2] == {"NetworkName": "OpenThread HA"}
 
-    await thread.async_set_active_dataset(
-        hass, thread.OperationalDataSet(network_name="OpenThread HA", channel=15)
+    await otbr.async_set_active_dataset(
+        hass, otbr.OperationalDataSet(network_name="OpenThread HA", channel=15)
     )
     assert aioclient_mock.call_count == 3
     assert aioclient_mock.mock_calls[-1][0] == "PUT"
@@ -238,8 +238,8 @@ async def test_set_active_dataset_no_dataset(
 
     aioclient_mock.put(f"{BASE_URL}/node/dataset/active", status=HTTPStatus.NOT_FOUND)
 
-    with pytest.raises(thread.NoDatasetError):
-        await thread.async_set_active_dataset(hass, thread.OperationalDataSet())
+    with pytest.raises(otbr.NoDatasetError):
+        await otbr.async_set_active_dataset(hass, otbr.OperationalDataSet())
 
 
 async def test_set_active_dataset_thread_active(
@@ -249,8 +249,8 @@ async def test_set_active_dataset_thread_active(
 
     aioclient_mock.put(f"{BASE_URL}/node/dataset/active", status=HTTPStatus.CONFLICT)
 
-    with pytest.raises(thread.ThreadNetworkActiveError):
-        await thread.async_set_active_dataset(hass, thread.OperationalDataSet())
+    with pytest.raises(otbr.ThreadNetworkActiveError):
+        await otbr.async_set_active_dataset(hass, otbr.OperationalDataSet())
 
 
 async def test_set_active_dataset_tlvs(
@@ -266,7 +266,7 @@ async def test_set_active_dataset_tlvs(
 
     aioclient_mock.put(f"{BASE_URL}/node/dataset/active", status=HTTPStatus.ACCEPTED)
 
-    await thread.async_set_active_dataset_tlvs(hass, dataset)
+    await otbr.async_set_active_dataset_tlvs(hass, dataset)
     assert aioclient_mock.call_count == 1
     assert aioclient_mock.mock_calls[-1][0] == "PUT"
     assert aioclient_mock.mock_calls[-1][1].path == "/node/dataset/active"
@@ -281,8 +281,8 @@ async def test_set_active_dataset_tlvs_no_dataset(
 
     aioclient_mock.put(f"{BASE_URL}/node/dataset/active", status=HTTPStatus.NOT_FOUND)
 
-    with pytest.raises(thread.NoDatasetError):
-        await thread.async_set_active_dataset_tlvs(hass, b"")
+    with pytest.raises(otbr.NoDatasetError):
+        await otbr.async_set_active_dataset_tlvs(hass, b"")
 
 
 async def test_set_active_dataset_tlvs_thread_active(
@@ -292,15 +292,15 @@ async def test_set_active_dataset_tlvs_thread_active(
 
     aioclient_mock.put(f"{BASE_URL}/node/dataset/active", status=HTTPStatus.CONFLICT)
 
-    with pytest.raises(thread.ThreadNetworkActiveError):
-        await thread.async_set_active_dataset_tlvs(hass, b"")
+    with pytest.raises(otbr.ThreadNetworkActiveError):
+        await otbr.async_set_active_dataset_tlvs(hass, b"")
 
 
 async def test_get_thread_state_no_addon(hass: HomeAssistant):
     """Test async_get_thread_state when it's not possible to get the addon state."""
 
     with pytest.raises(HomeAssistantError):
-        await thread.async_get_thread_state(hass)
+        await otbr.async_get_thread_state(hass)
 
 
 async def test_get_thread_state_addon_not_installed(
@@ -309,7 +309,7 @@ async def test_get_thread_state_addon_not_installed(
     """Test async_get_thread_state when the multi-PAN addon is not installed."""
 
     with pytest.raises(HomeAssistantError):
-        await thread.async_get_thread_state(hass)
+        await otbr.async_get_thread_state(hass)
 
 
 async def test_get_thread_state_404(
@@ -319,7 +319,7 @@ async def test_get_thread_state_404(
 
     aioclient_mock.get(f"{BASE_URL}/node/state", status=HTTPStatus.NOT_FOUND)
     with pytest.raises(HomeAssistantError):
-        await thread.async_get_thread_state(hass)
+        await otbr.async_get_thread_state(hass)
 
 
 async def test_get_thread_state_204(
@@ -329,7 +329,7 @@ async def test_get_thread_state_204(
 
     aioclient_mock.get(f"{BASE_URL}/node/state", status=HTTPStatus.NO_CONTENT)
     with pytest.raises(HomeAssistantError):
-        await thread.async_get_thread_state(hass)
+        await otbr.async_get_thread_state(hass)
 
 
 async def test_get_thread_state_invalid(
@@ -339,7 +339,7 @@ async def test_get_thread_state_invalid(
 
     aioclient_mock.get(f"{BASE_URL}/node/state", text="unexpected")
     with pytest.raises(HomeAssistantError):
-        await thread.async_get_thread_state(hass)
+        await otbr.async_get_thread_state(hass)
 
 
 async def test_set_thread_state_204(
@@ -349,7 +349,7 @@ async def test_set_thread_state_204(
 
     aioclient_mock.post(f"{BASE_URL}/node/state", status=HTTPStatus.NO_CONTENT)
     with pytest.raises(HomeAssistantError):
-        await thread.async_set_thread_state(hass, thread.ThreadState.ROUTER)
+        await otbr.async_set_thread_state(hass, otbr.ThreadState.ROUTER)
 
 
 async def test_get_active_dataset_201(
@@ -359,7 +359,7 @@ async def test_get_active_dataset_201(
 
     aioclient_mock.get(f"{BASE_URL}/node/dataset/active", status=HTTPStatus.CREATED)
     with pytest.raises(HomeAssistantError):
-        assert await thread.async_get_active_dataset(hass) is None
+        assert await otbr.async_get_active_dataset(hass) is None
 
 
 async def test_get_active_dataset_invalid(
@@ -369,7 +369,7 @@ async def test_get_active_dataset_invalid(
 
     aioclient_mock.get(f"{BASE_URL}/node/dataset/active", text="unexpected")
     with pytest.raises(HomeAssistantError):
-        assert await thread.async_get_active_dataset(hass) is None
+        assert await otbr.async_get_active_dataset(hass) is None
 
 
 async def test_get_active_dataset_tlvs_201(
@@ -379,7 +379,7 @@ async def test_get_active_dataset_tlvs_201(
 
     aioclient_mock.get(f"{BASE_URL}/node/dataset/active", status=HTTPStatus.CREATED)
     with pytest.raises(HomeAssistantError):
-        assert await thread.async_get_active_dataset_tlvs(hass) is None
+        assert await otbr.async_get_active_dataset_tlvs(hass) is None
 
 
 async def test_get_active_dataset_tlvs_invalid(
@@ -389,7 +389,7 @@ async def test_get_active_dataset_tlvs_invalid(
 
     aioclient_mock.get(f"{BASE_URL}/node/dataset/active", text="unexpected")
     with pytest.raises(HomeAssistantError):
-        assert await thread.async_get_active_dataset_tlvs(hass) is None
+        assert await otbr.async_get_active_dataset_tlvs(hass) is None
 
 
 async def test_create_active_dataset_thread_active_200(
@@ -400,7 +400,7 @@ async def test_create_active_dataset_thread_active_200(
     aioclient_mock.post(f"{BASE_URL}/node/dataset/active", status=HTTPStatus.OK)
 
     with pytest.raises(HomeAssistantError):
-        await thread.async_create_active_dataset(hass, thread.OperationalDataSet())
+        await otbr.async_create_active_dataset(hass, otbr.OperationalDataSet())
 
 
 async def test_set_active_dataset_thread_active_200(
@@ -411,7 +411,7 @@ async def test_set_active_dataset_thread_active_200(
     aioclient_mock.put(f"{BASE_URL}/node/dataset/active", status=HTTPStatus.OK)
 
     with pytest.raises(HomeAssistantError):
-        await thread.async_set_active_dataset(hass, thread.OperationalDataSet())
+        await otbr.async_set_active_dataset(hass, otbr.OperationalDataSet())
 
 
 async def test_set_active_dataset_tlvs_thread_active_200(
@@ -422,4 +422,4 @@ async def test_set_active_dataset_tlvs_thread_active_200(
     aioclient_mock.put(f"{BASE_URL}/node/dataset/active", status=HTTPStatus.OK)
 
     with pytest.raises(HomeAssistantError):
-        await thread.async_set_active_dataset_tlvs(hass, b"")
+        await otbr.async_set_active_dataset_tlvs(hass, b"")

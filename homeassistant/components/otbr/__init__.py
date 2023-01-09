@@ -1,4 +1,4 @@
-"""The Thread integration."""
+"""The Open Thread Border Router integration."""
 from __future__ import annotations
 
 from http import HTTPStatus
@@ -18,13 +18,13 @@ from homeassistant.helpers.typing import ConfigType
 
 from .models import OperationalDataSet, ThreadState
 
-DOMAIN = "thread"
+DOMAIN = "otbr"
 
 DATA_ADDON_MANAGER = "silabs_multiprotocol_addon_manager"
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up Thread."""
+    """Set up Open Thread Border Router."""
 
     return True
 
