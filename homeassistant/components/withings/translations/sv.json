@@ -24,10 +24,6 @@
                 "description": "Vilken profil valde du p\u00e5 Withings webbplats? Det \u00e4r viktigt att profilerna matchar, annars kommer data att vara felm\u00e4rkta.",
                 "title": "Anv\u00e4ndarprofil."
             },
-            "reauth": {
-                "description": "Profilen \" {profile} \" m\u00e5ste autentiseras p\u00e5 nytt f\u00f6r att kunna forts\u00e4tta att ta emot Withings-data.",
-                "title": "\u00c5terautenticera integration"
-            },
             "reauth_confirm": {
                 "description": "Profilen \" {profile} \" m\u00e5ste autentiseras p\u00e5 nytt f\u00f6r att kunna forts\u00e4tta att ta emot Withings-data.",
                 "title": "G\u00f6r om autentiseringen f\u00f6r integrationen"

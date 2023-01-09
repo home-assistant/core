@@ -23,11 +23,5 @@
                 }
             }
         }
-    },
-    "issues": {
-        "deprecated_yaml": {
-            "description": "Proses konfigurasi Integrasi Open Exchange Rates lewat YAML telah dihapus.\n\nHapus konfigurasi YAML Integrasi Open Exchange Rates dari file configuration.yaml dan mulai ulang Home Assistant untuk memperbaiki masalah ini.",
-            "title": "Konfigurasi YAML Integrasi Open Exchange Rates telah dihapus"
-        }
     }
 }

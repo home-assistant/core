@@ -28,15 +28,5 @@
                 "description": "Az API-kulcs automatikusan lek\u00e9rhet\u0151, ha a bejelentkez\u00e9si hiteles\u00edt\u0151 adatok nem lettek be\u00e1ll\u00edtva az alkalmaz\u00e1sban.\nAz API-kulcs a Lidarr webes felhaszn\u00e1l\u00f3i fel\u00fclet Be\u00e1ll\u00edt\u00e1sok > \u00c1ltal\u00e1nos men\u00fcpontj\u00e1ban tal\u00e1lhat\u00f3."
             }
         }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "max_records": "A keresett \u00e9s a v\u00e1r\u00f3list\u00e1n megjelen\u00edtend\u0151 maxim\u00e1lis rekordok sz\u00e1ma",
-                    "upcoming_days": "A napt\u00e1rban megjelen\u00edtend\u0151 k\u00f6vetkez\u0151 napok sz\u00e1ma"
-                }
-            }
-        }
     }
 }

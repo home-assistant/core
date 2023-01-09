@@ -1,5 +1,4 @@
 """Tests for Shelly update platform."""
-from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
@@ -7,7 +6,7 @@ import pytest
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
-from homeassistant.components.shelly.const import DOMAIN, REST_SENSORS_UPDATE_INTERVAL
+from homeassistant.components.shelly.const import DOMAIN
 from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
     ATTR_INSTALLED_VERSION,
@@ -20,11 +19,8 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_registry import async_get
-from homeassistant.util import dt
 
-from . import MOCK_MAC, init_integration
-
-from tests.common import async_fire_time_changed
+from . import MOCK_MAC, init_integration, mock_rest_update
 
 
 @pytest.mark.parametrize(
@@ -100,10 +96,7 @@ async def test_block_update(hass: HomeAssistant, mock_block_device, monkeypatch)
     assert state.attributes[ATTR_IN_PROGRESS] is True
 
     monkeypatch.setitem(mock_block_device.status["update"], "old_version", "2")
-    async_fire_time_changed(
-        hass, dt.utcnow() + timedelta(seconds=REST_SENSORS_UPDATE_INTERVAL)
-    )
-    await hass.async_block_till_done()
+    await mock_rest_update(hass)
 
     state = hass.states.get("update.test_name_firmware_update")
     assert state.state == STATE_OFF
@@ -134,10 +127,7 @@ async def test_block_beta_update(hass: HomeAssistant, mock_block_device, monkeyp
     assert state.attributes[ATTR_IN_PROGRESS] is False
 
     monkeypatch.setitem(mock_block_device.status["update"], "beta_version", "2b")
-    async_fire_time_changed(
-        hass, dt.utcnow() + timedelta(seconds=REST_SENSORS_UPDATE_INTERVAL)
-    )
-    await hass.async_block_till_done()
+    await mock_rest_update(hass)
 
     state = hass.states.get("update.test_name_beta_firmware_update")
     assert state.state == STATE_ON
@@ -160,10 +150,7 @@ async def test_block_beta_update(hass: HomeAssistant, mock_block_device, monkeyp
     assert state.attributes[ATTR_IN_PROGRESS] is True
 
     monkeypatch.setitem(mock_block_device.status["update"], "old_version", "2b")
-    async_fire_time_changed(
-        hass, dt.utcnow() + timedelta(seconds=REST_SENSORS_UPDATE_INTERVAL)
-    )
-    await hass.async_block_till_done()
+    await mock_rest_update(hass)
 
     state = hass.states.get("update.test_name_beta_firmware_update")
     assert state.state == STATE_OFF
@@ -288,10 +275,7 @@ async def test_rpc_update(hass: HomeAssistant, mock_rpc_device, monkeypatch):
     assert state.attributes[ATTR_IN_PROGRESS] is True
 
     monkeypatch.setitem(mock_rpc_device.shelly, "ver", "2")
-    async_fire_time_changed(
-        hass, dt.utcnow() + timedelta(seconds=REST_SENSORS_UPDATE_INTERVAL)
-    )
-    await hass.async_block_till_done()
+    await mock_rest_update(hass)
 
     state = hass.states.get("update.test_name_firmware_update")
     assert state.state == STATE_OFF
@@ -335,10 +319,7 @@ async def test_rpc_beta_update(hass: HomeAssistant, mock_rpc_device, monkeypatch
             "beta": {"version": "2b"},
         },
     )
-    async_fire_time_changed(
-        hass, dt.utcnow() + timedelta(seconds=REST_SENSORS_UPDATE_INTERVAL)
-    )
-    await hass.async_block_till_done()
+    await mock_rest_update(hass)
 
     state = hass.states.get("update.test_name_beta_firmware_update")
     assert state.state == STATE_ON
@@ -361,10 +342,7 @@ async def test_rpc_beta_update(hass: HomeAssistant, mock_rpc_device, monkeypatch
     assert state.attributes[ATTR_IN_PROGRESS] is True
 
     monkeypatch.setitem(mock_rpc_device.shelly, "ver", "2b")
-    async_fire_time_changed(
-        hass, dt.utcnow() + timedelta(seconds=REST_SENSORS_UPDATE_INTERVAL)
-    )
-    await hass.async_block_till_done()
+    await mock_rest_update(hass)
 
     state = hass.states.get("update.test_name_beta_firmware_update")
     assert state.state == STATE_OFF

@@ -16,7 +16,7 @@
                     "username": "Username"
                 },
                 "description": "Enter Dexcom Share credentials",
-                "title": "Setup Dexcom integration"
+                "title": "Set up Dexcom integration"
             }
         }
     },

@@ -7,7 +7,7 @@
             "webhook_not_internet_accessible": "Your Home Assistant instance needs to be accessible from the internet to receive webhook messages."
         },
         "create_entry": {
-            "default": "Your Plaato {device_type} with name **{device_name}** was successfully setup!"
+            "default": "Your Plaato {device_type} with name **{device_name}** was successfully set up!"
         },
         "error": {
             "invalid_webhook_device": "You have selected a device that does not support sending data to a webhook. It is only available for the Airlock",
@@ -28,11 +28,11 @@
                     "device_name": "Name your device",
                     "device_type": "Type of Plaato device"
                 },
-                "description": "Do you want to start set up?",
+                "description": "Do you want to start setup?",
                 "title": "Set up the Plaato devices"
             },
             "webhook": {
-                "description": "To send events to Home Assistant, you will need to setup the webhook feature in Plaato Airlock.\n\nFill in the following info:\n\n- URL: `{webhook_url}`\n- Method: POST\n\nSee [the documentation]({docs_url}) for further details.",
+                "description": "To send events to Home Assistant, you will need to set up the webhook feature in Plaato Airlock.\n\nFill in the following info:\n\n- URL: `{webhook_url}`\n- Method: POST\n\nSee [the documentation]({docs_url}) for further details.",
                 "title": "Webhook to use"
             }
         }

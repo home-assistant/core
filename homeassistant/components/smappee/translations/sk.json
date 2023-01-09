@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_device": "Zariadenie u\u017e je nakonfigurovan\u00e9",
+            "already_configured_local_device": "Lok\u00e1lne zariadenie (zariadenia) je u\u017e nakonfigurovan\u00e9. Pred konfigur\u00e1ciou cloudov\u00e9ho zariadenia ich najsk\u00f4r odstr\u00e1\u0148te.",
+            "authorize_url_timeout": "\u010casov\u00fd limit generovania autorizovanej adresy URL.",
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "invalid_mdns": "Nepodporovan\u00e9 zariadenie pre integr\u00e1ciu Smappee.",
+            "missing_configuration": "Komponent nie je nakonfigurovan\u00fd. Postupujte pod\u013ea dokument\u00e1cie.",
+            "no_url_available": "Nie je k dispoz\u00edcii \u017eiadna adresa URL. Inform\u00e1cie o tejto chybe n\u00e1jdete [pozrite si sekciu pomocn\u00edka]({docs_url})"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "environment": {
+                "data": {
+                    "environment": "Prostredie"
+                },
+                "description": "Nastavte si Smappee na integr\u00e1ciu s Home Assistant."
+            },
+            "local": {
+                "data": {
+                    "host": "Hostite\u013e"
+                },
+                "description": "Zadajte hostite\u013ea na spustenie lok\u00e1lnej integr\u00e1cie Smappee"
+            },
+            "pick_implementation": {
+                "title": "Vyberte met\u00f3du overenia"
+            },
+            "zeroconf_confirm": {
+                "description": "Chcete prida\u0165 zariadenie Smappee so s\u00e9riov\u00fdm \u010d\u00edslom `{serialnumber}` do Home Assistant?",
+                "title": "Objaven\u00e9 zariadenie Smappee"
+            }
+        }
+    }
+}

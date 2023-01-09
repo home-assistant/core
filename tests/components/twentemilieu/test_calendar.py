@@ -81,4 +81,7 @@ async def test_api_events(
         "summary": "Christmas tree pickup",
         "description": None,
         "location": None,
+        "uid": None,
+        "recurrence_id": None,
+        "rrule": None,
     }

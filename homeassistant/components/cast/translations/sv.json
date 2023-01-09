@@ -9,7 +9,7 @@
         "step": {
             "config": {
                 "data": {
-                    "known_hosts": "K\u00e4nad v\u00e4rdar"
+                    "known_hosts": "K\u00e4nda v\u00e4rdar"
                 },
                 "description": "K\u00e4nda v\u00e4rdar - En kommaseparerad lista \u00f6ver v\u00e4rdnamn eller IP-adresser f\u00f6r cast-enheter, anv\u00e4nd om mDNS-uppt\u00e4ckt inte fungerar.",
                 "title": "Google Cast-konfiguration"
@@ -34,7 +34,7 @@
             },
             "basic_options": {
                 "data": {
-                    "known_hosts": "K\u00e4nad v\u00e4rdar"
+                    "known_hosts": "K\u00e4nda v\u00e4rdar"
                 },
                 "description": "K\u00e4nda v\u00e4rdar - En kommaseparerad lista \u00f6ver v\u00e4rdnamn eller IP-adresser f\u00f6r cast-enheter, anv\u00e4nd om mDNS-uppt\u00e4ckt inte fungerar.",
                 "title": "Google Cast-konfiguration"

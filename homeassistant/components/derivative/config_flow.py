@@ -6,19 +6,12 @@ from typing import Any, cast
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_SOURCE,
-    TIME_DAYS,
-    TIME_HOURS,
-    TIME_MINUTES,
-    TIME_SECONDS,
-)
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import CONF_NAME, CONF_SOURCE, UnitOfTime
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaConfigFlowHandler,
     SchemaFlowFormStep,
-    SchemaFlowMenuStep,
 )
 
 from .const import (
@@ -41,10 +34,10 @@ UNIT_PREFIXES = [
     selector.SelectOptionDict(value="P", label="P (peta)"),
 ]
 TIME_UNITS = [
-    selector.SelectOptionDict(value=TIME_SECONDS, label="Seconds"),
-    selector.SelectOptionDict(value=TIME_MINUTES, label="Minutes"),
-    selector.SelectOptionDict(value=TIME_HOURS, label="Hours"),
-    selector.SelectOptionDict(value=TIME_DAYS, label="Days"),
+    selector.SelectOptionDict(value=UnitOfTime.SECONDS, label="Seconds"),
+    selector.SelectOptionDict(value=UnitOfTime.MINUTES, label="Minutes"),
+    selector.SelectOptionDict(value=UnitOfTime.HOURS, label="Hours"),
+    selector.SelectOptionDict(value=UnitOfTime.DAYS, label="Days"),
 ]
 
 OPTIONS_SCHEMA = vol.Schema(
@@ -61,7 +54,7 @@ OPTIONS_SCHEMA = vol.Schema(
         vol.Required(CONF_UNIT_PREFIX, default="none"): selector.SelectSelector(
             selector.SelectSelectorConfig(options=UNIT_PREFIXES),
         ),
-        vol.Required(CONF_UNIT_TIME, default=TIME_HOURS): selector.SelectSelector(
+        vol.Required(CONF_UNIT_TIME, default=UnitOfTime.HOURS): selector.SelectSelector(
             selector.SelectSelectorConfig(options=TIME_UNITS),
         ),
     }
@@ -71,17 +64,17 @@ CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): selector.TextSelector(),
         vol.Required(CONF_SOURCE): selector.EntitySelector(
-            selector.EntitySelectorConfig(domain="sensor"),
+            selector.EntitySelectorConfig(domain=SENSOR_DOMAIN),
         ),
     }
 ).extend(OPTIONS_SCHEMA.schema)
 
-CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
-    "user": SchemaFlowFormStep(CONFIG_SCHEMA)
+CONFIG_FLOW = {
+    "user": SchemaFlowFormStep(CONFIG_SCHEMA),
 }
 
-OPTIONS_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
-    "init": SchemaFlowFormStep(OPTIONS_SCHEMA)
+OPTIONS_FLOW = {
+    "init": SchemaFlowFormStep(OPTIONS_SCHEMA),
 }
 
 

@@ -6,6 +6,7 @@
         },
         "error": {
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
+            "incorrect_api_key": "Neplatn\u00fd kl\u00ed\u010d API pro vybran\u00fd \u00fa\u010det",
             "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed"
         }
     }

@@ -13,19 +13,9 @@
                 "data": {
                     "host": "Vert",
                     "password": "Passord",
-                    "switch_as_light": "Initialiser brytere som lysenheter",
                     "username": "Brukernavn"
                 },
                 "description": "Sett opp SwitchBee-integrasjon med Home Assistant."
-            }
-        }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "devices": "Enheter som skal inkluderes"
-                }
             }
         }
     }

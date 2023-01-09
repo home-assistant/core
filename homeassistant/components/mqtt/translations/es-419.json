@@ -10,7 +10,6 @@
             "broker": {
                 "data": {
                     "broker": "Broker",
-                    "discovery": "Habilitar descubrimiento",
                     "password": "Contrase\u00f1a",
                     "port": "Puerto",
                     "username": "Nombre de usuario"

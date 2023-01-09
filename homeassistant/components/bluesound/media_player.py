@@ -775,10 +775,10 @@ class BluesoundPlayer(MediaPlayerEntity):
         return None
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag of media commands that are supported."""
         if self._status is None:
-            return 0
+            return MediaPlayerEntityFeature(0)
 
         if self.is_grouped and not self.is_master:
             return (

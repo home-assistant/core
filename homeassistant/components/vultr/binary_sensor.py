@@ -5,7 +5,11 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+)
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -32,7 +36,6 @@ from . import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_DEVICE_CLASS = "power"
 DEFAULT_NAME = "Vultr {}"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -64,7 +67,7 @@ def setup_platform(
 class VultrBinarySensor(BinarySensorEntity):
     """Representation of a Vultr subscription sensor."""
 
-    _attr_device_class = DEFAULT_DEVICE_CLASS
+    _attr_device_class = BinarySensorDeviceClass.POWER
 
     def __init__(self, vultr, subscription, name):
         """Initialize a new Vultr binary sensor."""

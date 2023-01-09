@@ -213,7 +213,7 @@ def async_is_bindable_target(source_zha_device, target_zha_device):
 def async_get_zha_config_value(
     config_entry: ConfigEntry, section: str, config_key: str, default: _T
 ) -> _T:
-    """Get the value for the specified configuration from the zha config entry."""
+    """Get the value for the specified configuration from the ZHA config entry."""
     return (
         config_entry.options.get(CUSTOM_CONFIGURATION, {})
         .get(section, {})
@@ -221,11 +221,13 @@ def async_get_zha_config_value(
     )
 
 
-def async_cluster_exists(hass, cluster_id):
+def async_cluster_exists(hass, cluster_id, skip_coordinator=True):
     """Determine if a device containing the specified in cluster is paired."""
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     zha_devices = zha_gateway.devices.values()
     for zha_device in zha_devices:
+        if skip_coordinator and zha_device.is_coordinator:
+            continue
         clusters_by_endpoint = zha_device.async_get_clusters()
         for clusters in clusters_by_endpoint.values():
             if (
@@ -347,10 +349,7 @@ def retryable_req(
                     if delay:
                         delay = uniform(delay * 0.75, delay * 1.25)
                         channel.debug(
-                            (
-                                "%s: retryable request #%d failed: %s. "
-                                "Retrying in %ss"
-                            ),
+                            "%s: retryable request #%d failed: %s. Retrying in %ss",
                             func.__name__,
                             try_count,
                             ex,

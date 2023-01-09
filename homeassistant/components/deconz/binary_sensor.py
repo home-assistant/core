@@ -33,6 +33,7 @@ import homeassistant.helpers.entity_registry as er
 from .const import ATTR_DARK, ATTR_ON, DOMAIN as DECONZ_DOMAIN
 from .deconz_device import DeconzDevice
 from .gateway import DeconzGateway, get_gateway_from_config_entry
+from .util import serial_from_unique_id
 
 _SensorDeviceT = TypeVar("_SensorDeviceT", bound=PydeconzSensorBase)
 
@@ -187,7 +188,9 @@ def async_update_unique_id(
         return
 
     if description.old_unique_id_suffix:
-        unique_id = f'{unique_id.split("-", 1)[0]}-{description.old_unique_id_suffix}'
+        unique_id = (
+            f"{serial_from_unique_id(unique_id)}-{description.old_unique_id_suffix}"
+        )
 
     if entity_id := ent_reg.async_get_entity_id(DOMAIN, DECONZ_DOMAIN, unique_id):
         ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)

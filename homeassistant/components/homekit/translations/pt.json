@@ -28,7 +28,7 @@
             "init": {
                 "data": {
                     "domains": "Dom\u00ednios a incluir",
-                    "mode": "Modo"
+                    "mode": "Modo HomeKit"
                 },
                 "title": "Selecione os dom\u00ednios a serem expostos."
             },

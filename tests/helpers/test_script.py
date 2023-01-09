@@ -8,7 +8,7 @@ import logging
 import operator
 from types import MappingProxyType
 from unittest import mock
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from async_timeout import timeout
 import pytest
@@ -1734,6 +1734,7 @@ async def test_condition_created_once(async_from_config, hass):
     )
 
     async_from_config.reset_mock()
+    async_from_config.return_value = MagicMock()
 
     hass.states.async_set("test.entity", "hello")
     await script_obj.async_run(context=Context())

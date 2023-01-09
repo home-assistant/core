@@ -21,7 +21,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     STATE_OFF,
     STATE_ON,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -136,7 +136,7 @@ class MfiSensor(SensorEntity):
             return "State"
 
         if tag == "temperature":
-            return TEMP_CELSIUS
+            return UnitOfTemperature.CELSIUS
         if tag == "active_pwr":
             return "Watts"
         if self._port.model == "Input Digital":

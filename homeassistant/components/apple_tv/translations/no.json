@@ -57,7 +57,7 @@
                     "device_input": "Enhet"
                 },
                 "description": "Start med \u00e5 skrive inn enhetsnavnet (f.eks. Kj\u00f8kken eller soverom) eller IP-adressen til Apple TV-en du vil legge til. \n\n Hvis du ikke kan se enheten eller opplever problemer, pr\u00f8v \u00e5 spesifisere enhetens IP-adresse.",
-                "title": "Konfigurere en ny Apple TV"
+                "title": "Sett opp en ny Apple TV"
             }
         }
     },

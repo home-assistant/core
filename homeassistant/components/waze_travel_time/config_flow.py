@@ -52,7 +52,7 @@ class WazeOptionsFlow(config_entries.OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(
                 title="",
-                data={k: v for k, v in user_input.items() if v not in (None, "")},
+                data=user_input,
             )
 
         return self.async_show_form(

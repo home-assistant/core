@@ -18,5 +18,15 @@
                 "description": "Sisesta oma TOLO Sauna seadme hostinimi v\u00f5i IP-aadress."
             }
         }
+    },
+    "entity": {
+        "select": {
+            "lamp_mode": {
+                "state": {
+                    "automatic": "Automaatne",
+                    "manual": "K\u00e4sitsi"
+                }
+            }
+        }
     }
 }

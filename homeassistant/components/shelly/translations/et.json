@@ -58,5 +58,18 @@
             "single_push": "{subtype} l\u00fchike vajutus",
             "triple": "Nuppu {subtype} kl\u00f5psati kolm korda"
         }
+    },
+    "options": {
+        "abort": {
+            "ble_unsupported": "Bluetoothi tugi n\u00f5uab p\u00fcsivara versiooni {ble_min_version} v\u00f5i uuemat."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "ble_scanner_mode": "Bluetooth-sk\u00e4nneri re\u017eiim"
+                },
+                "description": "Bluetoothi skannimine v\u00f5ib olla aktiivne v\u00f5i passiivne. Aktiivse oleku korral k\u00fcsib Shelly andmeid l\u00e4hedalasuvatest seadmetest, passiivse puhul saab Shelly l\u00e4hedalasuvatest seadmetest soovimatuid andmeid."
+            }
+        }
     }
 }

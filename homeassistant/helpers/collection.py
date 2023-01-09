@@ -211,7 +211,7 @@ class YamlCollection(ObservableCollection):
             await self.notify_changes(change_sets)
 
 
-class StorageCollection(ObservableCollection):
+class StorageCollection(ObservableCollection, ABC):
     """Offer a CRUD interface on top of JSON storage."""
 
     def __init__(

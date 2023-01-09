@@ -31,5 +31,38 @@
                 "title": "Dane logowania Renault"
             }
         }
+    },
+    "entity": {
+        "select": {
+            "charge_mode": {
+                "state": {
+                    "always": "natychmiast",
+                    "always_charging": "natychmiast",
+                    "schedule_mode": "harmonogram"
+                }
+            }
+        },
+        "sensor": {
+            "charge_state": {
+                "state": {
+                    "charge_ended": "\u0142adowanie zako\u0144czone",
+                    "charge_error": "nie \u0142aduje lub nie pod\u0142\u0105czony",
+                    "charge_in_progress": "\u0142adowanie",
+                    "energy_flap_opened": "pokrywa \u0142adowania otwarta",
+                    "not_in_charge": "roz\u0142adowywanie",
+                    "unavailable": "niedost\u0119pny",
+                    "waiting_for_a_planned_charge": "oczekiwanie na zaplanowane \u0142adowanie",
+                    "waiting_for_current_charge": "oczekiwanie na bie\u017c\u0105ce \u0142adowanie"
+                }
+            },
+            "plug_state": {
+                "state": {
+                    "plug_error": "b\u0142\u0105d wtyczki",
+                    "plug_unknown": "nieznana wtyczka",
+                    "plugged": "pod\u0142\u0105czony",
+                    "unplugged": "od\u0142\u0105czony"
+                }
+            }
+        }
     }
 }

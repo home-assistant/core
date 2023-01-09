@@ -24,15 +24,12 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     CONF_API_KEY,
     CONF_NAME,
-    IRRADIATION_BTUS_PER_HOUR_SQUARE_FOOT,
-    IRRADIATION_WATTS_PER_SQUARE_METER,
-    LENGTH_KILOMETERS,
-    LENGTH_MILES,
     PERCENTAGE,
-    PRESSURE_HPA,
-    SPEED_METERS_PER_SECOND,
-    SPEED_MILES_PER_HOUR,
-    TEMP_CELSIUS,
+    UnitOfIrradiance,
+    UnitOfLength,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -103,20 +100,20 @@ SENSOR_TYPES = (
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_FEELS_LIKE,
         name="Feels Like",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_DEW_POINT,
         name="Dew Point",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     # Data comes in as hPa
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_PRESSURE_SURFACE_LEVEL,
         name="Pressure (Surface Level)",
-        native_unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=UnitOfPressure.HPA,
         device_class=SensorDeviceClass.PRESSURE,
     ),
     # Data comes in as W/m^2, convert to BTUs/(hr * ft^2) for imperial
@@ -124,28 +121,33 @@ SENSOR_TYPES = (
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_SOLAR_GHI,
         name="Global Horizontal Irradiance",
-        unit_imperial=IRRADIATION_BTUS_PER_HOUR_SQUARE_FOOT,
-        unit_metric=IRRADIATION_WATTS_PER_SQUARE_METER,
+        unit_imperial=UnitOfIrradiance.BTUS_PER_HOUR_SQUARE_FOOT,
+        unit_metric=UnitOfIrradiance.WATTS_PER_SQUARE_METER,
         imperial_conversion=(1 / 3.15459),
+        device_class=SensorDeviceClass.IRRADIANCE,
     ),
     # Data comes in as km, convert to miles for imperial
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_CLOUD_BASE,
         name="Cloud Base",
-        unit_imperial=LENGTH_MILES,
-        unit_metric=LENGTH_KILOMETERS,
+        unit_imperial=UnitOfLength.MILES,
+        unit_metric=UnitOfLength.KILOMETERS,
         imperial_conversion=lambda val: DistanceConverter.convert(
-            val, LENGTH_KILOMETERS, LENGTH_MILES
+            val,
+            UnitOfLength.KILOMETERS,
+            UnitOfLength.MILES,
         ),
     ),
     # Data comes in as km, convert to miles for imperial
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_CLOUD_CEILING,
         name="Cloud Ceiling",
-        unit_imperial=LENGTH_MILES,
-        unit_metric=LENGTH_KILOMETERS,
+        unit_imperial=UnitOfLength.MILES,
+        unit_metric=UnitOfLength.KILOMETERS,
         imperial_conversion=lambda val: DistanceConverter.convert(
-            val, LENGTH_KILOMETERS, LENGTH_MILES
+            val,
+            UnitOfLength.KILOMETERS,
+            UnitOfLength.MILES,
         ),
     ),
     TomorrowioSensorEntityDescription(
@@ -157,17 +159,19 @@ SENSOR_TYPES = (
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_WIND_GUST,
         name="Wind Gust",
-        unit_imperial=SPEED_MILES_PER_HOUR,
-        unit_metric=SPEED_METERS_PER_SECOND,
+        unit_imperial=UnitOfSpeed.MILES_PER_HOUR,
+        unit_metric=UnitOfSpeed.METERS_PER_SECOND,
         imperial_conversion=lambda val: SpeedConverter.convert(
-            val, SPEED_METERS_PER_SECOND, SPEED_MILES_PER_HOUR
+            val, UnitOfSpeed.METERS_PER_SECOND, UnitOfSpeed.MILES_PER_HOUR
         ),
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_PRECIPITATION_TYPE,
         name="Precipitation Type",
         value_map=PrecipitationType,
-        device_class="tomorrowio__precipitation_type",
+        device_class=SensorDeviceClass.ENUM,
+        options=["freezing_rain", "ice_pellets", "none", "rain", "snow"],
+        translation_key="precipitation_type",
         icon="mdi:weather-snowy-rainy",
     ),
     # Data comes in as ppb, convert to µg/m^3
@@ -231,7 +235,16 @@ SENSOR_TYPES = (
         key=TMRW_ATTR_EPA_HEALTH_CONCERN,
         name="US EPA Health Concern",
         value_map=HealthConcernType,
-        device_class="tomorrowio__health_concern",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "good",
+            "hazardous",
+            "moderate",
+            "unhealthy_for_sensitive_groups",
+            "unhealthy",
+            "very_unhealthy",
+        ],
+        translation_key="health_concern",
         icon="mdi:hospital",
     ),
     TomorrowioSensorEntityDescription(
@@ -248,28 +261,43 @@ SENSOR_TYPES = (
         key=TMRW_ATTR_CHINA_HEALTH_CONCERN,
         name="China MEP Health Concern",
         value_map=HealthConcernType,
-        device_class="tomorrowio__health_concern",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "good",
+            "hazardous",
+            "moderate",
+            "unhealthy_for_sensitive_groups",
+            "unhealthy",
+            "very_unhealthy",
+        ],
+        translation_key="health_concern",
         icon="mdi:hospital",
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_POLLEN_TREE,
         name="Tree Pollen Index",
         value_map=PollenIndex,
-        device_class="tomorrowio__pollen_index",
+        device_class=SensorDeviceClass.ENUM,
+        options=["high", "low", "medium", "none", "very_high", "very_low"],
+        translation_key="pollen_index",
         icon="mdi:flower-pollen",
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_POLLEN_WEED,
         name="Weed Pollen Index",
         value_map=PollenIndex,
-        device_class="tomorrowio__pollen_index",
+        device_class=SensorDeviceClass.ENUM,
+        options=["high", "low", "medium", "none", "very_high", "very_low"],
+        translation_key="pollen_index",
         icon="mdi:flower-pollen",
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_POLLEN_GRASS,
         name="Grass Pollen Index",
         value_map=PollenIndex,
-        device_class="tomorrowio__pollen_index",
+        device_class=SensorDeviceClass.ENUM,
+        options=["high", "low", "medium", "none", "very_high", "very_low"],
+        translation_key="pollen_index",
         icon="mdi:flower-pollen",
     ),
     TomorrowioSensorEntityDescription(

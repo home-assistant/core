@@ -146,40 +146,36 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
     """Store entity registry data."""
 
     async def _async_migrate_func(
-        self, old_major_version: int, old_minor_version: int, old_data: dict[str, Any]
+        self,
+        old_major_version: int,
+        old_minor_version: int,
+        old_data: dict[str, list[dict[str, Any]]],
     ) -> dict[str, Any]:
         """Migrate to the new version."""
         if old_major_version < 2:
             if old_minor_version < 2:
-                # From version 1.1
+                # Version 1.2 implements migration and freezes the available keys,
+                # populate keys which were introduced before version 1.2
                 for device in old_data["devices"]:
-                    # Introduced in 0.110
+                    device.setdefault("area_id", None)
+                    device.setdefault("configuration_url", None)
+                    device.setdefault("disabled_by", None)
                     try:
-                        device["entry_type"] = DeviceEntryType(device.get("entry_type"))
+                        device["entry_type"] = DeviceEntryType(
+                            device.get("entry_type"),  # type: ignore[arg-type]
+                        )
                     except ValueError:
                         device["entry_type"] = None
-
-                    # Introduced in 0.79
-                    # renamed in 0.95
-                    device["via_device_id"] = device.get("via_device_id") or device.get(
-                        "hub_device_id"
-                    )
-                    # Introduced in 0.87
-                    device["area_id"] = device.get("area_id")
-                    device["name_by_user"] = device.get("name_by_user")
-                    # Introduced in 0.119
-                    device["disabled_by"] = device.get("disabled_by")
-                    # Introduced in 2021.11
-                    device["configuration_url"] = device.get("configuration_url")
-                # Introduced in 0.111
-                old_data["deleted_devices"] = old_data.get("deleted_devices", [])
+                    device.setdefault("name_by_user", None)
+                    # via_device_id was originally introduced as hub_device_id
+                    device.setdefault("via_device_id", device.get("hub_device_id"))
+                old_data.setdefault("deleted_devices", [])
                 for device in old_data["deleted_devices"]:
-                    # Introduced in 2021.2
-                    device["orphaned_timestamp"] = device.get("orphaned_timestamp")
+                    device.setdefault("orphaned_timestamp", None)
             if old_minor_version < 3:
-                # Introduced in 2022.2
+                # Version 1.3 adds hw_version
                 for device in old_data["devices"]:
-                    device["hw_version"] = device.get("hw_version")
+                    device["hw_version"] = None
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -347,9 +343,11 @@ class DeviceRegistry:
 
         if isinstance(entry_type, str) and not isinstance(entry_type, DeviceEntryType):
             report(  # type: ignore[unreachable]
-                "uses str for device registry entry_type. This is deprecated and will "
-                "stop working in Home Assistant 2022.3, it should be updated to use "
-                "DeviceEntryType instead",
+                (
+                    "uses str for device registry entry_type. This is deprecated and"
+                    " will stop working in Home Assistant 2022.3, it should be updated"
+                    " to use DeviceEntryType instead"
+                ),
                 error_if_core=False,
             )
             entry_type = DeviceEntryType(entry_type)
@@ -418,9 +416,11 @@ class DeviceRegistry:
             disabled_by, DeviceEntryDisabler
         ):
             report(  # type: ignore[unreachable]
-                "uses str for device registry disabled_by. This is deprecated and will "
-                "stop working in Home Assistant 2022.3, it should be updated to use "
-                "DeviceEntryDisabler instead",
+                (
+                    "uses str for device registry disabled_by. This is deprecated and"
+                    " will stop working in Home Assistant 2022.3, it should be updated"
+                    " to use DeviceEntryDisabler instead"
+                ),
                 error_if_core=False,
             )
             disabled_by = DeviceEntryDisabler(disabled_by)
@@ -552,7 +552,10 @@ class DeviceRegistry:
                     config_entries=set(device["config_entries"]),
                     configuration_url=device["configuration_url"],
                     # type ignores (if tuple arg was cast): likely https://github.com/python/mypy/issues/8625
-                    connections={tuple(conn) for conn in device["connections"]},  # type: ignore[misc]
+                    connections={
+                        tuple(conn)  # type: ignore[misc]
+                        for conn in device["connections"]
+                    },
                     disabled_by=DeviceEntryDisabler(device["disabled_by"])
                     if device["disabled_by"]
                     else None,
@@ -561,7 +564,10 @@ class DeviceRegistry:
                     else None,
                     hw_version=device["hw_version"],
                     id=device["id"],
-                    identifiers={tuple(iden) for iden in device["identifiers"]},  # type: ignore[misc]
+                    identifiers={
+                        tuple(iden)  # type: ignore[misc]
+                        for iden in device["identifiers"]
+                    },
                     manufacturer=device["manufacturer"],
                     model=device["model"],
                     name_by_user=device["name_by_user"],
@@ -574,8 +580,14 @@ class DeviceRegistry:
                 deleted_devices[device["id"]] = DeletedDeviceEntry(
                     config_entries=set(device["config_entries"]),
                     # type ignores (if tuple arg was cast): likely https://github.com/python/mypy/issues/8625
-                    connections={tuple(conn) for conn in device["connections"]},  # type: ignore[misc]
-                    identifiers={tuple(iden) for iden in device["identifiers"]},  # type: ignore[misc]
+                    connections={
+                        tuple(conn)  # type: ignore[misc]
+                        for conn in device["connections"]
+                    },
+                    identifiers={
+                        tuple(iden)  # type: ignore[misc]
+                        for iden in device["identifiers"]
+                    },
                     id=device["id"],
                     orphaned_timestamp=device["orphaned_timestamp"],
                 )
@@ -696,7 +708,8 @@ async def async_get_registry(hass: HomeAssistant) -> DeviceRegistry:
     This is deprecated and will be removed in the future. Use async_get instead.
     """
     report(
-        "uses deprecated `async_get_registry` to access device registry, use async_get instead"
+        "uses deprecated `async_get_registry` to access device registry, use async_get"
+        " instead"
     )
     return async_get(hass)
 

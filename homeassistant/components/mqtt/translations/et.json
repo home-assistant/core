@@ -8,10 +8,11 @@
             "bad_birth": "Kehtetu loomise teavitus",
             "bad_certificate": "CA sertifikaat on kehtetu",
             "bad_client_cert": "Kehtetu kliendi sertifikaat, veendu, et on esitatud PEM-kodeeritud fail",
-            "bad_client_cert_key": "Kliendisertifikaat ja privaatne sertifikaat ei ole kehtiv paar",
+            "bad_client_cert_key": "Kliendisertifikaat ja privaatne v\u00f5ti ei ole kehtiv paar",
             "bad_client_key": "Kehtetu privaatv\u00f5ti, veendu, et PEM-kodeeritud fail tarnitakse ilma paroolita",
             "bad_discovery_prefix": "Sobimatu tuvastuse eesliide",
             "bad_will": "Kehtetu l\u00f5petamise teavitus",
+            "bad_ws_headers": "Esita korrektsed HTTP p\u00e4ised JSON objektina",
             "cannot_connect": "Vahendajaga ei saa \u00fchendust luua.",
             "invalid_inclusion": "Kliendisertifikaat ja privaatne v\u00f5ti tuleb konfigureerida koos."
         },
@@ -20,11 +21,10 @@
                 "data": {
                     "advanced_options": "T\u00e4psemad s\u00e4tted",
                     "broker": "Vahendaja",
-                    "certificate": "Tee kohandatud CA-sertifikaadifaili juurde",
-                    "client_cert": "Kliendi serdifaili tee",
+                    "certificate": "Lae \u00fcles kohandatud CA-sertifikaadi fail",
+                    "client_cert": "Lae \u00fcles kliendi sertifikaadifail",
                     "client_id": "Kliendi ID (juhuslikult genereeritud ID jaoks j\u00e4ta t\u00fchjaks)",
-                    "client_key": "Tee privaatse v\u00f5tme faili juurde",
-                    "discovery": "Luba automaatne avastamine",
+                    "client_key": "Lae \u00fcles privaatv\u00f5tme fail",
                     "keepalive": "Aegumiss\u00f5numite saatmise vaheline aeg",
                     "password": "Salas\u00f5na",
                     "port": "Port",
@@ -32,7 +32,10 @@
                     "set_ca_cert": "Sertifikaadi kinnitamine",
                     "set_client_cert": "Kasuta kliendi sertifikaati",
                     "tls_insecure": "Eira serdi valideerimist",
-                    "username": "Kasutajanimi"
+                    "transport": "MQTT \u00fclekanne",
+                    "username": "Kasutajanimi",
+                    "ws_headers": "WebSocketi p\u00e4ised JSON vormingus",
+                    "ws_path": "WebSocketi rada"
                 },
                 "description": "Sisesta oma MQTT vahendaja andmed."
             },
@@ -86,6 +89,7 @@
             "bad_client_key": "Kehtetu privaatv\u00f5ti, veendu, et PEM-kodeeritud fail tarnitakse ilma paroolita",
             "bad_discovery_prefix": "Sobimatu tuvastuse eesliide",
             "bad_will": "Kehtetu l\u00f5petamise teavitus",
+            "bad_ws_headers": "Esita korrektsed HTTP p\u00e4ised JSON objektina",
             "cannot_connect": "\u00dchendamine nurjus",
             "invalid_inclusion": "Kliendisertifikaat ja privaatne v\u00f5ti tuleb konfigureerida koos."
         },
@@ -105,7 +109,10 @@
                     "set_ca_cert": "Sertifikaadi kinnitamine",
                     "set_client_cert": "Kasuta kliendi sertifikaati",
                     "tls_insecure": "Eira serdi valideerimist",
-                    "username": "Kasutajanimi"
+                    "transport": "MQTT \u00fclekanne",
+                    "username": "Kasutajanimi",
+                    "ws_headers": "WebSocketi p\u00e4ised JSON vormingus",
+                    "ws_path": "WebSocketi rada"
                 },
                 "description": "Sisesta oma MQTT vahendaja \u00fchenduse teave.",
                 "title": "MQTT maakleri valikud"

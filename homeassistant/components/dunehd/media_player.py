@@ -19,7 +19,7 @@ from .const import ATTR_MANUFACTURER, DEFAULT_NAME, DOMAIN
 
 CONF_SOURCES: Final = "sources"
 
-DUNEHD_PLAYER_SUPPORT: Final[int] = (
+DUNEHD_PLAYER_SUPPORT: Final[MediaPlayerEntityFeature] = (
     MediaPlayerEntityFeature.PAUSE
     | MediaPlayerEntityFeature.TURN_ON
     | MediaPlayerEntityFeature.TURN_OFF
@@ -105,7 +105,7 @@ class DuneHDPlayerEntity(MediaPlayerEntity):
         return int(self._state.get("playback_mute", 0)) == 1
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         return DUNEHD_PLAYER_SUPPORT
 

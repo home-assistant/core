@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
+            "no_stations": "Nena\u0161li sa \u017eiadne stanice na monitorovanie vytopenia."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "station": "Stanica"
+                },
+                "description": "Vyberte stanicu, ktor\u00fa chcete sledova\u0165",
+                "title": "Sledujte povod\u0148ov\u00fa monitorovaciu stanicu"
+            }
+        }
+    }
+}

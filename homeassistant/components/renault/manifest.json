@@ -1,6 +1,7 @@
 {
   "domain": "renault",
   "name": "Renault",
+  "integration_type": "hub",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/renault",
   "requirements": ["renault-api==0.1.11"],

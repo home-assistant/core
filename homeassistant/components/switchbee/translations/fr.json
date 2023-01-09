@@ -13,19 +13,9 @@
                 "data": {
                     "host": "H\u00f4te",
                     "password": "Mot de passe",
-                    "switch_as_light": "Initialiser les commutateurs en tant que lumi\u00e8res",
                     "username": "Nom d'utilisateur"
                 },
                 "description": "Configurez l'int\u00e9gration de SwitchBee avec Home Assistant."
-            }
-        }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "devices": "Appareils \u00e0 inclure"
-                }
             }
         }
     }

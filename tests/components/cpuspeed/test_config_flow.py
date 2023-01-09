@@ -22,7 +22,6 @@ async def test_full_user_flow(
 
     assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == SOURCE_USER
-    assert "flow_id" in result
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -69,7 +68,6 @@ async def test_not_compatible(
 
     assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == SOURCE_USER
-    assert "flow_id" in result
 
     mock_cpuinfo_config_flow.return_value = {}
     result2 = await hass.config_entries.flow.async_configure(

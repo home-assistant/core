@@ -1,9 +1,10 @@
 """Test area_registry API."""
 import pytest
+from pytest_unordered import unordered
 
 from homeassistant.components.config import area_registry
 
-from tests.common import mock_area_registry
+from tests.common import ANY, mock_area_registry
 
 
 @pytest.fixture
@@ -21,30 +22,67 @@ def registry(hass):
 
 async def test_list_areas(hass, client, registry):
     """Test list entries."""
-    registry.async_create("mock 1")
-    registry.async_create("mock 2", "/image/example.png")
+    area1 = registry.async_create("mock 1")
+    area2 = registry.async_create(
+        "mock 2", aliases={"alias_1", "alias_2"}, picture="/image/example.png"
+    )
 
     await client.send_json({"id": 1, "type": "config/area_registry/list"})
 
     msg = await client.receive_json()
-
-    assert len(msg["result"]) == len(registry.areas)
-    assert msg["result"][0]["name"] == "mock 1"
-    assert msg["result"][0]["picture"] is None
-    assert msg["result"][1]["name"] == "mock 2"
-    assert msg["result"][1]["picture"] == "/image/example.png"
+    assert msg["result"] == [
+        {
+            "aliases": [],
+            "area_id": area1.id,
+            "name": "mock 1",
+            "picture": None,
+        },
+        {
+            "aliases": unordered(["alias_1", "alias_2"]),
+            "area_id": area2.id,
+            "name": "mock 2",
+            "picture": "/image/example.png",
+        },
+    ]
 
 
 async def test_create_area(hass, client, registry):
     """Test create entry."""
+    # Create area with only mandatory parameters
     await client.send_json(
         {"id": 1, "name": "mock", "type": "config/area_registry/create"}
     )
 
     msg = await client.receive_json()
 
-    assert "mock" in msg["result"]["name"]
+    assert msg["result"] == {
+        "aliases": [],
+        "area_id": ANY,
+        "name": "mock",
+        "picture": None,
+    }
     assert len(registry.areas) == 1
+
+    # Create area with all parameters
+    await client.send_json(
+        {
+            "id": 2,
+            "aliases": ["alias_1", "alias_2"],
+            "name": "mock 2",
+            "picture": "/image/example.png",
+            "type": "config/area_registry/create",
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["result"] == {
+        "aliases": unordered(["alias_1", "alias_2"]),
+        "area_id": ANY,
+        "name": "mock 2",
+        "picture": "/image/example.png",
+    }
+    assert len(registry.areas) == 2
 
 
 async def test_create_area_with_name_already_in_use(hass, client, registry):
@@ -100,6 +138,7 @@ async def test_update_area(hass, client, registry):
     await client.send_json(
         {
             "id": 1,
+            "aliases": ["alias_1", "alias_2"],
             "area_id": area.id,
             "name": "mock 2",
             "picture": "/image/example.png",
@@ -109,14 +148,18 @@ async def test_update_area(hass, client, registry):
 
     msg = await client.receive_json()
 
-    assert msg["result"]["area_id"] == area.id
-    assert msg["result"]["name"] == "mock 2"
-    assert msg["result"]["picture"] == "/image/example.png"
+    assert msg["result"] == {
+        "aliases": unordered(["alias_1", "alias_2"]),
+        "area_id": area.id,
+        "name": "mock 2",
+        "picture": "/image/example.png",
+    }
     assert len(registry.areas) == 1
 
     await client.send_json(
         {
             "id": 2,
+            "aliases": ["alias_1", "alias_1"],
             "area_id": area.id,
             "picture": None,
             "type": "config/area_registry/update",
@@ -125,9 +168,12 @@ async def test_update_area(hass, client, registry):
 
     msg = await client.receive_json()
 
-    assert msg["result"]["area_id"] == area.id
-    assert msg["result"]["name"] == "mock 2"
-    assert msg["result"]["picture"] is None
+    assert msg["result"] == {
+        "aliases": ["alias_1"],
+        "area_id": area.id,
+        "name": "mock 2",
+        "picture": None,
+    }
     assert len(registry.areas) == 1
 
 

@@ -17,6 +17,7 @@ from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DOMAIN as DECONZ_DOMAIN
 from .gateway import DeconzGateway
+from .util import serial_from_unique_id
 
 _DeviceT = TypeVar(
     "_DeviceT",
@@ -55,9 +56,7 @@ class DeconzBase(Generic[_DeviceT]):
     def serial(self) -> str | None:
         """Return a serial number for this device."""
         assert isinstance(self._device, PydeconzDevice)
-        if not self._device.unique_id or self._device.unique_id.count(":") != 7:
-            return None
-        return self._device.unique_id.split("-", 1)[0]
+        return serial_from_unique_id(self._device.unique_id)
 
     @property
     def device_info(self) -> DeviceInfo | None:
