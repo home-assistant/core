@@ -58,8 +58,37 @@
             "max_humidity": {
                 "name": "Maksimali tikslin\u0117 dr\u0117gm\u0117"
             },
-            "swing_mode": {
+            "max_temp": {
+                "name": "Maksimali tikslin\u0117 temperat\u016bra"
+            },
+            "min_humidity": {
+                "name": "Minimali tikslin\u0117 dr\u0117gm\u0117"
+            },
+            "min_temp": {
+                "name": "Minimali tikslin\u0117 temperat\u016bra"
+            },
+            "preset_mode": {
+                "name": "I\u0161 anksto nustatytas",
                 "state": {
+                    "activity": "Veikla",
+                    "away": "I\u0161vyk\u0119s",
+                    "boost": "Laikinai  padidinti",
+                    "comfort": "Komfortas",
+                    "eco": "Eko",
+                    "home": "Namuose",
+                    "none": "Joks",
+                    "sleep": "Miego"
+                }
+            },
+            "preset_modes": {
+                "name": "I\u0161 anksto nustatyti"
+            },
+            "swing_mode": {
+                "name": "Sukiojimo re\u017eimas",
+                "state": {
+                    "both": "Abu",
+                    "horizontal": "Horizontali",
+                    "off": "I\u0161jungta",
                     "on": "\u012ejungta",
                     "vertical": "Vertikalus"
                 }

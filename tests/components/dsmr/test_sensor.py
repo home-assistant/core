@@ -23,8 +23,11 @@ from homeassistant.const import (
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     ENERGY_KILO_WATT_HOUR,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     VOLUME_CUBIC_METERS,
+    UnitOfEnergy,
+    UnitOfPower,
 )
 from homeassistant.helpers import entity_registry as er
 
@@ -56,13 +59,13 @@ async def test_default_setup(hass, dsmr_connection_fixture):
 
     telegram = {
         CURRENT_ELECTRICITY_USAGE: CosemObject(
-            [{"value": Decimal("0.0"), "unit": ENERGY_KILO_WATT_HOUR}]
+            [{"value": Decimal("0.0"), "unit": UnitOfPower.WATT}]
         ),
         ELECTRICITY_ACTIVE_TARIFF: CosemObject([{"value": "0001", "unit": ""}]),
         GAS_METER_READING: MBusObject(
             [
                 {"value": datetime.datetime.fromtimestamp(1551642213)},
-                {"value": Decimal(745.695), "unit": "m3"},
+                {"value": Decimal(745.695), "unit": VOLUME_CUBIC_METERS},
             ]
         ),
     }
@@ -88,9 +91,9 @@ async def test_default_setup(hass, dsmr_connection_fixture):
 
     telegram_callback = connection_factory.call_args_list[0][0][2]
 
-    # make sure entities have been created and return 'unknown' state
+    # make sure entities have been created and return 'unavailable' state
     power_consumption = hass.states.get("sensor.electricity_meter_power_consumption")
-    assert power_consumption.state == STATE_UNKNOWN
+    assert power_consumption.state == STATE_UNAVAILABLE
     assert (
         power_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.POWER
     )
@@ -110,9 +113,7 @@ async def test_default_setup(hass, dsmr_connection_fixture):
     # ensure entities have new state value after incoming telegram
     power_consumption = hass.states.get("sensor.electricity_meter_power_consumption")
     assert power_consumption.state == "0.0"
-    assert (
-        power_consumption.attributes.get("unit_of_measurement") == ENERGY_KILO_WATT_HOUR
-    )
+    assert power_consumption.attributes.get("unit_of_measurement") == UnitOfPower.WATT
 
     # tariff should be translated in human readable and have no unit
     active_tariff = hass.states.get("sensor.electricity_meter_active_tariff")
@@ -784,6 +785,10 @@ async def test_reconnect(hass, dsmr_connection_fixture):
 
     assert connection_factory.call_count == 1
 
+    state = hass.states.get("sensor.electricity_meter_power_consumption")
+    assert state
+    assert state.state == STATE_UNKNOWN
+
     # indicate disconnect, release wait lock and allow reconnect to happen
     closed.set()
     # wait for lock set to resolve
@@ -800,3 +805,57 @@ async def test_reconnect(hass, dsmr_connection_fixture):
     await hass.config_entries.async_unload(mock_entry.entry_id)
 
     assert mock_entry.state == config_entries.ConfigEntryState.NOT_LOADED
+
+
+async def test_gas_meter_providing_energy_reading(hass, dsmr_connection_fixture):
+    """Test that gas providing energy readings use the correct device class."""
+    (connection_factory, transport, protocol) = dsmr_connection_fixture
+
+    from dsmr_parser.obis_references import GAS_METER_READING
+    from dsmr_parser.objects import MBusObject
+
+    entry_data = {
+        "port": "/dev/ttyUSB0",
+        "dsmr_version": "2.2",
+        "precision": 4,
+        "reconnect_interval": 30,
+        "serial_id": "1234",
+        "serial_id_gas": "5678",
+    }
+    entry_options = {
+        "time_between_update": 0,
+    }
+
+    telegram = {
+        GAS_METER_READING: MBusObject(
+            [
+                {"value": datetime.datetime.fromtimestamp(1551642213)},
+                {"value": Decimal(123.456), "unit": UnitOfEnergy.GIGA_JOULE},
+            ]
+        ),
+    }
+
+    mock_entry = MockConfigEntry(
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
+    )
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    telegram_callback = connection_factory.call_args_list[0][0][2]
+    telegram_callback(telegram)
+    await asyncio.sleep(0)
+
+    gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption")
+    assert gas_consumption.state == "123.456"
+    assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
+    assert (
+        gas_consumption.attributes.get(ATTR_STATE_CLASS)
+        == SensorStateClass.TOTAL_INCREASING
+    )
+    assert (
+        gas_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfEnergy.GIGA_JOULE
+    )

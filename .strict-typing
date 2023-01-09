@@ -58,6 +58,7 @@ homeassistant.components.amcrest.*
 homeassistant.components.ampio.*
 homeassistant.components.analytics.*
 homeassistant.components.anthemav.*
+homeassistant.components.apcupsd.*
 homeassistant.components.aqualogic.*
 homeassistant.components.aseko_pool_live.*
 homeassistant.components.asuswrt.*
@@ -68,6 +69,7 @@ homeassistant.components.backup.*
 homeassistant.components.baf.*
 homeassistant.components.bayesian.*
 homeassistant.components.binary_sensor.*
+homeassistant.components.bitcoin.*
 homeassistant.components.blockchain.*
 homeassistant.components.bluetooth.*
 homeassistant.components.bluetooth_tracker.*
@@ -176,6 +178,7 @@ homeassistant.components.lacrosse_view.*
 homeassistant.components.lametric.*
 homeassistant.components.laundrify.*
 homeassistant.components.lcn.*
+homeassistant.components.ld2410_ble.*
 homeassistant.components.lidarr.*
 homeassistant.components.lifx.*
 homeassistant.components.light.*
@@ -246,6 +249,7 @@ homeassistant.components.rituals_perfume_genie.*
 homeassistant.components.roku.*
 homeassistant.components.rpi_power.*
 homeassistant.components.rtsp_to_webrtc.*
+homeassistant.components.ruuvi_gateway.*
 homeassistant.components.ruuvitag_ble.*
 homeassistant.components.samsungtv.*
 homeassistant.components.scene.*
@@ -256,6 +260,7 @@ homeassistant.components.sensibo.*
 homeassistant.components.sensirion_ble.*
 homeassistant.components.sensor.*
 homeassistant.components.senz.*
+homeassistant.components.sfr_box.*
 homeassistant.components.shelly.*
 homeassistant.components.simplepush.*
 homeassistant.components.simplisafe.*

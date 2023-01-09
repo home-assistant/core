@@ -83,5 +83,18 @@
                 "description": "Elige el m\u00e9todo de conexi\u00f3n a la puerta de enlace"
             }
         }
+    },
+    "issues": {
+        "deprecated_service": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Actualiza cualquier automatizaci\u00f3n o script que use este servicio para usar en su lugar el servicio `{alternate_service}` con una ID de entidad de destino de `{alternate_target}`.",
+                        "title": "Se eliminar\u00e1 el servicio {deprecated_service}"
+                    }
+                }
+            },
+            "title": "Se eliminar\u00e1 el servicio {deprecated_service}"
+        }
     }
 }

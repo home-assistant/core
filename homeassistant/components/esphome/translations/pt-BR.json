@@ -28,13 +28,13 @@
                 "data": {
                     "noise_psk": "Chave de encripta\u00e7\u00e3o"
                 },
-                "description": "Insira a chave de criptografia que voc\u00ea definiu em sua configura\u00e7\u00e3o para {name} ."
+                "description": "Insira a chave de criptografia para {name}. Voc\u00ea pode encontr\u00e1-lo no ESPHome Dashboard ou na configura\u00e7\u00e3o do seu dispositivo."
             },
             "reauth_confirm": {
                 "data": {
                     "noise_psk": "Chave de encripta\u00e7\u00e3o"
                 },
-                "description": "O dispositivo ESPHome {name} ativou a criptografia de transporte ou alterou a chave de criptografia. Insira a chave atualizada."
+                "description": "O dispositivo ESPHome {name} ativou a criptografia de transporte ou alterou a chave de criptografia. Insira a chave atualizada. Voc\u00ea pode encontr\u00e1-lo no ESPHome Dashboard ou na configura\u00e7\u00e3o do seu dispositivo."
             },
             "user": {
                 "data": {

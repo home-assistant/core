@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime, time, timedelta
 import logging
-from typing import Any
+from typing import Any, Optional
 
 import here_routing
 from here_routing import (
@@ -40,7 +40,7 @@ BACKOFF_MULTIPLIER = 1.1
 _LOGGER = logging.getLogger(__name__)
 
 
-class HERERoutingDataUpdateCoordinator(DataUpdateCoordinator):
+class HERERoutingDataUpdateCoordinator(DataUpdateCoordinator[HERETravelTimeData]):
     """here_routing DataUpdateCoordinator."""
 
     def __init__(
@@ -59,7 +59,7 @@ class HERERoutingDataUpdateCoordinator(DataUpdateCoordinator):
         self._api = HERERoutingApi(api_key)
         self.config = config
 
-    async def _async_update_data(self) -> HERETravelTimeData | None:
+    async def _async_update_data(self) -> HERETravelTimeData:
         """Get the latest data from the HERE Routing API."""
         origin, destination, arrival, departure = prepare_parameters(
             self.hass, self.config
@@ -144,7 +144,9 @@ class HERERoutingDataUpdateCoordinator(DataUpdateCoordinator):
         )
 
 
-class HERETransitDataUpdateCoordinator(DataUpdateCoordinator):
+class HERETransitDataUpdateCoordinator(
+    DataUpdateCoordinator[Optional[HERETravelTimeData]]
+):
     """HERETravelTime DataUpdateCoordinator."""
 
     def __init__(

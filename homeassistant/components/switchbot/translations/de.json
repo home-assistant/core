@@ -8,6 +8,7 @@
             "unknown": "Unerwarteter Fehler"
         },
         "error": {
+            "auth_failed": "Authentifizierung fehlgeschlagen: {error_detail}",
             "encryption_key_invalid": "Schl\u00fcssel-ID oder Verschl\u00fcsselungsschl\u00fcssel ist ung\u00fcltig",
             "key_id_invalid": "Schl\u00fcssel-ID oder Verschl\u00fcsselungsschl\u00fcssel ist ung\u00fcltig"
         },
@@ -15,6 +16,27 @@
         "step": {
             "confirm": {
                 "description": "M\u00f6chtest du {name} einrichten?"
+            },
+            "lock_auth": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                },
+                "description": "Bitte gib deinen Benutzernamen und Passwort f\u00fcr die SwitchBot App an. Diese Daten werden nicht gespeichert und nur zum Abrufen deines Verschl\u00fcsselungsschl\u00fcssels verwendet. Bei Benutzernamen und Passw\u00f6rtern wird zwischen Gro\u00df- und Kleinschreibung unterschieden."
+            },
+            "lock_choose_method": {
+                "description": "Ein SwitchBot-Schloss kann im Home Assistant auf zwei verschiedene Arten eingerichtet werden.\n\nDu kannst die Schl\u00fcssel-ID und den Verschl\u00fcsselungscode selbst eingeben oder Home Assistant kann sie von deinem SwitchBot-Konto importieren.",
+                "menu_options": {
+                    "lock_auth": "SwitchBot-Konto (empfohlen)",
+                    "lock_key": "Verschl\u00fcsselungscode manuell eingeben"
+                }
+            },
+            "lock_chose_method": {
+                "description": "W\u00e4hle die Konfigurationsmethode, Einzelheiten findest du in der Dokumentation.",
+                "menu_options": {
+                    "lock_auth": "Login und Passwort der SwitchBot-App",
+                    "lock_key": "Verschl\u00fcsselungsschl\u00fcssel sperren"
+                }
             },
             "lock_key": {
                 "data": {

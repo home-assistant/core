@@ -12,7 +12,6 @@ from mysensors.persistence import MySensorsJSONDecoder
 from mysensors.sensor import Sensor
 import pytest
 
-from homeassistant.components.device_tracker.legacy import Device
 from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
 from homeassistant.components.mysensors.config_flow import DEFAULT_BAUD_RATE
 from homeassistant.components.mysensors.const import (
@@ -27,13 +26,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, load_fixture
-
-
-@pytest.fixture(autouse=True)
-def device_tracker_storage(mock_device_tracker_conf: list[Device]) -> list[Device]:
-    """Mock out device tracker known devices storage."""
-    devices = mock_device_tracker_conf
-    return devices
 
 
 @pytest.fixture(name="mqtt")

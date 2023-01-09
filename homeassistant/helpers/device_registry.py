@@ -32,7 +32,7 @@ DATA_REGISTRY = "device_registry"
 EVENT_DEVICE_REGISTRY_UPDATED = "device_registry_updated"
 STORAGE_KEY = "core.device_registry"
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 4
+STORAGE_VERSION_MINOR = 3
 SAVE_DELAY = 10
 CLEANUP_DELAY = 10
 
@@ -70,7 +70,6 @@ class DeviceEntryType(StrEnum):
 class DeviceEntry:
     """Device Registry Entry."""
 
-    aliases: set[str] = attr.ib(factory=set)
     area_id: str | None = attr.ib(default=None)
     config_entries: set[str] = attr.ib(converter=set, factory=set)
     configuration_url: str | None = attr.ib(default=None)
@@ -162,7 +161,9 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                     device.setdefault("configuration_url", None)
                     device.setdefault("disabled_by", None)
                     try:
-                        device["entry_type"] = DeviceEntryType(device.get("entry_type"))  # type: ignore[arg-type]
+                        device["entry_type"] = DeviceEntryType(
+                            device.get("entry_type"),  # type: ignore[arg-type]
+                        )
                     except ValueError:
                         device["entry_type"] = None
                     device.setdefault("name_by_user", None)
@@ -175,9 +176,6 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                 # Version 1.3 adds hw_version
                 for device in old_data["devices"]:
                     device["hw_version"] = None
-            if old_minor_version < 4:
-                for device in old_data["devices"]:
-                    device["aliases"] = []
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -382,7 +380,6 @@ class DeviceRegistry:
         device_id: str,
         *,
         add_config_entry_id: str | UndefinedType = UNDEFINED,
-        aliases: set[str] | UndefinedType = UNDEFINED,
         area_id: str | None | UndefinedType = UNDEFINED,
         configuration_url: str | None | UndefinedType = UNDEFINED,
         disabled_by: DeviceEntryDisabler | None | UndefinedType = UNDEFINED,
@@ -473,7 +470,6 @@ class DeviceRegistry:
             old_values["identifiers"] = old.identifiers
 
         for attr_name, value in (
-            ("aliases", aliases),
             ("area_id", area_id),
             ("configuration_url", configuration_url),
             ("disabled_by", disabled_by),
@@ -552,12 +548,14 @@ class DeviceRegistry:
         if data is not None:
             for device in data["devices"]:
                 devices[device["id"]] = DeviceEntry(
-                    aliases=set(device["aliases"]),
                     area_id=device["area_id"],
                     config_entries=set(device["config_entries"]),
                     configuration_url=device["configuration_url"],
                     # type ignores (if tuple arg was cast): likely https://github.com/python/mypy/issues/8625
-                    connections={tuple(conn) for conn in device["connections"]},  # type: ignore[misc]
+                    connections={
+                        tuple(conn)  # type: ignore[misc]
+                        for conn in device["connections"]
+                    },
                     disabled_by=DeviceEntryDisabler(device["disabled_by"])
                     if device["disabled_by"]
                     else None,
@@ -566,7 +564,10 @@ class DeviceRegistry:
                     else None,
                     hw_version=device["hw_version"],
                     id=device["id"],
-                    identifiers={tuple(iden) for iden in device["identifiers"]},  # type: ignore[misc]
+                    identifiers={
+                        tuple(iden)  # type: ignore[misc]
+                        for iden in device["identifiers"]
+                    },
                     manufacturer=device["manufacturer"],
                     model=device["model"],
                     name_by_user=device["name_by_user"],
@@ -579,8 +580,14 @@ class DeviceRegistry:
                 deleted_devices[device["id"]] = DeletedDeviceEntry(
                     config_entries=set(device["config_entries"]),
                     # type ignores (if tuple arg was cast): likely https://github.com/python/mypy/issues/8625
-                    connections={tuple(conn) for conn in device["connections"]},  # type: ignore[misc]
-                    identifiers={tuple(iden) for iden in device["identifiers"]},  # type: ignore[misc]
+                    connections={
+                        tuple(conn)  # type: ignore[misc]
+                        for conn in device["connections"]
+                    },
+                    identifiers={
+                        tuple(iden)  # type: ignore[misc]
+                        for iden in device["identifiers"]
+                    },
                     id=device["id"],
                     orphaned_timestamp=device["orphaned_timestamp"],
                 )
@@ -600,7 +607,6 @@ class DeviceRegistry:
 
         data["devices"] = [
             {
-                "aliases": list(entry.aliases),
                 "area_id": entry.area_id,
                 "config_entries": list(entry.config_entries),
                 "configuration_url": entry.configuration_url,

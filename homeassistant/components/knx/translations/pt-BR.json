@@ -132,7 +132,7 @@
             "invalid_signature": "A senha para descriptografar o arquivo `.knxkeys` est\u00e1 errada.",
             "keyfile_invalid_signature": "A senha para descriptografar o arquivo `.knxkeys` est\u00e1 errada.",
             "keyfile_no_backbone_key": "O arquivo `.knxkeys` n\u00e3o cont\u00e9m uma chave de backbone para roteamento seguro.",
-            "keyfile_no_tunnel_for_host": "O arquivo `.knxkeys` n\u00e3o cont\u00e9m credenciais para o host `{host}`.",
+            "keyfile_no_tunnel_for_host": "O arquivo `.knxkeys` n\u00e3o cont\u00e9m credenciais para o host ` {host} `.",
             "keyfile_not_found": "O arquivo `.knxkeys` especificado n\u00e3o foi encontrado no caminho config/.storage/knx/",
             "no_router_discovered": "Nenhum roteador KNXnet/IP foi descoberto na rede.",
             "no_tunnel_discovered": "N\u00e3o foi poss\u00edvel encontrar um servidor de encapsulamento KNX em sua rede.",
@@ -155,7 +155,7 @@
                     "connection_type": "Tipo de conex\u00e3o KNX"
                 },
                 "description": "Insira o tipo de conex\u00e3o que devemos usar para sua conex\u00e3o KNX.\n AUTOM\u00c1TICO - A integra\u00e7\u00e3o cuida da conectividade com o seu KNX Bus realizando uma varredura de gateway.\n TUNNELING - A integra\u00e7\u00e3o ser\u00e1 conectada ao seu barramento KNX via tunelamento.\n ROUTING - A integra\u00e7\u00e3o ligar-se-\u00e1 ao seu bus KNX atrav\u00e9s de encaminhamento.",
-                "title": "conex\u00e3o KNX"
+                "title": "Conex\u00e3o KNX"
             },
             "knxkeys_tunnel_select": {
                 "data": {

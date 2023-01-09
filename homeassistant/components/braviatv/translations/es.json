@@ -19,11 +19,25 @@
                     "pin": "C\u00f3digo PIN",
                     "use_psk": "Usar autenticaci\u00f3n PSK"
                 },
-                "description": "Introduce el c\u00f3digo PIN que se muestra en la TV Sony Bravia. \n\nSi no se muestra el c\u00f3digo PIN, debes cancelar el registro de Home Assistant en tu TV, ve a: Configuraci\u00f3n - > Red - > Configuraci\u00f3n del dispositivo remoto - > Cancelar el registro del dispositivo remoto. \n\nPuedes usar PSK (clave precompartida) en lugar de PIN. PSK es una clave secreta definida por el usuario que se utiliza para el control de acceso. Este m\u00e9todo de autenticaci\u00f3n se recomienda como m\u00e1s estable. Para habilitar PSK en tu TV, ve a: Configuraci\u00f3n - > Red - > Configuraci\u00f3n de red dom\u00e9stica - > Control de IP. Luego marca la casilla \u00abUsar autenticaci\u00f3n PSK\u00bb e introduce tu PSK en lugar de PIN.",
+                "description": "Aseg\u00farate de que \u00abControlar de forma remota\u00bb est\u00e9 habilitado en tu televisor, ve a:\nConfiguraci\u00f3n -> Red -> Configuraci\u00f3n de dispositivo remoto -> Controlar de forma remota. \n\nHay dos m\u00e9todos de autorizaci\u00f3n: c\u00f3digo PIN o PSK (clave precompartida).\nSe recomienda la autorizaci\u00f3n a trav\u00e9s de PSK ya que es m\u00e1s estable.",
                 "title": "Autorizar Sony Bravia TV"
             },
             "confirm": {
                 "description": "\u00bfQuieres iniciar la configuraci\u00f3n?"
+            },
+            "pin": {
+                "data": {
+                    "pin": "C\u00f3digo PIN"
+                },
+                "description": "Introduce el c\u00f3digo PIN que se muestra en Sony Bravia TV. \n\nSi no se muestra el c\u00f3digo PIN, debes cancelar el registro de Home Assistant en tu TV, ve a: Configuraci\u00f3n - > Red - > Configuraci\u00f3n del dispositivo remoto - > Cancelar el registro del dispositivo remoto.",
+                "title": "Autorizar Sony Bravia TV"
+            },
+            "psk": {
+                "data": {
+                    "pin": "PSK"
+                },
+                "description": "Para configurar PSK en tu televisor, ve a: Configuraci\u00f3n -> Red -> Configuraci\u00f3n de red dom\u00e9stica -> Control de IP. Establece \u00abAutenticaci\u00f3n\u00bb en \u00abClave normal y precompartida\u00bb o \u00abClave precompartida\u00bb y define tu cadena de clave precompartida (p. ej., sony). \nA continuaci\u00f3n introduce tu PSK aqu\u00ed.",
+                "title": "Autorizar Sony Bravia TV"
             },
             "reauth_confirm": {
                 "data": {

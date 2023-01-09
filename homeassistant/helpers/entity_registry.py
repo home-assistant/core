@@ -119,7 +119,8 @@ class RegistryEntry:
     has_entity_name: bool = attr.ib(default=False)
     name: str | None = attr.ib(default=None)
     options: EntityOptionsType = attr.ib(
-        default=None, converter=attr.converters.default_if_none(factory=dict)  # type: ignore[misc]
+        default=None,
+        converter=attr.converters.default_if_none(factory=dict),  # type: ignore[misc]
     )
     # As set by integration
     original_device_class: str | None = attr.ib(default=None)
@@ -780,8 +781,7 @@ class EntityRegistry:
         new_unique_id: str | UndefinedType = UNDEFINED,
         new_device_id: str | None | UndefinedType = UNDEFINED,
     ) -> RegistryEntry:
-        """
-        Update entity platform.
+        """Update entity platform.
 
         This should only be used when an entity needs to be migrated between
         integrations.

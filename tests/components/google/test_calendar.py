@@ -14,7 +14,7 @@ from aiohttp.client_exceptions import ClientError
 from gcal_sync.auth import API_BASE_URL
 import pytest
 
-from homeassistant.components.google.const import DOMAIN
+from homeassistant.components.google.const import CONF_CALENDAR_ACCESS, DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -1054,8 +1054,24 @@ async def test_websocket_delete_recurring_event_instance(
 
 
 @pytest.mark.parametrize(
-    "calendar_access_role",
-    ["reader"],
+    "calendar_access_role,token_scopes,config_entry_options",
+    [
+        (
+            "reader",
+            ["https://www.googleapis.com/auth/calendar"],
+            {CONF_CALENDAR_ACCESS: "read_write"},
+        ),
+        (
+            "reader",
+            ["https://www.googleapis.com/auth/calendar.readonly"],
+            {CONF_CALENDAR_ACCESS: "read_only"},
+        ),
+        (
+            "owner",
+            ["https://www.googleapis.com/auth/calendar.readonly"],
+            {CONF_CALENDAR_ACCESS: "read_only"},
+        ),
+    ],
 )
 async def test_readonly_websocket_create(
     hass: HomeAssistant,

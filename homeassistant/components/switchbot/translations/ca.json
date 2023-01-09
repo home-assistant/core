@@ -8,13 +8,35 @@
             "unknown": "Error inesperat"
         },
         "error": {
-            "encryption_key_invalid": "L'ID de clau o la clau de xifrat s\u00f3n inv\u00e0lids",
-            "key_id_invalid": "L'ID de clau o la clau de xifrat s\u00f3n inv\u00e0lids"
+            "auth_failed": "Ha fallat l'autenticaci\u00f3: {error_detail}",
+            "encryption_key_invalid": "L'ID de clau o la clau de xifrat no s\u00f3n v\u00e0lids",
+            "key_id_invalid": "L'ID de clau o la clau de xifrat no s\u00f3n v\u00e0lids"
         },
         "flow_title": "{name} ({address})",
         "step": {
             "confirm": {
                 "description": "Vols configurar {name}?"
+            },
+            "lock_auth": {
+                "data": {
+                    "password": "Contrasenya",
+                    "username": "Nom d'usuari"
+                },
+                "description": "Proporciona el nom d'usuari i la contrasenya de l'aplicaci\u00f3 SwitchBot. Aquesta informaci\u00f3 no es desar\u00e0 i nom\u00e9s s'utilitzar\u00e0 per recuperar la clau de xifrat dels teus panys. Els noms d'usuari i contrasenyes distingeixen entre maj\u00fascules i min\u00fascules."
+            },
+            "lock_choose_method": {
+                "description": "Els panys SwitchBot es poden configurar a Home Assistant de dues maneres diferents. \n\nPots introduir l'identificador de clau i la clau de xifrat, o b\u00e9, Home Assistant ho pot importar des del teu compte de SwitchBot.",
+                "menu_options": {
+                    "lock_auth": "Compte de SwitchBot (recomanat)",
+                    "lock_key": "Introdueix la clau de xifrat del pany manualment"
+                }
+            },
+            "lock_chose_method": {
+                "description": "Escolliu el m\u00e8tode de configuraci\u00f3; podeu trobar els detalls a la documentaci\u00f3.",
+                "menu_options": {
+                    "lock_auth": "Usuari i Contrasenya de l'app SwitchBot",
+                    "lock_key": "Bloca la clau de xifrat"
+                }
             },
             "lock_key": {
                 "data": {

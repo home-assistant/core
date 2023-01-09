@@ -91,7 +91,7 @@ class NumberDeviceClass(StrEnum):
     CURRENT = "current"
     """Current.
 
-    Unit of measurement: `A`
+    Unit of measurement: `A`,  `mA`
     """
 
     DATA_RATE = "data_rate"
@@ -213,7 +213,7 @@ class NumberDeviceClass(StrEnum):
     POWER_FACTOR = "power_factor"
     """Power factor.
 
-    Unit of measurement: `%`
+    Unit of measurement: `%`, `None`
     """
 
     POWER = "power"
@@ -223,7 +223,7 @@ class NumberDeviceClass(StrEnum):
     """
 
     PRECIPITATION = "precipitation"
-    """Precipitation.
+    """Accumulated precipitation.
 
     Unit of measurement: UnitOfPrecipitationDepth
     - SI / metric: `cm`, `mm`
@@ -296,7 +296,7 @@ class NumberDeviceClass(StrEnum):
     VOLTAGE = "voltage"
     """Voltage.
 
-    Unit of measurement: `V`
+    Unit of measurement: `V`, `mV`
     """
 
     VOLUME = "volume"
@@ -424,7 +424,9 @@ class NumberEntityDescription(EntityDescription):
             or self.step is not None
             or self.unit_of_measurement is not None
         ):
-            if self.__class__.__name__ == "NumberEntityDescription":  # type: ignore[unreachable]
+            if (  # type: ignore[unreachable]
+                self.__class__.__name__ == "NumberEntityDescription"
+            ):
                 caller = inspect.stack()[2]
                 module = inspect.getmodule(caller[0])
             else:
@@ -668,7 +670,9 @@ class NumberEntity(Entity):
             hasattr(self, "entity_description")
             and self.entity_description.unit_of_measurement is not None
         ):
-            return self.entity_description.unit_of_measurement  # type: ignore[unreachable]
+            return (  # type: ignore[unreachable]
+                self.entity_description.unit_of_measurement
+            )
 
         native_unit_of_measurement = self.native_unit_of_measurement
 

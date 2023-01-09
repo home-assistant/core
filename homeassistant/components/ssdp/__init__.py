@@ -706,11 +706,12 @@ async def _async_find_next_available_port(source: AddressTupleVXType) -> int:
     test_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
     for port in range(UPNP_SERVER_MIN_PORT, UPNP_SERVER_MAX_PORT):
+        addr = (source[0],) + (port,) + source[2:]
         try:
-            test_socket.bind(source)
+            test_socket.bind(addr)
             return port
         except OSError:
-            if port == UPNP_SERVER_MAX_PORT:
+            if port == UPNP_SERVER_MAX_PORT - 1:
                 raise
 
     raise RuntimeError("unreachable")

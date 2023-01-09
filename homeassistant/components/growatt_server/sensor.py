@@ -80,14 +80,8 @@ async def async_setup_entry(
         config[CONF_URL] = url
         hass.config_entries.async_update_entry(config_entry, data=config)
 
-    # Initialise the library with a random user id each time it is started,
-    # also extend the library's default identifier to include 'home-assistant'
-    api = growattServer.GrowattApi(
-        add_random_user_id=True,
-        agent_identifier=(
-            f"{growattServer.GrowattApi.agent_identifier} - home-assistant"
-        ),
-    )
+    # Initialise the library with the username & a random id each time it is started
+    api = growattServer.GrowattApi(add_random_user_id=True, agent_identifier=username)
     api.server_url = url
 
     devices, plant_id = await hass.async_add_executor_job(get_device_list, api, config)
