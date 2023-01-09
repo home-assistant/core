@@ -9,7 +9,7 @@ from homeassistant.helpers.entity import DeviceInfo, Entity
 from .const import DOMAIN as AXIS_DOMAIN
 from .device import AxisNetworkDevice
 
-TOPIC_TO_NAME = {
+TOPIC_TO_EVENT_TYPE = {
     EventTopic.DAY_NIGHT_VISION: "DayNight",
     EventTopic.FENCE_GUARD: "Fence Guard",
     EventTopic.LIGHT_STATUS: "Light",
@@ -71,7 +71,7 @@ class AxisEventBase(AxisEntityBase):
         super().__init__(device)
         self.event = event
 
-        self.event_type = TOPIC_TO_NAME[event.topic_base]
+        self.event_type = TOPIC_TO_EVENT_TYPE[event.topic_base]
         self._attr_name = f"{self.event_type} {event.id}"
         self._attr_unique_id = f"{device.unique_id}-{event.topic}-{event.id}"
 
