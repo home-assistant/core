@@ -65,7 +65,7 @@ class SelectableCapapility(MusicCastCapabilityEntity, SelectEntity):
         # If the translation key is "zone_sleep", we need to translate
         # the options to make them compatible with Home Assistant
         if self.translation_key == "zone_sleep":
-            return list(ZONE_SLEEP_STATE_MAPPING.values())
+            return list(STATE_ZONE_SLEEP_MAPPING)
         return list(self.capability.options.values())
 
     @property
