@@ -108,7 +108,7 @@ async def test_zeroconf_setup(
 ) -> None:
     """Test zeroconf setup."""
     aioclient_mock.get(
-        "http://loqed-aabbccddeeff/status",
+        "http://127.0.0.1/status",
         json=json.loads(load_fixture("loqed/status_ok.json")),
     )
 

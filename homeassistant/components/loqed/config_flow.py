@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import re
 
 from loqedAPI import loqed
 
@@ -30,7 +31,7 @@ class ConfigFlow(config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMA
         self, discovery_info: ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
-        host = discovery_info.hostname.rstrip(".")
+        host = discovery_info.host
 
         session = async_get_clientsession(self.hass)
         apiclient = loqed.APIClient(session, f"http://{host}")
@@ -53,11 +54,14 @@ class ConfigFlow(config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMA
             "https://app.loqed.com/API/integration_oauth3/retrieve_lock_data.php",
             headers={"Authorization": f"Bearer {data['token']['access_token']}"},
         )
+        lock_data = await res.json(content_type="text/html")
 
-        config = (
-            data
-            | {CONF_WEBHOOK_ID: webhook.async_generate_id()}
-            | await res.json(content_type="text/html")
+        await self.async_set_unique_id(
+            re.sub(
+                r"LOQED-([a-f0-9]+)\.local", r"\1", lock_data["bridge_mdns_hostname"]
+            )
         )
+
+        config = data | {CONF_WEBHOOK_ID: webhook.async_generate_id()} | lock_data
 
         return self.async_create_entry(title=self.flow_impl.name, data=config)
