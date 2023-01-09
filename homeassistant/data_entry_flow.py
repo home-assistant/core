@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import abc
-import asyncio
 from collections.abc import Iterable, Mapping
 import copy
 from dataclasses import dataclass
@@ -137,17 +136,8 @@ class FlowManager(abc.ABC):
     ) -> None:
         """Initialize the flow manager."""
         self.hass = hass
-        self._initializing: dict[str, list[asyncio.Future]] = {}
-        self._initialize_tasks: dict[str, list[asyncio.Task]] = {}
         self._progress: dict[str, FlowHandler] = {}
         self._handler_progress_index: dict[str, set[str]] = {}
-
-    async def async_wait_init_flow_finish(self, handler: str) -> None:
-        """Wait till all flows in progress are initialized."""
-        if not (current := self._initializing.get(handler)):
-            return
-
-        await asyncio.wait(current)
 
     @abc.abstractmethod
     async def async_create_flow(
@@ -219,32 +209,6 @@ class FlowManager(abc.ABC):
         """Start a configuration flow."""
         if context is None:
             context = {}
-
-        init_done: asyncio.Future = asyncio.Future()
-        self._initializing.setdefault(handler, []).append(init_done)
-
-        task = asyncio.create_task(self._async_init(init_done, handler, context, data))
-        self._initialize_tasks.setdefault(handler, []).append(task)
-
-        try:
-            flow, result = await task
-        finally:
-            self._initialize_tasks[handler].remove(task)
-            self._initializing[handler].remove(init_done)
-
-        if result["type"] != FlowResultType.ABORT:
-            await self.async_post_init(flow, result)
-
-        return result
-
-    async def _async_init(
-        self,
-        init_done: asyncio.Future,
-        handler: str,
-        context: dict,
-        data: Any,
-    ) -> tuple[FlowHandler, FlowResult]:
-        """Run the init in a task to allow it to be canceled at shutdown."""
         flow = await self.async_create_flow(handler, context=context, data=data)
         if not flow:
             raise UnknownFlow("Flow was not created")
@@ -254,14 +218,13 @@ class FlowManager(abc.ABC):
         flow.context = context
         flow.init_data = data
         self._async_add_flow_progress(flow)
-        result = await self._async_handle_step(flow, flow.init_step, data, init_done)
-        return flow, result
 
-    async def async_shutdown(self) -> None:
-        """Cancel any initializing flows."""
-        for task_list in self._initialize_tasks.values():
-            for task in task_list:
-                task.cancel()
+        result = await self._async_handle_step(flow, flow.init_step, data)
+
+        if result["type"] != FlowResultType.ABORT:
+            await self.async_post_init(flow, result)
+
+        return result
 
     async def async_configure(
         self, flow_id: str, user_input: dict | None = None
@@ -354,19 +317,13 @@ class FlowManager(abc.ABC):
             _LOGGER.exception("Error removing %s config flow: %s", flow.handler, err)
 
     async def _async_handle_step(
-        self,
-        flow: FlowHandler,
-        step_id: str,
-        user_input: dict | BaseServiceInfo | None,
-        step_done: asyncio.Future | None = None,
+        self, flow: FlowHandler, step_id: str, user_input: dict | BaseServiceInfo | None
     ) -> FlowResult:
         """Handle a step of a flow."""
         method = f"async_step_{step_id}"
 
         if not hasattr(flow, method):
             self._async_remove_flow_progress(flow.flow_id)
-            if step_done:
-                step_done.set_result(None)
             raise UnknownStep(
                 f"Handler {flow.__class__.__name__} doesn't support step {step_id}"
             )
@@ -377,13 +334,6 @@ class FlowManager(abc.ABC):
             result = _create_abort_data(
                 flow.flow_id, flow.handler, err.reason, err.description_placeholders
             )
-
-        # Mark the step as done.
-        # We do this before calling async_finish_flow because config entries will hit a
-        # circular dependency where async_finish_flow sets up new entry, which needs the
-        # integration to be set up, which is waiting for init to be done.
-        if step_done:
-            step_done.set_result(None)
 
         if not isinstance(result["type"], FlowResultType):
             result["type"] = FlowResultType(result["type"])  # type: ignore[unreachable]
