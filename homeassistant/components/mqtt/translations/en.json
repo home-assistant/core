@@ -48,13 +48,6 @@
             }
         }
     },
-    "data_options": {
-        "set_ca_cert": {
-            "off": "Off",
-            "auto": "Auto",
-            "custom": "Custom"
-        }
-    },
     "device_automation": {
         "trigger_subtype": {
             "button_1": "First button",
@@ -142,6 +135,15 @@
                 "description": "Discovery - If discovery is enabled (recommended), Home Assistant will automatically discover devices and entities which publish their configuration on the MQTT broker. If discovery is disabled, all configuration must be done manually.\nDiscovery prefix - The prefix a configuration topic for automatic discovery must start with.\nBirth message - The birth message will be sent each time Home Assistant (re)connects to the MQTT broker.\nWill message - The will message will be sent each time Home Assistant loses its connection to the broker, both in case of a clean (e.g. Home Assistant shutting down) and in case of an unclean (e.g. Home Assistant crashing or losing its network connection) disconnect.",
                 "title": "MQTT options"
             }
+        }
+    },
+    "selector": {
+        "set_ca_cert": {
+          "options": {
+            "off": "Off",
+            "auto": "Auto",
+            "custom": "Custom"
+          }
         }
     }
 }

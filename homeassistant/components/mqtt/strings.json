@@ -58,13 +58,6 @@
       "invalid_inclusion": "The client certificate and private key must be configurered together"
     }
   },
-  "data_options": {
-    "set_ca_cert": {
-      "off": "Off",
-      "auto": "Auto",
-      "custom": "Custom"
-    }
-  },
   "device_automation": {
     "trigger_type": {
       "button_short_press": "\"{subtype}\" pressed",
@@ -142,6 +135,15 @@
       "bad_ws_headers": "[%key:component::mqtt::config::error::bad_ws_headers%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_inclusion": "[%key:component::mqtt::config::error::invalid_inclusion%]"
+    }
+  },
+  "selector": {
+    "set_ca_cert": {
+      "options": {
+        "off": "Off",
+        "auto": "Auto",
+        "custom": "Custom"
+      }
     }
   }
 }

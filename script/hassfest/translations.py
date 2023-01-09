@@ -216,10 +216,12 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                 flow_title=UNDEFINED,
                 require_step_title=False,
             ),
-            vol.Optional("data_options"): cv.schema_with_slug_keys(
-                cv.schema_with_slug_keys(
-                    cv.string_with_no_html, slug_validator=lowercase_validator
-                ),
+            vol.Optional("selector"): cv.schema_with_slug_keys(
+                {
+                    "options": cv.schema_with_slug_keys(
+                        cv.string_with_no_html, slug_validator=lowercase_validator
+                    )
+                },
                 slug_validator=vol.Any("_", cv.slug),
             ),
             vol.Optional("device_automation"): {
