@@ -57,7 +57,7 @@ class SmartPlugLedSwitch(CoordinatedTPLinkEntity, SwitchEntity):
         """Initialize the LED switch."""
         super().__init__(device, coordinator)
 
-        self._attr_name = f"{device.alias} LED"
+        self._attr_name = "LED"
         self._attr_unique_id = f"{self.device.mac}_led"
 
     @property

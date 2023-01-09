@@ -154,14 +154,7 @@ class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
         self._attr_unique_id = (
             f"{legacy_device_id(self.device)}_{self.entity_description.key}"
         )
-
-    @property
-    def name(self) -> str:
-        """Return the name of the Smart Plug.
-
-        Overridden to include the description.
-        """
-        return f"{self.device.alias} {self.entity_description.name}"
+        self._attr_name = self.entity_description.name
 
     @property
     def native_value(self) -> float | None:

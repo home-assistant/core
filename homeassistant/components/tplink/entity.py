@@ -39,7 +39,7 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator]):
         """Initialize the switch."""
         super().__init__(coordinator)
         self.device: SmartDevice = device
-        self._attr_name = self.device.alias
+        self._attr_has_entity_name = True
         self._attr_unique_id = self.device.device_id
 
     @property
