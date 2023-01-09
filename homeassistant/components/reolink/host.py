@@ -70,7 +70,7 @@ class ReolinkHost:
 
         if not self._api.is_admin:
             _LOGGER.warning(
-                'User %s has authorisation level "%s". Only admin users can change camera settings! Not everything will work',
+                "User '%s' has authorisation level '%s'. Only admin users can change camera settings! Not everything will work",
                 self._api.username,
                 self._api.user_level,
             )
