@@ -8,9 +8,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .axis_base import AxisEventBase
 from .const import DOMAIN as AXIS_DOMAIN
 from .device import AxisNetworkDevice
+from .entity import AxisEventEntity
 
 
 async def async_setup_entry(
@@ -33,7 +33,7 @@ async def async_setup_entry(
     )
 
 
-class AxisSwitch(AxisEventBase, SwitchEntity):
+class AxisSwitch(AxisEventEntity, SwitchEntity):
     """Representation of a Axis switch."""
 
     def __init__(self, event: Event, device: AxisNetworkDevice) -> None:

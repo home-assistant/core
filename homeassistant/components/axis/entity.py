@@ -31,7 +31,7 @@ TOPIC_TO_EVENT_TYPE = {
 }
 
 
-class AxisEntityBase(Entity):
+class AxisEntity(Entity):
     """Base common to all Axis entities."""
 
     _attr_has_entity_name = True
@@ -61,7 +61,7 @@ class AxisEntityBase(Entity):
         self.async_write_ha_state()
 
 
-class AxisEventBase(AxisEntityBase):
+class AxisEventEntity(AxisEntity):
     """Base common to all Axis entities from event stream."""
 
     _attr_should_poll = False

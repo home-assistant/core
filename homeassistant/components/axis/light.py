@@ -8,9 +8,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .axis_base import AxisEventBase
 from .const import DOMAIN as AXIS_DOMAIN
 from .device import AxisNetworkDevice
+from .entity import AxisEventEntity
 
 
 async def async_setup_entry(
@@ -39,7 +39,7 @@ async def async_setup_entry(
     )
 
 
-class AxisLight(AxisEventBase, LightEntity):
+class AxisLight(AxisEventEntity, LightEntity):
     """Representation of a light Axis event."""
 
     _attr_should_poll = True

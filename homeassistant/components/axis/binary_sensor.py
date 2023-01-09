@@ -16,9 +16,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
-from .axis_base import AxisEventBase
 from .const import DOMAIN as AXIS_DOMAIN
 from .device import AxisNetworkDevice
+from .entity import AxisEventEntity
 
 DEVICE_CLASS = {
     EventGroup.INPUT: BinarySensorDeviceClass.CONNECTIVITY,
@@ -63,7 +63,7 @@ async def async_setup_entry(
     )
 
 
-class AxisBinarySensor(AxisEventBase, BinarySensorEntity):
+class AxisBinarySensor(AxisEventEntity, BinarySensorEntity):
     """Representation of a binary Axis event."""
 
     def __init__(self, event: Event, device: AxisNetworkDevice) -> None:
