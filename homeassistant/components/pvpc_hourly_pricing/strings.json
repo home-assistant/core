@@ -6,21 +6,48 @@
           "name": "Sensor Name",
           "tariff": "Applicable tariff by geographic zone",
           "power": "Contracted power (kW)",
-          "power_p3": "Contracted power for valley period P3 (kW)"
+          "power_p3": "Contracted power for valley period P3 (kW)",
+          "use_api_token": "Enable ESIOS API token for extra sensors"
+        }
+      },
+      "api_token": {
+        "title": "ESIOS API token",
+        "description": "To use the extended API you must request a personal token by mailing to {mail_to_link}.",
+        "data": {
+          "use_api_token": "Enable ESIOS API token for extra sensors",
+          "api_token": "[%key:common::config_flow::data::api_token%]"
+        }
+      },
+      "reauth_confirm": {
+        "data": {
+          "description": "Re-authenticate with a valid token or disable it",
+          "use_api_token": "Enable ESIOS API token for extra sensors",
+          "api_token": "[%key:common::config_flow::data::api_token%]"
         }
       }
     },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "options": {
     "step": {
       "init": {
         "data": {
-          "tariff": "Applicable tariff by geographic zone",
           "power": "Contracted power (kW)",
-          "power_p3": "Contracted power for valley period P3 (kW)"
+          "power_p3": "Contracted power for valley period P3 (kW)",
+          "use_api_token": "Enable ESIOS API token for extra sensors"
+        }
+      },
+      "api_token": {
+        "title": "ESIOS API token",
+        "description": "To use the extended API you must request a personal token by mailing to {mail_to_link}.",
+        "data": {
+          "api_token": "[%key:common::config_flow::data::api_token%]"
         }
       }
     }
