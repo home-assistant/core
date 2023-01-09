@@ -149,26 +149,29 @@ class DefaultAgent(AbstractConversationAgent):
 
                 # Will need to recreate graph
                 intents_changed = True
-                _LOGGER.info(
+                _LOGGER.debug(
                     "Loaded intents component=%s, language=%s", component, language
                 )
 
-            # Check for custom sentences
-            custom_sentences_path = Path(
-                self.hass.config.path("custom_sentences", component, f"{language}.yaml")
+        # Check for custom sentences in <config>/custom_sentences/<language>/
+        if lang_intents is None:
+            # Only load custom sentences once, otherwise they will be re-loaded
+            # when components change.
+            custom_sentences_dir = Path(
+                self.hass.config.path("custom_sentences", language)
             )
-            if custom_sentences_path.exists():
-                with custom_sentences_path.open(
-                    encoding="utf-8"
-                ) as custom_sentences_file:
-                    # Merge custom sentences
-                    merge_dict(intents_dict, yaml.safe_load(custom_sentences_file))
+            if custom_sentences_dir.is_dir():
+                for custom_sentences_path in custom_sentences_dir.rglob("*.yaml"):
+                    with custom_sentences_path.open(
+                        encoding="utf-8"
+                    ) as custom_sentences_file:
+                        # Merge custom sentences
+                        merge_dict(intents_dict, yaml.safe_load(custom_sentences_file))
 
                     # Will need to recreate graph
                     intents_changed = True
-                    _LOGGER.info(
-                        "Loaded custom sentences component=%s, language=%s, path=%s",
-                        component,
+                    _LOGGER.debug(
+                        "Loaded custom sentences language=%s, path=%s",
                         language,
                         custom_sentences_path,
                     )
