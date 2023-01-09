@@ -15,7 +15,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -26,46 +25,46 @@ from . import WhirlpoolData
 from .const import DOMAIN
 
 TANK_FILL = {
-    "0": "Unknown",
-    "1": "Empty",
+    "0": "unknown",
+    "1": "empty",
     "2": "25%",
     "3": "50%",
     "4": "100%",
-    "5": "Active",
+    "5": "active",
 }
 
 MACHINE_STATE = {
-    MachineState.Standby: "Standby",
-    MachineState.Setting: "Setting",
-    MachineState.DelayCountdownMode: "Delay Countdown",
-    MachineState.DelayPause: "Delay Paused",
-    MachineState.SmartDelay: "Smart Delay",
-    MachineState.SmartGridPause: "Smart Grid Pause",
-    MachineState.Pause: "Pause",
-    MachineState.RunningMainCycle: "Running Maincycle",
-    MachineState.RunningPostCycle: "Running Postcycle",
-    MachineState.Exceptions: "Exception",
-    MachineState.Complete: "Complete",
-    MachineState.PowerFailure: "Power Failure",
-    MachineState.ServiceDiagnostic: "Service Diagnostic Mode",
-    MachineState.FactoryDiagnostic: "Factory Diagnostic Mode",
-    MachineState.LifeTest: "Life Test",
-    MachineState.CustomerFocusMode: "Customer Focus Mode",
-    MachineState.DemoMode: "Demo Mode",
-    MachineState.HardStopOrError: "Hard Stop or Error",
-    MachineState.SystemInit: "System Initialize",
+    MachineState.Standby: "standby",
+    MachineState.Setting: "setting",
+    MachineState.DelayCountdownMode: "delay_countdown",
+    MachineState.DelayPause: "delay_paused",
+    MachineState.SmartDelay: "smart_delay",
+    MachineState.SmartGridPause: "smart_grid_pause",
+    MachineState.Pause: "pause",
+    MachineState.RunningMainCycle: "running_maincycle",
+    MachineState.RunningPostCycle: "running_postcycle",
+    MachineState.Exceptions: "exception",
+    MachineState.Complete: "complete",
+    MachineState.PowerFailure: "power_failure",
+    MachineState.ServiceDiagnostic: "service_diagnostic_mode",
+    MachineState.FactoryDiagnostic: "factory_diagnostic_mode",
+    MachineState.LifeTest: "life_test",
+    MachineState.CustomerFocusMode: "customer_focus_mode",
+    MachineState.DemoMode: "demo_mode",
+    MachineState.HardStopOrError: "hard_stop_or_error",
+    MachineState.SystemInit: "system_initialize",
 }
 
 CYCLE_FUNC = [
-    (WasherDryer.get_cycle_status_filling, "Cycle Filling"),
-    (WasherDryer.get_cycle_status_rinsing, "Cycle Rinsing"),
-    (WasherDryer.get_cycle_status_sensing, "Cycle Sensing"),
-    (WasherDryer.get_cycle_status_soaking, "Cycle Soaking"),
-    (WasherDryer.get_cycle_status_spinning, "Cycle Spinning"),
-    (WasherDryer.get_cycle_status_washing, "Cycle Washing"),
+    (WasherDryer.get_cycle_status_filling, "cycle_filling"),
+    (WasherDryer.get_cycle_status_rinsing, "cycle_rinsing"),
+    (WasherDryer.get_cycle_status_sensing, "cycle_sensing"),
+    (WasherDryer.get_cycle_status_soaking, "cycle_soaking"),
+    (WasherDryer.get_cycle_status_spinning, "cycle_spinning"),
+    (WasherDryer.get_cycle_status_washing, "cycle_washing"),
 ]
 
-
+DOOR_OPEN = "door_open"
 ICON_D = "mdi:tumble-dryer"
 ICON_W = "mdi:washing-machine"
 
@@ -76,7 +75,7 @@ def washer_state(washer: WasherDryer) -> str | None:
     """Determine correct states for a washer."""
 
     if washer.get_attribute("Cavity_OpStatusDoorOpen") == "1":
-        return "Door open"
+        return DOOR_OPEN
 
     machine_state = washer.get_machine_state()
 
@@ -85,7 +84,7 @@ def washer_state(washer: WasherDryer) -> str | None:
             if func(washer):
                 return cycle_name
 
-    return MACHINE_STATE.get(machine_state, STATE_UNKNOWN)
+    return MACHINE_STATE.get(machine_state, None)
 
 
 @dataclass
@@ -106,15 +105,21 @@ SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
     WhirlpoolSensorEntityDescription(
         key="state",
         name="State",
-        icon=ICON_W,
-        has_entity_name=True,
+        translation_key="whirlpool_machine",
+        device_class=SensorDeviceClass.ENUM,
+        options=(
+            list(MACHINE_STATE.values())
+            + [value for _, value in CYCLE_FUNC]
+            + [DOOR_OPEN]
+        ),
         value_fn=washer_state,
     ),
     WhirlpoolSensorEntityDescription(
         key="DispenseLevel",
         name="Detergent Level",
-        icon=ICON_W,
-        has_entity_name=True,
+        translation_key="whirlpool_tank",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(TANK_FILL.values()),
         value_fn=lambda WasherDryer: TANK_FILL[
             WasherDryer.get_attribute("WashCavity_OpStatusBulkDispense1Level")
         ],
@@ -126,8 +131,6 @@ SENSOR_TIMER: tuple[SensorEntityDescription] = (
         key="timeremaining",
         name="End Time",
         device_class=SensorDeviceClass.TIMESTAMP,
-        icon=ICON_W,
-        has_entity_name=True,
     ),
 )
 
@@ -186,19 +189,21 @@ class WasherDryerClass(SensorEntity):
         washdry: WasherDryer,
     ) -> None:
         """Initialize the washer sensor."""
-        self._name = name.capitalize()
         self._wd: WasherDryer = washdry
 
-        if self._name == "Dryer":
+        if name == "dryer":
             self._attr_icon = ICON_D
+        else:
+            self._attr_icon = ICON_W
 
         self.entity_description: WhirlpoolSensorEntityDescription = description
-        self._attr_unique_id = f"{said}-{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, said)},
-            name=self._name,
+            name=name.capitalize(),
             manufacturer="Whirlpool",
         )
+        self._attr_has_entity_name = True
+        self._attr_unique_id = f"{said}-{description.key}"
 
     async def async_added_to_hass(self) -> None:
         """Connect washer/dryer to the cloud."""
@@ -232,21 +237,22 @@ class WasherDryerTimeClass(RestoreSensor):
         washdry: WasherDryer,
     ) -> None:
         """Initialize the washer sensor."""
-        self._name = name.capitalize()
         self._wd: WasherDryer = washdry
 
-        if self._name == "Dryer":
+        if name == "dryer":
             self._attr_icon = ICON_D
+        else:
+            self._attr_icon = ICON_W
 
         self.entity_description: SensorEntityDescription = description
-        self._attr_unique_id = f"{said}-{description.key}"
         self._running: bool | None = None
-        self._timestamp: datetime | None = None
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, said)},
-            name=self._name,
+            name=name.capitalize(),
             manufacturer="Whirlpool",
         )
+        self._attr_has_entity_name = True
+        self._attr_unique_id = f"{said}-{description.key}"
 
     async def async_added_to_hass(self) -> None:
         """Connect washer/dryer to the cloud."""
