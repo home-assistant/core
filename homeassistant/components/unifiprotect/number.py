@@ -31,9 +31,9 @@ from .utils import async_dispatch_id as _ufpd
 class NumberKeysMixin:
     """Mixin for required keys."""
 
-    ufp_max: int
-    ufp_min: int
-    ufp_step: int
+    ufp_max: int | float
+    ufp_min: int | float
+    ufp_step: int | float
 
 
 @dataclass
