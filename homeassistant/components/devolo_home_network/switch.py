@@ -16,7 +16,6 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import require_reauth
 from .const import DOMAIN, SWITCH_GUEST_WIFI, SWITCH_LEDS
 from .entity import DevoloEntity
 
@@ -48,7 +47,6 @@ class DevoloSwitchEntityDescription(
 SWITCH_TYPES: dict[str, DevoloSwitchEntityDescription[Any]] = {
     SWITCH_GUEST_WIFI: DevoloSwitchEntityDescription[WifiGuestAccessGet](
         key=SWITCH_GUEST_WIFI,
-        entity_registry_enabled_default=True,
         icon="mdi:wifi",
         name="Enable guest Wifi",
         is_on_func=lambda data: data.enabled is True,
@@ -58,7 +56,6 @@ SWITCH_TYPES: dict[str, DevoloSwitchEntityDescription[Any]] = {
     SWITCH_LEDS: DevoloSwitchEntityDescription[bool](
         key=SWITCH_LEDS,
         entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=True,
         icon="mdi:led-off",
         name="Enable LEDs",
         is_on_func=bool,
@@ -125,7 +122,7 @@ class DevoloSwitchEntity(DevoloEntity[_DataT], SwitchEntity):
         try:
             await self.entity_description.turn_on_func(self.device)
         except DevicePasswordProtected:
-            require_reauth(self.hass, self.entry)
+            self.entry.async_start_reauth(self.hass)
         except DeviceUnavailable:
             pass  # The coordinator will handle this
         await self.coordinator.async_request_refresh()
@@ -135,7 +132,7 @@ class DevoloSwitchEntity(DevoloEntity[_DataT], SwitchEntity):
         try:
             await self.entity_description.turn_off_func(self.device)
         except DevicePasswordProtected:
-            require_reauth(self.hass, self.entry)
+            self.entry.async_start_reauth(self.hass)
         except DeviceUnavailable:
             pass  # The coordinator will handle this
         await self.coordinator.async_request_refresh()

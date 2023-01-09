@@ -70,6 +70,31 @@ async def test_update_guest_wifi_status_auth_failed(
     await hass.config_entries.async_unload(entry.entry_id)
 
 
+async def test_update_led_status_auth_failed(
+    hass: HomeAssistant, mock_device: MockDevice
+):
+    """Test getting the led status with wrong password triggers the reauth flow."""
+    entry = configure_integration(hass)
+    mock_device.device.async_get_led_setting.side_effect = DevicePasswordProtected
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    flow = flows[0]
+    assert flow["step_id"] == "reauth_confirm"
+    assert flow["handler"] == DOMAIN
+
+    assert "context" in flow
+    assert flow["context"]["source"] == SOURCE_REAUTH
+    assert flow["context"]["entry_id"] == entry.entry_id
+
+    await hass.config_entries.async_unload(entry.entry_id)
+
+
 async def test_update_enable_guest_wifi(hass: HomeAssistant, mock_device: MockDevice):
     """Test state change of a enable_guest_wifi switch device."""
     entry = configure_integration(hass)
@@ -132,6 +157,24 @@ async def test_update_enable_guest_wifi(hass: HomeAssistant, mock_device: MockDe
         assert state.state == STATE_ON
         turn_on.assert_called_once_with(True)
 
+    async_fire_time_changed(
+        hass, dt.utcnow() + timedelta(seconds=REQUEST_REFRESH_DEFAULT_COOLDOWN)
+    )
+
+    # Device unavailable
+    mock_device.device.async_get_wifi_guest_access.side_effect = DeviceUnavailable()
+    with patch(
+        "devolo_plc_api.device_api.deviceapi.DeviceApi.async_set_wifi_guest_access",
+        side_effect=DeviceUnavailable,
+    ):
+        await hass.services.async_call(
+            PLATFORM, SERVICE_TURN_ON, {"entity_id": state_key}, blocking=True
+        )
+
+        state = hass.states.get(state_key)
+        assert state is not None
+        assert state.state == STATE_UNAVAILABLE
+
     await hass.config_entries.async_unload(entry.entry_id)
 
 
@@ -193,6 +236,24 @@ async def test_update_enable_leds(hass: HomeAssistant, mock_device: MockDevice):
         assert state is not None
         assert state.state == STATE_ON
         turn_on.assert_called_once_with(True)
+
+    async_fire_time_changed(
+        hass, dt.utcnow() + timedelta(seconds=REQUEST_REFRESH_DEFAULT_COOLDOWN)
+    )
+
+    # Device unavailable
+    mock_device.device.async_get_led_setting.side_effect = DeviceUnavailable()
+    with patch(
+        "devolo_plc_api.device_api.deviceapi.DeviceApi.async_set_led_setting",
+        side_effect=DeviceUnavailable,
+    ):
+        await hass.services.async_call(
+            PLATFORM, SERVICE_TURN_OFF, {"entity_id": state_key}, blocking=True
+        )
+
+        state = hass.states.get(state_key)
+        assert state is not None
+        assert state.state == STATE_UNAVAILABLE
 
     await hass.config_entries.async_unload(entry.entry_id)
 
@@ -274,9 +335,9 @@ async def test_auth_failed(
         PLATFORM, SERVICE_TURN_OFF, {"entity_id": state_key}, blocking=True
     )
     flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 2
+    assert len(flows) == 1
 
-    flow = flows[1]
+    flow = flows[0]
     assert flow["step_id"] == "reauth_confirm"
     assert flow["handler"] == DOMAIN
     assert "context" in flow

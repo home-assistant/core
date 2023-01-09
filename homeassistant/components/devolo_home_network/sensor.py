@@ -65,7 +65,6 @@ SENSOR_TYPES: dict[str, DevoloSensorEntityDescription[Any]] = {
     ),
     CONNECTED_WIFI_CLIENTS: DevoloSensorEntityDescription[list[ConnectedStationInfo]](
         key=CONNECTED_WIFI_CLIENTS,
-        entity_registry_enabled_default=True,
         icon="mdi:wifi",
         name="Connected Wifi clients",
         state_class=SensorStateClass.MEASUREMENT,
