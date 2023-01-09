@@ -96,7 +96,7 @@ class AxisBinarySensor(AxisEventBase, BinarySensorEntity):
                     and event_data
                     and event.id in event_data
                 ):
-                    self._attr_name = f"{self.event_type} {event_data[event.id].name}"
+                    self._attr_name = f"{self._event_type} {event_data[event.id].name}"
                     break
 
     @callback

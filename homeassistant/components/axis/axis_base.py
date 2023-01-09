@@ -69,10 +69,12 @@ class AxisEventBase(AxisEntityBase):
     def __init__(self, event: Event, device: AxisNetworkDevice) -> None:
         """Initialize the Axis event."""
         super().__init__(device)
-        self.event = event
 
-        self.event_type = TOPIC_TO_EVENT_TYPE[event.topic_base]
-        self._attr_name = f"{self.event_type} {event.id}"
+        self._event_id = event.id
+        self._event_topic = event.topic_base
+        self._event_type = TOPIC_TO_EVENT_TYPE[event.topic_base]
+
+        self._attr_name = f"{self._event_type} {event.id}"
         self._attr_unique_id = f"{device.unique_id}-{event.topic}-{event.id}"
 
         self._attr_device_class = event.group.value
@@ -88,7 +90,7 @@ class AxisEventBase(AxisEntityBase):
         self.async_on_remove(
             self.device.api.event.subscribe(
                 self.async_event_callback,
-                id_filter=self.event.id,
-                topic_filter=self.event.topic_base,
+                id_filter=self._event_id,
+                topic_filter=self._event_topic,
             )
         )

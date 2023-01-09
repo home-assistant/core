@@ -52,8 +52,8 @@ class AxisSwitch(AxisEventBase, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
-        await self.device.api.vapix.ports[self.event.id].close()
+        await self.device.api.vapix.ports[self._event_id].close()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
-        await self.device.api.vapix.ports[self.event.id].open()
+        await self.device.api.vapix.ports[self._event_id].open()
