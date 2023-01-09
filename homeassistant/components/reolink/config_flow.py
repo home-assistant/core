@@ -66,7 +66,7 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the initial step."""
         errors = {}
-        placeholders = {{"error": ""}}
+        placeholders = {"error": ""}
 
         if user_input is not None:
             try:
