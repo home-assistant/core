@@ -6,13 +6,10 @@ from unittest.mock import patch
 
 from homeassistant.components import mikrotik
 from homeassistant.components.mikrotik.const import (
-    CHR_ROUTER_TYPE,
     CONF_ARP_PING,
     CONF_DETECTION_TIME,
     CONF_FORCE_DHCP,
-    CONF_ROUTER_TYPE,
     DEFAULT_DETECTION_TIME,
-    ROUTERBOARD_ROUTER_TYPE,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -33,17 +30,6 @@ MOCK_DATA = {
     CONF_PASSWORD: "pass",
     CONF_PORT: 8278,
     CONF_VERIFY_SSL: False,
-    CONF_ROUTER_TYPE: ROUTERBOARD_ROUTER_TYPE,
-}
-
-MOCK_DATA_CHR = {
-    CONF_NAME: "Mikrotik",
-    CONF_HOST: "0.0.0.0",
-    CONF_USERNAME: "user",
-    CONF_PASSWORD: "pass",
-    CONF_PORT: 8278,
-    CONF_VERIFY_SSL: False,
-    CONF_ROUTER_TYPE: CHR_ROUTER_TYPE,
 }
 
 MOCK_OPTIONS = {
@@ -191,11 +177,11 @@ async def setup_mikrotik_entry(hass: HomeAssistant, **kwargs: Any) -> None:
     wireless_data: list[dict[str, Any]] = kwargs.get("wireless_data", WIRELESS_DATA)
     wifiwave2_data: list[dict[str, Any]] = kwargs.get("wifiwave2_data", WIFIWAVE2_DATA)
     entry_id: str = kwargs.get("entry_id", None)
-    data: dict[str, Any] = kwargs.get("data", MOCK_DATA)
+    info_data: list(dict[str, str]) = kwargs.get("info_data", INFO_DATA)
 
     def mock_command(self, cmd: str, params: dict[str, Any] | None = None) -> Any:
         if cmd == mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.INFO]:
-            return INFO_DATA
+            return info_data
         if cmd == mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.IS_WIRELESS]:
             return support_wireless
         if cmd == mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.IS_WIFIWAVE2]:
@@ -218,7 +204,7 @@ async def setup_mikrotik_entry(hass: HomeAssistant, **kwargs: Any) -> None:
         options.update({"arp_ping": True})
 
     config_entry = MockConfigEntry(
-        domain=mikrotik.DOMAIN, data=data, options=options, entry_id=entry_id
+        domain=mikrotik.DOMAIN, data=MOCK_DATA, options=options, entry_id=entry_id
     )
     config_entry.add_to_hass(hass)
 

@@ -25,9 +25,7 @@ from .const import (
     CONF_ARP_PING,
     CONF_DETECTION_TIME,
     CONF_FORCE_DHCP,
-    CONF_ROUTER_TYPE,
     DEFAULT_DETECTION_TIME,
-    DEFAULT_ROUTER_TYPE,
     DHCP,
     DOMAIN,
     IDENTITY,
@@ -40,7 +38,6 @@ from .const import (
     NAME,
     WIFI,
     WIFIWAVE2,
-    ROUTERBOARD_ROUTER_TYPE,
     WIRELESS,
 )
 from .device import Device
@@ -70,6 +67,7 @@ class MikrotikData:
         self.model: str = ""
         self.firmware: str = ""
         self.serial_number: str = ""
+        self.is_routerboard: bool | None = None
 
     @staticmethod
     def load_mac(devices: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
@@ -91,16 +89,18 @@ class MikrotikData:
         """Return force_dhcp option setting."""
         return self.config_entry.options.get(CONF_FORCE_DHCP, False)
 
-    @property
-    def router_type(self) -> str:
-        """Return router_type data setting."""
-        return self.config_entry.data.get(CONF_ROUTER_TYPE, DEFAULT_ROUTER_TYPE)
+    def detect_routerboard_router(self) -> bool:
+        """Detect whether or not it's a routerboard router."""
+        return len(self.command(MIKROTIK_SERVICES[INFO])) != 0
 
     def get_info(self, param: str) -> str:
         """Return device model name."""
         cmd = IDENTITY if param == NAME else INFO
 
-        if cmd == INFO and self.router_type != ROUTERBOARD_ROUTER_TYPE:
+        if self.is_routerboard is None:
+            self.is_routerboard = self.detect_routerboard_router()
+
+        if cmd == INFO and not self.is_routerboard:
             return ""
 
         if data := self.command(MIKROTIK_SERVICES[cmd]):

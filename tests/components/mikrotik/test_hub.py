@@ -4,7 +4,7 @@ from __future__ import annotations
 from homeassistant.components import mikrotik
 from homeassistant.core import HomeAssistant
 
-from . import MOCK_DATA_CHR, setup_mikrotik_entry
+from . import setup_mikrotik_entry
 
 
 async def test_info_routerboard(hass: HomeAssistant) -> None:
@@ -22,7 +22,7 @@ async def test_info_chr(hass: HomeAssistant) -> None:
     """Test device firmware/model for CHR routers."""
 
     entry_id = "mikrotik_entry_id"
-    await setup_mikrotik_entry(hass, entry_id=entry_id, data=MOCK_DATA_CHR)
+    await setup_mikrotik_entry(hass, entry_id=entry_id, info_data=[])
     device = hass.data[mikrotik.DOMAIN][entry_id]
 
     assert device.firmware == ""

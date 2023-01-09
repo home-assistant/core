@@ -16,39 +16,18 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.selector import (
-    SelectOptionDict,
-    SelectSelector,
-    SelectSelectorConfig,
-    SelectSelectorMode,
-)
 
 from .const import (
-    CHR_ROUTER_TYPE,
     CONF_ARP_PING,
     CONF_DETECTION_TIME,
     CONF_FORCE_DHCP,
-    CONF_ROUTER_TYPE,
     DEFAULT_API_PORT,
     DEFAULT_DETECTION_TIME,
     DEFAULT_NAME,
-    DEFAULT_ROUTER_TYPE,
     DOMAIN,
-    ROUTERBOARD_ROUTER_TYPE,
 )
 from .errors import CannotConnect, LoginError
 from .hub import get_api
-
-ROUTER_TYPES = [
-    SelectOptionDict(value=ROUTERBOARD_ROUTER_TYPE, label="Routerboard"),
-    SelectOptionDict(value=CHR_ROUTER_TYPE, label="CHR"),
-]
-ROUTER_TYPE_SELECTOR = SelectSelector(
-    SelectSelectorConfig(
-        options=ROUTER_TYPES,
-        mode=SelectSelectorMode.DROPDOWN,
-    )
-)
 
 
 class MikrotikFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -94,9 +73,6 @@ class MikrotikFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_PASSWORD): str,
                     vol.Optional(CONF_PORT, default=DEFAULT_API_PORT): int,
                     vol.Optional(CONF_VERIFY_SSL, default=False): bool,
-                    vol.Optional(
-                        CONF_ROUTER_TYPE, default=DEFAULT_ROUTER_TYPE
-                    ): ROUTER_TYPE_SELECTOR,
                 }
             ),
             errors=errors,
