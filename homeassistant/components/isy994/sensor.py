@@ -35,6 +35,7 @@ from .const import (
     _LOGGER,
     DOMAIN as ISY994_DOMAIN,
     ISY994_NODES,
+    ISY_CONF_UUID,
     SENSOR_AUX,
     UOM_DOUBLE_TEMP,
     UOM_FRIENDLY_NAME,
@@ -251,7 +252,7 @@ class ISYAuxSensorEntity(ISYSensorEntity):
         """Get the unique identifier of the device and aux sensor."""
         if not hasattr(self._node, "address"):
             return None
-        return f"{self._node.isy.configuration['uuid']}_{self._node.address}_{self._control}"
+        return f"{self._node.isy.configuration[ISY_CONF_UUID]}_{self._node.address}_{self._control}"
 
     @property
     def name(self) -> str:
