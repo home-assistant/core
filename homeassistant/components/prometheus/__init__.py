@@ -69,6 +69,11 @@ CONF_CUSTOM_LABELS = "custom_labels"
 COMPONENT_CONFIG_SCHEMA_ENTRY = vol.Schema(
     {vol.Optional(CONF_OVERRIDE_METRIC): cv.string}
 )
+CONF_NAME = "name"
+CONF_TEMPLATE = "template"
+CUSTOM_LABEL_SCHEMA_ENTRY = vol.Schema(
+    {vol.Required(CONF_NAME): cv.string, vol.Required(CONF_TEMPLATE): cv.template}
+)
 
 DEFAULT_NAMESPACE = "homeassistant"
 
@@ -89,8 +94,8 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_COMPONENT_CONFIG_DOMAIN, default={}): vol.Schema(
                     {cv.string: COMPONENT_CONFIG_SCHEMA_ENTRY}
                 ),
-                vol.Optional(CONF_CUSTOM_LABELS, default={}): vol.Schema(
-                    {cv.string: cv.template}
+                vol.Optional(CONF_CUSTOM_LABELS, default=[]): vol.All(
+                    cv.ensure_list, [CUSTOM_LABEL_SCHEMA_ENTRY]
                 ),
             }
         )
@@ -115,7 +120,9 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         conf[CONF_COMPONENT_CONFIG_GLOB],
     )
     custom_labels = conf.get(CONF_CUSTOM_LABELS)
-    attach(hass, custom_labels)
+
+    for custom_label in custom_labels:
+        attach(hass, custom_label[CONF_TEMPLATE])
 
     metrics = PrometheusMetrics(
         prometheus_client,
@@ -270,9 +277,9 @@ class PrometheusMetrics:
                 pass
 
     def _metric(self, metric, factory, documentation, extra_labels=None):
-        labels = ["entity", "friendly_name", "domain"] + list(
-            self._custom_labels.keys()
-        )
+        labels = ["entity", "friendly_name", "domain"] + [
+            custom_label[CONF_NAME] for custom_label in self._custom_labels
+        ]
         if extra_labels is not None:
             labels.extend(extra_labels)
 
@@ -316,8 +323,8 @@ class PrometheusMetrics:
 
     def _labels(self, state):
         custom_labels = {
-            key: template.render(state=state)
-            for key, template in self._custom_labels.items()
+            custom_label[CONF_NAME]: custom_label[CONF_TEMPLATE].render(state=state)
+            for custom_label in self._custom_labels
         }
         return {
             "entity": state.entity_id,

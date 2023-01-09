@@ -97,7 +97,7 @@ async def setup_prometheus_client(hass, hass_client, namespace, custom_labels):
 
 
 @pytest.fixture(name="custom_labels")
-def custom_labels():
+def empty_custom_labels():
     return None
 
 
@@ -892,7 +892,8 @@ async def test_disabling_entity(
 
 
 @pytest.mark.parametrize(
-    "namespace, custom_labels", [(None, {"object_id": "{{ state.object_id }}"})]
+    "namespace, custom_labels",
+    [(None, [{"name": "object_id", "template": "{{ state.object_id }}"}])],
 )
 async def test_custom_labels(client, sensor_entities):
     """Test custom_labels setting."""
@@ -1592,7 +1593,9 @@ async def test_full_config(hass, mock_client):
                 "exclude_entity_globs": ["climate.excluded_*"],
                 "exclude_entities": ["fake.time_excluded"],
             },
-            "custom_labels": {"area_name": "{{ area_name(state.entity_id) }}"},
+            "custom_labels": [
+                {"name": "area_name", "template": "{{ area_name(state.entity_id) }}"},
+            ],
         }
     }
     assert await async_setup_component(hass, prometheus.DOMAIN, config)
