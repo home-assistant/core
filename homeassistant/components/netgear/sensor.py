@@ -59,6 +59,7 @@ SENSOR_TYPES = {
         name="signal strength",
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:wifi",
     ),
     "ssid": SensorEntityDescription(
         key="ssid",
