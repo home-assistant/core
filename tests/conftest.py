@@ -89,6 +89,7 @@ from .test_util.aiohttp import (  # noqa: E402, isort:skip
 
 
 _LOGGER = logging.getLogger(__name__)
+TestClientGenerator = Callable[..., Coroutine[Any, Any, TestClient]]
 
 asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))
 # Disable fixtures overriding our beautiful policy
