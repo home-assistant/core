@@ -422,7 +422,7 @@ class SensorEntity(Entity):
                     f"non-numeric device class: {device_class}"
                 )
 
-        # Check below only apply if there is a value
+        # Checks below only apply if there is a value
         if value is None:
             return None
 
