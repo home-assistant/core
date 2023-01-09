@@ -17,6 +17,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -145,7 +146,7 @@ async def async_setup_entry(
             whirlpool_data.backend_selector,
             whirlpool_data.auth,
             appliance["SAID"],
-            whirlpool_data.session,
+            async_get_clientsession(hass),
         )
         await _wd.connect()
 

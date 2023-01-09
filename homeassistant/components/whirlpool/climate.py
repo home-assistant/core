@@ -25,6 +25,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo, generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -80,7 +81,7 @@ async def async_setup_entry(
             ac_data["NAME"],
             whirlpool_data.backend_selector,
             whirlpool_data.auth,
-            whirlpool_data.session,
+            async_get_clientsession(hass),
         )
         for ac_data in whirlpool_data.appliances_manager.aircons
     ]

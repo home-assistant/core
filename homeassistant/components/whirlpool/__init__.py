@@ -3,7 +3,7 @@ import asyncio
 from dataclasses import dataclass
 import logging
 
-from aiohttp import ClientError, ClientSession
+from aiohttp import ClientError
 from whirlpool.appliancesmanager import AppliancesManager
 from whirlpool.auth import Auth
 from whirlpool.backendselector import BackendSelector
@@ -48,7 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return False
 
     hass.data[DOMAIN][entry.entry_id] = WhirlpoolData(
-        appliances_manager, auth, backend_selector, session
+        appliances_manager, auth, backend_selector
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -71,4 +71,3 @@ class WhirlpoolData:
     appliances_manager: AppliancesManager
     auth: Auth
     backend_selector: BackendSelector
-    session: ClientSession
