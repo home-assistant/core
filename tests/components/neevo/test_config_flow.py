@@ -1,8 +1,9 @@
 """Test the Nee-Vo Tank Monitoring config flow."""
 from unittest.mock import patch
 
+from pyneevo.errors import InvalidCredentialsError, PyNeeVoError
+
 from homeassistant import config_entries
-from homeassistant.components.neevo.config_flow import CannotConnect, InvalidAuth
 from homeassistant.components.neevo.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -51,7 +52,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.neevo.config_flow.PlaceholderHub.authenticate",
-        side_effect=InvalidAuth,
+        side_effect=InvalidCredentialsError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -74,7 +75,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.neevo.config_flow.PlaceholderHub.authenticate",
-        side_effect=CannotConnect,
+        side_effect=PyNeeVoError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

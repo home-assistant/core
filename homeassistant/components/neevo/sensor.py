@@ -1,7 +1,15 @@
 """Support for Nee-Vo Tank Monitors."""
+from __future__ import annotations
+
 import logging
 
-from homeassistant.components.sensor import SensorEntity
+from pyneevo.tank import Tank
+
+from homeassistant.components.sensor import (
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, UnitOfPressure
 from homeassistant.core import HomeAssistant
@@ -12,18 +20,23 @@ from .const import DOMAIN, TANKS
 
 _LOGGER = logging.getLogger(__name__)
 
-TANK_LEVEL = "tank_level"
-TANK_LAST_PRESSURE = "tank_last_pressure"
-
-SENSOR_NAMES_TO_ATTRIBUTES = {
-    TANK_LEVEL: "level",
-    TANK_LAST_PRESSURE: "TankLastPressure",
-}
-
-SENSOR_NAMES_TO_UNIT_OF_MEASUREMENT = {
-    TANK_LEVEL: PERCENTAGE,
-    TANK_LAST_PRESSURE: UnitOfPressure.KPA,  # default is kPa
-}
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="level",
+        name="Tank Level",
+        icon="mdi:propane-tank",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="tank_last_pressure",
+        name="Tank Last Pressure",
+        icon="mdi:gauge",
+        native_unit_of_measurement=UnitOfPressure.KPA,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+)
 
 
 async def async_setup_entry(
@@ -32,14 +45,14 @@ async def async_setup_entry(
     """Set up Nee-Vo sensor based on a config entry."""
 
     tanks = hass.data[DOMAIN][TANKS][entry.entry_id]
-    sensors = []
     all_tanks = tanks.copy()
 
-    for _equip in all_tanks.values():
-        _LOGGER.debug("Adding sensors for %s", _equip)
-        for name, attribute in SENSOR_NAMES_TO_ATTRIBUTES.items():
-            if getattr(_equip, attribute, None) is not None:
-                sensors.append(NeeVoSensor(_equip, name))
+    sensors = [
+        NeeVoSensor(_equip, description)
+        for _equip in all_tanks.values()
+        for description in SENSOR_TYPES
+        if getattr(_equip, description.key, False) is not False
+    ]
 
     async_add_entities(sensors)
 
@@ -47,37 +60,29 @@ async def async_setup_entry(
 class NeeVoSensor(NeeVoEntity, SensorEntity):
     """Define a Nee-Vo sensor."""
 
-    def __init__(self, neevo_tank, device_name):
+    def __init__(self, neevo_tank: Tank, description: SensorEntityDescription) -> None:
         """Initialize."""
         super().__init__(neevo_tank)
-        self._neevo = neevo_tank
-        self._device_name = device_name
-        self._attr_device_class = None
-        self._attr_state_class = "measurement"
+        self.entity_description = description
+        self._attr_name = f"{neevo_tank.name} {description.name}"
+        self._attr_unique_id = f"{neevo_tank.id}_{neevo_tank.name}_{description.key}"
 
     @property
     def native_value(self) -> float:
         """Return sensors state."""
-        value = getattr(self._neevo, SENSOR_NAMES_TO_ATTRIBUTES[self._device_name])
+        value = getattr(self._neevo, self.entity_description.key)
         if isinstance(value, float):
             value = round(value, 2)
+
         return value
 
     @property
-    def native_unit_of_measurement(self) -> str:
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        unit_of_measurement = SENSOR_NAMES_TO_UNIT_OF_MEASUREMENT[self._device_name]
-        if self._device_name == TANK_LAST_PRESSURE:
-            if self._neevo.last_pressure_unit is not None:
-                unit_of_measurement = UnitOfPressure(self._neevo.last_pressure_unit)
+        unit_of_measurement = self.entity_description.native_unit_of_measurement
+        if self.entity_description.key == "tank_last_pressure":
+            if self._neevo.tank_last_pressure_unit is not None:
+                unit_of_measurement = UnitOfPressure[
+                    self._neevo.tank_last_pressure_unit.upper()
+                ]
         return unit_of_measurement
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return f"{self._neevo.name}_{self._device_name}"
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID of the entity."""
-        return f"{self._neevo.id}_{self._neevo.name}_{self._device_name}"

@@ -3483,7 +3483,7 @@
       "iot_class": "cloud_polling"
     },
     "neevo": {
-      "name": "Nee-Vo Tank Monitoring",
+      "name": "OTODATA Nee-Vo Tank Monitoring",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"

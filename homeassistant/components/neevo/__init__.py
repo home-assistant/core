@@ -27,13 +27,13 @@ from .const import API_CLIENT, DOMAIN, TANKS
 _LOGGER = logging.getLogger(__name__)
 
 PUSH_UPDATE = "neevo.push_update"
-INTERVAL = timedelta(minutes=60)
+INTERVAL = timedelta(minutes=15)
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the EcoNet component."""
+    """Set up the Nee-Vo component."""
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][API_CLIENT] = {}
     hass.data[DOMAIN][TANKS] = {}
@@ -59,6 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         tanks = await api.get_tanks_info()
     except (ClientError, GenericHTTPError, InvalidResponseFormat) as err:
         raise ConfigEntryNotReady from err
+
     hass.data[DOMAIN][API_CLIENT][config_entry.entry_id] = api
     hass.data[DOMAIN][TANKS][config_entry.entry_id] = tanks
 
@@ -101,6 +102,8 @@ class NeeVoEntity(Entity):
     def __init__(self, neevo):
         """Initialize."""
         self._neevo = neevo
+        self._attr_name = neevo.name
+        self._attr_unique_id = f"{neevo.id}_{neevo.name}"
 
     async def async_added_to_hass(self):
         """Subscribe to device events."""
@@ -111,7 +114,7 @@ class NeeVoEntity(Entity):
 
     @callback
     def on_update_received(self):
-        """Update was pushed from the ecoent API."""
+        """Update was pushed from the Nee-Vo API."""
         self.async_write_ha_state()
 
     @property
@@ -119,16 +122,6 @@ class NeeVoEntity(Entity):
         """Return device registry information for this entity."""
         return DeviceInfo(
             identifiers={(DOMAIN, self._neevo.id)},
-            manufacturer="Nee-Vo",
+            manufacturer="OTODATA",
             name=self._neevo.name,
         )
-
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return self._neevo.name
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of the entity."""
-        return f"{self._neevo.id}_{self._neevo.name}"
