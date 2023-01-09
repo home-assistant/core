@@ -353,7 +353,9 @@ def parse_time_expression(parameter: Any, min_value: int, max_value: int) -> lis
 def _dst_offset_diff(dattim: dt.datetime) -> dt.timedelta:
     """Return the offset when crossing the DST barrier."""
     delta = dt.timedelta(hours=24)
-    return (dattim + delta).utcoffset() - (dattim - delta).utcoffset()  # type: ignore[operator]
+    return (dattim + delta).utcoffset() - (  # type: ignore[operator]
+        dattim - delta
+    ).utcoffset()
 
 
 def _lower_bound(arr: list[int], cmp: int) -> int | None:
@@ -385,7 +387,8 @@ def find_next_time_expression_time(
         raise ValueError("Cannot find a next time: Time expression never matches!")
 
     while True:
-        # Reset microseconds and fold; fold (for ambiguous DST times) will be handled later
+        # Reset microseconds and fold; fold (for ambiguous DST times) will be
+        # handled later.
         result = now.replace(microsecond=0, fold=0)
 
         # Match next second
@@ -433,11 +436,12 @@ def find_next_time_expression_time(
             # -> trigger on the next time that 1. matches the pattern and 2. does exist
             # for example:
             #   on 2021.03.28 02:00:00 in CET timezone clocks are turned forward an hour
-            #   with pattern "02:30", don't run on 28 mar (such a wall time does not exist on this day)
-            #   instead run at 02:30 the next day
+            #   with pattern "02:30", don't run on 28 mar (such a wall time does not
+            #   exist on this day) instead run at 02:30 the next day
 
-            # We solve this edge case by just iterating one second until the result exists
-            # (max. 3600 operations, which should be fine for an edge case that happens once a year)
+            # We solve this edge case by just iterating one second until the result
+            # exists (max. 3600 operations, which should be fine for an edge case that
+            # happens once a year)
             now += dt.timedelta(seconds=1)
             continue
 
@@ -445,29 +449,34 @@ def find_next_time_expression_time(
             return result
 
         # When leaving DST and clocks are turned backward.
-        # Then there are wall clock times that are ambiguous i.e. exist with DST and without DST
-        # The logic above does not take into account if a given pattern matches _twice_
-        # in a day.
-        # Example: on 2021.10.31 02:00:00 in CET timezone clocks are turned backward an hour
+        # Then there are wall clock times that are ambiguous i.e. exist with DST and
+        # without DST. The logic above does not take into account if a given pattern
+        # matches _twice_ in a day.
+        # Example: on 2021.10.31 02:00:00 in CET timezone clocks are turned
+        # backward an hour.
 
         if _datetime_ambiguous(result):
             # `now` and `result` are both ambiguous, so the next match happens
             # _within_ the current fold.
 
             # Examples:
-            #  1. 2021.10.31 02:00:00+02:00 with pattern 02:30 -> 2021.10.31 02:30:00+02:00
-            #  2. 2021.10.31 02:00:00+01:00 with pattern 02:30 -> 2021.10.31 02:30:00+01:00
+            #  1. 2021.10.31 02:00:00+02:00 with pattern 02:30
+            #       -> 2021.10.31 02:30:00+02:00
+            #  2. 2021.10.31 02:00:00+01:00 with pattern 02:30
+            #       -> 2021.10.31 02:30:00+01:00
             return result.replace(fold=now.fold)
 
         if now.fold == 0:
-            # `now` is in the first fold, but result is not ambiguous (meaning it no longer matches
-            # within the fold).
-            # -> Check if result matches in the next fold. If so, emit that match
+            # `now` is in the first fold, but result is not ambiguous (meaning it no
+            # longer matches within the fold).
+            #   -> Check if result matches in the next fold. If so, emit that match
 
-            # Turn back the time by the DST offset, effectively run the algorithm on the first fold
-            # If it matches on the first fold, that means it will also match on the second one.
+            # Turn back the time by the DST offset, effectively run the algorithm on
+            # the first fold. If it matches on the first fold, that means it will also
+            # match on the second one.
 
-            # Example: 2021.10.31 02:45:00+02:00 with pattern 02:30 -> 2021.10.31 02:30:00+01:00
+            # Example: 2021.10.31 02:45:00+02:00 with pattern 02:30
+            #   -> 2021.10.31 02:30:00+01:00
 
             check_result = find_next_time_expression_time(
                 now + _dst_offset_diff(now), seconds, minutes, hours
