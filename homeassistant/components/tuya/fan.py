@@ -1,6 +1,7 @@
 """Support for Tuya Fan."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
 
 from tuya_iot import TuyaDevice, TuyaDeviceManager
@@ -9,6 +10,7 @@ from homeassistant.components.fan import (
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
     FanEntity,
+    FanEntityDescription,
     FanEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -24,12 +26,84 @@ from . import HomeAssistantTuyaData
 from .base import EnumTypeData, IntegerTypeData, TuyaEntity
 from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, DPType
 
+
+def filter_fan_speed_range_list(orginal_list) -> list[str]:
+    """Filter 'off' value from fan speeds enum range, because the percentage utility does not expect it."""
+    return [speed for speed in orginal_list if speed != "off"]
+
+
+@dataclass
+class TuyaFanEntityDescription(FanEntityDescription):
+    """Describe an Tuya fan entity."""
+
+    direction: DPCode | None = None
+    oscillate: DPCode | None = None
+    presets: DPCode | None = None
+    speed: DPCode | None = None
+    switch: DPCode | None = None
+
+
 TUYA_SUPPORT_TYPE = {
     "fs",  # Fan
     "fsd",  # Fan with Light
     "fskg",  # Fan wall switch
     "kj",  # Air Purifier
     "yyj",  # Extractor hood
+}
+
+FANS: dict[str, tuple[TuyaFanEntityDescription, ...]] = {
+    # Fan
+    # https://developer.tuya.com/en/docs/iot/categoryfs?id=Kaiuz1xweel1c
+    "fs": (
+        TuyaFanEntityDescription(
+            key=DPCode.SWITCH,
+            direction=DPCode.FAN_DIRECTION,
+            # seems to support both horizontal and vertical oscillation
+            oscillate=DPCode.SWITCH_HORIZONTAL,
+            presets=DPCode.MODE,
+            speed=DPCode.FAN_SPEED_PERCENT,
+            switch=DPCode.SWITCH,
+        ),
+    ),
+    # Fan with Light
+    # https://developer.tuya.com/en/docs/iot/fsd?id=Kaof8eiei4c2v
+    "fsd": (
+        TuyaFanEntityDescription(
+            key=DPCode.FAN_SWITCH,
+            direction=DPCode.FAN_DIRECTION,
+            presets=DPCode.FAN_MODE,
+            speed=DPCode.FAN_SPEED,
+            switch=DPCode.FAN_SWITCH,
+        ),
+    ),
+    # Fan wall switch
+    # https://developer.tuya.com/en/docs/iot/fskg?id=Kbcs1e383bnra
+    "fskg": (
+        TuyaFanEntityDescription(
+            key=DPCode.SWITCH_FAN,
+            speed=DPCode.FAN_SPEED,
+            switch=DPCode.SWITCH_FAN,
+        ),
+    ),
+    # Air purifier
+    # https://developer.tuya.com/en/docs/iot/categorykj?id=Kaiuz1atqo5l7
+    "kj": (
+        TuyaFanEntityDescription(
+            key=DPCode.SWITCH,
+            presets=DPCode.FAN_MODE,
+            # Seems to support both 'SPEED' and 'FAN_SPEED_ENUM'
+            speed=DPCode.FAN_SPEED_ENUM,
+            switch=DPCode.SWITCH,
+        ),
+    ),
+    # Extractor hood
+    "yyj": (
+        TuyaFanEntityDescription(
+            key="",
+            speed=DPCode.FAN_SPEED_ENUM,
+            switch=None,
+        ),
+    ),
 }
 
 
@@ -45,8 +119,11 @@ async def async_setup_entry(
         entities: list[TuyaFanEntity] = []
         for device_id in device_ids:
             device = hass_data.device_manager.device_map[device_id]
-            if device and device.category in TUYA_SUPPORT_TYPE:
-                entities.append(TuyaFanEntity(device, hass_data.device_manager))
+            if descriptions := FANS.get(device.category):
+                for description in descriptions:
+                    entities.append(
+                        TuyaFanEntity(device, hass_data.device_manager, description)
+                    )
         async_add_entities(entities)
 
     async_discover_device([*hass_data.device_manager.device_map])
@@ -59,6 +136,8 @@ async def async_setup_entry(
 class TuyaFanEntity(TuyaEntity, FanEntity):
     """Tuya Fan Device."""
 
+    entity_description: TuyaFanEntityDescription
+
     _direction: EnumTypeData | None = None
     _oscillate: DPCode | None = None
     _presets: EnumTypeData | None = None
@@ -70,48 +149,38 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
         self,
         device: TuyaDevice,
         device_manager: TuyaDeviceManager,
+        description: TuyaFanEntityDescription,
     ) -> None:
         """Init Tuya Fan Device."""
         super().__init__(device, device_manager)
 
-        self._switch = self.find_dpcode(
-            (DPCode.SWITCH_FAN, DPCode.FAN_SWITCH, DPCode.SWITCH), prefer_function=True
-        )
+        self._switch = self.find_dpcode(description.switch, prefer_function=True)
 
         self._attr_preset_modes = []
         if enum_type := self.find_dpcode(
-            (DPCode.FAN_MODE, DPCode.MODE), dptype=DPType.ENUM, prefer_function=True
+            description.presets, dptype=DPType.ENUM, prefer_function=True
         ):
             self._presets = enum_type
             self._attr_supported_features |= FanEntityFeature.PRESET_MODE
             self._attr_preset_modes = enum_type.range
 
-        # Find speed controls, can be either percentage or a set of speeds
-        dpcodes = (
-            DPCode.FAN_SPEED_PERCENT,
-            DPCode.FAN_SPEED,
-            DPCode.SPEED,
-            DPCode.FAN_SPEED_ENUM,
-        )
         if int_type := self.find_dpcode(
-            dpcodes, dptype=DPType.INTEGER, prefer_function=True
+            description.speed, dptype=DPType.INTEGER, prefer_function=True
         ):
             self._attr_supported_features |= FanEntityFeature.SET_SPEED
             self._speed = int_type
         elif enum_type := self.find_dpcode(
-            dpcodes, dptype=DPType.ENUM, prefer_function=True
+            description.speed, dptype=DPType.ENUM, prefer_function=True
         ):
             self._attr_supported_features |= FanEntityFeature.SET_SPEED
             self._speeds = enum_type
 
-        if dpcode := self.find_dpcode(
-            (DPCode.SWITCH_HORIZONTAL, DPCode.SWITCH_VERTICAL), prefer_function=True
-        ):
+        if dpcode := self.find_dpcode(description.oscillate, prefer_function=True):
             self._oscillate = dpcode
             self._attr_supported_features |= FanEntityFeature.OSCILLATE
 
         if enum_type := self.find_dpcode(
-            DPCode.FAN_DIRECTION, dptype=DPType.ENUM, prefer_function=True
+            description.direction, dptype=DPType.ENUM, prefer_function=True
         ):
             self._direction = enum_type
             self._attr_supported_features |= FanEntityFeature.DIRECTION
@@ -141,13 +210,25 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
             )
             return
 
+        if self._speeds is not None and percentage == 0 and "off" in self._speeds.range:
+            self._send_command(
+                [
+                    {
+                        "code": self._speeds.dpcode,
+                        "value": "off",
+                    }
+                ]
+            )
+            return
+
         if self._speeds is not None:
             self._send_command(
                 [
                     {
                         "code": self._speeds.dpcode,
                         "value": percentage_to_ordered_list_item(
-                            self._speeds.range, percentage
+                            filter_fan_speed_range_list(self._speeds.range),
+                            percentage,
                         ),
                     }
                 ]
@@ -155,7 +236,23 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
-        self._send_command([{"code": self._switch, "value": False}])
+        if self._switch is not None:
+            self._send_command([{"code": self._switch, "value": False}])
+
+        # Fake turn on
+        if (
+            self._switch is None
+            and self._speeds is not None
+            and "off" in self._speeds.range
+        ):
+            self._send_command(
+                [
+                    {
+                        "code": self._speeds.dpcode,
+                        "value": "off",
+                    }
+                ]
+            )
 
     def turn_on(
         self,
@@ -164,12 +261,10 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
         **kwargs: Any,
     ) -> None:
         """Turn on the fan."""
-        if self._switch is None:
-            return
+        commands: list[dict[str, str | bool | int]] = []
 
-        commands: list[dict[str, str | bool | int]] = [
-            {"code": self._switch, "value": True}
-        ]
+        if self._switch is not None:
+            commands.append({"code": self._switch, "value": True})
 
         if percentage is not None and self._speed is not None:
             commands.append(
@@ -184,13 +279,26 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
                 {
                     "code": self._speeds.dpcode,
                     "value": percentage_to_ordered_list_item(
-                        self._speeds.range, percentage
+                        filter_fan_speed_range_list(self._speeds.range), percentage
                     ),
                 }
             )
 
         if preset_mode is not None and self._presets is not None:
             commands.append({"code": self._presets.dpcode, "value": preset_mode})
+
+        if (
+            self._switch is None
+            and percentage is None
+            and preset_mode is None
+            and self._speeds is not None
+        ):
+            commands.append(
+                {
+                    "code": self._speeds.dpcode,
+                    "value": filter_fan_speed_range_list(self._speeds.range)[0],
+                }
+            )
 
         self._send_command(commands)
 
@@ -203,11 +311,19 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if fan is on."""
-        if self._switch is None:
-            return None
-        if self._speeds is not None and "off" in self._speeds.range:
+
+        if self._switch is not None:
+            return self.device.status.get(self._switch)
+
+        # Fake on/off reporting
+        if (
+            self._switch is None
+            and self._speeds is not None
+            and "off" in self._speeds.range
+        ):
             return self.device.status.get(self._speeds.dpcode) != "off"
-        return self.device.status.get(self._switch)
+
+        return None
 
     @property
     def current_direction(self) -> str | None:
@@ -251,7 +367,11 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
         if self._speeds is not None:
             if (value := self.device.status.get(self._speeds.dpcode)) is None:
                 return None
-            return ordered_list_item_to_percentage(self._speeds.range, value)
+            if (value := self.device.status.get(self._speeds.dpcode)) == "off":
+                return 0
+            return ordered_list_item_to_percentage(
+                filter_fan_speed_range_list(self._speeds.range), value
+            )
 
         return None
 
@@ -259,5 +379,5 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
         if self._speeds is not None:
-            return len(self._speeds.range)
+            return len(filter_fan_speed_range_list(self._speeds.range))
         return 100
