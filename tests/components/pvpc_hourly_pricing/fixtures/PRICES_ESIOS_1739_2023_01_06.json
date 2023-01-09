@@ -1,0 +1,223 @@
+{
+  "indicator": {
+    "name": "Precio de la energía excedentaria del autoconsumo para el mecanismo de compensación simplificada (PVPC)",
+    "short_name": "Precio de la energía excedentaria",
+    "id": 1739,
+    "composited": false,
+    "step_type": "linear",
+    "disaggregated": false,
+    "magnitud": [
+      {
+        "name": "Precio",
+        "id": 23
+      }
+    ],
+    "tiempo": [
+      {
+        "name": "Hora",
+        "id": 4
+      }
+    ],
+    "geos": [
+      {
+        "geo_id": 3,
+        "geo_name": "España"
+      }
+    ],
+    "values_updated_at": "2023-01-05T20:17:31.000+01:00",
+    "values": [
+      {
+        "value": 105.6,
+        "datetime": "2023-01-06T00:00:00.000+01:00",
+        "datetime_utc": "2023-01-05T23:00:00Z",
+        "tz_time": "2023-01-05T23:00:00.000Z",
+        "geo_id": 3,
+        "geo_name": "España"
+      },
+      {
+        "value": 99.45,
+        "datetime": "2023-01-06T01:00:00.000+01:00",
+        "datetime_utc": "2023-01-06T00:00:00Z",
+        "tz_time": "2023-01-06T00:00:00.000Z",
+        "geo_id": 3,
+        "geo_name": "España"
+      },
+      {
+        "value": 95.99,
+        "datetime": "2023-01-06T02:00:00.000+01:00",
+        "datetime_utc": "2023-01-06T01:00:00Z",
+        "tz_time": "2023-01-06T01:00:00.000Z",
+        "geo_id": 3,
+        "geo_name": "España"
+      },
+      {
+        "value": 80.63,
+        "datetime": "2023-01-06T03:00:00.000+01:00",
+        "datetime_utc": "2023-01-06T02:00:00Z",
+        "tz_time": "2023-01-06T02:00:00.000Z",
+        "geo_id": 3,
+        "geo_name": "España"
+      },
+      {
+        "value": 75.05,
+        "datetime": "2023-01-06T04:00:00.000+01:00",
+        "datetime_utc": "2023-01-06T03:00:00Z",
+        "tz_time": "2023-01-06T03:00:00.000Z",
+        "geo_id": 3,
+        "geo_name": "España"
+      },
+      {
+        "value": 80.3,
+        "datetime": "2023-01-06T05:00:00.000+01:00",
+        "datetime_utc": "2023-01-06T04:00:00Z",
+        "tz_time": "2023-01-06T04:00:00.000Z",
+        "geo_id": 3,
+        "geo_name": "España"
+      },
+      {
+        "value": 96.71,
+        "datetime": "2023-01-06T06:00:00.000+01:00",
+        "datetime_utc": "2023-01-06T05:00:00Z",
+        "tz_time": "2023-01-06T05:00:00.000Z",
+        "geo_id": 3,
+        "geo_name": "España"
+      },
+      {
+        "value": 106.21,
+        "datetime": "2023-01-06T07:00:00.000+01:00",
+        "datetime_utc": "2023-01-06T06:00:00Z",
+        "tz_time": "2023-01-06T06:00:00.000Z",
+        "geo_id": 3,
+        "geo_name": "España"
+      },
+      {
+        "value": 120.56,
+        "datetime": "2023-01-06T08:00:00.000+01:00",
+        "datetime_utc": "2023-01-06T07:00:00Z",
+        "tz_time": "2023-01-06T07:00:00.000Z",
+        "geo_id": 3,
+        "geo_name": "España"
+      },
+      {
+        "value": 123.04,
+        "datetime": "2023-01-06T09:00:00.000+01:00",
+        "datetime_utc": "2023-01-06T08:00:00Z",
+        "tz_time": "2023-01-06T08:00:00.000Z",
+        "geo_id": 3,
+        "geo_name": "España"
+      },
+      {
+        "value": 118.78,
+        "datetime": "2023-01-06T10:00:00.000+01:00",
+        "datetime_utc": "2023-01-06T09:00:00Z",
+        "tz_time": "2023-01-06T09:00:00.000Z",
+        "geo_id": 3,
+        "geo_name": "España"
+      },
+      {
+        "value": 109.0,
+        "datetime": "2023-01-06T11:00:00.000+01:00",
+        "datetime_utc": "2023-01-06T10:00:00Z",
+        "tz_time": "2023-01-06T10:00:00.000Z",
+        "geo_id": 3,
+        "geo_name": "España"
+      },
+      {
+        "value": 102.44,
+        "datetime": "2023-01-06T12:00:00.000+01:00",
+        "datetime_utc": "2023-01-06T11:00:00Z",
+        "tz_time": "2023-01-06T11:00:00.000Z",
+        "geo_id": 3,
+        "geo_name": "España"
+      },
+      {
+        "value": 89.49,
+        "datetime": "2023-01-06T13:00:00.000+01:00",
+        "datetime_utc": "2023-01-06T12:00:00Z",
+        "tz_time": "2023-01-06T12:00:00.000Z",
+        "geo_id": 3,
+        "geo_name": "España"
+      },
+      {
+        "value": 79.65,
+        "datetime": "2023-01-06T14:00:00.000+01:00",
+        "datetime_utc": "2023-01-06T13:00:00Z",
+        "tz_time": "2023-01-06T13:00:00.000Z",
+        "geo_id": 3,
+        "geo_name": "España"
+      },
+      {
+        "value": 69.53,
+        "datetime": "2023-01-06T15:00:00.000+01:00",
+        "datetime_utc": "2023-01-06T14:00:00Z",
+        "tz_time": "2023-01-06T14:00:00.000Z",
+        "geo_id": 3,
+        "geo_name": "España"
+      },
+      {
+        "value": 80.31,
+        "datetime": "2023-01-06T16:00:00.000+01:00",
+        "datetime_utc": "2023-01-06T15:00:00Z",
+        "tz_time": "2023-01-06T15:00:00.000Z",
+        "geo_id": 3,
+        "geo_name": "España"
+      },
+      {
+        "value": 120.47,
+        "datetime": "2023-01-06T17:00:00.000+01:00",
+        "datetime_utc": "2023-01-06T16:00:00Z",
+        "tz_time": "2023-01-06T16:00:00.000Z",
+        "geo_id": 3,
+        "geo_name": "España"
+      },
+      {
+        "value": 127.74,
+        "datetime": "2023-01-06T18:00:00.000+01:00",
+        "datetime_utc": "2023-01-06T17:00:00Z",
+        "tz_time": "2023-01-06T17:00:00.000Z",
+        "geo_id": 3,
+        "geo_name": "España"
+      },
+      {
+        "value": 136.99,
+        "datetime": "2023-01-06T19:00:00.000+01:00",
+        "datetime_utc": "2023-01-06T18:00:00Z",
+        "tz_time": "2023-01-06T18:00:00.000Z",
+        "geo_id": 3,
+        "geo_name": "España"
+      },
+      {
+        "value": 136.99,
+        "datetime": "2023-01-06T20:00:00.000+01:00",
+        "datetime_utc": "2023-01-06T19:00:00Z",
+        "tz_time": "2023-01-06T19:00:00.000Z",
+        "geo_id": 3,
+        "geo_name": "España"
+      },
+      {
+        "value": 131.26,
+        "datetime": "2023-01-06T21:00:00.000+01:00",
+        "datetime_utc": "2023-01-06T20:00:00Z",
+        "tz_time": "2023-01-06T20:00:00.000Z",
+        "geo_id": 3,
+        "geo_name": "España"
+      },
+      {
+        "value": 99.43,
+        "datetime": "2023-01-06T22:00:00.000+01:00",
+        "datetime_utc": "2023-01-06T21:00:00Z",
+        "tz_time": "2023-01-06T21:00:00.000Z",
+        "geo_id": 3,
+        "geo_name": "España"
+      },
+      {
+        "value": 91.02,
+        "datetime": "2023-01-06T23:00:00.000+01:00",
+        "datetime_utc": "2023-01-06T22:00:00Z",
+        "tz_time": "2023-01-06T22:00:00.000Z",
+        "geo_id": 3,
+        "geo_name": "España"
+      }
+    ]
+  }
+}
