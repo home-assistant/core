@@ -29,7 +29,7 @@ class RidwellDataUpdateCoordinator(
     config_entry: ConfigEntry
 
     def __init__(self, hass: HomeAssistant, *, name: str) -> None:
-        """Initialize global data updater."""
+        """Initialize."""
         # These will be filled in by async_initialize; we give them these defaults to
         # avoid arduous typing checks down the line:
         self.accounts: dict[str, RidwellAccount] = {}
