@@ -218,8 +218,9 @@ async def async_setup_entry(
     # Categorize variables call to be removed with variable sensors in 2023.5.0
     _categorize_variables(hass_isy_data, isy.variables, variable_identifier)
     # Gather ISY Variables to be added. Identifier used to enable by default.
+    numbers = hass_isy_data[ISY994_VARIABLES][Platform.NUMBER]
     for vtype, vname, vid in isy.variables.children:
-        hass_isy_data[ISY994_VARIABLES][Platform.NUMBER].append(
+        numbers.append(
             (isy.variables[vtype][vid], variable_identifier in vname)
         )
     if isy.configuration[ISY_CONF_NETWORKING]:
