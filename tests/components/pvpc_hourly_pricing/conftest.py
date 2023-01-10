@@ -13,7 +13,7 @@ from homeassistant.const import (
 from tests.common import load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-FIXTURE_JSON_DATA_2021_06_01 = "PVPC_DATA_2021_06_01.json"
+FIXTURE_JSON_PUBLIC_DATA_2023_01_06 = "PVPC_DATA_2023_01_06.json"
 
 
 def check_valid_state(state, tariff: str, value=None, key_attr=None):
@@ -42,17 +42,18 @@ def check_valid_state(state, tariff: str, value=None, key_attr=None):
 @pytest.fixture
 def pvpc_aioclient_mock(aioclient_mock: AiohttpClientMocker):
     """Create a mock config entry."""
-    mask_url = "https://apidatos.ree.es/es/datos/mercados/precios-mercados-tiempo-real"
-    mask_url += "?time_trunc=hour&geo_ids={0}&start_date={1}T00:00&end_date={1}T23:59"
+    mask_url_public = (
+        "https://api.esios.ree.es/archives/70/download_json?locale=es&date={0}"
+    )
     # new format for prices >= 2021-06-01
-    sample_data = load_fixture(f"{DOMAIN}/{FIXTURE_JSON_DATA_2021_06_01}")
-
-    # tariff variant with different geo_ids=8744
-    aioclient_mock.get(mask_url.format(8741, "2021-06-01"), text=sample_data)
-    aioclient_mock.get(mask_url.format(8744, "2021-06-01"), text=sample_data)
-    # simulate missing day
+    example_day = "2023-01-06"
     aioclient_mock.get(
-        mask_url.format(8741, "2021-06-02"),
+        mask_url_public.format(example_day),
+        text=load_fixture(f"{DOMAIN}/{FIXTURE_JSON_PUBLIC_DATA_2023_01_06}"),
+    )
+    # simulate missing days
+    aioclient_mock.get(
+        mask_url_public.format("2023-01-07"),
         status=HTTPStatus.BAD_GATEWAY,
         text=(
             '{"errors":[{"code":502,"status":"502","title":"Bad response from ESIOS",'
