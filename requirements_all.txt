@@ -751,7 +751,7 @@ gTTS==2.2.4
 gassist-text==0.0.7
 
 # homeassistant.components.google
-gcal-sync==4.1.1
+gcal-sync==4.1.2
 
 # homeassistant.components.geniushub
 geniushub-client==0.6.30
