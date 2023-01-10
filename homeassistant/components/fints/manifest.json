@@ -1,7 +1,6 @@
 {
   "domain": "fints",
   "name": "FinTS",
-  "version": "1.0.1",
   "integration_type": "service",
   "documentation": "https://www.home-assistant.io/integrations/fints",
   "requirements": ["fints==3.1.0"],
