@@ -12,5 +12,5 @@ MWH_IDENTITY_KEY = "heat_usage_mwh"
 GJ_IDENTITY_KEY = "heat_usage_gj"
 
 # Keys that are energy unit specific
-MWH_ONLY_KEYS = ["heat_usage", "heat_previous_year"]
-GJ_ONLY_KEYS = ["heat_usage_gj", "heat_previous_year_gj"]
+MWH_ONLY_KEYS = {"heat_usage", "heat_previous_year"}
+GJ_ONLY_KEYS = {"heat_usage_gj", "heat_previous_year_gj"}
