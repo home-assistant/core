@@ -1,7 +1,7 @@
 """Representation of ISYEntity Types."""
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any
 
 from pyisy.constants import (
     COMMAND_FRIENDLY_NAME,
@@ -128,13 +128,6 @@ class ISYEntity(Entity):
         """Get the unique identifier of the device."""
         if hasattr(self._node, "address"):
             return f"{self._node.isy.configuration[ISY_CONF_UUID]}_{self._node.address}"
-        return None
-
-    @property
-    def old_unique_id(self) -> str | None:
-        """Get the old unique identifier of the device."""
-        if hasattr(self._node, "address"):
-            return cast(str, self._node.address)
         return None
 
     @property
