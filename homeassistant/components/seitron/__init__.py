@@ -38,7 +38,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_interval=timedelta(seconds=60),
     )
 
-    _LOGGER.info("Init: setup: Coordinator published")
 
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
