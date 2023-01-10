@@ -29,17 +29,6 @@
                 }
             },
             "title": "{deprecated_service} szolg\u00e1ltat\u00e1s elt\u00e1vol\u00edt\u00e1sra ker\u00fcl"
-        },
-        "replaced_old_entity": {
-            "fix_flow": {
-                "step": {
-                    "confirm": {
-                        "description": "Ezt az entit\u00e1st a `{replacement_entity_id}} v\u00e1ltotta fel.",
-                        "title": "{old_entity_id} entit\u00e1s el lesz t\u00e1vol\u00edtva"
-                    }
-                }
-            },
-            "title": "{old_entity_id} entit\u00e1s el lesz t\u00e1vol\u00edtva"
         }
     }
 }

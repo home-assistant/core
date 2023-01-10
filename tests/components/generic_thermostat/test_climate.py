@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant import config as hass_config
 from homeassistant.components import input_boolean, switch
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_PRESET_MODE,
     DOMAIN,
     PRESET_ACTIVITY,
@@ -37,7 +37,7 @@ from homeassistant.core import DOMAIN as HASS_DOMAIN, CoreState, State, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
+from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from tests.common import (
     assert_setup_component,
@@ -1201,7 +1201,7 @@ async def setup_comp_9(hass):
 
 async def test_precision(hass, setup_comp_9):
     """Test that setting precision to tenths works as intended."""
-    hass.config.units = IMPERIAL_SYSTEM
+    hass.config.units = US_CUSTOMARY_SYSTEM
     await common.async_set_temperature(hass, 23.27)
     state = hass.states.get(ENTITY)
     assert state.attributes.get("temperature") == 23.3

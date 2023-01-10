@@ -1,12 +1,20 @@
 {
     "config": {
         "abort": {
-            "already_configured": "A hely m\u00e1r konfigur\u00e1lva van"
+            "already_configured": "A hely m\u00e1r konfigur\u00e1lva van",
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt."
         },
         "error": {
             "invalid_api_key": "\u00c9rv\u00e9nytelen API kulcs"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API kulcs"
+                },
+                "description": "K\u00e9rj\u00fck, adja meg \u00fajra az API-kulcsot a k\u00f6vetkez\u0151h\u00f6z: {latitude}, {longitude}.",
+                "title": "Integr\u00e1ci\u00f3 \u00fajrahiteles\u00edt\u00e9se"
+            },
             "user": {
                 "data": {
                     "api_key": "API kulcs",

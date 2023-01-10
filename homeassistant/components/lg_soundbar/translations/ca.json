@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El dispositiu ja est\u00e0 configurat",
-            "existing_instance_updated": "S'ha actualitzat la configuraci\u00f3 existent."
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
         },
         "error": {
-            "cannot_connect": "Ha fallat la connexi\u00f3"
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "no_data": "El dispositiu no ha retornat dades necess\u00e0ries per a cap entrada."
         },
         "step": {
             "user": {

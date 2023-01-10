@@ -6,7 +6,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_START, STATE_UNAVAILABLE
-from homeassistant.core import CoreState, callback
+from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import MaxLengthExceeded
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
@@ -84,6 +84,7 @@ def test_get_or_create_updates_data(registry):
         original_icon="initial-original_icon",
         original_name="initial-original_name",
         supported_features=5,
+        translation_key="initial-translation_key",
         unit_of_measurement="initial-unit_of_measurement",
     )
 
@@ -106,6 +107,7 @@ def test_get_or_create_updates_data(registry):
         original_icon="initial-original_icon",
         original_name="initial-original_name",
         supported_features=5,
+        translation_key="initial-translation_key",
         unit_of_measurement="initial-unit_of_measurement",
     )
 
@@ -126,6 +128,7 @@ def test_get_or_create_updates_data(registry):
         original_icon="updated-original_icon",
         original_name="updated-original_name",
         supported_features=10,
+        translation_key="updated-translation_key",
         unit_of_measurement="updated-unit_of_measurement",
     )
 
@@ -133,6 +136,7 @@ def test_get_or_create_updates_data(registry):
         "light.hue_5678",
         "5678",
         "hue",
+        aliases=set(),
         area_id=None,
         capabilities={"new-max": 150},
         config_entry_id=new_config_entry.entry_id,
@@ -149,6 +153,7 @@ def test_get_or_create_updates_data(registry):
         original_icon="updated-original_icon",
         original_name="updated-original_name",
         supported_features=10,
+        translation_key="updated-translation_key",
         unit_of_measurement="updated-unit_of_measurement",
     )
 
@@ -167,6 +172,7 @@ def test_get_or_create_updates_data(registry):
         original_icon=None,
         original_name=None,
         supported_features=None,
+        translation_key=None,
         unit_of_measurement=None,
     )
 
@@ -174,6 +180,7 @@ def test_get_or_create_updates_data(registry):
         "light.hue_5678",
         "5678",
         "hue",
+        aliases=set(),
         area_id=None,
         capabilities=None,
         config_entry_id=None,
@@ -190,6 +197,7 @@ def test_get_or_create_updates_data(registry):
         original_icon=None,
         original_name=None,
         supported_features=0,  # supported_features is stored as an int
+        translation_key=None,
         unit_of_measurement=None,
     )
 
@@ -242,10 +250,12 @@ async def test_loading_saving_data(hass, registry):
         original_icon="hass:original-icon",
         original_name="Original Name",
         supported_features=5,
+        translation_key="initial-translation_key",
         unit_of_measurement="initial-unit_of_measurement",
     )
     registry.async_update_entity(
         orig_entry2.entity_id,
+        aliases={"initial_alias_1", "initial_alias_2"},
         area_id="mock-area-id",
         device_class="user-class",
         name="User Name",
@@ -287,6 +297,7 @@ async def test_loading_saving_data(hass, registry):
     assert new_entry2.original_icon == "hass:original-icon"
     assert new_entry2.original_name == "Original Name"
     assert new_entry2.supported_features == 5
+    assert new_entry2.translation_key == "initial-translation_key"
     assert new_entry2.unit_of_measurement == "initial-unit_of_measurement"
 
 
@@ -597,6 +608,56 @@ async def test_update_entity_unique_id_conflict(registry):
     assert registry.async_get_entity_id("light", "hue", "1234") == entry2.entity_id
 
 
+async def test_update_entity_entity_id(registry):
+    """Test entity's entity_id is updated."""
+    entry = registry.async_get_or_create("light", "hue", "5678")
+    assert registry.async_get_entity_id("light", "hue", "5678") == entry.entity_id
+
+    new_entity_id = "light.blah"
+    assert new_entity_id != entry.entity_id
+    with patch.object(registry, "async_schedule_save") as mock_schedule_save:
+        updated_entry = registry.async_update_entity(
+            entry.entity_id, new_entity_id=new_entity_id
+        )
+    assert updated_entry != entry
+    assert updated_entry.entity_id == new_entity_id
+    assert mock_schedule_save.call_count == 1
+
+    assert registry.async_get(entry.entity_id) is None
+    assert registry.async_get(new_entity_id) is not None
+
+
+async def test_update_entity_entity_id_entity_id(hass: HomeAssistant, registry):
+    """Test update raises when entity_id already in use."""
+    entry = registry.async_get_or_create("light", "hue", "5678")
+    entry2 = registry.async_get_or_create("light", "hue", "1234")
+    state_entity_id = "light.blah"
+    hass.states.async_set(state_entity_id, "on")
+    assert entry.entity_id != state_entity_id
+    assert entry2.entity_id != state_entity_id
+
+    # Try updating to a registered entity_id
+    with patch.object(
+        registry, "async_schedule_save"
+    ) as mock_schedule_save, pytest.raises(ValueError):
+        registry.async_update_entity(entry.entity_id, new_entity_id=entry2.entity_id)
+    assert mock_schedule_save.call_count == 0
+    assert registry.async_get_entity_id("light", "hue", "5678") == entry.entity_id
+    assert registry.async_get(entry.entity_id) is entry
+    assert registry.async_get_entity_id("light", "hue", "1234") == entry2.entity_id
+    assert registry.async_get(entry2.entity_id) is entry2
+
+    # Try updating to an entity_id which is in the state machine
+    with patch.object(
+        registry, "async_schedule_save"
+    ) as mock_schedule_save, pytest.raises(ValueError):
+        registry.async_update_entity(entry.entity_id, new_entity_id=state_entity_id)
+    assert mock_schedule_save.call_count == 0
+    assert registry.async_get_entity_id("light", "hue", "5678") == entry.entity_id
+    assert registry.async_get(entry.entity_id) is entry
+    assert registry.async_get(state_entity_id) is None
+
+
 async def test_update_entity(registry):
     """Test updating entity."""
     mock_config = MockConfigEntry(domain="light", entry_id="mock-id-1")
@@ -605,9 +666,10 @@ async def test_update_entity(registry):
     )
 
     for attr_name, new_value in (
-        ("name", "new name"),
-        ("icon", "new icon"),
+        ("aliases", {"alias_1", "alias_2"}),
         ("disabled_by", er.RegistryEntryDisabler.USER),
+        ("icon", "new icon"),
+        ("name", "new name"),
     ):
         changes = {attr_name: new_value}
         updated_entry = registry.async_update_entity(entry.entity_id, **changes)

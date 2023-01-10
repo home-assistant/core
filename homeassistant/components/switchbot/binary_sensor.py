@@ -44,6 +44,28 @@ BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
         name="Light",
         device_class=BinarySensorDeviceClass.LIGHT,
     ),
+    "door_open": BinarySensorEntityDescription(
+        key="door_status",
+        name="Door status",
+        device_class=BinarySensorDeviceClass.DOOR,
+    ),
+    "unclosed_alarm": BinarySensorEntityDescription(
+        key="unclosed_alarm",
+        name="Door unclosed alarm",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    "unlocked_alarm": BinarySensorEntityDescription(
+        key="unlocked_alarm",
+        name="Door unlocked alarm",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    "auto_lock_paused": BinarySensorEntityDescription(
+        key="auto_lock_paused",
+        name="Door auto-lock paused",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
 }
 
 
@@ -54,15 +76,13 @@ async def async_setup_entry(
     coordinator: SwitchbotDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         SwitchBotBinarySensor(coordinator, binary_sensor)
-        for binary_sensor in coordinator.data["data"]
+        for binary_sensor in coordinator.device.parsed_data
         if binary_sensor in BINARY_SENSOR_TYPES
     )
 
 
 class SwitchBotBinarySensor(SwitchbotEntity, BinarySensorEntity):
     """Representation of a Switchbot binary sensor."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -79,4 +99,4 @@ class SwitchBotBinarySensor(SwitchbotEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return the state of the sensor."""
-        return self.data["data"][self._sensor]
+        return self.parsed_data[self._sensor]

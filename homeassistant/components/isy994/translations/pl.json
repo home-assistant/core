@@ -32,6 +32,19 @@
             }
         }
     },
+    "issues": {
+        "deprecated_service": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Zaktualizuj wszystkie automatyzacje lub skrypty tak, aby u\u017cywa\u0142y `{alternate_service}`z ID encji `{alternate_target}`.",
+                        "title": "Proces {deprecated_service} zostanie usuni\u0119ty"
+                    }
+                }
+            },
+            "title": "Proces {deprecated_service} zostanie usuni\u0119ty"
+        }
+    },
     "options": {
         "step": {
             "init": {

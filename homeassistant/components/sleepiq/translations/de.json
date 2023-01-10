@@ -13,7 +13,7 @@
                 "data": {
                     "password": "Passwort"
                 },
-                "description": "Die SleepIQ-Integration muss dein Konto {username} erneut authentifizieren.",
+                "description": "Die SleepIQ Integration muss dein Konto {username} erneut authentifizieren.",
                 "title": "Integration erneut authentifizieren"
             },
             "user": {

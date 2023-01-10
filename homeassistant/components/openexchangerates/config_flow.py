@@ -126,7 +126,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except asyncio.TimeoutError as err:
                 raise AbortFlow("timeout_connect") from err
         return self.currencies
-
-    async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
-        """Handle import from yaml/configuration."""
-        return await self.async_step_user(import_config)

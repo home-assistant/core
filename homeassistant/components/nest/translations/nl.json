@@ -7,7 +7,6 @@
             "missing_configuration": "Integratie niet geconfigureerd. Raadpleeg de documentatie.",
             "no_url_available": "Geen URL beschikbaar. Voor informatie over deze fout, [raadpleeg de documentatie]({docs_url})",
             "reauth_successful": "Herauthenticatie geslaagd",
-            "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk.",
             "unknown_authorize_url_generation": "Onbekende fout bij het genereren van een autorisatie-URL."
         },
         "create_entry": {
@@ -23,13 +22,6 @@
             "wrong_project_id": "Voer een geldig Cloud Project ID in (found Device Acces Project ID)"
         },
         "step": {
-            "auth": {
-                "data": {
-                    "code": "Toegangstoken"
-                },
-                "description": "Om uw Google account te koppelen, [authoriseer uw account]({url}).\n\nNa autorisatie, copy-paste u de gegeven toegangstoken hieronder.",
-                "title": "Link Google Account"
-            },
             "init": {
                 "data": {
                     "flow_impl": "Leverancier"

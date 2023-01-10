@@ -2,15 +2,15 @@
     "config": {
         "abort": {
             "already_configured": "Perangkat sudah dikonfigurasi",
-            "not_forked_daapd": "Perangkat bukan server forked-daapd."
+            "not_forked_daapd": "Perangkat bukan server Owntone."
         },
         "error": {
-            "forbidden": "Tidak dapat terhubung. Periksa izin jaringan forked-daapd Anda.",
+            "forbidden": "Tidak dapat terhubung. Periksa izin jaringan Owntone Anda.",
             "unknown_error": "Kesalahan yang tidak diharapkan",
-            "websocket_not_enabled": "Websocket server forked-daapd tidak diaktifkan.",
+            "websocket_not_enabled": "Websocket server Owntone tidak diaktifkan.",
             "wrong_host_or_port": "Tidak dapat terhubung. Periksa nilai host dan port.",
             "wrong_password": "Kata sandi salah.",
-            "wrong_server_type": "Integrasi forked-daapd membutuhkan server forked-daapd dengan versi >= 27.0."
+            "wrong_server_type": "Integrasi Owntone membutuhkan server forked-daapd dengan versi >= 27.0."
         },
         "flow_title": "{name} ({host})",
         "step": {
@@ -21,7 +21,7 @@
                     "password": "Kata sandi API (kosongkan jika tidak ada kata sandi)",
                     "port": "Port API"
                 },
-                "title": "Siapkan perangkat forked-daapd"
+                "title": "Siapkan perangkat Owntone"
             }
         }
     },
@@ -34,8 +34,8 @@
                     "tts_pause_time": "Tenggang waktu dalam detik sebelum dan setelah TTS",
                     "tts_volume": "Volume TTS (bilangan float dalam rentang [0,1])"
                 },
-                "description": "Tentukan berbagai opsi untuk integrasi forked-daapd.",
-                "title": "Konfigurasikan opsi forked-daapd"
+                "description": "Tentukan berbagai opsi untuk integrasi Owntone.",
+                "title": "Konfigurasikan opsi Owntone"
             }
         }
     }

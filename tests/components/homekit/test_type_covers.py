@@ -6,9 +6,7 @@ from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     DOMAIN,
-    SUPPORT_SET_POSITION,
-    SUPPORT_SET_TILT_POSITION,
-    SUPPORT_STOP,
+    CoverEntityFeature,
 )
 from homeassistant.components.homekit.const import (
     ATTR_OBSTRUCTION_DETECTED,
@@ -136,7 +134,9 @@ async def test_windowcovering_set_cover_position(hass, hk_driver, events):
     entity_id = "cover.window"
 
     hass.states.async_set(
-        entity_id, STATE_UNKNOWN, {ATTR_SUPPORTED_FEATURES: SUPPORT_SET_POSITION}
+        entity_id,
+        STATE_UNKNOWN,
+        {ATTR_SUPPORTED_FEATURES: CoverEntityFeature.SET_POSITION},
     )
     await hass.async_block_till_done()
     acc = WindowCovering(hass, hk_driver, "Cover", entity_id, 2, None)
@@ -152,7 +152,10 @@ async def test_windowcovering_set_cover_position(hass, hk_driver, events):
     hass.states.async_set(
         entity_id,
         STATE_UNKNOWN,
-        {ATTR_SUPPORTED_FEATURES: SUPPORT_SET_POSITION, ATTR_CURRENT_POSITION: None},
+        {
+            ATTR_SUPPORTED_FEATURES: CoverEntityFeature.SET_POSITION,
+            ATTR_CURRENT_POSITION: None,
+        },
     )
     await hass.async_block_till_done()
     assert acc.char_current_position.value == 0
@@ -162,7 +165,10 @@ async def test_windowcovering_set_cover_position(hass, hk_driver, events):
     hass.states.async_set(
         entity_id,
         STATE_OPENING,
-        {ATTR_SUPPORTED_FEATURES: SUPPORT_SET_POSITION, ATTR_CURRENT_POSITION: 60},
+        {
+            ATTR_SUPPORTED_FEATURES: CoverEntityFeature.SET_POSITION,
+            ATTR_CURRENT_POSITION: 60,
+        },
     )
     await hass.async_block_till_done()
     assert acc.char_current_position.value == 60
@@ -172,7 +178,10 @@ async def test_windowcovering_set_cover_position(hass, hk_driver, events):
     hass.states.async_set(
         entity_id,
         STATE_OPENING,
-        {ATTR_SUPPORTED_FEATURES: SUPPORT_SET_POSITION, ATTR_CURRENT_POSITION: 70.0},
+        {
+            ATTR_SUPPORTED_FEATURES: CoverEntityFeature.SET_POSITION,
+            ATTR_CURRENT_POSITION: 70.0,
+        },
     )
     await hass.async_block_till_done()
     assert acc.char_current_position.value == 70
@@ -182,7 +191,10 @@ async def test_windowcovering_set_cover_position(hass, hk_driver, events):
     hass.states.async_set(
         entity_id,
         STATE_CLOSING,
-        {ATTR_SUPPORTED_FEATURES: SUPPORT_SET_POSITION, ATTR_CURRENT_POSITION: 50},
+        {
+            ATTR_SUPPORTED_FEATURES: CoverEntityFeature.SET_POSITION,
+            ATTR_CURRENT_POSITION: 50,
+        },
     )
     await hass.async_block_till_done()
     assert acc.char_current_position.value == 50
@@ -192,7 +204,10 @@ async def test_windowcovering_set_cover_position(hass, hk_driver, events):
     hass.states.async_set(
         entity_id,
         STATE_OPEN,
-        {ATTR_SUPPORTED_FEATURES: SUPPORT_SET_POSITION, ATTR_CURRENT_POSITION: 50},
+        {
+            ATTR_SUPPORTED_FEATURES: CoverEntityFeature.SET_POSITION,
+            ATTR_CURRENT_POSITION: 50,
+        },
     )
     await hass.async_block_till_done()
     assert acc.char_current_position.value == 50
@@ -230,7 +245,10 @@ async def test_window_instantiate_set_position(hass, hk_driver, events):
     hass.states.async_set(
         entity_id,
         STATE_OPEN,
-        {ATTR_SUPPORTED_FEATURES: SUPPORT_SET_POSITION, ATTR_CURRENT_POSITION: 0},
+        {
+            ATTR_SUPPORTED_FEATURES: CoverEntityFeature.SET_POSITION,
+            ATTR_CURRENT_POSITION: 0,
+        },
     )
     await hass.async_block_till_done()
     acc = Window(hass, hk_driver, "Window", entity_id, 2, None)
@@ -246,7 +264,10 @@ async def test_window_instantiate_set_position(hass, hk_driver, events):
     hass.states.async_set(
         entity_id,
         STATE_OPEN,
-        {ATTR_SUPPORTED_FEATURES: SUPPORT_SET_POSITION, ATTR_CURRENT_POSITION: 50},
+        {
+            ATTR_SUPPORTED_FEATURES: CoverEntityFeature.SET_POSITION,
+            ATTR_CURRENT_POSITION: 50,
+        },
     )
     await hass.async_block_till_done()
     assert acc.char_current_position.value == 50
@@ -257,7 +278,7 @@ async def test_window_instantiate_set_position(hass, hk_driver, events):
         entity_id,
         STATE_OPEN,
         {
-            ATTR_SUPPORTED_FEATURES: SUPPORT_SET_POSITION,
+            ATTR_SUPPORTED_FEATURES: CoverEntityFeature.SET_POSITION,
             ATTR_CURRENT_POSITION: "GARBAGE",
         },
     )
@@ -272,7 +293,9 @@ async def test_windowcovering_cover_set_tilt(hass, hk_driver, events):
     entity_id = "cover.window"
 
     hass.states.async_set(
-        entity_id, STATE_UNKNOWN, {ATTR_SUPPORTED_FEATURES: SUPPORT_SET_TILT_POSITION}
+        entity_id,
+        STATE_UNKNOWN,
+        {ATTR_SUPPORTED_FEATURES: CoverEntityFeature.SET_TILT_POSITION},
     )
     await hass.async_block_till_done()
     acc = WindowCovering(hass, hk_driver, "Cover", entity_id, 2, None)
@@ -339,7 +362,9 @@ async def test_windowcovering_tilt_only(hass, hk_driver, events):
     entity_id = "cover.window"
 
     hass.states.async_set(
-        entity_id, STATE_UNKNOWN, {ATTR_SUPPORTED_FEATURES: SUPPORT_SET_TILT_POSITION}
+        entity_id,
+        STATE_UNKNOWN,
+        {ATTR_SUPPORTED_FEATURES: CoverEntityFeature.SET_TILT_POSITION},
     )
     await hass.async_block_till_done()
     acc = WindowCovering(hass, hk_driver, "Cover", entity_id, 2, None)
@@ -441,7 +466,7 @@ async def test_windowcovering_open_close_stop(hass, hk_driver, events):
     entity_id = "cover.window"
 
     hass.states.async_set(
-        entity_id, STATE_UNKNOWN, {ATTR_SUPPORTED_FEATURES: SUPPORT_STOP}
+        entity_id, STATE_UNKNOWN, {ATTR_SUPPORTED_FEATURES: CoverEntityFeature.STOP}
     )
     acc = WindowCoveringBasic(hass, hk_driver, "Cover", entity_id, 2, None)
     await acc.run()
@@ -492,7 +517,10 @@ async def test_windowcovering_open_close_with_position_and_stop(
     hass.states.async_set(
         entity_id,
         STATE_UNKNOWN,
-        {ATTR_SUPPORTED_FEATURES: SUPPORT_STOP | SUPPORT_SET_POSITION},
+        {
+            ATTR_SUPPORTED_FEATURES: CoverEntityFeature.STOP
+            | CoverEntityFeature.SET_POSITION
+        },
     )
     acc = WindowCovering(hass, hk_driver, "Cover", entity_id, 2, None)
     await acc.run()
@@ -532,7 +560,7 @@ async def test_windowcovering_basic_restore(hass, hk_driver, events):
         "9012",
         suggested_object_id="all_info_set",
         capabilities={},
-        supported_features=SUPPORT_STOP,
+        supported_features=CoverEntityFeature.STOP,
         original_device_class="mock-device-class",
     )
 
@@ -545,7 +573,7 @@ async def test_windowcovering_basic_restore(hass, hk_driver, events):
     assert acc.char_target_position is not None
     assert acc.char_position_state is not None
 
-    acc = WindowCoveringBasic(hass, hk_driver, "Cover", "cover.all_info_set", 2, None)
+    acc = WindowCoveringBasic(hass, hk_driver, "Cover", "cover.all_info_set", 3, None)
     assert acc.category == 14
     assert acc.char_current_position is not None
     assert acc.char_target_position is not None
@@ -570,7 +598,7 @@ async def test_windowcovering_restore(hass, hk_driver, events):
         "9012",
         suggested_object_id="all_info_set",
         capabilities={},
-        supported_features=SUPPORT_STOP,
+        supported_features=CoverEntityFeature.STOP,
         original_device_class="mock-device-class",
     )
 
@@ -583,7 +611,7 @@ async def test_windowcovering_restore(hass, hk_driver, events):
     assert acc.char_target_position is not None
     assert acc.char_position_state is not None
 
-    acc = WindowCovering(hass, hk_driver, "Cover", "cover.all_info_set", 2, None)
+    acc = WindowCovering(hass, hk_driver, "Cover", "cover.all_info_set", 3, None)
     assert acc.category == 14
     assert acc.char_current_position is not None
     assert acc.char_target_position is not None

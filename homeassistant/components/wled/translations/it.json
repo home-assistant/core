@@ -18,7 +18,18 @@
             },
             "zeroconf_confirm": {
                 "description": "Vuoi aggiungere il WLED chiamato `{name}` a Home Assistant?",
-                "title": "Dispositivo WLED rilevato"
+                "title": "Rilevato dispositivo WLED"
+            }
+        }
+    },
+    "entity": {
+        "select": {
+            "live_override": {
+                "state": {
+                    "0": "Spento",
+                    "1": "Acceso",
+                    "2": "Fino al riavvio del dispositivo"
+                }
             }
         }
     },

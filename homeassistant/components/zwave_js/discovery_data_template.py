@@ -34,6 +34,7 @@ from zwave_js_server.const.command_class.multilevel_sensor import (
     PRESSURE_SENSORS,
     SIGNAL_STRENGTH_SENSORS,
     TEMPERATURE_SENSORS,
+    UNIT_A_WEIGHTED_DECIBELS,
     UNIT_AMPERE as SENSOR_UNIT_AMPERE,
     UNIT_BTU_H,
     UNIT_CELSIUS,
@@ -52,6 +53,7 @@ from zwave_js_server.const.command_class.multilevel_sensor import (
     UNIT_INCHES_PER_HOUR,
     UNIT_KILOGRAM,
     UNIT_KILOHERTZ,
+    UNIT_KILOPASCAL,
     UNIT_LITER,
     UNIT_LUX,
     UNIT_M_S,
@@ -69,6 +71,7 @@ from zwave_js_server.const.command_class.multilevel_sensor import (
     UNIT_RSSI,
     UNIT_SECOND,
     UNIT_SYSTOLIC,
+    UNIT_UV_INDEX,
     UNIT_VOLT as SENSOR_UNIT_VOLT,
     UNIT_WATT as SENSOR_UNIT_WATT,
     UNIT_WATT_PER_SQUARE_METER,
@@ -80,7 +83,7 @@ from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import (
     ConfigurationValue as ZwaveConfigurationValue,
     Value as ZwaveValue,
-    get_value_id,
+    get_value_id_str,
 )
 from zwave_js_server.util.command_class.meter import get_meter_scale_type
 from zwave_js_server.util.command_class.multilevel_sensor import (
@@ -92,41 +95,26 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
-    ELECTRIC_CURRENT_AMPERE,
-    ELECTRIC_CURRENT_MILLIAMPERE,
-    ELECTRIC_POTENTIAL_MILLIVOLT,
-    ELECTRIC_POTENTIAL_VOLT,
-    ENERGY_KILO_WATT_HOUR,
-    FREQUENCY_HERTZ,
-    FREQUENCY_KILOHERTZ,
-    IRRADIATION_WATTS_PER_SQUARE_METER,
-    LENGTH_CENTIMETERS,
-    LENGTH_FEET,
-    LENGTH_METERS,
     LIGHT_LUX,
-    MASS_KILOGRAMS,
-    MASS_POUNDS,
     PERCENTAGE,
-    POWER_BTU_PER_HOUR,
-    POWER_WATT,
-    PRECIPITATION_INCHES_PER_HOUR,
-    PRECIPITATION_MILLIMETERS_PER_HOUR,
-    PRESSURE_INHG,
-    PRESSURE_MMHG,
-    PRESSURE_PSI,
-    SIGNAL_STRENGTH_DECIBELS,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    SPEED_METERS_PER_SECOND,
-    SPEED_MILES_PER_HOUR,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-    TIME_SECONDS,
-    VOLUME_CUBIC_FEET,
-    VOLUME_CUBIC_METERS,
-    VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE,
-    VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
-    VOLUME_GALLONS,
-    VOLUME_LITERS,
+    UV_INDEX,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfFrequency,
+    UnitOfIrradiance,
+    UnitOfLength,
+    UnitOfMass,
+    UnitOfPower,
+    UnitOfPressure,
+    UnitOfSoundPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
+    UnitOfTime,
+    UnitOfVolume,
+    UnitOfVolumeFlowRate,
+    UnitOfVolumetricFlux,
 )
 
 from .const import (
@@ -150,7 +138,7 @@ from .const import (
 )
 from .helpers import ZwaveValueID
 
-METER_DEVICE_CLASS_MAP: dict[str, set[MeterScaleType]] = {
+METER_DEVICE_CLASS_MAP: dict[str, list[MeterScaleType]] = {
     ENTITY_DESC_KEY_CURRENT: CURRENT_METER_TYPES,
     ENTITY_DESC_KEY_VOLTAGE: VOLTAGE_METER_TYPES,
     ENTITY_DESC_KEY_ENERGY_TOTAL_INCREASING: ENERGY_TOTAL_INCREASING_METER_TYPES,
@@ -158,7 +146,7 @@ METER_DEVICE_CLASS_MAP: dict[str, set[MeterScaleType]] = {
     ENTITY_DESC_KEY_POWER_FACTOR: POWER_FACTOR_METER_TYPES,
 }
 
-MULTILEVEL_SENSOR_DEVICE_CLASS_MAP: dict[str, set[MultilevelSensorType]] = {
+MULTILEVEL_SENSOR_DEVICE_CLASS_MAP: dict[str, list[MultilevelSensorType]] = {
     ENTITY_DESC_KEY_CO: CO_SENSORS,
     ENTITY_DESC_KEY_CO2: CO2_SENSORS,
     ENTITY_DESC_KEY_CURRENT: CURRENT_SENSORS,
@@ -172,56 +160,59 @@ MULTILEVEL_SENSOR_DEVICE_CLASS_MAP: dict[str, set[MultilevelSensorType]] = {
     ENTITY_DESC_KEY_VOLTAGE: VOLTAGE_SENSORS,
 }
 
-METER_UNIT_MAP: dict[str, set[MeterScaleType]] = {
-    ELECTRIC_CURRENT_AMPERE: METER_UNIT_AMPERE,
-    VOLUME_CUBIC_FEET: UNIT_CUBIC_FEET,
-    VOLUME_CUBIC_METERS: METER_UNIT_CUBIC_METER,
-    VOLUME_GALLONS: UNIT_US_GALLON,
-    ENERGY_KILO_WATT_HOUR: UNIT_KILOWATT_HOUR,
-    ELECTRIC_POTENTIAL_VOLT: METER_UNIT_VOLT,
-    POWER_WATT: METER_UNIT_WATT,
+METER_UNIT_MAP: dict[str, list[MeterScaleType]] = {
+    UnitOfElectricCurrent.AMPERE: METER_UNIT_AMPERE,
+    UnitOfVolume.CUBIC_FEET: UNIT_CUBIC_FEET,
+    UnitOfVolume.CUBIC_METERS: METER_UNIT_CUBIC_METER,
+    UnitOfVolume.GALLONS: UNIT_US_GALLON,
+    UnitOfEnergy.KILO_WATT_HOUR: UNIT_KILOWATT_HOUR,
+    UnitOfElectricPotential.VOLT: METER_UNIT_VOLT,
+    UnitOfPower.WATT: METER_UNIT_WATT,
 }
 
-MULTILEVEL_SENSOR_UNIT_MAP: dict[str, set[MultilevelSensorScaleType]] = {
-    ELECTRIC_CURRENT_AMPERE: SENSOR_UNIT_AMPERE,
-    POWER_BTU_PER_HOUR: UNIT_BTU_H,
-    TEMP_CELSIUS: UNIT_CELSIUS,
-    LENGTH_CENTIMETERS: UNIT_CENTIMETER,
-    VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE: UNIT_CUBIC_FEET_PER_MINUTE,
-    VOLUME_CUBIC_METERS: SENSOR_UNIT_CUBIC_METER,
-    VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR: UNIT_CUBIC_METER_PER_HOUR,
-    SIGNAL_STRENGTH_DECIBELS: UNIT_DECIBEL,
+MULTILEVEL_SENSOR_UNIT_MAP: dict[str, list[MultilevelSensorScaleType]] = {
+    UnitOfElectricCurrent.AMPERE: SENSOR_UNIT_AMPERE,
+    UnitOfPower.BTU_PER_HOUR: UNIT_BTU_H,
+    UnitOfTemperature.CELSIUS: UNIT_CELSIUS,
+    UnitOfLength.CENTIMETERS: UNIT_CENTIMETER,
+    UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE: UNIT_CUBIC_FEET_PER_MINUTE,
+    UnitOfVolume.CUBIC_METERS: SENSOR_UNIT_CUBIC_METER,
+    UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: UNIT_CUBIC_METER_PER_HOUR,
+    UnitOfSoundPressure.DECIBEL: UNIT_DECIBEL,
+    UnitOfSoundPressure.WEIGHTED_DECIBEL_A: UNIT_A_WEIGHTED_DECIBELS,
     DEGREE: UNIT_DEGREES,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: {
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: [
         *UNIT_DENSITY,
         *UNIT_MICROGRAM_PER_CUBIC_METER,
-    },
-    TEMP_FAHRENHEIT: UNIT_FAHRENHEIT,
-    LENGTH_FEET: UNIT_FEET,
-    VOLUME_GALLONS: UNIT_GALLONS,
-    FREQUENCY_HERTZ: UNIT_HERTZ,
-    PRESSURE_INHG: UNIT_INCHES_OF_MERCURY,
-    PRECIPITATION_INCHES_PER_HOUR: UNIT_INCHES_PER_HOUR,
-    MASS_KILOGRAMS: UNIT_KILOGRAM,
-    FREQUENCY_KILOHERTZ: UNIT_KILOHERTZ,
-    VOLUME_LITERS: UNIT_LITER,
+    ],
+    UnitOfTemperature.FAHRENHEIT: UNIT_FAHRENHEIT,
+    UnitOfLength.FEET: UNIT_FEET,
+    UnitOfVolume.GALLONS: UNIT_GALLONS,
+    UnitOfFrequency.HERTZ: UNIT_HERTZ,
+    UnitOfPressure.INHG: UNIT_INCHES_OF_MERCURY,
+    UnitOfPressure.KPA: UNIT_KILOPASCAL,
+    UnitOfVolumetricFlux.INCHES_PER_HOUR: UNIT_INCHES_PER_HOUR,
+    UnitOfMass.KILOGRAMS: UNIT_KILOGRAM,
+    UnitOfFrequency.KILOHERTZ: UNIT_KILOHERTZ,
+    UnitOfVolume.LITERS: UNIT_LITER,
     LIGHT_LUX: UNIT_LUX,
-    LENGTH_METERS: UNIT_METER,
-    ELECTRIC_CURRENT_MILLIAMPERE: UNIT_MILLIAMPERE,
-    PRECIPITATION_MILLIMETERS_PER_HOUR: UNIT_MILLIMETER_HOUR,
-    ELECTRIC_POTENTIAL_MILLIVOLT: UNIT_MILLIVOLT,
-    SPEED_MILES_PER_HOUR: UNIT_MPH,
-    SPEED_METERS_PER_SECOND: UNIT_M_S,
+    UnitOfLength.METERS: UNIT_METER,
+    UnitOfElectricCurrent.MILLIAMPERE: UNIT_MILLIAMPERE,
+    UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: UNIT_MILLIMETER_HOUR,
+    UnitOfElectricPotential.MILLIVOLT: UNIT_MILLIVOLT,
+    UnitOfSpeed.MILES_PER_HOUR: UNIT_MPH,
+    UnitOfSpeed.METERS_PER_SECOND: UNIT_M_S,
     CONCENTRATION_PARTS_PER_MILLION: UNIT_PARTS_MILLION,
-    PERCENTAGE: {*UNIT_PERCENTAGE_VALUE, *UNIT_RSSI},
-    MASS_POUNDS: UNIT_POUNDS,
-    PRESSURE_PSI: UNIT_POUND_PER_SQUARE_INCH,
+    PERCENTAGE: [*UNIT_PERCENTAGE_VALUE, *UNIT_RSSI],
+    UnitOfMass.POUNDS: UNIT_POUNDS,
+    UnitOfPressure.PSI: UNIT_POUND_PER_SQUARE_INCH,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT: UNIT_POWER_LEVEL,
-    TIME_SECONDS: UNIT_SECOND,
-    PRESSURE_MMHG: UNIT_SYSTOLIC,
-    ELECTRIC_POTENTIAL_VOLT: SENSOR_UNIT_VOLT,
-    POWER_WATT: SENSOR_UNIT_WATT,
-    IRRADIATION_WATTS_PER_SQUARE_METER: UNIT_WATT_PER_SQUARE_METER,
+    UnitOfTime.SECONDS: UNIT_SECOND,
+    UnitOfPressure.MMHG: UNIT_SYSTOLIC,
+    UnitOfElectricPotential.VOLT: SENSOR_UNIT_VOLT,
+    UnitOfPower.WATT: SENSOR_UNIT_WATT,
+    UnitOfIrradiance.WATTS_PER_SQUARE_METER: UNIT_WATT_PER_SQUARE_METER,
+    UV_INDEX: UNIT_UV_INDEX,
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -263,7 +254,7 @@ class BaseDiscoverySchemaDataTemplate:
         node: ZwaveNode, value_id_obj: ZwaveValueID
     ) -> ZwaveValue | ZwaveConfigurationValue | None:
         """Get a ZwaveValue from a node using a ZwaveValueDict."""
-        value_id = get_value_id(
+        value_id = get_value_id_str(
             node,
             value_id_obj.command_class,
             value_id_obj.property_,
@@ -335,9 +326,9 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
         enum_value: MultilevelSensorType | MultilevelSensorScaleType | MeterScaleType,
         set_map: Mapping[
             str,
-            set[MultilevelSensorType]
-            | set[MultilevelSensorScaleType]
-            | set[MeterScaleType],
+            list[MultilevelSensorType]
+            | list[MultilevelSensorScaleType]
+            | list[MeterScaleType],
         ],
     ) -> str | None:
         """Find a key in a set map that matches a given enum value."""

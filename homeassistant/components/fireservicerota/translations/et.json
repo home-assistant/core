@@ -11,11 +11,11 @@
             "invalid_auth": "Vigane autentimine"
         },
         "step": {
-            "reauth": {
+            "reauth_confirm": {
                 "data": {
                     "password": "Salas\u00f5na"
                 },
-                "description": "Tuvastusstring aegus, taasloomiseks logi sisse."
+                "description": "Autentimise m\u00e4rgised muutusid kehtetuks, logi sisse, et neid uuesti luua."
             },
             "user": {
                 "data": {

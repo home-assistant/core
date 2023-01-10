@@ -3,8 +3,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
-from homeassistant.components.media_player.const import SERVICE_JOIN
+from homeassistant.components.media_player import DOMAIN as MP_DOMAIN, SERVICE_JOIN
 from homeassistant.components.sonos.const import DATA_SONOS
 from homeassistant.exceptions import HomeAssistantError
 

@@ -1,6 +1,7 @@
 """Test the Bond config flow."""
 from __future__ import annotations
 
+import asyncio
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import MagicMock, Mock, patch
@@ -235,6 +236,43 @@ async def test_zeroconf_form_token_unavailable(hass: core.HomeAssistant):
     """Test we get the discovery form and we handle the token being unavailable."""
 
     with patch_bond_version(), patch_bond_token():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=zeroconf.ZeroconfServiceInfo(
+                host="test-host",
+                addresses=["test-host"],
+                hostname="mock_hostname",
+                name="ZXXX12345.some-other-tail-info",
+                port=None,
+                properties={},
+                type="mock_type",
+            ),
+        )
+        await hass.async_block_till_done()
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+
+    with patch_bond_version(), patch_bond_bridge(), patch_bond_device_ids(), _patch_async_setup_entry() as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_ACCESS_TOKEN: "test-token"},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "create_entry"
+    assert result2["title"] == "bond-name"
+    assert result2["data"] == {
+        CONF_HOST: "test-host",
+        CONF_ACCESS_TOKEN: "test-token",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_zeroconf_form_token_times_out(hass: core.HomeAssistant):
+    """Test we get the discovery form and we handle the token request timeout."""
+
+    with patch_bond_version(), patch_bond_token(side_effect=asyncio.TimeoutError):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},

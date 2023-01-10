@@ -1,0 +1,49 @@
+{
+    "config": {
+        "error": {
+            "address": "Alamat IP jarak jauh yang ditentukan tidak valid. Alamat harus berupa alamat IP atau nama host yang dapat ditemukan.",
+            "address_in_use": "Port mendengarkan yang dipilih sudah digunakan pada sistem ini.",
+            "model": "Model yang dipilih tampaknya tidak mendukung MODBUS40",
+            "read": "Kesalahan pada permintaan baca dari pompa. Verifikasi `Port baca jarak jauh` atau `Alamat jarak jauh` Anda.",
+            "unknown": "Kesalahan yang tidak diharapkan",
+            "url": "URL yang ditentukan tidak dalam format yang benar atau tidak didukung",
+            "write": "Kesalahan pada permintaan tulis ke pompa. Verifikasi `Port tulis jarak jauh` atau `Alamat jarak jauh` Anda."
+        },
+        "step": {
+            "modbus": {
+                "data": {
+                    "modbus_unit": "Pengidentifikasi Unit Modbus",
+                    "modbus_url": "URL Modbus",
+                    "model": "Model Pompa Panas"
+                },
+                "data_description": {
+                    "modbus_unit": "Identifikasi unit untuk Pompa Panas Anda. Biasanya dapat dibiarkan pada nilai 0.",
+                    "modbus_url": "URL Modbus yang menjelaskan koneksi ke unit Heat Pump atau MODBUS40 Anda. Ini harus dalam format:\n - `tcp://[HOST]:[PORT]` untuk koneksi Modbus TCP\n - `serial://[LOCAL DEVICE]` untuk koneksi Modbus RTU lokal\n - `rfc2217://[HOST]:[PORT]` untuk koneksi Modbus RTU berbasis telnet jarak jauh."
+                }
+            },
+            "nibegw": {
+                "data": {
+                    "ip_address": "Alamat jarak jauh",
+                    "listening_port": "Port mendengarkan lokal",
+                    "model": "Model Pompa Panas",
+                    "remote_read_port": "Port baca jarak jauh",
+                    "remote_write_port": "Port tulis jarak jauh"
+                },
+                "data_description": {
+                    "ip_address": "Alamat unit NibeGW. Perangkat seharusnya sudah dikonfigurasi dengan alamat statis.",
+                    "listening_port": "Port lokal pada sistem ini, yang dikonfigurasi untuk mengirim data ke unit NibeGW.",
+                    "remote_read_port": "Port yang digunakan unit NibeGW untuk mendengarkan permintaan baca.",
+                    "remote_write_port": "Port yang digunakan unit NibeGW untuk mendengarkan permintaan tulis."
+                },
+                "description": "Sebelum mencoba mengonfigurasi integrasi, pastikan bahwa:\n - Unit NibeGW terhubung ke pompa panas.\n - Aksesori MODBUS40 telah diaktifkan dalam konfigurasi pompa panas.\n - Pompa tidak sedang dalam status alarm tentang aksesori MODBUS40 yang tidak tersedia."
+            },
+            "user": {
+                "description": "Pilih metode koneksi ke pompa. Secara umum, pompa seri F memerlukan aksesori khusus NibeGW, sementara pompa seri S memiliki dukungan Modbus bawaan.",
+                "menu_options": {
+                    "modbus": "Modbus",
+                    "nibegw": "NibeGW"
+                }
+            }
+        }
+    }
+}

@@ -1,6 +1,7 @@
 """Support for esphome sensors."""
 from __future__ import annotations
 
+from contextlib import suppress
 from datetime import datetime
 import math
 
@@ -14,7 +15,6 @@ from aioesphomeapi import (
 from aioesphomeapi.model import LastResetType
 
 from homeassistant.components.sensor import (
-    DEVICE_CLASSES,
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
@@ -76,7 +76,7 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
         """Return if this sensor should force a state update."""
         return self._static_info.force_update
 
-    @property  # type: ignore[misc]
+    @property
     @esphome_state_property
     def native_value(self) -> datetime | str | None:
         """Return the state of the entity."""
@@ -96,11 +96,11 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
         return self._static_info.unit_of_measurement
 
     @property
-    def device_class(self) -> str | None:
+    def device_class(self) -> SensorDeviceClass | None:
         """Return the class of this device, from component DEVICE_CLASSES."""
-        if self._static_info.device_class not in DEVICE_CLASSES:
-            return None
-        return self._static_info.device_class
+        with suppress(ValueError):
+            return SensorDeviceClass(self._static_info.device_class)
+        return None
 
     @property
     def state_class(self) -> SensorStateClass | None:
@@ -121,7 +121,7 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
 class EsphomeTextSensor(EsphomeEntity[TextSensorInfo, TextSensorState], SensorEntity):
     """A text sensor implementation for ESPHome."""
 
-    @property  # type: ignore[misc]
+    @property
     @esphome_state_property
     def native_value(self) -> str | None:
         """Return the state of the entity."""

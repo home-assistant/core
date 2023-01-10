@@ -87,6 +87,42 @@ class RuntimeEntryData:
     loaded_platforms: set[str] = field(default_factory=set)
     platform_load_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     _storage_contents: dict[str, Any] | None = None
+    ble_connections_free: int = 0
+    ble_connections_limit: int = 0
+    _ble_connection_free_futures: list[asyncio.Future[int]] = field(
+        default_factory=list
+    )
+
+    @property
+    def name(self) -> str:
+        """Return the name of the device."""
+        return self.device_info.name if self.device_info else self.entry_id
+
+    @callback
+    def async_update_ble_connection_limits(self, free: int, limit: int) -> None:
+        """Update the BLE connection limits."""
+        _LOGGER.debug(
+            "%s [%s]: BLE connection limits: used=%s free=%s limit=%s",
+            self.name,
+            self.device_info.mac_address if self.device_info else "unknown",
+            limit - free,
+            free,
+            limit,
+        )
+        self.ble_connections_free = free
+        self.ble_connections_limit = limit
+        if free:
+            for fut in self._ble_connection_free_futures:
+                fut.set_result(free)
+            self._ble_connection_free_futures.clear()
+
+    async def wait_for_ble_connections_free(self) -> int:
+        """Wait until there are free BLE connections."""
+        if self.ble_connections_free > 0:
+            return self.ble_connections_free
+        fut: asyncio.Future[int] = asyncio.Future()
+        self._ble_connection_free_futures.append(fut)
+        return await fut
 
     @callback
     def async_remove_entity(
@@ -143,7 +179,8 @@ class RuntimeEntryData:
         subscription_key = (type(state), state.key)
         self.state[type(state)][state.key] = state
         _LOGGER.debug(
-            "Dispatching update with key %s: %s",
+            "%s: dispatching update with key %s: %s",
+            self.name,
             subscription_key,
             state,
         )

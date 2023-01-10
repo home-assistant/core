@@ -6,5 +6,6 @@
   "after_dependencies": ["zeroconf"],
   "codeowners": ["@home-assistant/core"],
   "quality_scale": "internal",
-  "loggers": ["netdisco"]
+  "loggers": ["netdisco"],
+  "integration_type": "system"
 }

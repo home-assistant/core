@@ -3,7 +3,7 @@
         "abort": {
             "authorize_url_timeout": "Tidsavbrudd ved oppretting av godkjenningsadresse",
             "missing_configuration": "Komponenten er ikke konfigurert, vennligst f\u00f8lg dokumentasjonen",
-            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
+            "reauth_successful": "Re-autentisering var vellykket"
         },
         "create_entry": {
             "default": "Vellykket godkjenning"

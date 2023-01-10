@@ -7,10 +7,6 @@ import pytest
 
 from homeassistant.components import automation
 from homeassistant.components.media_player import (
-    DOMAIN as MP_DOMAIN,
-    MediaPlayerDeviceClass,
-)
-from homeassistant.components.media_player.const import (
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_CONTENT_ID,
@@ -18,11 +14,12 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_TITLE,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
-    MEDIA_TYPE_CHANNEL,
+    DOMAIN as MP_DOMAIN,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_SET,
+    MediaPlayerDeviceClass,
+    MediaPlayerEntityFeature,
+    MediaType,
 )
 from homeassistant.components.webostv.const import (
     ATTR_BUTTON,
@@ -304,7 +301,7 @@ async def test_entity_attributes(hass, client, monkeypatch):
     assert attrs[ATTR_MEDIA_VOLUME_LEVEL] == 0.37
     assert attrs[ATTR_INPUT_SOURCE] == "Live TV"
     assert attrs[ATTR_INPUT_SOURCE_LIST] == ["Input01", "Input02", "Live TV"]
-    assert attrs[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_CHANNEL
+    assert attrs[ATTR_MEDIA_CONTENT_TYPE] == MediaType.CHANNEL
     assert attrs[ATTR_MEDIA_TITLE] == "Channel 1"
     assert attrs[ATTR_SOUND_OUTPUT] == "speaker"
 
@@ -373,7 +370,7 @@ async def test_play_media(hass, client, media_id, ch_id):
 
     data = {
         ATTR_ENTITY_ID: ENTITY_ID,
-        ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_CHANNEL,
+        ATTR_MEDIA_CONTENT_TYPE: MediaType.CHANNEL,
         ATTR_MEDIA_CONTENT_ID: media_id,
     }
     assert await hass.services.async_call(MP_DOMAIN, SERVICE_PLAY_MEDIA, data, True)
@@ -525,7 +522,7 @@ async def test_supported_features(hass, client, monkeypatch):
     # Support volume mute, step, set
     monkeypatch.setattr(client, "sound_output", "speaker")
     await client.mock_state_update()
-    supported = supported | SUPPORT_WEBOSTV_VOLUME | SUPPORT_VOLUME_SET
+    supported = supported | SUPPORT_WEBOSTV_VOLUME | MediaPlayerEntityFeature.VOLUME_SET
     attrs = hass.states.get(ENTITY_ID).attributes
 
     assert attrs[ATTR_SUPPORTED_FEATURES] == supported
@@ -552,7 +549,7 @@ async def test_supported_features(hass, client, monkeypatch):
             ],
         },
     )
-    supported |= SUPPORT_TURN_ON
+    supported |= MediaPlayerEntityFeature.TURN_ON
     await client.mock_state_update()
     attrs = hass.states.get(ENTITY_ID).attributes
 
@@ -563,7 +560,9 @@ async def test_cached_supported_features(hass, client, monkeypatch):
     """Test test supported features."""
     monkeypatch.setattr(client, "is_on", False)
     monkeypatch.setattr(client, "sound_output", None)
-    supported = SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME | SUPPORT_TURN_ON
+    supported = (
+        SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME | MediaPlayerEntityFeature.TURN_ON
+    )
     mock_restore_cache(
         hass,
         [
@@ -583,7 +582,9 @@ async def test_cached_supported_features(hass, client, monkeypatch):
     # validate SUPPORT_TURN_ON is not cached
     attrs = hass.states.get(ENTITY_ID).attributes
 
-    assert attrs[ATTR_SUPPORTED_FEATURES] == supported & ~SUPPORT_TURN_ON
+    assert (
+        attrs[ATTR_SUPPORTED_FEATURES] == supported & ~MediaPlayerEntityFeature.TURN_ON
+    )
 
     # TV on, support volume mute, step
     monkeypatch.setattr(client, "is_on", True)
@@ -610,7 +611,9 @@ async def test_cached_supported_features(hass, client, monkeypatch):
     monkeypatch.setattr(client, "sound_output", "speaker")
     await client.mock_state_update()
 
-    supported = SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME | SUPPORT_VOLUME_SET
+    supported = (
+        SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME | MediaPlayerEntityFeature.VOLUME_SET
+    )
     attrs = hass.states.get(ENTITY_ID).attributes
 
     assert attrs[ATTR_SUPPORTED_FEATURES] == supported
@@ -620,7 +623,9 @@ async def test_cached_supported_features(hass, client, monkeypatch):
     monkeypatch.setattr(client, "sound_output", None)
     await client.mock_state_update()
 
-    supported = SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME | SUPPORT_VOLUME_SET
+    supported = (
+        SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME | MediaPlayerEntityFeature.VOLUME_SET
+    )
     attrs = hass.states.get(ENTITY_ID).attributes
 
     assert attrs[ATTR_SUPPORTED_FEATURES] == supported
@@ -651,7 +656,9 @@ async def test_cached_supported_features(hass, client, monkeypatch):
 
     attrs = hass.states.get(ENTITY_ID).attributes
 
-    assert attrs[ATTR_SUPPORTED_FEATURES] == supported | SUPPORT_TURN_ON
+    assert (
+        attrs[ATTR_SUPPORTED_FEATURES] == supported | MediaPlayerEntityFeature.TURN_ON
+    )
 
 
 async def test_supported_features_no_cache(hass, client, monkeypatch):
@@ -660,7 +667,9 @@ async def test_supported_features_no_cache(hass, client, monkeypatch):
     monkeypatch.setattr(client, "sound_output", None)
     await setup_webostv(hass)
 
-    supported = SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME | SUPPORT_VOLUME_SET
+    supported = (
+        SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME | MediaPlayerEntityFeature.VOLUME_SET
+    )
     attrs = hass.states.get(ENTITY_ID).attributes
 
     assert attrs[ATTR_SUPPORTED_FEATURES] == supported
@@ -682,7 +691,9 @@ async def test_supported_features_ignore_cache(hass, client):
     )
     await setup_webostv(hass)
 
-    supported = SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME | SUPPORT_VOLUME_SET
+    supported = (
+        SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME | MediaPlayerEntityFeature.VOLUME_SET
+    )
     attrs = hass.states.get(ENTITY_ID).attributes
 
     assert attrs[ATTR_SUPPORTED_FEATURES] == supported

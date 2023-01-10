@@ -18,6 +18,16 @@
             }
         }
     },
+    "issues": {
+        "deprecated_service_multiple_alternate_targets": {
+            "description": "Bu hizmeti kullanan t\u00fcm otomasyonlar\u0131 veya komut dosyalar\u0131n\u0131, bunun yerine hedef olarak \u015fu varl\u0131k kimliklerinden biriyle ` {alternate_service} ` hizmetini kullanacak \u015fekilde g\u00fcncelleyin: ` {alternate_targets} `.",
+            "title": "{deprecated_service} hizmeti kald\u0131r\u0131l\u0131yor"
+        },
+        "deprecated_service_single_alternate_target": {
+            "description": "Bu hizmeti kullanan t\u00fcm otomasyonlar\u0131 veya komut dosyalar\u0131n\u0131, hedef olarak `{alternate_targets}` ile `{alternate_service}` hizmetini kullanacak \u015fekilde g\u00fcncelleyin.",
+            "title": "{deprecated_service} hizmeti kald\u0131r\u0131l\u0131yor"
+        }
+    },
     "options": {
         "step": {
             "init": {

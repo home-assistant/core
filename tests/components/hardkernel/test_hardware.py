@@ -48,6 +48,7 @@ async def test_hardware_info(hass: HomeAssistant, hass_ws_client) -> None:
                     "model": "odroid-n2",
                     "revision": None,
                 },
+                "config_entries": [config_entry.entry_id],
                 "dongle": None,
                 "name": "Home Assistant Blue / Hardkernel Odroid-N2",
                 "url": None,

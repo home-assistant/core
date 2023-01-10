@@ -8,6 +8,7 @@ from zwave_js_server.client import Client
 from zwave_js_server.event import Event
 from zwave_js_server.exceptions import BaseZwaveJSServerError, InvalidServerVersion
 from zwave_js_server.model.node import Node
+from zwave_js_server.model.version import VersionInfo
 
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.zwave_js import DOMAIN
@@ -198,7 +199,7 @@ async def test_on_node_added_not_ready(
     device_id = f"{client.driver.controller.home_id}-{zp3111_not_ready_state['nodeId']}"
 
     assert len(hass.states.async_all()) == 0
-    assert not dev_reg.devices
+    assert len(dev_reg.devices) == 1
 
     node_state = deepcopy(zp3111_not_ready_state)
     node_state["isSecure"] = False
@@ -667,6 +668,7 @@ async def test_update_addon(
     backup_calls,
     update_addon_side_effect,
     create_backup_side_effect,
+    version_state,
 ):
     """Test update the Z-Wave JS add-on during entry setup."""
     device = "/test"
@@ -677,7 +679,9 @@ async def test_update_addon(
     addon_info.return_value["update_available"] = update_available
     create_backup.side_effect = create_backup_side_effect
     update_addon.side_effect = update_addon_side_effect
-    client.connect.side_effect = InvalidServerVersion("Invalid version")
+    client.connect.side_effect = InvalidServerVersion(
+        VersionInfo("a", "b", 1, 1, 1), 1, "Invalid version"
+    )
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Z-Wave JS",
@@ -703,7 +707,9 @@ async def test_issue_registry(hass, client, version_state):
     device = "/test"
     network_key = "abc123"
 
-    client.connect.side_effect = InvalidServerVersion("Invalid version")
+    client.connect.side_effect = InvalidServerVersion(
+        VersionInfo("a", "b", 1, 1, 1), 1, "Invalid version"
+    )
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -905,12 +911,12 @@ async def test_removed_device(
     driver = client.driver
     assert driver
     # Verify how many nodes are available
-    assert len(driver.controller.nodes) == 2
+    assert len(driver.controller.nodes) == 3
 
     # Make sure there are the same number of devices
     dev_reg = dr.async_get(hass)
     device_entries = dr.async_entries_for_config_entry(dev_reg, integration.entry_id)
-    assert len(device_entries) == 2
+    assert len(device_entries) == 3
 
     # Check how many entities there are
     ent_reg = er.async_get(hass)
@@ -925,7 +931,7 @@ async def test_removed_device(
     # Assert that the node and all of it's entities were removed from the device and
     # entity registry
     device_entries = dr.async_entries_for_config_entry(dev_reg, integration.entry_id)
-    assert len(device_entries) == 1
+    assert len(device_entries) == 2
     entity_entries = er.async_entries_for_config_entry(ent_reg, integration.entry_id)
     assert len(entity_entries) == 18
     assert dev_reg.async_get_device({get_device_id(driver, old_node)}) is None

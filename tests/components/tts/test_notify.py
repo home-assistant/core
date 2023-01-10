@@ -3,7 +3,7 @@ import pytest
 import yarl
 
 import homeassistant.components.media_player as media_player
-from homeassistant.components.media_player.const import (
+from homeassistant.components.media_player import (
     DOMAIN as DOMAIN_MP,
     SERVICE_PLAY_MEDIA,
 )

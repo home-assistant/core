@@ -2,6 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu",
+            "reauth_unsuccessful": "Yeniden kimlik do\u011frulama ba\u015far\u0131s\u0131z oldu, l\u00fctfen entegrasyonu kald\u0131r\u0131n ve yeniden kurun.",
             "unsupported_firmware": "Cihaz, desteklenmeyen bir versiyon s\u00fcr\u00fcm\u00fc kullan\u0131yor."
         },
         "error": {
@@ -16,6 +18,12 @@
                 "description": "{model} 'i {host} kurmak istiyor musunuz? \n\n Parola korumal\u0131 pille \u00e7al\u0131\u015fan cihazlar, kuruluma devam etmeden \u00f6nce uyand\u0131r\u0131lmal\u0131d\u0131r.\n Parola korumal\u0131 olmayan pille \u00e7al\u0131\u015fan cihazlar, cihaz uyand\u0131\u011f\u0131nda eklenecektir, art\u0131k \u00fczerindeki bir d\u00fc\u011fmeyi kullanarak cihaz\u0131 manuel olarak uyand\u0131rabilir veya cihazdan bir sonraki veri g\u00fcncellemesini bekleyebilirsiniz."
             },
             "credentials": {
+                "data": {
+                    "password": "Parola",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                }
+            },
+            "reauth_confirm": {
                 "data": {
                     "password": "Parola",
                     "username": "Kullan\u0131c\u0131 Ad\u0131"

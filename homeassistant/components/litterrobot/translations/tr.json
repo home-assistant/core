@@ -24,5 +24,11 @@
                 }
             }
         }
+    },
+    "issues": {
+        "migrated_attributes": {
+            "description": "Vakum varl\u0131k \u00f6znitelikleri art\u0131k tan\u0131 sens\u00f6rleri olarak mevcuttur. \n\n L\u00fctfen bu \u00f6znitelikleri kullanan t\u00fcm otomasyonlar\u0131 veya komut dosyalar\u0131n\u0131 ayarlay\u0131n.",
+            "title": "Litter-Robot \u00f6znitelikleri art\u0131k kendi sens\u00f6rleridir"
+        }
     }
 }

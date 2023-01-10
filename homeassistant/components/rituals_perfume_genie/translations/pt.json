@@ -4,14 +4,14 @@
             "already_configured": "O dispositivo j\u00e1 est\u00e1 configurado"
         },
         "error": {
-            "cannot_connect": "Falha na liga\u00e7\u00e3o",
+            "cannot_connect": "A liga\u00e7\u00e3o falhou",
             "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida",
             "unknown": "Erro inesperado"
         },
         "step": {
             "user": {
                 "data": {
-                    "email": "Email",
+                    "email": "",
                     "password": "Palavra-passe"
                 }
             }

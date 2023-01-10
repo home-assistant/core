@@ -217,7 +217,8 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         """Instantiate config flow."""
         if self.DOMAIN == "":
             raise TypeError(
-                f"Can't instantiate class {self.__class__.__name__} without DOMAIN being set"
+                f"Can't instantiate class {self.__class__.__name__} without DOMAIN"
+                " being set"
             )
 
         self.external_data: Any = None
@@ -290,7 +291,9 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
             return self.async_abort(
                 reason="no_url_available",
                 description_placeholders={
-                    "docs_url": "https://www.home-assistant.io/more-info/no-url-available"
+                    "docs_url": (
+                        "https://www.home-assistant.io/more-info/no-url-available"
+                    )
                 },
             )
 

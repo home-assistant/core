@@ -34,6 +34,7 @@ class HardwareInfo:
 
     name: str | None
     board: BoardInfo | None
+    config_entries: list[str] | None
     dongle: USBInfo | None
     url: str | None
 

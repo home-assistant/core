@@ -1,6 +1,7 @@
 """Support for MQTT humidifiers."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import functools
 import logging
 from typing import Any
@@ -28,6 +29,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import subscription
@@ -47,11 +49,16 @@ from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
     async_setup_entry_helper,
-    async_setup_platform_helper,
     warn_for_legacy_schema,
 )
-from .models import MqttCommandTemplate, MqttValueTemplate
-from .util import valid_publish_topic, valid_subscribe_topic
+from .models import (
+    MqttCommandTemplate,
+    MqttValueTemplate,
+    PublishPayloadType,
+    ReceiveMessage,
+    ReceivePayloadType,
+)
+from .util import get_mqtt_data, valid_publish_topic, valid_subscribe_topic
 
 CONF_AVAILABLE_MODES_LIST = "modes"
 CONF_DEVICE_CLASS = "device_class"
@@ -69,7 +76,6 @@ CONF_TARGET_HUMIDITY_STATE_TEMPLATE = "target_humidity_state_template"
 CONF_TARGET_HUMIDITY_STATE_TOPIC = "target_humidity_state_topic"
 
 DEFAULT_NAME = "MQTT Humidifier"
-DEFAULT_OPTIMISTIC = False
 DEFAULT_PAYLOAD_ON = "ON"
 DEFAULT_PAYLOAD_OFF = "OFF"
 DEFAULT_PAYLOAD_RESET = "None"
@@ -87,18 +93,22 @@ MQTT_HUMIDIFIER_ATTRIBUTES_BLOCKED = frozenset(
 _LOGGER = logging.getLogger(__name__)
 
 
-def valid_mode_configuration(config):
+def valid_mode_configuration(config: ConfigType) -> ConfigType:
     """Validate that the mode reset payload is not one of the available modes."""
-    if config.get(CONF_PAYLOAD_RESET_MODE) in config.get(CONF_AVAILABLE_MODES_LIST):
+    if config[CONF_PAYLOAD_RESET_MODE] in config[CONF_AVAILABLE_MODES_LIST]:
         raise ValueError("modes must not contain payload_reset_mode")
     return config
 
 
-def valid_humidity_range_configuration(config):
-    """Validate that the target_humidity range configuration is valid, throws if it isn't."""
-    if config.get(CONF_TARGET_HUMIDITY_MIN) >= config.get(CONF_TARGET_HUMIDITY_MAX):
+def valid_humidity_range_configuration(config: ConfigType) -> ConfigType:
+    """Validate humidity range.
+
+    Ensures that the target_humidity range configuration is valid,
+    throws if it isn't.
+    """
+    if config[CONF_TARGET_HUMIDITY_MIN] >= config[CONF_TARGET_HUMIDITY_MAX]:
         raise ValueError("target_humidity_max must be > target_humidity_min")
-    if config.get(CONF_TARGET_HUMIDITY_MAX) > 100:
+    if config[CONF_TARGET_HUMIDITY_MAX] > 100:
         raise ValueError("max_humidity must be <= 100")
 
     return config
@@ -121,7 +131,6 @@ _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
         vol.Optional(CONF_MODE_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_MODE_STATE_TEMPLATE): cv.template,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
         vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
         vol.Optional(CONF_STATE_VALUE_TEMPLATE): cv.template,
@@ -142,11 +151,10 @@ _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-# Configuring MQTT Humidifiers under the humidifier platform key is deprecated in HA Core 2022.6
+# Configuring MQTT Humidifiers under the humidifier platform key was deprecated in
+# HA Core 2022.6
+# Setup for the legacy YAML format was removed in HA Core 2022.12
 PLATFORM_SCHEMA = vol.All(
-    cv.PLATFORM_SCHEMA.extend(_PLATFORM_SCHEMA_BASE.schema),
-    valid_humidity_range_configuration,
-    valid_mode_configuration,
     warn_for_legacy_schema(humidifier.DOMAIN),
 )
 
@@ -163,29 +171,12 @@ DISCOVERY_SCHEMA = vol.All(
 )
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up MQTT humidifier configured under the fan platform key (deprecated)."""
-    # Deprecated in HA Core 2022.6
-    await async_setup_platform_helper(
-        hass,
-        humidifier.DOMAIN,
-        discovery_info or config,
-        async_add_entities,
-        _async_setup_entity,
-    )
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT humidifier through configuration.yaml and dynamically through MQTT discovery."""
+    """Set up MQTT humidifier through YAML and through MQTT discovery."""
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -196,8 +187,8 @@ async def _async_setup_entity(
     hass: HomeAssistant,
     async_add_entities: AddEntitiesCallback,
     config: ConfigType,
-    config_entry: ConfigEntry | None = None,
-    discovery_data: dict | None = None,
+    config_entry: ConfigEntry,
+    discovery_data: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the MQTT humidifier."""
     async_add_entities([MqttHumidifier(hass, config, config_entry, discovery_data)])
@@ -209,33 +200,36 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
     _entity_id_format = humidifier.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_HUMIDIFIER_ATTRIBUTES_BLOCKED
 
-    def __init__(self, hass, config, config_entry, discovery_data):
-        """Initialize the MQTT humidifier."""
-        self._state = None
-        self._target_humidity = None
-        self._mode = None
-        self._supported_features = 0
+    _command_templates: dict[str, Callable[[PublishPayloadType], PublishPayloadType]]
+    _value_templates: dict[str, Callable[[ReceivePayloadType], ReceivePayloadType]]
+    _optimistic: bool
+    _optimistic_target_humidity: bool
+    _optimistic_mode: bool
+    _payload: dict[str, str]
+    _topic: dict[str, Any]
 
-        self._topic = None
-        self._payload = None
-        self._value_templates = None
-        self._command_templates = None
-        self._optimistic = None
-        self._optimistic_target_humidity = None
-        self._optimistic_mode = None
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config: ConfigType,
+        config_entry: ConfigEntry,
+        discovery_data: DiscoveryInfoType | None,
+    ) -> None:
+        """Initialize the MQTT humidifier."""
+        self._attr_mode = None
 
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
-    def config_schema():
+    def config_schema() -> vol.Schema:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
-    def _setup_from_config(self, config):
+    def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
-        self._attr_min_humidity = config.get(CONF_TARGET_HUMIDITY_MIN)
-        self._attr_max_humidity = config.get(CONF_TARGET_HUMIDITY_MAX)
+        self._attr_min_humidity = config[CONF_TARGET_HUMIDITY_MIN]
+        self._attr_max_humidity = config[CONF_TARGET_HUMIDITY_MAX]
 
         self._topic = {
             key: config.get(key)
@@ -248,16 +242,6 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
                 CONF_MODE_COMMAND_TOPIC,
             )
         }
-        self._value_templates = {
-            CONF_STATE: config.get(CONF_STATE_VALUE_TEMPLATE),
-            ATTR_HUMIDITY: config.get(CONF_TARGET_HUMIDITY_STATE_TEMPLATE),
-            ATTR_MODE: config.get(CONF_MODE_STATE_TEMPLATE),
-        }
-        self._command_templates = {
-            CONF_STATE: config.get(CONF_COMMAND_TEMPLATE),
-            ATTR_HUMIDITY: config.get(CONF_TARGET_HUMIDITY_COMMAND_TEMPLATE),
-            ATTR_MODE: config.get(CONF_MODE_COMMAND_TEMPLATE),
-        }
         self._payload = {
             "STATE_ON": config[CONF_PAYLOAD_ON],
             "STATE_OFF": config[CONF_PAYLOAD_OFF],
@@ -265,51 +249,61 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
             "MODE_RESET": config[CONF_PAYLOAD_RESET_MODE],
         }
         if CONF_MODE_COMMAND_TOPIC in config and CONF_AVAILABLE_MODES_LIST in config:
-            self._available_modes = config[CONF_AVAILABLE_MODES_LIST]
+            self._attr_available_modes = config[CONF_AVAILABLE_MODES_LIST]
         else:
-            self._available_modes = []
-        if self._available_modes:
+            self._attr_available_modes = []
+        if self._attr_available_modes:
             self._attr_supported_features = HumidifierEntityFeature.MODES
-        else:
-            self._attr_supported_features = 0
 
-        optimistic = config[CONF_OPTIMISTIC]
+        optimistic: bool = config[CONF_OPTIMISTIC]
         self._optimistic = optimistic or self._topic[CONF_STATE_TOPIC] is None
         self._optimistic_target_humidity = (
             optimistic or self._topic[CONF_TARGET_HUMIDITY_STATE_TOPIC] is None
         )
         self._optimistic_mode = optimistic or self._topic[CONF_MODE_STATE_TOPIC] is None
 
-        for key, tpl in self._command_templates.items():
+        self._command_templates = {}
+        command_templates: dict[str, Template | None] = {
+            CONF_STATE: config.get(CONF_COMMAND_TEMPLATE),
+            ATTR_HUMIDITY: config.get(CONF_TARGET_HUMIDITY_COMMAND_TEMPLATE),
+            ATTR_MODE: config.get(CONF_MODE_COMMAND_TEMPLATE),
+        }
+        for key, tpl in command_templates.items():
             self._command_templates[key] = MqttCommandTemplate(
                 tpl, entity=self
             ).async_render
 
-        for key, tpl in self._value_templates.items():
+        self._value_templates = {}
+        value_templates: dict[str, Template | None] = {
+            CONF_STATE: config.get(CONF_STATE_VALUE_TEMPLATE),
+            ATTR_HUMIDITY: config.get(CONF_TARGET_HUMIDITY_STATE_TEMPLATE),
+            ATTR_MODE: config.get(CONF_MODE_STATE_TEMPLATE),
+        }
+        for key, tpl in value_templates.items():
             self._value_templates[key] = MqttValueTemplate(
                 tpl,
                 entity=self,
             ).async_render_with_possible_json_value
 
-    def _prepare_subscribe_topics(self):
+    def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        topics = {}
+        topics: dict[str, Any] = {}
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        def state_received(msg):
+        def state_received(msg: ReceiveMessage) -> None:
             """Handle new received MQTT message."""
             payload = self._value_templates[CONF_STATE](msg.payload)
             if not payload:
                 _LOGGER.debug("Ignoring empty state from '%s'", msg.topic)
                 return
             if payload == self._payload["STATE_ON"]:
-                self._state = True
+                self._attr_is_on = True
             elif payload == self._payload["STATE_OFF"]:
-                self._state = False
+                self._attr_is_on = False
             elif payload == PAYLOAD_NONE:
-                self._state = None
-            self.async_write_ha_state()
+                self._attr_is_on = None
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if self._topic[CONF_STATE_TOPIC] is not None:
             topics[CONF_STATE_TOPIC] = {
@@ -321,7 +315,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        def target_humidity_received(msg):
+        def target_humidity_received(msg: ReceiveMessage) -> None:
             """Handle new received MQTT message for the target humidity."""
             rendered_target_humidity_payload = self._value_templates[ATTR_HUMIDITY](
                 msg.payload
@@ -330,8 +324,8 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
                 _LOGGER.debug("Ignoring empty target humidity from '%s'", msg.topic)
                 return
             if rendered_target_humidity_payload == self._payload["HUMIDITY_RESET"]:
-                self._target_humidity = None
-                self.async_write_ha_state()
+                self._attr_target_humidity = None
+                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
                 return
             try:
                 target_humidity = round(float(rendered_target_humidity_payload))
@@ -354,8 +348,8 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
                     rendered_target_humidity_payload,
                 )
                 return
-            self._target_humidity = target_humidity
-            self.async_write_ha_state()
+            self._attr_target_humidity = target_humidity
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if self._topic[CONF_TARGET_HUMIDITY_STATE_TOPIC] is not None:
             topics[CONF_TARGET_HUMIDITY_STATE_TOPIC] = {
@@ -364,21 +358,21 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
                 "qos": self._config[CONF_QOS],
                 "encoding": self._config[CONF_ENCODING] or None,
             }
-            self._target_humidity = None
+            self._attr_target_humidity = None
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        def mode_received(msg):
+        def mode_received(msg: ReceiveMessage) -> None:
             """Handle new received MQTT message for mode."""
-            mode = self._value_templates[ATTR_MODE](msg.payload)
+            mode = str(self._value_templates[ATTR_MODE](msg.payload))
             if mode == self._payload["MODE_RESET"]:
-                self._mode = None
-                self.async_write_ha_state()
+                self._attr_mode = None
+                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
                 return
             if not mode:
                 _LOGGER.debug("Ignoring empty mode from '%s'", msg.topic)
                 return
-            if mode not in self.available_modes:
+            if not self.available_modes or mode not in self.available_modes:
                 _LOGGER.warning(
                     "'%s' received on topic %s. '%s' is not a valid mode",
                     msg.payload,
@@ -387,8 +381,8 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
                 )
                 return
 
-            self._mode = mode
-            self.async_write_ha_state()
+            self._attr_mode = mode
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if self._topic[CONF_MODE_STATE_TOPIC] is not None:
             topics[CONF_MODE_STATE_TOPIC] = {
@@ -397,13 +391,13 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
                 "qos": self._config[CONF_QOS],
                 "encoding": self._config[CONF_ENCODING] or None,
             }
-            self._mode = None
+            self._attr_mode = None
 
         self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass, self._sub_state, topics
         )
 
-    async def _subscribe_topics(self):
+    async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
@@ -411,26 +405,6 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
     def assumed_state(self) -> bool:
         """Return true if we do optimistic updates."""
         return self._optimistic
-
-    @property
-    def available_modes(self) -> list:
-        """Get the list of available modes."""
-        return self._available_modes
-
-    @property
-    def is_on(self) -> bool | None:
-        """Return true if device is on."""
-        return self._state
-
-    @property
-    def target_humidity(self):
-        """Return the current target humidity."""
-        return self._target_humidity
-
-    @property
-    def mode(self):
-        """Return the current mode."""
-        return self._mode
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the entity.
@@ -446,7 +420,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
             self._config[CONF_ENCODING],
         )
         if self._optimistic:
-            self._state = True
+            self._attr_is_on = True
             self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -463,7 +437,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
             self._config[CONF_ENCODING],
         )
         if self._optimistic:
-            self._state = False
+            self._attr_is_on = False
             self.async_write_ha_state()
 
     async def async_set_humidity(self, humidity: int) -> None:
@@ -481,7 +455,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
         )
 
         if self._optimistic_target_humidity:
-            self._target_humidity = humidity
+            self._attr_target_humidity = humidity
             self.async_write_ha_state()
 
     async def async_set_mode(self, mode: str) -> None:
@@ -489,7 +463,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
 
         This method is a coroutine.
         """
-        if mode not in self.available_modes:
+        if not self.available_modes or mode not in self.available_modes:
             _LOGGER.warning("'%s'is not a valid mode", mode)
             return
 
@@ -504,5 +478,5 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
         )
 
         if self._optimistic_mode:
-            self._mode = mode
+            self._attr_mode = mode
             self.async_write_ha_state()

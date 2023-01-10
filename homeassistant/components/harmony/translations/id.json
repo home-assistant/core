@@ -22,6 +22,15 @@
             }
         }
     },
+    "entity": {
+        "select": {
+            "activities": {
+                "state": {
+                    "power_off": "Daya Mati"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {

@@ -1,5 +1,5 @@
 """Test KNX climate."""
-from homeassistant.components.climate.const import PRESET_ECO, PRESET_SLEEP, HVACMode
+from homeassistant.components.climate import PRESET_ECO, PRESET_SLEEP, HVACMode
 from homeassistant.components.knx.schema import ClimateSchema
 from homeassistant.const import CONF_NAME, STATE_IDLE
 from homeassistant.core import HomeAssistant

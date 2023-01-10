@@ -58,7 +58,12 @@ PLATFORMS_BY_TYPE: Final = {
         Platform.SENSOR,
         Platform.SWITCH,
     ],
-    DeviceType.Switch: [Platform.BUTTON, Platform.SELECT, Platform.SWITCH],
+    DeviceType.Switch: [
+        Platform.BUTTON,
+        Platform.SELECT,
+        Platform.SENSOR,
+        Platform.SWITCH,
+    ],
 }
 DISCOVERY_INTERVAL: Final = timedelta(minutes=15)
 REQUEST_REFRESH_DELAY: Final = 1.5
@@ -172,7 +177,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if not mac_matches_by_one(mac, entry.unique_id):
             # The device is offline and another flux_led device is now using the ip address
             raise ConfigEntryNotReady(
-                f"Unexpected device found at {host}; Expected {entry.unique_id}, found {mac}"
+                f"Unexpected device found at {host}; Expected {entry.unique_id}, found"
+                f" {mac}"
             )
 
     if not discovery_cached:

@@ -45,11 +45,11 @@ from homeassistant.const import (
     CONF_LOCATION,
     CONF_LONGITUDE,
     CONF_NAME,
-    LENGTH_KILOMETERS,
-    LENGTH_MILLIMETERS,
-    PRESSURE_HPA,
-    SPEED_METERS_PER_SECOND,
-    TEMP_CELSIUS,
+    UnitOfLength,
+    UnitOfPrecipitationDepth,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
@@ -57,7 +57,8 @@ from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
-from homeassistant.util import Throttle, slugify, speed as speed_util
+from homeassistant.util import Throttle, slugify
+from homeassistant.util.unit_conversion import SpeedConverter
 
 from .const import (
     ATTR_SMHI_CLOUDINESS,
@@ -120,11 +121,11 @@ class SmhiWeather(WeatherEntity):
     """Representation of a weather entity."""
 
     _attr_attribution = "Swedish weather institute (SMHI)"
-    _attr_native_temperature_unit = TEMP_CELSIUS
-    _attr_native_visibility_unit = LENGTH_KILOMETERS
-    _attr_native_precipitation_unit = LENGTH_MILLIMETERS
-    _attr_native_wind_speed_unit = SPEED_METERS_PER_SECOND
-    _attr_native_pressure_unit = PRESSURE_HPA
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_visibility_unit = UnitOfLength.KILOMETERS
+    _attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
+    _attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
+    _attr_native_pressure_unit = UnitOfPressure.HPA
 
     _attr_has_entity_name = True
 
@@ -155,9 +156,9 @@ class SmhiWeather(WeatherEntity):
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return additional attributes."""
         if self._forecasts:
-            wind_gust = speed_util.convert(
+            wind_gust = SpeedConverter.convert(
                 self._forecasts[0].wind_gust,
-                SPEED_METERS_PER_SECOND,
+                UnitOfSpeed.METERS_PER_SECOND,
                 self._wind_speed_unit,
             )
             return {

@@ -500,11 +500,9 @@ def get_media(
     if not item_id.startswith("A:ALBUM") and search_type == SONOS_ALBUM:
         item_id = "A:ALBUMARTIST/" + "/".join(item_id.split("/")[2:])
 
-    for item in media_library.browse_by_idstring(
-        search_type,
-        "/".join(item_id.split("/")[:-1]),
-        full_album_art_uri=True,
-        max_items=0,
-    ):
-        if item.item_id == item_id:
-            return item
+    search_term = item_id.split("/")[-1]
+    matches = media_library.get_music_library_information(
+        search_type, search_term=search_term, full_album_art_uri=True
+    )
+    if len(matches) > 0:
+        return matches[0]

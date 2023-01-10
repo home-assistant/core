@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
             "already_in_progress": "Konfiguracja jest ju\u017c w toku",
+            "mdns_missing_mac": "Brak adresu MAC we w\u0142a\u015bciwo\u015bciach MDNS.",
             "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
         },
         "error": {
@@ -27,13 +28,13 @@
                 "data": {
                     "noise_psk": "Klucz szyfruj\u0105cy"
                 },
-                "description": "Wprowad\u017a klucz szyfruj\u0105cy ustawiony w konfiguracji dla {name}."
+                "description": "Wprowad\u017a klucz szyfrowania dla {name} . Mo\u017cesz go znale\u017a\u0107 w dashboardzie ESPHome lub w konfiguracji swojego urz\u0105dzenia."
             },
             "reauth_confirm": {
                 "data": {
                     "noise_psk": "Klucz szyfruj\u0105cy"
                 },
-                "description": "Urz\u0105dzenie ESPHome {name} w\u0142\u0105czy\u0142o szyfrowanie transportu lub zmieni\u0142o klucz szyfruj\u0105cy. Wprowad\u017a zaktualizowany klucz."
+                "description": "Urz\u0105dzenie ESPHome {name} w\u0142\u0105czy\u0142o szyfrowanie transportu lub zmieni\u0142o klucz szyfruj\u0105cy. Wprowad\u017a zaktualizowany klucz. Mo\u017cesz go znale\u017a\u0107 w dashboardzie ESPHome lub w konfiguracji swojego urz\u0105dzenia."
             },
             "user": {
                 "data": {
@@ -42,6 +43,12 @@
                 },
                 "description": "Wprowad\u017a ustawienia po\u0142\u0105czenia w\u0119z\u0142a [ESPHome]({esphome_url})."
             }
+        }
+    },
+    "issues": {
+        "ble_firmware_outdated": {
+            "description": "Aby poprawi\u0107 niezawodno\u015b\u0107 i wydajno\u015b\u0107 Bluetooth, zdecydowanie zalecamy zaktualizowanie {name} do ESPHome {version} lub nowszej. Podczas aktualizacji urz\u0105dzenia do ESPHome {version} zaleca si\u0119 u\u017cycie kabla szeregowego zamiast aktualizacji bezprzewodowej, aby skorzysta\u0107 z nowego schematu partycji.",
+            "title": "Zaktualizuj {name} do wersji ESPHome {version} lub nowszej"
         }
     }
 }

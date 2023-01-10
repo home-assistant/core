@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Perangkat sudah dikonfigurasi"
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "reauth_successful": "Autentikasi ulang berhasil"
         },
         "error": {
             "cannot_connect": "Gagal terhubung",
@@ -9,6 +10,13 @@
             "name_exists": "Nama sudah ada"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Kata Sandi"
+                },
+                "description": "Kata sandi untuk {username} tidak valid.",
+                "title": "Autentikasi Ulang Integrasi"
+            },
             "user": {
                 "data": {
                     "host": "Host",

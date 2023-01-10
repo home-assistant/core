@@ -1,7 +1,9 @@
 {
     "config": {
-        "error": {
-            "unknown": "Onverwachte fout"
+        "step": {
+            "user": {
+                "description": "Weet u zeker dat u Ecowitt wilt instellen?"
+            }
         }
     }
 }

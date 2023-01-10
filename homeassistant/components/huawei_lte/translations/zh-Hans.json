@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "not_huawei_lte": "\u8be5\u8bbe\u5907\u4e0d\u662f\u534e\u4e3a LTE \u8bbe\u5907"
+            "not_huawei_lte": "\u8be5\u8bbe\u5907\u4e0d\u662f\u534e\u4e3a LTE \u8bbe\u5907",
+            "reauth_successful": "\u91cd\u65b0\u8ba4\u8bc1\u6210\u529f"
         },
         "error": {
             "connection_timeout": "\u8fde\u63a5\u8d85\u65f6",
@@ -14,6 +15,14 @@
             "unknown": "\u672a\u77e5\u9519\u8bef"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "\u5bc6\u7801",
+                    "username": "\u7528\u6237\u540d"
+                },
+                "description": "\u8bf7\u8f93\u5165\u8bbe\u5907\u8ba4\u8bc1\u51ed\u636e\u3002",
+                "title": "\u8bf7\u91cd\u65b0\u8ba4\u8bc1\u6b64\u96c6\u6210"
+            },
             "user": {
                 "data": {
                     "url": "\u4e3b\u673a\u5730\u5740",

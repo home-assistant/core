@@ -3,11 +3,15 @@ from collections.abc import Awaitable, Callable
 from unittest.mock import MagicMock
 
 from aiohttp import ClientWebSocketResponse
-from demetriek import LaMetricConnectionError, LaMetricConnectionTimeoutError
+from demetriek import (
+    LaMetricAuthenticationError,
+    LaMetricConnectionError,
+    LaMetricConnectionTimeoutError,
+)
 import pytest
 
 from homeassistant.components.lametric.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -70,3 +74,30 @@ async def test_yaml_config_raises_repairs(
     issues = await get_repairs(hass, hass_ws_client)
     assert len(issues) == 1
     assert issues[0]["issue_id"] == "manual_migration"
+
+
+async def test_config_entry_authentication_failed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_lametric: MagicMock,
+) -> None:
+    """Test trigger reauthentication flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    mock_lametric.device.side_effect = LaMetricAuthenticationError
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    flow = flows[0]
+    assert flow.get("step_id") == "choice_enter_manual_or_fetch_cloud"
+    assert flow.get("handler") == DOMAIN
+
+    assert "context" in flow
+    assert flow["context"].get("source") == SOURCE_REAUTH
+    assert flow["context"].get("entry_id") == mock_config_entry.entry_id

@@ -25,6 +25,10 @@
             },
             "pick_implementation": {
                 "title": "Pilih Metode Autentikasi"
+            },
+            "reauth_confirm": {
+                "description": "Integrasi Google Spreadsheet perlu mengautentikasi ulang akun Anda",
+                "title": "Autentikasi Ulang Integrasi"
             }
         }
     }

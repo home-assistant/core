@@ -12,14 +12,14 @@
         "flow_title": "{name} ({host})",
         "step": {
             "link": {
-                "description": "Naci\u015bnij i przytrzymaj przycisk Home na {name} a\u017c urz\u0105dzenie wygeneruje d\u017awi\u0119k (oko\u0142o dwie sekundy), a nast\u0119pnie zatwierd\u017a w ci\u0105gu 30 sekund.",
+                "description": "Upewnij si\u0119, \u017ce aplikacja iRobot nie jest uruchomiona na \u017cadnym urz\u0105dzeniu. Naci\u015bnij i przytrzymaj przycisk Home na {name} a\u017c urz\u0105dzenie wygeneruje d\u017awi\u0119k (oko\u0142o dwie sekundy), a nast\u0119pnie zatwierd\u017a w ci\u0105gu 30 sekund.",
                 "title": "Odzyskiwanie has\u0142a"
             },
             "link_manual": {
                 "data": {
                     "password": "Has\u0142o"
                 },
-                "description": "Nie mo\u017cna automatycznie pobra\u0107 has\u0142a z urz\u0105dzenia. Post\u0119puj zgodnie z instrukcjami podanymi w dokumentacji pod adresem: {auth_help_url}",
+                "description": "Nie mo\u017cna automatycznie pobra\u0107 has\u0142a z urz\u0105dzenia. Upewnij si\u0119, \u017ce aplikacja iRobot nie jest otwarta na \u017cadnym urz\u0105dzeniu podczas pr\u00f3by odzyskania has\u0142a. Post\u0119puj zgodnie z instrukcjami podanymi w dokumentacji pod adresem: {auth_help_url}",
                 "title": "Wprowad\u017a has\u0142o"
             },
             "manual": {

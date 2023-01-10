@@ -14,10 +14,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, LOGGER
+from .const import LOGGER
 
 DEFAULT_UPDATE_INTERVAL = timedelta(seconds=30)
 
@@ -56,23 +55,6 @@ def async_finish_entity_domain_replacements(
             continue
 
         old_entity_id = registry_entry.entity_id
-        translation_key = "replaced_old_entity"
-
-        async_create_issue(
-            hass,
-            DOMAIN,
-            f"{translation_key}_{old_entity_id}",
-            breaks_in_ha_version=strategy.breaks_in_ha_version,
-            is_fixable=True,
-            is_persistent=True,
-            severity=IssueSeverity.WARNING,
-            translation_key=translation_key,
-            translation_placeholders={
-                "old_entity_id": old_entity_id,
-                "replacement_entity_id": strategy.replacement_entity_id,
-            },
-        )
-
         if strategy.remove_old_entity:
             LOGGER.info('Removing old entity: "%s"', old_entity_id)
             ent_reg.async_remove(old_entity_id)
@@ -105,7 +87,6 @@ class GuardianDataUpdateCoordinator(DataUpdateCoordinator[dict]):
         self._api_coro = api_coro
         self._api_lock = api_lock
         self._client = client
-        self._signal_handler_unsubs: list[Callable[..., None]] = []
 
         self.config_entry = entry
         self.signal_reboot_requested = SIGNAL_REBOOT_REQUESTED.format(
@@ -130,16 +111,8 @@ class GuardianDataUpdateCoordinator(DataUpdateCoordinator[dict]):
             self.last_update_success = False
             self.async_update_listeners()
 
-        self._signal_handler_unsubs.append(
+        self.config_entry.async_on_unload(
             async_dispatcher_connect(
                 self.hass, self.signal_reboot_requested, async_reboot_requested
             )
         )
-
-        @callback
-        def async_teardown() -> None:
-            """Tear the coordinator down appropriately."""
-            for unsub in self._signal_handler_unsubs:
-                unsub()
-
-        self.config_entry.async_on_unload(async_teardown)

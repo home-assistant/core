@@ -27,6 +27,7 @@ TEST_PASSWORD = "test-password"
 TEST_PASSWORD2 = "test-password2"
 TEST_HUB = "somfy_europe"
 TEST_HUB2 = "hi_kumo_europe"
+TEST_HUB_COZYTOUCH = "atlantic_cozytouch"
 TEST_GATEWAY_ID = "1234-5678-9123"
 TEST_GATEWAY_ID2 = "4321-5678-9123"
 
@@ -89,7 +90,7 @@ async def test_form(hass: HomeAssistant) -> None:
         (ClientError, "cannot_connect"),
         (MaintenanceException, "server_in_maintenance"),
         (TooManyAttemptsBannedException, "too_many_attempts"),
-        (UnknownUserException, "unknown_user"),
+        (UnknownUserException, "unsupported_hardware"),
         (Exception, "unknown"),
     ],
 )
@@ -105,6 +106,35 @@ async def test_form_invalid_auth(
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"username": TEST_EMAIL, "password": TEST_PASSWORD, "hub": TEST_HUB},
+        )
+
+    assert result["step_id"] == config_entries.SOURCE_USER
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["errors"] == {"base": error}
+
+
+@pytest.mark.parametrize(
+    "side_effect, error",
+    [
+        (BadCredentialsException, "unsupported_hardware"),
+    ],
+)
+async def test_form_invalid_cozytouch_auth(
+    hass: HomeAssistant, side_effect: Exception, error: str
+) -> None:
+    """Test we handle invalid auth from CozyTouch."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch("pyoverkiz.client.OverkizClient.login", side_effect=side_effect):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": TEST_EMAIL,
+                "password": TEST_PASSWORD,
+                "hub": TEST_HUB_COZYTOUCH,
+            },
         )
 
     assert result["step_id"] == config_entries.SOURCE_USER

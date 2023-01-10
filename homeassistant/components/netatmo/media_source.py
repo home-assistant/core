@@ -72,21 +72,13 @@ class NetatmoSource(MediaSource):
         self, source: str, camera_id: str, event_id: int | None = None
     ) -> BrowseMediaSource:
         if event_id and event_id in self.events[camera_id]:
-            created = dt.datetime.fromtimestamp(event_id)
-            if self.events[camera_id][event_id]["type"] == "outdoor":
-                thumbnail = (
-                    self.events[camera_id][event_id]["event_list"][0]
-                    .get("snapshot", {})
-                    .get("url")
-                )
-                message = remove_html_tags(
-                    self.events[camera_id][event_id]["event_list"][0]["message"]
-                )
-            else:
-                thumbnail = (
-                    self.events[camera_id][event_id].get("snapshot", {}).get("url")
-                )
-                message = remove_html_tags(self.events[camera_id][event_id]["message"])
+            created = dt.datetime.fromtimestamp(
+                self.events[camera_id][event_id]["event_time"]
+            )
+            thumbnail = self.events[camera_id][event_id].get("snapshot", {}).get("url")
+            message = remove_html_tags(
+                self.events[camera_id][event_id].get("message", "")
+            )
             title = f"{created} - {message}"
         else:
             title = self.hass.data[DOMAIN][DATA_CAMERAS].get(camera_id, MANUFACTURER)

@@ -53,7 +53,9 @@ async def test_hassio(hass):
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
         data=HassioServiceInfo(
-            config={"addon": "Almond add-on", "host": "almond-addon", "port": "1234"}
+            config={"addon": "Almond add-on", "host": "almond-addon", "port": "1234"},
+            name="Almond add-on",
+            slug="almond",
         ),
     )
 
@@ -90,7 +92,9 @@ async def test_abort_if_existing_entry(hass):
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 
-    result = await flow.async_step_hassio(HassioServiceInfo(config={}))
+    result = await flow.async_step_hassio(
+        HassioServiceInfo(config={}, name="Almond add-on", slug="almond")
+    )
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 

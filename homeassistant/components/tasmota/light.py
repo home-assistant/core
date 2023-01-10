@@ -120,7 +120,7 @@ class TasmotaLight(
     def _setup_from_entity(self) -> None:
         """(Re)Setup the entity."""
         self._supported_color_modes = set()
-        supported_features = 0
+        supported_features = LightEntityFeature(0)
         light_type = self._tasmota_entity.light_type
 
         if light_type in [LIGHT_TYPE_RGB, LIGHT_TYPE_RGBW, LIGHT_TYPE_RGBCW]:

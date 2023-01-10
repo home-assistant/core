@@ -639,7 +639,7 @@ async def test_integration_logs_is_custom(hass, caplog):
 
 
 async def test_async_get_loaded_integrations(hass):
-    """Test we can enumerate loaded integations."""
+    """Test we can enumerate loaded integrations."""
     hass.config.components.add("notbase")
     hass.config.components.add("switch")
     hass.config.components.add("notbase.switch")

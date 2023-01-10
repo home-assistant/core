@@ -1332,3 +1332,39 @@ def test_currency():
 
     for value in ("EUR", "USD"):
         assert schema(value)
+
+
+def test_historic_currency():
+    """Test historic currency validator."""
+    schema = vol.Schema(cv.historic_currency)
+
+    for value in (None, "BTC", "EUR"):
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    for value in ("DEM", "NLG"):
+        assert schema(value)
+
+
+def test_country():
+    """Test country validator."""
+    schema = vol.Schema(cv.country)
+
+    for value in (None, "Candyland", "USA"):
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    for value in ("NL", "SE"):
+        assert schema(value)
+
+
+def test_language():
+    """Test language validator."""
+    schema = vol.Schema(cv.language)
+
+    for value in (None, "Klingon", "english"):
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    for value in ("en", "sv"):
+        assert schema(value)

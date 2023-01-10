@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
-from enum import IntEnum
+from enum import IntFlag
 import functools as ft
 import logging
 from typing import Any, final
@@ -48,7 +48,7 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 LOCK_SERVICE_SCHEMA = make_entity_service_schema({vol.Optional(ATTR_CODE): cv.string})
 
 
-class LockEntityFeature(IntEnum):
+class LockEntityFeature(IntFlag):
     """Supported features of the lock entity."""
 
     OPEN = 1
@@ -112,6 +112,7 @@ class LockEntity(Entity):
     _attr_is_unlocking: bool | None = None
     _attr_is_jammed: bool | None = None
     _attr_state: None = None
+    _attr_supported_features: LockEntityFeature = LockEntityFeature(0)
 
     @property
     def changed_by(self) -> str | None:
@@ -190,3 +191,8 @@ class LockEntity(Entity):
         if (locked := self.is_locked) is None:
             return None
         return STATE_LOCKED if locked else STATE_UNLOCKED
+
+    @property
+    def supported_features(self) -> LockEntityFeature:
+        """Return the list of supported features."""
+        return self._attr_supported_features

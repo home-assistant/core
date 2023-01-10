@@ -11,6 +11,7 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
+    ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     PERCENTAGE,
@@ -37,7 +38,7 @@ async def test_sensor(hass, aioclient_mock):
     assert state.state == "7"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "CAQI"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.AQI
+    assert state.attributes.get(ATTR_ICON) == "mdi:air-filter"
 
     entry = registry.async_get("sensor.home_caqi")
     assert entry

@@ -4,7 +4,6 @@ import asyncio
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 from uuid import UUID
 
-from pyhap.accessory_driver import AccessoryDriver
 import pytest
 
 from homeassistant.components import camera, ffmpeg
@@ -76,21 +75,6 @@ async def _async_stop_stream(hass, acc, session_info):
     await acc.stop_stream(session_info)
     await acc.run()
     await hass.async_block_till_done()
-
-
-@pytest.fixture()
-def run_driver(hass):
-    """Return a custom AccessoryDriver instance for HomeKit accessory init."""
-    with patch("pyhap.accessory_driver.AsyncZeroconf"), patch(
-        "pyhap.accessory_driver.AccessoryEncoder"
-    ), patch("pyhap.accessory_driver.HAPServer"), patch(
-        "pyhap.accessory_driver.AccessoryDriver.publish"
-    ), patch(
-        "pyhap.accessory_driver.AccessoryDriver.persist"
-    ):
-        yield AccessoryDriver(
-            pincode=b"123-45-678", address="127.0.0.1", loop=hass.loop
-        )
 
 
 def _mock_reader():

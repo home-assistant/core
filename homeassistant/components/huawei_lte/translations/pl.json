@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "not_huawei_lte": "To nie jest urz\u0105dzenie Huawei LTE"
+            "not_huawei_lte": "To nie jest urz\u0105dzenie Huawei LTE",
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
         },
         "error": {
             "connection_timeout": "Przekroczono limit czasu pr\u00f3by po\u0142\u0105czenia",
@@ -15,6 +16,14 @@
         },
         "flow_title": "{name}",
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Has\u0142o",
+                    "username": "Nazwa u\u017cytkownika"
+                },
+                "description": "Wprowad\u017a dane uwierzytelniaj\u0105ce dost\u0119pu do urz\u0105dzenia.",
+                "title": "Ponownie uwierzytelnij integracj\u0119"
+            },
             "user": {
                 "data": {
                     "password": "Has\u0142o",

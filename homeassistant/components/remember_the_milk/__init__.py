@@ -328,8 +328,10 @@ class RememberTheMilk(Entity):
         rtm_id = self._rtm_config.get_rtm_id(self._name, hass_id)
         if rtm_id is None:
             _LOGGER.error(
-                "Could not find task with ID %s in account %s. "
-                "So task could not be closed",
+                (
+                    "Could not find task with ID %s in account %s. "
+                    "So task could not be closed"
+                ),
                 hass_id,
                 self._name,
             )

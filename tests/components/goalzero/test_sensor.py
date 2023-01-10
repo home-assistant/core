@@ -77,7 +77,7 @@ async def test_sensors(
     assert state.attributes.get(ATTR_STATE_CLASS) is None
     state = hass.states.get(f"sensor.{DEFAULT_NAME}_time_to_empty_full")
     assert state.state == "-1"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == TIME_MINUTES
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DURATION
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TIME_MINUTES
     assert state.attributes.get(ATTR_STATE_CLASS) is None
     state = hass.states.get(f"sensor.{DEFAULT_NAME}_temperature")

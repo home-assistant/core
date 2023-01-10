@@ -21,10 +21,12 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 from . import statistics, websocket_api
-from .const import (
+from .const import (  # noqa: F401
     CONF_DB_INTEGRITY_CHECK,
     DATA_INSTANCE,
     DOMAIN,
+    EVENT_RECORDER_5MIN_STATISTICS_GENERATED,
+    EVENT_RECORDER_HOURLY_STATISTICS_GENERATED,
     EXCLUDE_ATTRIBUTES,
     SQLITE_URL_PREFIX,
 )
@@ -69,7 +71,10 @@ ALLOW_IN_MEMORY_DB = False
 def validate_db_url(db_url: str) -> Any:
     """Validate database URL."""
     # Don't allow on-memory sqlite databases
-    if (db_url == SQLITE_URL_PREFIX or ":memory:" in db_url) and not ALLOW_IN_MEMORY_DB:
+    if (
+        db_url == SQLITE_URL_PREFIX
+        or (db_url.startswith(SQLITE_URL_PREFIX) and ":memory:" in db_url)
+    ) and not ALLOW_IN_MEMORY_DB:
         raise vol.Invalid("In-memory SQLite database is not supported")
 
     return db_url

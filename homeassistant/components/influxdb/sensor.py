@@ -18,7 +18,6 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
     EVENT_HOMEASSISTANT_STOP,
-    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady, TemplateError
@@ -323,10 +322,10 @@ class InfluxSensor(SensorEntity):
         """Get the latest data from Influxdb and updates the states."""
         self.data.update()
         if (value := self.data.value) is None:
-            value = STATE_UNKNOWN
+            value = None
         if self._value_template is not None:
             value = self._value_template.render_with_possible_json_value(
-                str(value), STATE_UNKNOWN
+                str(value), None
             )
 
         self._state = value
@@ -347,7 +346,10 @@ class InfluxFluxSensorData:
         self.value = None
         self.full_query = None
 
-        self.query_prefix = f'from(bucket:"{bucket}") |> range(start: {range_start}, stop: {range_stop}) |>'
+        self.query_prefix = (
+            f'from(bucket:"{bucket}") |> range(start: {range_start}, stop:'
+            f" {range_stop}) |>"
+        )
         if imports is not None:
             for i in imports:
                 self.query_prefix = f'import "{i}" {self.query_prefix}'
@@ -411,7 +413,10 @@ class InfluxQLSensorData:
             _LOGGER.error(RENDERING_WHERE_ERROR_MESSAGE, ex)
             return
 
-        self.query = f"select {self.group}({self.field}) as {INFLUX_CONF_VALUE} from {self.measurement} where {where_clause}"
+        self.query = (
+            f"select {self.group}({self.field}) as {INFLUX_CONF_VALUE} from"
+            f" {self.measurement} where {where_clause}"
+        )
 
         _LOGGER.debug(RUNNING_QUERY_MESSAGE, self.query)
 

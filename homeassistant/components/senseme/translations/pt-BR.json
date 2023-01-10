@@ -11,7 +11,7 @@
         "flow_title": "{name} - {model} ({host})",
         "step": {
             "discovery_confirm": {
-                "description": "Deseja configurar {name} - {model} ( {host} )?"
+                "description": "Deseja configurar {name} - {model} ({host})?"
             },
             "manual": {
                 "data": {

@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "Kontoen er allerede konfigurert",
             "kamereon_no_account": "Finner ikke Kamereon-konto",
-            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
+            "reauth_successful": "Re-autentisering var vellykket"
         },
         "error": {
             "invalid_credentials": "Ugyldig godkjenning"
@@ -29,6 +29,39 @@
                     "username": "E-post"
                 },
                 "title": "Angi Renault-legitimasjon"
+            }
+        }
+    },
+    "entity": {
+        "select": {
+            "charge_mode": {
+                "state": {
+                    "always": "Umiddelbar",
+                    "always_charging": "Umiddelbar",
+                    "schedule_mode": "Planner"
+                }
+            }
+        },
+        "sensor": {
+            "charge_state": {
+                "state": {
+                    "charge_ended": "Ladningen ble avsluttet",
+                    "charge_error": "Lader ikke eller kobles til",
+                    "charge_in_progress": "Lader",
+                    "energy_flap_opened": "Energiluken \u00e5pnet",
+                    "not_in_charge": "Lader ikke",
+                    "unavailable": "Utilgjengelig",
+                    "waiting_for_a_planned_charge": "Venter p\u00e5 planlagt lading",
+                    "waiting_for_current_charge": "Venter p\u00e5 gjeldende lading"
+                }
+            },
+            "plug_state": {
+                "state": {
+                    "plug_error": "Pluggfeil",
+                    "plug_unknown": "Plugg ukjent",
+                    "plugged": "Plugget inn",
+                    "unplugged": "Koblet fra"
+                }
             }
         }
     }

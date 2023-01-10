@@ -9,7 +9,7 @@ import pytest
 
 from homeassistant.components import zone
 import homeassistant.components.device_tracker as device_tracker
-from homeassistant.components.device_tracker import const, legacy
+from homeassistant.components.device_tracker import SourceType, const, legacy
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
     ATTR_FRIENDLY_NAME,
@@ -495,7 +495,7 @@ async def test_see_passive_zone_state(
     assert attrs.get("latitude") == 1
     assert attrs.get("longitude") == 2
     assert attrs.get("gps_accuracy") == 0
-    assert attrs.get("source_type") == device_tracker.SOURCE_TYPE_ROUTER
+    assert attrs.get("source_type") == SourceType.ROUTER
 
     scanner.leave_home("dev1")
 
@@ -515,7 +515,7 @@ async def test_see_passive_zone_state(
     assert attrs.get("latitude") is None
     assert attrs.get("longitude") is None
     assert attrs.get("gps_accuracy") is None
-    assert attrs.get("source_type") == device_tracker.SOURCE_TYPE_ROUTER
+    assert attrs.get("source_type") == SourceType.ROUTER
 
 
 @patch("homeassistant.components.device_tracker.const.LOGGER.warning")

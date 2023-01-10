@@ -7,21 +7,6 @@
         "error": {
             "invalid_auth": "Ong\u00eblteg Authentifikatioun",
             "unknown": "Onerwaarte Feeler"
-        },
-        "step": {
-            "reauth_confirm": {
-                "data": {
-                    "password": "Passwuert"
-                },
-                "description": "D\u00e4in Acc\u00e8s Jeton as ofgelaf oder gouf revok\u00e9iert. G\u00ebff d\u00e4i Passwuert an fir d\u00e4i Kont fr\u00ebsch ze verbannen.",
-                "title": "Integratioun re-authentifiz\u00e9ieren"
-            },
-            "user": {
-                "data": {
-                    "password": "Passwuert",
-                    "username": "E-Mail"
-                }
-            }
         }
     },
     "options": {

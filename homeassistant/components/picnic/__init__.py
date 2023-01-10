@@ -8,6 +8,7 @@ from homeassistant.core import HomeAssistant
 
 from .const import CONF_API, CONF_COORDINATOR, CONF_COUNTRY_CODE, DOMAIN
 from .coordinator import PicnicUpdateCoordinator
+from .services import async_register_services
 
 PLATFORMS = [Platform.SENSOR]
 
@@ -35,6 +36,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Register the services
+    await async_register_services(hass)
 
     return True
 

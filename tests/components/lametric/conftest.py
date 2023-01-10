@@ -94,3 +94,16 @@ def mock_lametric() -> Generator[MagicMock, None, None]:
             load_fixture("device.json", DOMAIN)
         )
         yield lametric
+
+
+@pytest.fixture
+async def init_integration(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_lametric: MagicMock
+) -> MockConfigEntry:
+    """Set up the LaMetric integration for testing."""
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    return mock_config_entry

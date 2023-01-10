@@ -135,18 +135,21 @@ def validate_version_specific_config(conf: dict) -> dict:
     if conf[CONF_API_VERSION] == API_VERSION_2:
         if CONF_TOKEN not in conf:
             raise vol.Invalid(
-                f"{CONF_TOKEN} and {CONF_BUCKET} are required when {CONF_API_VERSION} is {API_VERSION_2}"
+                f"{CONF_TOKEN} and {CONF_BUCKET} are required when"
+                f" {CONF_API_VERSION} is {API_VERSION_2}"
             )
 
         if CONF_USERNAME in conf:
             raise vol.Invalid(
-                f"{CONF_USERNAME} and {CONF_PASSWORD} are only allowed when {CONF_API_VERSION} is {DEFAULT_API_VERSION}"
+                f"{CONF_USERNAME} and {CONF_PASSWORD} are only allowed when"
+                f" {CONF_API_VERSION} is {DEFAULT_API_VERSION}"
             )
 
     else:
         if CONF_TOKEN in conf:
             raise vol.Invalid(
-                f"{CONF_TOKEN} and {CONF_BUCKET} are only allowed when {CONF_API_VERSION} is {API_VERSION_2}"
+                f"{CONF_TOKEN} and {CONF_BUCKET} are only allowed when"
+                f" {CONF_API_VERSION} is {API_VERSION_2}"
             )
 
     return conf
@@ -218,7 +221,7 @@ def _generate_event_to_json(conf: dict) -> Callable[[Event], dict[str, Any] | No
         state: State | None = event.data.get(EVENT_NEW_STATE)
         if (
             state is None
-            or state.state in (STATE_UNKNOWN, "", STATE_UNAVAILABLE)
+            or state.state in (STATE_UNKNOWN, "", STATE_UNAVAILABLE, None)
             or not entity_filter(state.entity_id)
         ):
             return None

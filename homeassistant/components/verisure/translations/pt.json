@@ -11,13 +11,13 @@
         "step": {
             "reauth_confirm": {
                 "data": {
-                    "email": "Email",
+                    "email": "",
                     "password": "Palavra-passe"
                 }
             },
             "user": {
                 "data": {
-                    "email": "Email",
+                    "email": "",
                     "password": "Palavra-passe"
                 }
             }

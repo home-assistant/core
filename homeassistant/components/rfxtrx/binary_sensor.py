@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import RFXtrx as rfxtrxmod
 
@@ -14,6 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_COMMAND_OFF, CONF_COMMAND_ON, STATE_ON
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import event as evt
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DeviceTuple, RfxtrxEntity, async_setup_platform_entry, get_pt2262_cmd
@@ -72,7 +74,7 @@ SENSOR_TYPES = (
 SENSOR_TYPES_DICT = {desc.key: desc for desc in SENSOR_TYPES}
 
 
-def supported(event: rfxtrxmod.RFXtrxEvent):
+def supported(event: rfxtrxmod.RFXtrxEvent) -> bool:
     """Return whether an event supports binary_sensor."""
     if isinstance(event, rfxtrxmod.ControlEvent):
         return True
@@ -91,7 +93,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up config entry."""
 
-    def get_sensor_description(type_string: str):
+    def get_sensor_description(type_string: str) -> BinarySensorEntityDescription:
         if (description := SENSOR_TYPES_DICT.get(type_string)) is None:
             return BinarySensorEntityDescription(key=type_string)
         return description
@@ -100,8 +102,8 @@ async def async_setup_entry(
         event: rfxtrxmod.RFXtrxEvent,
         auto: rfxtrxmod.RFXtrxEvent | None,
         device_id: DeviceTuple,
-        entity_info: dict,
-    ):
+        entity_info: dict[str, Any],
+    ) -> list[Entity]:
 
         return [
             RfxtrxBinarySensor(
@@ -122,10 +124,13 @@ async def async_setup_entry(
 
 
 class RfxtrxBinarySensor(RfxtrxEntity, BinarySensorEntity):
-    """A representation of a RFXtrx binary sensor."""
+    """A representation of a RFXtrx binary sensor.
+
+    Since all repeated events have meaning, these types of sensors
+    need to have force update enabled.
+    """
 
     _attr_force_update = True
-    """We should force updates. Repeated states have meaning."""
 
     def __init__(
         self,
@@ -159,7 +164,7 @@ class RfxtrxBinarySensor(RfxtrxEntity, BinarySensorEntity):
         if self.is_on and self._off_delay is not None:
             self._attr_is_on = False
 
-    def _apply_event_lighting4(self, event: rfxtrxmod.RFXtrxEvent):
+    def _apply_event_lighting4(self, event: rfxtrxmod.RFXtrxEvent) -> None:
         """Apply event for a lighting 4 device."""
         if self._data_bits is not None:
             cmdstr = get_pt2262_cmd(event.device.id_string, self._data_bits)
@@ -172,7 +177,7 @@ class RfxtrxBinarySensor(RfxtrxEntity, BinarySensorEntity):
         else:
             self._attr_is_on = True
 
-    def _apply_event_standard(self, event: rfxtrxmod.RFXtrxEvent):
+    def _apply_event_standard(self, event: rfxtrxmod.RFXtrxEvent) -> None:
         assert isinstance(event, (rfxtrxmod.SensorEvent, rfxtrxmod.ControlEvent))
         if event.values.get("Command") in COMMAND_ON_LIST:
             self._attr_is_on = True
@@ -183,7 +188,7 @@ class RfxtrxBinarySensor(RfxtrxEntity, BinarySensorEntity):
         elif event.values.get("Sensor Status") in SENSOR_STATUS_OFF:
             self._attr_is_on = False
 
-    def _apply_event(self, event: rfxtrxmod.RFXtrxEvent):
+    def _apply_event(self, event: rfxtrxmod.RFXtrxEvent) -> None:
         """Apply command from rfxtrx."""
         super()._apply_event(event)
         if event.device.packettype == DEVICE_PACKET_TYPE_LIGHTING4:
@@ -192,7 +197,9 @@ class RfxtrxBinarySensor(RfxtrxEntity, BinarySensorEntity):
             self._apply_event_standard(event)
 
     @callback
-    def _handle_event(self, event: rfxtrxmod.RFXtrxEvent, device_id: DeviceTuple):
+    def _handle_event(
+        self, event: rfxtrxmod.RFXtrxEvent, device_id: DeviceTuple
+    ) -> None:
         """Check if event applies to me and update."""
         if not self._event_applies(event, device_id):
             return
@@ -215,7 +222,7 @@ class RfxtrxBinarySensor(RfxtrxEntity, BinarySensorEntity):
         if self.is_on and self._off_delay is not None:
 
             @callback
-            def off_delay_listener(now):
+            def off_delay_listener(now: Any) -> None:
                 """Switch device off after a delay."""
                 self._delay_listener = None
                 self._attr_is_on = False

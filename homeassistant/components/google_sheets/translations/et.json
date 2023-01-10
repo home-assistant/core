@@ -25,6 +25,10 @@
             },
             "pick_implementation": {
                 "title": "Vali tuvastusmeetod"
+            },
+            "reauth_confirm": {
+                "description": "Google Sheets integratsioon peab teie konto uuesti autentima",
+                "title": "Taastuvasta sidumine"
             }
         }
     }

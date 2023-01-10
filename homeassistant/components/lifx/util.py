@@ -14,11 +14,14 @@ from awesomeversion import AwesomeVersion
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_BRIGHTNESS_PCT,
+    ATTR_COLOR_NAME,
     ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
+    ATTR_KELVIN,
     ATTR_RGB_COLOR,
     ATTR_XY_COLOR,
-    preprocess_turn_on_alternatives,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -81,7 +84,16 @@ def find_hsbk(hass: HomeAssistant, **kwargs: Any) -> list[float | int | None] | 
     """
     hue, saturation, brightness, kelvin = [None] * 4
 
-    preprocess_turn_on_alternatives(hass, kwargs)
+    if (color_name := kwargs.get(ATTR_COLOR_NAME)) is not None:
+        try:
+            hue, saturation = color_util.color_RGB_to_hs(
+                *color_util.color_name_to_rgb(color_name)
+            )
+        except ValueError:
+            _LOGGER.warning(
+                "Got unknown color %s, falling back to neutral white", color_name
+            )
+            hue, saturation = (0, 0)
 
     if ATTR_HS_COLOR in kwargs:
         hue, saturation = kwargs[ATTR_HS_COLOR]
@@ -96,14 +108,29 @@ def find_hsbk(hass: HomeAssistant, **kwargs: Any) -> list[float | int | None] | 
         saturation = int(saturation / 100 * 65535)
         kelvin = 3500
 
-    if ATTR_COLOR_TEMP in kwargs:
-        kelvin = int(
-            color_util.color_temperature_mired_to_kelvin(kwargs[ATTR_COLOR_TEMP])
+    if ATTR_KELVIN in kwargs:
+        _LOGGER.warning(
+            "The 'kelvin' parameter is deprecated. Please use 'color_temp_kelvin' for"
+            " all service calls"
         )
+        kelvin = kwargs.pop(ATTR_KELVIN)
+        saturation = 0
+
+    if ATTR_COLOR_TEMP in kwargs:
+        kelvin = color_util.color_temperature_mired_to_kelvin(
+            kwargs.pop(ATTR_COLOR_TEMP)
+        )
+        saturation = 0
+
+    if ATTR_COLOR_TEMP_KELVIN in kwargs:
+        kelvin = kwargs.pop(ATTR_COLOR_TEMP_KELVIN)
         saturation = 0
 
     if ATTR_BRIGHTNESS in kwargs:
         brightness = convert_8_to_16(kwargs[ATTR_BRIGHTNESS])
+
+    if ATTR_BRIGHTNESS_PCT in kwargs:
+        brightness = convert_8_to_16(round(255 * kwargs[ATTR_BRIGHTNESS_PCT] / 100))
 
     hsbk = [hue, saturation, brightness, kelvin]
     return None if hsbk == [None] * 4 else hsbk
@@ -158,8 +185,6 @@ async def async_execute_lifx(method: Callable) -> Message:
             # The future will get canceled out from under
             # us by async_timeout when we hit the OVERALL_TIMEOUT
             future.set_result(message)
-
-    _LOGGER.debug("Sending LIFX command: %s", method)
 
     method(callb=_callback)
     result = None

@@ -237,7 +237,7 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
         return self._program.channel
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         return SUPPORT_DTV_CLIENT if self._is_client else SUPPORT_DTV
 

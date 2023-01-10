@@ -1,0 +1,14 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "entity_id": "Prep\u00edna\u010d",
+                    "target_domain": "Nov\u00fd typ"
+                },
+                "description": "Vyberte prep\u00edna\u010d, ktor\u00fd chcete zobrazi\u0165 v aplik\u00e1cii Home Assistant ako svetlo, kryt alebo \u010doko\u013evek in\u00e9. P\u00f4vodn\u00fd sp\u00edna\u010d bude skryt\u00fd."
+            }
+        }
+    },
+    "title": "Zmena typu zariadenia prep\u00edna\u010da"
+}

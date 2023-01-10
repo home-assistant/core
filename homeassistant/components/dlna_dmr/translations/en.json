@@ -16,7 +16,7 @@
         "flow_title": "{name}",
         "step": {
             "confirm": {
-                "description": "Do you want to start set up?"
+                "description": "Do you want to start setup?"
             },
             "import_turn_on": {
                 "description": "Please turn on the device and click submit to continue migration"

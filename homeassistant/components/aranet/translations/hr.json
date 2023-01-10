@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ure\u0111aj je ve\u0107 konfiguriran"
+        },
+        "error": {
+            "unknown": "Neo\u010dekivana gre\u0161ka"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "bluetooth_confirm": {
+                "description": "\u017delite li postaviti {name}?"
+            },
+            "user": {
+                "data": {
+                    "address": "Ure\u0111aj"
+                },
+                "description": "Odaberite ure\u0111aj za postavljanje"
+            }
+        }
+    }
+}

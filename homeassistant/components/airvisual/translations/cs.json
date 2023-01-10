@@ -43,6 +43,16 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "pollutant_level": {
+                "state": {
+                    "good": "Dobr\u00e9",
+                    "hazardous": "Nebezpe\u010dn\u00e9"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {

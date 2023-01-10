@@ -3333,9 +3333,7 @@ async def test_track_sunrise(hass):
     # Setup sun component
     hass.config.latitude = latitude
     hass.config.longitude = longitude
-    assert await async_setup_component(
-        hass, sun.DOMAIN, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}}
-    )
+    assert await async_setup_component(hass, sun.DOMAIN, {sun.DOMAIN: {}})
 
     location = LocationInfo(
         latitude=hass.config.latitude, longitude=hass.config.longitude
@@ -3400,9 +3398,7 @@ async def test_track_sunrise_update_location(hass):
     # Setup sun component
     hass.config.latitude = 32.87336
     hass.config.longitude = 117.22743
-    assert await async_setup_component(
-        hass, sun.DOMAIN, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}}
-    )
+    assert await async_setup_component(hass, sun.DOMAIN, {sun.DOMAIN: {}})
 
     location = LocationInfo(
         latitude=hass.config.latitude, longitude=hass.config.longitude
@@ -3476,9 +3472,7 @@ async def test_track_sunset(hass):
     # Setup sun component
     hass.config.latitude = latitude
     hass.config.longitude = longitude
-    assert await async_setup_component(
-        hass, sun.DOMAIN, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}}
-    )
+    assert await async_setup_component(hass, sun.DOMAIN, {sun.DOMAIN: {}})
 
     # Get next sunrise/sunset
     utc_now = datetime(2014, 5, 24, 12, 0, 0, tzinfo=dt_util.UTC)

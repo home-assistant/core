@@ -28,7 +28,7 @@ from tests.common import (
 
 
 @pytest.fixture
-def mock_hass(loop):
+def mock_hass(event_loop):
     """Home Assistant mock with minimum amount of data set to make it work with auth."""
     hass = Mock()
     hass.config.skip_pip = True

@@ -15,14 +15,13 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_PORT,
-    DATA_GIGABYTES,
-    ELECTRIC_POTENTIAL_VOLT,
-    FREQUENCY_GIGAHERTZ,
-    FREQUENCY_HERTZ,
-    FREQUENCY_MEGAHERTZ,
     PERCENTAGE,
-    POWER_WATT,
-    TEMP_CELSIUS,
+    REVOLUTIONS_PER_MINUTE,
+    UnitOfElectricPotential,
+    UnitOfFrequency,
+    UnitOfInformation,
+    UnitOfPower,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -41,7 +40,6 @@ ATTR_TYPE: Final = "type"
 ATTR_USED: Final = "used"
 
 PIXELS: Final = "px"
-RPM: Final = "RPM"
 
 
 @dataclass
@@ -138,7 +136,8 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         key="cpu_speed",
         name="CPU Speed",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=FREQUENCY_GIGAHERTZ,
+        native_unit_of_measurement=UnitOfFrequency.GIGAHERTZ,
+        device_class=SensorDeviceClass.FREQUENCY,
         icon="mdi:speedometer",
         value=cpu_speed,
     ),
@@ -148,7 +147,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value=lambda data: data.cpu.temperature,
     ),
     SystemBridgeSensorEntityDescription(
@@ -157,7 +156,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         value=lambda data: data.cpu.voltage,
     ),
     SystemBridgeSensorEntityDescription(
@@ -171,7 +170,8 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         key="memory_free",
         name="Memory Free",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=DATA_GIGABYTES,
+        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:memory",
         value=memory_free,
     ),
@@ -188,7 +188,8 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         name="Memory Used",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=DATA_GIGABYTES,
+        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:memory",
         value=memory_used,
     ),
@@ -345,7 +346,8 @@ async def async_setup_entry(
                     key=f"display_{display['name']}_refresh_rate",
                     name=f"Display {display['name']} Refresh Rate",
                     state_class=SensorStateClass.MEASUREMENT,
-                    native_unit_of_measurement=FREQUENCY_HERTZ,
+                    native_unit_of_measurement=UnitOfFrequency.HERTZ,
+                    device_class=SensorDeviceClass.FREQUENCY,
                     icon="mdi:monitor",
                     value=lambda data, k=display["key"]: getattr(
                         data.display, f"{k}_refresh_rate"
@@ -374,7 +376,8 @@ async def async_setup_entry(
                     name=f"{gpu['name']} Clock Speed",
                     entity_registry_enabled_default=False,
                     state_class=SensorStateClass.MEASUREMENT,
-                    native_unit_of_measurement=FREQUENCY_MEGAHERTZ,
+                    native_unit_of_measurement=UnitOfFrequency.MEGAHERTZ,
+                    device_class=SensorDeviceClass.FREQUENCY,
                     icon="mdi:speedometer",
                     value=lambda data, k=gpu["key"]: gpu_core_clock_speed(data, k),
                 ),
@@ -387,7 +390,8 @@ async def async_setup_entry(
                     name=f"{gpu['name']} Memory Clock Speed",
                     entity_registry_enabled_default=False,
                     state_class=SensorStateClass.MEASUREMENT,
-                    native_unit_of_measurement=FREQUENCY_MEGAHERTZ,
+                    native_unit_of_measurement=UnitOfFrequency.MEGAHERTZ,
+                    device_class=SensorDeviceClass.FREQUENCY,
                     icon="mdi:speedometer",
                     value=lambda data, k=gpu["key"]: gpu_memory_clock_speed(data, k),
                 ),
@@ -399,7 +403,8 @@ async def async_setup_entry(
                     key=f"gpu_{index}_memory_free",
                     name=f"{gpu['name']} Memory Free",
                     state_class=SensorStateClass.MEASUREMENT,
-                    native_unit_of_measurement=DATA_GIGABYTES,
+                    native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+                    device_class=SensorDeviceClass.DATA_SIZE,
                     icon="mdi:memory",
                     value=lambda data, k=gpu["key"]: gpu_memory_free(data, k),
                 ),
@@ -426,7 +431,8 @@ async def async_setup_entry(
                     name=f"{gpu['name']} Memory Used",
                     entity_registry_enabled_default=False,
                     state_class=SensorStateClass.MEASUREMENT,
-                    native_unit_of_measurement=DATA_GIGABYTES,
+                    native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+                    device_class=SensorDeviceClass.DATA_SIZE,
                     icon="mdi:memory",
                     value=lambda data, k=gpu["key"]: gpu_memory_used(data, k),
                 ),
@@ -439,7 +445,7 @@ async def async_setup_entry(
                     name=f"{gpu['name']} Fan Speed",
                     entity_registry_enabled_default=False,
                     state_class=SensorStateClass.MEASUREMENT,
-                    native_unit_of_measurement=RPM,
+                    native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
                     icon="mdi:fan",
                     value=lambda data, k=gpu["key"]: getattr(
                         data.gpu, f"{k}_fan_speed"
@@ -455,7 +461,7 @@ async def async_setup_entry(
                     entity_registry_enabled_default=False,
                     device_class=SensorDeviceClass.POWER,
                     state_class=SensorStateClass.MEASUREMENT,
-                    native_unit_of_measurement=POWER_WATT,
+                    native_unit_of_measurement=UnitOfPower.WATT,
                     value=lambda data, k=gpu["key"]: getattr(data.gpu, f"{k}_power"),
                 ),
                 entry.data[CONF_PORT],
@@ -468,7 +474,7 @@ async def async_setup_entry(
                     entity_registry_enabled_default=False,
                     device_class=SensorDeviceClass.TEMPERATURE,
                     state_class=SensorStateClass.MEASUREMENT,
-                    native_unit_of_measurement=TEMP_CELSIUS,
+                    native_unit_of_measurement=UnitOfTemperature.CELSIUS,
                     value=lambda data, k=gpu["key"]: getattr(
                         data.gpu, f"{k}_temperature"
                     ),

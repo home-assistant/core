@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "addon_get_discovery_info_failed": "Kunne ikke hente oppdagelsesinformasjon for Matter Server-tillegg.",
+            "addon_info_failed": "Kunne ikke hente tilleggsinformasjon om Matter Server.",
+            "addon_install_failed": "Kunne ikke installere Matter Server-tillegget.",
+            "addon_start_failed": "Kunne ikke starte Matter Server-tillegget.",
+            "already_configured": "Enheten er allerede konfigurert",
+            "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
+            "not_matter_addon": "Discovered add-on er ikke det offisielle Matter Server-tillegget.",
+            "reconfiguration_successful": "Har konfigurert Matter-integrasjonen p\u00e5 nytt."
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_server_version": "Matter-serveren er ikke riktig versjon",
+            "unknown": "Uventet feil"
+        },
+        "flow_title": "{name}",
+        "progress": {
+            "install_addon": "Vent mens installasjonen av Matter Server-tillegget fullf\u00f8res. Dette kan ta flere minutter.",
+            "start_addon": "Vennligst vent mens Matter Server-tillegget starter. Dette tillegget er det som driver Matter i Home Assistant. Dette kan ta noen sekunder."
+        },
+        "step": {
+            "hassio_confirm": {
+                "title": "Sett opp Matter-integrasjonen med Matter Server-tillegget"
+            },
+            "install_addon": {
+                "title": "Tilleggsinstallasjonen har startet"
+            },
+            "manual": {
+                "data": {
+                    "url": "URL"
+                }
+            },
+            "on_supervisor": {
+                "data": {
+                    "use_addon": "Bruk det offisielle Matter Server Supervisor-tillegget"
+                },
+                "description": "Vil du bruke det offisielle Matter Server Supervisor-tillegget? \n\n Hvis du allerede kj\u00f8rer Matter Server i et annet tillegg, i en egendefinert beholder, native etc., s\u00e5 ikke velg dette alternativet.",
+                "title": "Velg tilkoblingsmetode"
+            },
+            "start_addon": {
+                "title": "Starter tillegg."
+            }
+        }
+    }
+}

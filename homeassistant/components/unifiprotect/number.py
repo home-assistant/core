@@ -14,7 +14,7 @@ from pyunifiprotect.data import (
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, TIME_SECONDS
+from homeassistant.const import PERCENTAGE, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
@@ -31,9 +31,9 @@ from .utils import async_dispatch_id as _ufpd
 class NumberKeysMixin:
     """Mixin for required keys."""
 
-    ufp_max: int
-    ufp_min: int
-    ufp_step: int
+    ufp_max: int | float
+    ufp_min: int | float
+    ufp_step: int | float
 
 
 @dataclass
@@ -57,6 +57,10 @@ def _get_auto_close(obj: Doorlock) -> int:
 
 async def _set_auto_close(obj: Doorlock, value: float) -> None:
     await obj.set_auto_close_time(timedelta(seconds=value))
+
+
+def _get_chime_duration(obj: Camera) -> int:
+    return int(obj.chime_duration.total_seconds())
 
 
 CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
@@ -102,6 +106,21 @@ CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_set_method="set_camera_zoom",
         ufp_perm=PermRequired.WRITE,
     ),
+    ProtectNumberEntityDescription(
+        key="chime_duration",
+        name="Chime Duration",
+        icon="mdi:bell",
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        ufp_min=1,
+        ufp_max=10,
+        ufp_step=0.1,
+        ufp_required_field="feature_flags.has_chime",
+        ufp_enabled="is_digital_chime",
+        ufp_value_fn=_get_chime_duration,
+        ufp_set_method="set_chime_duration",
+        ufp_perm=PermRequired.WRITE,
+    ),
 )
 
 LIGHT_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
@@ -124,7 +143,7 @@ LIGHT_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         name="Auto-shutoff Duration",
         icon="mdi:camera-timer",
         entity_category=EntityCategory.CONFIG,
-        native_unit_of_measurement=TIME_SECONDS,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         ufp_min=15,
         ufp_max=900,
         ufp_step=15,
@@ -158,7 +177,7 @@ DOORLOCK_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         name="Auto-lock Timeout",
         icon="mdi:walk",
         entity_category=EntityCategory.CONFIG,
-        native_unit_of_measurement=TIME_SECONDS,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         ufp_min=0,
         ufp_max=3600,
         ufp_step=15,

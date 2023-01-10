@@ -16,7 +16,7 @@ from homeassistant.components.tellduslive import (
 from homeassistant.config_entries import SOURCE_DISCOVERY
 from homeassistant.const import CONF_HOST
 
-from tests.common import MockConfigEntry, mock_coro
+from tests.common import MockConfigEntry
 
 
 def init_config_flow(hass, side_effect=None):

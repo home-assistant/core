@@ -30,7 +30,7 @@ ALLOWED_IGNORE_VIOLATIONS = {
 }
 
 
-def validate(integrations: dict[str, Integration], config: Config):
+def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Validate coverage."""
     coverage_path = config.root / ".coveragerc"
 

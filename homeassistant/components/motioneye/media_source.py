@@ -284,7 +284,13 @@ class MotionEyeMediaSource(MediaSource):
 
         sub_dirs: set[str] = set()
         parts = parsed_path.parts
-        for media in resp.get(KEY_MEDIA_LIST, []):
+        media_list = resp.get(KEY_MEDIA_LIST, [])
+
+        def get_media_sort_key(media: dict) -> str:
+            """Get media sort key."""
+            return media.get(KEY_PATH, "")
+
+        for media in sorted(media_list, key=get_media_sort_key):
             if (
                 KEY_PATH not in media
                 or KEY_MIME_TYPE not in media

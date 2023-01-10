@@ -411,6 +411,72 @@ async def test_report_fan_speed_state(hass):
     properties.assert_equal("Alexa.RangeController", "rangeValue", 0)
 
 
+async def test_report_humidifier_humidity_state(hass):
+    """Test PercentageController, PowerLevelController reports humidifier humidity correctly."""
+    hass.states.async_set(
+        "humidifier.dry",
+        "on",
+        {
+            "friendly_name": "Humidifier dry",
+            "supported_features": 0,
+            "humidity": 25,
+            "min_humidity": 20,
+            "max_humidity": 90,
+        },
+    )
+    hass.states.async_set(
+        "humidifier.wet",
+        "on",
+        {
+            "friendly_name": "Humidifier wet",
+            "supported_features": 0,
+            "humidity": 80,
+            "min_humidity": 20,
+            "max_humidity": 90,
+        },
+    )
+    properties = await reported_properties(hass, "humidifier.dry")
+    properties.assert_equal("Alexa.RangeController", "rangeValue", 25)
+
+    properties = await reported_properties(hass, "humidifier.wet")
+    properties.assert_equal("Alexa.RangeController", "rangeValue", 80)
+
+
+async def test_report_humidifier_mode(hass):
+    """Test ModeController reports humidifier mode correctly."""
+    hass.states.async_set(
+        "humidifier.auto",
+        "on",
+        {
+            "friendly_name": "Humidifier auto",
+            "supported_features": 1,
+            "humidity": 50,
+            "mode": "Auto",
+            "available_modes": ["Auto", "Low", "Medium", "High"],
+            "min_humidity": 20,
+            "max_humidity": 90,
+        },
+    )
+    properties = await reported_properties(hass, "humidifier.auto")
+    properties.assert_equal("Alexa.ModeController", "mode", "mode.Auto")
+
+    hass.states.async_set(
+        "humidifier.medium",
+        "on",
+        {
+            "friendly_name": "Humidifier auto",
+            "supported_features": 1,
+            "humidity": 60,
+            "mode": "Medium",
+            "available_modes": ["Auto", "Low", "Medium", "High"],
+            "min_humidity": 20,
+            "max_humidity": 90,
+        },
+    )
+    properties = await reported_properties(hass, "humidifier.medium")
+    properties.assert_equal("Alexa.ModeController", "mode", "mode.Medium")
+
+
 async def test_report_fan_preset_mode(hass):
     """Test ModeController reports fan preset_mode correctly."""
     hass.states.async_set(

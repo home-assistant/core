@@ -21,6 +21,7 @@
     "input_select",
     "input_text",
     "logbook",
+    "logger",
     "map",
     "media_source",
     "mobile_app",
@@ -41,5 +42,6 @@
     "zone"
   ],
   "codeowners": ["@home-assistant/core"],
-  "quality_scale": "internal"
+  "quality_scale": "internal",
+  "integration_type": "system"
 }

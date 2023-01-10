@@ -2,7 +2,7 @@
 
 import pytest
 
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_AUX_HEAT,
     ATTR_FAN_MODE,
     ATTR_HUMIDITY,
@@ -11,9 +11,6 @@ from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     DOMAIN,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
     SERVICE_SET_AUX_HEAT,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HUMIDITY,
@@ -21,6 +18,7 @@ from homeassistant.components.climate.const import (
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
+    HVACMode,
 )
 from homeassistant.components.climate.reproduce_state import async_reproduce_states
 from homeassistant.const import ATTR_TEMPERATURE
@@ -32,7 +30,7 @@ ENTITY_1 = "climate.test1"
 ENTITY_2 = "climate.test2"
 
 
-@pytest.mark.parametrize("state", [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF])
+@pytest.mark.parametrize("state", [HVACMode.AUTO, HVACMode.HEAT, HVACMode.OFF])
 async def test_with_hvac_mode(hass, state):
     """Test that state different hvac states."""
     calls = async_mock_service(hass, DOMAIN, SERVICE_SET_HVAC_MODE)
@@ -50,7 +48,7 @@ async def test_multiple_state(hass):
     calls_1 = async_mock_service(hass, DOMAIN, SERVICE_SET_HVAC_MODE)
 
     await async_reproduce_states(
-        hass, [State(ENTITY_1, HVAC_MODE_HEAT), State(ENTITY_2, HVAC_MODE_AUTO)]
+        hass, [State(ENTITY_1, HVACMode.HEAT), State(ENTITY_2, HVACMode.AUTO)]
     )
 
     await hass.async_block_till_done()
@@ -58,11 +56,11 @@ async def test_multiple_state(hass):
     assert len(calls_1) == 2
     # order is not guaranteed
     assert any(
-        call.data == {"entity_id": ENTITY_1, "hvac_mode": HVAC_MODE_HEAT}
+        call.data == {"entity_id": ENTITY_1, "hvac_mode": HVACMode.HEAT}
         for call in calls_1
     )
     assert any(
-        call.data == {"entity_id": ENTITY_2, "hvac_mode": HVAC_MODE_AUTO}
+        call.data == {"entity_id": ENTITY_2, "hvac_mode": HVACMode.AUTO}
         for call in calls_1
     )
 
@@ -85,13 +83,13 @@ async def test_state_with_context(hass):
     context = Context()
 
     await async_reproduce_states(
-        hass, [State(ENTITY_1, HVAC_MODE_HEAT)], context=context
+        hass, [State(ENTITY_1, HVACMode.HEAT)], context=context
     )
 
     await hass.async_block_till_done()
 
     assert len(calls) == 1
-    assert calls[0].data == {"entity_id": ENTITY_1, "hvac_mode": HVAC_MODE_HEAT}
+    assert calls[0].data == {"entity_id": ENTITY_1, "hvac_mode": HVACMode.HEAT}
     assert calls[0].context == context
 
 
