@@ -82,7 +82,7 @@ def test_sensor(hass: HomeAssistant):
 
             elif device.subscription == "123456":  # Custom name with 1 {}
                 assert device.name == "Server Pending Charges"
-                assert device.state == "not a number"
+                assert device.state is None
                 tested += 1
 
             elif device.subscription == "555555":  # No {} in name

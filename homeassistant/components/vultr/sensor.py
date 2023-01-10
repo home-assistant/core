@@ -109,10 +109,13 @@ class VultrSensor(SensorEntity):
     @property
     def native_value(self):
         """Return the value of this given sensor type."""
+        value = self.data.get(self.entity_description.key)
+        if value == "not a number":
+            return None
         try:
-            return round(float(self.data.get(self.entity_description.key)), 2)
+            return round(float(value), 2)
         except (TypeError, ValueError):
-            return self.data.get(self.entity_description.key)
+            return value
 
     def update(self) -> None:
         """Update state of sensor."""
