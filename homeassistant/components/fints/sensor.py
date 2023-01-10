@@ -170,7 +170,8 @@ class FinTsClient:
 
         if 1 <= account_information["type"] <= 9:
             return True
-        elif (
+
+        if (
             account_information["iban"] in self.account_config
             or account_information["account_number"] in self.account_config
         ):
@@ -189,7 +190,8 @@ class FinTsClient:
 
         if 30 <= account_information["type"] <= 39:
             return True
-        elif (
+
+        if (
             account_information["iban"] in self.holdings_config
             or account_information["account_number"] in self.holdings_config
         ):
@@ -212,7 +214,11 @@ class FinTsClient:
                 holdings_accounts.append(account)
 
             else:
-                _LOGGER.warning("Could not determine type of account %s", account.iban)
+                _LOGGER.warning(
+                    "Could not determine type of account %s from %s",
+                    account.iban,
+                    self.client.user_id,
+                )
 
         return balance_accounts, holdings_accounts
 
