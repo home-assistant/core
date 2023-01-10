@@ -112,9 +112,6 @@ class SeitronClimate(CoordinatorEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        _LOGGER.info(
-            "Climate: set HVAC mode: %s --> %s", self._thermostat.mode, hvac_mode
-        )
 
         if hvac_mode == HVACMode.COOL:
             await self.coordinator.data.set_hvac_mode(self._thermostat.gmac, "COOL")
