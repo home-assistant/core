@@ -375,7 +375,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 0: "HomeAssistant",
                 1: "ConfigEntry",
             },
-            return_type=["DiagnosticsData", "Mapping[str, Any]"],
+            return_type=["DiagnosticsContent", "Mapping[str, Any]"],
         ),
         TypeHintMatch(
             function_name="async_get_device_diagnostics",
@@ -384,7 +384,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 1: "ConfigEntry",
                 2: "DeviceEntry",
             },
-            return_type=["DiagnosticsData", "Mapping[str, Any]"],
+            return_type=["DiagnosticsContent", "Mapping[str, Any]"],
         ),
     ],
     "notify": [
