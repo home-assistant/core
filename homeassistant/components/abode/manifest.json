@@ -3,7 +3,7 @@
   "name": "Abode",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/abode",
-  "requirements": ["jaraco.abode==3.1.2"],
+  "requirements": ["jaraco.abode==3.2.1"],
   "codeowners": ["@shred86"],
   "homekit": {
     "models": ["Abode", "Iota"]
