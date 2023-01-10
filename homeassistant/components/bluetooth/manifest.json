@@ -6,7 +6,7 @@
   "after_dependencies": ["hassio"],
   "quality_scale": "internal",
   "requirements": [
-    "bleak==0.19.2",
+    "bleak==0.19.5",
     "bleak-retry-connector==2.13.0",
     "bluetooth-adapters==0.15.2",
     "bluetooth-auto-recovery==1.0.3",

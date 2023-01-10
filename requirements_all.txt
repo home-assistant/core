@@ -434,7 +434,7 @@ bizkaibus==0.1.1
 bleak-retry-connector==2.13.0
 
 # homeassistant.components.bluetooth
-bleak==0.19.2
+bleak==0.19.5
 
 # homeassistant.components.blebox
 blebox_uniapi==2.1.4
