@@ -64,7 +64,8 @@ class NeeVoSensor(NeeVoEntity, SensorEntity):
         """Initialize."""
         super().__init__(neevo_tank)
         self.entity_description = description
-        self._attr_name = f"{neevo_tank.name} {description.name}"
+        self._attr_has_entity_name = True
+        self._attr_name = f"{description.name}"
         self._attr_unique_id = f"{neevo_tank.id}_{neevo_tank.name}_{description.key}"
 
     @property

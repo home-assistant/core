@@ -27,7 +27,7 @@ from .const import API_CLIENT, DOMAIN, TANKS
 _LOGGER = logging.getLogger(__name__)
 
 PUSH_UPDATE = "neevo.push_update"
-INTERVAL = timedelta(minutes=15)
+INTERVAL = timedelta(minutes=60)
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -77,7 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         await api.refresh_tanks()
 
     config_entry.async_on_unload(
-        async_track_time_interval(hass, fetch_update, INTERVAL + timedelta(minutes=1))
+        async_track_time_interval(hass, fetch_update, INTERVAL)
     )
 
     return True
