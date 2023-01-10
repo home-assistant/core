@@ -82,6 +82,7 @@ PLATFORMS = [
     Platform.FAN,
     Platform.LIGHT,
     Platform.LOCK,
+    Platform.NUMBER,
     Platform.SENSOR,
     Platform.SWITCH,
 ]
@@ -306,6 +307,14 @@ NODE_FILTERS: dict[Platform, dict[str, list[str]]] = {
         FILTER_NODE_DEF_ID: ["TempLinc", "Thermostat"],
         FILTER_INSTEON_TYPE: ["4.8", TYPE_CATEGORY_CLIMATE],
         FILTER_ZWAVE_CAT: ["140"],
+    },
+    Platform.NUMBER: {
+        # No devices automatically sorted as numbers at this time.
+        FILTER_UOM: [],
+        FILTER_STATES: [],
+        FILTER_NODE_DEF_ID: [],
+        FILTER_INSTEON_TYPE: [],
+        FILTER_ZWAVE_CAT: [],
     },
 }
 
