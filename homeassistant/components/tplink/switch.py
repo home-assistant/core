@@ -93,7 +93,7 @@ class SmartPlugSwitch(CoordinatedTPLinkEntity, SwitchEntity):
         super().__init__(device, coordinator)
         # For backwards compat with pyHS100
         self._attr_unique_id = legacy_device_id(device)
-        # Define names for single sockets
+        # Define names for individual sockets
         if device.is_strip_socket:
             self._attr_name = device.alias
 

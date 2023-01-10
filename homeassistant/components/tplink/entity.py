@@ -41,6 +41,7 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator]):
         self.device: SmartDevice = device
         self._attr_has_entity_name = True
         self._attr_unique_id = self.device.device_id
+        self._attr_name = None
 
     @property
     def device_info(self) -> DeviceInfo:
