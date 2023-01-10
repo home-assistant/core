@@ -91,7 +91,9 @@ class MikrotikData:
 
     def detect_routerboard_router(self) -> bool:
         """Detect whether or not it's a routerboard router."""
-        return len(self.command(MIKROTIK_SERVICES[INFO])) != 0
+        return (
+            len(self.command(MIKROTIK_SERVICES[INFO], log_protocol_errors=False)) != 0
+        )
 
     def get_info(self, param: str) -> str:
         """Return device model name."""
@@ -217,7 +219,10 @@ class MikrotikData:
         return True
 
     def command(
-        self, cmd: str, params: dict[str, Any] | None = None
+        self,
+        cmd: str,
+        params: dict[str, Any] | None = None,
+        log_protocol_errors: bool = True,
     ) -> list[dict[str, Any]]:
         """Retrieve data from Mikrotik API."""
         _LOGGER.debug("Running command %s", cmd)
@@ -236,12 +241,13 @@ class MikrotikData:
             # we still have to raise CannotConnect to fail the update.
             raise CannotConnect from api_error
         except librouteros.exceptions.ProtocolError as api_error:
-            _LOGGER.warning(
-                "Mikrotik %s failed to retrieve data. cmd=[%s] Error: %s",
-                self._host,
-                cmd,
-                api_error,
-            )
+            if log_protocol_errors:
+                _LOGGER.warning(
+                    "Mikrotik %s failed to retrieve data. cmd=[%s] Error: %s",
+                    self._host,
+                    cmd,
+                    api_error,
+                )
             return []
 
 
