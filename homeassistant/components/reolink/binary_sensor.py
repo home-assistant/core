@@ -5,7 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 
-from reolink_ip.api import (
+from reolink_aio.api import (
     FACE_DETECTION_TYPE,
     PERSON_DETECTION_TYPE,
     PET_DETECTION_TYPE,
