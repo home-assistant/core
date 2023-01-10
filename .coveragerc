@@ -1065,6 +1065,7 @@ omit =
     homeassistant/components/rest/switch.py
     homeassistant/components/rfxtrx/diagnostics.py
     homeassistant/components/ridwell/__init__.py
+    homeassistant/components/ridwell/coordinator.py
     homeassistant/components/ridwell/entity.py
     homeassistant/components/ridwell/sensor.py
     homeassistant/components/ridwell/switch.py
