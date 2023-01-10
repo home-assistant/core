@@ -1141,7 +1141,7 @@ moehlenhoff-alpha2==1.2.1
 motionblinds==0.6.15
 
 # homeassistant.components.motioneye
-motioneye-client==0.3.12
+motioneye-client==0.3.14
 
 # homeassistant.components.mullvad
 mullvad-api==1.0.0
