@@ -1260,6 +1260,8 @@ build.json @home-assistant/supervisor
 /tests/components/version/ @ludeeus
 /homeassistant/components/vesync/ @markperdue @webdjoe @thegardenmonkey
 /tests/components/vesync/ @markperdue @webdjoe @thegardenmonkey
+/homeassistant/components/viaris/ @HGC72
+/tests/components/viaris/ @HGC72
 /homeassistant/components/vicare/ @oischinger
 /tests/components/vicare/ @oischinger
 /homeassistant/components/vilfo/ @ManneW

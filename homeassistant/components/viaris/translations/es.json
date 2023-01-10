@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya está configurado"
+        },
+        "flow_title": "{name}",
+        "error": {
+            "cannot_connect": "Fallo en la conexión",
+            "invalid_auth": "Fallo en la utenticación",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "discovery_confirm": {
+                "description": "Quiere configurar {name}?"
+            },
+            "user": {
+                "description": "Por favor, proporcione el numero de serie del dispositivo",
+                "data": {
+                    "serial_number": "Numero de serie",
+                    "topic_prefix": "Topic"
+                }
+            }
+        }
+    }
+}

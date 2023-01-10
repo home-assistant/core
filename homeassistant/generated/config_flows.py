@@ -452,6 +452,7 @@ FLOWS = {
         "verisure",
         "version",
         "vesync",
+        "viaris",
         "vicare",
         "vilfo",
         "vizio",

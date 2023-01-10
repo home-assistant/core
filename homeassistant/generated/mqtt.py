@@ -10,4 +10,9 @@ MQTT = {
     "tasmota": [
         "tasmota/discovery/#",
     ],
+    "viaris": [
+        "XEO/VIARIS/+/stat/0/+/streamrt/modulator",
+        "XEO/VIARIS/+/stat/0/+/value/evsm/mennekes",
+        "XEO/VIARIS/+/stat/0/+/value/evsm/schuko",
+    ],
 }
