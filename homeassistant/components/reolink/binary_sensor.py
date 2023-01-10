@@ -161,4 +161,4 @@ class ReolinkBinarySensorEntity(ReolinkCoordinatorEntity, BinarySensorEntity):
 
     async def handle_event(self, event):
         """Handle incoming event for motion detection."""
-        await self.async_write_ha_state()
+        self.async_write_ha_state()
