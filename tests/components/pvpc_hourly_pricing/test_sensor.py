@@ -58,11 +58,12 @@ async def test_multi_sensor_migration(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 2
     assert len(entity_reg.entities) == 2
 
-    mock_data = {"return_time": datetime(2021, 6, 1, 21, tzinfo=date_util.UTC)}
+    _mock_time = datetime(2023, 1, 6, 21, tzinfo=date_util.UTC)
+    _mock_time_2h_later = _mock_time + timedelta(hours=2)
 
     caplog.clear()
     with caplog.at_level(logging.WARNING):
-        with freeze_time(mock_data["return_time"]):
+        with freeze_time(_mock_time):
             assert await hass.config_entries.async_setup(config_entry_1.entry_id)
             assert any("Migrating PVPC" in message for message in caplog.messages)
             assert any(
@@ -87,12 +88,12 @@ async def test_multi_sensor_migration(
 
             # check state and availability
             state = hass.states.get("sensor.test_pvpc_1")
-            check_valid_state(state, tariff=TARIFFS[0], value=0.1565)
+            check_valid_state(state, tariff=TARIFFS[0], value=0.13937)
 
-        with freeze_time(mock_data["return_time"] + timedelta(minutes=60)):
-            async_fire_time_changed(hass, mock_data["return_time"])
+        with freeze_time(_mock_time_2h_later):
+            async_fire_time_changed(hass, _mock_time_2h_later)
             await list(hass.data[DOMAIN].values())[0].async_refresh()
             await hass.async_block_till_done()
             state = hass.states.get("sensor.test_pvpc_1")
             check_valid_state(state, tariff=TARIFFS[0], value="unavailable")
-            assert pvpc_aioclient_mock.call_count == 3
+            assert pvpc_aioclient_mock.call_count == 4
