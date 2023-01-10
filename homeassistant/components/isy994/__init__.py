@@ -220,9 +220,7 @@ async def async_setup_entry(
     # Gather ISY Variables to be added. Identifier used to enable by default.
     numbers = hass_isy_data[ISY994_VARIABLES][Platform.NUMBER]
     for vtype, vname, vid in isy.variables.children:
-        numbers.append(
-            (isy.variables[vtype][vid], variable_identifier in vname)
-        )
+        numbers.append((isy.variables[vtype][vid], variable_identifier in vname))
     if isy.configuration[ISY_CONF_NETWORKING]:
         for resource in isy.networking.nobjs:
             hass_isy_data[ISY994_NODES][PROTO_NETWORK_RESOURCE].append(resource)
