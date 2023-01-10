@@ -243,17 +243,17 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
     @property
     def min_color_temp_kelvin(self) -> int:
         """Return minimum supported color temperature."""
-        return self.device.valid_temperature_range.min
+        return cast(int, self.device.valid_temperature_range.min)
 
     @property
     def max_color_temp_kelvin(self) -> int:
         """Return maximum supported color temperature."""
-        return self.device.valid_temperature_range.max
+        return cast(int, self.device.valid_temperature_range.max)
 
     @property
-    def color_temp_kelvin(self) -> int | None:
+    def color_temp_kelvin(self) -> int:
         """Return the color temperature of this light."""
-        return self.device.color_temp
+        return cast(int, self.device.color_temp)
 
     @property
     def brightness(self) -> int | None:
