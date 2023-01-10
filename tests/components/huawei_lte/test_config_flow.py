@@ -291,7 +291,7 @@ async def test_ssdp(
     for k, v in expected_result.items():
         assert result[k] == v
     if result.get("data_schema"):
-        result["data_schema"]({})[CONF_URL] == url
+        assert result["data_schema"]({})[CONF_URL] == url + "/"
 
 
 @pytest.mark.parametrize(
