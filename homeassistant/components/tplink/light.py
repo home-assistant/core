@@ -337,7 +337,8 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
         if ATTR_EFFECT in kwargs:
             await self.device.set_effect(kwargs[ATTR_EFFECT])
             # We need to set the brightness separately until upstream allows defining it for set_effect.
-            await self._async_turn_on_with_brightness(brightness, transition)
+            if brightness is not None:
+                await self._async_turn_on_with_brightness(brightness, transition)
         elif ATTR_COLOR_TEMP in kwargs:
             if self.effect:
                 # If there is an effect in progress
