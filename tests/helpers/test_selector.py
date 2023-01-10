@@ -420,6 +420,27 @@ def test_text_selector_schema(schema, valid_selections, invalid_selections):
             ("cat", 0, None, ["red"]),
         ),
         (
+            {
+                "options": ["red", "green", "blue"],
+                "translation_key": "color",
+                "translation_domain": "demo",
+            },
+            ("red", "green", "blue"),
+            ("cat", 0, None, ["red"]),
+        ),
+        (
+            {
+                "options": [
+                    {"value": "red", "label": "Ruby Red"},
+                    {"value": "green", "label": "Emerald Green"},
+                ],
+                "translation_key": "color",
+                "translation_domain": "demo",
+            },
+            ("red", "green"),
+            ("cat", 0, None, ["red"]),
+        ),
+        (
             {"options": ["red", "green", "blue"], "multiple": True},
             (["red"], ["green", "blue"], []),
             ("cat", 0, None, "red"),
