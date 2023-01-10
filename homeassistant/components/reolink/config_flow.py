@@ -42,7 +42,7 @@ class ReolinkOptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Required(
                         CONF_PROTOCOL,
                         default=self.config_entry.options[CONF_PROTOCOL],
-                    ): vol.In(["rtsp", "rtmp"]),
+                    ): vol.In(["rtsp", "rtmp", "flv"]),
                 }
             ),
         )
