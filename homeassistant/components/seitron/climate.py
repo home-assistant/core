@@ -83,7 +83,6 @@ class SeitronClimate(CoordinatorEntity[DateUpdateCoordinator[SeitronGateway]], C
     @property
     def target_temperature(self) -> float | None:
         """Return the setpoint."""
-        _LOGGER.info("Climate: getting target")
         return self._thermostat.temp_target
 
     @property
