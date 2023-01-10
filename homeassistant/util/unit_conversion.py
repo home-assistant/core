@@ -342,8 +342,8 @@ class TemperatureConverter(BaseUnitConverter):
         For converting an interval between two temperatures, please use
         `convert_interval` instead.
         """
-        # We cannot use the implementation from BaseUnitConverter here because the temperature
-        # units do not use the same floor: 0°C, 0°F and 0K do not align
+        # We cannot use the implementation from BaseUnitConverter here because the
+        # temperature units do not use the same floor: 0°C, 0°F and 0K do not align
         if from_unit == to_unit:
             return value
 

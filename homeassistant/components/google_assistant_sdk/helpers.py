@@ -22,6 +22,8 @@ DEFAULT_LANGUAGE_CODES = {
     "es": "es-ES",
     "fr": "fr-FR",
     "it": "it-IT",
+    "ja": "ja-JP",
+    "ko": "ko-KR",
     "pt": "pt-BR",
 }
 

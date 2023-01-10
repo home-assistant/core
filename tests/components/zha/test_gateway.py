@@ -3,12 +3,14 @@ import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+import zigpy.exceptions
 import zigpy.profiles.zha as zha
 import zigpy.zcl.clusters.general as general
 import zigpy.zcl.clusters.lighting as lighting
 
 from homeassistant.components.zha.core.group import GroupMember
 from homeassistant.const import Platform
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .common import async_find_group_entity_id, get_zha_gateway
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
@@ -259,3 +261,20 @@ async def test_gateway_initialize_failure(hass, device_light_1, coordinator):
             await zha_gateway.async_initialize()
 
     assert mock_new.call_count == 3
+
+
+@patch("homeassistant.components.zha.core.gateway.STARTUP_FAILURE_DELAY_S", 0.01)
+async def test_gateway_initialize_failure_transient(hass, device_light_1, coordinator):
+    """Test ZHA failing to initialize the gateway but with a transient error."""
+    zha_gateway = get_zha_gateway(hass)
+    assert zha_gateway is not None
+
+    with patch(
+        "bellows.zigbee.application.ControllerApplication.new",
+        side_effect=[RuntimeError(), zigpy.exceptions.TransientConnectionError()],
+    ) as mock_new:
+        with pytest.raises(ConfigEntryNotReady):
+            await zha_gateway.async_initialize()
+
+    # Initialization immediately stops and is retried after TransientConnectionError
+    assert mock_new.call_count == 2
