@@ -10,6 +10,7 @@ from aiopvpc.const import KEY_INYECTION, KEY_MAG, KEY_OMIE, KEY_PVPC
 from aiopvpc.ha_helpers import make_sensor_unique_id
 
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
@@ -33,19 +34,22 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=KEY_PVPC,
         icon="mdi:currency-eur",
+        device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=KEY_INYECTION,
         icon="mdi:currency-eur",
+        device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         state_class=SensorStateClass.MEASUREMENT,
-        name="Inyection Price",
+        name="Injection Price",
     ),
     SensorEntityDescription(
         key=KEY_MAG,
         icon="mdi:currency-eur",
+        device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         state_class=SensorStateClass.MEASUREMENT,
         name="MAG tax",
@@ -53,6 +57,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=KEY_OMIE,
         icon="mdi:currency-eur",
+        device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         state_class=SensorStateClass.MEASUREMENT,
         name="OMIE Price",
