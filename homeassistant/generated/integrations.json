@@ -1990,6 +1990,12 @@
           "iot_class": "cloud_polling",
           "name": "Google Domains"
         },
+        "google_mail": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Google Mail"
+        },
         "google_maps": {
           "integration_type": "hub",
           "config_flow": false,
@@ -2433,7 +2439,7 @@
     "imap": {
       "name": "IMAP",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_push"
     },
     "imap_email_content": {
@@ -2667,6 +2673,12 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
+    "kitchen_sink": {
+      "name": "Everything but the Kitchen Sink",
+      "integration_type": "hub",
+      "config_flow": false,
+      "iot_class": "calculated"
+    },
     "kiwi": {
       "name": "KIWI",
       "integration_type": "hub",
@@ -2773,6 +2785,12 @@
       "name": "LCN",
       "integration_type": "hub",
       "config_flow": false,
+      "iot_class": "local_push"
+    },
+    "ld2410_ble": {
+      "name": "LD2410 BLE",
+      "integration_type": "device",
+      "config_flow": true,
       "iot_class": "local_push"
     },
     "led_ble": {
@@ -4330,7 +4348,7 @@
     "rainbird": {
       "name": "Rain Bird",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "rainforest_eagle": {
@@ -5155,6 +5173,12 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "starlink": {
+      "name": "Starlink",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "startca": {
       "name": "Start.ca",
       "integration_type": "hub",
@@ -5260,7 +5284,7 @@
       "name": "SwitchBee",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "local_polling"
+      "iot_class": "local_push"
     },
     "switchbot": {
       "name": "SwitchBot",
@@ -6040,7 +6064,7 @@
       "iot_class": "local_push"
     },
     "whirlpool": {
-      "name": "Whirlpool Sixth Sense",
+      "name": "Whirlpool Appliances",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_push"

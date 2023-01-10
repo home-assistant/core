@@ -32,6 +32,7 @@ from homeassistant.const import (
     VOLUME_CUBIC_METERS,
     VOLUME_FLUID_OUNCE,
     VOLUME_LITERS,
+    UnitOfEnergy,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, State
@@ -229,25 +230,25 @@ async def test_reject_timezoneless_datetime_str(
 
 
 RESTORE_DATA = {
-    "str": {"native_unit_of_measurement": "°F", "native_value": "abc123"},
+    "str": {"native_unit_of_measurement": None, "native_value": "abc123"},
     "int": {"native_unit_of_measurement": "°F", "native_value": 123},
     "float": {"native_unit_of_measurement": "°F", "native_value": 123.0},
     "date": {
-        "native_unit_of_measurement": "°F",
+        "native_unit_of_measurement": None,
         "native_value": {
             "__type": "<class 'datetime.date'>",
             "isoformat": date(2020, 2, 8).isoformat(),
         },
     },
     "datetime": {
-        "native_unit_of_measurement": "°F",
+        "native_unit_of_measurement": None,
         "native_value": {
             "__type": "<class 'datetime.datetime'>",
             "isoformat": datetime(2020, 2, 8, 15, tzinfo=timezone.utc).isoformat(),
         },
     },
     "Decimal": {
-        "native_unit_of_measurement": "°F",
+        "native_unit_of_measurement": "kWh",
         "native_value": {
             "__type": "<class 'decimal.Decimal'>",
             "decimal_str": "123.4",
@@ -265,19 +266,38 @@ RESTORE_DATA = {
 
 # None | str | int | float | date | datetime | Decimal:
 @pytest.mark.parametrize(
-    "native_value, native_value_type, expected_extra_data, device_class",
+    "native_value, native_value_type, expected_extra_data, device_class, uom",
     [
-        ("abc123", str, RESTORE_DATA["str"], None),
-        (123, int, RESTORE_DATA["int"], SensorDeviceClass.TEMPERATURE),
-        (123.0, float, RESTORE_DATA["float"], SensorDeviceClass.TEMPERATURE),
-        (date(2020, 2, 8), dict, RESTORE_DATA["date"], SensorDeviceClass.DATE),
+        ("abc123", str, RESTORE_DATA["str"], None, None),
+        (
+            123,
+            int,
+            RESTORE_DATA["int"],
+            SensorDeviceClass.TEMPERATURE,
+            UnitOfTemperature.FAHRENHEIT,
+        ),
+        (
+            123.0,
+            float,
+            RESTORE_DATA["float"],
+            SensorDeviceClass.TEMPERATURE,
+            UnitOfTemperature.FAHRENHEIT,
+        ),
+        (date(2020, 2, 8), dict, RESTORE_DATA["date"], SensorDeviceClass.DATE, None),
         (
             datetime(2020, 2, 8, 15, tzinfo=timezone.utc),
             dict,
             RESTORE_DATA["datetime"],
             SensorDeviceClass.TIMESTAMP,
+            None,
         ),
-        (Decimal("123.4"), dict, RESTORE_DATA["Decimal"], SensorDeviceClass.ENERGY),
+        (
+            Decimal("123.4"),
+            dict,
+            RESTORE_DATA["Decimal"],
+            SensorDeviceClass.ENERGY,
+            UnitOfEnergy.KILO_WATT_HOUR,
+        ),
     ],
 )
 async def test_restore_sensor_save_state(
@@ -288,6 +308,7 @@ async def test_restore_sensor_save_state(
     native_value_type,
     expected_extra_data,
     device_class,
+    uom,
 ):
     """Test RestoreSensor."""
     platform = getattr(hass.components, "test.sensor")
@@ -295,7 +316,7 @@ async def test_restore_sensor_save_state(
     platform.ENTITIES["0"] = platform.MockRestoreSensor(
         name="Test",
         native_value=native_value,
-        native_unit_of_measurement=TEMP_FAHRENHEIT,
+        native_unit_of_measurement=uom,
         device_class=device_class,
     )
 
@@ -317,23 +338,23 @@ async def test_restore_sensor_save_state(
 @pytest.mark.parametrize(
     "native_value, native_value_type, extra_data, device_class, uom",
     [
-        ("abc123", str, RESTORE_DATA["str"], None, "°F"),
+        ("abc123", str, RESTORE_DATA["str"], None, None),
         (123, int, RESTORE_DATA["int"], SensorDeviceClass.TEMPERATURE, "°F"),
         (123.0, float, RESTORE_DATA["float"], SensorDeviceClass.TEMPERATURE, "°F"),
-        (date(2020, 2, 8), date, RESTORE_DATA["date"], SensorDeviceClass.DATE, "°F"),
+        (date(2020, 2, 8), date, RESTORE_DATA["date"], SensorDeviceClass.DATE, None),
         (
             datetime(2020, 2, 8, 15, tzinfo=timezone.utc),
             datetime,
             RESTORE_DATA["datetime"],
             SensorDeviceClass.TIMESTAMP,
-            "°F",
+            None,
         ),
         (
             Decimal("123.4"),
             Decimal,
             RESTORE_DATA["Decimal"],
             SensorDeviceClass.ENERGY,
-            "°F",
+            "kWh",
         ),
         (None, type(None), None, None, None),
         (None, type(None), {}, None, None),
@@ -500,6 +521,32 @@ async def test_custom_unit(
             1000,
             SensorDeviceClass.DISTANCE,
         ),
+        # Energy
+        (
+            UnitOfEnergy.KILO_WATT_HOUR,
+            UnitOfEnergy.MEGA_WATT_HOUR,
+            UnitOfEnergy.MEGA_WATT_HOUR,
+            1000,
+            1.0,
+            SensorDeviceClass.ENERGY,
+        ),
+        (
+            UnitOfEnergy.GIGA_JOULE,
+            UnitOfEnergy.MEGA_WATT_HOUR,
+            UnitOfEnergy.MEGA_WATT_HOUR,
+            1000,
+            278,
+            SensorDeviceClass.ENERGY,
+        ),
+        (
+            UnitOfEnergy.KILO_WATT_HOUR,
+            "BTU",
+            UnitOfEnergy.KILO_WATT_HOUR,
+            1000,
+            1000,
+            SensorDeviceClass.ENERGY,
+        ),
+        # Pressure
         # Smaller to larger unit, InHg is ~33x larger than hPa -> 1 more decimal
         (
             PRESSURE_HPA,

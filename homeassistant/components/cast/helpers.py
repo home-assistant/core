@@ -59,7 +59,8 @@ class ChromecastInfo:
         if self.cast_info.cast_type is None or self.cast_info.manufacturer is None:
             unknown_models = hass.data[DOMAIN]["unknown_models"]
             if self.cast_info.model_name not in unknown_models:
-                # Manufacturer and cast type is not available in mDNS data, get it over http
+                # Manufacturer and cast type is not available in mDNS data,
+                # get it over HTTP
                 cast_info = dial.get_cast_type(
                     cast_info,
                     zconf=ChromeCastZeroconf.get_zeroconf(),

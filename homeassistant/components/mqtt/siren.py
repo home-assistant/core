@@ -128,7 +128,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT siren through configuration.yaml and dynamically through MQTT discovery."""
+    """Set up MQTT siren through YAML and through MQTT discovery."""
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -386,4 +386,6 @@ class MqttSiren(MqttEntity, SirenEntity):
         """Update the extra siren state attributes."""
         for attribute, support in SUPPORTED_ATTRIBUTES.items():
             if self._attr_supported_features & support and attribute in data:
-                self._attr_extra_state_attributes[attribute] = data[attribute]  # type: ignore[literal-required]
+                self._attr_extra_state_attributes[attribute] = data[
+                    attribute  # type: ignore[literal-required]
+                ]

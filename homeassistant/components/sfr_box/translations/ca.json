@@ -14,5 +14,32 @@
                 }
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "line_status": {
+                "state": {
+                    "loss_of_power": "P\u00e8rdua de pot\u00e8ncia",
+                    "loss_of_signal": "P\u00e8rdua de senyal",
+                    "loss_of_signal_quality": "P\u00e8rdua de qualitat de senyal",
+                    "no_defect": "Sense defectes",
+                    "unknown": "Desconegut"
+                }
+            },
+            "training": {
+                "state": {
+                    "g_922_channel_analysis": "An\u00e0lisi de canal G.922",
+                    "g_992_message_exchange": "Intercanvi de missatge G.992",
+                    "g_992_started": "G.992 s'ha iniciat",
+                    "g_993_channel_analysis": "An\u00e0lisi de canal G.993",
+                    "g_993_message_exchange": "Intercanvi de missatge G.993",
+                    "g_993_started": "G.993 s'ha iniciat",
+                    "g_994_training": "Entrenant G.994",
+                    "idle": "Inactiu",
+                    "showtime": "Hora de l'espectacle",
+                    "unknown": "Desconegut"
+                }
+            }
+        }
     }
 }

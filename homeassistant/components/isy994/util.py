@@ -9,6 +9,7 @@ from .const import (
     ISY994_NODES,
     ISY994_PROGRAMS,
     ISY994_VARIABLES,
+    ISY_CONF_UUID,
     PLATFORMS,
     PROGRAM_PLATFORMS,
 )
@@ -19,7 +20,7 @@ def unique_ids_for_config_entry_id(
 ) -> set[str]:
     """Find all the unique ids for a config entry id."""
     hass_isy_data = hass.data[DOMAIN][config_entry_id]
-    uuid = hass_isy_data[ISY994_ISY].configuration["uuid"]
+    uuid = hass_isy_data[ISY994_ISY].configuration[ISY_CONF_UUID]
     current_unique_ids: set[str] = {uuid}
 
     for platform in PLATFORMS:

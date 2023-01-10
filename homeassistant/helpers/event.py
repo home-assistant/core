@@ -710,8 +710,8 @@ def async_track_state_change_filtered(
 
     Returns
     -------
-    Object used to update the listeners (async_update_listeners) with a new TrackStates or
-    cancel the tracking (async_remove).
+    Object used to update the listeners (async_update_listeners) with a new
+    TrackStates or cancel the tracking (async_remove).
 
     """
     tracker = _TrackStateChangeFiltered(hass, track_states, action)
