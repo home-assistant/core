@@ -54,7 +54,7 @@ class SeitronClimate(CoordinatorEntity[DateUpdateCoordinator[SeitronGateway]], C
     _attr_should_poll = True
     _attr_icon = "mdi:thermostat-box"
 
-    def __init__(self, coordinator, thermostat: SeitronThermostat) -> None:
+    def __init__(self, coordinator: DataUpdateCoordinator[SeitronGateway], thermostat: SeitronThermostat) -> None:
         """Initialize an Seitron climate device."""
         super().__init__(coordinator)
         self._thermostat = thermostat
