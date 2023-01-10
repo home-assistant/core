@@ -3,7 +3,10 @@ from unittest.mock import patch
 
 from starlink_grpc import StatusDict
 
-from homeassistant.components.starlink.coordinator import StarlinkUpdateCoordinator
+from homeassistant.components.starlink.coordinator import (
+    StarlinkData,
+    StarlinkUpdateCoordinator,
+)
 
 SETUP_ENTRY_PATCHER = patch(
     "homeassistant.components.starlink.async_setup_entry", return_value=True
@@ -12,7 +15,11 @@ SETUP_ENTRY_PATCHER = patch(
 COORDINATOR_SUCCESS_PATCHER = patch.object(
     StarlinkUpdateCoordinator,
     "_async_update_data",
-    return_value=[StatusDict(id="1", software_version="1", hardware_version="1")],
+    return_value=StarlinkData(
+        StatusDict(id="1", software_version="1", hardware_version="1"),
+        {},
+        {},
+    ),
 )
 
 DEVICE_FOUND_PATCHER = patch(
