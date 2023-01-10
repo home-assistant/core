@@ -871,7 +871,7 @@ hass_splunk==0.1.1
 hassil==0.2.3
 
 # homeassistant.components.tasmota
-hatasmota==0.6.2
+hatasmota==0.6.3
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.4
