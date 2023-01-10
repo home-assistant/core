@@ -150,7 +150,7 @@ class AirlyDataUpdateCoordinator(DataUpdateCoordinator):
         """Initialize."""
         self.latitude = latitude
         self.longitude = longitude
-        self.airly = Airly(api_key, session)
+        self.airly = Airly(api_key, session, language=hass.config.language)
         self.use_nearest = use_nearest
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
