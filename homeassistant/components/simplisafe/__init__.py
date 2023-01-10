@@ -237,11 +237,12 @@ def _async_get_system_for_service_call(
     ) is None:
         raise ValueError("No base station registered for alarm control panel")
 
-    [system_id] = [
+    [system_id_str] = [
         identity[1]
         for identity in base_station_device_entry.identifiers
         if identity[0] == DOMAIN
     ]
+    system_id = int(system_id_str)
 
     for entry_id in base_station_device_entry.config_entries:
         if (simplisafe := hass.data[DOMAIN].get(entry_id)) is None:
@@ -296,13 +297,28 @@ def _async_register_base_station(
 ) -> None:
     """Register a new bridge."""
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+
+    base_station = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, system.system_id)},
+        identifiers={(DOMAIN, str(system.system_id))},
         manufacturer="SimpliSafe",
         model=system.version,
         name=system.address,
     )
+
+    # Check for an old system ID format and remove it:
+    if old_base_station := device_registry.async_get_device(
+        {(DOMAIN, system.system_id)}  # type: ignore[arg-type]
+    ):
+        # Update the new base station with any properties the user might have configured
+        # on the old base station:
+        device_registry.async_update_device(
+            base_station.id,
+            area_id=old_base_station.area_id,
+            disabled_by=old_base_station.disabled_by,
+            name_by_user=old_base_station.name_by_user,
+        )
+        device_registry.async_remove_device(old_base_station.id)
 
 
 @callback
@@ -473,7 +489,7 @@ class SimpliSafe:
         self.systems: dict[int, SystemType] = {}
 
         # This will get filled in by async_init:
-        self.coordinator: DataUpdateCoordinator | None = None
+        self.coordinator: DataUpdateCoordinator[None] | None = None
 
     @callback
     def _async_process_new_notifications(self, system: SystemType) -> None:
@@ -676,7 +692,7 @@ class SimpliSafe:
                 raise UpdateFailed(f"SimpliSafe error while updating: {result}")
 
 
-class SimpliSafeEntity(CoordinatorEntity):
+class SimpliSafeEntity(CoordinatorEntity[DataUpdateCoordinator[None]]):
     """Define a base SimpliSafe entity."""
 
     _attr_has_entity_name = True
@@ -731,7 +747,7 @@ class SimpliSafeEntity(CoordinatorEntity):
             manufacturer="SimpliSafe",
             model=model,
             name=device_name,
-            via_device=(DOMAIN, system.system_id),
+            via_device=(DOMAIN, str(system.system_id)),
         )
 
         self._attr_unique_id = serial

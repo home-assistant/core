@@ -13,12 +13,7 @@ def generate_and_validate(integrations: dict[str, Integration]) -> str:
     data = defaultdict(list)
 
     for domain in sorted(integrations):
-        integration = integrations[domain]
-
-        if not integration.manifest or not integration.config_flow:
-            continue
-
-        mqtt = integration.manifest.get("mqtt")
+        mqtt = integrations[domain].manifest.get("mqtt")
 
         if not mqtt:
             continue

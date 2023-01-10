@@ -26,7 +26,7 @@ def mock_dev_track(mock_device_tracker_conf):
 
 
 @pytest.fixture
-async def gpslogger_client(loop, hass, hass_client_no_auth):
+async def gpslogger_client(event_loop, hass, hass_client_no_auth):
     """Mock client for GPSLogger (unauthenticated)."""
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
@@ -38,7 +38,7 @@ async def gpslogger_client(loop, hass, hass_client_no_auth):
 
 
 @pytest.fixture(autouse=True)
-async def setup_zones(loop, hass):
+async def setup_zones(event_loop, hass):
     """Set up Zone config in HA."""
     assert await async_setup_component(
         hass,

@@ -49,10 +49,7 @@ def generate_and_validate(integrations: dict[str, Integration], config: Config) 
     for domain in sorted(integrations):
         integration = integrations[domain]
 
-        if (
-            not integration.manifest
-            or integration.manifest.get("integration_type") == "virtual"
-        ):
+        if integration.integration_type == "virtual":
             continue
 
         codeowners = integration.manifest["codeowners"]

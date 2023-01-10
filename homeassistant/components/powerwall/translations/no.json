@@ -14,7 +14,7 @@
         "flow_title": "{name} ( {ip_address} )",
         "step": {
             "confirm_discovery": {
-                "description": "Vil du konfigurere {name} ( {ip_address} )?",
+                "description": "Vil du sette opp {name} ( {ip_address} )?",
                 "title": "Koble til powerwall"
             },
             "reauth_confim": {

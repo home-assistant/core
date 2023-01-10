@@ -22,7 +22,7 @@
         "step": {
             "init": {
                 "data": {
-                    "reverse": "Umgekehrte Schalterlogik (NC verwenden)"
+                    "reverse": "Umgekehrte Schaltlogik (NC verwenden)"
                 }
             }
         }

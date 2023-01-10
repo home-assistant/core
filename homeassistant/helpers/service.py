@@ -371,7 +371,8 @@ def async_extract_referenced_entity_ids(
         return selected
 
     for ent_entry in ent_reg.entities.values():
-        # Do not add entities which are hidden or which are config or diagnostic entities
+        # Do not add entities which are hidden or which are config
+        # or diagnostic entities.
         if ent_entry.entity_category is not None or ent_entry.hidden_by is not None:
             continue
 
@@ -437,7 +438,7 @@ def _load_services_file(hass: HomeAssistant, integration: Integration) -> JSON_T
 def _load_services_files(
     hass: HomeAssistant, integrations: Iterable[Integration]
 ) -> list[JSON_TYPE]:
-    """Load service files for multiple intergrations."""
+    """Load service files for multiple integrations."""
     return [_load_services_file(hass, integration) for integration in integrations]
 
 
@@ -489,7 +490,10 @@ async def async_get_all_descriptions(
             # Cache missing descriptions
             if description is None:
                 domain_yaml = loaded[domain]
-                yaml_description = domain_yaml.get(service, {})  # type: ignore[union-attr]
+
+                yaml_description = domain_yaml.get(  # type: ignore[union-attr]
+                    service, {}
+                )
 
                 # Don't warn for missing services, because it triggers false
                 # positives for things like scripts, that register as a service
@@ -706,17 +710,23 @@ async def _handle_entity_call(
     entity.async_set_context(context)
 
     if isinstance(func, str):
-        result = hass.async_run_job(partial(getattr(entity, func), **data))  # type: ignore[arg-type]
+        result = hass.async_run_job(
+            partial(getattr(entity, func), **data)  # type: ignore[arg-type]
+        )
     else:
         result = hass.async_run_job(func, entity, data)
 
-    # Guard because callback functions do not return a task when passed to async_run_job.
+    # Guard because callback functions do not return a task when passed to
+    # async_run_job.
     if result is not None:
         await result
 
     if asyncio.iscoroutine(result):
         _LOGGER.error(
-            "Service %s for %s incorrectly returns a coroutine object. Await result instead in service handler. Report bug to integration author",
+            (
+                "Service %s for %s incorrectly returns a coroutine object. Await result"
+                " instead in service handler. Report bug to integration author"
+            ),
             func,
             entity.entity_id,
         )

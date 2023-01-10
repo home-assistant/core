@@ -44,6 +44,16 @@
             }
         }
     },
+    "entity": {
+        "select": {
+            "brightness_mode": {
+                "state": {
+                    "auto": "Automatikus",
+                    "manual": "Manu\u00e1lis"
+                }
+            }
+        }
+    },
     "issues": {
         "manual_migration": {
             "description": "A LaMetric integr\u00e1ci\u00f3 moderniz\u00e1l\u00e1sra ker\u00fclt: A konfigur\u00e1l\u00e1s \u00e9s be\u00e1ll\u00edt\u00e1s mostant\u00f3l a felhaszn\u00e1l\u00f3i fel\u00fcleten kereszt\u00fcl t\u00f6rt\u00e9nik, \u00e9s a kommunik\u00e1ci\u00f3 mostant\u00f3l helyi.\n\nSajnos nincs lehet\u0151s\u00e9g automatikus migr\u00e1ci\u00f3s \u00fatvonalra, \u00edgy a LaMetric-et \u00fajra be kell \u00e1ll\u00edtania a Home Assistant seg\u00edts\u00e9g\u00e9vel. K\u00e9rj\u00fck, tekintse meg a Home Assistant LaMetric integr\u00e1ci\u00f3 dokument\u00e1ci\u00f3j\u00e1t a be\u00e1ll\u00edt\u00e1ssal kapcsolatban.\n\nA probl\u00e9ma megold\u00e1s\u00e1hoz t\u00e1vol\u00edtsa el a r\u00e9gi LaMetric YAML konfigur\u00e1ci\u00f3t a configuration.yaml f\u00e1jlb\u00f3l, \u00e9s ind\u00edtsa \u00fajra a Home Assistant-ot.",

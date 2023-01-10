@@ -12,11 +12,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    LENGTH_KILOMETERS,
     PERCENTAGE,
-    SPEED_MILES_PER_HOUR,
-    TEMP_CELSIUS,
     UV_INDEX,
+    UnitOfLength,
+    UnitOfSpeed,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -65,7 +65,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="temperature",
         name="Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         icon=None,
         entity_registry_enabled_default=True,
     ),
@@ -73,17 +73,18 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="feels_like_temperature",
         name="Feels like temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         icon=None,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="wind_speed",
         name="Wind speed",
-        native_unit_of_measurement=SPEED_MILES_PER_HOUR,
-        suggested_unit_of_measurement=SPEED_MILES_PER_HOUR,
-        device_class=SensorDeviceClass.SPEED,
-        icon="mdi:weather-windy",
+        native_unit_of_measurement=UnitOfSpeed.MILES_PER_HOUR,
+        # Hint mph because that's the preferred unit for wind speeds in UK
+        # This can be removed if we add a mixed metric/imperial unit system for UK users
+        suggested_unit_of_measurement=UnitOfSpeed.MILES_PER_HOUR,
+        device_class=SensorDeviceClass.WIND_SPEED,
         entity_registry_enabled_default=True,
     ),
     SensorEntityDescription(
@@ -95,10 +96,11 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="wind_gust",
         name="Wind gust",
-        native_unit_of_measurement=SPEED_MILES_PER_HOUR,
-        suggested_unit_of_measurement=SPEED_MILES_PER_HOUR,
-        device_class=SensorDeviceClass.SPEED,
-        icon="mdi:weather-windy",
+        native_unit_of_measurement=UnitOfSpeed.MILES_PER_HOUR,
+        # Hint mph because that's the preferred unit for wind speeds in UK
+        # This can be removed if we add a mixed metric/imperial unit system for UK users
+        suggested_unit_of_measurement=UnitOfSpeed.MILES_PER_HOUR,
+        device_class=SensorDeviceClass.WIND_SPEED,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
@@ -111,7 +113,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="visibility_distance",
         name="Visibility distance",
-        native_unit_of_measurement=LENGTH_KILOMETERS,
+        native_unit_of_measurement=UnitOfLength.KILOMETERS,
         device_class=SensorDeviceClass.DISTANCE,
         icon="mdi:eye",
         entity_registry_enabled_default=False,

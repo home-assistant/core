@@ -47,7 +47,7 @@ METER_TYPES = [
 ]
 
 
-def _validate_config(
+async def _validate_config(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
     """Validate config."""

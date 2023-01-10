@@ -10,12 +10,7 @@ def generate_and_validate(integrations: dict[str, Integration]) -> str:
     match_list = []
 
     for domain in sorted(integrations):
-        integration = integrations[domain]
-
-        if not integration.manifest or not integration.config_flow:
-            continue
-
-        match_types = integration.manifest.get("bluetooth", [])
+        match_types = integrations[domain].manifest.get("bluetooth", [])
 
         if not match_types:
             continue

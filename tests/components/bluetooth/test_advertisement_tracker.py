@@ -4,10 +4,9 @@ from datetime import timedelta
 import time
 from unittest.mock import patch
 
-from bleak.backends.scanner import AdvertisementData, BLEDevice
+from bleak.backends.scanner import BLEDevice
 
 from homeassistant.components.bluetooth import (
-    BaseHaScanner,
     async_register_scanner,
     async_track_unavailable,
 )
@@ -22,6 +21,7 @@ from homeassistant.core import callback
 from homeassistant.util import dt as dt_util
 
 from . import (
+    FakeScanner,
     generate_advertisement_data,
     inject_advertisement_with_time_and_source,
     inject_advertisement_with_time_and_source_connectable,
@@ -303,16 +303,6 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_adapter_c
         rssi=-100,
     )
     switchbot_device_went_unavailable = False
-
-    class FakeScanner(BaseHaScanner):
-        """Fake scanner."""
-
-        @property
-        def discovered_devices_and_advertisement_data(
-            self,
-        ) -> dict[str, tuple[BLEDevice, AdvertisementData]]:
-            """Return a list of discovered devices."""
-            return {}
 
     scanner = FakeScanner(hass, "new", "fake_adapter")
     cancel_scanner = async_register_scanner(hass, scanner, False)

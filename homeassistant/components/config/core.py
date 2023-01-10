@@ -110,4 +110,7 @@ async def websocket_detect_config(
     if location_info.currency:
         info["currency"] = location_info.currency
 
+    if location_info.country_code:
+        info["country"] = location_info.country_code
+
     connection.send_result(msg["id"], info)

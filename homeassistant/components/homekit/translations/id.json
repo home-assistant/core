@@ -5,7 +5,7 @@
         },
         "step": {
             "pairing": {
-                "description": "Untuk menyelesaikan pemasangan ikuti petunjuk di \"Notifikasi\" di bawah \"Pemasangan HomeKit\".",
+                "description": "Untuk menyelesaikan pemasangan, ikuti petunjuk di \"Notifikasi\" di bawah \"Pemasangan HomeKit\".",
                 "title": "Pasangkan HomeKit"
             },
             "user": {
@@ -51,7 +51,7 @@
                 "data": {
                     "entities": "Entitas"
                 },
-                "description": "Semua entitas \"{domains}\" akan disertakan kecuali entitas tertentu dipilih.",
+                "description": "Hanya entitas \"{domains}\" yang dipilih yang akan disertakan.",
                 "title": "Pilih entitas yang akan disertakan"
             },
             "init": {

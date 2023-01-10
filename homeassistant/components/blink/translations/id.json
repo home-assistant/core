@@ -14,7 +14,7 @@
                 "data": {
                     "2fa": "Kode autentikasi dua faktor"
                 },
-                "description": "Masukkan PIN yang dikirimkan ke email Anda",
+                "description": "Masukkan PIN yang dikirimkan lewat SMS atau email",
                 "title": "Autentikasi dua faktor"
             },
             "user": {

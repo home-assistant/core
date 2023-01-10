@@ -69,5 +69,39 @@
             "single_press": "\" {subtype} \" on vajutatud"
         }
     },
+    "entity": {
+        "select": {
+            "ecobee_mode": {
+                "state": {
+                    "away": "Eemal",
+                    "home": "Kodus",
+                    "sleep": "Uneaeg"
+                }
+            }
+        },
+        "sensor": {
+            "thread_node_capabilities": {
+                "state": {
+                    "border_router_capable": "Piiriruuteri v\u00f5imekus",
+                    "full": "T\u00e4ielik l\u00f5ppseade",
+                    "minimal": "Minimaalne l\u00f5ppseade",
+                    "none": "Puudub",
+                    "router_eligible": "Ruuteriks sobiv l\u00f5ppseade",
+                    "sleepy": "Uinuv l\u00f5ppseade"
+                }
+            },
+            "thread_status": {
+                "state": {
+                    "border_router": "Rajaruuter",
+                    "child": "Alamseade",
+                    "detached": "Eraldatud",
+                    "disabled": "Keelatud",
+                    "joining": "Liitun",
+                    "leader": "Juhtseade",
+                    "router": "Ruuter"
+                }
+            }
+        }
+    },
     "title": "HomeKit kontroller"
 }

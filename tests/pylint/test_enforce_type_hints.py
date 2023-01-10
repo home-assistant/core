@@ -898,7 +898,7 @@ def test_invalid_device_class(
         pylint.testutils.MessageTest(
             msg_id="hass-return-type",
             node=prop_node,
-            args=(["CoverDeviceClass", "str", None], "device_class"),
+            args=(["CoverDeviceClass", None], "device_class"),
             line=12,
             col_offset=4,
             end_line=12,

@@ -13,12 +13,14 @@ from homeassistant.core import HomeAssistant
 from . import CONFIG_SCHEMA
 from .const import (
     CONF_KNX_KNXKEY_PASSWORD,
+    CONF_KNX_ROUTING_BACKBONE_KEY,
     CONF_KNX_SECURE_DEVICE_AUTHENTICATION,
     CONF_KNX_SECURE_USER_PASSWORD,
     DOMAIN,
 )
 
 TO_REDACT = {
+    CONF_KNX_ROUTING_BACKBONE_KEY,
     CONF_KNX_KNXKEY_PASSWORD,
     CONF_KNX_SECURE_USER_PASSWORD,
     CONF_KNX_SECURE_DEVICE_AUTHENTICATION,
@@ -27,7 +29,7 @@ TO_REDACT = {
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry
-) -> dict:
+) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     diag: dict[str, Any] = {}
     knx_module = hass.data[DOMAIN]

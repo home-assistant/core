@@ -69,5 +69,39 @@
             "single_press": "\"{subtype}\" trykket"
         }
     },
+    "entity": {
+        "select": {
+            "ecobee_mode": {
+                "state": {
+                    "away": "Borte",
+                    "home": "Hjemme",
+                    "sleep": "Sove"
+                }
+            }
+        },
+        "sensor": {
+            "thread_node_capabilities": {
+                "state": {
+                    "border_router_capable": "Kan med kantruter",
+                    "full": "Full End-enhet",
+                    "minimal": "Minimal sluttenhet",
+                    "none": "Ingen",
+                    "router_eligible": "Ruterkvalifisert sluttenhet",
+                    "sleepy": "S\u00f8vnig sluttenhet"
+                }
+            },
+            "thread_status": {
+                "state": {
+                    "border_router": "Border Router",
+                    "child": "Barn",
+                    "detached": "Frakoblet",
+                    "disabled": "Deaktivert",
+                    "joining": "Blir med",
+                    "leader": "Leder",
+                    "router": "Ruter"
+                }
+            }
+        }
+    },
     "title": "HomeKit-kontroller"
 }

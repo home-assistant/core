@@ -13,13 +13,16 @@
             "reauth_confirm": {
                 "data": {
                     "password": "Heslo"
-                }
+                },
+                "description": "Znova zadajte heslo pre: {username}",
+                "title": "Znova overi\u0165 integr\u00e1ciu"
             },
             "user": {
                 "data": {
                     "password": "Heslo",
                     "username": "U\u017e\u00edvate\u013esk\u00e9 meno"
-                }
+                },
+                "title": "Nastavte integr\u00e1ciu Brunt"
             }
         }
     }

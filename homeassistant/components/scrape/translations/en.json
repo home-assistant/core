@@ -57,7 +57,57 @@
     },
     "options": {
         "step": {
+            "add_sensor": {
+                "data": {
+                    "attribute": "Attribute",
+                    "device_class": "Device Class",
+                    "index": "Index",
+                    "name": "Name",
+                    "select": "Select",
+                    "state_class": "State Class",
+                    "unit_of_measurement": "Unit of Measurement",
+                    "value_template": "Value Template"
+                },
+                "data_description": {
+                    "attribute": "Get value of an attribute on the selected tag",
+                    "device_class": "The type/class of the sensor to set the icon in the frontend",
+                    "index": "Defines which of the elements returned by the CSS selector to use",
+                    "select": "Defines what tag to search for. Check Beautifulsoup CSS selectors for details",
+                    "state_class": "The state_class of the sensor",
+                    "unit_of_measurement": "Choose temperature measurement or create your own",
+                    "value_template": "Defines a template to get the state of the sensor"
+                }
+            },
+            "edit_sensor": {
+                "data": {
+                    "attribute": "Attribute",
+                    "device_class": "Device Class",
+                    "index": "Index",
+                    "name": "Name",
+                    "select": "Select",
+                    "state_class": "State Class",
+                    "unit_of_measurement": "Unit of Measurement",
+                    "value_template": "Value Template"
+                },
+                "data_description": {
+                    "attribute": "Get value of an attribute on the selected tag",
+                    "device_class": "The type/class of the sensor to set the icon in the frontend",
+                    "index": "Defines which of the elements returned by the CSS selector to use",
+                    "select": "Defines what tag to search for. Check Beautifulsoup CSS selectors for details",
+                    "state_class": "The state_class of the sensor",
+                    "unit_of_measurement": "Choose temperature measurement or create your own",
+                    "value_template": "Defines a template to get the state of the sensor"
+                }
+            },
             "init": {
+                "menu_options": {
+                    "add_sensor": "Add sensor",
+                    "remove_sensor": "Remove sensor",
+                    "resource": "Configure resource",
+                    "select_edit_sensor": "Configure sensor"
+                }
+            },
+            "resource": {
                 "data": {
                     "authentication": "Select authentication method",
                     "headers": "Headers",

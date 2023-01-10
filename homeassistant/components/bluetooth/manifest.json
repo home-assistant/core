@@ -7,11 +7,11 @@
   "quality_scale": "internal",
   "requirements": [
     "bleak==0.19.2",
-    "bleak-retry-connector==2.8.5",
-    "bluetooth-adapters==0.8.0",
-    "bluetooth-auto-recovery==0.4.0",
-    "bluetooth-data-tools==0.3.0",
-    "dbus-fast==1.75.0"
+    "bleak-retry-connector==2.13.0",
+    "bluetooth-adapters==0.15.2",
+    "bluetooth-auto-recovery==1.0.3",
+    "bluetooth-data-tools==0.3.1",
+    "dbus-fast==1.82.0"
   ],
   "codeowners": ["@bdraco"],
   "config_flow": true,

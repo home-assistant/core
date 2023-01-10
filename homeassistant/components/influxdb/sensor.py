@@ -83,7 +83,8 @@ def validate_query_format_for_version(conf: dict) -> dict:
     if conf[CONF_API_VERSION] == API_VERSION_2:
         if CONF_QUERIES_FLUX not in conf:
             raise vol.Invalid(
-                f"{CONF_QUERIES_FLUX} is required when {CONF_API_VERSION} is {API_VERSION_2}"
+                f"{CONF_QUERIES_FLUX} is required when {CONF_API_VERSION} is"
+                f" {API_VERSION_2}"
             )
 
         for query in conf[CONF_QUERIES_FLUX]:
@@ -95,7 +96,8 @@ def validate_query_format_for_version(conf: dict) -> dict:
     else:
         if CONF_QUERIES not in conf:
             raise vol.Invalid(
-                f"{CONF_QUERIES} is required when {CONF_API_VERSION} is {DEFAULT_API_VERSION}"
+                f"{CONF_QUERIES} is required when {CONF_API_VERSION} is"
+                f" {DEFAULT_API_VERSION}"
             )
 
         for query in conf[CONF_QUERIES]:
@@ -270,7 +272,10 @@ class InfluxFluxSensorData:
         self.value = None
         self.full_query = None
 
-        self.query_prefix = f'from(bucket:"{bucket}") |> range(start: {range_start}, stop: {range_stop}) |>'
+        self.query_prefix = (
+            f'from(bucket:"{bucket}") |> range(start: {range_start}, stop:'
+            f" {range_stop}) |>"
+        )
         if imports is not None:
             for i in imports:
                 self.query_prefix = f'import "{i}" {self.query_prefix}'
@@ -334,7 +339,10 @@ class InfluxQLSensorData:
             _LOGGER.error(RENDERING_WHERE_ERROR_MESSAGE, ex)
             return
 
-        self.query = f"select {self.group}({self.field}) as {INFLUX_CONF_VALUE} from {self.measurement} where {where_clause}"
+        self.query = (
+            f"select {self.group}({self.field}) as {INFLUX_CONF_VALUE} from"
+            f" {self.measurement} where {where_clause}"
+        )
 
         _LOGGER.debug(RUNNING_QUERY_MESSAGE, self.query)
 

@@ -20,8 +20,7 @@
                     "host": "Host",
                     "id": "ID del sistema",
                     "port": "Puerto"
-                },
-                "description": "Configura la integraci\u00f3n Airzone."
+                }
             }
         }
     }

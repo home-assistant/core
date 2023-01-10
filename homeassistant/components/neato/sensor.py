@@ -79,7 +79,7 @@ class NeatoSensor(SensorEntity):
         return self._robot_serial
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> SensorDeviceClass:
         """Return the device class."""
         return SensorDeviceClass.BATTERY
 

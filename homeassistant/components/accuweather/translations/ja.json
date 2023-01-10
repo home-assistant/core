@@ -22,16 +22,6 @@
             }
         }
     },
-    "options": {
-        "step": {
-            "user": {
-                "data": {
-                    "forecast": "\u5929\u6c17\u4e88\u5831"
-                },
-                "description": "\u7121\u6599\u7248\u306eAccuWeather API\u30ad\u30fc\u306e\u5236\u9650\u306b\u3088\u308a\u3001\u5929\u6c17\u4e88\u5831\u3092\u6709\u52b9\u306b\u3057\u305f\u5834\u5408\u3001\u30c7\u30fc\u30bf\u306e\u66f4\u65b0\u306f40\u5206\u6bce\u3067\u306f\u306a\u304f80\u5206\u6bce\u306b\u5b9f\u884c\u3055\u308c\u307e\u3059\u3002"
-            }
-        }
-    },
     "system_health": {
         "info": {
             "can_reach_server": "AccuWeather\u30b5\u30fc\u30d0\u30fc\u3078\u306e\u30a2\u30af\u30bb\u30b9",

@@ -1,4 +1,5 @@
 """Test requirements module."""
+import logging
 import os
 from unittest.mock import call, patch
 
@@ -91,6 +92,23 @@ async def test_install_missing_package(hass):
         await async_process_requirements(hass, "test_component", ["hello==1.0.0"])
 
     assert len(mock_inst.mock_calls) == 3
+
+
+async def test_install_skipped_package(hass, caplog):
+    """Test an install attempt on a dependency that should be skipped."""
+    with patch(
+        "homeassistant.util.package.install_package", return_value=True
+    ) as mock_inst:
+        hass.config.skip_pip_packages = ["hello"]
+        with caplog.at_level(logging.WARNING):
+            await async_process_requirements(
+                hass, "test_component", ["hello==1.0.0", "not_skipped==1.2.3"]
+            )
+
+    assert "Skipping requirement hello==1.0.0" in caplog.text
+
+    assert len(mock_inst.mock_calls) == 1
+    assert mock_inst.mock_calls[0].args[0] == "not_skipped==1.2.3"
 
 
 async def test_get_integration_with_requirements(hass):
@@ -401,7 +419,7 @@ async def test_discovery_requirements_mqtt(hass):
     ) as mock_process:
         await async_get_integration_with_requirements(hass, "mqtt_comp")
 
-    assert len(mock_process.mock_calls) == 2  # mqtt also depends on http
+    assert len(mock_process.mock_calls) == 3  # mqtt also depends on http
     assert mock_process.mock_calls[0][1][1] == mqtt.requirements
 
 

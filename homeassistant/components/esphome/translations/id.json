@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Perangkat sudah dikonfigurasi",
             "already_in_progress": "Alur konfigurasi sedang berlangsung",
+            "mdns_missing_mac": "Alamat MAC tidak ada dalam properti MDNS.",
             "reauth_successful": "Autentikasi ulang berhasil"
         },
         "error": {
@@ -46,8 +47,8 @@
     },
     "issues": {
         "ble_firmware_outdated": {
-            "description": "Untuk meningkatkan keandalan dan performa Bluetooth, kami sangat menyarankan untuk memperbarui {name} dengan ESPHome 2022.11.0 atau yang lebih baru.",
-            "title": "Perbarui {name} dengan ESPHome 2022.11.0 atau yang lebih baru"
+            "description": "Untuk meningkatkan keandalan dan performa Bluetooth, kami sangat menyarankan untuk memperbarui {name} dengan ESPHome {version} atau yang lebih baru. Saat memperbarui perangkat ke ESPHome {version}, disarankan untuk menggunakan kabel serial, bukan pembaruan OTA, untuk memanfaatkan skema partisi yang baru.",
+            "title": "Perbarui {name} dengan ESPHome {version} atau yang lebih baru"
         }
     }
 }

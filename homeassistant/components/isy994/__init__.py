@@ -1,4 +1,4 @@
-"""Support the ISY-994 controllers."""
+"""Support the Universal Devices ISY/IoX controllers."""
 from __future__ import annotations
 
 import asyncio
@@ -7,6 +7,7 @@ from urllib.parse import urlparse
 from aiohttp import CookieJar
 import async_timeout
 from pyisy import ISY, ISYConnectionError, ISYInvalidAuthError, ISYResponseParseError
+from pyisy.constants import PROTO_NETWORK_RESOURCE
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -38,9 +39,19 @@ from .const import (
     ISY994_NODES,
     ISY994_PROGRAMS,
     ISY994_VARIABLES,
+    ISY_CONF_FIRMWARE,
+    ISY_CONF_MODEL,
+    ISY_CONF_NAME,
+    ISY_CONF_NETWORKING,
+    ISY_CONF_UUID,
+    ISY_CONN_ADDRESS,
+    ISY_CONN_PORT,
+    ISY_CONN_TLS,
     MANUFACTURER,
     PLATFORMS,
     PROGRAM_PLATFORMS,
+    SCHEME_HTTP,
+    SCHEME_HTTPS,
     SENSOR_AUX,
 )
 from .helpers import _categorize_nodes, _categorize_programs, _categorize_variables
@@ -122,7 +133,7 @@ async def async_setup_entry(
     hass.data[DOMAIN][entry.entry_id] = {}
     hass_isy_data = hass.data[DOMAIN][entry.entry_id]
 
-    hass_isy_data[ISY994_NODES] = {SENSOR_AUX: []}
+    hass_isy_data[ISY994_NODES] = {SENSOR_AUX: [], PROTO_NETWORK_RESOURCE: []}
     for platform in PLATFORMS:
         hass_isy_data[ISY994_NODES][platform] = []
 
@@ -148,18 +159,18 @@ async def async_setup_entry(
         CONF_VAR_SENSOR_STRING, DEFAULT_VAR_SENSOR_STRING
     )
 
-    if host.scheme == "http":
+    if host.scheme == SCHEME_HTTP:
         https = False
         port = host.port or 80
         session = aiohttp_client.async_create_clientsession(
             hass, verify_ssl=False, cookie_jar=CookieJar(unsafe=True)
         )
-    elif host.scheme == "https":
+    elif host.scheme == SCHEME_HTTPS:
         https = True
         port = host.port or 443
         session = aiohttp_client.async_get_clientsession(hass)
     else:
-        _LOGGER.error("The isy994 host value in configuration is invalid")
+        _LOGGER.error("The ISY/IoX host value in configuration is invalid")
         return False
 
     # Connect to ISY controller.
@@ -180,7 +191,8 @@ async def async_setup_entry(
             await isy.initialize()
     except asyncio.TimeoutError as err:
         raise ConfigEntryNotReady(
-            f"Timed out initializing the ISY; device may be busy, trying again later: {err}"
+            "Timed out initializing the ISY; device may be busy, trying again later:"
+            f" {err}"
         ) from err
     except ISYInvalidAuthError as err:
         raise ConfigEntryAuthFailed(f"Invalid credentials for the ISY: {err}") from err
@@ -190,7 +202,8 @@ async def async_setup_entry(
         ) from err
     except ISYResponseParseError as err:
         raise ConfigEntryNotReady(
-            f"Invalid XML response from ISY; Ensure the ISY is running the latest firmware: {err}"
+            "Invalid XML response from ISY; Ensure the ISY is running the latest"
+            f" firmware: {err}"
         ) from err
     except TypeError as err:
         raise ConfigEntryNotReady(
@@ -200,6 +213,9 @@ async def async_setup_entry(
     _categorize_nodes(hass_isy_data, isy.nodes, ignore_identifier, sensor_identifier)
     _categorize_programs(hass_isy_data, isy.programs)
     _categorize_variables(hass_isy_data, isy.variables, variable_identifier)
+    if isy.configuration[ISY_CONF_NETWORKING]:
+        for resource in isy.networking.nobjs:
+            hass_isy_data[ISY994_NODES][PROTO_NETWORK_RESOURCE].append(resource)
 
     # Dump ISY Clock Information. Future: Add ISY as sensor to Hass with attrs
     _LOGGER.info(repr(isy.clock))
@@ -260,8 +276,8 @@ def _async_import_options_from_data_if_missing(
 def _async_isy_to_configuration_url(isy: ISY) -> str:
     """Extract the configuration url from the isy."""
     connection_info = isy.conn.connection_info
-    proto = "https" if "tls" in connection_info else "http"
-    return f"{proto}://{connection_info['addr']}:{connection_info['port']}"
+    proto = SCHEME_HTTPS if ISY_CONN_TLS in connection_info else SCHEME_HTTP
+    return f"{proto}://{connection_info[ISY_CONN_ADDRESS]}:{connection_info[ISY_CONN_PORT]}"
 
 
 @callback
@@ -272,12 +288,12 @@ def _async_get_or_create_isy_device_in_registry(
     url = _async_isy_to_configuration_url(isy)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, isy.configuration["uuid"])},
-        identifiers={(DOMAIN, isy.configuration["uuid"])},
+        connections={(dr.CONNECTION_NETWORK_MAC, isy.configuration[ISY_CONF_UUID])},
+        identifiers={(DOMAIN, isy.configuration[ISY_CONF_UUID])},
         manufacturer=MANUFACTURER,
-        name=isy.configuration["name"],
-        model=isy.configuration["model"],
-        sw_version=isy.configuration["firmware"],
+        name=isy.configuration[ISY_CONF_NAME],
+        model=isy.configuration[ISY_CONF_MODEL],
+        sw_version=isy.configuration[ISY_CONF_FIRMWARE],
         configuration_url=url,
     )
 
@@ -308,7 +324,7 @@ async def async_remove_config_entry_device(
     config_entry: config_entries.ConfigEntry,
     device_entry: dr.DeviceEntry,
 ) -> bool:
-    """Remove isy994 config entry from a device."""
+    """Remove ISY config entry from a device."""
     return not device_entry.identifiers.intersection(
         (DOMAIN, unique_id)
         for unique_id in unique_ids_for_config_entry_id(hass, config_entry.entry_id)

@@ -12,7 +12,7 @@ def integration():
     """Fixture for hassfest integration model."""
     integration = Integration(
         path=Path("homeassistant/components/test"),
-        manifest={
+        _manifest={
             "domain": "test",
             "documentation": "https://example.com",
             "name": "test",

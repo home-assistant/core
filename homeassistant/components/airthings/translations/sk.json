@@ -11,6 +11,7 @@
         "step": {
             "user": {
                 "data": {
+                    "description": "Ak chcete n\u00e1js\u0165 svoje poverenia, prihl\u00e1ste sa na adrese {url}",
                     "id": "ID",
                     "secret": "Tajn\u00e9"
                 }

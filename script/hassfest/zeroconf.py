@@ -16,10 +16,6 @@ def generate_and_validate(integrations: dict[str, Integration]) -> str:
 
     for domain in sorted(integrations):
         integration = integrations[domain]
-
-        if not integration.manifest or not integration.config_flow:
-            continue
-
         service_types = integration.manifest.get("zeroconf", [])
         homekit = integration.manifest.get("homekit", {})
         homekit_models = homekit.get("models", [])

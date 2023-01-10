@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "L\u00f6senord"
+                }
+            }
+        }
+    }
+}

@@ -14,5 +14,18 @@
                 }
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "printer_state": {
+                "state": {
+                    "cancelling": "Avbryter",
+                    "idle": "Inaktiv",
+                    "paused": "Pauset",
+                    "pausing": "Setter p\u00e5 pause",
+                    "printing": "Printing"
+                }
+            }
+        }
     }
 }

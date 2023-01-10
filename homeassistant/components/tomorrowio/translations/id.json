@@ -17,6 +17,39 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "health_concern": {
+                "state": {
+                    "good": "Bagus",
+                    "hazardous": "Berbahaya",
+                    "moderate": "Sedang",
+                    "unhealthy": "Tidak Sehat",
+                    "unhealthy_for_sensitive_groups": "Tidak Sehat untuk Kelompok Sensitif",
+                    "very_unhealthy": "Sangat Tidak Sehat"
+                }
+            },
+            "pollen_index": {
+                "state": {
+                    "high": "Tinggi",
+                    "low": "Rendah",
+                    "medium": "Sedang",
+                    "none": "Tidak Ada",
+                    "very_high": "Sangat Tinggi",
+                    "very_low": "Sangat Rendah"
+                }
+            },
+            "precipitation_type": {
+                "state": {
+                    "freezing_rain": "Hujan Beku",
+                    "ice_pellets": "Hujan Es",
+                    "none": "Tidak Ada",
+                    "rain": "Hujan",
+                    "snow": "Salju"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {

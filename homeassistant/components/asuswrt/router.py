@@ -402,7 +402,10 @@ class AsusWrtRouter:
             ]
         except Exception as exc:  # pylint: disable=broad-except
             _LOGGER.debug(
-                "Failed checking temperature sensor availability for ASUS router %s. Exception: %s",
+                (
+                    "Failed checking temperature sensor availability for ASUS router"
+                    " %s. Exception: %s"
+                ),
                 self._host,
                 exc,
             )

@@ -8,10 +8,10 @@
         "error": {
             "cannot_connect": "\u00dchendamine nurjus"
         },
-        "flow_title": "{label} ({host}) {serial}",
+        "flow_title": "{label} ({group})",
         "step": {
             "discovery_confirm": {
-                "description": "Kas seadistada {label} ( {host} ) {serial} ?"
+                "description": "Kas seadistada {label} ({group})?"
             },
             "pick_device": {
                 "data": {

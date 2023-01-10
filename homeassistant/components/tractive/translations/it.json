@@ -17,5 +17,17 @@
                 }
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "tracker_state": {
+                "state": {
+                    "not_reporting": "Non segnalante",
+                    "operational": "Operativo",
+                    "system_shutdown_user": "Spegnimento del sistema da parte dell'utente",
+                    "system_startup": "Avvio del sistema"
+                }
+            }
+        }
     }
 }

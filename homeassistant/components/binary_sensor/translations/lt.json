@@ -1,4 +1,14 @@
 {
+    "device_automation": {
+        "condition_type": {
+            "is_motion": "{entity_name} aptiko judes\u012f",
+            "is_no_motion": "{entity_name} judesio n\u0117ra"
+        },
+        "trigger_type": {
+            "motion": "{entity_name} prad\u0117jo aptikti judes\u012f",
+            "no_motion": "{entity_name} nustojo aptikti judes\u012f"
+        }
+    },
     "state": {
         "_": {
             "off": "I\u0161jungta",

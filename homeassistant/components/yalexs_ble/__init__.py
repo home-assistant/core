@@ -2,44 +2,21 @@
 from __future__ import annotations
 
 import asyncio
-from typing import TypedDict
 
 import async_timeout
 from yalexs_ble import PushLock, local_name_is_unique
 
 from homeassistant.components import bluetooth
-from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import discovery_flow
 
 from .const import CONF_KEY, CONF_LOCAL_NAME, CONF_SLOT, DEVICE_TIMEOUT, DOMAIN
 from .models import YaleXSBLEData
 from .util import async_find_existing_service_info, bluetooth_callback_matcher
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.LOCK, Platform.SENSOR]
-
-
-class YaleXSBLEDiscovery(TypedDict):
-    """A validated discovery of a Yale XS BLE device."""
-
-    name: str
-    address: str
-    serial: str
-    key: str
-    slot: int
-
-
-@callback
-def async_discovery(hass: HomeAssistant, discovery: YaleXSBLEDiscovery) -> None:
-    """Update keys for the yalexs-ble integration if available."""
-    discovery_flow.async_create_flow(
-        hass,
-        DOMAIN,
-        context={"source": SOURCE_INTEGRATION_DISCOVERY},
-        data=discovery,
-    )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

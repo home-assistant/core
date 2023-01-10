@@ -28,7 +28,6 @@ async def test_full_flow(
     )
     assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == SOURCE_USER
-    assert "flow_id" in result
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -72,7 +71,6 @@ async def test_errors(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert "flow_id" in result
     flow_id = result["flow_id"]
 
     mock_fully_kiosk_config_flow.getDeviceInfo.side_effect = side_effect
@@ -119,7 +117,6 @@ async def test_duplicate_updates_existing_entry(
     )
     assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == SOURCE_USER
-    assert "flow_id" in result
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],

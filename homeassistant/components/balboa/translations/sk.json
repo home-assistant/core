@@ -11,6 +11,16 @@
             "user": {
                 "data": {
                     "host": "Hostite\u013e"
+                },
+                "title": "Pripojte sa k zariadeniu Balboa Wi-Fi"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "sync_time": "Udr\u017eujte \u010das svojho klienta Balboa Spa synchronizovan\u00fd s Home Assistant"
                 }
             }
         }

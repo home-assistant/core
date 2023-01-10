@@ -18,5 +18,15 @@
                 "description": "Wprowad\u017a nazw\u0119 hosta lub adres IP urz\u0105dzenia TOLO Sauna."
             }
         }
+    },
+    "entity": {
+        "select": {
+            "lamp_mode": {
+                "state": {
+                    "automatic": "automatyczny",
+                    "manual": "r\u0119czny"
+                }
+            }
+        }
     }
 }

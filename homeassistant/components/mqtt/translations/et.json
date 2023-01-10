@@ -8,7 +8,7 @@
             "bad_birth": "Kehtetu loomise teavitus",
             "bad_certificate": "CA sertifikaat on kehtetu",
             "bad_client_cert": "Kehtetu kliendi sertifikaat, veendu, et on esitatud PEM-kodeeritud fail",
-            "bad_client_cert_key": "Kliendisertifikaat ja privaatne sertifikaat ei ole kehtiv paar",
+            "bad_client_cert_key": "Kliendisertifikaat ja privaatne v\u00f5ti ei ole kehtiv paar",
             "bad_client_key": "Kehtetu privaatv\u00f5ti, veendu, et PEM-kodeeritud fail tarnitakse ilma paroolita",
             "bad_discovery_prefix": "Sobimatu tuvastuse eesliide",
             "bad_will": "Kehtetu l\u00f5petamise teavitus",

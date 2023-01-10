@@ -15,7 +15,8 @@
                 "data": {
                     "password": "Heslo"
                 },
-                "description": "Aktualizova\u0165 heslo pre {username}"
+                "description": "Aktualizova\u0165 heslo pre {username}",
+                "title": "Znova overi\u0165 integr\u00e1ciu"
             },
             "service": {
                 "data": {
@@ -25,7 +26,8 @@
             },
             "user": {
                 "data": {
-                    "password": "Heslo"
+                    "password": "Heslo",
+                    "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
                 }
             }
         }

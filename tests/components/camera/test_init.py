@@ -503,15 +503,17 @@ async def test_camera_proxy_stream(hass, mock_camera, hass_client):
 
     client = await hass_client()
 
-    response = await client.get("/api/camera_proxy_stream/camera.demo_camera")
-    assert response.status == HTTPStatus.OK
+    async with client.get("/api/camera_proxy_stream/camera.demo_camera") as response:
+        assert response.status == HTTPStatus.OK
 
     with patch(
         "homeassistant.components.demo.camera.DemoCamera.handle_async_mjpeg_stream",
         return_value=None,
     ):
-        response = await client.get("/api/camera_proxy_stream/camera.demo_camera")
-        assert response.status == HTTPStatus.BAD_GATEWAY
+        async with await client.get(
+            "/api/camera_proxy_stream/camera.demo_camera"
+        ) as response:
+            assert response.status == HTTPStatus.BAD_GATEWAY
 
 
 async def test_websocket_web_rtc_offer(

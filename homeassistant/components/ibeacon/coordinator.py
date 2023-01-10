@@ -355,8 +355,8 @@ class IBeaconCoordinator:
             if group_id not in self._unavailable_group_ids
             and (service_info := self._last_seen_by_group_id.get(group_id))
             and (
-                # We will not be callbacks for iBeacons with random macs
-                # that rotate infrequently since their advertisement data is
+                # We will not get callbacks for iBeacons with random macs
+                # that rotate infrequently since their advertisement data
                 # does not change as the bluetooth.async_register_callback API
                 # suppresses callbacks for duplicate advertisements to avoid
                 # exposing integrations to the firehose of bluetooth advertisements.

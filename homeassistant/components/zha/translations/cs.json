@@ -142,6 +142,9 @@
                 },
                 "title": "P\u0159epsat adresu IEEE r\u00e1dia"
             },
+            "prompt_migrate_or_reconfigure": {
+                "description": "P\u0159ech\u00e1z\u00edte na nov\u00e9 r\u00e1dio nebo m\u011bn\u00edte konfiguraci st\u00e1vaj\u00edc\u00edho r\u00e1dia?"
+            },
             "upload_manual_backup": {
                 "data": {
                     "uploaded_backup_file": "Nahr\u00e1t soubor"

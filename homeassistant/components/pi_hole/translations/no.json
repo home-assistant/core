@@ -1,16 +1,25 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Tjenesten er allerede konfigurert"
+            "already_configured": "Tjenesten er allerede konfigurert",
+            "reauth_successful": "Re-autentisering var vellykket"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes"
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig godkjenning"
         },
         "step": {
             "api_key": {
                 "data": {
                     "api_key": "API-n\u00f8kkel"
                 }
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API-n\u00f8kkel"
+                },
+                "description": "Vennligst skriv inn en ny API-n\u00f8kkel for PI-hull p\u00e5 {host} / {location}",
+                "title": "PI-Hole Godkjenne integrering p\u00e5 nytt"
             },
             "user": {
                 "data": {
@@ -24,6 +33,12 @@
                     "verify_ssl": "Verifisere SSL-sertifikat"
                 }
             }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Konfigurering av PI-hull med YAML blir fjernet. \n\n Din eksisterende YAML-konfigurasjon har blitt importert til brukergrensesnittet automatisk. \n\n Fjern PI-Hole YAML-konfigurasjonen fra configuration.yaml-filen og start Home Assistant p\u00e5 nytt for \u00e5 fikse dette problemet.",
+            "title": "PI-Hole YAML-konfigurasjonen blir fjernet"
         }
     }
 }

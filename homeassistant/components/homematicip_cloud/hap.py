@@ -190,8 +190,10 @@ class HomematicipHAP:
                 await hmip_events
             except HmipConnectionError:
                 _LOGGER.error(
-                    "Error connecting to HomematicIP with HAP %s. "
-                    "Retrying in %d seconds",
+                    (
+                        "Error connecting to HomematicIP with HAP %s. "
+                        "Retrying in %d seconds"
+                    ),
                     self.config_entry.unique_id,
                     retry_delay,
                 )

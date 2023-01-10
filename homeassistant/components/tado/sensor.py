@@ -7,7 +7,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
+from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -139,7 +139,7 @@ class TadoHomeSensor(TadoHomeEntity, SensorEntity):
     def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         if self.home_variable in ["temperature", "outdoor temperature"]:
-            return TEMP_CELSIUS
+            return UnitOfTemperature.CELSIUS
         if self.home_variable == "solar percentage":
             return PERCENTAGE
         if self.home_variable == "weather condition":
@@ -248,7 +248,7 @@ class TadoZoneSensor(TadoZoneEntity, SensorEntity):
     def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         if self.zone_variable == "temperature":
-            return TEMP_CELSIUS
+            return UnitOfTemperature.CELSIUS
         if self.zone_variable == "humidity":
             return PERCENTAGE
         if self.zone_variable == "heating":

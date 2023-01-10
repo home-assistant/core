@@ -22,7 +22,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -103,9 +103,9 @@ class HoneywellUSThermostat(ClimateEntity):
 
         self._attr_unique_id = device.deviceid
         self._attr_name = device.name
-        self._attr_temperature_unit = (
-            TEMP_CELSIUS if device.temperature_unit == "C" else TEMP_FAHRENHEIT
-        )
+        self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+        if device.temperature_unit == "C":
+            self._attr_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_preset_modes = [PRESET_NONE, PRESET_AWAY, PRESET_HOLD]
         self._attr_is_aux_heat = device.system_mode == "emheat"
 
