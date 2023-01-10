@@ -40,7 +40,7 @@ async def async_setup_entry(
     )
 
 
-class SeitronClimate(CoordinatorEntity, ClimateEntity):
+class SeitronClimate(CoordinatorEntity[DateUpdateCoordinator[SeitronGateway]], ClimateEntity):
     """A Seitron IoT thermostat climate entity."""
 
     _attr_precision = PRECISION_TENTHS
