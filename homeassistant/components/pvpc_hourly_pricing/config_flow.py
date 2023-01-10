@@ -133,10 +133,6 @@ class TariffSelectorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         assert self._name is not None
         return self.async_create_entry(title=self._name, data=data)
 
-    async def async_step_import(self, import_info) -> FlowResult:
-        """Handle import from config file."""
-        return await self.async_step_user(import_info)
-
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle re-authentication with ESIOS Token."""
         self._reauth_entry = self.hass.config_entries.async_get_entry(
