@@ -64,8 +64,11 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
     def native_temperature(self) -> float | None:
         """Return the platform temperature."""
         try:
-            return float(self.coordinator.data[self.station_id]["TL"]["data"])
-        except (KeyError, ValueError):
+            return float(
+                self.coordinator.data[self.station_id]["TLAM"]["data"]
+                or self.coordinator.data[self.station_id]["TL"]["data"]
+            )
+        except (KeyError, ValueError, TypeError):
             return None
 
     @property
@@ -73,7 +76,7 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
         """Return the pressure."""
         try:
             return float(self.coordinator.data[self.station_id]["P"]["data"])
-        except (KeyError, ValueError):
+        except (KeyError, ValueError, TypeError):
             return None
 
     @property
@@ -81,21 +84,27 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
         """Return the humidity."""
         try:
             return float(self.coordinator.data[self.station_id]["RFAM"]["data"])
-        except (KeyError, ValueError):
+        except (KeyError, ValueError, TypeError):
             return None
 
     @property
     def native_wind_speed(self) -> float | None:
         """Return the wind speed."""
         try:
-            return float(self.coordinator.data[self.station_id]["FFAM"]["data"])
-        except (KeyError, ValueError):
+            return float(
+                self.coordinator.data[self.station_id]["FFAM"]["data"]
+                or self.coordinator.data[self.station_id]["FFX"]["data"]
+            )
+        except (KeyError, ValueError, TypeError):
             return None
 
     @property
-    def wind_bearing(self) -> float | str | None:
+    def wind_bearing(self) -> float | None:
         """Return the wind bearing."""
         try:
-            return self.coordinator.data[self.station_id]["DD"]["data"]
-        except (KeyError, ValueError):
+            return float(
+                self.coordinator.data[self.station_id]["DD"]["data"]
+                or self.coordinator.data[self.station_id]["DDX"]["data"]
+            )
+        except (KeyError, ValueError, TypeError):
             return None
