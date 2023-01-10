@@ -244,6 +244,12 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
         )
 
+        unique_id = discovery_info.upnp.get(
+            ssdp.ATTR_UPNP_SERIAL, discovery_info.upnp[ssdp.ATTR_UPNP_UDN]
+        )
+        await self.async_set_unique_id(unique_id)
+        self._abort_if_unique_id_configured(updates={CONF_URL: url})
+
         def _is_supported_device() -> bool:
             """
             See if we are looking at a possibly supported device.
@@ -261,12 +267,6 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if not await self.hass.async_add_executor_job(_is_supported_device):
             return self.async_abort(reason="unsupported_device")
-
-        unique_id = discovery_info.upnp.get(
-            ssdp.ATTR_UPNP_SERIAL, discovery_info.upnp[ssdp.ATTR_UPNP_UDN]
-        )
-        await self.async_set_unique_id(unique_id)
-        self._abort_if_unique_id_configured(updates={CONF_URL: url})
 
         self.context.update(
             {
