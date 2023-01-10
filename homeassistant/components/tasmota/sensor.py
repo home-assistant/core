@@ -231,6 +231,7 @@ SENSOR_UNIT_MAP = {
     hc.TEMP_FAHRENHEIT: UnitOfTemperature.FAHRENHEIT,
     hc.TEMP_KELVIN: UnitOfTemperature.KELVIN,
     hc.VOLT: UnitOfElectricPotential.VOLT,
+    " ": None,
 }
 
 
