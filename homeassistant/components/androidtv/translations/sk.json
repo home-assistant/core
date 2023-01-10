@@ -25,6 +25,9 @@
         }
     },
     "options": {
+        "error": {
+            "invalid_det_rules": "Neplatn\u00e9 pravidl\u00e1 detekcie stavu"
+        },
         "step": {
             "apps": {
                 "data": {
@@ -37,14 +40,23 @@
             },
             "init": {
                 "data": {
-                    "apps": "Konfigur\u00e1cia zoznamu aplik\u00e1ci\u00ed"
+                    "apps": "Konfigur\u00e1cia zoznamu aplik\u00e1ci\u00ed",
+                    "exclude_unnamed_apps": "Vyl\u00fa\u010dte aplik\u00e1cie s nezn\u00e1mym n\u00e1zvom zo zoznamu zdrojov",
+                    "get_sources": "Z\u00edskanie spusten\u00fdch aplik\u00e1ci\u00ed ako zoznamu zdrojov",
+                    "screencap": "Pou\u017eitie sn\u00edmania obrazovky pre obal albumu",
+                    "state_detection_rules": "Konfigur\u00e1cia pravidiel detekcie stavu",
+                    "turn_off_command": "Pr\u00edkaz na vypnutie prostredia ADB (pre predvolen\u00e9 nastavenie ponechajte pr\u00e1zdne)",
+                    "turn_on_command": "Pr\u00edkaz na zapnutie prostredia ADB (pre predvolen\u00e9 nastavenie ponechajte pr\u00e1zdne)"
                 }
             },
             "rules": {
                 "data": {
+                    "rule_delete": "Za\u010diarknut\u00edm tohto pravidla odstr\u00e1nite",
                     "rule_id": "ID aplik\u00e1cie",
                     "rule_values": "Zoznam pravidiel zis\u0165ovania stavu (pozri dokument\u00e1ciu)"
-                }
+                },
+                "description": "Konfigur\u00e1cia pravidla detekcie pre ID aplik\u00e1cie {rule_id}",
+                "title": "Konfigur\u00e1cia pravidiel detekcie stavu Android TV"
             }
         }
     }

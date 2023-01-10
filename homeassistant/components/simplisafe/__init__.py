@@ -237,11 +237,12 @@ def _async_get_system_for_service_call(
     ) is None:
         raise ValueError("No base station registered for alarm control panel")
 
-    [system_id] = [
+    [system_id_str] = [
         identity[1]
         for identity in base_station_device_entry.identifiers
         if identity[0] == DOMAIN
     ]
+    system_id = int(system_id_str)
 
     for entry_id in base_station_device_entry.config_entries:
         if (simplisafe := hass.data[DOMAIN].get(entry_id)) is None:
@@ -488,7 +489,7 @@ class SimpliSafe:
         self.systems: dict[int, SystemType] = {}
 
         # This will get filled in by async_init:
-        self.coordinator: DataUpdateCoordinator | None = None
+        self.coordinator: DataUpdateCoordinator[None] | None = None
 
     @callback
     def _async_process_new_notifications(self, system: SystemType) -> None:
@@ -691,7 +692,7 @@ class SimpliSafe:
                 raise UpdateFailed(f"SimpliSafe error while updating: {result}")
 
 
-class SimpliSafeEntity(CoordinatorEntity):
+class SimpliSafeEntity(CoordinatorEntity[DataUpdateCoordinator[None]]):
     """Define a base SimpliSafe entity."""
 
     _attr_has_entity_name = True

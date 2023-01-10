@@ -13,7 +13,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -41,8 +41,9 @@ async def async_setup_entry(
 class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
     """Representation of an Plugwise thermostat."""
 
-    _attr_temperature_unit = TEMP_CELSIUS
     _attr_has_entity_name = True
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_translation_key = DOMAIN
 
     def __init__(
         self,

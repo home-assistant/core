@@ -119,9 +119,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         assert self._discovered_device is not None
         discovered = self._discovered_device
         _LOGGER.debug(
-            "Confirming discovery: %s with serial %s",
+            "Confirming discovery of %s (%s) [%s]",
             discovered.label,
-            self.unique_id,
+            discovered.group,
+            discovered.mac_addr,
         )
         if user_input is not None or self._async_discovered_pending_migration():
             return self._async_create_entry_from_device(discovered)
@@ -130,8 +131,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._set_confirm_only()
         placeholders = {
             "label": discovered.label,
-            "host": discovered.ip_addr,
-            "serial": self.unique_id,
+            "group": discovered.group,
         }
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(
@@ -224,11 +224,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # get_hostfirmware required for MAC address offset
             # get_version required for lifx_features()
             # get_label required to log the name of the device
+            # get_group required to populate suggested areas
             messages = await asyncio.gather(
                 *[
                     async_execute_lifx(device.get_hostfirmware),
                     async_execute_lifx(device.get_version),
                     async_execute_lifx(device.get_label),
+                    async_execute_lifx(device.get_group),
                 ]
             )
         except asyncio.TimeoutError:
@@ -237,7 +239,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             connection.async_stop()
         if (
             messages is None
-            or len(messages) != 3
+            or len(messages) != 4
             or lifx_features(device)["relays"] is True
             or device.host_firmware_version is None
         ):

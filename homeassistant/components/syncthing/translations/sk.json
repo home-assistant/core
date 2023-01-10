@@ -10,6 +10,7 @@
         "step": {
             "user": {
                 "data": {
+                    "title": "Nastavenie integr\u00e1cie Syncthing",
                     "token": "Token",
                     "url": "URL",
                     "verify_ssl": "Overi\u0165 SSL certifik\u00e1t"

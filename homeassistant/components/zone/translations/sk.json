@@ -9,9 +9,13 @@
                     "icon": "Ikona",
                     "latitude": "Zemepisn\u00e1 \u0161\u00edrka",
                     "longitude": "Zemepisn\u00e1 d\u013a\u017eka",
-                    "name": "N\u00e1zov"
-                }
+                    "name": "N\u00e1zov",
+                    "passive": "Pas\u00edvny",
+                    "radius": "Polomer"
+                },
+                "title": "Definujte parametre z\u00f3ny"
             }
-        }
+        },
+        "title": "Z\u00f3na"
     }
 }

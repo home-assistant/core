@@ -24,7 +24,8 @@
                     "password": "Heslo",
                     "port": "Port",
                     "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
-                }
+                },
+                "title": "Nastavenie klienta prenosu"
             }
         }
     },
@@ -37,15 +38,19 @@
                         "title": "K\u013e\u00fa\u010d s n\u00e1zvom v slu\u017eb\u00e1ch prenosu sa odstra\u0148uje"
                     }
                 }
-            }
+            },
+            "title": "K\u013e\u00fa\u010d s n\u00e1zvom v slu\u017eb\u00e1ch prenosu sa odstra\u0148uje"
         }
     },
     "options": {
         "step": {
             "init": {
                 "data": {
+                    "limit": "Limit",
+                    "order": "Poradie",
                     "scan_interval": "Frekvencia aktualiz\u00e1cie"
-                }
+                },
+                "title": "Konfigur\u00e1cia mo\u017enost\u00ed Transmission"
             }
         }
     }

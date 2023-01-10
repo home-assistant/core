@@ -12,14 +12,12 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ELECTRIC_CURRENT_AMPERE,
-    ELECTRIC_CURRENT_MILLIAMPERE,
-    ELECTRIC_POTENTIAL_MILLIVOLT,
-    ELECTRIC_POTENTIAL_VOLT,
-    TIME_HOURS,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfPower,
     UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
@@ -47,28 +45,28 @@ UNIT_DESCRIPTIONS = {
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
     ),
     "mA": SensorEntityDescription(
         key="mA",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=ELECTRIC_CURRENT_MILLIAMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
     ),
     "V": SensorEntityDescription(
         key="V",
         entity_category=EntityCategory.DIAGNOSTIC,
-        device_class=SensorDeviceClass.CURRENT,
+        device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
     ),
     "mV": SensorEntityDescription(
         key="mV",
         entity_category=EntityCategory.DIAGNOSTIC,
-        device_class=SensorDeviceClass.CURRENT,
+        device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_MILLIVOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
     ),
     "W": SensorEntityDescription(
         key="W",
@@ -110,7 +108,7 @@ UNIT_DESCRIPTIONS = {
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=TIME_HOURS,
+        native_unit_of_measurement=UnitOfTime.HOURS,
     ),
 }
 

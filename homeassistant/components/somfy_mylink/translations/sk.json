@@ -23,6 +23,21 @@
     "options": {
         "abort": {
             "cannot_connect": "Nepodarilo sa pripoji\u0165"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "target_id": "Konfigur\u00e1cia mo\u017enost\u00ed pre \u017eal\u00fazie."
+                },
+                "title": "Nakonfigurujte mo\u017enosti MyLink"
+            },
+            "target_config": {
+                "data": {
+                    "reverse": "\u017dal\u00fazie s\u00fa invertovan\u00e9"
+                },
+                "description": "Nakonfigurujte mo\u017enosti pre `{target_name}`",
+                "title": "Nakonfigurujte MyLink Cover"
+            }
         }
     }
 }

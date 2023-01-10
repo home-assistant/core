@@ -25,7 +25,7 @@ from homeassistant.const import (
     CONF_EXCLUDE,
     PRECISION_HALVES,
     PRECISION_TENTHS,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
@@ -129,7 +129,7 @@ class ControllerDevice(ClimateEntity):
 
     _attr_precision = PRECISION_TENTHS
     _attr_should_poll = False
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, controller: Controller) -> None:
         """Initialise ControllerDevice."""
@@ -437,7 +437,7 @@ class ZoneDevice(ClimateEntity):
 
     _attr_precision = PRECISION_TENTHS
     _attr_should_poll = False
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, controller: ControllerDevice, zone: Zone) -> None:
         """Initialise ZoneDevice."""

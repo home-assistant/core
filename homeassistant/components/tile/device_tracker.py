@@ -30,6 +30,7 @@ ATTR_CONNECTION_STATE = "connection_state"
 ATTR_IS_DEAD = "is_dead"
 ATTR_IS_LOST = "is_lost"
 ATTR_LAST_LOST_TIMESTAMP = "last_lost_timestamp"
+ATTR_LAST_TIMESTAMP = "last_timestamp"
 ATTR_RING_STATE = "ring_state"
 ATTR_TILE_NAME = "tile_name"
 ATTR_VOIP_STATE = "voip_state"
@@ -77,13 +78,13 @@ async def async_setup_scanner(
     return True
 
 
-class TileDeviceTracker(CoordinatorEntity, TrackerEntity):
+class TileDeviceTracker(CoordinatorEntity[DataUpdateCoordinator[None]], TrackerEntity):
     """Representation of a network infrastructure device."""
 
     _attr_icon = DEFAULT_ICON
 
     def __init__(
-        self, entry: ConfigEntry, coordinator: DataUpdateCoordinator, tile: Tile
+        self, entry: ConfigEntry, coordinator: DataUpdateCoordinator[None], tile: Tile
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
@@ -142,6 +143,7 @@ class TileDeviceTracker(CoordinatorEntity, TrackerEntity):
                 ATTR_ALTITUDE: self._tile.altitude,
                 ATTR_IS_LOST: self._tile.lost,
                 ATTR_LAST_LOST_TIMESTAMP: self._tile.lost_timestamp,
+                ATTR_LAST_TIMESTAMP: self._tile.last_timestamp,
                 ATTR_RING_STATE: self._tile.ring_state,
                 ATTR_VOIP_STATE: self._tile.voip_state,
             }

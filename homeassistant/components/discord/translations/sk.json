@@ -13,12 +13,14 @@
             "reauth_confirm": {
                 "data": {
                     "api_token": "API token"
-                }
+                },
+                "description": "Inform\u00e1cie o z\u00edskan\u00ed k\u013e\u00fa\u010da robota Discord n\u00e1jdete v dokument\u00e1cii. \n\n {url}"
             },
             "user": {
                 "data": {
                     "api_token": "API token"
-                }
+                },
+                "description": "Inform\u00e1cie o z\u00edskan\u00ed k\u013e\u00fa\u010da robota Discord n\u00e1jdete v dokument\u00e1cii. \n\n {url}"
             }
         }
     }

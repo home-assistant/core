@@ -20,7 +20,8 @@
             "user": {
                 "data": {
                     "host": "Hostite\u013e"
-                }
+                },
+                "description": "Ak nech\u00e1te hostite\u013ea pr\u00e1zdneho, na vyh\u013ead\u00e1vanie zariaden\u00ed sa pou\u017eije zis\u0165ovanie."
             }
         }
     },
@@ -28,7 +29,11 @@
         "step": {
             "init": {
                 "data": {
-                    "model": "Model"
+                    "model": "Model",
+                    "nightlight_switch": "Pou\u017eite prep\u00edna\u010d no\u010dn\u00e9ho osvetlenia",
+                    "save_on_change": "Ulo\u017ei\u0165 stav pri zmene",
+                    "transition": "\u010cas prechodu (v ms)",
+                    "use_music_mode": "Povoli\u0165 hudobn\u00fd re\u017eim"
                 }
             }
         }

@@ -146,6 +146,14 @@ SSDP = {
             "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
             "manufacturer": "Huawei",
         },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
+            "manufacturer": "Huawei Technologies Co., Ltd.",
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
+            "manufacturer": "SOYEA TECHNOLOGY CO., LTD.",
+        },
     ],
     "hue": [
         {

@@ -16,7 +16,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -213,7 +213,7 @@ def create_climate_entity(tado, name: str, zone_id: int, device_info: dict):
 class TadoClimate(TadoZoneEntity, ClimateEntity):
     """Representation of a Tado climate entity."""
 
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(
         self,
@@ -598,7 +598,10 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
             )
 
         _LOGGER.debug(
-            "Switching to %s for zone %s (%d) with temperature %s °C and duration %s using overlay %s",
+            (
+                "Switching to %s for zone %s (%d) with temperature %s °C and duration"
+                " %s using overlay %s"
+            ),
             self._current_tado_hvac_mode,
             self.zone_name,
             self.zone_id,

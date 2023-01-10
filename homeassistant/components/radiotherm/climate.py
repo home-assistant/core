@@ -24,7 +24,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_HOST,
     PRECISION_HALVES,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
@@ -137,10 +137,10 @@ async def async_setup_platform(
         translation_key="deprecated_yaml",
     )
     _LOGGER.warning(
-        "Configuration of the Radio Thermostat climate platform in YAML is deprecated and "
-        "will be removed in Home Assistant 2022.9; Your existing configuration "
-        "has been imported into the UI automatically and can be safely removed "
-        "from your configuration.yaml file"
+        "Configuration of the Radio Thermostat climate platform in YAML is deprecated"
+        " and will be removed in Home Assistant 2022.9; Your existing configuration has"
+        " been imported into the UI automatically and can be safely removed from your"
+        " configuration.yaml file"
     )
 
     hosts: list[str] = []
@@ -169,7 +169,7 @@ class RadioThermostat(RadioThermostatEntity, ClimateEntity):
     """Representation of a Radio Thermostat."""
 
     _attr_hvac_modes = OPERATION_LIST
-    _attr_temperature_unit = TEMP_FAHRENHEIT
+    _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
     _attr_precision = PRECISION_HALVES
 
     def __init__(self, coordinator: RadioThermUpdateCoordinator) -> None:

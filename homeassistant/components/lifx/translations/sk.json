@@ -21,7 +21,8 @@
             "user": {
                 "data": {
                     "host": "Hostite\u013e"
-                }
+                },
+                "description": "Ak nech\u00e1te hostite\u013ea pr\u00e1zdneho, na vyh\u013ead\u00e1vanie zariaden\u00ed sa pou\u017eije zis\u0165ovanie."
             }
         }
     }

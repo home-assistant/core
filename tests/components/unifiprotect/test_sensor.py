@@ -23,7 +23,7 @@ from homeassistant.components.unifiprotect.sensor import (
     ALL_DEVICES_SENSORS,
     CAMERA_DISABLED_SENSORS,
     CAMERA_SENSORS,
-    MOTION_SENSORS,
+    EVENT_SENSORS,
     MOTION_TRIP_SENSORS,
     NVR_DISABLED_SENSORS,
     NVR_SENSORS,
@@ -62,11 +62,11 @@ async def test_sensor_camera_remove(
 
     ufp.api.bootstrap.nvr.system_info.ustorage = None
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.SENSOR, 26, 13)
+    assert_entity_counts(hass, Platform.SENSOR, 25, 12)
     await remove_entities(hass, ufp, [doorbell, unadopted_camera])
     assert_entity_counts(hass, Platform.SENSOR, 12, 9)
     await adopt_devices(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.SENSOR, 26, 13)
+    assert_entity_counts(hass, Platform.SENSOR, 25, 12)
 
 
 async def test_sensor_sensor_remove(
@@ -318,7 +318,7 @@ async def test_sensor_setup_camera(
     """Test sensor entity setup for camera devices."""
 
     await init_entry(hass, ufp, [doorbell])
-    assert_entity_counts(hass, Platform.SENSOR, 26, 13)
+    assert_entity_counts(hass, Platform.SENSOR, 25, 12)
 
     entity_registry = er.async_get(hass)
 
@@ -399,7 +399,7 @@ async def test_sensor_setup_camera(
 
     # Detected Object
     unique_id, entity_id = ids_from_device_description(
-        Platform.SENSOR, doorbell, MOTION_SENSORS[0]
+        Platform.SENSOR, doorbell, EVENT_SENSORS[0]
     )
 
     entity = entity_registry.async_get(entity_id)
@@ -424,7 +424,7 @@ async def test_sensor_setup_camera_with_last_trip_time(
     """Test sensor entity setup for camera devices with last trip time."""
 
     await init_entry(hass, ufp, [doorbell])
-    assert_entity_counts(hass, Platform.SENSOR, 26, 26)
+    assert_entity_counts(hass, Platform.SENSOR, 25, 25)
 
     entity_registry = er.async_get(hass)
 
@@ -452,10 +452,10 @@ async def test_sensor_update_motion(
     """Test sensor motion entity."""
 
     await init_entry(hass, ufp, [doorbell])
-    assert_entity_counts(hass, Platform.SENSOR, 26, 13)
+    assert_entity_counts(hass, Platform.SENSOR, 25, 12)
 
     _, entity_id = ids_from_device_description(
-        Platform.SENSOR, doorbell, MOTION_SENSORS[0]
+        Platform.SENSOR, doorbell, EVENT_SENSORS[0]
     )
 
     await enable_entity(hass, ufp.entry.entry_id, entity_id)
@@ -582,7 +582,7 @@ async def test_camera_update_licenseplate(
     assert_entity_counts(hass, Platform.SENSOR, 24, 13)
 
     _, entity_id = ids_from_device_description(
-        Platform.SENSOR, camera, MOTION_SENSORS[1]
+        Platform.SENSOR, camera, EVENT_SENSORS[1]
     )
 
     event_metadata = EventMetadata(

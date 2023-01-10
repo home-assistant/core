@@ -37,8 +37,7 @@ from homeassistant.const import (
     CLOUD_NEVER_EXPOSED_ENTITIES,
     CONF_DESCRIPTION,
     CONF_NAME,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
     __version__,
 )
 from homeassistant.core import HomeAssistant, State, callback
@@ -745,7 +744,10 @@ class SensorCapabilities(AlexaEntity):
     def interfaces(self):
         """Yield the supported interfaces."""
         attrs = self.entity.attributes
-        if attrs.get(ATTR_UNIT_OF_MEASUREMENT) in (TEMP_FAHRENHEIT, TEMP_CELSIUS):
+        if attrs.get(ATTR_UNIT_OF_MEASUREMENT) in {
+            UnitOfTemperature.FAHRENHEIT,
+            UnitOfTemperature.CELSIUS,
+        }:
             yield AlexaTemperatureSensor(self.hass, self.entity)
             yield AlexaEndpointHealth(self.hass, self.entity)
             yield Alexa(self.hass)

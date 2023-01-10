@@ -1,4 +1,4 @@
-"""Test ISY994 system health."""
+"""Test ISY system health."""
 import asyncio
 from unittest.mock import Mock
 

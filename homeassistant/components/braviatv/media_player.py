@@ -35,6 +35,7 @@ async def async_setup_entry(
 class BraviaTVMediaPlayer(BraviaTVEntity, MediaPlayerEntity):
     """Representation of a Bravia TV Media Player."""
 
+    _attr_assumed_state = True
     _attr_device_class = MediaPlayerDeviceClass.TV
     _attr_supported_features = (
         MediaPlayerEntityFeature.PAUSE
@@ -54,11 +55,7 @@ class BraviaTVMediaPlayer(BraviaTVEntity, MediaPlayerEntity):
     def state(self) -> MediaPlayerState:
         """Return the state of the device."""
         if self.coordinator.is_on:
-            return (
-                MediaPlayerState.PLAYING
-                if self.coordinator.playing
-                else MediaPlayerState.PAUSED
-            )
+            return MediaPlayerState.ON
         return MediaPlayerState.OFF
 
     @property
@@ -135,6 +132,10 @@ class BraviaTVMediaPlayer(BraviaTVEntity, MediaPlayerEntity):
 
     async def async_media_pause(self) -> None:
         """Send pause command."""
+        await self.coordinator.async_media_pause()
+
+    async def async_media_play_pause(self) -> None:
+        """Send pause command that toggle play/pause."""
         await self.coordinator.async_media_pause()
 
     async def async_media_stop(self) -> None:

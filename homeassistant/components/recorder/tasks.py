@@ -297,3 +297,17 @@ class SynchronizeTask(RecorderTask):
         # Does not use a tracked task to avoid
         # blocking shutdown if the recorder is broken
         instance.hass.loop.call_soon_threadsafe(self.event.set)
+
+
+@dataclass
+class PostSchemaMigrationTask(RecorderTask):
+    """Post migration task to update schema."""
+
+    old_version: int
+    new_version: int
+
+    def run(self, instance: Recorder) -> None:
+        """Handle the task."""
+        instance._post_schema_migration(  # pylint: disable=[protected-access]
+            self.old_version, self.new_version
+        )

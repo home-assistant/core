@@ -69,5 +69,39 @@
             "single_press": "\"{subtype}\" pulsado"
         }
     },
+    "entity": {
+        "select": {
+            "ecobee_mode": {
+                "state": {
+                    "away": "Ausente",
+                    "home": "En casa",
+                    "sleep": "Dormir"
+                }
+            }
+        },
+        "sensor": {
+            "thread_node_capabilities": {
+                "state": {
+                    "border_router_capable": "Capacidad de router fronterizo",
+                    "full": "Dispositivo final completo",
+                    "minimal": "Dispositivo final m\u00ednimo",
+                    "none": "Ninguna",
+                    "router_eligible": "Dispositivo final elegible como router",
+                    "sleepy": "Dispositivo final dormido"
+                }
+            },
+            "thread_status": {
+                "state": {
+                    "border_router": "Router fronterizo",
+                    "child": "Hijo",
+                    "detached": "Aislado",
+                    "disabled": "Deshabilitado",
+                    "joining": "Uniendo",
+                    "leader": "L\u00edder",
+                    "router": "Router"
+                }
+            }
+        }
+    },
     "title": "Controlador HomeKit"
 }

@@ -5,73 +5,91 @@ from homeassistant.components.sensor import (
     ENTITY_ID_FORMAT,
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
 )
-from homeassistant.const import PERCENTAGE, POWER_WATT, TEMP_FAHRENHEIT
+from homeassistant.const import PERCENTAGE, UnitOfPower, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
 
-from . import DOMAIN as WF_DOMAIN, UPDATE_TOPIC
-
-
-class WFSensorConfig:
-    """Water Furnace Sensor configuration."""
-
-    def __init__(
-        self,
-        friendly_name,
-        field,
-        icon="mdi:gauge",
-        unit_of_measurement=None,
-        device_class=None,
-    ):
-        """Initialize configuration."""
-        self.device_class = device_class
-        self.friendly_name = friendly_name
-        self.field = field
-        self.icon = icon
-        self.unit_of_measurement = unit_of_measurement
-
+from . import DOMAIN as WF_DOMAIN, UPDATE_TOPIC, WaterFurnaceData
 
 SENSORS = [
-    WFSensorConfig("Furnace Mode", "mode"),
-    WFSensorConfig("Total Power", "totalunitpower", "mdi:flash", POWER_WATT),
-    WFSensorConfig(
-        "Active Setpoint",
-        "tstatactivesetpoint",
-        None,
-        TEMP_FAHRENHEIT,
-        SensorDeviceClass.TEMPERATURE,
+    SensorEntityDescription(name="Furnace Mode", key="mode", icon="mdi:gauge"),
+    SensorEntityDescription(
+        name="Total Power",
+        key="totalunitpower",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
     ),
-    WFSensorConfig(
-        "Leaving Air",
-        "leavingairtemp",
-        None,
-        TEMP_FAHRENHEIT,
-        SensorDeviceClass.TEMPERATURE,
+    SensorEntityDescription(
+        name="Active Setpoint",
+        key="tstatactivesetpoint",
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
-    WFSensorConfig(
-        "Room Temp",
-        "tstatroomtemp",
-        None,
-        TEMP_FAHRENHEIT,
-        SensorDeviceClass.TEMPERATURE,
+    SensorEntityDescription(
+        name="Leaving Air",
+        key="leavingairtemp",
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
-    WFSensorConfig("Loop Temp", "enteringwatertemp", None, TEMP_FAHRENHEIT),
-    WFSensorConfig(
-        "Humidity Set Point", "tstathumidsetpoint", "mdi:water-percent", PERCENTAGE
+    SensorEntityDescription(
+        name="Room Temp",
+        key="tstatroomtemp",
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
-    WFSensorConfig(
-        "Humidity", "tstatrelativehumidity", "mdi:water-percent", PERCENTAGE
+    SensorEntityDescription(
+        name="Loop Temp",
+        key="enteringwatertemp",
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
-    WFSensorConfig("Compressor Power", "compressorpower", "mdi:flash", POWER_WATT),
-    WFSensorConfig("Fan Power", "fanpower", "mdi:flash", POWER_WATT),
-    WFSensorConfig("Aux Power", "auxpower", "mdi:flash", POWER_WATT),
-    WFSensorConfig("Loop Pump Power", "looppumppower", "mdi:flash", POWER_WATT),
-    WFSensorConfig("Compressor Speed", "actualcompressorspeed", "mdi:speedometer"),
-    WFSensorConfig("Fan Speed", "airflowcurrentspeed", "mdi:fan"),
+    SensorEntityDescription(
+        name="Humidity Set Point",
+        key="tstathumidsetpoint",
+        icon="mdi:water-percent",
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    SensorEntityDescription(
+        name="Humidity",
+        key="tstatrelativehumidity",
+        icon="mdi:water-percent",
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    SensorEntityDescription(
+        name="Compressor Power",
+        key="compressorpower",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+    ),
+    SensorEntityDescription(
+        name="Fan Power",
+        key="fanpower",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+    ),
+    SensorEntityDescription(
+        name="Aux Power",
+        key="auxpower",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+    ),
+    SensorEntityDescription(
+        name="Loop Pump Power",
+        key="looppumppower",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+    ),
+    SensorEntityDescription(
+        name="Compressor Speed", key="actualcompressorspeed", icon="mdi:speedometer"
+    ),
+    SensorEntityDescription(
+        name="Fan Speed", key="airflowcurrentspeed", icon="mdi:fan"
+    ),
 ]
 
 
@@ -87,8 +105,8 @@ def setup_platform(
 
     sensors = []
     client = hass.data[WF_DOMAIN]
-    for sconfig in SENSORS:
-        sensors.append(WaterFurnaceSensor(client, sconfig))
+    for description in SENSORS:
+        sensors.append(WaterFurnaceSensor(client, description))
 
     add_entities(sensors)
 
@@ -98,40 +116,17 @@ class WaterFurnaceSensor(SensorEntity):
 
     _attr_should_poll = False
 
-    def __init__(self, client, config):
+    def __init__(
+        self, client: WaterFurnaceData, description: SensorEntityDescription
+    ) -> None:
         """Initialize the sensor."""
         self.client = client
-        self._name = config.friendly_name
-        self._attr = config.field
-        self._state = None
-        self._icon = config.icon
-        self._unit_of_measurement = config.unit_of_measurement
-        self._attr_device_class = config.device_class
+        self.entity_description = description
 
         # This ensures that the sensors are isolated per waterfurnace unit
         self.entity_id = ENTITY_ID_FORMAT.format(
-            f"wf_{slugify(self.client.unit)}_{slugify(self._attr)}"
+            f"wf_{slugify(self.client.unit)}_{slugify(description.key)}"
         )
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def icon(self):
-        """Return icon."""
-        return self._icon
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the units of measurement."""
-        return self._unit_of_measurement
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -145,5 +140,7 @@ class WaterFurnaceSensor(SensorEntity):
     def async_update_callback(self):
         """Update state."""
         if self.client.data is not None:
-            self._state = getattr(self.client.data, self._attr, None)
+            self._attr_native_value = getattr(
+                self.client.data, self.entity_description.key, None
+            )
             self.async_write_ha_state()

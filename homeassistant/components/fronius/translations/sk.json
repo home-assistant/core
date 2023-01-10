@@ -17,7 +17,8 @@
                 "data": {
                     "host": "Hostite\u013e"
                 },
-                "description": "Nakonfigurujte IP adresu alebo miestny n\u00e1zov hostite\u013ea v\u00e1\u0161ho zariadenia Fronius."
+                "description": "Nakonfigurujte IP adresu alebo miestny n\u00e1zov hostite\u013ea v\u00e1\u0161ho zariadenia Fronius.",
+                "title": "Fronius SolarNet"
             }
         }
     }

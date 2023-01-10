@@ -347,7 +347,8 @@ class ShellyBlockEntity(CoordinatorEntity[ShellyBlockCoordinator]):
         except DeviceConnectionError as err:
             self.coordinator.last_update_success = False
             raise HomeAssistantError(
-                f"Setting state for entity {self.name} failed, state: {kwargs}, error: {repr(err)}"
+                f"Setting state for entity {self.name} failed, state: {kwargs}, error:"
+                f" {repr(err)}"
             ) from err
         except InvalidAuthError:
             self.coordinator.entry.async_start_reauth(self.hass)
@@ -399,11 +400,13 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
         except DeviceConnectionError as err:
             self.coordinator.last_update_success = False
             raise HomeAssistantError(
-                f"Call RPC for {self.name} connection error, method: {method}, params: {params}, error: {repr(err)}"
+                f"Call RPC for {self.name} connection error, method: {method}, params:"
+                f" {params}, error: {repr(err)}"
             ) from err
         except RpcCallError as err:
             raise HomeAssistantError(
-                f"Call RPC for {self.name} request error, method: {method}, params: {params}, error: {repr(err)}"
+                f"Call RPC for {self.name} request error, method: {method}, params:"
+                f" {params}, error: {repr(err)}"
             ) from err
         except InvalidAuthError:
             self.coordinator.entry.async_start_reauth(self.hass)
@@ -520,19 +523,20 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, entity.Entity):
         self._last_value = None
 
     @property
+    def sub_status(self) -> Any:
+        """Device status by entity key."""
+        return self.status[self.entity_description.sub_key]
+
+    @property
     def attribute_value(self) -> StateType:
         """Value of sensor."""
         if callable(self.entity_description.value):
+            # using "get" here since subkey might not exist (e.g. "errors" sub_key)
             self._last_value = self.entity_description.value(
-                self.coordinator.device.status[self.key].get(
-                    self.entity_description.sub_key
-                ),
-                self._last_value,
+                self.status.get(self.entity_description.sub_key), self._last_value
             )
         else:
-            self._last_value = self.coordinator.device.status[self.key][
-                self.entity_description.sub_key
-            ]
+            self._last_value = self.sub_status
 
         return self._last_value
 
@@ -544,9 +548,7 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, entity.Entity):
         if not available or not self.entity_description.available:
             return available
 
-        return self.entity_description.available(
-            self.coordinator.device.status[self.key][self.entity_description.sub_key]
-        )
+        return self.entity_description.available(self.sub_status)
 
 
 class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEntity):

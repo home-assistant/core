@@ -442,7 +442,8 @@ class TimestampValidator:
             gap = packet.time_base * (prev_dts - packet.dts)
             if gap > MAX_TIMESTAMP_GAP:
                 raise StreamWorkerError(
-                    f"Timestamp overflow detected: last dts = {prev_dts}, dts = {packet.dts}"
+                    f"Timestamp overflow detected: last dts = {prev_dts}, dts ="
+                    f" {packet.dts}"
                 )
             return False
         self._last_dts[packet.stream] = packet.dts
@@ -496,7 +497,8 @@ def stream_worker(
         container = av.open(source, options=pyav_options, timeout=SOURCE_TIMEOUT)
     except av.AVError as err:
         raise StreamWorkerError(
-            f"Error opening stream ({err.type}, {err.strerror}) {redact_credentials(str(source))}"
+            f"Error opening stream ({err.type}, {err.strerror})"
+            f" {redact_credentials(str(source))}"
         ) from err
     try:
         video_stream = container.streams.video[0]

@@ -22,7 +22,7 @@
             "can_reach_cloud_auth": "Authentifizierungsserver erreichbar",
             "google_enabled": "Google aktiviert",
             "logged_in": "Angemeldet",
-            "relayer_connected": "Relay verbunden",
+            "relayer_connected": "Relais verbunden",
             "remote_connected": "Remote verbunden",
             "remote_enabled": "Remote aktiviert",
             "remote_server": "Remote-Server",

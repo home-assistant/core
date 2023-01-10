@@ -11,12 +11,34 @@
             "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
         },
         "step": {
+            "reauth_confirm": {
+                "description": "Integr\u00e1ciu Steam je potrebn\u00e9 manu\u00e1lne znova overi\u0165 \n\n Svoj k\u013e\u00fa\u010d n\u00e1jdete tu: {api_key_url}",
+                "title": "Znova overi\u0165 integr\u00e1ciu"
+            },
             "user": {
                 "data": {
                     "account": "ID \u00fa\u010dtu Steam",
                     "api_key": "API k\u013e\u00fa\u010d"
                 },
                 "description": "Na vyh\u013eadanie ID \u00fa\u010dtu Steam pou\u017eite {account_id_url}"
+            }
+        }
+    },
+    "issues": {
+        "removed_yaml": {
+            "description": "Konfigur\u00e1cia Steamu pomocou YAML bola odstr\u00e1nen\u00e1. \n\n Asistent dom\u00e1cnosti nepou\u017e\u00edva va\u0161u existuj\u00facu konfigur\u00e1ciu YAML. \n\n Ak chcete tento probl\u00e9m vyrie\u0161i\u0165, odstr\u00e1\u0148te konfigur\u00e1ciu YAML zo s\u00faboru configuration.yaml a re\u0161tartujte aplik\u00e1ciu Home Assistant.",
+            "title": "Konfigur\u00e1cia Steam YAML bola odstr\u00e1nen\u00e1"
+        }
+    },
+    "options": {
+        "error": {
+            "unauthorized": "Obmedzen\u00fd zoznam priate\u013eov: Pozrite si dokument\u00e1ciu o tom, ako zobrazi\u0165 v\u0161etk\u00fdch ostatn\u00fdch priate\u013eov"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "accounts": "N\u00e1zvy monitorovan\u00fdch \u00fa\u010dtov"
+                }
             }
         }
     }

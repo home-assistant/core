@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Device is already configured",
             "already_in_progress": "Configuration flow is already in progress",
+            "mdns_missing_mac": "Missing MAC address in MDNS properties.",
             "reauth_successful": "Re-authentication was successful"
         },
         "error": {
@@ -27,13 +28,13 @@
                 "data": {
                     "noise_psk": "Encryption key"
                 },
-                "description": "Please enter the encryption key you set in your configuration for {name}."
+                "description": "Please enter the encryption key for {name}. You can find it in the ESPHome Dashboard or in your device configuration."
             },
             "reauth_confirm": {
                 "data": {
                     "noise_psk": "Encryption key"
                 },
-                "description": "The ESPHome device {name} enabled transport encryption or changed the encryption key. Please enter the updated key."
+                "description": "The ESPHome device {name} enabled transport encryption or changed the encryption key. Please enter the updated key. You can find it in the ESPHome Dashboard or in your device configuration."
             },
             "user": {
                 "data": {
@@ -46,8 +47,8 @@
     },
     "issues": {
         "ble_firmware_outdated": {
-            "description": "To improve Bluetooth reliability and performance, we highly recommend updating {name} with ESPHome 2022.11.0 or later.",
-            "title": "Update {name} with ESPHome 2022.11.0 or later"
+            "description": "To improve Bluetooth reliability and performance, we highly recommend updating {name} with ESPHome {version} or later. When updating the device to ESPHome {version}, it is recommended to use a serial cable instead of an over-the-air update to take advantage of the new partition scheme.",
+            "title": "Update {name} with ESPHome {version} or later"
         }
     }
 }

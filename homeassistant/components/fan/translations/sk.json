@@ -1,6 +1,7 @@
 {
     "device_automation": {
         "action_type": {
+            "toggle": "Prepn\u00fa\u0165 {entity_name}",
             "turn_off": "Vypn\u00fa\u0165 {entity_name}",
             "turn_on": "Zapn\u00fa\u0165 {entity_name}"
         },

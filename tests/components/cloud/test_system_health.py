@@ -13,7 +13,7 @@ from tests.common import get_system_health_info
 async def test_cloud_system_health(hass, aioclient_mock):
     """Test cloud system health."""
     aioclient_mock.get("https://cloud.bla.com/status", text="")
-    aioclient_mock.get("https://cert-server", text="")
+    aioclient_mock.get("https://cert-server/directory", text="")
     aioclient_mock.get(
         "https://cognito-idp.us-east-1.amazonaws.com/AAAA/.well-known/jwks.json",
         exc=ClientError,
@@ -25,8 +25,8 @@ async def test_cloud_system_health(hass, aioclient_mock):
     hass.data["cloud"] = Mock(
         region="us-east-1",
         user_pool_id="AAAA",
-        relayer="wss://cloud.bla.com/websocket_api",
-        acme_directory_server="https://cert-server",
+        relayer_server="cloud.bla.com",
+        acme_server="cert-server",
         is_logged_in=True,
         remote=Mock(is_connected=False, snitun_server="us-west-1"),
         expiration_date=now,

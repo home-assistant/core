@@ -26,12 +26,6 @@
             }
         }
     },
-    "issues": {
-        "deprecated_yaml": {
-            "description": "Konfigurering av Radarr med YAML tas bort. \n\n Din befintliga YAML-konfiguration har automatiskt importerats till anv\u00e4ndargr\u00e4nssnittet. \n\n Ta bort Radarr YAML-konfigurationen fr\u00e5n filen configuration.yaml och starta om Home Assistant f\u00f6r att \u00e5tg\u00e4rda problemet.",
-            "title": "Radarr YAML-konfigurationen tas bort"
-        }
-    },
     "options": {
         "step": {
             "init": {

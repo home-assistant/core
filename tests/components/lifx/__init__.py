@@ -14,6 +14,7 @@ MODULE = "homeassistant.components.lifx"
 MODULE_CONFIG_FLOW = "homeassistant.components.lifx.config_flow"
 IP_ADDRESS = "127.0.0.1"
 LABEL = "My Bulb"
+GROUP = "My Group"
 SERIAL = "aa:bb:cc:dd:ee:cc"
 MAC_ADDRESS = "aa:bb:cc:dd:ee:cd"
 DEFAULT_ENTRY_TITLE = LABEL
@@ -81,6 +82,7 @@ def _mocked_bulb() -> Light:
     bulb = Light(asyncio.get_running_loop(), SERIAL, IP_ADDRESS)
     bulb.host_firmware_version = "3.00"
     bulb.label = LABEL
+    bulb.group = GROUP
     bulb.color = [1, 2, 3, 4]
     bulb.power_level = 0
     bulb.fire_and_forget = AsyncMock()
@@ -88,6 +90,7 @@ def _mocked_bulb() -> Light:
     bulb.try_sending = AsyncMock()
     bulb.set_infrared = MockLifxCommand(bulb)
     bulb.get_label = MockLifxCommand(bulb)
+    bulb.get_group = MockLifxCommand(bulb)
     bulb.get_color = MockLifxCommand(bulb)
     bulb.set_power = MockLifxCommand(bulb)
     bulb.set_color = MockLifxCommand(bulb)

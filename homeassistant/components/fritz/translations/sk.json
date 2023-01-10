@@ -38,6 +38,7 @@
                     "port": "Port",
                     "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
                 },
+                "description": "Nastavte n\u00e1stroje FRITZ!Box na ovl\u00e1danie v\u00e1\u0161ho zariadenia FRITZ!Box.\n Potrebn\u00e9 minimum: u\u017e\u00edvate\u013esk\u00e9 meno, heslo.",
                 "title": "Nastavte n\u00e1stroje FRITZ!Box"
             }
         }
@@ -46,6 +47,7 @@
         "step": {
             "init": {
                 "data": {
+                    "consider_home": "Sekundy na \u010dakanie, zariadenia \u201edoma\u201c",
                     "old_discovery": "Povoli\u0165 star\u00fa met\u00f3du zis\u0165ovania"
                 }
             }

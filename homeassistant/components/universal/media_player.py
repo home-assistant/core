@@ -40,6 +40,7 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -279,7 +280,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         )
 
     @property
-    def device_class(self) -> str | None:
+    def device_class(self) -> MediaPlayerDeviceClass | None:
         """Return the class of this device."""
         return self._device_class
 

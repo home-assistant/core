@@ -10,6 +10,9 @@
         },
         "error": {
             "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "cloud_credentials_incomplete": "Poverenia cloudu nie s\u00fa \u00fapln\u00e9, vypl\u0148te pou\u017e\u00edvate\u013esk\u00e9 meno, heslo a krajinu",
+            "cloud_login_error": "Nepodarilo sa prihl\u00e1si\u0165 do Xiaomi Miio Cloud, skontrolujte prihlasovacie \u00fadaje.",
+            "cloud_no_devices": "V tomto cloudovom \u00fa\u010dte Xiaomi Miio sa nena\u0161li \u017eiadne zariadenia.",
             "unknown_device": "Model zariadenia nie je zn\u00e1my, nie je mo\u017en\u00e9 nastavi\u0165 zariadenie pomocou konfigura\u010dn\u00e9ho toku.",
             "wrong_token": "Chyba kontroln\u00e9ho s\u00fa\u010dtu, nespr\u00e1vny token"
         },
@@ -21,7 +24,8 @@
                     "cloud_password": "Heslo do cloudu",
                     "cloud_username": "Cloudov\u00e9 pou\u017e\u00edvate\u013esk\u00e9 meno",
                     "manual": "Konfigurova\u0165 manu\u00e1lne (neodpor\u00fa\u010da sa)"
-                }
+                },
+                "description": "Prihl\u00e1ste sa do cloudu Xiaomi Miio, pozrite si https://www.openhab.org/addons/bindings/miio/#country-servers, kde n\u00e1jdete cloudov\u00fd server, ktor\u00fd chcete pou\u017ei\u0165."
             },
             "connect": {
                 "data": {
@@ -32,9 +36,11 @@
                 "data": {
                     "host": "IP adresa",
                     "token": "API token"
-                }
+                },
+                "description": "Budete potrebova\u0165 32 znakov API token , pokyny n\u00e1jdete na https://www.home-assistant.io/integrations/xiaomi_miio#retrieving-the-access-token. Upozor\u0148ujeme, \u017ee tento API token sa l\u00ed\u0161i od k\u013e\u00fa\u010da pou\u017e\u00edvan\u00e9ho integr\u00e1ciou Xiaomi Aqara."
             },
             "reauth_confirm": {
+                "description": "Integr\u00e1cia Xiaomi Miio mus\u00ed znova overi\u0165 v\u00e1\u0161 \u00fa\u010det, aby sa aktualizovali tokeny alebo pridali ch\u00fdbaj\u00face cloudov\u00e9 poverenia.",
                 "title": "Znova overi\u0165 integr\u00e1ciu"
             },
             "select": {
@@ -45,7 +51,35 @@
             }
         }
     },
+    "entity": {
+        "select": {
+            "display_orientation": {
+                "state": {
+                    "forward": "Dopredu",
+                    "left": "V\u013eavo",
+                    "right": "Vpravo"
+                }
+            },
+            "led_brightness": {
+                "state": {
+                    "bright": "Jas",
+                    "dim": "Dim",
+                    "off": "Vypnut\u00e9"
+                }
+            },
+            "ptc_level": {
+                "state": {
+                    "high": "Vysok\u00e9",
+                    "low": "N\u00edzke",
+                    "medium": "Stredn\u00e9"
+                }
+            }
+        }
+    },
     "options": {
+        "error": {
+            "cloud_credentials_incomplete": "Poverenia cloudu nie s\u00fa \u00fapln\u00e9, vypl\u0148te pou\u017e\u00edvate\u013esk\u00e9 meno, heslo a krajinu"
+        },
         "step": {
             "init": {
                 "data": {

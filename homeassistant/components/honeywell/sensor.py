@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -24,7 +24,9 @@ from .const import DOMAIN, HUMIDITY_STATUS_KEY, TEMPERATURE_STATUS_KEY
 
 def _get_temperature_sensor_unit(device: Device) -> str:
     """Get the correct temperature unit for the device."""
-    return TEMP_CELSIUS if device.temperature_unit == "C" else TEMP_FAHRENHEIT
+    if device.temperature_unit == "C":
+        return UnitOfTemperature.CELSIUS
+    return UnitOfTemperature.FAHRENHEIT
 
 
 @dataclass

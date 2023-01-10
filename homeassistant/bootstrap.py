@@ -284,8 +284,7 @@ async def async_from_config_dict(
         return None
     except HomeAssistantError:
         _LOGGER.error(
-            "Home Assistant core failed to initialize. "
-            "Further initialization aborted"
+            "Home Assistant core failed to initialize. Further initialization aborted"
         )
         return None
 

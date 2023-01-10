@@ -13,7 +13,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_HOME,
     STATE_ON,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import callback
 
@@ -124,7 +124,9 @@ class TemperatureSensor(HomeAccessory):
     @callback
     def async_update_state(self, new_state):
         """Update temperature after state changed."""
-        unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS)
+        unit = new_state.attributes.get(
+            ATTR_UNIT_OF_MEASUREMENT, UnitOfTemperature.CELSIUS
+        )
         if (temperature := convert_to_float(new_state.state)) is not None:
             temperature = temperature_to_homekit(temperature, unit)
             self.char_temp.set_value(temperature)

@@ -298,7 +298,7 @@ def get_rpc_channel_name(device: RpcDevice, key: str) -> str:
         entity_name = device.config[key].get("name", device_name)
 
     if entity_name is None:
-        if key.startswith(("input:", "switch:")):
+        if key.startswith(("input:", "light:", "switch:")):
             return f"{device_name} {key.replace(':', '_')}"
         return device_name
 
@@ -398,3 +398,19 @@ def device_update_info(
         dev_registry.async_update_device(
             device.id, sw_version=shellydevice.firmware_version
         )
+
+
+def brightness_to_percentage(brightness: int) -> int:
+    """Convert brightness level to percentage."""
+    return int(100 * (brightness + 1) / 255)
+
+
+def percentage_to_brightness(percentage: int) -> int:
+    """Convert percentage to brightness level."""
+    return round(255 * percentage / 100)
+
+
+def mac_address_from_name(name: str) -> str | None:
+    """Convert a name to a mac address."""
+    mac = name.partition(".")[0].partition("-")[-1]
+    return mac.upper() if len(mac) == 12 else None

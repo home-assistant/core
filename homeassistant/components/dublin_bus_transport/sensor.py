@@ -14,7 +14,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import CONF_NAME, TIME_MINUTES
+from homeassistant.const import CONF_NAME, UnitOfTime
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -117,7 +117,7 @@ class DublinPublicTransportSensor(SensorEntity):
     @property
     def native_unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        return TIME_MINUTES
+        return UnitOfTime.MINUTES
 
     @property
     def icon(self):

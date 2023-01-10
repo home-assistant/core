@@ -237,7 +237,10 @@ class MqttValueTemplate:
             return rendered_payload
 
         _LOGGER.debug(
-            "Rendering incoming payload '%s' with variables %s with default value '%s' and %s",
+            (
+                "Rendering incoming payload '%s' with variables %s with default value"
+                " '%s' and %s"
+            ),
             payload,
             values,
             default,

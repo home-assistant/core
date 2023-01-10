@@ -69,5 +69,39 @@
             "single_press": "przycisk \"{subtype}\" zostanie naci\u015bni\u0119ty"
         }
     },
+    "entity": {
+        "select": {
+            "ecobee_mode": {
+                "state": {
+                    "away": "poza domem",
+                    "home": "w domu",
+                    "sleep": "noc"
+                }
+            }
+        },
+        "sensor": {
+            "thread_node_capabilities": {
+                "state": {
+                    "border_router_capable": "funkcje routera granicznego",
+                    "full": "pe\u0142ne urz\u0105dzenie ko\u0144cowe",
+                    "minimal": "podstawowe urz\u0105dzenie ko\u0144cowe",
+                    "none": "brak",
+                    "router_eligible": "urz\u0105dzenie ko\u0144cowe kwalifikuj\u0105ce si\u0119 jako router",
+                    "sleepy": "u\u015bpione urz\u0105dzenie ko\u0144cowe"
+                }
+            },
+            "thread_status": {
+                "state": {
+                    "border_router": "router graniczny",
+                    "child": "dziecko",
+                    "detached": "od\u0142\u0105czony",
+                    "disabled": "wy\u0142\u0105czony",
+                    "joining": "do\u0142\u0105czanie",
+                    "leader": "lider",
+                    "router": "router"
+                }
+            }
+        }
+    },
     "title": "Kontroler HomeKit"
 }

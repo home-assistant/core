@@ -44,6 +44,16 @@
             }
         }
     },
+    "entity": {
+        "select": {
+            "brightness_mode": {
+                "state": {
+                    "auto": "Autom\u00e1tico",
+                    "manual": "Manual"
+                }
+            }
+        }
+    },
     "issues": {
         "manual_migration": {
             "description": "La integraci\u00f3n de LaMetric se ha modernizado: ahora se configura a trav\u00e9s de la interfaz de usuario y las comunicaciones son locales.\n\nDesafortunadamente, no existe una ruta de migraci\u00f3n autom\u00e1tica posible y, por lo tanto, requiere que vuelvas a configurar tu LaMetric con Home Assistant. Consulta la documentaci\u00f3n de la integraci\u00f3n LaMetric en Home Assistant sobre c\u00f3mo configurarlo. \n\nElimina la configuraci\u00f3n antigua de LaMetric YAML de tu archivo configuration.yaml y reinicia Home Assistant para solucionar este problema.",

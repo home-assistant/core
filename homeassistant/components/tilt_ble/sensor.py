@@ -19,7 +19,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT, TEMP_FAHRENHEIT
+from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
@@ -30,7 +30,7 @@ SENSOR_DESCRIPTIONS = {
     (DeviceClass.TEMPERATURE, Units.TEMP_FAHRENHEIT): SensorEntityDescription(
         key=f"{DeviceClass.TEMPERATURE}_{Units.TEMP_FAHRENHEIT}",
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_FAHRENHEIT,
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (DeviceClass.SPECIFIC_GRAVITY, Units.SPECIFIC_GRAVITY): SensorEntityDescription(

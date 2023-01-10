@@ -82,9 +82,8 @@ from homeassistant.const import (
     ENTITY_MATCH_NONE,
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
     WEEKDAYS,
+    UnitOfTemperature,
 )
 from homeassistant.core import split_entity_id, valid_entity_id
 from homeassistant.exceptions import TemplateError
@@ -579,13 +578,13 @@ def string_with_no_html(value: Any) -> str:
     return str(value)
 
 
-def temperature_unit(value: Any) -> str:
+def temperature_unit(value: Any) -> UnitOfTemperature:
     """Validate and transform temperature unit."""
     value = str(value).upper()
     if value == "C":
-        return TEMP_CELSIUS
+        return UnitOfTemperature.CELSIUS
     if value == "F":
-        return TEMP_FAHRENHEIT
+        return UnitOfTemperature.FAHRENHEIT
     raise vol.Invalid("invalid temperature unit (expected C or F)")
 
 
@@ -779,12 +778,12 @@ def _deprecated_or_removed(
     raise_if_present: bool,
     option_removed: bool,
 ) -> Callable[[dict], dict]:
-    """
-    Log key as deprecated and provide a replacement (if exists) or fail.
+    """Log key as deprecated and provide a replacement (if exists) or fail.
 
     Expected behavior:
         - Outputs or throws the appropriate deprecation warning if key is detected
-        - Outputs or throws the appropriate error if key is detected and removed from support
+        - Outputs or throws the appropriate error if key is detected
+          and removed from support
         - Processes schema moving the value from key to replacement_key
         - Processes schema changing nothing if only replacement_key provided
         - No warning if only replacement_key provided
@@ -810,7 +809,10 @@ def _deprecated_or_removed(
         """Check if key is in config and log warning or error."""
         if key in config:
             try:
-                near = f"near {config.__config_file__}:{config.__line__} "  # type: ignore[attr-defined]
+                near = (
+                    f"near {config.__config_file__}"  # type: ignore[attr-defined]
+                    f":{config.__line__} "
+                )
             except AttributeError:
                 near = ""
             arguments: tuple[str, ...]
@@ -852,11 +854,11 @@ def deprecated(
     default: Any | None = None,
     raise_if_present: bool | None = False,
 ) -> Callable[[dict], dict]:
-    """
-    Log key as deprecated and provide a replacement (if exists).
+    """Log key as deprecated and provide a replacement (if exists).
 
     Expected behavior:
-        - Outputs the appropriate deprecation warning if key is detected or raises an exception
+        - Outputs the appropriate deprecation warning if key is detected
+          or raises an exception
         - Processes schema moving the value from key to replacement_key
         - Processes schema changing nothing if only replacement_key provided
         - No warning if only replacement_key provided
@@ -877,11 +879,11 @@ def removed(
     default: Any | None = None,
     raise_if_present: bool | None = True,
 ) -> Callable[[dict], dict]:
-    """
-    Log key as deprecated and fail the config validation.
+    """Log key as deprecated and fail the config validation.
 
     Expected behavior:
-        - Outputs the appropriate error if key is detected and removed from support or raises an exception
+        - Outputs the appropriate error if key is detected and removed from
+          support or raises an exception.
     """
     return _deprecated_or_removed(
         key,

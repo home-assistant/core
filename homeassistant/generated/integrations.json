@@ -120,9 +120,20 @@
     },
     "airvisual": {
       "name": "AirVisual",
-      "integration_type": "device",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
+      "integrations": {
+        "airvisual": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "AirVisual Cloud"
+        },
+        "airvisual_pro": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "AirVisual Pro"
+        }
+      }
     },
     "airzone": {
       "name": "Airzone",
@@ -143,7 +154,6 @@
       "iot_class": "local_push"
     },
     "alert": {
-      "name": "Alert",
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_push"
@@ -232,7 +242,7 @@
     },
     "androidtv": {
       "name": "Android TV",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -247,6 +257,11 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "anwb_energie": {
+      "name": "ANWB Energie",
+      "integration_type": "virtual",
+      "supported_by": "energyzero"
     },
     "apache_kafka": {
       "name": "Apache Kafka",
@@ -993,12 +1008,6 @@
         }
       }
     },
-    "deutsche_bahn": {
-      "name": "Deutsche Bahn",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
-    },
     "device_sun_light_trigger": {
       "name": "Presence-based Lights",
       "integration_type": "hub",
@@ -1358,6 +1367,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "energyzero": {
+      "name": "EnergyZero",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "enigma2": {
       "name": "Enigma2 (OpenWebif)",
@@ -1957,6 +1972,12 @@
           "iot_class": "cloud_push",
           "name": "Google Assistant"
         },
+        "google_assistant_sdk": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Google Assistant SDK"
+        },
         "google_cloud": {
           "integration_type": "hub",
           "config_flow": false,
@@ -1968,6 +1989,12 @@
           "config_flow": false,
           "iot_class": "cloud_polling",
           "name": "Google Domains"
+        },
+        "google_mail": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Google Mail"
         },
         "google_maps": {
           "integration_type": "hub",
@@ -2412,7 +2439,7 @@
     "imap": {
       "name": "IMAP",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_push"
     },
     "imap_email_content": {
@@ -2533,7 +2560,7 @@
       "iot_class": "cloud_polling"
     },
     "isy994": {
-      "name": "Universal Devices ISY994",
+      "name": "Universal Devices ISY/IoX",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
@@ -2646,6 +2673,12 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
+    "kitchen_sink": {
+      "name": "Everything but the Kitchen Sink",
+      "integration_type": "hub",
+      "config_flow": false,
+      "iot_class": "calculated"
+    },
     "kiwi": {
       "name": "KIWI",
       "integration_type": "hub",
@@ -2752,6 +2785,12 @@
       "name": "LCN",
       "integration_type": "hub",
       "config_flow": false,
+      "iot_class": "local_push"
+    },
+    "ld2410_ble": {
+      "name": "LD2410 BLE",
+      "integration_type": "device",
+      "config_flow": true,
       "iot_class": "local_push"
     },
     "led_ble": {
@@ -3046,6 +3085,12 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
+    "matter": {
+      "name": "Matter (BETA)",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "mazda": {
       "name": "Mazda Connected Services",
       "integration_type": "hub",
@@ -3223,6 +3268,11 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
+    },
+    "mijndomein_energie": {
+      "name": "Mijndomein Energie",
+      "integration_type": "virtual",
+      "supported_by": "energyzero"
     },
     "mikrotik": {
       "name": "Mikrotik",
@@ -3657,7 +3707,7 @@
     },
     "nut": {
       "name": "Network UPS Tools (NUT)",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -4159,6 +4209,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "purpleair": {
+      "name": "PurpleAir",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "push": {
       "name": "Push",
       "integration_type": "hub",
@@ -4292,7 +4348,7 @@
     "rainbird": {
       "name": "Rain Bird",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "rainforest_eagle": {
@@ -4387,6 +4443,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "reolink": {
+      "name": "Reolink IP NVR/camera",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "repetier": {
       "name": "Repetier-Server",
@@ -4540,6 +4602,12 @@
           "name": "Russound RNET"
         }
       }
+    },
+    "ruuvi_gateway": {
+      "name": "Ruuvi Gateway",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "ruuvitag_ble": {
       "name": "RuuviTag BLE",
@@ -4711,6 +4779,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_polling"
+    },
+    "sfr_box": {
+      "name": "SFR Box",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "sharkiq": {
       "name": "Shark IQ",
@@ -5099,6 +5173,12 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "starlink": {
+      "name": "Starlink",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "startca": {
       "name": "Start.ca",
       "integration_type": "hub",
@@ -5204,7 +5284,7 @@
       "name": "SwitchBee",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "local_polling"
+      "iot_class": "local_push"
     },
     "switchbot": {
       "name": "SwitchBot",
@@ -5984,7 +6064,7 @@
       "iot_class": "local_push"
     },
     "whirlpool": {
-      "name": "Whirlpool Sixth Sense",
+      "name": "Whirlpool Appliances",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_push"
@@ -6254,6 +6334,12 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "zeversolar": {
+      "name": "Zeversolar",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "zha": {
       "name": "Zigbee Home Automation",
       "integration_type": "hub",
@@ -6385,6 +6471,7 @@
     }
   },
   "translated_name": [
+    "alert",
     "aurora",
     "cert_expiry",
     "cpuspeed",

@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado"
+        },
+        "error": {
+            "api_error": "Ocurri\u00f3 un error de API: {error}",
+            "cannot_connect": "No se pudo conectar",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
+            "unknown": "Error inesperado: {error}"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Contrase\u00f1a",
+                    "port": "Puerto",
+                    "use_https": "Habilitar HTTPS",
+                    "username": "Nombre de usuario"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "protocol": "Protocolo"
+                }
+            }
+        }
+    }
+}

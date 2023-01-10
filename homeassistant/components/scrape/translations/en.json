@@ -102,9 +102,9 @@
             "init": {
                 "menu_options": {
                     "add_sensor": "Add sensor",
-                    "select_edit_sensor": "Configure sensor",
                     "remove_sensor": "Remove sensor",
-                    "resource": "Configure resource"
+                    "resource": "Configure resource",
+                    "select_edit_sensor": "Configure sensor"
                 }
             },
             "resource": {

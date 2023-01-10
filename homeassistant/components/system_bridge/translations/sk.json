@@ -15,7 +15,8 @@
             "authenticate": {
                 "data": {
                     "api_key": "API k\u013e\u00fa\u010d"
-                }
+                },
+                "description": "Zadajte k\u013e\u00fa\u010d API, ktor\u00fd ste nastavili vo svojej konfigur\u00e1cii pre {name}."
             },
             "user": {
                 "data": {

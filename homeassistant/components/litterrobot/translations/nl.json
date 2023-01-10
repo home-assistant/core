@@ -23,5 +23,15 @@
                 }
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "status_code": {
+                "state": {
+                    "cd": "Kat gedetecteerd",
+                    "p": "Gepauzeerd"
+                }
+            }
+        }
     }
 }

@@ -16,7 +16,7 @@
         },
         "step": {
             "auth": {
-                "description": "Folge dem Link unten und **Best\u00e4tige** den Zugriff auf dein Minut-Konto. Kehre dann zur\u00fcck und dr\u00fccke unten auf **Senden**. \n\n [Link]({authorization_url})",
+                "description": "Folge dem Link unten und **Best\u00e4tige** den Zugriff auf dein Minut Konto. Kehre dann zur\u00fcck und dr\u00fccke unten auf **Senden**. \n\n [Link]({authorization_url})",
                 "title": "Point authentifizieren"
             },
             "user": {

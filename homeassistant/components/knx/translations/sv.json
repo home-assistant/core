@@ -50,12 +50,6 @@
                 },
                 "description": "V\u00e4nligen ange informationen f\u00f6r din `.knxkeys`-fil."
             },
-            "secure_tunneling": {
-                "description": "V\u00e4lj hur du vill konfigurera KNX/IP Secure.",
-                "menu_options": {
-                    "secure_knxkeys": "Anv\u00e4nd en fil `.knxkeys` som inneh\u00e5ller s\u00e4kra IP-nycklar."
-                }
-            },
             "tunnel": {
                 "data": {
                     "gateway": "KNX-tunnelanslutning"

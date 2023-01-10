@@ -13,5 +13,11 @@
                 "title": "Vyberte met\u00f3du overenia"
             }
         }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Konfigur\u00e1cia konzoly Xbox v s\u00fabore configuration.yaml sa v aplik\u00e1cii Home Assistant 2022.9 odstra\u0148uje. \n\n Va\u0161e existuj\u00face poverenia aplik\u00e1cie OAuth a nastavenia pr\u00edstupu sa importovali do pou\u017e\u00edvate\u013esk\u00e9ho rozhrania automaticky. Ak chcete tento probl\u00e9m vyrie\u0161i\u0165, odstr\u00e1\u0148te konfigur\u00e1ciu YAML zo s\u00faboru configuration.yaml a re\u0161tartujte aplik\u00e1ciu Home Assistant.",
+            "title": "Konfigur\u00e1cia Xbox YAML sa odstra\u0148uje"
+        }
     }
 }

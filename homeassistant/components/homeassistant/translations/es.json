@@ -1,7 +1,7 @@
 {
     "issues": {
         "country_not_configured": {
-            "description": "No se ha configurado ning\u00fan pa\u00eds, por favor, actualiza la configuraci\u00f3n haciendo clic en el bot\u00f3n \"m\u00e1s informaci\u00f3n\" a continuaci\u00f3n.",
+            "description": "No se ha configurado ning\u00fan pa\u00eds, por favor, actualiza la configuraci\u00f3n haciendo clic en el bot\u00f3n \"Saber m\u00e1s\" a continuaci\u00f3n.",
             "title": "El pa\u00eds no ha sido configurado"
         },
         "historic_currency": {

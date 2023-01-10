@@ -162,7 +162,10 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             name.startswith(ZEROCONF_GATEWAY) or name.startswith(ZEROCONF_ACPARTNER)
         ):
             _LOGGER.debug(
-                "Xiaomi device '%s' discovered with host %s, not identified as xiaomi aqara gateway",
+                (
+                    "Xiaomi device '%s' discovered with host %s, not identified as"
+                    " xiaomi aqara gateway"
+                ),
                 name,
                 self.host,
             )

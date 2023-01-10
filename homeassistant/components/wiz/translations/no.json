@@ -15,7 +15,7 @@
         "flow_title": "{name} ({host})",
         "step": {
             "discovery_confirm": {
-                "description": "Vil du konfigurere {name} ({host})?"
+                "description": "Vil du sette opp {name} ( {host} )?"
             },
             "pick_device": {
                 "data": {

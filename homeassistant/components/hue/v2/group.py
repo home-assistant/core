@@ -120,7 +120,10 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         scenes = {
             x.metadata.name for x in self.api.scenes if x.group.rid == self.group.id
         }
-        lights = {x.metadata.name for x in self.controller.get_lights(self.resource.id)}
+        lights = {
+            self.controller.get_device(x.id).metadata.name
+            for x in self.controller.get_lights(self.resource.id)
+        }
         return {
             "is_hue_group": True,
             "hue_scenes": scenes,

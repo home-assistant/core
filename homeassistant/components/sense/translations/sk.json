@@ -20,13 +20,16 @@
             "user": {
                 "data": {
                     "email": "Email",
-                    "password": "Heslo"
-                }
+                    "password": "Heslo",
+                    "timeout": "\u010casov\u00fd limit"
+                },
+                "title": "Pripojenie k monitoru Sense Energy"
             },
             "validation": {
                 "data": {
                     "code": "Overovac\u00ed k\u00f3d"
-                }
+                },
+                "title": "Viacfaktorov\u00e9 overovanie Sense"
             }
         }
     }

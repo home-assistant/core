@@ -6,6 +6,8 @@
             "unknown_entry": "Nie je mo\u017en\u00e9 n\u00e1js\u0165 existuj\u00faci z\u00e1znam."
         },
         "error": {
+            "invalid_code": "Nepodarilo sa prihl\u00e1si\u0165 do Hive. V\u00e1\u0161 dvojfaktorov\u00fd overovac\u00ed k\u00f3d bol nespr\u00e1vny.",
+            "invalid_password": "Nepodarilo sa prihl\u00e1si\u0165 do Hive. Nespr\u00e1vne heslo, sk\u00faste to znova.",
             "invalid_username": "Nepodarilo sa prihl\u00e1si\u0165 do syst\u00e9mu Hive. Va\u0161a e-mailov\u00e1 adresa nie je rozpoznan\u00e1.",
             "no_internet_available": "Na pripojenie k Hive je potrebn\u00e9 internetov\u00e9 pripojenie.",
             "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
@@ -50,6 +52,7 @@
                 "data": {
                     "scan_interval": "Interval skenovania (sekundy)"
                 },
+                "description": "Aktualizujte interval skenovania, aby sa \u00fadaje vyh\u013ead\u00e1vali \u010dastej\u0161ie.",
                 "title": "Mo\u017enosti pre Hive"
             }
         }
