@@ -122,7 +122,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             if not title or not uri:
                 continue
             self.source_map[uri] = {**item, "type": source_type}
-            if add_to_list:
+            if add_to_list and title not in self.source_list:
                 self.source_list.append(title)
 
     async def _async_update_data(self) -> None:
