@@ -61,8 +61,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     async def async_device_config_update():
         """Update the host state cache and renew the ONVIF-subscription."""
         async with async_timeout.timeout(host.api.timeout):
-            if not await host.update_states()
-                raise UpdateFailed("Error updating Reolink %s", host.api.nvr_name)
+            if not await host.update_states():
+                raise UpdateFailed(f"Error updating Reolink {host.api.nvr_name}")
         async with async_timeout.timeout(host.api.timeout):
             if not await host.renew():
                 _LOGGER.error("Reolink %s event subscription lost", host.api.nvr_name)

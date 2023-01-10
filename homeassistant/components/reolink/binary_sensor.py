@@ -1,18 +1,29 @@
 """This component provides support for Reolink binary sensors."""
-import logging
+from __future__ import annotations
 
-from homeassistant.core                     import HomeAssistant
-from homeassistant.components.binary_sensor import BinarySensorEntity, BinarySensorEntityDescription
+from collections.abc import Callable
+from dataclasses import dataclass
+import logging
 
 from reolink_ip.api import (
     FACE_DETECTION_TYPE,
     PERSON_DETECTION_TYPE,
+    PET_DETECTION_TYPE,
     VEHICLE_DETECTION_TYPE,
-    PET_DETECTION_TYPE
 )
 
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+    BinarySensorEntityDescription,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from . import ReolinkData
+from .const import DOMAIN
 from .entity import ReolinkCoordinatorEntity
-from .const  import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,8 +34,8 @@ class ReolinkBinarySensorDescription(BinarySensorEntityDescription):
 
     icon: str = "mdi:motion-sensor"
     icon_off: str = "mdi:motion-sensor-off"
-    value: Callable | None = None
-    supported: Callable | None = None
+    value: Callable = lambda host, ch: None
+    supported: Callable = lambda host, ch: True
 
 
 BINARY_SENSORS = (
@@ -33,7 +44,6 @@ BINARY_SENSORS = (
         name="Motion",
         device_class=BinarySensorDeviceClass.MOTION,
         value=lambda host, ch: host.motion_detected(ch),
-        supported=lambda host, ch: True,
     ),
     ReolinkBinarySensorDescription(
         key=FACE_DETECTION_TYPE,
@@ -93,7 +103,7 @@ async def async_setup_entry(
         for description in BINARY_SENSORS:
             if not description.supported(host, channel):
                 continue
-            
+
             entities.append(
                 ReolinkBinarySensorEntity(
                     reolink_data,
@@ -114,34 +124,39 @@ class ReolinkBinarySensorEntity(ReolinkCoordinatorEntity, BinarySensorEntity):
         self,
         reolink_data: ReolinkData,
         channel: int,
-        description: ReolinkBinarySensorDescription
+        description: ReolinkBinarySensorDescription,
     ) -> None:
         """Initialize Reolink binary sensor."""
         ReolinkCoordinatorEntity.__init__(self, reolink_data, channel)
         BinarySensorEntity.__init__(self)
-        
+
         self._description = description
-        
+
         self._attr_name = description.name
-        self._attr_unique_id = f"{self._host.unique_id}_{self._channel}_{description.key}"
+        self._attr_unique_id = (
+            f"{self._host.unique_id}_{self._channel}_{description.key}"
+        )
         self._attr_device_class = description.device_class
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Icon of the sensor."""
         if self.is_on:
             return self._description.icon
-        else:
-            return self._description.icon_off
+
+        return self._description.icon_off
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
+        """State of the sensor."""
         return self._description.value(self._host, self._channel)
 
     async def async_added_to_hass(self) -> None:
         """Entity created."""
         await super().async_added_to_hass()
-        self.hass.bus.async_listen(f"{self._host.webhook_id}_{self._channel}", self.handle_event)
+        self.hass.bus.async_listen(
+            f"{self._host.webhook_id}_{self._channel}", self.handle_event
+        )
         self.hass.bus.async_listen(f"{self._host.webhook_id}_all", self.handle_event)
 
     async def handle_event(self, event):
