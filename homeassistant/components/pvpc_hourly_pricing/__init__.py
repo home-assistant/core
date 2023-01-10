@@ -152,7 +152,7 @@ class ElecPricesDataUpdateCoordinator(DataUpdateCoordinator[EsiosApiData]):
             sensor_keys=tuple(sensor_keys),
         )
         super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=timedelta(minutes=5)
+            hass, _LOGGER, name=DOMAIN, update_interval=timedelta(minutes=30)
         )
         self._entry = entry
 
@@ -172,6 +172,5 @@ class ElecPricesDataUpdateCoordinator(DataUpdateCoordinator[EsiosApiData]):
             or not api_data.sensors
             or not all(api_data.availability.values())
         ):
-            _LOGGER.error("Update fail for api_data=%s", api_data)
             raise UpdateFailed
         return api_data
