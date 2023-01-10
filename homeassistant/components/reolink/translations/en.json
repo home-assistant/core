@@ -7,19 +7,19 @@
             "api_error": "API error occurred",
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
-            "not_admin": "User needs to be admin",
+            "not_admin": "User needs to be admin, user ''{username}'' has authorisation level ''{userlevel}''",
             "unknown": "Unexpected error"
         },
         "step": {
             "user": {
-                "description": "{error}",
                 "data": {
                     "host": "Host",
                     "password": "Password",
                     "port": "Port",
                     "use_https": "Enable HTTPS",
                     "username": "Username"
-                }
+                },
+                "description": "{error}"
             }
         }
     },
