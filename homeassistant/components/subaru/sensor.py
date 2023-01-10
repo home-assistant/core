@@ -131,7 +131,6 @@ EV_SENSORS = [
         key=sc.EV_TIME_TO_FULLY_CHARGED_UTC,
         device_class=SensorDeviceClass.TIMESTAMP,
         name="EV time to full charge",
-        state_class=SensorStateClass.MEASUREMENT,
     ),
 ]
 
