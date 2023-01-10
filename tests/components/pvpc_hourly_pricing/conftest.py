@@ -4,11 +4,7 @@ from http import HTTPStatus
 import pytest
 
 from homeassistant.components.pvpc_hourly_pricing import ATTR_TARIFF, DOMAIN
-from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT,
-    CURRENCY_EURO,
-    ENERGY_KILO_WATT_HOUR,
-)
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, CURRENCY_EURO, UnitOfEnergy
 
 from tests.common import load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -25,7 +21,7 @@ def check_valid_state(state, tariff: str, value=None, key_attr=None):
     assert state
     assert (
         state.attributes[ATTR_UNIT_OF_MEASUREMENT]
-        == f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}"
+        == f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}"
     )
     try:
         _ = float(state.state)

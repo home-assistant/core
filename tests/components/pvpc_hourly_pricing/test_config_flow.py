@@ -65,7 +65,7 @@ async def test_config_flow(
         check_valid_state(state, tariff=TARIFFS[1])
         assert pvpc_aioclient_mock.call_count == 1
 
-        state_inyection = hass.states.get("sensor.inyection_price")
+        state_inyection = hass.states.get("sensor.injection_price")
         assert state_inyection is None
 
         # Check abort when configuring another with same tariff
@@ -135,7 +135,7 @@ async def test_config_flow(
         assert state.attributes["next_period"] == "P2"
         assert state.attributes["available_power"] == 4600
 
-        state_inyection = hass.states.get("sensor.inyection_price")
+        state_inyection = hass.states.get("sensor.injection_price")
         state_mag = hass.states.get("sensor.mag_tax")
         state_omie = hass.states.get("sensor.omie_price")
         assert state_inyection
@@ -162,7 +162,7 @@ async def test_config_flow(
         await hass.async_block_till_done()
 
         state = hass.states.get("sensor.test")
-        state_inyection = hass.states.get("sensor.inyection_price")
+        state_inyection = hass.states.get("sensor.injection_price")
         state_mag = hass.states.get("sensor.mag_tax")
         state_omie = hass.states.get("sensor.omie_price")
         check_valid_state(state, tariff=TARIFFS[1])
