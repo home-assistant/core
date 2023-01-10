@@ -11,7 +11,7 @@ from homeassistant.components.pvpc_hourly_pricing.const import (
     DOMAIN,
     TARIFFS,
 )
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_API_TOKEN, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -169,3 +169,70 @@ async def test_config_flow(
         assert state_inyection.state == "unavailable"
         assert state_mag.state == "unavailable"
         assert state_omie.state == "unavailable"
+
+
+async def test_reauth(
+    hass: HomeAssistant, pvpc_aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test reauth flow."""
+    hass.config.set_time_zone("Europe/Madrid")
+    tst_config = {
+        CONF_NAME: "test",
+        ATTR_TARIFF: TARIFFS[1],
+        ATTR_POWER: 4.6,
+        ATTR_POWER_P3: 5.75,
+        CONF_USE_API_TOKEN: True,
+    }
+    with freeze_time(_MOCK_TIME_BAD_AUTH_RESPONSES):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        assert result["type"] == FlowResultType.FORM
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], tst_config
+        )
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "api_token"
+        assert pvpc_aioclient_mock.call_count == 0
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=_BAD_TOKEN
+        )
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "api_token"
+        assert result["errors"]["base"] == "invalid_auth"
+        assert pvpc_aioclient_mock.call_count == 1
+
+    with freeze_time(_MOCK_TIME_VALID_RESPONSES):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=_GOOD_TOKEN
+        )
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+        config_entry = result["result"]
+        assert pvpc_aioclient_mock.call_count == 6
+
+    # check reauth trigger with bad-auth responses
+    with freeze_time(_MOCK_TIME_BAD_AUTH_RESPONSES):
+        await hass.async_block_till_done()
+        assert pvpc_aioclient_mock.call_count == 10
+
+        result = hass.config_entries.flow.async_progress_by_handler(DOMAIN)[0]
+        assert result["context"]["entry_id"] == config_entry.entry_id
+        assert result["context"]["source"] == SOURCE_REAUTH
+        assert result["step_id"] == "reauth_confirm"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=_BAD_TOKEN
+        )
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
+        assert pvpc_aioclient_mock.call_count == 11
+
+    with freeze_time(_MOCK_TIME_VALID_RESPONSES):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=_GOOD_TOKEN
+        )
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == "reauth_successful"
+        assert pvpc_aioclient_mock.call_count == 12
