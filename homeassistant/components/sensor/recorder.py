@@ -202,9 +202,11 @@ def _normalize_states(
                         f"({old_metadata['unit_of_measurement']})"
                     )
                 _LOGGER.warning(
-                    "The unit of %s is changing, got multiple %s, generation of long term "
-                    "statistics will be suppressed unless the unit is stable%s. "
-                    "Go to %s to fix this",
+                    (
+                        "The unit of %s is changing, got multiple %s, generation of"
+                        " long term statistics will be suppressed unless the unit is"
+                        " stable%s. Go to %s to fix this"
+                    ),
                     entity_id,
                     all_units,
                     extra,
@@ -226,11 +228,12 @@ def _normalize_states(
             if entity_id not in hass.data[WARN_UNSUPPORTED_UNIT]:
                 hass.data[WARN_UNSUPPORTED_UNIT].add(entity_id)
                 _LOGGER.warning(
-                    "The unit of %s (%s) can not be converted to the unit of previously "
-                    "compiled statistics (%s). Generation of long term statistics "
-                    "will be suppressed unless the unit changes back to %s or a "
-                    "compatible unit. "
-                    "Go to %s to fix this",
+                    (
+                        "The unit of %s (%s) can not be converted to the unit of"
+                        " previously compiled statistics (%s). Generation of long term"
+                        " statistics will be suppressed unless the unit changes back to"
+                        " %s or a compatible unit. Go to %s to fix this"
+                    ),
                     entity_id,
                     state_unit,
                     statistics_unit,
@@ -291,9 +294,11 @@ def warn_dip(
         if domain in ["energy", "growatt_server", "solaredge"]:
             return
         _LOGGER.warning(
-            "Entity %s %shas state class total_increasing, but its state is "
-            "not strictly increasing. Triggered by state %s (%s) with last_updated set to %s. "
-            "Please %s",
+            (
+                "Entity %s %shas state class total_increasing, but its state is not"
+                " strictly increasing. Triggered by state %s (%s) with last_updated set"
+                " to %s. Please %s"
+            ),
             entity_id,
             f"from integration {domain} " if domain else "",
             state.state,
@@ -311,8 +316,10 @@ def warn_negative(hass: HomeAssistant, entity_id: str, state: State) -> None:
         hass.data[WARN_NEGATIVE].add(entity_id)
         domain = entity_sources(hass).get(entity_id, {}).get("domain")
         _LOGGER.warning(
-            "Entity %s %shas state class total_increasing, but its state is "
-            "negative. Triggered by state %s with last_updated set to %s. Please %s",
+            (
+                "Entity %s %shas state class total_increasing, but its state is "
+                "negative. Triggered by state %s with last_updated set to %s. Please %s"
+            ),
             entity_id,
             f"from integration {domain} " if domain else "",
             state.state,
@@ -472,11 +479,13 @@ def _compile_statistics(  # noqa: C901
                 if entity_id not in hass.data[WARN_UNSTABLE_UNIT]:
                     hass.data[WARN_UNSTABLE_UNIT].add(entity_id)
                     _LOGGER.warning(
-                        "The unit of %s (%s) can not be converted to the unit of previously "
-                        "compiled statistics (%s). Generation of long term statistics "
-                        "will be suppressed unless the unit changes back to %s or a "
-                        "compatible unit. "
-                        "Go to %s to fix this",
+                        (
+                            "The unit of %s (%s) can not be converted to the unit of"
+                            " previously compiled statistics (%s). Generation of long"
+                            " term statistics will be suppressed unless the unit"
+                            " changes back to %s or a compatible unit. Go to %s to fix"
+                            " this"
+                        ),
                         entity_id,
                         statistics_unit,
                         old_metadata[1]["unit_of_measurement"],
@@ -498,9 +507,19 @@ def _compile_statistics(  # noqa: C901
         # Make calculations
         stat: StatisticData = {"start": start}
         if "max" in wanted_statistics[entity_id]:
-            stat["max"] = max(*itertools.islice(zip(*fstates), 1))  # type: ignore[typeddict-item]
+            stat["max"] = max(
+                *itertools.islice(
+                    zip(*fstates),  # type: ignore[typeddict-item]
+                    1,
+                )
+            )
         if "min" in wanted_statistics[entity_id]:
-            stat["min"] = min(*itertools.islice(zip(*fstates), 1))  # type: ignore[typeddict-item]
+            stat["min"] = min(
+                *itertools.islice(
+                    zip(*fstates),  # type: ignore[typeddict-item]
+                    1,
+                )
+            )
 
         if "mean" in wanted_statistics[entity_id]:
             stat["mean"] = _time_weighted_average(fstates, start, end)
@@ -510,7 +529,8 @@ def _compile_statistics(  # noqa: C901
             new_state = old_state = None
             _sum = 0.0
             if entity_id in last_stats:
-                # We have compiled history for this sensor before, use that as a starting point
+                # We have compiled history for this sensor before,
+                # use that as a starting point.
                 last_reset = old_last_reset = last_stats[entity_id][0]["last_reset"]
                 if old_last_reset is not None:
                     last_reset = old_last_reset = old_last_reset.isoformat()
@@ -531,13 +551,19 @@ def _compile_statistics(  # noqa: C901
                 ):
                     if old_state is None:
                         _LOGGER.info(
-                            "Compiling initial sum statistics for %s, zero point set to %s",
+                            (
+                                "Compiling initial sum statistics for %s, zero point"
+                                " set to %s"
+                            ),
                             entity_id,
                             fstate,
                         )
                     else:
                         _LOGGER.info(
-                            "Detected new cycle for %s, last_reset set to %s (old last_reset %s)",
+                            (
+                                "Detected new cycle for %s, last_reset set to %s (old"
+                                " last_reset %s)"
+                            ),
                             entity_id,
                             last_reset,
                             old_last_reset,
@@ -557,8 +583,11 @@ def _compile_statistics(  # noqa: C901
                         ):
                             reset = True
                             _LOGGER.info(
-                                "Detected new cycle for %s, value dropped from %s to %s, "
-                                "triggered by state with last_updated set to %s",
+                                (
+                                    "Detected new cycle for %s, value dropped from %s"
+                                    " to %s, triggered by state with last_updated set"
+                                    " to %s"
+                                ),
                                 entity_id,
                                 new_state,
                                 state.last_updated.isoformat(),

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from homeassistant.components.number import NumberEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TIME_MINUTES
+from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -36,7 +36,7 @@ class PeriodicVentingTime(CoordinatorEntity[Coordinator], NumberEntity):
     _attr_native_min_value: float = 0
     _attr_native_step: float = 1
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_native_unit_of_measurement = TIME_MINUTES
+    _attr_native_unit_of_measurement = UnitOfTime.MINUTES
 
     def __init__(
         self,

@@ -20,12 +20,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    CONF_SCAN_INTERVAL,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-)
+from homeassistant.const import ATTR_TEMPERATURE, CONF_SCAN_INTERVAL, UnitOfTemperature
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 
@@ -341,6 +336,6 @@ class NestThermostat(ClimateEntity):
         self._max_temperature = self.device.max_temperature
         self._is_locked = self.device.is_locked
         if self.device.temperature_scale == "C":
-            self._temperature_scale = TEMP_CELSIUS
+            self._temperature_scale = UnitOfTemperature.CELSIUS
         else:
-            self._temperature_scale = TEMP_FAHRENHEIT
+            self._temperature_scale = UnitOfTemperature.FAHRENHEIT

@@ -52,10 +52,10 @@ class GoalZeroSwitch(GoalZeroEntity, SwitchEntity):
         """Turn off the switch."""
         payload = {self.entity_description.key: 0}
         await self._api.post_state(payload=payload)
-        self.coordinator.async_set_updated_data(data=payload)
+        self.coordinator.async_set_updated_data(None)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         payload = {self.entity_description.key: 1}
         await self._api.post_state(payload=payload)
-        self.coordinator.async_set_updated_data(data=payload)
+        self.coordinator.async_set_updated_data(None)

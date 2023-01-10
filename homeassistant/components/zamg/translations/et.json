@@ -2,10 +2,12 @@
     "config": {
         "abort": {
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
-            "cannot_connect": "\u00dchendamine nurjus"
+            "cannot_connect": "\u00dchendamine nurjus",
+            "station_not_found": "Jaama ID-d zamg-st ei leitud"
         },
         "error": {
-            "cannot_connect": "\u00dchendamine nurjus"
+            "cannot_connect": "\u00dchendamine nurjus",
+            "station_not_found": "Jaama ID-d zamg-st ei leitud"
         },
         "flow_title": "{name}",
         "step": {

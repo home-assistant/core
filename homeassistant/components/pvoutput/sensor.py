@@ -14,11 +14,10 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ENERGY_KILO_WATT_HOUR,
-    ENERGY_WATT_HOUR,
-    TEMP_CELSIUS,
     UnitOfElectricPotential,
+    UnitOfEnergy,
     UnitOfPower,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
@@ -47,7 +46,7 @@ SENSORS: tuple[PVOutputSensorEntityDescription, ...] = (
     PVOutputSensorEntityDescription(
         key="energy_consumption",
         name="Energy consumed",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda status: status.energy_consumption,
@@ -55,7 +54,7 @@ SENSORS: tuple[PVOutputSensorEntityDescription, ...] = (
     PVOutputSensorEntityDescription(
         key="energy_generation",
         name="Energy generated",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda status: status.energy_generation,
@@ -63,7 +62,9 @@ SENSORS: tuple[PVOutputSensorEntityDescription, ...] = (
     PVOutputSensorEntityDescription(
         key="normalized_output",
         name="Efficiency",
-        native_unit_of_measurement=f"{ENERGY_KILO_WATT_HOUR}/{UnitOfPower.KILO_WATT}",
+        native_unit_of_measurement=(
+            f"{UnitOfEnergy.KILO_WATT_HOUR}/{UnitOfPower.KILO_WATT}"
+        ),
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda status: status.normalized_output,
     ),
@@ -86,7 +87,7 @@ SENSORS: tuple[PVOutputSensorEntityDescription, ...] = (
     PVOutputSensorEntityDescription(
         key="temperature",
         name="Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda status: status.temperature,

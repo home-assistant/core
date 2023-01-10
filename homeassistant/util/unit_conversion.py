@@ -3,7 +3,11 @@ from __future__ import annotations
 
 from homeassistant.const import (
     UNIT_NOT_RECOGNIZED_TEMPLATE,
+    UnitOfDataRate,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
     UnitOfEnergy,
+    UnitOfInformation,
     UnitOfLength,
     UnitOfMass,
     UnitOfPower,
@@ -86,6 +90,28 @@ class BaseUnitConverter:
         return cls._UNIT_CONVERSION[from_unit] / cls._UNIT_CONVERSION[to_unit]
 
 
+class DataRateConverter(BaseUnitConverter):
+    """Utility to convert data rate values."""
+
+    UNIT_CLASS = "data_rate"
+    NORMALIZED_UNIT = UnitOfDataRate.BITS_PER_SECOND
+    # Units in terms of bits
+    _UNIT_CONVERSION: dict[str, float] = {
+        UnitOfDataRate.BITS_PER_SECOND: 1,
+        UnitOfDataRate.KILOBITS_PER_SECOND: 1 / 1e3,
+        UnitOfDataRate.MEGABITS_PER_SECOND: 1 / 1e6,
+        UnitOfDataRate.GIGABITS_PER_SECOND: 1 / 1e9,
+        UnitOfDataRate.BYTES_PER_SECOND: 1 / 8,
+        UnitOfDataRate.KILOBYTES_PER_SECOND: 1 / 8e3,
+        UnitOfDataRate.MEGABYTES_PER_SECOND: 1 / 8e6,
+        UnitOfDataRate.GIGABYTES_PER_SECOND: 1 / 8e9,
+        UnitOfDataRate.KIBIBYTES_PER_SECOND: 1 / 2**13,
+        UnitOfDataRate.MEBIBYTES_PER_SECOND: 1 / 2**23,
+        UnitOfDataRate.GIBIBYTES_PER_SECOND: 1 / 2**33,
+    }
+    VALID_UNITS = set(UnitOfDataRate)
+
+
 class DistanceConverter(BaseUnitConverter):
     """Utility to convert distance values."""
 
@@ -113,6 +139,33 @@ class DistanceConverter(BaseUnitConverter):
     }
 
 
+class ElectricCurrentConverter(BaseUnitConverter):
+    """Utility to convert electric current values."""
+
+    UNIT_CLASS = "electric_current"
+    NORMALIZED_UNIT = UnitOfElectricCurrent.AMPERE
+    _UNIT_CONVERSION: dict[str, float] = {
+        UnitOfElectricCurrent.AMPERE: 1,
+        UnitOfElectricCurrent.MILLIAMPERE: 1e3,
+    }
+    VALID_UNITS = set(UnitOfElectricCurrent)
+
+
+class ElectricPotentialConverter(BaseUnitConverter):
+    """Utility to convert electric potential values."""
+
+    UNIT_CLASS = "voltage"
+    NORMALIZED_UNIT = UnitOfElectricPotential.VOLT
+    _UNIT_CONVERSION: dict[str, float] = {
+        UnitOfElectricPotential.VOLT: 1,
+        UnitOfElectricPotential.MILLIVOLT: 1e3,
+    }
+    VALID_UNITS = {
+        UnitOfElectricPotential.VOLT,
+        UnitOfElectricPotential.MILLIVOLT,
+    }
+
+
 class EnergyConverter(BaseUnitConverter):
     """Utility to convert energy values."""
 
@@ -130,6 +183,38 @@ class EnergyConverter(BaseUnitConverter):
         UnitOfEnergy.MEGA_WATT_HOUR,
         UnitOfEnergy.GIGA_JOULE,
     }
+
+
+class InformationConverter(BaseUnitConverter):
+    """Utility to convert information values."""
+
+    UNIT_CLASS = "information"
+    NORMALIZED_UNIT = UnitOfInformation.BITS
+    # Units in terms of bits
+    _UNIT_CONVERSION: dict[str, float] = {
+        UnitOfInformation.BITS: 1,
+        UnitOfInformation.KILOBITS: 1 / 1e3,
+        UnitOfInformation.MEGABITS: 1 / 1e6,
+        UnitOfInformation.GIGABITS: 1 / 1e9,
+        UnitOfInformation.BYTES: 1 / 8,
+        UnitOfInformation.KILOBYTES: 1 / 8e3,
+        UnitOfInformation.MEGABYTES: 1 / 8e6,
+        UnitOfInformation.GIGABYTES: 1 / 8e9,
+        UnitOfInformation.TERABYTES: 1 / 8e12,
+        UnitOfInformation.PETABYTES: 1 / 8e15,
+        UnitOfInformation.EXABYTES: 1 / 8e18,
+        UnitOfInformation.ZETTABYTES: 1 / 8e21,
+        UnitOfInformation.YOTTABYTES: 1 / 8e24,
+        UnitOfInformation.KIBIBYTES: 1 / 2**13,
+        UnitOfInformation.MEBIBYTES: 1 / 2**23,
+        UnitOfInformation.GIBIBYTES: 1 / 2**33,
+        UnitOfInformation.TEBIBYTES: 1 / 2**43,
+        UnitOfInformation.PEBIBYTES: 1 / 2**53,
+        UnitOfInformation.EXBIBYTES: 1 / 2**63,
+        UnitOfInformation.ZEBIBYTES: 1 / 2**73,
+        UnitOfInformation.YOBIBYTES: 1 / 2**83,
+    }
+    VALID_UNITS = set(UnitOfInformation)
 
 
 class MassConverter(BaseUnitConverter):
@@ -257,8 +342,8 @@ class TemperatureConverter(BaseUnitConverter):
         For converting an interval between two temperatures, please use
         `convert_interval` instead.
         """
-        # We cannot use the implementation from BaseUnitConverter here because the temperature
-        # units do not use the same floor: 0°C, 0°F and 0K do not align
+        # We cannot use the implementation from BaseUnitConverter here because the
+        # temperature units do not use the same floor: 0°C, 0°F and 0K do not align
         if from_unit == to_unit:
             return value
 
@@ -339,6 +424,7 @@ class VolumeConverter(BaseUnitConverter):
         UnitOfVolume.FLUID_OUNCES: 1 / _FLUID_OUNCE_TO_CUBIC_METER,
         UnitOfVolume.CUBIC_METERS: 1,
         UnitOfVolume.CUBIC_FEET: 1 / _CUBIC_FOOT_TO_CUBIC_METER,
+        UnitOfVolume.CENTUM_CUBIC_FEET: 1 / (100 * _CUBIC_FOOT_TO_CUBIC_METER),
     }
     VALID_UNITS = {
         UnitOfVolume.LITERS,
@@ -347,4 +433,5 @@ class VolumeConverter(BaseUnitConverter):
         UnitOfVolume.FLUID_OUNCES,
         UnitOfVolume.CUBIC_METERS,
         UnitOfVolume.CUBIC_FEET,
+        UnitOfVolume.CENTUM_CUBIC_FEET,
     }

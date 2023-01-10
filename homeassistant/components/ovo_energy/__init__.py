@@ -61,7 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 raise ConfigEntryAuthFailed("Not authenticated with OVO Energy")
             return await client.get_daily_usage(datetime.utcnow().strftime("%Y-%m"))
 
-    coordinator = DataUpdateCoordinator(
+    coordinator = DataUpdateCoordinator[OVODailyUsage](
         hass,
         _LOGGER,
         # Name of the data. For logging purposes.
@@ -96,12 +96,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class OVOEnergyEntity(CoordinatorEntity):
+class OVOEnergyEntity(CoordinatorEntity[DataUpdateCoordinator[OVODailyUsage]]):
     """Defines a base OVO Energy entity."""
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[OVODailyUsage],
         client: OVOEnergy,
     ) -> None:
         """Initialize the OVO Energy entity."""

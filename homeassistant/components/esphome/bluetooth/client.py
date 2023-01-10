@@ -168,7 +168,10 @@ class ESPHomeClient(BaseBleakClient):
             self._cancel_connection_state()
         except (AssertionError, ValueError) as ex:
             _LOGGER.debug(
-                "%s: %s - %s: Failed to unsubscribe from connection state (likely connection dropped): %s",
+                (
+                    "%s: %s - %s: Failed to unsubscribe from connection state (likely"
+                    " connection dropped): %s"
+                ),
                 self._source_name,
                 self._ble_device.name,
                 self._ble_device.address,
@@ -278,7 +281,8 @@ class ESPHomeClient(BaseBleakClient):
                     )
                 connected_future.set_exception(
                     BleakError(
-                        f"Error {ble_connection_error_name} while connecting: {human_error}"
+                        f"Error {ble_connection_error_name} while connecting:"
+                        f" {human_error}"
                     )
                 )
                 return
@@ -587,7 +591,8 @@ class ESPHomeClient(BaseBleakClient):
             and "indicate" not in characteristic.properties
         ):
             raise BleakError(
-                f"Characteristic {characteristic.uuid} does not have notify or indicate property set."
+                f"Characteristic {characteristic.uuid} does not have notify or indicate"
+                " property set."
             )
 
         self._notify_cancels[
@@ -614,7 +619,10 @@ class ESPHomeClient(BaseBleakClient):
             )
 
         _LOGGER.debug(
-            "%s: %s - %s: Writing to CCD descriptor %s for notifications with properties=%s",
+            (
+                "%s: %s - %s: Writing to CCD descriptor %s for notifications with"
+                " properties=%s"
+            ),
             self._source_name,
             self._ble_device.name,
             self._ble_device.address,
@@ -652,7 +660,10 @@ class ESPHomeClient(BaseBleakClient):
         """Destructor to make sure the connection state is unsubscribed."""
         if self._cancel_connection_state:
             _LOGGER.warning(
-                "%s: %s - %s: ESPHomeClient bleak client was not properly disconnected before destruction",
+                (
+                    "%s: %s - %s: ESPHomeClient bleak client was not properly"
+                    " disconnected before destruction"
+                ),
                 self._source_name,
                 self._ble_device.name,
                 self._ble_device.address,

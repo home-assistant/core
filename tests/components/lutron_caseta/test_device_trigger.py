@@ -396,7 +396,7 @@ async def test_validate_trigger_config_unknown_device(hass, calls, device_reg):
     assert len(calls) == 0
 
 
-async def test_validate_trigger_invalid_triggers(hass, device_reg):
+async def test_validate_trigger_invalid_triggers(hass, device_reg, caplog):
     """Test for click_event with invalid triggers."""
     config_entry_id = await _async_setup_lutron_with_picos(hass)
     data: LutronCasetaData = hass.data[DOMAIN][config_entry_id]
@@ -415,7 +415,7 @@ async def test_validate_trigger_invalid_triggers(hass, device_reg):
                         CONF_PLATFORM: "device",
                         CONF_DOMAIN: DOMAIN,
                         CONF_DEVICE_ID: device_id,
-                        CONF_TYPE: "press",
+                        CONF_TYPE: "invalid",
                         CONF_SUBTYPE: "on",
                     },
                     "action": {
@@ -426,6 +426,8 @@ async def test_validate_trigger_invalid_triggers(hass, device_reg):
             ]
         },
     )
+
+    assert "value must be one of ['press', 'release']" in caplog.text
 
 
 async def test_if_fires_on_button_event_late_setup(hass, calls):

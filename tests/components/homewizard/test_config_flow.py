@@ -385,6 +385,9 @@ async def test_reauth_flow(hass, aioclient_mock):
 
     device = get_mock_device()
     with patch(
+        "homeassistant.components.homewizard.async_setup_entry",
+        return_value=True,
+    ), patch(
         "homeassistant.components.homewizard.config_flow.HomeWizardEnergy",
         return_value=device,
     ):

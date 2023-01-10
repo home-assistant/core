@@ -202,6 +202,10 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "local_name": "mib*",
     },
     {
+        "domain": "ld2410_ble",
+        "local_name": "HLK-LD2410B_*",
+    },
+    {
         "domain": "led_ble",
         "local_name": "LEDnet*",
     },
@@ -265,10 +269,12 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "service_data_uuid": "0000fdcd-0000-1000-8000-00805f9b34fb",
     },
     {
+        "connectable": False,
         "domain": "ruuvitag_ble",
         "manufacturer_id": 1177,
     },
     {
+        "connectable": False,
         "domain": "ruuvitag_ble",
         "local_name": "Ruuvi *",
     },
@@ -343,6 +349,11 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "manufacturer_id": 89,
     },
     {
+        "connectable": True,
+        "domain": "switchbot",
+        "manufacturer_id": 741,
+    },
+    {
         "connectable": False,
         "domain": "thermobeacon",
         "manufacturer_data_start": [
@@ -376,6 +387,15 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
             0,
         ],
         "manufacturer_id": 24,
+        "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "connectable": False,
+        "domain": "thermobeacon",
+        "manufacturer_data_start": [
+            0,
+        ],
+        "manufacturer_id": 27,
         "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb",
     },
     {

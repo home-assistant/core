@@ -87,7 +87,10 @@ class DiscordNotificationService(BaseNotificationService):
 
             if content_length is not None and int(content_length) > max_file_size:
                 _LOGGER.error(
-                    "Attachment too large (Content-Length reports %s). Max size: %s bytes",
+                    (
+                        "Attachment too large (Content-Length reports %s). Max size: %s"
+                        " bytes"
+                    ),
                     int(content_length),
                     max_file_size,
                 )

@@ -49,5 +49,56 @@
                 }
             }
         }
+    },
+    "options": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi"
+        },
+        "error": {
+            "invalid_api_key": "Kunci API tidak valid",
+            "no_sensors_near_coordinates": "Tidak ada sensor yang ditemukan di dekat koordinat (dalam jarak yang ditentukan)",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "step": {
+            "add_sensor": {
+                "data": {
+                    "distance": "Radius Pencarian",
+                    "latitude": "Lintang",
+                    "longitude": "Bujur"
+                },
+                "data_description": {
+                    "distance": "Jari-jari (dalam kilometer) lingkaran untuk mencari di dalam",
+                    "latitude": "Garis lintang untuk mencari sensor",
+                    "longitude": "Garis bujur untuk mencari sensor"
+                },
+                "description": "Cari sensor PurpleAir dalam jarak tertentu dari garis lintang/bujur.",
+                "title": "Tambahkan Sensor"
+            },
+            "choose_sensor": {
+                "data": {
+                    "sensor_index": "Sensor"
+                },
+                "data_description": {
+                    "sensor_index": "Sensor yang dilacak"
+                },
+                "description": "Manakah dari sensor terdekat yang ingin dilacak?",
+                "title": "Pilih Sensor untuk Ditambahkan"
+            },
+            "init": {
+                "menu_options": {
+                    "add_sensor": "Tambahkan sensor",
+                    "remove_sensor": "Hapus sensor"
+                }
+            },
+            "remove_sensor": {
+                "data": {
+                    "sensor_device_id": "Nama Sensor"
+                },
+                "data_description": {
+                    "sensor_device_id": "Sensor untuk dihapus"
+                },
+                "title": "Hapus Sensor"
+            }
+        }
     }
 }

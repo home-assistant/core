@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from datetime import datetime as dt
 
 import sqlalchemy
 from sqlalchemy import lambda_stmt, select, union_all
@@ -12,7 +11,7 @@ from sqlalchemy.sql.selectable import CTE, CompoundSelect
 
 from homeassistant.components.recorder.db_schema import (
     ENTITY_ID_IN_EVENT,
-    ENTITY_ID_LAST_UPDATED_INDEX,
+    ENTITY_ID_LAST_UPDATED_INDEX_TS,
     OLD_ENTITY_ID_IN_EVENT,
     EventData,
     Events,
@@ -32,8 +31,8 @@ from .common import (
 
 
 def _select_entities_context_ids_sub_query(
-    start_day: dt,
-    end_day: dt,
+    start_day: float,
+    end_day: float,
     event_types: tuple[str, ...],
     entity_ids: list[str],
     json_quoted_entity_ids: list[str],
@@ -44,7 +43,9 @@ def _select_entities_context_ids_sub_query(
             apply_event_entity_id_matchers(json_quoted_entity_ids)
         ),
         apply_entities_hints(select(States.context_id))
-        .filter((States.last_updated > start_day) & (States.last_updated < end_day))
+        .filter(
+            (States.last_updated_ts > start_day) & (States.last_updated_ts < end_day)
+        )
         .where(States.entity_id.in_(entity_ids)),
     )
     return select(union.c.context_id).group_by(union.c.context_id)
@@ -52,8 +53,8 @@ def _select_entities_context_ids_sub_query(
 
 def _apply_entities_context_union(
     query: Query,
-    start_day: dt,
-    end_day: dt,
+    start_day: float,
+    end_day: float,
     event_types: tuple[str, ...],
     entity_ids: list[str],
     json_quoted_entity_ids: list[str],
@@ -87,8 +88,8 @@ def _apply_entities_context_union(
 
 
 def entities_stmt(
-    start_day: dt,
-    end_day: dt,
+    start_day: float,
+    end_day: float,
     event_types: tuple[str, ...],
     entity_ids: list[str],
     json_quoted_entity_ids: list[str],
@@ -104,12 +105,12 @@ def entities_stmt(
             event_types,
             entity_ids,
             json_quoted_entity_ids,
-        ).order_by(Events.time_fired)
+        ).order_by(Events.time_fired_ts)
     )
 
 
 def states_query_for_entity_ids(
-    start_day: dt, end_day: dt, entity_ids: list[str]
+    start_day: float, end_day: float, entity_ids: list[str]
 ) -> Query:
     """Generate a select for states from the States table for specific entities."""
     return apply_states_filters(
@@ -136,5 +137,5 @@ def apply_event_entity_id_matchers(
 def apply_entities_hints(query: Query) -> Query:
     """Force mysql to use the right index on large selects."""
     return query.with_hint(
-        States, f"FORCE INDEX ({ENTITY_ID_LAST_UPDATED_INDEX})", dialect_name="mysql"
+        States, f"FORCE INDEX ({ENTITY_ID_LAST_UPDATED_INDEX_TS})", dialect_name="mysql"
     )

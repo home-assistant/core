@@ -9,6 +9,7 @@ import pytest
 from homeassistant.components.google_assistant_sdk import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from .conftest import ComponentSetup, ExpectedCredentials
 
@@ -177,3 +178,107 @@ async def test_send_text_command_expired_token_refresh_failure(
         )
 
     assert any(entry.async_get_active_flows(hass, {"reauth"})) == requires_reauth
+
+
+async def test_conversation_agent(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+) -> None:
+    """Test GoogleAssistantConversationAgent."""
+    await setup_integration()
+
+    assert await async_setup_component(hass, "conversation", {})
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    entry = entries[0]
+    assert entry.state is ConfigEntryState.LOADED
+    hass.config_entries.async_update_entry(
+        entry, options={"enable_conversation_agent": True}
+    )
+    await hass.async_block_till_done()
+
+    text1 = "tell me a joke"
+    text2 = "tell me another one"
+    with patch(
+        "homeassistant.components.google_assistant_sdk.TextAssistant"
+    ) as mock_text_assistant:
+        await hass.services.async_call(
+            "conversation",
+            "process",
+            {"text": text1},
+            blocking=True,
+        )
+        await hass.services.async_call(
+            "conversation",
+            "process",
+            {"text": text2},
+            blocking=True,
+        )
+
+    # Assert constructor is called only once since it's reused across requests
+    assert mock_text_assistant.call_count == 1
+    mock_text_assistant.assert_called_once_with(ExpectedCredentials(), "en-US")
+    mock_text_assistant.assert_has_calls([call().assist(text1)])
+    mock_text_assistant.assert_has_calls([call().assist(text2)])
+
+
+async def test_conversation_agent_refresh_token(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test GoogleAssistantConversationAgent when token is expired."""
+    await setup_integration()
+
+    assert await async_setup_component(hass, "conversation", {})
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    entry = entries[0]
+    assert entry.state is ConfigEntryState.LOADED
+    hass.config_entries.async_update_entry(
+        entry, options={"enable_conversation_agent": True}
+    )
+    await hass.async_block_till_done()
+
+    text1 = "tell me a joke"
+    text2 = "tell me another one"
+    with patch(
+        "homeassistant.components.google_assistant_sdk.TextAssistant"
+    ) as mock_text_assistant:
+        await hass.services.async_call(
+            "conversation",
+            "process",
+            {"text": text1},
+            blocking=True,
+        )
+
+        # Expire the token between requests
+        entry.data["token"]["expires_at"] = time.time() - 3600
+        updated_access_token = "updated-access-token"
+        aioclient_mock.post(
+            "https://oauth2.googleapis.com/token",
+            json={
+                "access_token": updated_access_token,
+                "refresh_token": "updated-refresh-token",
+                "expires_at": time.time() + 3600,
+                "expires_in": 3600,
+            },
+        )
+
+        await hass.services.async_call(
+            "conversation",
+            "process",
+            {"text": text2},
+            blocking=True,
+        )
+
+    # Assert constructor is called twice since the token was expired
+    assert mock_text_assistant.call_count == 2
+    mock_text_assistant.assert_has_calls([call(ExpectedCredentials(), "en-US")])
+    mock_text_assistant.assert_has_calls(
+        [call(ExpectedCredentials(updated_access_token), "en-US")]
+    )
+    mock_text_assistant.assert_has_calls([call().assist(text1)])
+    mock_text_assistant.assert_has_calls([call().assist(text2)])

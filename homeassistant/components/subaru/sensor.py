@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, PRESSURE_HPA, UnitOfLength, UnitOfVolume
+from homeassistant.const import PERCENTAGE, UnitOfLength, UnitOfPressure, UnitOfVolume
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -84,28 +84,28 @@ API_GEN_2_SENSORS = [
         key=sc.TIRE_PRESSURE_FL,
         device_class=SensorDeviceClass.PRESSURE,
         name="Tire pressure FL",
-        native_unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=UnitOfPressure.HPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=sc.TIRE_PRESSURE_FR,
         device_class=SensorDeviceClass.PRESSURE,
         name="Tire pressure FR",
-        native_unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=UnitOfPressure.HPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=sc.TIRE_PRESSURE_RL,
         device_class=SensorDeviceClass.PRESSURE,
         name="Tire pressure RL",
-        native_unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=UnitOfPressure.HPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=sc.TIRE_PRESSURE_RR,
         device_class=SensorDeviceClass.PRESSURE,
         name="Tire pressure RR",
-        native_unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=UnitOfPressure.HPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 ]
@@ -131,7 +131,6 @@ EV_SENSORS = [
         key=sc.EV_TIME_TO_FULLY_CHARGED_UTC,
         device_class=SensorDeviceClass.TIMESTAMP,
         name="EV time to full charge",
-        state_class=SensorStateClass.MEASUREMENT,
     ),
 ]
 

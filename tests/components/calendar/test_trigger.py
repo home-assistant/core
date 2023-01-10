@@ -462,7 +462,7 @@ async def test_invalid_calendar_id(hass, caplog):
         },
     )
     await hass.async_block_till_done()
-    assert "Invalid config for [automation]" in caplog.text
+    assert "Entity ID invalid-calendar-id is an invalid entity ID" in caplog.text
 
 
 async def test_legacy_entity_type(hass, caplog):

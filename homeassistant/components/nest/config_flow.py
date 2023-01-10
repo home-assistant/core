@@ -333,7 +333,8 @@ class NestFlowHandler(
             project_id = user_input[CONF_PROJECT_ID]
             if project_id == self._data[CONF_CLOUD_PROJECT_ID]:
                 _LOGGER.error(
-                    "Device Access Project ID and Cloud Project ID must not be the same, see documentation"
+                    "Device Access Project ID and Cloud Project ID must not be the"
+                    " same, see documentation"
                 )
                 errors[CONF_PROJECT_ID] = "wrong_project_id"
             else:

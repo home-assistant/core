@@ -1,6 +1,5 @@
 """UPnP/IGD coordinator."""
 
-from collections.abc import Mapping
 from datetime import timedelta
 from typing import Any
 
@@ -35,7 +34,7 @@ class UpnpDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=update_interval,
         )
 
-    async def _async_update_data(self) -> Mapping[str, Any]:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Update data."""
         try:
             return await self.device.async_get_data()

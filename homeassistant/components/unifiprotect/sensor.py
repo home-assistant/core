@@ -29,11 +29,11 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    TEMP_CELSIUS,
-    TIME_SECONDS,
     UnitOfDataRate,
     UnitOfElectricPotential,
     UnitOfInformation,
+    UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -206,7 +206,7 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         name="Last Doorbell Ring",
         device_class=SensorDeviceClass.TIMESTAMP,
         icon="mdi:doorbell-video",
-        ufp_required_field="feature_flags.has_chime",
+        ufp_required_field="feature_flags.is_doorbell",
         ufp_value="last_ring",
         entity_registry_enabled_default=False,
     ),
@@ -320,7 +320,7 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ProtectSensorEntityDescription(
         key="temperature_level",
         name="Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         ufp_value="stats.temperature.value",
@@ -482,7 +482,7 @@ NVR_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ProtectSensorEntityDescription[NVR](
         key="record_capacity",
         name="Recording Capacity",
-        native_unit_of_measurement=TIME_SECONDS,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         icon="mdi:record-rec",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
@@ -504,7 +504,7 @@ NVR_DISABLED_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ProtectSensorEntityDescription(
         key="cpu_temperature",
         name="CPU Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,

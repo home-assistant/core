@@ -2,13 +2,15 @@
 from __future__ import annotations
 
 from datetime import timedelta
+import logging
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.const import ENERGY_KILO_WATT_HOUR, UnitOfPower
+from homeassistant.const import UnitOfEnergy, UnitOfPower
 
 from .models import ForecastSolarSensorEntityDescription
 
 DOMAIN = "forecast_solar"
+LOGGER = logging.getLogger(__package__)
 
 CONF_DECLINATION = "declination"
 CONF_AZIMUTH = "azimuth"
@@ -22,14 +24,14 @@ SENSORS: tuple[ForecastSolarSensorEntityDescription, ...] = (
         name="Estimated energy production - today",
         state=lambda estimate: estimate.energy_production_today / 1000,
         device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
     ),
     ForecastSolarSensorEntityDescription(
         key="energy_production_tomorrow",
         name="Estimated energy production - tomorrow",
         state=lambda estimate: estimate.energy_production_tomorrow / 1000,
         device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
     ),
     ForecastSolarSensorEntityDescription(
         key="power_highest_peak_time_today",
@@ -84,13 +86,13 @@ SENSORS: tuple[ForecastSolarSensorEntityDescription, ...] = (
         name="Estimated energy production - this hour",
         state=lambda estimate: estimate.energy_current_hour / 1000,
         device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
     ),
     ForecastSolarSensorEntityDescription(
         key="energy_next_hour",
         state=lambda estimate: estimate.sum_energy_production(1) / 1000,
         name="Estimated energy production - next hour",
         device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
     ),
 )

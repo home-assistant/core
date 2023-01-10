@@ -587,7 +587,8 @@ class NextDnsSwitch(CoordinatorEntity[NextDnsSettingsUpdateCoordinator], SwitchE
             ClientError,
         ) as err:
             raise HomeAssistantError(
-                f"NextDNS API returned an error calling set_setting for {self.entity_id}: {err}"
+                "NextDNS API returned an error calling set_setting for"
+                f" {self.entity_id}: {err}"
             ) from err
 
         if result:

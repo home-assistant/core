@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import timedelta
-from typing import Any
+from typing import Any, Union
 
 from homeassistant.components.sensor import (
     RestoreSensor,
@@ -18,8 +18,8 @@ from homeassistant.const import (
     ATTR_LONGITUDE,
     CONF_MODE,
     CONF_NAME,
-    TIME_MINUTES,
     UnitOfLength,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType
@@ -56,14 +56,14 @@ def sensor_descriptions(travel_mode: str) -> tuple[SensorEntityDescription, ...]
             icon=ICONS.get(travel_mode, ICON_CAR),
             key=ATTR_DURATION,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=TIME_MINUTES,
+            native_unit_of_measurement=UnitOfTime.MINUTES,
         ),
         SensorEntityDescription(
             name="Duration in traffic",
             icon=ICONS.get(travel_mode, ICON_CAR),
             key=ATTR_DURATION_IN_TRAFFIC,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=TIME_MINUTES,
+            native_unit_of_measurement=UnitOfTime.MINUTES,
         ),
         SensorEntityDescription(
             name="Distance",
@@ -102,7 +102,12 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class HERETravelTimeSensor(CoordinatorEntity, RestoreSensor):
+class HERETravelTimeSensor(
+    CoordinatorEntity[
+        Union[HERERoutingDataUpdateCoordinator, HERETransitDataUpdateCoordinator]
+    ],
+    RestoreSensor,
+):
     """Representation of a HERE travel time sensor."""
 
     def __init__(
@@ -144,7 +149,7 @@ class HERETravelTimeSensor(CoordinatorEntity, RestoreSensor):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if self.coordinator.data is not None:
-            self._attr_native_value = self.coordinator.data.get(
+            self._attr_native_value = self.coordinator.data.get(  # type: ignore[assignment]
                 self.entity_description.key
             )
             self.async_write_ha_state()

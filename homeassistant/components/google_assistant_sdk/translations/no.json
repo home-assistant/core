@@ -29,5 +29,14 @@
                 "title": "Godkjenne integrering p\u00e5 nytt"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "language_code": "Spr\u00e5kkode"
+                }
+            }
+        }
     }
 }

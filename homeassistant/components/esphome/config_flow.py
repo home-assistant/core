@@ -47,7 +47,9 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None, error: str | None = None
     ) -> FlowResult:
         if user_input is not None:
-            return await self._async_try_fetch_device_info(user_input)
+            self._host = user_input[CONF_HOST]
+            self._port = user_input[CONF_PORT]
+            return await self._async_try_fetch_device_info()
 
         fields: dict[Any, type] = OrderedDict()
         fields[vol.Required(CONF_HOST, default=self._host or vol.UNDEFINED)] = str
@@ -78,7 +80,6 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         self._host = entry.data[CONF_HOST]
         self._port = entry.data[CONF_PORT]
         self._password = entry.data[CONF_PASSWORD]
-        self._noise_psk = entry.data.get(CONF_NOISE_PSK)
         self._name = entry.title
         return await self.async_step_reauth_confirm()
 
@@ -111,16 +112,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         self.context[CONF_NAME] = value
         self.context["title_placeholders"] = {"name": self._name}
 
-    def _set_user_input(self, user_input: dict[str, Any] | None) -> None:
-        if user_input is None:
-            return
-        self._host = user_input[CONF_HOST]
-        self._port = user_input[CONF_PORT]
-
-    async def _async_try_fetch_device_info(
-        self, user_input: dict[str, Any] | None
-    ) -> FlowResult:
-        self._set_user_input(user_input)
+    async def _async_try_fetch_device_info(self) -> FlowResult:
         error = await self.fetch_device_info()
         if error == ERROR_REQUIRES_ENCRYPTION_KEY:
             return await self.async_step_encryption_key()
@@ -141,7 +133,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle user-confirmation of discovered node."""
         if user_input is not None:
-            return await self._async_try_fetch_device_info(None)
+            return await self._async_try_fetch_device_info()
         return self.async_show_form(
             step_id="discovery_confirm", description_placeholders={"name": self._name}
         )

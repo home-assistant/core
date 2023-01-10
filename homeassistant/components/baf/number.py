@@ -13,7 +13,7 @@ from homeassistant.components.number import (
     NumberEntityDescription,
     NumberMode,
 )
-from homeassistant.const import TIME_SECONDS
+from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -73,7 +73,7 @@ FAN_NUMBER_DESCRIPTIONS = (
         native_min_value=ONE_MIN_SECS,
         native_max_value=HALF_DAY_SECS,
         entity_category=EntityCategory.CONFIG,
-        native_unit_of_measurement=TIME_SECONDS,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         value_fn=lambda device: cast(Optional[int], device.return_to_auto_timeout),
         mode=NumberMode.SLIDER,
     ),
@@ -83,7 +83,7 @@ FAN_NUMBER_DESCRIPTIONS = (
         native_min_value=ONE_MIN_SECS,
         native_max_value=ONE_DAY_SECS,
         entity_category=EntityCategory.CONFIG,
-        native_unit_of_measurement=TIME_SECONDS,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         value_fn=lambda device: cast(Optional[int], device.motion_sense_timeout),
         mode=NumberMode.SLIDER,
     ),
@@ -96,7 +96,7 @@ LIGHT_NUMBER_DESCRIPTIONS = (
         native_min_value=ONE_MIN_SECS,
         native_max_value=HALF_DAY_SECS,
         entity_category=EntityCategory.CONFIG,
-        native_unit_of_measurement=TIME_SECONDS,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         value_fn=lambda device: cast(
             Optional[int], device.light_return_to_auto_timeout
         ),
@@ -108,7 +108,7 @@ LIGHT_NUMBER_DESCRIPTIONS = (
         native_min_value=ONE_MIN_SECS,
         native_max_value=ONE_DAY_SECS,
         entity_category=EntityCategory.CONFIG,
-        native_unit_of_measurement=TIME_SECONDS,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         value_fn=lambda device: cast(Optional[int], device.light_auto_motion_timeout),
         mode=NumberMode.SLIDER,
     ),

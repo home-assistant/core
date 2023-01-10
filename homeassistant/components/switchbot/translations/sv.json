@@ -12,6 +12,11 @@
             "confirm": {
                 "description": "Vill du konfigurera {name}?"
             },
+            "lock_choose_method": {
+                "menu_options": {
+                    "lock_key": "Ange krypteringsnyckel manuellt"
+                }
+            },
             "password": {
                 "data": {
                     "password": "L\u00f6senord"

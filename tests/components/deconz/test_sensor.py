@@ -100,10 +100,9 @@ TEST_DATA = [
             "old_unique_id": "00:12:4b:00:14:4d:00:07-ppb",
             "state": "809",
             "entity_category": None,
-            "device_class": SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+            "device_class": None,
             "state_class": SensorStateClass.MEASUREMENT,
             "attributes": {
-                "device_class": "volatile_organic_compounds",
                 "friendly_name": "BOSCH Air quality sensor PPB",
                 "state_class": "measurement",
                 "unit_of_measurement": "ppb",
