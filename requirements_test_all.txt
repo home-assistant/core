@@ -1682,7 +1682,7 @@ starlink-grpc-core==1.1.1
 statsd==3.2.1
 
 # homeassistant.components.steam_online
-steamodd==4.23
+steamodd==4.21
 
 # homeassistant.components.stookalert
 stookalert==0.1.4
