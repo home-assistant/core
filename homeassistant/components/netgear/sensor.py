@@ -432,7 +432,7 @@ class NetgearRouterSensorEntity(NetgearRouterCoordinatorEntity, RestoreSensor):
             if sensor_data is not None:
                 self._value = sensor_data.native_value
             else:
-                self.coordinator.async_request_refresh()
+                await self.coordinator.async_request_refresh()
 
     @callback
     def async_update_device(self) -> None:

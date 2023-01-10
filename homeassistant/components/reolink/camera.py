@@ -27,7 +27,7 @@ async def async_setup_entry(
     cameras = []
     for channel in host.api.channels:
         streams = ["sub", "main", "snapshots"]
-        if host.api.protocol == "rtmp":
+        if host.api.protocol in ["rtmp", "flv"]:
             streams.append("ext")
 
         for stream in streams:
