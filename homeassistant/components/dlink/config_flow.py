@@ -65,7 +65,6 @@ class DLinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _try_connect(self, user_input: dict[str, Any]) -> str | None:
         """Try connecting to D-Link Power Plug."""
-        _LOGGER.warning(user_input)
         try:
             smartplug = SmartPlug(
                 user_input[CONF_HOST],
