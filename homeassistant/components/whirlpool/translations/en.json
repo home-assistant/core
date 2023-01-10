@@ -35,7 +35,7 @@
                     "factory_diagnostic_mode": "Factory Diagnostic Mode",
                     "hard_stop_or_error": "Hard Stop or Error",
                     "life_test": "Life Test",
-                    "pause": "Pause",
+                    "pause": "Paused",
                     "power_failure": "Power Failure",
                     "running_maincycle": "Running Maincycle",
                     "running_postcycle": "Running Postcycle",
