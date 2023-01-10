@@ -24,7 +24,6 @@ from .const import (
     UOM_BARRIER,
 )
 from .entity import ISYNodeEntity, ISYProgramEntity
-from .helpers import migrate_old_unique_ids
 
 
 async def async_setup_entry(
@@ -39,7 +38,6 @@ async def async_setup_entry(
     for name, status, actions in hass_isy_data[ISY994_PROGRAMS][Platform.COVER]:
         entities.append(ISYCoverProgramEntity(name, status, actions))
 
-    await migrate_old_unique_ids(hass, Platform.COVER, entities)
     async_add_entities(entities)
 
 
