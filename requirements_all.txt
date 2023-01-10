@@ -184,7 +184,7 @@ aiohomekit==2.4.3
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==4.5.0
+aiohue==4.6.1
 
 # homeassistant.components.imap
 aioimaplib==1.0.1
@@ -395,7 +395,7 @@ aurorapy==0.2.7
 # avion==0.10
 
 # homeassistant.components.axis
-axis==45
+axis==46
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.7.0
@@ -1738,7 +1738,7 @@ pylibrespot-java==0.1.1
 pylitejet==0.3.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2022.12.0
+pylitterbot==2023.1.0
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.17.1
@@ -1979,7 +1979,7 @@ pystiebeleltron==0.0.1.dev2
 pysuez==0.1.19
 
 # homeassistant.components.switchbee
-pyswitchbee==1.7.3
+pyswitchbee==1.7.19
 
 # homeassistant.components.syncthru
 pysyncthru==0.7.10
@@ -2128,7 +2128,7 @@ pytrafikverket==0.2.2
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.6.0
+pyunifiprotect==4.6.1
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -2288,7 +2288,7 @@ sendgrid==6.8.2
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
-sense_energy==0.11.0
+sense_energy==0.11.1
 
 # homeassistant.components.sensirion_ble
 sensirion-ble==0.0.1
