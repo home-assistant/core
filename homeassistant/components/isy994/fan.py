@@ -19,7 +19,6 @@ from homeassistant.util.percentage import (
 
 from .const import _LOGGER, DOMAIN as ISY994_DOMAIN, ISY994_NODES, ISY994_PROGRAMS
 from .entity import ISYNodeEntity, ISYProgramEntity
-from .helpers import migrate_old_unique_ids
 
 SPEED_RANGE = (1, 255)  # off is not included
 
@@ -37,7 +36,6 @@ async def async_setup_entry(
     for name, status, actions in hass_isy_data[ISY994_PROGRAMS][Platform.FAN]:
         entities.append(ISYFanProgramEntity(name, status, actions))
 
-    await migrate_old_unique_ids(hass, Platform.FAN, entities)
     async_add_entities(entities)
 
 

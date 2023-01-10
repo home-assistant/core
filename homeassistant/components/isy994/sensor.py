@@ -45,7 +45,7 @@ from .const import (
     UOM_TO_STATES,
 )
 from .entity import ISYEntity, ISYNodeEntity
-from .helpers import convert_isy_value_to_hass, migrate_old_unique_ids
+from .helpers import convert_isy_value_to_hass
 
 # Disable general purpose and redundant sensors by default
 AUX_DISABLED_BY_DEFAULT_MATCH = ["GV", "DO"]
@@ -135,7 +135,6 @@ async def async_setup_entry(
     for vname, vobj in hass_isy_data[ISY994_VARIABLES]:
         entities.append(ISYSensorVariableEntity(vname, vobj))
 
-    await migrate_old_unique_ids(hass, Platform.SENSOR, entities)
     async_add_entities(entities)
 
 

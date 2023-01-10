@@ -13,7 +13,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import _LOGGER, DOMAIN as ISY994_DOMAIN, ISY994_NODES, ISY994_PROGRAMS
 from .entity import ISYNodeEntity, ISYProgramEntity
-from .helpers import migrate_old_unique_ids
 
 
 async def async_setup_entry(
@@ -28,7 +27,6 @@ async def async_setup_entry(
     for name, status, actions in hass_isy_data[ISY994_PROGRAMS][Platform.SWITCH]:
         entities.append(ISYSwitchProgramEntity(name, status, actions))
 
-    await migrate_old_unique_ids(hass, Platform.SWITCH, entities)
     async_add_entities(entities)
 
 
