@@ -23,27 +23,27 @@
     },
     "entity_unexpected_unit_energy": {
       "title": "Unexpected unit of measurement",
-      "description": "The following entities do not have the expected units of measurement {energy_units}:"
+      "description": "The following entities do not have an expected unit of measurement (either of {energy_units}):"
     },
     "entity_unexpected_unit_gas": {
-      "title": "Unexpected unit of measurement",
-      "description": "The following entities do not have the expected units of measurement {energy_units} for an energy sensor or {gas_units} for a gas sensor:"
+      "title": "[%key:component::energy::issues::entity_unexpected_unit_energy::title%]",
+      "description": "The following entities do not have an expected unit of measurement (either of {energy_units} for an energy sensor or either of {gas_units} for a gas sensor:)"
     },
     "entity_unexpected_unit_water": {
-      "title": "Unexpected unit of measurement",
-      "description": "The following entities do not have the expected units of measurement {water_units} for a water sensor:"
+      "title": "[%key:component::energy::issues::entity_unexpected_unit_energy::title%]",
+      "description": "The following entities do not have the expected unit of measurement (either of {water_units}):"
     },
     "entity_unexpected_unit_energy_price": {
-      "title": "Unexpected unit of measurement",
-      "description": "The following entities do not have the expected units of measurement {price_units}:"
+      "title": "[%key:component::energy::issues::entity_unexpected_unit_energy::title%]",
+      "description": "The following entities do not have an expected unit of measurement {price_units}:"
     },
     "entity_unexpected_unit_gas_price": {
-      "title": "Unexpected unit of measurement",
-      "description": "The following entities do not have the expected units of measurement {price_units}:"
+      "title": "[%key:component::energy::issues::entity_unexpected_unit_energy_price::title%]",
+      "description": "[%key:component::energy::issues::entity_unexpected_unit_energy::description%]"
     },
     "entity_unexpected_unit_water_price": {
-      "title": "Unexpected unit of measurement",
-      "description": "The following entities do not have the expected units of measurement {price_units}:"
+      "title": "[%key:component::energy::issues::entity_unexpected_unit_energy::title%]",
+      "description": "[%key:component::energy::issues::entity_unexpected_unit_energy::description%]"
     },
     "entity_unexpected_state_class": {
       "title": "Unexpected state class",

@@ -29,27 +29,27 @@
             "title": "Unexpected state class"
         },
         "entity_unexpected_unit_energy": {
-            "description": "The following entities do not have the expected units of measurement {energy_units}:",
+            "description": "The following entities do not have an expected unit of measurement (either of {energy_units}):",
             "title": "Unexpected unit of measurement"
         },
         "entity_unexpected_unit_energy_price": {
-            "description": "The following entities do not have the expected units of measurement {price_units}:",
+            "description": "The following entities do not have an expected unit of measurement {price_units}:",
             "title": "Unexpected unit of measurement"
         },
         "entity_unexpected_unit_gas": {
-            "description": "The following entities do not have the expected units of measurement {energy_units} for an energy sensor or {gas_units} for a gas sensor:",
+            "description": "The following entities do not have an expected unit of measurement (either of {energy_units} for an energy sensor or either of {gas_units} for a gas sensor:)",
             "title": "Unexpected unit of measurement"
         },
         "entity_unexpected_unit_gas_price": {
-            "description": "The following entities do not have the expected units of measurement {price_units}:",
+            "description": "The following entities do not have an expected unit of measurement (either of {energy_units}):",
             "title": "Unexpected unit of measurement"
         },
         "entity_unexpected_unit_water": {
-            "description": "The following entities do not have the expected units of measurement {water_units} for a water sensor:",
+            "description": "The following entities do not have the expected unit of measurement (either of {water_units}):",
             "title": "Unexpected unit of measurement"
         },
         "entity_unexpected_unit_water_price": {
-            "description": "The following entities do not have the expected units of measurement {price_units}:",
+            "description": "The following entities do not have an expected unit of measurement (either of {energy_units}):",
             "title": "Unexpected unit of measurement"
         },
         "recorder_untracked": {
