@@ -18,8 +18,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import (
     _LOGGER,
     DOMAIN as ISY994_DOMAIN,
-    ISY994_NODES,
-    ISY994_PROGRAMS,
+    ISY_NODES,
+    ISY_PROGRAMS,
     UOM_8_BIT_RANGE,
     UOM_BARRIER,
 )
@@ -32,10 +32,10 @@ async def async_setup_entry(
     """Set up the ISY cover platform."""
     hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
     entities: list[ISYCoverEntity | ISYCoverProgramEntity] = []
-    for node in hass_isy_data[ISY994_NODES][Platform.COVER]:
+    for node in hass_isy_data[ISY_NODES][Platform.COVER]:
         entities.append(ISYCoverEntity(node))
 
-    for name, status, actions in hass_isy_data[ISY994_PROGRAMS][Platform.COVER]:
+    for name, status, actions in hass_isy_data[ISY_PROGRAMS][Platform.COVER]:
         entities.append(ISYCoverProgramEntity(name, status, actions))
 
     async_add_entities(entities)

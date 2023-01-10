@@ -18,12 +18,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import _async_isy_to_configuration_url
 from .const import (
     DOMAIN as ISY994_DOMAIN,
-    ISY994_ISY,
-    ISY994_VARIABLES,
     ISY_CONF_FIRMWARE,
     ISY_CONF_MODEL,
     ISY_CONF_NAME,
     ISY_CONF_UUID,
+    ISY_ROOT,
+    ISY_VARIABLES,
     MANUFACTURER,
 )
 from .helpers import convert_isy_value_to_hass
@@ -38,11 +38,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up ISY/IoX number entities from config entry."""
     hass_isy_data = hass.data[ISY994_DOMAIN][config_entry.entry_id]
-    isy: ISY = hass_isy_data[ISY994_ISY]
+    isy: ISY = hass_isy_data[ISY_ROOT]
     uuid = isy.configuration[ISY_CONF_UUID]
     entities: list[ISYVariableNumberEntity] = []
 
-    for node, enable_by_default in hass_isy_data[ISY994_VARIABLES][Platform.NUMBER]:
+    for node, enable_by_default in hass_isy_data[ISY_VARIABLES][Platform.NUMBER]:
         step = 10 ** (-1 * node.prec)
         min_max = ISY_MAX_SIZE / (10**node.prec)
         description = NumberEntityDescription(

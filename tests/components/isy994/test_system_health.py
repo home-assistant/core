@@ -4,7 +4,7 @@ from unittest.mock import Mock
 
 from aiohttp import ClientError
 
-from homeassistant.components.isy994.const import DOMAIN, ISY994_ISY, ISY_URL_POSTFIX
+from homeassistant.components.isy994.const import DOMAIN, ISY_ROOT, ISY_URL_POSTFIX
 from homeassistant.const import CONF_HOST
 from homeassistant.setup import async_setup_component
 
@@ -33,7 +33,7 @@ async def test_system_health(hass, aioclient_mock):
 
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][MOCK_ENTRY_ID] = {}
-    hass.data[DOMAIN][MOCK_ENTRY_ID][ISY994_ISY] = Mock(
+    hass.data[DOMAIN][MOCK_ENTRY_ID][ISY_ROOT] = Mock(
         connected=True,
         websocket=Mock(
             last_heartbeat=MOCK_HEARTBEAT,
@@ -69,7 +69,7 @@ async def test_system_health_failed_connect(hass, aioclient_mock):
 
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][MOCK_ENTRY_ID] = {}
-    hass.data[DOMAIN][MOCK_ENTRY_ID][ISY994_ISY] = Mock(
+    hass.data[DOMAIN][MOCK_ENTRY_ID][ISY_ROOT] = Mock(
         connected=True,
         websocket=Mock(
             last_heartbeat=MOCK_HEARTBEAT,

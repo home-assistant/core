@@ -17,7 +17,7 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from .const import _LOGGER, DOMAIN as ISY994_DOMAIN, ISY994_NODES, ISY994_PROGRAMS
+from .const import _LOGGER, DOMAIN as ISY994_DOMAIN, ISY_NODES, ISY_PROGRAMS
 from .entity import ISYNodeEntity, ISYProgramEntity
 
 SPEED_RANGE = (1, 255)  # off is not included
@@ -30,10 +30,10 @@ async def async_setup_entry(
     hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
     entities: list[ISYFanEntity | ISYFanProgramEntity] = []
 
-    for node in hass_isy_data[ISY994_NODES][Platform.FAN]:
+    for node in hass_isy_data[ISY_NODES][Platform.FAN]:
         entities.append(ISYFanEntity(node))
 
-    for name, status, actions in hass_isy_data[ISY994_PROGRAMS][Platform.FAN]:
+    for name, status, actions in hass_isy_data[ISY_PROGRAMS][Platform.FAN]:
         entities.append(ISYFanProgramEntity(name, status, actions))
 
     async_add_entities(entities)

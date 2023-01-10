@@ -31,8 +31,8 @@ from .const import (
     BINARY_SENSOR_DEVICE_TYPES_ISY,
     BINARY_SENSOR_DEVICE_TYPES_ZWAVE,
     DOMAIN as ISY994_DOMAIN,
-    ISY994_NODES,
-    ISY994_PROGRAMS,
+    ISY_NODES,
+    ISY_PROGRAMS,
     SUBNODE_CLIMATE_COOL,
     SUBNODE_CLIMATE_HEAT,
     SUBNODE_DUSK_DAWN,
@@ -74,7 +74,7 @@ async def async_setup_entry(
     entity: ISYInsteonBinarySensorEntity | ISYBinarySensorEntity | ISYBinarySensorHeartbeat | ISYBinarySensorProgramEntity
 
     hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
-    for node in hass_isy_data[ISY994_NODES][Platform.BINARY_SENSOR]:
+    for node in hass_isy_data[ISY_NODES][Platform.BINARY_SENSOR]:
         assert isinstance(node, Node)
         device_class, device_type = _detect_device_type_and_class(node)
         if node.protocol == PROTO_INSTEON:
@@ -187,7 +187,7 @@ async def async_setup_entry(
         entity = ISYBinarySensorEntity(node, device_class)
         entities.append(entity)
 
-    for name, status, _ in hass_isy_data[ISY994_PROGRAMS][Platform.BINARY_SENSOR]:
+    for name, status, _ in hass_isy_data[ISY_PROGRAMS][Platform.BINARY_SENSOR]:
         entities.append(ISYBinarySensorProgramEntity(name, status))
 
     async_add_entities(entities)

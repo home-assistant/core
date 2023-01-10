@@ -18,7 +18,7 @@ from .const import (
     _LOGGER,
     CONF_RESTORE_LIGHT_STATE,
     DOMAIN as ISY994_DOMAIN,
-    ISY994_NODES,
+    ISY_NODES,
     UOM_PERCENTAGE,
 )
 from .entity import ISYNodeEntity
@@ -36,7 +36,7 @@ async def async_setup_entry(
     restore_light_state = isy_options.get(CONF_RESTORE_LIGHT_STATE, False)
 
     entities = []
-    for node in hass_isy_data[ISY994_NODES][Platform.LIGHT]:
+    for node in hass_isy_data[ISY_NODES][Platform.LIGHT]:
         entities.append(ISYLightEntity(node, restore_light_state))
 
     async_add_entities(entities)

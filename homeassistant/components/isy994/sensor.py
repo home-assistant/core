@@ -34,9 +34,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import (
     _LOGGER,
     DOMAIN as ISY994_DOMAIN,
-    ISY994_NODES,
-    ISY994_VARIABLES,
     ISY_CONF_UUID,
+    ISY_NODES,
+    ISY_VARIABLES,
     SENSOR_AUX,
     UOM_DOUBLE_TEMP,
     UOM_FRIENDLY_NAME,
@@ -113,12 +113,12 @@ async def async_setup_entry(
     hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
     entities: list[ISYSensorEntity | ISYSensorVariableEntity] = []
 
-    for node in hass_isy_data[ISY994_NODES][Platform.SENSOR]:
+    for node in hass_isy_data[ISY_NODES][Platform.SENSOR]:
         _LOGGER.debug("Loading %s", node.name)
         entities.append(ISYSensorEntity(node))
 
     aux_nodes = set()
-    for node, control in hass_isy_data[ISY994_NODES][SENSOR_AUX]:
+    for node, control in hass_isy_data[ISY_NODES][SENSOR_AUX]:
         aux_nodes.add(node)
         if control in SKIP_AUX_PROPERTIES:
             continue
@@ -132,7 +132,7 @@ async def async_setup_entry(
         # Any node in SENSOR_AUX can potentially have communication errors
         entities.append(ISYAuxSensorEntity(node, PROP_COMMS_ERROR, False))
 
-    for vname, vobj in hass_isy_data[ISY994_VARIABLES][Platform.SENSOR]:
+    for vname, vobj in hass_isy_data[ISY_VARIABLES][Platform.SENSOR]:
         entities.append(ISYSensorVariableEntity(vname, vobj))
 
     async_add_entities(entities)

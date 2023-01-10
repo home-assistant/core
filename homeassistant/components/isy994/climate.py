@@ -42,8 +42,8 @@ from .const import (
     DOMAIN as ISY994_DOMAIN,
     HA_FAN_TO_ISY,
     HA_HVAC_TO_ISY,
-    ISY994_NODES,
     ISY_HVAC_MODES,
+    ISY_NODES,
     UOM_FAN_MODES,
     UOM_HVAC_ACTIONS,
     UOM_HVAC_MODE_GENERIC,
@@ -64,7 +64,7 @@ async def async_setup_entry(
     entities = []
 
     hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
-    for node in hass_isy_data[ISY994_NODES][Platform.CLIMATE]:
+    for node in hass_isy_data[ISY_NODES][Platform.CLIMATE]:
         entities.append(ISYThermostatEntity(node))
 
     async_add_entities(entities)

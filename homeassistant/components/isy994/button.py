@@ -16,13 +16,14 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import _async_isy_to_configuration_url
 from .const import (
     DOMAIN as ISY994_DOMAIN,
-    ISY994_ISY,
-    ISY994_NODES,
     ISY_CONF_FIRMWARE,
     ISY_CONF_MODEL,
     ISY_CONF_NAME,
     ISY_CONF_NETWORKING,
     ISY_CONF_UUID,
+    ISY_NET_RES,
+    ISY_ROOT,
+    ISY_ROOT_NODES,
     MANUFACTURER,
 )
 
@@ -34,20 +35,20 @@ async def async_setup_entry(
 ) -> None:
     """Set up ISY/IoX button from config entry."""
     hass_isy_data = hass.data[ISY994_DOMAIN][config_entry.entry_id]
-    isy: ISY = hass_isy_data[ISY994_ISY]
+    isy: ISY = hass_isy_data[ISY_ROOT]
     uuid = isy.configuration[ISY_CONF_UUID]
     entities: list[
         ISYNodeQueryButtonEntity
         | ISYNodeBeepButtonEntity
         | ISYNetworkResourceButtonEntity
     ] = []
-    nodes: dict = hass_isy_data[ISY994_NODES]
-    for node in nodes[Platform.BUTTON]:
+
+    for node in hass_isy_data[ISY_ROOT_NODES][Platform.BUTTON]:
         entities.append(ISYNodeQueryButtonEntity(node, f"{uuid}_{node.address}"))
         if node.protocol == PROTO_INSTEON:
             entities.append(ISYNodeBeepButtonEntity(node, f"{uuid}_{node.address}"))
 
-    for node in nodes[PROTO_NETWORK_RESOURCE]:
+    for node in hass_isy_data[ISY_NET_RES]:
         entities.append(
             ISYNetworkResourceButtonEntity(node, f"{uuid}_{PROTO_NETWORK_RESOURCE}")
         )

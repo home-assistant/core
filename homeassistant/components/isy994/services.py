@@ -26,10 +26,10 @@ from homeassistant.helpers.service import entity_service_call
 from .const import (
     _LOGGER,
     DOMAIN,
-    ISY994_ISY,
     ISY_CONF_NAME,
     ISY_CONF_NETWORKING,
     ISY_CONF_UUID,
+    ISY_ROOT,
 )
 from .util import unique_ids_for_config_entry_id
 
@@ -192,7 +192,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         isy_name = service.data.get(CONF_ISY)
         entity_registry = er.async_get(hass)
         for config_entry_id in hass.data[DOMAIN]:
-            isy = hass.data[DOMAIN][config_entry_id][ISY994_ISY]
+            isy = hass.data[DOMAIN][config_entry_id][ISY_ROOT]
             if isy_name and isy_name != isy.configuration["name"]:
                 continue
             # If an address is provided, make sure we query the correct ISY.
@@ -237,7 +237,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         isy_name = service.data.get(CONF_ISY)
 
         for config_entry_id in hass.data[DOMAIN]:
-            isy = hass.data[DOMAIN][config_entry_id][ISY994_ISY]
+            isy = hass.data[DOMAIN][config_entry_id][ISY_ROOT]
             if isy_name and isy_name != isy.configuration[ISY_CONF_NAME]:
                 continue
             if isy.networking is None or not isy.configuration[ISY_CONF_NETWORKING]:
@@ -274,7 +274,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         isy_name = service.data.get(CONF_ISY)
 
         for config_entry_id in hass.data[DOMAIN]:
-            isy = hass.data[DOMAIN][config_entry_id][ISY994_ISY]
+            isy = hass.data[DOMAIN][config_entry_id][ISY_ROOT]
             if isy_name and isy_name != isy.configuration["name"]:
                 continue
             program = None
@@ -297,7 +297,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         isy_name = service.data.get(CONF_ISY)
 
         for config_entry_id in hass.data[DOMAIN]:
-            isy = hass.data[DOMAIN][config_entry_id][ISY994_ISY]
+            isy = hass.data[DOMAIN][config_entry_id][ISY_ROOT]
             if isy_name and isy_name != isy.configuration["name"]:
                 continue
             variable = None

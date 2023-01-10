@@ -7,7 +7,6 @@ from urllib.parse import urlparse
 from aiohttp import CookieJar
 import async_timeout
 from pyisy import ISY, ISYConnectionError, ISYInvalidAuthError, ISYResponseParseError
-from pyisy.constants import PROTO_NETWORK_RESOURCE
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -36,10 +35,6 @@ from .const import (
     DEFAULT_SENSOR_STRING,
     DEFAULT_VAR_SENSOR_STRING,
     DOMAIN,
-    ISY994_ISY,
-    ISY994_NODES,
-    ISY994_PROGRAMS,
-    ISY994_VARIABLES,
     ISY_CONF_FIRMWARE,
     ISY_CONF_MODEL,
     ISY_CONF_NAME,
@@ -48,12 +43,21 @@ from .const import (
     ISY_CONN_ADDRESS,
     ISY_CONN_PORT,
     ISY_CONN_TLS,
+    ISY_NET_RES,
+    ISY_NODES,
+    ISY_PROGRAMS,
+    ISY_ROOT,
+    ISY_ROOT_NODES,
+    ISY_VARIABLES,
     MANUFACTURER,
+    NODE_PLATFORMS,
     PLATFORMS,
     PROGRAM_PLATFORMS,
+    ROOT_NODE_PLATFORMS,
     SCHEME_HTTP,
     SCHEME_HTTPS,
     SENSOR_AUX,
+    VARIABLE_PLATFORMS,
 )
 from .helpers import _categorize_nodes, _categorize_programs, _categorize_variables
 from .services import async_setup_services, async_unload_services
@@ -134,17 +138,11 @@ async def async_setup_entry(
     hass.data[DOMAIN][entry.entry_id] = {}
     hass_isy_data = hass.data[DOMAIN][entry.entry_id]
 
-    hass_isy_data[ISY994_NODES] = {SENSOR_AUX: [], PROTO_NETWORK_RESOURCE: []}
-    for platform in PLATFORMS:
-        hass_isy_data[ISY994_NODES][platform] = []
-
-    hass_isy_data[ISY994_PROGRAMS] = {}
-    for platform in PROGRAM_PLATFORMS:
-        hass_isy_data[ISY994_PROGRAMS][platform] = []
-
-    hass_isy_data[ISY994_VARIABLES] = {}
-    hass_isy_data[ISY994_VARIABLES][Platform.NUMBER] = []
-    hass_isy_data[ISY994_VARIABLES][Platform.SENSOR] = []
+    hass_isy_data[ISY_NODES] = {p: [] for p in (NODE_PLATFORMS + [SENSOR_AUX])}
+    hass_isy_data[ISY_ROOT_NODES] = {p: [] for p in ROOT_NODE_PLATFORMS}
+    hass_isy_data[ISY_PROGRAMS] = {p: [] for p in PROGRAM_PLATFORMS}
+    hass_isy_data[ISY_VARIABLES] = {p: [] for p in VARIABLE_PLATFORMS}
+    hass_isy_data[ISY_NET_RES] = []
 
     isy_config = entry.data
     isy_options = entry.options
@@ -218,17 +216,17 @@ async def async_setup_entry(
     # Categorize variables call to be removed with variable sensors in 2023.5.0
     _categorize_variables(hass_isy_data, isy.variables, variable_identifier)
     # Gather ISY Variables to be added. Identifier used to enable by default.
-    numbers = hass_isy_data[ISY994_VARIABLES][Platform.NUMBER]
+    numbers = hass_isy_data[ISY_VARIABLES][Platform.NUMBER]
     for vtype, vname, vid in isy.variables.children:
         numbers.append((isy.variables[vtype][vid], variable_identifier in vname))
     if isy.configuration[ISY_CONF_NETWORKING]:
         for resource in isy.networking.nobjs:
-            hass_isy_data[ISY994_NODES][PROTO_NETWORK_RESOURCE].append(resource)
+            hass_isy_data[ISY_NET_RES].append(resource)
 
     # Dump ISY Clock Information. Future: Add ISY as sensor to Hass with attrs
     _LOGGER.info(repr(isy.clock))
 
-    hass_isy_data[ISY994_ISY] = isy
+    hass_isy_data[ISY_ROOT] = isy
     _async_get_or_create_isy_device_in_registry(hass, entry, isy)
 
     # Load platforms for the devices in the ISY controller that we support.
@@ -314,7 +312,7 @@ async def async_unload_entry(
 
     hass_isy_data = hass.data[DOMAIN][entry.entry_id]
 
-    isy: ISY = hass_isy_data[ISY994_ISY]
+    isy: ISY = hass_isy_data[ISY_ROOT]
 
     _LOGGER.debug("ISY Stopping Event Stream and automatic updates")
     isy.websocket.stop()
