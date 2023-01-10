@@ -149,7 +149,6 @@ def _mocked_plug() -> SmartPlug:
     plug.is_dimmer = False
     plug.is_strip = False
     plug.is_plug = True
-    plug.is_strip_socket = False
     plug.device_id = MAC_ADDRESS
     plug.hw_info = {"sw_ver": "1.0.0", "hw_ver": "1.0.0"}
     plug.turn_off = AsyncMock()
