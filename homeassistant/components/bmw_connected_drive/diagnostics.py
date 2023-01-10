@@ -11,7 +11,6 @@ from homeassistant.components.diagnostics.util import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceEntry
 
 from .const import CONF_REFRESH_TOKEN, DOMAIN
@@ -40,7 +39,7 @@ TO_REDACT_DATA = [
 ]
 
 
-def vehicle_to_dict(vehicle: MyBMWVehicle) -> dict:
+def vehicle_to_dict(vehicle: MyBMWVehicle | None) -> dict:
     """Convert a MyBMWVehicle to a dictionary using MyBMWJSONEncoder."""
     retval: dict = json.loads(json.dumps(vehicle, cls=MyBMWJSONEncoder))
     return retval
@@ -83,9 +82,6 @@ async def async_get_device_diagnostics(
 
     vin = next(iter(device.identifiers))[1]
     vehicle = coordinator.account.get_vehicle(vin)
-
-    if not vehicle:
-        raise HomeAssistantError("Vehicle not found")
 
     diagnostics_data = {
         "info": async_redact_data(config_entry.data, TO_REDACT_INFO),

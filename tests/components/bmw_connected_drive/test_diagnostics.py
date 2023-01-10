@@ -6,7 +6,6 @@ import os
 import time
 
 from freezegun import freeze_time
-import pytest
 
 from homeassistant.components.bmw_connected_drive.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -92,7 +91,14 @@ async def test_device_diagnostics_vehicle_not_found(
         reg_device.id, new_identifiers={(DOMAIN, "WBY00000000REXI99")}
     )
 
-    with pytest.raises(AssertionError):
-        await get_diagnostics_for_device(
-            hass, hass_client, mock_config_entry, reg_device
-        )
+    diagnostics = await get_diagnostics_for_device(
+        hass, hass_client, mock_config_entry, reg_device
+    )
+
+    diagnostics_fixture = json.loads(
+        load_fixture("diagnostics/diagnostics_device.json", DOMAIN)
+    )
+    # Mock empty data if car is not found in account anymore
+    diagnostics_fixture["data"] = None
+
+    assert diagnostics == diagnostics_fixture
