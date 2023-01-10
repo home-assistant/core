@@ -367,7 +367,7 @@ blebox_uniapi==2.1.4
 blinkpy==0.19.2
 
 # homeassistant.components.bluemaestro
-bluemaestro-ble==0.2.0
+bluemaestro-ble==0.2.1
 
 # homeassistant.components.bluetooth
 bluetooth-adapters==0.15.2
