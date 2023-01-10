@@ -248,7 +248,7 @@ aiosenseme==0.6.1
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==5.2.0
+aioshelly==5.2.1
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -361,7 +361,7 @@ bimmer_connected==0.12.0
 bleak-retry-connector==2.13.0
 
 # homeassistant.components.bluetooth
-bleak==0.19.2
+bleak==0.19.5
 
 # homeassistant.components.blebox
 blebox_uniapi==2.1.4
@@ -446,7 +446,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.82.0
+dbus-fast==1.84.0
 
 # homeassistant.components.debugpy
 debugpy==1.6.5
@@ -846,7 +846,7 @@ moehlenhoff-alpha2==1.2.1
 motionblinds==0.6.15
 
 # homeassistant.components.motioneye
-motioneye-client==0.3.12
+motioneye-client==0.3.14
 
 # homeassistant.components.mullvad
 mullvad-api==1.0.0
@@ -1305,7 +1305,7 @@ pynzbgetapi==0.2.0
 pyoctoprintapi==0.1.9
 
 # homeassistant.components.openuv
-pyopenuv==2022.04.0
+pyopenuv==2023.01.0
 
 # homeassistant.components.opnsense
 pyopnsense==0.2.0
@@ -1497,7 +1497,7 @@ pytrafikverket==0.2.2
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.6.0
+pyunifiprotect==4.6.1
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -1820,7 +1820,7 @@ wallbox==0.4.12
 watchdog==2.2.1
 
 # homeassistant.components.whirlpool
-whirlpool-sixth-sense==0.18.0
+whirlpool-sixth-sense==0.18.1
 
 # homeassistant.components.whois
 whois==0.9.16

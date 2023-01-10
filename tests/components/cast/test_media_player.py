@@ -992,7 +992,9 @@ async def test_entity_browse_media(hass: HomeAssistant, hass_ws_client):
         "title": "Epic Sax Guy 10 Hours.mp4",
         "media_class": "video",
         "media_content_type": "video/mp4",
-        "media_content_id": "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4",
+        "media_content_id": (
+            "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4"
+        ),
         "can_play": True,
         "can_expand": False,
         "thumbnail": None,
@@ -1048,7 +1050,9 @@ async def test_entity_browse_media_audio_only(
         "title": "Epic Sax Guy 10 Hours.mp4",
         "media_class": "video",
         "media_content_type": "video/mp4",
-        "media_content_id": "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4",
+        "media_content_id": (
+            "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4"
+        ),
         "can_play": True,
         "can_expand": False,
         "thumbnail": None,
@@ -1254,10 +1258,17 @@ async def test_entity_play_media_sign_URL(hass: HomeAssistant, quick_play_mock):
         ),
         # Test HLS playlist is forwarded to the device
         (
-            "http://a.files.bbci.co.uk/media/live/manifesto/audio/simulcast/hls/nonuk/sbr_low/ak/bbc_radio_fourfm.m3u8",
+            (
+                "http://a.files.bbci.co.uk/media/live/manifesto"
+                "/audio/simulcast/hls/nonuk/sbr_low/ak/bbc_radio_fourfm.m3u8"
+            ),
             "bbc_radio_fourfm.m3u8",
             {
-                "media_id": "http://a.files.bbci.co.uk/media/live/manifesto/audio/simulcast/hls/nonuk/sbr_low/ak/bbc_radio_fourfm.m3u8",
+                "media_id": (
+                    "http://a.files.bbci.co.uk/media/live/manifesto"
+                    "/audio/simulcast/hls/nonuk/sbr_low/ak"
+                    "/bbc_radio_fourfm.m3u8"
+                ),
                 "media_type": "audio",
             },
         ),
@@ -2237,7 +2248,9 @@ async def test_cast_platform_play_media_local_media(
         {
             ATTR_ENTITY_ID: entity_id,
             media_player.ATTR_MEDIA_CONTENT_TYPE: "application/vnd.apple.mpegurl",
-            media_player.ATTR_MEDIA_CONTENT_ID: f"{network.get_url(hass)}/api/hls/bla/master_playlist.m3u8?token=bla",
+            media_player.ATTR_MEDIA_CONTENT_ID: (
+                f"{network.get_url(hass)}" "/api/hls/bla/master_playlist.m3u8?token=bla"
+            ),
         },
         blocking=True,
     )
