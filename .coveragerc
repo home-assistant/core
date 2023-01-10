@@ -561,6 +561,8 @@ omit =
     homeassistant/components/ifttt/const.py
     homeassistant/components/iglo/light.py
     homeassistant/components/ihc/*
+    homeassistant/components/imap/__init__.py
+    homeassistant/components/imap/coordinator.py
     homeassistant/components/imap/sensor.py
     homeassistant/components/imap_email_content/sensor.py
     homeassistant/components/incomfort/*
@@ -581,6 +583,7 @@ omit =
     homeassistant/components/intellifire/coordinator.py
     homeassistant/components/intellifire/entity.py
     homeassistant/components/intellifire/fan.py
+    homeassistant/components/intellifire/light.py
     homeassistant/components/intellifire/number.py
     homeassistant/components/intellifire/sensor.py
     homeassistant/components/intellifire/switch.py
@@ -1062,6 +1065,7 @@ omit =
     homeassistant/components/rest/switch.py
     homeassistant/components/rfxtrx/diagnostics.py
     homeassistant/components/ridwell/__init__.py
+    homeassistant/components/ridwell/entity.py
     homeassistant/components/ridwell/sensor.py
     homeassistant/components/ridwell/switch.py
     homeassistant/components/ring/camera.py

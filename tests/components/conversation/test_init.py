@@ -12,6 +12,19 @@ from homeassistant.setup import async_setup_component
 from tests.common import async_mock_service
 
 
+class OrderBeerIntentHandler(intent.IntentHandler):
+    """Handle OrderBeer intent."""
+
+    intent_type = "OrderBeer"
+
+    async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
+        """Return speech response."""
+        beer_style = intent_obj.slots["beer_style"]["value"]
+        response = intent_obj.create_response()
+        response.async_set_speech(f"You ordered a {beer_style}")
+        return response
+
+
 @pytest.fixture
 async def init_components(hass):
     """Initialize relevant components with empty configs."""
@@ -314,3 +327,43 @@ async def test_ws_api(hass, hass_ws_client, payload):
         },
         "conversation_id": payload.get("conversation_id") or ANY,
     }
+
+
+async def test_custom_sentences(hass, hass_client, hass_admin_user):
+    """Test custom sentences with a custom intent."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "conversation", {})
+    assert await async_setup_component(hass, "intent", {})
+
+    # Expecting testing_config/custom_sentences/en/beer.yaml
+    intent.async_register(hass, OrderBeerIntentHandler())
+
+    # Invoke intent via HTTP API
+    client = await hass_client()
+    for beer_style in ("stout", "lager"):
+        resp = await client.post(
+            "/api/conversation/process",
+            json={"text": f"I'd like to order a {beer_style}, please"},
+        )
+        assert resp.status == HTTPStatus.OK
+        data = await resp.json()
+
+        assert data == {
+            "response": {
+                "card": {},
+                "speech": {
+                    "plain": {
+                        "extra_data": None,
+                        "speech": f"You ordered a {beer_style}",
+                    }
+                },
+                "language": hass.config.language,
+                "response_type": "action_done",
+                "data": {
+                    "targets": [],
+                    "success": [],
+                    "failed": [],
+                },
+            },
+            "conversation_id": None,
+        }

@@ -24,3 +24,5 @@ SUPPORTED_LANGUAGE_CODES: Final = [
     "ko-KR",
     "pt-BR",
 ]
+
+CONF_ENABLE_CONVERSATION_AGENT: Final = "enable_conversation_agent"

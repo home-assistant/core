@@ -87,6 +87,10 @@ async def mock_setup_integration(
 class ExpectedCredentials:
     """Assert credentials have the expected access token."""
 
+    def __init__(self, expected_access_token: str = ACCESS_TOKEN) -> None:
+        """Initialize ExpectedCredentials."""
+        self.expected_access_token = expected_access_token
+
     def __eq__(self, other: Credentials):
         """Return true if credentials have the expected access token."""
-        return other.token == ACCESS_TOKEN
+        return other.token == self.expected_access_token
