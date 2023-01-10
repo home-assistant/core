@@ -30,7 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await seitron_gw.update()
         return seitron_gw
 
-    coordinator = DataUpdateCoordinator(
+    coordinator = DataUpdateCoordinator[SeitronGateway](
         hass,
         _LOGGER,
         name=DOMAIN.title(),
