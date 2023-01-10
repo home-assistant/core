@@ -369,8 +369,9 @@ def _categorize_variables(
     except KeyError as err:
         _LOGGER.error("Error adding ISY Variables: %s", err)
         return
+    variable_entities = hass_isy_data[ISY994_VARIABLES]
     for vtype, vname, vid in var_to_add:
-        hass_isy_data[ISY994_VARIABLES].append((vname, variables[vtype][vid]))
+        variable_entities[Platform.SENSOR].append((vname, variables[vtype][vid]))
 
 
 def convert_isy_value_to_hass(

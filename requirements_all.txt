@@ -449,7 +449,7 @@ blinkstick==1.2.0
 blockchain==1.4.4
 
 # homeassistant.components.bluemaestro
-bluemaestro-ble==0.2.0
+bluemaestro-ble==0.2.1
 
 # homeassistant.components.decora
 # homeassistant.components.zengge
@@ -751,7 +751,7 @@ gTTS==2.2.4
 gassist-text==0.0.7
 
 # homeassistant.components.google
-gcal-sync==4.1.1
+gcal-sync==4.1.2
 
 # homeassistant.components.geniushub
 geniushub-client==0.6.30
@@ -871,7 +871,7 @@ hass_splunk==0.1.1
 hassil==0.2.3
 
 # homeassistant.components.tasmota
-hatasmota==0.6.2
+hatasmota==0.6.3
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.4
@@ -901,7 +901,7 @@ hole==0.8.0
 holidays==0.18.0
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230104.0
+home-assistant-frontend==20230110.0
 
 # homeassistant.components.conversation
 home-assistant-intents==0.0.1

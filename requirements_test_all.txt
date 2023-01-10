@@ -370,7 +370,7 @@ blebox_uniapi==2.1.4
 blinkpy==0.19.2
 
 # homeassistant.components.bluemaestro
-bluemaestro-ble==0.2.0
+bluemaestro-ble==0.2.1
 
 # homeassistant.components.bluetooth
 bluetooth-adapters==0.15.2
@@ -570,7 +570,7 @@ gTTS==2.2.4
 gassist-text==0.0.7
 
 # homeassistant.components.google
-gcal-sync==4.1.1
+gcal-sync==4.1.2
 
 # homeassistant.components.geocaching
 geocachingapi==0.2.1
@@ -663,7 +663,7 @@ hass-nabucasa==0.61.0
 hassil==0.2.3
 
 # homeassistant.components.tasmota
-hatasmota==0.6.2
+hatasmota==0.6.3
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.4
@@ -684,7 +684,7 @@ hole==0.8.0
 holidays==0.18.0
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230104.0
+home-assistant-frontend==20230110.0
 
 # homeassistant.components.conversation
 home-assistant-intents==0.0.1
