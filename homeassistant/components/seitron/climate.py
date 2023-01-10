@@ -22,7 +22,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import DOMAIN  # seitron
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
