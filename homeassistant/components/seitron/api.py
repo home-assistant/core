@@ -20,7 +20,6 @@ class AsyncSeitronAuth(AbstractAuth):
         oauth_session: config_entry_oauth2_flow.OAuth2Session,
     ) -> None:
         """Initialize seitron auth."""
-        _LOGGER.info("Api.init %s", API_URL)
         super().__init__(websession, API_URL)
         self._oauth_session = oauth_session
 
