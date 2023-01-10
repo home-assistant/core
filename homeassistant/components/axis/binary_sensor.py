@@ -74,30 +74,7 @@ class AxisBinarySensor(AxisEventEntity, BinarySensorEntity):
         self._attr_device_class = DEVICE_CLASS.get(event.group)
         self._attr_is_on = event.is_tripped
 
-        if (
-            event.group == EventGroup.INPUT
-            and event.id in self.device.api.vapix.ports
-            and self.device.api.vapix.ports[event.id].name
-        ):
-            self._attr_name = self.device.api.vapix.ports[event.id].name
-
-        if event.group == EventGroup.MOTION:
-
-            for event_topic, event_data in (
-                (EventTopic.FENCE_GUARD, self.device.api.vapix.fence_guard),
-                (EventTopic.LOITERING_GUARD, self.device.api.vapix.loitering_guard),
-                (EventTopic.MOTION_GUARD, self.device.api.vapix.motion_guard),
-                (EventTopic.OBJECT_ANALYTICS, self.device.api.vapix.object_analytics),
-                (EventTopic.MOTION_DETECTION_4, self.device.api.vapix.vmd4),
-            ):
-
-                if (
-                    event.topic_base == event_topic
-                    and event_data
-                    and event.id in event_data
-                ):
-                    self._attr_name = f"{self._event_type} {event_data[event.id].name}"
-                    break
+        self._set_name(event)
 
     @callback
     def async_event_callback(self, event: Event) -> None:
@@ -123,3 +100,31 @@ class AxisBinarySensor(AxisEventEntity, BinarySensorEntity):
             scheduled_update,
             utcnow() + timedelta(seconds=self.device.option_trigger_time),
         )
+
+    @callback
+    def _set_name(self, event: Event) -> None:
+        """Set binary sensor name."""
+        if (
+            event.group == EventGroup.INPUT
+            and event.id in self.device.api.vapix.ports
+            and self.device.api.vapix.ports[event.id].name
+        ):
+            self._attr_name = self.device.api.vapix.ports[event.id].name
+
+        elif event.group == EventGroup.MOTION:
+
+            for event_topic, event_data in (
+                (EventTopic.FENCE_GUARD, self.device.api.vapix.fence_guard),
+                (EventTopic.LOITERING_GUARD, self.device.api.vapix.loitering_guard),
+                (EventTopic.MOTION_GUARD, self.device.api.vapix.motion_guard),
+                (EventTopic.OBJECT_ANALYTICS, self.device.api.vapix.object_analytics),
+                (EventTopic.MOTION_DETECTION_4, self.device.api.vapix.vmd4),
+            ):
+
+                if (
+                    event.topic_base == event_topic
+                    and event_data
+                    and event.id in event_data
+                ):
+                    self._attr_name = f"{self._event_type} {event_data[event.id].name}"
+                    break
