@@ -18,6 +18,7 @@ from homeassistant.const import SUN_EVENT_SUNSET
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sun import get_astral_event_date
+from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
@@ -171,7 +172,7 @@ class JewishCalendarSensor(SensorEntity):
     ) -> None:
         """Initialize the Jewish calendar sensor."""
         self.entity_description = description
-        self._attr_unique_id = f"{data['name']}_{description.key}"
+        self._attr_unique_id = f"{slugify(data['name'])}_{description.key}"
         self._location = data["location"]
         self._hebrew = data["language"] == "hebrew"
         self._candle_lighting_offset = data["candle_lighting_offset"]
