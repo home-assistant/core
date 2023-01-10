@@ -14,7 +14,7 @@ from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import api
-from .const import DOMAIN  # seitron
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
