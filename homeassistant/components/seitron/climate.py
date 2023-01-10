@@ -67,7 +67,6 @@ class SeitronClimate(CoordinatorEntity[DateUpdateCoordinator[SeitronGateway]], C
             name=thermostat.name,
             sw_version=thermostat.fw_ver,
         )
-        _LOGGER.info("Climate: ctored %s %s", thermostat.gmac, thermostat.name)
 
     @property
     def temperature_unit(self) -> str:
