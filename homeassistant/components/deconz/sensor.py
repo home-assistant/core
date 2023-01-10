@@ -112,7 +112,6 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
         update_key="airquality",
         value_fn=lambda device: device.air_quality,
         instance_check=AirQuality,
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     DeconzSensorDescription[AirQuality](
         key="air_quality_ppb",
