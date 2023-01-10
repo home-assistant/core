@@ -160,6 +160,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_show_form(
                     step_id="discovery_confirm",
                     errors={"base": ex.error_code},
+                    description_placeholders={
+                        CONF_PRODUCT_TYPE: cast(str, self.config[CONF_PRODUCT_TYPE]),
+                        CONF_SERIAL: cast(str, self.config[CONF_SERIAL]),
+                        CONF_IP_ADDRESS: cast(str, self.config[CONF_IP_ADDRESS]),
+                    },
                 )
 
             return self.async_create_entry(

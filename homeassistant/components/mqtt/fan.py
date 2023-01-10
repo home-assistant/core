@@ -88,7 +88,6 @@ DEFAULT_NAME = "MQTT Fan"
 DEFAULT_PAYLOAD_ON = "ON"
 DEFAULT_PAYLOAD_OFF = "OFF"
 DEFAULT_PAYLOAD_RESET = "None"
-DEFAULT_OPTIMISTIC = False
 DEFAULT_SPEED_RANGE_MIN = 1
 DEFAULT_SPEED_RANGE_MAX = 100
 
@@ -128,7 +127,6 @@ def valid_preset_mode_configuration(config: ConfigType) -> ConfigType:
 _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_OSCILLATION_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_OSCILLATION_COMMAND_TEMPLATE): cv.template,
@@ -138,7 +136,8 @@ _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
         vol.Optional(CONF_PERCENTAGE_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_PERCENTAGE_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_PERCENTAGE_VALUE_TEMPLATE): cv.template,
-        # CONF_PRESET_MODE_COMMAND_TOPIC and CONF_PRESET_MODES_LIST must be used together
+        # CONF_PRESET_MODE_COMMAND_TOPIC and CONF_PRESET_MODES_LIST
+        # must be used together
         vol.Inclusive(
             CONF_PRESET_MODE_COMMAND_TOPIC, "preset_modes"
         ): valid_publish_topic,
@@ -196,7 +195,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT fan through configuration.yaml and dynamically through MQTT discovery."""
+    """Set up MQTT fan through YAML and through MQTT discovery."""
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )

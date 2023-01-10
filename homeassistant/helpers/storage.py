@@ -104,8 +104,9 @@ class Store(Generic[_T]):
     async def async_load(self) -> _T | None:
         """Load data.
 
-        If the expected version and minor version do not match the given versions, the
-        migrate function will be invoked with migrate_func(version, minor_version, config).
+        If the expected version and minor version do not match the given
+        versions, the migrate function will be invoked with
+        migrate_func(version, minor_version, config).
 
         Will ensure that when a call comes in while another one is in progress,
         the second call will wait and return the result of the first call.

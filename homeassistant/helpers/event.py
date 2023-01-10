@@ -710,8 +710,8 @@ def async_track_state_change_filtered(
 
     Returns
     -------
-    Object used to update the listeners (async_update_listeners) with a new TrackStates or
-    cancel the tracking (async_remove).
+    Object used to update the listeners (async_update_listeners) with a new
+    TrackStates or cancel the tracking (async_remove).
 
     """
     tracker = _TrackStateChangeFiltered(hass, track_states, action)
@@ -1326,7 +1326,7 @@ def async_track_point_in_utc_time(
         hass.async_run_hass_job(job, utc_point_in_time)
 
     job = action if isinstance(action, HassJob) else HassJob(action)
-    delta = utc_point_in_time.timestamp() - time.time()
+    delta = expected_fire_timestamp - time.time()
     cancel_callback = hass.loop.call_later(delta, run_action, job)
 
     @callback

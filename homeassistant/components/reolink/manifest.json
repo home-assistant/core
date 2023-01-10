@@ -3,10 +3,8 @@
   "name": "Reolink IP NVR/camera",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/reolink",
-  "requirements": ["reolink-ip==0.0.40"],
-  "dependencies": ["webhook"],
-  "after_dependencies": ["http"],
-  "codeowners": ["@starkillerOG", "@JimStar"],
+  "requirements": ["reolink-aio==0.2.1"],
+  "codeowners": ["@starkillerOG"],
   "iot_class": "local_polling",
-  "loggers": ["reolink-ip"]
+  "loggers": ["reolink-aio"]
 }

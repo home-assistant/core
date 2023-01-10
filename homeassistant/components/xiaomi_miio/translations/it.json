@@ -63,7 +63,7 @@
             "led_brightness": {
                 "state": {
                     "bright": "Luminoso",
-                    "dim": "Scuro",
+                    "dim": "Attenuata",
                     "off": "Spento"
                 }
             },

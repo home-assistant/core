@@ -43,7 +43,7 @@ async def test_config_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock):
         )
 
     assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["errors"] == {"base": "unknown"}
+    assert result["errors"] == {"base": "cannot_connect"}
 
     system_info = SystemInfo(**json.loads(load_fixture("system_getInfo.json", DOMAIN)))
     with patch(

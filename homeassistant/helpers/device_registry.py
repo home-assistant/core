@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections import UserDict
-from collections.abc import Coroutine
+from collections.abc import Coroutine, ValuesView
 import logging
 import time
 from typing import TYPE_CHECKING, Any, TypeVar, cast
@@ -14,11 +14,16 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, RequiredParameterMissing
 from homeassistant.loader import bind_hass
+from homeassistant.util.json import (
+    find_paths_unserializable_data,
+    format_unserializable_data,
+)
 import homeassistant.util.uuid as uuid_util
 
 from . import storage
 from .debounce import Debouncer
 from .frame import report
+from .json import JSON_DUMP
 from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
@@ -32,7 +37,7 @@ DATA_REGISTRY = "device_registry"
 EVENT_DEVICE_REGISTRY_UPDATED = "device_registry_updated"
 STORAGE_KEY = "core.device_registry"
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 4
+STORAGE_VERSION_MINOR = 3
 SAVE_DELAY = 10
 CLEANUP_DELAY = 10
 
@@ -70,7 +75,6 @@ class DeviceEntryType(StrEnum):
 class DeviceEntry:
     """Device Registry Entry."""
 
-    aliases: set[str] = attr.ib(factory=set)
     area_id: str | None = attr.ib(default=None)
     config_entries: set[str] = attr.ib(converter=set, factory=set)
     configuration_url: str | None = attr.ib(default=None)
@@ -90,10 +94,52 @@ class DeviceEntry:
     # This value is not stored, just used to keep track of events to fire.
     is_new: bool = attr.ib(default=False)
 
+    _json_repr: str | None = attr.ib(cmp=False, default=None, init=False, repr=False)
+
     @property
     def disabled(self) -> bool:
         """Return if entry is disabled."""
         return self.disabled_by is not None
+
+    @property
+    def dict_repr(self) -> dict[str, Any]:
+        """Return a dict representation of the entry."""
+        return {
+            "area_id": self.area_id,
+            "configuration_url": self.configuration_url,
+            "config_entries": list(self.config_entries),
+            "connections": list(self.connections),
+            "disabled_by": self.disabled_by,
+            "entry_type": self.entry_type,
+            "hw_version": self.hw_version,
+            "id": self.id,
+            "identifiers": list(self.identifiers),
+            "manufacturer": self.manufacturer,
+            "model": self.model,
+            "name_by_user": self.name_by_user,
+            "name": self.name,
+            "sw_version": self.sw_version,
+            "via_device_id": self.via_device_id,
+        }
+
+    @property
+    def json_repr(self) -> str | None:
+        """Return a cached JSON representation of the entry."""
+        if self._json_repr is not None:
+            return self._json_repr
+
+        try:
+            dict_repr = self.dict_repr
+            object.__setattr__(self, "_json_repr", JSON_DUMP(dict_repr))
+        except (ValueError, TypeError):
+            _LOGGER.error(
+                "Unable to serialize entry %s to JSON. Bad data found at %s",
+                self.id,
+                format_unserializable_data(
+                    find_paths_unserializable_data(dict_repr, dump=JSON_DUMP)
+                ),
+            )
+        return self._json_repr
 
 
 @attr.s(slots=True, frozen=True)
@@ -162,7 +208,9 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                     device.setdefault("configuration_url", None)
                     device.setdefault("disabled_by", None)
                     try:
-                        device["entry_type"] = DeviceEntryType(device.get("entry_type"))  # type: ignore[arg-type]
+                        device["entry_type"] = DeviceEntryType(
+                            device.get("entry_type"),  # type: ignore[arg-type]
+                        )
                     except ValueError:
                         device["entry_type"] = None
                     device.setdefault("name_by_user", None)
@@ -175,9 +223,6 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                 # Version 1.3 adds hw_version
                 for device in old_data["devices"]:
                     device["hw_version"] = None
-            if old_minor_version < 4:
-                for device in old_data["devices"]:
-                    device["aliases"] = []
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -200,6 +245,10 @@ class DeviceRegistryItems(UserDict[str, _EntryTypeT]):
         super().__init__()
         self._connections: dict[tuple[str, str], _EntryTypeT] = {}
         self._identifiers: dict[tuple[str, str], _EntryTypeT] = {}
+
+    def values(self) -> ValuesView[_EntryTypeT]:
+        """Return the underlying values to avoid __iter__ overhead."""
+        return self.data.values()
 
     def __setitem__(self, key: str, entry: _EntryTypeT) -> None:
         """Add an item."""
@@ -382,7 +431,6 @@ class DeviceRegistry:
         device_id: str,
         *,
         add_config_entry_id: str | UndefinedType = UNDEFINED,
-        aliases: set[str] | UndefinedType = UNDEFINED,
         area_id: str | None | UndefinedType = UNDEFINED,
         configuration_url: str | None | UndefinedType = UNDEFINED,
         disabled_by: DeviceEntryDisabler | None | UndefinedType = UNDEFINED,
@@ -473,7 +521,6 @@ class DeviceRegistry:
             old_values["identifiers"] = old.identifiers
 
         for attr_name, value in (
-            ("aliases", aliases),
             ("area_id", area_id),
             ("configuration_url", configuration_url),
             ("disabled_by", disabled_by),
@@ -552,12 +599,14 @@ class DeviceRegistry:
         if data is not None:
             for device in data["devices"]:
                 devices[device["id"]] = DeviceEntry(
-                    aliases=set(device["aliases"]),
                     area_id=device["area_id"],
                     config_entries=set(device["config_entries"]),
                     configuration_url=device["configuration_url"],
                     # type ignores (if tuple arg was cast): likely https://github.com/python/mypy/issues/8625
-                    connections={tuple(conn) for conn in device["connections"]},  # type: ignore[misc]
+                    connections={
+                        tuple(conn)  # type: ignore[misc]
+                        for conn in device["connections"]
+                    },
                     disabled_by=DeviceEntryDisabler(device["disabled_by"])
                     if device["disabled_by"]
                     else None,
@@ -566,7 +615,10 @@ class DeviceRegistry:
                     else None,
                     hw_version=device["hw_version"],
                     id=device["id"],
-                    identifiers={tuple(iden) for iden in device["identifiers"]},  # type: ignore[misc]
+                    identifiers={
+                        tuple(iden)  # type: ignore[misc]
+                        for iden in device["identifiers"]
+                    },
                     manufacturer=device["manufacturer"],
                     model=device["model"],
                     name_by_user=device["name_by_user"],
@@ -579,8 +631,14 @@ class DeviceRegistry:
                 deleted_devices[device["id"]] = DeletedDeviceEntry(
                     config_entries=set(device["config_entries"]),
                     # type ignores (if tuple arg was cast): likely https://github.com/python/mypy/issues/8625
-                    connections={tuple(conn) for conn in device["connections"]},  # type: ignore[misc]
-                    identifiers={tuple(iden) for iden in device["identifiers"]},  # type: ignore[misc]
+                    connections={
+                        tuple(conn)  # type: ignore[misc]
+                        for conn in device["connections"]
+                    },
+                    identifiers={
+                        tuple(iden)  # type: ignore[misc]
+                        for iden in device["identifiers"]
+                    },
                     id=device["id"],
                     orphaned_timestamp=device["orphaned_timestamp"],
                 )
@@ -600,7 +658,6 @@ class DeviceRegistry:
 
         data["devices"] = [
             {
-                "aliases": list(entry.aliases),
                 "area_id": entry.area_id,
                 "config_entries": list(entry.config_entries),
                 "configuration_url": entry.configuration_url,
