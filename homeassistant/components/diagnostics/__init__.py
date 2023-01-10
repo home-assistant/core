@@ -1,12 +1,12 @@
 """The Diagnostics integration."""
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine, Mapping
+from collections.abc import Callable, Coroutine, Mapping, Sequence
 from dataclasses import dataclass, field
 from http import HTTPStatus
 import json
 import logging
-from typing import Any, Protocol
+from typing import Any, Protocol, Union
 
 from aiohttp import web
 import voluptuous as vol
@@ -31,6 +31,18 @@ from .util import async_redact_data
 __all__ = ["REDACTED", "async_redact_data"]
 
 _LOGGER = logging.getLogger(__name__)
+DiagnosticsContent = Mapping[
+    Union[str, int, float],
+    Union[
+        str,
+        int,
+        float,
+        bool,
+        None,
+        Sequence[Union[str, int, float, bool, "DiagnosticsContent"]],
+        "DiagnosticsContent",
+    ],
+]
 
 
 @dataclass
@@ -38,11 +50,11 @@ class DiagnosticsPlatformData:
     """Diagnostic platform data."""
 
     config_entry_diagnostics: Callable[
-        [HomeAssistant, ConfigEntry], Coroutine[Any, Any, Mapping[str, Any]]
+        [HomeAssistant, ConfigEntry], Coroutine[Any, Any, DiagnosticsContent]
     ] | None
     device_diagnostics: Callable[
         [HomeAssistant, ConfigEntry, DeviceEntry],
-        Coroutine[Any, Any, Mapping[str, Any]],
+        Coroutine[Any, Any, DiagnosticsContent],
     ] | None
 
 
@@ -73,12 +85,12 @@ class DiagnosticsProtocol(Protocol):
 
     async def async_get_config_entry_diagnostics(
         self, hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> Mapping[str, Any]:
+    ) -> DiagnosticsContent:
         """Return diagnostics for a config entry."""
 
     async def async_get_device_diagnostics(
         self, hass: HomeAssistant, config_entry: ConfigEntry, device: DeviceEntry
-    ) -> Mapping[str, Any]:
+    ) -> DiagnosticsContent:
         """Return diagnostics for a device."""
 
 
@@ -149,7 +161,7 @@ def handle_get(
 
 async def _async_get_json_file_response(
     hass: HomeAssistant,
-    data: Mapping[str, Any],
+    data: DiagnosticsContent,
     filename: str,
     domain: str,
     d_id: str,
