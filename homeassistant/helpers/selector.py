@@ -733,6 +733,7 @@ class SelectSelectorConfig(TypedDict, total=False):
     multiple: bool
     custom_value: bool
     mode: SelectSelectorMode
+    domain: str
     translation_key: str
 
 
