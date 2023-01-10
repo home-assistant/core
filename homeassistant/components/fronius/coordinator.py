@@ -104,8 +104,7 @@ class FroniusCoordinatorBase(
                         continue
                     new_entities.append(entity_constructor(self, key, solar_net_id))
                     self.unregistered_keys[solar_net_id].remove(key)
-            if new_entities:
-                async_add_entities(new_entities)
+            async_add_entities(new_entities)
 
         _add_entities_for_unregistered_keys()
         self.solar_net.cleanup_callbacks.append(

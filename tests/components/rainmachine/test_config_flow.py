@@ -6,7 +6,11 @@ from regenmaschine.errors import RainMachineError
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components import zeroconf
-from homeassistant.components.rainmachine import CONF_ZONE_RUN_TIME, DOMAIN
+from homeassistant.components.rainmachine import (
+    CONF_DEFAULT_ZONE_RUN_TIME,
+    CONF_USE_APP_RUN_TIMES,
+    DOMAIN,
+)
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, CONF_SSL
 from homeassistant.helpers import entity_registry as er
 
@@ -99,10 +103,14 @@ async def test_options_flow(hass, config, config_entry):
         assert result["step_id"] == "init"
 
         result = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input={CONF_ZONE_RUN_TIME: 600}
+            result["flow_id"],
+            user_input={CONF_DEFAULT_ZONE_RUN_TIME: 600, CONF_USE_APP_RUN_TIMES: False},
         )
         assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-        assert config_entry.options == {CONF_ZONE_RUN_TIME: 600}
+        assert config_entry.options == {
+            CONF_DEFAULT_ZONE_RUN_TIME: 600,
+            CONF_USE_APP_RUN_TIMES: False,
+        }
 
 
 async def test_show_form(hass):
@@ -130,7 +138,7 @@ async def test_step_user(hass, config, setup_rainmachine):
         CONF_PASSWORD: "password",
         CONF_PORT: 8080,
         CONF_SSL: True,
-        CONF_ZONE_RUN_TIME: 600,
+        CONF_DEFAULT_ZONE_RUN_TIME: 600,
     }
 
 
@@ -238,7 +246,7 @@ async def test_step_homekit_zeroconf_new_controller_when_some_exist(
         CONF_PASSWORD: "password",
         CONF_PORT: 8080,
         CONF_SSL: True,
-        CONF_ZONE_RUN_TIME: 600,
+        CONF_DEFAULT_ZONE_RUN_TIME: 600,
     }
 
 

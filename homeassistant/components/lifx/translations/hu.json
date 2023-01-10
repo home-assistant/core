@@ -3,19 +3,15 @@
         "abort": {
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
             "already_in_progress": "A be\u00e1ll\u00edt\u00e1si folyamat m\u00e1r el lett kezdve",
-            "no_devices_found": "Nem tal\u00e1lhat\u00f3 eszk\u00f6z a h\u00e1l\u00f3zaton",
-            "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges."
+            "no_devices_found": "Nem tal\u00e1lhat\u00f3 eszk\u00f6z a h\u00e1l\u00f3zaton"
         },
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s"
         },
-        "flow_title": "{label} ({host}) {serial}",
+        "flow_title": "{label} ({group})",
         "step": {
-            "confirm": {
-                "description": "Szeretn\u00e9 be\u00e1ll\u00edtani: LIFX?"
-            },
             "discovery_confirm": {
-                "description": "Szeretn\u00e9 be\u00e1ll\u00edtani: {label} ({host}) {serial}?"
+                "description": "Szeretn\u00e9 be\u00e1ll\u00edtani: {label} ({group})?"
             },
             "pick_device": {
                 "data": {

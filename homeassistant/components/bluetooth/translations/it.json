@@ -9,9 +9,6 @@
             "bluetooth_confirm": {
                 "description": "Vuoi configurare {name}?"
             },
-            "enable_bluetooth": {
-                "description": "Vuoi configurare il Bluetooth?"
-            },
             "multiple_adapters": {
                 "data": {
                     "adapter": "Adattatore"
@@ -25,7 +22,7 @@
                 "data": {
                     "address": "Dispositivo"
                 },
-                "description": "Seleziona un dispositivo da configurare"
+                "description": "Scegli un dispositivo da configurare"
             }
         }
     },
@@ -39,10 +36,8 @@
         "step": {
             "init": {
                 "data": {
-                    "adapter": "L'adattatore Bluetooth da utilizzare per la scansione",
                     "passive": "Scansione passiva"
-                },
-                "description": "L'ascolto passivo richiede BlueZ 5.63 o successivo con funzionalit\u00e0 sperimentali abilitate."
+                }
             }
         }
     }

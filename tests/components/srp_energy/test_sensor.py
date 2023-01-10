@@ -11,7 +11,7 @@ from homeassistant.components.srp_energy.const import (
     SRP_ENERGY_DOMAIN,
 )
 from homeassistant.components.srp_energy.sensor import SrpEntity, async_setup_entry
-from homeassistant.const import ATTR_ATTRIBUTION, ENERGY_KILO_WATT_HOUR
+from homeassistant.const import ENERGY_KILO_WATT_HOUR
 
 
 async def test_async_setup_entry(hass):
@@ -93,7 +93,7 @@ async def test_srp_entity(hass):
     assert srp_entity.icon == ICON
     assert srp_entity.usage == "2.00"
     assert srp_entity.should_poll is False
-    assert srp_entity.extra_state_attributes[ATTR_ATTRIBUTION] == ATTRIBUTION
+    assert srp_entity.attribution == ATTRIBUTION
     assert srp_entity.available is not None
     assert srp_entity.device_class is SensorDeviceClass.ENERGY
     assert srp_entity.state_class is SensorStateClass.TOTAL_INCREASING

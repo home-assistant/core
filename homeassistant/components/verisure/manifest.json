@@ -11,5 +11,6 @@
     }
   ],
   "iot_class": "cloud_polling",
+  "integration_type": "hub",
   "loggers": ["verisure"]
 }

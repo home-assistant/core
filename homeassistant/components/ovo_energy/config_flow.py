@@ -6,11 +6,15 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import DOMAIN
+from .const import CONF_ACCOUNT, DOMAIN
 
 REAUTH_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
 USER_SCHEMA = vol.Schema(
-    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+    {
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
+        vol.Optional(CONF_ACCOUNT): str,
+    }
 )
 
 
@@ -22,6 +26,7 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize the flow."""
         self.username = None
+        self.account = None
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
@@ -30,7 +35,9 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
             client = OVOEnergy()
             try:
                 authenticated = await client.authenticate(
-                    user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
+                    user_input[CONF_USERNAME],
+                    user_input[CONF_PASSWORD],
+                    user_input.get(CONF_ACCOUNT, None),
                 )
             except aiohttp.ClientError:
                 errors["base"] = "cannot_connect"
@@ -44,6 +51,7 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
                         data={
                             CONF_USERNAME: user_input[CONF_USERNAME],
                             CONF_PASSWORD: user_input[CONF_PASSWORD],
+                            CONF_ACCOUNT: client.account_id,
                         },
                     )
 
@@ -60,13 +68,16 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input and user_input.get(CONF_USERNAME):
             self.username = user_input[CONF_USERNAME]
 
+        if user_input and user_input.get(CONF_ACCOUNT):
+            self.account = user_input[CONF_ACCOUNT]
+
         self.context["title_placeholders"] = {CONF_USERNAME: self.username}
 
         if user_input is not None and user_input.get(CONF_PASSWORD) is not None:
             client = OVOEnergy()
             try:
                 authenticated = await client.authenticate(
-                    self.username, user_input[CONF_PASSWORD]
+                    self.username, user_input[CONF_PASSWORD], self.account
                 )
             except aiohttp.ClientError:
                 errors["base"] = "connection_error"
@@ -78,6 +89,7 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
                         data={
                             CONF_USERNAME: self.username,
                             CONF_PASSWORD: user_input[CONF_PASSWORD],
+                            CONF_ACCOUNT: self.account,
                         },
                     )
                     return self.async_abort(reason="reauth_successful")

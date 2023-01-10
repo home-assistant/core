@@ -8,7 +8,10 @@
             "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
         "error": {
+            "auth_failed": "Uwierzytelnianie nie powiod\u0142o si\u0119: {error_detail}",
+            "encryption_key_invalid": "Identyfikator klucza lub klucz szyfruj\u0105cy jest nieprawid\u0142owy",
             "few": "Puste",
+            "key_id_invalid": "Identyfikator klucza lub klucz szyfruj\u0105cy jest nieprawid\u0142owy",
             "many": "Pustych",
             "one": "Pusty",
             "other": ""
@@ -18,6 +21,34 @@
             "confirm": {
                 "description": "Czy chcesz skonfigurowa\u0107 {name}?"
             },
+            "lock_auth": {
+                "data": {
+                    "password": "Has\u0142o",
+                    "username": "Nazwa u\u017cytkownika"
+                },
+                "description": "Podaj swoj\u0105 nazw\u0119 u\u017cytkownika i has\u0142o do aplikacji SwitchBot. Te dane nie zostan\u0105 zapisane i zostan\u0105 u\u017cyte tylko do odzyskania klucza szyfrowania Twoich zamk\u00f3w."
+            },
+            "lock_choose_method": {
+                "description": "Zamek SwitchBot mo\u017cna skonfigurowa\u0107 w Home Assistant na dwa r\u00f3\u017cne sposoby. \n\nMo\u017cesz samodzielnie wprowadzi\u0107 identyfikator klucza i klucz szyfrowania lub Home Assistant mo\u017ce zaimportowa\u0107 je z konta SwitchBot.",
+                "menu_options": {
+                    "lock_auth": "Konto SwitchBot (zalecane)",
+                    "lock_key": "Wprowad\u017a klucz szyfrowania zamka r\u0119cznie"
+                }
+            },
+            "lock_chose_method": {
+                "description": "Wybierz spos\u00f3b konfiguracji, szczeg\u00f3\u0142y znajdziesz w dokumentacji.",
+                "menu_options": {
+                    "lock_auth": "Login i has\u0142o do aplikacji SwitchBot",
+                    "lock_key": "Klucz szyfrowania zamka"
+                }
+            },
+            "lock_key": {
+                "data": {
+                    "encryption_key": "Klucz szyfruj\u0105cy",
+                    "key_id": "Identyfikator klucza"
+                },
+                "description": "Urz\u0105dzenie {name} wymaga klucza szyfruj\u0105cego, szczeg\u00f3\u0142y jak go uzyska\u0107 znajdziesz w dokumentacji."
+            },
             "password": {
                 "data": {
                     "password": "Has\u0142o"
@@ -26,12 +57,8 @@
             },
             "user": {
                 "data": {
-                    "address": "Adres urz\u0105dzenia",
-                    "mac": "Adres MAC urz\u0105dzenia",
-                    "name": "Nazwa",
-                    "password": "Has\u0142o"
-                },
-                "title": "Konfiguracja urz\u0105dzenia Switchbot"
+                    "address": "Adres urz\u0105dzenia"
+                }
             }
         }
     },
@@ -39,10 +66,7 @@
         "step": {
             "init": {
                 "data": {
-                    "retry_count": "Liczba ponownych pr\u00f3b",
-                    "retry_timeout": "Limit czasu mi\u0119dzy kolejnymi pr\u00f3bami",
-                    "scan_timeout": "Jak d\u0142ugo skanowa\u0107 w poszukiwaniu danych reklamowych",
-                    "update_time": "Czas mi\u0119dzy aktualizacjami (sekundy)"
+                    "retry_count": "Liczba ponownych pr\u00f3b"
                 }
             }
         }

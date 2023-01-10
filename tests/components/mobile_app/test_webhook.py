@@ -6,7 +6,8 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.camera import CameraEntityFeature
-from homeassistant.components.mobile_app.const import CONF_SECRET
+from homeassistant.components.mobile_app.const import CONF_SECRET, DOMAIN
+from homeassistant.components.tag import EVENT_TAG_SCANNED
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.const import (
     CONF_WEBHOOK_ID,
@@ -16,11 +17,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import CALL_SERVICE, FIRE_EVENT, REGISTER_CLEARTEXT, RENDER_TEMPLATE, UPDATE
 
-from tests.common import async_mock_service
+from tests.common import async_capture_events, async_mock_service
 
 
 def encrypt_payload(secret_key, payload, encode_json=True):
@@ -840,14 +841,10 @@ async def test_webhook_camera_stream_stream_available_but_errors(
 
 async def test_webhook_handle_scan_tag(hass, create_registrations, webhook_client):
     """Test that we can scan tags."""
-    events = []
+    device = dr.async_get(hass).async_get_device({(DOMAIN, "mock-device-id")})
+    assert device is not None
 
-    @callback
-    def store_event(event):
-        """Help store events."""
-        events.append(event)
-
-    hass.bus.async_listen("tag_scanned", store_event)
+    events = async_capture_events(hass, EVENT_TAG_SCANNED)
 
     resp = await webhook_client.post(
         "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),
@@ -860,7 +857,7 @@ async def test_webhook_handle_scan_tag(hass, create_registrations, webhook_clien
 
     assert len(events) == 1
     assert events[0].data["tag_id"] == "mock-tag-id"
-    assert events[0].data["device_id"] == "mock-device-id"
+    assert events[0].data["device_id"] == device.id
 
 
 async def test_register_sensor_limits_state_class(

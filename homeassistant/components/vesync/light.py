@@ -156,7 +156,10 @@ class VeSyncTunableWhiteLightHA(VeSyncBaseLight, LightEntity):
         except ValueError:
             # deal if any unexpected/non numeric value
             _LOGGER.debug(
-                "VeSync - received unexpected 'color_temp_pct' value from pyvesync api: %s",
+                (
+                    "VeSync - received unexpected 'color_temp_pct' value from pyvesync"
+                    " api: %s"
+                ),
                 result,
             )
             return 0

@@ -5,6 +5,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
+from blebox_uniapi.box import Box
 import blebox_uniapi.light
 from blebox_uniapi.light import BleboxColorMode
 
@@ -23,7 +24,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BleBoxEntity, create_blebox_entities
+from . import BleBoxEntity
+from .const import DOMAIN, PRODUCT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,10 +38,11 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a BleBox entry."""
-
-    create_blebox_entities(
-        hass, config_entry, async_add_entities, BleBoxLightEntity, "lights"
-    )
+    product: Box = hass.data[DOMAIN][config_entry.entry_id][PRODUCT]
+    entities = [
+        BleBoxLightEntity(feature) for feature in product.features.get("lights", [])
+    ]
+    async_add_entities(entities, True)
 
 
 COLOR_MODE_MAP = {
@@ -53,10 +56,8 @@ COLOR_MODE_MAP = {
 }
 
 
-class BleBoxLightEntity(BleBoxEntity, LightEntity):
+class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
     """Representation of BleBox lights."""
-
-    _feature: blebox_uniapi.light.Light
 
     def __init__(self, feature: blebox_uniapi.light.Light) -> None:
         """Initialize a BleBox light."""
@@ -176,7 +177,8 @@ class BleBoxLightEntity(BleBoxEntity, LightEntity):
                 await self._feature.async_api_command("effect", effect_value)
             except ValueError as exc:
                 raise ValueError(
-                    f"Turning on with effect '{self.name}' failed: {effect} not in effect list."
+                    f"Turning on with effect '{self.name}' failed: {effect} not in"
+                    " effect list."
                 ) from exc
 
     async def async_turn_off(self, **kwargs: Any) -> None:

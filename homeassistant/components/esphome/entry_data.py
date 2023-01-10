@@ -93,11 +93,22 @@ class RuntimeEntryData:
         default_factory=list
     )
 
+    @property
+    def name(self) -> str:
+        """Return the name of the device."""
+        return self.device_info.name if self.device_info else self.entry_id
+
     @callback
     def async_update_ble_connection_limits(self, free: int, limit: int) -> None:
         """Update the BLE connection limits."""
-        name = self.device_info.name if self.device_info else self.entry_id
-        _LOGGER.debug("%s: BLE connection limits: %s/%s", name, free, limit)
+        _LOGGER.debug(
+            "%s [%s]: BLE connection limits: used=%s free=%s limit=%s",
+            self.name,
+            self.device_info.mac_address if self.device_info else "unknown",
+            limit - free,
+            free,
+            limit,
+        )
         self.ble_connections_free = free
         self.ble_connections_limit = limit
         if free:
@@ -168,7 +179,8 @@ class RuntimeEntryData:
         subscription_key = (type(state), state.key)
         self.state[type(state)][state.key] = state
         _LOGGER.debug(
-            "Dispatching update with key %s: %s",
+            "%s: dispatching update with key %s: %s",
+            self.name,
             subscription_key,
             state,
         )

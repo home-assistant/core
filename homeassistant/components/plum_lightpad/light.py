@@ -42,8 +42,7 @@ async def async_setup_entry(
             logical_load = plum.get_load(device["llid"])
             entities.append(PlumLight(load=logical_load))
 
-        if entities:
-            async_add_entities(entities)
+        async_add_entities(entities)
 
     async def new_load(device):
         setup_entities(device)

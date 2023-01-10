@@ -13,19 +13,9 @@
                 "data": {
                     "host": "Host",
                     "password": "Passwort",
-                    "switch_as_light": "Schalter als Lichteinheiten initialisieren",
                     "username": "Benutzername"
                 },
-                "description": "Einrichten der SwitchBee-Integration mit Home Assistant."
-            }
-        }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "devices": "Einzuschlie\u00dfende Ger\u00e4te"
-                }
+                "description": "Einrichten der SwitchBee Integration mit Home Assistant."
             }
         }
     }

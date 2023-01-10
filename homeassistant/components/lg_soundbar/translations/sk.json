@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9"
+        },
+        "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "no_data": "Zariadenie nevr\u00e1tilo \u017eiadne po\u017eadovan\u00e9 \u00fadaje k z\u00e1znamu."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hostite\u013e"
+                }
+            }
+        }
+    }
+}

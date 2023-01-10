@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable
 import contextlib
-from dataclasses import dataclass
+from dataclasses import dataclass, replace as dataclass_replace
 from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING
@@ -37,10 +37,13 @@ from .db_schema import (
 )
 from .models import process_timestamp
 from .statistics import (
+    correct_db_schema as statistics_correct_db_schema,
     delete_statistics_duplicates,
     delete_statistics_meta_duplicates,
     get_start_time,
+    validate_db_schema as statistics_validate_db_schema,
 )
+from .tasks import PostSchemaMigrationTask
 from .util import session_scope
 
 if TYPE_CHECKING:
@@ -83,6 +86,8 @@ class SchemaValidationStatus:
     """Store schema validation status."""
 
     current_version: int
+    statistics_schema_errors: set[str]
+    valid: bool
 
 
 def _schema_is_current(current_version: int) -> bool:
@@ -90,13 +95,8 @@ def _schema_is_current(current_version: int) -> bool:
     return current_version == SCHEMA_VERSION
 
 
-def schema_is_valid(schema_status: SchemaValidationStatus) -> bool:
-    """Check if the schema is valid."""
-    return _schema_is_current(schema_status.current_version)
-
-
 def validate_db_schema(
-    hass: HomeAssistant, session_maker: Callable[[], Session]
+    hass: HomeAssistant, engine: Engine, session_maker: Callable[[], Session]
 ) -> SchemaValidationStatus | None:
     """Check if the schema is valid.
 
@@ -104,11 +104,20 @@ def validate_db_schema(
     errors caused by manual migration between database engines, for example importing an
     SQLite database to MariaDB.
     """
+    schema_errors: set[str] = set()
+
     current_version = get_schema_version(session_maker)
     if current_version is None:
         return None
 
-    return SchemaValidationStatus(current_version)
+    if is_current := _schema_is_current(current_version):
+        # We can only check for further errors if the schema is current, because
+        # columns may otherwise not exist etc.
+        schema_errors |= statistics_validate_db_schema(hass, engine, session_maker)
+
+    valid = is_current and not schema_errors
+
+    return SchemaValidationStatus(current_version, schema_errors, valid)
 
 
 def live_migration(schema_status: SchemaValidationStatus) -> bool:
@@ -125,10 +134,18 @@ def migrate_schema(
 ) -> None:
     """Check if the schema needs to be upgraded."""
     current_version = schema_status.current_version
-    _LOGGER.warning("Database is about to upgrade. Schema version: %s", current_version)
+    if current_version != SCHEMA_VERSION:
+        _LOGGER.warning(
+            "Database is about to upgrade from schema version: %s to: %s",
+            current_version,
+            SCHEMA_VERSION,
+        )
     db_ready = False
     for version in range(current_version, SCHEMA_VERSION):
-        if live_migration(SchemaValidationStatus(version)) and not db_ready:
+        if (
+            live_migration(dataclass_replace(schema_status, current_version=version))
+            and not db_ready
+        ):
             db_ready = True
             instance.migration_is_live = True
             hass.add_job(instance.async_set_db_ready)
@@ -139,6 +156,16 @@ def migrate_schema(
             session.add(SchemaChanges(schema_version=new_version))
 
         _LOGGER.info("Upgrade to version %s done", new_version)
+
+    if schema_errors := schema_status.statistics_schema_errors:
+        _LOGGER.warning(
+            "Database is about to correct DB schema errors: %s",
+            ", ".join(sorted(schema_errors)),
+        )
+        statistics_correct_db_schema(instance, engine, session_maker, schema_errors)
+
+    if current_version != SCHEMA_VERSION:
+        instance.queue_task(PostSchemaMigrationTask(current_version, SCHEMA_VERSION))
 
 
 def _create_index(
@@ -159,9 +186,11 @@ def _create_index(
     index = index_list[0]
     _LOGGER.debug("Creating %s index", index_name)
     _LOGGER.warning(
-        "Adding index `%s` to database. Note: this can take several "
-        "minutes on large databases and slow computers. Please "
-        "be patient!",
+        (
+            "Adding index `%s` to database. Note: this can take several "
+            "minutes on large databases and slow computers. Please "
+            "be patient!"
+        ),
         index_name,
     )
     with session_scope(session=session_maker()) as session:
@@ -248,9 +277,11 @@ def _drop_index(
             return
 
         _LOGGER.warning(
-            "Failed to drop index %s from table %s. Schema "
-            "Migration will continue; this is not a "
-            "critical operation",
+            (
+                "Failed to drop index %s from table %s. Schema "
+                "Migration will continue; this is not a "
+                "critical operation"
+            ),
             index_name,
             table_name,
         )
@@ -261,9 +292,11 @@ def _add_columns(
 ) -> None:
     """Add columns to a table."""
     _LOGGER.warning(
-        "Adding columns %s to table %s. Note: this can take several "
-        "minutes on large databases and slow computers. Please "
-        "be patient!",
+        (
+            "Adding columns %s to table %s. Note: this can take several "
+            "minutes on large databases and slow computers. Please "
+            "be patient!"
+        ),
         ", ".join(column.split(" ")[0] for column in columns_def),
         table_name,
     )
@@ -315,18 +348,22 @@ def _modify_columns(
     """Modify columns in a table."""
     if engine.dialect.name == SupportedDialect.SQLITE:
         _LOGGER.debug(
-            "Skipping to modify columns %s in table %s; "
-            "Modifying column length in SQLite is unnecessary, "
-            "it does not impose any length restrictions",
+            (
+                "Skipping to modify columns %s in table %s; "
+                "Modifying column length in SQLite is unnecessary, "
+                "it does not impose any length restrictions"
+            ),
             ", ".join(column.split(" ")[0] for column in columns_def),
             table_name,
         )
         return
 
     _LOGGER.warning(
-        "Modifying columns %s in table %s. Note: this can take several "
-        "minutes on large databases and slow computers. Please "
-        "be patient!",
+        (
+            "Modifying columns %s in table %s. Note: this can take several "
+            "minutes on large databases and slow computers. Please "
+            "be patient!"
+        ),
         ", ".join(column.split(" ")[0] for column in columns_def),
         table_name,
     )
@@ -459,6 +496,10 @@ def _apply_update(  # noqa: C901
     """Perform operations to bring schema up to date."""
     dialect = engine.dialect.name
     big_int = "INTEGER(20)" if dialect == SupportedDialect.MYSQL else "INTEGER"
+    if dialect in (SupportedDialect.MYSQL, SupportedDialect.POSTGRESQL):
+        timestamp_type = "DOUBLE PRECISION"
+    else:
+        timestamp_type = "FLOAT"
 
     if new_version == 1:
         _create_index(session_maker, "events", "ix_events_time_fired")
@@ -613,9 +654,11 @@ def _apply_update(  # noqa: C901
         if engine.dialect.name == SupportedDialect.MYSQL:
             for table in ("events", "states", "statistics_meta"):
                 _LOGGER.warning(
-                    "Updating character set and collation of table %s to utf8mb4. "
-                    "Note: this can take several minutes on large databases and slow "
-                    "computers. Please be patient!",
+                    (
+                        "Updating character set and collation of table %s to utf8mb4."
+                        " Note: this can take several minutes on large databases and"
+                        " slow computers. Please be patient!"
+                    ),
                     table,
                 )
                 with contextlib.suppress(SQLAlchemyError):
@@ -625,8 +668,8 @@ def _apply_update(  # noqa: C901
                             # Using LOCK=EXCLUSIVE to prevent the database from corrupting
                             # https://github.com/home-assistant/core/issues/56104
                             text(
-                                f"ALTER TABLE {table} CONVERT TO "
-                                "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci, LOCK=EXCLUSIVE"
+                                f"ALTER TABLE {table} CONVERT TO CHARACTER SET utf8mb4"
+                                " COLLATE utf8mb4_unicode_ci, LOCK=EXCLUSIVE"
                             )
                         )
     elif new_version == 22:
@@ -786,8 +829,109 @@ def _apply_update(  # noqa: C901
         # Once we require SQLite >= 3.35.5, we should drop the column:
         # ALTER TABLE statistics_meta DROP COLUMN state_unit_of_measurement
         pass
+    elif new_version == 31:
+        # Once we require SQLite >= 3.35.5, we should drop the column:
+        # ALTER TABLE events DROP COLUMN time_fired
+        # ALTER TABLE states DROP COLUMN last_updated
+        # ALTER TABLE states DROP COLUMN last_changed
+        _add_columns(session_maker, "events", [f"time_fired_ts {timestamp_type}"])
+        _add_columns(
+            session_maker,
+            "states",
+            [f"last_updated_ts {timestamp_type}", f"last_changed_ts {timestamp_type}"],
+        )
+        _create_index(session_maker, "events", "ix_events_time_fired_ts")
+        _create_index(session_maker, "events", "ix_events_event_type_time_fired_ts")
+        _create_index(session_maker, "states", "ix_states_entity_id_last_updated_ts")
+        _create_index(session_maker, "states", "ix_states_last_updated_ts")
+        with session_scope(session=session_maker()) as session:
+            _migrate_columns_to_timestamp(hass, session, engine)
+    elif new_version == 32:
+        # Migration is done in two steps to ensure we can start using
+        # the new columns before we wipe the old ones.
+        _drop_index(session_maker, "states", "ix_states_entity_id_last_updated")
+        _drop_index(session_maker, "events", "ix_events_event_type_time_fired")
+        _drop_index(session_maker, "states", "ix_states_last_updated")
+        _drop_index(session_maker, "events", "ix_events_time_fired")
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
+
+
+def post_schema_migration(
+    session: Session,
+    old_version: int,
+    new_version: int,
+) -> None:
+    """Post schema migration.
+
+    Run any housekeeping tasks after the schema migration has completed.
+
+    Post schema migration is run after the schema migration has completed
+    and the queue has been processed to ensure that we reduce the memory
+    pressure since events are held in memory until the queue is processed
+    which is blocked from being processed until the schema migration is
+    complete.
+    """
+    if old_version < 32 <= new_version:
+        # In version 31 we migrated all the time_fired, last_updated, and last_changed
+        # columns to be timestamps. In version 32 we need to wipe the old columns
+        # since they are no longer used and take up a significant amount of space.
+        _wipe_old_string_time_columns(session)
+
+
+def _wipe_old_string_time_columns(session: Session) -> None:
+    """Wipe old string time columns to save space."""
+    # Wipe Events.time_fired since its been replaced by Events.time_fired_ts
+    # Wipe States.last_updated since its been replaced by States.last_updated_ts
+    # Wipe States.last_changed since its been replaced by States.last_changed_ts
+    session.execute(text("UPDATE events set time_fired=NULL;"))
+    session.execute(text("UPDATE states set last_updated=NULL, last_changed=NULL;"))
+    session.commit()
+
+
+def _migrate_columns_to_timestamp(
+    hass: HomeAssistant, session: Session, engine: Engine
+) -> None:
+    """Migrate columns to use timestamp."""
+    # Migrate all data in Events.time_fired to Events.time_fired_ts
+    # Migrate all data in States.last_updated to States.last_updated_ts
+    # Migrate all data in States.last_changed to States.last_changed_ts
+    connection = session.connection()
+    if engine.dialect.name == SupportedDialect.SQLITE:
+        connection.execute(
+            text(
+                'UPDATE events set time_fired_ts=strftime("%s",time_fired) + '
+                "cast(substr(time_fired,-7) AS FLOAT);"
+            )
+        )
+        connection.execute(
+            text(
+                'UPDATE states set last_updated_ts=strftime("%s",last_updated) + '
+                "cast(substr(last_updated,-7) AS FLOAT), "
+                'last_changed_ts=strftime("%s",last_changed) + '
+                "cast(substr(last_changed,-7) AS FLOAT);"
+            )
+        )
+    elif engine.dialect.name == SupportedDialect.MYSQL:
+        connection.execute(
+            text("UPDATE events set time_fired_ts=UNIX_TIMESTAMP(time_fired);")
+        )
+        connection.execute(
+            text(
+                "UPDATE states set last_updated_ts=UNIX_TIMESTAMP(last_updated), "
+                "last_changed_ts=UNIX_TIMESTAMP(last_changed);"
+            )
+        )
+    elif engine.dialect.name == SupportedDialect.POSTGRESQL:
+        connection.execute(
+            text("UPDATE events set time_fired_ts=EXTRACT(EPOCH FROM time_fired);")
+        )
+        connection.execute(
+            text(
+                "UPDATE states set last_updated_ts=EXTRACT(EPOCH FROM last_updated), "
+                "last_changed_ts=EXTRACT(EPOCH FROM last_changed);"
+            )
+        )
 
 
 def _initialize_database(session: Session) -> bool:
@@ -805,7 +949,7 @@ def _initialize_database(session: Session) -> bool:
     indexes = inspector.get_indexes("events")
 
     for index in indexes:
-        if index["column_names"] == ["time_fired"]:
+        if index["column_names"] in (["time_fired"], ["time_fired_ts"]):
             # Schema addition from version 1 detected. New DB.
             session.add(StatisticsRuns(start=get_start_time()))
             session.add(SchemaChanges(schema_version=SCHEMA_VERSION))

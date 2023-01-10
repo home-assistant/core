@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Konto jest ju\u017c skonfigurowane",
             "already_configured_account": "Konto jest ju\u017c skonfigurowane",
             "already_configured_device": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
             "no_devices_found": "Nie znaleziono urz\u0105dze\u0144 w sieci",
@@ -26,9 +25,6 @@
                 "description": "Czy chcesz skonfigurowa\u0107 {model} ({device_id})?"
             },
             "local": {
-                "data": {
-                    "host": "Adres IP"
-                },
                 "description": "Post\u0119puj zgodnie z [tymi instrukcjami]({url}), aby dowiedzie\u0107 si\u0119, jak w\u0142\u0105czy\u0107 lokalny interfejs API Awair. \n\n Po zako\u0144czeniu kliknij Zatwierd\u017a."
             },
             "local_pick": {
@@ -36,13 +32,6 @@
                     "device": "Urz\u0105dzenie",
                     "host": "Adres IP"
                 }
-            },
-            "reauth": {
-                "data": {
-                    "access_token": "Token dost\u0119pu",
-                    "email": "Adres e-mail"
-                },
-                "description": "Wprowad\u017a ponownie token dost\u0119pu programisty Awair."
             },
             "reauth_confirm": {
                 "data": {
@@ -52,10 +41,6 @@
                 "description": "Wprowad\u017a ponownie token dost\u0119pu programisty Awair."
             },
             "user": {
-                "data": {
-                    "access_token": "Token dost\u0119pu",
-                    "email": "Adres e-mail"
-                },
                 "description": "Wybierz lokalny, aby uzyska\u0107 najlepsze efekty. Korzystaj z chmury tylko wtedy, gdy urz\u0105dzenie nie jest pod\u0142\u0105czone do tej samej sieci co Home Assistant lub je\u015bli masz starsze urz\u0105dzenie.",
                 "menu_options": {
                     "cloud": "Po\u0142\u0105cz si\u0119 przez chmur\u0119",

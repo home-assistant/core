@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 import functools as ft
 import logging
+from random import randint
 import time
 from typing import Any, Union, cast
 
@@ -59,6 +60,9 @@ _DOMAINS_LISTENER = "domains"
 _ENTITIES_LISTENER = "entities"
 
 _LOGGER = logging.getLogger(__name__)
+
+RANDOM_MICROSECOND_MIN = 50000
+RANDOM_MICROSECOND_MAX = 500000
 
 _P = ParamSpec("_P")
 
@@ -706,8 +710,8 @@ def async_track_state_change_filtered(
 
     Returns
     -------
-    Object used to update the listeners (async_update_listeners) with a new TrackStates or
-    cancel the tracking (async_remove).
+    Object used to update the listeners (async_update_listeners) with a new
+    TrackStates or cancel the tracking (async_remove).
 
     """
     tracker = _TrackStateChangeFiltered(hass, track_states, action)
@@ -725,7 +729,7 @@ def async_track_template(
     ],
     variables: TemplateVarsType | None = None,
 ) -> CALLBACK_TYPE:
-    """Add a listener that fires when a a template evaluates to 'true'.
+    """Add a listener that fires when a template evaluates to 'true'.
 
     Listen for the result of the template becoming true, or a true-like
     string result, such as 'On', 'Open', or 'Yes'. If the template results
@@ -880,7 +884,10 @@ class TrackTemplateResultInfo:
         )
         self._update_time_listeners()
         _LOGGER.debug(
-            "Template group %s listens for %s, first render blocker by super template: %s",
+            (
+                "Template group %s listens for %s, first render blocker by super"
+                " template: %s"
+            ),
             self._track_templates,
             self.listeners,
             block_render,
@@ -1102,7 +1109,10 @@ class TrackTemplateResultInfo:
                 )
             )
             _LOGGER.debug(
-                "Template group %s listens for %s, re-render blocker by super template: %s",
+                (
+                    "Template group %s listens for %s, re-render blocker by super"
+                    " template: %s"
+                ),
                 self._track_templates,
                 self.listeners,
                 block_updates,
@@ -1316,7 +1326,7 @@ def async_track_point_in_utc_time(
         hass.async_run_hass_job(job, utc_point_in_time)
 
     job = action if isinstance(action, HassJob) else HassJob(action)
-    delta = utc_point_in_time.timestamp() - time.time()
+    delta = expected_fire_timestamp - time.time()
     cancel_callback = hass.loop.call_later(delta, run_action, job)
 
     @callback
@@ -1506,13 +1516,17 @@ def async_track_utc_time_change(
     matching_seconds = dt_util.parse_time_expression(second, 0, 59)
     matching_minutes = dt_util.parse_time_expression(minute, 0, 59)
     matching_hours = dt_util.parse_time_expression(hour, 0, 23)
+    # Avoid aligning all time trackers to the same second
+    # since it can create a thundering herd problem
+    # https://github.com/home-assistant/core/issues/82231
+    microsecond = randint(RANDOM_MICROSECOND_MIN, RANDOM_MICROSECOND_MAX)
 
     def calculate_next(now: datetime) -> datetime:
         """Calculate and set the next time the trigger should fire."""
         localized_now = dt_util.as_local(now) if local else now
         return dt_util.find_next_time_expression_time(
             localized_now, matching_seconds, matching_minutes, matching_hours
-        )
+        ).replace(microsecond=microsecond)
 
     time_listener: CALLBACK_TYPE | None = None
 

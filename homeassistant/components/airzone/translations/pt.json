@@ -4,12 +4,18 @@
             "already_configured": "O dispositivo j\u00e1 est\u00e1 configurado"
         },
         "error": {
-            "cannot_connect": "Falha na liga\u00e7\u00e3o"
+            "cannot_connect": "A liga\u00e7\u00e3o falhou"
         },
         "step": {
+            "discovered_connection": {
+                "data": {
+                    "host": "Endere\u00e7o",
+                    "port": "Porta"
+                }
+            },
             "user": {
                 "data": {
-                    "host": "Servidor",
+                    "host": "Endere\u00e7o",
                     "port": "Porta"
                 }
             }

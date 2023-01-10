@@ -2,52 +2,20 @@
 from __future__ import annotations
 
 from homeassistant.const import (
-    ENERGY_KILO_WATT_HOUR,
-    ENERGY_MEGA_WATT_HOUR,
-    ENERGY_WATT_HOUR,
-    LENGTH_CENTIMETERS,
-    LENGTH_FEET,
-    LENGTH_INCHES,
-    LENGTH_KILOMETERS,
-    LENGTH_METERS,
-    LENGTH_MILES,
-    LENGTH_MILLIMETERS,
-    LENGTH_YARD,
-    MASS_GRAMS,
-    MASS_KILOGRAMS,
-    MASS_MICROGRAMS,
-    MASS_MILLIGRAMS,
-    MASS_OUNCES,
-    MASS_POUNDS,
-    POWER_KILO_WATT,
-    POWER_WATT,
-    PRESSURE_BAR,
-    PRESSURE_CBAR,
-    PRESSURE_HPA,
-    PRESSURE_INHG,
-    PRESSURE_KPA,
-    PRESSURE_MBAR,
-    PRESSURE_MMHG,
-    PRESSURE_PA,
-    PRESSURE_PSI,
-    SPEED_FEET_PER_SECOND,
-    SPEED_INCHES_PER_DAY,
-    SPEED_INCHES_PER_HOUR,
-    SPEED_KILOMETERS_PER_HOUR,
-    SPEED_KNOTS,
-    SPEED_METERS_PER_SECOND,
-    SPEED_MILES_PER_HOUR,
-    SPEED_MILLIMETERS_PER_DAY,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-    TEMP_KELVIN,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
-    VOLUME_CUBIC_FEET,
-    VOLUME_CUBIC_METERS,
-    VOLUME_FLUID_OUNCE,
-    VOLUME_GALLONS,
-    VOLUME_LITERS,
-    VOLUME_MILLILITERS,
+    UnitOfDataRate,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfInformation,
+    UnitOfLength,
+    UnitOfMass,
+    UnitOfPower,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
+    UnitOfVolume,
+    UnitOfVolumetricFlux,
 )
 from homeassistant.exceptions import HomeAssistantError
 
@@ -69,7 +37,8 @@ _DAYS_TO_SECS = 24 * _HRS_TO_SECS  # 1 day = 24 hours = 86400 seconds
 
 # Mass conversion constants
 _POUND_TO_G = 453.59237
-_OUNCE_TO_G = _POUND_TO_G / 16
+_OUNCE_TO_G = _POUND_TO_G / 16  # 16 ounces to a pound
+_STONE_TO_G = _POUND_TO_G * 14  # 14 pounds to a stone
 
 # Pressure conversion constants
 _STANDARD_GRAVITY = 9.80665
@@ -121,30 +90,79 @@ class BaseUnitConverter:
         return cls._UNIT_CONVERSION[from_unit] / cls._UNIT_CONVERSION[to_unit]
 
 
+class DataRateConverter(BaseUnitConverter):
+    """Utility to convert data rate values."""
+
+    UNIT_CLASS = "data_rate"
+    NORMALIZED_UNIT = UnitOfDataRate.BITS_PER_SECOND
+    # Units in terms of bits
+    _UNIT_CONVERSION: dict[str, float] = {
+        UnitOfDataRate.BITS_PER_SECOND: 1,
+        UnitOfDataRate.KILOBITS_PER_SECOND: 1 / 1e3,
+        UnitOfDataRate.MEGABITS_PER_SECOND: 1 / 1e6,
+        UnitOfDataRate.GIGABITS_PER_SECOND: 1 / 1e9,
+        UnitOfDataRate.BYTES_PER_SECOND: 1 / 8,
+        UnitOfDataRate.KILOBYTES_PER_SECOND: 1 / 8e3,
+        UnitOfDataRate.MEGABYTES_PER_SECOND: 1 / 8e6,
+        UnitOfDataRate.GIGABYTES_PER_SECOND: 1 / 8e9,
+        UnitOfDataRate.KIBIBYTES_PER_SECOND: 1 / 2**13,
+        UnitOfDataRate.MEBIBYTES_PER_SECOND: 1 / 2**23,
+        UnitOfDataRate.GIBIBYTES_PER_SECOND: 1 / 2**33,
+    }
+    VALID_UNITS = set(UnitOfDataRate)
+
+
 class DistanceConverter(BaseUnitConverter):
     """Utility to convert distance values."""
 
     UNIT_CLASS = "distance"
-    NORMALIZED_UNIT = LENGTH_METERS
+    NORMALIZED_UNIT = UnitOfLength.METERS
     _UNIT_CONVERSION: dict[str, float] = {
-        LENGTH_METERS: 1,
-        LENGTH_MILLIMETERS: 1 / _MM_TO_M,
-        LENGTH_CENTIMETERS: 1 / _CM_TO_M,
-        LENGTH_KILOMETERS: 1 / _KM_TO_M,
-        LENGTH_INCHES: 1 / _IN_TO_M,
-        LENGTH_FEET: 1 / _FOOT_TO_M,
-        LENGTH_YARD: 1 / _YARD_TO_M,
-        LENGTH_MILES: 1 / _MILE_TO_M,
+        UnitOfLength.METERS: 1,
+        UnitOfLength.MILLIMETERS: 1 / _MM_TO_M,
+        UnitOfLength.CENTIMETERS: 1 / _CM_TO_M,
+        UnitOfLength.KILOMETERS: 1 / _KM_TO_M,
+        UnitOfLength.INCHES: 1 / _IN_TO_M,
+        UnitOfLength.FEET: 1 / _FOOT_TO_M,
+        UnitOfLength.YARDS: 1 / _YARD_TO_M,
+        UnitOfLength.MILES: 1 / _MILE_TO_M,
     }
     VALID_UNITS = {
-        LENGTH_KILOMETERS,
-        LENGTH_MILES,
-        LENGTH_FEET,
-        LENGTH_METERS,
-        LENGTH_CENTIMETERS,
-        LENGTH_MILLIMETERS,
-        LENGTH_INCHES,
-        LENGTH_YARD,
+        UnitOfLength.KILOMETERS,
+        UnitOfLength.MILES,
+        UnitOfLength.FEET,
+        UnitOfLength.METERS,
+        UnitOfLength.CENTIMETERS,
+        UnitOfLength.MILLIMETERS,
+        UnitOfLength.INCHES,
+        UnitOfLength.YARDS,
+    }
+
+
+class ElectricCurrentConverter(BaseUnitConverter):
+    """Utility to convert electric current values."""
+
+    UNIT_CLASS = "electric_current"
+    NORMALIZED_UNIT = UnitOfElectricCurrent.AMPERE
+    _UNIT_CONVERSION: dict[str, float] = {
+        UnitOfElectricCurrent.AMPERE: 1,
+        UnitOfElectricCurrent.MILLIAMPERE: 1e3,
+    }
+    VALID_UNITS = set(UnitOfElectricCurrent)
+
+
+class ElectricPotentialConverter(BaseUnitConverter):
+    """Utility to convert electric potential values."""
+
+    UNIT_CLASS = "voltage"
+    NORMALIZED_UNIT = UnitOfElectricPotential.VOLT
+    _UNIT_CONVERSION: dict[str, float] = {
+        UnitOfElectricPotential.VOLT: 1,
+        UnitOfElectricPotential.MILLIVOLT: 1e3,
+    }
+    VALID_UNITS = {
+        UnitOfElectricPotential.VOLT,
+        UnitOfElectricPotential.MILLIVOLT,
     }
 
 
@@ -152,39 +170,75 @@ class EnergyConverter(BaseUnitConverter):
     """Utility to convert energy values."""
 
     UNIT_CLASS = "energy"
-    NORMALIZED_UNIT = ENERGY_KILO_WATT_HOUR
+    NORMALIZED_UNIT = UnitOfEnergy.KILO_WATT_HOUR
     _UNIT_CONVERSION: dict[str, float] = {
-        ENERGY_WATT_HOUR: 1 * 1000,
-        ENERGY_KILO_WATT_HOUR: 1,
-        ENERGY_MEGA_WATT_HOUR: 1 / 1000,
+        UnitOfEnergy.WATT_HOUR: 1 * 1000,
+        UnitOfEnergy.KILO_WATT_HOUR: 1,
+        UnitOfEnergy.MEGA_WATT_HOUR: 1 / 1000,
+        UnitOfEnergy.GIGA_JOULE: 3.6 / 1000,
     }
     VALID_UNITS = {
-        ENERGY_WATT_HOUR,
-        ENERGY_KILO_WATT_HOUR,
-        ENERGY_MEGA_WATT_HOUR,
+        UnitOfEnergy.WATT_HOUR,
+        UnitOfEnergy.KILO_WATT_HOUR,
+        UnitOfEnergy.MEGA_WATT_HOUR,
+        UnitOfEnergy.GIGA_JOULE,
     }
+
+
+class InformationConverter(BaseUnitConverter):
+    """Utility to convert information values."""
+
+    UNIT_CLASS = "information"
+    NORMALIZED_UNIT = UnitOfInformation.BITS
+    # Units in terms of bits
+    _UNIT_CONVERSION: dict[str, float] = {
+        UnitOfInformation.BITS: 1,
+        UnitOfInformation.KILOBITS: 1 / 1e3,
+        UnitOfInformation.MEGABITS: 1 / 1e6,
+        UnitOfInformation.GIGABITS: 1 / 1e9,
+        UnitOfInformation.BYTES: 1 / 8,
+        UnitOfInformation.KILOBYTES: 1 / 8e3,
+        UnitOfInformation.MEGABYTES: 1 / 8e6,
+        UnitOfInformation.GIGABYTES: 1 / 8e9,
+        UnitOfInformation.TERABYTES: 1 / 8e12,
+        UnitOfInformation.PETABYTES: 1 / 8e15,
+        UnitOfInformation.EXABYTES: 1 / 8e18,
+        UnitOfInformation.ZETTABYTES: 1 / 8e21,
+        UnitOfInformation.YOTTABYTES: 1 / 8e24,
+        UnitOfInformation.KIBIBYTES: 1 / 2**13,
+        UnitOfInformation.MEBIBYTES: 1 / 2**23,
+        UnitOfInformation.GIBIBYTES: 1 / 2**33,
+        UnitOfInformation.TEBIBYTES: 1 / 2**43,
+        UnitOfInformation.PEBIBYTES: 1 / 2**53,
+        UnitOfInformation.EXBIBYTES: 1 / 2**63,
+        UnitOfInformation.ZEBIBYTES: 1 / 2**73,
+        UnitOfInformation.YOBIBYTES: 1 / 2**83,
+    }
+    VALID_UNITS = set(UnitOfInformation)
 
 
 class MassConverter(BaseUnitConverter):
     """Utility to convert mass values."""
 
     UNIT_CLASS = "mass"
-    NORMALIZED_UNIT = MASS_GRAMS
+    NORMALIZED_UNIT = UnitOfMass.GRAMS
     _UNIT_CONVERSION: dict[str, float] = {
-        MASS_MICROGRAMS: 1 * 1000 * 1000,
-        MASS_MILLIGRAMS: 1 * 1000,
-        MASS_GRAMS: 1,
-        MASS_KILOGRAMS: 1 / 1000,
-        MASS_OUNCES: 1 / _OUNCE_TO_G,
-        MASS_POUNDS: 1 / _POUND_TO_G,
+        UnitOfMass.MICROGRAMS: 1 * 1000 * 1000,
+        UnitOfMass.MILLIGRAMS: 1 * 1000,
+        UnitOfMass.GRAMS: 1,
+        UnitOfMass.KILOGRAMS: 1 / 1000,
+        UnitOfMass.OUNCES: 1 / _OUNCE_TO_G,
+        UnitOfMass.POUNDS: 1 / _POUND_TO_G,
+        UnitOfMass.STONES: 1 / _STONE_TO_G,
     }
     VALID_UNITS = {
-        MASS_GRAMS,
-        MASS_KILOGRAMS,
-        MASS_MILLIGRAMS,
-        MASS_MICROGRAMS,
-        MASS_OUNCES,
-        MASS_POUNDS,
+        UnitOfMass.GRAMS,
+        UnitOfMass.KILOGRAMS,
+        UnitOfMass.MILLIGRAMS,
+        UnitOfMass.MICROGRAMS,
+        UnitOfMass.OUNCES,
+        UnitOfMass.POUNDS,
+        UnitOfMass.STONES,
     }
 
 
@@ -192,14 +246,14 @@ class PowerConverter(BaseUnitConverter):
     """Utility to convert power values."""
 
     UNIT_CLASS = "power"
-    NORMALIZED_UNIT = POWER_WATT
+    NORMALIZED_UNIT = UnitOfPower.WATT
     _UNIT_CONVERSION: dict[str, float] = {
-        POWER_WATT: 1,
-        POWER_KILO_WATT: 1 / 1000,
+        UnitOfPower.WATT: 1,
+        UnitOfPower.KILO_WATT: 1 / 1000,
     }
     VALID_UNITS = {
-        POWER_WATT,
-        POWER_KILO_WATT,
+        UnitOfPower.WATT,
+        UnitOfPower.KILO_WATT,
     }
 
 
@@ -207,28 +261,30 @@ class PressureConverter(BaseUnitConverter):
     """Utility to convert pressure values."""
 
     UNIT_CLASS = "pressure"
-    NORMALIZED_UNIT = PRESSURE_PA
+    NORMALIZED_UNIT = UnitOfPressure.PA
     _UNIT_CONVERSION: dict[str, float] = {
-        PRESSURE_PA: 1,
-        PRESSURE_HPA: 1 / 100,
-        PRESSURE_KPA: 1 / 1000,
-        PRESSURE_BAR: 1 / 100000,
-        PRESSURE_CBAR: 1 / 1000,
-        PRESSURE_MBAR: 1 / 100,
-        PRESSURE_INHG: 1 / (_IN_TO_M * 1000 * _STANDARD_GRAVITY * _MERCURY_DENSITY),
-        PRESSURE_PSI: 1 / 6894.757,
-        PRESSURE_MMHG: 1 / (_MM_TO_M * 1000 * _STANDARD_GRAVITY * _MERCURY_DENSITY),
+        UnitOfPressure.PA: 1,
+        UnitOfPressure.HPA: 1 / 100,
+        UnitOfPressure.KPA: 1 / 1000,
+        UnitOfPressure.BAR: 1 / 100000,
+        UnitOfPressure.CBAR: 1 / 1000,
+        UnitOfPressure.MBAR: 1 / 100,
+        UnitOfPressure.INHG: 1
+        / (_IN_TO_M * 1000 * _STANDARD_GRAVITY * _MERCURY_DENSITY),
+        UnitOfPressure.PSI: 1 / 6894.757,
+        UnitOfPressure.MMHG: 1
+        / (_MM_TO_M * 1000 * _STANDARD_GRAVITY * _MERCURY_DENSITY),
     }
     VALID_UNITS = {
-        PRESSURE_PA,
-        PRESSURE_HPA,
-        PRESSURE_KPA,
-        PRESSURE_BAR,
-        PRESSURE_CBAR,
-        PRESSURE_MBAR,
-        PRESSURE_INHG,
-        PRESSURE_PSI,
-        PRESSURE_MMHG,
+        UnitOfPressure.PA,
+        UnitOfPressure.HPA,
+        UnitOfPressure.KPA,
+        UnitOfPressure.BAR,
+        UnitOfPressure.CBAR,
+        UnitOfPressure.MBAR,
+        UnitOfPressure.INHG,
+        UnitOfPressure.PSI,
+        UnitOfPressure.MMHG,
     }
 
 
@@ -236,26 +292,28 @@ class SpeedConverter(BaseUnitConverter):
     """Utility to convert speed values."""
 
     UNIT_CLASS = "speed"
-    NORMALIZED_UNIT = SPEED_METERS_PER_SECOND
+    NORMALIZED_UNIT = UnitOfSpeed.METERS_PER_SECOND
     _UNIT_CONVERSION: dict[str, float] = {
-        SPEED_FEET_PER_SECOND: 1 / _FOOT_TO_M,
-        SPEED_INCHES_PER_DAY: _DAYS_TO_SECS / _IN_TO_M,
-        SPEED_INCHES_PER_HOUR: _HRS_TO_SECS / _IN_TO_M,
-        SPEED_KILOMETERS_PER_HOUR: _HRS_TO_SECS / _KM_TO_M,
-        SPEED_KNOTS: _HRS_TO_SECS / _NAUTICAL_MILE_TO_M,
-        SPEED_METERS_PER_SECOND: 1,
-        SPEED_MILES_PER_HOUR: _HRS_TO_SECS / _MILE_TO_M,
-        SPEED_MILLIMETERS_PER_DAY: _DAYS_TO_SECS / _MM_TO_M,
+        UnitOfVolumetricFlux.INCHES_PER_DAY: _DAYS_TO_SECS / _IN_TO_M,
+        UnitOfVolumetricFlux.INCHES_PER_HOUR: _HRS_TO_SECS / _IN_TO_M,
+        UnitOfVolumetricFlux.MILLIMETERS_PER_DAY: _DAYS_TO_SECS / _MM_TO_M,
+        UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: _HRS_TO_SECS / _MM_TO_M,
+        UnitOfSpeed.FEET_PER_SECOND: 1 / _FOOT_TO_M,
+        UnitOfSpeed.KILOMETERS_PER_HOUR: _HRS_TO_SECS / _KM_TO_M,
+        UnitOfSpeed.KNOTS: _HRS_TO_SECS / _NAUTICAL_MILE_TO_M,
+        UnitOfSpeed.METERS_PER_SECOND: 1,
+        UnitOfSpeed.MILES_PER_HOUR: _HRS_TO_SECS / _MILE_TO_M,
     }
     VALID_UNITS = {
-        SPEED_FEET_PER_SECOND,
-        SPEED_INCHES_PER_DAY,
-        SPEED_INCHES_PER_HOUR,
-        SPEED_KILOMETERS_PER_HOUR,
-        SPEED_KNOTS,
-        SPEED_METERS_PER_SECOND,
-        SPEED_MILES_PER_HOUR,
-        SPEED_MILLIMETERS_PER_DAY,
+        UnitOfVolumetricFlux.INCHES_PER_DAY,
+        UnitOfVolumetricFlux.INCHES_PER_HOUR,
+        UnitOfVolumetricFlux.MILLIMETERS_PER_DAY,
+        UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        UnitOfSpeed.FEET_PER_SECOND,
+        UnitOfSpeed.KILOMETERS_PER_HOUR,
+        UnitOfSpeed.KNOTS,
+        UnitOfSpeed.METERS_PER_SECOND,
+        UnitOfSpeed.MILES_PER_HOUR,
     }
 
 
@@ -263,16 +321,16 @@ class TemperatureConverter(BaseUnitConverter):
     """Utility to convert temperature values."""
 
     UNIT_CLASS = "temperature"
-    NORMALIZED_UNIT = TEMP_CELSIUS
+    NORMALIZED_UNIT = UnitOfTemperature.CELSIUS
     VALID_UNITS = {
-        TEMP_CELSIUS,
-        TEMP_FAHRENHEIT,
-        TEMP_KELVIN,
+        UnitOfTemperature.CELSIUS,
+        UnitOfTemperature.FAHRENHEIT,
+        UnitOfTemperature.KELVIN,
     }
     _UNIT_CONVERSION = {
-        TEMP_CELSIUS: 1.0,
-        TEMP_FAHRENHEIT: 1.8,
-        TEMP_KELVIN: 1.0,
+        UnitOfTemperature.CELSIUS: 1.0,
+        UnitOfTemperature.FAHRENHEIT: 1.8,
+        UnitOfTemperature.KELVIN: 1.0,
     }
 
     @classmethod
@@ -284,33 +342,33 @@ class TemperatureConverter(BaseUnitConverter):
         For converting an interval between two temperatures, please use
         `convert_interval` instead.
         """
-        # We cannot use the implementation from BaseUnitConverter here because the temperature
-        # units do not use the same floor: 0°C, 0°F and 0K do not align
+        # We cannot use the implementation from BaseUnitConverter here because the
+        # temperature units do not use the same floor: 0°C, 0°F and 0K do not align
         if from_unit == to_unit:
             return value
 
-        if from_unit == TEMP_CELSIUS:
-            if to_unit == TEMP_FAHRENHEIT:
+        if from_unit == UnitOfTemperature.CELSIUS:
+            if to_unit == UnitOfTemperature.FAHRENHEIT:
                 return cls._celsius_to_fahrenheit(value)
-            if to_unit == TEMP_KELVIN:
+            if to_unit == UnitOfTemperature.KELVIN:
                 return cls._celsius_to_kelvin(value)
             raise HomeAssistantError(
                 UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, cls.UNIT_CLASS)
             )
 
-        if from_unit == TEMP_FAHRENHEIT:
-            if to_unit == TEMP_CELSIUS:
+        if from_unit == UnitOfTemperature.FAHRENHEIT:
+            if to_unit == UnitOfTemperature.CELSIUS:
                 return cls._fahrenheit_to_celsius(value)
-            if to_unit == TEMP_KELVIN:
+            if to_unit == UnitOfTemperature.KELVIN:
                 return cls._celsius_to_kelvin(cls._fahrenheit_to_celsius(value))
             raise HomeAssistantError(
                 UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, cls.UNIT_CLASS)
             )
 
-        if from_unit == TEMP_KELVIN:
-            if to_unit == TEMP_CELSIUS:
+        if from_unit == UnitOfTemperature.KELVIN:
+            if to_unit == UnitOfTemperature.CELSIUS:
                 return cls._kelvin_to_celsius(value)
-            if to_unit == TEMP_FAHRENHEIT:
+            if to_unit == UnitOfTemperature.FAHRENHEIT:
                 return cls._celsius_to_fahrenheit(cls._kelvin_to_celsius(value))
             raise HomeAssistantError(
                 UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, cls.UNIT_CLASS)
@@ -357,21 +415,23 @@ class VolumeConverter(BaseUnitConverter):
     """Utility to convert volume values."""
 
     UNIT_CLASS = "volume"
-    NORMALIZED_UNIT = VOLUME_CUBIC_METERS
+    NORMALIZED_UNIT = UnitOfVolume.CUBIC_METERS
     # Units in terms of m³
     _UNIT_CONVERSION: dict[str, float] = {
-        VOLUME_LITERS: 1 / _L_TO_CUBIC_METER,
-        VOLUME_MILLILITERS: 1 / _ML_TO_CUBIC_METER,
-        VOLUME_GALLONS: 1 / _GALLON_TO_CUBIC_METER,
-        VOLUME_FLUID_OUNCE: 1 / _FLUID_OUNCE_TO_CUBIC_METER,
-        VOLUME_CUBIC_METERS: 1,
-        VOLUME_CUBIC_FEET: 1 / _CUBIC_FOOT_TO_CUBIC_METER,
+        UnitOfVolume.LITERS: 1 / _L_TO_CUBIC_METER,
+        UnitOfVolume.MILLILITERS: 1 / _ML_TO_CUBIC_METER,
+        UnitOfVolume.GALLONS: 1 / _GALLON_TO_CUBIC_METER,
+        UnitOfVolume.FLUID_OUNCES: 1 / _FLUID_OUNCE_TO_CUBIC_METER,
+        UnitOfVolume.CUBIC_METERS: 1,
+        UnitOfVolume.CUBIC_FEET: 1 / _CUBIC_FOOT_TO_CUBIC_METER,
+        UnitOfVolume.CENTUM_CUBIC_FEET: 1 / (100 * _CUBIC_FOOT_TO_CUBIC_METER),
     }
     VALID_UNITS = {
-        VOLUME_LITERS,
-        VOLUME_MILLILITERS,
-        VOLUME_GALLONS,
-        VOLUME_FLUID_OUNCE,
-        VOLUME_CUBIC_METERS,
-        VOLUME_CUBIC_FEET,
+        UnitOfVolume.LITERS,
+        UnitOfVolume.MILLILITERS,
+        UnitOfVolume.GALLONS,
+        UnitOfVolume.FLUID_OUNCES,
+        UnitOfVolume.CUBIC_METERS,
+        UnitOfVolume.CUBIC_FEET,
+        UnitOfVolume.CENTUM_CUBIC_FEET,
     }

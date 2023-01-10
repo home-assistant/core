@@ -42,8 +42,9 @@ def auth_header(hass_access_token):
 
 
 @pytest.fixture
-def assistant_client(loop, hass, hass_client_no_auth):
+def assistant_client(event_loop, hass, hass_client_no_auth):
     """Create web client for the Google Assistant API."""
+    loop = event_loop
     loop.run_until_complete(
         setup.async_setup_component(
             hass,
@@ -66,8 +67,10 @@ def assistant_client(loop, hass, hass_client_no_auth):
 
 
 @pytest.fixture
-def hass_fixture(loop, hass):
+def hass_fixture(event_loop, hass):
     """Set up a Home Assistant instance for these tests."""
+    loop = event_loop
+
     # We need to do this to get access to homeassistant/turn_(on,off)
     loop.run_until_complete(setup.async_setup_component(hass, core.DOMAIN, {}))
 

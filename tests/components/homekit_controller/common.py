@@ -21,6 +21,7 @@ from aiohomekit.zeroconf import HomeKitService
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.homekit_controller.const import (
     CONTROLLER,
+    DEBOUNCE_COOLDOWN,
     DOMAIN,
     HOMEKIT_ACCESSORY_DISPATCH,
     IDENTIFIER_ACCESSORY_ID,
@@ -146,6 +147,7 @@ class Helper:
             # If they are enabled, then HA will pick up the changes next time
             # we yield control
             await time_changed(self.hass, 60)
+            await time_changed(self.hass, DEBOUNCE_COOLDOWN)
 
         await self.hass.async_block_till_done()
 
@@ -165,6 +167,7 @@ class Helper:
     async def poll_and_get_state(self) -> State:
         """Trigger a time based poll and return the current entity state."""
         await time_changed(self.hass, 60)
+        await time_changed(self.hass, DEBOUNCE_COOLDOWN)
 
         state = self.hass.states.get(self.entity_id)
         assert state is not None

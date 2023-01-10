@@ -11,7 +11,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .const import (
     DEFAULT_RADIUS,
@@ -62,7 +62,7 @@ class GeonetnzVolcanoFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if identifier in configured_instances(self.hass):
             return await self._show_form({"base": "already_configured"})
 
-        if self.hass.config.units is IMPERIAL_SYSTEM:
+        if self.hass.config.units is US_CUSTOMARY_SYSTEM:
             user_input[CONF_UNIT_SYSTEM] = IMPERIAL_UNITS
         else:
             user_input[CONF_UNIT_SYSTEM] = METRIC_UNITS

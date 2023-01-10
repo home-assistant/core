@@ -84,6 +84,7 @@ def test_get_or_create_updates_data(registry):
         original_icon="initial-original_icon",
         original_name="initial-original_name",
         supported_features=5,
+        translation_key="initial-translation_key",
         unit_of_measurement="initial-unit_of_measurement",
     )
 
@@ -106,6 +107,7 @@ def test_get_or_create_updates_data(registry):
         original_icon="initial-original_icon",
         original_name="initial-original_name",
         supported_features=5,
+        translation_key="initial-translation_key",
         unit_of_measurement="initial-unit_of_measurement",
     )
 
@@ -126,6 +128,7 @@ def test_get_or_create_updates_data(registry):
         original_icon="updated-original_icon",
         original_name="updated-original_name",
         supported_features=10,
+        translation_key="updated-translation_key",
         unit_of_measurement="updated-unit_of_measurement",
     )
 
@@ -133,6 +136,7 @@ def test_get_or_create_updates_data(registry):
         "light.hue_5678",
         "5678",
         "hue",
+        aliases=set(),
         area_id=None,
         capabilities={"new-max": 150},
         config_entry_id=new_config_entry.entry_id,
@@ -149,6 +153,7 @@ def test_get_or_create_updates_data(registry):
         original_icon="updated-original_icon",
         original_name="updated-original_name",
         supported_features=10,
+        translation_key="updated-translation_key",
         unit_of_measurement="updated-unit_of_measurement",
     )
 
@@ -167,6 +172,7 @@ def test_get_or_create_updates_data(registry):
         original_icon=None,
         original_name=None,
         supported_features=None,
+        translation_key=None,
         unit_of_measurement=None,
     )
 
@@ -174,6 +180,7 @@ def test_get_or_create_updates_data(registry):
         "light.hue_5678",
         "5678",
         "hue",
+        aliases=set(),
         area_id=None,
         capabilities=None,
         config_entry_id=None,
@@ -190,6 +197,7 @@ def test_get_or_create_updates_data(registry):
         original_icon=None,
         original_name=None,
         supported_features=0,  # supported_features is stored as an int
+        translation_key=None,
         unit_of_measurement=None,
     )
 
@@ -242,10 +250,12 @@ async def test_loading_saving_data(hass, registry):
         original_icon="hass:original-icon",
         original_name="Original Name",
         supported_features=5,
+        translation_key="initial-translation_key",
         unit_of_measurement="initial-unit_of_measurement",
     )
     registry.async_update_entity(
         orig_entry2.entity_id,
+        aliases={"initial_alias_1", "initial_alias_2"},
         area_id="mock-area-id",
         device_class="user-class",
         name="User Name",
@@ -287,6 +297,7 @@ async def test_loading_saving_data(hass, registry):
     assert new_entry2.original_icon == "hass:original-icon"
     assert new_entry2.original_name == "Original Name"
     assert new_entry2.supported_features == 5
+    assert new_entry2.translation_key == "initial-translation_key"
     assert new_entry2.unit_of_measurement == "initial-unit_of_measurement"
 
 
@@ -655,9 +666,10 @@ async def test_update_entity(registry):
     )
 
     for attr_name, new_value in (
-        ("name", "new name"),
-        ("icon", "new icon"),
+        ("aliases", {"alias_1", "alias_2"}),
         ("disabled_by", er.RegistryEntryDisabler.USER),
+        ("icon", "new icon"),
+        ("name", "new name"),
     ):
         changes = {attr_name: new_value}
         updated_entry = registry.async_update_entity(entry.entity_id, **changes)

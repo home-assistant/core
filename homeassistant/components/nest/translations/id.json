@@ -10,7 +10,6 @@
             "missing_configuration": "Komponen tidak dikonfigurasi. Ikuti petunjuk dalam dokumentasi.",
             "no_url_available": "Tidak ada URL yang tersedia. Untuk informasi tentang kesalahan ini, [lihat bagian bantuan]({docs_url})",
             "reauth_successful": "Autentikasi ulang berhasil",
-            "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan.",
             "unknown_authorize_url_generation": "Kesalahan tidak dikenal ketika menghasilkan URL otorisasi."
         },
         "create_entry": {
@@ -26,13 +25,6 @@
             "wrong_project_id": "Masukkan ID Proyek Cloud yang valid (sebelumnya sama dengan ID Proyek Akses Perangkat)"
         },
         "step": {
-            "auth": {
-                "data": {
-                    "code": "Token Akses"
-                },
-                "description": "Untuk menautkan akun Google Anda, [otorisasi akun Anda]({url}).\n\nSetelah otorisasi, salin dan tempel Token Auth yang disediakan di bawah ini.",
-                "title": "Tautkan Akun Google"
-            },
             "auth_upgrade": {
                 "description": "Autentikasi Aplikasi tidak digunakan lagi oleh Google untuk meningkatkan keamanan, dan Anda perlu mengambil tindakan dengan membuat kredensial aplikasi baru. \n\nBuka [dokumentasi]({more_info_url}) untuk panduan langkah selanjutnya yang perlu diambil untuk memulihkan akses ke perangkat Nest Anda.",
                 "title": "Nest: Penghentian Autentikasi Aplikasi"

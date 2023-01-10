@@ -14,8 +14,8 @@
             "authentication_error": "Ung\u00fcltiger HomeKit Code, \u00fcberpr\u00fcfe bitte den Code und versuche es erneut.",
             "insecure_setup_code": "Der angeforderte Setup-Code ist unsicher, da er zu trivial ist. Dieses Zubeh\u00f6r erf\u00fcllt nicht die grundlegenden Sicherheitsanforderungen.",
             "max_peers_error": "Das Ger\u00e4t weigerte sich, die Kopplung durchzuf\u00fchren, da es keinen freien Kopplungs-Speicher hat.",
-            "pairing_failed": "Beim Versuch dieses Ger\u00e4t zu koppeln ist ein Fehler aufgetreten. Dies kann ein vor\u00fcbergehender Fehler sein oder das Ger\u00e4t wird derzeit m\u00f6glicherweise nicht unterst\u00fctzt.",
-            "unable_to_pair": "Koppeln fehltgeschlagen, bitte versuche es erneut",
+            "pairing_failed": "Beim Koppeln mit diesem Ger\u00e4t ist ein nicht behandelter Fehler aufgetreten. Dies kann ein vor\u00fcbergehender Fehler sein oder das oder dein Ger\u00e4t wird derzeit nicht unterst\u00fctzt: {error}",
+            "unable_to_pair": "Koppeln fehlgeschlagen, bitte versuche es erneut",
             "unknown_error": "Das Ger\u00e4t meldete einen unbekannten Fehler. Die Kopplung ist fehlgeschlagen."
         },
         "flow_title": "{name} ({category})",
@@ -33,7 +33,7 @@
                     "allow_insecure_setup_codes": "Pairing mit unsicheren Setup-Codes zulassen.",
                     "pairing_code": "Kopplungscode"
                 },
-                "description": "HomeKit Controller kommuniziert mit {name} ( {category} ) \u00fcber das lokale Netzwerk unter Verwendung einer sicheren verschl\u00fcsselten Verbindung ohne separaten HomeKit Controller oder iCloud. Gib deinen HomeKit-Kopplungscode (im Format XXX-XX-XXX) ein, um dieses Zubeh\u00f6r zu verwenden. Dieser Code befindet sich normalerweise auf dem Ger\u00e4t selbst oder in der Verpackung.",
+                "description": "HomeKit Controller kommuniziert mit {name} ({category}) \u00fcber das lokale Netzwerk unter Verwendung einer sicheren verschl\u00fcsselten Verbindung ohne separaten HomeKit Controller oder iCloud. Gib deinen HomeKit-Kopplungscode (im Format XXX-XX-XXX) ein, um dieses Zubeh\u00f6r zu verwenden. Dieser Code befindet sich normalerweise auf dem Ger\u00e4t selbst oder in der Verpackung.",
                 "title": "Mit HomeKit Zubeh\u00f6r koppeln"
             },
             "protocol_error": {
@@ -67,6 +67,40 @@
             "double_press": "\"{subtype}\" zweimal gedr\u00fcckt",
             "long_press": "\"{subtype}\" gedr\u00fcckt und gehalten",
             "single_press": "\"{subtype}\" gedr\u00fcckt"
+        }
+    },
+    "entity": {
+        "select": {
+            "ecobee_mode": {
+                "state": {
+                    "away": "Abwesend",
+                    "home": "Zu Hause",
+                    "sleep": "Schlafen"
+                }
+            }
+        },
+        "sensor": {
+            "thread_node_capabilities": {
+                "state": {
+                    "border_router_capable": "Border Router-f\u00e4hig",
+                    "full": "Vollst\u00e4ndiges Endger\u00e4t",
+                    "minimal": "Minimales Endger\u00e4t",
+                    "none": "Keine",
+                    "router_eligible": "Router-f\u00e4higes Endger\u00e4t",
+                    "sleepy": "Sleepy Endger\u00e4t"
+                }
+            },
+            "thread_status": {
+                "state": {
+                    "border_router": "Border Router",
+                    "child": "Kind",
+                    "detached": "Freistehend",
+                    "disabled": "Deaktiviert",
+                    "joining": "Beitreten",
+                    "leader": "Anf\u00fchrer",
+                    "router": "Router"
+                }
+            }
         }
     },
     "title": "HomeKit-Controller"

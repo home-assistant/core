@@ -1,11 +1,11 @@
 """The Homewizard integration."""
 import logging
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import DOMAIN, PLATFORMS
 from .coordinator import HWEnergyDeviceUpdateCoordinator as Coordinator
@@ -64,17 +64,40 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.async_create_task(hass.config_entries.async_remove(old_config_entry_id))
 
     # Create coordinator
-    coordinator = Coordinator(hass, entry.data[CONF_IP_ADDRESS])
+    coordinator = Coordinator(hass, entry.entry_id, entry.data[CONF_IP_ADDRESS])
     try:
         await coordinator.async_config_entry_first_refresh()
+
     except ConfigEntryNotReady:
+
         await coordinator.api.close()
+
+        if coordinator.api_disabled:
+            entry.async_start_reauth(hass)
+
         raise
 
-    # Finalize
+    # Abort reauth config flow if active
+    for progress_flow in hass.config_entries.flow.async_progress_by_handler(DOMAIN):
+        if progress_flow["context"].get("source") == SOURCE_REAUTH:
+            hass.config_entries.flow.async_abort(progress_flow["flow_id"])
+
+    # Setup entry
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
+    # Register device
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        name=entry.title,
+        manufacturer="HomeWizard",
+        sw_version=coordinator.data["device"].firmware_version,
+        model=coordinator.data["device"].product_type,
+        identifiers={(DOMAIN, coordinator.data["device"].serial)},
+    )
+
+    # Finalize
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -87,7 +110,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
-        config_data = hass.data[DOMAIN].pop(entry.entry_id)
-        await config_data.api.close()
+        coordinator = hass.data[DOMAIN].pop(entry.entry_id)
+        await coordinator.api.close()
 
     return unload_ok

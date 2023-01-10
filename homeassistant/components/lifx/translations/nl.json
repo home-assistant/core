@@ -3,17 +3,13 @@
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd",
             "already_in_progress": "De configuratie is momenteel al bezig",
-            "no_devices_found": "Geen apparaten gevonden op het netwerk",
-            "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk."
+            "no_devices_found": "Geen apparaten gevonden op het netwerk"
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken"
         },
         "flow_title": "{label} ({host}) {serial}",
         "step": {
-            "confirm": {
-                "description": "Wilt u LIFX instellen?"
-            },
             "discovery_confirm": {
                 "description": "Wilt u {label} ({host}) {serial} instellen?"
             },

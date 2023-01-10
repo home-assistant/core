@@ -12,7 +12,9 @@ from .objects import Input, NodeListClass
 try:
     from yaml import CSafeDumper as FastestAvailableSafeDumper
 except ImportError:
-    from yaml import SafeDumper as FastestAvailableSafeDumper  # type: ignore[misc]
+    from yaml import (  # type: ignore[assignment]
+        SafeDumper as FastestAvailableSafeDumper,
+    )
 
 
 def dump(_dict: dict) -> str:

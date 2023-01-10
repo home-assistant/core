@@ -16,6 +16,7 @@
             },
             "user": {
                 "data": {
+                    "account": "Identyfikator konta OVO (dodaj tylko, je\u015bli masz wiele kont)",
                     "password": "Has\u0142o",
                     "username": "Nazwa u\u017cytkownika"
                 },

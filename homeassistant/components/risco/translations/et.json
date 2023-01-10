@@ -24,11 +24,6 @@
                 }
             },
             "user": {
-                "data": {
-                    "password": "Salas\u00f5na",
-                    "pin": "PIN kood",
-                    "username": "Kasutajanimi"
-                },
                 "menu_options": {
                     "cloud": "Risco Cloud (soovitatav)",
                     "local": "Kohalik Risco paneel (t\u00e4psem)"

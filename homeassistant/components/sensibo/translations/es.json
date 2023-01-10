@@ -17,7 +17,7 @@
                     "api_key": "Clave API"
                 },
                 "data_description": {
-                    "api_key": "Sigue la documentaci\u00f3n para obtener una nueva clave API."
+                    "api_key": "Sigue la documentaci\u00f3n para obtener tu clave API"
                 }
             },
             "user": {
@@ -25,7 +25,46 @@
                     "api_key": "Clave API"
                 },
                 "data_description": {
-                    "api_key": "Sigue la documentaci\u00f3n para obtener tu clave API."
+                    "api_key": "Sigue la documentaci\u00f3n para obtener tu clave API"
+                }
+            }
+        }
+    },
+    "entity": {
+        "select": {
+            "horizontalswing": {
+                "state": {
+                    "fixedcenter": "Fijado al centro",
+                    "fixedcenterleft": "Fijado al centro izquierda",
+                    "fixedcenterright": "Fijado al centro derecha",
+                    "fixedleft": "Fijado a la izquierda",
+                    "fixedleftright": "Fijado a izquierda y derecha",
+                    "fixedright": "Fijado a la derecha",
+                    "rangecenter": "Rango al centro",
+                    "rangefull": "Rango completo",
+                    "stopped": "Detenido"
+                }
+            },
+            "light": {
+                "state": {
+                    "dim": "Atenuada",
+                    "off": "Apagada",
+                    "on": "Encendida"
+                }
+            }
+        },
+        "sensor": {
+            "sensitivity": {
+                "state": {
+                    "n": "Normal",
+                    "s": "Sensible"
+                }
+            },
+            "smart_type": {
+                "state": {
+                    "feelslike": "Se siente como",
+                    "humidity": "Humedad",
+                    "temperature": "Temperatura"
                 }
             }
         }

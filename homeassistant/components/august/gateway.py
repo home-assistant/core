@@ -131,7 +131,10 @@ class AugustGateway:
                 await self.authenticator.async_refresh_access_token(force=False)
             )
             _LOGGER.info(
-                "Refreshed august access token. The old token expired at %s, and the new token expires at %s",
+                (
+                    "Refreshed august access token. The old token expired at %s, and"
+                    " the new token expires at %s"
+                ),
                 self.authentication.access_token_expires,
                 refreshed_authentication.access_token_expires,
             )

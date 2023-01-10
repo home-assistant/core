@@ -12,7 +12,7 @@
         "flow_title": "{name}",
         "step": {
             "confirm_usb": {
-                "description": "Vil du konfigurere {name}?"
+                "description": "Vil du sette opp {name} ?"
             },
             "hubv1": {
                 "data": {

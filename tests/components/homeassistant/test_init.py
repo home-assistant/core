@@ -179,6 +179,7 @@ class TestComponentsCore(unittest.TestCase):
             config.YAML_CONFIG_FILE: yaml.dump(
                 {
                     ha.DOMAIN: {
+                        "country": "SE",  # To avoid creating issue country_not_configured
                         "latitude": 10,
                         "longitude": 20,
                         "customize": {"test.Entity": {"hello": "world"}},

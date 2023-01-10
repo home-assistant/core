@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Slu\u017eba u\u017e je nakonfigurovan\u00e1"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "mmi": "MMI",
+                    "radius": "R\u00e1dius"
+                },
+                "title": "Vypl\u0148te podrobnosti filtra."
+            }
+        }
+    }
+}

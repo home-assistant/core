@@ -2,6 +2,7 @@
 import logging
 from typing import Final
 
+from homeassistant.components.media_player import MediaClass, MediaType
 from homeassistant.const import Platform, __version__ as hass_version
 
 DOMAIN: Final = "jellyfin"
@@ -32,7 +33,6 @@ ITEM_TYPE_MOVIE: Final = "Movie"
 MAX_IMAGE_WIDTH: Final = 500
 MAX_STREAMING_BITRATE: Final = "140000000"
 
-
 MEDIA_SOURCE_KEY_PATH: Final = "Path"
 
 MEDIA_TYPE_AUDIO: Final = "Audio"
@@ -44,5 +44,29 @@ SUPPORTED_COLLECTION_TYPES: Final = [COLLECTION_TYPE_MUSIC, COLLECTION_TYPE_MOVI
 USER_APP_NAME: Final = "Home Assistant"
 USER_AGENT: Final = f"Home-Assistant/{CLIENT_VERSION}"
 
-PLATFORMS = [Platform.SENSOR]
+CONTENT_TYPE_MAP = {
+    "Audio": MediaType.MUSIC,
+    "Episode": MediaType.EPISODE,
+    "Season": MediaType.SEASON,
+    "Series": MediaType.TVSHOW,
+    "Movie": MediaType.MOVIE,
+    "CollectionFolder": "collection",
+    "AggregateFolder": "library",
+    "Folder": "library",
+    "BoxSet": "boxset",
+}
+MEDIA_CLASS_MAP = {
+    "MusicAlbum": MediaClass.ALBUM,
+    "MusicArtist": MediaClass.ARTIST,
+    "Audio": MediaClass.MUSIC,
+    "Series": MediaClass.DIRECTORY,
+    "Movie": MediaClass.MOVIE,
+    "CollectionFolder": MediaClass.DIRECTORY,
+    "Folder": MediaClass.DIRECTORY,
+    "BoxSet": MediaClass.DIRECTORY,
+    "Episode": MediaClass.EPISODE,
+    "Season": MediaClass.SEASON,
+}
+
+PLATFORMS = [Platform.MEDIA_PLAYER, Platform.SENSOR]
 LOGGER = logging.getLogger(__package__)

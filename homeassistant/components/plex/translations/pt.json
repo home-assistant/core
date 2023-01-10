@@ -12,7 +12,7 @@
         "step": {
             "manual_setup": {
                 "data": {
-                    "host": "Servidor",
+                    "host": "Endere\u00e7o",
                     "port": "Porta",
                     "ssl": "Utiliza um certificado SSL",
                     "verify_ssl": "Verificar o certificado SSL"

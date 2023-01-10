@@ -16,7 +16,7 @@
                     "address": "Device address",
                     "name": "Name"
                 },
-                "title": "Setup MicroBot device"
+                "title": "Set up MicroBot device"
             },
             "link": {
                 "description": "Press the button on the MicroBot Push when the LED is solid pink or green to register with Home Assistant.",

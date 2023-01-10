@@ -30,7 +30,6 @@ class HomeKitEntity(Entity):
         self._aid = devinfo["aid"]
         self._iid = devinfo["iid"]
         self._char_name: str | None = None
-        self._features = 0
         self.setup()
 
         super().__init__()
@@ -174,6 +173,10 @@ class HomeKitEntity(Entity):
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
         raise NotImplementedError
+
+    async def async_update(self) -> None:
+        """Update the entity."""
+        await self._accessory.async_request_update()
 
 
 class AccessoryEntity(HomeKitEntity):

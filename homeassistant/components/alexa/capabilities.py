@@ -8,6 +8,7 @@ from homeassistant.components import (
     climate,
     cover,
     fan,
+    humidifier,
     image_processing,
     input_button,
     input_number,
@@ -168,60 +169,47 @@ class AlexaCapability:
 
     def serialize_discovery(self):
         """Serialize according to the Discovery API."""
-        # pylint: disable=assignment-from-none
-        # Methods may be overridden and return a value.
         result = {"type": "AlexaInterface", "interface": self.name(), "version": "3"}
 
         if (instance := self.instance) is not None:
             result["instance"] = instance
 
-        properties_supported = self.properties_supported()
-        if properties_supported:
+        if properties_supported := self.properties_supported():
             result["properties"] = {
-                "supported": self.properties_supported(),
+                "supported": properties_supported,
                 "proactivelyReported": self.properties_proactively_reported(),
                 "retrievable": self.properties_retrievable(),
             }
 
-        proactively_reported = self.capability_proactively_reported()
-        if proactively_reported is not None:
+        if (proactively_reported := self.capability_proactively_reported()) is not None:
             result["proactivelyReported"] = proactively_reported
 
-        non_controllable = self.properties_non_controllable()
-        if non_controllable is not None:
+        if (non_controllable := self.properties_non_controllable()) is not None:
             result["properties"]["nonControllable"] = non_controllable
 
-        supports_deactivation = self.supports_deactivation()
-        if supports_deactivation is not None:
+        if (supports_deactivation := self.supports_deactivation()) is not None:
             result["supportsDeactivation"] = supports_deactivation
 
-        capability_resources = self.capability_resources()
-        if capability_resources:
+        if capability_resources := self.capability_resources():
             result["capabilityResources"] = capability_resources
 
-        configuration = self.configuration()
-        if configuration:
+        if configuration := self.configuration():
             result["configuration"] = configuration
 
         # The plural configurations object is different than the singular configuration object above.
-        configurations = self.configurations()
-        if configurations:
+        if configurations := self.configurations():
             result["configurations"] = configurations
 
-        semantics = self.semantics()
-        if semantics:
+        if semantics := self.semantics():
             result["semantics"] = semantics
 
-        supported_operations = self.supported_operations()
-        if supported_operations:
+        if supported_operations := self.supported_operations():
             result["supportedOperations"] = supported_operations
 
-        inputs = self.inputs()
-        if inputs:
+        if inputs := self.inputs():
             result["inputs"] = inputs
 
-        camera_stream_configurations = self.camera_stream_configurations()
-        if camera_stream_configurations:
+        if camera_stream_configurations := self.camera_stream_configurations():
             result["cameraStreamConfigurations"] = camera_stream_configurations
 
         return result
@@ -398,6 +386,8 @@ class AlexaPowerController(AlexaCapability):
             is_on = self.entity.state != climate.HVACMode.OFF
         elif self.entity.domain == fan.DOMAIN:
             is_on = self.entity.state == fan.STATE_ON
+        elif self.entity.domain == humidifier.DOMAIN:
+            is_on = self.entity.state == humidifier.STATE_ON
         elif self.entity.domain == vacuum.DOMAIN:
             is_on = self.entity.state == vacuum.STATE_CLEANING
         elif self.entity.domain == timer.DOMAIN:
@@ -651,59 +641,6 @@ class AlexaColorTemperatureController(AlexaCapability):
                 self.entity.attributes["color_temp"]
             )
         return None
-
-
-class AlexaPercentageController(AlexaCapability):
-    """Implements Alexa.PercentageController.
-
-    https://developer.amazon.com/docs/device-apis/alexa-percentagecontroller.html
-    """
-
-    supported_locales = {
-        "de-DE",
-        "en-AU",
-        "en-CA",
-        "en-GB",
-        "en-IN",
-        "en-US",
-        "es-ES",
-        "es-US",
-        "fr-CA",
-        "fr-FR",
-        "hi-IN",
-        "it-IT",
-        "ja-JP",
-        "pt-BR",
-    }
-
-    def name(self):
-        """Return the Alexa API name of this interface."""
-        return "Alexa.PercentageController"
-
-    def properties_supported(self):
-        """Return what properties this entity supports."""
-        return [{"name": "percentage"}]
-
-    def properties_proactively_reported(self):
-        """Return True if properties asynchronously reported."""
-        return True
-
-    def properties_retrievable(self):
-        """Return True if properties can be retrieved."""
-        return True
-
-    def get_property(self, name):
-        """Read and return a property."""
-        if name != "percentage":
-            raise UnsupportedProperty(name)
-
-        if self.entity.domain == fan.DOMAIN:
-            return self.entity.attributes.get(fan.ATTR_PERCENTAGE) or 0
-
-        if self.entity.domain == cover.DOMAIN:
-            return self.entity.attributes.get(cover.ATTR_CURRENT_POSITION, 0)
-
-        return 0
 
 
 class AlexaSpeaker(AlexaCapability):
@@ -1403,6 +1340,12 @@ class AlexaModeController(AlexaCapability):
             if mode in self.entity.attributes.get(fan.ATTR_PRESET_MODES, None):
                 return f"{fan.ATTR_PRESET_MODE}.{mode}"
 
+        # Humidifier mode
+        if self.instance == f"{humidifier.DOMAIN}.{humidifier.ATTR_MODE}":
+            mode = self.entity.attributes.get(humidifier.ATTR_MODE, None)
+            if mode in self.entity.attributes.get(humidifier.ATTR_AVAILABLE_MODES, []):
+                return f"{humidifier.ATTR_MODE}.{mode}"
+
         # Cover Position
         if self.instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
             # Return state instead of position when using ModeController.
@@ -1456,6 +1399,20 @@ class AlexaModeController(AlexaCapability):
             if len(preset_modes) == 1:
                 self._resource.add_mode(
                     f"{fan.ATTR_PRESET_MODE}.{PRESET_MODE_NA}", [PRESET_MODE_NA]
+                )
+            return self._resource.serialize_capability_resources()
+
+        # Humidifier modes
+        if self.instance == f"{humidifier.DOMAIN}.{humidifier.ATTR_MODE}":
+            self._resource = AlexaModeResource([AlexaGlobalCatalog.SETTING_MODE], False)
+            modes = self.entity.attributes.get(humidifier.ATTR_AVAILABLE_MODES, [])
+            for mode in modes:
+                self._resource.add_mode(f"{humidifier.ATTR_MODE}.{mode}", [mode])
+            # Humidifiers or Fans with a single mode completely break Alexa discovery, add a
+            # fake preset (see issue #53832).
+            if len(modes) == 1:
+                self._resource.add_mode(
+                    f"{humidifier.ATTR_MODE}.{PRESET_MODE_NA}", [PRESET_MODE_NA]
                 )
             return self._resource.serialize_capability_resources()
 
@@ -1600,6 +1557,12 @@ class AlexaRangeController(AlexaCapability):
                 return self.entity.attributes.get(fan.ATTR_PERCENTAGE)
             return 100 if self.entity.state == fan.STATE_ON else 0
 
+        # Humidifier target humidity
+        if self.instance == f"{humidifier.DOMAIN}.{humidifier.ATTR_HUMIDITY}":
+            # If the humidifier is turned off the target humidity attribute is not set.
+            # We return 0 to make clear we do not know the current value.
+            return self.entity.attributes.get(humidifier.ATTR_HUMIDITY, 0)
+
         # Input Number Value
         if self.instance == f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}":
             return float(self.entity.state)
@@ -1636,6 +1599,17 @@ class AlexaRangeController(AlexaCapability):
                 # precision must be a divider of 100 and must be an integer; set step
                 # size to 1 for a consistent behavior except for on/off fans
                 precision=1 if percentage_step else 100,
+                unit=AlexaGlobalCatalog.UNIT_PERCENT,
+            )
+            return self._resource.serialize_capability_resources()
+
+        # Humidifier Target Humidity Resources
+        if self.instance == f"{humidifier.DOMAIN}.{humidifier.ATTR_HUMIDITY}":
+            self._resource = AlexaPresetResource(
+                labels=["Humidity", "Percentage", "Target humidity"],
+                min_value=self.entity.attributes.get(humidifier.ATTR_MIN_HUMIDITY, 10),
+                max_value=self.entity.attributes.get(humidifier.ATTR_MAX_HUMIDITY, 90),
+                precision=1,
                 unit=AlexaGlobalCatalog.UNIT_PERCENT,
             )
             return self._resource.serialize_capability_resources()
@@ -1761,6 +1735,22 @@ class AlexaRangeController(AlexaCapability):
             )
             self._semantics.add_action_to_directive(
                 raise_labels, "SetRangeValue", {"rangeValue": 100}
+            )
+            return self._semantics.serialize_semantics()
+
+        # Target Humidity Percentage
+        if self.instance == f"{humidifier.DOMAIN}.{humidifier.ATTR_HUMIDITY}":
+            lower_labels = [AlexaSemantics.ACTION_LOWER]
+            raise_labels = [AlexaSemantics.ACTION_RAISE]
+            self._semantics = AlexaSemantics()
+            min_value = self.entity.attributes.get(humidifier.ATTR_MIN_HUMIDITY, 10)
+            max_value = self.entity.attributes.get(humidifier.ATTR_MAX_HUMIDITY, 90)
+
+            self._semantics.add_action_to_directive(
+                lower_labels, "SetRangeValue", {"rangeValue": min_value}
+            )
+            self._semantics.add_action_to_directive(
+                raise_labels, "SetRangeValue", {"rangeValue": max_value}
             )
             return self._semantics.serialize_semantics()
 

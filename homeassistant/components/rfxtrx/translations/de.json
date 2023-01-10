@@ -58,7 +58,7 @@
             "prompt_options": {
                 "data": {
                     "automatic_add": "Automatisches Hinzuf\u00fcgen aktivieren",
-                    "debug": "Debugging aktivieren",
+                    "debug": "Debuggen aktivieren",
                     "device": "Zu konfigurierendes Ger\u00e4t ausw\u00e4hlen",
                     "event_code": "Ereigniscode zum Hinzuf\u00fcgen eingeben",
                     "protocols": "Protokolle"
@@ -68,7 +68,7 @@
             "set_device_options": {
                 "data": {
                     "command_off": "Datenbitwert f\u00fcr den Befehl \"aus\"",
-                    "command_on": "Datenbitwert f\u00fcr den Befehl \"ein\"",
+                    "command_on": "Datenbitwert f\u00fcr den Befehl \"an\"",
                     "data_bit": "Anzahl der Datenbits",
                     "off_delay": "Ausschaltverz\u00f6gerung",
                     "off_delay_enabled": "Ausschaltverz\u00f6gerung aktivieren",

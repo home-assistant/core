@@ -64,6 +64,24 @@ def async_register_scan_request_callback(
 @hass_callback
 def async_is_plugged_in(hass: HomeAssistant, matcher: USBCallbackMatcher) -> bool:
     """Return True is a USB device is present."""
+
+    vid = matcher.get("vid", "")
+    pid = matcher.get("pid", "")
+    serial_number = matcher.get("serial_number", "")
+    manufacturer = matcher.get("manufacturer", "")
+    description = matcher.get("description", "")
+
+    if (
+        vid != vid.upper()
+        or pid != pid.upper()
+        or serial_number != serial_number.lower()
+        or manufacturer != manufacturer.lower()
+        or description != description.lower()
+    ):
+        raise ValueError(
+            f"vid and pid must be uppercase, the rest lowercase in matcher {matcher!r}"
+        )
+
     usb_discovery: USBDiscovery = hass.data[DOMAIN]
     return any(
         _is_matching(USBDevice(*device_tuple), matcher)
@@ -315,7 +333,7 @@ class USBDiscovery:
 async def websocket_usb_scan(
     hass: HomeAssistant,
     connection: ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
 ) -> None:
     """Scan for new usb devices."""
     usb_discovery: USBDiscovery = hass.data[DOMAIN]

@@ -795,3 +795,32 @@ async def test_remove_config_entry_without_app_credentials(
         "config_entry", {"config_entry_id": entries[0].entry_id}
     )
     assert "application_credential_id" not in result
+
+
+async def test_websocket_create_strips_whitespace(ws_client: ClientFixture):
+    """Test websocket create command with whitespace in the credentials."""
+    client = await ws_client()
+    result = await client.cmd_result(
+        "create",
+        {
+            CONF_DOMAIN: TEST_DOMAIN,
+            CONF_CLIENT_ID: f"  {CLIENT_ID}  ",
+            CONF_CLIENT_SECRET: f" {CLIENT_SECRET} ",
+        },
+    )
+    assert result == {
+        CONF_DOMAIN: TEST_DOMAIN,
+        CONF_CLIENT_ID: CLIENT_ID,
+        CONF_CLIENT_SECRET: CLIENT_SECRET,
+        "id": ID,
+    }
+
+    result = await client.cmd_result("list")
+    assert result == [
+        {
+            CONF_DOMAIN: TEST_DOMAIN,
+            CONF_CLIENT_ID: CLIENT_ID,
+            CONF_CLIENT_SECRET: CLIENT_SECRET,
+            "id": ID,
+        }
+    ]

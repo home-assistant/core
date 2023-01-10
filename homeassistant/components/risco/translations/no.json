@@ -24,11 +24,6 @@
                 }
             },
             "user": {
-                "data": {
-                    "password": "Passord",
-                    "pin": "PIN kode",
-                    "username": "Brukernavn"
-                },
                 "menu_options": {
                     "cloud": "Risco Cloud (anbefalt)",
                     "local": "Lokalt Risco-panel (avansert)"

@@ -2,44 +2,21 @@
 from __future__ import annotations
 
 import asyncio
-from typing import TypedDict
 
 import async_timeout
 from yalexs_ble import PushLock, local_name_is_unique
 
 from homeassistant.components import bluetooth
-from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import discovery_flow
 
 from .const import CONF_KEY, CONF_LOCAL_NAME, CONF_SLOT, DEVICE_TIMEOUT, DOMAIN
 from .models import YaleXSBLEData
 from .util import async_find_existing_service_info, bluetooth_callback_matcher
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.LOCK, Platform.SENSOR]
-
-
-class YaleXSBLEDiscovery(TypedDict):
-    """A validated discovery of a Yale XS BLE device."""
-
-    name: str
-    address: str
-    serial: str
-    key: str
-    slot: int
-
-
-@callback
-def async_discovery(hass: HomeAssistant, discovery: YaleXSBLEDiscovery) -> None:
-    """Update keys for the yalexs-ble integration if available."""
-    discovery_flow.async_create_flow(
-        hass,
-        DOMAIN,
-        context={"source": SOURCE_INTEGRATION_DISCOVERY},
-        data=discovery,
-    )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -92,6 +69,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = YaleXSBLEData(
         entry.title, push_lock
+    )
+
+    @callback
+    def _async_device_unavailable(
+        _service_info: bluetooth.BluetoothServiceInfoBleak,
+    ) -> None:
+        """Handle device not longer being seen by the bluetooth stack."""
+        push_lock.reset_advertisement_state()
+
+    entry.async_on_unload(
+        bluetooth.async_track_unavailable(
+            hass, _async_device_unavailable, push_lock.address
+        )
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

@@ -194,7 +194,7 @@ async def test_non_allowed_templates(hass, calls, caplog):
     )
 
     assert (
-        "Got error 'TemplateError: str: Use of 'states' is not supported in limited templates' when setting up triggers"
+        "Got error 'TemplateError: Use of 'states' is not supported in limited templates' when setting up triggers"
         in caplog.text
     )
 

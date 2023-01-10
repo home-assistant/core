@@ -3,13 +3,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from axis.rtsp import (
-    SIGNAL_DATA,
-    SIGNAL_FAILED,
-    SIGNAL_PLAYING,
-    STATE_PLAYING,
-    STATE_STOPPED,
-)
+from axis.rtsp import Signal, State
 import pytest
 
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
@@ -18,19 +12,19 @@ from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 @pytest.fixture(autouse=True)
 def mock_axis_rtspclient():
     """No real RTSP communication allowed."""
-    with patch("axis.streammanager.RTSPClient") as rtsp_client_mock:
+    with patch("axis.stream_manager.RTSPClient") as rtsp_client_mock:
 
-        rtsp_client_mock.return_value.session.state = STATE_STOPPED
+        rtsp_client_mock.return_value.session.state = State.STOPPED
 
         async def start_stream():
             """Set state to playing when calling RTSPClient.start."""
-            rtsp_client_mock.return_value.session.state = STATE_PLAYING
+            rtsp_client_mock.return_value.session.state = State.PLAYING
 
         rtsp_client_mock.return_value.start = start_stream
 
         def stop_stream():
             """Set state to stopped when calling RTSPClient.stop."""
-            rtsp_client_mock.return_value.session.state = STATE_STOPPED
+            rtsp_client_mock.return_value.session.state = State.STOPPED
 
         rtsp_client_mock.return_value.stop = stop_stream
 
@@ -40,7 +34,7 @@ def mock_axis_rtspclient():
 
             if data:
                 rtsp_client_mock.return_value.rtp.data = data
-                axis_streammanager_session_callback(signal=SIGNAL_DATA)
+                axis_streammanager_session_callback(signal=Signal.DATA)
             elif state:
                 axis_streammanager_session_callback(signal=state)
             else:
@@ -106,7 +100,7 @@ def mock_rtsp_signal_state(mock_axis_rtspclient):
 
     def send_signal(connected: bool) -> None:
         """Signal state change of RTSP connection."""
-        signal = SIGNAL_PLAYING if connected else SIGNAL_FAILED
+        signal = Signal.PLAYING if connected else Signal.FAILED
         mock_axis_rtspclient(state=signal)
 
     yield send_signal

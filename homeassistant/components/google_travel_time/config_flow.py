@@ -5,9 +5,10 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_MODE, CONF_NAME
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .const import (
     ALL_LANGUAGES,
@@ -34,8 +35,20 @@ from .const import (
     TRAVEL_MODE,
     TRAVEL_MODEL,
     UNITS,
+    UNITS_IMPERIAL,
+    UNITS_METRIC,
 )
 from .helpers import InvalidApiKeyException, UnknownException, validate_config_entry
+
+
+def default_options(hass: HomeAssistant) -> dict[str, str | None]:
+    """Get the default options."""
+    return {
+        CONF_MODE: "driving",
+        CONF_UNITS: (
+            UNITS_IMPERIAL if hass.config.units is US_CUSTOMARY_SYSTEM else UNITS_METRIC
+        ),
+    }
 
 
 class GoogleOptionsFlow(config_entries.OptionsFlow):
@@ -135,6 +148,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=user_input.get(CONF_NAME, DEFAULT_NAME),
                     data=user_input,
+                    options=default_options(self.hass),
                 )
             except InvalidApiKeyException:
                 errors["base"] = "invalid_auth"

@@ -609,7 +609,7 @@ async def test_sensor_entity_total_liters(
 
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL_INCREASING
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == VOLUME_CUBIC_METERS
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.VOLUME
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.WATER
     assert state.attributes.get(ATTR_ICON) == "mdi:gauge"
 
 
@@ -773,14 +773,4 @@ async def test_api_disabled(hass, mock_config_entry_data, mock_config_entry):
                 "sensor.product_name_aabbccddeeff_total_power_import_t1"
             ).state
             == "unavailable"
-        )
-
-        api.data.side_effect = None
-        async_fire_time_changed(hass, utcnow + timedelta(seconds=10))
-        await hass.async_block_till_done()
-        assert (
-            hass.states.get(
-                "sensor.product_name_aabbccddeeff_total_power_import_t1"
-            ).state
-            == "1234.123"
         )

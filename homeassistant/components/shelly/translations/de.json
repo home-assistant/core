@@ -58,5 +58,18 @@
             "single_push": "{subtype} einfacher Druck",
             "triple": "{subtype} dreifach bet\u00e4tigt"
         }
+    },
+    "options": {
+        "abort": {
+            "ble_unsupported": "Bluetooth-Unterst\u00fctzung erfordert Firmware-Version {ble_min_version} oder neuer."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "ble_scanner_mode": "Bluetooth Scannermodus"
+                },
+                "description": "Bluetooth-Scannen kann aktiv oder passiv sein. Bei aktiv fordert Shelly Daten von Ger\u00e4ten in der N\u00e4he an; Mit Passiv empf\u00e4ngt Shelly unaufgefordert Daten von Ger\u00e4ten in der N\u00e4he."
+            }
+        }
     }
 }

@@ -1,0 +1,145 @@
+{
+  "routes": [
+    {
+      "id": "C0",
+      "sections": [
+        {
+          "id": "C0-S0",
+          "type": "pedestrian",
+          "actions": [
+            {
+              "action": "depart",
+              "duration": 1111,
+              "instruction": "Head west on Wilhelm-Fay-Straße. Go for 1.1 km.",
+              "length": 1099,
+              "offset": 0
+            },
+            {
+              "action": "roundaboutExit",
+              "duration": 73,
+              "instruction": "Walk right around the roundabout and turn at the 1st street Frankfurter Straße. Go for 63 m.",
+              "length": 63,
+              "offset": 40,
+              "exit": 1,
+              "direction": "right"
+            },
+            {
+              "action": "arrive",
+              "duration": 0,
+              "instruction": "Arrive at Frankfurter Straße. Your destination is on the left.",
+              "length": 0,
+              "offset": 47
+            }
+          ],
+          "travelSummary": {
+            "duration": 1140,
+            "length": 1162
+          },
+          "departure": {
+            "time": "2022-07-19T15:39:00+02:00",
+            "place": {
+              "type": "place",
+              "location": {
+                "lat": 50.127787,
+                "lng": 8.582082
+              }
+            }
+          },
+          "arrival": {
+            "time": "2022-07-19T15:58:00+02:00",
+            "place": {
+              "name": "Eschborn Alfred-Herrhausen-Allee",
+              "type": "station",
+              "location": {
+                "lat": 50.135176,
+                "lng": 8.572745
+              },
+              "id": "110439568"
+            }
+          },
+          "polyline": "BGwhxz_Cgv5rQwDrQ8BvHkNr2BsE7LkI7V0FrO4I7QgF3IoGzKkSjXsTzU0FzFkXnV0tB7pBkN3N0FzF4DjD0KrJwW3S0UrJwWnG4cjI0FjDkDvC8BnB0F_EsErEkDrEkIrJ8G_J4IrOsJ_O8VzjB8Q7asJnQwbztB8G7L0FrJsE7GkNvW8BwC4D8BsEnB8BjDgFkIkD0FqHwL",
+          "transport": {
+            "mode": "pedestrian"
+          }
+        },
+        {
+          "id": "C0-S3",
+          "type": "pedestrian",
+          "actions": [
+            {
+              "action": "depart",
+              "duration": 166,
+              "instruction": "Head southwest on Hunsrückstraße. Go for 155 m.",
+              "length": 155,
+              "offset": 0
+            },
+            {
+              "action": "turn",
+              "duration": 91,
+              "instruction": "Turn right onto Stolberger Straße. Go for 82 m.",
+              "length": 82,
+              "offset": 4,
+              "direction": "right",
+              "severity": "quite"
+            },
+            {
+              "action": "turn",
+              "duration": 476,
+              "instruction": "Turn left onto Horchheimer Straße. Go for 466 m.",
+              "length": 466,
+              "offset": 9,
+              "direction": "left",
+              "severity": "quite"
+            },
+            {
+              "action": "turn",
+              "duration": 18,
+              "instruction": "Turn left onto Hessenring. Go for 18 m.",
+              "length": 18,
+              "offset": 21,
+              "direction": "left",
+              "severity": "quite"
+            },
+            {
+              "action": "arrive",
+              "duration": 0,
+              "instruction": "Arrive at Hessenring. Your destination is on the left.",
+              "length": 0,
+              "offset": 22
+            }
+          ],
+          "travelSummary": {
+            "duration": 720,
+            "length": 721
+          },
+          "departure": {
+            "time": "2022-07-19T17:15:00+02:00",
+            "place": {
+              "name": "Wiesbaden-Nordenstadt Stolberger Straße",
+              "type": "station",
+              "location": {
+                "lat": 50.060615,
+                "lng": 8.344163
+              },
+              "id": "110812533"
+            }
+          },
+          "arrival": {
+            "time": "2022-07-19T17:27:00+02:00",
+            "place": {
+              "type": "place",
+              "location": {
+                "lat": 50.060941,
+                "lng": 8.336477
+              }
+            }
+          },
+          "polyline": "BG20uv_C4lp9P9nBn-B3DzFvC3DnQjX8GvHkDvC4DnBoGoBkX8L0F3cwCnLkN7iCnBzhCAnG8B3wBsEzZkD_OwCzP8GnkBwHjmB8GvlBhJ1G",
+          "transport": {
+            "mode": "pedestrian"
+          }
+        }
+      ]
+    }
+  ]
+}

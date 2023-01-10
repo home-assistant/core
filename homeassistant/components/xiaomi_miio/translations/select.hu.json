@@ -7,7 +7,7 @@
         },
         "xiaomi_miio__led_brightness": {
             "bright": "F\u00e9nyes",
-            "dim": "Hom\u00e1lyos",
+            "dim": "Halv\u00e1ny",
             "off": "Ki"
         },
         "xiaomi_miio__ptc_level": {
