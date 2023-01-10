@@ -130,8 +130,5 @@ class SeitronClimate(CoordinatorEntity, ClimateEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temp: float = kwargs[ATTR_TEMPERATURE]
-        _LOGGER.info(
-            "Climate: set target temp: %s --> %s", self._thermostat.temp_target, temp
-        )
         await self.coordinator.data.set_temperature(self._thermostat.gmac, temp)
         await self.coordinator.async_request_refresh()
