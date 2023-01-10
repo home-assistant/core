@@ -1,7 +1,7 @@
 """Sorting helpers for ISY device classifications."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from typing import cast
 
 from pyisy.constants import (
     ISY_VALUE_UNKNOWN,
@@ -45,9 +45,6 @@ from .const import (
     UOM_DOUBLE_TEMP,
     UOM_ISYV4_DEGREES,
 )
-
-if TYPE_CHECKING:
-    pass
 
 BINARY_SENSOR_UOMS = ["2", "78"]
 BINARY_SENSOR_ISY_STATES = ["on", "off"]
