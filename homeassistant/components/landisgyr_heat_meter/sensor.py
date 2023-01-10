@@ -316,7 +316,7 @@ async def async_setup_entry(
     elif energy_unit == UnitOfEnergy.MEGA_WATT_HOUR:
         exclude_keys = GJ_ONLY_KEYS
     else:
-        exclude_keys = []
+        exclude_keys = set()
 
     sensors = []
     for description in HEAT_METER_SENSOR_TYPES:
