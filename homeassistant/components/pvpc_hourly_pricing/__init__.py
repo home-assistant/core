@@ -1,9 +1,8 @@
 """The pvpc_hourly_pricing integration to collect Spain official electric prices."""
-from collections.abc import Mapping
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 
-from aiopvpc import DEFAULT_POWER_KW, TARIFFS, PVPCData
+from aiopvpc import DEFAULT_POWER_KW, TARIFFS, EsiosApiData, PVPCData
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -122,7 +121,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class ElecPricesDataUpdateCoordinator(DataUpdateCoordinator[Mapping[datetime, float]]):
+class ElecPricesDataUpdateCoordinator(DataUpdateCoordinator[EsiosApiData]):
     """Class to manage fetching Electricity prices data from API."""
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -144,11 +143,13 @@ class ElecPricesDataUpdateCoordinator(DataUpdateCoordinator[Mapping[datetime, fl
         """Return entry ID."""
         return self._entry.entry_id
 
-    async def _async_update_data(self) -> Mapping[datetime, float]:
+    async def _async_update_data(self) -> EsiosApiData:
         """Update electricity prices from the ESIOS API."""
-        prices = await self.api.async_update_prices(dt_util.utcnow())
-        self.api.process_state_and_attributes(dt_util.utcnow())
-        if not prices:
+        api_data = await self.api.async_update_all(self.data, dt_util.utcnow())
+        if (
+            not api_data
+            or not api_data.sensors
+            or not all(api_data.availability.values())
+        ):
             raise UpdateFailed
-
-        return prices
+        return api_data

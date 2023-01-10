@@ -6,7 +6,11 @@ from datetime import datetime
 import logging
 from typing import Any
 
+from aiopvpc.const import KEY_PVPC
+from aiopvpc.ha_helpers import make_sensor_unique_id
+
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
@@ -28,13 +32,16 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 1
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
-        key="PVPC",
+        key=KEY_PVPC,
         icon="mdi:currency-eur",
+        device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 _PRICE_SENSOR_ATTRIBUTES_MAP = {
+    "data_id": "data_id",
+    "name": "name",
     "tariff": "tariff",
     "period": "period",
     "available_power": "available_power",
@@ -139,17 +146,22 @@ class ElecPriceSensor(CoordinatorEntity[ElecPricesDataUpdateCoordinator], Sensor
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_attribution = coordinator.api.attribution
-        self._attr_unique_id = unique_id
+        self._attr_unique_id = make_sensor_unique_id(unique_id, description.key)
         self._attr_name = name
         self._attr_device_info = DeviceInfo(
-            configuration_url="https://www.ree.es/es/apidatos",
+            configuration_url="https://api.esios.ree.es",
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, coordinator.entry_id)},
             manufacturer="REE",
-            name="PVPC (REData API)",
+            name="ESIOS API",
         )
         self._state: StateType = None
         self._attrs: Mapping[str, Any] = {}
+        self.async_on_remove(
+            lambda: coordinator.api.update_active_sensors(
+                self.entity_description.key, False
+            )
+        )
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
@@ -162,30 +174,48 @@ class ElecPriceSensor(CoordinatorEntity[ElecPricesDataUpdateCoordinator], Sensor
             )
         )
         _LOGGER.debug(
-            "Setup of price sensor %s (%s) with tariff '%s'",
-            self.name,
+            "Setup of ESIOS sensor %s (%s, unique_id: %s)",
+            self.entity_description.key,
             self.entity_id,
-            self.coordinator.api.tariff,
+            self._attr_unique_id,
         )
+
+    @callback
+    def async_registry_entry_updated(self) -> None:
+        """Enable API downloads for this sensor."""
+        self.coordinator.api.update_active_sensors(self.entity_description.key, True)
 
     @callback
     def update_current_price(self, now: datetime) -> None:
         """Update the sensor state, by selecting the current price for this hour."""
-        self.coordinator.api.process_state_and_attributes(now)
+        self.coordinator.api.process_state_and_attributes(
+            self.coordinator.data, self.entity_description.key, now
+        )
         self.async_write_ha_state()
 
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        self._state = self.coordinator.api.state
+        self._state = self.coordinator.api.states.get(self.entity_description.key)
         return self._state
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        self._attr_available = self.coordinator.data.availability.get(
+            self.entity_description.key, False
+        )
+        return self._attr_available
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
+        sensor_attributes = self.coordinator.api.sensor_attributes.get(
+            self.entity_description.key, {}
+        )
         self._attrs = {
             _PRICE_SENSOR_ATTRIBUTES_MAP[key]: value
-            for key, value in self.coordinator.api.attributes.items()
+            for key, value in sensor_attributes.items()
             if key in _PRICE_SENSOR_ATTRIBUTES_MAP
         }
         return self._attrs
