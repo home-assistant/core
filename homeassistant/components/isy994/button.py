@@ -15,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONF_NETWORK,
-    DOMAIN as ISY994_DOMAIN,
+    DOMAIN,
     ISY_CONF_UUID,
     ISY_DEVICES,
     ISY_NET_RES,
@@ -30,7 +30,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up ISY/IoX button from config entry."""
-    hass_isy_data = hass.data[ISY994_DOMAIN][config_entry.entry_id]
+    hass_isy_data = hass.data[DOMAIN][config_entry.entry_id]
     isy: ISY = hass_isy_data[ISY_ROOT]
     uuid = isy.configuration[ISY_CONF_UUID]
     device_info = hass_isy_data[ISY_DEVICES]
@@ -77,7 +77,7 @@ async def async_setup_entry(
             node=isy,
             name="Query",
             unique_id=uuid,
-            device_info=DeviceInfo(identifiers={(ISY994_DOMAIN, uuid)}),
+            device_info=DeviceInfo(identifiers={(DOMAIN, uuid)}),
             entity_category=EntityCategory.DIAGNOSTIC,
         )
     )

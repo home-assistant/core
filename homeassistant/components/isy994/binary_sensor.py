@@ -30,7 +30,7 @@ from .const import (
     _LOGGER,
     BINARY_SENSOR_DEVICE_TYPES_ISY,
     BINARY_SENSOR_DEVICE_TYPES_ZWAVE,
-    DOMAIN as ISY994_DOMAIN,
+    DOMAIN,
     ISY_NODES,
     ISY_PROGRAMS,
     SUBNODE_CLIMATE_COOL,
@@ -73,7 +73,7 @@ async def async_setup_entry(
     child_nodes: list[tuple[Node, BinarySensorDeviceClass | None, str | None]] = []
     entity: ISYInsteonBinarySensorEntity | ISYBinarySensorEntity | ISYBinarySensorHeartbeat | ISYBinarySensorProgramEntity
 
-    hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
+    hass_isy_data = hass.data[DOMAIN][entry.entry_id]
     for node in hass_isy_data[ISY_NODES][Platform.BINARY_SENSOR]:
         assert isinstance(node, Node)
         device_class, device_type = _detect_device_type_and_class(node)

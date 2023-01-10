@@ -14,13 +14,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    DOMAIN as ISY994_DOMAIN,
-    ISY_CONF_UUID,
-    ISY_DEVICES,
-    ISY_ROOT,
-    ISY_VARIABLES,
-)
+from .const import DOMAIN, ISY_CONF_UUID, ISY_DEVICES, ISY_ROOT, ISY_VARIABLES
 from .helpers import convert_isy_value_to_hass
 
 ISY_MAX_SIZE = (2**32) / 2
@@ -32,7 +26,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up ISY/IoX number entities from config entry."""
-    hass_isy_data = hass.data[ISY994_DOMAIN][config_entry.entry_id]
+    hass_isy_data = hass.data[DOMAIN][config_entry.entry_id]
     isy: ISY = hass_isy_data[ISY_ROOT]
     uuid = isy.configuration[ISY_CONF_UUID]
     device_info = hass_isy_data[ISY_DEVICES]

@@ -11,7 +11,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import _LOGGER, DOMAIN as ISY994_DOMAIN, ISY_NODES, ISY_PROGRAMS
+from .const import _LOGGER, DOMAIN, ISY_NODES, ISY_PROGRAMS
 from .entity import ISYNodeEntity, ISYProgramEntity
 
 
@@ -19,7 +19,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the ISY switch platform."""
-    hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
+    hass_isy_data = hass.data[DOMAIN][entry.entry_id]
     entities: list[ISYSwitchProgramEntity | ISYSwitchEntity] = []
     for node in hass_isy_data[ISY_NODES][Platform.SWITCH]:
         entities.append(ISYSwitchEntity(node))

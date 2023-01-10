@@ -33,7 +33,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     _LOGGER,
-    DOMAIN as ISY994_DOMAIN,
+    DOMAIN,
     ISY_CONF_UUID,
     ISY_NODES,
     ISY_VARIABLES,
@@ -110,7 +110,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the ISY sensor platform."""
-    hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
+    hass_isy_data = hass.data[DOMAIN][entry.entry_id]
     entities: list[ISYSensorEntity | ISYSensorVariableEntity] = []
 
     for node in hass_isy_data[ISY_NODES][Platform.SENSOR]:

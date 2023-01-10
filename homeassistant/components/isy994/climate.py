@@ -39,7 +39,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     _LOGGER,
-    DOMAIN as ISY994_DOMAIN,
+    DOMAIN,
     HA_FAN_TO_ISY,
     HA_HVAC_TO_ISY,
     ISY_HVAC_MODES,
@@ -63,7 +63,7 @@ async def async_setup_entry(
     """Set up the ISY thermostat platform."""
     entities = []
 
-    hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
+    hass_isy_data = hass.data[DOMAIN][entry.entry_id]
     for node in hass_isy_data[ISY_NODES][Platform.CLIMATE]:
         entities.append(ISYThermostatEntity(node))
 
