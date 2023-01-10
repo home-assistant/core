@@ -32,10 +32,6 @@ class TariffSelectorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="user", data_schema=UI_CONFIG_SCHEMA)
 
-    async def async_step_import(self, import_info):
-        """Handle import from config file."""
-        return await self.async_step_user(import_info)
-
 
 class PVPCOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle PVPC options."""
