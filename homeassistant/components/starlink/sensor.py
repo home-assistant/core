@@ -5,8 +5,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
-from starlink_grpc import AlertDict, ObstructionDict, StatusDict
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -21,7 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
-from .coordinator import StarlinkUpdateCoordinator
+from .coordinator import StarlinkData, StarlinkUpdateCoordinator
 from .entity import StarlinkEntity
 
 
@@ -40,9 +38,7 @@ async def async_setup_entry(
 class StarlinkSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[
-        [tuple[StatusDict, ObstructionDict, AlertDict]], datetime | StateType
-    ]
+    value_fn: Callable[[StarlinkData], datetime | StateType]
 
 
 @dataclass
@@ -65,7 +61,7 @@ class StarlinkSensorEntity(StarlinkEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{self.coordinator.data[0]['id']}_{description.key}"
+        self._attr_unique_id = f"{self.coordinator.data.status['id']}_{description.key}"
 
     @property
     def native_value(self) -> StateType | datetime:
@@ -80,7 +76,7 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         icon="mdi:speedometer",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTime.MILLISECONDS,
-        value_fn=lambda data: round(data[0]["pop_ping_latency_ms"]),
+        value_fn=lambda data: round(data.status["pop_ping_latency_ms"]),
     ),
     StarlinkSensorEntityDescription(
         key="azimuth",
@@ -89,7 +85,7 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DEGREE,
-        value_fn=lambda data: round(data[0]["direction_azimuth"]),
+        value_fn=lambda data: round(data.status["direction_azimuth"]),
     ),
     StarlinkSensorEntityDescription(
         key="elevation",
@@ -98,7 +94,7 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DEGREE,
-        value_fn=lambda data: round(data[0]["direction_elevation"]),
+        value_fn=lambda data: round(data.status["direction_elevation"]),
     ),
     StarlinkSensorEntityDescription(
         key="uplink_throughput",
@@ -106,7 +102,7 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         icon="mdi:upload",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfDataRate.BITS_PER_SECOND,
-        value_fn=lambda data: round(data[0]["uplink_throughput_bps"]),
+        value_fn=lambda data: round(data.status["uplink_throughput_bps"]),
     ),
     StarlinkSensorEntityDescription(
         key="downlink_throughput",
@@ -114,7 +110,7 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         icon="mdi:download",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfDataRate.BITS_PER_SECOND,
-        value_fn=lambda data: round(data[0]["downlink_throughput_bps"]),
+        value_fn=lambda data: round(data.status["downlink_throughput_bps"]),
     ),
     StarlinkSensorEntityDescription(
         key="last_boot_time",
@@ -123,6 +119,6 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: datetime.now().astimezone()
-        - timedelta(seconds=data[0]["uptime"]),
+        - timedelta(seconds=data.status["uptime"]),
     ),
 )

@@ -21,10 +21,10 @@ class StarlinkEntity(CoordinatorEntity[StarlinkUpdateCoordinator], Entity):
         super().__init__(coordinator)
         self._attr_device_info = DeviceInfo(
             identifiers={
-                (DOMAIN, self.coordinator.data[0]["id"]),
+                (DOMAIN, self.coordinator.data.status["id"]),
             },
-            sw_version=self.coordinator.data[0]["software_version"],
-            hw_version=self.coordinator.data[0]["hardware_version"],
+            sw_version=self.coordinator.data.status["software_version"],
+            hw_version=self.coordinator.data.status["hardware_version"],
             name="Starlink",
             configuration_url=f"http://{self.coordinator.channel_context.target.split(':')[0]}",
             manufacturer="SpaceX",
