@@ -33,7 +33,8 @@ from .const import (
     DEFAULT_USERNAME,
     DOMAIN,
 )
-from .entity import DLinkEntity, SmartPlugData
+from .data import SmartPlugData
+from .entity import DLinkEntity
 
 SCAN_INTERVAL = timedelta(minutes=2)
 
@@ -87,7 +88,7 @@ async def async_setup_entry(
             SmartPlugSwitch(
                 hass,
                 entry,
-                SmartPlugData(hass.data[DOMAIN][entry.entry_id]),
+                hass.data[DOMAIN][entry.entry_id],
                 SWITCH_TYPE,
             ),
         ],

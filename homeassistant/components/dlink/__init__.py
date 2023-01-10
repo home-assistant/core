@@ -9,26 +9,24 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import CONF_USE_LEGACY_PROTOCOL, DOMAIN
+from .data import SmartPlugData
 
 PLATFORMS = [Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up D-Link Power Plug from a config entry."""
-    try:
-        smartplug = await hass.async_add_executor_job(
-            SmartPlug,
-            entry.data[CONF_HOST],
-            entry.data[CONF_PASSWORD],
-            entry.data[CONF_USERNAME],
-            entry.data[CONF_USE_LEGACY_PROTOCOL],
-        )
-    except Exception as ex:  # pylint: disable=broad-except
-        raise ConfigEntryNotReady(f"Failed to connect to device: {ex}") from ex
+    smartplug = await hass.async_add_executor_job(
+        SmartPlug,
+        entry.data[CONF_HOST],
+        entry.data[CONF_PASSWORD],
+        entry.data[CONF_USERNAME],
+        entry.data[CONF_USE_LEGACY_PROTOCOL],
+    )
     if not smartplug.authenticated:
         raise ConfigEntryNotReady("Cannot connect/authenticate")
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = smartplug
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = SmartPlugData(smartplug)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True

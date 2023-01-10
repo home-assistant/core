@@ -4,7 +4,7 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "password": "[%key:common::config_flow::data::password%]",
+          "password": "Password (default: PIN code on the back)",
           "username": "[%key:common::config_flow::data::username%]",
           "use_legacy_protocol": "Use legacy protocol"
         }

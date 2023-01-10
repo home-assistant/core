@@ -1,5 +1,6 @@
 """Configure pytest for D-Link tests."""
 
+from copy import deepcopy
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -52,6 +53,7 @@ def mocked_plug() -> MagicMock:
 @pytest.fixture()
 def mocked_plug_no_auth(mocked_plug: MagicMock) -> MagicMock:
     """Create mocked unauthenticated plug device."""
+    mocked_plug = deepcopy(mocked_plug)
     mocked_plug.authenticated = None
     return mocked_plug
 

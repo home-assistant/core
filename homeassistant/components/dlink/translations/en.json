@@ -11,7 +11,7 @@
             "user": {
                 "data": {
                     "host": "Host",
-                    "password": "Password",
+                    "password": "Password (default: PIN code on the back)",
                     "username": "Username",
                     "use_legacy_protocol": "Use legacy protocol"
                 }

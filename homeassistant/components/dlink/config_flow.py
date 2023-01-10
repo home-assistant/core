@@ -19,12 +19,13 @@ _LOGGER = logging.getLogger(__name__)
 class DLinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for D-Link Power Plug."""
 
-    async def async_step_import(
-        self,
-        config: dict[str, Any] | None = None,
-    ) -> FlowResult:
+    async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
         """Import a config entry."""
-        return await self.async_step_user(config)
+        title = config.pop(CONF_NAME, DEFAULT_NAME)
+        return self.async_create_entry(
+            title=title,
+            data=config,
+        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -38,9 +39,8 @@ class DLinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 self._try_connect, user_input
             )
             if error is None:
-                title = user_input.pop(CONF_NAME, DEFAULT_NAME)
                 return self.async_create_entry(
-                    title=title,
+                    title=DEFAULT_NAME,
                     data=user_input,
                 )
             errors["base"] = error
@@ -64,6 +64,7 @@ class DLinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _try_connect(self, user_input: dict[str, Any]) -> str | None:
         """Try connecting to D-Link Power Plug."""
+        _LOGGER.warning(user_input)
         try:
             smartplug = SmartPlug(
                 user_input[CONF_HOST],

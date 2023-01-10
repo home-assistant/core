@@ -44,7 +44,7 @@ async def test_flow_user_already_configured(
 
 
 async def test_flow_user_cannot_connect(
-    hass: HomeAssistant, mocked_plug_no_auth: MagicMock
+    hass: HomeAssistant, mocked_plug: MagicMock, mocked_plug_no_auth: MagicMock
 ) -> None:
     """Test user initialized flow with unreachable server."""
     with patch_config_flow(mocked_plug_no_auth):
@@ -54,6 +54,15 @@ async def test_flow_user_cannot_connect(
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"]["base"] == "cannot_connect"
+
+    with patch_config_flow(mocked_plug):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_DATA,
+        )
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["title"] == DEFAULT_NAME
+    assert result["data"] == CONF_DATA
 
 
 async def test_flow_user_unknown_error(
@@ -68,6 +77,15 @@ async def test_flow_user_unknown_error(
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"]["base"] == "unknown"
+
+    with patch_config_flow(mocked_plug):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_DATA,
+        )
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["title"] == DEFAULT_NAME
+    assert result["data"] == CONF_DATA
 
 
 async def test_import(hass: HomeAssistant, mocked_plug: MagicMock) -> None:
