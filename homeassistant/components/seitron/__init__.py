@@ -24,7 +24,7 @@ PLATFORMS: list[Platform] = [Platform.CLIMATE]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up seitron from a config entry."""
 
-    async def _async_update_data():
+    async def _async_update_data() -> SeitronGateway:
         """Update data via library."""
         async with async_timeout.timeout(20):
             await seitron_gw.update()
