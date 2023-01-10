@@ -449,7 +449,7 @@ blinkstick==1.2.0
 blockchain==1.4.4
 
 # homeassistant.components.bluemaestro
-bluemaestro-ble==0.2.0
+bluemaestro-ble==0.2.1
 
 # homeassistant.components.decora
 # homeassistant.components.zengge
