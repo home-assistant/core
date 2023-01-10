@@ -237,6 +237,13 @@ class ISYAuxSensorEntity(ISYSensorEntity):
         self._attr_device_class = ISY_CONTROL_TO_DEVICE_CLASS.get(control)
         self._attr_state_class = ISY_CONTROL_TO_STATE_CLASS.get(control)
 
+        name = COMMAND_FRIENDLY_NAME.get(self._control, self._control)
+        self._attr_name = f"{node.name} {name.replace('_', ' ').title()}"
+
+        self._attr_unique_id = (
+            f"{node.isy.configuration[ISY_CONF_UUID]}_{node.address}_{control}"
+        )
+
     @property
     def target(self) -> Node | NodeProperty | None:
         """Return target for the sensor."""
@@ -249,20 +256,6 @@ class ISYAuxSensorEntity(ISYSensorEntity):
     def target_value(self) -> Any:
         """Return the target value."""
         return None if self.target is None else self.target.value
-
-    @property
-    def unique_id(self) -> str | None:
-        """Get the unique identifier of the device and aux sensor."""
-        if not hasattr(self._node, "address"):
-            return None
-        return f"{self._node.isy.configuration[ISY_CONF_UUID]}_{self._node.address}_{self._control}"
-
-    @property
-    def name(self) -> str:
-        """Get the name of the device and aux sensor."""
-        base_name = self._name or str(self._node.name)
-        name = COMMAND_FRIENDLY_NAME.get(self._control, self._control)
-        return f"{base_name} {name.replace('_', ' ').title()}"
 
 
 class ISYSensorVariableEntity(ISYEntity, SensorEntity):

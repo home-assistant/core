@@ -15,16 +15,20 @@ from pyisy.nodes import Group, Node, Nodes
 from pyisy.programs import Programs
 from pyisy.variables import Variables
 
-from homeassistant.const import Platform
+from homeassistant.const import ATTR_MANUFACTURER, ATTR_MODEL, Platform
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import (
     _LOGGER,
     DEFAULT_PROGRAM_STRING,
+    DOMAIN,
     FILTER_INSTEON_TYPE,
     FILTER_NODE_DEF_ID,
     FILTER_STATES,
     FILTER_UOM,
     FILTER_ZWAVE_CAT,
+    ISY_CONF_UUID,
+    ISY_DEVICES,
     ISY_GROUP_PLATFORM,
     ISY_NODES,
     ISY_PROGRAMS,
@@ -46,6 +50,7 @@ from .const import (
     UOM_DOUBLE_TEMP,
     UOM_ISYV4_DEGREES,
 )
+from .util import _async_isy_to_configuration_url
 
 BINARY_SENSOR_UOMS = ["2", "78"]
 BINARY_SENSOR_ISY_STATES = ["on", "off"]
@@ -270,6 +275,43 @@ def _is_sensor_a_binary_sensor(hass_isy_data: dict, node: Group | Node) -> bool:
     return False
 
 
+def _generate_device_info(node: Node) -> DeviceInfo:
+    """Generate the device info for a root node device."""
+    isy = node.isy
+    uuid = isy.configuration[ISY_CONF_UUID]
+    url = _async_isy_to_configuration_url(isy)
+    basename = node.name
+    device_info = DeviceInfo(
+        identifiers={(DOMAIN, f"{uuid}_{node.address}")},
+        manufacturer=node.protocol,
+        name=f"{basename} ({(str(node.address).rpartition(' ')[0] or node.address)})",
+        via_device=(DOMAIN, uuid),
+        configuration_url=url,
+        suggested_area=node.folder,
+    )
+
+    # ISYv5 Device Types can provide model and manufacturer
+    model: str = "Unknown"
+    if node.node_def_id is not None:
+        model = str(node.node_def_id)
+
+    # Numerical Device Type
+    if node.type is not None:
+        model += f" ({node.type})"
+
+    # Get extra information for Z-Wave Devices
+    if node.protocol == PROTO_ZWAVE:
+        device_info[ATTR_MANUFACTURER] = f"Z-Wave MfrID:{node.zwave_props.mfr_id}"
+        model += (
+            f" Type:{node.zwave_props.devtype_gen} "
+            f"ProductTypeID:{node.zwave_props.prod_type_id} "
+            f"ProductID:{node.zwave_props.product_id}"
+        )
+    device_info[ATTR_MODEL] = model
+
+    return device_info
+
+
 def _categorize_nodes(
     hass_isy_data: dict, nodes: Nodes, ignore_identifier: str, sensor_identifier: str
 ) -> None:
@@ -281,7 +323,8 @@ def _categorize_nodes(
             continue
 
         if hasattr(node, "parent_node") and node.parent_node is None:
-            # This is a physical device / parent node, add a query button
+            # This is a physical device / parent node
+            hass_isy_data[ISY_DEVICES][node.address] = _generate_device_info(node)
             hass_isy_data[ISY_ROOT_NODES][Platform.BUTTON].append(node)
 
         if node.protocol == PROTO_GROUP:

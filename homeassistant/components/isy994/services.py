@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pyisy.constants import COMMAND_FRIENDLY_NAME, PROTO_NETWORK_RESOURCE
+from pyisy.constants import COMMAND_FRIENDLY_NAME
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -25,6 +25,7 @@ from homeassistant.helpers.service import entity_service_call
 
 from .const import (
     _LOGGER,
+    CONF_NETWORK,
     DOMAIN,
     ISY_CONF_NAME,
     ISY_CONF_NETWORKING,
@@ -257,7 +258,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
                     alternate_target=entity_registry.async_get_entity_id(
                         Platform.BUTTON,
                         DOMAIN,
-                        f"{isy.configuration[ISY_CONF_UUID]}_{PROTO_NETWORK_RESOURCE}_{address}",
+                        f"{isy.configuration[ISY_CONF_UUID]}_{CONF_NETWORK}_{address}",
                     ),
                     breaks_in_ha_version="2023.5.0",
                 )
@@ -326,40 +327,31 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
     def async_cleanup_registry_entries(service: ServiceCall) -> None:
         """Remove extra entities that are no longer part of the integration."""
         entity_registry = er.async_get(hass)
-        config_ids = []
-        current_unique_ids: set[str] = set()
 
         for config_entry_id in hass.data[DOMAIN]:
             entries_for_this_config = er.async_entries_for_config_entry(
                 entity_registry, config_entry_id
             )
-            config_ids.extend(
-                [
-                    (entity.unique_id, entity.entity_id)
-                    for entity in entries_for_this_config
-                ]
+            entities = {
+                (entity.domain, entity.unique_id): entity.entity_id
+                for entity in entries_for_this_config
+            }
+
+            extra_entities = set(entities.keys()).difference(
+                unique_ids_for_config_entry_id(hass, config_entry_id)
             )
-            current_unique_ids |= unique_ids_for_config_entry_id(hass, config_entry_id)
 
-        extra_entities = [
-            entity_id
-            for unique_id, entity_id in config_ids
-            if unique_id not in current_unique_ids
-        ]
+            for entity in extra_entities:
+                if entity_registry.async_is_registered(entities[entity]):
+                    entity_registry.async_remove(entities[entity])
 
-        for entity_id in extra_entities:
-            if entity_registry.async_is_registered(entity_id):
-                entity_registry.async_remove(entity_id)
-
-        _LOGGER.debug(
-            (
-                "Cleaning up ISY Entities and devices: Config Entries: %s, Current"
-                " Entries: %s, Extra Entries Removed: %s"
-            ),
-            len(config_ids),
-            len(current_unique_ids),
-            len(extra_entities),
-        )
+            _LOGGER.debug(
+                (
+                    "Cleaning up ISY entities: removed %s extra entities for config entry: %s"
+                ),
+                len(extra_entities),
+                len(config_entry_id),
+            )
 
     async def async_reload_config_entries(service: ServiceCall) -> None:
         """Trigger a reload of all ISY config entries."""

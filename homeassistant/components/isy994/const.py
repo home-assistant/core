@@ -58,6 +58,7 @@ DOMAIN = "isy994"
 
 MANUFACTURER = "Universal Devices, Inc"
 
+CONF_NETWORK = "network"
 CONF_IGNORE_STRING = "ignore_string"
 CONF_SENSOR_STRING = "sensor_string"
 CONF_VAR_SENSOR_STRING = "variable_sensor_string"
@@ -114,6 +115,7 @@ ISY_NET_RES = "isy_net_res"
 ISY_NODES = "isy_nodes"
 ISY_PROGRAMS = "isy_programs"
 ISY_VARIABLES = "isy_variables"
+ISY_DEVICES = "isy_devices"
 
 ISY_CONF_NETWORKING = "Networking Module"
 ISY_CONF_UUID = "uuid"

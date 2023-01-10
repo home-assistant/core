@@ -14,25 +14,30 @@ from pyisy.constants import (
 from pyisy.helpers import EventListener, NodeProperty
 from pyisy.nodes import Node
 from pyisy.programs import Program
+from pyisy.variables import Variable
 
-from homeassistant.const import ATTR_MANUFACTURER, ATTR_MODEL, STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
-from . import _async_isy_to_configuration_url
-from .const import DOMAIN, ISY_CONF_UUID
+from .const import DOMAIN, ISY_CONF_UUID, ISY_DEVICES
 
 
 class ISYEntity(Entity):
     """Representation of an ISY device."""
 
-    _name: str | None = None
+    _attr_has_entity_name = False
     _attr_should_poll = False
+    _node: Node | Program | Variable
 
     def __init__(self, node: Node) -> None:
         """Initialize the insteon device."""
         self._node = node
+        self._attr_name = node.name
+        uuid = node.isy.configuration[ISY_CONF_UUID]
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, uuid)})
+        self._attr_unique_id = f"{uuid}_{node.address}"
         self._attrs: dict[str, Any] = {}
         self._change_handler: EventListener | None = None
         self._control_handler: EventListener | None = None
@@ -69,75 +74,35 @@ class ISYEntity(Entity):
 
         self.hass.bus.async_fire("isy994_control", event_data)
 
-    @property
-    def device_info(self) -> DeviceInfo | None:
-        """Return the device_info of the device."""
-        isy = self._node.isy
-        uuid = isy.configuration[ISY_CONF_UUID]
-        node = self._node
-        url = _async_isy_to_configuration_url(isy)
-
-        basename = self._name or str(self._node.name)
-
-        if node.protocol == PROTO_GROUP and len(node.controllers) == 1:
-            # If Group has only 1 Controller, link to that device instead of the hub
-            node = isy.nodes.get_by_id(node.controllers[0])
-            basename = node.name
-
-        if hasattr(node, "parent_node"):  # Verify this is a Node class
-            if node.parent_node is not None:
-                # This is not the parent node, get the parent node.
-                node = node.parent_node
-                basename = node.name
-        else:
-            # Default to the hub device if parent node is not a physical device
-            return DeviceInfo(identifiers={(DOMAIN, uuid)})
-
-        device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{uuid}_{node.address}")},
-            manufacturer=node.protocol,
-            name=f"{basename} ({(str(node.address).rpartition(' ')[0] or node.address)})",
-            via_device=(DOMAIN, uuid),
-            configuration_url=url,
-            suggested_area=node.folder,
-        )
-
-        # ISYv5 Device Types can provide model and manufacturer
-        model: str = "Unknown"
-        if node.node_def_id is not None:
-            model = str(node.node_def_id)
-
-        # Numerical Device Type
-        if node.type is not None:
-            model += f" ({node.type})"
-
-        # Get extra information for Z-Wave Devices
-        if node.protocol == PROTO_ZWAVE:
-            device_info[ATTR_MANUFACTURER] = f"Z-Wave MfrID:{node.zwave_props.mfr_id}"
-            model += (
-                f" Type:{node.zwave_props.devtype_gen} "
-                f"ProductTypeID:{node.zwave_props.prod_type_id} "
-                f"ProductID:{node.zwave_props.product_id}"
-            )
-        device_info[ATTR_MODEL] = model
-
-        return device_info
-
-    @property
-    def unique_id(self) -> str | None:
-        """Get the unique identifier of the device."""
-        if hasattr(self._node, "address"):
-            return f"{self._node.isy.configuration[ISY_CONF_UUID]}_{self._node.address}"
-        return None
-
-    @property
-    def name(self) -> str:
-        """Get the name of the device."""
-        return self._name or str(self._node.name)
-
 
 class ISYNodeEntity(ISYEntity):
     """Representation of a ISY Nodebase (Node/Group) entity."""
+
+    @property
+    def device_info(self) -> DeviceInfo | None:
+        """Return the device info."""
+        assert self.platform and self.platform.config_entry
+
+        entry_id = self.platform.config_entry.entry_id
+        device_info: dict[str, DeviceInfo] = self.hass.data[DOMAIN][entry_id][
+            ISY_DEVICES
+        ]
+        primary_address = self._node.primary_node
+
+        if self._node.protocol == PROTO_GROUP:
+            if len(self._node.controllers) == 1:
+                # If Group has only 1 Controller, link to that device instead of the hub
+                primary_address = self._node.isy.nodes.get_by_id(
+                    self._node.controllers[0]
+                ).primary_node
+            else:
+                return self._attr_device_info
+
+        if device := device_info.get(primary_address):
+            return device
+
+        # Fall back to the hub if we don't have a primary device
+        return self._attr_device_info
 
     @property
     def extra_state_attributes(self) -> dict:
@@ -219,7 +184,7 @@ class ISYProgramEntity(ISYEntity):
     def __init__(self, name: str, status: Any | None, actions: Program = None) -> None:
         """Initialize the ISY program-based entity."""
         super().__init__(status)
-        self._name = name
+        self._attr_name = name
         self._actions = actions
 
     @property

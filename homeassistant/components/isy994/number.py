@@ -9,22 +9,17 @@ from pyisy.variables import Variable
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_VARIABLES, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import _async_isy_to_configuration_url
 from .const import (
     DOMAIN as ISY994_DOMAIN,
-    ISY_CONF_FIRMWARE,
-    ISY_CONF_MODEL,
-    ISY_CONF_NAME,
     ISY_CONF_UUID,
+    ISY_DEVICES,
     ISY_ROOT,
     ISY_VARIABLES,
-    MANUFACTURER,
 )
 from .helpers import convert_isy_value_to_hass
 
@@ -40,6 +35,7 @@ async def async_setup_entry(
     hass_isy_data = hass.data[ISY994_DOMAIN][config_entry.entry_id]
     isy: ISY = hass_isy_data[ISY_ROOT]
     uuid = isy.configuration[ISY_CONF_UUID]
+    device_info = hass_isy_data[ISY_DEVICES]
     entities: list[ISYVariableNumberEntity] = []
 
     for node, enable_by_default in hass_isy_data[ISY_VARIABLES][Platform.NUMBER]:
@@ -72,6 +68,7 @@ async def async_setup_entry(
                 node,
                 unique_id=f"{uuid}_{node.address}",
                 description=description,
+                device_info=device_info[CONF_VARIABLES],
             )
         )
         entities.append(
@@ -79,6 +76,7 @@ async def async_setup_entry(
                 node=node,
                 unique_id=f"{uuid}_{node.address}_init",
                 description=description_init,
+                device_info=device_info[CONF_VARIABLES],
                 init_entity=True,
             )
         )
@@ -100,37 +98,19 @@ class ISYVariableNumberEntity(NumberEntity):
         node: Variable,
         unique_id: str,
         description: NumberEntityDescription,
+        device_info: DeviceInfo,
         init_entity: bool = False,
     ) -> None:
         """Initialize the ISY variable number."""
         self._node = node
-        self._name = description.name
         self.entity_description = description
         self._change_handler: EventListener | None = None
 
         # Two entities are created for each variable, one for current value and one for initial.
         # Initial value entities are disabled by default
         self._init_entity = init_entity
-
         self._attr_unique_id = unique_id
-
-        url = _async_isy_to_configuration_url(node.isy)
-        config = node.isy.configuration
-        self._attr_device_info = DeviceInfo(
-            identifiers={
-                (
-                    ISY994_DOMAIN,
-                    f"{config[ISY_CONF_UUID]}_variables",
-                )
-            },
-            manufacturer=MANUFACTURER,
-            name=f"{config[ISY_CONF_NAME]} Variables",
-            model=config[ISY_CONF_MODEL],
-            sw_version=config[ISY_CONF_FIRMWARE],
-            configuration_url=url,
-            via_device=(ISY994_DOMAIN, config[ISY_CONF_UUID]),
-            entry_type=DeviceEntryType.SERVICE,
-        )
+        self._attr_device_info = device_info
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to the node change events."""

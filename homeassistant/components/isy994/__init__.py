@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_USERNAME,
+    CONF_VARIABLES,
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
@@ -21,11 +22,14 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     _LOGGER,
     CONF_IGNORE_STRING,
+    CONF_NETWORK,
     CONF_RESTORE_LIGHT_STATE,
     CONF_SENSOR_STRING,
     CONF_TLS_VER,
@@ -40,9 +44,7 @@ from .const import (
     ISY_CONF_NAME,
     ISY_CONF_NETWORKING,
     ISY_CONF_UUID,
-    ISY_CONN_ADDRESS,
-    ISY_CONN_PORT,
-    ISY_CONN_TLS,
+    ISY_DEVICES,
     ISY_NET_RES,
     ISY_NODES,
     ISY_PROGRAMS,
@@ -61,7 +63,7 @@ from .const import (
 )
 from .helpers import _categorize_nodes, _categorize_programs, _categorize_variables
 from .services import async_setup_services, async_unload_services
-from .util import unique_ids_for_config_entry_id
+from .util import _async_isy_to_configuration_url
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -143,6 +145,7 @@ async def async_setup_entry(
     hass_isy_data[ISY_PROGRAMS] = {p: [] for p in PROGRAM_PLATFORMS}
     hass_isy_data[ISY_VARIABLES] = {p: [] for p in VARIABLE_PLATFORMS}
     hass_isy_data[ISY_NET_RES] = []
+    hass_isy_data[ISY_DEVICES] = {}
 
     isy_config = entry.data
     isy_options = entry.options
@@ -216,10 +219,17 @@ async def async_setup_entry(
     # Categorize variables call to be removed with variable sensors in 2023.5.0
     _categorize_variables(hass_isy_data, isy.variables, variable_identifier)
     # Gather ISY Variables to be added. Identifier used to enable by default.
-    numbers = hass_isy_data[ISY_VARIABLES][Platform.NUMBER]
-    for vtype, vname, vid in isy.variables.children:
-        numbers.append((isy.variables[vtype][vid], variable_identifier in vname))
+    if len(isy.variables.children) > 0:
+        hass_isy_data[ISY_DEVICES][CONF_VARIABLES] = _create_service_device_info(
+            isy, name=CONF_VARIABLES.title(), unique_id=CONF_VARIABLES
+        )
+        numbers = hass_isy_data[ISY_VARIABLES][Platform.NUMBER]
+        for vtype, vname, vid in isy.variables.children:
+            numbers.append((isy.variables[vtype][vid], variable_identifier in vname))
     if isy.configuration[ISY_CONF_NETWORKING]:
+        hass_isy_data[ISY_DEVICES][CONF_NETWORK] = _create_service_device_info(
+            isy, name=ISY_CONF_NETWORKING, unique_id=CONF_NETWORK
+        )
         for resource in isy.networking.nobjs:
             hass_isy_data[ISY_NET_RES].append(resource)
 
@@ -279,14 +289,6 @@ def _async_import_options_from_data_if_missing(
 
 
 @callback
-def _async_isy_to_configuration_url(isy: ISY) -> str:
-    """Extract the configuration url from the isy."""
-    connection_info = isy.conn.connection_info
-    proto = SCHEME_HTTPS if ISY_CONN_TLS in connection_info else SCHEME_HTTP
-    return f"{proto}://{connection_info[ISY_CONN_ADDRESS]}:{connection_info[ISY_CONN_PORT]}"
-
-
-@callback
 def _async_get_or_create_isy_device_in_registry(
     hass: HomeAssistant, entry: config_entries.ConfigEntry, isy: ISY
 ) -> None:
@@ -301,6 +303,26 @@ def _async_get_or_create_isy_device_in_registry(
         model=isy.configuration[ISY_CONF_MODEL],
         sw_version=isy.configuration[ISY_CONF_FIRMWARE],
         configuration_url=url,
+    )
+
+
+def _create_service_device_info(isy: ISY, name: str, unique_id: str) -> DeviceInfo:
+    """Create device info for ISY service devices."""
+    url = _async_isy_to_configuration_url(isy)
+    return DeviceInfo(
+        identifiers={
+            (
+                DOMAIN,
+                f"{isy.configuration[ISY_CONF_UUID]}_{unique_id}",
+            )
+        },
+        manufacturer=MANUFACTURER,
+        name=f"{isy.configuration[ISY_CONF_NAME]} {name}",
+        model=isy.configuration[ISY_CONF_MODEL],
+        sw_version=isy.configuration[ISY_CONF_FIRMWARE],
+        configuration_url=url,
+        via_device=(DOMAIN, isy.configuration[ISY_CONF_UUID]),
+        entry_type=DeviceEntryType.SERVICE,
     )
 
 
@@ -331,7 +353,7 @@ async def async_remove_config_entry_device(
     device_entry: dr.DeviceEntry,
 ) -> bool:
     """Remove ISY config entry from a device."""
+    hass_isy_devices = hass.data[DOMAIN][config_entry.entry_id][ISY_DEVICES]
     return not device_entry.identifiers.intersection(
-        (DOMAIN, unique_id)
-        for unique_id in unique_ids_for_config_entry_id(hass, config_entry.entry_id)
+        (DOMAIN, unique_id) for unique_id in hass_isy_devices
     )
