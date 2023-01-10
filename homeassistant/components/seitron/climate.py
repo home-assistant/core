@@ -34,7 +34,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up the seitron climate entities from a config entry."""
     coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    # coordinator.data is a SeitronGateway
     async_add_entities(
         SeitronClimate(coordinator, thermostat)
         for thermostat in coordinator.data.devices
