@@ -6,6 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import datetime as dt
 from datetime import datetime
+from typing import Any
 
 import hdate
 from hdate.zmanim import Zmanim
@@ -18,6 +19,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import event
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
 from . import DOMAIN
@@ -82,12 +84,12 @@ class JewishCalendarBinarySensor(BinarySensorEntity):
 
     def __init__(
         self,
-        data: dict[str, str | bool | int | float],
+        data: dict[str, Any],
         description: JewishCalendarBinarySensorEntityDescription,
     ) -> None:
         """Initialize the binary sensor."""
         self.entity_description = description
-        self._attr_unique_id = f"{data['name']}_{description.key}"
+        self._attr_unique_id = f"{slugify(data['name'])}_{description.key}"
         self._location = data["location"]
         self._hebrew = data["language"] == "hebrew"
         self._candle_lighting_offset = data["candle_lighting_offset"]
