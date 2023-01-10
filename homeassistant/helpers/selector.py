@@ -733,7 +733,7 @@ class SelectSelectorConfig(TypedDict, total=False):
     multiple: bool
     custom_value: bool
     mode: SelectSelectorMode
-    domain: str
+    translation_domain: str
     translation_key: str
 
 
@@ -751,7 +751,7 @@ class SelectSelector(Selector[SelectSelectorConfig]):
             vol.Optional("mode"): vol.All(
                 vol.Coerce(SelectSelectorMode), lambda val: val.value
             ),
-            vol.Optional("domain"): cv.string,
+            vol.Optional("translation_domain"): cv.string,
             vol.Optional("translation_key"): cv.string,
         }
     )
