@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_registry import (
     EntityRegistry,
@@ -39,6 +40,7 @@ UI_CONFIG_SCHEMA = vol.Schema(
         vol.Required(ATTR_POWER_P3, default=DEFAULT_POWER_KW): VALID_POWER,
     }
 )
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
