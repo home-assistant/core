@@ -54,7 +54,7 @@ from .const import (
     UOM_TO_STATES,
 )
 from .entity import ISYNodeEntity
-from .helpers import convert_isy_value_to_hass, migrate_old_unique_ids
+from .helpers import convert_isy_value_to_hass
 
 
 async def async_setup_entry(
@@ -67,7 +67,6 @@ async def async_setup_entry(
     for node in hass_isy_data[ISY994_NODES][Platform.CLIMATE]:
         entities.append(ISYThermostatEntity(node))
 
-    await migrate_old_unique_ids(hass, Platform.CLIMATE, entities)
     async_add_entities(entities)
 
 
