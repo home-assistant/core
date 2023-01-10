@@ -43,21 +43,21 @@ BINARY_SENSORS = (
         key="motion",
         name="Motion",
         device_class=BinarySensorDeviceClass.MOTION,
-        value=lambda host, ch: host.motion_detected(ch),
+        value=lambda host, ch: host.api.motion_detected(ch),
     ),
     ReolinkBinarySensorDescription(
         key=FACE_DETECTION_TYPE,
         name=FACE_DETECTION_TYPE,
         icon="mdi:face-recognition",
         device_class=BinarySensorDeviceClass.MOTION,
-        value=lambda host, ch: host.ai_detected(ch, FACE_DETECTION_TYPE),
+        value=lambda host, ch: host.api.ai_detected(ch, FACE_DETECTION_TYPE),
         supported=lambda host, ch: host.api.ai_supported(ch, FACE_DETECTION_TYPE),
     ),
     ReolinkBinarySensorDescription(
         key=PERSON_DETECTION_TYPE,
         name=PERSON_DETECTION_TYPE,
         device_class=BinarySensorDeviceClass.MOTION,
-        value=lambda host, ch: host.ai_detected(ch, PERSON_DETECTION_TYPE),
+        value=lambda host, ch: host.api.ai_detected(ch, PERSON_DETECTION_TYPE),
         supported=lambda host, ch: host.api.ai_supported(ch, PERSON_DETECTION_TYPE),
     ),
     ReolinkBinarySensorDescription(
@@ -66,7 +66,7 @@ BINARY_SENSORS = (
         icon="mdi:car",
         icon_off="mdi:car-off",
         device_class=BinarySensorDeviceClass.MOTION,
-        value=lambda host, ch: host.ai_detected(ch, VEHICLE_DETECTION_TYPE),
+        value=lambda host, ch: host.api.ai_detected(ch, VEHICLE_DETECTION_TYPE),
         supported=lambda host, ch: host.api.ai_supported(ch, VEHICLE_DETECTION_TYPE),
     ),
     ReolinkBinarySensorDescription(
@@ -75,7 +75,7 @@ BINARY_SENSORS = (
         icon="mdi:dog-side",
         icon_off="mdi:dog-side-off",
         device_class=BinarySensorDeviceClass.MOTION,
-        value=lambda host, ch: host.ai_detected(ch, PET_DETECTION_TYPE),
+        value=lambda host, ch: host.api.ai_detected(ch, PET_DETECTION_TYPE),
         supported=lambda host, ch: host.api.ai_supported(ch, PET_DETECTION_TYPE),
     ),
     ReolinkBinarySensorDescription(
@@ -83,7 +83,7 @@ BINARY_SENSORS = (
         name="Visitor",
         icon="mdi:bell-ring-outline",
         icon_off="mdi:doorbell",
-        value=lambda host, ch: host.visitor_detected(ch),
+        value=lambda host, ch: host.api.visitor_detected(ch),
         supported=lambda host, ch: host.api.is_doorbell_enabled(ch),
     ),
 )
