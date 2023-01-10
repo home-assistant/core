@@ -21,6 +21,7 @@ class DLinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
         """Import a config entry."""
+        self._async_abort_entries_match({CONF_HOST: config[CONF_HOST]})
         title = config.pop(CONF_NAME, DEFAULT_NAME)
         return self.async_create_entry(
             title=title,

@@ -32,6 +32,7 @@ class DLinkEntity(Entity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, config_entry.entry_id)},
             manufacturer=MANUFACTURER,
+            model=data.smartplug.model_name,
             name=config_entry.title,
         )
         if config_entry.unique_id:
