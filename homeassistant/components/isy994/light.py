@@ -22,7 +22,6 @@ from .const import (
     UOM_PERCENTAGE,
 )
 from .entity import ISYNodeEntity
-from .helpers import migrate_old_unique_ids
 from .services import async_setup_light_services
 
 ATTR_LAST_BRIGHTNESS = "last_brightness"
@@ -40,7 +39,6 @@ async def async_setup_entry(
     for node in hass_isy_data[ISY994_NODES][Platform.LIGHT]:
         entities.append(ISYLightEntity(node, restore_light_state))
 
-    await migrate_old_unique_ids(hass, Platform.LIGHT, entities)
     async_add_entities(entities)
     async_setup_light_services(hass)
 
