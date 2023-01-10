@@ -45,7 +45,6 @@ from .const import (
     TYPE_INSTEON_MOTION,
 )
 from .entity import ISYNodeEntity, ISYProgramEntity
-from .helpers import migrate_old_unique_ids
 
 DEVICE_PARENT_REQUIRED = [
     BinarySensorDeviceClass.OPENING,
@@ -191,7 +190,6 @@ async def async_setup_entry(
     for name, status, _ in hass_isy_data[ISY994_PROGRAMS][Platform.BINARY_SENSOR]:
         entities.append(ISYBinarySensorProgramEntity(name, status))
 
-    await migrate_old_unique_ids(hass, Platform.BINARY_SENSOR, entities)
     async_add_entities(entities)
 
 
