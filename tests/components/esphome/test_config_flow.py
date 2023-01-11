@@ -14,6 +14,7 @@ import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import dhcp, zeroconf
 from homeassistant.components.esphome import (
+    CONF_DEVICE_NAME,
     CONF_NOISE_PSK,
     DOMAIN,
     DomainData,
@@ -47,12 +48,6 @@ async def test_user_connection_works(hass, mock_client, mock_zeroconf):
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(
-            uses_password=False, name="test", mac_address="mock-mac"
-        )
-    )
-
     result = await hass.config_entries.flow.async_init(
         "esphome",
         context={"source": config_entries.SOURCE_USER},
@@ -65,9 +60,10 @@ async def test_user_connection_works(hass, mock_client, mock_zeroconf):
         CONF_PORT: 80,
         CONF_PASSWORD: "",
         CONF_NOISE_PSK: "",
+        CONF_DEVICE_NAME: "test",
     }
     assert result["title"] == "test"
-    assert result["result"].unique_id == "mock-mac"
+    assert result["result"].unique_id == "11:22:33:44:55:aa"
 
     assert len(mock_client.connect.mock_calls) == 1
     assert len(mock_client.device_info.mock_calls) == 1
@@ -83,7 +79,7 @@ async def test_user_connection_updates_host(hass, mock_client, mock_zeroconf):
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "test.local", CONF_PORT: 6053, CONF_PASSWORD: ""},
-        unique_id="mock-mac",
+        unique_id="11:22:33:44:55:aa",
     )
     entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
@@ -94,12 +90,6 @@ async def test_user_connection_updates_host(hass, mock_client, mock_zeroconf):
 
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
-
-    mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(
-            uses_password=False, name="test", mac_address="mock-mac"
-        )
-    )
 
     result = await hass.config_entries.flow.async_init(
         "esphome",
@@ -155,9 +145,7 @@ async def test_user_connection_error(hass, mock_client, mock_zeroconf):
 
 async def test_user_with_password(hass, mock_client, mock_zeroconf):
     """Test user step with password."""
-    mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(uses_password=True, name="test")
-    )
+    mock_client.device_info.return_value = DeviceInfo(uses_password=True, name="test")
 
     result = await hass.config_entries.flow.async_init(
         "esphome",
@@ -178,15 +166,14 @@ async def test_user_with_password(hass, mock_client, mock_zeroconf):
         CONF_PORT: 6053,
         CONF_PASSWORD: "password1",
         CONF_NOISE_PSK: "",
+        CONF_DEVICE_NAME: "test",
     }
     assert mock_client.password == "password1"
 
 
 async def test_user_invalid_password(hass, mock_client, mock_zeroconf):
     """Test user step with invalid password."""
-    mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(uses_password=True, name="test")
-    )
+    mock_client.device_info.return_value = DeviceInfo(uses_password=True, name="test")
 
     result = await hass.config_entries.flow.async_init(
         "esphome",
@@ -210,9 +197,7 @@ async def test_user_invalid_password(hass, mock_client, mock_zeroconf):
 
 async def test_login_connection_error(hass, mock_client, mock_zeroconf):
     """Test user step with connection error on login attempt."""
-    mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(uses_password=True, name="test")
-    )
+    mock_client.device_info.return_value = DeviceInfo(uses_password=True, name="test")
 
     result = await hass.config_entries.flow.async_init(
         "esphome",
@@ -236,16 +221,10 @@ async def test_login_connection_error(hass, mock_client, mock_zeroconf):
 
 async def test_discovery_initiation(hass, mock_client, mock_zeroconf):
     """Test discovery importing works."""
-    mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(
-            uses_password=False, name="test8266", mac_address="11:22:33:44:55:aa"
-        )
-    )
-
     service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.43.183",
         addresses=["192.168.43.183"],
-        hostname="test8266.local.",
+        hostname="test.local.",
         name="mock_name",
         port=6053,
         properties={
@@ -262,7 +241,7 @@ async def test_discovery_initiation(hass, mock_client, mock_zeroconf):
     )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "test8266"
+    assert result["title"] == "test"
     assert result["data"][CONF_HOST] == "192.168.43.183"
     assert result["data"][CONF_PORT] == 6053
 
@@ -320,15 +299,11 @@ async def test_discovery_duplicate_data(hass, mock_client):
     service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.43.183",
         addresses=["192.168.43.183"],
-        hostname="test8266.local.",
+        hostname="test.local.",
         name="mock_name",
         port=6053,
-        properties={"address": "test8266.local", "mac": "1122334455aa"},
+        properties={"address": "test.local", "mac": "1122334455aa"},
         type="mock_type",
-    )
-
-    mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(uses_password=False, name="test8266")
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -419,6 +394,7 @@ async def test_encryption_key_valid_psk(hass, mock_client, mock_zeroconf):
         CONF_PORT: 6053,
         CONF_PASSWORD: "",
         CONF_NOISE_PSK: VALID_NOISE_PSK,
+        CONF_DEVICE_NAME: "test",
     }
     assert mock_client.noise_psk == VALID_NOISE_PSK
 
@@ -485,9 +461,7 @@ async def test_reauth_confirm_valid(hass, mock_client, mock_zeroconf):
         },
     )
 
-    mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(uses_password=False, name="test")
-    )
+    mock_client.device_info.return_value = DeviceInfo(uses_password=False, name="test")
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_NOISE_PSK: VALID_NOISE_PSK}
     )
@@ -495,6 +469,53 @@ async def test_reauth_confirm_valid(hass, mock_client, mock_zeroconf):
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert entry.data[CONF_NOISE_PSK] == VALID_NOISE_PSK
+
+
+async def test_reauth_fixed_via_dashboard(hass, mock_client, mock_zeroconf):
+    """Test reauth fixed automatically via dashboard."""
+    dashboard.async_set_dashboard_info(hass, "mock-slug", "mock-host", 6052)
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+            CONF_DEVICE_NAME: "test",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    mock_client.device_info.return_value = DeviceInfo(uses_password=False, name="test")
+
+    with patch(
+        "homeassistant.components.esphome.dashboard.ESPHomeDashboardAPI.get_devices",
+        return_value={
+            "configured": [
+                {
+                    "name": "test",
+                    "configuration": "test.yaml",
+                }
+            ]
+        },
+    ), patch(
+        "homeassistant.components.esphome.dashboard.ESPHomeDashboardAPI.get_encryption_key",
+        return_value=VALID_NOISE_PSK,
+    ) as mock_get_encryption_key:
+        result = await hass.config_entries.flow.async_init(
+            "esphome",
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "entry_id": entry.entry_id,
+                "unique_id": entry.unique_id,
+            },
+        )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data[CONF_NOISE_PSK] == VALID_NOISE_PSK
+
+    assert len(mock_get_encryption_key.mock_calls) == 1
 
 
 async def test_reauth_confirm_invalid(hass, mock_client, mock_zeroconf):
@@ -649,3 +670,104 @@ async def test_discovery_hassio(hass):
     dash = dashboard.async_get_dashboard(hass)
     assert dash is not None
     assert dash.addon_slug == "mock-slug"
+
+
+async def test_zeroconf_encryption_key_via_dashboard(hass, mock_client, mock_zeroconf):
+    """Test encryption key retrieved from dashboard."""
+    service_info = zeroconf.ZeroconfServiceInfo(
+        host="192.168.43.183",
+        addresses=["192.168.43.183"],
+        hostname="test8266.local.",
+        name="mock_name",
+        port=6053,
+        properties={
+            "mac": "1122334455aa",
+        },
+        type="mock_type",
+    )
+    flow = await hass.config_entries.flow.async_init(
+        "esphome", context={"source": config_entries.SOURCE_ZEROCONF}, data=service_info
+    )
+
+    assert flow["type"] == FlowResultType.FORM
+    assert flow["step_id"] == "discovery_confirm"
+
+    dashboard.async_set_dashboard_info(hass, "mock-slug", "mock-host", 6052)
+
+    mock_client.device_info.side_effect = [
+        RequiresEncryptionAPIError,
+        DeviceInfo(
+            uses_password=False,
+            name="test8266",
+            mac_address="11:22:33:44:55:aa",
+        ),
+    ]
+
+    with patch(
+        "homeassistant.components.esphome.dashboard.ESPHomeDashboardAPI.get_devices",
+        return_value={
+            "configured": [
+                {
+                    "name": "test8266",
+                    "configuration": "test8266.yaml",
+                }
+            ]
+        },
+    ), patch(
+        "homeassistant.components.esphome.dashboard.ESPHomeDashboardAPI.get_encryption_key",
+        return_value=VALID_NOISE_PSK,
+    ) as mock_get_encryption_key:
+        result = await hass.config_entries.flow.async_configure(
+            flow["flow_id"], user_input={}
+        )
+
+    assert len(mock_get_encryption_key.mock_calls) == 1
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "test8266"
+    assert result["data"][CONF_HOST] == "192.168.43.183"
+    assert result["data"][CONF_PORT] == 6053
+    assert result["data"][CONF_NOISE_PSK] == VALID_NOISE_PSK
+
+    assert result["result"]
+    assert result["result"].unique_id == "11:22:33:44:55:aa"
+
+    assert mock_client.noise_psk == VALID_NOISE_PSK
+
+
+async def test_zeroconf_no_encryption_key_via_dashboard(
+    hass, mock_client, mock_zeroconf
+):
+    """Test encryption key not retrieved from dashboard."""
+    service_info = zeroconf.ZeroconfServiceInfo(
+        host="192.168.43.183",
+        addresses=["192.168.43.183"],
+        hostname="test8266.local.",
+        name="mock_name",
+        port=6053,
+        properties={
+            "mac": "1122334455aa",
+        },
+        type="mock_type",
+    )
+    flow = await hass.config_entries.flow.async_init(
+        "esphome", context={"source": config_entries.SOURCE_ZEROCONF}, data=service_info
+    )
+
+    assert flow["type"] == FlowResultType.FORM
+    assert flow["step_id"] == "discovery_confirm"
+
+    dashboard.async_set_dashboard_info(hass, "mock-slug", "mock-host", 6052)
+
+    mock_client.device_info.side_effect = RequiresEncryptionAPIError
+
+    with patch(
+        "homeassistant.components.esphome.dashboard.ESPHomeDashboardAPI.get_devices",
+        return_value={"configured": []},
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            flow["flow_id"], user_input={}
+        )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "encryption_key"
