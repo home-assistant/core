@@ -100,15 +100,15 @@ async def async_setup_entry(
 
     entities = []
     for channel in host.api.channels:
-        for description in BINARY_SENSORS:
-            if not description.supported(host, channel):
+        for entity_description in BINARY_SENSORS:
+            if not entity_description.supported(host, channel):
                 continue
 
             entities.append(
                 ReolinkBinarySensorEntity(
                     reolink_data,
                     channel,
-                    description,
+                    entity_description,
                 )
             )
 
@@ -124,30 +124,30 @@ class ReolinkBinarySensorEntity(ReolinkCoordinatorEntity, BinarySensorEntity):
         self,
         reolink_data: ReolinkData,
         channel: int,
-        description: ReolinkBinarySensorDescription,
+        entity_description: ReolinkBinarySensorDescription,
     ) -> None:
         """Initialize Reolink binary sensor."""
         ReolinkCoordinatorEntity.__init__(self, reolink_data, channel)
-        self.entity_description = description
+        self.entity_description = entity_description
 
-        self._attr_name = description.name
+        self._attr_name = entity_description.name
         self._attr_unique_id = (
-            f"{self._host.unique_id}_{self._channel}_{description.key}"
+            f"{self._host.unique_id}_{self._channel}_{entity_description.key}"
         )
-        self._attr_device_class = description.device_class
+        self._attr_device_class = entity_description.device_class
 
     @property
     def icon(self) -> str:
         """Icon of the sensor."""
         if self.is_on:
-            return self._description.icon
+            return self.entity_description.icon
 
-        return self._description.icon_off
+        return self.entity_description.icon_off
 
     @property
     def is_on(self) -> bool:
         """State of the sensor."""
-        return self._description.value(self._host, self._channel)
+        return self.entity_description.value(self._host, self._channel)
 
     async def async_added_to_hass(self) -> None:
         """Entity created."""
