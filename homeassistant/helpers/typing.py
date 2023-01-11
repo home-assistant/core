@@ -1,5 +1,7 @@
 """Typing Helpers for Home Assistant."""
-from collections.abc import Mapping
+from __future__ import annotations
+
+from collections.abc import Mapping, MutableMapping, MutableSequence, Sequence
 from enum import Enum
 from typing import Any
 
@@ -16,6 +18,27 @@ TemplateVarsType = Mapping[str, Any] | None
 
 # Custom type for recorder Queries
 QueryType = Any
+
+JsonValueType = Union[
+    None,
+    str,
+    int,
+    float,
+    bool,
+    Sequence["JsonValueType"],
+    Mapping[str, "JsonValueType"],
+]
+JsonMutableValueType = Union[
+    None,
+    str,
+    int,
+    float,
+    bool,
+    MutableSequence["JsonMutableValueType"],
+    MutableMapping[str, "JsonMutableValueType"],
+]
+JsonObjectType = Mapping[str, JsonValueType]
+JsonMutableObjectType = MutableMapping[str, JsonMutableValueType]
 
 
 class UndefinedType(Enum):
