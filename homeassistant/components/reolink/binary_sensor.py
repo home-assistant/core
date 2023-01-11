@@ -20,6 +20,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import ReolinkData
 from .const import DOMAIN
@@ -152,10 +153,20 @@ class ReolinkBinarySensorEntity(ReolinkCoordinatorEntity, BinarySensorEntity):
     async def async_added_to_hass(self) -> None:
         """Entity created."""
         await super().async_added_to_hass()
-        self.async_on_remove(self.hass.bus.async_listen(
-            f"{self._host.webhook_id}_{self._channel}", self._async_handle_event
-        ))
-        self.async_on_remove(self.hass.bus.async_listen(f"{self._host.webhook_id}_all", self._async_handle_event))
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._host.webhook_id}_{self._channel}",
+                self._async_handle_event,
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{self._host.webhook_id}_all",
+                self._async_handle_event,
+            )
+        )
 
     async def _async_handle_event(self, event):
         """Handle incoming event for motion detection."""

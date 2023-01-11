@@ -20,6 +20,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNA
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
     CONF_PROTOCOL,
@@ -313,6 +314,6 @@ class ReolinkHost:
         channel = await self._api.ONVIF_event_callback(data)
 
         if channel is None:
-            hass.bus.async_fire(f"{webhook_id}_all", {})
+            async_dispatcher_send(hass, f"{webhook_id}_all", {})
         else:
-            hass.bus.async_fire(f"{webhook_id}_{channel}", {})
+            async_dispatcher_send(hass, f"{webhook_id}_{channel}", {})
