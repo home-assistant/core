@@ -1,7 +1,7 @@
 """Typing Helpers for Home Assistant."""
 from __future__ import annotations
 
-from collections.abc import Mapping, MutableMapping, MutableSequence, Sequence
+from collections.abc import Mapping, Sequence
 from enum import Enum
 from typing import Any
 
@@ -28,17 +28,7 @@ JsonValueType = Union[
     Sequence["JsonValueType"],
     Mapping[str, "JsonValueType"],
 ]
-JsonMutableValueType = Union[
-    None,
-    str,
-    int,
-    float,
-    bool,
-    MutableSequence["JsonMutableValueType"],
-    MutableMapping[str, "JsonMutableValueType"],
-]
 JsonObjectType = Mapping[str, JsonValueType]
-JsonMutableObjectType = MutableMapping[str, JsonMutableValueType]
 
 
 class UndefinedType(Enum):
