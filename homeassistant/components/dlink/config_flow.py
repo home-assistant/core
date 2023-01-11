@@ -8,6 +8,7 @@ from pyW215.pyW215 import SmartPlug
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import dhcp
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 
@@ -18,6 +19,25 @@ _LOGGER = logging.getLogger(__name__)
 
 class DLinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for D-Link Power Plug."""
+
+    def __init__(self) -> None:
+        """Initialize a D-Link Power Plug flow."""
+        self.ip_address: str | None = None
+
+    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
+        """Handle dhcp discovery."""
+        await self.async_set_unique_id(discovery_info.macaddress)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
+        self.ip_address = discovery_info.ip
+        for entry in self.hass.config_entries.async_entries(DOMAIN):
+            if entry.data[CONF_HOST] == discovery_info.ip and not entry.unique_id:
+                # Add mac address as the unique id, can be removed with import
+                self.hass.config_entries.async_update_entry(
+                    entry, unique_id=discovery_info.macaddress
+                )
+            return self.async_abort(reason="already_configured")
+
+        return await self.async_step_user()
 
     async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
         """Import a config entry."""
@@ -51,7 +71,9 @@ class DLinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
+                    vol.Required(
+                        CONF_HOST, default=user_input.get(CONF_HOST, self.ip_address)
+                    ): str,
                     vol.Optional(
                         CONF_USERNAME,
                         default=user_input.get(CONF_USERNAME, DEFAULT_USERNAME),
