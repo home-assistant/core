@@ -11,9 +11,15 @@ from aioesphomeapi import (
 )
 import pytest
 
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import dhcp, zeroconf
-from homeassistant.components.esphome import CONF_NOISE_PSK, DOMAIN, DomainData
+from homeassistant.components.esphome import (
+    CONF_NOISE_PSK,
+    DOMAIN,
+    DomainData,
+    dashboard,
+)
+from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -620,3 +626,26 @@ async def test_discovery_dhcp_no_changes(hass, mock_client):
     assert result["reason"] == "already_configured"
 
     assert entry.data[CONF_HOST] == "192.168.43.183"
+
+
+async def test_discovery_hassio(hass):
+    """Test dashboard discovery."""
+    result = await hass.config_entries.flow.async_init(
+        "esphome",
+        data=HassioServiceInfo(
+            config={
+                "host": "mock-esphome",
+                "port": 6052,
+            },
+            name="ESPHome",
+            slug="mock-slug",
+        ),
+        context={"source": config_entries.SOURCE_HASSIO},
+    )
+    assert result
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "service_received"
+
+    dash = dashboard.async_get_dashboard(hass)
+    assert dash is not None
+    assert dash.addon_slug == "mock-slug"

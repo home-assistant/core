@@ -17,6 +17,7 @@ from aioesphomeapi import (
 import voluptuous as vol
 
 from homeassistant.components import dhcp, zeroconf
+from homeassistant.components.hassio.discovery import HassioServiceInfo
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import callback
@@ -24,6 +25,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.device_registry import format_mac
 
 from . import CONF_NOISE_PSK, DOMAIN
+from .dashboard import async_set_dashboard_info
 
 ERROR_REQUIRES_ENCRYPTION_KEY = "requires_encryption_key"
 ESPHOME_URL = "https://esphome.io/"
@@ -172,6 +174,16 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         # This should never happen since we only listen to DHCP requests
         # for configured devices.
         return self.async_abort(reason="already_configured")
+
+    async def async_step_hassio(self, discovery_info: HassioServiceInfo) -> FlowResult:
+        """Handle Supervisor service discovery."""
+        async_set_dashboard_info(
+            self.hass,
+            discovery_info.slug,
+            discovery_info.config["host"],
+            discovery_info.config["port"],
+        )
+        return self.async_abort(reason="service_received")
 
     @callback
     def _async_get_entry(self) -> FlowResult:
