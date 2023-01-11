@@ -1063,6 +1063,9 @@ pyRFXtrx==0.30.0
 # homeassistant.components.tibber
 pyTibber==0.26.7
 
+# homeassistant.components.dlink
+pyW215==0.7.0
+
 # homeassistant.components.nextbus
 py_nextbusnext==0.1.5
 
