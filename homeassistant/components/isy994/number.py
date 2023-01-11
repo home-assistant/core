@@ -102,7 +102,7 @@ class ISYVariableNumberEntity(NumberEntity):
         description: NumberEntityDescription,
         init_entity: bool = False,
     ) -> None:
-        """Initialize the ISY binary sensor program."""
+        """Initialize the ISY variable number."""
         self._node = node
         self._name = description.name
         self.entity_description = description

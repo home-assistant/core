@@ -15,6 +15,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.components.bluetooth import (
     DOMAIN,
+    FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
     BluetoothChange,
     BluetoothScanningMode,
     BluetoothServiceInfoBleak,
@@ -200,6 +201,8 @@ async def test_unavailable_after_no_data(
     hass, mock_bleak_scanner_start, mock_bluetooth_adapters
 ):
     """Test that the coordinator is unavailable after no data for a while."""
+    start_monotonic = time.monotonic()
+
     with patch(
         "bleak.BleakScanner.discovered_devices_and_advertisement_data",  # Must patch before we setup
         {"44:44:33:11:23:45": (MagicMock(address="44:44:33:11:23:45"), MagicMock())},
@@ -265,7 +268,12 @@ async def test_unavailable_after_no_data(
     assert len(mock_add_entities.mock_calls) == 1
     assert coordinator.available is True
     assert processor.available is True
-    with patch_all_discovered_devices([MagicMock(address="44:44:33:11:23:45")]):
+    monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
+
+    with patch(
+        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
+        return_value=monotonic_now,
+    ), patch_all_discovered_devices([MagicMock(address="44:44:33:11:23:45")]):
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
         )
@@ -279,7 +287,12 @@ async def test_unavailable_after_no_data(
     assert coordinator.available is True
     assert processor.available is True
 
-    with patch_all_discovered_devices([MagicMock(address="44:44:33:11:23:45")]):
+    monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 2
+
+    with patch(
+        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
+        return_value=monotonic_now,
+    ), patch_all_discovered_devices([MagicMock(address="44:44:33:11:23:45")]):
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
         )

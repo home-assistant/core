@@ -56,6 +56,7 @@ from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.template import Template
 
 from .bluetooth import async_connect_scanner
+from .dashboard import async_get_dashboard
 from .domain_data import DOMAIN, DomainData
 
 # Import config flow so that it's added to the registry
@@ -352,6 +353,8 @@ def _async_setup_device_registry(
     configuration_url = None
     if device_info.webserver_port > 0:
         configuration_url = f"http://{entry.data['host']}:{device_info.webserver_port}"
+    elif dashboard := async_get_dashboard(hass):
+        configuration_url = f"homeassistant://hassio/ingress/{dashboard.addon_slug}"
 
     manufacturer = "espressif"
     if device_info.manufacturer:

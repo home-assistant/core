@@ -244,7 +244,7 @@ aiopurpleair==2022.12.1
 aiopvapi==2.0.4
 
 # homeassistant.components.pvpc_hourly_pricing
-aiopvpc==3.0.0
+aiopvpc==4.0.1
 
 # homeassistant.components.lidarr
 # homeassistant.components.radarr
@@ -449,7 +449,7 @@ blinkstick==1.2.0
 blockchain==1.4.4
 
 # homeassistant.components.bluemaestro
-bluemaestro-ble==0.2.0
+bluemaestro-ble==0.2.1
 
 # homeassistant.components.decora
 # homeassistant.components.zengge
@@ -922,7 +922,7 @@ horimote==0.4.1
 httplib2==0.20.4
 
 # homeassistant.components.huawei_lte
-huawei-lte-api==1.6.7
+huawei-lte-api==1.6.11
 
 # homeassistant.components.hydrawise
 hydrawiser==0.2
@@ -2391,7 +2391,7 @@ starlink-grpc-core==1.1.1
 statsd==3.2.1
 
 # homeassistant.components.steam_online
-steamodd==4.23
+steamodd==4.21
 
 # homeassistant.components.stookalert
 stookalert==0.1.4
@@ -2592,7 +2592,7 @@ waterfurnace==1.1.0
 webexteamssdk==1.1.1
 
 # homeassistant.components.whirlpool
-whirlpool-sixth-sense==0.18.1
+whirlpool-sixth-sense==0.18.2
 
 # homeassistant.components.whois
 whois==0.9.16
@@ -2622,7 +2622,7 @@ xboxapi==2.0.1
 xiaomi-ble==0.14.3
 
 # homeassistant.components.knx
-xknx==2.2.0
+xknx==2.3.0
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz
