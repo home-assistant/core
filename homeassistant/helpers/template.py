@@ -14,6 +14,7 @@ import json
 import logging
 import math
 from operator import attrgetter
+import os
 import random
 import re
 import statistics
@@ -26,7 +27,7 @@ import weakref
 
 from awesomeversion import AwesomeVersion
 import jinja2
-from jinja2 import pass_context, pass_environment, pass_eval_context
+from jinja2 import FileSystemLoader, pass_context, pass_environment, pass_eval_context
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
 from typing_extensions import Concatenate, ParamSpec
@@ -2025,7 +2026,20 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             undefined = LoggingUndefined
         else:
             undefined = jinja2.StrictUndefined
-        super().__init__(undefined=undefined)
+
+        loader: type[FileSystemLoader] | None = None
+        if hass is not None:
+            loader = FileSystemLoader(
+                os.path.join(
+                    hass.config.config_dir,
+                    "templates",
+                )
+            )
+
+        super().__init__(
+            undefined=undefined,
+            loader=loader,
+        )
         self.hass = hass
         self.template_cache: weakref.WeakValueDictionary[
             str | jinja2.nodes.Template, CodeType | str | None
