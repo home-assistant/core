@@ -10,7 +10,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_TIMEOUT,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
     Platform,
@@ -83,18 +82,14 @@ def get_smtp_client(entry: dict[str, Any]) -> smtplib.SMTP_SSL | smtplib.SMTP:
         mail: smtplib.SMTP_SSL | smtplib.SMTP = smtplib.SMTP_SSL(
             entry[CONF_SERVER],
             entry[CONF_PORT],
-            timeout=entry[CONF_TIMEOUT],
             context=ssl_context,
         )
     else:
-        mail = smtplib.SMTP(
-            entry[CONF_SERVER], entry[CONF_PORT], timeout=entry[CONF_TIMEOUT]
-        )
+        mail = smtplib.SMTP(entry[CONF_SERVER], entry[CONF_PORT])
     mail.set_debuglevel(entry[CONF_DEBUG])
     mail.ehlo_or_helo_if_needed()
     if entry[CONF_ENCRYPTION] == "starttls":
         mail.starttls(context=ssl_context)
-        mail.ehlo()
     if CONF_USERNAME in entry and CONF_PASSWORD in entry:
         mail.login(entry[CONF_USERNAME], entry[CONF_PASSWORD])
     return mail

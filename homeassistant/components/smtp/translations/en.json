@@ -35,6 +35,17 @@
         }
     },
     "issues": {
+        "deprecated_sender_name_key": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Sender name from imported YAML config will be removed in the future. Ensure that you update your automations or scripts to specify the sender name under service data.",
+                        "title": "Imported sender name is being removed"
+                    }
+                }
+            },
+            "title": "Imported sender name is being removed"
+        },
         "deprecated_yaml": {
             "description": "Configuring SMTP using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the SMTP YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue.\n\nThe imported recipient key will be removed in the future. Ensure that you update your scripts and automations to set the recipients as targets.",
             "title": "The SMTP YAML configuration is being removed"
@@ -43,7 +54,7 @@
             "fix_flow": {
                 "step": {
                     "confirm": {
-                        "description": "Recipients from imported YAML config will be removed in the future. Ensure that you update any automations or scripts to specify the recipients as targets.",
+                        "description": "Recipients from imported YAML config will be removed in the future. Ensure that you update your automations or scripts to specify the recipients as targets.",
                         "title": "Imported recipients is being removed"
                     }
                 }

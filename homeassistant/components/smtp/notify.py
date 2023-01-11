@@ -42,10 +42,10 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 from . import get_smtp_client
-from .config_flow import RECEPIENTS_SCHEMA
 from .const import (
     ATTR_HTML,
     ATTR_IMAGES,
+    ATTR_SENDER_NAME,
     CONF_DEBUG,
     CONF_ENCRYPTION,
     CONF_SENDER_NAME,
@@ -81,6 +81,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+RECIPIENTS_SCHEMA = vol.Schema(vol.All(cv.ensure_list_csv, [vol.Email()]))
+
 
 async def async_get_service(
     hass: HomeAssistant,
@@ -93,7 +95,7 @@ async def async_get_service(
             hass,
             DOMAIN,
             "deprecated_yaml",
-            breaks_in_ha_version="2023.2.0",
+            breaks_in_ha_version="2023.4.0",
             is_fixable=False,
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_yaml",
@@ -123,26 +125,12 @@ class MailNotificationService(BaseNotificationService):
         with inline image attachments if images config is defined, or will
         build a multipart HTML if html config is defined.
         """
-        subject = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
-
-        if data := kwargs.get(ATTR_DATA):
-            if ATTR_HTML in data:
-                msg: MIMEMultipart | MIMEText = _build_html_msg(
-                    message, data[ATTR_HTML], images=data.get(ATTR_IMAGES, [])
-                )
-            else:
-                msg = _build_multipart_msg(message, images=data.get(ATTR_IMAGES, []))
-        else:
-            msg = _build_text_msg(message)
-
-        msg["Subject"] = subject
-
         if not kwargs.get(ATTR_TARGET):
             create_issue(
                 self.hass,
                 DOMAIN,
                 "missing_target",
-                breaks_in_ha_version="2023.2.0",
+                breaks_in_ha_version="2023.4.0",
                 is_fixable=True,
                 is_persistent=True,
                 severity=IssueSeverity.WARNING,
@@ -152,18 +140,44 @@ class MailNotificationService(BaseNotificationService):
                 raise ValueError("At least one target recipient is required")
 
         try:
-            recipients = RECEPIENTS_SCHEMA(
+            recipients = RECIPIENTS_SCHEMA(
                 kwargs.get(ATTR_TARGET) or self.entry[CONF_RECIPIENT]
             )
         except vol.Invalid as err:
             raise ValueError("Target is not a valid list of email addresses") from err
 
+        data = kwargs.get(ATTR_DATA, {})
+        if ATTR_HTML in data:
+            msg: MIMEMultipart | MIMEText = _build_html_msg(
+                message, data[ATTR_HTML], images=data.get(ATTR_IMAGES, [])
+            )
+        elif ATTR_IMAGES in data:
+            msg = _build_multipart_msg(message, images=data[ATTR_IMAGES])
+        else:
+            msg = _build_text_msg(message)
+
+        msg["Subject"] = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
+
         msg["To"] = ",".join(recipients)
 
-        if CONF_SENDER_NAME in self.entry:
+        if sender_name := data.get(ATTR_SENDER_NAME):
+            msg["From"] = f"{sender_name} <{self.entry[CONF_USERNAME]}>"
+        # to be removed in future release
+        elif CONF_SENDER_NAME in self.entry:
+            create_issue(
+                self.hass,
+                DOMAIN,
+                "deprecated_sender_name_key",
+                breaks_in_ha_version="2023.4.0",
+                is_fixable=True,
+                is_persistent=True,
+                severity=IssueSeverity.WARNING,
+                translation_key="deprecated_sender_name_key",
+            )
             msg["From"] = f"{self.entry[CONF_SENDER_NAME]} <{self.entry[CONF_SENDER]}>"
         else:
-            msg["From"] = self.entry[CONF_SENDER]
+            msg["From"] = self.entry.get(CONF_SENDER) or self.entry[CONF_USERNAME]
+
         msg["X-Mailer"] = "Home Assistant"
         msg["Date"] = email.utils.format_datetime(dt_util.now())
         msg["Message-Id"] = email.utils.make_msgid()
@@ -191,21 +205,18 @@ class MailNotificationService(BaseNotificationService):
 
 
 def _build_text_msg(message: str) -> MIMEText:
-    """Build plaintext eself.mail."""
+    """Build plaintext email."""
     _LOGGER.debug("Building plain text email")
     return MIMEText(message)
 
 
-def _attach_file(
-    attach_name: str, content_id: str
-) -> MIMEImage | MIMEApplication | None:
+def _attach_file(attach_name: str, content_id: str) -> MIMEImage | MIMEApplication:
     """Create a message attachment."""
     try:
         with open(attach_name, "rb") as attachment_file:
             file_bytes = attachment_file.read()
-    except FileNotFoundError:
-        _LOGGER.warning("Attachment %s not found. Skipping", attach_name)
-        return None
+    except FileNotFoundError as err:
+        raise ValueError(f"Attachment {attach_name} not found.") from err
 
     try:
         attachment: MIMEImage | MIMEApplication = MIMEImage(file_bytes)
@@ -231,12 +242,10 @@ def _build_multipart_msg(message: str, images: list[str]) -> MIMEMultipart:
     msg_alt.attach(body_txt)
     body_text = [f"<p>{message}</p><br>"]
 
-    for atch_num, attach_name in enumerate(images):
-        cid = f"image{atch_num}"
+    for attach_num, attach_name in enumerate(images):
+        cid = f"image{attach_num}"
         body_text.append(f'<img src="cid:{cid}"><br>')
-        attachment = _attach_file(attach_name, cid)
-        if attachment:
-            msg.attach(attachment)
+        msg.attach(_attach_file(attach_name, cid))
 
     body_html = MIMEText("".join(body_text), "html")
     msg_alt.attach(body_html)
@@ -254,7 +263,5 @@ def _build_html_msg(text: str, html: str, images: list[str]) -> MIMEMultipart:
 
     for attach_name in images:
         name = os.path.basename(attach_name)
-        attachment = _attach_file(attach_name, name)
-        if attachment:
-            msg.attach(attachment)
+        msg.attach(_attach_file(attach_name, name))
     return msg

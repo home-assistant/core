@@ -45,7 +45,18 @@
         "step": {
           "confirm": {
             "title": "Imported recipients is being removed",
-            "description": "Recipients from imported YAML config will be removed in the future. Ensure that you update any automations or scripts to specify the recipients as targets."
+            "description": "Recipients from imported YAML config will be removed in the future. Ensure that you update your automations or scripts to specify the recipients as targets."
+          }
+        }
+      }
+    },
+    "deprecated_sender_name_key": {
+      "title": "Imported sender name is being removed",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Imported sender name is being removed",
+            "description": "Sender name from imported YAML config will be removed in the future. Ensure that you update your automations or scripts to specify the sender name under service data."
           }
         }
       }

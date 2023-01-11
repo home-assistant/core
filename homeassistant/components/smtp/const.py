@@ -8,6 +8,7 @@ DATA_HASS_CONFIG: Final = "smtp_hass_config"
 
 ATTR_IMAGES: Final = "images"  # optional embedded image file attachments
 ATTR_HTML: Final = "html"
+ATTR_SENDER_NAME: Final = "sender_name"
 
 CONF_ENCRYPTION: Final = "encryption"
 CONF_DEBUG: Final = "debug"

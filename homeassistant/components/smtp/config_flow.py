@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from smtplib import SMTPAuthenticationError
+from smtplib import SMTPAuthenticationError, SMTPException
 import socket
 from typing import Any
 
@@ -14,8 +14,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_SENDER,
-    CONF_TIMEOUT,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
@@ -27,31 +25,21 @@ from . import get_smtp_client
 from .const import (
     CONF_DEBUG,
     CONF_ENCRYPTION,
-    CONF_SENDER_NAME,
     CONF_SERVER,
     DEFAULT_DEBUG,
     DEFAULT_ENCRYPTION,
     DEFAULT_HOST,
     DEFAULT_NAME,
     DEFAULT_PORT,
-    DEFAULT_TIMEOUT,
     DOMAIN,
     ENCRYPTION_OPTIONS,
 )
 
-# pylint: disable=no-value-for-parameter
-RECEPIENTS_SCHEMA = vol.Schema(vol.All(cv.ensure_list_csv, [vol.Email()]))
-
 CONFIG_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): selector.TextSelector(),
-        vol.Required(CONF_SENDER): selector.TextSelector(
-            selector.TextSelectorConfig(type=selector.TextSelectorType.EMAIL)
-        ),
-        vol.Optional(CONF_SENDER_NAME): selector.TextSelector(),
         vol.Optional(CONF_SERVER, default=DEFAULT_HOST): selector.TextSelector(),
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
         vol.Optional(
             CONF_ENCRYPTION, default=DEFAULT_ENCRYPTION
         ): selector.SelectSelector(
@@ -79,7 +67,7 @@ def validate_input(user_input: dict[str, Any]) -> dict[str, str]:
     except SMTPAuthenticationError as error:
         print(error)
         errors[CONF_USERNAME] = errors[CONF_PASSWORD] = "invalid_auth"
-    except (socket.gaierror, ConnectionRefusedError, OSError):
+    except (SMTPException, socket.gaierror, ConnectionRefusedError, OSError):
         errors["base"] = "cannot_connect"
 
     return errors
@@ -96,13 +84,10 @@ class SMTPFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by the user."""
         errors = {}
         if user_input is not None:
-
-            await self.async_set_unique_id(user_input[CONF_SENDER])
-            self._abort_if_unique_id_configured()
-
             self._async_abort_entries_match(
                 {
                     CONF_NAME: user_input[CONF_NAME],
+                    CONF_USERNAME: user_input[CONF_USERNAME],
                 }
             )
             if not (
