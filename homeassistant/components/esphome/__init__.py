@@ -269,8 +269,8 @@ async def async_setup_entry(  # noqa: C901
                     entry, unique_id=format_mac(device_info.mac_address)
                 )
 
-            # Make sure we have the correct device name stored.
-            # us to map the device to ESPHome Dashboard config
+            # Make sure we have the correct device name stored
+            # so we can map the device to ESPHome Dashboard config
             if entry.data.get(CONF_DEVICE_NAME) != device_info.name:
                 hass.config_entries.async_update_entry(
                     entry, data={**entry.data, CONF_DEVICE_NAME: device_info.name}
