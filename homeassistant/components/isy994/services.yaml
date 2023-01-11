@@ -152,8 +152,8 @@ set_on_level:
           min: 0
           max: 255
 set_ramp_rate:
-  name: Set ramp rate
-  description: Send a ISY set_ramp_rate command to a Node.
+  name: Set ramp rate (Deprecated)
+  description: "Send a ISY set_ramp_rate command to a Node. Deprecated: Use On Level Number entity instead."
   target:
     entity:
       integration: isy994

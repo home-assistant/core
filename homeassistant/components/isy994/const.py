@@ -87,7 +87,7 @@ NODE_PLATFORMS = [
     Platform.SENSOR,
     Platform.SWITCH,
 ]
-NODE_AUX_PROP_PLATFORMS = [Platform.SENSOR, Platform.NUMBER]
+NODE_AUX_PROP_PLATFORMS = [Platform.SELECT, Platform.SENSOR, Platform.NUMBER]
 PROGRAM_PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.COVER,
@@ -309,7 +309,7 @@ NODE_FILTERS: dict[Platform, dict[str, list[str]]] = {
 }
 NODE_AUX_FILTERS: dict[str, Platform] = {
     PROP_ON_LEVEL: Platform.NUMBER,
-    PROP_RAMP_RATE: Platform.SENSOR,
+    PROP_RAMP_RATE: Platform.SELECT,
 }
 
 UOM_FRIENDLY_NAME = {
@@ -656,3 +656,38 @@ SCHEME_HTTP = "http"
 HTTP_PORT = 80
 SCHEME_HTTPS = "https"
 HTTPS_PORT = 443
+
+INSTEON_RAMP_RATES = [
+    f"9 {UnitOfTime.MINUTES}",
+    f"8 {UnitOfTime.MINUTES}",
+    f"7 {UnitOfTime.MINUTES}",
+    f"6 {UnitOfTime.MINUTES}",
+    f"5 {UnitOfTime.MINUTES}",
+    f"4.5 {UnitOfTime.MINUTES}",
+    f"4 {UnitOfTime.MINUTES}",
+    f"3.5 {UnitOfTime.MINUTES}",
+    f"3 {UnitOfTime.MINUTES}",
+    f"2.5 {UnitOfTime.MINUTES}",
+    f"2 {UnitOfTime.MINUTES}",
+    f"1.5 {UnitOfTime.MINUTES}",
+    f"1 {UnitOfTime.MINUTES}",
+    f"47 {UnitOfTime.SECONDS}",
+    f"43 {UnitOfTime.SECONDS}",
+    f"38.5 {UnitOfTime.SECONDS}",
+    f"34 {UnitOfTime.SECONDS}",
+    f"32 {UnitOfTime.SECONDS}",
+    f"30 {UnitOfTime.SECONDS}",
+    f"28 {UnitOfTime.SECONDS}",
+    f"26 {UnitOfTime.SECONDS}",
+    f"23.5 {UnitOfTime.SECONDS}",
+    f"21.5 {UnitOfTime.SECONDS}",
+    f"19 {UnitOfTime.SECONDS}",
+    f"8.5 {UnitOfTime.SECONDS}",
+    f"6.5 {UnitOfTime.SECONDS}",
+    f"4.5 {UnitOfTime.SECONDS}",
+    f"2 {UnitOfTime.SECONDS}",
+    f"0.5 {UnitOfTime.SECONDS}",
+    f"0.3 {UnitOfTime.SECONDS}",
+    f"0.2 {UnitOfTime.SECONDS}",
+    f"0.1 {UnitOfTime.SECONDS}",
+]
