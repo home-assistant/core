@@ -290,7 +290,9 @@ class BluetoothManager:
                     # since it may have gone to sleep and since we do not need an active
                     # connection to it we can only determine its availability
                     # by the lack of advertisements
-                    if advertising_interval := intervals.get(address, FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS):
+                    if advertising_interval := intervals.get(
+                        address, FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
+                    ):
                         time_since_seen = monotonic_now - all_history[address].time
                         if time_since_seen <= advertising_interval:
                             continue
