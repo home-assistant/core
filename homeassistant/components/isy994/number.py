@@ -80,7 +80,7 @@ async def async_setup_entry(
 class ISYVariableNumberEntity(NumberEntity):
     """Representation of an ISY variable as a number entity device."""
 
-    _attr_has_entity_name = True
+    _attr_has_entity_name = False
     _attr_should_poll = False
     _init_entity: bool
     _node: Variable

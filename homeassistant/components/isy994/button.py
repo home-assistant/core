@@ -110,9 +110,6 @@ class ISYNodeButtonEntity(ButtonEntity):
 class ISYNodeQueryButtonEntity(ISYNodeButtonEntity):
     """Representation of a device query button entity."""
 
-    _attr_should_poll = False
-    _attr_has_entity_name = True
-
     async def async_press(self) -> None:
         """Press the button."""
         await self._node.query()
@@ -128,6 +125,8 @@ class ISYNodeBeepButtonEntity(ISYNodeButtonEntity):
 
 class ISYNetworkResourceButtonEntity(ISYNodeButtonEntity):
     """Representation of an ISY/IoX Network Resource button entity."""
+
+    _attr_has_entity_name = False
 
     async def async_press(self) -> None:
         """Press the button."""
