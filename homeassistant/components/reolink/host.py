@@ -233,7 +233,7 @@ class ReolinkHost:
                 )
                 return await self._api.subscribe(self._webhook_url)
             _LOGGER.info(
-                "Host %s SUCCESSFULLY renewed Reolink subscription", self._api.host
+                "Host %s successfully renewed Reolink subscription", self._api.host
             )
 
         return True
