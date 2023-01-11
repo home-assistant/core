@@ -53,6 +53,7 @@ HOMEKIT_ACCESSORY_DISPATCH = {
     ServicesTypes.TELEVISION: "media_player",
     ServicesTypes.VALVE: "switch",
     ServicesTypes.CAMERA_RTP_STREAM_MANAGEMENT: "camera",
+    ServicesTypes.AIR_PURIFIER: "fan",
 }
 
 CHARACTERISTIC_PLATFORMS = {
@@ -95,6 +96,9 @@ CHARACTERISTIC_PLATFORMS = {
     CharacteristicsTypes.IDENTIFY: "button",
     CharacteristicsTypes.THREAD_NODE_CAPABILITIES: "sensor",
     CharacteristicsTypes.THREAD_CONTROL_POINT: "button",
+    CharacteristicsTypes.AIR_PURIFIER_STATE_TARGET: "switch",
+    CharacteristicsTypes.MUTE: "switch",
+    CharacteristicsTypes.FILTER_LIFE_LEVEL: "sensor",
 }
 
 STARTUP_EXCEPTIONS = (

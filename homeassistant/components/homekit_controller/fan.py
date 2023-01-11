@@ -186,6 +186,7 @@ class HomeKitFanV2(BaseHomeKitFan):
 ENTITY_TYPES = {
     ServicesTypes.FAN: HomeKitFanV1,
     ServicesTypes.FAN_V2: HomeKitFanV2,
+    ServicesTypes.AIR_PURIFIER: HomeKitFanV2,
 }
 
 
