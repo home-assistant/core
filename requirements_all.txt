@@ -492,7 +492,7 @@ brunt==1.2.0
 bt_proximity==0.2.1
 
 # homeassistant.components.bthome
-bthome-ble==2.4.1
+bthome-ble==2.5.0
 
 # homeassistant.components.bt_home_hub_5
 bthomehub5-devicelist==0.1.1
@@ -671,6 +671,9 @@ epson-projector==0.5.0
 
 # homeassistant.components.epsonworkforce
 epsonprinter==0.0.9
+
+# homeassistant.components.esphome
+esphome-dashboard-api==1.1
 
 # homeassistant.components.netgear_lte
 eternalegypt==0.0.12
