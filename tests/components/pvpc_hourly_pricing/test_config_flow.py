@@ -19,6 +19,8 @@ from .conftest import check_valid_state
 from tests.common import date_util
 from tests.test_util.aiohttp import AiohttpClientMocker
 
+_MOCK_TIME_VALID_RESPONSES = datetime(2023, 1, 6, 12, 0, tzinfo=date_util.UTC)
+
 
 async def test_config_flow(hass, pvpc_aioclient_mock: AiohttpClientMocker):
     """
@@ -37,9 +39,8 @@ async def test_config_flow(hass, pvpc_aioclient_mock: AiohttpClientMocker):
         ATTR_POWER: 4.6,
         ATTR_POWER_P3: 5.75,
     }
-    mock_data = {"return_time": datetime(2021, 6, 1, 12, 0, tzinfo=date_util.UTC)}
 
-    with freeze_time(mock_data["return_time"]):
+    with freeze_time(_MOCK_TIME_VALID_RESPONSES):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -86,9 +87,9 @@ async def test_config_flow(hass, pvpc_aioclient_mock: AiohttpClientMocker):
         state = hass.states.get("sensor.test")
         check_valid_state(state, tariff=TARIFFS[1])
         assert pvpc_aioclient_mock.call_count == 2
-        assert state.attributes["period"] == "P1"
+        assert state.attributes["period"] == "P3"
         assert state.attributes["next_period"] == "P2"
-        assert state.attributes["available_power"] == 4600
+        assert state.attributes["available_power"] == 5750
 
         # check options flow
         current_entries = hass.config_entries.async_entries(DOMAIN)
@@ -107,6 +108,6 @@ async def test_config_flow(hass, pvpc_aioclient_mock: AiohttpClientMocker):
         state = hass.states.get("sensor.test")
         check_valid_state(state, tariff=TARIFFS[0])
         assert pvpc_aioclient_mock.call_count == 3
-        assert state.attributes["period"] == "P2"
-        assert state.attributes["next_period"] == "P1"
-        assert state.attributes["available_power"] == 3000
+        assert state.attributes["period"] == "P3"
+        assert state.attributes["next_period"] == "P2"
+        assert state.attributes["available_power"] == 4600
