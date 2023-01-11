@@ -24,9 +24,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     except AuthenticationRequired as err:
         raise ConfigEntryAuthFailed from err
 
-    device = hass.data[AXIS_DOMAIN][config_entry.entry_id] = AxisNetworkDevice(
-        hass, config_entry, api
-    )
+    device = AxisNetworkDevice(hass, config_entry, api)
+    hass.data[AXIS_DOMAIN][config_entry.entry_id] = device
     await device.async_update_device_registry()
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     device.async_setup_events()
