@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, Mock, patch
 
-from aioesphomeapi import APIClient
+from aioesphomeapi import APIClient, DeviceInfo
 import pytest
 from zeroconf import Zeroconf
 
@@ -78,7 +78,14 @@ def mock_client():
         return mock_client
 
     mock_client.side_effect = mock_constructor
-    mock_client.device_info = AsyncMock()
+    mock_client.device_info = AsyncMock(
+        return_value=DeviceInfo(
+            uses_password=False,
+            name="test",
+            bluetooth_proxy_version=0,
+            mac_address="11:22:33:44:55:aa",
+        )
+    )
     mock_client.connect = AsyncMock()
     mock_client.disconnect = AsyncMock()
 

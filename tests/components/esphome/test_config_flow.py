@@ -48,12 +48,6 @@ async def test_user_connection_works(hass, mock_client, mock_zeroconf):
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(
-            uses_password=False, name="test", mac_address="mock-mac"
-        )
-    )
-
     result = await hass.config_entries.flow.async_init(
         "esphome",
         context={"source": config_entries.SOURCE_USER},
@@ -69,7 +63,7 @@ async def test_user_connection_works(hass, mock_client, mock_zeroconf):
         CONF_DEVICE_NAME: "test",
     }
     assert result["title"] == "test"
-    assert result["result"].unique_id == "mock-mac"
+    assert result["result"].unique_id == "11:22:33:44:55:aa"
 
     assert len(mock_client.connect.mock_calls) == 1
     assert len(mock_client.device_info.mock_calls) == 1
@@ -85,7 +79,7 @@ async def test_user_connection_updates_host(hass, mock_client, mock_zeroconf):
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "test.local", CONF_PORT: 6053, CONF_PASSWORD: ""},
-        unique_id="mock-mac",
+        unique_id="11:22:33:44:55:aa",
     )
     entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
@@ -96,12 +90,6 @@ async def test_user_connection_updates_host(hass, mock_client, mock_zeroconf):
 
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
-
-    mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(
-            uses_password=False, name="test", mac_address="mock-mac"
-        )
-    )
 
     result = await hass.config_entries.flow.async_init(
         "esphome",
@@ -157,9 +145,7 @@ async def test_user_connection_error(hass, mock_client, mock_zeroconf):
 
 async def test_user_with_password(hass, mock_client, mock_zeroconf):
     """Test user step with password."""
-    mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(uses_password=True, name="test")
-    )
+    mock_client.device_info.return_value = DeviceInfo(uses_password=True, name="test")
 
     result = await hass.config_entries.flow.async_init(
         "esphome",
@@ -187,9 +173,7 @@ async def test_user_with_password(hass, mock_client, mock_zeroconf):
 
 async def test_user_invalid_password(hass, mock_client, mock_zeroconf):
     """Test user step with invalid password."""
-    mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(uses_password=True, name="test")
-    )
+    mock_client.device_info.return_value = DeviceInfo(uses_password=True, name="test")
 
     result = await hass.config_entries.flow.async_init(
         "esphome",
@@ -213,9 +197,7 @@ async def test_user_invalid_password(hass, mock_client, mock_zeroconf):
 
 async def test_login_connection_error(hass, mock_client, mock_zeroconf):
     """Test user step with connection error on login attempt."""
-    mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(uses_password=True, name="test")
-    )
+    mock_client.device_info.return_value = DeviceInfo(uses_password=True, name="test")
 
     result = await hass.config_entries.flow.async_init(
         "esphome",
@@ -239,16 +221,10 @@ async def test_login_connection_error(hass, mock_client, mock_zeroconf):
 
 async def test_discovery_initiation(hass, mock_client, mock_zeroconf):
     """Test discovery importing works."""
-    mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(
-            uses_password=False, name="test8266", mac_address="11:22:33:44:55:aa"
-        )
-    )
-
     service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.43.183",
         addresses=["192.168.43.183"],
-        hostname="test8266.local.",
+        hostname="test.local.",
         name="mock_name",
         port=6053,
         properties={
@@ -265,7 +241,7 @@ async def test_discovery_initiation(hass, mock_client, mock_zeroconf):
     )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "test8266"
+    assert result["title"] == "test"
     assert result["data"][CONF_HOST] == "192.168.43.183"
     assert result["data"][CONF_PORT] == 6053
 
@@ -323,15 +299,11 @@ async def test_discovery_duplicate_data(hass, mock_client):
     service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.43.183",
         addresses=["192.168.43.183"],
-        hostname="test8266.local.",
+        hostname="test.local.",
         name="mock_name",
         port=6053,
-        properties={"address": "test8266.local", "mac": "1122334455aa"},
+        properties={"address": "test.local", "mac": "1122334455aa"},
         type="mock_type",
-    )
-
-    mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(uses_password=False, name="test8266")
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -489,9 +461,7 @@ async def test_reauth_confirm_valid(hass, mock_client, mock_zeroconf):
         },
     )
 
-    mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(uses_password=False, name="test")
-    )
+    mock_client.device_info.return_value = DeviceInfo(uses_password=False, name="test")
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_NOISE_PSK: VALID_NOISE_PSK}
     )
@@ -516,9 +486,7 @@ async def test_reauth_fixed_via_dashboard(hass, mock_client, mock_zeroconf):
     )
     entry.add_to_hass(hass)
 
-    mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(uses_password=False, name="test")
-    )
+    mock_client.device_info.return_value = DeviceInfo(uses_password=False, name="test")
 
     with patch(
         "homeassistant.components.esphome.dashboard.ESPHomeDashboardAPI.get_devices",
