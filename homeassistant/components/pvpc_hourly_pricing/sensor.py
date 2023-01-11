@@ -142,11 +142,11 @@ class ElecPriceSensor(CoordinatorEntity[ElecPricesDataUpdateCoordinator], Sensor
         self._attr_unique_id = unique_id
         self._attr_name = name
         self._attr_device_info = DeviceInfo(
-            configuration_url="https://www.ree.es/es/apidatos",
+            configuration_url="https://api.esios.ree.es",
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, coordinator.entry_id)},
             manufacturer="REE",
-            name="PVPC (REData API)",
+            name="ESIOS API",
         )
         self._state: StateType = None
         self._attrs: Mapping[str, Any] = {}
@@ -171,21 +171,26 @@ class ElecPriceSensor(CoordinatorEntity[ElecPricesDataUpdateCoordinator], Sensor
     @callback
     def update_current_price(self, now: datetime) -> None:
         """Update the sensor state, by selecting the current price for this hour."""
-        self.coordinator.api.process_state_and_attributes(now)
+        self.coordinator.api.process_state_and_attributes(
+            self.coordinator.data, self.entity_description.key, now
+        )
         self.async_write_ha_state()
 
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        self._state = self.coordinator.api.state
+        self._state = self.coordinator.api.states.get(self.entity_description.key)
         return self._state
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
+        sensor_attributes = self.coordinator.api.sensor_attributes.get(
+            self.entity_description.key, {}
+        )
         self._attrs = {
             _PRICE_SENSOR_ATTRIBUTES_MAP[key]: value
-            for key, value in self.coordinator.api.attributes.items()
+            for key, value in sensor_attributes.items()
             if key in _PRICE_SENSOR_ATTRIBUTES_MAP
         }
         return self._attrs
