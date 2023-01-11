@@ -50,6 +50,6 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
                 status = await self.hass.async_add_executor_job(
                     status_data, self.channel_context
                 )
-                return StarlinkData(status[0], status[1], status[2])
+                return StarlinkData(*status)
             except GrpcError as exc:
                 raise UpdateFailed from exc
