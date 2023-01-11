@@ -3,6 +3,7 @@ from datetime import datetime
 
 from freezegun import freeze_time
 
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.pvpc_hourly_pricing import (
     ATTR_POWER,
     ATTR_POWER_P3,
@@ -10,10 +11,7 @@ from homeassistant.components.pvpc_hourly_pricing import (
     DOMAIN,
     TARIFFS,
 )
-from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_NAME
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import check_valid_state
@@ -24,9 +22,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 _MOCK_TIME_VALID_RESPONSES = datetime(2023, 1, 6, 12, 0, tzinfo=date_util.UTC)
 
 
-async def test_config_flow(
-    hass: HomeAssistant, pvpc_aioclient_mock: AiohttpClientMocker
-):
+async def test_config_flow(hass, pvpc_aioclient_mock: AiohttpClientMocker):
     """
     Test config flow for pvpc_hourly_pricing.
 
@@ -46,14 +42,14 @@ async def test_config_flow(
 
     with freeze_time(_MOCK_TIME_VALID_RESPONSES):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], tst_config
         )
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
         await hass.async_block_till_done()
         state = hass.states.get("sensor.test")
@@ -62,13 +58,13 @@ async def test_config_flow(
 
         # Check abort when configuring another with same tariff
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], tst_config
         )
-        assert result["type"] == FlowResultType.ABORT
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert pvpc_aioclient_mock.call_count == 1
 
         # Check removal
@@ -78,14 +74,14 @@ async def test_config_flow(
 
         # and add it again with UI
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], tst_config
         )
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
         await hass.async_block_till_done()
         state = hass.states.get("sensor.test")
@@ -101,16 +97,16 @@ async def test_config_flow(
         config_entry = current_entries[0]
 
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "init"
 
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
-            user_input={ATTR_POWER: 3.0, ATTR_POWER_P3: 4.6},
+            user_input={ATTR_TARIFF: TARIFFS[0], ATTR_POWER: 3.0, ATTR_POWER_P3: 4.6},
         )
         await hass.async_block_till_done()
         state = hass.states.get("sensor.test")
-        check_valid_state(state, tariff=TARIFFS[1])
+        check_valid_state(state, tariff=TARIFFS[0])
         assert pvpc_aioclient_mock.call_count == 3
         assert state.attributes["period"] == "P3"
         assert state.attributes["next_period"] == "P2"
