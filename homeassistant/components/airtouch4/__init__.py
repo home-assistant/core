@@ -67,7 +67,7 @@ class AirtouchDataUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed("Airtouch connection issue")
         return {
             "acs": [
-                {"ac_number": ac.AcNumber, "is_on": ac.IsOn}
+                {"ac_number": ac.AcNumber, "is_on": ac.IsOn, "ac_name": ac.AcName}
                 for ac in self.airtouch.GetAcs()
             ],
             "groups": [

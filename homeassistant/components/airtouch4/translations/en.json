@@ -5,14 +5,17 @@
         },
         "error": {
             "cannot_connect": "Failed to connect",
-            "no_units": "Could not find any AirTouch 4 Groups."
+            "no_units": "Could not find any AirTouch Groups."
         },
         "step": {
             "user": {
                 "data": {
-                    "host": "Host"
+                    "host": "Host",
+                    "port": "Port",
+                    "airtouch_version": "AirTouch Version"
                 },
-                "title": "Set up your AirTouch 4 connection details."
+                "description": "In most cases, you only need a host. If you want to specify port, you must specify version. You must turn on advanced config in your settings to see this option.",
+                "title": "Set up your AirTouch connection details."
             }
         }
     }

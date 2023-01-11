@@ -1,9 +1,9 @@
 {
   "domain": "airtouch4",
-  "name": "AirTouch 4",
+  "name": "AirTouch",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/airtouch4",
-  "requirements": ["airtouch4pyapi==1.0.5"],
+  "requirements": ["airtouch4pyapi==1.0.7"],
   "codeowners": ["@LonePurpleWolf"],
   "iot_class": "local_polling",
   "loggers": ["airtouch4pyapi"]

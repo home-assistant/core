@@ -5,13 +5,16 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "no_units": "Could not find any AirTouch 4 Groups."
+      "no_units": "Could not find any AirTouch Groups."
     },
     "step": {
       "user": {
-        "title": "Set up your AirTouch 4 connection details.",
+        "title": "[%key:common::config_flow::title%]",
+        "description": "[%key:common::config_flow::description%]",
         "data": {
-          "host": "[%key:common::config_flow::data::host%]"
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "airtouch_version": "AirTouch Version"
         }
       }
     }

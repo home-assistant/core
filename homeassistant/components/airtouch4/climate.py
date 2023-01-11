@@ -65,7 +65,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Airtouch 4."""
+    """Set up the Airtouch."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     info = coordinator.data
     entities: list[ClimateEntity] = [
@@ -82,7 +82,7 @@ async def async_setup_entry(
 
 
 class AirtouchAC(CoordinatorEntity, ClimateEntity):
-    """Representation of an AirTouch 4 ac."""
+    """Representation of an AirTouch ac."""
 
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
@@ -113,33 +113,33 @@ class AirtouchAC(CoordinatorEntity, ClimateEntity):
         )
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return unique ID for this device."""
         return f"ac_{self._ac_number}"
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> float:
         """Return the current temperature."""
         return self._unit.Temperature
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the climate device."""
-        return f"AC {self._ac_number}"
+        return self._unit.AcName
 
     @property
-    def fan_mode(self):
+    def fan_mode(self) -> str:
         """Return fan mode of the AC this group belongs to."""
         return AT_TO_HA_FAN_SPEED[self._airtouch.acs[self._ac_number].AcFanSpeed]
 
     @property
-    def fan_modes(self):
+    def fan_modes(self) -> list[str]:
         """Return the list of available fan modes."""
         airtouch_fan_speeds = self._airtouch.GetSupportedFanSpeedsForAc(self._ac_number)
         return [AT_TO_HA_FAN_SPEED[speed] for speed in airtouch_fan_speeds]
 
     @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> HVACMode:
         """Return hvac target hvac state."""
         is_off = self._unit.PowerState == "Off"
         if is_off:
@@ -148,12 +148,18 @@ class AirtouchAC(CoordinatorEntity, ClimateEntity):
         return AT_TO_HA_STATE[self._airtouch.acs[self._ac_number].AcMode]
 
     @property
-    def hvac_modes(self):
+    def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available operation modes."""
         airtouch_modes = self._airtouch.GetSupportedCoolingModesForAc(self._ac_number)
         modes = [AT_TO_HA_STATE[mode] for mode in airtouch_modes]
         modes.append(HVACMode.OFF)
         return modes
+
+    @property
+    def target_temperature_step(self) -> float:
+        """Return the appropriate temperature step."""
+
+        return float(1.0)
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new operation mode."""
@@ -198,7 +204,7 @@ class AirtouchAC(CoordinatorEntity, ClimateEntity):
 
 
 class AirtouchGroup(CoordinatorEntity, ClimateEntity):
-    """Representation of an AirTouch 4 group."""
+    """Representation of an AirTouch group / zone."""
 
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
@@ -211,6 +217,7 @@ class AirtouchGroup(CoordinatorEntity, ClimateEntity):
         self._airtouch = coordinator.airtouch
         self._info = info
         self._unit = self._airtouch.GetGroupByGroupNumber(self._group_number)
+        self._version = self._airtouch.GetVersion()
 
     @callback
     def _handle_coordinator_update(self):
@@ -223,42 +230,42 @@ class AirtouchGroup(CoordinatorEntity, ClimateEntity):
         return DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
             manufacturer="Airtouch",
-            model="Airtouch 4",
+            model="Airtouch " + self._version,
             name=self.name,
         )
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return unique ID for this device."""
         return self._group_number
 
     @property
-    def min_temp(self):
+    def min_temp(self) -> float:
         """Return Minimum Temperature for AC of this group."""
         return self._airtouch.acs[self._unit.BelongsToAc].MinSetpoint
 
     @property
-    def max_temp(self):
+    def max_temp(self) -> float:
         """Return Max Temperature for AC of this group."""
         return self._airtouch.acs[self._unit.BelongsToAc].MaxSetpoint
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the climate device."""
         return self._unit.GroupName
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> float:
         """Return the current temperature."""
         return self._unit.Temperature
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float:
         """Return the temperature we are trying to reach."""
         return self._unit.TargetSetpoint
 
     @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> HVACMode:
         """Return hvac target hvac state."""
         # there are other power states that aren't 'on' but still count as on (eg. 'Turbo')
         is_off = self._unit.PowerState == "Off"
@@ -266,6 +273,11 @@ class AirtouchGroup(CoordinatorEntity, ClimateEntity):
             return HVACMode.OFF
 
         return HVACMode.FAN_ONLY
+
+    @property
+    def target_temperature_step(self) -> float:
+        """Return the appropriate temperature step."""
+        return float(1.0)
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new operation mode."""
@@ -283,12 +295,12 @@ class AirtouchGroup(CoordinatorEntity, ClimateEntity):
         self.async_write_ha_state()
 
     @property
-    def fan_mode(self):
+    def fan_mode(self) -> str:
         """Return fan mode of the AC this group belongs to."""
         return AT_TO_HA_FAN_SPEED[self._airtouch.acs[self._unit.BelongsToAc].AcFanSpeed]
 
     @property
-    def fan_modes(self):
+    def fan_modes(self) -> list[str]:
         """Return the list of available fan modes."""
         airtouch_fan_speeds = self._airtouch.GetSupportedFanSpeedsByGroup(
             self._group_number

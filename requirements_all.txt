@@ -315,7 +315,7 @@ airthings-ble==0.5.3
 airthings_cloud==0.1.0
 
 # homeassistant.components.airtouch4
-airtouch4pyapi==1.0.5
+airtouch4pyapi==1.0.7
 
 # homeassistant.components.alpha_vantage
 alpha_vantage==2.3.1
