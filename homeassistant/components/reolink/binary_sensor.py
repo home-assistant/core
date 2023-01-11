@@ -128,9 +128,7 @@ class ReolinkBinarySensorEntity(ReolinkCoordinatorEntity, BinarySensorEntity):
     ) -> None:
         """Initialize Reolink binary sensor."""
         ReolinkCoordinatorEntity.__init__(self, reolink_data, channel)
-        BinarySensorEntity.__init__(self)
-
-        self._description = description
+        self.entity_description = description
 
         self._attr_name = description.name
         self._attr_unique_id = (
