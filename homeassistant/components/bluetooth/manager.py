@@ -28,7 +28,10 @@ from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.dt import monotonic_time_coarse
 
-from .advertisement_tracker import AdvertisementTracker
+from .advertisement_tracker import (
+    TRACKER_BUFFERING_WOBBLE_SECONDS,
+    AdvertisementTracker,
+)
 from .base_scanner import BaseHaScanner, BluetoothScannerDevice
 from .const import (
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
@@ -290,12 +293,15 @@ class BluetoothManager:
                     # since it may have gone to sleep and since we do not need an active
                     # connection to it we can only determine its availability
                     # by the lack of advertisements
-                    if advertising_interval := intervals.get(
-                        address, FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
-                    ):
-                        time_since_seen = monotonic_now - all_history[address].time
-                        if time_since_seen <= advertising_interval:
-                            continue
+                    if advertising_interval := intervals.get(address):
+                        advertising_interval += TRACKER_BUFFERING_WOBBLE_SECONDS
+                    else:
+                        advertising_interval = (
+                            FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
+                        )
+                    time_since_seen = monotonic_now - all_history[address].time
+                    if time_since_seen <= advertising_interval:
+                        continue
 
                     # The second loop (connectable=False) is responsible for removing
                     # the device from all the interval tracking since it is no longer

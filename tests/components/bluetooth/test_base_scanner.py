@@ -14,9 +14,13 @@ from homeassistant.components.bluetooth import (
     HaBluetoothConnector,
     storage,
 )
+from homeassistant.components.bluetooth.advertisement_tracker import (
+    TRACKER_BUFFERING_WOBBLE_SECONDS,
+)
 from homeassistant.components.bluetooth.const import (
     CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
+    UNAVAILABLE_TRACK_SECONDS,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.json import json_loads
@@ -240,7 +244,9 @@ async def test_remote_scanner_expires_non_connectable(hass, enable_bluetooth):
         > CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
     )
 
-    # The connectable timeout is not used for non connectable devices
+    # The connectable timeout is used for all devices
+    # as the manager takes care of availability and the scanner
+    # if only concerned about making a connection
     expire_monotonic = (
         start_time_monotonic
         + CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
@@ -256,11 +262,9 @@ async def test_remote_scanner_expires_non_connectable(hass, enable_bluetooth):
         async_fire_time_changed(hass, expire_utc)
         await hass.async_block_till_done()
 
-    assert len(scanner.discovered_devices) == 1
-    assert len(scanner.discovered_devices_and_advertisement_data) == 1
+    assert len(scanner.discovered_devices) == 0
+    assert len(scanner.discovered_devices_and_advertisement_data) == 0
 
-    # The non connectable timeout is used for non connectable devices
-    # which is always longer than the connectable timeout
     expire_monotonic = (
         start_time_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
     )
@@ -446,7 +450,7 @@ async def test_device_with_ten_minute_advertising_interval(
 
     @callback
     def _bparasite_device_unavailable_callback(_address: str) -> None:
-        """Bparasite device unavailable callback."""
+        """Barasite device unavailable callback."""
         nonlocal bparasite_device_went_unavailable
         bparasite_device_went_unavailable = True
 
@@ -482,7 +486,7 @@ async def test_device_with_ten_minute_advertising_interval(
     assert bparasite_device_went_unavailable is False
 
     missed_advertisement_future_time = (
-        future_time + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
+        future_time + advertising_interval + TRACKER_BUFFERING_WOBBLE_SECONDS + 1
     )
 
     with patch(
@@ -492,6 +496,12 @@ async def test_device_with_ten_minute_advertising_interval(
         "homeassistant.components.bluetooth.base_scanner.MONOTONIC_TIME",
         return_value=missed_advertisement_future_time,
     ):
+        # Fire once for the scanner to expire the device
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
+        )
+        await hass.async_block_till_done()
+        # Fire again for the manager to expire the device
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=missed_advertisement_future_time)
         )
