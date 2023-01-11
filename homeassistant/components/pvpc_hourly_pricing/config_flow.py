@@ -9,7 +9,7 @@ from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
-from . import CONF_NAME, UI_CONFIG_SCHEMA, VALID_POWER, VALID_TARIFF
+from . import CONF_NAME, UI_CONFIG_SCHEMA, VALID_POWER
 from .const import ATTR_POWER, ATTR_POWER_P3, ATTR_TARIFF, DOMAIN
 
 
@@ -53,9 +53,6 @@ class PVPCOptionsFlowHandler(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data=user_input)
 
         # Fill options with entry data
-        tariff = self.config_entry.options.get(
-            ATTR_TARIFF, self.config_entry.data[ATTR_TARIFF]
-        )
         power = self.config_entry.options.get(
             ATTR_POWER, self.config_entry.data[ATTR_POWER]
         )
@@ -64,7 +61,6 @@ class PVPCOptionsFlowHandler(config_entries.OptionsFlow):
         )
         schema = vol.Schema(
             {
-                vol.Required(ATTR_TARIFF, default=tariff): VALID_TARIFF,
                 vol.Required(ATTR_POWER, default=power): VALID_POWER,
                 vol.Required(ATTR_POWER_P3, default=power_valley): VALID_POWER,
             }

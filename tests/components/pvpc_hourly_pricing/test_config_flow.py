@@ -102,11 +102,11 @@ async def test_config_flow(hass, pvpc_aioclient_mock: AiohttpClientMocker):
 
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
-            user_input={ATTR_TARIFF: TARIFFS[0], ATTR_POWER: 3.0, ATTR_POWER_P3: 4.6},
+            user_input={ATTR_POWER: 3.0, ATTR_POWER_P3: 4.6},
         )
         await hass.async_block_till_done()
         state = hass.states.get("sensor.test")
-        check_valid_state(state, tariff=TARIFFS[0])
+        check_valid_state(state, tariff=TARIFFS[1])
         assert pvpc_aioclient_mock.call_count == 3
         assert state.attributes["period"] == "P3"
         assert state.attributes["next_period"] == "P2"
