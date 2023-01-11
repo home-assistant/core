@@ -258,7 +258,7 @@ class ISYAuxSensorEntity(ISYSensorEntity):
 class ISYSensorVariableEntity(ISYEntity, SensorEntity):
     """Representation of an ISY variable as a sensor device."""
 
-    # Depreceted sensors, will be removed in 2023.5.0
+    # Deprecated sensors, will be removed in 2023.5.0
     _attr_entity_registry_enabled_default = False
 
     def __init__(self, vname: str, vobj: object) -> None:
