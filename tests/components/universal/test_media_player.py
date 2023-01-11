@@ -9,7 +9,8 @@ from homeassistant import config as hass_config
 import homeassistant.components.input_number as input_number
 import homeassistant.components.input_select as input_select
 import homeassistant.components.media_player as media_player
-from homeassistant.components.media_player import MediaPlayerEntityFeature
+from homeassistant.components.media_player import MediaClass, MediaPlayerEntityFeature
+from homeassistant.components.media_player.browse_media import BrowseMedia
 import homeassistant.components.switch as switch
 import homeassistant.components.universal.media_player as universal
 from homeassistant.const import (
@@ -35,6 +36,15 @@ CONFIG_CHILDREN_ONLY = {
         media_player.ENTITY_ID_FORMAT.format("mock2"),
     ],
 }
+
+MOCK_BROWSE_MEDIA = BrowseMedia(
+    media_class=MediaClass.APP,
+    media_content_id="mock-id",
+    media_content_type="mock-type",
+    title="Mock Title",
+    can_play=False,
+    can_expand=True,
+)
 
 
 def validate_config(config):
@@ -374,7 +384,7 @@ async def test_master_state(hass):
     """Test master state property."""
     config = validate_config(CONFIG_CHILDREN_ONLY)
 
-    ump = universal.UniversalMediaPlayer(hass, **config)
+    ump = universal.UniversalMediaPlayer(hass, config)
 
     assert ump.master_state is None
 
@@ -383,7 +393,7 @@ async def test_master_state_with_attrs(hass, config_children_and_attr, mock_stat
     """Test master state property."""
     config = validate_config(config_children_and_attr)
 
-    ump = universal.UniversalMediaPlayer(hass, **config)
+    ump = universal.UniversalMediaPlayer(hass, config)
 
     assert ump.master_state == STATE_OFF
     hass.states.async_set(mock_states.mock_state_switch_id, STATE_ON)
@@ -396,7 +406,7 @@ async def test_master_state_with_bad_attrs(hass, config_children_and_attr):
     config["attributes"]["state"] = "bad.entity_id"
     config = validate_config(config)
 
-    ump = universal.UniversalMediaPlayer(hass, **config)
+    ump = universal.UniversalMediaPlayer(hass, config)
 
     assert ump.master_state == STATE_OFF
 
@@ -405,7 +415,7 @@ async def test_active_child_state(hass, mock_states):
     """Test active child state property."""
     config = validate_config(CONFIG_CHILDREN_ONLY)
 
-    ump = universal.UniversalMediaPlayer(hass, **config)
+    ump = universal.UniversalMediaPlayer(hass, config)
     ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config["name"])
     await ump.async_update()
 
@@ -446,7 +456,7 @@ async def test_name(hass):
     """Test name property."""
     config = validate_config(CONFIG_CHILDREN_ONLY)
 
-    ump = universal.UniversalMediaPlayer(hass, **config)
+    ump = universal.UniversalMediaPlayer(hass, config)
 
     assert config["name"] == ump.name
 
@@ -455,7 +465,7 @@ async def test_polling(hass):
     """Test should_poll property."""
     config = validate_config(CONFIG_CHILDREN_ONLY)
 
-    ump = universal.UniversalMediaPlayer(hass, **config)
+    ump = universal.UniversalMediaPlayer(hass, config)
 
     assert ump.should_poll is False
 
@@ -464,7 +474,7 @@ async def test_state_children_only(hass, mock_states):
     """Test media player state with only children."""
     config = validate_config(CONFIG_CHILDREN_ONLY)
 
-    ump = universal.UniversalMediaPlayer(hass, **config)
+    ump = universal.UniversalMediaPlayer(hass, config)
     ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config["name"])
     await ump.async_update()
 
@@ -483,7 +493,7 @@ async def test_state_with_children_and_attrs(
     """Test media player with children and master state."""
     config = validate_config(config_children_and_attr)
 
-    ump = universal.UniversalMediaPlayer(hass, **config)
+    ump = universal.UniversalMediaPlayer(hass, config)
     ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config["name"])
     await ump.async_update()
 
@@ -508,7 +518,7 @@ async def test_volume_level(hass, mock_states):
     """Test volume level property."""
     config = validate_config(CONFIG_CHILDREN_ONLY)
 
-    ump = universal.UniversalMediaPlayer(hass, **config)
+    ump = universal.UniversalMediaPlayer(hass, config)
     ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config["name"])
     await ump.async_update()
 
@@ -532,7 +542,7 @@ async def test_media_image_url(hass, mock_states):
     test_url = "test_url"
     config = validate_config(CONFIG_CHILDREN_ONLY)
 
-    ump = universal.UniversalMediaPlayer(hass, **config)
+    ump = universal.UniversalMediaPlayer(hass, config)
     ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config["name"])
     await ump.async_update()
 
@@ -552,7 +562,7 @@ async def test_is_volume_muted_children_only(hass, mock_states):
     """Test is volume muted property w/ children only."""
     config = validate_config(CONFIG_CHILDREN_ONLY)
 
-    ump = universal.UniversalMediaPlayer(hass, **config)
+    ump = universal.UniversalMediaPlayer(hass, config)
     ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config["name"])
     await ump.async_update()
 
@@ -577,7 +587,7 @@ async def test_sound_mode_list_children_and_attr(
     """Test sound mode list property w/ children and attrs."""
     config = validate_config(config_children_and_attr)
 
-    ump = universal.UniversalMediaPlayer(hass, **config)
+    ump = universal.UniversalMediaPlayer(hass, config)
 
     assert ump.sound_mode_list == "['music', 'movie']"
 
@@ -593,7 +603,7 @@ async def test_source_list_children_and_attr(
     """Test source list property w/ children and attrs."""
     config = validate_config(config_children_and_attr)
 
-    ump = universal.UniversalMediaPlayer(hass, **config)
+    ump = universal.UniversalMediaPlayer(hass, config)
 
     assert ump.source_list == "['dvd', 'htpc']"
 
@@ -607,7 +617,7 @@ async def test_sound_mode_children_and_attr(
     """Test sound modeproperty w/ children and attrs."""
     config = validate_config(config_children_and_attr)
 
-    ump = universal.UniversalMediaPlayer(hass, **config)
+    ump = universal.UniversalMediaPlayer(hass, config)
 
     assert ump.sound_mode == "music"
 
@@ -619,7 +629,7 @@ async def test_source_children_and_attr(hass, config_children_and_attr, mock_sta
     """Test source property w/ children and attrs."""
     config = validate_config(config_children_and_attr)
 
-    ump = universal.UniversalMediaPlayer(hass, **config)
+    ump = universal.UniversalMediaPlayer(hass, config)
 
     assert ump.source == "dvd"
 
@@ -633,7 +643,7 @@ async def test_volume_level_children_and_attr(
     """Test volume level property w/ children and attrs."""
     config = validate_config(config_children_and_attr)
 
-    ump = universal.UniversalMediaPlayer(hass, **config)
+    ump = universal.UniversalMediaPlayer(hass, config)
 
     assert ump.volume_level == 0
 
@@ -647,7 +657,7 @@ async def test_is_volume_muted_children_and_attr(
     """Test is volume muted property w/ children and attrs."""
     config = validate_config(config_children_and_attr)
 
-    ump = universal.UniversalMediaPlayer(hass, **config)
+    ump = universal.UniversalMediaPlayer(hass, config)
 
     assert not ump.is_volume_muted
 
@@ -659,7 +669,7 @@ async def test_supported_features_children_only(hass, mock_states):
     """Test supported media commands with only children."""
     config = validate_config(CONFIG_CHILDREN_ONLY)
 
-    ump = universal.UniversalMediaPlayer(hass, **config)
+    ump = universal.UniversalMediaPlayer(hass, config)
     ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config["name"])
     await ump.async_update()
 
@@ -699,9 +709,10 @@ async def test_supported_features_children_and_cmds(
         "play_media": excmd,
         "clear_playlist": excmd,
     }
+    config["browse_media_entity"] = "media_player.test"
     config = validate_config(config)
 
-    ump = universal.UniversalMediaPlayer(hass, **config)
+    ump = universal.UniversalMediaPlayer(hass, config)
     ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config["name"])
     await ump.async_update()
 
@@ -727,6 +738,7 @@ async def test_supported_features_children_and_cmds(
         | MediaPlayerEntityFeature.PREVIOUS_TRACK
         | MediaPlayerEntityFeature.PLAY_MEDIA
         | MediaPlayerEntityFeature.CLEAR_PLAYLIST
+        | MediaPlayerEntityFeature.BROWSE_MEDIA
     )
 
     assert check_flags == ump.supported_features
@@ -916,7 +928,7 @@ async def test_supported_features_play_pause(
     config["commands"] = {"media_play_pause": excmd}
     config = validate_config(config)
 
-    ump = universal.UniversalMediaPlayer(hass, **config)
+    ump = universal.UniversalMediaPlayer(hass, config)
     ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config["name"])
     await ump.async_update()
 
@@ -936,7 +948,7 @@ async def test_service_call_no_active_child(
     """Test a service call to children with no active child."""
     config = validate_config(config_children_and_attr)
 
-    ump = universal.UniversalMediaPlayer(hass, **config)
+    ump = universal.UniversalMediaPlayer(hass, config)
     ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config["name"])
     await ump.async_update()
 
@@ -956,7 +968,7 @@ async def test_service_call_to_child(hass, mock_states):
     """Test service calls that should be routed to a child."""
     config = validate_config(CONFIG_CHILDREN_ONLY)
 
-    ump = universal.UniversalMediaPlayer(hass, **config)
+    ump = universal.UniversalMediaPlayer(hass, config)
     ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config["name"])
     await ump.async_update()
 
@@ -1035,7 +1047,7 @@ async def test_service_call_to_command(hass, mock_states):
 
     service = async_mock_service(hass, "test", "turn_off")
 
-    ump = universal.UniversalMediaPlayer(hass, **config)
+    ump = universal.UniversalMediaPlayer(hass, config)
     ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config["name"])
     await ump.async_update()
 
@@ -1072,6 +1084,67 @@ async def test_state_template(hass):
     hass.states.async_set("sensor.test_sensor", STATE_OFF)
     await hass.async_block_till_done()
     assert hass.states.get("media_player.tv").state == STATE_OFF
+
+
+async def test_browse_media(hass):
+    """Test browse media."""
+    await async_setup_component(
+        hass, "media_player", {"media_player": {"platform": "demo"}}
+    )
+    await hass.async_block_till_done()
+
+    config = {
+        "name": "test",
+        "platform": "universal",
+        "children": [
+            "media_player.bedroom",
+        ],
+    }
+    config = validate_config(config)
+    ump = universal.UniversalMediaPlayer(hass, config)
+    ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config["name"])
+    await ump.async_update()
+
+    with patch(
+        "homeassistant.components.demo.media_player.MediaPlayerEntity.supported_features",
+        MediaPlayerEntityFeature.BROWSE_MEDIA,
+    ), patch(
+        "homeassistant.components.demo.media_player.MediaPlayerEntity.async_browse_media",
+        return_value=MOCK_BROWSE_MEDIA,
+    ):
+        result = await ump.async_browse_media()
+        assert result == MOCK_BROWSE_MEDIA
+
+
+async def test_browse_media_override(hass):
+    """Test browse media override."""
+    await async_setup_component(
+        hass, "media_player", {"media_player": {"platform": "demo"}}
+    )
+    await hass.async_block_till_done()
+
+    config = {
+        "name": "test",
+        "platform": "universal",
+        "children": [
+            "media_player.mock1",
+        ],
+        "browse_media_entity": "media_player.bedroom",
+    }
+    config = validate_config(config)
+    ump = universal.UniversalMediaPlayer(hass, config)
+    ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config["name"])
+    await ump.async_update()
+
+    with patch(
+        "homeassistant.components.demo.media_player.MediaPlayerEntity.supported_features",
+        MediaPlayerEntityFeature.BROWSE_MEDIA,
+    ), patch(
+        "homeassistant.components.demo.media_player.MediaPlayerEntity.async_browse_media",
+        return_value=MOCK_BROWSE_MEDIA,
+    ):
+        result = await ump.async_browse_media()
+        assert result == MOCK_BROWSE_MEDIA
 
 
 async def test_device_class(hass):
