@@ -59,6 +59,23 @@ class ESPHomeDashboard(DataUpdateCoordinator[dict[str, ConfiguredDevice]]):
         self.addon_slug = addon_slug
         self.api = ESPHomeDashboardAPI(url, session)
 
+    async def ensure_data(self) -> None:
+        """Ensure the update coordinator has data when this call finishes."""
+        if self.data:
+            return
+
+        if self._first_fetch_lock is not None:
+            async with self._first_fetch_lock:
+                # We know the data is fetched when lock is done
+                return
+
+        self._first_fetch_lock = asyncio.Lock()
+
+        async with self._first_fetch_lock:
+            await self.async_request_refresh()
+
+        self._first_fetch_lock = None
+
     async def _async_update_data(self) -> dict:
         """Fetch device data."""
         devices = await self.api.get_devices()
