@@ -274,13 +274,15 @@ def mock_default_vapix_requests(respx: respx, host: str = DEFAULT_HOST) -> None:
     respx.post(f"http://{host}:80/local/vmd/control.cgi").respond(json=VMD4_RESPONSE)
 
 
-async def setup_axis_integration(hass, config=ENTRY_CONFIG, options=ENTRY_OPTIONS):
+async def setup_axis_integration(
+    hass, config=ENTRY_CONFIG, options=ENTRY_OPTIONS, entry_version=1
+):
     """Create the Axis device."""
     config_entry = MockConfigEntry(
         domain=AXIS_DOMAIN,
         data=deepcopy(config),
         options=deepcopy(options),
-        version=3,
+        version=entry_version,
         unique_id=FORMATTED_MAC,
     )
     config_entry.add_to_hass(hass)
