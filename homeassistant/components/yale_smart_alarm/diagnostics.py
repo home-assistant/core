@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.diagnostics import async_redact_data
+from homeassistant.components.diagnostics import DiagnosticsContent, async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
@@ -24,7 +24,7 @@ TO_REDACT = {
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
-) -> dict[str, Any]:
+) -> DiagnosticsContent:
     """Return diagnostics for a config entry."""
     coordinator: YaleDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
         COORDINATOR
@@ -32,4 +32,5 @@ async def async_get_config_entry_diagnostics(
 
     assert coordinator.yale
     get_all_data = await hass.async_add_executor_job(coordinator.yale.get_all)
-    return async_redact_data(get_all_data, TO_REDACT)
+    redacted_data: dict[str, Any] = async_redact_data(get_all_data, TO_REDACT)
+    return redacted_data

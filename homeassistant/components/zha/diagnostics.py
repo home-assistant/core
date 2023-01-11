@@ -15,6 +15,7 @@ import zigpy_xbee
 import zigpy_zigate
 import zigpy_znp
 
+from homeassistant.components.diagnostics import DiagnosticsContent
 from homeassistant.components.diagnostics.util import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_UNIQUE_ID
@@ -69,7 +70,7 @@ def shallow_asdict(obj: Any) -> dict:
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry
-) -> dict[str, Any]:
+) -> DiagnosticsContent:
     """Return diagnostics for a config entry."""
     config: dict = hass.data[DATA_ZHA].get(DATA_ZHA_CONFIG, {})
     gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
@@ -94,7 +95,7 @@ async def async_get_config_entry_diagnostics(
 
 async def async_get_device_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry, device: dr.DeviceEntry
-) -> dict[str, Any]:
+) -> DiagnosticsContent:
     """Return diagnostics for a device."""
     zha_device: ZHADevice = async_get_zha_device(hass, device.id)
     device_info: dict[str, Any] = zha_device.zha_device_info

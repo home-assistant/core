@@ -10,7 +10,7 @@ from zwave_js_server.dump import dump_msgs
 from zwave_js_server.model.node import Node, NodeDataType
 from zwave_js_server.model.value import ValueDataType
 
-from homeassistant.components.diagnostics import REDACTED
+from homeassistant.components.diagnostics import REDACTED, DiagnosticsContent
 from homeassistant.components.diagnostics.util import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
@@ -106,7 +106,7 @@ def get_device_entities(
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry
-) -> dict[str, Any]:
+) -> DiagnosticsContent:
     """Return diagnostics for a config entry."""
     msgs: list[dict] = async_redact_data(
         await dump_msgs(
@@ -124,7 +124,7 @@ async def async_get_config_entry_diagnostics(
 
 async def async_get_device_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry, device: dr.DeviceEntry
-) -> dict[str, Any]:
+) -> DiagnosticsContent:
     """Return diagnostics for a device."""
     client: Client = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
     identifiers = get_home_and_node_id_from_device_entry(device)
@@ -145,5 +145,5 @@ async def async_get_device_diagnostics(
             "maxSchemaVersion": client.version.max_schema_version,
         },
         "entities": entities,
-        "state": node_state,
+        "state": node_state,  # type: ignore[dict-item]
     }
