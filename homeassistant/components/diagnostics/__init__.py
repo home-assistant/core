@@ -1,12 +1,12 @@
 """The Diagnostics integration."""
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine, Mapping, Sequence
+from collections.abc import Callable, Coroutine, Mapping
 from dataclasses import dataclass, field
 from http import HTTPStatus
 import json
 import logging
-from typing import Any, Protocol, Union
+from typing import Any, Protocol
 
 from aiohttp import web
 import voluptuous as vol
@@ -18,7 +18,7 @@ from homeassistant.helpers import integration_platform
 from homeassistant.helpers.device_registry import DeviceEntry, async_get
 from homeassistant.helpers.json import ExtendedJSONEncoder
 from homeassistant.helpers.system_info import async_get_system_info
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, JsonValueReadOnlyType
 from homeassistant.loader import async_get_custom_components, async_get_integration
 from homeassistant.util.json import (
     find_paths_unserializable_data,
@@ -31,18 +31,7 @@ from .util import async_redact_data
 __all__ = ["REDACTED", "async_redact_data"]
 
 _LOGGER = logging.getLogger(__name__)
-DiagnosticsContent = Mapping[
-    Union[str, int, float],
-    Union[
-        str,
-        int,
-        float,
-        bool,
-        None,
-        Sequence[Union[str, int, float, bool, "DiagnosticsContent"]],
-        "DiagnosticsContent",
-    ],
-]
+DiagnosticsContent = Mapping[str, JsonValueReadOnlyType]
 
 
 @dataclass

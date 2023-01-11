@@ -1,5 +1,7 @@
 """Typing Helpers for Home Assistant."""
-from collections.abc import Mapping
+from __future__ import annotations
+
+from collections.abc import Mapping, Sequence
 from enum import Enum
 from typing import Any, Optional, Union
 
@@ -16,6 +18,25 @@ TemplateVarsType = Optional[Mapping[str, Any]]
 
 # Custom type for recorder Queries
 QueryType = Any
+
+JsonValueType = Union[
+    None,
+    str,
+    int,
+    float,
+    bool,
+    list["JsonValueType"],
+    dict[str, "JsonValueType"],
+]
+JsonValueReadOnlyType = Union[
+    None,
+    str,
+    int,
+    float,
+    bool,
+    Sequence["JsonValueReadOnlyType"],
+    Mapping[str, "JsonValueReadOnlyType"],
+]
 
 
 class UndefinedType(Enum):
