@@ -1,6 +1,6 @@
 """DataUpdateCoordinator for Plugwise."""
 from datetime import timedelta
-from typing import NamedTuple, cast
+from typing import NamedTuple
 
 from plugwise import Smile
 from plugwise.constants import DeviceData, GatewayData
@@ -87,7 +87,4 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[PlugwiseData]):
             raise ConfigEntryError("Device with unsupported firmware") from err
         except ConnectionFailedError as err:
             raise UpdateFailed("Failed to connect to the Plugwise Smile") from err
-        return PlugwiseData(
-            gateway=cast(GatewayData, data[0]),
-            devices=cast(dict[str, DeviceData], data[1]),
-        )
+        return PlugwiseData(data[0], data[1])

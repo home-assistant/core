@@ -444,6 +444,6 @@ class PlugwiseSensorEntity(PlugwiseEntity, SensorEntity):
         self._attr_unique_id = f"{device_id}-{description.key}"
 
     @property
-    def native_value(self) -> int | float | None:
+    def native_value(self) -> int | float:
         """Return the value reported by the sensor."""
-        return self.device["sensors"].get(self.entity_description.key)
+        return self.device["sensors"][self.entity_description.key]
