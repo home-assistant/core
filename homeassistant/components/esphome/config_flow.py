@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from collections.abc import Mapping
+import logging
 from typing import Any
 
 from aioesphomeapi import (
@@ -14,10 +15,11 @@ from aioesphomeapi import (
     RequiresEncryptionAPIError,
     ResolveAPIError,
 )
+import aiohttp
 import voluptuous as vol
 
 from homeassistant.components import dhcp, zeroconf
-from homeassistant.components.hassio.discovery import HassioServiceInfo
+from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import callback
@@ -25,10 +27,12 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.device_registry import format_mac
 
 from . import CONF_NOISE_PSK, DOMAIN
-from .dashboard import async_set_dashboard_info
+from .dashboard import async_get_dashboard, async_set_dashboard_info
 
 ERROR_REQUIRES_ENCRYPTION_KEY = "requires_encryption_key"
+ERROR_INVALID_ENCRYPTION_KEY = "invalid_psk"
 ESPHOME_URL = "https://esphome.io/"
+_LOGGER = logging.getLogger(__name__)
 
 
 class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -44,6 +48,8 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         self._noise_psk: str | None = None
         self._device_info: DeviceInfo | None = None
         self._reauth_entry: ConfigEntry | None = None
+        # The ESPHome name as per its config
+        self._device_name: str | None = None
 
     async def _async_step_user_base(
         self, user_input: dict[str, Any] | None = None, error: str | None = None
@@ -116,6 +122,17 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def _async_try_fetch_device_info(self) -> FlowResult:
         error = await self.fetch_device_info()
+
+        if (
+            error == ERROR_REQUIRES_ENCRYPTION_KEY
+            and await self._retrieve_encryption_key_from_dashboard()
+        ):
+            error = await self.fetch_device_info()
+            # If the fetched key is invalid, unset it again.
+            if error == ERROR_INVALID_ENCRYPTION_KEY:
+                self._noise_psk = None
+                error = ERROR_REQUIRES_ENCRYPTION_KEY
+
         if error == ERROR_REQUIRES_ENCRYPTION_KEY:
             return await self.async_step_encryption_key()
         if error is not None:
@@ -156,6 +173,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         # Hostname is format: livingroom.local.
         self._name = discovery_info.hostname[: -len(".local.")]
+        self._device_name = self._name
         self._host = discovery_info.host
         self._port = discovery_info.port
 
@@ -272,7 +290,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         except RequiresEncryptionAPIError:
             return ERROR_REQUIRES_ENCRYPTION_KEY
         except InvalidEncryptionKeyAPIError:
-            return "invalid_psk"
+            return ERROR_INVALID_ENCRYPTION_KEY
         except ResolveAPIError:
             return "resolve_error"
         except APIConnectionError:
@@ -280,7 +298,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         finally:
             await cli.disconnect(force=True)
 
-        self._name = self._device_info.name
+        self._name = self._device_name = self._device_info.name
         await self.async_set_unique_id(
             self._device_info.mac_address, raise_on_progress=False
         )
@@ -314,3 +332,33 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             await cli.disconnect(force=True)
 
         return None
+
+    async def _retrieve_encryption_key_from_dashboard(self) -> bool:
+        """Try to retrieve the encryption key from the dashboard.
+
+        Return boolean if a key was retrieved.
+        """
+        if self._device_name is None:
+            return False
+
+        if (dashboard := async_get_dashboard(self.hass)) is None:
+            return False
+
+        await dashboard.async_request_refresh()
+
+        if not dashboard.last_update_success:
+            return False
+
+        device = dashboard.data.get(self._device_name)
+
+        if device is None:
+            return False
+
+        try:
+            noise_psk = await dashboard.api.get_encryption_key(device["configuration"])
+        except aiohttp.ClientError as err:
+            _LOGGER.error("Error talking to the dashboard: %s", err)
+            return False
+
+        self._noise_psk = noise_psk
+        return True

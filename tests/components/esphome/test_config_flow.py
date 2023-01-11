@@ -649,3 +649,104 @@ async def test_discovery_hassio(hass):
     dash = dashboard.async_get_dashboard(hass)
     assert dash is not None
     assert dash.addon_slug == "mock-slug"
+
+
+async def test_zeroconf_encryption_key_via_dashboard(hass, mock_client, mock_zeroconf):
+    """Test encryption key retrieved from dashboard."""
+    service_info = zeroconf.ZeroconfServiceInfo(
+        host="192.168.43.183",
+        addresses=["192.168.43.183"],
+        hostname="test8266.local.",
+        name="mock_name",
+        port=6053,
+        properties={
+            "mac": "1122334455aa",
+        },
+        type="mock_type",
+    )
+    flow = await hass.config_entries.flow.async_init(
+        "esphome", context={"source": config_entries.SOURCE_ZEROCONF}, data=service_info
+    )
+
+    assert flow["type"] == FlowResultType.FORM
+    assert flow["step_id"] == "discovery_confirm"
+
+    dashboard.async_set_dashboard_info(hass, "mock-slug", "mock-host", 6052)
+
+    mock_client.device_info.side_effect = [
+        RequiresEncryptionAPIError,
+        DeviceInfo(
+            uses_password=False,
+            name="test8266",
+            mac_address="11:22:33:44:55:aa",
+        ),
+    ]
+
+    with patch(
+        "homeassistant.components.esphome.dashboard.ESPHomeDashboardAPI.get_devices",
+        return_value={
+            "configured": [
+                {
+                    "name": "test8266",
+                    "configuration": "test8266.yaml",
+                }
+            ]
+        },
+    ), patch(
+        "homeassistant.components.esphome.dashboard.ESPHomeDashboardAPI.get_encryption_key",
+        return_value=VALID_NOISE_PSK,
+    ) as mock_get_encryption_key:
+        result = await hass.config_entries.flow.async_configure(
+            flow["flow_id"], user_input={}
+        )
+
+    assert len(mock_get_encryption_key.mock_calls) == 1
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "test8266"
+    assert result["data"][CONF_HOST] == "192.168.43.183"
+    assert result["data"][CONF_PORT] == 6053
+    assert result["data"][CONF_NOISE_PSK] == VALID_NOISE_PSK
+
+    assert result["result"]
+    assert result["result"].unique_id == "11:22:33:44:55:aa"
+
+    assert mock_client.noise_psk == VALID_NOISE_PSK
+
+
+async def test_zeroconf_no_encryption_key_via_dashboard(
+    hass, mock_client, mock_zeroconf
+):
+    """Test encryption key not retrieved from dashboard."""
+    service_info = zeroconf.ZeroconfServiceInfo(
+        host="192.168.43.183",
+        addresses=["192.168.43.183"],
+        hostname="test8266.local.",
+        name="mock_name",
+        port=6053,
+        properties={
+            "mac": "1122334455aa",
+        },
+        type="mock_type",
+    )
+    flow = await hass.config_entries.flow.async_init(
+        "esphome", context={"source": config_entries.SOURCE_ZEROCONF}, data=service_info
+    )
+
+    assert flow["type"] == FlowResultType.FORM
+    assert flow["step_id"] == "discovery_confirm"
+
+    dashboard.async_set_dashboard_info(hass, "mock-slug", "mock-host", 6052)
+
+    mock_client.device_info.side_effect = RequiresEncryptionAPIError
+
+    with patch(
+        "homeassistant.components.esphome.dashboard.ESPHomeDashboardAPI.get_devices",
+        return_value={"configured": []},
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            flow["flow_id"], user_input={}
+        )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "encryption_key"

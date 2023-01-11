@@ -78,6 +78,7 @@ def mock_client():
         return mock_client
 
     mock_client.side_effect = mock_constructor
+    mock_client.device_info = AsyncMock()
     mock_client.connect = AsyncMock()
     mock_client.disconnect = AsyncMock()
 
