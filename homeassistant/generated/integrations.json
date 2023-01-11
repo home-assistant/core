@@ -602,6 +602,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "bluetooth_adapters": {
+      "name": "Bluetooth Adapters",
+      "integration_type": "hub",
+      "config_flow": false,
+      "iot_class": "local_push"
+    },
     "bluetooth_le_tracker": {
       "name": "Bluetooth LE Tracker",
       "integration_type": "hub",
