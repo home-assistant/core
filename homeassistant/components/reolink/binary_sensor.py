@@ -139,7 +139,7 @@ class ReolinkBinarySensorEntity(ReolinkCoordinatorEntity, BinarySensorEntity):
     @property
     def icon(self) -> str:
         """Icon of the sensor."""
-        if self.is_on:
+        if self.entity_description.value(self._host, self._channel):
             return self.entity_description.icon
 
         return self.entity_description.icon_off
