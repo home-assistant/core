@@ -220,7 +220,6 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             await self.client.set_active_app(uri)
         else:
             await self.client.set_play_content(uri)
-        return
 
     async def async_source_find(
         self, query: str, source_type: SourceType | str
