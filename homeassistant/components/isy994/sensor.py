@@ -28,12 +28,13 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     _LOGGER,
     DOMAIN,
+    ISY_DEVICES,
     ISY_NODES,
     ISY_VARIABLES,
     SENSOR_AUX,
@@ -111,10 +112,11 @@ async def async_setup_entry(
     """Set up the ISY sensor platform."""
     hass_isy_data = hass.data[DOMAIN][entry.entry_id]
     entities: list[ISYSensorEntity | ISYSensorVariableEntity] = []
+    devices: dict[str, DeviceInfo] = hass_isy_data[ISY_DEVICES]
 
     for node in hass_isy_data[ISY_NODES][Platform.SENSOR]:
         _LOGGER.debug("Loading %s", node.name)
-        entities.append(ISYSensorEntity(node))
+        entities.append(ISYSensorEntity(node, devices.get(node.primary_node)))
 
     aux_nodes = set()
     for node, control in hass_isy_data[ISY_NODES][SENSOR_AUX]:
@@ -125,11 +127,25 @@ async def async_setup_entry(
         enabled_default = control not in AUX_DISABLED_BY_DEFAULT_EXACT and not any(
             control.startswith(match) for match in AUX_DISABLED_BY_DEFAULT_MATCH
         )
-        entities.append(ISYAuxSensorEntity(node, control, enabled_default))
+        entities.append(
+            ISYAuxSensorEntity(
+                node=node,
+                control=control,
+                enabled_default=enabled_default,
+                device_info=devices.get(node.primary_node),
+            )
+        )
 
     for node in aux_nodes:
         # Any node in SENSOR_AUX can potentially have communication errors
-        entities.append(ISYAuxSensorEntity(node, PROP_COMMS_ERROR, False))
+        entities.append(
+            ISYAuxSensorEntity(
+                node=node,
+                control=PROP_COMMS_ERROR,
+                enabled_default=False,
+                device_info=devices.get(node.primary_node),
+            )
+        )
 
     for vname, vobj in hass_isy_data[ISY_VARIABLES][Platform.SENSOR]:
         entities.append(ISYSensorVariableEntity(vname, vobj))
@@ -227,9 +243,15 @@ class ISYSensorEntity(ISYNodeEntity, SensorEntity):
 class ISYAuxSensorEntity(ISYSensorEntity):
     """Representation of an ISY aux sensor device."""
 
-    def __init__(self, node: Node, control: str, enabled_default: bool) -> None:
+    def __init__(
+        self,
+        node: Node,
+        control: str,
+        enabled_default: bool,
+        device_info: DeviceInfo | None = None,
+    ) -> None:
         """Initialize the ISY aux sensor."""
-        super().__init__(node)
+        super().__init__(node, device_info=device_info)
         self._control = control
         self._attr_entity_registry_enabled_default = enabled_default
         self._attr_entity_category = ISY_CONTROL_TO_ENTITY_CATEGORY.get(control)

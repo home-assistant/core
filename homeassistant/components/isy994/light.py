@@ -11,10 +11,18 @@ from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import _LOGGER, CONF_RESTORE_LIGHT_STATE, DOMAIN, ISY_NODES, UOM_PERCENTAGE
+from .const import (
+    _LOGGER,
+    CONF_RESTORE_LIGHT_STATE,
+    DOMAIN,
+    ISY_DEVICES,
+    ISY_NODES,
+    UOM_PERCENTAGE,
+)
 from .entity import ISYNodeEntity
 from .services import async_setup_light_services
 
@@ -26,12 +34,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up the ISY light platform."""
     hass_isy_data = hass.data[DOMAIN][entry.entry_id]
+    devices: dict[str, DeviceInfo] = hass_isy_data[ISY_DEVICES]
     isy_options = entry.options
     restore_light_state = isy_options.get(CONF_RESTORE_LIGHT_STATE, False)
 
     entities = []
     for node in hass_isy_data[ISY_NODES][Platform.LIGHT]:
-        entities.append(ISYLightEntity(node, restore_light_state))
+        entities.append(
+            ISYLightEntity(node, restore_light_state, devices.get(node.primary_node))
+        )
 
     async_add_entities(entities)
     async_setup_light_services(hass)
@@ -43,9 +54,14 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
-    def __init__(self, node: Node, restore_light_state: bool) -> None:
+    def __init__(
+        self,
+        node: Node,
+        restore_light_state: bool,
+        device_info: DeviceInfo | None = None,
+    ) -> None:
         """Initialize the ISY light device."""
-        super().__init__(node)
+        super().__init__(node, device_info=device_info)
         self._last_brightness: int | None = None
         self._restore_light_state = restore_light_state
 

@@ -7,7 +7,6 @@ from pyisy.constants import (
     COMMAND_FRIENDLY_NAME,
     EMPTY_TIME,
     EVENT_PROPS_IGNORED,
-    PROTO_GROUP,
     PROTO_INSTEON,
     PROTO_ZWAVE,
 )
@@ -21,7 +20,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
-from .const import DOMAIN, ISY_DEVICES
+from .const import DOMAIN
 
 
 class ISYEntity(Entity):
@@ -31,11 +30,13 @@ class ISYEntity(Entity):
     _attr_should_poll = False
     _node: Node | Program | Variable
 
-    def __init__(self, node: Node) -> None:
+    def __init__(self, node: Node, device_info: DeviceInfo | None = None) -> None:
         """Initialize the insteon device."""
         self._node = node
         self._attr_name = node.name
-        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, node.isy.uuid)})
+        if device_info is None:
+            device_info = DeviceInfo(identifiers={(DOMAIN, node.isy.uuid)})
+        self._attr_device_info = device_info
         self._attr_unique_id = f"{node.isy.uuid}_{node.address}"
         self._attrs: dict[str, Any] = {}
         self._change_handler: EventListener | None = None
@@ -76,32 +77,6 @@ class ISYEntity(Entity):
 
 class ISYNodeEntity(ISYEntity):
     """Representation of a ISY Nodebase (Node/Group) entity."""
-
-    @property
-    def device_info(self) -> DeviceInfo | None:
-        """Return the device info."""
-        assert self.platform and self.platform.config_entry
-
-        entry_id = self.platform.config_entry.entry_id
-        device_info: dict[str, DeviceInfo] = self.hass.data[DOMAIN][entry_id][
-            ISY_DEVICES
-        ]
-        primary_address = self._node.primary_node
-
-        if self._node.protocol == PROTO_GROUP:
-            if len(self._node.controllers) == 1:
-                # If Group has only 1 Controller, link to that device instead of the hub
-                primary_address = self._node.isy.nodes.get_by_id(
-                    self._node.controllers[0]
-                ).primary_node
-            else:
-                return self._attr_device_info
-
-        if device := device_info.get(primary_address):
-            return device
-
-        # Fall back to the hub if we don't have a primary device
-        return self._attr_device_info
 
     @property
     def extra_state_attributes(self) -> dict:

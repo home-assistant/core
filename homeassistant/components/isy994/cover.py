@@ -13,11 +13,13 @@ from homeassistant.components.cover import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     _LOGGER,
     DOMAIN,
+    ISY_DEVICES,
     ISY_NODES,
     ISY_PROGRAMS,
     UOM_8_BIT_RANGE,
@@ -32,8 +34,9 @@ async def async_setup_entry(
     """Set up the ISY cover platform."""
     hass_isy_data = hass.data[DOMAIN][entry.entry_id]
     entities: list[ISYCoverEntity | ISYCoverProgramEntity] = []
+    devices: dict[str, DeviceInfo] = hass_isy_data[ISY_DEVICES]
     for node in hass_isy_data[ISY_NODES][Platform.COVER]:
-        entities.append(ISYCoverEntity(node))
+        entities.append(ISYCoverEntity(node, devices.get(node.primary_node)))
 
     for name, status, actions in hass_isy_data[ISY_PROGRAMS][Platform.COVER]:
         entities.append(ISYCoverProgramEntity(name, status, actions))
