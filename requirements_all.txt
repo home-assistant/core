@@ -672,6 +672,9 @@ epson-projector==0.5.0
 # homeassistant.components.epsonworkforce
 epsonprinter==0.0.9
 
+# homeassistant.components.esphome
+esphome-dashboard-api==1.1
+
 # homeassistant.components.netgear_lte
 eternalegypt==0.0.12
 
