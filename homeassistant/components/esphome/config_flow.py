@@ -26,7 +26,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.device_registry import format_mac
 
-from . import CONF_NOISE_PSK, DOMAIN
+from . import CONF_DEVICE_NAME, CONF_NOISE_PSK, DOMAIN
 from .dashboard import async_get_dashboard, async_set_dashboard_info
 
 ERROR_REQUIRES_ENCRYPTION_KEY = "requires_encryption_key"
@@ -89,6 +89,13 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         self._port = entry.data[CONF_PORT]
         self._password = entry.data[CONF_PASSWORD]
         self._name = entry.title
+        self._device_name = entry.data.get(CONF_DEVICE_NAME)
+
+        if await self._retrieve_encryption_key_from_dashboard():
+            error = await self.fetch_device_info()
+            if error is None:
+                return await self._async_authenticate_or_add()
+
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -211,6 +218,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             # The API uses protobuf, so empty string denotes absence
             CONF_PASSWORD: self._password or "",
             CONF_NOISE_PSK: self._noise_psk or "",
+            CONF_DEVICE_NAME: self._device_name,
         }
         if self._reauth_entry:
             entry = self._reauth_entry

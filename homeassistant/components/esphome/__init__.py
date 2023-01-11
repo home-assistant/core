@@ -62,6 +62,7 @@ from .domain_data import DOMAIN, DomainData
 # Import config flow so that it's added to the registry
 from .entry_data import RuntimeEntryData
 
+CONF_DEVICE_NAME = "device_name"
 CONF_NOISE_PSK = "noise_psk"
 _LOGGER = logging.getLogger(__name__)
 _R = TypeVar("_R")
@@ -266,6 +267,13 @@ async def async_setup_entry(  # noqa: C901
             if entry.unique_id != format_mac(device_info.mac_address):
                 hass.config_entries.async_update_entry(
                     entry, unique_id=format_mac(device_info.mac_address)
+                )
+
+            # Make sure we have the correct device name stored.
+            # us to map the device to ESPHome Dashboard config
+            if entry.data.get(CONF_DEVICE_NAME) != device_info.name:
+                hass.config_entries.async_update_entry(
+                    entry, data={**entry.data, CONF_DEVICE_NAME: device_info.name}
                 )
 
             entry_data.device_info = device_info

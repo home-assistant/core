@@ -14,6 +14,7 @@ import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import dhcp, zeroconf
 from homeassistant.components.esphome import (
+    CONF_DEVICE_NAME,
     CONF_NOISE_PSK,
     DOMAIN,
     DomainData,
@@ -65,6 +66,7 @@ async def test_user_connection_works(hass, mock_client, mock_zeroconf):
         CONF_PORT: 80,
         CONF_PASSWORD: "",
         CONF_NOISE_PSK: "",
+        CONF_DEVICE_NAME: "test",
     }
     assert result["title"] == "test"
     assert result["result"].unique_id == "mock-mac"
@@ -178,6 +180,7 @@ async def test_user_with_password(hass, mock_client, mock_zeroconf):
         CONF_PORT: 6053,
         CONF_PASSWORD: "password1",
         CONF_NOISE_PSK: "",
+        CONF_DEVICE_NAME: "test",
     }
     assert mock_client.password == "password1"
 
@@ -419,6 +422,7 @@ async def test_encryption_key_valid_psk(hass, mock_client, mock_zeroconf):
         CONF_PORT: 6053,
         CONF_PASSWORD: "",
         CONF_NOISE_PSK: VALID_NOISE_PSK,
+        CONF_DEVICE_NAME: "test",
     }
     assert mock_client.noise_psk == VALID_NOISE_PSK
 
@@ -495,6 +499,55 @@ async def test_reauth_confirm_valid(hass, mock_client, mock_zeroconf):
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert entry.data[CONF_NOISE_PSK] == VALID_NOISE_PSK
+
+
+async def test_reauth_fixed_via_dashboard(hass, mock_client, mock_zeroconf):
+    """Test reauth fixed automatically via dashboard."""
+    dashboard.async_set_dashboard_info(hass, "mock-slug", "mock-host", 6052)
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+            CONF_DEVICE_NAME: "test",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    mock_client.device_info = AsyncMock(
+        return_value=DeviceInfo(uses_password=False, name="test")
+    )
+
+    with patch(
+        "homeassistant.components.esphome.dashboard.ESPHomeDashboardAPI.get_devices",
+        return_value={
+            "configured": [
+                {
+                    "name": "test",
+                    "configuration": "test.yaml",
+                }
+            ]
+        },
+    ), patch(
+        "homeassistant.components.esphome.dashboard.ESPHomeDashboardAPI.get_encryption_key",
+        return_value=VALID_NOISE_PSK,
+    ) as mock_get_encryption_key:
+        result = await hass.config_entries.flow.async_init(
+            "esphome",
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "entry_id": entry.entry_id,
+                "unique_id": entry.unique_id,
+            },
+        )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data[CONF_NOISE_PSK] == VALID_NOISE_PSK
+
+    assert len(mock_get_encryption_key.mock_calls) == 1
 
 
 async def test_reauth_confirm_invalid(hass, mock_client, mock_zeroconf):
