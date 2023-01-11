@@ -34,8 +34,10 @@
         "step": {
             "init": {
                 "data": {
+                    "enable_conversation_agent": "Aktiver samtaleagenten",
                     "language_code": "Spr\u00e5kkode"
-                }
+                },
+                "description": "Angi spr\u00e5k for interaksjoner med Google Assistant og om du vil aktivere samtaleagenten."
             }
         }
     }
