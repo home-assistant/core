@@ -33,7 +33,7 @@ async def async_setup_entry(
         for stream in streams:
             cameras.append(ReolinkCamera(reolink_data, channel, stream))
 
-    async_add_entities(cameras, update_before_add=True)
+    async_add_entities(cameras)
 
 
 class ReolinkCamera(ReolinkCoordinatorEntity, Camera):
