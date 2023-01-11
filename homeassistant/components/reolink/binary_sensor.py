@@ -113,7 +113,7 @@ async def async_setup_entry(
                 )
             )
 
-    async_add_entities(entities, update_before_add=True)
+    async_add_entities(entities)
 
 
 class ReolinkBinarySensorEntity(ReolinkCoordinatorEntity, BinarySensorEntity):
