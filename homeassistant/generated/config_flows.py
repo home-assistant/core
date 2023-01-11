@@ -93,6 +93,7 @@ FLOWS = {
         "dialogflow",
         "directv",
         "discord",
+        "dlink",
         "dlna_dmr",
         "dlna_dms",
         "dnsip",
