@@ -25,7 +25,7 @@ async def test_entry_diagnostics(hass, hass_client):
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "config": {
             "entry_id": config_entry.entry_id,
-            "version": 3,
+            "version": 1,
             "domain": "axis",
             "title": "Mock Title",
             "data": {

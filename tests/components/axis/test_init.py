@@ -3,9 +3,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from homeassistant.components import axis
 from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.const import (
-    CONF_DEVICE,
     CONF_HOST,
     CONF_MAC,
     CONF_MODEL,
@@ -14,7 +12,6 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
 )
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.setup import async_setup_component
 
@@ -66,42 +63,7 @@ async def test_unload_entry(hass):
 
 async def test_migrate_entry(hass):
     """Test successful migration of entry data."""
-    legacy_config = {
-        CONF_DEVICE: {
-            CONF_HOST: "1.2.3.4",
-            CONF_USERNAME: "username",
-            CONF_PASSWORD: "password",
-            CONF_PORT: 80,
-        },
-        CONF_MAC: "00408C123456",
-        CONF_MODEL: "model",
-        CONF_NAME: "name",
-    }
-    entry = MockConfigEntry(domain=AXIS_DOMAIN, data=legacy_config)
-
-    assert entry.data == legacy_config
-    assert entry.version == 1
-    assert not entry.unique_id
-
-    # Create entity entry to migrate to new unique ID
-    registry = er.async_get(hass)
-    registry.async_get_or_create(
-        BINARY_SENSOR_DOMAIN,
-        AXIS_DOMAIN,
-        "00408C123456-vmd4-0",
-        suggested_object_id="vmd4",
-        config_entry=entry,
-    )
-
-    await entry.async_migrate(hass)
-
-    assert entry.data == {
-        CONF_DEVICE: {
-            CONF_HOST: "1.2.3.4",
-            CONF_USERNAME: "username",
-            CONF_PASSWORD: "password",
-            CONF_PORT: 80,
-        },
+    config_entry_data = {
         CONF_HOST: "1.2.3.4",
         CONF_USERNAME: "username",
         CONF_PASSWORD: "password",
@@ -110,8 +72,12 @@ async def test_migrate_entry(hass):
         CONF_MODEL: "model",
         CONF_NAME: "name",
     }
-    assert entry.version == 2  # Keep version to support rollbacking
-    assert entry.unique_id == "00:40:8c:12:34:56"
+    entry = MockConfigEntry(domain=AXIS_DOMAIN, data=config_entry_data, version=2)
 
-    vmd4_entity = registry.async_get("binary_sensor.vmd4")
-    assert vmd4_entity.unique_id == "00:40:8c:12:34:56-vmd4-0"
+    assert entry.data == config_entry_data
+    assert entry.version == 2
+
+    await entry.async_migrate(hass)
+
+    assert entry.data == config_entry_data
+    assert entry.version == 1
