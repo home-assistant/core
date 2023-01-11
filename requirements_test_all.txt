@@ -1063,6 +1063,9 @@ pyRFXtrx==0.30.0
 # homeassistant.components.tibber
 pyTibber==0.26.7
 
+# homeassistant.components.dlink
+pyW215==0.7.0
+
 # homeassistant.components.nextbus
 py_nextbusnext==0.1.5
 
@@ -1844,7 +1847,7 @@ xbox-webapi==2.0.11
 xiaomi-ble==0.14.3
 
 # homeassistant.components.knx
-xknx==2.2.0
+xknx==2.3.0
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz
