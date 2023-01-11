@@ -86,7 +86,7 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
 
     def __init__(self, node: Node, device_info: DeviceInfo | None = None) -> None:
         """Initialize the ISY Thermostat entity."""
-        super().__init__(node)
+        super().__init__(node, device_info=device_info)
         self._uom = self._node.uom
         if isinstance(self._uom, list):
             self._uom = self._node.uom[0]
