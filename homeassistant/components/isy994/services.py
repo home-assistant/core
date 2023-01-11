@@ -29,7 +29,6 @@ from .const import (
     DOMAIN,
     ISY_CONF_NAME,
     ISY_CONF_NETWORKING,
-    ISY_CONF_UUID,
     ISY_ROOT,
 )
 from .util import unique_ids_for_config_entry_id
@@ -194,7 +193,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         entity_registry = er.async_get(hass)
         for config_entry_id in hass.data[DOMAIN]:
             isy = hass.data[DOMAIN][config_entry_id][ISY_ROOT]
-            if isy_name and isy_name != isy.configuration["name"]:
+            if isy_name and isy_name != isy.conf["name"]:
                 continue
             # If an address is provided, make sure we query the correct ISY.
             # Otherwise, query the whole system on all ISY's connected.
@@ -202,7 +201,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
                 _LOGGER.debug(
                     "Requesting query of device %s on ISY %s",
                     address,
-                    isy.configuration[ISY_CONF_UUID],
+                    isy.uuid,
                 )
                 await isy.query(address)
                 async_log_deprecated_service_call(
@@ -212,21 +211,19 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
                     alternate_target=entity_registry.async_get_entity_id(
                         Platform.BUTTON,
                         DOMAIN,
-                        f"{isy.configuration[ISY_CONF_UUID]}_{address}_query",
+                        f"{isy.uuid}_{address}_query",
                     ),
                     breaks_in_ha_version="2023.5.0",
                 )
                 return
-            _LOGGER.debug(
-                "Requesting system query of ISY %s", isy.configuration[ISY_CONF_UUID]
-            )
+            _LOGGER.debug("Requesting system query of ISY %s", isy.uuid)
             await isy.query()
             async_log_deprecated_service_call(
                 hass,
                 call=service,
                 alternate_service="button.press",
                 alternate_target=entity_registry.async_get_entity_id(
-                    Platform.BUTTON, DOMAIN, f"{isy.configuration[ISY_CONF_UUID]}_query"
+                    Platform.BUTTON, DOMAIN, f"{isy.uuid}_query"
                 ),
                 breaks_in_ha_version="2023.5.0",
             )
@@ -239,9 +236,9 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
 
         for config_entry_id in hass.data[DOMAIN]:
             isy = hass.data[DOMAIN][config_entry_id][ISY_ROOT]
-            if isy_name and isy_name != isy.configuration[ISY_CONF_NAME]:
+            if isy_name and isy_name != isy.conf[ISY_CONF_NAME]:
                 continue
-            if isy.networking is None or not isy.configuration[ISY_CONF_NETWORKING]:
+            if isy.networking is None or not isy.conf[ISY_CONF_NETWORKING]:
                 continue
             command = None
             if address:
@@ -258,7 +255,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
                     alternate_target=entity_registry.async_get_entity_id(
                         Platform.BUTTON,
                         DOMAIN,
-                        f"{isy.configuration[ISY_CONF_UUID]}_{CONF_NETWORK}_{address}",
+                        f"{isy.uuid}_{CONF_NETWORK}_{address}",
                     ),
                     breaks_in_ha_version="2023.5.0",
                 )
@@ -276,7 +273,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
 
         for config_entry_id in hass.data[DOMAIN]:
             isy = hass.data[DOMAIN][config_entry_id][ISY_ROOT]
-            if isy_name and isy_name != isy.configuration["name"]:
+            if isy_name and isy_name != isy.conf["name"]:
                 continue
             program = None
             if address:
@@ -299,7 +296,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
 
         for config_entry_id in hass.data[DOMAIN]:
             isy = hass.data[DOMAIN][config_entry_id][ISY_ROOT]
-            if isy_name and isy_name != isy.configuration["name"]:
+            if isy_name and isy_name != isy.conf["name"]:
                 continue
             variable = None
             if name:
@@ -316,7 +313,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
                     alternate_target=entity_registry.async_get_entity_id(
                         Platform.NUMBER,
                         DOMAIN,
-                        f"{isy.configuration[ISY_CONF_UUID]}_{address}{'_init' if init else ''}",
+                        f"{isy.uuid}_{address}{'_init' if init else ''}",
                     ),
                     breaks_in_ha_version="2023.5.0",
                 )

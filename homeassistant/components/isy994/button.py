@@ -16,7 +16,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import (
     CONF_NETWORK,
     DOMAIN,
-    ISY_CONF_UUID,
     ISY_DEVICES,
     ISY_NET_RES,
     ISY_ROOT,
@@ -32,7 +31,6 @@ async def async_setup_entry(
     """Set up ISY/IoX button from config entry."""
     hass_isy_data = hass.data[DOMAIN][config_entry.entry_id]
     isy: ISY = hass_isy_data[ISY_ROOT]
-    uuid = isy.configuration[ISY_CONF_UUID]
     device_info = hass_isy_data[ISY_DEVICES]
     entities: list[
         ISYNodeQueryButtonEntity
@@ -45,7 +43,7 @@ async def async_setup_entry(
             ISYNodeQueryButtonEntity(
                 node=node,
                 name="Query",
-                unique_id=f"{uuid}_{node.address}_query",
+                unique_id=f"{isy.uuid}_{node.address}_query",
                 entity_category=EntityCategory.DIAGNOSTIC,
                 device_info=device_info[node.address],
             )
@@ -55,7 +53,7 @@ async def async_setup_entry(
                 ISYNodeBeepButtonEntity(
                     node=node,
                     name="Beep",
-                    unique_id=f"{uuid}_{node.address}_beep",
+                    unique_id=f"{isy.uuid}_{node.address}_beep",
                     entity_category=EntityCategory.DIAGNOSTIC,
                     device_info=device_info[node.address],
                 )
@@ -66,7 +64,7 @@ async def async_setup_entry(
             ISYNetworkResourceButtonEntity(
                 node=node,
                 name=node.name,
-                unique_id=f"{uuid}_{CONF_NETWORK}_{node.address}",
+                unique_id=f"{isy.uuid}_{CONF_NETWORK}_{node.address}",
                 device_info=device_info[CONF_NETWORK],
             )
         )
@@ -76,8 +74,8 @@ async def async_setup_entry(
         ISYNodeQueryButtonEntity(
             node=isy,
             name="Query",
-            unique_id=uuid,
-            device_info=DeviceInfo(identifiers={(DOMAIN, uuid)}),
+            unique_id=isy.uuid,
+            device_info=DeviceInfo(identifiers={(DOMAIN, isy.uuid)}),
             entity_category=EntityCategory.DIAGNOSTIC,
         )
     )

@@ -34,7 +34,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import (
     _LOGGER,
     DOMAIN,
-    ISY_CONF_UUID,
     ISY_NODES,
     ISY_VARIABLES,
     SENSOR_AUX,
@@ -240,9 +239,7 @@ class ISYAuxSensorEntity(ISYSensorEntity):
         name = COMMAND_FRIENDLY_NAME.get(self._control, self._control)
         self._attr_name = f"{node.name} {name.replace('_', ' ').title()}"
 
-        self._attr_unique_id = (
-            f"{node.isy.configuration[ISY_CONF_UUID]}_{node.address}_{control}"
-        )
+        self._attr_unique_id = f"{node.isy.uuid}_{node.address}_{control}"
 
     @property
     def target(self) -> Node | NodeProperty | None:

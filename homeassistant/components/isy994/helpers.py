@@ -27,7 +27,6 @@ from .const import (
     FILTER_STATES,
     FILTER_UOM,
     FILTER_ZWAVE_CAT,
-    ISY_CONF_UUID,
     ISY_DEVICES,
     ISY_GROUP_PLATFORM,
     ISY_NODES,
@@ -50,7 +49,6 @@ from .const import (
     UOM_DOUBLE_TEMP,
     UOM_ISYV4_DEGREES,
 )
-from .util import _async_isy_to_configuration_url
 
 BINARY_SENSOR_UOMS = ["2", "78"]
 BINARY_SENSOR_ISY_STATES = ["on", "off"]
@@ -278,15 +276,13 @@ def _is_sensor_a_binary_sensor(hass_isy_data: dict, node: Group | Node) -> bool:
 def _generate_device_info(node: Node) -> DeviceInfo:
     """Generate the device info for a root node device."""
     isy = node.isy
-    uuid = isy.configuration[ISY_CONF_UUID]
-    url = _async_isy_to_configuration_url(isy)
     basename = node.name
     device_info = DeviceInfo(
-        identifiers={(DOMAIN, f"{uuid}_{node.address}")},
+        identifiers={(DOMAIN, f"{isy.uuid}_{node.address}")},
         manufacturer=node.protocol,
         name=f"{basename} ({(str(node.address).rpartition(' ')[0] or node.address)})",
-        via_device=(DOMAIN, uuid),
-        configuration_url=url,
+        via_device=(DOMAIN, isy.uuid),
+        configuration_url=isy.conn.url,
         suggested_area=node.folder,
     )
 

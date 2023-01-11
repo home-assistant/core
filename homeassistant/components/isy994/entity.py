@@ -21,7 +21,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
-from .const import DOMAIN, ISY_CONF_UUID, ISY_DEVICES
+from .const import DOMAIN, ISY_DEVICES
 
 
 class ISYEntity(Entity):
@@ -35,9 +35,8 @@ class ISYEntity(Entity):
         """Initialize the insteon device."""
         self._node = node
         self._attr_name = node.name
-        uuid = node.isy.configuration[ISY_CONF_UUID]
-        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, uuid)})
-        self._attr_unique_id = f"{uuid}_{node.address}"
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, node.isy.uuid)})
+        self._attr_unique_id = f"{node.isy.uuid}_{node.address}"
         self._attrs: dict[str, Any] = {}
         self._change_handler: EventListener | None = None
         self._control_handler: EventListener | None = None

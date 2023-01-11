@@ -43,7 +43,6 @@ from .const import (
     ISY_CONF_MODEL,
     ISY_CONF_NAME,
     ISY_CONF_NETWORKING,
-    ISY_CONF_UUID,
     ISY_DEVICES,
     ISY_NET_RES,
     ISY_NODES,
@@ -63,7 +62,6 @@ from .const import (
 )
 from .helpers import _categorize_nodes, _categorize_programs, _categorize_variables
 from .services import async_setup_services, async_unload_services
-from .util import _async_isy_to_configuration_url
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -226,7 +224,7 @@ async def async_setup_entry(
         numbers = hass_isy_data[ISY_VARIABLES][Platform.NUMBER]
         for vtype, vname, vid in isy.variables.children:
             numbers.append((isy.variables[vtype][vid], variable_identifier in vname))
-    if isy.configuration[ISY_CONF_NETWORKING]:
+    if isy.conf[ISY_CONF_NETWORKING]:
         hass_isy_data[ISY_DEVICES][CONF_NETWORK] = _create_service_device_info(
             isy, name=ISY_CONF_NETWORKING, unique_id=CONF_NETWORK
         )
@@ -293,35 +291,33 @@ def _async_get_or_create_isy_device_in_registry(
     hass: HomeAssistant, entry: config_entries.ConfigEntry, isy: ISY
 ) -> None:
     device_registry = dr.async_get(hass)
-    url = _async_isy_to_configuration_url(isy)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, isy.configuration[ISY_CONF_UUID])},
-        identifiers={(DOMAIN, isy.configuration[ISY_CONF_UUID])},
+        connections={(dr.CONNECTION_NETWORK_MAC, isy.uuid)},
+        identifiers={(DOMAIN, isy.uuid)},
         manufacturer=MANUFACTURER,
-        name=isy.configuration[ISY_CONF_NAME],
-        model=isy.configuration[ISY_CONF_MODEL],
-        sw_version=isy.configuration[ISY_CONF_FIRMWARE],
-        configuration_url=url,
+        name=isy.conf[ISY_CONF_NAME],
+        model=isy.conf[ISY_CONF_MODEL],
+        sw_version=isy.conf[ISY_CONF_FIRMWARE],
+        configuration_url=isy.conn.url,
     )
 
 
 def _create_service_device_info(isy: ISY, name: str, unique_id: str) -> DeviceInfo:
     """Create device info for ISY service devices."""
-    url = _async_isy_to_configuration_url(isy)
     return DeviceInfo(
         identifiers={
             (
                 DOMAIN,
-                f"{isy.configuration[ISY_CONF_UUID]}_{unique_id}",
+                f"{isy.uuid}_{unique_id}",
             )
         },
         manufacturer=MANUFACTURER,
-        name=f"{isy.configuration[ISY_CONF_NAME]} {name}",
-        model=isy.configuration[ISY_CONF_MODEL],
-        sw_version=isy.configuration[ISY_CONF_FIRMWARE],
-        configuration_url=url,
-        via_device=(DOMAIN, isy.configuration[ISY_CONF_UUID]),
+        name=f"{isy.conf[ISY_CONF_NAME]} {name}",
+        model=isy.conf[ISY_CONF_MODEL],
+        sw_version=isy.conf[ISY_CONF_FIRMWARE],
+        configuration_url=isy.conn.url,
+        via_device=(DOMAIN, isy.uuid),
         entry_type=DeviceEntryType.SERVICE,
     )
 
