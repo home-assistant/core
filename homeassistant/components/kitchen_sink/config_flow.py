@@ -9,8 +9,8 @@ from homeassistant.data_entry_flow import FlowResult
 from . import DOMAIN
 
 
-class DemoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Demo configuration flow."""
+class KitchenSinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """Kitchen Sink configuration flow."""
 
     VERSION = 1
 
