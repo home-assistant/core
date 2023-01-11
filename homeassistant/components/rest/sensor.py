@@ -27,7 +27,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.json import json_dumps, json_loads
 from homeassistant.helpers.template_entity import TemplateSensor
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, JsonValueType
 
 from . import async_get_config_and_coordinator, create_rest_data_from_config
 from .const import CONF_JSON_ATTRS, CONF_JSON_ATTRS_PATH, DEFAULT_SENSOR_NAME
@@ -153,7 +153,7 @@ class RestSensor(RestEntity, TemplateSensor):
             self._attributes = {}
             if value:
                 try:
-                    json_dict = json_loads(value)
+                    json_dict: JsonValueType = json_loads(value)
                     if self._json_attrs_path is not None:
                         json_dict = jsonpath(json_dict, self._json_attrs_path)
                     # jsonpath will always store the result in json_dict[0]

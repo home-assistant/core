@@ -1,4 +1,6 @@
 """Rest API for Home Assistant."""
+from __future__ import annotations
+
 import asyncio
 from http import HTTPStatus
 import logging
@@ -30,7 +32,7 @@ from homeassistant.exceptions import ServiceNotFound, TemplateError, Unauthorize
 from homeassistant.helpers import template
 from homeassistant.helpers.json import json_dumps, json_loads
 from homeassistant.helpers.service import async_get_all_descriptions
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, JsonObjectType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -260,7 +262,7 @@ class APIEventView(HomeAssistantView):
             raise Unauthorized()
         body = await request.text()
         try:
-            event_data = json_loads(body) if body else None
+            event_data: JsonObjectType | None = json_loads(body) if body else None
         except ValueError:
             return self.json_message(
                 "Event data should be valid JSON.", HTTPStatus.BAD_REQUEST
@@ -313,7 +315,7 @@ class APIDomainServicesView(HomeAssistantView):
         hass: ha.HomeAssistant = request.app["hass"]
         body = await request.text()
         try:
-            data = json_loads(body) if body else None
+            data: JsonObjectType | None = json_loads(body) if body else None
         except ValueError:
             return self.json_message(
                 "Data should be valid JSON.", HTTPStatus.BAD_REQUEST
