@@ -520,7 +520,6 @@ omit =
     homeassistant/components/home_plus_control/switch.py
     homeassistant/components/homely/sensor.py
     homeassistant/components/homely/__init__.py
-    homeassistant/components/homely/binary_sensor.py
     homeassistant/components/homely/homely_device.py
     homeassistant/components/homematic/*
     homeassistant/components/homeworks/*

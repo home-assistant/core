@@ -11,7 +11,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfElectricPotential, UnitOfTemperature
+from homeassistant.const import (
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -33,11 +38,22 @@ async def async_setup_entry(
     """Set up Plate Relays as switch based on a config entry."""
     homely_home: HomelyHomeCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    entities: list[SensorEntity] = [
-        HomelySensorEntity(homely_home, homely_device, description)
-        for homely_device in homely_home.devices.values()
-        for description in SENSOR_TYPES
-    ]
+    entities: list[SensorEntity] = []
+    for homely_device in homely_home.devices.values():
+        if homely_device.homely_api_device.model_name == "EMI Norwegian HAN":
+            entities.extend(
+                [
+                    HomelySensorEntity(homely_home, homely_device, description)
+                    for description in HAN_SENSOR_ENTITY_DESCRIPTIONS
+                ]
+            )
+        else:
+            entities.extend(
+                [
+                    HomelySensorEntity(homely_home, homely_device, description)
+                    for description in GENERIC_SENSOR_TYPES
+                ]
+            )
     async_add_entities(entities)
 
 
@@ -48,7 +64,7 @@ class HomelySensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[Device], StateType] = lambda _: _
 
 
-SENSOR_TYPES: tuple[HomelySensorEntityDescription, ...] = (
+GENERIC_SENSOR_TYPES: tuple[HomelySensorEntityDescription, ...] = (
     HomelySensorEntityDescription(
         key="Temperature",
         name="Temperature",
@@ -68,6 +84,30 @@ SENSOR_TYPES: tuple[HomelySensorEntityDescription, ...] = (
         name="Zigbee signal strength",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         value_fn=lambda device: device.diagnostic.network_link_strength,
+    ),
+)
+
+HAN_SENSOR_ENTITY_DESCRIPTIONS: tuple[HomelySensorEntityDescription, ...] = (
+    HomelySensorEntityDescription(
+        key="SummationDelivered",
+        name="Summation delivered",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        value_fn=lambda device: device.metering.summation_delivered,
+    ),
+    HomelySensorEntityDescription(
+        key="SummationReceived",
+        name="Summation received",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        value_fn=lambda device: device.metering.summation_received,
+    ),
+    HomelySensorEntityDescription(
+        key="Demand",
+        name="Demand",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        value_fn=lambda device: device.metering.summation_delivered,
     ),
 )
 
