@@ -240,7 +240,7 @@ class BraviaTVMediaPlayer(BraviaTVEntity, MediaPlayerEntity):
             if icon := self.coordinator.source_map[media_content_id].get("icon"):
                 (content, content_type) = await self._async_fetch_image(icon)
                 if content_type:
-                    # Fix invalid Bravia Content-Type header
+                    # Fix invalid Content-Type header returned by Bravia
                     content_type = content_type.replace("Content-Type: ", "")
                 return (content, content_type)
         return None, None
