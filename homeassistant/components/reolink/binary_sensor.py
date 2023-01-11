@@ -159,6 +159,6 @@ class ReolinkBinarySensorEntity(ReolinkCoordinatorEntity, BinarySensorEntity):
         )
         self.hass.bus.async_listen(f"{self._host.webhook_id}_all", self.handle_event)
 
-    async def handle_event(self, event):
+    async def _async_handle_event(self, event):
         """Handle incoming event for motion detection."""
         self.async_write_ha_state()
