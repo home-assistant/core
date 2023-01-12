@@ -289,21 +289,6 @@ class PressureConverter(BaseUnitConverter):
     }
 
 
-class UnitlessConverter(BaseUnitConverter):
-    """Utility to convert unitless ratios."""
-
-    UNIT_CLASS = "unitless"
-    NORMALIZED_UNIT = None
-    _UNIT_CONVERSION: dict[str | None, float] = {
-        None: 1,
-        PERCENTAGE: 100,
-    }
-    VALID_UNITS = {
-        None,
-        PERCENTAGE,
-    }
-
-
 class SpeedConverter(BaseUnitConverter):
     """Utility to convert speed values."""
 
@@ -425,6 +410,21 @@ class TemperatureConverter(BaseUnitConverter):
     def _celsius_to_kelvin(cls, celsius: float) -> float:
         """Convert a temperature in Celsius to Kelvin."""
         return celsius + 273.15
+
+
+class UnitlessRatioConverter(BaseUnitConverter):
+    """Utility to convert unitless ratios."""
+
+    UNIT_CLASS = "unitless"
+    NORMALIZED_UNIT = None
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        None: 1,
+        PERCENTAGE: 100,
+    }
+    VALID_UNITS = {
+        None,
+        PERCENTAGE,
+    }
 
 
 class VolumeConverter(BaseUnitConverter):

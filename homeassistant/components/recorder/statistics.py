@@ -43,7 +43,7 @@ from homeassistant.util.unit_conversion import (
     PressureConverter,
     SpeedConverter,
     TemperatureConverter,
-    UnitlessConverter,
+    UnitlessRatioConverter,
     VolumeConverter,
 )
 
@@ -135,7 +135,7 @@ STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
     **{unit: PressureConverter for unit in PressureConverter.VALID_UNITS},
     **{unit: SpeedConverter for unit in SpeedConverter.VALID_UNITS},
     **{unit: TemperatureConverter for unit in TemperatureConverter.VALID_UNITS},
-    **{unit: UnitlessConverter for unit in UnitlessConverter.VALID_UNITS},
+    **{unit: UnitlessRatioConverter for unit in UnitlessRatioConverter.VALID_UNITS},
     **{unit: VolumeConverter for unit in VolumeConverter.VALID_UNITS},
 }
 
