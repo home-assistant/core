@@ -37,8 +37,8 @@ class IsyData:
     root: ISY
     nodes: dict[Platform, list[Node | Group]]
     root_nodes: dict[Platform, list[Node]]
-    variables: dict[Platform, list[tuple[str, Program, Program]]]
-    programs: dict[Platform, list[Variable]]
+    variables: dict[Platform, list[Variable]]
+    programs: dict[Platform, list[tuple[str, Program, Program]]]
     net_resources: list[NetworkCommand]
     devices: dict[str, DeviceInfo]
     aux_props: dict[Platform, list[tuple[Node, str]]]
