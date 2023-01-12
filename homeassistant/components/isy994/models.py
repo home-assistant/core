@@ -13,7 +13,6 @@ from pyisy.variables import Variable
 
 from homeassistant import config_entries
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 
 from .const import (
@@ -30,8 +29,6 @@ from .const import (
 class IsyData:
     """Data for the ISY/IoX integration."""
 
-    hass: HomeAssistant
-    config_entry: config_entries.ConfigEntry
     root: ISY
     nodes: dict[Platform, list[Node | Group]]
     root_nodes: dict[Platform, list[Node]]
@@ -43,7 +40,6 @@ class IsyData:
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize an empty ISY data class."""
-        self.config_entry = config_entry
         self.nodes = {p: [] for p in NODE_PLATFORMS}
         self.root_nodes = {p: [] for p in ROOT_NODE_PLATFORMS}
         self.aux_properties = {p: [] for p in NODE_AUX_PROP_PLATFORMS}
