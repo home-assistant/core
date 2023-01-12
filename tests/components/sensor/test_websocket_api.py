@@ -33,7 +33,7 @@ async def test_device_class_units(hass: HomeAssistant, hass_ws_client) -> None:
         {
             "id": 2,
             "type": "sensor/device_class_convertible_units",
-            "device_class": "energy",
+            "device_class": "power",
         }
     )
     msg = await client.receive_json()
