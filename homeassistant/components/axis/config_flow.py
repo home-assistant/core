@@ -43,7 +43,7 @@ DEFAULT_PORT = 80
 class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
     """Handle a Axis config flow."""
 
-    VERSION = 1
+    VERSION = 3
 
     @staticmethod
     @callback

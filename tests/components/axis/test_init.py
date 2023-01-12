@@ -53,10 +53,10 @@ async def test_unload_entry(hass):
 
 async def test_migrate_entry(hass):
     """Test successful migration of entry data."""
-    config_entry = MockConfigEntry(domain=AXIS_DOMAIN, version=3)
+    config_entry = MockConfigEntry(domain=AXIS_DOMAIN, version=1)
     config_entry.add_to_hass(hass)
 
-    assert config_entry.version == 3
+    assert config_entry.version == 1
 
     mock_device = Mock()
     mock_device.async_setup = AsyncMock()
@@ -72,4 +72,4 @@ async def test_migrate_entry(hass):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     assert hass.data[AXIS_DOMAIN]
-    assert config_entry.version == 1
+    assert config_entry.version == 3

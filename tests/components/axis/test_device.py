@@ -275,7 +275,7 @@ def mock_default_vapix_requests(respx: respx, host: str = DEFAULT_HOST) -> None:
 
 
 async def setup_axis_integration(
-    hass, config=ENTRY_CONFIG, options=ENTRY_OPTIONS, entry_version=1
+    hass, config=ENTRY_CONFIG, options=ENTRY_OPTIONS, entry_version=3
 ):
     """Create the Axis device."""
     config_entry = MockConfigEntry(
