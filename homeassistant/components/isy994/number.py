@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from pyisy import ISY
 from pyisy.helpers import EventListener, NodeProperty
 from pyisy.variables import Variable
 
@@ -14,7 +13,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, ISY_DEVICES, ISY_ROOT, ISY_VARIABLES
+from .const import CONF_VAR_SENSOR_STRING, DEFAULT_VAR_SENSOR_STRING, DOMAIN
 from .helpers import convert_isy_value_to_hass
 
 ISY_MAX_SIZE = (2**32) / 2
@@ -26,19 +25,19 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up ISY/IoX number entities from config entry."""
-    hass_isy_data = hass.data[DOMAIN][config_entry.entry_id]
-    isy: ISY = hass_isy_data[ISY_ROOT]
-    device_info = hass_isy_data[ISY_DEVICES]
+    isy_data = hass.data[DOMAIN][config_entry.entry_id]
+    device_info = isy_data.devices
     entities: list[ISYVariableNumberEntity] = []
+    var_id = config_entry.options.get(CONF_VAR_SENSOR_STRING, DEFAULT_VAR_SENSOR_STRING)
 
-    for node, enable_by_default in hass_isy_data[ISY_VARIABLES][Platform.NUMBER]:
+    for node in isy_data.variables[Platform.NUMBER]:
         step = 10 ** (-1 * node.prec)
         min_max = ISY_MAX_SIZE / (10**node.prec)
         description = NumberEntityDescription(
             key=node.address,
             name=node.name,
             icon="mdi:counter",
-            entity_registry_enabled_default=enable_by_default,
+            entity_registry_enabled_default=var_id in node.name,
             native_unit_of_measurement=None,
             native_step=step,
             native_min_value=-min_max,
@@ -59,7 +58,7 @@ async def async_setup_entry(
         entities.append(
             ISYVariableNumberEntity(
                 node,
-                unique_id=f"{isy.uuid}_{node.address}",
+                unique_id=isy_data.uid_base(node),
                 description=description,
                 device_info=device_info[CONF_VARIABLES],
             )
@@ -67,7 +66,7 @@ async def async_setup_entry(
         entities.append(
             ISYVariableNumberEntity(
                 node=node,
-                unique_id=f"{isy.uuid}_{node.address}_init",
+                unique_id=f"{isy_data.uid_base(node)}_init",
                 description=description_init,
                 device_info=device_info[CONF_VARIABLES],
                 init_entity=True,
