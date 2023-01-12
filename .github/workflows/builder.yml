@@ -113,6 +113,17 @@ jobs:
           workflow_conclusion: success
           name: wheels
 
+      - name: Download nightly wheels of intents
+        if: needs.init.outputs.channel == 'dev'
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          github_token: ${{secrets.GITHUB_TOKEN}}
+          repo: home-assistant/intents
+          branch: main
+          workflow: nightly.yaml
+          workflow_conclusion: success
+          name: package
+
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         if: needs.init.outputs.channel == 'dev'
         uses: actions/setup-python@v4.4.0
@@ -136,6 +147,21 @@ jobs:
 
             sed -i "s|home-assistant-frontend==.*|home-assistant-frontend==${BASH_REMATCH[1]}|" \
               homeassistant/package_constraints.txt
+
+            python -m script.gen_requirements_all
+          fi
+
+          if [[ "$(ls home_assistant_intents*.whl)" =~ ^home_assistant_intents-(.*)-py3-none-any.whl$ ]]; then
+            echo "Found intents wheel, setting version to: ${BASH_REMATCH[1]}"
+            yq \
+              --inplace e -o json \
+              'del(.requirements[] | select(contains("home-assistant-intents")))' \
+              homeassistant/components/conversation/manifest.json
+
+            intents_version="${BASH_REMATCH[1]}" yq \
+              --inplace e -o json \
+              '.requirements += ["home-assistant-intents=="+env(intents_version)]' \
+              homeassistant/components/conversation/manifest.json
 
             python -m script.gen_requirements_all
           fi
