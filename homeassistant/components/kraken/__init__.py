@@ -78,7 +78,8 @@ class KrakenData:
         except pykrakenapi.pykrakenapi.KrakenAPIError as error:
             if "Unknown asset pair" in str(error):
                 _LOGGER.info(
-                    "Kraken.com reported an unknown asset pair. Refreshing list of tradable asset pairs"
+                    "Kraken.com reported an unknown asset pair. Refreshing list of"
+                    " tradable asset pairs"
                 )
                 await self._async_refresh_tradable_asset_pairs()
             else:
@@ -87,7 +88,8 @@ class KrakenData:
                 ) from error
         except pykrakenapi.pykrakenapi.CallRateLimitError:
             _LOGGER.warning(
-                "Exceeded the Kraken.com call rate limit. Increase the update interval to prevent this error"
+                "Exceeded the Kraken.com call rate limit. Increase the update interval"
+                " to prevent this error"
             )
         return None
 

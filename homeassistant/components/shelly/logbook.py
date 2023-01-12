@@ -53,7 +53,9 @@ def async_describe_events(
 
         return {
             LOGBOOK_ENTRY_NAME: "Shelly",
-            LOGBOOK_ENTRY_MESSAGE: f"'{click_type}' click event for {input_name} Input was fired",
+            LOGBOOK_ENTRY_MESSAGE: (
+                f"'{click_type}' click event for {input_name} Input was fired"
+            ),
         }
 
     async_describe_event(DOMAIN, EVENT_SHELLY_CLICK, async_describe_shelly_click_event)

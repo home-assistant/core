@@ -41,6 +41,7 @@
                 "data": {
                     "name": "N\u00e1zov notifika\u010dnej slu\u017eby (zmena vy\u017eaduje re\u0161tart)",
                     "recipient": "Pr\u00edjemcovia upozornen\u00ed SMS",
+                    "track_wired_clients": "Sledovanie klientov k\u00e1blovej siete",
                     "unauthenticated_mode": "Neoveren\u00fd re\u017eim (zmena vy\u017eaduje op\u00e4tovn\u00e9 na\u010d\u00edtanie)"
                 }
             }

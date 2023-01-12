@@ -33,5 +33,15 @@
                 }
             }
         }
+    },
+    "entity": {
+        "select": {
+            "brightness_mode": {
+                "state": {
+                    "auto": "Automatisch",
+                    "manual": "Handmatig"
+                }
+            }
+        }
     }
 }

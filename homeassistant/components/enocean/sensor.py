@@ -19,10 +19,10 @@ from homeassistant.const import (
     CONF_ID,
     CONF_NAME,
     PERCENTAGE,
-    POWER_WATT,
     STATE_CLOSED,
     STATE_OPEN,
-    TEMP_CELSIUS,
+    UnitOfPower,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -62,7 +62,7 @@ class EnOceanSensorEntityDescription(
 SENSOR_DESC_TEMPERATURE = EnOceanSensorEntityDescription(
     key=SENSOR_TYPE_TEMPERATURE,
     name="Temperature",
-    native_unit_of_measurement=TEMP_CELSIUS,
+    native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     icon="mdi:thermometer",
     device_class=SensorDeviceClass.TEMPERATURE,
     state_class=SensorStateClass.MEASUREMENT,
@@ -82,7 +82,7 @@ SENSOR_DESC_HUMIDITY = EnOceanSensorEntityDescription(
 SENSOR_DESC_POWER = EnOceanSensorEntityDescription(
     key=SENSOR_TYPE_POWER,
     name="Power",
-    native_unit_of_measurement=POWER_WATT,
+    native_unit_of_measurement=UnitOfPower.WATT,
     icon="mdi:power-plug",
     device_class=SensorDeviceClass.POWER,
     state_class=SensorStateClass.MEASUREMENT,

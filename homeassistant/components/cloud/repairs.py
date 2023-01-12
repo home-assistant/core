@@ -106,7 +106,7 @@ class LegacySubscriptionRepairFlow(RepairsFlow):
 
     async def async_step_complete(self, _: None = None) -> FlowResult:
         """Handle the final step of a fix flow."""
-        return self.async_create_entry(title="", data={})
+        return self.async_create_entry(data={})
 
     async def async_step_timeout(self, _: None = None) -> FlowResult:
         """Handle the final step of a fix flow."""

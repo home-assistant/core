@@ -1,0 +1,10 @@
+{
+    "state": {
+        "_": {
+            "idle": "Ootel",
+            "off": "Kinnitatud",
+            "on": "Aktiivne"
+        }
+    },
+    "title": "Hoiatus"
+}

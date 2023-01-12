@@ -2,6 +2,11 @@
     "config": {
         "abort": {
             "single_instance_allowed": "U\u017e je nakonfigurovan\u00fd. Mo\u017en\u00e1 len jedna konfigur\u00e1cia."
+        },
+        "step": {
+            "confirm": {
+                "description": "Uistite sa, \u017ee ste nakonfigurovali zdroje \u00fadajov \u201erozdelen\u00e1 t\u00e9ma\u201c v aplik\u00e1cii DSMR Reader."
+            }
         }
     },
     "issues": {

@@ -16,6 +16,7 @@
         },
         "step": {
             "auth": {
+                "description": "Kliknite na odkaz ni\u017e\u0161ie a **Prijmite** pr\u00edstup k svojmu \u00fa\u010dtu Minut, potom sa vr\u00e1\u0165te a stla\u010dte **Odosla\u0165** ni\u017e\u0161ie. \n\n[Odkaz]({authorization_url})",
                 "title": "Overenie Point"
             },
             "user": {

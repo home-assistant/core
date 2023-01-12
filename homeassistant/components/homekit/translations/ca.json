@@ -5,7 +5,7 @@
         },
         "step": {
             "pairing": {
-                "description": "Per completar la vinculaci\u00f3, segueix les instruccions a \"Configuraci\u00f3 de l'enlla\u00e7 HomeKit\" sota \"Notificacions\".",
+                "description": "Per completar la vinculaci\u00f3, segueix les instruccions a \u201cNotificacions\u201d sota \u201cVinculaci\u00f3 ('pairing') HomeKit\u201d.",
                 "title": "Vinculaci\u00f3 HomeKit"
             },
             "user": {

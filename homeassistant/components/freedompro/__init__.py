@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Final
+from typing import Any, Final
 
 from pyfreedompro import get_list, get_states
 
@@ -60,14 +60,14 @@ async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> Non
     await hass.config_entries.async_reload(config_entry.entry_id)
 
 
-class FreedomproDataUpdateCoordinator(DataUpdateCoordinator):
+class FreedomproDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
     """Class to manage fetching Freedompro data API."""
 
     def __init__(self, hass, api_key):
         """Initialize."""
         self._hass = hass
         self._api_key = api_key
-        self._devices = None
+        self._devices: list[dict[str, Any]] | None = None
 
         update_interval = timedelta(minutes=1)
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)

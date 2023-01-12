@@ -6,6 +6,14 @@
         },
         "progress": {
             "wait_for_device": "1. Otvorte {url} \n2. Vlo\u017ete nasleduj\u00faci k\u013e\u00fa\u010d na autoriz\u00e1ciu integr\u00e1cie: \n```\n{code}\n```\n"
+        },
+        "step": {
+            "repositories": {
+                "data": {
+                    "repositories": "Vyberte \u00falo\u017eisk\u00e1, ktor\u00e9 chcete sledova\u0165."
+                },
+                "title": "Konfigur\u00e1cia \u00falo\u017e\u00edsk"
+            }
         }
     }
 }

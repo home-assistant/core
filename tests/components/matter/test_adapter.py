@@ -1,46 +1,53 @@
 """Test the adapter."""
 from __future__ import annotations
 
-from typing import Any
+from unittest.mock import MagicMock
 
+from matter_server.common.helpers.util import dataclass_from_dict
+from matter_server.common.models.events import EventType
+from matter_server.common.models.node import MatterNode
 import pytest
 
 from homeassistant.components.matter.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .common import setup_integration_with_node_fixture
-
-# TEMP: Tests need to be fixed
-pytestmark = pytest.mark.skip("all tests still WIP")
+from .common import load_and_parse_node_fixture, setup_integration_with_node_fixture
 
 
 async def test_device_registry_single_node_device(
-    hass: HomeAssistant, hass_storage: dict[str, Any]
+    hass: HomeAssistant,
+    matter_client: MagicMock,
 ) -> None:
     """Test bridge devices are set up correctly with via_device."""
     await setup_integration_with_node_fixture(
-        hass, hass_storage, "lighting-example-app"
+        hass,
+        "onoff-light",
+        matter_client,
     )
 
     dev_reg = dr.async_get(hass)
 
-    entry = dev_reg.async_get_device({(DOMAIN, "BE8F70AA40DDAE41")})
+    entry = dev_reg.async_get_device({(DOMAIN, "mock-onoff-light")})
     assert entry is not None
 
-    assert entry.name == "My Cool Light"
+    assert entry.name == "Mock OnOff Light"
     assert entry.manufacturer == "Nabu Casa"
-    assert entry.model == "M5STAMP Lighting App"
+    assert entry.model == "Mock Light"
     assert entry.hw_version == "v1.0"
-    assert entry.sw_version == "55ab764bea"
+    assert entry.sw_version == "v1.0"
 
 
+@pytest.mark.skip("Waiting for a new test fixture")
 async def test_device_registry_bridge(
-    hass: HomeAssistant, hass_storage: dict[str, Any]
+    hass: HomeAssistant,
+    matter_client: MagicMock,
 ) -> None:
     """Test bridge devices are set up correctly with via_device."""
     await setup_integration_with_node_fixture(
-        hass, hass_storage, "fake-bridge-two-light"
+        hass,
+        "fake-bridge-two-light",
+        matter_client,
     )
 
     dev_reg = dr.async_get(hass)
@@ -76,3 +83,29 @@ async def test_device_registry_bridge(
     assert device2_entry.model == "Mock Light"
     assert device2_entry.hw_version is None
     assert device2_entry.sw_version == "1.49.1"
+
+
+async def test_node_added_subscription(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    integration: MagicMock,
+) -> None:
+    """Test subscription to new devices work."""
+    assert matter_client.subscribe.call_count == 1
+    assert matter_client.subscribe.call_args[0][1] == EventType.NODE_ADDED
+
+    node_added_callback = matter_client.subscribe.call_args[0][0]
+    node_data = load_and_parse_node_fixture("onoff-light")
+    node = dataclass_from_dict(
+        MatterNode,
+        node_data,
+    )
+
+    entity_state = hass.states.get("light.mock_onoff_light")
+    assert not entity_state
+
+    node_added_callback(EventType.NODE_ADDED, node)
+    await hass.async_block_till_done()
+
+    entity_state = hass.states.get("light.mock_onoff_light")
+    assert entity_state

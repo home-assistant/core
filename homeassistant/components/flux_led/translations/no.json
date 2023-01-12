@@ -11,7 +11,7 @@
         "flow_title": "{model} {id} ( {ipaddr} )",
         "step": {
             "discovery_confirm": {
-                "description": "Vil du konfigurere {model} {id} ( {ipaddr} )?"
+                "description": "Vil du sette opp {model} {id} ( {ipaddr} )?"
             },
             "user": {
                 "data": {

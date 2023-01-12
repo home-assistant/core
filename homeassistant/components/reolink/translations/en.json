@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "api_error": "API error occurred: {error}",
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error: {error}"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "port": "Port",
+                    "use_https": "Enable HTTPS",
+                    "username": "Username"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "protocol": "Protocol"
+                }
+            }
+        }
+    }
+}

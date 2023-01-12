@@ -30,7 +30,9 @@
         "step": {
             "init": {
                 "data": {
+                    "account_balance_currencies": "Zostatky v pe\u0148a\u017eenke na reportovanie.",
                     "exchange_base": "Z\u00e1kladn\u00e1 mena pre sn\u00edma\u010de zmenov\u00fdch kurzov.",
+                    "exchange_rate_currencies": "V\u00fdmenn\u00e9 kurzy na reportovanie.",
                     "exchnage_rate_precision": "Po\u010det desatinn\u00fdch miest pre v\u00fdmenn\u00e9 kurzy."
                 },
                 "description": "Upravte mo\u017enosti Coinbase"

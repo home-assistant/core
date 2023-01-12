@@ -56,6 +56,7 @@
     },
     "issues": {
         "manual_migration": {
+            "description": "Integr\u00e1cia LaMetric bola modernizovan\u00e1: Teraz je nakonfigurovan\u00e1 a nastaven\u00e1 prostredn\u00edctvom pou\u017e\u00edvate\u013esk\u00e9ho rozhrania a komunik\u00e1cia je teraz lok\u00e1lna. \n\n\u017dia\u013e, nie je mo\u017en\u00e1 \u017eiadna cesta automatickej migr\u00e1cie, a preto je potrebn\u00e9, aby ste svoj LaMetric znova nastavili pomocou Home Assistant. Inform\u00e1cie o tom, ako ho nastavi\u0165, n\u00e1jdete v integra\u010dnej dokument\u00e1cii Home Assistant LaMetric. \n\nOdstr\u00e1\u0148te star\u00fa konfigur\u00e1ciu LaMetric YAML zo s\u00faboru configuration.yaml a re\u0161tartujte Home Assistant, aby ste tento probl\u00e9m vyrie\u0161ili.",
             "title": "Pre LaMetric je potrebn\u00e1 manu\u00e1lna migr\u00e1cia"
         }
     }

@@ -6,6 +6,7 @@
                 "addon_install_failed": "\u5b89\u88dd Silicon Labs Multiprotocol \u9644\u52a0\u5143\u4ef6\u5931\u6557\u3002",
                 "addon_set_config_failed": "\u8a2d\u5b9a Silicon Labs Multiprotocol \u9644\u52a0\u5143\u4ef6\u5931\u6557\u3002",
                 "addon_start_failed": "\u555f\u52d5 Silicon Labs Multiprotocol \u9644\u52a0\u5143\u4ef6\u5931\u6557\u3002",
+                "disabled_due_to_bug": "\u7531\u65bc\u6b63\u5728\u4fee\u6b63\u932f\u8aa4\u3001\u786c\u9ad4\u9078\u9805\u66ab\u6642\u95dc\u9589\u3002 [\u4e86\u89e3\u66f4\u591a]({url})",
                 "not_hassio": "\u786c\u9ad4\u9078\u9805\u50c5\u80fd\u65bc HassOS \u5b89\u88dd\u6a21\u5f0f\u9032\u884c\u8a2d\u5b9a\u3002",
                 "zha_migration_failed": "ZHA \u9077\u79fb\u672a\u6210\u529f\u3002"
             },

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from switchbee.api import SwitchBeeDeviceOfflineError, SwitchBeeError
+from switchbee.api.central_unit import SwitchBeeDeviceOfflineError, SwitchBeeError
 from switchbee.const import (
     ApiAttribute,
     ThermostatFanSpeed,

@@ -12,6 +12,7 @@
             "user": {
                 "data": {
                     "client_id": "ID klienta (volite\u013en\u00e9)",
+                    "client_secret": "Client Secret (volite\u013en\u00e9)",
                     "password": "Heslo",
                     "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
                 },

@@ -36,6 +36,7 @@
             "ha_to_risco": {
                 "data": {
                     "armed_away": "Nepr\u00edtomnos\u0165",
+                    "armed_custom_bypass": "Akt\u00edvny, definovan\u00fd u\u017e\u00edvate\u013eom",
                     "armed_home": "Re\u017eim domov",
                     "armed_night": "No\u010dn\u00fd re\u017eim"
                 },
@@ -45,6 +46,7 @@
             "init": {
                 "data": {
                     "code_arm_required": "Vy\u017eadova\u0165 PIN k\u00f3d na zabezpe\u010denie",
+                    "code_disarm_required": "Po\u017eadovan\u00e9 PIN k\u00f3d pre odomknutie",
                     "scan_interval": "Ako \u010dasto dotazova\u0165 Risco (v sekund\u00e1ch)"
                 },
                 "title": "Konfigur\u00e1cia mo\u017enost\u00ed"
@@ -54,8 +56,12 @@
                     "A": "Skupina A",
                     "B": "Skupina B",
                     "C": "Skupina C",
-                    "D": "Skupina D"
-                }
+                    "D": "Skupina D",
+                    "arm": "Akt\u00edvny (nepr\u00edtomn\u00fd)",
+                    "partial_arm": "\u010ciasto\u010dne akt\u00edvny (STAY)"
+                },
+                "description": "Vyberte, ak\u00fd \u0161t\u00e1t bude v\u00e1\u0161 alarm Home Assistant hl\u00e1si\u0165 pre ka\u017ed\u00fd \u0161t\u00e1t hl\u00e1sen\u00fd spolo\u010dnos\u0165ou Risco",
+                "title": "Mapujte \u0161t\u00e1ty Risco na \u0161t\u00e1ty Home Assistant"
             }
         }
     }

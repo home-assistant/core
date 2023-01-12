@@ -1,0 +1,17 @@
+{
+    "config": {
+        "step": {
+            "by_coordinates": {
+                "data": {
+                    "latitude": "\u0428\u0438\u0440\u043e\u0442\u0430",
+                    "longitude": "\u0414\u043e\u0432\u0433\u043e\u0442\u0430"
+                }
+            },
+            "choose_sensor": {
+                "data": {
+                    "sensor_index": "\u0414\u0430\u0442\u0447\u0438\u043a"
+                }
+            }
+        }
+    }
+}

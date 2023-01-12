@@ -52,6 +52,7 @@
                 "data": {
                     "scan_interval": "Interval skenovania (sekundy)"
                 },
+                "description": "Aktualizujte interval skenovania, aby sa \u00fadaje vyh\u013ead\u00e1vali \u010dastej\u0161ie.",
                 "title": "Mo\u017enosti pre Hive"
             }
         }

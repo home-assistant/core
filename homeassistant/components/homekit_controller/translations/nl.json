@@ -69,5 +69,14 @@
             "single_press": "\" {subtype} \" ingedrukt"
         }
     },
+    "entity": {
+        "select": {
+            "ecobee_mode": {
+                "state": {
+                    "home": "Thuis"
+                }
+            }
+        }
+    },
     "title": "HomeKit Controller"
 }

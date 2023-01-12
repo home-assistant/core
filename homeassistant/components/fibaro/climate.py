@@ -159,7 +159,8 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
             ):
                 self._target_temp_device = FibaroDevice(device)
                 self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
-                tempunit = device.properties.unit
+                if "unit" in device.properties:
+                    tempunit = device.properties.unit
 
             if any(action for action in OP_MODE_ACTIONS if action in device.actions):
                 self._op_mode_device = FibaroDevice(device)
@@ -216,11 +217,13 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         _LOGGER.debug(
-            "Climate %s\n"
-            "- _temp_sensor_device %s\n"
-            "- _target_temp_device %s\n"
-            "- _op_mode_device %s\n"
-            "- _fan_mode_device %s",
+            (
+                "Climate %s\n"
+                "- _temp_sensor_device %s\n"
+                "- _target_temp_device %s\n"
+                "- _op_mode_device %s\n"
+                "- _fan_mode_device %s"
+            ),
             self.ha_id,
             self._temp_sensor_device.ha_id if self._temp_sensor_device else "None",
             self._target_temp_device.ha_id if self._target_temp_device else "None",

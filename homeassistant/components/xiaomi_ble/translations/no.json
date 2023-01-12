@@ -14,7 +14,7 @@
         "flow_title": "{name}",
         "step": {
             "bluetooth_confirm": {
-                "description": "Vil du konfigurere {name}?"
+                "description": "Vil du sette opp {name} ?"
             },
             "confirm_slow": {
                 "description": "Det har ikke v\u00e6rt en sending fra denne enheten det siste minuttet, s\u00e5 vi er ikke sikre p\u00e5 om denne enheten bruker kryptering eller ikke. Dette kan skyldes at enheten bruker et tregt kringkastingsintervall. Bekreft \u00e5 legge til denne enheten uansett, s\u00e5 neste gang en kringkasting mottas, vil du bli bedt om \u00e5 angi bindn\u00f8kkelen hvis det er n\u00f8dvendig."

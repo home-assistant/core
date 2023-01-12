@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from functools import partial
-from typing import TYPE_CHECKING
 
 from chip.clusters import Objects as clusters
 from matter_server.common.models import device_types
@@ -18,11 +17,8 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
 from .entity import MatterEntity, MatterEntityDescriptionBaseClass
-
-if TYPE_CHECKING:
-    from .adapter import MatterAdapter
+from .helpers import get_matter
 
 
 async def async_setup_entry(
@@ -31,7 +27,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Matter binary sensor from Config Entry."""
-    matter: MatterAdapter = hass.data[DOMAIN][config_entry.entry_id]
+    matter = get_matter(hass)
     matter.register_platform_handler(Platform.BINARY_SENSOR, async_add_entities)
 
 
@@ -43,9 +39,8 @@ class MatterBinarySensor(MatterEntity, BinarySensorEntity):
     @callback
     def _update_from_device(self) -> None:
         """Update from device."""
-        self._attr_is_on = self._device_type_instance.get_cluster(
-            clusters.BooleanState
-        ).stateValue
+        cluster = self._device_type_instance.get_cluster(clusters.BooleanState)
+        self._attr_is_on = cluster.stateValue if cluster else None
 
 
 class MatterOccupancySensor(MatterBinarySensor):
@@ -56,11 +51,9 @@ class MatterOccupancySensor(MatterBinarySensor):
     @callback
     def _update_from_device(self) -> None:
         """Update from device."""
-        occupancy = self._device_type_instance.get_cluster(
-            clusters.OccupancySensing
-        ).occupancy
+        cluster = self._device_type_instance.get_cluster(clusters.OccupancySensing)
         # The first bit = if occupied
-        self._attr_is_on = occupancy & 1 == 1
+        self._attr_is_on = cluster.occupancy & 1 == 1 if cluster else None
 
 
 @dataclass

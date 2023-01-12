@@ -19,6 +19,10 @@
                     "pin": "PIN k\u00f3d"
                 },
                 "title": "Vyberte pr\u00edstupov\u00fd bod HomematicIP"
+            },
+            "link": {
+                "description": "Stla\u010den\u00edm modr\u00e9ho tla\u010didla na pr\u00edstupovom bode a tla\u010didla odoslania zaregistrujte HomematicIP s Home Assistant. \n\n ![Umiestnenie tla\u010didla na bridge](/static/images/config_flows/config_homematicip_cloud.png)",
+                "title": "Link Pr\u00edstupov\u00fd bod"
             }
         }
     }

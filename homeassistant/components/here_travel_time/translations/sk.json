@@ -30,13 +30,21 @@
             "origin_coordinates": {
                 "data": {
                     "origin": "P\u00f4vod ako s\u00faradnice GPS"
-                }
+                },
+                "title": "Vyberte v\u00fdchodzie miesto"
+            },
+            "origin_entity_id": {
+                "data": {
+                    "origin_entity_id": "V\u00fdchodzie miesto pomocou entity"
+                },
+                "title": "Vyberte v\u00fdchodzie miesto"
             },
             "origin_menu": {
                 "menu_options": {
                     "origin_coordinates": "Pou\u017eitie polohy na mape",
                     "origin_entity": "Pou\u017eitie entity"
-                }
+                },
+                "title": "Vyberte v\u00fdchodzie miesto"
             },
             "user": {
                 "data": {
@@ -73,7 +81,8 @@
                     "arrival_time": "Nakonfigurujte \u010das pr\u00edchodu",
                     "departure_time": "Nakonfigurujte \u010das odchodu",
                     "no_time": "Nekonfigurujte \u010das"
-                }
+                },
+                "title": "V\u00fdber typu \u010dasu"
             }
         }
     }

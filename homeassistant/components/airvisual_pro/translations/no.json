@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert",
+            "reauth_successful": "Re-autentisering var vellykket"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig godkjenning",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Passord"
+                },
+                "description": "Passordet kan hentes fra AirVisual Pros brukergrensesnitt."
+            },
+            "user": {
+                "data": {
+                    "ip_address": "Vert",
+                    "password": "Passord"
+                },
+                "description": "Passordet kan hentes fra AirVisual Pros brukergrensesnitt."
+            }
+        }
+    }
+}

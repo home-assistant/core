@@ -1441,7 +1441,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="set_humidity",
-                    arg_types={1: "str"},
+                    arg_types={1: "int"},
                     return_type=None,
                     has_async_counterpart=True,
                 ),
@@ -2157,7 +2157,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             matches=[
                 TypeHintMatch(
                     function_name="device_class",
-                    return_type=["SensorDeviceClass", "str", None],
+                    return_type=["SensorDeviceClass", None],
                 ),
                 TypeHintMatch(
                     function_name="state_class",

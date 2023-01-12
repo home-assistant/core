@@ -46,7 +46,15 @@ async def test_http_handle_intent(hass, hass_client, hass_admin_user):
         "card": {
             "simple": {"content": "You chose a Belgian.", "title": "Beer ordered"}
         },
-        "speech": {"plain": {"extra_data": None, "speech": "I've ordered a Belgian!"}},
+        "speech": {
+            "plain": {
+                "extra_data": None,
+                "speech": "I've ordered a Belgian!",
+            }
+        },
+        "language": hass.config.language,
+        "response_type": "action_done",
+        "data": {"targets": [], "success": [], "failed": []},
     }
 
 
@@ -160,7 +168,7 @@ async def test_turn_on_multiple_intent(hass):
     calls = async_mock_service(hass, "light", SERVICE_TURN_ON)
 
     response = await intent.async_handle(
-        hass, "test", "HassTurnOn", {"name": {"value": "test lights"}}
+        hass, "test", "HassTurnOn", {"name": {"value": "test lights 2"}}
     )
     await hass.async_block_till_done()
 

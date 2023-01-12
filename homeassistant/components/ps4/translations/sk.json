@@ -14,12 +14,18 @@
             "no_ipaddress": "Zadajte IP adresa konzoly PlayStation 4, ktor\u00fa chcete nakonfigurova\u0165."
         },
         "step": {
+            "creds": {
+                "description": "Potrebn\u00e9 poverenia. Stla\u010dte 'Odosla\u0165' a potom v aplik\u00e1cii PS4 2nd Screen App obnovte zariadenia a pokra\u010dujte v\u00fdberom zariadenia 'Home-Assistant'."
+            },
             "link": {
                 "data": {
                     "code": "PIN k\u00f3d",
                     "ip_address": "IP adresa",
                     "name": "N\u00e1zov",
                     "region": "Regi\u00f3n"
+                },
+                "data_description": {
+                    "code": "Na konzole PlayStation 4 prejdite do \u010dasti Nastavenia. Potom prejdite na \u201eNastavenia pripojenia k mobilnej aplik\u00e1cii\u201c a vyberte \u201ePrida\u0165 zariadenie\u201c, aby ste z\u00edskali PIN."
                 }
             },
             "mode": {

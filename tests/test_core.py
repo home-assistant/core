@@ -400,6 +400,58 @@ def test_state_as_dict():
     assert state.as_dict() is as_dict_1
 
 
+def test_state_as_compressed_state():
+    """Test a State as compressed state."""
+    last_time = datetime(1984, 12, 8, 12, 0, 0, tzinfo=dt_util.UTC)
+    state = ha.State(
+        "happy.happy",
+        "on",
+        {"pig": "dog"},
+        last_updated=last_time,
+        last_changed=last_time,
+    )
+    expected = {
+        "a": {"pig": "dog"},
+        "c": state.context.id,
+        "lc": last_time.timestamp(),
+        "s": "on",
+    }
+    as_compressed_state = state.as_compressed_state()
+    # We are not too concerned about these being ReadOnlyDict
+    # since we don't expect them to be called by external callers
+    assert as_compressed_state == expected
+    # 2nd time to verify cache
+    assert state.as_compressed_state() == expected
+    assert state.as_compressed_state() is as_compressed_state
+
+
+def test_state_as_compressed_state_unique_last_updated():
+    """Test a State as compressed state where last_changed is not last_updated."""
+    last_changed = datetime(1984, 12, 8, 11, 0, 0, tzinfo=dt_util.UTC)
+    last_updated = datetime(1984, 12, 8, 12, 0, 0, tzinfo=dt_util.UTC)
+    state = ha.State(
+        "happy.happy",
+        "on",
+        {"pig": "dog"},
+        last_updated=last_updated,
+        last_changed=last_changed,
+    )
+    expected = {
+        "a": {"pig": "dog"},
+        "c": state.context.id,
+        "lc": last_changed.timestamp(),
+        "lu": last_updated.timestamp(),
+        "s": "on",
+    }
+    as_compressed_state = state.as_compressed_state()
+    # We are not too concerned about these being ReadOnlyDict
+    # since we don't expect them to be called by external callers
+    assert as_compressed_state == expected
+    # 2nd time to verify cache
+    assert state.as_compressed_state() == expected
+    assert state.as_compressed_state() is as_compressed_state
+
+
 async def test_eventbus_add_remove_listener(hass):
     """Test remove_listener method."""
     old_count = len(hass.bus.async_listeners())
@@ -1128,7 +1180,12 @@ async def test_service_executed_with_subservices(hass):
         call2 = hass.services.async_call(
             "test", "inner", blocking=True, context=call.context
         )
-        await asyncio.wait([call1, call2])
+        await asyncio.wait(
+            [
+                hass.async_create_task(call1),
+                hass.async_create_task(call2),
+            ]
+        )
         calls.append(call)
 
     hass.services.async_register("test", "outer", handle_outer)

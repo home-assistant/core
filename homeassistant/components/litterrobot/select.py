@@ -14,7 +14,7 @@ from homeassistant.components.select import (
     SelectEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TIME_MINUTES
+from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -48,7 +48,7 @@ LITTER_ROBOT_SELECT = RobotSelectEntityDescription[LitterRobot, int](
     key="cycle_delay",
     name="Clean Cycle Wait Time Minutes",
     icon="mdi:timer-outline",
-    unit_of_measurement=TIME_MINUTES,
+    unit_of_measurement=UnitOfTime.MINUTES,
     current_fn=lambda robot: robot.clean_cycle_wait_time_minutes,
     options_fn=lambda robot: robot.VALID_WAIT_TIMES,
     select_fn=lambda robot, option: robot.set_wait_time(int(option)),

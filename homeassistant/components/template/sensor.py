@@ -99,8 +99,9 @@ def extra_validation_checks(val):
     """Run extra validation checks."""
     if CONF_TRIGGER in val:
         raise vol.Invalid(
-            "You can only add triggers to template entities if they are defined under `template:`. "
-            "See the template documentation for more information: https://www.home-assistant.io/integrations/template/"
+            "You can only add triggers to template entities if they are defined under"
+            " `template:`. See the template documentation for more information:"
+            " https://www.home-assistant.io/integrations/template/"
         )
 
     if CONF_SENSORS not in val and SENSOR_DOMAIN not in val:

@@ -39,7 +39,7 @@
                     "username": "Benutzername"
                 },
                 "description": "FRITZ!Box Tools einrichten, um deine FRITZ!Box zu steuern.\nMindestens erforderlich: Benutzername, Passwort.",
-                "title": "Setup FRITZ!Box Tools"
+                "title": "FRITZ!Box Tools einrichten"
             }
         }
     },

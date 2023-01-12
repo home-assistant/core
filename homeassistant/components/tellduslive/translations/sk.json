@@ -11,6 +11,7 @@
         },
         "step": {
             "auth": {
+                "description": "Ak chcete prepoji\u0165 svoj \u00fa\u010det TelldusLive:\n 1. Kliknite na odkaz ni\u017e\u0161ie\n 2. Prihl\u00e1ste sa do Telldus Live\n 3. Autorizujte **{app_name}** (kliknite na **\u00c1no**).\n 4. Vr\u00e1\u0165te sa sem a kliknite na **ODOSLA\u0164**. \n\n [Prepoji\u0165 \u00fa\u010det TelldusLive]({auth_url})",
                 "title": "Overenie pomocou TelldusLive"
             },
             "user": {

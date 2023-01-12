@@ -15,5 +15,10 @@
                 "title": "Umiestnenie"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "api_endpoint_reachable": "Koncov\u00fd bod IPMA API je dosiahnute\u013en\u00fd"
+        }
     }
 }

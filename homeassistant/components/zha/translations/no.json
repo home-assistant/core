@@ -36,10 +36,10 @@
                 "title": "Velg en seriell port"
             },
             "confirm": {
-                "description": "Vil du konfigurere {name}?"
+                "description": "Vil du sette opp {name} ?"
             },
             "confirm_hardware": {
-                "description": "Vil du konfigurere {name} ?"
+                "description": "Vil du sette opp {name} ?"
             },
             "manual_pick_radio_type": {
                 "data": {

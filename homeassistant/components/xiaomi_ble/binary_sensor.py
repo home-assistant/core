@@ -5,6 +5,7 @@ from typing import Optional
 
 from xiaomi_ble.parser import (
     BinarySensorDeviceClass as XiaomiBinarySensorDeviceClass,
+    ExtendedBinarySensorDeviceClass,
     SensorUpdate,
 )
 
@@ -28,20 +29,48 @@ from .const import DOMAIN
 from .device import device_key_to_bluetooth_entity_key
 
 BINARY_SENSOR_DESCRIPTIONS = {
-    XiaomiBinarySensorDeviceClass.MOTION: BinarySensorEntityDescription(
-        key=XiaomiBinarySensorDeviceClass.MOTION,
-        device_class=BinarySensorDeviceClass.MOTION,
+    XiaomiBinarySensorDeviceClass.DOOR: BinarySensorEntityDescription(
+        key=XiaomiBinarySensorDeviceClass.DOOR,
+        device_class=BinarySensorDeviceClass.DOOR,
     ),
     XiaomiBinarySensorDeviceClass.LIGHT: BinarySensorEntityDescription(
         key=XiaomiBinarySensorDeviceClass.LIGHT,
         device_class=BinarySensorDeviceClass.LIGHT,
     ),
+    XiaomiBinarySensorDeviceClass.MOISTURE: BinarySensorEntityDescription(
+        key=XiaomiBinarySensorDeviceClass.MOISTURE,
+        device_class=BinarySensorDeviceClass.MOISTURE,
+    ),
+    XiaomiBinarySensorDeviceClass.MOTION: BinarySensorEntityDescription(
+        key=XiaomiBinarySensorDeviceClass.MOTION,
+        device_class=BinarySensorDeviceClass.MOTION,
+    ),
+    XiaomiBinarySensorDeviceClass.OPENING: BinarySensorEntityDescription(
+        key=XiaomiBinarySensorDeviceClass.OPENING,
+        device_class=BinarySensorDeviceClass.OPENING,
+    ),
     XiaomiBinarySensorDeviceClass.SMOKE: BinarySensorEntityDescription(
         key=XiaomiBinarySensorDeviceClass.SMOKE,
         device_class=BinarySensorDeviceClass.SMOKE,
     ),
-    XiaomiBinarySensorDeviceClass.MOISTURE: BinarySensorEntityDescription(
-        key=XiaomiBinarySensorDeviceClass.MOISTURE,
+    ExtendedBinarySensorDeviceClass.DEVICE_FORCIBLY_REMOVED: BinarySensorEntityDescription(
+        key=ExtendedBinarySensorDeviceClass.DEVICE_FORCIBLY_REMOVED,
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    ExtendedBinarySensorDeviceClass.DOOR_LEFT_OPEN: BinarySensorEntityDescription(
+        key=ExtendedBinarySensorDeviceClass.DOOR_LEFT_OPEN,
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    ExtendedBinarySensorDeviceClass.DOOR_STUCK: BinarySensorEntityDescription(
+        key=ExtendedBinarySensorDeviceClass.DOOR_STUCK,
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    ExtendedBinarySensorDeviceClass.KNOCK_ON_THE_DOOR: BinarySensorEntityDescription(
+        key=ExtendedBinarySensorDeviceClass.KNOCK_ON_THE_DOOR,
+    ),
+    ExtendedBinarySensorDeviceClass.PRY_THE_DOOR: BinarySensorEntityDescription(
+        key=ExtendedBinarySensorDeviceClass.PRY_THE_DOOR,
+        device_class=BinarySensorDeviceClass.TAMPER,
     ),
 }
 

@@ -17,6 +17,7 @@
         "info": {
             "arch": "Architekt\u00fara CPU",
             "config_dir": "Adres\u00e1r konfigur\u00e1cie",
+            "dev": "V\u00fdvoj",
             "docker": "Docker",
             "hassio": "Supervisor",
             "installation_type": "Typ in\u0161tal\u00e1cie",

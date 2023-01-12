@@ -21,7 +21,8 @@
                 "data": {
                     "password": "Heslo"
                 },
-                "description": "Heslo je zvy\u010dajne posledn\u00fdch 5 znakov s\u00e9riov\u00e9ho \u010d\u00edsla pre Backup Gateway a mo\u017eno ho n\u00e1js\u0165 v aplik\u00e1cii Tesla alebo posledn\u00fdch 5 znakov hesla, ktor\u00e9 n\u00e1jdete vo dver\u00e1ch pre Backup Gateway 2."
+                "description": "Heslo je zvy\u010dajne posledn\u00fdch 5 znakov s\u00e9riov\u00e9ho \u010d\u00edsla pre Backup Gateway a mo\u017eno ho n\u00e1js\u0165 v aplik\u00e1cii Tesla alebo posledn\u00fdch 5 znakov hesla, ktor\u00e9 n\u00e1jdete vo dver\u00e1ch pre Backup Gateway 2.",
+                "title": "Znova overte powerwall"
             },
             "user": {
                 "data": {

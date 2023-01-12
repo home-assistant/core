@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
 
 from synology_dsm.api.core.security import SynoCoreSecurity
 from synology_dsm.api.storage.storage import SynoStorage
@@ -17,10 +16,10 @@ from homeassistant.const import CONF_DISKS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import SynoApi
 from .const import DOMAIN
+from .coordinator import SynologyDSMCentralUpdateCoordinator
 from .entity import (
     SynologyDSMBaseEntity,
     SynologyDSMDeviceEntity,
@@ -89,7 +88,9 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class SynoDSMBinarySensor(SynologyDSMBaseEntity, BinarySensorEntity):
+class SynoDSMBinarySensor(
+    SynologyDSMBaseEntity[SynologyDSMCentralUpdateCoordinator], BinarySensorEntity
+):
     """Mixin for binary sensor specific attributes."""
 
     entity_description: SynologyDSMBinarySensorEntityDescription
@@ -97,7 +98,7 @@ class SynoDSMBinarySensor(SynologyDSMBaseEntity, BinarySensorEntity):
     def __init__(
         self,
         api: SynoApi,
-        coordinator: DataUpdateCoordinator[dict[str, dict[str, Any]]],
+        coordinator: SynologyDSMCentralUpdateCoordinator,
         description: SynologyDSMBinarySensorEntityDescription,
     ) -> None:
         """Initialize the Synology DSM binary_sensor entity."""
@@ -131,7 +132,7 @@ class SynoDSMStorageBinarySensor(SynologyDSMDeviceEntity, SynoDSMBinarySensor):
     def __init__(
         self,
         api: SynoApi,
-        coordinator: DataUpdateCoordinator[dict[str, dict[str, Any]]],
+        coordinator: SynologyDSMCentralUpdateCoordinator,
         description: SynologyDSMBinarySensorEntityDescription,
         device_id: str | None = None,
     ) -> None:

@@ -1,16 +1,25 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Teenus on juba seadistatud"
+            "already_configured": "Teenus on juba seadistatud",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
         },
         "error": {
-            "cannot_connect": "\u00dchendamine nurjus"
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamine nurjus"
         },
         "step": {
             "api_key": {
                 "data": {
                     "api_key": "API v\u00f5ti"
                 }
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API v\u00f5ti"
+                },
+                "description": "Sisesta PI-Hole'i uus API-v\u00f5ti aadressil {host}/{location}",
+                "title": "PI-Hole Taastuvasta sidumine"
             },
             "user": {
                 "data": {
@@ -24,6 +33,12 @@
                     "verify_ssl": "Kontrolli SSL sertifikaati"
                 }
             }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "PI-Hole'i konfigureerimine YAML-i abil eemaldatakse.\n\nTeie olemasolev YAML-konfiguratsioon on automaatselt kasutajaliidesesse imporditud.\n\nEemaldage PI-Hole'i YAML-konfiguratsioon oma configuration.yaml-failist ja k\u00e4ivitage Home Assistant uuesti, et see probleem lahendada.",
+            "title": "PI-Hole YAML-i konfiguratsiooni eemaldatakse"
         }
     }
 }

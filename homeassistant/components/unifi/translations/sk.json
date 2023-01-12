@@ -41,6 +41,8 @@
             },
             "device_tracker": {
                 "data": {
+                    "detection_time": "\u010cas v sekund\u00e1ch od posledn\u00e9ho videnia a\u017e po zv\u00e1\u017eenie pre\u010d",
+                    "ignore_wired_bug": "Zak\u00e1zanie logiky chyby k\u00e1blovej siete UniFi",
                     "ssid_filter": "Vyberte SSID na sledovanie bezdr\u00f4tov\u00fdch klientov",
                     "track_clients": "Sledovanie klientov siete",
                     "track_devices": "Sledovanie sie\u0165ov\u00fdch zariaden\u00ed (zariadenia Ubiquiti)",
@@ -67,8 +69,10 @@
             },
             "statistics_sensors": {
                 "data": {
-                    "allow_bandwidth_sensors": "Senzory vyu\u017eitia \u0161\u00edrky p\u00e1sma pre sie\u0165ov\u00fdch klientov"
+                    "allow_bandwidth_sensors": "Senzory vyu\u017eitia \u0161\u00edrky p\u00e1sma pre sie\u0165ov\u00fdch klientov",
+                    "allow_uptime_sensors": "Sn\u00edma\u010de dostupnosti pre sie\u0165ov\u00fdch klientov"
                 },
+                "description": "Konfigur\u00e1cia sn\u00edma\u010dov \u0161tatistiky",
                 "title": "Mo\u017enosti siete UniFi 3/3"
             }
         }

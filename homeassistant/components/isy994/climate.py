@@ -1,4 +1,4 @@
-"""Support for Insteon Thermostats via ISY994 Platform."""
+"""Support for Insteon Thermostats via ISY Platform."""
 from __future__ import annotations
 
 from typing import Any
@@ -19,7 +19,6 @@ from pyisy.nodes import Node
 from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
-    DOMAIN as CLIMATE,
     FAN_AUTO,
     FAN_OFF,
     FAN_ON,
@@ -29,17 +28,24 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    PRECISION_TENTHS,
+    Platform,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     _LOGGER,
-    DOMAIN as ISY994_DOMAIN,
+    DOMAIN,
     HA_FAN_TO_ISY,
     HA_HVAC_TO_ISY,
-    ISY994_NODES,
+    ISY_DEVICES,
     ISY_HVAC_MODES,
+    ISY_NODES,
     UOM_FAN_MODES,
     UOM_HVAC_ACTIONS,
     UOM_HVAC_MODE_GENERIC,
@@ -50,25 +56,25 @@ from .const import (
     UOM_TO_STATES,
 )
 from .entity import ISYNodeEntity
-from .helpers import convert_isy_value_to_hass, migrate_old_unique_ids
+from .helpers import convert_isy_value_to_hass
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the ISY994 thermostat platform."""
+    """Set up the ISY thermostat platform."""
     entities = []
 
-    hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
-    for node in hass_isy_data[ISY994_NODES][CLIMATE]:
-        entities.append(ISYThermostatEntity(node))
+    hass_isy_data = hass.data[DOMAIN][entry.entry_id]
+    devices: dict[str, DeviceInfo] = hass_isy_data[ISY_DEVICES]
+    for node in hass_isy_data[ISY_NODES][Platform.CLIMATE]:
+        entities.append(ISYThermostatEntity(node, devices.get(node.primary_node)))
 
-    await migrate_old_unique_ids(hass, CLIMATE, entities)
     async_add_entities(entities)
 
 
 class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
-    """Representation of an ISY994 thermostat entity."""
+    """Representation of an ISY thermostat entity."""
 
     _attr_hvac_modes = ISY_HVAC_MODES
     _attr_precision = PRECISION_TENTHS
@@ -78,9 +84,9 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
     )
 
-    def __init__(self, node: Node) -> None:
+    def __init__(self, node: Node, device_info: DeviceInfo | None = None) -> None:
         """Initialize the ISY Thermostat entity."""
-        super().__init__(node)
+        super().__init__(node, device_info=device_info)
         self._uom = self._node.uom
         if isinstance(self._uom, list):
             self._uom = self._node.uom[0]

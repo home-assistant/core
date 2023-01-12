@@ -43,7 +43,7 @@
             "gw_mqtt": {
                 "data": {
                     "persistence_file": "perzisztencia f\u00e1jl (hagyja \u00fcresen az automatikus gener\u00e1l\u00e1shoz)",
-                    "retain": "mqtt megtart\u00e1sa",
+                    "retain": "mqtt tart\u00e1s (retain)",
                     "topic_in_prefix": "el\u0151tag a beviteli t\u00e9m\u00e1khoz (topic_in_prefix)",
                     "topic_out_prefix": "el\u0151tag a kimeneti t\u00e9m\u00e1khoz (topic_out_prefix)",
                     "version": "MySensors verzi\u00f3"
@@ -82,6 +82,18 @@
                 },
                 "description": "V\u00e1lassza ki az \u00e1tj\u00e1r\u00f3hoz val\u00f3 csatlakoz\u00e1si m\u00f3dot"
             }
+        }
+    },
+    "issues": {
+        "deprecated_service": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "title": "A(z) {deprecated_service} szolg\u00e1ltat\u00e1s elt\u00e1vol\u00edt\u00e1sra ker\u00fcl"
+                    }
+                }
+            },
+            "title": "A(z) {deprecated_service} szolg\u00e1ltat\u00e1s elt\u00e1vol\u00edt\u00e1sra ker\u00fcl"
         }
     }
 }
