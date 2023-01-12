@@ -1,4 +1,4 @@
-"""Test zha cover."""
+"""Test ZHA cover."""
 import asyncio
 from unittest.mock import AsyncMock, patch
 
@@ -41,7 +41,7 @@ from tests.common import async_capture_events, mock_coro, mock_restore_cache
 
 @pytest.fixture(autouse=True)
 def cover_platform_only():
-    """Only setup the cover and required base platforms to speed up tests."""
+    """Only set up the cover and required base platforms to speed up tests."""
     with patch(
         "homeassistant.components.zha.PLATFORMS",
         (
@@ -121,7 +121,7 @@ def zigpy_keen_vent(zigpy_device_mock):
 
 
 async def test_cover(hass, zha_device_joined_restored, zigpy_cover_device):
-    """Test zha cover platform."""
+    """Test ZHA cover platform."""
 
     # load up cover domain
     cluster = zigpy_cover_device.endpoints.get(1).window_covering
@@ -212,7 +212,7 @@ async def test_cover(hass, zha_device_joined_restored, zigpy_cover_device):
 
 
 async def test_shade(hass, zha_device_joined_restored, zigpy_shade_device):
-    """Test zha cover platform for shade device type."""
+    """Test ZHA cover platform for shade device type."""
 
     # load up cover domain
     zha_device = await zha_device_joined_restored(zigpy_shade_device)
@@ -418,7 +418,7 @@ async def test_keen_vent(hass, zha_device_joined_restored, zigpy_keen_vent):
 
 
 async def test_cover_remote(hass, zha_device_joined_restored, zigpy_cover_remote):
-    """Test zha cover remote."""
+    """Test ZHA cover remote."""
 
     # load up cover domain
     await zha_device_joined_restored(zigpy_cover_remote)

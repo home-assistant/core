@@ -28,13 +28,13 @@
                 "data": {
                     "noise_psk": "Krypteringsn\u00f8kkel"
                 },
-                "description": "Skriv inn krypteringsn\u00f8kkelen du angav i konfigurasjonen for {name} ."
+                "description": "Skriv inn krypteringsn\u00f8kkelen for {name} . Du finner den i ESPHome-dashbordet eller i enhetskonfigurasjonen."
             },
             "reauth_confirm": {
                 "data": {
                     "noise_psk": "Krypteringsn\u00f8kkel"
                 },
-                "description": "ESPHome -enheten {name} aktiverte transportkryptering eller endret krypteringsn\u00f8kkelen. Skriv inn den oppdaterte n\u00f8kkelen."
+                "description": "ESPHome-enheten {name} aktiverte transportkryptering eller endret krypteringsn\u00f8kkelen. Vennligst skriv inn den oppdaterte n\u00f8kkelen. Du finner den i ESPHome-dashbordet eller i enhetskonfigurasjonen."
             },
             "user": {
                 "data": {

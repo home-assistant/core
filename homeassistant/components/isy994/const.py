@@ -1,4 +1,4 @@
-"""Constants for the ISY994 Platform."""
+"""Constants for the ISY Platform."""
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
@@ -58,6 +58,7 @@ DOMAIN = "isy994"
 
 MANUFACTURER = "Universal Devices, Inc"
 
+CONF_NETWORK = "network"
 CONF_IGNORE_STRING = "ignore_string"
 CONF_SENSOR_STRING = "sensor_string"
 CONF_VAR_SENSOR_STRING = "variable_sensor_string"
@@ -74,7 +75,7 @@ DEFAULT_VAR_SENSOR_STRING = "HA."
 KEY_ACTIONS = "actions"
 KEY_STATUS = "status"
 
-PLATFORMS = [
+NODE_PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
     Platform.COVER,
@@ -91,6 +92,16 @@ PROGRAM_PLATFORMS = [
     Platform.LOCK,
     Platform.SWITCH,
 ]
+ROOT_NODE_PLATFORMS = [Platform.BUTTON]
+VARIABLE_PLATFORMS = [Platform.NUMBER, Platform.SENSOR]
+
+# Set of all platforms used by integration
+PLATFORMS = {
+    *NODE_PLATFORMS,
+    *PROGRAM_PLATFORMS,
+    *ROOT_NODE_PLATFORMS,
+    *VARIABLE_PLATFORMS,
+}
 
 SUPPORTED_BIN_SENS_CLASSES = ["moisture", "opening", "motion", "climate"]
 
@@ -98,10 +109,23 @@ SUPPORTED_BIN_SENS_CLASSES = ["moisture", "opening", "motion", "climate"]
 # (they can turn off, and report their state)
 ISY_GROUP_PLATFORM = Platform.SWITCH
 
-ISY994_ISY = "isy"
-ISY994_NODES = "isy994_nodes"
-ISY994_PROGRAMS = "isy994_programs"
-ISY994_VARIABLES = "isy994_variables"
+ISY_ROOT = "isy"
+ISY_ROOT_NODES = "isy_root_nodes"
+ISY_NET_RES = "isy_net_res"
+ISY_NODES = "isy_nodes"
+ISY_PROGRAMS = "isy_programs"
+ISY_VARIABLES = "isy_variables"
+ISY_DEVICES = "isy_devices"
+
+ISY_CONF_NETWORKING = "Networking Module"
+ISY_CONF_UUID = "uuid"
+ISY_CONF_NAME = "name"
+ISY_CONF_MODEL = "model"
+ISY_CONF_FIRMWARE = "firmware"
+
+ISY_CONN_PORT = "port"
+ISY_CONN_ADDRESS = "addr"
+ISY_CONN_TLS = "tls"
 
 FILTER_UOM = "uom"
 FILTER_STATES = "states"
@@ -291,9 +315,9 @@ NODE_FILTERS: dict[Platform, dict[str, list[str]]] = {
 }
 
 UOM_FRIENDLY_NAME = {
-    "1": "A",
+    "1": UnitOfElectricCurrent.AMPERE,
     UOM_ON_OFF: "",  # Binary, no unit
-    "3": f"btu/{UnitOfTime.HOURS}",
+    "3": UnitOfPower.BTU_PER_HOUR,
     "4": UnitOfTemperature.CELSIUS,
     "5": UnitOfLength.CENTIMETERS,
     "6": UnitOfVolume.CUBIC_FEET,
@@ -319,7 +343,7 @@ UOM_FRIENDLY_NAME = {
     "28": UnitOfMass.KILOGRAMS,
     "29": "kV",
     "30": UnitOfPower.KILO_WATT,
-    "31": "kPa",
+    "31": UnitOfPressure.KPA,
     "32": UnitOfSpeed.KILOMETERS_PER_HOUR,
     "33": UnitOfEnergy.KILO_WATT_HOUR,
     "34": "liedu",

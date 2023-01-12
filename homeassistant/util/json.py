@@ -124,7 +124,8 @@ def find_paths_unserializable_data(
         except (ValueError, TypeError):
             pass
 
-        # We convert objects with as_dict to their dict values so we can find bad data inside it
+        # We convert objects with as_dict to their dict values
+        # so we can find bad data inside it
         if hasattr(obj, "as_dict"):
             desc = obj.__class__.__name__
             if isinstance(obj, State):
