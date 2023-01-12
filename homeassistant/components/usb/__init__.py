@@ -62,15 +62,15 @@ def async_register_scan_request_callback(
 
 
 @hass_callback
-def async_register_discovery_started_callback(
+def async_register_initial_scan_callback(
     hass: HomeAssistant, callback: CALLBACK_TYPE
 ) -> CALLBACK_TYPE:
-    """Register to receive a callback when USB discovery has started.
+    """Register to receive a callback when the initial USB scan is done.
 
-    If USB discovery is already started, the callback is called immediately.
+    If the initial scan is already done, the callback is called immediately.
     """
     discovery: USBDiscovery = hass.data[DOMAIN]
-    return discovery.async_register_discovery_started_callback(callback)
+    return discovery.async_register_initial_scan_callback(callback)
 
 
 @hass_callback
@@ -198,8 +198,8 @@ class USBDiscovery:
         self.observer_active = False
         self._request_debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None
         self._request_callbacks: list[CALLBACK_TYPE] = []
-        self.discovery_started = False
-        self._discovery_started_callbacks: list[CALLBACK_TYPE] = []
+        self.initial_scan_done = False
+        self._initial_scan_callbacks: list[CALLBACK_TYPE] = []
 
     async def async_setup(self) -> None:
         """Set up USB Discovery."""
@@ -209,9 +209,6 @@ class USBDiscovery:
     async def async_start(self, event: Event) -> None:
         """Start USB Discovery and run a manual scan."""
         await self._async_scan_serial()
-        self.discovery_started = True
-        while self._discovery_started_callbacks:
-            self._discovery_started_callbacks.pop()()
 
     async def _async_start_monitor(self) -> None:
         """Start monitoring hardware with pyudev."""
@@ -276,22 +273,22 @@ class USBDiscovery:
         return _async_remove_callback
 
     @hass_callback
-    def async_register_discovery_started_callback(
+    def async_register_initial_scan_callback(
         self,
         callback: CALLBACK_TYPE,
     ) -> CALLBACK_TYPE:
-        """Register a discovery started callback."""
-        if self.discovery_started:
+        """Register an initial scan callback."""
+        if self.initial_scan_done:
             callback()
             return lambda: None
 
-        self._discovery_started_callbacks.append(callback)
+        self._initial_scan_callbacks.append(callback)
 
         @hass_callback
         def _async_remove_callback() -> None:
-            if callback not in self._discovery_started_callbacks:
+            if callback not in self._initial_scan_callbacks:
                 return
-            self._discovery_started_callbacks.remove(callback)
+            self._initial_scan_callbacks.remove(callback)
 
         return _async_remove_callback
 
@@ -344,6 +341,12 @@ class USBDiscovery:
     async def _async_scan_serial(self) -> None:
         """Scan serial ports."""
         self._async_process_ports(await self.hass.async_add_executor_job(comports))
+        if self.initial_scan_done:
+            return
+
+        self.initial_scan_done = True
+        while self._initial_scan_callbacks:
+            self._initial_scan_callbacks.pop()()
 
     async def _async_scan(self) -> None:
         """Scan for USB devices and notify callbacks to scan as well."""

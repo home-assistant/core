@@ -71,8 +71,8 @@ async def _multi_pan_addon_info(
     return addon_info
 
 
-async def _async_usb_discovery_started(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Set up a Home Assistant Sky Connect config entry."""
+async def _async_usb_scan_done(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Finish Home Assistant Sky Connect config entry setup."""
     matcher = usb.USBCallbackMatcher(
         domain=DOMAIN,
         vid=entry.data["vid"].upper(),
@@ -117,13 +117,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await _wait_multi_pan_addon(hass, entry)
 
     @callback
-    def async_usb_discovery_started() -> None:
+    def async_usb_scan_done() -> None:
         """Handle usb discovery started."""
-        hass.async_add_job(_async_usb_discovery_started, hass, entry)
+        hass.async_add_job(_async_usb_scan_done, hass, entry)
 
-    unsub_usb = usb.async_register_discovery_started_callback(
-        hass, async_usb_discovery_started
-    )
+    unsub_usb = usb.async_register_initial_scan_callback(hass, async_usb_scan_done)
     entry.async_on_unload(unsub_usb)
 
     return True
