@@ -125,7 +125,7 @@ async def async_setup_entry(
     # they are missing from the options
     _async_import_options_from_data_if_missing(hass, entry)
 
-    isy_data = hass.data[DOMAIN][entry.entry_id] = IsyData(entry)
+    isy_data = hass.data[DOMAIN][entry.entry_id] = IsyData()
 
     isy_config = entry.data
     isy_options = entry.options
