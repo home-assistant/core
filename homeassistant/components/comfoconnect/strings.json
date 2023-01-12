@@ -1,0 +1,28 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Set up your Zehnder ComfoAir Q to allow monitoring and control.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "pin": "[%key:common::config_flow::data::pin%]",
+          "user_agent": "User agent",
+          "token": "[%key:common::config_flow::data::access_token%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    }
+  },
+  "issues": {
+    "deprecated_yaml": {
+      "title": "The ComfoConnect YAML configuration is being removed",
+      "description": "Configuring ComfoConnect using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the ComfoConnect YAML configuration and the ComfoConnect sensor YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+    }
+  }
+}
