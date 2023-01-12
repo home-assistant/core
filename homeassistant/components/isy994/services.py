@@ -24,6 +24,7 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from homeassistant.helpers.service import entity_service_call
 
 from .const import _LOGGER, CONF_NETWORK, DOMAIN, ISY_CONF_NAME, ISY_CONF_NETWORKING
+from .util import _async_cleanup_registry_entries
 
 # Common Services for All Platforms:
 SERVICE_SYSTEM_QUERY = "system_query"
@@ -320,8 +321,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
     def async_cleanup_registry_entries(service: ServiceCall) -> None:
         """Remove extra entities that are no longer part of the integration."""
         for config_entry_id in hass.data[DOMAIN]:
-            isy_data = hass.data[DOMAIN][config_entry_id]
-            isy_data.async_cleanup_registry_entries()
+            _async_cleanup_registry_entries(hass, config_entry_id)
 
     async def async_reload_config_entries(service: ServiceCall) -> None:
         """Trigger a reload of all ISY config entries."""

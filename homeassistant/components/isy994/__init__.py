@@ -51,6 +51,7 @@ from .const import (
 from .helpers import _categorize_nodes, _categorize_programs, _categorize_variables
 from .models import IsyData
 from .services import async_setup_services, async_unload_services
+from .util import _async_cleanup_registry_entries
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -124,8 +125,7 @@ async def async_setup_entry(
     # they are missing from the options
     _async_import_options_from_data_if_missing(hass, entry)
 
-    hass.data[DOMAIN][entry.entry_id] = IsyData(hass, entry)
-    isy_data = hass.data[DOMAIN][entry.entry_id]
+    isy_data = hass.data[DOMAIN][entry.entry_id] = IsyData(entry)
 
     isy_config = entry.data
     isy_options = entry.options
@@ -223,7 +223,7 @@ async def async_setup_entry(
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # Clean-up any old entities that we no longer provide.
-    isy_data.async_cleanup_registry_entries()
+    _async_cleanup_registry_entries(hass, entry.entry_id)
 
     @callback
     def _async_stop_auto_update(event: Event) -> None:

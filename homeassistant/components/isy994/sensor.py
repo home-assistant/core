@@ -115,7 +115,7 @@ async def async_setup_entry(
         _LOGGER.debug("Loading %s", node.name)
         entities.append(ISYSensorEntity(node, devices.get(node.primary_node)))
 
-    aux_sensors_list = isy_data.aux_props[Platform.SENSOR]
+    aux_sensors_list = isy_data.aux_properties[Platform.SENSOR]
     for node, control in aux_sensors_list:
         _LOGGER.debug("Loading %s %s", node.name, COMMAND_FRIENDLY_NAME.get(control))
         enabled_default = control not in AUX_DISABLED_BY_DEFAULT_EXACT and not any(

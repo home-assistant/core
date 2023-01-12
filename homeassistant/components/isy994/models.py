@@ -13,12 +13,10 @@ from pyisy.variables import Variable
 
 from homeassistant import config_entries
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
-import homeassistant.helpers.entity_registry as er
 
 from .const import (
-    _LOGGER,
     CONF_NETWORK,
     NODE_AUX_PROP_PLATFORMS,
     NODE_PLATFORMS,
@@ -41,17 +39,14 @@ class IsyData:
     programs: dict[Platform, list[tuple[str, Program, Program]]]
     net_resources: list[NetworkCommand]
     devices: dict[str, DeviceInfo]
-    aux_props: dict[Platform, list[tuple[Node, str]]]
+    aux_properties: dict[Platform, list[tuple[Node, str]]]
 
-    def __init__(
-        self, hass: HomeAssistant, config_entry: config_entries.ConfigEntry
-    ) -> None:
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize an empty ISY data class."""
-        self.hass = hass
         self.config_entry = config_entry
         self.nodes = {p: [] for p in NODE_PLATFORMS}
         self.root_nodes = {p: [] for p in ROOT_NODE_PLATFORMS}
-        self.aux_props = {p: [] for p in NODE_AUX_PROP_PLATFORMS}
+        self.aux_properties = {p: [] for p in NODE_AUX_PROP_PLATFORMS}
         self.programs = {p: [] for p in PROGRAM_PLATFORMS}
         self.variables = {p: [] for p in VARIABLE_PLATFORMS}
         self.net_resources = []
@@ -81,7 +76,7 @@ class IsyData:
                 current_unique_ids.add((platform, self.uid_base(node)))
 
         for platform in NODE_AUX_PROP_PLATFORMS:
-            for node, control in self.aux_props[platform]:
+            for node, control in self.aux_properties[platform]:
                 current_unique_ids.add((platform, f"{self.uid_base(node)}_{control}"))
 
         for platform in PROGRAM_PLATFORMS:
@@ -104,30 +99,3 @@ class IsyData:
             current_unique_ids.add((Platform.BUTTON, self.uid_base(node)))
 
         return current_unique_ids
-
-    @callback
-    def async_cleanup_registry_entries(self) -> None:
-        """Remove extra entities that are no longer part of the integration."""
-        entity_registry = er.async_get(self.hass)
-
-        existing_entries = er.async_entries_for_config_entry(
-            entity_registry, self.config_entry.entry_id
-        )
-        entities = {
-            (entity.domain, entity.unique_id): entity.entity_id
-            for entity in existing_entries
-        }
-
-        extra_entities = set(entities.keys()).difference(self.unique_ids)
-        if not extra_entities:
-            return
-
-        for entity in extra_entities:
-            if entity_registry.async_is_registered(entities[entity]):
-                entity_registry.async_remove(entities[entity])
-
-        _LOGGER.debug(
-            ("Cleaning up ISY entities: removed %s extra entities for %s"),
-            len(extra_entities),
-            self.config_entry.title,
-        )

@@ -326,12 +326,12 @@ def _categorize_nodes(
             isy_data.devices[node.address] = _generate_device_info(node)
             isy_data.root_nodes[Platform.BUTTON].append(node)
             # Any parent node can have communication errors:
-            isy_data.aux_props[Platform.SENSOR].append((node, PROP_COMMS_ERROR))
+            isy_data.aux_properties[Platform.SENSOR].append((node, PROP_COMMS_ERROR))
             # Add Ramp Rate and On Levels for Dimmable Load devices
             if getattr(node, "is_dimmable", False):
                 aux_controls = ROOT_AUX_CONTROLS.intersection(node.aux_properties)
                 for control in aux_controls:
-                    isy_data.aux_props[Platform.SENSOR].append((node, control))
+                    isy_data.aux_properties[Platform.SENSOR].append((node, control))
 
         if node.protocol == PROTO_GROUP:
             isy_data.nodes[ISY_GROUP_PLATFORM].append(node)
@@ -341,7 +341,7 @@ def _categorize_nodes(
             for control in node.aux_properties:
                 if control in SKIP_AUX_PROPS:
                     continue
-                isy_data.aux_props[Platform.SENSOR].append((node, control))
+                isy_data.aux_properties[Platform.SENSOR].append((node, control))
 
         if sensor_identifier in path or sensor_identifier in node.name:
             # User has specified to treat this as a sensor. First we need to
