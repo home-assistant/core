@@ -99,8 +99,12 @@ class SmartPlugSwitch(DLinkEntity, SwitchEntity):
             attrs[ATTR_TEMPERATURE] = self.hass.config.units.temperature(
                 int(self.data.temperature), UnitOfTemperature.CELSIUS
             )
+        else:
+            attrs[ATTR_TEMPERATURE] = None
         if self.data.total_consumption:
             attrs[ATTR_TOTAL_CONSUMPTION] = float(self.data.total_consumption)
+        else:
+            attrs[ATTR_TOTAL_CONSUMPTION] = None
 
         return attrs
 
