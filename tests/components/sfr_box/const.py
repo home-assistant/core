@@ -1,4 +1,5 @@
 """Constants for SFR Box tests."""
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.sensor import (
     ATTR_OPTIONS,
     ATTR_STATE_CLASS,
@@ -16,6 +17,7 @@ from homeassistant.const import (
     ATTR_SW_VERSION,
     ATTR_UNIT_OF_MEASUREMENT,
     SIGNAL_STRENGTH_DECIBELS,
+    STATE_ON,
     Platform,
     UnitOfDataRate,
     UnitOfElectricPotential,
@@ -38,6 +40,14 @@ EXPECTED_ENTITIES = {
         ATTR_NAME: "SFR Box",
         ATTR_SW_VERSION: "NB6VAC-MAIN-R4.0.44k",
     },
+    Platform.BINARY_SENSOR: [
+        {
+            ATTR_DEVICE_CLASS: BinarySensorDeviceClass.CONNECTIVITY,
+            ATTR_ENTITY_ID: "binary_sensor.sfr_box_status",
+            ATTR_STATE: STATE_ON,
+            ATTR_UNIQUE_ID: "e4:5d:51:00:11:22_dsl_status",
+        },
+    ],
     Platform.SENSOR: [
         {
             ATTR_DEFAULT_DISABLED: True,
