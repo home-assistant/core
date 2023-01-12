@@ -19,6 +19,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 T = TypeVar("T", bound=Optional[KamereonVehicleDataAttributes])
 
+# We have potentially 7 coordinators per vehicle
 _PARALLEL_SEMAPHORE = asyncio.Semaphore(1)
 
 
