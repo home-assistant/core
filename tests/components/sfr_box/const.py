@@ -53,7 +53,7 @@ EXPECTED_ENTITIES = {
             ATTR_DEFAULT_DISABLED: True,
             ATTR_DEVICE_CLASS: SensorDeviceClass.ENUM,
             ATTR_ENTITY_ID: "sensor.sfr_box_network_infrastructure",
-            ATTR_OPTIONS: ["adsl", "ftth", "gprs"],
+            ATTR_OPTIONS: ["adsl", "ftth", "gprs", "unknown"],
             ATTR_STATE: "adsl",
             ATTR_UNIQUE_ID: "e4:5d:51:00:11:22_system_net_infra",
         },
