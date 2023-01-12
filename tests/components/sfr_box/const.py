@@ -20,6 +20,8 @@ from homeassistant.const import (
     STATE_ON,
     Platform,
     UnitOfDataRate,
+    UnitOfElectricPotential,
+    UnitOfTemperature,
 )
 
 ATTR_DEFAULT_DISABLED = "default_disabled"
@@ -47,6 +49,30 @@ EXPECTED_ENTITIES = {
         },
     ],
     Platform.SENSOR: [
+        {
+            ATTR_DEFAULT_DISABLED: True,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENUM,
+            ATTR_ENTITY_ID: "sensor.sfr_box_network_infrastructure",
+            ATTR_OPTIONS: ["adsl", "ftth", "gprs"],
+            ATTR_STATE: "adsl",
+            ATTR_UNIQUE_ID: "e4:5d:51:00:11:22_system_net_infra",
+        },
+        {
+            ATTR_DEFAULT_DISABLED: True,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
+            ATTR_ENTITY_ID: "sensor.sfr_box_temperature",
+            ATTR_STATE: "27.56",
+            ATTR_UNIQUE_ID: "e4:5d:51:00:11:22_system_temperature",
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
+        },
+        {
+            ATTR_DEFAULT_DISABLED: True,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.VOLTAGE,
+            ATTR_ENTITY_ID: "sensor.sfr_box_voltage",
+            ATTR_STATE: "12251",
+            ATTR_UNIQUE_ID: "e4:5d:51:00:11:22_system_alimvoltage",
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfElectricPotential.MILLIVOLT,
+        },
         {
             ATTR_DEFAULT_DISABLED: True,
             ATTR_ENTITY_ID: "sensor.sfr_box_line_mode",

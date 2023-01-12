@@ -40,11 +40,13 @@ from homeassistant.util.unit_conversion import (
     DistanceConverter,
     ElectricCurrentConverter,
     ElectricPotentialConverter,
+    EnergyConverter,
     InformationConverter,
     MassConverter,
     PressureConverter,
     SpeedConverter,
     TemperatureConverter,
+    UnitlessRatioConverter,
     VolumeConverter,
 )
 
@@ -418,7 +420,9 @@ UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] =
     SensorDeviceClass.DATA_SIZE: InformationConverter,
     SensorDeviceClass.DISTANCE: DistanceConverter,
     SensorDeviceClass.CURRENT: ElectricCurrentConverter,
+    SensorDeviceClass.ENERGY: EnergyConverter,
     SensorDeviceClass.GAS: VolumeConverter,
+    SensorDeviceClass.POWER_FACTOR: UnitlessRatioConverter,
     SensorDeviceClass.PRECIPITATION: DistanceConverter,
     SensorDeviceClass.PRESSURE: PressureConverter,
     SensorDeviceClass.SPEED: SpeedConverter,
