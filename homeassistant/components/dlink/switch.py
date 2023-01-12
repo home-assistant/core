@@ -95,7 +95,7 @@ class SmartPlugSwitch(DLinkEntity, SwitchEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the device."""
         attrs: dict[str, Any] = {}
-        if self.data.temperature:
+        if self.data.temperature and self.data.temperature.isnumeric():
             attrs[ATTR_TEMPERATURE] = self.hass.config.units.temperature(
                 int(self.data.temperature), UnitOfTemperature.CELSIUS
             )
