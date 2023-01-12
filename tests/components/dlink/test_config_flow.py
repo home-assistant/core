@@ -19,7 +19,7 @@ from tests.common import MockConfigEntry
 
 
 def _patch_setup_entry():
-    return patch("homeassistant.components.dlink.async_setup_entry")
+    return patch("homeassistant.components.dlink.async_setup_entry", return_value=True)
 
 
 async def test_flow_user(hass: HomeAssistant, mocked_plug: MagicMock) -> None:
@@ -62,7 +62,7 @@ async def test_flow_user_cannot_connect(
     assert result["step_id"] == "user"
     assert result["errors"]["base"] == "cannot_connect"
 
-    with patch_config_flow(mocked_plug):
+    with patch_config_flow(mocked_plug), _patch_setup_entry():
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=CONF_DATA,
@@ -85,7 +85,7 @@ async def test_flow_user_unknown_error(
     assert result["step_id"] == "user"
     assert result["errors"]["base"] == "unknown"
 
-    with patch_config_flow(mocked_plug):
+    with patch_config_flow(mocked_plug), _patch_setup_entry():
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=CONF_DATA,
