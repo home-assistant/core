@@ -101,7 +101,7 @@ class SmartPlugSwitch(DLinkEntity, SwitchEntity):
             )
         else:
             attrs[ATTR_TEMPERATURE] = None
-        if self.data.total_consumption:
+        if self.data.total_consumption and self.data.total_consumption.isnumeric():
             attrs[ATTR_TOTAL_CONSUMPTION] = float(self.data.total_consumption)
         else:
             attrs[ATTR_TOTAL_CONSUMPTION] = None
