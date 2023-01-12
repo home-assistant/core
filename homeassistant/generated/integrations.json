@@ -1374,6 +1374,11 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "energie_vanons": {
+      "name": "Energie VanOns",
+      "integration_type": "virtual",
+      "supported_by": "energyzero"
+    },
     "energyzero": {
       "name": "EnergyZero",
       "integration_type": "hub",
