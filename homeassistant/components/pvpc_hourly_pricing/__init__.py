@@ -2,7 +2,12 @@
 from datetime import timedelta
 import logging
 
-from aiopvpc import BadApiTokenAuthError, EsiosApiData, PVPCData
+from aiopvpc import (
+    BadApiTokenAuthError,
+    EsiosApiData,
+    PVPCData,
+    get_enabled_sensor_keys,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_TOKEN, Platform
@@ -10,6 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -22,7 +28,13 @@ CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up pvpc hourly pricing from a config entry."""
-    coordinator = ElecPricesDataUpdateCoordinator(hass, entry)
+    entity_registry = er.async_get(hass)
+    entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    sensor_keys = get_enabled_sensor_keys(
+        using_private_api=entry.data.get(CONF_API_TOKEN) is not None,
+        disabled_sensor_ids=[sensor.unique_id for sensor in entries if sensor.disabled],
+    )
+    coordinator = ElecPricesDataUpdateCoordinator(hass, entry, sensor_keys)
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
@@ -55,7 +67,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class ElecPricesDataUpdateCoordinator(DataUpdateCoordinator[EsiosApiData]):
     """Class to manage fetching Electricity prices data from API."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, entry: ConfigEntry, sensor_keys: set[str]
+    ) -> None:
         """Initialize."""
         self.api = PVPCData(
             session=async_get_clientsession(hass),
@@ -64,6 +78,7 @@ class ElecPricesDataUpdateCoordinator(DataUpdateCoordinator[EsiosApiData]):
             power=entry.data[ATTR_POWER],
             power_valley=entry.data[ATTR_POWER_P3],
             api_token=entry.data.get(CONF_API_TOKEN),
+            sensor_keys=tuple(sensor_keys),
         )
         super().__init__(
             hass, _LOGGER, name=DOMAIN, update_interval=timedelta(minutes=30)
