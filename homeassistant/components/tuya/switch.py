@@ -171,6 +171,15 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             device_class=SwitchDeviceClass.OUTLET,
         ),
     ),
+    # SIREN: Siren (switch) with Temperature and humidity sensor
+    # https://developer.tuya.com/en/docs/iot/f?id=Kavck4sr3o5ek
+    "wsdcg": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH,
+            name="Switch",
+            device_class=SwitchDeviceClass.OUTLET,
+        ),
+    ),
     # Switch
     # https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
     "kg": (
