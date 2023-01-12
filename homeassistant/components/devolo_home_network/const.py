@@ -10,7 +10,6 @@ from devolo_plc_api.device_api import (
 )
 
 DOMAIN = "devolo_home_network"
-
 PRODUCT = "product"
 SERIAL_NUMBER = "serial_number"
 TITLE = "title"
@@ -22,6 +21,7 @@ CONNECTED_PLC_DEVICES = "connected_plc_devices"
 CONNECTED_TO_ROUTER = "connected_to_router"
 CONNECTED_WIFI_CLIENTS = "connected_wifi_clients"
 NEIGHBORING_WIFI_NETWORKS = "neighboring_wifi_networks"
+START_WPS = "start_wps"
 SWITCH_GUEST_WIFI = "switch_guest_wifi"
 SWITCH_LEDS = "switch_leds"
 
