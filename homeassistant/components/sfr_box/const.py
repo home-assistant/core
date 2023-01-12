@@ -2,6 +2,7 @@
 from homeassistant.const import Platform
 
 DEFAULT_HOST = "192.168.0.1"
+DEFAULT_USERNAME = "admin"
 
 DOMAIN = "sfr_box"
 

@@ -5,13 +5,16 @@
         },
         "error": {
             "cannot_connect": "Failed to connect",
-            "unknown": "Unexpected error"
+            "invalid_auth": "Invalid authentication"
         },
         "step": {
             "user": {
                 "data": {
-                    "host": "Host"
-                }
+                    "host": "Host",
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "Setting the credentials is optional, but enables additional functionality."
             }
         }
     },
