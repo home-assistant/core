@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    SIGNAL_STRENGTH_DECIBELS,
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfPower,
@@ -83,6 +84,7 @@ GENERIC_SENSOR_TYPES: tuple[HomelySensorEntityDescription, ...] = (
         key="ZigbeeSignalStrength",
         name="Zigbee signal strength",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         value_fn=lambda device: device.diagnostic.network_link_strength,
     ),
 )

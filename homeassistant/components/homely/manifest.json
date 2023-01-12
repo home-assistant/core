@@ -3,7 +3,7 @@
   "name": "Homely",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/homely",
-  "requirements": ["homelypy==0.0.9"],
+  "requirements": ["homelypy==0.0.10"],
   "integration_type": "hub",
   "codeowners": ["@kolaf"],
   "iot_class": "cloud_push",
