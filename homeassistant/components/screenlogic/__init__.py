@@ -219,7 +219,6 @@ class ScreenlogicEntity(CoordinatorEntity[ScreenlogicDataUpdateCoordinator]):
             equipment_model = f"Unknown Model C:{controller_type} H:{hardware_type}"
         return DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, self.mac)},
-            identifiers={(DOMAIN, self.mac)},
             manufacturer="Pentair",
             model=equipment_model,
             name=self.gateway_name,
