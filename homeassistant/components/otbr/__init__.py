@@ -76,7 +76,7 @@ async def async_get_thread_state(hass: HomeAssistant) -> ThreadState:
         raise HomeAssistantError
 
     try:
-        state = ThreadState(int(await response.read()))
+        state = ThreadState(int(await response.json()))
     except (TypeError, ValueError) as exc:
         raise HomeAssistantError from exc
 
