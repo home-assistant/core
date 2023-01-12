@@ -62,6 +62,18 @@ def async_register_scan_request_callback(
 
 
 @hass_callback
+def async_register_discovery_started_callback(
+    hass: HomeAssistant, callback: CALLBACK_TYPE
+) -> CALLBACK_TYPE:
+    """Register to receive a callback when USB discovery has started.
+
+    If USB discovery is already started, the callback is called immediately.
+    """
+    discovery: USBDiscovery = hass.data[DOMAIN]
+    return discovery.async_register_discovery_started_callback(callback)
+
+
+@hass_callback
 def async_is_plugged_in(hass: HomeAssistant, matcher: USBCallbackMatcher) -> bool:
     """Return True is a USB device is present."""
 
@@ -186,6 +198,8 @@ class USBDiscovery:
         self.observer_active = False
         self._request_debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None
         self._request_callbacks: list[CALLBACK_TYPE] = []
+        self.discovery_started = False
+        self._discovery_started_callbacks: list[CALLBACK_TYPE] = []
 
     async def async_setup(self) -> None:
         """Set up USB Discovery."""
@@ -195,6 +209,9 @@ class USBDiscovery:
     async def async_start(self, event: Event) -> None:
         """Start USB Discovery and run a manual scan."""
         await self._async_scan_serial()
+        for callback in self._discovery_started_callbacks:
+            callback()
+        self.discovery_started = True
 
     async def _async_start_monitor(self) -> None:
         """Start monitoring hardware with pyudev."""
@@ -249,12 +266,32 @@ class USBDiscovery:
         self,
         _callback: CALLBACK_TYPE,
     ) -> CALLBACK_TYPE:
-        """Register a callback."""
+        """Register a scan request callback."""
         self._request_callbacks.append(_callback)
 
         @hass_callback
         def _async_remove_callback() -> None:
             self._request_callbacks.remove(_callback)
+
+        return _async_remove_callback
+
+    @hass_callback
+    def async_register_discovery_started_callback(
+        self,
+        callback: CALLBACK_TYPE,
+    ) -> CALLBACK_TYPE:
+        """Register a discovery started callback."""
+        if self.discovery_started:
+            callback()
+            return lambda: None
+
+        self._discovery_started_callbacks.append(callback)
+
+        @hass_callback
+        def _async_remove_callback() -> None:
+            if callback not in self._discovery_started_callbacks:
+                return
+            self._discovery_started_callbacks.remove(callback)
 
         return _async_remove_callback
 
