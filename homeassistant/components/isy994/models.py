@@ -90,9 +90,7 @@ class IsyData:
             for node in self.variables[platform]:
                 current_unique_ids.add((platform, self.uid_base(node)))
                 if platform == Platform.NUMBER:
-                    current_unique_ids.add(
-                        (Platform.NUMBER, f"{self.uid_base(node)}_init")
-                    )
+                    current_unique_ids.add((platform, f"{self.uid_base(node)}_init"))
 
         for platform in ROOT_NODE_PLATFORMS:
             for node in self.root_nodes[platform]:
