@@ -43,6 +43,7 @@ from homeassistant.util.unit_conversion import (
     PressureConverter,
     SpeedConverter,
     TemperatureConverter,
+    UnitlessRatioConverter,
     VolumeConverter,
 )
 
@@ -134,6 +135,7 @@ STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
     **{unit: PressureConverter for unit in PressureConverter.VALID_UNITS},
     **{unit: SpeedConverter for unit in SpeedConverter.VALID_UNITS},
     **{unit: TemperatureConverter for unit in TemperatureConverter.VALID_UNITS},
+    **{unit: UnitlessRatioConverter for unit in UnitlessRatioConverter.VALID_UNITS},
     **{unit: VolumeConverter for unit in VolumeConverter.VALID_UNITS},
 }
 
@@ -154,9 +156,6 @@ def get_display_unit(
     statistic_unit: str | None,
 ) -> str | None:
     """Return the unit which the statistic will be displayed in."""
-
-    if statistic_unit is None:
-        return None
 
     if (converter := STATISTIC_UNIT_TO_UNIT_CONVERTER.get(statistic_unit)) is None:
         return statistic_unit
@@ -182,9 +181,6 @@ def _get_statistic_to_display_unit_converter(
     def no_conversion(val: float | None) -> float | None:
         """Return val."""
         return val
-
-    if statistic_unit is None:
-        return no_conversion
 
     if (converter := STATISTIC_UNIT_TO_UNIT_CONVERTER.get(statistic_unit)) is None:
         return no_conversion
@@ -225,9 +221,6 @@ def _get_display_to_statistic_unit_converter(
     def no_conversion(val: float) -> float:
         """Return val."""
         return val
-
-    if statistic_unit is None:
-        return no_conversion
 
     if (converter := STATISTIC_UNIT_TO_UNIT_CONVERTER.get(statistic_unit)) is None:
         return no_conversion
@@ -1555,17 +1548,10 @@ def statistic_during_period(
             else:
                 result["change"] = None
 
-    def no_conversion(val: float | None) -> float | None:
-        """Return val."""
-        return val
-
     state_unit = unit = metadata[statistic_id][1]["unit_of_measurement"]
     if state := hass.states.get(statistic_id):
         state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-    if unit is not None:
-        convert = _get_statistic_to_display_unit_converter(unit, state_unit, units)
-    else:
-        convert = no_conversion
+    convert = _get_statistic_to_display_unit_converter(unit, state_unit, units)
 
     return {key: convert(value) for key, value in result.items()}
 
@@ -1916,7 +1902,7 @@ def _sorted_statistics_to_dict(
         statistic_id = metadata[meta_id]["statistic_id"]
         if state := hass.states.get(statistic_id):
             state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        if unit is not None and convert_units:
+        if convert_units:
             convert = _get_statistic_to_display_unit_converter(unit, state_unit, units)
         else:
             convert = no_conversion
