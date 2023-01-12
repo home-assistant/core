@@ -77,6 +77,7 @@ from .const import (  # noqa: F401
     SensorDeviceClass,
     SensorStateClass,
 )
+from .websocket_api import async_setup as async_setup_ws_api
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -109,6 +110,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
+    async_setup_ws_api(hass)
     await component.async_setup(config)
     return True
 
