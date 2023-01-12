@@ -66,6 +66,7 @@ class ScreenLogicBinarySensor(ScreenlogicEntity, BinarySensorEntity):
     """Representation of the basic ScreenLogic binary sensor entity."""
 
     _attr_has_entity_name = True
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
     def name(self):
@@ -77,11 +78,6 @@ class ScreenLogicBinarySensor(ScreenlogicEntity, BinarySensorEntity):
         """Return the device class."""
         device_type = self.sensor.get("device_type")
         return SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS.get(device_type)
-
-    @property
-    def entity_category(self) -> EntityCategory:
-        """Entity Category of the sensor."""
-        return EntityCategory.DIAGNOSTIC
 
     @property
     def is_on(self) -> bool:
