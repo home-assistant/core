@@ -46,7 +46,7 @@ class NoDatasetError(HomeAssistantError):
     """Raised on attempts to update a dataset which does not exist."""
 
 
-async def _async_get_thread_rest_service_url(hass) -> str:
+def _async_get_thread_rest_service_url(hass) -> str:
     """Return Thread REST API URL."""
     otbr_data: OTBRData | None = hass.data.get(DOMAIN)
     if not otbr_data:
@@ -67,7 +67,7 @@ async def async_get_thread_state(hass: HomeAssistant) -> ThreadState:
     """Get current Thread state."""
 
     response = await async_get_clientsession(hass).get(
-        f"{await _async_get_thread_rest_service_url(hass)}/node/state",
+        f"{_async_get_thread_rest_service_url(hass)}/node/state",
         timeout=aiohttp.ClientTimeout(total=10),
     )
 
@@ -87,7 +87,7 @@ async def async_set_thread_state(hass: HomeAssistant, state: ThreadState) -> Non
     """Set current Thread state."""
 
     response = await async_get_clientsession(hass).post(
-        f"{await _async_get_thread_rest_service_url(hass)}/node/state",
+        f"{_async_get_thread_rest_service_url(hass)}/node/state",
         data=str(state.value),
         timeout=aiohttp.ClientTimeout(total=10),
     )
@@ -105,7 +105,7 @@ async def async_get_active_dataset(hass: HomeAssistant) -> OperationalDataSet | 
     """
 
     response = await async_get_clientsession(hass).get(
-        f"{await _async_get_thread_rest_service_url(hass)}/node/dataset/active",
+        f"{_async_get_thread_rest_service_url(hass)}/node/dataset/active",
         timeout=aiohttp.ClientTimeout(total=10),
     )
 
@@ -130,7 +130,7 @@ async def async_get_active_dataset_tlvs(hass: HomeAssistant) -> bytes | None:
     """
 
     response = await async_get_clientsession(hass).get(
-        f"{await _async_get_thread_rest_service_url(hass)}/node/dataset/active",
+        f"{_async_get_thread_rest_service_url(hass)}/node/dataset/active",
         headers={"Accept": "text/plain"},
         timeout=aiohttp.ClientTimeout(total=10),
     )
@@ -160,7 +160,7 @@ async def async_create_active_dataset(
     """
 
     response = await async_get_clientsession(hass).post(
-        f"{await _async_get_thread_rest_service_url(hass)}/node/dataset/active",
+        f"{_async_get_thread_rest_service_url(hass)}/node/dataset/active",
         json=dataset.as_json(),
         timeout=aiohttp.ClientTimeout(total=10),
     )
@@ -183,7 +183,7 @@ async def async_set_active_dataset(
     """
 
     response = await async_get_clientsession(hass).put(
-        f"{await _async_get_thread_rest_service_url(hass)}/node/dataset/active",
+        f"{_async_get_thread_rest_service_url(hass)}/node/dataset/active",
         json=dataset.as_json(),
         timeout=aiohttp.ClientTimeout(total=10),
     )
@@ -206,7 +206,7 @@ async def async_set_active_dataset_tlvs(hass: HomeAssistant, dataset: bytes) -> 
     """
 
     response = await async_get_clientsession(hass).put(
-        f"{await _async_get_thread_rest_service_url(hass)}/node/dataset/active",
+        f"{_async_get_thread_rest_service_url(hass)}/node/dataset/active",
         data=dataset.hex(),
         headers={"Content-Type": "text/plain"},
         timeout=aiohttp.ClientTimeout(total=10),
