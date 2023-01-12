@@ -910,11 +910,6 @@ numato-gpio==0.10.0
 # homeassistant.components.trend
 numpy==1.23.2
 
-# homeassistant.components.google
-# homeassistant.components.google_assistant_sdk
-# homeassistant.components.google_sheets
-oauth2client==4.1.3
-
 # homeassistant.components.profiler
 objgraph==3.5.0
 

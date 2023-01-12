@@ -1,7 +1,5 @@
 """application_credentials platform for nest."""
 
-import oauth2client
-
 from homeassistant.components.application_credentials import (
     AuthorizationServer,
     ClientCredential,
@@ -12,7 +10,8 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from .api import DeviceAuth
 
 AUTHORIZATION_SERVER = AuthorizationServer(
-    oauth2client.GOOGLE_AUTH_URI, oauth2client.GOOGLE_TOKEN_URI
+    "https://accounts.google.com/o/oauth2/v2/auth",
+    "https://oauth2.googleapis.com/token",
 )
 
 
