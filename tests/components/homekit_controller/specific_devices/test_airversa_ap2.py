@@ -1,7 +1,7 @@
 """Tests for Airversa AP2 Air Purifier."""
 
 from homeassistant.components.fan import FanEntityFeature
-from homeassistant.components.sensor.const import SensorStateClass
+from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, PERCENTAGE
 from homeassistant.helpers.entity import EntityCategory
 
