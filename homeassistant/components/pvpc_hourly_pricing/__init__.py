@@ -13,7 +13,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import ATTR_POWER, ATTR_POWER_P3, ATTR_TARIFF, DOMAIN
+from .const import ATTR_POWER, ATTR_POWER_P3, ATTR_TARIFF, CONF_USE_API_TOKEN, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -35,7 +35,7 @@ async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     if any(
         entry.data.get(attrib) != entry.options.get(attrib)
-        for attrib in (ATTR_POWER, ATTR_POWER_P3, CONF_API_TOKEN)
+        for attrib in (ATTR_POWER, ATTR_POWER_P3, CONF_USE_API_TOKEN, CONF_API_TOKEN)
     ):
         # update entry replacing data with new options
         hass.config_entries.async_update_entry(
@@ -57,13 +57,16 @@ class ElecPricesDataUpdateCoordinator(DataUpdateCoordinator[EsiosApiData]):
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize."""
+        api_token = None
+        if entry.data.get(CONF_USE_API_TOKEN, False):
+            api_token = entry.data.get(CONF_API_TOKEN)
         self.api = PVPCData(
             session=async_get_clientsession(hass),
             tariff=entry.data[ATTR_TARIFF],
             local_timezone=hass.config.time_zone,
             power=entry.data[ATTR_POWER],
             power_valley=entry.data[ATTR_POWER_P3],
-            api_token=entry.data.get(CONF_API_TOKEN),
+            api_token=api_token,
         )
         super().__init__(
             hass, _LOGGER, name=DOMAIN, update_interval=timedelta(minutes=30)
