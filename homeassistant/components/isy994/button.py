@@ -2,14 +2,15 @@
 from __future__ import annotations
 
 from pyisy import ISY
-from pyisy.constants import PROTO_INSTEON
+from pyisy.constants import NC_NODE_ENABLED, PROTO_INSTEON
+from pyisy.helpers import EventListener, NodeProperty
 from pyisy.networking import NetworkCommand
 from pyisy.nodes import Node
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -98,6 +99,30 @@ class ISYNodeButtonEntity(ButtonEntity):
         self._attr_entity_category = entity_category
         self._attr_unique_id = unique_id
         self._attr_device_info = device_info
+        self._node_enabled = getattr(node, "enabled", True)
+        self._availability_handler: EventListener | None = None
+
+    @property
+    def available(self) -> bool:
+        """Return entity availability."""
+        return self._node_enabled
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to the node change events."""
+        # No status for NetworkResources or ISY Query buttons
+        if not hasattr(self._node, "status_events") or not hasattr(self._node, "isy"):
+            return
+        self._availability_handler = self._node.isy.nodes.status_events.subscribe(
+            self.async_on_update,
+            event_filter={"address": self._node.address, "action": NC_NODE_ENABLED},
+            key=self.unique_id,
+        )
+
+    @callback
+    def async_on_update(self, event: NodeProperty) -> None:
+        """Handle the update event from the ISY Node."""
+        # Watch for node availability/enabled changes only
+        self.async_write_ha_state()
 
 
 class ISYNodeQueryButtonEntity(ISYNodeButtonEntity):
