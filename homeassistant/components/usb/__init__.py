@@ -209,9 +209,9 @@ class USBDiscovery:
     async def async_start(self, event: Event) -> None:
         """Start USB Discovery and run a manual scan."""
         await self._async_scan_serial()
-        for callback in self._discovery_started_callbacks:
-            callback()
         self.discovery_started = True
+        while self._discovery_started_callbacks:
+            self._discovery_started_callbacks.pop()()
 
     async def _async_start_monitor(self) -> None:
         """Start monitoring hardware with pyudev."""
