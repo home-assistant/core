@@ -57,7 +57,7 @@ class RidwellCalendar(RidwellEntity, CalendarEntity):
         """Initialize the Ridwell entity."""
         super().__init__(coordinator, account)
 
-        self._attr_unique_id = f"{self._account.account_id}_calendar"
+        self._attr_unique_id = self._account.account_id
         self._event: CalendarEvent | None = None
 
     @property
