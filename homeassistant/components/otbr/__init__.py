@@ -35,14 +35,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-class ThreadNetworkActiveError(HomeAssistantError):
-    """Raised on attempts to modify the active dataset when thread network is active."""
-
-
-class NoDatasetError(HomeAssistantError):
-    """Raised on attempts to update a dataset which does not exist."""
-
-
 def _async_get_thread_rest_service_url(hass) -> str:
     """Return Thread REST API URL."""
     otbr_data: OTBRData | None = hass.data.get(DOMAIN)
