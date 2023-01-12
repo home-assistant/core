@@ -32,6 +32,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
@@ -146,7 +147,7 @@ class MailNotificationService(BaseNotificationService):
         except vol.Invalid as err:
             raise ValueError("Target is not a valid list of email addresses") from err
 
-        data = kwargs.get(ATTR_DATA, {})
+        data = kwargs.get(ATTR_DATA) or {}
         if ATTR_HTML in data:
             msg: MIMEMultipart | MIMEText = _build_html_msg(
                 message, data[ATTR_HTML], images=data.get(ATTR_IMAGES, [])
@@ -182,23 +183,16 @@ class MailNotificationService(BaseNotificationService):
         msg["Date"] = email.utils.format_datetime(dt_util.now())
         msg["Message-Id"] = email.utils.make_msgid()
 
-        return self._send_email(msg, recipients)
-
-    def _send_email(self, msg: MIMEMultipart | MIMEText, recipients: list[str]) -> None:
-        """Send the message."""
         mail = get_smtp_client(self.entry)
-        for _ in range(2):
+        for attempt in range(2):
             try:
-                mail.sendmail(self.entry[CONF_SENDER], recipients, msg.as_string())
+                mail.sendmail(self.entry[CONF_USERNAME], recipients, msg.as_string())
                 break
-            except smtplib.SMTPServerDisconnected:
-                _LOGGER.warning(
-                    "SMTPServerDisconnected sending mail: retrying connection"
-                )
-                mail.quit()
-                mail = get_smtp_client(self.entry)
-            except smtplib.SMTPException:
-                _LOGGER.warning("SMTPException sending mail: retrying connection")
+            except (smtplib.SMTPException) as err:
+                if attempt == 1:
+                    mail.quit()
+                    raise HomeAssistantError(f"Failed to send message: {err}") from err
+                _LOGGER.error("Error sending mail: %s. Retrying connection", err)
                 mail.quit()
                 mail = get_smtp_client(self.entry)
         mail.quit()

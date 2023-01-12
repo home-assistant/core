@@ -36,7 +36,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up smtp from a config entry."""
-
     try:
         smtp_client = await hass.async_add_executor_job(
             get_smtp_client, dict(entry.data)

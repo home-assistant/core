@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.smtp.const import DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_SENDER, CONF_USERNAME
+from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -46,12 +46,11 @@ async def test_flow_successful(hass: HomeAssistant) -> None:
     assert result["data"] == MOCK_USER_INPUT
 
 
-async def test_flow_sender_already_configured(hass: HomeAssistant) -> None:
-    """Test user initialized flow with duplicate sender email."""
+async def test_flow_username_already_configured(hass: HomeAssistant) -> None:
+    """Test user initialized flow with duplicate username."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=MOCK_USER_INPUT,
-        unique_id="sender@email.com",
     )
 
     entry.add_to_hass(hass)
@@ -60,6 +59,9 @@ async def test_flow_sender_already_configured(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
     )
+    new_entry = MOCK_USER_INPUT.copy()
+    new_entry[CONF_NAME] = "New name"
+
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input=MOCK_USER_INPUT,
@@ -73,13 +75,12 @@ async def test_flow_entry_name_already_configured(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=MOCK_USER_INPUT,
-        unique_id="sender@email.com",
     )
 
     entry.add_to_hass(hass)
 
     new_entry = MOCK_USER_INPUT.copy()
-    new_entry[CONF_SENDER] = "sender2@email.com"
+    new_entry[CONF_USERNAME] = "example2@mail.com"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -161,7 +162,7 @@ async def test_reauth_success(hass: HomeAssistant) -> None:
 
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
-    assert result["description_placeholders"] == {CONF_USERNAME: "username"}
+    assert result["description_placeholders"] == {CONF_USERNAME: "example@mail.com"}
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],

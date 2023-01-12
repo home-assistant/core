@@ -84,12 +84,8 @@ class SMTPFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by the user."""
         errors = {}
         if user_input is not None:
-            self._async_abort_entries_match(
-                {
-                    CONF_NAME: user_input[CONF_NAME],
-                    CONF_USERNAME: user_input[CONF_USERNAME],
-                }
-            )
+            self._async_abort_entries_match({CONF_NAME: user_input[CONF_NAME]})
+            self._async_abort_entries_match({CONF_USERNAME: user_input[CONF_USERNAME]})
             if not (
                 errors := await self.hass.async_add_executor_job(
                     validate_input, user_input
