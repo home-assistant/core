@@ -1236,6 +1236,8 @@ numpy==1.23.2
 oasatelematics==0.3
 
 # homeassistant.components.google
+# homeassistant.components.google_assistant_sdk
+# homeassistant.components.google_sheets
 oauth2client==4.1.3
 
 # homeassistant.components.profiler
