@@ -40,7 +40,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.36.3
+PySwitchbot==0.36.4
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -300,7 +300,7 @@ aiovlc==0.1.0
 aiowatttime==0.1.1
 
 # homeassistant.components.webostv
-aiowebostv==0.2.1
+aiowebostv==0.3.0
 
 # homeassistant.components.yandex_transport
 aioymaps==1.2.2
@@ -1461,7 +1461,7 @@ pyRFXtrx==0.30.0
 pySwitchmate==0.5.1
 
 # homeassistant.components.tibber
-pyTibber==0.26.7
+pyTibber==0.26.8
 
 # homeassistant.components.dlink
 pyW215==0.7.0
@@ -1741,7 +1741,7 @@ pylibrespot-java==0.1.1
 pylitejet==0.3.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2023.1.0
+pylitterbot==2023.1.1
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.17.1
@@ -2306,7 +2306,7 @@ sensorpush-ble==1.5.2
 sentry-sdk==1.12.1
 
 # homeassistant.components.sfr_box
-sfrbox-api==0.0.2
+sfrbox-api==0.0.4
 
 # homeassistant.components.sharkiq
 sharkiq==0.0.1
