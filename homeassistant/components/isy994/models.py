@@ -11,7 +11,6 @@ from pyisy.nodes import Group, Node
 from pyisy.programs import Program
 from pyisy.variables import Variable
 
-from homeassistant import config_entries
 from homeassistant.const import Platform
 from homeassistant.helpers.entity import DeviceInfo
 
@@ -38,7 +37,7 @@ class IsyData:
     devices: dict[str, DeviceInfo]
     aux_properties: dict[Platform, list[tuple[Node, str]]]
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self) -> None:
         """Initialize an empty ISY data class."""
         self.nodes = {p: [] for p in NODE_PLATFORMS}
         self.root_nodes = {p: [] for p in ROOT_NODE_PLATFORMS}
