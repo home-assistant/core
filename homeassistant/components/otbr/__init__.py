@@ -21,14 +21,13 @@ from .models import OperationalDataSet, ThreadState
 class OTBRData:
     """Container for OTBR data."""
 
-    host: str
-    port: str
+    url: str
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up an Open Thread Border Router config entry."""
 
-    hass.data[DOMAIN] = OTBRData(entry.data["host"], entry.data["port"])
+    hass.data[DOMAIN] = OTBRData(entry.data["url"])
 
     return True
 
@@ -53,7 +52,7 @@ async def _async_get_thread_rest_service_url(hass) -> str:
     if not otbr_data:
         raise HomeAssistantError
 
-    return f"http://{otbr_data.host}:{otbr_data.port}"
+    return otbr_data.url
 
 
 def _raise_for_status(response: aiohttp.ClientResponse) -> None:

@@ -6,7 +6,7 @@ from homeassistant.components import otbr
 
 from tests.common import MockConfigEntry
 
-CONFIG_ENTRY_DATA = {"host": "core-silabs-multiprotocol", "port": "8081"}
+CONFIG_ENTRY_DATA = {"url": "http://core-silabs-multiprotocol:8081"}
 
 
 @pytest.fixture(name="thread_config_entry")

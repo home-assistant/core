@@ -18,10 +18,8 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
+        config = discovery_info.config
         return self.async_create_entry(
             title="Thread",
-            data={
-                "host": discovery_info.config["host"],
-                "port": discovery_info.config["port"],
-            },
+            data={"url": f"http://{config['host']}:{config['port']}"},
         )

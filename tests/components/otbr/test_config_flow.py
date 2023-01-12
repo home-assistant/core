@@ -25,8 +25,7 @@ async def test_hassio_discovery_flow(hass: HomeAssistant) -> None:
         )
 
     expected_data = {
-        "host": HASSIO_DATA.config["host"],
-        "port": HASSIO_DATA.config["port"],
+        "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
     }
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
