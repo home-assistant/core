@@ -23,7 +23,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTR_COORDINATORS, DOMAIN
+from .const import DOMAIN
 from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
 
@@ -106,7 +106,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up YoLink switch from a config entry."""
-    device_coordinators = hass.data[DOMAIN][config_entry.entry_id][ATTR_COORDINATORS]
+    device_coordinators = hass.data[DOMAIN][config_entry.entry_id].device_coordinartors
     switch_device_coordinators = [
         device_coordinator
         for device_coordinator in device_coordinators.values()

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
 
@@ -18,7 +19,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
 from . import api
-from .const import ATTR_COORDINATORS, ATTR_HOME_INSTANCE, DOMAIN
+from .const import DOMAIN
 from .coordinator import YoLinkCoordinator
 
 SCAN_INTERVAL = timedelta(minutes=5)
@@ -49,12 +50,20 @@ class YoLinkHomeMessageListener(MessageListener):
         entry_data = self._hass.data[DOMAIN].get(self._entry.entry_id)
         if not entry_data:
             return
-        device_coordinators = entry_data.get(ATTR_COORDINATORS)
+        device_coordinators = entry_data.device_coordinartors
         if not device_coordinators:
             return
         device_coordiantor = device_coordinators.get(device.device_id)
         if device_coordiantor is not None:
             device_coordiantor.async_set_updated_data(msg_data)
+
+
+@dataclass
+class YoLinkHomeStore:
+    """YoLink home store."""
+
+    home_instance: YoLinkHome
+    device_coordinartors: dict[str, YoLinkCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -82,7 +91,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except (YoLinkClientError, asyncio.TimeoutError) as err:
         raise ConfigEntryNotReady from err
 
-    hass.data[DOMAIN][entry.entry_id] = {ATTR_HOME_INSTANCE: yolink_home}
     device_coordinators = {}
     for device in yolink_home.get_devices():
         device_coordinator = YoLinkCoordinator(hass, device)
@@ -92,7 +100,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             # Not failure by fetching device state
             device_coordinator.data = {}
         device_coordinators[device.device_id] = device_coordinator
-    hass.data[DOMAIN][entry.entry_id][ATTR_COORDINATORS] = device_coordinators
+    hass.data[DOMAIN][entry.entry_id] = YoLinkHomeStore(
+        yolink_home, device_coordinators
+    )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     async def async_yolink_unload(event) -> None:
@@ -109,6 +119,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await hass.data[DOMAIN][entry.entry_id][ATTR_HOME_INSTANCE].async_unload()
+        await hass.data[DOMAIN][entry.entry_id].home_instance.async_unload()
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok

@@ -23,7 +23,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTR_COORDINATORS, DOMAIN
+from .const import DOMAIN
 from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
 
@@ -100,7 +100,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up YoLink Sensor from a config entry."""
-    device_coordinators = hass.data[DOMAIN][config_entry.entry_id][ATTR_COORDINATORS]
+    device_coordinators = hass.data[DOMAIN][config_entry.entry_id].device_coordinartors
     binary_sensor_device_coordinators = [
         device_coordinator
         for device_coordinator in device_coordinators.values()
@@ -145,17 +145,4 @@ class YoLinkBinarySensorEntity(YoLinkEntity, BinarySensorEntity):
         self._attr_is_on = self.entity_description.value(
             state.get(self.entity_description.state_key)
         )
-        # check door sensor paired device
-        if (
-            self.coordinator.device.parent_id is not None
-            and self.coordinator.device.parent_id != "null"
-            and self.coordinator.device.device_type == ATTR_DEVICE_DOOR_SENSOR
-        ):
-            paired_device_coordinator = self.hass.data[DOMAIN][
-                self.config_entry.entry_id
-            ][ATTR_COORDINATORS].get(self.coordinator.device.parent_id)
-            if paired_device_coordinator is not None:
-                paired_device_coordinator.async_set_updated_data(
-                    {"state": state.get(self.entity_description.state_key)}
-                )
         self.async_write_ha_state()

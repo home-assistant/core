@@ -2,9 +2,6 @@
 
 DOMAIN = "yolink"
 MANUFACTURER = "YoLink"
-HOME_ID = "homeId"
-ATTR_HOME_INSTANCE = "home_instance"
-ATTR_COORDINATORS = "coordinators"
 ATTR_DEVICE = "devices"
 ATTR_DEVICE_TYPE = "type"
 ATTR_DEVICE_NAME = "name"

@@ -15,7 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTR_COORDINATORS, DOMAIN
+from .const import DOMAIN
 from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
 
@@ -26,7 +26,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up YoLink garage door from a config entry."""
-    device_coordinators = hass.data[DOMAIN][config_entry.entry_id][ATTR_COORDINATORS]
+    device_coordinators = hass.data[DOMAIN][config_entry.entry_id].device_coordinartors
     entities = [
         YoLinkCoverEntity(config_entry, device_coordinator)
         for device_coordinator in device_coordinators.values()
@@ -55,7 +55,9 @@ class YoLinkCoverEntity(YoLinkEntity, CoverEntity):
     @callback
     def update_entity_state(self, state: dict[str, Any]) -> None:
         """Update HA Entity State."""
-        self._attr_is_closed = state.get("state") == "closed"
+        if (state_val := state.get("state")) is None:
+            return
+        self._attr_is_closed = state_val == "closed"
         self.async_write_ha_state()
 
     async def toggle_garage_state(self) -> None:
