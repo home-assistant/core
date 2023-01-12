@@ -195,7 +195,6 @@ RPC_SENSORS: Final = {
         sub_key="alarm",
         name="Smoke",
         device_class=BinarySensorDeviceClass.SMOKE,
-        entity_registry_enabled_default=True,
     ),
 }
 
