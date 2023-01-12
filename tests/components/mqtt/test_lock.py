@@ -8,8 +8,11 @@ from homeassistant.components.lock import (
     SERVICE_LOCK,
     SERVICE_OPEN,
     SERVICE_UNLOCK,
+    STATE_JAMMED,
     STATE_LOCKED,
+    STATE_LOCKING,
     STATE_UNLOCKED,
+    STATE_UNLOCKING,
     LockEntityFeature,
 )
 from homeassistant.components.mqtt.lock import MQTT_LOCK_ATTRIBUTES_BLOCKED
@@ -79,7 +82,10 @@ async def test_controlling_state_via_topic(hass, mqtt_mock_entry_with_yaml_confi
                     "payload_lock": "LOCK",
                     "payload_unlock": "UNLOCK",
                     "state_locked": "LOCKED",
+                    "state_jammed": "JAMMED",
+                    "state_locking": "LOCKING",
                     "state_unlocked": "UNLOCKED",
+                    "state_unlocking": "UNLOCKING",
                 }
             }
         },
@@ -92,15 +98,30 @@ async def test_controlling_state_via_topic(hass, mqtt_mock_entry_with_yaml_confi
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
     assert not state.attributes.get(ATTR_SUPPORTED_FEATURES)
 
+    async_fire_mqtt_message(hass, "state-topic", "JAMMED")
+
+    state = hass.states.get("lock.test")
+    assert state.state is STATE_JAMMED
+
     async_fire_mqtt_message(hass, "state-topic", "LOCKED")
 
     state = hass.states.get("lock.test")
     assert state.state is STATE_LOCKED
 
+    async_fire_mqtt_message(hass, "state-topic", "LOCKING")
+
+    state = hass.states.get("lock.test")
+    assert state.state is STATE_LOCKING
+
     async_fire_mqtt_message(hass, "state-topic", "UNLOCKED")
 
     state = hass.states.get("lock.test")
     assert state.state is STATE_UNLOCKED
+
+    async_fire_mqtt_message(hass, "state-topic", "UNLOCKING")
+
+    state = hass.states.get("lock.test")
+    assert state.state is STATE_UNLOCKING
 
 
 async def test_controlling_non_default_state_via_topic(
@@ -118,8 +139,11 @@ async def test_controlling_non_default_state_via_topic(
                     "command_topic": "command-topic",
                     "payload_lock": "LOCK",
                     "payload_unlock": "UNLOCK",
+                    "state_jammed": "blocked",
                     "state_locked": "closed",
+                    "state_locking": "closing",
                     "state_unlocked": "open",
+                    "state_unlocking": "opening",
                 }
             }
         },
@@ -131,15 +155,30 @@ async def test_controlling_non_default_state_via_topic(
     assert state.state is STATE_UNLOCKED
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
+    async_fire_mqtt_message(hass, "state-topic", "blocked")
+
+    state = hass.states.get("lock.test")
+    assert state.state is STATE_JAMMED
+
     async_fire_mqtt_message(hass, "state-topic", "closed")
 
     state = hass.states.get("lock.test")
     assert state.state is STATE_LOCKED
 
+    async_fire_mqtt_message(hass, "state-topic", "closing")
+
+    state = hass.states.get("lock.test")
+    assert state.state is STATE_LOCKING
+
     async_fire_mqtt_message(hass, "state-topic", "open")
 
     state = hass.states.get("lock.test")
     assert state.state is STATE_UNLOCKED
+
+    async_fire_mqtt_message(hass, "state-topic", "opening")
+
+    state = hass.states.get("lock.test")
+    assert state.state is STATE_UNLOCKING
 
 
 async def test_controlling_state_via_topic_and_json_message(
@@ -157,8 +196,11 @@ async def test_controlling_state_via_topic_and_json_message(
                     "command_topic": "command-topic",
                     "payload_lock": "LOCK",
                     "payload_unlock": "UNLOCK",
+                    "state_jammed": "JAMMED",
                     "state_locked": "LOCKED",
+                    "state_locking": "LOCKING",
                     "state_unlocked": "UNLOCKED",
+                    "state_unlocking": "UNLOCKING",
                     "value_template": "{{ value_json.val }}",
                 }
             }
@@ -170,15 +212,30 @@ async def test_controlling_state_via_topic_and_json_message(
     state = hass.states.get("lock.test")
     assert state.state is STATE_UNLOCKED
 
+    async_fire_mqtt_message(hass, "state-topic", '{"val":"JAMMED"}')
+
+    state = hass.states.get("lock.test")
+    assert state.state is STATE_JAMMED
+
     async_fire_mqtt_message(hass, "state-topic", '{"val":"LOCKED"}')
 
     state = hass.states.get("lock.test")
     assert state.state is STATE_LOCKED
 
+    async_fire_mqtt_message(hass, "state-topic", '{"val":"LOCKING"}')
+
+    state = hass.states.get("lock.test")
+    assert state.state is STATE_LOCKING
+
     async_fire_mqtt_message(hass, "state-topic", '{"val":"UNLOCKED"}')
 
     state = hass.states.get("lock.test")
     assert state.state is STATE_UNLOCKED
+
+    async_fire_mqtt_message(hass, "state-topic", '{"val":"UNLOCKING"}')
+
+    state = hass.states.get("lock.test")
+    assert state.state is STATE_UNLOCKING
 
 
 async def test_controlling_non_default_state_via_topic_and_json_message(
@@ -196,8 +253,11 @@ async def test_controlling_non_default_state_via_topic_and_json_message(
                     "command_topic": "command-topic",
                     "payload_lock": "LOCK",
                     "payload_unlock": "UNLOCK",
+                    "state_jammed": "blocked",
                     "state_locked": "closed",
+                    "state_locking": "closing",
                     "state_unlocked": "open",
+                    "state_unlocking": "opening",
                     "value_template": "{{ value_json.val }}",
                 }
             }
@@ -209,15 +269,30 @@ async def test_controlling_non_default_state_via_topic_and_json_message(
     state = hass.states.get("lock.test")
     assert state.state is STATE_UNLOCKED
 
+    async_fire_mqtt_message(hass, "state-topic", '{"val":"blocked"}')
+
+    state = hass.states.get("lock.test")
+    assert state.state is STATE_JAMMED
+
     async_fire_mqtt_message(hass, "state-topic", '{"val":"closed"}')
 
     state = hass.states.get("lock.test")
     assert state.state is STATE_LOCKED
 
+    async_fire_mqtt_message(hass, "state-topic", '{"val":"closing"}')
+
+    state = hass.states.get("lock.test")
+    assert state.state is STATE_LOCKING
+
     async_fire_mqtt_message(hass, "state-topic", '{"val":"open"}')
 
     state = hass.states.get("lock.test")
     assert state.state is STATE_UNLOCKED
+
+    async_fire_mqtt_message(hass, "state-topic", '{"val":"opening"}')
+
+    state = hass.states.get("lock.test")
+    assert state.state is STATE_UNLOCKING
 
 
 async def test_sending_mqtt_commands_and_optimistic(
