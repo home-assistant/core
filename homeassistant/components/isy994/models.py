@@ -66,11 +66,11 @@ class IsyData:
             return f"{self.uuid}_{CONF_NETWORK}_{node.address}"
         return f"{self.uuid}_{node.address}"
 
-    def get_unique_ids(self) -> set[tuple[Platform | str, str]]:
-        """Find all the unique ids for a config entry id."""
-        isy = self.root
-        current_unique_ids: set[tuple[Platform | str, str]] = {
-            (Platform.BUTTON, f"{isy.uuid}_query")
+    @property
+    def unique_ids(self) -> set[tuple[Platform, str]]:
+        """Return all the unique ids for a config entry id."""
+        current_unique_ids: set[tuple[Platform, str]] = {
+            (Platform.BUTTON, f"{self.uuid}_query")
         }
 
         # Structure and prefixes here must match what's added in __init__ and helpers

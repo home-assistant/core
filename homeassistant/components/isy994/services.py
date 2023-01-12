@@ -330,7 +330,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
                 for entity in entries_for_this_config
             }
 
-            extra_entities = set(entities.keys()).difference(isy_data.get_unique_ids())
+            extra_entities = set(entities.keys()).difference(isy_data.unique_ids)
 
             for entity in extra_entities:
                 if entity_registry.async_is_registered(entities[entity]):
