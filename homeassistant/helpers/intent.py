@@ -11,7 +11,11 @@ from typing import Any, TypeVar
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+)
 from homeassistant.core import Context, HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
@@ -260,11 +264,18 @@ class ServiceIntentHandler(IntentHandler):
                     # Skip diagnostic entities
                     continue
 
-                if domains and (entity_entry.domain not in domains):
+                state = hass.states.get(entity_entry.entity_id)
+                assert state is not None
+
+                if domains and (state.domain not in domains):
                     # Skip entity not in the domain
                     continue
 
-                if device_classes and (entity_entry.device_class not in device_classes):
+                device_class = state.attributes.get(
+                    ATTR_DEVICE_CLASS, entity_entry.device_class
+                )
+
+                if device_classes and (device_class not in device_classes):
                     # Skip entity with wrong device class
                     continue
 
@@ -272,19 +283,16 @@ class ServiceIntentHandler(IntentHandler):
                     hass.services.async_call(
                         self.domain,
                         self.service,
-                        {ATTR_ENTITY_ID: entity_entry.entity_id},
+                        {ATTR_ENTITY_ID: state.entity_id},
                         context=intent_obj.context,
                     )
                 )
-
-                state = hass.states.get(entity_entry.entity_id)
-                assert state is not None
 
                 success_results.append(
                     IntentResponseTarget(
                         type=IntentResponseTargetType.ENTITY,
                         name=state.name,
-                        id=entity_entry.entity_id,
+                        id=state.entity_id,
                     ),
                 )
 
