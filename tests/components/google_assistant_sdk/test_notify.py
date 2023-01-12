@@ -18,7 +18,7 @@ from .conftest import ComponentSetup, ExpectedCredentials
         ("en-US", "Dinner is served", "broadcast Dinner is served"),
         ("es-ES", "La cena está en la mesa", "Anuncia La cena está en la mesa"),
         ("ko-KR", "저녁 식사가 준비됐어요", "저녁 식사가 준비됐어요 라고 방송해 줘"),
-        ("ja-JP", "晩ご飯できたよ", "晩ご飯できたよとほうそうして"),
+        ("ja-JP", "晩ご飯できたよ", "晩ご飯できたよとブロードキャストして"),
     ],
     ids=["english", "spanish", "korean", "japanese"],
 )

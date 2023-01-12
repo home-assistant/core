@@ -509,7 +509,8 @@ class ShellyRpcCoordinator(DataUpdateCoordinator[None]):
         This will be executed on connect or when the config entry
         is updated.
         """
-        await self._async_connect_ble_scanner()
+        if not self.entry.data.get(CONF_SLEEP_PERIOD):
+            await self._async_connect_ble_scanner()
 
     async def _async_connect_ble_scanner(self) -> None:
         """Connect BLE scanner."""

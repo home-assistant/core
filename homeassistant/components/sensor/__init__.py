@@ -56,7 +56,7 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
-from homeassistant.helpers.typing import ConfigType, StateType
+from homeassistant.helpers.typing import UNDEFINED, ConfigType, StateType, UndefinedType
 from homeassistant.util import dt as dt_util
 
 from .const import (  # noqa: F401
@@ -77,6 +77,7 @@ from .const import (  # noqa: F401
     SensorDeviceClass,
     SensorStateClass,
 )
+from .websocket_api import async_setup as async_setup_ws_api
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -109,6 +110,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
+    async_setup_ws_api(hass)
     await component.async_setup(config)
     return True
 
@@ -155,7 +157,7 @@ class SensorEntity(Entity):
     )
     _invalid_unit_of_measurement_reported = False
     _last_reset_reported = False
-    _sensor_option_unit_of_measurement: str | None = None
+    _sensor_option_unit_of_measurement: str | None | UndefinedType = UNDEFINED
 
     @callback
     def add_to_platform_start(
@@ -371,7 +373,7 @@ class SensorEntity(Entity):
         """Return the unit of measurement of the entity, after unit conversion."""
         # Highest priority, for registered entities: unit set by user,with fallback to
         # unit suggested by integration or secondary fallback to unit conversion rules
-        if self._sensor_option_unit_of_measurement:
+        if self._sensor_option_unit_of_measurement is not UNDEFINED:
             return self._sensor_option_unit_of_measurement
 
         # Second priority, for non registered entities: unit suggested by integration
@@ -401,41 +403,6 @@ class SensorEntity(Entity):
         value = self.native_value
         device_class = self.device_class
 
-        # Received a datetime
-        if value is not None and device_class == SensorDeviceClass.TIMESTAMP:
-            try:
-                # We cast the value, to avoid using isinstance, but satisfy
-                # typechecking. The errors are guarded in this try.
-                value = cast(datetime, value)
-                if value.tzinfo is None:
-                    raise ValueError(
-                        f"Invalid datetime: {self.entity_id} provides state '{value}', "
-                        "which is missing timezone information"
-                    )
-
-                if value.tzinfo != timezone.utc:
-                    value = value.astimezone(timezone.utc)
-
-                return value.isoformat(timespec="seconds")
-            except (AttributeError, OverflowError, TypeError) as err:
-                raise ValueError(
-                    f"Invalid datetime: {self.entity_id} has timestamp device class "
-                    f"but provides state {value}:{type(value)} resulting in '{err}'"
-                ) from err
-
-        # Received a date value
-        if value is not None and device_class == SensorDeviceClass.DATE:
-            try:
-                # We cast the value, to avoid using isinstance, but satisfy
-                # typechecking. The errors are guarded in this try.
-                value = cast(date, value)
-                return value.isoformat()
-            except (AttributeError, TypeError) as err:
-                raise ValueError(
-                    f"Invalid date: {self.entity_id} has date device class "
-                    f"but provides state {value}:{type(value)} resulting in '{err}'"
-                ) from err
-
         # Sensors with device classes indicating a non-numeric value
         # should not have a state class or unit of measurement
         if device_class in {
@@ -457,10 +424,47 @@ class SensorEntity(Entity):
                     f"non-numeric device class: {device_class}"
                 )
 
+        # Checks below only apply if there is a value
+        if value is None:
+            return None
+
+        # Received a datetime
+        if device_class == SensorDeviceClass.TIMESTAMP:
+            try:
+                # We cast the value, to avoid using isinstance, but satisfy
+                # typechecking. The errors are guarded in this try.
+                value = cast(datetime, value)
+                if value.tzinfo is None:
+                    raise ValueError(
+                        f"Invalid datetime: {self.entity_id} provides state '{value}', "
+                        "which is missing timezone information"
+                    )
+
+                if value.tzinfo != timezone.utc:
+                    value = value.astimezone(timezone.utc)
+
+                return value.isoformat(timespec="seconds")
+            except (AttributeError, OverflowError, TypeError) as err:
+                raise ValueError(
+                    f"Invalid datetime: {self.entity_id} has timestamp device class "
+                    f"but provides state {value}:{type(value)} resulting in '{err}'"
+                ) from err
+
+        # Received a date value
+        if device_class == SensorDeviceClass.DATE:
+            try:
+                # We cast the value, to avoid using isinstance, but satisfy
+                # typechecking. The errors are guarded in this try.
+                value = cast(date, value)
+                return value.isoformat()
+            except (AttributeError, TypeError) as err:
+                raise ValueError(
+                    f"Invalid date: {self.entity_id} has date device class "
+                    f"but provides state {value}:{type(value)} resulting in '{err}'"
+                ) from err
+
         # Enum checks
-        if value is not None and (
-            device_class == SensorDeviceClass.ENUM or self.options is not None
-        ):
+        if device_class == SensorDeviceClass.ENUM or self.options is not None:
             if device_class != SensorDeviceClass.ENUM:
                 reason = "is missing the enum device class"
                 if device_class is not None:
@@ -476,12 +480,9 @@ class SensorEntity(Entity):
                 )
 
         if (
-            value is not None
-            and native_unit_of_measurement != unit_of_measurement
+            native_unit_of_measurement != unit_of_measurement
             and device_class in UNIT_CONVERTERS
         ):
-            assert unit_of_measurement
-            assert native_unit_of_measurement
             converter = UNIT_CONVERTERS[device_class]
 
             value_s = str(value)
@@ -514,7 +515,6 @@ class SensorEntity(Entity):
         # Validate unit of measurement used for sensors with a device class
         if (
             not self._invalid_unit_of_measurement_reported
-            and value is not None
             and device_class
             and (units := DEVICE_CLASS_UNITS.get(device_class)) is not None
             and native_unit_of_measurement not in units
@@ -550,28 +550,31 @@ class SensorEntity(Entity):
 
         return super().__repr__()
 
-    def _custom_unit_or_none(self, primary_key: str, secondary_key: str) -> str | None:
-        """Return a custom unit, or None if it's not compatible with the native unit."""
+    def _custom_unit_or_undef(
+        self, primary_key: str, secondary_key: str
+    ) -> str | None | UndefinedType:
+        """Return a custom unit, or UNDEFINED if not compatible with the native unit."""
         assert self.registry_entry
         if (
             (sensor_options := self.registry_entry.options.get(primary_key))
-            and (custom_unit := sensor_options.get(secondary_key))
+            and secondary_key in sensor_options
             and (device_class := self.device_class) in UNIT_CONVERTERS
             and self.native_unit_of_measurement
             in UNIT_CONVERTERS[device_class].VALID_UNITS
-            and custom_unit in UNIT_CONVERTERS[device_class].VALID_UNITS
+            and (custom_unit := sensor_options[secondary_key])
+            in UNIT_CONVERTERS[device_class].VALID_UNITS
         ):
             return cast(str, custom_unit)
-        return None
+        return UNDEFINED
 
     @callback
     def async_registry_entry_updated(self) -> None:
         """Run when the entity registry entry has been updated."""
-        self._sensor_option_unit_of_measurement = self._custom_unit_or_none(
+        self._sensor_option_unit_of_measurement = self._custom_unit_or_undef(
             DOMAIN, CONF_UNIT_OF_MEASUREMENT
         )
-        if not self._sensor_option_unit_of_measurement:
-            self._sensor_option_unit_of_measurement = self._custom_unit_or_none(
+        if self._sensor_option_unit_of_measurement is UNDEFINED:
+            self._sensor_option_unit_of_measurement = self._custom_unit_or_undef(
                 f"{DOMAIN}.private", "suggested_unit_of_measurement"
             )
 
