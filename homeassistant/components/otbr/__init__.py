@@ -3,10 +3,8 @@ from __future__ import annotations
 
 import dataclasses
 from http import HTTPStatus
-from json import JSONDecodeError
 
 import aiohttp
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -14,7 +12,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
-from .models import OperationalDataSet, ThreadState
 
 
 @dataclasses.dataclass
@@ -63,65 +60,6 @@ def _raise_for_status(response: aiohttp.ClientResponse) -> None:
         raise HomeAssistantError(f"unexpected http status {response.status}") from exc
 
 
-async def async_get_thread_state(hass: HomeAssistant) -> ThreadState:
-    """Get current Thread state."""
-
-    response = await async_get_clientsession(hass).get(
-        f"{_async_get_thread_rest_service_url(hass)}/node/state",
-        timeout=aiohttp.ClientTimeout(total=10),
-    )
-
-    _raise_for_status(response)
-    if response.status != HTTPStatus.OK:
-        raise HomeAssistantError(f"unexpected http status {response.status}")
-
-    try:
-        state = ThreadState(int(await response.json()))
-    except (TypeError, ValueError) as exc:
-        raise HomeAssistantError("unexpected API response") from exc
-
-    return state
-
-
-async def async_set_thread_state(hass: HomeAssistant, state: ThreadState) -> None:
-    """Set current Thread state."""
-
-    response = await async_get_clientsession(hass).post(
-        f"{_async_get_thread_rest_service_url(hass)}/node/state",
-        data=str(state.value),
-        timeout=aiohttp.ClientTimeout(total=10),
-    )
-
-    _raise_for_status(response)
-    if response.status != HTTPStatus.OK:
-        raise HomeAssistantError(f"unexpected http status {response.status}")
-
-
-async def async_get_active_dataset(hass: HomeAssistant) -> OperationalDataSet | None:
-    """Get current active operational dataset.
-
-    Returns None if there is no active operational dataset.
-    Raises if the http status is 400 or higher or if the response is invalid.
-    """
-
-    response = await async_get_clientsession(hass).get(
-        f"{_async_get_thread_rest_service_url(hass)}/node/dataset/active",
-        timeout=aiohttp.ClientTimeout(total=10),
-    )
-
-    _raise_for_status(response)
-    if response.status == HTTPStatus.NO_CONTENT:
-        return None
-
-    if response.status != HTTPStatus.OK:
-        raise HomeAssistantError(f"unexpected http status {response.status}")
-
-    try:
-        return OperationalDataSet.from_json(await response.json())
-    except (JSONDecodeError, vol.Error) as exc:
-        raise HomeAssistantError("unexpected API response") from exc
-
-
 async def async_get_active_dataset_tlvs(hass: HomeAssistant) -> bytes | None:
     """Get current active operational dataset in TLVS format, or None.
 
@@ -147,75 +85,3 @@ async def async_get_active_dataset_tlvs(hass: HomeAssistant) -> bytes | None:
         return bytes.fromhex(tmp.decode("ASCII"))
     except ValueError as exc:
         raise HomeAssistantError("unexpected API response") from exc
-
-
-async def async_create_active_dataset(
-    hass: HomeAssistant, dataset: OperationalDataSet
-) -> None:
-    """Create active operational dataset.
-
-    The passed in OperationalDataSet does not need to be fully populated, any fields
-    not set will be automatically set by the open thread border router.
-    Raises if the http status is 400 or higher or if the response is invalid.
-    """
-
-    response = await async_get_clientsession(hass).post(
-        f"{_async_get_thread_rest_service_url(hass)}/node/dataset/active",
-        json=dataset.as_json(),
-        timeout=aiohttp.ClientTimeout(total=10),
-    )
-
-    if response.status == HTTPStatus.CONFLICT:
-        raise ThreadNetworkActiveError
-    _raise_for_status(response)
-    if response.status != HTTPStatus.ACCEPTED:
-        raise HomeAssistantError(f"unexpected http status {response.status}")
-
-
-async def async_set_active_dataset(
-    hass: HomeAssistant, dataset: OperationalDataSet
-) -> None:
-    """Set current active operational dataset.
-
-    The passed in OperationalDataSet does not need to be fully populated, any fields
-    not set will be automatically copied from the current active dataset.
-    Raises if the http status is 400 or higher or if the response is invalid.
-    """
-
-    response = await async_get_clientsession(hass).put(
-        f"{_async_get_thread_rest_service_url(hass)}/node/dataset/active",
-        json=dataset.as_json(),
-        timeout=aiohttp.ClientTimeout(total=10),
-    )
-
-    if response.status == HTTPStatus.NOT_FOUND:
-        raise NoDatasetError
-    if response.status == HTTPStatus.CONFLICT:
-        raise ThreadNetworkActiveError
-    _raise_for_status(response)
-    if response.status != HTTPStatus.ACCEPTED:
-        raise HomeAssistantError(f"unexpected http status {response.status}")
-
-
-async def async_set_active_dataset_tlvs(hass: HomeAssistant, dataset: bytes) -> None:
-    """Set current active operational dataset.
-
-    The passed in OperationalDataSet does not need to be fully populated, any fields
-    not set will be automatically copied from the current active dataset.
-    Raises if the http status is 400 or higher or if the response is invalid.
-    """
-
-    response = await async_get_clientsession(hass).put(
-        f"{_async_get_thread_rest_service_url(hass)}/node/dataset/active",
-        data=dataset.hex(),
-        headers={"Content-Type": "text/plain"},
-        timeout=aiohttp.ClientTimeout(total=10),
-    )
-
-    if response.status == HTTPStatus.NOT_FOUND:
-        raise NoDatasetError
-    if response.status == HTTPStatus.CONFLICT:
-        raise ThreadNetworkActiveError
-    _raise_for_status(response)
-    if response.status != HTTPStatus.ACCEPTED:
-        raise HomeAssistantError(f"unexpected http status {response.status}")
