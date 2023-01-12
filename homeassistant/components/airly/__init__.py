@@ -150,6 +150,7 @@ class AirlyDataUpdateCoordinator(DataUpdateCoordinator):
         """Initialize."""
         self.latitude = latitude
         self.longitude = longitude
+        # Currently, Airly only supports Polish and English
         language = "pl" if hass.config.language == "pl" else "en"
         self.airly = Airly(api_key, session, language=language)
         self.use_nearest = use_nearest
