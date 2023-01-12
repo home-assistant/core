@@ -1,10 +1,18 @@
 """Test the Diagnostics integration."""
 from http import HTTPStatus
+import json
 from unittest.mock import AsyncMock, Mock
 
 import pytest
 
+from homeassistant.components.diagnostics import (
+    DOMAIN,
+    DiagnosticsSubscriptionSupport,
+    async_has_subscription,
+    async_log_object,
+)
 from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import async_get
 from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.setup import async_setup_component
@@ -18,6 +26,8 @@ from tests.common import MockConfigEntry, mock_platform
 async def mock_diagnostics_integration(hass):
     """Mock a diagnostics integration."""
     hass.config.components.add("fake_integration")
+    hass.config.components.add("fake_integration_no_subscribe")
+    hass.config.components.add("integration_without_diagnostics")
     mock_platform(
         hass,
         "fake_integration.diagnostics",
@@ -32,14 +42,37 @@ async def mock_diagnostics_integration(hass):
                     "device": "info",
                 }
             ),
+            async_supports_subscription=Mock(
+                return_value=DiagnosticsSubscriptionSupport(True, True)
+            ),
+        ),
+    )
+    mock_platform(
+        hass,
+        "fake_integration_no_subscribe.diagnostics",
+        Mock(
+            async_get_config_entry_diagnostics=AsyncMock(
+                return_value={
+                    "config_entry": "info",
+                }
+            ),
+            async_get_device_diagnostics=AsyncMock(
+                return_value={
+                    "device": "info",
+                }
+            ),
+            spec_set=[
+                "async_get_config_entry_diagnostics",
+                "async_get_device_diagnostics",
+            ],
         ),
     )
     mock_platform(
         hass,
         "integration_without_diagnostics.diagnostics",
-        Mock(),
+        Mock(spec_set=[]),
     )
-    assert await async_setup_component(hass, "diagnostics", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
 
 async def test_websocket(hass, hass_ws_client):
@@ -52,12 +85,22 @@ async def test_websocket(hass, hass_ws_client):
     assert msg["id"] == 5
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
-    assert msg["result"] == [
-        {
-            "domain": "fake_integration",
-            "handlers": {"config_entry": True, "device": True},
-        }
-    ]
+    assert len(msg["result"]) == 3
+    assert {
+        "domain": "fake_integration_no_subscribe",
+        "handlers": {"config_entry": True, "device": True},
+        "supports_subscription": {"config_entry": False, "domain": False},
+    } in msg["result"]
+    assert {
+        "domain": "fake_integration",
+        "handlers": {"config_entry": True, "device": True},
+        "supports_subscription": {"config_entry": True, "domain": True},
+    } in msg["result"]
+    assert {
+        "domain": "integration_without_diagnostics",
+        "handlers": {"config_entry": False, "device": False},
+        "supports_subscription": {"config_entry": False, "domain": False},
+    } in msg["result"]
 
     await client.send_json(
         {"id": 6, "type": "diagnostics/get", "domain": "fake_integration"}
@@ -71,6 +114,7 @@ async def test_websocket(hass, hass_ws_client):
     assert msg["result"] == {
         "domain": "fake_integration",
         "handlers": {"config_entry": True, "device": True},
+        "supports_subscription": {"config_entry": True, "domain": True},
     }
 
 
@@ -153,3 +197,76 @@ async def test_failure_scenarios(hass, hass_client):
         f"/api/diagnostics/config_entry/{config_entry.entry_id}/device/fake_id"
     )
     assert response.status == HTTPStatus.NOT_FOUND
+
+
+async def test_diagnostics_subscription_domain(hass: HomeAssistant, hass_ws_client):
+    """Test websocket diagnostics subscription for a domain."""
+
+    client = await hass_ws_client(hass)
+
+    # Test there's no subscription
+    assert not async_has_subscription(hass, "fake_integration")
+
+    await client.send_json(
+        {"id": 1, "type": "diagnostics/subscribe", "domain": "fake_integration"}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert async_has_subscription(hass, "fake_integration")
+
+    # Log some data
+    async_log_object(hass, {"some": "data"}, "fake_integration")
+    await hass.async_block_till_done()
+
+    response = await client.receive_json()
+    assert json.loads(response["event"]) == {"data": {"some": "data"}}
+
+    # Unsubscribe
+    await client.send_json({"id": 8, "type": "unsubscribe_events", "subscription": 1})
+    response = await client.receive_json()
+    assert response["success"]
+    assert not async_has_subscription(hass, "fake_integration")
+    assert not async_has_subscription(hass, "fake_integration", "fake_config_entry_id")
+
+
+async def test_diagnostics_subscription_config_entry(
+    hass: HomeAssistant, hass_ws_client
+):
+    """Test websocket diagnostics subscription for a config_entry."""
+
+    client = await hass_ws_client(hass)
+
+    # Test there's no subscription
+    assert not async_has_subscription(hass, "fake_integration", "fake_config_entry_id")
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "diagnostics/subscribe",
+            "domain": "fake_integration",
+            "config_entry": "fake_config_entry_id",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert async_has_subscription(hass, "fake_integration", "fake_config_entry_id")
+
+    # Log some data for the domain
+    async_log_object(hass, {"some": "data"}, "fake_integration")
+    await hass.async_block_till_done()
+
+    response = await client.receive_json()
+    assert json.loads(response["event"]) == {"data": {"some": "data"}}
+
+    # Log some data for the config entry
+    async_log_object(hass, {"some": "data"}, "fake_integration", "fake_config_entry_id")
+    await hass.async_block_till_done()
+
+    response = await client.receive_json()
+    assert json.loads(response["event"]) == {"data": {"some": "data"}}
+
+    # Unsubscribe
+    await client.send_json({"id": 8, "type": "unsubscribe_events", "subscription": 1})
+    response = await client.receive_json()
+    assert response["success"]
+    assert not async_has_subscription(hass, "fake_integration", "fake_config_entry_id")
