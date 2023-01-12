@@ -92,13 +92,6 @@ BINARY_SENSORS = [
         value_fn=lambda data: data.alert["alert_is_power_save_idle"],
     ),
     StarlinkBinarySensorEntityDescription(
-        key="install_pending",
-        name="Update pending",
-        device_class=BinarySensorDeviceClass.UPDATE,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: data.alert["alert_install_pending"],
-    ),
-    StarlinkBinarySensorEntityDescription(
         key="mast_near_vertical",
         name="Mast near vertical",
         device_class=BinarySensorDeviceClass.PROBLEM,
