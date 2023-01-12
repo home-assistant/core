@@ -20,7 +20,7 @@ async def test_intent_set_color(hass):
         hass,
         "test",
         intent.INTENT_SET,
-        {"name": {"value": "Hello"}, "color": {"value": "blue"}},
+        {"name": {"value": "Hello 2"}, "color": {"value": "blue"}},
     )
     await hass.async_block_till_done()
 
@@ -68,7 +68,7 @@ async def test_intent_set_color_and_brightness(hass):
         "test",
         intent.INTENT_SET,
         {
-            "name": {"value": "Hello"},
+            "name": {"value": "Hello 2"},
             "color": {"value": "blue"},
             "brightness": {"value": "20"},
         },

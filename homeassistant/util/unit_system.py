@@ -125,9 +125,11 @@ class UnitSystem:
     def name(self) -> str:
         """Return the name of the unit system."""
         report(
-            "accesses the `name` property of the unit system. "
-            "This is deprecated and will stop working in Home Assistant 2023.1. "
-            "Please adjust to use instance check instead.",
+            (
+                "accesses the `name` property of the unit system. "
+                "This is deprecated and will stop working in Home Assistant 2023.1. "
+                "Please adjust to use instance check instead."
+            ),
             error_if_core=False,
         )
         if self is IMPERIAL_SYSTEM:
@@ -139,9 +141,11 @@ class UnitSystem:
     def is_metric(self) -> bool:
         """Determine if this is the metric unit system."""
         report(
-            "accesses the `is_metric` property of the unit system. "
-            "This is deprecated and will stop working in Home Assistant 2023.1. "
-            "Please adjust to use instance check instead.",
+            (
+                "accesses the `is_metric` property of the unit system. "
+                "This is deprecated and will stop working in Home Assistant 2023.1. "
+                "Please adjust to use instance check instead."
+            ),
             error_if_core=False,
         )
         return self is METRIC_SYSTEM
@@ -191,7 +195,9 @@ class UnitSystem:
             raise TypeError(f"{wind_speed!s} is not a numeric value.")
 
         # type ignore: https://github.com/python/mypy/issues/7207
-        return SpeedConverter.convert(wind_speed, from_unit, self.wind_speed_unit)  # type: ignore[unreachable]
+        return SpeedConverter.convert(  # type: ignore[unreachable]
+            wind_speed, from_unit, self.wind_speed_unit
+        )
 
     def volume(self, volume: float | None, from_unit: str) -> float:
         """Convert the given volume to this unit system."""
@@ -199,7 +205,9 @@ class UnitSystem:
             raise TypeError(f"{volume!s} is not a numeric value.")
 
         # type ignore: https://github.com/python/mypy/issues/7207
-        return VolumeConverter.convert(volume, from_unit, self.volume_unit)  # type: ignore[unreachable]
+        return VolumeConverter.convert(  # type: ignore[unreachable]
+            volume, from_unit, self.volume_unit
+        )
 
     def as_dict(self) -> dict[str, str]:
         """Convert the unit system to a dictionary."""

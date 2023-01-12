@@ -144,7 +144,6 @@ async def test_unsuccessful_discovery_user_form_and_auth(hass):
         "host": "1.1.1.1",
         "api_key": "good_token",
         "port": 9331,
-        "api_key": "good_token",
         "roon_server_id": "core_id",
         "roon_server_name": "Roon Core",
     }

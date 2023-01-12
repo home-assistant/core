@@ -270,7 +270,23 @@ async def test_get_trigger_capabilities_hvac_mode(hass):
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
-    ) == [{"name": "for", "optional": True, "type": "positive_time_period_dict"}]
+    ) == [
+        {
+            "name": "to",
+            "options": [
+                ("off", "off"),
+                ("heat", "heat"),
+                ("cool", "cool"),
+                ("heat_cool", "heat_cool"),
+                ("auto", "auto"),
+                ("dry", "dry"),
+                ("fan_only", "fan_only"),
+            ],
+            "required": True,
+            "type": "select",
+        },
+        {"name": "for", "optional": True, "type": "positive_time_period_dict"},
+    ]
 
 
 @pytest.mark.parametrize(

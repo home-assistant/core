@@ -311,7 +311,7 @@ def handle_subscribe_entities(
     connection.send_result(msg["id"])
     data: dict[str, dict[str, dict]] = {
         messages.ENTITY_EVENT_ADD: {
-            state.entity_id: messages.compressed_state_dict_add(state)
+            state.entity_id: state.as_compressed_state()
             for state in states
             if not entity_ids or state.entity_id in entity_ids
         }

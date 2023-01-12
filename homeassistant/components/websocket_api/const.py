@@ -50,10 +50,4 @@ SIGNAL_WEBSOCKET_DISCONNECTED: Final = "websocket_disconnected"
 # Data used to store the current connection list
 DATA_CONNECTIONS: Final = f"{DOMAIN}.connections"
 
-COMPRESSED_STATE_STATE = "s"
-COMPRESSED_STATE_ATTRIBUTES = "a"
-COMPRESSED_STATE_CONTEXT = "c"
-COMPRESSED_STATE_LAST_CHANGED = "lc"
-COMPRESSED_STATE_LAST_UPDATED = "lu"
-
 FEATURE_COALESCE_MESSAGES = "coalesce_messages"

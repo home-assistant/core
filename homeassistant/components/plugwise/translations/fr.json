@@ -22,5 +22,19 @@
                 "title": "Se connecter \u00e0 Smile"
             }
         }
+    },
+    "entity": {
+        "climate": {
+            "plugwise": {
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "no_frost": "Hors-gel",
+                            "vacation": "Vacances"
+                        }
+                    }
+                }
+            }
+        }
     }
 }

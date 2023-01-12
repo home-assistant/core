@@ -270,7 +270,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
             await self._async_device_turn_off()
         await self.async_update_ha_state()
 
-    async def async_set_humidity(self, humidity: int):
+    async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
         if humidity is None:
             return

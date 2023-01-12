@@ -309,7 +309,8 @@ class HaScanner(BaseHaScanner):
         self._async_setup_scanner_watchdog()
         await restore_discoveries(self.scanner, self.adapter)
 
-    async def _async_scanner_watchdog(self, now: datetime) -> None:
+    @hass_callback
+    def _async_scanner_watchdog(self, now: datetime) -> None:
         """Check if the scanner is running."""
         if not self._async_watchdog_triggered():
             return
@@ -324,6 +325,10 @@ class HaScanner(BaseHaScanner):
             self.name,
             SCANNER_WATCHDOG_TIMEOUT,
         )
+        self.hass.async_create_task(self._async_restart_scanner())
+
+    async def _async_restart_scanner(self) -> None:
+        """Restart the scanner."""
         async with self._start_stop_lock:
             time_since_last_detection = MONOTONIC_TIME() - self._last_detection
             # Stop the scanner but not the watchdog

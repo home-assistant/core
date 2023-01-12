@@ -23,7 +23,7 @@
                 "title": "V\u00e1lasszon Hue bridge-t"
             },
             "link": {
-                "description": "Nyomja meg a gombot a bridge-en a Philips Hue Home Assistantban val\u00f3 regisztr\u00e1l\u00e1s\u00e1hoz.\n\n![Gomb helye](/static/images/config_philips_hue.jpg)",
+                "description": "Nyomja meg a gombot a bridge-en a Philips Hue Home Assistantban val\u00f3 regisztr\u00e1l\u00e1s\u00e1hoz.\n\n![Gomb elhelyez\u00e9se](/static/images/config_philips_hue.jpg)",
                 "title": "Kapcsol\u00f3d\u00e1s a hubhoz"
             },
             "manual": {

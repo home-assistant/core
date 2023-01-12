@@ -18,7 +18,6 @@ async def test_full_flow(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result.get("type") == FlowResultType.FORM
-    assert "flow_id" in result
 
     with patch(
         "homeassistant.components.garages_amsterdam.async_setup_entry",

@@ -192,6 +192,26 @@ async def test_calendar_yaml_error(
     assert hass.states.get(TEST_API_ENTITY)
 
 
+@pytest.mark.parametrize("calendars_config", [None])
+async def test_empty_calendar_yaml(
+    hass: HomeAssistant,
+    component_setup: ComponentSetup,
+    calendars_config: list[dict[str, Any]],
+    mock_calendars_yaml: None,
+    mock_calendars_list: ApiResult,
+    test_api_calendar: dict[str, Any],
+    mock_events_list: ApiResult,
+) -> None:
+    """Test an empty yaml file is equivalent to a missing yaml file."""
+    mock_calendars_list({"items": [test_api_calendar]})
+    mock_events_list({})
+
+    assert await component_setup()
+
+    assert not hass.states.get(TEST_YAML_ENTITY)
+    assert hass.states.get(TEST_API_ENTITY)
+
+
 async def test_init_calendar(
     hass: HomeAssistant,
     component_setup: ComponentSetup,

@@ -120,7 +120,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 @overload
-async def async_get_device_automation_platform(  # noqa: D103
+async def async_get_device_automation_platform(
     hass: HomeAssistant,
     domain: str,
     automation_type: Literal[DeviceAutomationType.TRIGGER],
@@ -129,7 +129,7 @@ async def async_get_device_automation_platform(  # noqa: D103
 
 
 @overload
-async def async_get_device_automation_platform(  # noqa: D103
+async def async_get_device_automation_platform(
     hass: HomeAssistant,
     domain: str,
     automation_type: Literal[DeviceAutomationType.CONDITION],
@@ -138,7 +138,7 @@ async def async_get_device_automation_platform(  # noqa: D103
 
 
 @overload
-async def async_get_device_automation_platform(  # noqa: D103
+async def async_get_device_automation_platform(
     hass: HomeAssistant,
     domain: str,
     automation_type: Literal[DeviceAutomationType.ACTION],
@@ -147,15 +147,15 @@ async def async_get_device_automation_platform(  # noqa: D103
 
 
 @overload
-async def async_get_device_automation_platform(  # noqa: D103
+async def async_get_device_automation_platform(
     hass: HomeAssistant, domain: str, automation_type: DeviceAutomationType
-) -> "DeviceAutomationPlatformType":
+) -> DeviceAutomationPlatformType:
     ...
 
 
 async def async_get_device_automation_platform(
     hass: HomeAssistant, domain: str, automation_type: DeviceAutomationType
-) -> "DeviceAutomationPlatformType":
+) -> DeviceAutomationPlatformType:
     """Load device automation platform for integration.
 
     Throws InvalidDeviceAutomationConfig if the integration is not found or does not support device automation.

@@ -1,0 +1,7 @@
+{
+    "config": {
+        "error": {
+            "invalid_thermostat": "Termostato serijinis numeris negalioja."
+        }
+    }
+}

@@ -19,5 +19,18 @@
                 "title": "Koble til Venstar-termostaten"
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "schedule_part": {
+                "state": {
+                    "day": "Dag",
+                    "evening": "Kveld",
+                    "inactive": "Inaktiv",
+                    "morning": "Morgen",
+                    "night": "Natt"
+                }
+            }
+        }
     }
 }

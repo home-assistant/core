@@ -58,6 +58,9 @@ class KNXTestKit:
 
         async def patch_xknx_start():
             """Patch `xknx.start` for unittests."""
+            self.xknx.cemi_handler.send_telegram = AsyncMock(
+                side_effect=self._outgoing_telegrams.put
+            )
             # after XKNX.__init__() to not overwrite it by the config entry again
             # before StateUpdater starts to avoid slow down of tests
             self.xknx.rate_limit = 0
@@ -72,7 +75,6 @@ class KNXTestKit:
             mock = Mock()
             mock.start = AsyncMock(side_effect=patch_xknx_start)
             mock.stop = AsyncMock()
-            mock.send_telegram = AsyncMock(side_effect=self._outgoing_telegrams.put)
             return mock
 
         def fish_xknx(*args, **kwargs):

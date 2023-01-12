@@ -14,6 +14,7 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
+from .coordinator import SynologyDSMCentralUpdateCoordinator
 from .entity import SynologyDSMBaseEntity, SynologyDSMEntityDescription
 from .models import SynologyDSMData
 
@@ -46,7 +47,9 @@ async def async_setup_entry(
     )
 
 
-class SynoDSMUpdateEntity(SynologyDSMBaseEntity, UpdateEntity):
+class SynoDSMUpdateEntity(
+    SynologyDSMBaseEntity[SynologyDSMCentralUpdateCoordinator], UpdateEntity
+):
     """Mixin for update entity specific attributes."""
 
     entity_description: SynologyDSMUpdateEntityEntityDescription

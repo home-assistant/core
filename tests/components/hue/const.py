@@ -32,7 +32,6 @@ FAKE_LIGHT = {
     },
     "id": "fake_light_id_1",
     "id_v1": "/lights/1",
-    "metadata": {"archetype": "unknown", "name": "Hue fake light"},
     "mode": "normal",
     "on": {"on": False},
     "owner": {"rid": "fake_device_id_1", "rtype": "device"},
@@ -93,5 +92,6 @@ FAKE_SCENE = {
     },
     "palette": {"color": [], "color_temperature": [], "dimming": []},
     "speed": 0.5,
+    "auto_dynamic": False,
     "type": "scene",
 }

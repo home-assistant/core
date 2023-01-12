@@ -34,8 +34,10 @@
         "step": {
             "init": {
                 "data": {
+                    "enable_conversation_agent": "V\u00f5ta vestlusagent kasutusele",
                     "language_code": "Keele kood"
-                }
+                },
+                "description": "M\u00e4\u00e4ra keel Google'i assistendiga suhtlemiseks ja kas soovid vestlusagendi lubada."
             }
         }
     }

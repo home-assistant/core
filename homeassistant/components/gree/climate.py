@@ -43,6 +43,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .bridge import DeviceDataUpdateCoordinator
 from .const import (
     COORDINATORS,
     DISPATCH_DEVICE_DISCOVERED,
@@ -105,7 +106,7 @@ async def async_setup_entry(
     )
 
 
-class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
+class GreeClimateEntity(CoordinatorEntity[DeviceDataUpdateCoordinator], ClimateEntity):
     """Representation of a Gree HVAC device."""
 
     _attr_precision = PRECISION_WHOLE
@@ -116,7 +117,7 @@ class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
         | ClimateEntityFeature.SWING_MODE
     )
 
-    def __init__(self, coordinator):
+    def __init__(self, coordinator: DeviceDataUpdateCoordinator) -> None:
         """Initialize the Gree device."""
         super().__init__(coordinator)
         self._name = coordinator.device.device_info.name

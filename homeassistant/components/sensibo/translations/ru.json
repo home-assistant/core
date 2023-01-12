@@ -31,6 +31,28 @@
         }
     },
     "entity": {
+        "select": {
+            "horizontalswing": {
+                "state": {
+                    "fixedcenter": "\u0424\u0438\u043a\u0441\u0438\u0440\u043e\u0432\u0430\u043d\u043d\u044b\u0439 \u0446\u0435\u043d\u0442\u0440",
+                    "fixedcenterleft": "\u0424\u0438\u043a\u0441\u0438\u0440\u043e\u0432\u0430\u043d\u043d\u044b\u0439 \u0446\u0435\u043d\u0442\u0440 \u0441\u043b\u0435\u0432\u0430",
+                    "fixedcenterright": "\u0424\u0438\u043a\u0441\u0438\u0440\u043e\u0432\u0430\u043d\u043d\u044b\u0439 \u0446\u0435\u043d\u0442\u0440 \u0441\u043f\u0440\u0430\u0432\u0430",
+                    "fixedleft": "\u0424\u0438\u043a\u0441\u0438\u0440\u043e\u0432\u0430\u043d\u043d\u044b\u0439 \u043b\u0435\u0432\u044b\u0439",
+                    "fixedleftright": "\u0424\u0438\u043a\u0441\u0438\u0440\u043e\u0432\u0430\u043d\u043d\u044b\u0439 \u043b\u0435\u0432\u044b\u0439 \u043f\u0440\u0430\u0432\u044b\u0439",
+                    "fixedright": "\u0424\u0438\u043a\u0441\u0438\u0440\u043e\u0432\u0430\u043d\u043d\u044b\u0439 \u043f\u0440\u0430\u0432\u044b\u0439",
+                    "rangecenter": "\u0426\u0435\u043d\u0442\u0440 \u0434\u0438\u0430\u043f\u0430\u0437\u043e\u043d\u0430",
+                    "rangefull": "\u041f\u043e\u043b\u043d\u044b\u0439 \u0434\u0438\u0430\u043f\u0430\u0437\u043e\u043d",
+                    "stopped": "\u041e\u0441\u0442\u0430\u043d\u043e\u0432\u043b\u0435\u043d\u043e"
+                }
+            },
+            "light": {
+                "state": {
+                    "dim": "\u0422\u0443\u0441\u043a\u043b\u043e",
+                    "off": "\u0412\u044b\u043a\u043b\u044e\u0447\u0435\u043d\u043e",
+                    "on": "\u0412\u043a\u043b\u044e\u0447\u0435\u043d\u043e"
+                }
+            }
+        },
         "sensor": {
             "sensitivity": {
                 "state": {

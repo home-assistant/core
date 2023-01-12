@@ -7,7 +7,7 @@
         },
         "error": {
             "one": "hiba",
-            "other": ""
+            "other": "hiba"
         },
         "flow_title": "{name}",
         "step": {

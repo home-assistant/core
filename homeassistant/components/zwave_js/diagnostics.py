@@ -106,7 +106,7 @@ def get_device_entities(
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry
-) -> list[dict]:
+) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     msgs: list[dict] = async_redact_data(
         await dump_msgs(
@@ -119,12 +119,12 @@ async def async_get_config_entry_diagnostics(
     network_state["result"]["state"]["nodes"] = [
         redact_node_state(node) for node in network_state["result"]["state"]["nodes"]
     ]
-    return [*handshake_msgs, network_state]
+    return {"messages": [*handshake_msgs, network_state]}
 
 
 async def async_get_device_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry, device: dr.DeviceEntry
-) -> dict:
+) -> dict[str, Any]:
     """Return diagnostics for a device."""
     client: Client = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
     identifiers = get_home_and_node_id_from_device_entry(device)

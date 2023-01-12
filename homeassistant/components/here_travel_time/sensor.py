@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import timedelta
-from typing import Any
+from typing import Any, Union
 
 from homeassistant.components.sensor import (
     RestoreSensor,
@@ -102,7 +102,12 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class HERETravelTimeSensor(CoordinatorEntity, RestoreSensor):
+class HERETravelTimeSensor(
+    CoordinatorEntity[
+        Union[HERERoutingDataUpdateCoordinator, HERETransitDataUpdateCoordinator]
+    ],
+    RestoreSensor,
+):
     """Representation of a HERE travel time sensor."""
 
     def __init__(
@@ -144,7 +149,7 @@ class HERETravelTimeSensor(CoordinatorEntity, RestoreSensor):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if self.coordinator.data is not None:
-            self._attr_native_value = self.coordinator.data.get(
+            self._attr_native_value = self.coordinator.data.get(  # type: ignore[assignment]
                 self.entity_description.key
             )
             self.async_write_ha_state()

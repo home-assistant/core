@@ -1,0 +1,11 @@
+{
+    "entity": {
+        "sensor": {
+            "printer_state": {
+                "state": {
+                    "idle": "Laukiama"
+                }
+            }
+        }
+    }
+}

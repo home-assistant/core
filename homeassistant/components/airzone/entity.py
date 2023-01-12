@@ -1,9 +1,12 @@
 """Entity classes for the Airzone integration."""
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from aioairzone.const import (
+    API_SYSTEM_ID,
+    API_ZONE_ID,
     AZD_FIRMWARE,
     AZD_FULL_NAME,
     AZD_ID,
@@ -17,14 +20,18 @@ from aioairzone.const import (
     AZD_WEBSERVER,
     AZD_ZONES,
 )
+from aioairzone.exceptions import AirzoneError
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER
 from .coordinator import AirzoneUpdateCoordinator
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class AirzoneEntity(CoordinatorEntity[AirzoneUpdateCoordinator]):
@@ -130,3 +137,20 @@ class AirzoneZoneEntity(AirzoneEntity):
             if key in zone:
                 value = zone[key]
         return value
+
+    async def _async_update_hvac_params(self, params: dict[str, Any]) -> None:
+        """Send HVAC parameters to API."""
+        _params = {
+            API_SYSTEM_ID: self.system_id,
+            API_ZONE_ID: self.zone_id,
+            **params,
+        }
+        _LOGGER.debug("update_hvac_params=%s", _params)
+        try:
+            await self.coordinator.airzone.set_hvac_parameters(_params)
+        except AirzoneError as error:
+            raise HomeAssistantError(
+                f"Failed to set zone {self.name}: {error}"
+            ) from error
+        else:
+            self.coordinator.async_set_updated_data(self.coordinator.airzone.data())

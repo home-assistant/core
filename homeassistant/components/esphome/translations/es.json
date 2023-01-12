@@ -28,13 +28,13 @@
                 "data": {
                     "noise_psk": "Clave de cifrado"
                 },
-                "description": "Por favor, introduce la clave de cifrado que estableciste en tu configuraci\u00f3n para {name}."
+                "description": "Por favor, introduce la clave de cifrado para {name}. Puedes encontrarla en el panel de ESPHome o en la configuraci\u00f3n de tu dispositivo."
             },
             "reauth_confirm": {
                 "data": {
                     "noise_psk": "Clave de cifrado"
                 },
-                "description": "El dispositivo ESPHome {name} habilit\u00f3 el cifrado de transporte o cambi\u00f3 la clave de cifrado. Por favor, introduce la clave actualizada."
+                "description": "El dispositivo ESPHome {name} habilit\u00f3 el cifrado de transporte o cambi\u00f3 la clave de cifrado. Por favor, introduce la clave actualizada. Puedes encontrarla en el panel de ESPHome o en la configuraci\u00f3n de tu dispositivo."
             },
             "user": {
                 "data": {

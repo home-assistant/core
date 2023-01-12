@@ -4,6 +4,7 @@ from unittest.mock import patch
 from pycfdns.exceptions import (
     CloudflareAuthenticationException,
     CloudflareConnectionException,
+    CloudflareZoneException,
 )
 import pytest
 
@@ -31,14 +32,21 @@ async def test_unload_entry(hass, cfupdate):
     assert not hass.data.get(DOMAIN)
 
 
-async def test_async_setup_raises_entry_not_ready(hass, cfupdate):
+@pytest.mark.parametrize(
+    "side_effect",
+    (
+        CloudflareConnectionException(),
+        CloudflareZoneException(),
+    ),
+)
+async def test_async_setup_raises_entry_not_ready(hass, cfupdate, side_effect):
     """Test that it throws ConfigEntryNotReady when exception occurs during setup."""
     instance = cfupdate.return_value
 
     entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_CONFIG)
     entry.add_to_hass(hass)
 
-    instance.get_zone_id.side_effect = CloudflareConnectionException()
+    instance.get_zone_id.side_effect = side_effect
     await hass.config_entries.async_setup(entry.entry_id)
 
     assert entry.state is ConfigEntryState.SETUP_RETRY

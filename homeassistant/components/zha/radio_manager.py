@@ -210,7 +210,7 @@ class ZhaRadioManager:
         return backup
 
     async def async_form_network(self) -> None:
-        """Form a brand new network."""
+        """Form a brand-new network."""
         async with self._connect_zigpy_app() as app:
             await app.form_network()
 
@@ -273,7 +273,7 @@ class ZhaMultiPANMigrationHelper:
     """Helper class for automatic migration when upgrading the firmware of a radio.
 
     This class is currently only intended to be used when changing the firmware on the
-    radio used in the Home Assistant Sky Connect USB stick and the Home Asssistant Yellow
+    radio used in the Home Assistant Sky Connect USB stick and the Home Assistant Yellow
     from Zigbee only firmware to firmware supporting both Zigbee and Thread.
     """
 

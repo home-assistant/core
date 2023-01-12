@@ -1,0 +1,27 @@
+{
+    "entity": {
+        "climate": {
+            "ubercool": {
+                "state_attributes": {
+                    "fan_mode": {
+                        "state": {
+                            "auto_high": "Auto auk\u0161tas",
+                            "auto_low": "Auto \u017eemas",
+                            "on_high": "\u012ejungta auk\u0161tas",
+                            "on_low": "\u012ejungta \u017eemas"
+                        }
+                    },
+                    "swing_mode": {
+                        "state": {
+                            "1": "1",
+                            "2": "2",
+                            "3": "3",
+                            "auto": "Auto",
+                            "off": "I\u0161jungta"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

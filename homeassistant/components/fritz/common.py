@@ -136,7 +136,7 @@ class HostInfo(TypedDict):
     status: bool
 
 
-class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
+class FritzBoxTools(update_coordinator.DataUpdateCoordinator[None]):
     """FritzBoxTools class."""
 
     def __init__(

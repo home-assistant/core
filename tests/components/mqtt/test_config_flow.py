@@ -454,93 +454,90 @@ async def test_hassio_cannot_connect(
     assert len(mock_finish_setup.mock_calls) == 0
 
 
-@patch(
-    "homeassistant.config.async_hass_config_yaml",
-    AsyncMock(return_value={}),
-)
 async def test_option_flow(
     hass,
     mqtt_mock_entry_no_yaml_config,
     mock_try_connection,
-    caplog,
 ):
     """Test config flow options."""
-    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
-    mock_try_connection.return_value = True
-    config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    config_entry.data = {
-        mqtt.CONF_BROKER: "test-broker",
-        mqtt.CONF_PORT: 1234,
-    }
+    with patch(
+        "homeassistant.config.async_hass_config_yaml", AsyncMock(return_value={})
+    ) as yaml_mock:
+        mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+        mock_try_connection.return_value = True
+        config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+        config_entry.data = {
+            mqtt.CONF_BROKER: "test-broker",
+            mqtt.CONF_PORT: 1234,
+        }
 
-    mqtt_mock.async_connect.reset_mock()
+        mqtt_mock.async_connect.reset_mock()
 
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "broker"
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "broker"
 
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                mqtt.CONF_BROKER: "another-broker",
+                mqtt.CONF_PORT: 2345,
+                mqtt.CONF_USERNAME: "user",
+                mqtt.CONF_PASSWORD: "pass",
+            },
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "options"
+
+        await hass.async_block_till_done()
+        assert mqtt_mock.async_connect.call_count == 0
+
+        yaml_mock.reset_mock()
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                mqtt.CONF_DISCOVERY: True,
+                "discovery_prefix": "homeassistant",
+                "birth_enable": True,
+                "birth_topic": "ha_state/online",
+                "birth_payload": "online",
+                "birth_qos": 1,
+                "birth_retain": True,
+                "will_enable": True,
+                "will_topic": "ha_state/offline",
+                "will_payload": "offline",
+                "will_qos": 2,
+                "will_retain": True,
+            },
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["data"] == {}
+        assert config_entry.data == {
             mqtt.CONF_BROKER: "another-broker",
             mqtt.CONF_PORT: 2345,
             mqtt.CONF_USERNAME: "user",
             mqtt.CONF_PASSWORD: "pass",
-        },
-    )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "options"
-
-    await hass.async_block_till_done()
-    assert mqtt_mock.async_connect.call_count == 0
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
             mqtt.CONF_DISCOVERY: True,
-            "discovery_prefix": "homeassistant",
-            "birth_enable": True,
-            "birth_topic": "ha_state/online",
-            "birth_payload": "online",
-            "birth_qos": 1,
-            "birth_retain": True,
-            "will_enable": True,
-            "will_topic": "ha_state/offline",
-            "will_payload": "offline",
-            "will_qos": 2,
-            "will_retain": True,
-        },
-    )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["data"] == {}
-    assert config_entry.data == {
-        mqtt.CONF_BROKER: "another-broker",
-        mqtt.CONF_PORT: 2345,
-        mqtt.CONF_USERNAME: "user",
-        mqtt.CONF_PASSWORD: "pass",
-        mqtt.CONF_DISCOVERY: True,
-        mqtt.CONF_DISCOVERY_PREFIX: "homeassistant",
-        mqtt.CONF_BIRTH_MESSAGE: {
-            mqtt.ATTR_TOPIC: "ha_state/online",
-            mqtt.ATTR_PAYLOAD: "online",
-            mqtt.ATTR_QOS: 1,
-            mqtt.ATTR_RETAIN: True,
-        },
-        mqtt.CONF_WILL_MESSAGE: {
-            mqtt.ATTR_TOPIC: "ha_state/offline",
-            mqtt.ATTR_PAYLOAD: "offline",
-            mqtt.ATTR_QOS: 2,
-            mqtt.ATTR_RETAIN: True,
-        },
-    }
+            mqtt.CONF_DISCOVERY_PREFIX: "homeassistant",
+            mqtt.CONF_BIRTH_MESSAGE: {
+                mqtt.ATTR_TOPIC: "ha_state/online",
+                mqtt.ATTR_PAYLOAD: "online",
+                mqtt.ATTR_QOS: 1,
+                mqtt.ATTR_RETAIN: True,
+            },
+            mqtt.CONF_WILL_MESSAGE: {
+                mqtt.ATTR_TOPIC: "ha_state/offline",
+                mqtt.ATTR_PAYLOAD: "offline",
+                mqtt.ATTR_QOS: 2,
+                mqtt.ATTR_RETAIN: True,
+            },
+        }
 
-    await hass.async_block_till_done()
-    assert config_entry.title == "another-broker"
+        await hass.async_block_till_done()
+        assert config_entry.title == "another-broker"
     # assert that the entry was reloaded with the new config
-    assert (
-        "<Event call_service[L]: domain=mqtt, service=reload, service_data=>"
-        in caplog.text
-    )
+    assert yaml_mock.await_count
 
 
 @pytest.mark.parametrize(

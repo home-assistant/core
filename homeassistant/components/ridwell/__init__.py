@@ -15,12 +15,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, entity_registry as er
-from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER, SENSOR_TYPE_NEXT_PICKUP
 
@@ -34,7 +29,7 @@ class RidwellData:
     """Define an object to be stored in `hass.data`."""
 
     accounts: dict[str, RidwellAccount]
-    coordinator: DataUpdateCoordinator
+    coordinator: DataUpdateCoordinator[dict[str, RidwellPickupEvent]]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -70,7 +65,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         return data
 
-    coordinator = DataUpdateCoordinator(
+    coordinator: DataUpdateCoordinator[
+        dict[str, RidwellPickupEvent]
+    ] = DataUpdateCoordinator(
         hass,
         LOGGER,
         name=entry.title,
@@ -79,8 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     await coordinator.async_config_entry_first_refresh()
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = RidwellData(
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = RidwellData(
         accounts=accounts, coordinator=coordinator
     )
 
@@ -91,8 +87,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
@@ -121,22 +116,3 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     LOGGER.info("Migration to version %s successful", version)
 
     return True
-
-
-class RidwellEntity(CoordinatorEntity):
-    """Define a base Ridwell entity."""
-
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        coordinator: DataUpdateCoordinator,
-        account: RidwellAccount,
-        description: EntityDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator)
-
-        self._account = account
-        self._attr_unique_id = f"{account.account_id}_{description.key}"
-        self.entity_description = description

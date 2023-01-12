@@ -30,6 +30,7 @@ def mock_addon_info(addon_info_side_effect):
         side_effect=addon_info_side_effect,
     ) as addon_info:
         addon_info.return_value = {
+            "available": False,
             "hostname": None,
             "options": {},
             "state": None,
@@ -53,6 +54,7 @@ def mock_addon_store_info(addon_store_info_side_effect):
         side_effect=addon_store_info_side_effect,
     ) as addon_store_info:
         addon_store_info.return_value = {
+            "available": False,
             "installed": None,
             "state": None,
             "version": "1.0.0",
@@ -64,10 +66,12 @@ def mock_addon_store_info(addon_store_info_side_effect):
 def mock_addon_running(addon_store_info, addon_info):
     """Mock add-on already running."""
     addon_store_info.return_value = {
+        "available": True,
         "installed": "1.0.0",
         "state": "started",
         "version": "1.0.0",
     }
+    addon_info.return_value["available"] = True
     addon_info.return_value["state"] = "started"
     addon_info.return_value["version"] = "1.0.0"
     return addon_info
@@ -77,10 +81,12 @@ def mock_addon_running(addon_store_info, addon_info):
 def mock_addon_installed(addon_store_info, addon_info):
     """Mock add-on already installed but not running."""
     addon_store_info.return_value = {
+        "available": True,
         "installed": "1.0.0",
         "state": "stopped",
         "version": "1.0.0",
     }
+    addon_info.return_value["available"] = True
     addon_info.return_value["state"] = "stopped"
     addon_info.return_value["version"] = "1.0.0"
     return addon_info
@@ -89,6 +95,7 @@ def mock_addon_installed(addon_store_info, addon_info):
 @pytest.fixture(name="addon_not_installed")
 def mock_addon_not_installed(addon_store_info, addon_info):
     """Mock add-on not installed."""
+    addon_store_info.return_value["available"] = True
     return addon_info
 
 
@@ -126,10 +133,12 @@ def install_addon_side_effect_fixture(addon_store_info, addon_info):
     async def install_addon(hass, slug):
         """Mock install add-on."""
         addon_store_info.return_value = {
+            "available": True,
             "installed": "1.0.0",
             "state": "stopped",
             "version": "1.0.0",
         }
+        addon_info.return_value["available"] = True
         addon_info.return_value["state"] = "stopped"
         addon_info.return_value["version"] = "1.0.0"
 
@@ -162,10 +171,12 @@ def start_addon_side_effect_fixture(addon_store_info, addon_info):
     async def start_addon(hass, slug):
         """Mock start add-on."""
         addon_store_info.return_value = {
+            "available": True,
             "installed": "1.0.0",
             "state": "started",
             "version": "1.0.0",
         }
+        addon_info.return_value["available"] = True
         addon_info.return_value["state"] = "started"
 
     return start_addon

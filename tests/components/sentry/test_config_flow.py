@@ -30,7 +30,6 @@ async def test_full_user_flow_implementation(hass: HomeAssistant) -> None:
     )
     assert result.get("type") == FlowResultType.FORM
     assert result.get("errors") == {}
-    assert "flow_id" in result
 
     with patch("homeassistant.components.sentry.config_flow.Dsn"), patch(
         "homeassistant.components.sentry.async_setup_entry",
@@ -67,7 +66,6 @@ async def test_user_flow_bad_dsn(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert "flow_id" in result
 
     with patch(
         "homeassistant.components.sentry.config_flow.Dsn",
@@ -87,7 +85,6 @@ async def test_user_flow_unknown_exception(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert "flow_id" in result
 
     with patch(
         "homeassistant.components.sentry.config_flow.Dsn",
@@ -118,7 +115,6 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
     assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == "init"
-    assert "flow_id" in result
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],

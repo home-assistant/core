@@ -65,7 +65,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class RitualsDataUpdateCoordinator(DataUpdateCoordinator):
+class RitualsDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Class to manage fetching Rituals Perfume Genie device data from single endpoint."""
 
     def __init__(self, hass: HomeAssistant, device: Diffuser) -> None:

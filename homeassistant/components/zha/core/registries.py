@@ -149,7 +149,7 @@ class MatchRule:
     def weight(self) -> int:
         """Return the weight of the matching rule.
 
-        Most specific matches should be preferred over less specific. Model matching
+        More specific matches should be preferred over less specific. Model matching
         rules have a priority over manufacturer matching rules and rules matching a
         single model/manufacturer get a better priority over rules matching multiple
         models/manufacturers. And any model or manufacturers matching rules get better
@@ -343,7 +343,7 @@ class ZHAEntityRegistry:
         def decorator(zha_ent: _ZhaEntityT) -> _ZhaEntityT:
             """Register a strict match rule.
 
-            All non empty fields of a match rule must match.
+            All non-empty fields of a match rule must match.
             """
             self._strict_registry[component][rule] = zha_ent
             return zha_ent
@@ -406,7 +406,7 @@ class ZHAEntityRegistry:
         def decorator(zha_entity: _ZhaEntityT) -> _ZhaEntityT:
             """Register a loose match rule.
 
-            All non empty fields of a match rule must match.
+            All non-empty fields of a match rule must match.
             """
             # group the rules by channels
             self._config_diagnostic_entity_registry[component][stop_on_match_group][

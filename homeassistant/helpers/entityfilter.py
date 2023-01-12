@@ -43,14 +43,16 @@ class EntityFilter:
 
     def explicitly_included(self, entity_id: str) -> bool:
         """Check if an entity is explicitly included."""
-        return entity_id in self._include_e or _test_against_patterns(
-            self._include_eg, entity_id
+        return entity_id in self._include_e or (
+            bool(self._include_eg)
+            and _test_against_patterns(self._include_eg, entity_id)
         )
 
     def explicitly_excluded(self, entity_id: str) -> bool:
         """Check if an entity is explicitly excluded."""
-        return entity_id in self._exclude_e or _test_against_patterns(
-            self._exclude_eg, entity_id
+        return entity_id in self._exclude_e or (
+            bool(self._exclude_eg)
+            and _test_against_patterns(self._exclude_eg, entity_id)
         )
 
     def __call__(self, entity_id: str) -> bool:
@@ -189,7 +191,7 @@ def _generate_filter_from_sets_and_pattern_lists(
         return (
             entity_id in include_e
             or domain in include_d
-            or _test_against_patterns(include_eg, entity_id)
+            or (bool(include_eg) and _test_against_patterns(include_eg, entity_id))
         )
 
     def entity_excluded(domain: str, entity_id: str) -> bool:
@@ -197,7 +199,7 @@ def _generate_filter_from_sets_and_pattern_lists(
         return (
             entity_id in exclude_e
             or domain in exclude_d
-            or _test_against_patterns(exclude_eg, entity_id)
+            or (bool(exclude_eg) and _test_against_patterns(exclude_eg, entity_id))
         )
 
     # Case 1 - No filter
@@ -247,10 +249,12 @@ def _generate_filter_from_sets_and_pattern_lists(
             return entity_id in include_e or (
                 entity_id not in exclude_e
                 and (
-                    _test_against_patterns(include_eg, entity_id)
+                    (include_eg and _test_against_patterns(include_eg, entity_id))
                     or (
                         split_entity_id(entity_id)[0] in include_d
-                        and not _test_against_patterns(exclude_eg, entity_id)
+                        and not (
+                            exclude_eg and _test_against_patterns(exclude_eg, entity_id)
+                        )
                     )
                 )
             )

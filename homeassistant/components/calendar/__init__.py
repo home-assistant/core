@@ -74,6 +74,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     websocket_api.async_register_command(hass, handle_calendar_event_create)
     websocket_api.async_register_command(hass, handle_calendar_event_delete)
+    websocket_api.async_register_command(hass, handle_calendar_event_update)
 
     await component.async_setup(config)
     return True
@@ -297,6 +298,16 @@ class CalendarEntity(Entity):
         """Delete an event on the calendar."""
         raise NotImplementedError()
 
+    async def async_update_event(
+        self,
+        uid: str,
+        event: dict[str, Any],
+        recurrence_id: str | None = None,
+        recurrence_range: str | None = None,
+    ) -> None:
+        """Delete an event on the calendar."""
+        raise NotImplementedError()
+
 
 class CalendarEventView(http.HomeAssistantView):
     """View to retrieve calendar content."""
@@ -492,6 +503,64 @@ async def handle_calendar_event_delete(
     try:
         await entity.async_delete_event(
             msg[EVENT_UID],
+            recurrence_id=msg.get(EVENT_RECURRENCE_ID),
+            recurrence_range=msg.get(EVENT_RECURRENCE_RANGE),
+        )
+    except (HomeAssistantError, ValueError) as ex:
+        _LOGGER.error("Error handling Calendar Event call: %s", ex)
+        connection.send_error(msg["id"], "failed", str(ex))
+    else:
+        connection.send_result(msg["id"])
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "calendar/event/update",
+        vol.Required("entity_id"): cv.entity_id,
+        vol.Required(EVENT_UID): cv.string,
+        vol.Optional(EVENT_RECURRENCE_ID): cv.string,
+        vol.Optional(EVENT_RECURRENCE_RANGE): cv.string,
+        vol.Required(CONF_EVENT): vol.Schema(
+            vol.All(
+                {
+                    vol.Required(EVENT_START): vol.Any(cv.date, cv.datetime),
+                    vol.Required(EVENT_END): vol.Any(cv.date, cv.datetime),
+                    vol.Required(EVENT_SUMMARY): cv.string,
+                    vol.Optional(EVENT_DESCRIPTION): cv.string,
+                    vol.Optional(EVENT_RRULE): _validate_rrule,
+                },
+                _has_same_type(EVENT_START, EVENT_END),
+                _has_consistent_timezone(EVENT_START, EVENT_END),
+                _is_sorted(EVENT_START, EVENT_END),
+            )
+        ),
+    }
+)
+@websocket_api.async_response
+async def handle_calendar_event_update(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle creation of a calendar event."""
+    component: EntityComponent[CalendarEntity] = hass.data[DOMAIN]
+    if not (entity := component.get_entity(msg["entity_id"])):
+        connection.send_error(msg["id"], ERR_NOT_FOUND, "Entity not found")
+        return
+
+    if (
+        not entity.supported_features
+        or not entity.supported_features & CalendarEntityFeature.UPDATE_EVENT
+    ):
+        connection.send_message(
+            websocket_api.error_message(
+                msg["id"], ERR_NOT_SUPPORTED, "Calendar does not support event update"
+            )
+        )
+        return
+
+    try:
+        await entity.async_update_event(
+            msg[EVENT_UID],
+            msg[CONF_EVENT],
             recurrence_id=msg.get(EVENT_RECURRENCE_ID),
             recurrence_range=msg.get(EVENT_RECURRENCE_RANGE),
         )

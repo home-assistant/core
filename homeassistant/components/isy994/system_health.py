@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 
-from .const import DOMAIN, ISY994_ISY, ISY_URL_POSTFIX
+from .const import DOMAIN, ISY_ROOT, ISY_URL_POSTFIX
 
 
 @callback
@@ -28,7 +28,7 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     config_entry_id = next(
         iter(hass.data[DOMAIN])
     )  # Only first ISY is supported for now
-    isy: ISY = hass.data[DOMAIN][config_entry_id][ISY994_ISY]
+    isy: ISY = hass.data[DOMAIN][config_entry_id][ISY_ROOT]
 
     entry = hass.config_entries.async_get_entry(config_entry_id)
     assert isinstance(entry, ConfigEntry)

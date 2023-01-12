@@ -10,7 +10,12 @@ from pysnooz.testing import MockSnoozDevice
 import pytest
 
 from homeassistant.components import fan
-from homeassistant.components.snooz.const import DOMAIN
+from homeassistant.components.snooz.const import (
+    ATTR_DURATION,
+    DOMAIN,
+    SERVICE_TRANSITION_OFF,
+    SERVICE_TRANSITION_ON,
+)
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
@@ -33,6 +38,20 @@ async def test_turn_on(hass: HomeAssistant, snooz_fan_entity_id: str):
         fan.DOMAIN,
         fan.SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: [snooz_fan_entity_id]},
+        blocking=True,
+    )
+
+    state = hass.states.get(snooz_fan_entity_id)
+    assert state.state == STATE_ON
+    assert ATTR_ASSUMED_STATE not in state.attributes
+
+
+async def test_transition_on(hass: HomeAssistant, snooz_fan_entity_id: str):
+    """Test transitioning on the device."""
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_TRANSITION_ON,
+        {ATTR_ENTITY_ID: [snooz_fan_entity_id], ATTR_DURATION: 1},
         blocking=True,
     )
 
@@ -107,6 +126,20 @@ async def test_turn_off(hass: HomeAssistant, snooz_fan_entity_id: str):
         fan.DOMAIN,
         fan.SERVICE_TURN_OFF,
         {ATTR_ENTITY_ID: [snooz_fan_entity_id]},
+        blocking=True,
+    )
+
+    state = hass.states.get(snooz_fan_entity_id)
+    assert state.state == STATE_OFF
+    assert ATTR_ASSUMED_STATE not in state.attributes
+
+
+async def test_transition_off(hass: HomeAssistant, snooz_fan_entity_id: str):
+    """Test transitioning off the device."""
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_TRANSITION_OFF,
+        {ATTR_ENTITY_ID: [snooz_fan_entity_id], ATTR_DURATION: 1},
         blocking=True,
     )
 

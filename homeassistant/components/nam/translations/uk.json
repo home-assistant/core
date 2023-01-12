@@ -1,0 +1,12 @@
+{
+    "entity": {
+        "sensor": {
+            "caqi_level": {
+                "state": {
+                    "very_high": "\u0414\u0443\u0436\u0435 \u0432\u0438\u0441\u043e\u043a\u043e",
+                    "very_low": "\u0414\u0443\u0436\u0435 \u043d\u0438\u0437\u044c\u043a\u043e"
+                }
+            }
+        }
+    }
+}

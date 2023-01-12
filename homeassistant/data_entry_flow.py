@@ -10,6 +10,7 @@ import logging
 from types import MappingProxyType
 from typing import Any, TypedDict
 
+from typing_extensions import Required
 import voluptuous as vol
 
 from .backports.enum import StrEnum
@@ -91,8 +92,8 @@ class FlowResult(TypedDict, total=False):
     description: str | None
     errors: dict[str, str] | None
     extra: str
-    flow_id: str
-    handler: str
+    flow_id: Required[str]
+    handler: Required[str]
     last_step: bool | None
     menu_options: list[str] | dict[str, str]
     options: Mapping[str, Any]

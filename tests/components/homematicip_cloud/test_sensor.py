@@ -29,6 +29,7 @@ from homeassistant.const import (
     PERCENTAGE,
     POWER_WATT,
     SPEED_KILOMETERS_PER_HOUR,
+    STATE_UNKNOWN,
     TEMP_CELSIUS,
 )
 from homeassistant.setup import async_setup_component
@@ -82,7 +83,7 @@ async def test_hmip_heating_thermostat(hass, default_mock_hap_factory):
 
     await async_manipulate_test_data(hass, hmip_device, "valveState", "nn")
     ha_state = hass.states.get(entity_id)
-    assert ha_state.state == "nn"
+    assert ha_state.state == STATE_UNKNOWN
 
     await async_manipulate_test_data(
         hass, hmip_device, "valveState", ValveState.ADAPTION_DONE

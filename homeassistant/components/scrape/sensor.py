@@ -13,7 +13,9 @@ from homeassistant.components.sensor import (
     DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     STATE_CLASSES_SCHEMA,
+    SensorDeviceClass,
 )
+from homeassistant.components.sensor.helpers import async_parse_date_datetime
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ATTRIBUTE,
@@ -246,12 +248,19 @@ class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], TemplateSensor):
         """Update state from the rest data."""
         value = self._extract_value()
 
-        if self._value_template is not None:
-            self._attr_native_value = (
-                self._value_template.async_render_with_possible_json_value(value, None)
-            )
-        else:
+        if (template := self._value_template) is not None:
+            value = template.async_render_with_possible_json_value(value, None)
+
+        if self.device_class not in {
+            SensorDeviceClass.DATE,
+            SensorDeviceClass.TIMESTAMP,
+        }:
             self._attr_native_value = value
+            return
+
+        self._attr_native_value = async_parse_date_datetime(
+            value, self.entity_id, self.device_class
+        )
 
     @callback
     def _handle_coordinator_update(self) -> None:

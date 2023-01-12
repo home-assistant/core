@@ -45,6 +45,28 @@
           "humidity": "Humidity"
         }
       }
+    },
+    "select": {
+      "horizontalswing": {
+        "state": {
+          "stopped": "Stopped",
+          "fixedleft": "Fixed left",
+          "fixedcenterleft": "Fixed center left",
+          "fixedcenter": "Fixed center",
+          "fixedcenterright": "Fixed center right",
+          "fixedright": "Fixed right",
+          "fixedleftright": "Fixed left right",
+          "rangecenter": "Range center",
+          "rangefull": "Range full"
+        }
+      },
+      "light": {
+        "state": {
+          "on": "On",
+          "dim": "Dim",
+          "off": "Off"
+        }
+      }
     }
   }
 }

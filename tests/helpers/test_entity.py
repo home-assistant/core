@@ -238,7 +238,7 @@ async def test_async_async_request_call_without_lock(hass):
         job1 = ent_1.async_request_call(ent_1.testhelper(1))
         job2 = ent_2.async_request_call(ent_2.testhelper(2))
 
-        await asyncio.wait([job1, job2])
+        await asyncio.gather(job1, job2)
         while True:
             if len(updates) >= 2:
                 break

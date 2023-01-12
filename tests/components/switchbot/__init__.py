@@ -168,6 +168,26 @@ WOSENSORTH_SERVICE_INFO = BluetoothServiceInfoBleak(
     connectable=False,
 )
 
+
+WOLOCK_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="WoLock",
+    manufacturer_data={2409: b"\xf1\t\x9fE\x1a]\xda\x83\x00 "},
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"o\x80d"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="aa:bb:cc:dd:ee:ff",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="WoLock",
+        manufacturer_data={2409: b"\xf1\t\x9fE\x1a]\xda\x83\x00 "},
+        service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"o\x80d"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=BLEDevice("aa:bb:cc:dd:ee:ff", "WoLock"),
+    time=0,
+    connectable=True,
+)
+
 NOT_SWITCHBOT_INFO = BluetoothServiceInfoBleak(
     name="unknown",
     service_uuids=[],

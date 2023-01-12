@@ -561,6 +561,7 @@ class ExposeSchema(KNXPlatformSchema):
     CONF_KNX_EXPOSE_TYPE = CONF_TYPE
     CONF_KNX_EXPOSE_ATTRIBUTE = "attribute"
     CONF_KNX_EXPOSE_BINARY = "binary"
+    CONF_KNX_EXPOSE_COOLDOWN = "cooldown"
     CONF_KNX_EXPOSE_DEFAULT = "default"
     EXPOSE_TIME_TYPES: Final = [
         "time",
@@ -578,6 +579,8 @@ class ExposeSchema(KNXPlatformSchema):
     )
     EXPOSE_SENSOR_SCHEMA = vol.Schema(
         {
+            vol.Optional(CONF_KNX_EXPOSE_COOLDOWN, default=0): cv.positive_float,
+            vol.Optional(CONF_RESPOND_TO_READ, default=True): cv.boolean,
             vol.Required(CONF_KNX_EXPOSE_TYPE): vol.Any(
                 CONF_KNX_EXPOSE_BINARY, sensor_type_validator
             ),

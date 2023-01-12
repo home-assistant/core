@@ -1,7 +1,6 @@
 """Update coordinator for HomeWizard."""
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 
 from homewizard_energy import HomeWizardEnergy
@@ -15,8 +14,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DOMAIN, UPDATE_INTERVAL, DeviceResponseEntry
 
 _LOGGER = logging.getLogger(__name__)
-
-MAX_UPDATE_INTERVAL = timedelta(minutes=30)
 
 
 class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]):
@@ -73,7 +70,6 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
 
             raise UpdateFailed(ex) from ex
 
-        else:
-            self.api_disabled = False
+        self.api_disabled = False
 
         return data

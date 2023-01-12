@@ -10,6 +10,7 @@ from pycfdns.exceptions import (
     CloudflareAuthenticationException,
     CloudflareConnectionException,
     CloudflareException,
+    CloudflareZoneException,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -47,7 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         zone_id = await cfupdate.get_zone_id()
     except CloudflareAuthenticationException as error:
         raise ConfigEntryAuthFailed from error
-    except CloudflareConnectionException as error:
+    except (CloudflareConnectionException, CloudflareZoneException) as error:
         raise ConfigEntryNotReady from error
 
     async def update_records(now):

@@ -24,12 +24,13 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
-    ELECTRIC_CURRENT_AMPERE,
-    ELECTRIC_POTENTIAL_VOLT,
-    ENERGY_KILO_WATT_HOUR,
-    POWER_WATT,
+    PERCENTAGE,
     STATE_UNAVAILABLE,
-    TEMP_CELSIUS,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfTemperature,
 )
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
@@ -49,21 +50,25 @@ from .common import (
 )
 
 
-async def test_numeric_sensor(hass, multisensor_6, integration):
+async def test_numeric_sensor(
+    hass, multisensor_6, express_controls_ezmultipli, integration
+):
     """Test the numeric sensor."""
     state = hass.states.get(AIR_TEMPERATURE_SENSOR)
 
     assert state
     assert state.state == "9.0"
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
     state = hass.states.get(BATTERY_SENSOR)
 
     assert state
     assert state.state == "100.0"
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "%"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.BATTERY
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
     ent_reg = er.async_get(hass)
     entity_entry = ent_reg.async_get(BATTERY_SENSOR)
@@ -74,8 +79,27 @@ async def test_numeric_sensor(hass, multisensor_6, integration):
 
     assert state
     assert state.state == "65.0"
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "%"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.HUMIDITY
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+
+    state = hass.states.get("sensor.multisensor_6_ultraviolet")
+
+    assert state
+    assert state.state == "0.0"
+    # TODO: Add UV_INDEX unit of measurement to this sensor
+    assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
+    assert ATTR_DEVICE_CLASS not in state.attributes
+    # TODO: Add measurement state class to this sensor
+    assert ATTR_STATE_CLASS not in state.attributes
+
+    state = hass.states.get("sensor.hsm200_illuminance")
+
+    assert state
+    assert state.state == "61.0"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
+    assert ATTR_DEVICE_CLASS not in state.attributes
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
 
 async def test_energy_sensors(hass, hank_binary_switch, integration):
@@ -84,7 +108,7 @@ async def test_energy_sensors(hass, hank_binary_switch, integration):
 
     assert state
     assert state.state == "0.0"
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == POWER_WATT
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfPower.WATT
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.POWER
     assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.MEASUREMENT
 
@@ -92,7 +116,7 @@ async def test_energy_sensors(hass, hank_binary_switch, integration):
 
     assert state
     assert state.state == "0.16"
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == ENERGY_KILO_WATT_HOUR
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfEnergy.KILO_WATT_HOUR
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENERGY
     assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.TOTAL_INCREASING
 
@@ -100,14 +124,14 @@ async def test_energy_sensors(hass, hank_binary_switch, integration):
 
     assert state
     assert state.state == "122.96"
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == ELECTRIC_POTENTIAL_VOLT
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfElectricPotential.VOLT
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.VOLTAGE
 
     state = hass.states.get(CURRENT_SENSOR)
 
     assert state
     assert state.state == "0.0"
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == ELECTRIC_CURRENT_AMPERE
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfElectricCurrent.AMPERE
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.CURRENT
 
 
@@ -401,7 +425,8 @@ async def test_unit_change(hass, zp3111, client, integration):
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "21.98"
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
     event = Event(
         "metadata updated",
         {
@@ -431,7 +456,8 @@ async def test_unit_change(hass, zp3111, client, integration):
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "21.98"
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
     event = Event(
         "value updated",
         {
@@ -454,4 +480,5 @@ async def test_unit_change(hass, zp3111, client, integration):
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "100.0"
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE

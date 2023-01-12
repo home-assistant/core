@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Paskyra jau sukonfig\u016bruota"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Slapta\u017eodis"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "code_format_mismatch": "Kodas neatitinka reikalaujamo skaitmen\u0173 skai\u010diaus"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "code": "Numatytasis u\u017erakt\u0173 kodas, naudojamas, jei nenurodytas joks kodas",
+                    "lock_code_digits": "U\u017erakt\u0173 PIN kodo skaitmen\u0173 skai\u010dius"
+                }
+            }
+        }
+    }
+}

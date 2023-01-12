@@ -4,7 +4,6 @@ from http import HTTPStatus
 from unittest.mock import Mock, patch
 
 import homeassistant.components.google_wifi.sensor as google_wifi
-from homeassistant.const import STATE_UNKNOWN
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -171,7 +170,7 @@ def test_update_when_value_changed(hass, requests_mock):
             elif name == google_wifi.ATTR_NEW_VERSION:
                 assert sensor.state == "Latest"
             elif name == google_wifi.ATTR_LOCAL_IP:
-                assert sensor.state == STATE_UNKNOWN
+                assert sensor.state is None
             else:
                 assert sensor.state == "next"
 
@@ -185,7 +184,7 @@ def test_when_api_data_missing(hass, requests_mock):
             sensor = sensor_dict[name]["sensor"]
             fake_delay(hass, 2)
             sensor.update()
-            assert sensor.state == STATE_UNKNOWN
+            assert sensor.state is None
 
 
 def test_update_when_unavailable(hass, requests_mock):

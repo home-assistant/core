@@ -1,5 +1,5 @@
 """Define tests for the OpenUV config flow."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from pyopenuv.errors import InvalidApiKeyError
 import voluptuous as vol
@@ -14,8 +14,41 @@ from homeassistant.const import (
     CONF_LONGITUDE,
 )
 
+from .conftest import TEST_API_KEY, TEST_ELEVATION, TEST_LATITUDE, TEST_LONGITUDE
 
-async def test_duplicate_error(hass, config, config_entry):
+
+async def test_create_entry(hass, client, config, mock_pyopenuv):
+    """Test creating an entry."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    # Test an error occurring:
+    with patch.object(client, "uv_index", AsyncMock(side_effect=InvalidApiKeyError)):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=config
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {CONF_API_KEY: "invalid_api_key"}
+
+    # Test that we can recover from the error:
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=config
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["title"] == f"{TEST_LATITUDE}, {TEST_LONGITUDE}"
+    assert result["data"] == {
+        CONF_API_KEY: TEST_API_KEY,
+        CONF_ELEVATION: TEST_ELEVATION,
+        CONF_LATITUDE: TEST_LATITUDE,
+        CONF_LONGITUDE: TEST_LONGITUDE,
+    }
+
+
+async def test_duplicate_error(hass, config, config_entry, setup_config_entry):
     """Test that errors are shown when duplicates are added."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=config
@@ -24,60 +57,45 @@ async def test_duplicate_error(hass, config, config_entry):
     assert result["reason"] == "already_configured"
 
 
-async def test_invalid_api_key(hass, config):
-    """Test that an invalid API key throws an error."""
-    with patch(
-        "homeassistant.components.openuv.Client.uv_index",
-        side_effect=InvalidApiKeyError,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=config
-        )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
-        assert result["errors"] == {CONF_API_KEY: "invalid_api_key"}
-
-
-def _get_schema_marker(data_schema: vol.Schema, key: str) -> vol.Marker:
-    for k in data_schema.schema:
-        if k == key and isinstance(k, vol.Marker):
-            return k
-    return None
-
-
-async def test_options_flow(hass, config_entry):
+async def test_options_flow(hass, config_entry, setup_config_entry):
     """Test config flow options."""
-    with patch("homeassistant.components.openuv.async_setup_entry", return_value=True):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        result = await hass.config_entries.options.async_init(config_entry.entry_id)
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
-        assert result["step_id"] == "init"
-        # Original schema uses defaults for suggested values
-        assert _get_schema_marker(
-            result["data_schema"], CONF_FROM_WINDOW
-        ).description == {"suggested_value": 3.5}
-        assert _get_schema_marker(
-            result["data_schema"], CONF_TO_WINDOW
-        ).description == {"suggested_value": 3.5}
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "init"
 
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input={CONF_FROM_WINDOW: 3.5, CONF_TO_WINDOW: 2.0}
-        )
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-        assert config_entry.options == {CONF_FROM_WINDOW: 3.5, CONF_TO_WINDOW: 2.0}
+    def get_schema_marker(data_schema: vol.Schema, key: str) -> vol.Marker:
+        for k in data_schema.schema:
+            if k == key and isinstance(k, vol.Marker):
+                return k
+        return None
 
-        # Subsequent schema uses previous input for suggested values
-        result = await hass.config_entries.options.async_init(config_entry.entry_id)
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
-        assert result["step_id"] == "init"
-        assert _get_schema_marker(
-            result["data_schema"], CONF_FROM_WINDOW
-        ).description == {"suggested_value": 3.5}
-        assert _get_schema_marker(
-            result["data_schema"], CONF_TO_WINDOW
-        ).description == {"suggested_value": 2.0}
+    # Original schema uses defaults for suggested values:
+    assert get_schema_marker(result["data_schema"], CONF_FROM_WINDOW).description == {
+        "suggested_value": 3.5
+    }
+    assert get_schema_marker(result["data_schema"], CONF_TO_WINDOW).description == {
+        "suggested_value": 3.5
+    }
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_FROM_WINDOW: 3.5, CONF_TO_WINDOW: 2.0}
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {CONF_FROM_WINDOW: 3.5, CONF_TO_WINDOW: 2.0}
+
+    # Subsequent schema uses previous input for suggested values:
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert get_schema_marker(result["data_schema"], CONF_FROM_WINDOW).description == {
+        "suggested_value": 3.5
+    }
+    assert get_schema_marker(result["data_schema"], CONF_TO_WINDOW).description == {
+        "suggested_value": 2.0
+    }
 
 
-async def test_step_reauth(hass, config, config_entry, setup_openuv):
+async def test_step_reauth(hass, config, config_entry, setup_config_entry):
     """Test that the reauth step works."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_REAUTH}, data=config
@@ -88,33 +106,9 @@ async def test_step_reauth(hass, config, config_entry, setup_openuv):
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
-    with patch("homeassistant.components.openuv.async_setup_entry", return_value=True):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_API_KEY: "new_api_key"}
-        )
-        await hass.async_block_till_done()
-
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_KEY: "new_api_key"}
+    )
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert len(hass.config_entries.async_entries()) == 1
-
-
-async def test_step_user(hass, config, setup_openuv):
-    """Test that the user step works."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=config
-    )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == "51.528308, -0.3817765"
-    assert result["data"] == {
-        CONF_API_KEY: "abcde12345",
-        CONF_ELEVATION: 0,
-        CONF_LATITUDE: 51.528308,
-        CONF_LONGITUDE: -0.3817765,
-    }

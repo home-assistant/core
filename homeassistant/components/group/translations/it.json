@@ -130,14 +130,14 @@
         "_": {
             "closed": "Chiuso",
             "home": "In casa",
-            "locked": "Bloccato",
+            "locked": "Chiusa",
             "not_home": "Fuori casa",
             "off": "Spento",
             "ok": "OK",
             "on": "Acceso",
             "open": "Aperto",
             "problem": "Problema",
-            "unlocked": "Sbloccato"
+            "unlocked": "Aperta"
         }
     },
     "title": "Gruppo"

@@ -83,5 +83,18 @@
                 "description": "Choose connection method to the gateway"
             }
         }
+    },
+    "issues": {
+        "deprecated_service": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Update any automations or scripts that use this service to instead use the `{alternate_service}` service with a target entity ID of `{alternate_target}`.",
+                        "title": "The {deprecated_service} service will be removed"
+                    }
+                }
+            },
+            "title": "The {deprecated_service} service will be removed"
+        }
     }
 }

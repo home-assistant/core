@@ -8,6 +8,7 @@
                 "data": {
                     "name": "N\u00e1zov sn\u00edma\u010da",
                     "power": "Zmluvn\u00fd v\u00fdkon (kW)",
+                    "power_p3": "Zmluvn\u00fd v\u00fdkon NT (kW)",
                     "tariff": "Platn\u00e1 tarifa pod\u013ea geografickej z\u00f3ny"
                 }
             }
@@ -18,6 +19,7 @@
             "init": {
                 "data": {
                     "power": "Zmluvn\u00fd v\u00fdkon (kW)",
+                    "power_p3": "Zmluvn\u00fd v\u00fdkon NT (kW)",
                     "tariff": "Platn\u00e1 tarifa pod\u013ea geografickej z\u00f3ny"
                 }
             }

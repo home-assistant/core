@@ -7,6 +7,7 @@ import pytest
 from yarl import URL
 
 from homeassistant.components.qwikswitch import DOMAIN as QWIKSWITCH
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.setup import async_setup_component
 
 from tests.test_util.aiohttp import AiohttpClientMockResponse, MockLongPollSideEffect
@@ -105,7 +106,7 @@ async def test_sensor_device(hass, aioclient_mock, qs_devices):
     await hass.async_block_till_done()
 
     state_obj = hass.states.get("sensor.ss1")
-    assert state_obj.state == "None"
+    assert state_obj.state == STATE_UNKNOWN
 
     # receive command that sets the sensor value
     listen_mock.queue_response(

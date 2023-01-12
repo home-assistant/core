@@ -1,16 +1,12 @@
 """Support for Rain Bird Irrigation system LNK WiFi Module."""
 from __future__ import annotations
 
-import asyncio
 import logging
 
-from pyrainbird.async_client import (
-    AsyncRainbirdClient,
-    AsyncRainbirdController,
-    RainbirdApiException,
-)
+from pyrainbird.async_client import AsyncRainbirdClient, AsyncRainbirdController
 import voluptuous as vol
 
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     CONF_FRIENDLY_NAME,
     CONF_HOST,
@@ -18,18 +14,14 @@ from homeassistant.const import (
     CONF_TRIGGER_TIME,
     Platform,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import discovery
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    CONF_ZONES,
-    RAINBIRD_CONTROLLER,
-    SENSOR_TYPE_RAINDELAY,
-    SENSOR_TYPE_RAINSENSOR,
-)
+from .const import ATTR_CONFIG_ENTRY_ID, ATTR_DURATION, CONF_SERIAL_NUMBER, CONF_ZONES
 from .coordinator import RainbirdUpdateCoordinator
 
 PLATFORMS = [Platform.SWITCH, Platform.SENSOR, Platform.BINARY_SENSOR]
@@ -61,47 +53,99 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+SERVICE_SET_RAIN_DELAY = "set_rain_delay"
+SERVICE_SCHEMA_RAIN_DELAY = vol.All(
+    vol.Schema(
+        {
+            vol.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
+            vol.Required(ATTR_DURATION): cv.positive_float,
+        }
+    ),
+)
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Rain Bird component."""
-    return all(
-        await asyncio.gather(
-            *[
-                _setup_controller(hass, controller_config, config)
-                for controller_config in config[DOMAIN]
-            ]
-        )
-    )
+    if DOMAIN not in config:
+        return True
 
-
-async def _setup_controller(hass, controller_config, config):
-    """Set up a controller."""
-    server = controller_config[CONF_HOST]
-    password = controller_config[CONF_PASSWORD]
-    client = AsyncRainbirdClient(async_get_clientsession(hass), server, password)
-    controller = AsyncRainbirdController(client)
-    try:
-        await controller.get_serial_number()
-    except RainbirdApiException as exc:
-        _LOGGER.error("Unable to setup controller: %s", exc)
-        return False
-
-    rain_coordinator = RainbirdUpdateCoordinator(hass, controller.get_rain_sensor_state)
-    delay_coordinator = RainbirdUpdateCoordinator(hass, controller.get_rain_delay)
-
-    for platform in PLATFORMS:
+    for controller_config in config[DOMAIN]:
         hass.async_create_task(
-            discovery.async_load_platform(
-                hass,
-                platform,
+            hass.config_entries.flow.async_init(
                 DOMAIN,
-                {
-                    RAINBIRD_CONTROLLER: controller,
-                    SENSOR_TYPE_RAINSENSOR: rain_coordinator,
-                    SENSOR_TYPE_RAINDELAY: delay_coordinator,
-                    **controller_config,
-                },
-                config,
+                context={"source": SOURCE_IMPORT},
+                data=controller_config,
             )
         )
+
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2023.4.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+    )
+
     return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up the config entry for Rain Bird."""
+
+    hass.data.setdefault(DOMAIN, {})
+
+    controller = AsyncRainbirdController(
+        AsyncRainbirdClient(
+            async_get_clientsession(hass),
+            entry.data[CONF_HOST],
+            entry.data[CONF_PASSWORD],
+        )
+    )
+    coordinator = RainbirdUpdateCoordinator(
+        hass,
+        name=entry.title,
+        controller=controller,
+        serial_number=entry.data[CONF_SERIAL_NUMBER],
+    )
+    await coordinator.async_config_entry_first_refresh()
+
+    hass.data[DOMAIN][entry.entry_id] = coordinator
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    async def set_rain_delay(call: ServiceCall) -> None:
+        """Service call to delay automatic irrigigation."""
+        entry_id = call.data[ATTR_CONFIG_ENTRY_ID]
+        duration = call.data[ATTR_DURATION]
+        if entry_id not in hass.data[DOMAIN]:
+            raise HomeAssistantError(f"Config entry id does not exist: {entry_id}")
+        coordinator = hass.data[DOMAIN][entry_id]
+        await coordinator.controller.set_rain_delay(duration)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_RAIN_DELAY,
+        set_rain_delay,
+        schema=SERVICE_SCHEMA_RAIN_DELAY,
+    )
+
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        hass.data[DOMAIN].pop(entry.entry_id)
+
+    loaded_entries = [
+        entry
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if entry.state == ConfigEntryState.LOADED
+    ]
+    if len(loaded_entries) == 1:
+        hass.services.async_remove(DOMAIN, SERVICE_SET_RAIN_DELAY)
+
+    return unload_ok

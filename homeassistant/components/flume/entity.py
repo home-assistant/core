@@ -1,16 +1,29 @@
 """Platform for shared base classes for sensors."""
 from __future__ import annotations
 
+from typing import TypeVar, Union
+
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+from .coordinator import (
+    FlumeDeviceConnectionUpdateCoordinator,
+    FlumeDeviceDataUpdateCoordinator,
+    FlumeNotificationDataUpdateCoordinator,
+)
+
+_FlumeCoordinatorT = TypeVar(
+    "_FlumeCoordinatorT",
+    bound=Union[
+        FlumeDeviceDataUpdateCoordinator,
+        FlumeDeviceConnectionUpdateCoordinator,
+        FlumeNotificationDataUpdateCoordinator,
+    ],
+)
 
 
-class FlumeEntity(CoordinatorEntity[DataUpdateCoordinator[None]]):
+class FlumeEntity(CoordinatorEntity[_FlumeCoordinatorT]):
     """Base entity class."""
 
     _attr_attribution = "Data provided by Flume API"
@@ -18,7 +31,7 @@ class FlumeEntity(CoordinatorEntity[DataUpdateCoordinator[None]]):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: _FlumeCoordinatorT,
         description: EntityDescription,
         device_id: str,
         location_name: str,

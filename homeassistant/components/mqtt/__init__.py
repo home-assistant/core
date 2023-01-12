@@ -486,7 +486,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 entity.async_remove()
                 for mqtt_platform in mqtt_platforms
                 for entity in mqtt_platform.entities.values()
-                if not entity._discovery_data  # type: ignore[attr-defined] # pylint: disable=protected-access
+                # pylint: disable=protected-access
+                if not entity._discovery_data  # type: ignore[attr-defined]
                 if mqtt_platform.config_entry
                 and mqtt_platform.domain in RELOADABLE_PLATFORMS
             ]
@@ -542,7 +543,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             mqtt_data.reload_entry = False
             reload_manual_setup = True
 
-        # When the entry was disabled before, reload manual set up items to enable MQTT again
+        # When the entry was disabled before, reload manual set up items to enable
+        # MQTT again
         if mqtt_data.reload_needed:
             mqtt_data.reload_needed = False
             reload_manual_setup = True
@@ -710,7 +712,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Trigger reload manual MQTT items at entry setup
     if (mqtt_entry_status := mqtt_config_entry_enabled(hass)) is False:
-        # The entry is disabled reload legacy manual items when the entry is enabled again
+        # The entry is disabled reload legacy manual items when
+        # the entry is enabled again
         mqtt_data.reload_needed = True
     elif mqtt_entry_status is True:
         # The entry is reloaded:

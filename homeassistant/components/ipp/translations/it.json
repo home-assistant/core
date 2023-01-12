@@ -31,5 +31,16 @@
                 "title": "Rilevata stampante"
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "printer": {
+                "state": {
+                    "idle": "Inattiva",
+                    "printing": "In stampa",
+                    "stopped": "Fermata"
+                }
+            }
+        }
     }
 }

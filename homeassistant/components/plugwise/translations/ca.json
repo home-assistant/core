@@ -26,13 +26,28 @@
         }
     },
     "entity": {
+        "climate": {
+            "plugwise": {
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "asleep": "Nit",
+                            "away": "A fora",
+                            "home": "A casa",
+                            "no_frost": "Anti-gelades",
+                            "vacation": "Vacances"
+                        }
+                    }
+                }
+            }
+        },
         "select": {
             "dhw_mode": {
                 "state": {
                     "auto": "Autom\u00e0tic",
                     "boost": "Incrementat",
                     "comfort": "Confort",
-                    "off": "OFF"
+                    "off": "Inactiu"
                 }
             },
             "regulation_mode": {
@@ -41,7 +56,7 @@
                     "bleeding_hot": "Molt calent",
                     "cooling": "Refredant",
                     "heating": "Escalfant",
-                    "off": "OFF"
+                    "off": "Inactiu"
                 }
             }
         }

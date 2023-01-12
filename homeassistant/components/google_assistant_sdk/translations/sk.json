@@ -34,8 +34,10 @@
         "step": {
             "init": {
                 "data": {
+                    "enable_conversation_agent": "Povolenie agenta pre konverz\u00e1ciu",
                     "language_code": "K\u00f3d jazyka"
-                }
+                },
+                "description": "Nastavte jazyk pre interakcie s Asistentom Google a \u010di chcete povoli\u0165 agenta konverz\u00e1cie."
             }
         }
     }

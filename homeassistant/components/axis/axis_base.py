@@ -1,5 +1,6 @@
 """Base classes for Axis entities."""
-from axis.event_stream import AxisEvent
+
+from axis.models.event import Event, EventTopic
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -7,6 +8,25 @@ from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DOMAIN as AXIS_DOMAIN
 from .device import AxisNetworkDevice
+
+TOPIC_TO_EVENT_TYPE = {
+    EventTopic.DAY_NIGHT_VISION: "DayNight",
+    EventTopic.FENCE_GUARD: "Fence Guard",
+    EventTopic.LIGHT_STATUS: "Light",
+    EventTopic.LOITERING_GUARD: "Loitering Guard",
+    EventTopic.MOTION_DETECTION: "Motion",
+    EventTopic.MOTION_DETECTION_3: "VMD3",
+    EventTopic.MOTION_DETECTION_4: "VMD4",
+    EventTopic.MOTION_GUARD: "Motion Guard",
+    EventTopic.OBJECT_ANALYTICS: "Object Analytics",
+    EventTopic.PIR: "PIR",
+    EventTopic.PORT_INPUT: "Input",
+    EventTopic.PORT_SUPERVISED_INPUT: "Supervised Input",
+    EventTopic.PTZ_IS_MOVING: "is_moving",
+    EventTopic.PTZ_ON_PRESET: "on_preset",
+    EventTopic.RELAY: "Relay",
+    EventTopic.SOUND_TRIGGER_LEVEL: "Sound",
+}
 
 
 class AxisEntityBase(Entity):
@@ -46,21 +66,30 @@ class AxisEventBase(AxisEntityBase):
 
     _attr_should_poll = False
 
-    def __init__(self, event: AxisEvent, device: AxisNetworkDevice) -> None:
+    def __init__(self, event: Event, device: AxisNetworkDevice) -> None:
         """Initialize the Axis event."""
         super().__init__(device)
         self.event = event
 
-        self._attr_name = f"{event.TYPE} {event.id}"
+        self.event_type = TOPIC_TO_EVENT_TYPE[event.topic_base]
+        self._attr_name = f"{self.event_type} {event.id}"
         self._attr_unique_id = f"{device.unique_id}-{event.topic}-{event.id}"
 
-        self._attr_device_class = event.CLASS
+        self._attr_device_class = event.group.value
+
+    @callback
+    def async_event_callback(self, event) -> None:
+        """Update the entities state."""
+        self.event = event
+        self.update_callback()
 
     async def async_added_to_hass(self) -> None:
         """Subscribe sensors events."""
-        self.event.register_callback(self.update_callback)
         await super().async_added_to_hass()
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect device object when removed."""
-        self.event.remove_callback(self.update_callback)
+        self.async_on_remove(
+            self.device.api.event.subscribe(
+                self.async_event_callback,
+                id_filter=self.event.id,
+                topic_filter=self.event.topic_base,
+            )
+        )

@@ -1,6 +1,7 @@
 """The Huisbaasje integration."""
 from datetime import timedelta
 import logging
+from typing import Any
 
 import async_timeout
 from energyflip import EnergyFlip, EnergyFlipException
@@ -45,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Authentication failed: %s", str(exception))
         return False
 
-    async def async_update_data():
+    async def async_update_data() -> dict[str, dict[str, Any]]:
         return await async_update_huisbaasje(energyflip)
 
     # Create a coordinator for polling updates
@@ -80,7 +81,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def async_update_huisbaasje(energyflip):
+async def async_update_huisbaasje(energyflip: EnergyFlip) -> dict[str, dict[str, Any]]:
     """Update the data by performing a request to Huisbaasje."""
     try:
         # Note: asyncio.TimeoutError and aiohttp.ClientError are already

@@ -31,6 +31,28 @@
         }
     },
     "entity": {
+        "select": {
+            "horizontalswing": {
+                "state": {
+                    "fixedcenter": "po \u015brodku",
+                    "fixedcenterleft": "po \u015brodku w lewo",
+                    "fixedcenterright": "po \u015brodku w prawo",
+                    "fixedleft": "w lewo",
+                    "fixedleftright": "w prawo i w lewo",
+                    "fixedright": "w prawo",
+                    "rangecenter": "zasi\u0119g \u015brodkowy",
+                    "rangefull": "pe\u0142ny zasi\u0119g",
+                    "stopped": "zatrzymane"
+                }
+            },
+            "light": {
+                "state": {
+                    "dim": "ciemne",
+                    "off": "wy\u0142.",
+                    "on": "w\u0142."
+                }
+            }
+        },
         "sensor": {
             "sensitivity": {
                 "state": {

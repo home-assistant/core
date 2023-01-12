@@ -19,11 +19,25 @@
                     "pin": "PIN k\u00f3d",
                     "use_psk": "Pou\u017eite autentifik\u00e1ciu PSK"
                 },
-                "description": "Zadajte PIN k\u00f3d zobrazen\u00fd na telev\u00edzii Sony Bravia.\n\nPokia\u013e sa PIN k\u00f3d nezobraz\u00ed, je potrebn\u00e9 zru\u0161i\u0165 registr\u00e1ciu Home Assistant na telev\u00edzii, prejdite na: Nastavenia -> Sie\u0165 -> Nastavenie vzdialen\u00e9ho zariadenia -> Zru\u0161i\u0165 registr\u00e1ciu vzdialen\u00e9ho zariadenia.",
+                "description": "Uistite sa, \u017ee je na va\u0161om telev\u00edzore aktivovan\u00e9 \u201eOvl\u00e1danie na dia\u013eku\u201c, prejdite na:\n Nastavenia - > Sie\u0165 - > Nastavenia vzdialen\u00e9ho zariadenia - > Ovl\u00e1da\u0165 na dia\u013eku. \n\n Existuj\u00fa dva sp\u00f4soby autoriz\u00e1cie: PIN k\u00f3d alebo PSK (Pre-Shared Key).\n Ako stabilnej\u0161ia sa odpor\u00fa\u010da autoriz\u00e1cia cez PSK.",
                 "title": "Autorizujte telev\u00edzor Sony Bravia"
             },
             "confirm": {
                 "description": "Chcete za\u010da\u0165 nastavova\u0165?"
+            },
+            "pin": {
+                "data": {
+                    "pin": "PIN k\u00f3d"
+                },
+                "description": "Zadajte k\u00f3d PIN zobrazen\u00fd na telev\u00edzore Sony Bravia. \n\n Ak sa k\u00f3d PIN nezobrazuje, mus\u00edte zru\u0161i\u0165 registr\u00e1ciu aplik\u00e1cie Home Assistant na telev\u00edzore, prejdite na: Nastavenia - > Sie\u0165 - > Nastavenia vzdialen\u00e9ho zariadenia - > Zru\u0161te registr\u00e1ciu vzdialen\u00e9ho zariadenia.",
+                "title": "Autorizujte telev\u00edzor Sony Bravia"
+            },
+            "psk": {
+                "data": {
+                    "pin": "PSK"
+                },
+                "description": "Ak chcete nastavi\u0165 PSK na svojom telev\u00edzore, prejdite na: Nastavenia - > Sie\u0165 - > Nastavenie dom\u00e1cej siete - > Ovl\u00e1danie IP. Nastavte \u00abAuthentication\u00bb na \u00abNormal and Pre-Shared Key\u00bb alebo \u00abPre-Shared Key\u00bb a definujte svoj re\u0165azec pre-Shared-Key (napr. Sony). \n\n Tu zadajte svoje PSK.",
+                "title": "Autorizujte telev\u00edzor Sony Bravia"
             },
             "reauth_confirm": {
                 "data": {

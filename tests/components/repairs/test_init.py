@@ -459,7 +459,7 @@ async def test_non_compliant_platform(hass: HomeAssistant, hass_ws_client) -> No
     """Test non-compliant platforms are not registered."""
 
     hass.config.components.add("fake_integration")
-    hass.config.components.add("integration_without_diagnostics")
+    hass.config.components.add("integration_without_repairs")
     mock_platform(
         hass,
         "fake_integration.repairs",
@@ -467,7 +467,7 @@ async def test_non_compliant_platform(hass: HomeAssistant, hass_ws_client) -> No
     )
     mock_platform(
         hass,
-        "integration_without_diagnostics.repairs",
+        "integration_without_repairs.repairs",
         Mock(spec=[]),
     )
     assert await async_setup_component(hass, DOMAIN, {})

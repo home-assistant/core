@@ -385,7 +385,10 @@ def async_numeric_state(  # noqa: C901
             except (ValueError, TypeError) as ex:
                 raise ConditionErrorMessage(
                     "numeric_state",
-                    f"the 'below' entity {below} state '{below_entity.state}' cannot be processed as a number",
+                    (
+                        f"the 'below' entity {below} state '{below_entity.state}'"
+                        " cannot be processed as a number"
+                    ),
                 ) from ex
         elif fvalue >= below:
             condition_trace_set_result(False, state=fvalue, wanted_state_below=below)
@@ -413,7 +416,10 @@ def async_numeric_state(  # noqa: C901
             except (ValueError, TypeError) as ex:
                 raise ConditionErrorMessage(
                     "numeric_state",
-                    f"the 'above' entity {above} state '{above_entity.state}' cannot be processed as a number",
+                    (
+                        f"the 'above' entity {above} state '{above_entity.state}'"
+                        " cannot be processed as a number"
+                    ),
                 ) from ex
         elif fvalue <= above:
             condition_trace_set_result(False, state=fvalue, wanted_state_above=above)
@@ -605,8 +611,8 @@ def sun(
     # Special case: before sunrise OR after sunset
     # This will handle the very rare case in the polar region when the sun rises/sets
     # but does not set/rise.
-    # However this entire condition does not handle those full days of darkness or light,
-    # the following should be used instead:
+    # However this entire condition does not handle those full days of darkness
+    # or light, the following should be used instead:
     #
     #    condition:
     #      condition: state
@@ -889,7 +895,10 @@ def zone_from_config(config: ConfigType) -> ConditionCheckerType:
                     errors.append(
                         ConditionErrorMessage(
                             "zone",
-                            f"error matching {entity_id} with {zone_entity_id}: {ex.message}",
+                            (
+                                f"error matching {entity_id} with {zone_entity_id}:"
+                                f" {ex.message}"
+                            ),
                         )
                     )
 

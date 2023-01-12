@@ -68,7 +68,7 @@ class QSSensor(QSEntity, SensorEntity):
     @property
     def native_value(self):
         """Return the value of the sensor."""
-        return str(self._val)
+        return None if self._val is None else str(self._val)
 
     @property
     def unique_id(self):

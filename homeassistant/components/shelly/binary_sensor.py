@@ -190,6 +190,12 @@ RPC_SENSORS: Final = {
         entity_category=EntityCategory.DIAGNOSTIC,
         supported=lambda status: status.get("apower") is not None,
     ),
+    "smoke": RpcBinarySensorDescription(
+        key="smoke",
+        sub_key="alarm",
+        name="Smoke",
+        device_class=BinarySensorDeviceClass.SMOKE,
+    ),
 }
 
 

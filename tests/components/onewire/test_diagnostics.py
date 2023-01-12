@@ -1,4 +1,5 @@
 """Test 1-Wire diagnostics."""
+from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -14,7 +15,7 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 
 
 @pytest.fixture(autouse=True)
-def override_platforms():
+def override_platforms() -> Generator[None, None, None]:
     """Override PLATFORMS."""
     with patch("homeassistant.components.onewire.PLATFORMS", [Platform.SWITCH]):
         yield
@@ -41,7 +42,7 @@ async def test_entry_diagnostics(
     hass_client,
     owproxy: MagicMock,
     device_id: str,
-):
+) -> None:
     """Test config entry diagnostics."""
     setup_owproxy_mock_devices(owproxy, Platform.SENSOR, [device_id])
     await hass.config_entries.async_setup(config_entry.entry_id)

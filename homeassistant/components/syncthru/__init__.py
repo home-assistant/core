@@ -50,7 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 )
             return printer
 
-    coordinator: DataUpdateCoordinator = DataUpdateCoordinator(
+    coordinator = DataUpdateCoordinator[SyncThru](
         hass,
         _LOGGER,
         name=DOMAIN,

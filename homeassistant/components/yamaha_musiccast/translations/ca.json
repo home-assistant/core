@@ -37,10 +37,10 @@
             "zone_link_audio_delay": {
                 "state": {
                     "audio_sync": "Sincronitzaci\u00f3 d'\u00e0udio",
-                    "audio_sync_off": "Sincronitzaci\u00f3 d'\u00e0udio OFF",
-                    "audio_sync_on": "Sincronitzaci\u00f3 d'\u00e0udio ON",
+                    "audio_sync_off": "Sincronitzaci\u00f3 d'\u00e0udio Desactivada",
+                    "audio_sync_on": "Sincronitzaci\u00f3 d'\u00e0udio Activada",
                     "balanced": "Equilibrat",
-                    "lip_sync": "Sincronitzaci\u00f3 Lip"
+                    "lip_sync": "Sincronitzaci\u00f3 dels llavis"
                 }
             },
             "zone_link_audio_quality": {
@@ -59,10 +59,14 @@
             "zone_sleep": {
                 "state": {
                     "120 min": "120 minuts",
+                    "120_min": "120 minuts",
                     "30 min": "30 minuts",
+                    "30_min": "30 minuts",
                     "60 min": "60 minuts",
+                    "60_min": "60 minuts",
                     "90 min": "90 minuts",
-                    "off": "OFF"
+                    "90_min": "90 minuts",
+                    "off": "Desactivat"
                 }
             },
             "zone_surr_decoder_type": {

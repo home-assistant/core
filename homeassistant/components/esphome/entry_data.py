@@ -37,6 +37,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import Store
 
+from .dashboard import async_get_dashboard
+
 SAVE_DELAY = 120
 _LOGGER = logging.getLogger(__name__)
 
@@ -147,6 +149,10 @@ class RuntimeEntryData:
         """Distribute an update of static infos to all platforms."""
         # First, load all platforms
         needed_platforms = set()
+
+        if async_get_dashboard(hass):
+            needed_platforms.add("update")
+
         for info in infos:
             for info_type, platform in INFO_TYPE_TO_PLATFORM.items():
                 if isinstance(info, info_type):

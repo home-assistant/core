@@ -1,4 +1,17 @@
 {
+    "entity": {
+        "climate": {
+            "ubercool": {
+                "state_attributes": {
+                    "swing_mode": {
+                        "state": {
+                            "auto": "\u0410\u0432\u0442\u043e"
+                        }
+                    }
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "options_1": {

@@ -276,10 +276,6 @@ async def test_controlling_state_and_attributes_with_json_message_without_templa
     assert state.attributes.get(siren.ATTR_TONE) == "bell"
     assert state.attributes.get(siren.ATTR_DURATION) == 5
     assert state.attributes.get(siren.ATTR_VOLUME_LEVEL) == 0.6
-    assert (
-        "Ignoring empty payload '{}' after rendering for topic state-topic"
-        in caplog.text
-    )
 
 
 async def test_filtering_not_supported_attributes_optimistic(

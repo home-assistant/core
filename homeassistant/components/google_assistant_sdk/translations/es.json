@@ -34,8 +34,10 @@
         "step": {
             "init": {
                 "data": {
+                    "enable_conversation_agent": "Habilitar el agente de conversaci\u00f3n",
                     "language_code": "C\u00f3digo de idioma"
-                }
+                },
+                "description": "Configura el idioma para las interacciones con el Asistente de Google y si deseas habilitar el agente de conversaci\u00f3n."
             }
         }
     }

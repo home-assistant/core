@@ -79,8 +79,7 @@ def distance(
 def vincenty(
     point1: tuple[float, float], point2: tuple[float, float], miles: bool = False
 ) -> float | None:
-    """
-    Vincenty formula (inverse method) to calculate the distance.
+    """Vincenty formula (inverse method) to calculate the distance.
 
     Result in kilometers or miles between two points on the surface of a
     spheroid.

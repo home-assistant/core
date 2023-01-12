@@ -94,13 +94,13 @@ def set_time_zone():
 @pytest.mark.parametrize(
     "device_class, state_unit, display_unit, statistics_unit, unit_class, mean, min, max",
     [
-        (None, "%", "%", "%", None, 13.050847, -10, 30),
-        ("battery", "%", "%", "%", None, 13.050847, -10, 30),
-        ("battery", None, None, None, None, 13.050847, -10, 30),
+        (None, "%", "%", "%", "unitless", 13.050847, -10, 30),
+        ("battery", "%", "%", "%", "unitless", 13.050847, -10, 30),
+        ("battery", None, None, None, "unitless", 13.050847, -10, 30),
         ("distance", "m", "m", "m", "distance", 13.050847, -10, 30),
         ("distance", "mi", "mi", "mi", "distance", 13.050847, -10, 30),
-        ("humidity", "%", "%", "%", None, 13.050847, -10, 30),
-        ("humidity", None, None, None, None, 13.050847, -10, 30),
+        ("humidity", "%", "%", "%", "unitless", 13.050847, -10, 30),
+        ("humidity", None, None, None, "unitless", 13.050847, -10, 30),
         ("pressure", "Pa", "Pa", "Pa", "pressure", 13.050847, -10, 30),
         ("pressure", "hPa", "hPa", "hPa", "pressure", 13.050847, -10, 30),
         ("pressure", "mbar", "mbar", "mbar", "pressure", 13.050847, -10, 30),
@@ -178,7 +178,7 @@ def test_compile_hourly_statistics(
 @pytest.mark.parametrize(
     "device_class, state_unit, display_unit, statistics_unit, unit_class",
     [
-        (None, "%", "%", "%", None),
+        (None, "%", "%", "%", "unitless"),
     ],
 )
 def test_compile_hourly_statistics_purged_state_changes(
@@ -317,7 +317,7 @@ def test_compile_hourly_statistics_wrong_unit(hass_recorder, caplog, attributes)
             "source": "recorder",
             "statistic_id": "sensor.test3",
             "statistics_unit_of_measurement": None,
-            "unit_class": None,
+            "unit_class": "unitless",
         },
         {
             "statistic_id": "sensor.test6",
@@ -1775,8 +1775,8 @@ def test_compile_hourly_statistics_fails(hass_recorder, caplog):
 @pytest.mark.parametrize(
     "state_class, device_class, state_unit, display_unit, statistics_unit, unit_class, statistic_type",
     [
-        ("measurement", "battery", "%", "%", "%", None, "mean"),
-        ("measurement", "battery", None, None, None, None, "mean"),
+        ("measurement", "battery", "%", "%", "%", "unitless", "mean"),
+        ("measurement", "battery", None, None, None, "unitless", "mean"),
         ("measurement", "distance", "m", "m", "m", "distance", "mean"),
         ("measurement", "distance", "mi", "mi", "mi", "distance", "mean"),
         ("total", "distance", "m", "m", "m", "distance", "sum"),
@@ -1785,8 +1785,8 @@ def test_compile_hourly_statistics_fails(hass_recorder, caplog):
         ("total", "energy", "kWh", "kWh", "kWh", "energy", "sum"),
         ("measurement", "energy", "Wh", "Wh", "Wh", "energy", "mean"),
         ("measurement", "energy", "kWh", "kWh", "kWh", "energy", "mean"),
-        ("measurement", "humidity", "%", "%", "%", None, "mean"),
-        ("measurement", "humidity", None, None, None, None, "mean"),
+        ("measurement", "humidity", "%", "%", "%", "unitless", "mean"),
+        ("measurement", "humidity", None, None, None, "unitless", "mean"),
         ("total", "monetary", "USD", "USD", "USD", None, "sum"),
         ("total", "monetary", "None", "None", "None", None, "sum"),
         ("total", "gas", "m³", "m³", "m³", "volume", "sum"),
@@ -1898,10 +1898,10 @@ def test_list_statistic_ids_unsupported(hass_recorder, caplog, _attributes):
 @pytest.mark.parametrize(
     "device_class, state_unit, state_unit2, unit_class, mean, min, max",
     [
-        (None, None, "cats", None, 13.050847, -10, 30),
-        (None, "%", "cats", None, 13.050847, -10, 30),
-        ("battery", "%", "cats", None, 13.050847, -10, 30),
-        ("battery", None, "cats", None, 13.050847, -10, 30),
+        (None, None, "cats", "unitless", 13.050847, -10, 30),
+        (None, "%", "cats", "unitless", 13.050847, -10, 30),
+        ("battery", "%", "cats", "unitless", 13.050847, -10, 30),
+        ("battery", None, "cats", "unitless", 13.050847, -10, 30),
         (None, "kW", "Wh", "power", 13.050847, -10, 30),
         # Can't downgrade from ft³ to ft3 or from m³ to m3
         (None, "ft³", "ft3", "volume", 13.050847, -10, 30),
@@ -1919,7 +1919,10 @@ def test_compile_hourly_statistics_changing_units_1(
     min,
     max,
 ):
-    """Test compiling hourly statistics where units change from one hour to the next."""
+    """Test compiling hourly statistics where units change from one hour to the next.
+
+    This tests the case where the recorder can not convert between the units.
+    """
     zero = dt_util.utcnow()
     hass = hass_recorder()
     setup_component(hass, "sensor", {})
@@ -2014,10 +2017,7 @@ def test_compile_hourly_statistics_changing_units_1(
 @pytest.mark.parametrize(
     "device_class, state_unit, display_unit, statistics_unit, unit_class, mean, min, max",
     [
-        (None, None, None, None, None, 13.050847, -10, 30),
-        (None, "%", "%", "%", None, 13.050847, -10, 30),
-        ("battery", "%", "%", "%", None, 13.050847, -10, 30),
-        ("battery", None, None, None, None, 13.050847, -10, 30),
+        (None, "dogs", "dogs", "dogs", None, 13.050847, -10, 30),
     ],
 )
 def test_compile_hourly_statistics_changing_units_2(
@@ -2032,7 +2032,11 @@ def test_compile_hourly_statistics_changing_units_2(
     min,
     max,
 ):
-    """Test compiling hourly statistics where units change during an hour."""
+    """Test compiling hourly statistics where units change during an hour.
+
+    This tests the behaviour when the sensor units are note supported by any unit
+    converter.
+    """
     zero = dt_util.utcnow()
     hass = hass_recorder()
     setup_component(hass, "sensor", {})
@@ -2077,10 +2081,7 @@ def test_compile_hourly_statistics_changing_units_2(
 @pytest.mark.parametrize(
     "device_class, state_unit, display_unit, statistics_unit, unit_class, mean, min, max",
     [
-        (None, None, None, None, None, 13.050847, -10, 30),
-        (None, "%", "%", "%", None, 13.050847, -10, 30),
-        ("battery", "%", "%", "%", None, 13.050847, -10, 30),
-        ("battery", None, None, None, None, 13.050847, -10, 30),
+        (None, "dogs", "dogs", "dogs", None, 13.050847, -10, 30),
     ],
 )
 def test_compile_hourly_statistics_changing_units_3(
@@ -2095,7 +2096,11 @@ def test_compile_hourly_statistics_changing_units_3(
     min,
     max,
 ):
-    """Test compiling hourly statistics where units change from one hour to the next."""
+    """Test compiling hourly statistics where units change from one hour to the next.
+
+    This tests the behaviour when the sensor units are note supported by any unit
+    converter.
+    """
     zero = dt_util.utcnow()
     hass = hass_recorder()
     setup_component(hass, "sensor", {})
@@ -2182,6 +2187,132 @@ def test_compile_hourly_statistics_changing_units_3(
                 "state": None,
                 "sum": None,
             }
+        ]
+    }
+    assert "Error while processing event StatisticsTask" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    "state_unit_1, state_unit_2, unit_class, mean, min, max, factor",
+    [
+        (None, "%", "unitless", 13.050847, -10, 30, 100),
+        ("%", None, "unitless", 13.050847, -10, 30, 0.01),
+        ("W", "kW", "power", 13.050847, -10, 30, 0.001),
+        ("kW", "W", "power", 13.050847, -10, 30, 1000),
+    ],
+)
+def test_compile_hourly_statistics_convert_units_1(
+    hass_recorder,
+    caplog,
+    state_unit_1,
+    state_unit_2,
+    unit_class,
+    mean,
+    min,
+    max,
+    factor,
+):
+    """Test compiling hourly statistics where units change from one hour to the next.
+
+    This tests the case where the recorder can convert between the units.
+    """
+    zero = dt_util.utcnow()
+    hass = hass_recorder()
+    setup_component(hass, "sensor", {})
+    wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
+    attributes = {
+        "device_class": None,
+        "state_class": "measurement",
+        "unit_of_measurement": state_unit_1,
+    }
+    four, states = record_states(hass, zero, "sensor.test1", attributes)
+    four, _states = record_states(
+        hass, zero + timedelta(minutes=5), "sensor.test1", attributes, seq=[0, 1, None]
+    )
+    states["sensor.test1"] += _states["sensor.test1"]
+
+    do_adhoc_statistics(hass, start=zero)
+    wait_recording_done(hass)
+    assert "does not match the unit of already compiled" not in caplog.text
+    statistic_ids = list_statistic_ids(hass)
+    assert statistic_ids == [
+        {
+            "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": state_unit_1,
+            "has_mean": True,
+            "has_sum": False,
+            "name": None,
+            "source": "recorder",
+            "statistics_unit_of_measurement": state_unit_1,
+            "unit_class": unit_class,
+        },
+    ]
+    stats = statistics_during_period(hass, zero, period="5minute")
+    assert stats == {
+        "sensor.test1": [
+            {
+                "start": process_timestamp(zero),
+                "end": process_timestamp(zero + timedelta(minutes=5)),
+                "mean": approx(mean),
+                "min": approx(min),
+                "max": approx(max),
+                "last_reset": None,
+                "state": None,
+                "sum": None,
+            }
+        ]
+    }
+
+    attributes["unit_of_measurement"] = state_unit_2
+    four, _states = record_states(
+        hass, zero + timedelta(minutes=10), "sensor.test1", attributes
+    )
+    states["sensor.test1"] += _states["sensor.test1"]
+    hist = history.get_significant_states(hass, zero, four)
+    assert dict(states) == dict(hist)
+    do_adhoc_statistics(hass, start=zero + timedelta(minutes=10))
+    wait_recording_done(hass)
+    assert "The unit of sensor.test1 is changing" not in caplog.text
+    assert (
+        f"matches the unit of already compiled statistics ({state_unit_1})"
+        not in caplog.text
+    )
+    statistic_ids = list_statistic_ids(hass)
+    assert statistic_ids == [
+        {
+            "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": state_unit_2,
+            "has_mean": True,
+            "has_sum": False,
+            "name": None,
+            "source": "recorder",
+            "statistics_unit_of_measurement": state_unit_1,
+            "unit_class": unit_class,
+        },
+    ]
+    stats = statistics_during_period(hass, zero, period="5minute")
+    assert stats == {
+        "sensor.test1": [
+            {
+                "start": process_timestamp(zero),
+                "end": process_timestamp(zero + timedelta(minutes=5)),
+                "mean": approx(mean * factor),
+                "min": approx(min * factor),
+                "max": approx(max * factor),
+                "last_reset": None,
+                "state": None,
+                "sum": None,
+            },
+            {
+                "start": process_timestamp(zero + timedelta(minutes=10)),
+                "end": process_timestamp(zero + timedelta(minutes=15)),
+                "mean": approx(mean),
+                "min": approx(min),
+                "max": approx(max),
+                "last_reset": None,
+                "state": None,
+                "sum": None,
+            },
         ]
     }
     assert "Error while processing event StatisticsTask" not in caplog.text
@@ -2400,7 +2531,10 @@ def test_compile_hourly_statistics_changing_device_class_1(
     min,
     max,
 ):
-    """Test compiling hourly statistics where device class changes from one hour to the next."""
+    """Test compiling hourly statistics where device class changes from one hour to the next.
+
+    Device class is ignored, meaning changing device class should not influence the statistics.
+    """
     zero = dt_util.utcnow()
     hass = hass_recorder()
     setup_component(hass, "sensor", {})
@@ -2586,7 +2720,10 @@ def test_compile_hourly_statistics_changing_device_class_2(
     min,
     max,
 ):
-    """Test compiling hourly statistics where device class changes from one hour to the next."""
+    """Test compiling hourly statistics where device class changes from one hour to the next.
+
+    Device class is ignored, meaning changing device class should not influence the statistics.
+    """
     zero = dt_util.utcnow()
     hass = hass_recorder()
     setup_component(hass, "sensor", {})
@@ -2692,10 +2829,10 @@ def test_compile_hourly_statistics_changing_device_class_2(
 @pytest.mark.parametrize(
     "device_class, state_unit, display_unit, statistics_unit, unit_class, mean, min, max",
     [
-        (None, None, None, None, None, 13.050847, -10, 30),
+        (None, None, None, None, "unitless", 13.050847, -10, 30),
     ],
 )
-def test_compile_hourly_statistics_changing_statistics(
+def test_compile_hourly_statistics_changing_state_class(
     hass_recorder,
     caplog,
     device_class,
@@ -2707,7 +2844,7 @@ def test_compile_hourly_statistics_changing_statistics(
     min,
     max,
 ):
-    """Test compiling hourly statistics where units change during an hour."""
+    """Test compiling hourly statistics where state class changes."""
     period0 = dt_util.utcnow()
     period0_end = period1 = period0 + timedelta(minutes=5)
     period1_end = period0 + timedelta(minutes=10)
@@ -2737,7 +2874,7 @@ def test_compile_hourly_statistics_changing_statistics(
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": None,
-            "unit_class": None,
+            "unit_class": unit_class,
         },
     ]
     metadata = get_metadata(hass, statistic_ids=("sensor.test1",))
@@ -2773,7 +2910,7 @@ def test_compile_hourly_statistics_changing_statistics(
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": None,
-            "unit_class": None,
+            "unit_class": unit_class,
         },
     ]
     metadata = get_metadata(hass, statistic_ids=("sensor.test1",))
@@ -2965,7 +3102,7 @@ def test_compile_statistics_hourly_daily_monthly_summary(hass_recorder, caplog):
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": "%",
-            "unit_class": None,
+            "unit_class": "unitless",
         },
         {
             "statistic_id": "sensor.test2",
@@ -2975,7 +3112,7 @@ def test_compile_statistics_hourly_daily_monthly_summary(hass_recorder, caplog):
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": "%",
-            "unit_class": None,
+            "unit_class": "unitless",
         },
         {
             "statistic_id": "sensor.test3",
@@ -2985,7 +3122,7 @@ def test_compile_statistics_hourly_daily_monthly_summary(hass_recorder, caplog):
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": "%",
-            "unit_class": None,
+            "unit_class": "unitless",
         },
         {
             "statistic_id": "sensor.test4",
@@ -3496,6 +3633,13 @@ async def test_validate_statistics_unit_ignore_device_class(
             "bar",
             "Pa, bar, cbar, hPa, inHg, kPa, mbar, mmHg, psi",
         ),
+        (
+            METRIC_SYSTEM,
+            BATTERY_SENSOR_ATTRIBUTES,
+            "%",
+            None,
+            "%, <None>",
+        ),
     ],
 )
 async def test_validate_statistics_unit_change_no_device_class(
@@ -3851,8 +3995,8 @@ async def test_validate_statistics_sensor_removed(
 @pytest.mark.parametrize(
     "attributes, unit1, unit2",
     [
-        (BATTERY_SENSOR_ATTRIBUTES, "%", "dogs"),
-        (NONE_SENSOR_ATTRIBUTES, None, "dogs"),
+        (BATTERY_SENSOR_ATTRIBUTES, "cats", "dogs"),
+        (NONE_SENSOR_ATTRIBUTES, "cats", "dogs"),
     ],
 )
 async def test_validate_statistics_unit_change_no_conversion(

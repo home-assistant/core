@@ -2,10 +2,10 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import date, datetime
+from datetime import date
 from typing import Any
 
-from aioridwell.model import RidwellAccount, RidwellPickupEvent
+from aioridwell.model import RidwellAccount
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -15,11 +15,11 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import RidwellData, RidwellEntity
+from . import RidwellData
 from .const import DOMAIN, SENSOR_TYPE_NEXT_PICKUP
+from .entity import RidwellEntity
 
 ATTR_CATEGORY = "category"
 ATTR_PICKUP_STATE = "pickup_state"
@@ -40,10 +40,8 @@ async def async_setup_entry(
     data: RidwellData = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        [
-            RidwellSensor(data.coordinator, account, SENSOR_DESCRIPTION)
-            for account in data.accounts.values()
-        ]
+        RidwellSensor(data.coordinator, account, SENSOR_DESCRIPTION)
+        for account in data.accounts.values()
     )
 
 
@@ -64,14 +62,12 @@ class RidwellSensor(RidwellEntity, SensorEntity):
     @property
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return entity specific state attributes."""
-        event = self.coordinator.data[self._account.account_id]
-
         attrs: dict[str, Any] = {
             ATTR_PICKUP_TYPES: {},
-            ATTR_PICKUP_STATE: event.state.value,
+            ATTR_PICKUP_STATE: self.next_pickup_event.state.value,
         }
 
-        for pickup in event.pickups:
+        for pickup in self.next_pickup_event.pickups:
             if pickup.name not in attrs[ATTR_PICKUP_TYPES]:
                 attrs[ATTR_PICKUP_TYPES][pickup.name] = {
                     ATTR_CATEGORY: pickup.category.value,
@@ -86,7 +82,6 @@ class RidwellSensor(RidwellEntity, SensorEntity):
         return attrs
 
     @property
-    def native_value(self) -> StateType | date | datetime:
+    def native_value(self) -> date:
         """Return the value reported by the sensor."""
-        event: RidwellPickupEvent = self.coordinator.data[self._account.account_id]
-        return event.pickup_date
+        return self.next_pickup_event.pickup_date

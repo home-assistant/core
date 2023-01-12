@@ -41,7 +41,7 @@
                 "state": {
                     "auto": "Autom\u00e0tic",
                     "diffuse": "Dif\u00fas",
-                    "focus": "Enfocament",
+                    "focus": "Enfocat",
                     "high": "Alt",
                     "low": "Baix",
                     "medium": "Mitj\u00e0",
@@ -65,17 +65,17 @@
                     "fan": "Ventilador",
                     "heating": "Escalfant",
                     "idle": "Inactiu",
-                    "off": "OFF"
+                    "off": "Apagat"
                 }
             },
             "hvac_modes": {
                 "name": "Modes HVAC"
             },
             "max_humidity": {
-                "name": "Humitat m\u00e0xima objectiu"
+                "name": "Humitat objectiu m\u00e0xima"
             },
             "max_temp": {
-                "name": "Temperatura m\u00e0xima objectiu"
+                "name": "Temperatura objectiu m\u00e0xima"
             },
             "min_humidity": {
                 "name": "Humitat objectiu m\u00ednima"

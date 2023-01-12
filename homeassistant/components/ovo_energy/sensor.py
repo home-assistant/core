@@ -115,9 +115,9 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up OVO Energy sensor based on a config entry."""
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        DATA_COORDINATOR
-    ]
+    coordinator: DataUpdateCoordinator[OVODailyUsage] = hass.data[DOMAIN][
+        entry.entry_id
+    ][DATA_COORDINATOR]
     client: OVOEnergy = hass.data[DOMAIN][entry.entry_id][DATA_CLIENT]
 
     entities = []
@@ -152,25 +152,22 @@ async def async_setup_entry(
 class OVOEnergySensor(OVOEnergyDeviceEntity, SensorEntity):
     """Define a OVO Energy sensor."""
 
-    coordinator: DataUpdateCoordinator
+    coordinator: DataUpdateCoordinator[DataUpdateCoordinator[OVODailyUsage]]
     entity_description: OVOEnergySensorEntityDescription
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[OVODailyUsage],
         description: OVOEnergySensorEntityDescription,
         client: OVOEnergy,
     ) -> None:
         """Initialize."""
-        super().__init__(
-            coordinator,
-            client,
-        )
+        super().__init__(coordinator, client)
         self._attr_unique_id = f"{DOMAIN}_{client.account_id}_{description.key}"
         self.entity_description = description
 
     @property
     def native_value(self) -> StateType | datetime:
         """Return the state."""
-        usage: OVODailyUsage = self.coordinator.data
+        usage = self.coordinator.data
         return self.entity_description.value(usage)

@@ -30,14 +30,14 @@
                 "data_description": {
                     "sensor_index": "Sensor al qual fer-li seguiment"
                 },
-                "description": "Quins dels sensors propers t'agradaria seguir?"
+                "description": "Quins dels sensors propers us agradaria seguir?"
             },
             "reauth_confirm": {
                 "data": {
                     "api_key": "Clau API"
                 },
                 "data_description": {
-                    "api_key": "Clau API de PurpleAir (si tens claus de lectura i escriptura, utilitza la de lectura)"
+                    "api_key": "Clau API de PurpleAir (si teniu claus de lectura i escriptura, utilitzeu la de lectura)"
                 }
             },
             "user": {
@@ -45,7 +45,7 @@
                     "api_key": "Clau API"
                 },
                 "data_description": {
-                    "api_key": "Clau API de PurpleAir (si tens claus de lectura i escriptura, utilitza la de lectura)"
+                    "api_key": "Clau API de PurpleAir (si teniu claus de lectura i escriptura, utilitzeu la de lectura)"
                 }
             }
         }
@@ -81,13 +81,13 @@
                 "data_description": {
                     "sensor_index": "Sensor al qual fer-li seguiment"
                 },
-                "description": "Quins dels sensors propers t'agradaria seguir?",
-                "title": "Tria sensor a afegir"
+                "description": "Quins dels sensors propers us agradaria seguir?",
+                "title": "Trieu el sensor a afegir"
             },
             "init": {
                 "menu_options": {
-                    "add_sensor": "Afegeix sensor",
-                    "remove_sensor": "Elimina sensor"
+                    "add_sensor": "Afegeix un sensor",
+                    "remove_sensor": "Elimina un sensor"
                 }
             },
             "remove_sensor": {
@@ -97,7 +97,7 @@
                 "data_description": {
                     "sensor_device_id": "Sensor a eliminar"
                 },
-                "title": "Elimina sensor"
+                "title": "Elimina un sensor"
             }
         }
     }

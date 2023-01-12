@@ -53,10 +53,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class UptimeRobotDataUpdateCoordinator(DataUpdateCoordinator):
+class UptimeRobotDataUpdateCoordinator(DataUpdateCoordinator[list[UptimeRobotMonitor]]):
     """Data update coordinator for UptimeRobot."""
 
-    data: list[UptimeRobotMonitor]
     config_entry: ConfigEntry
 
     def __init__(
@@ -77,7 +76,7 @@ class UptimeRobotDataUpdateCoordinator(DataUpdateCoordinator):
         self._device_registry = dev_reg
         self.api = api
 
-    async def _async_update_data(self) -> list[UptimeRobotMonitor] | None:
+    async def _async_update_data(self) -> list[UptimeRobotMonitor]:
         """Update data."""
         try:
             response = await self.api.async_get_monitors()
@@ -111,6 +110,5 @@ class UptimeRobotDataUpdateCoordinator(DataUpdateCoordinator):
             self.hass.async_create_task(
                 self.hass.config_entries.async_reload(self._config_entry_id)
             )
-            return None
 
         return monitors

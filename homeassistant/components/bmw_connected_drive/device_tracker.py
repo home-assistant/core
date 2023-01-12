@@ -69,6 +69,7 @@ class BMWDeviceTracker(BMWBaseEntity, TrackerEntity):
         return (
             self.vehicle.vehicle_location.location[0]
             if self.vehicle.is_vehicle_tracking_enabled
+            and self.vehicle.vehicle_location.location
             else None
         )
 
@@ -78,6 +79,7 @@ class BMWDeviceTracker(BMWBaseEntity, TrackerEntity):
         return (
             self.vehicle.vehicle_location.location[1]
             if self.vehicle.is_vehicle_tracking_enabled
+            and self.vehicle.vehicle_location.location
             else None
         )
 

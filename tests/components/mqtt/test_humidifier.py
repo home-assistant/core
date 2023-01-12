@@ -301,7 +301,7 @@ async def test_controlling_state_via_topic_and_json_message(
     assert state.attributes.get(humidifier.ATTR_HUMIDITY) is None
 
     async_fire_mqtt_message(hass, "humidity-state-topic", '{"otherval": 100}')
-    assert "Ignoring empty target humidity from" in caplog.text
+    assert state.attributes.get(humidifier.ATTR_HUMIDITY) is None
     caplog.clear()
 
     async_fire_mqtt_message(hass, "mode-state-topic", '{"val": "low"}')
@@ -325,7 +325,7 @@ async def test_controlling_state_via_topic_and_json_message(
     assert state.attributes.get(humidifier.ATTR_MODE) is None
 
     async_fire_mqtt_message(hass, "mode-state-topic", '{"otherval": 100}')
-    assert "Ignoring empty mode from" in caplog.text
+    assert state.attributes.get(humidifier.ATTR_MODE) is None
     caplog.clear()
 
     async_fire_mqtt_message(hass, "state-topic", '{"val": null}')
@@ -407,8 +407,6 @@ async def test_controlling_state_via_topic_and_json_message_shared_topic(
     state = hass.states.get("humidifier.test")
     assert state.attributes.get(humidifier.ATTR_HUMIDITY) == 100
     assert state.attributes.get(humidifier.ATTR_MODE) == "auto"
-    assert "Ignoring empty mode from" in caplog.text
-    assert "Ignoring empty state from" in caplog.text
     caplog.clear()
 
 

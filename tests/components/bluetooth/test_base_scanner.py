@@ -14,10 +14,15 @@ from homeassistant.components.bluetooth import (
     HaBluetoothConnector,
     storage,
 )
+from homeassistant.components.bluetooth.advertisement_tracker import (
+    TRACKER_BUFFERING_WOBBLE_SECONDS,
+)
 from homeassistant.components.bluetooth.const import (
     CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
+    UNAVAILABLE_TRACK_SECONDS,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.json import json_loads
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -239,7 +244,9 @@ async def test_remote_scanner_expires_non_connectable(hass, enable_bluetooth):
         > CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
     )
 
-    # The connectable timeout is not used for non connectable devices
+    # The connectable timeout is used for all devices
+    # as the manager takes care of availability and the scanner
+    # if only concerned about making a connection
     expire_monotonic = (
         start_time_monotonic
         + CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
@@ -255,11 +262,9 @@ async def test_remote_scanner_expires_non_connectable(hass, enable_bluetooth):
         async_fire_time_changed(hass, expire_utc)
         await hass.async_block_till_done()
 
-    assert len(scanner.discovered_devices) == 1
-    assert len(scanner.discovered_devices_and_advertisement_data) == 1
+    assert len(scanner.discovered_devices) == 0
+    assert len(scanner.discovered_devices_and_advertisement_data) == 0
 
-    # The non connectable timeout is used for non connectable devices
-    # which is always longer than the connectable timeout
     expire_monotonic = (
         start_time_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
     )
@@ -391,6 +396,122 @@ async def test_restore_history_remote_adapter(hass, hass_storage):
     cancel = _get_manager().async_register_scanner(scanner, True)
     assert "EB:0B:36:35:6F:A4" in scanner.discovered_devices_and_advertisement_data
     assert "E3:A5:63:3E:5E:23" not in scanner.discovered_devices_and_advertisement_data
+
+    cancel()
+    unsetup()
+
+
+async def test_device_with_ten_minute_advertising_interval(
+    hass, caplog, enable_bluetooth
+):
+    """Test a device with a 10 minute advertising interval."""
+    manager = _get_manager()
+
+    bparasite_device = BLEDevice(
+        "44:44:33:11:23:45",
+        "bparasite",
+        {},
+        rssi=-100,
+    )
+    bparasite_device_adv = generate_advertisement_data(
+        local_name="bparasite",
+        service_uuids=[],
+        manufacturer_data={1: b"\x01"},
+        rssi=-100,
+    )
+
+    class FakeScanner(BaseHaRemoteScanner):
+        def inject_advertisement(
+            self, device: BLEDevice, advertisement_data: AdvertisementData
+        ) -> None:
+            """Inject an advertisement."""
+            self._async_on_advertisement(
+                device.address,
+                advertisement_data.rssi,
+                device.name,
+                advertisement_data.service_uuids,
+                advertisement_data.service_data,
+                advertisement_data.manufacturer_data,
+                advertisement_data.tx_power,
+                {"scanner_specific_data": "test"},
+            )
+
+    new_info_callback = manager.scanner_adv_received
+    connector = (
+        HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
+    )
+    scanner = FakeScanner(hass, "esp32", "esp32", new_info_callback, connector, False)
+    unsetup = scanner.async_setup()
+    cancel = manager.async_register_scanner(scanner, True)
+
+    monotonic_now = time.monotonic()
+    new_time = monotonic_now
+    bparasite_device_went_unavailable = False
+
+    @callback
+    def _bparasite_device_unavailable_callback(_address: str) -> None:
+        """Barasite device unavailable callback."""
+        nonlocal bparasite_device_went_unavailable
+        bparasite_device_went_unavailable = True
+
+    advertising_interval = 60 * 10
+
+    bparasite_device_unavailable_cancel = bluetooth.async_track_unavailable(
+        hass,
+        _bparasite_device_unavailable_callback,
+        bparasite_device.address,
+        connectable=False,
+    )
+
+    for _ in range(0, 20):
+        new_time += advertising_interval
+        with patch(
+            "homeassistant.components.bluetooth.base_scanner.MONOTONIC_TIME",
+            return_value=new_time,
+        ):
+            scanner.inject_advertisement(bparasite_device, bparasite_device_adv)
+
+    future_time = new_time
+    assert (
+        bluetooth.async_address_present(hass, bparasite_device.address, False) is True
+    )
+    assert bparasite_device_went_unavailable is False
+    with patch(
+        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
+        return_value=new_time,
+    ):
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=future_time))
+        await hass.async_block_till_done()
+
+    assert bparasite_device_went_unavailable is False
+
+    missed_advertisement_future_time = (
+        future_time + advertising_interval + TRACKER_BUFFERING_WOBBLE_SECONDS + 1
+    )
+
+    with patch(
+        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
+        return_value=missed_advertisement_future_time,
+    ), patch(
+        "homeassistant.components.bluetooth.base_scanner.MONOTONIC_TIME",
+        return_value=missed_advertisement_future_time,
+    ):
+        # Fire once for the scanner to expire the device
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
+        )
+        await hass.async_block_till_done()
+        # Fire again for the manager to expire the device
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + timedelta(seconds=missed_advertisement_future_time)
+        )
+        await hass.async_block_till_done()
+
+    assert (
+        bluetooth.async_address_present(hass, bparasite_device.address, False) is False
+    )
+    assert bparasite_device_went_unavailable is True
+    bparasite_device_unavailable_cancel()
 
     cancel()
     unsetup()

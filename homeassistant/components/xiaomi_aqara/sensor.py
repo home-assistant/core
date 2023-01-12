@@ -42,7 +42,6 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     "illumination": SensorEntityDescription(
         key="illumination",
         native_unit_of_measurement="lm",
-        device_class=SensorDeviceClass.ILLUMINANCE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "lux": SensorEntityDescription(

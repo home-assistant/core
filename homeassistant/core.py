@@ -50,6 +50,11 @@ from .const import (
     ATTR_FRIENDLY_NAME,
     ATTR_SERVICE,
     ATTR_SERVICE_DATA,
+    COMPRESSED_STATE_ATTRIBUTES,
+    COMPRESSED_STATE_CONTEXT,
+    COMPRESSED_STATE_LAST_CHANGED,
+    COMPRESSED_STATE_LAST_UPDATED,
+    COMPRESSED_STATE_STATE,
     EVENT_CALL_SERVICE,
     EVENT_CORE_CONFIG_UPDATE,
     EVENT_HOMEASSISTANT_CLOSE,
@@ -1115,6 +1120,7 @@ class State:
         "domain",
         "object_id",
         "_as_dict",
+        "_as_compressed_state",
     ]
 
     def __init__(
@@ -1150,6 +1156,7 @@ class State:
         self.context = context or Context()
         self.domain, self.object_id = split_entity_id(self.entity_id)
         self._as_dict: ReadOnlyDict[str, Collection[Any]] | None = None
+        self._as_compressed_state: dict[str, Any] | None = None
 
     def __hash__(self) -> int:
         """Make the state hashable.
@@ -1190,6 +1197,33 @@ class State:
                 }
             )
         return self._as_dict
+
+    def as_compressed_state(self) -> dict[str, Any]:
+        """Build a compressed dict of a state for adds.
+
+        Omits the lu (last_updated) if it matches (lc) last_changed.
+
+        Sends c (context) as a string if it only contains an id.
+        """
+        if self._as_compressed_state:
+            return self._as_compressed_state
+        state_context = self.context
+        if state_context.parent_id is None and state_context.user_id is None:
+            context: dict[str, Any] | str = state_context.id
+        else:
+            context = state_context.as_dict()
+        compressed_state = {
+            COMPRESSED_STATE_STATE: self.state,
+            COMPRESSED_STATE_ATTRIBUTES: self.attributes,
+            COMPRESSED_STATE_CONTEXT: context,
+            COMPRESSED_STATE_LAST_CHANGED: dt_util.utc_to_timestamp(self.last_changed),
+        }
+        if self.last_changed != self.last_updated:
+            compressed_state[COMPRESSED_STATE_LAST_UPDATED] = dt_util.utc_to_timestamp(
+                self.last_updated
+            )
+        self._as_compressed_state = compressed_state
+        return compressed_state
 
     @classmethod
     def from_dict(cls: type[_StateT], json_dict: dict[str, Any]) -> _StateT | None:

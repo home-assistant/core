@@ -29,5 +29,15 @@
                 }
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "smart_type": {
+                "state": {
+                    "humidity": "Humidit\u00e9",
+                    "temperature": "Temp\u00e9rature"
+                }
+            }
+        }
     }
 }

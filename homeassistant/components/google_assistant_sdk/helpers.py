@@ -1,6 +1,8 @@
 """Helper classes for Google Assistant SDK integration."""
 from __future__ import annotations
 
+import logging
+
 import aiohttp
 from gassist_text import TextAssistant
 from google.oauth2.credentials import Credentials
@@ -12,12 +14,16 @@ from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 
 from .const import CONF_LANGUAGE_CODE, DOMAIN, SUPPORTED_LANGUAGE_CODES
 
+_LOGGER = logging.getLogger(__name__)
+
 DEFAULT_LANGUAGE_CODES = {
     "de": "de-DE",
     "en": "en-US",
     "es": "es-ES",
     "fr": "fr-FR",
     "it": "it-IT",
+    "ja": "ja-JP",
+    "ko": "ko-KR",
     "pt": "pt-BR",
 }
 
@@ -39,7 +45,8 @@ async def async_send_text_commands(commands: list[str], hass: HomeAssistant) -> 
     language_code = entry.options.get(CONF_LANGUAGE_CODE, default_language_code(hass))
     with TextAssistant(credentials, language_code) as assistant:
         for command in commands:
-            assistant.assist(command)
+            text_response = assistant.assist(command)[0]
+            _LOGGER.debug("command: %s\nresponse: %s", command, text_response)
 
 
 def default_language_code(hass: HomeAssistant):

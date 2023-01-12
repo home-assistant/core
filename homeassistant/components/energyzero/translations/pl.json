@@ -1,0 +1,12 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
+        },
+        "step": {
+            "user": {
+                "description": "Czy chcesz rozpocz\u0105\u0107 konfiguracj\u0119?"
+            }
+        }
+    }
+}

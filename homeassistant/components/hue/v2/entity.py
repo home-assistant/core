@@ -71,11 +71,11 @@ class HueBaseEntity(Entity):
             # creating a pretty name for device-less entities (e.g. groups/scenes)
             # should be handled in the platform instead
             return self.resource.type.value
-        # if resource is a light, use the name from metadata
-        if self.resource.type == ResourceTypes.LIGHT:
-            return self.resource.name
-        # for sensors etc, use devicename + pretty name of type
         dev_name = self.device.metadata.name
+        # if resource is a light, use the device name itself
+        if self.resource.type == ResourceTypes.LIGHT:
+            return dev_name
+        # for sensors etc, use devicename + pretty name of type
         type_title = RESOURCE_TYPE_NAMES.get(
             self.resource.type, self.resource.type.value.replace("_", " ").title()
         )

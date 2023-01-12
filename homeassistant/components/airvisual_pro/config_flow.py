@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass, field
 from typing import Any
 
 from pyairvisual.node import (
@@ -33,13 +34,24 @@ STEP_USER_SCHEMA = vol.Schema(
 )
 
 
-async def async_validate_credentials(ip_address: str, password: str) -> dict[str, Any]:
-    """Validate an IP address/password combo (and return any errors as appropriate)."""
+@dataclass
+class ValidationResult:
+    """Define a validation result."""
+
+    serial_number: str | None = None
+    errors: dict[str, Any] = field(default_factory=dict)
+
+
+async def async_validate_credentials(
+    ip_address: str, password: str
+) -> ValidationResult:
+    """Validate an IP address/password combo."""
     node = NodeSamba(ip_address, password)
     errors = {}
 
     try:
         await node.async_connect()
+        measurements = await node.async_get_latest_measurements()
     except InvalidAuthenticationError as err:
         LOGGER.error("Invalid password for Pro at IP address %s: %s", ip_address, err)
         errors["base"] = "invalid_auth"
@@ -52,10 +64,12 @@ async def async_validate_credentials(ip_address: str, password: str) -> dict[str
     except Exception as err:  # pylint: disable=broad-except
         LOGGER.exception("Unknown error while connecting to %s: %s", ip_address, err)
         errors["base"] = "unknown"
+    else:
+        return ValidationResult(serial_number=measurements["serial_number"])
     finally:
         await node.async_disconnect()
 
-    return errors
+    return ValidationResult(errors=errors)
 
 
 class AirVisualProFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -89,11 +103,15 @@ class AirVisualProFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         assert self._reauth_entry
 
-        if errors := await async_validate_credentials(
+        validation_result = await async_validate_credentials(
             self._reauth_entry.data[CONF_IP_ADDRESS], user_input[CONF_PASSWORD]
-        ):
+        )
+
+        if validation_result.errors:
             return self.async_show_form(
-                step_id="reauth_confirm", data_schema=STEP_REAUTH_SCHEMA, errors=errors
+                step_id="reauth_confirm",
+                data_schema=STEP_REAUTH_SCHEMA,
+                errors=validation_result.errors,
             )
 
         self.hass.config_entries.async_update_entry(
@@ -113,14 +131,18 @@ class AirVisualProFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         ip_address = user_input[CONF_IP_ADDRESS]
 
-        await self.async_set_unique_id(ip_address)
-        self._abort_if_unique_id_configured()
-
-        if errors := await async_validate_credentials(
+        validation_result = await async_validate_credentials(
             ip_address, user_input[CONF_PASSWORD]
-        ):
+        )
+
+        if validation_result.errors:
             return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_SCHEMA, errors=errors
+                step_id="user",
+                data_schema=STEP_USER_SCHEMA,
+                errors=validation_result.errors,
             )
+
+        await self.async_set_unique_id(validation_result.serial_number)
+        self._abort_if_unique_id_configured()
 
         return self.async_create_entry(title=ip_address, data=user_input)

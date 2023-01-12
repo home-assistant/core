@@ -1,4 +1,6 @@
 """Test homekit_controller diagnostics."""
+from unittest.mock import ANY
+
 from aiohttp import ClientSession
 
 from homeassistant.components.homekit_controller.const import KNOWN_DEVICES
@@ -247,8 +249,8 @@ async def test_config_entry(hass: HomeAssistant, hass_client: ClientSession, utc
                                 "friendly_name": "Koogeek-LS1-20833F Identify"
                             },
                             "entity_id": "button.koogeek_ls1_20833f_identify",
-                            "last_changed": "2023-01-01T00:00:00+00:00",
-                            "last_updated": "2023-01-01T00:00:00+00:00",
+                            "last_changed": ANY,
+                            "last_updated": ANY,
                             "state": "unknown",
                         },
                         "unit_of_measurement": None,
@@ -269,8 +271,8 @@ async def test_config_entry(hass: HomeAssistant, hass_client: ClientSession, utc
                                 "supported_features": 0,
                             },
                             "entity_id": "light.koogeek_ls1_20833f_light_strip",
-                            "last_changed": "2023-01-01T00:00:00+00:00",
-                            "last_updated": "2023-01-01T00:00:00+00:00",
+                            "last_changed": ANY,
+                            "last_updated": ANY,
                             "state": "off",
                         },
                         "unit_of_measurement": None,
@@ -518,8 +520,8 @@ async def test_device(hass: HomeAssistant, hass_client: ClientSession, utcnow):
                             "friendly_name": "Koogeek-LS1-20833F " "Identify"
                         },
                         "entity_id": "button.koogeek_ls1_20833f_identify",
-                        "last_changed": "2023-01-01T00:00:00+00:00",
-                        "last_updated": "2023-01-01T00:00:00+00:00",
+                        "last_changed": ANY,
+                        "last_updated": ANY,
                         "state": "unknown",
                     },
                     "unit_of_measurement": None,
@@ -540,8 +542,8 @@ async def test_device(hass: HomeAssistant, hass_client: ClientSession, utcnow):
                             "supported_features": 0,
                         },
                         "entity_id": "light.koogeek_ls1_20833f_light_strip",
-                        "last_changed": "2023-01-01T00:00:00+00:00",
-                        "last_updated": "2023-01-01T00:00:00+00:00",
+                        "last_changed": ANY,
+                        "last_updated": ANY,
                         "state": "off",
                     },
                     "unit_of_measurement": None,

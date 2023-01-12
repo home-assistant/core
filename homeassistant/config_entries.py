@@ -9,6 +9,7 @@ from copy import deepcopy
 from enum import Enum
 import functools
 import logging
+from random import randint
 from types import MappingProxyType, MethodType
 from typing import TYPE_CHECKING, Any, Optional, TypeVar, cast
 import weakref
@@ -27,7 +28,11 @@ from .exceptions import (
 )
 from .helpers import device_registry, entity_registry, storage
 from .helpers.dispatcher import async_dispatcher_send
-from .helpers.event import async_call_later
+from .helpers.event import (
+    RANDOM_MICROSECOND_MAX,
+    RANDOM_MICROSECOND_MIN,
+    async_call_later,
+)
 from .helpers.frame import report
 from .helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType, UndefinedType
 from .setup import DATA_SETUP_DONE, async_process_deps_reqs, async_setup_component
@@ -409,7 +414,9 @@ class ConfigEntry:
             result = False
         except ConfigEntryNotReady as ex:
             self.async_set_state(hass, ConfigEntryState.SETUP_RETRY, str(ex) or None)
-            wait_time = 2 ** min(tries, 4) * 5
+            wait_time = 2 ** min(tries, 4) * 5 + (
+                randint(RANDOM_MICROSECOND_MIN, RANDOM_MICROSECOND_MAX) / 1000000
+            )
             tries += 1
             message = str(ex)
             ready_message = f"ready yet: {message}" if message else "ready yet"

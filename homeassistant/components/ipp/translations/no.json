@@ -31,5 +31,16 @@
                 "title": "Oppdaget skriver"
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "printer": {
+                "state": {
+                    "idle": "Tomgang",
+                    "printing": "Printing",
+                    "stopped": "Stoppet"
+                }
+            }
+        }
     }
 }

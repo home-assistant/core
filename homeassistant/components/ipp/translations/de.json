@@ -31,5 +31,16 @@
                 "title": "Entdeckter Drucker"
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "printer": {
+                "state": {
+                    "idle": "Unt\u00e4tig",
+                    "printing": "Druckt",
+                    "stopped": "Angehalten"
+                }
+            }
+        }
     }
 }

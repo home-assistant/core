@@ -7,10 +7,9 @@ from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, PRESSURE, SLEEP_NUMBER
-from .coordinator import SleepIQData
+from .coordinator import SleepIQData, SleepIQDataUpdateCoordinator
 from .entity import SleepIQSleeperEntity
 
 SENSORS = [PRESSURE, SLEEP_NUMBER]
@@ -31,14 +30,16 @@ async def async_setup_entry(
     )
 
 
-class SleepIQSensorEntity(SleepIQSleeperEntity, SensorEntity):
+class SleepIQSensorEntity(
+    SleepIQSleeperEntity[SleepIQDataUpdateCoordinator], SensorEntity
+):
     """Representation of an SleepIQ Entity with CoordinatorEntity."""
 
     _attr_icon = "mdi:bed"
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: SleepIQDataUpdateCoordinator,
         bed: SleepIQBed,
         sleeper: SleepIQSleeper,
         sensor_type: str,

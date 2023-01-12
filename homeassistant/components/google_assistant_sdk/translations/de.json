@@ -34,8 +34,10 @@
         "step": {
             "init": {
                 "data": {
+                    "enable_conversation_agent": "Aktiviere den Konversationsagenten",
                     "language_code": "Sprachcode"
-                }
+                },
+                "description": "Lege die Sprache f\u00fcr Interaktionen mit Google Assistant fest und ob du den Konversationsagenten aktivieren m\u00f6chtest."
             }
         }
     }

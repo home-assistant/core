@@ -25,5 +25,10 @@
                 }
             }
         }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "title": "A PI-Hole YAML konfigur\u00e1ci\u00f3 elt\u00e1vol\u00edt\u00e1sra ker\u00fcl"
+        }
     }
 }

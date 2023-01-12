@@ -489,7 +489,7 @@ class SimpliSafe:
         self.systems: dict[int, SystemType] = {}
 
         # This will get filled in by async_init:
-        self.coordinator: DataUpdateCoordinator | None = None
+        self.coordinator: DataUpdateCoordinator[None] | None = None
 
     @callback
     def _async_process_new_notifications(self, system: SystemType) -> None:
@@ -692,7 +692,7 @@ class SimpliSafe:
                 raise UpdateFailed(f"SimpliSafe error while updating: {result}")
 
 
-class SimpliSafeEntity(CoordinatorEntity):
+class SimpliSafeEntity(CoordinatorEntity[DataUpdateCoordinator[None]]):
     """Define a base SimpliSafe entity."""
 
     _attr_has_entity_name = True

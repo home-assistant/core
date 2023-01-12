@@ -67,37 +67,6 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
-    async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
-        """Import YAML configuration."""
-        await self.async_set_unique_id(
-            f"{config[CONF_LOCATION][CONF_LATITUDE]}_{config[CONF_LOCATION][CONF_LONGITUDE]}"
-        )
-        self._abort_if_unique_id_configured()
-
-        selected_station_ids: list[str] = []
-        # add all nearby stations
-        nearby_stations = await async_get_nearby_stations(self.hass, config)
-        for station in nearby_stations.get("stations", []):
-            selected_station_ids.append(station["id"])
-
-        # add all manual added stations
-        for station_id in config[CONF_STATIONS]:
-            selected_station_ids.append(station_id)
-
-        return self._create_entry(
-            data={
-                CONF_NAME: "Home",
-                CONF_API_KEY: config[CONF_API_KEY],
-                CONF_FUEL_TYPES: config[CONF_FUEL_TYPES],
-                CONF_LOCATION: config[CONF_LOCATION],
-                CONF_RADIUS: config[CONF_RADIUS],
-                CONF_STATIONS: selected_station_ids,
-            },
-            options={
-                CONF_SHOW_ON_MAP: config[CONF_SHOW_ON_MAP],
-            },
-        )
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:

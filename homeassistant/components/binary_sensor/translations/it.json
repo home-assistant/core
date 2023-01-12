@@ -8,7 +8,7 @@
             "is_gas": "{entity_name} sta rilevando il gas",
             "is_hot": "{entity_name} \u00e8 caldo",
             "is_light": "{entity_name} sta rilevando la luce",
-            "is_locked": "{entity_name} \u00e8 bloccato",
+            "is_locked": "{entity_name} \u00e8 chiusa",
             "is_moist": "{entity_name} \u00e8 umido",
             "is_motion": "{entity_name} sta rilevando il movimento",
             "is_moving": "{entity_name} si sta muovendo",
@@ -25,7 +25,7 @@
             "is_not_cold": "{entity_name} non \u00e8 freddo",
             "is_not_connected": "{entity_name} \u00e8 disconnesso",
             "is_not_hot": "{entity_name} non \u00e8 caldo",
-            "is_not_locked": "{entity_name} \u00e8 sbloccato",
+            "is_not_locked": "{entity_name} \u00e8 aperta",
             "is_not_moist": "{entity_name} \u00e8 asciutto",
             "is_not_moving": "{entity_name} non si sta muovendo",
             "is_not_occupied": "{entity_name} non \u00e8 occupato",
@@ -165,8 +165,8 @@
             "on": "Luce rilevata"
         },
         "lock": {
-            "off": "Bloccato",
-            "on": "Sbloccato"
+            "off": "Chiusa",
+            "on": "Aperta"
         },
         "moisture": {
             "off": "Asciutto",

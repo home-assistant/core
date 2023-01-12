@@ -2,7 +2,7 @@
   "domain": "todoist",
   "name": "Todoist",
   "documentation": "https://www.home-assistant.io/integrations/todoist",
-  "requirements": ["todoist-python==8.0.0"],
+  "requirements": ["todoist-api-python==2.0.2"],
   "codeowners": ["@boralyl"],
   "iot_class": "cloud_polling",
   "loggers": ["todoist"]

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, Mock, patch
 
-from aioesphomeapi import APIClient
+from aioesphomeapi import APIClient, DeviceInfo
 import pytest
 from zeroconf import Zeroconf
 
@@ -12,6 +12,11 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture(autouse=True)
+def mock_bluetooth(enable_bluetooth):
+    """Auto mock bluetooth."""
 
 
 @pytest.fixture(autouse=True)
@@ -36,6 +41,18 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
+def mock_device_info() -> DeviceInfo:
+    """Return the default mocked device info."""
+    return DeviceInfo(
+        uses_password=False,
+        name="test",
+        bluetooth_proxy_version=0,
+        mac_address="11:22:33:44:55:aa",
+        esphome_version="1.0.0",
+    )
+
+
+@pytest.fixture
 async def init_integration(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> MockConfigEntry:
@@ -49,7 +66,7 @@ async def init_integration(
 
 
 @pytest.fixture
-def mock_client():
+def mock_client(mock_device_info):
     """Mock APIClient."""
     mock_client = Mock(spec=APIClient)
 
@@ -73,6 +90,7 @@ def mock_client():
         return mock_client
 
     mock_client.side_effect = mock_constructor
+    mock_client.device_info = AsyncMock(return_value=mock_device_info)
     mock_client.connect = AsyncMock()
     mock_client.disconnect = AsyncMock()
 

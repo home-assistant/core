@@ -62,7 +62,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class BrotherDataUpdateCoordinator(DataUpdateCoordinator):
+class BrotherDataUpdateCoordinator(DataUpdateCoordinator[BrotherSensors]):
     """Class to manage fetching Brother data from the printer."""
 
     def __init__(self, hass: HomeAssistant, brother: Brother) -> None:

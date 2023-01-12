@@ -9,12 +9,7 @@ from homeassistant import config_entries
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import ERR_NOT_FOUND
 from homeassistant.components.websocket_api.decorators import require_admin
-from homeassistant.components.websocket_api.messages import (
-    IDEN_JSON_TEMPLATE,
-    IDEN_TEMPLATE,
-    message_to_json,
-)
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -25,46 +20,39 @@ from homeassistant.helpers import (
 async def async_setup(hass: HomeAssistant) -> bool:
     """Enable the Entity Registry views."""
 
-    cached_list_entities: str | None = None
-
-    @callback
-    def _async_clear_list_entities_cache(event: Event) -> None:
-        nonlocal cached_list_entities
-        cached_list_entities = None
-
-    @websocket_api.websocket_command(
-        {vol.Required("type"): "config/entity_registry/list"}
-    )
-    @callback
-    def websocket_list_entities(
-        hass: HomeAssistant,
-        connection: websocket_api.ActiveConnection,
-        msg: dict[str, Any],
-    ) -> None:
-        """Handle list registry entries command."""
-        nonlocal cached_list_entities
-        if not cached_list_entities:
-            registry = er.async_get(hass)
-            cached_list_entities = message_to_json(
-                websocket_api.result_message(
-                    IDEN_TEMPLATE,  # type: ignore[arg-type]
-                    [_entry_dict(entry) for entry in registry.entities.values()],
-                )
-            )
-        connection.send_message(
-            cached_list_entities.replace(IDEN_JSON_TEMPLATE, str(msg["id"]), 1)
-        )
-
-    hass.bus.async_listen(
-        er.EVENT_ENTITY_REGISTRY_UPDATED,
-        _async_clear_list_entities_cache,
-        run_immediately=True,
-    )
     websocket_api.async_register_command(hass, websocket_list_entities)
     websocket_api.async_register_command(hass, websocket_get_entity)
+    websocket_api.async_register_command(hass, websocket_get_entities)
     websocket_api.async_register_command(hass, websocket_update_entity)
     websocket_api.async_register_command(hass, websocket_remove_entity)
     return True
+
+
+@websocket_api.websocket_command({vol.Required("type"): "config/entity_registry/list"})
+@callback
+def websocket_list_entities(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Handle list registry entries command."""
+    registry = er.async_get(hass)
+    # Build start of response message
+    msg_json_prefix = (
+        f'{{"id":{msg["id"]},"type": "{websocket_api.const.TYPE_RESULT}",'
+        f'"success":true,"result": ['
+    )
+    # Concatenate cached entity registry item JSON serializations
+    msg_json = (
+        msg_json_prefix
+        + ",".join(
+            entry.json_repr
+            for entry in registry.entities.values()
+            if entry.json_repr is not None
+        )
+        + "]}"
+    )
+    connection.send_message(msg_json)
 
 
 @websocket_api.websocket_command(
@@ -94,6 +82,33 @@ def websocket_get_entity(
     connection.send_message(
         websocket_api.result_message(msg["id"], _entry_ext_dict(entry))
     )
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "config/entity_registry/get_entries",
+        vol.Required("entity_ids"): cv.entity_ids,
+    }
+)
+@callback
+def websocket_get_entities(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Handle get entity registry entries command.
+
+    Async friendly.
+    """
+    registry = er.async_get(hass)
+
+    entity_ids = msg["entity_ids"]
+    entries: dict[str, dict[str, Any] | None] = {}
+    for entity_id in entity_ids:
+        entry = registry.entities.get(entity_id)
+        entries[entity_id] = _entry_ext_dict(entry) if entry else None
+
+    connection.send_message(websocket_api.result_message(msg["id"], entries))
 
 
 @require_admin

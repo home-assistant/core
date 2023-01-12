@@ -28,13 +28,13 @@
                 "data": {
                     "noise_psk": "Klucz szyfruj\u0105cy"
                 },
-                "description": "Wprowad\u017a klucz szyfruj\u0105cy ustawiony w konfiguracji dla {name}."
+                "description": "Wprowad\u017a klucz szyfrowania dla {name} . Mo\u017cesz go znale\u017a\u0107 w dashboardzie ESPHome lub w konfiguracji swojego urz\u0105dzenia."
             },
             "reauth_confirm": {
                 "data": {
                     "noise_psk": "Klucz szyfruj\u0105cy"
                 },
-                "description": "Urz\u0105dzenie ESPHome {name} w\u0142\u0105czy\u0142o szyfrowanie transportu lub zmieni\u0142o klucz szyfruj\u0105cy. Wprowad\u017a zaktualizowany klucz."
+                "description": "Urz\u0105dzenie ESPHome {name} w\u0142\u0105czy\u0142o szyfrowanie transportu lub zmieni\u0142o klucz szyfruj\u0105cy. Wprowad\u017a zaktualizowany klucz. Mo\u017cesz go znale\u017a\u0107 w dashboardzie ESPHome lub w konfiguracji swojego urz\u0105dzenia."
             },
             "user": {
                 "data": {

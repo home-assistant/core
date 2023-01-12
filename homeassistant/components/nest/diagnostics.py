@@ -41,7 +41,7 @@ def _async_get_nest_devices(
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry
-) -> dict:
+) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     nest_devices = _async_get_nest_devices(hass, config_entry)
     if not nest_devices:
@@ -64,7 +64,7 @@ async def async_get_device_diagnostics(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     device: DeviceEntry,
-) -> dict:
+) -> dict[str, Any]:
     """Return diagnostics for a device."""
     nest_devices = _async_get_nest_devices(hass, config_entry)
     nest_device_id = next(iter(device.identifiers))[1]

@@ -162,7 +162,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     return unload_ok
 
 
-class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator):
+class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Define an object to hold Tomorrow.io data."""
 
     def __init__(self, hass: HomeAssistant, api: TomorrowioV4) -> None:
@@ -235,7 +235,7 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
-        data = {}
+        data: dict[str, Any] = {}
         # If we are refreshing because of a new config entry that's not already in our
         # data, we do a partial refresh to avoid wasted API calls.
         if self.data and any(

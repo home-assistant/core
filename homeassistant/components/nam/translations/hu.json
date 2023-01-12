@@ -46,7 +46,9 @@
                     "low": "Alacsony",
                     "medium": "K\u00f6zepes",
                     "very high": "Nagyon magas",
-                    "very low": "Nagyon alacsony"
+                    "very low": "Nagyon alacsony",
+                    "very_high": "Nagyon magas",
+                    "very_low": "Nagyon alacsony"
                 }
             }
         }

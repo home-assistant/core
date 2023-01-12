@@ -19,5 +19,18 @@
                 "title": "Mit Venstar-Thermostat verbinden"
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "schedule_part": {
+                "state": {
+                    "day": "Tag",
+                    "evening": "Abend",
+                    "inactive": "Inaktiv",
+                    "morning": "Morgen",
+                    "night": "Nacht"
+                }
+            }
+        }
     }
 }

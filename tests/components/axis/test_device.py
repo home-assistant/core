@@ -4,7 +4,6 @@ from unittest import mock
 from unittest.mock import Mock, patch
 
 import axis as axislib
-from axis.event_stream import OPERATION_INITIALIZED
 import pytest
 import respx
 
@@ -463,21 +462,6 @@ async def test_device_unknown_error(hass):
     assert hass.data[AXIS_DOMAIN] == {}
 
 
-async def test_new_event_sends_signal(hass):
-    """Make sure that new event send signal."""
-    entry = Mock()
-    entry.data = ENTRY_CONFIG
-
-    axis_device = axis.device.AxisNetworkDevice(hass, entry, Mock())
-
-    with patch.object(axis.device, "async_dispatcher_send") as mock_dispatch_send:
-        axis_device.async_event_callback(action=OPERATION_INITIALIZED, event_id="event")
-        await hass.async_block_till_done()
-
-    assert len(mock_dispatch_send.mock_calls) == 1
-    assert len(mock_dispatch_send.mock_calls[0]) == 3
-
-
 async def test_shutdown():
     """Successful shutdown."""
     hass = Mock()
@@ -494,7 +478,7 @@ async def test_shutdown():
 async def test_get_device_fails(hass):
     """Device unauthorized yields authentication required error."""
     with patch(
-        "axis.vapix.Vapix.request", side_effect=axislib.Unauthorized
+        "axis.vapix.vapix.Vapix.request", side_effect=axislib.Unauthorized
     ), pytest.raises(axis.errors.AuthenticationRequired):
         await axis.device.get_axis_device(hass, ENTRY_CONFIG)
 
@@ -502,7 +486,7 @@ async def test_get_device_fails(hass):
 async def test_get_device_device_unavailable(hass):
     """Device unavailable yields cannot connect error."""
     with patch(
-        "axis.vapix.Vapix.request", side_effect=axislib.RequestError
+        "axis.vapix.vapix.Vapix.request", side_effect=axislib.RequestError
     ), pytest.raises(axis.errors.CannotConnect):
         await axis.device.get_axis_device(hass, ENTRY_CONFIG)
 
@@ -510,6 +494,6 @@ async def test_get_device_device_unavailable(hass):
 async def test_get_device_unknown_error(hass):
     """Device yield unknown error."""
     with patch(
-        "axis.vapix.Vapix.request", side_effect=axislib.AxisException
+        "axis.vapix.vapix.Vapix.request", side_effect=axislib.AxisException
     ), pytest.raises(axis.errors.AuthenticationRequired):
         await axis.device.get_axis_device(hass, ENTRY_CONFIG)

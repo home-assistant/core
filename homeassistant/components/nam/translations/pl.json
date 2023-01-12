@@ -46,7 +46,9 @@
                     "low": "niski",
                     "medium": "\u015bredni",
                     "very high": "bardzo wysoki",
-                    "very low": "bardzo niski"
+                    "very low": "bardzo niski",
+                    "very_high": "bardzo wysoki",
+                    "very_low": "bardzo niski"
                 }
             }
         }

@@ -125,11 +125,12 @@ async def async_setup_entry(
     async_add_entities(flume_entity_list)
 
 
-class FlumeNotificationBinarySensor(FlumeEntity, BinarySensorEntity):
+class FlumeNotificationBinarySensor(
+    FlumeEntity[FlumeNotificationDataUpdateCoordinator], BinarySensorEntity
+):
     """Binary sensor class."""
 
     entity_description: FlumeBinarySensorEntityDescription
-    coordinator: FlumeNotificationDataUpdateCoordinator
 
     @property
     def is_on(self) -> bool:
@@ -144,11 +145,12 @@ class FlumeNotificationBinarySensor(FlumeEntity, BinarySensorEntity):
         )
 
 
-class FlumeConnectionBinarySensor(FlumeEntity, BinarySensorEntity):
+class FlumeConnectionBinarySensor(
+    FlumeEntity[FlumeDeviceConnectionUpdateCoordinator], BinarySensorEntity
+):
     """Binary Sensor class for WIFI Connection status."""
 
     entity_description: FlumeBinarySensorEntityDescription
-    coordinator: FlumeDeviceConnectionUpdateCoordinator
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
 

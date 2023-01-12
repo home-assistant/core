@@ -12,7 +12,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import CONF_SUPPORTED_MODES, DEFAULT_PORT, DOMAIN
+from .const import CONF_SUPPORTED_MODES, CONF_SWING_SUPPORT, DEFAULT_PORT, DOMAIN
 
 AVAILABLE_MODES = [
     HVACMode.OFF.value,
@@ -25,7 +25,13 @@ AVAILABLE_MODES = [
 
 MODES_SCHEMA = {vol.Required(mode, default=True): bool for mode in AVAILABLE_MODES}
 
-DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str, **MODES_SCHEMA})
+DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): str,
+        **MODES_SCHEMA,
+        vol.Required(CONF_SWING_SUPPORT, default=False): bool,
+    }
+)
 
 
 async def _validate_connection(host: str) -> bool:
@@ -50,6 +56,7 @@ class CoolmasterConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_HOST: data[CONF_HOST],
                 CONF_PORT: DEFAULT_PORT,
                 CONF_SUPPORTED_MODES: supported_modes,
+                CONF_SWING_SUPPORT: data[CONF_SWING_SUPPORT],
             },
         )
 

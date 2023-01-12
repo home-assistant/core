@@ -46,7 +46,9 @@
                     "low": "Bajo",
                     "medium": "Medio",
                     "very high": "Muy alto",
-                    "very low": "Muy bajo"
+                    "very low": "Muy bajo",
+                    "very_high": "Muy alto",
+                    "very_low": "Muy bajo"
                 }
             }
         }

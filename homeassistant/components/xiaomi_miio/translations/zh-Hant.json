@@ -23,7 +23,7 @@
                     "cloud_country": "\u96f2\u7aef\u670d\u52d9\u4f3a\u670d\u5668\u570b\u5bb6",
                     "cloud_password": "\u96f2\u7aef\u670d\u52d9\u5bc6\u78bc",
                     "cloud_username": "\u96f2\u7aef\u670d\u52d9\u4f7f\u7528\u8005\u540d\u7a31",
-                    "manual": "\u624b\u52d5\u8a2d\u5b9a (\u4e0d\u5efa\u8b70)"
+                    "manual": "\u624b\u52d5\u8a2d\u5b9a\uff08\u4e0d\u63a8\u85a6\uff09"
                 },
                 "description": "\u767b\u5165\u81f3\u5c0f\u7c73 Miio \u96f2\u670d\u52d9\uff0c\u8acb\u53c3\u95b1 https://www.openhab.org/addons/bindings/miio/#country-servers \u4ee5\u4e86\u89e3\u9078\u64c7\u54ea\u4e00\u7d44\u96f2\u7aef\u4f3a\u670d\u5668\u3002"
             },

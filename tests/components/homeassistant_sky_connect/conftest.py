@@ -69,6 +69,7 @@ def addon_store_info_fixture():
         "homeassistant.components.hassio.addon_manager.async_get_addon_store_info"
     ) as addon_store_info:
         addon_store_info.return_value = {
+            "available": True,
             "installed": None,
             "state": None,
             "version": "1.0.0",
@@ -83,6 +84,7 @@ def addon_info_fixture():
         "homeassistant.components.hassio.addon_manager.async_get_addon_info",
     ) as addon_info:
         addon_info.return_value = {
+            "available": True,
             "hostname": None,
             "options": {},
             "state": None,

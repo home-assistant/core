@@ -228,7 +228,7 @@ def zha_device_joined_restored(request):
 
 @pytest.fixture
 def zha_device_mock(hass, zigpy_device_mock):
-    """Return a zha Device factory."""
+    """Return a ZHA Device factory."""
 
     def _zha_device(
         endpoints=None,
