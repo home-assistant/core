@@ -78,7 +78,7 @@ class ESPHomeUpdateEntity(CoordinatorEntity[ESPHomeDashboard], UpdateEntity):
         super().__init__(coordinator=coordinator)
         assert entry_data.device_info is not None
         self._device_info = entry_data.device_info
-        self._attr_unique_id = f"{entry_data.entry_id}_update"
+        self._attr_unique_id = entry_data.device_info.mac_address
         self._attr_device_info = DeviceInfo(
             connections={
                 (dr.CONNECTION_NETWORK_MAC, entry_data.device_info.mac_address)

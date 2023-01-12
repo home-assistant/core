@@ -19,6 +19,7 @@ from pyisy.constants import (
 )
 from pyisy.helpers import NodeProperty
 from pyisy.nodes import Node
+from pyisy.variables import Variable
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -34,10 +35,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import (
     _LOGGER,
     DOMAIN,
-    ISY_DEVICES,
-    ISY_NODES,
-    ISY_VARIABLES,
-    SENSOR_AUX,
     UOM_DOUBLE_TEMP,
     UOM_FRIENDLY_NAME,
     UOM_INDEX,
@@ -110,20 +107,17 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the ISY sensor platform."""
-    hass_isy_data = hass.data[DOMAIN][entry.entry_id]
+    isy_data = hass.data[DOMAIN][entry.entry_id]
     entities: list[ISYSensorEntity | ISYSensorVariableEntity] = []
-    devices: dict[str, DeviceInfo] = hass_isy_data[ISY_DEVICES]
+    devices: dict[str, DeviceInfo] = isy_data.devices
 
-    for node in hass_isy_data[ISY_NODES][Platform.SENSOR]:
+    for node in isy_data.nodes[Platform.SENSOR]:
         _LOGGER.debug("Loading %s", node.name)
         entities.append(ISYSensorEntity(node, devices.get(node.primary_node)))
 
-    aux_nodes = set()
-    for node, control in hass_isy_data[ISY_NODES][SENSOR_AUX]:
-        aux_nodes.add(node)
-        if control in SKIP_AUX_PROPERTIES:
-            continue
-        _LOGGER.debug("Loading %s %s", node.name, node.aux_properties[control])
+    aux_sensors_list = isy_data.aux_properties[Platform.SENSOR]
+    for node, control in aux_sensors_list:
+        _LOGGER.debug("Loading %s %s", node.name, COMMAND_FRIENDLY_NAME.get(control))
         enabled_default = control not in AUX_DISABLED_BY_DEFAULT_EXACT and not any(
             control.startswith(match) for match in AUX_DISABLED_BY_DEFAULT_MATCH
         )
@@ -132,23 +126,13 @@ async def async_setup_entry(
                 node=node,
                 control=control,
                 enabled_default=enabled_default,
+                unique_id=f"{isy_data.uid_base(node)}_{control}",
                 device_info=devices.get(node.primary_node),
             )
         )
 
-    for node in aux_nodes:
-        # Any node in SENSOR_AUX can potentially have communication errors
-        entities.append(
-            ISYAuxSensorEntity(
-                node=node,
-                control=PROP_COMMS_ERROR,
-                enabled_default=False,
-                device_info=devices.get(node.primary_node),
-            )
-        )
-
-    for vname, vobj in hass_isy_data[ISY_VARIABLES][Platform.SENSOR]:
-        entities.append(ISYSensorVariableEntity(vname, vobj))
+    for variable in isy_data.variables[Platform.SENSOR]:
+        entities.append(ISYSensorVariableEntity(variable))
 
     async_add_entities(entities)
 
@@ -248,6 +232,7 @@ class ISYAuxSensorEntity(ISYSensorEntity):
         node: Node,
         control: str,
         enabled_default: bool,
+        unique_id: str,
         device_info: DeviceInfo | None = None,
     ) -> None:
         """Initialize the ISY aux sensor."""
@@ -257,11 +242,10 @@ class ISYAuxSensorEntity(ISYSensorEntity):
         self._attr_entity_category = ISY_CONTROL_TO_ENTITY_CATEGORY.get(control)
         self._attr_device_class = ISY_CONTROL_TO_DEVICE_CLASS.get(control)
         self._attr_state_class = ISY_CONTROL_TO_STATE_CLASS.get(control)
+        self._attr_unique_id = unique_id
 
         name = COMMAND_FRIENDLY_NAME.get(self._control, self._control)
         self._attr_name = f"{node.name} {name.replace('_', ' ').title()}"
-
-        self._attr_unique_id = f"{node.isy.uuid}_{node.address}_{control}"
 
     @property
     def target(self) -> Node | NodeProperty | None:
@@ -283,10 +267,10 @@ class ISYSensorVariableEntity(ISYEntity, SensorEntity):
     # Deprecated sensors, will be removed in 2023.5.0
     _attr_entity_registry_enabled_default = False
 
-    def __init__(self, vname: str, vobj: object) -> None:
+    def __init__(self, variable_node: Variable) -> None:
         """Initialize the ISY binary sensor program."""
-        super().__init__(vobj)
-        self._name = vname
+        super().__init__(variable_node)
+        self._name = variable_node.name
 
     @property
     def native_value(self) -> float | int | None:
