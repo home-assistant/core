@@ -28,15 +28,15 @@ class DLinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle dhcp discovery."""
         await self.async_set_unique_id(discovery_info.macaddress)
         self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
-        self.ip_address = discovery_info.ip
         for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if entry.data[CONF_HOST] == discovery_info.ip and not entry.unique_id:
+            if not entry.unique_id and entry.data[CONF_HOST] == discovery_info.ip:
                 # Add mac address as the unique id, can be removed with import
                 self.hass.config_entries.async_update_entry(
                     entry, unique_id=discovery_info.macaddress
                 )
-            return self.async_abort(reason="already_configured")
+                return self.async_abort(reason="already_configured")
 
+        self.ip_address = discovery_info.ip
         return await self.async_step_user()
 
     async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
