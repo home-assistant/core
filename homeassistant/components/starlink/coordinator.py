@@ -12,6 +12,7 @@ from starlink_grpc import (
     GrpcError,
     ObstructionDict,
     StatusDict,
+    set_stow_state,
     status_data,
 )
 
@@ -51,5 +52,15 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
                     status_data, self.channel_context
                 )
                 return StarlinkData(*status)
+            except GrpcError as exc:
+                raise UpdateFailed from exc
+
+    async def stow_starlink(self, stow: bool):
+        """Set whether Starlink should be stowed."""
+        async with async_timeout.timeout(4):
+            try:
+                await self.hass.async_add_executor_job(
+                    set_stow_state, not stow, self.channel_context
+                )
             except GrpcError as exc:
                 raise UpdateFailed from exc
