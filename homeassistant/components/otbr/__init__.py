@@ -50,7 +50,7 @@ def _async_get_thread_rest_service_url(hass) -> str:
     """Return Thread REST API URL."""
     otbr_data: OTBRData | None = hass.data.get(DOMAIN)
     if not otbr_data:
-        raise HomeAssistantError
+        raise HomeAssistantError("otbr not setup")
 
     return otbr_data.url
 
@@ -60,7 +60,7 @@ def _raise_for_status(response: aiohttp.ClientResponse) -> None:
     try:
         response.raise_for_status()
     except aiohttp.ClientResponseError as exc:
-        raise HomeAssistantError from exc
+        raise HomeAssistantError(f"unexpected http status {response.status}") from exc
 
 
 async def async_get_thread_state(hass: HomeAssistant) -> ThreadState:
@@ -73,12 +73,12 @@ async def async_get_thread_state(hass: HomeAssistant) -> ThreadState:
 
     _raise_for_status(response)
     if response.status != HTTPStatus.OK:
-        raise HomeAssistantError
+        raise HomeAssistantError(f"unexpected http status {response.status}")
 
     try:
         state = ThreadState(int(await response.json()))
     except (TypeError, ValueError) as exc:
-        raise HomeAssistantError from exc
+        raise HomeAssistantError("unexpected API response") from exc
 
     return state
 
@@ -94,7 +94,7 @@ async def async_set_thread_state(hass: HomeAssistant, state: ThreadState) -> Non
 
     _raise_for_status(response)
     if response.status != HTTPStatus.OK:
-        raise HomeAssistantError
+        raise HomeAssistantError(f"unexpected http status {response.status}")
 
 
 async def async_get_active_dataset(hass: HomeAssistant) -> OperationalDataSet | None:
@@ -114,12 +114,12 @@ async def async_get_active_dataset(hass: HomeAssistant) -> OperationalDataSet | 
         return None
 
     if response.status != HTTPStatus.OK:
-        raise HomeAssistantError
+        raise HomeAssistantError(f"unexpected http status {response.status}")
 
     try:
         return OperationalDataSet.from_json(await response.json())
     except (JSONDecodeError, vol.Error) as exc:
-        raise HomeAssistantError from exc
+        raise HomeAssistantError("unexpected API response") from exc
 
 
 async def async_get_active_dataset_tlvs(hass: HomeAssistant) -> bytes | None:
@@ -140,13 +140,13 @@ async def async_get_active_dataset_tlvs(hass: HomeAssistant) -> bytes | None:
         return None
 
     if response.status != HTTPStatus.OK:
-        raise HomeAssistantError
+        raise HomeAssistantError(f"unexpected http status {response.status}")
 
     try:
         tmp = await response.read()
         return bytes.fromhex(tmp.decode("ASCII"))
     except ValueError as exc:
-        raise HomeAssistantError from exc
+        raise HomeAssistantError("unexpected API response") from exc
 
 
 async def async_create_active_dataset(
@@ -169,7 +169,7 @@ async def async_create_active_dataset(
         raise ThreadNetworkActiveError
     _raise_for_status(response)
     if response.status != HTTPStatus.ACCEPTED:
-        raise HomeAssistantError
+        raise HomeAssistantError(f"unexpected http status {response.status}")
 
 
 async def async_set_active_dataset(
@@ -194,7 +194,7 @@ async def async_set_active_dataset(
         raise ThreadNetworkActiveError
     _raise_for_status(response)
     if response.status != HTTPStatus.ACCEPTED:
-        raise HomeAssistantError
+        raise HomeAssistantError(f"unexpected http status {response.status}")
 
 
 async def async_set_active_dataset_tlvs(hass: HomeAssistant, dataset: bytes) -> None:
@@ -218,4 +218,4 @@ async def async_set_active_dataset_tlvs(hass: HomeAssistant, dataset: bytes) -> 
         raise ThreadNetworkActiveError
     _raise_for_status(response)
     if response.status != HTTPStatus.ACCEPTED:
-        raise HomeAssistantError
+        raise HomeAssistantError(f"unexpected http status {response.status}")
