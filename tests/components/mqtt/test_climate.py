@@ -275,7 +275,7 @@ async def test_set_operation_optimistic(hass, mqtt_mock_entry_with_yaml_config):
 
 # CONF_POWER_COMMAND_TOPIC, CONF_POWER_STATE_TOPIC and CONF_POWER_STATE_TEMPLATE are deprecated,
 # support for CONF_POWER_STATE_TOPIC and CONF_POWER_STATE_TEMPLATE was already removed or never added
-# support was deprecated with release 2023.2 and will be removed with release 2023.5
+# support was deprecated with release 2023.2 and will be removed with release 2023.8
 async def test_set_operation_with_power_command(hass, mqtt_mock_entry_with_yaml_config):
     """Test setting of new operation mode with power command enabled."""
     config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
