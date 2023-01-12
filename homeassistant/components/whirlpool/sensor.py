@@ -16,6 +16,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -148,6 +149,7 @@ async def async_setup_entry(
             whirlpool_data.backend_selector,
             whirlpool_data.auth,
             appliance["SAID"],
+            async_get_clientsession(hass),
         )
         await _wd.connect()
 
@@ -211,7 +213,7 @@ class WasherDryerClass(SensorEntity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Close Whrilpool Appliance sockets before removing."""
-        await self._wd.disconnect()
+        self._wd.unregister_attr_callback(self.async_write_ha_state)
 
     @property
     def available(self) -> bool:

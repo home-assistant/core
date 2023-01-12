@@ -265,6 +265,8 @@ build.json @home-assistant/supervisor
 /tests/components/discord/ @tkdrob
 /homeassistant/components/discovery/ @home-assistant/core
 /tests/components/discovery/ @home-assistant/core
+/homeassistant/components/dlink/ @tkdrob
+/tests/components/dlink/ @tkdrob
 /homeassistant/components/dlna_dmr/ @StevenLooman @chishm
 /tests/components/dlna_dmr/ @StevenLooman @chishm
 /homeassistant/components/dlna_dms/ @chishm
@@ -605,6 +607,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/keyboard_remote/ @bendavid @lanrat
 /homeassistant/components/keymitt_ble/ @spycle
 /tests/components/keymitt_ble/ @spycle
+/homeassistant/components/kitchen_sink/ @home-assistant/core
+/tests/components/kitchen_sink/ @home-assistant/core
 /homeassistant/components/kmtronic/ @dgomes
 /tests/components/kmtronic/ @dgomes
 /homeassistant/components/knx/ @Julius2342 @farmio @marvin-w

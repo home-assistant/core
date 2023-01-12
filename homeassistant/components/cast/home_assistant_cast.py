@@ -55,7 +55,8 @@ async def async_setup_ha_cast(
         hass_uuid = await instance_id.async_get(hass)
 
         controller = HomeAssistantController(
-            # If you are developing Home Assistant Cast, uncomment and set to your dev app id.
+            # If you are developing Home Assistant Cast, uncomment and set to
+            # your dev app id.
             # app_id="5FE44367",
             hass_url=hass_url,
             hass_uuid=hass_uuid,

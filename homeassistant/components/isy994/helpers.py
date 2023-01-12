@@ -1,8 +1,7 @@
 """Sorting helpers for ISY device classifications."""
 from __future__ import annotations
 
-from collections.abc import Sequence
-from typing import TYPE_CHECKING, cast
+from typing import cast
 
 from pyisy.constants import (
     ISY_VALUE_UNKNOWN,
@@ -17,13 +16,10 @@ from pyisy.programs import Programs
 from pyisy.variables import Variables
 
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 
 from .const import (
     _LOGGER,
     DEFAULT_PROGRAM_STRING,
-    DOMAIN,
     FILTER_INSTEON_TYPE,
     FILTER_NODE_DEF_ID,
     FILTER_STATES,
@@ -49,9 +45,6 @@ from .const import (
     UOM_DOUBLE_TEMP,
     UOM_ISYV4_DEGREES,
 )
-
-if TYPE_CHECKING:
-    from .entity import ISYEntity
 
 BINARY_SENSOR_UOMS = ["2", "78"]
 BINARY_SENSOR_ISY_STATES = ["on", "off"]
@@ -376,42 +369,9 @@ def _categorize_variables(
     except KeyError as err:
         _LOGGER.error("Error adding ISY Variables: %s", err)
         return
+    variable_entities = hass_isy_data[ISY994_VARIABLES]
     for vtype, vname, vid in var_to_add:
-        hass_isy_data[ISY994_VARIABLES].append((vname, variables[vtype][vid]))
-
-
-async def migrate_old_unique_ids(
-    hass: HomeAssistant, platform: str, entities: Sequence[ISYEntity]
-) -> None:
-    """Migrate to new controller-specific unique ids."""
-    registry = er.async_get(hass)
-
-    for entity in entities:
-        if entity.old_unique_id is None or entity.unique_id is None:
-            continue
-        old_entity_id = registry.async_get_entity_id(
-            platform, DOMAIN, entity.old_unique_id
-        )
-        if old_entity_id is not None:
-            _LOGGER.debug(
-                "Migrating unique_id from [%s] to [%s]",
-                entity.old_unique_id,
-                entity.unique_id,
-            )
-            registry.async_update_entity(old_entity_id, new_unique_id=entity.unique_id)
-
-        old_entity_id_2 = registry.async_get_entity_id(
-            platform, DOMAIN, entity.unique_id.replace(":", "")
-        )
-        if old_entity_id_2 is not None:
-            _LOGGER.debug(
-                "Migrating unique_id from [%s] to [%s]",
-                entity.unique_id.replace(":", ""),
-                entity.unique_id,
-            )
-            registry.async_update_entity(
-                old_entity_id_2, new_unique_id=entity.unique_id
-            )
+        variable_entities[Platform.SENSOR].append((vname, variables[vtype][vid]))
 
 
 def convert_isy_value_to_hass(

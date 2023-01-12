@@ -1088,8 +1088,8 @@
     },
     "dlink": {
       "name": "D-Link Wi-Fi Smart Plugs",
-      "integration_type": "hub",
-      "config_flow": false,
+      "integration_type": "device",
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "dlna": {
@@ -1367,6 +1367,11 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "energie_vanons": {
+      "name": "Energie VanOns",
+      "integration_type": "virtual",
+      "supported_by": "energyzero"
     },
     "energyzero": {
       "name": "EnergyZero",
@@ -2672,6 +2677,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_push"
+    },
+    "kitchen_sink": {
+      "name": "Everything but the Kitchen Sink",
+      "integration_type": "hub",
+      "config_flow": false,
+      "iot_class": "calculated"
     },
     "kiwi": {
       "name": "KIWI",

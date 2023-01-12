@@ -401,41 +401,6 @@ class SensorEntity(Entity):
         value = self.native_value
         device_class = self.device_class
 
-        # Received a datetime
-        if value is not None and device_class == SensorDeviceClass.TIMESTAMP:
-            try:
-                # We cast the value, to avoid using isinstance, but satisfy
-                # typechecking. The errors are guarded in this try.
-                value = cast(datetime, value)
-                if value.tzinfo is None:
-                    raise ValueError(
-                        f"Invalid datetime: {self.entity_id} provides state '{value}', "
-                        "which is missing timezone information"
-                    )
-
-                if value.tzinfo != timezone.utc:
-                    value = value.astimezone(timezone.utc)
-
-                return value.isoformat(timespec="seconds")
-            except (AttributeError, OverflowError, TypeError) as err:
-                raise ValueError(
-                    f"Invalid datetime: {self.entity_id} has timestamp device class "
-                    f"but provides state {value}:{type(value)} resulting in '{err}'"
-                ) from err
-
-        # Received a date value
-        if value is not None and device_class == SensorDeviceClass.DATE:
-            try:
-                # We cast the value, to avoid using isinstance, but satisfy
-                # typechecking. The errors are guarded in this try.
-                value = cast(date, value)
-                return value.isoformat()
-            except (AttributeError, TypeError) as err:
-                raise ValueError(
-                    f"Invalid date: {self.entity_id} has date device class "
-                    f"but provides state {value}:{type(value)} resulting in '{err}'"
-                ) from err
-
         # Sensors with device classes indicating a non-numeric value
         # should not have a state class or unit of measurement
         if device_class in {
@@ -457,10 +422,47 @@ class SensorEntity(Entity):
                     f"non-numeric device class: {device_class}"
                 )
 
+        # Checks below only apply if there is a value
+        if value is None:
+            return None
+
+        # Received a datetime
+        if device_class == SensorDeviceClass.TIMESTAMP:
+            try:
+                # We cast the value, to avoid using isinstance, but satisfy
+                # typechecking. The errors are guarded in this try.
+                value = cast(datetime, value)
+                if value.tzinfo is None:
+                    raise ValueError(
+                        f"Invalid datetime: {self.entity_id} provides state '{value}', "
+                        "which is missing timezone information"
+                    )
+
+                if value.tzinfo != timezone.utc:
+                    value = value.astimezone(timezone.utc)
+
+                return value.isoformat(timespec="seconds")
+            except (AttributeError, OverflowError, TypeError) as err:
+                raise ValueError(
+                    f"Invalid datetime: {self.entity_id} has timestamp device class "
+                    f"but provides state {value}:{type(value)} resulting in '{err}'"
+                ) from err
+
+        # Received a date value
+        if device_class == SensorDeviceClass.DATE:
+            try:
+                # We cast the value, to avoid using isinstance, but satisfy
+                # typechecking. The errors are guarded in this try.
+                value = cast(date, value)
+                return value.isoformat()
+            except (AttributeError, TypeError) as err:
+                raise ValueError(
+                    f"Invalid date: {self.entity_id} has date device class "
+                    f"but provides state {value}:{type(value)} resulting in '{err}'"
+                ) from err
+
         # Enum checks
-        if value is not None and (
-            device_class == SensorDeviceClass.ENUM or self.options is not None
-        ):
+        if device_class == SensorDeviceClass.ENUM or self.options is not None:
             if device_class != SensorDeviceClass.ENUM:
                 reason = "is missing the enum device class"
                 if device_class is not None:
@@ -476,8 +478,7 @@ class SensorEntity(Entity):
                 )
 
         if (
-            value is not None
-            and native_unit_of_measurement != unit_of_measurement
+            native_unit_of_measurement != unit_of_measurement
             and device_class in UNIT_CONVERTERS
         ):
             assert unit_of_measurement
@@ -514,7 +515,6 @@ class SensorEntity(Entity):
         # Validate unit of measurement used for sensors with a device class
         if (
             not self._invalid_unit_of_measurement_reported
-            and value is not None
             and device_class
             and (units := DEVICE_CLASS_UNITS.get(device_class)) is not None
             and native_unit_of_measurement not in units

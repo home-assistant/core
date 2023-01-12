@@ -6,6 +6,7 @@ from devolo_plc_api.device_api import (
     WIFI_VAP_MAIN_AP,
     ConnectedStationInfo,
     NeighborAPInfo,
+    WifiGuestAccessGet,
 )
 from devolo_plc_api.plcnet_api import LogicalNetwork
 
@@ -56,6 +57,13 @@ DISCOVERY_INFO_WRONG_DEVICE = ZeroconfServiceInfo(
     type="mock_type",
 )
 
+GUEST_WIFI = WifiGuestAccessGet(
+    ssid="devolo-guest-930",
+    key="HMANPGBA",
+    enabled=False,
+    remaining_duration=0,
+)
+
 NEIGHBOR_ACCESS_POINTS = [
     NeighborAPInfo(
         mac_address="AA:BB:CC:DD:EE:FF",
@@ -66,7 +74,6 @@ NEIGHBOR_ACCESS_POINTS = [
         signal_bars=1,
     )
 ]
-
 
 PLCNET = LogicalNetwork(
     devices=[
@@ -84,7 +91,6 @@ PLCNET = LogicalNetwork(
         },
     ],
 )
-
 
 PLCNET_ATTACHED = LogicalNetwork(
     devices=[

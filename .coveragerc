@@ -230,6 +230,9 @@ omit =
     homeassistant/components/discord/notify.py
     homeassistant/components/dlib_face_detect/image_processing.py
     homeassistant/components/dlib_face_identify/image_processing.py
+    homeassistant/components/dlink/__init__.py
+    homeassistant/components/dlink/data.py
+    homeassistant/components/dlink/entity.py
     homeassistant/components/dlink/switch.py
     homeassistant/components/dominos/*
     homeassistant/components/doods/*
@@ -607,6 +610,7 @@ omit =
     homeassistant/components/isy994/helpers.py
     homeassistant/components/isy994/light.py
     homeassistant/components/isy994/lock.py
+    homeassistant/components/isy994/number.py
     homeassistant/components/isy994/sensor.py
     homeassistant/components/isy994/services.py
     homeassistant/components/isy994/switch.py
@@ -1065,6 +1069,7 @@ omit =
     homeassistant/components/rest/switch.py
     homeassistant/components/rfxtrx/diagnostics.py
     homeassistant/components/ridwell/__init__.py
+    homeassistant/components/ridwell/entity.py
     homeassistant/components/ridwell/sensor.py
     homeassistant/components/ridwell/switch.py
     homeassistant/components/ring/camera.py

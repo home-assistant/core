@@ -80,7 +80,8 @@ class CastProtocol(Protocol):
     ) -> BrowseMedia | None:
         """Browse media.
 
-        Return a BrowseMedia object or None if the media does not belong to this platform.
+        Return a BrowseMedia object or None if the media does not belong to
+        this platform.
         """
 
     async def async_play_media(

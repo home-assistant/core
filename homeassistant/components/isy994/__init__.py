@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -141,7 +142,9 @@ async def async_setup_entry(
     for platform in PROGRAM_PLATFORMS:
         hass_isy_data[ISY994_PROGRAMS][platform] = []
 
-    hass_isy_data[ISY994_VARIABLES] = []
+    hass_isy_data[ISY994_VARIABLES] = {}
+    hass_isy_data[ISY994_VARIABLES][Platform.NUMBER] = []
+    hass_isy_data[ISY994_VARIABLES][Platform.SENSOR] = []
 
     isy_config = entry.data
     isy_options = entry.options
@@ -212,7 +215,12 @@ async def async_setup_entry(
 
     _categorize_nodes(hass_isy_data, isy.nodes, ignore_identifier, sensor_identifier)
     _categorize_programs(hass_isy_data, isy.programs)
+    # Categorize variables call to be removed with variable sensors in 2023.5.0
     _categorize_variables(hass_isy_data, isy.variables, variable_identifier)
+    # Gather ISY Variables to be added. Identifier used to enable by default.
+    numbers = hass_isy_data[ISY994_VARIABLES][Platform.NUMBER]
+    for vtype, vname, vid in isy.variables.children:
+        numbers.append((isy.variables[vtype][vid], variable_identifier in vname))
     if isy.configuration[ISY_CONF_NETWORKING]:
         for resource in isy.networking.nobjs:
             hass_isy_data[ISY994_NODES][PROTO_NETWORK_RESOURCE].append(resource)

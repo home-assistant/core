@@ -45,7 +45,7 @@ from .const import (
     UOM_TO_STATES,
 )
 from .entity import ISYEntity, ISYNodeEntity
-from .helpers import convert_isy_value_to_hass, migrate_old_unique_ids
+from .helpers import convert_isy_value_to_hass
 
 # Disable general purpose and redundant sensors by default
 AUX_DISABLED_BY_DEFAULT_MATCH = ["GV", "DO"]
@@ -132,10 +132,9 @@ async def async_setup_entry(
         # Any node in SENSOR_AUX can potentially have communication errors
         entities.append(ISYAuxSensorEntity(node, PROP_COMMS_ERROR, False))
 
-    for vname, vobj in hass_isy_data[ISY994_VARIABLES]:
+    for vname, vobj in hass_isy_data[ISY994_VARIABLES][Platform.SENSOR]:
         entities.append(ISYSensorVariableEntity(vname, vobj))
 
-    await migrate_old_unique_ids(hass, Platform.SENSOR, entities)
     async_add_entities(entities)
 
 
@@ -268,6 +267,9 @@ class ISYAuxSensorEntity(ISYSensorEntity):
 
 class ISYSensorVariableEntity(ISYEntity, SensorEntity):
     """Representation of an ISY variable as a sensor device."""
+
+    # Depreceted sensors, will be removed in 2023.5.0
+    _attr_entity_registry_enabled_default = False
 
     def __init__(self, vname: str, vobj: object) -> None:
         """Initialize the ISY binary sensor program."""
