@@ -319,30 +319,9 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
     @callback
     def async_cleanup_registry_entries(service: ServiceCall) -> None:
         """Remove extra entities that are no longer part of the integration."""
-        entity_registry = er.async_get(hass)
         for config_entry_id in hass.data[DOMAIN]:
             isy_data = hass.data[DOMAIN][config_entry_id]
-            entries_for_this_config = er.async_entries_for_config_entry(
-                entity_registry, config_entry_id
-            )
-            entities = {
-                (entity.domain, entity.unique_id): entity.entity_id
-                for entity in entries_for_this_config
-            }
-
-            extra_entities = set(entities.keys()).difference(isy_data.unique_ids)
-
-            for entity in extra_entities:
-                if entity_registry.async_is_registered(entities[entity]):
-                    entity_registry.async_remove(entities[entity])
-
-            _LOGGER.debug(
-                (
-                    "Cleaning up ISY entities: removed %s extra entities for config entry: %s"
-                ),
-                len(extra_entities),
-                len(config_entry_id),
-            )
+            isy_data.async_cleanup_registry_entries()
 
     async def async_reload_config_entries(service: ServiceCall) -> None:
         """Trigger a reload of all ISY config entries."""

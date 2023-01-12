@@ -222,6 +222,9 @@ async def async_setup_entry(
     # Load platforms for the devices in the ISY controller that we support.
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    # Clean-up any old entities that we no longer provide.
+    isy_data.async_cleanup_registry_entries()
+
     @callback
     def _async_stop_auto_update(event: Event) -> None:
         """Stop the isy auto update on Home Assistant Shutdown."""

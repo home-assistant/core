@@ -13,10 +13,12 @@ from pyisy.variables import Variable
 
 from homeassistant import config_entries
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
+import homeassistant.helpers.entity_registry as er
 
 from .const import (
+    _LOGGER,
     CONF_NETWORK,
     NODE_AUX_PROP_PLATFORMS,
     NODE_PLATFORMS,
@@ -102,3 +104,30 @@ class IsyData:
             current_unique_ids.add((Platform.BUTTON, self.uid_base(node)))
 
         return current_unique_ids
+
+    @callback
+    def async_cleanup_registry_entries(self) -> None:
+        """Remove extra entities that are no longer part of the integration."""
+        entity_registry = er.async_get(self.hass)
+
+        existing_entries = er.async_entries_for_config_entry(
+            entity_registry, self.config_entry.entry_id
+        )
+        entities = {
+            (entity.domain, entity.unique_id): entity.entity_id
+            for entity in existing_entries
+        }
+
+        extra_entities = set(entities.keys()).difference(self.unique_ids)
+        if not extra_entities:
+            return
+
+        for entity in extra_entities:
+            if entity_registry.async_is_registered(entities[entity]):
+                entity_registry.async_remove(entities[entity])
+
+        _LOGGER.debug(
+            ("Cleaning up ISY entities: removed %s extra entities for %s"),
+            len(extra_entities),
+            self.config_entry.title,
+        )
