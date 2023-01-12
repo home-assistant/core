@@ -166,7 +166,7 @@ class ScreenLogicSensor(ScreenlogicEntity, SensorEntity):
     def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         sl_unit = self.sensor.get("unit")
-        return SL_UNIT_TO_HA_UNIT[sl_unit] if sl_unit in SL_UNIT_TO_HA_UNIT else sl_unit
+        return SL_UNIT_TO_HA_UNIT.get(sl_unit, sl_unit)
 
     @property
     def device_class(self):
