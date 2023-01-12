@@ -31,7 +31,8 @@
                 "state": {
                     "adsl": "ADSL",
                     "ftth": "FTTH",
-                    "gprs": "GPRS"
+                    "gprs": "GPRS",
+                    "unknown": "Unknown"
                 }
             },
             "training": {

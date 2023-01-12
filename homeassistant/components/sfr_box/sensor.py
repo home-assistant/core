@@ -172,6 +172,7 @@ SYSTEM_SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription[SystemInfo], ...] = (
             "adsl",
             "ftth",
             "gprs",
+            "unknown",
         ],
         translation_key="net_infra",
         value_fn=lambda x: x.net_infra,
