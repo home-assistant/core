@@ -13,14 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    CONF_NETWORK,
-    DOMAIN,
-    ISY_DEVICES,
-    ISY_NET_RES,
-    ISY_ROOT,
-    ISY_ROOT_NODES,
-)
+from .const import CONF_NETWORK, DOMAIN
 
 
 async def async_setup_entry(
@@ -29,21 +22,21 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up ISY/IoX button from config entry."""
-    hass_isy_data = hass.data[DOMAIN][config_entry.entry_id]
-    isy: ISY = hass_isy_data[ISY_ROOT]
-    device_info = hass_isy_data[ISY_DEVICES]
+    isy_data = hass.data[DOMAIN][config_entry.entry_id]
+    isy: ISY = isy_data.root
+    device_info = isy_data.devices
     entities: list[
         ISYNodeQueryButtonEntity
         | ISYNodeBeepButtonEntity
         | ISYNetworkResourceButtonEntity
     ] = []
 
-    for node in hass_isy_data[ISY_ROOT_NODES][Platform.BUTTON]:
+    for node in isy_data.root_nodes[Platform.BUTTON]:
         entities.append(
             ISYNodeQueryButtonEntity(
                 node=node,
                 name="Query",
-                unique_id=f"{isy.uuid}_{node.address}_query",
+                unique_id=f"{isy_data.uid_base(node)}_query",
                 entity_category=EntityCategory.DIAGNOSTIC,
                 device_info=device_info[node.address],
             )
@@ -53,18 +46,18 @@ async def async_setup_entry(
                 ISYNodeBeepButtonEntity(
                     node=node,
                     name="Beep",
-                    unique_id=f"{isy.uuid}_{node.address}_beep",
+                    unique_id=f"{isy_data.uid_base(node)}_beep",
                     entity_category=EntityCategory.DIAGNOSTIC,
                     device_info=device_info[node.address],
                 )
             )
 
-    for node in hass_isy_data[ISY_NET_RES]:
+    for node in isy_data.net_resources:
         entities.append(
             ISYNetworkResourceButtonEntity(
                 node=node,
                 name=node.name,
-                unique_id=f"{isy.uuid}_{CONF_NETWORK}_{node.address}",
+                unique_id=isy_data.uid_base(node),
                 device_info=device_info[CONF_NETWORK],
             )
         )

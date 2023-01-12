@@ -11,7 +11,7 @@ from pyisy.constants import (
     PROTO_ZWAVE,
 )
 from pyisy.helpers import EventListener, NodeProperty
-from pyisy.nodes import Node
+from pyisy.nodes import Group, Node
 from pyisy.programs import Program
 from pyisy.variables import Variable
 
@@ -30,7 +30,9 @@ class ISYEntity(Entity):
     _attr_should_poll = False
     _node: Node | Program | Variable
 
-    def __init__(self, node: Node, device_info: DeviceInfo | None = None) -> None:
+    def __init__(
+        self, node: Node | Group | Variable, device_info: DeviceInfo | None = None
+    ) -> None:
         """Initialize the insteon device."""
         self._node = node
         self._attr_name = node.name
@@ -155,7 +157,10 @@ class ISYNodeEntity(ISYEntity):
 class ISYProgramEntity(ISYEntity):
     """Representation of an ISY program base."""
 
-    def __init__(self, name: str, status: Any | None, actions: Program = None) -> None:
+    _actions: Program
+    _status: Program
+
+    def __init__(self, name: str, status: Program, actions: Program = None) -> None:
         """Initialize the ISY program-based entity."""
         super().__init__(status)
         self._attr_name = name
