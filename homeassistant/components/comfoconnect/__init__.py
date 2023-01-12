@@ -45,8 +45,11 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the ComfoConnect bridge."""
+
+    if DOMAIN not in config:
+        return True
 
     conf = config[DOMAIN]
     host = conf[CONF_HOST]
@@ -74,10 +77,13 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     def _shutdown(_event):
         ccb.disconnect()
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
 
     # Load platforms
-    discovery.load_platform(hass, Platform.FAN, DOMAIN, {}, config)
+    # discovery.async_load_platform(hass, Platform.FAN, DOMAIN, {}, config)
+    hass.async_create_task(
+        discovery.async_load_platform(hass, Platform.FAN, DOMAIN, {}, config)
+    )
 
     return True
 

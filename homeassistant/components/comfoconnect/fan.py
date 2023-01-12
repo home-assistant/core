@@ -44,16 +44,16 @@ PRESET_MODE_AUTO = "auto"
 PRESET_MODES = [PRESET_MODE_AUTO]
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the ComfoConnect fan platform."""
     ccb = hass.data[DOMAIN]
 
-    add_entities([ComfoConnectFan(ccb)], True)
+    async_add_entities([ComfoConnectFan(ccb)], True)
 
 
 class ComfoConnectFan(FanEntity):

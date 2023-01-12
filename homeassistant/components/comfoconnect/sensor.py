@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import logging
 
 from pycomfoconnect import (
     SENSOR_BYPASS_STATE,
@@ -36,6 +35,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_RESOURCES,
     PERCENTAGE,
@@ -53,6 +53,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, ComfoConnectBridge
+from .const import _LOGGER
 
 ATTR_AIR_FLOW_EXHAUST = "air_flow_exhaust"
 ATTR_AIR_FLOW_SUPPLY = "air_flow_supply"
@@ -75,8 +76,6 @@ ATTR_SUPPLY_FAN_DUTY = "supply_fan_duty"
 ATTR_SUPPLY_FAN_SPEED = "supply_fan_speed"
 ATTR_SUPPLY_HUMIDITY = "supply_humidity"
 ATTR_SUPPLY_TEMPERATURE = "supply_temperature"
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -279,22 +278,23 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the ComfoConnect sensor platform."""
     ccb = hass.data[DOMAIN]
 
+    resources = config[CONF_RESOURCES]
     sensors = [
-        ComfoConnectSensor(ccb=ccb, description=description)
+        ComfoConnectSensor(ccb, resources, description)
         for description in SENSOR_TYPES
-        if description.key in config[CONF_RESOURCES]
+        if description.key in resources
     ]
 
-    add_entities(sensors, True)
+    async_add_entities(sensors, True)
 
 
 class ComfoConnectSensor(SensorEntity):
@@ -306,6 +306,7 @@ class ComfoConnectSensor(SensorEntity):
     def __init__(
         self,
         ccb: ComfoConnectBridge,
+        entry: ConfigEntry,
         description: ComfoconnectSensorEntityDescription,
     ) -> None:
         """Initialize the ComfoConnect sensor."""
@@ -313,6 +314,14 @@ class ComfoConnectSensor(SensorEntity):
         self.entity_description = description
         self._attr_name = f"{ccb.name} {description.name}"
         self._attr_unique_id = f"{ccb.unique_id}-{description.key}"
+        # self._attr_unique_id = "_".join(
+        #     [
+        #         DOMAIN,
+        #         ccb.name,
+        #         "sensor",
+        #         description.key,
+        #     ]
+        # )
 
     async def async_added_to_hass(self) -> None:
         """Register for sensor updates."""
