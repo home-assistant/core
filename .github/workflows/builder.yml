@@ -119,7 +119,7 @@ jobs:
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
           repo: home-assistant/intents
-          branch: dev
+          branch: main
           workflow: nightly.yaml
           workflow_conclusion: success
           name: package
