@@ -2,38 +2,21 @@
 from datetime import timedelta
 import logging
 
-from aiopvpc import DEFAULT_POWER_KW, TARIFFS, EsiosApiData, PVPCData
-import voluptuous as vol
+from aiopvpc import BadApiTokenAuthError, EsiosApiData, PVPCData
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_API_TOKEN, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import (
-    ATTR_POWER,
-    ATTR_POWER_P3,
-    ATTR_TARIFF,
-    DEFAULT_NAME,
-    DOMAIN,
-    PLATFORMS,
-)
+from .const import ATTR_POWER, ATTR_POWER_P3, ATTR_TARIFF, CONF_USE_API_TOKEN, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-_DEFAULT_TARIFF = TARIFFS[0]
-VALID_POWER = vol.All(vol.Coerce(float), vol.Range(min=1.0, max=15.0))
-VALID_TARIFF = vol.In(TARIFFS)
-UI_CONFIG_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
-        vol.Required(ATTR_TARIFF, default=_DEFAULT_TARIFF): VALID_TARIFF,
-        vol.Required(ATTR_POWER, default=DEFAULT_POWER_KW): VALID_POWER,
-        vol.Required(ATTR_POWER_P3, default=DEFAULT_POWER_KW): VALID_POWER,
-    }
-)
+PLATFORMS: list[Platform] = [Platform.SENSOR]
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
@@ -52,7 +35,7 @@ async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     if any(
         entry.data.get(attrib) != entry.options.get(attrib)
-        for attrib in (ATTR_POWER, ATTR_POWER_P3)
+        for attrib in (ATTR_POWER, ATTR_POWER_P3, CONF_USE_API_TOKEN, CONF_API_TOKEN)
     ):
         # update entry replacing data with new options
         hass.config_entries.async_update_entry(
@@ -74,12 +57,16 @@ class ElecPricesDataUpdateCoordinator(DataUpdateCoordinator[EsiosApiData]):
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize."""
+        api_token = None
+        if entry.data.get(CONF_USE_API_TOKEN, False):
+            api_token = entry.data.get(CONF_API_TOKEN)
         self.api = PVPCData(
             session=async_get_clientsession(hass),
             tariff=entry.data[ATTR_TARIFF],
             local_timezone=hass.config.time_zone,
             power=entry.data[ATTR_POWER],
             power_valley=entry.data[ATTR_POWER_P3],
+            api_token=api_token,
         )
         super().__init__(
             hass, _LOGGER, name=DOMAIN, update_interval=timedelta(minutes=30)
@@ -93,7 +80,10 @@ class ElecPricesDataUpdateCoordinator(DataUpdateCoordinator[EsiosApiData]):
 
     async def _async_update_data(self) -> EsiosApiData:
         """Update electricity prices from the ESIOS API."""
-        api_data = await self.api.async_update_all(self.data, dt_util.utcnow())
+        try:
+            api_data = await self.api.async_update_all(self.data, dt_util.utcnow())
+        except BadApiTokenAuthError as exc:
+            raise ConfigEntryAuthFailed from exc
         if (
             not api_data
             or not api_data.sensors
