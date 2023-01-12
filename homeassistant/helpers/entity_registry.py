@@ -153,8 +153,8 @@ class RegistryEntry:
         return self.hidden_by is not None
 
     @property
-    def dict_repr(self) -> dict[str, Any]:
-        """Return a dict representation of the entry."""
+    def as_partial_dict(self) -> dict[str, Any]:
+        """Return a partial dict representation of the entry."""
         return {
             "area_id": self.area_id,
             "config_entry_id": self.config_entry_id,
@@ -174,13 +174,13 @@ class RegistryEntry:
         }
 
     @property
-    def json_repr(self) -> str | None:
-        """Return a cached JSON representation of the entry."""
+    def partial_json_repr(self) -> str | None:
+        """Return a cached partial JSON representation of the entry."""
         if self._json_repr is not None:
             return self._json_repr
 
         try:
-            dict_repr = self.dict_repr
+            dict_repr = self.as_partial_dict
             object.__setattr__(self, "_json_repr", JSON_DUMP(dict_repr))
         except (ValueError, TypeError):
             _LOGGER.error(

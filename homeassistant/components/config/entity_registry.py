@@ -46,9 +46,9 @@ def websocket_list_entities(
     msg_json = (
         msg_json_prefix
         + ",".join(
-            entry.json_repr
+            entry.partial_json_repr
             for entry in registry.entities.values()
-            if entry.json_repr is not None
+            if entry.partial_json_repr is not None
         )
         + "]}"
     )
@@ -262,7 +262,7 @@ def websocket_remove_entity(
 @callback
 def _entry_ext_dict(entry: er.RegistryEntry) -> dict[str, Any]:
     """Convert entry to API format."""
-    data = entry.dict_repr
+    data = entry.as_partial_dict
     data["aliases"] = entry.aliases
     data["capabilities"] = entry.capabilities
     data["device_class"] = entry.device_class
