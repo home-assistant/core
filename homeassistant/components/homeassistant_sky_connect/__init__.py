@@ -119,7 +119,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     @callback
     def async_usb_scan_done() -> None:
         """Handle usb discovery started."""
-        hass.async_add_job(_async_usb_scan_done, hass, entry)
+        hass.async_create_task(_async_usb_scan_done(hass, entry))
 
     unsub_usb = usb.async_register_initial_scan_callback(hass, async_usb_scan_done)
     entry.async_on_unload(unsub_usb)
