@@ -1,7 +1,7 @@
 """The USB Discovery integration."""
 from __future__ import annotations
 
-from collections.abc import Coroutine
+from collections.abc import Callable, Coroutine
 import dataclasses
 import fnmatch
 import logging
@@ -20,12 +20,17 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
+    HassJob,
     HomeAssistant,
     callback as hass_callback,
 )
 from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.helpers import discovery_flow, system_info
 from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import USBMatcher, async_get_usb
 
@@ -39,6 +44,8 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 REQUEST_SCAN_COOLDOWN = 60  # 1 minute cooldown
+
+USB_DISCOVERY_STARTED = "usb_discovery_started"
 
 __all__ = [
     "async_is_plugged_in",
@@ -87,6 +94,46 @@ def async_is_plugged_in(hass: HomeAssistant, matcher: USBCallbackMatcher) -> boo
         _is_matching(USBDevice(*device_tuple), matcher)
         for device_tuple in usb_discovery.seen
     )
+
+
+@hass_callback
+def async_at_discovery_started(
+    hass: HomeAssistant,
+    at_start_cb: Callable[[HomeAssistant], Coroutine[Any, Any, None] | None],
+) -> CALLBACK_TYPE:
+    """Execute a job at_start_cb when USB discovery has started.
+
+    The job is executed immediately if USB discovery is already started.
+    """
+    discovery: USBDiscovery = hass.data[DOMAIN]
+    at_start_job = HassJob(at_start_cb)
+
+    if discovery.started:
+        hass.async_run_hass_job(at_start_job, hass)
+        return lambda: None
+
+    unsub: None | CALLBACK_TYPE = None
+
+    @hass_callback
+    def _usb_started() -> None:
+        """Call the callback when USB discovery started."""
+        hass.async_run_hass_job(at_start_job, hass)
+        nonlocal unsub
+        if unsub is not None:
+            unsub()
+            unsub = None
+
+    @hass_callback
+    def cancel() -> None:
+        if unsub is not None:
+            unsub()
+
+    unsub = async_dispatcher_connect(
+        hass,
+        USB_DISCOVERY_STARTED,
+        _usb_started,
+    )
+    return cancel
 
 
 @dataclasses.dataclass
@@ -184,6 +231,7 @@ class USBDiscovery:
         self.usb = usb
         self.seen: set[tuple[str, ...]] = set()
         self.observer_active = False
+        self.started = False
         self._request_debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None
         self._request_callbacks: list[CALLBACK_TYPE] = []
 
@@ -195,6 +243,8 @@ class USBDiscovery:
     async def async_start(self, event: Event) -> None:
         """Start USB Discovery and run a manual scan."""
         await self._async_scan_serial()
+        async_dispatcher_send(self.hass, USB_DISCOVERY_STARTED)
+        self.started = True
 
     async def _async_start_monitor(self) -> None:
         """Start monitoring hardware with pyudev."""

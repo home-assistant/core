@@ -1,6 +1,7 @@
 """The Home Assistant Sky Connect integration."""
 from __future__ import annotations
 
+import asyncio
 import logging
 
 from homeassistant.components import usb
@@ -16,7 +17,7 @@ from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon 
     get_zigbee_socket,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
@@ -64,6 +65,30 @@ async def _multi_pan_addon_info(
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a Home Assistant Sky Connect config entry."""
+
+    usb_discovery_started: asyncio.Future[None] = asyncio.Future()
+
+    @callback
+    def async_usb_discovery_started(hass: HomeAssistant) -> None:
+        """Handle usb discovery started."""
+        if not usb_discovery_started.cancelled():
+            usb_discovery_started.set_result(None)
+
+    @callback
+    def cancel_startup() -> None:
+        """Stop waiting for USB discovery started."""
+        unsub_usb()
+        if not usb_discovery_started.cancelled():
+            usb_discovery_started.cancel()
+
+    unsub_usb = usb.async_at_discovery_started(hass, async_usb_discovery_started)
+    entry.async_on_unload(cancel_startup)
+
+    try:
+        await usb_discovery_started
+    except asyncio.CancelledError:
+        return False
+
     matcher = usb.USBCallbackMatcher(
         domain=DOMAIN,
         vid=entry.data["vid"].upper(),
@@ -74,8 +99,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     if not usb.async_is_plugged_in(hass, matcher):
-        # The USB dongle is not plugged in
-        raise ConfigEntryNotReady
+        # The USB dongle is not plugged in, remove the config entry
+        hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
 
     addon_info = await _multi_pan_addon_info(hass, entry)
 
