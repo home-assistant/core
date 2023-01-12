@@ -413,17 +413,13 @@ def _categorize_variables(
 ) -> None:
     """Gather the ISY Variables to be added as sensors."""
     try:
-        var_to_add = [
-            (vtype, vname, vid)
+        isy_data.variables[Platform.SENSOR] = [
+            variables[vtype][vid]
             for (vtype, vname, vid) in variables.children
             if identifier in vname
         ]
     except KeyError as err:
         _LOGGER.error("Error adding ISY Variables: %s", err)
-        return
-    variable_entities = isy_data.variables
-    for vtype, vname, vid in var_to_add:
-        variable_entities[Platform.SENSOR].append(variables[vtype][vid])
 
 
 def convert_isy_value_to_hass(
