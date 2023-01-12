@@ -1,46 +1,43 @@
 """Representation of ISYEntity Types."""
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any
 
 from pyisy.constants import (
     COMMAND_FRIENDLY_NAME,
     EMPTY_TIME,
     EVENT_PROPS_IGNORED,
-    PROTO_GROUP,
     PROTO_INSTEON,
     PROTO_ZWAVE,
 )
 from pyisy.helpers import EventListener, NodeProperty
 from pyisy.nodes import Node
 from pyisy.programs import Program
+from pyisy.variables import Variable
 
-from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
-    ATTR_SUGGESTED_AREA,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
-from . import _async_isy_to_configuration_url
 from .const import DOMAIN
 
 
 class ISYEntity(Entity):
-    """Representation of an ISY994 device."""
+    """Representation of an ISY device."""
 
-    _name: str | None = None
+    _attr_has_entity_name = False
     _attr_should_poll = False
+    _node: Node | Program | Variable
 
-    def __init__(self, node: Node) -> None:
+    def __init__(self, node: Node, device_info: DeviceInfo | None = None) -> None:
         """Initialize the insteon device."""
         self._node = node
+        self._attr_name = node.name
+        if device_info is None:
+            device_info = DeviceInfo(identifiers={(DOMAIN, node.isy.uuid)})
+        self._attr_device_info = device_info
+        self._attr_unique_id = f"{node.isy.uuid}_{node.address}"
         self._attrs: dict[str, Any] = {}
         self._change_handler: EventListener | None = None
         self._control_handler: EventListener | None = None
@@ -56,12 +53,12 @@ class ISYEntity(Entity):
 
     @callback
     def async_on_update(self, event: NodeProperty) -> None:
-        """Handle the update event from the ISY994 Node."""
+        """Handle the update event from the ISY Node."""
         self.async_write_ha_state()
 
     @callback
     def async_on_control(self, event: NodeProperty) -> None:
-        """Handle a control event from the ISY994 Node."""
+        """Handle a control event from the ISY Node."""
         event_data = {
             "entity_id": self.entity_id,
             "control": event.control,
@@ -76,89 +73,6 @@ class ISYEntity(Entity):
             self.async_write_ha_state()
 
         self.hass.bus.async_fire("isy994_control", event_data)
-
-    @property
-    def device_info(self) -> DeviceInfo | None:
-        """Return the device_info of the device."""
-        isy = self._node.isy
-        uuid = isy.configuration["uuid"]
-        node = self._node
-        url = _async_isy_to_configuration_url(isy)
-
-        basename = self._name or str(self._node.name)
-
-        if hasattr(node, "protocol") and node.protocol == PROTO_GROUP:
-            # If Group has only 1 Controller, link to that device, otherwise link to ISY Hub
-            if len(node.controllers) != 1:
-                return DeviceInfo(identifiers={(DOMAIN, uuid)})
-
-            node = isy.nodes.get_by_id(node.controllers[0])
-            basename = node.name
-
-        if hasattr(node, "parent_node") and node.parent_node is not None:
-            # This is not the parent node, get the parent node.
-            node = node.parent_node
-            basename = node.name
-
-        device_info = DeviceInfo(
-            manufacturer="Unknown",
-            model="Unknown",
-            name=basename,
-            via_device=(DOMAIN, uuid),
-            configuration_url=url,
-        )
-
-        if hasattr(node, "address"):
-            assert isinstance(node.address, str)
-            device_info[
-                ATTR_NAME
-            ] = f"{basename} ({(node.address.rpartition(' ')[0] or node.address)})"
-        if hasattr(node, "primary_node"):
-            device_info[ATTR_IDENTIFIERS] = {(DOMAIN, f"{uuid}_{node.address}")}
-        # ISYv5 Device Types
-        if hasattr(node, "node_def_id") and node.node_def_id is not None:
-            model: str = str(node.node_def_id)
-            # Numerical Device Type
-            if hasattr(node, "type") and node.type is not None:
-                model += f" {node.type}"
-            device_info[ATTR_MODEL] = model
-        if hasattr(node, "protocol"):
-            model = str(device_info[ATTR_MODEL])
-            manufacturer = str(node.protocol)
-            if node.protocol == PROTO_ZWAVE:
-                # Get extra information for Z-Wave Devices
-                manufacturer += f" MfrID:{node.zwave_props.mfr_id}"
-                model += (
-                    f" Type:{node.zwave_props.devtype_gen} "
-                    f"ProductTypeID:{node.zwave_props.prod_type_id} "
-                    f"ProductID:{node.zwave_props.product_id}"
-                )
-            device_info[ATTR_MANUFACTURER] = manufacturer
-            device_info[ATTR_MODEL] = model
-        if hasattr(node, "folder") and node.folder is not None:
-            device_info[ATTR_SUGGESTED_AREA] = node.folder
-        # Note: sw_version is not exposed by the ISY for the individual devices.
-
-        return device_info
-
-    @property
-    def unique_id(self) -> str | None:
-        """Get the unique identifier of the device."""
-        if hasattr(self._node, "address"):
-            return f"{self._node.isy.configuration['uuid']}_{self._node.address}"
-        return None
-
-    @property
-    def old_unique_id(self) -> str | None:
-        """Get the old unique identifier of the device."""
-        if hasattr(self._node, "address"):
-            return cast(str, self._node.address)
-        return None
-
-    @property
-    def name(self) -> str:
-        """Get the name of the device."""
-        return self._name or str(self._node.name)
 
 
 class ISYNodeEntity(ISYEntity):
@@ -239,12 +153,12 @@ class ISYNodeEntity(ISYEntity):
 
 
 class ISYProgramEntity(ISYEntity):
-    """Representation of an ISY994 program base."""
+    """Representation of an ISY program base."""
 
     def __init__(self, name: str, status: Any | None, actions: Program = None) -> None:
-        """Initialize the ISY994 program-based entity."""
+        """Initialize the ISY program-based entity."""
         super().__init__(status)
-        self._name = name
+        self._attr_name = name
         self._actions = actions
 
     @property

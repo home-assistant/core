@@ -62,7 +62,9 @@
         "step": {
             "add_sensor": {
                 "data": {
-                    "distance": "Polomer vyh\u013ead\u00e1vania"
+                    "distance": "Polomer vyh\u013ead\u00e1vania",
+                    "latitude": "Zemepisn\u00e1 \u0161\u00edrka",
+                    "longitude": "Zemepisn\u00e1 d\u013a\u017eka"
                 },
                 "data_description": {
                     "distance": "Polomer (v kilometroch) kruhu, v ktorom sa m\u00e1 vyh\u013ead\u00e1va\u0165",

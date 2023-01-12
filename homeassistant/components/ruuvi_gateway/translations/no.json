@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kontoen er allerede konfigurert"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig godkjenning",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Vert (IP-adresse eller DNS-navn)",
+                    "token": "B\u00e6rer-token (konfigureres under gateway-oppsett)"
+                }
+            }
+        }
+    }
+}

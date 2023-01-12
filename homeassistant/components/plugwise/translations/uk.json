@@ -14,5 +14,18 @@
                 "title": "\u0422\u0438\u043f \u043f\u0440\u0438\u0441\u0442\u0440\u043e\u044e Plugwise"
             }
         }
+    },
+    "entity": {
+        "climate": {
+            "plugwise": {
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "asleep": "\u041d\u0456\u0447"
+                        }
+                    }
+                }
+            }
+        }
     }
 }
