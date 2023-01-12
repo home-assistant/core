@@ -1,6 +1,7 @@
 {
   "domain": "comfoconnect",
   "name": "Zehnder ComfoAir Q",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/comfoconnect",
   "requirements": ["pycomfoconnect==0.5.1"],
   "codeowners": ["@michaelarnauts"],
