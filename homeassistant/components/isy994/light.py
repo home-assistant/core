@@ -15,14 +15,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import (
-    _LOGGER,
-    CONF_RESTORE_LIGHT_STATE,
-    DOMAIN,
-    ISY_DEVICES,
-    ISY_NODES,
-    UOM_PERCENTAGE,
-)
+from .const import _LOGGER, CONF_RESTORE_LIGHT_STATE, DOMAIN, UOM_PERCENTAGE
 from .entity import ISYNodeEntity
 from .services import async_setup_light_services
 
@@ -33,13 +26,13 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the ISY light platform."""
-    hass_isy_data = hass.data[DOMAIN][entry.entry_id]
-    devices: dict[str, DeviceInfo] = hass_isy_data[ISY_DEVICES]
+    isy_data = hass.data[DOMAIN][entry.entry_id]
+    devices: dict[str, DeviceInfo] = isy_data.devices
     isy_options = entry.options
     restore_light_state = isy_options.get(CONF_RESTORE_LIGHT_STATE, False)
 
     entities = []
-    for node in hass_isy_data[ISY_NODES][Platform.LIGHT]:
+    for node in isy_data.nodes[Platform.LIGHT]:
         entities.append(
             ISYLightEntity(node, restore_light_state, devices.get(node.primary_node))
         )
