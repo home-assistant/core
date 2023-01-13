@@ -24,6 +24,7 @@ from homeassistant.helpers import aiohttp_client, config_validation as cv
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -56,24 +57,27 @@ from .util import _async_cleanup_registry_entries
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_HOST): cv.url,
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_TLS_VER): vol.Coerce(float),
-                vol.Optional(
-                    CONF_IGNORE_STRING, default=DEFAULT_IGNORE_STRING
-                ): cv.string,
-                vol.Optional(
-                    CONF_SENSOR_STRING, default=DEFAULT_SENSOR_STRING
-                ): cv.string,
-                vol.Optional(
-                    CONF_VAR_SENSOR_STRING, default=DEFAULT_VAR_SENSOR_STRING
-                ): cv.string,
-                vol.Required(
-                    CONF_RESTORE_LIGHT_STATE, default=DEFAULT_RESTORE_LIGHT_STATE
-                ): bool,
-            }
+            vol.All(
+                cv.deprecated(DOMAIN),
+                {
+                    vol.Required(CONF_HOST): cv.url,
+                    vol.Required(CONF_USERNAME): cv.string,
+                    vol.Required(CONF_PASSWORD): cv.string,
+                    vol.Optional(CONF_TLS_VER): vol.Coerce(float),
+                    vol.Optional(
+                        CONF_IGNORE_STRING, default=DEFAULT_IGNORE_STRING
+                    ): cv.string,
+                    vol.Optional(
+                        CONF_SENSOR_STRING, default=DEFAULT_SENSOR_STRING
+                    ): cv.string,
+                    vol.Optional(
+                        CONF_VAR_SENSOR_STRING, default=DEFAULT_VAR_SENSOR_STRING
+                    ): cv.string,
+                    vol.Required(
+                        CONF_RESTORE_LIGHT_STATE, default=DEFAULT_RESTORE_LIGHT_STATE
+                    ): bool,
+                },
+            )
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -87,6 +91,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     if not isy_config:
         return True
+
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2023.5.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+    )
 
     # Only import if we haven't before.
     config_entry = _async_find_matching_config_entry(hass)
