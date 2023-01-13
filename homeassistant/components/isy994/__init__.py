@@ -54,29 +54,32 @@ from .services import async_setup_services, async_unload_services
 from .util import _async_cleanup_registry_entries
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_HOST): cv.url,
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_TLS_VER): vol.Coerce(float),
-                vol.Optional(
-                    CONF_IGNORE_STRING, default=DEFAULT_IGNORE_STRING
-                ): cv.string,
-                vol.Optional(
-                    CONF_SENSOR_STRING, default=DEFAULT_SENSOR_STRING
-                ): cv.string,
-                vol.Optional(
-                    CONF_VAR_SENSOR_STRING, default=DEFAULT_VAR_SENSOR_STRING
-                ): cv.string,
-                vol.Required(
-                    CONF_RESTORE_LIGHT_STATE, default=DEFAULT_RESTORE_LIGHT_STATE
-                ): bool,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Required(CONF_HOST): cv.url,
+                    vol.Required(CONF_USERNAME): cv.string,
+                    vol.Required(CONF_PASSWORD): cv.string,
+                    vol.Optional(CONF_TLS_VER): vol.Coerce(float),
+                    vol.Optional(
+                        CONF_IGNORE_STRING, default=DEFAULT_IGNORE_STRING
+                    ): cv.string,
+                    vol.Optional(
+                        CONF_SENSOR_STRING, default=DEFAULT_SENSOR_STRING
+                    ): cv.string,
+                    vol.Optional(
+                        CONF_VAR_SENSOR_STRING, default=DEFAULT_VAR_SENSOR_STRING
+                    ): cv.string,
+                    vol.Required(
+                        CONF_RESTORE_LIGHT_STATE, default=DEFAULT_RESTORE_LIGHT_STATE
+                    ): bool,
+                }
+            )
+        },
+        extra=vol.ALLOW_EXTRA,
+    )
 )
 
 
