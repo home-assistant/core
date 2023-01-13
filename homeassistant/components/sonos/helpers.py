@@ -115,9 +115,9 @@ def _find_target_identifier(instance: Any, fallback_soco: SoCo | None) -> str | 
 def hostname_to_uid(hostname: str) -> str:
     """Convert a Sonos hostname to a uid."""
     if hostname.startswith("Sonos-"):
-        baseuid = hostname.split("-")[1].replace(".local.", "")
+        baseuid = hostname.removeprefix("Sonos-").replace(".local.", "")
     elif hostname.startswith("sonos"):
-        baseuid = hostname[5:].replace(".local.", "")
+        baseuid = hostname.removeprefix("sonos").replace(".local.", "")
     else:
         raise ValueError(f"{hostname} is not a sonos device.")
     return f"{UID_PREFIX}{baseuid}{UID_POSTFIX}"

@@ -37,11 +37,13 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import Store
 
+from .dashboard import async_get_dashboard
+
 SAVE_DELAY = 120
 _LOGGER = logging.getLogger(__name__)
 
 # Mapping from ESPHome info type to HA platform
-INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], str] = {
+INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], Platform] = {
     BinarySensorInfo: Platform.BINARY_SENSOR,
     ButtonInfo: Platform.BUTTON,
     CameraInfo: Platform.CAMERA,
@@ -84,7 +86,7 @@ class RuntimeEntryData:
     state_subscriptions: dict[
         tuple[type[EntityState], int], Callable[[], None]
     ] = field(default_factory=dict)
-    loaded_platforms: set[str] = field(default_factory=set)
+    loaded_platforms: set[Platform] = field(default_factory=set)
     platform_load_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     _storage_contents: dict[str, Any] | None = None
     ble_connections_free: int = 0
@@ -133,7 +135,7 @@ class RuntimeEntryData:
         async_dispatcher_send(hass, signal)
 
     async def _ensure_platforms_loaded(
-        self, hass: HomeAssistant, entry: ConfigEntry, platforms: set[str]
+        self, hass: HomeAssistant, entry: ConfigEntry, platforms: set[Platform]
     ) -> None:
         async with self.platform_load_lock:
             needed = platforms - self.loaded_platforms
@@ -147,6 +149,10 @@ class RuntimeEntryData:
         """Distribute an update of static infos to all platforms."""
         # First, load all platforms
         needed_platforms = set()
+
+        if async_get_dashboard(hass):
+            needed_platforms.add(Platform.UPDATE)
+
         for info in infos:
             for info_type, platform in INFO_TYPE_TO_PLATFORM.items():
                 if isinstance(info, info_type):

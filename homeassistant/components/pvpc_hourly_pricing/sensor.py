@@ -148,8 +148,6 @@ class ElecPriceSensor(CoordinatorEntity[ElecPricesDataUpdateCoordinator], Sensor
             manufacturer="REE",
             name="ESIOS API",
         )
-        self._state: StateType = None
-        self._attrs: Mapping[str, Any] = {}
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
@@ -179,18 +177,16 @@ class ElecPriceSensor(CoordinatorEntity[ElecPricesDataUpdateCoordinator], Sensor
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        self._state = self.coordinator.api.states.get(self.entity_description.key)
-        return self._state
+        return self.coordinator.api.states.get(self.entity_description.key)
 
     @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+    def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the state attributes."""
         sensor_attributes = self.coordinator.api.sensor_attributes.get(
             self.entity_description.key, {}
         )
-        self._attrs = {
+        return {
             _PRICE_SENSOR_ATTRIBUTES_MAP[key]: value
             for key, value in sensor_attributes.items()
             if key in _PRICE_SENSOR_ATTRIBUTES_MAP
         }
-        return self._attrs
