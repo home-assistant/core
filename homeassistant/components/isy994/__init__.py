@@ -82,6 +82,11 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the isy994 integration from YAML."""
+    _LOGGER.warning(
+        "Configuring ISY994 through yaml is deprecated. Please remove it from"
+        " your configuration as it has already been imported to a config entry."
+        " Support will be removed in 2023.5.0"
+    )
     isy_config: ConfigType | None = config.get(DOMAIN)
     hass.data.setdefault(DOMAIN, {})
 
