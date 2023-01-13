@@ -221,7 +221,6 @@ def calc_sum(
 ) -> tuple[dict[str, Any], float]:
     """Calculate a sum of values."""
     result = 0.0
-    _LOGGER.debug("sensor_values: %s", sensor_values)
     for _, sensor_value, _ in sensor_values:
         result += sensor_value
 
