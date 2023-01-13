@@ -72,7 +72,6 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an authentication error or no admin privileges."""
-        self._host = None
         self._host = entry_data[CONF_HOST]
         self._username = entry_data[CONF_USERNAME]
         self._password = entry_data[CONF_PASSWORD]
