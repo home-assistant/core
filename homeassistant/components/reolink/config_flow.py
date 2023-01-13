@@ -14,6 +14,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 
+from .exceptions import UserNotAdmin
 from .const import CONF_PROTOCOL, CONF_USE_HTTPS, DEFAULT_PROTOCOL, DOMAIN
 from .host import ReolinkHost
 
@@ -56,6 +57,7 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize."""
+        self._reolink_host = None
         self._host: str | None = None
         self._username: str = "admin"
         self._password: str | None = None
@@ -71,6 +73,7 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an authentication error or no admin privileges."""
+        self._host = None
         self._host = entry_data[CONF_HOST]
         self._username = entry_data[CONF_USERNAME]
         self._password = entry_data[CONF_PASSWORD]
@@ -94,11 +97,11 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                host = await async_obtain_host_settings(self.hass, user_input)
-                if not host.api.is_admin:
-                    errors[CONF_USERNAME] = "not_admin"
-                    placeholders["username"] = host.api.username
-                    placeholders["userlevel"] = host.api.user_level
+                host = await self.async_obtain_host_settings(self.hass, user_input)
+            except UserNotAdmin:
+                errors[CONF_USERNAME] = "not_admin"
+                placeholders["username"] = self._reolink_host.api.username
+                placeholders["userlevel"] = self._reolink_host.api.user_level
             except CannotConnect:
                 errors[CONF_HOST] = "cannot_connect"
             except CredentialsInvalidError:
@@ -157,19 +160,19 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-async def async_obtain_host_settings(
-    hass: core.HomeAssistant, user_input: dict
-) -> ReolinkHost:
-    """Initialize the Reolink host and get the host information."""
-    host = ReolinkHost(hass, user_input, DEFAULT_OPTIONS)
+    async def async_obtain_host_settings(
+        self, hass: core.HomeAssistant, user_input: dict
+    ) -> ReolinkHost:
+        """Initialize the Reolink host and get the host information."""
+        self._reolink_host = ReolinkHost(hass, user_input, DEFAULT_OPTIONS)
 
-    try:
-        if not await host.async_init():
-            raise CannotConnect
-    finally:
-        await host.stop()
+        try:
+            if not await self._reolink_host.async_init():
+                raise CannotConnect
+        finally:
+            await self._reolink_host.stop()
 
-    return host
+        return self._reolink_host
 
 
 class CannotConnect(exceptions.HomeAssistantError):

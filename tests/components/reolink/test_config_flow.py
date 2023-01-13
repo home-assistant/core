@@ -278,3 +278,59 @@ async def test_change_connection_settings(hass):
     assert config_entry.data[CONF_HOST] == TEST_HOST2
     assert config_entry.data[CONF_USERNAME] == TEST_USERNAME2
     assert config_entry.data[CONF_PASSWORD] == TEST_PASSWORD2
+
+
+async def test_reauth(hass):
+    """Test a reauth flow."""
+    config_entry = MockConfigEntry(
+        domain=const.DOMAIN,
+        unique_id=format_mac(TEST_MAC),
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_PORT: TEST_PORT,
+            const.CONF_USE_HTTPS: TEST_USE_HTTPS,
+        },
+        options={
+            const.CONF_PROTOCOL: const.DEFAULT_PROTOCOL,
+        },
+        title=TEST_NVR_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN,
+        context={"source": config_entries.SOURCE_REAUTH},
+        data=config_entry.data,
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: TEST_HOST2,
+            CONF_USERNAME: TEST_USERNAME2,
+            CONF_PASSWORD: TEST_PASSWORD2,
+        },
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "reauth_successful"
+    assert config_entry.data[CONF_HOST] == TEST_HOST2
+    assert config_entry.data[CONF_USERNAME] == TEST_USERNAME2
+    assert config_entry.data[CONF_PASSWORD] == TEST_PASSWORD2
