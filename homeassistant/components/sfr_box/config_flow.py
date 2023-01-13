@@ -6,7 +6,12 @@ from sfrbox_api.exceptions import SFRBoxAuthenticationError, SFRBoxError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    ATTR_CREDENTIALS,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
 from homeassistant.helpers.httpx_client import get_async_client
@@ -16,8 +21,10 @@ from .const import DEFAULT_HOST, DEFAULT_USERNAME, DOMAIN
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST, default=DEFAULT_HOST): selector.TextSelector(),
-        vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): selector.TextSelector(),
-        vol.Optional(CONF_PASSWORD): selector.TextSelector(
+        vol.Inclusive(
+            CONF_USERNAME, ATTR_CREDENTIALS, default=DEFAULT_USERNAME
+        ): selector.TextSelector(),
+        vol.Inclusive(CONF_PASSWORD, ATTR_CREDENTIALS): selector.TextSelector(
             selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
         ),
     }
