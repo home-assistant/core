@@ -3,7 +3,7 @@ import json
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from reolink_aio.exceptions import ApiError, CredentialsInvalidError
+from reolink_aio.exceptions import ApiError, CredentialsInvalidError, ReolinkError
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.reolink import const
@@ -24,11 +24,11 @@ TEST_NVR_NAME = "test_reolink_name"
 TEST_USE_HTTPS = True
 
 
-def get_mock_info(error=None, host_data_return=True):
+def get_mock_info(error=None):
     """Return a mock gateway info instance."""
     host_mock = Mock()
     if error is None:
-        host_mock.get_host_data = AsyncMock(return_value=host_data_return)
+        host_mock.get_host_data = AsyncMock(return_value=None)
     else:
         host_mock.get_host_data = AsyncMock(side_effect=error)
     host_mock.unsubscribe_all = AsyncMock(return_value=True)
@@ -97,7 +97,7 @@ async def test_config_flow_errors(hass):
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    host_mock = get_mock_info(host_data_return=False)
+    host_mock = get_mock_info(error=ReolinkError("Test error"))
     with patch("homeassistant.components.reolink.host.Host", return_value=host_mock):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
