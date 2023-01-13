@@ -19,7 +19,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Axis light."""
-    device: AxisNetworkDevice = hass.data[AXIS_DOMAIN][config_entry.unique_id]
+    device: AxisNetworkDevice = hass.data[AXIS_DOMAIN][config_entry.entry_id]
 
     if (
         device.api.vapix.light_control is None
