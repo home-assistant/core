@@ -104,9 +104,9 @@ SINGLE_DEVICE_SELECTOR_CONFIG_SCHEMA = vol.Schema(
         # Integration linked to it with a config entry
         vol.Optional("integration"): str,
         # Manufacturer of device
-        vol.Optional("manufacturer"): str,
+        vol.Optional("manufacturer"): vol.Any(str, [str]),
         # Model of device
-        vol.Optional("model"): str,
+        vol.Optional("model"): vol.Any(str, [str]),
         # Device has to contain entities matching this selector
         vol.Optional("entity"): SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA,
     }
@@ -117,8 +117,8 @@ class SingleDeviceSelectorConfig(TypedDict, total=False):
     """Class to represent a single device selector config."""
 
     integration: str
-    manufacturer: str
-    model: str
+    manufacturer: str | list[str]
+    model: str | list[str]
     entity: SingleEntitySelectorConfig
 
 
@@ -397,8 +397,8 @@ class DeviceSelectorConfig(TypedDict, total=False):
     """Class to represent a device selector config."""
 
     integration: str
-    manufacturer: str
-    model: str
+    manufacturer: str | list[str]
+    model: str | list[str]
     entity: SingleEntitySelectorConfig
     multiple: bool
 

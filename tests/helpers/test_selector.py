@@ -84,8 +84,15 @@ def _test_selector(
         ({}, ("abc123",), (None,)),
         ({"integration": "zha"}, ("abc123",), (None,)),
         ({"manufacturer": "mock-manuf"}, ("abc123",), (None,)),
+        ({"manufacturer": ["mock-manuf", "mock-manf-2"]}, ("abc123",), (None,)),
         ({"model": "mock-model"}, ("abc123",), (None,)),
+        ({"model": ["mock-model", "mock-model-2"]}, ("abc123",), (None,)),
         ({"manufacturer": "mock-manuf", "model": "mock-model"}, ("abc123",), (None,)),
+        (
+            {"manufacturer": "mock-manuf", "model": ["mock-model", "mock-model-2"]},
+            ("abc123",),
+            (None,),
+        ),
         (
             {"integration": "zha", "manufacturer": "mock-manuf", "model": "mock-model"},
             ("abc123",),
@@ -198,6 +205,16 @@ def test_entity_selector_schema(schema, valid_selections, invalid_selections):
         ),
         (
             {"device": {"integration": "demo", "model": "mock-model"}},
+            ("abc123",),
+            (None,),
+        ),
+        (
+            {
+                "device": {
+                    "integration": "demo",
+                    "model": ["mock-model", "mock-model-2"],
+                }
+            },
             ("abc123",),
             (None,),
         ),
@@ -355,6 +372,16 @@ def test_state_selector_schema(schema, valid_selections, invalid_selections):
             (),
         ),
         ({"device": {"integration": "demo", "model": "mock-model"}}, (), ()),
+        (
+            {
+                "device": {
+                    "integration": "demo",
+                    "model": ["mock-model", "mock-model-2"],
+                }
+            },
+            (),
+            (),
+        ),
         (
             {
                 "entity": {"domain": "binary_sensor", "device_class": "motion"},
