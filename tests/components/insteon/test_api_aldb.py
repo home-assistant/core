@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from pyinsteon import pub
 from pyinsteon.address import Address
-from pyinsteon.topics import ALDB_STATUS_CHANGED, DEVICE_LINK_CONTROLLER_CREATED
+from pyinsteon.topics import ALDB_LINK_CHANGED, ALDB_STATUS_CHANGED
 import pytest
 
 from homeassistant.components import insteon
@@ -245,10 +245,10 @@ async def test_notify_on_aldb_record_added(hass, hass_ws_client, aldb_data):
         assert msg["success"]
 
         pub.sendMessage(
-            f"{DEVICE_LINK_CONTROLLER_CREATED}.333333",
-            controller=Address("11.11.11"),
-            responder=Address("33.33.33"),
-            group=100,
+            f"333333.{ALDB_LINK_CHANGED}",
+            record={},
+            sender=Address("33.33.33"),
+            deleted=False,
         )
         msg = await ws_client.receive_json()
         assert msg["event"]["type"] == "record_loaded"
