@@ -1299,7 +1299,7 @@ def async_capture_events(hass: HomeAssistant, event_name: str) -> list[Event]:
 
 
 @callback
-def async_mock_signal(hass: HomeAssistant, signal: str) -> list[list[Any]]:
+def async_mock_signal(hass: HomeAssistant, signal: str) -> list[tuple[Any]]:
     """Catch all dispatches to a signal."""
     calls = []
 
