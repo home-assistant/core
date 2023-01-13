@@ -3,18 +3,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from homeassistant.components import axis
 from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.const import (
-    CONF_DEVICE,
-    CONF_HOST,
-    CONF_MAC,
-    CONF_MODEL,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-)
-from homeassistant.helpers import entity_registry as er
+from homeassistant.const import CONF_MAC
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.setup import async_setup_component
 
@@ -38,9 +27,7 @@ async def test_setup_entry(hass):
 
 async def test_setup_entry_fails(hass):
     """Test successful setup of entry."""
-    config_entry = MockConfigEntry(
-        domain=AXIS_DOMAIN, data={CONF_MAC: "0123"}, version=3
-    )
+    config_entry = MockConfigEntry(domain=AXIS_DOMAIN, data={CONF_MAC: "0123"})
     config_entry.add_to_hass(hass)
 
     mock_device = Mock()
@@ -66,52 +53,23 @@ async def test_unload_entry(hass):
 
 async def test_migrate_entry(hass):
     """Test successful migration of entry data."""
-    legacy_config = {
-        CONF_DEVICE: {
-            CONF_HOST: "1.2.3.4",
-            CONF_USERNAME: "username",
-            CONF_PASSWORD: "password",
-            CONF_PORT: 80,
-        },
-        CONF_MAC: "00408C123456",
-        CONF_MODEL: "model",
-        CONF_NAME: "name",
-    }
-    entry = MockConfigEntry(domain=AXIS_DOMAIN, data=legacy_config)
+    config_entry = MockConfigEntry(domain=AXIS_DOMAIN, version=1)
+    config_entry.add_to_hass(hass)
 
-    assert entry.data == legacy_config
-    assert entry.version == 1
-    assert not entry.unique_id
+    assert config_entry.version == 1
 
-    # Create entity entry to migrate to new unique ID
-    registry = er.async_get(hass)
-    registry.async_get_or_create(
-        BINARY_SENSOR_DOMAIN,
-        AXIS_DOMAIN,
-        "00408C123456-vmd4-0",
-        suggested_object_id="vmd4",
-        config_entry=entry,
-    )
+    mock_device = Mock()
+    mock_device.async_setup = AsyncMock()
+    mock_device.async_update_device_registry = AsyncMock()
+    mock_device.api.vapix.light_control = None
+    mock_device.api.vapix.params.image_format = None
 
-    await entry.async_migrate(hass)
+    with patch.object(axis, "get_axis_device"), patch.object(
+        axis, "AxisNetworkDevice"
+    ) as mock_device_class:
+        mock_device_class.return_value = mock_device
 
-    assert entry.data == {
-        CONF_DEVICE: {
-            CONF_HOST: "1.2.3.4",
-            CONF_USERNAME: "username",
-            CONF_PASSWORD: "password",
-            CONF_PORT: 80,
-        },
-        CONF_HOST: "1.2.3.4",
-        CONF_USERNAME: "username",
-        CONF_PASSWORD: "password",
-        CONF_PORT: 80,
-        CONF_MAC: "00408C123456",
-        CONF_MODEL: "model",
-        CONF_NAME: "name",
-    }
-    assert entry.version == 2  # Keep version to support rollbacking
-    assert entry.unique_id == "00:40:8c:12:34:56"
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
 
-    vmd4_entity = registry.async_get("binary_sensor.vmd4")
-    assert vmd4_entity.unique_id == "00:40:8c:12:34:56-vmd4-0"
+    assert hass.data[AXIS_DOMAIN]
+    assert config_entry.version == 3
