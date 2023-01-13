@@ -474,7 +474,7 @@ def infer_unit(value: str) -> tuple[str, str | None]:
 
     for unit in ALL_UNITS:
         if value.endswith(unit):
-            return value[: -len(unit)], INFERRED_UNITS.get(unit, unit.strip())
+            return value.removesuffix(unit), INFERRED_UNITS.get(unit, unit.strip())
     return value, None
 
 
