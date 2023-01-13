@@ -78,7 +78,7 @@ CONFIG_SCHEMA = vol.Schema(
                     ): bool,
                 },
             )
-        }
+        },
     ),
     extra=vol.ALLOW_EXTRA,
 )
