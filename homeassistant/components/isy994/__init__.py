@@ -55,10 +55,10 @@ from .services import async_setup_services, async_unload_services
 from .util import _async_cleanup_registry_entries
 
 CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            vol.All(
+                cv.deprecated(DOMAIN),
                 {
                     vol.Required(CONF_HOST): cv.url,
                     vol.Required(CONF_USERNAME): cv.string,
@@ -76,11 +76,11 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Required(
                         CONF_RESTORE_LIGHT_STATE, default=DEFAULT_RESTORE_LIGHT_STATE
                     ): bool,
-                }
+                },
             )
-        },
-        extra=vol.ALLOW_EXTRA,
-    )
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
 )
 
 
