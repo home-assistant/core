@@ -19,6 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import CONF_PROTOCOL, CONF_USE_HTTPS, DEFAULT_TIMEOUT
+from .exceptions import UserNotAdmin
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,6 +68,12 @@ class ReolinkHost:
 
         if self._api.mac_address is None:
             return False
+
+        if not self._api.is_admin:
+            await self.stop()
+            raise UserNotAdmin(
+                f"User '{self._api.username}' has authorization level '{self._api.user_level}', only admin users can change camera settings"
+            )
 
         enable_onvif = None
         enable_rtmp = None

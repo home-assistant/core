@@ -14,10 +14,11 @@ from reolink_aio.exceptions import ApiError, InvalidContentTypeError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
+from .exceptions import UserNotAdmin
 from .host import ReolinkHost
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,16 +41,20 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     try:
         if not await host.async_init():
+            await host.stop()
             raise ConfigEntryNotReady(
                 f"Error while trying to setup {host.api.host}:{host.api.port}: "
                 "failed to obtain data from device."
             )
+    except UserNotAdmin as err:
+        raise ConfigEntryAuthFailed(err) from UserNotAdmin
     except (
         ClientConnectorError,
         asyncio.TimeoutError,
         ApiError,
         InvalidContentTypeError,
     ) as err:
+        await host.stop()
         raise ConfigEntryNotReady(
             f'Error while trying to setup {host.api.host}:{host.api.port}: "{str(err)}".'
         ) from err

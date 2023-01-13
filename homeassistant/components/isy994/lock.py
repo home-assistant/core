@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import _LOGGER, DOMAIN, ISY_DEVICES, ISY_NODES, ISY_PROGRAMS
+from .const import _LOGGER, DOMAIN
 from .entity import ISYNodeEntity, ISYProgramEntity
 
 VALUE_TO_STATE = {0: False, 100: True}
@@ -22,13 +22,13 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the ISY lock platform."""
-    hass_isy_data = hass.data[DOMAIN][entry.entry_id]
-    devices: dict[str, DeviceInfo] = hass_isy_data[ISY_DEVICES]
+    isy_data = hass.data[DOMAIN][entry.entry_id]
+    devices: dict[str, DeviceInfo] = isy_data.devices
     entities: list[ISYLockEntity | ISYLockProgramEntity] = []
-    for node in hass_isy_data[ISY_NODES][Platform.LOCK]:
+    for node in isy_data.nodes[Platform.LOCK]:
         entities.append(ISYLockEntity(node, devices.get(node.primary_node)))
 
-    for name, status, actions in hass_isy_data[ISY_PROGRAMS][Platform.LOCK]:
+    for name, status, actions in isy_data.programs[Platform.LOCK]:
         entities.append(ISYLockProgramEntity(name, status, actions))
 
     async_add_entities(entities)
