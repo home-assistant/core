@@ -43,6 +43,10 @@
                 }
             },
             "title": "The {deprecated_service} service will be removed"
+        },
+        "deprecated_yaml": {
+            "title": "The ISY/IoX YAML configuration is being removed",
+            "description": "Configuring Universal Devices ISY/IoX using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the `isy994` YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
         }
     },
     "options": {
