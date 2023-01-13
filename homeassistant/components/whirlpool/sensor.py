@@ -28,9 +28,9 @@ from .const import DOMAIN
 TANK_FILL = {
     "0": "unknown",
     "1": "empty",
-    "2": "25%",
-    "3": "50%",
-    "4": "100%",
+    "2": "25_percent",
+    "3": "50_percent",
+    "4": "100_percent",
     "5": "active",
 }
 
