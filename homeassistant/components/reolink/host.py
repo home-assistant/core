@@ -18,8 +18,8 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNA
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
 
-from .exceptions import UserNotAdmin
 from .const import CONF_PROTOCOL, CONF_USE_HTTPS, DEFAULT_TIMEOUT
+from .exceptions import UserNotAdmin
 
 _LOGGER = logging.getLogger(__name__)
 

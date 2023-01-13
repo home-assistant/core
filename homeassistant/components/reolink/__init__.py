@@ -14,7 +14,7 @@ from reolink_aio.exceptions import ApiError, InvalidContentTypeError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady, ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN

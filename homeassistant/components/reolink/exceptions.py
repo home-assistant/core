@@ -3,4 +3,4 @@ from homeassistant.exceptions import HomeAssistantError
 
 
 class UserNotAdmin(HomeAssistantError):
-    """Raised when user is not admin"""
+    """Raised when user is not admin."""
