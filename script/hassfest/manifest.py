@@ -1,6 +1,7 @@
 """Manifest validation."""
 from __future__ import annotations
 
+from enum import IntEnum
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
@@ -23,7 +24,17 @@ DOCUMENTATION_URL_HOST = "www.home-assistant.io"
 DOCUMENTATION_URL_PATH_PREFIX = "/integrations/"
 DOCUMENTATION_URL_EXCEPTIONS = {"https://www.home-assistant.io/hassio"}
 
-SUPPORTED_QUALITY_SCALES = ["gold", "internal", "platinum", "silver"]
+
+class QualityScale(IntEnum):
+    """Supported manifest quality scales."""
+
+    INTERNAL = -1
+    SILVER = 1
+    GOLD = 2
+    PLATINUM = 3
+
+
+SUPPORTED_QUALITY_SCALES = [enum.name.lower() for enum in QualityScale]
 SUPPORTED_IOT_CLASSES = [
     "assumed_state",
     "calculated",
@@ -337,10 +348,11 @@ def validate_manifest(integration: Integration, core_components_dir: Path) -> No
             "Virtual integration points to non-existing supported_by integration",
         )
 
-    if (quality_scale := integration.manifest.get("quality_scale")) in {
-        "gold",
-        "platinum",
-    } and not integration.manifest.get("codeowners"):
+    if (
+        (quality_scale := integration.manifest.get("quality_scale"))
+        and QualityScale[quality_scale.upper()] > QualityScale.SILVER
+        and not integration.manifest.get("codeowners")
+    ):
         integration.add_error(
             "manifest",
             f"{quality_scale} integration does not have a code owner",
