@@ -228,7 +228,9 @@ def calc_sum(
     return {}, value
 
 
-CALC_TYPES: dict[str, Callable] = {
+CALC_TYPES: dict[
+    str, Callable[[list[tuple[str, float, State]], int], tuple[dict[str, str], float]]
+] = {
     "min": calc_min,
     "max": calc_max,
     "mean": calc_mean,
