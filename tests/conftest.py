@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import AsyncGenerator, Callable, Generator
 from contextlib import asynccontextmanager
+import datetime
 import functools
 import gc
 import itertools
@@ -76,6 +77,14 @@ _LOGGER = logging.getLogger(__name__)
 asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))
 # Disable fixtures overriding our beautiful policy
 asyncio.set_event_loop_policy = lambda policy: None
+
+
+def _utcnow():
+    """Make utcnow patchable by freezegun."""
+    return datetime.datetime.now(datetime.timezone.utc)
+
+
+dt_util.utcnow = _utcnow
 
 
 def pytest_addoption(parser):
@@ -618,7 +627,7 @@ def current_request():
             "GET",
             "/some/request",
             headers={"Host": "example.com"},
-            sslcontext=ssl.SSLContext(ssl.PROTOCOL_TLS),
+            sslcontext=ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT),
         )
         mock_request_context.get.return_value = mocked_request
         yield mock_request_context

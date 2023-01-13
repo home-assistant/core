@@ -69,19 +69,20 @@ class RobotUpdateEntity(LitterRobotEntity[LitterRobot4], UpdateEntity):
 
     async def async_update(self) -> None:
         """Update the entity."""
-        if await self.robot.has_firmware_update():
-            latest_version = await self.robot.get_latest_firmware()
-        else:
-            latest_version = self.installed_version
-
-        if self._attr_latest_version != self.installed_version:
+        # If the robot has a firmware update already in progress, checking for the
+        # latest firmware informs that an update has already been triggered, no
+        # firmware information is returned and we won't know the latest version.
+        if not self.robot.firmware_update_triggered:
+            latest_version = await self.robot.get_latest_firmware(True)
+            if not await self.robot.has_firmware_update():
+                latest_version = self.robot.firmware
             self._attr_latest_version = latest_version
 
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update."""
-        if await self.robot.has_firmware_update():
+        if await self.robot.has_firmware_update(True):
             if not await self.robot.update_firmware():
                 message = f"Unable to start firmware update on {self.robot.name}"
                 raise HomeAssistantError(message)

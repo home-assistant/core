@@ -6,7 +6,6 @@ from homeassistant.components.config import entity_registry
 from homeassistant.const import ATTR_ICON
 from homeassistant.helpers.device_registry import DeviceEntryDisabler
 from homeassistant.helpers.entity_registry import (
-    EVENT_ENTITY_REGISTRY_UPDATED,
     RegistryEntry,
     RegistryEntryDisabler,
     RegistryEntryHider,
@@ -95,6 +94,9 @@ async def test_list_entities(hass, client):
         },
     ]
 
+    class Unserializable:
+        """Good luck serializing me."""
+
     mock_registry(
         hass,
         {
@@ -104,13 +106,15 @@ async def test_list_entities(hass, client):
                 platform="test_platform",
                 name="Hello World",
             ),
+            "test_domain.name_2": RegistryEntry(
+                entity_id="test_domain.name_2",
+                unique_id="6789",
+                platform="test_platform",
+                name=Unserializable(),
+            ),
         },
     )
 
-    hass.bus.async_fire(
-        EVENT_ENTITY_REGISTRY_UPDATED,
-        {"action": "create", "entity_id": "test_domain.no_name"},
-    )
     await client.send_json({"id": 6, "type": "config/entity_registry/list"})
     msg = await client.receive_json()
 

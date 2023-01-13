@@ -265,6 +265,8 @@ build.json @home-assistant/supervisor
 /tests/components/discord/ @tkdrob
 /homeassistant/components/discovery/ @home-assistant/core
 /tests/components/discovery/ @home-assistant/core
+/homeassistant/components/dlink/ @tkdrob
+/tests/components/dlink/ @tkdrob
 /homeassistant/components/dlna_dmr/ @StevenLooman @chishm
 /tests/components/dlna_dmr/ @StevenLooman @chishm
 /homeassistant/components/dlna_dms/ @chishm
@@ -538,6 +540,8 @@ build.json @home-assistant/supervisor
 /tests/components/image_processing/ @home-assistant/core
 /homeassistant/components/image_upload/ @home-assistant/core
 /tests/components/image_upload/ @home-assistant/core
+/homeassistant/components/imap/ @engrbm87
+/tests/components/imap/ @engrbm87
 /homeassistant/components/incomfort/ @zxdavb
 /homeassistant/components/influxdb/ @mdegat01
 /tests/components/influxdb/ @mdegat01
@@ -604,6 +608,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/keyboard_remote/ @bendavid @lanrat
 /homeassistant/components/keymitt_ble/ @spycle
 /tests/components/keymitt_ble/ @spycle
+/homeassistant/components/kitchen_sink/ @home-assistant/core
+/tests/components/kitchen_sink/ @home-assistant/core
 /homeassistant/components/kmtronic/ @dgomes
 /tests/components/kmtronic/ @dgomes
 /homeassistant/components/knx/ @Julius2342 @farmio @marvin-w
@@ -1379,8 +1385,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/zoneminder/ @rohankapoorcom
 /homeassistant/components/zwave_js/ @home-assistant/z-wave
 /tests/components/zwave_js/ @home-assistant/z-wave
-/homeassistant/components/zwave_me/ @lawfulchaos @Z-Wave-Me
-/tests/components/zwave_me/ @lawfulchaos @Z-Wave-Me
+/homeassistant/components/zwave_me/ @lawfulchaos @Z-Wave-Me @PoltoS
+/tests/components/zwave_me/ @lawfulchaos @Z-Wave-Me @PoltoS
 
 # Individual files
 /homeassistant/components/demo/weather.py @fabaff

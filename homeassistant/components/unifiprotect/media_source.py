@@ -763,7 +763,7 @@ class ProtectMediaSource(MediaSource):
             if camera is None:
                 raise BrowseError(f"Unknown Camera ID: {camera_id}")
             name = camera.name or camera.market_name or camera.type
-            is_doorbell = camera.feature_flags.has_chime
+            is_doorbell = camera.feature_flags.is_doorbell
             has_smart = camera.feature_flags.has_smart_detect
 
         thumbnail_url: str | None = None

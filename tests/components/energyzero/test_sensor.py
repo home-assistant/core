@@ -56,7 +56,7 @@ async def test_energy_today(
         == f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}"
     )
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.MONETARY
+    assert ATTR_DEVICE_CLASS not in state.attributes
     assert ATTR_ICON not in state.attributes
 
     # Average price sensor
@@ -74,7 +74,7 @@ async def test_energy_today(
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}"
     )
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.MONETARY
+    assert ATTR_DEVICE_CLASS not in state.attributes
     assert ATTR_ICON not in state.attributes
 
     # Highest price sensor
@@ -92,7 +92,7 @@ async def test_energy_today(
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}"
     )
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.MONETARY
+    assert ATTR_DEVICE_CLASS not in state.attributes
     assert ATTR_ICON not in state.attributes
 
     # Highest price time sensor
@@ -144,7 +144,7 @@ async def test_gas_today(
         == f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}"
     )
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.MONETARY
+    assert ATTR_DEVICE_CLASS not in state.attributes
     assert ATTR_ICON not in state.attributes
 
     assert entry.device_id

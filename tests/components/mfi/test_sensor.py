@@ -148,7 +148,7 @@ async def test_uom_power(port, sensor):
 async def test_uom_digital(port, sensor):
     """Test the UOM digital input."""
     port.model = "Input Digital"
-    assert sensor.unit_of_measurement == "State"
+    assert sensor.unit_of_measurement is None
     assert sensor.device_class is None
 
 
@@ -162,7 +162,7 @@ async def test_uom_unknown(port, sensor):
 async def test_uom_uninitialized(port, sensor):
     """Test that the UOM defaults if not initialized."""
     type(port).tag = mock.PropertyMock(side_effect=ValueError)
-    assert sensor.unit_of_measurement == "State"
+    assert sensor.unit_of_measurement is None
     assert sensor.device_class is None
 
 
