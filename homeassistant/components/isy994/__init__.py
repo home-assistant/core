@@ -83,6 +83,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the isy994 integration from YAML."""
     isy_config: ConfigType | None = config.get(DOMAIN)
