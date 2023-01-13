@@ -12,3 +12,8 @@ class ReolinkSetupException(ReolinkException):
 
 class ReolinkWebhookException(ReolinkException):
     """Raised when registering the reolink webhook failed."""
+
+
+class UserNotAdmin(ReolinkException):
+    """Raised when user is not admin."""
+

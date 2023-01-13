@@ -265,6 +265,8 @@ build.json @home-assistant/supervisor
 /tests/components/discord/ @tkdrob
 /homeassistant/components/discovery/ @home-assistant/core
 /tests/components/discovery/ @home-assistant/core
+/homeassistant/components/dlink/ @tkdrob
+/tests/components/dlink/ @tkdrob
 /homeassistant/components/dlna_dmr/ @StevenLooman @chishm
 /tests/components/dlna_dmr/ @StevenLooman @chishm
 /homeassistant/components/dlna_dms/ @chishm
@@ -849,8 +851,8 @@ build.json @home-assistant/supervisor
 /tests/components/openweathermap/ @fabaff @freekode @nzapponi
 /homeassistant/components/opnsense/ @mtreinish
 /tests/components/opnsense/ @mtreinish
-/homeassistant/components/oralb/ @bdraco
-/tests/components/oralb/ @bdraco
+/homeassistant/components/oralb/ @bdraco @conway20
+/tests/components/oralb/ @bdraco @conway20
 /homeassistant/components/oru/ @bvlaicu
 /homeassistant/components/overkiz/ @imicknl @vlebourl @tetienne @nyroDev
 /tests/components/overkiz/ @imicknl @vlebourl @tetienne @nyroDev

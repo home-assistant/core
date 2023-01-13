@@ -29,7 +29,7 @@ from .const import (
     DOMAIN,
     SUBSCRIPTION_RENEW_THRESHOLD,
 )
-from .exceptions import ReolinkSetupException, ReolinkWebhookException
+from .exceptions import ReolinkSetupException, ReolinkWebhookException, UserNotAdmin
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,6 +80,12 @@ class ReolinkHost:
 
         if self._api.mac_address is None:
             raise ReolinkSetupException("Could not get mac address")
+
+        if not self._api.is_admin:
+            await self.stop()
+            raise UserNotAdmin(
+                f"User '{self._api.username}' has authorization level '{self._api.user_level}', only admin users can change camera settings"
+            )
 
         enable_onvif = None
         enable_rtmp = None

@@ -1088,8 +1088,8 @@
     },
     "dlink": {
       "name": "D-Link Wi-Fi Smart Plugs",
-      "integration_type": "hub",
-      "config_flow": false,
+      "integration_type": "device",
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "dlna": {
@@ -1367,6 +1367,11 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "energie_vanons": {
+      "name": "Energie VanOns",
+      "integration_type": "virtual",
+      "supported_by": "energyzero"
     },
     "energyzero": {
       "name": "EnergyZero",
@@ -5613,7 +5618,7 @@
       "name": "Torque",
       "integration_type": "hub",
       "config_flow": false,
-      "iot_class": "cloud_polling"
+      "iot_class": "local_push"
     },
     "totalconnect": {
       "name": "Total Connect",

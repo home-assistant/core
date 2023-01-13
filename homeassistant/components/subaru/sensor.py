@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 import subarulink.const as sc
 
@@ -207,11 +207,11 @@ class SubaruSensor(
             return None
 
         if unit in LENGTH_UNITS:
-            return round(unit_system.length(current_value, unit), 1)
+            return round(unit_system.length(current_value, cast(str, unit)), 1)
 
         if unit in PRESSURE_UNITS and unit_system == US_CUSTOMARY_SYSTEM:
             return round(
-                unit_system.pressure(current_value, unit),
+                unit_system.pressure(current_value, cast(str, unit)),
                 1,
             )
 
