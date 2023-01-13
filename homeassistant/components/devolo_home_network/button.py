@@ -8,12 +8,16 @@ import logging
 from devolo_plc_api.device import Device
 from devolo_plc_api.exceptions.device import DevicePasswordProtected, DeviceUnavailable
 
-from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
+from homeassistant.components.button import (
+    ButtonDeviceClass,
+    ButtonEntity,
+    ButtonEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, START_WPS
+from .const import DOMAIN, IDENTIFY, PAIRING, RESTART, START_WPS
 from .entity import DevoloEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,6 +38,24 @@ class DevoloButtonEntityDescription(
 
 
 BUTTON_TYPES: dict[str, DevoloButtonEntityDescription] = {
+    IDENTIFY: DevoloButtonEntityDescription(
+        key=IDENTIFY,
+        icon="mdi:led-on",
+        name="Identify device with a blinking LED",
+        press_func=lambda device: device.plcnet.async_identify_device_start(),  # type: ignore[union-attr]
+    ),
+    PAIRING: DevoloButtonEntityDescription(
+        key=PAIRING,
+        icon="mdi:plus-network-outline",
+        name="Start PLC pairing",
+        press_func=lambda device: device.plcnet.async_pair_device(),  # type: ignore[union-attr]
+    ),
+    RESTART: DevoloButtonEntityDescription(
+        key=RESTART,
+        device_class=ButtonDeviceClass.RESTART,
+        name="Restart device",
+        press_func=lambda device: device.device.async_restart(),  # type: ignore[union-attr]
+    ),
     START_WPS: DevoloButtonEntityDescription(
         key=START_WPS,
         icon="mdi:wifi-plus",
@@ -50,6 +72,29 @@ async def async_setup_entry(
     device: Device = hass.data[DOMAIN][entry.entry_id]["device"]
 
     entities: list[DevoloButtonEntity] = []
+    if device.plcnet:
+        entities.append(
+            DevoloButtonEntity(
+                entry,
+                BUTTON_TYPES[IDENTIFY],
+                device,
+            )
+        )
+        entities.append(
+            DevoloButtonEntity(
+                entry,
+                BUTTON_TYPES[PAIRING],
+                device,
+            )
+        )
+    if device.device and "restart" in device.device.features:
+        entities.append(
+            DevoloButtonEntity(
+                entry,
+                BUTTON_TYPES[RESTART],
+                device,
+            )
+        )
     if device.device and "wifi1" in device.device.features:
         entities.append(
             DevoloButtonEntity(
