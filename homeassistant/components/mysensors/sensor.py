@@ -29,6 +29,7 @@ from homeassistant.const import (
     UnitOfSoundPressure,
     UnitOfTemperature,
     UnitOfVolume,
+    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -125,7 +126,8 @@ SENSORS: dict[str, SensorEntityDescription] = {
         # The documentation on this measurement is inconsistent.
         # Better not to set a device class here yet.
         key="V_FLOW",
-        native_unit_of_measurement=UnitOfLength.METERS,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        device_class=SensorDeviceClass.WATER_FLOW,
         icon="mdi:gauge",
     ),
     "V_VOLUME": SensorEntityDescription(
