@@ -63,7 +63,7 @@
                     "type": "Type",
                     "unit_of_measurement": "Unit of Measurement"
                 },
-                "description": "If \"ignore non-numeric\" is enabled, the group's state is calculated if at least one member has a numerical value. If \"ignore non-numeric\" is disabled, the group's state is calculated only be if all group members have numerical values.",
+                "description": "If \"ignore non-numeric\" is enabled, the group's state is calculated if at least one member has a numerical value. If \"ignore non-numeric\" is disabled, the group's state is calculated only if all group members have numerical values.",
                 "title": "Add Group"
             },
             "switch": {
@@ -143,7 +143,7 @@
                     "type": "Type",
                     "unit_of_measurement": "Unit of Measurement"
                 },
-                "description": "If \"ignore non-numeric\" is enabled, the group's state is calculated if at least one member has a numerical value. If \"ignore non-numeric\" is disabled, the group's state is calculated only be if all group members have numerical values."
+                "description": "If \"ignore non-numeric\" is enabled, the group's state is calculated if at least one member has a numerical value. If \"ignore non-numeric\" is disabled, the group's state is calculated only if all group members have numerical values."
             },
             "switch": {
                 "data": {

@@ -68,7 +68,7 @@
       },
       "sensor": {
         "title": "[%key:component::group::config::step::user::title%]",
-        "description": "If \"ignore non-numeric\" is enabled, the group's state is calculated if at least one member has a numerical value. If \"ignore non-numeric\" is disabled, the group's state is calculated only be if all group members have numerical values.",
+        "description": "If \"ignore non-numeric\" is enabled, the group's state is calculated if at least one member has a numerical value. If \"ignore non-numeric\" is disabled, the group's state is calculated only if all group members have numerical values.",
         "data": {
           "ignore_non_numeric": "Ignore non-numeric",
           "entities": "Members",
