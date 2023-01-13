@@ -37,7 +37,39 @@ class DLinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="already_configured")
 
         self.ip_address = discovery_info.ip
-        return await self.async_step_user()
+        return await self.async_step_confirm_discovery()
+
+    async def async_step_confirm_discovery(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Allow the user to confirm adding the device."""
+        errors = {}
+        if user_input is not None:
+            error = await self.hass.async_add_executor_job(
+                self._try_connect, user_input
+            )
+            if error is None:
+                return self.async_create_entry(
+                    title=DEFAULT_NAME,
+                    data=user_input | {CONF_HOST: self.ip_address},
+                )
+            errors["base"] = error
+
+        user_input = user_input or {}
+        return self.async_show_form(
+            step_id="confirm_discovery",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_USERNAME,
+                        default=user_input.get(CONF_USERNAME, DEFAULT_USERNAME),
+                    ): str,
+                    vol.Required(CONF_PASSWORD): str,
+                    vol.Required(CONF_USE_LEGACY_PROTOCOL): bool,
+                }
+            ),
+            errors=errors,
+        )
 
     async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
         """Import a config entry."""
@@ -89,7 +121,7 @@ class DLinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Try connecting to D-Link Power Plug."""
         try:
             smartplug = SmartPlug(
-                user_input[CONF_HOST],
+                user_input.get(CONF_HOST, self.ip_address),
                 user_input[CONF_PASSWORD],
                 user_input[CONF_USERNAME],
                 user_input[CONF_USE_LEGACY_PROTOCOL],

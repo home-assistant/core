@@ -8,6 +8,13 @@
           "username": "[%key:common::config_flow::data::username%]",
           "use_legacy_protocol": "Use legacy protocol"
         }
+      },
+      "confirm_discovery": {
+        "data": {
+          "password": "Password (default: PIN code on the back)",
+          "username": "[%key:common::config_flow::data::username%]",
+          "use_legacy_protocol": "Use legacy protocol"
+        }
       }
     },
     "error": {

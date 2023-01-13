@@ -10,6 +10,7 @@ from homeassistant.core import HomeAssistant
 
 from .conftest import (
     CONF_DATA,
+    CONF_DHCP_DATA,
     CONF_DHCP_FLOW,
     CONF_DHCP_FLOW_NEW_IP,
     CONF_IMPORT_DATA,
@@ -115,11 +116,38 @@ async def test_dhcp(hass: HomeAssistant, mocked_plug: MagicMock) -> None:
         DOMAIN, context={"source": SOURCE_DHCP}, data=CONF_DHCP_FLOW
     )
     assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "confirm_discovery"
     with patch_config_flow(mocked_plug), _patch_setup_entry():
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input=CONF_DATA,
+            user_input=CONF_DHCP_DATA,
+        )
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["title"] == DEFAULT_NAME
+    assert result["data"] == CONF_DATA
+
+
+async def test_dhcp_failed_auth(
+    hass: HomeAssistant, mocked_plug: MagicMock, mocked_plug_no_auth: MagicMock
+) -> None:
+    """Test we can recovery from failed authentication during dhcp flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_DHCP}, data=CONF_DHCP_FLOW
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "confirm_discovery"
+    with patch_config_flow(mocked_plug_no_auth):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_DHCP_DATA,
+        )
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["errors"]["base"] == "cannot_connect"
+
+    with patch_config_flow(mocked_plug), _patch_setup_entry():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_DHCP_DATA,
         )
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
@@ -160,11 +188,11 @@ async def test_dhcp_unique_id_assignment(
         DOMAIN, context={"source": SOURCE_DHCP}, data=dhcp_data
     )
     assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "confirm_discovery"
     with patch_config_flow(mocked_plug), _patch_setup_entry():
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input=CONF_DATA | {CONF_HOST: "2.3.4.5"},
+            user_input=CONF_DHCP_DATA,
         )
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"] == CONF_DATA | {CONF_HOST: "2.3.4.5"}
