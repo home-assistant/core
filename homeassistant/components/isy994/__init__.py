@@ -24,6 +24,7 @@ from homeassistant.helpers import aiohttp_client, config_validation as cv
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -85,16 +86,21 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the isy994 integration from YAML."""
-    _LOGGER.warning(
-        "Configuring ISY994 through yaml is deprecated. Please remove it from"
-        " your configuration as it has already been imported to a config entry."
-        " Support will be removed in 2023.5.0"
-    )
     isy_config: ConfigType | None = config.get(DOMAIN)
     hass.data.setdefault(DOMAIN, {})
 
     if not isy_config:
         return True
+
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2023.5.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+    )
 
     # Only import if we haven't before.
     config_entry = _async_find_matching_config_entry(hass)
