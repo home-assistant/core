@@ -170,6 +170,9 @@ async def test_add_device_api(hass, hass_ws_client):
         )
         msg = await ws_client.receive_json()
         assert msg["event"]["type"] == "linking_stopped"
+        msg = await ws_client.receive_json()
+        assert msg["type"] == "result"
+        assert msg["success"]
 
 
 async def test_cancel_add_device(hass, hass_ws_client):
