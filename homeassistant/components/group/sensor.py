@@ -130,7 +130,7 @@ async def async_setup_entry(
                 entities,
                 config_entry.options[CONF_ALL],
                 config_entry.options[CONF_TYPE],
-                int(config_entry.options[CONF_ROUND_DIGITS]),
+                int(config_entry.options.get(CONF_ROUND_DIGITS, 2)),
                 None,
                 None,
                 None,
