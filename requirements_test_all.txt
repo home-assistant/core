@@ -1599,7 +1599,7 @@ samsungtvws[async,encrypted]==2.5.0
 scapy==2.5.0
 
 # homeassistant.components.screenlogic
-screenlogicpy==0.6.2
+screenlogicpy==0.6.3
 
 # homeassistant.components.backup
 securetar==2022.2.0
