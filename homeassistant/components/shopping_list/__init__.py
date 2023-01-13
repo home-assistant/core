@@ -264,7 +264,8 @@ class ShoppingData:
             # so all items left in the mapping should be checked items.
             if all_items_mapping[key]["complete"] is False:
                 raise vol.Invalid(
-                    "The item ids array doesn't contain all the unchecked shopping list items."
+                    "The item ids array doesn't contain all the unchecked shopping list"
+                    " items."
                 )
             new_items.append(all_items_mapping[key])
         self.items = new_items

@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from pynws import SimpleNWS
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -32,7 +34,7 @@ from homeassistant.util.unit_conversion import (
 )
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from . import base_unique_id, device_info
+from . import NwsDataUpdateCoordinator, base_unique_id, device_info
 from .const import (
     ATTRIBUTION,
     CONF_STATION,
@@ -163,7 +165,7 @@ async def async_setup_entry(
     )
 
 
-class NWSSensor(CoordinatorEntity, SensorEntity):
+class NWSSensor(CoordinatorEntity[NwsDataUpdateCoordinator], SensorEntity):
     """An NWS Sensor Entity."""
 
     entity_description: NWSSensorEntityDescription
@@ -179,7 +181,7 @@ class NWSSensor(CoordinatorEntity, SensorEntity):
     ):
         """Initialise the platform with a data instance."""
         super().__init__(hass_data[COORDINATOR_OBSERVATION])
-        self._nws = hass_data[NWS_DATA]
+        self._nws: SimpleNWS = hass_data[NWS_DATA]
         self._latitude = entry_data[CONF_LATITUDE]
         self._longitude = entry_data[CONF_LONGITUDE]
         self.entity_description = description

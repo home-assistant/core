@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, TypeVar
 
 import async_timeout
 from synology_dsm.api.surveillance_station.camera import SynoCamera
@@ -23,9 +23,10 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+_DataT = TypeVar("_DataT")
 
 
-class SynologyDSMUpdateCoordinator(DataUpdateCoordinator):
+class SynologyDSMUpdateCoordinator(DataUpdateCoordinator[_DataT]):
     """DataUpdateCoordinator base class for synology_dsm."""
 
     def __init__(
@@ -46,7 +47,9 @@ class SynologyDSMUpdateCoordinator(DataUpdateCoordinator):
         )
 
 
-class SynologyDSMSwitchUpdateCoordinator(SynologyDSMUpdateCoordinator):
+class SynologyDSMSwitchUpdateCoordinator(
+    SynologyDSMUpdateCoordinator[dict[str, dict[str, Any]]]
+):
     """DataUpdateCoordinator to gather data for a synology_dsm switch devices."""
 
     def __init__(
@@ -78,7 +81,7 @@ class SynologyDSMSwitchUpdateCoordinator(SynologyDSMUpdateCoordinator):
         }
 
 
-class SynologyDSMCentralUpdateCoordinator(SynologyDSMUpdateCoordinator):
+class SynologyDSMCentralUpdateCoordinator(SynologyDSMUpdateCoordinator[None]):
     """DataUpdateCoordinator to gather data for a synology_dsm central device."""
 
     def __init__(
@@ -106,7 +109,9 @@ class SynologyDSMCentralUpdateCoordinator(SynologyDSMUpdateCoordinator):
         return None
 
 
-class SynologyDSMCameraUpdateCoordinator(SynologyDSMUpdateCoordinator):
+class SynologyDSMCameraUpdateCoordinator(
+    SynologyDSMUpdateCoordinator[dict[str, dict[str, SynoCamera]]]
+):
     """DataUpdateCoordinator to gather data for a synology_dsm cameras."""
 
     def __init__(

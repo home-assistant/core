@@ -240,7 +240,8 @@ class ProtectData:
         # alert user viewport needs restart so voice clients can get new options
         elif len(self.api.bootstrap.viewers) > 0 and isinstance(obj, Liveview):
             _LOGGER.warning(
-                "Liveviews updated. Restart Home Assistant to update Viewport select options"
+                "Liveviews updated. Restart Home Assistant to update Viewport select"
+                " options"
             )
 
     @callback

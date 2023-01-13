@@ -38,7 +38,6 @@ from .const import (
     DEV_PROFILE_RGB,
     DEV_PROFILE_RGBW,
     DOMAIN,
-    HIDDEN_DEV_VALUES,
     MIN_EFFECT_VERSION,
 )
 
@@ -296,10 +295,6 @@ class TwinklyLight(LightEntity):
                         CONF_MODEL: self._model,
                     },
                 )
-
-            for key, value in device_info.items():
-                if key not in HIDDEN_DEV_VALUES:
-                    self._attributes[key] = value
 
             if LightEntityFeature.EFFECT & self.supported_features:
                 await self.async_update_movies()

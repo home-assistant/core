@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "panels": {
+                "data": {
+                    "panel_pin": "PIN-Code"
+                }
+            }
+        }
+    }
+}

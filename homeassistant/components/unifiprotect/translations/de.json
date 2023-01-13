@@ -52,8 +52,19 @@
     },
     "issues": {
         "deprecate_smart_sensor": {
-            "description": "Der einheitliche Sensor \u201eErkanntes Objekt\u201c f\u00fcr intelligente Erkennungen ist jetzt veraltet. Er wurde durch einzelne bin\u00e4re Smart Detection Sensoren f\u00fcr jeden Smart Detection Typ ersetzt. Bitte aktualisiere alle Vorlagen oder Automatisierungen entsprechend.",
+            "description": "Der einheitliche Sensor \"Erkanntes Objekt\" f\u00fcr intelligente Erkennungen ist jetzt veraltet. Er wurde durch individuelle Bin\u00e4rsensoren f\u00fcr jeden intelligenten Erkennungstyp ersetzt.\n\nIm Folgenden findest du die erkannten Automatisierungen oder Skripte, die eine oder mehrere der veralteten Entit\u00e4ten verwenden:\n{items}\nDie obige Liste ist m\u00f6glicherweise unvollst\u00e4ndig und enth\u00e4lt keine Vorlagen, die innerhalb von Dashboards verwendet werden. Bitte aktualisiere alle Vorlagen, Automatisierungen oder Skripte entsprechend.",
             "title": "Smart Detection Sensor veraltet"
+        },
+        "deprecated_service_set_doorbell_message": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Der Dienst \"unifiprotect.set_doorbell_message\" wird zugunsten der neuen Entit\u00e4t \"Doorbell Text\", die zu jedem Doorbell-Ger\u00e4t hinzugef\u00fcgt wird, verworfen. Er wird in v2023.3.0 entfernt. Bitte aktualisiere, um den [`text.set_value`-Dienst]({link}) zu verwenden.",
+                        "title": "set_doorbell_message ist veraltet"
+                    }
+                }
+            },
+            "title": "set_doorbell_message ist veraltet"
         },
         "ea_setup_failed": {
             "description": "Du verwendest v{version} von UniFi Protect, eine Early-Access-Version. Beim Versuch, die Integration zu laden, ist ein nicht behebbarer Fehler aufgetreten. Bitte f\u00fchre ein [Downgrade auf eine stabile Version](https://www.home-assistant.io/integrations/unifiprotect#downgrading-unifi-protect) von UniFi Protect durch, um die Integration weiterhin zu verwenden. \n\nFehler: {error}",

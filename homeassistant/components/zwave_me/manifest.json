@@ -7,5 +7,5 @@
   "after_dependencies": ["zeroconf"],
   "zeroconf": [{ "type": "_hap._tcp.local.", "name": "*z.wave-me*" }],
   "config_flow": true,
-  "codeowners": ["@lawfulchaos", "@Z-Wave-Me"]
+  "codeowners": ["@lawfulchaos", "@Z-Wave-Me", "@PoltoS"]
 }

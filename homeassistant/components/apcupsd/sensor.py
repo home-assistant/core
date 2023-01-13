@@ -9,6 +9,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -39,6 +40,9 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="ambtemp",
         name="UPS Ambient Temperature",
         icon="mdi:thermometer",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "apc": SensorEntityDescription(
         key="apc",
@@ -72,12 +76,15 @@ SENSORS: dict[str, SensorEntityDescription] = {
         name="UPS Battery Voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "bcharge": SensorEntityDescription(
         key="bcharge",
         name="UPS Battery",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:battery",
+        device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "cable": SensorEntityDescription(
         key="cable",
@@ -89,6 +96,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="cumonbatt",
         name="UPS Total Time on Battery",
         icon="mdi:timer-outline",
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     "date": SensorEntityDescription(
         key="date",
@@ -155,13 +163,16 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="humidity",
         name="UPS Ambient Humidity",
         native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.HUMIDITY,
         icon="mdi:water-percent",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "itemp": SensorEntityDescription(
         key="itemp",
         name="UPS Internal Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "laststest": SensorEntityDescription(
         key="laststest",
@@ -184,18 +195,21 @@ SENSORS: dict[str, SensorEntityDescription] = {
         name="UPS Line Frequency",
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         device_class=SensorDeviceClass.FREQUENCY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "linev": SensorEntityDescription(
         key="linev",
         name="UPS Input Voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "loadpct": SensorEntityDescription(
         key="loadpct",
         name="UPS Load",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:gauge",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "loadapnt": SensorEntityDescription(
         key="loadapnt",
@@ -288,18 +302,21 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="numxfers",
         name="UPS Transfer Count",
         icon="mdi:counter",
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     "outcurnt": SensorEntityDescription(
         key="outcurnt",
         name="UPS Output Current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "outputv": SensorEntityDescription(
         key="outputv",
         name="UPS Output Voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "reg1": SensorEntityDescription(
         key="reg1",
@@ -362,16 +379,19 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="stesti",
         name="UPS Self Test Interval",
         icon="mdi:information-outline",
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     "timeleft": SensorEntityDescription(
         key="timeleft",
         name="UPS Time Left",
         icon="mdi:clock-alert",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "tonbatt": SensorEntityDescription(
         key="tonbatt",
         name="UPS Time on Battery",
         icon="mdi:timer-outline",
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     "upsmode": SensorEntityDescription(
         key="upsmode",
@@ -445,7 +465,7 @@ async def async_setup_entry(
     async_add_entities(entities, update_before_add=True)
 
 
-def infer_unit(value):
+def infer_unit(value: str) -> tuple[str, str | None]:
     """If the value ends with any of the units from ALL_UNITS.
 
     Split the unit off the end of the value and return the value, unit tuple
@@ -454,7 +474,7 @@ def infer_unit(value):
 
     for unit in ALL_UNITS:
         if value.endswith(unit):
-            return value[: -len(unit)], INFERRED_UNITS.get(unit, unit.strip())
+            return value.removesuffix(unit), INFERRED_UNITS.get(unit, unit.strip())
     return value, None
 
 

@@ -3,9 +3,8 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from asyncio import Lock, TimeoutError as AsyncIOTimeoutError
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
-from typing import Any
 
 from aiohttp import ClientError
 from bond_async import BPUPSubscriptions
@@ -50,7 +49,7 @@ class BondEntity(Entity):
         self._sub_device = sub_device
         self._attr_available = True
         self._bpup_subs = bpup_subs
-        self._update_lock: Lock | None = None
+        self._update_lock = Lock()
         self._initialized = False
         if sub_device_id:
             sub_device_id = f"_{sub_device_id}"
@@ -104,7 +103,8 @@ class BondEntity(Entity):
         """Fetch assumed state of the cover from the hub using API."""
         await self._async_update_from_api()
 
-    async def _async_update_if_bpup_not_alive(self, *_: Any) -> None:
+    @callback
+    def _async_update_if_bpup_not_alive(self, now: datetime) -> None:
         """Fetch via the API if BPUP is not alive."""
         if (
             self.hass.is_stopping
@@ -113,8 +113,6 @@ class BondEntity(Entity):
             and self.available
         ):
             return
-
-        assert self._update_lock is not None
         if self._update_lock.locked():
             _LOGGER.warning(
                 "Updating %s took longer than the scheduled update interval %s",
@@ -122,7 +120,10 @@ class BondEntity(Entity):
                 _FALLBACK_SCAN_INTERVAL,
             )
             return
+        self.hass.async_create_task(self._async_update())
 
+    async def _async_update(self) -> None:
+        """Fetch via the API."""
         async with self._update_lock:
             await self._async_update_from_api()
             self.async_write_ha_state()
@@ -170,7 +171,6 @@ class BondEntity(Entity):
     async def async_added_to_hass(self) -> None:
         """Subscribe to BPUP and start polling."""
         await super().async_added_to_hass()
-        self._update_lock = Lock()
         self._bpup_subs.subscribe(self._device_id, self._async_bpup_callback)
         self.async_on_remove(
             async_track_time_interval(

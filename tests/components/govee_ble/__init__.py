@@ -36,3 +36,16 @@ GVH5177_SERVICE_INFO = BluetoothServiceInfo(
     service_data={},
     source="local",
 )
+
+GVH5178_SERVICE_INFO_ERROR = BluetoothServiceInfo(
+    name="B51782BC8",
+    address="A4:C1:38:75:2B:C8",
+    rssi=-66,
+    manufacturer_data={
+        1: b"\x01\x01\x01\x00\x03\xe7\xe4\x00\x01",
+        76: b"\x02\x15INTELLI_ROCKS_HWPu\xf2\xff\xc2",
+    },
+    service_data={},
+    service_uuids=["0000ec88-0000-1000-8000-00805f9b34fb"],
+    source="local",
+)

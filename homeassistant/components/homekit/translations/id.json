@@ -5,7 +5,7 @@
         },
         "step": {
             "pairing": {
-                "description": "Untuk menyelesaikan pemasangan ikuti petunjuk di \"Notifikasi\" di bawah \"Pemasangan HomeKit\".",
+                "description": "Untuk menyelesaikan pemasangan, ikuti petunjuk di \"Notifikasi\" di bawah \"Pemasangan HomeKit\".",
                 "title": "Pasangkan HomeKit"
             },
             "user": {

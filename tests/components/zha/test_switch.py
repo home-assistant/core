@@ -1,4 +1,4 @@
-"""Test zha switch."""
+"""Test ZHA switch."""
 from unittest.mock import call, patch
 
 import pytest
@@ -43,7 +43,7 @@ IEEE_GROUPABLE_DEVICE2 = "02:2d:6f:00:0a:90:69:e8"
 
 @pytest.fixture(autouse=True)
 def switch_platform_only():
-    """Only setup the switch and required base platforms to speed up tests."""
+    """Only set up the switch and required base platforms to speed up tests."""
     with patch(
         "homeassistant.components.zha.PLATFORMS",
         (
@@ -71,7 +71,7 @@ def zigpy_device(zigpy_device_mock):
 
 @pytest.fixture
 async def coordinator(hass, zigpy_device_mock, zha_device_joined):
-    """Test zha light platform."""
+    """Test ZHA light platform."""
 
     zigpy_device = zigpy_device_mock(
         {
@@ -92,7 +92,7 @@ async def coordinator(hass, zigpy_device_mock, zha_device_joined):
 
 @pytest.fixture
 async def device_switch_1(hass, zigpy_device_mock, zha_device_joined):
-    """Test zha switch platform."""
+    """Test ZHA switch platform."""
 
     zigpy_device = zigpy_device_mock(
         {
@@ -112,7 +112,7 @@ async def device_switch_1(hass, zigpy_device_mock, zha_device_joined):
 
 @pytest.fixture
 async def device_switch_2(hass, zigpy_device_mock, zha_device_joined):
-    """Test zha switch platform."""
+    """Test ZHA switch platform."""
 
     zigpy_device = zigpy_device_mock(
         {
@@ -131,7 +131,7 @@ async def device_switch_2(hass, zigpy_device_mock, zha_device_joined):
 
 
 async def test_switch(hass, zha_device_joined_restored, zigpy_device):
-    """Test zha switch platform."""
+    """Test ZHA switch platform."""
 
     zha_device = await zha_device_joined_restored(zigpy_device)
     cluster = zigpy_device.endpoints.get(1).on_off
@@ -297,14 +297,14 @@ async def test_zha_group_switch_entity(
     await async_enable_traffic(hass, [device_switch_1, device_switch_2], enabled=False)
     await async_wait_for_updates(hass)
 
-    # test that the lights were created and that they are off
+    # test that the switches were created and that they are off
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
     # allow traffic to flow through the gateway and device
     await async_enable_traffic(hass, [device_switch_1, device_switch_2])
     await async_wait_for_updates(hass)
 
-    # test that the lights were created and are off
+    # test that the switches were created and are off
     assert hass.states.get(entity_id).state == STATE_OFF
 
     # turn on from HA
@@ -354,30 +354,30 @@ async def test_zha_group_switch_entity(
     await send_attributes_report(hass, dev2_cluster_on_off, {0: 1})
     await async_wait_for_updates(hass)
 
-    # test that group light is on
+    # test that group switch is on
     assert hass.states.get(entity_id).state == STATE_ON
 
     await send_attributes_report(hass, dev1_cluster_on_off, {0: 0})
     await async_wait_for_updates(hass)
 
-    # test that group light is still on
+    # test that group switch is still on
     assert hass.states.get(entity_id).state == STATE_ON
 
     await send_attributes_report(hass, dev2_cluster_on_off, {0: 0})
     await async_wait_for_updates(hass)
 
-    # test that group light is now off
+    # test that group switch is now off
     assert hass.states.get(entity_id).state == STATE_OFF
 
     await send_attributes_report(hass, dev1_cluster_on_off, {0: 1})
     await async_wait_for_updates(hass)
 
-    # test that group light is now back on
+    # test that group switch is now back on
     assert hass.states.get(entity_id).state == STATE_ON
 
 
 async def test_switch_configurable(hass, zha_device_joined_restored, zigpy_device_tuya):
-    """Test zha configurable switch platform."""
+    """Test ZHA configurable switch platform."""
 
     zha_device = await zha_device_joined_restored(zigpy_device_tuya)
     cluster = zigpy_device_tuya.endpoints.get(1).tuya_manufacturer

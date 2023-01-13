@@ -1,6 +1,28 @@
 """Constants for Google Assistant SDK integration."""
-from __future__ import annotations
+from typing import Final
 
-DOMAIN = "google_assistant_sdk"
+DOMAIN: Final = "google_assistant_sdk"
 
-DEFAULT_NAME = "Google Assistant SDK"
+DEFAULT_NAME: Final = "Google Assistant SDK"
+
+CONF_LANGUAGE_CODE: Final = "language_code"
+
+# https://developers.google.com/assistant/sdk/reference/rpc/languages
+SUPPORTED_LANGUAGE_CODES: Final = [
+    "de-DE",
+    "en-AU",
+    "en-CA",
+    "en-GB",
+    "en-IN",
+    "en-US",
+    "es-ES",
+    "es-MX",
+    "fr-CA",
+    "fr-FR",
+    "it-IT",
+    "ja-JP",
+    "ko-KR",
+    "pt-BR",
+]
+
+CONF_ENABLE_CONVERSATION_AGENT: Final = "enable_conversation_agent"

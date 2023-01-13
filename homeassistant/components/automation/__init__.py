@@ -8,9 +8,8 @@ import logging
 from typing import Any, Protocol, cast
 
 import voluptuous as vol
-from voluptuous.humanize import humanize_error
 
-from homeassistant.components import blueprint, websocket_api
+from homeassistant.components import websocket_api
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -92,7 +91,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.dt import parse_datetime
 
-from .config import AutomationConfig, async_validate_config_item
+from .config import AutomationConfig
 from .const import (
     CONF_ACTION,
     CONF_INITIAL_STATE,
@@ -120,8 +119,6 @@ ATTR_LAST_TRIGGERED = "last_triggered"
 ATTR_SOURCE = "source"
 ATTR_VARIABLES = "variables"
 SERVICE_TRIGGER = "trigger"
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class IfAction(Protocol):
@@ -421,8 +418,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             if last_triggered is not None:
                 self.action_script.last_triggered = parse_datetime(last_triggered)
             self._logger.debug(
-                "Loaded automation %s with state %s from state "
-                " storage last state %s",
+                "Loaded automation %s with state %s from state storage last state %s",
                 self.entity_id,
                 enable_automation,
                 state,
@@ -438,8 +434,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         if self._initial_state is not None:
             enable_automation = self._initial_state
             self._logger.debug(
-                "Automation %s initial state %s overridden from "
-                "config initial_state",
+                "Automation %s initial state %s overridden from config initial_state",
                 self.entity_id,
                 enable_automation,
             )
@@ -682,32 +677,11 @@ async def _prepare_automation_config(
     """Parse configuration and prepare automation entity configuration."""
     automation_configs: list[AutomationEntityConfig] = []
 
-    conf: list[ConfigType | blueprint.BlueprintInputs] = config[DOMAIN]
+    conf: list[ConfigType] = config[DOMAIN]
 
     for list_no, config_block in enumerate(conf):
-        raw_blueprint_inputs = None
-        raw_config = None
-        if isinstance(config_block, blueprint.BlueprintInputs):
-            blueprint_inputs = config_block
-            raw_blueprint_inputs = blueprint_inputs.config_with_inputs
-
-            try:
-                raw_config = blueprint_inputs.async_substitute()
-                config_block = cast(
-                    dict[str, Any],
-                    await async_validate_config_item(hass, raw_config),
-                )
-            except vol.Invalid as err:
-                LOGGER.error(
-                    "Blueprint %s generated invalid automation with inputs %s: %s",
-                    blueprint_inputs.blueprint.name,
-                    blueprint_inputs.inputs,
-                    humanize_error(config_block, err),
-                )
-                continue
-        else:
-            raw_config = cast(AutomationConfig, config_block).raw_config
-
+        raw_config = cast(AutomationConfig, config_block).raw_config
+        raw_blueprint_inputs = cast(AutomationConfig, config_block).raw_blueprint_inputs
         automation_configs.append(
             AutomationEntityConfig(
                 config_block, list_no, raw_blueprint_inputs, raw_config

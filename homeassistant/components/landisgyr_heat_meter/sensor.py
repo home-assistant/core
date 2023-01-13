@@ -4,12 +4,21 @@ from __future__ import annotations
 from dataclasses import asdict
 import logging
 
-from homeassistant.components.sensor import RestoreSensor, SensorDeviceClass
+from ultraheat_api.response import HeatMeterResponse
+
+from homeassistant.components.sensor import (
+    RestoreSensor,
+    SensorDeviceClass,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 from homeassistant.util import dt as dt_util
 
 from . import DOMAIN
@@ -23,7 +32,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor platform."""
     unique_id = entry.entry_id
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: DataUpdateCoordinator[HeatMeterResponse] = hass.data[DOMAIN][
+        entry.entry_id
+    ]
 
     model = entry.data["model"]
 
@@ -42,16 +53,21 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class HeatMeterSensor(CoordinatorEntity, RestoreSensor):
+class HeatMeterSensor(
+    CoordinatorEntity[DataUpdateCoordinator[HeatMeterResponse]], RestoreSensor
+):
     """Representation of a Sensor."""
 
-    def __init__(self, coordinator, description, device):
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator[HeatMeterResponse],
+        description: SensorEntityDescription,
+        device: DeviceInfo,
+    ) -> None:
         """Set up the sensor with the initial values."""
         super().__init__(coordinator)
         self.key = description.key
-        self._attr_unique_id = (
-            f"{coordinator.config_entry.data['device_number']}_{description.key}"
-        )
+        self._attr_unique_id = f"{coordinator.config_entry.data['device_number']}_{description.key}"  # type: ignore[union-attr]
         self._attr_name = f"Heat Meter {description.name}"
         self.entity_description = description
 

@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import datetime
 from datetime import timedelta
-from enum import Enum, IntEnum
+from enum import IntEnum
 from http import HTTPStatus
 import logging
 import re
@@ -27,27 +27,19 @@ from withings_api.common import (
     query_measure_groups,
 )
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.components import webhook
 from homeassistant.components.application_credentials import AuthImplementation
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_WEBHOOK_ID,
-    MASS_KILOGRAMS,
-    PERCENTAGE,
-    SPEED_METERS_PER_SECOND,
-    TIME_SECONDS,
-)
+from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_entry_oauth2_flow, entity_registry as er
+from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.config_entry_oauth2_flow import (
     AbstractOAuth2Implementation,
     OAuth2Session,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt
 
@@ -62,18 +54,8 @@ NOT_AUTHENTICATED_ERROR = re.compile(
 )
 DATA_UPDATED_SIGNAL = "withings_entity_state_updated"
 
-MeasurementData = dict[Measurement, Any]
 
-
-class NotAuthenticatedError(HomeAssistantError):
-    """Raise when not authenticated with the service."""
-
-
-class ServiceError(HomeAssistantError):
-    """Raise when the service has an error."""
-
-
-class UpdateType(Enum):
+class UpdateType(StrEnum):
     """Data update type."""
 
     POLL = "poll"
@@ -81,25 +63,17 @@ class UpdateType(Enum):
 
 
 @dataclass
-class WithingsAttribute:
-    """Immutable class for describing withings sensor data."""
+class WithingsEntityDescriptionMixin:
+    """Mixin for describing withings data."""
 
     measurement: Measurement
-    measute_type: Enum
-    friendly_name: str
-    unit_of_measurement: str
-    icon: str | None
-    platform: str
-    enabled_by_default: bool
+    measure_type: NotifyAppli | GetSleepSummaryField | MeasureType
     update_type: UpdateType
 
 
 @dataclass
-class WithingsData:
-    """Represents value and meta-data from the withings service."""
-
-    attribute: WithingsAttribute
-    value: Any
+class WithingsEntityDescription(EntityDescription, WithingsEntityDescriptionMixin):
+    """Immutable class for describing withings data."""
 
 
 @dataclass
@@ -111,365 +85,44 @@ class WebhookConfig:
     enabled: bool
 
 
-@dataclass
-class StateData:
-    """State data held by data manager for retrieval by entities."""
-
-    unique_id: str
-    state: Any
-
-
-WITHINGS_ATTRIBUTES = [
-    WithingsAttribute(
-        Measurement.WEIGHT_KG,
-        MeasureType.WEIGHT,
-        "Weight",
-        MASS_KILOGRAMS,
-        "mdi:weight-kilogram",
-        SENSOR_DOMAIN,
-        True,
-        UpdateType.POLL,
-    ),
-    WithingsAttribute(
-        Measurement.FAT_MASS_KG,
-        MeasureType.FAT_MASS_WEIGHT,
-        "Fat Mass",
-        MASS_KILOGRAMS,
-        "mdi:weight-kilogram",
-        SENSOR_DOMAIN,
-        True,
-        UpdateType.POLL,
-    ),
-    WithingsAttribute(
-        Measurement.FAT_FREE_MASS_KG,
-        MeasureType.FAT_FREE_MASS,
-        "Fat Free Mass",
-        MASS_KILOGRAMS,
-        "mdi:weight-kilogram",
-        SENSOR_DOMAIN,
-        True,
-        UpdateType.POLL,
-    ),
-    WithingsAttribute(
-        Measurement.MUSCLE_MASS_KG,
-        MeasureType.MUSCLE_MASS,
-        "Muscle Mass",
-        MASS_KILOGRAMS,
-        "mdi:weight-kilogram",
-        SENSOR_DOMAIN,
-        True,
-        UpdateType.POLL,
-    ),
-    WithingsAttribute(
-        Measurement.BONE_MASS_KG,
-        MeasureType.BONE_MASS,
-        "Bone Mass",
-        MASS_KILOGRAMS,
-        "mdi:weight-kilogram",
-        SENSOR_DOMAIN,
-        True,
-        UpdateType.POLL,
-    ),
-    WithingsAttribute(
-        Measurement.HEIGHT_M,
-        MeasureType.HEIGHT,
-        "Height",
-        const.UOM_LENGTH_M,
-        "mdi:ruler",
-        SENSOR_DOMAIN,
-        False,
-        UpdateType.POLL,
-    ),
-    WithingsAttribute(
-        Measurement.TEMP_C,
-        MeasureType.TEMPERATURE,
-        "Temperature",
-        const.UOM_TEMP_C,
-        "mdi:thermometer",
-        SENSOR_DOMAIN,
-        True,
-        UpdateType.POLL,
-    ),
-    WithingsAttribute(
-        Measurement.BODY_TEMP_C,
-        MeasureType.BODY_TEMPERATURE,
-        "Body Temperature",
-        const.UOM_TEMP_C,
-        "mdi:thermometer",
-        SENSOR_DOMAIN,
-        True,
-        UpdateType.POLL,
-    ),
-    WithingsAttribute(
-        Measurement.SKIN_TEMP_C,
-        MeasureType.SKIN_TEMPERATURE,
-        "Skin Temperature",
-        const.UOM_TEMP_C,
-        "mdi:thermometer",
-        SENSOR_DOMAIN,
-        True,
-        UpdateType.POLL,
-    ),
-    WithingsAttribute(
-        Measurement.FAT_RATIO_PCT,
-        MeasureType.FAT_RATIO,
-        "Fat Ratio",
-        PERCENTAGE,
-        None,
-        SENSOR_DOMAIN,
-        True,
-        UpdateType.POLL,
-    ),
-    WithingsAttribute(
-        Measurement.DIASTOLIC_MMHG,
-        MeasureType.DIASTOLIC_BLOOD_PRESSURE,
-        "Diastolic Blood Pressure",
-        const.UOM_MMHG,
-        None,
-        SENSOR_DOMAIN,
-        True,
-        UpdateType.POLL,
-    ),
-    WithingsAttribute(
-        Measurement.SYSTOLIC_MMGH,
-        MeasureType.SYSTOLIC_BLOOD_PRESSURE,
-        "Systolic Blood Pressure",
-        const.UOM_MMHG,
-        None,
-        SENSOR_DOMAIN,
-        True,
-        UpdateType.POLL,
-    ),
-    WithingsAttribute(
-        Measurement.HEART_PULSE_BPM,
-        MeasureType.HEART_RATE,
-        "Heart Pulse",
-        const.UOM_BEATS_PER_MINUTE,
-        "mdi:heart-pulse",
-        SENSOR_DOMAIN,
-        True,
-        UpdateType.POLL,
-    ),
-    WithingsAttribute(
-        Measurement.SPO2_PCT,
-        MeasureType.SP02,
-        "SP02",
-        PERCENTAGE,
-        None,
-        SENSOR_DOMAIN,
-        True,
-        UpdateType.POLL,
-    ),
-    WithingsAttribute(
-        Measurement.HYDRATION,
-        MeasureType.HYDRATION,
-        "Hydration",
-        MASS_KILOGRAMS,
-        "mdi:water",
-        SENSOR_DOMAIN,
-        False,
-        UpdateType.POLL,
-    ),
-    WithingsAttribute(
-        Measurement.PWV,
-        MeasureType.PULSE_WAVE_VELOCITY,
-        "Pulse Wave Velocity",
-        SPEED_METERS_PER_SECOND,
-        None,
-        SENSOR_DOMAIN,
-        True,
-        UpdateType.POLL,
-    ),
-    WithingsAttribute(
-        Measurement.SLEEP_BREATHING_DISTURBANCES_INTENSITY,
-        GetSleepSummaryField.BREATHING_DISTURBANCES_INTENSITY,
-        "Breathing disturbances intensity",
-        "",
-        "",
-        SENSOR_DOMAIN,
-        False,
-        UpdateType.POLL,
-    ),
-    WithingsAttribute(
-        Measurement.SLEEP_DEEP_DURATION_SECONDS,
-        GetSleepSummaryField.DEEP_SLEEP_DURATION,
-        "Deep sleep",
-        TIME_SECONDS,
-        "mdi:sleep",
-        SENSOR_DOMAIN,
-        False,
-        UpdateType.POLL,
-    ),
-    WithingsAttribute(
-        Measurement.SLEEP_TOSLEEP_DURATION_SECONDS,
-        GetSleepSummaryField.DURATION_TO_SLEEP,
-        "Time to sleep",
-        TIME_SECONDS,
-        "mdi:sleep",
-        SENSOR_DOMAIN,
-        False,
-        UpdateType.POLL,
-    ),
-    WithingsAttribute(
-        Measurement.SLEEP_TOWAKEUP_DURATION_SECONDS,
-        GetSleepSummaryField.DURATION_TO_WAKEUP,
-        "Time to wakeup",
-        TIME_SECONDS,
-        "mdi:sleep-off",
-        SENSOR_DOMAIN,
-        False,
-        UpdateType.POLL,
-    ),
-    WithingsAttribute(
-        Measurement.SLEEP_HEART_RATE_AVERAGE,
-        GetSleepSummaryField.HR_AVERAGE,
-        "Average heart rate",
-        const.UOM_BEATS_PER_MINUTE,
-        "mdi:heart-pulse",
-        SENSOR_DOMAIN,
-        False,
-        UpdateType.POLL,
-    ),
-    WithingsAttribute(
-        Measurement.SLEEP_HEART_RATE_MAX,
-        GetSleepSummaryField.HR_MAX,
-        "Maximum heart rate",
-        const.UOM_BEATS_PER_MINUTE,
-        "mdi:heart-pulse",
-        SENSOR_DOMAIN,
-        False,
-        UpdateType.POLL,
-    ),
-    WithingsAttribute(
-        Measurement.SLEEP_HEART_RATE_MIN,
-        GetSleepSummaryField.HR_MIN,
-        "Minimum heart rate",
-        const.UOM_BEATS_PER_MINUTE,
-        "mdi:heart-pulse",
-        SENSOR_DOMAIN,
-        False,
-        UpdateType.POLL,
-    ),
-    WithingsAttribute(
-        Measurement.SLEEP_LIGHT_DURATION_SECONDS,
-        GetSleepSummaryField.LIGHT_SLEEP_DURATION,
-        "Light sleep",
-        TIME_SECONDS,
-        "mdi:sleep",
-        SENSOR_DOMAIN,
-        False,
-        UpdateType.POLL,
-    ),
-    WithingsAttribute(
-        Measurement.SLEEP_REM_DURATION_SECONDS,
-        GetSleepSummaryField.REM_SLEEP_DURATION,
-        "REM sleep",
-        TIME_SECONDS,
-        "mdi:sleep",
-        SENSOR_DOMAIN,
-        False,
-        UpdateType.POLL,
-    ),
-    WithingsAttribute(
-        Measurement.SLEEP_RESPIRATORY_RATE_AVERAGE,
-        GetSleepSummaryField.RR_AVERAGE,
-        "Average respiratory rate",
-        const.UOM_BREATHS_PER_MINUTE,
-        None,
-        SENSOR_DOMAIN,
-        False,
-        UpdateType.POLL,
-    ),
-    WithingsAttribute(
-        Measurement.SLEEP_RESPIRATORY_RATE_MAX,
-        GetSleepSummaryField.RR_MAX,
-        "Maximum respiratory rate",
-        const.UOM_BREATHS_PER_MINUTE,
-        None,
-        SENSOR_DOMAIN,
-        False,
-        UpdateType.POLL,
-    ),
-    WithingsAttribute(
-        Measurement.SLEEP_RESPIRATORY_RATE_MIN,
-        GetSleepSummaryField.RR_MIN,
-        "Minimum respiratory rate",
-        const.UOM_BREATHS_PER_MINUTE,
-        None,
-        SENSOR_DOMAIN,
-        False,
-        UpdateType.POLL,
-    ),
-    WithingsAttribute(
-        Measurement.SLEEP_SCORE,
-        GetSleepSummaryField.SLEEP_SCORE,
-        "Sleep score",
-        const.SCORE_POINTS,
-        "mdi:medal",
-        SENSOR_DOMAIN,
-        False,
-        UpdateType.POLL,
-    ),
-    WithingsAttribute(
-        Measurement.SLEEP_SNORING,
-        GetSleepSummaryField.SNORING,
-        "Snoring",
-        "",
-        None,
-        SENSOR_DOMAIN,
-        False,
-        UpdateType.POLL,
-    ),
-    WithingsAttribute(
-        Measurement.SLEEP_SNORING_EPISODE_COUNT,
-        GetSleepSummaryField.SNORING_EPISODE_COUNT,
-        "Snoring episode count",
-        "",
-        None,
-        SENSOR_DOMAIN,
-        False,
-        UpdateType.POLL,
-    ),
-    WithingsAttribute(
-        Measurement.SLEEP_WAKEUP_COUNT,
-        GetSleepSummaryField.WAKEUP_COUNT,
-        "Wakeup count",
-        const.UOM_FREQUENCY,
-        "mdi:sleep-off",
-        SENSOR_DOMAIN,
-        False,
-        UpdateType.POLL,
-    ),
-    WithingsAttribute(
-        Measurement.SLEEP_WAKEUP_DURATION_SECONDS,
-        GetSleepSummaryField.WAKEUP_DURATION,
-        "Wakeup time",
-        TIME_SECONDS,
-        "mdi:sleep-off",
-        SENSOR_DOMAIN,
-        False,
-        UpdateType.POLL,
-    ),
-    # Webhook measurements.
-    WithingsAttribute(
-        Measurement.IN_BED,
-        NotifyAppli.BED_IN,
-        "In bed",
-        "",
-        "mdi:bed",
-        BINARY_SENSOR_DOMAIN,
-        True,
-        UpdateType.WEBHOOK,
-    ),
-]
-
-WITHINGS_MEASUREMENTS_MAP: dict[Measurement, WithingsAttribute] = {
-    attr.measurement: attr for attr in WITHINGS_ATTRIBUTES
-}
-
 WITHINGS_MEASURE_TYPE_MAP: dict[
-    NotifyAppli | GetSleepSummaryField | MeasureType, WithingsAttribute
-] = {attr.measute_type: attr for attr in WITHINGS_ATTRIBUTES}
+    NotifyAppli | GetSleepSummaryField | MeasureType, Measurement
+] = {
+    MeasureType.WEIGHT: Measurement.WEIGHT_KG,
+    MeasureType.FAT_MASS_WEIGHT: Measurement.FAT_MASS_KG,
+    MeasureType.FAT_FREE_MASS: Measurement.FAT_FREE_MASS_KG,
+    MeasureType.MUSCLE_MASS: Measurement.MUSCLE_MASS_KG,
+    MeasureType.BONE_MASS: Measurement.BONE_MASS_KG,
+    MeasureType.HEIGHT: Measurement.HEIGHT_M,
+    MeasureType.TEMPERATURE: Measurement.TEMP_C,
+    MeasureType.BODY_TEMPERATURE: Measurement.BODY_TEMP_C,
+    MeasureType.SKIN_TEMPERATURE: Measurement.SKIN_TEMP_C,
+    MeasureType.FAT_RATIO: Measurement.FAT_RATIO_PCT,
+    MeasureType.DIASTOLIC_BLOOD_PRESSURE: Measurement.DIASTOLIC_MMHG,
+    MeasureType.SYSTOLIC_BLOOD_PRESSURE: Measurement.SYSTOLIC_MMGH,
+    MeasureType.HEART_RATE: Measurement.HEART_PULSE_BPM,
+    MeasureType.SP02: Measurement.SPO2_PCT,
+    MeasureType.HYDRATION: Measurement.HYDRATION,
+    MeasureType.PULSE_WAVE_VELOCITY: Measurement.PWV,
+    GetSleepSummaryField.BREATHING_DISTURBANCES_INTENSITY: Measurement.SLEEP_BREATHING_DISTURBANCES_INTENSITY,
+    GetSleepSummaryField.DEEP_SLEEP_DURATION: Measurement.SLEEP_DEEP_DURATION_SECONDS,
+    GetSleepSummaryField.DURATION_TO_SLEEP: Measurement.SLEEP_TOSLEEP_DURATION_SECONDS,
+    GetSleepSummaryField.DURATION_TO_WAKEUP: Measurement.SLEEP_TOWAKEUP_DURATION_SECONDS,
+    GetSleepSummaryField.HR_AVERAGE: Measurement.SLEEP_HEART_RATE_AVERAGE,
+    GetSleepSummaryField.HR_MAX: Measurement.SLEEP_HEART_RATE_MAX,
+    GetSleepSummaryField.HR_MIN: Measurement.SLEEP_HEART_RATE_MIN,
+    GetSleepSummaryField.LIGHT_SLEEP_DURATION: Measurement.SLEEP_LIGHT_DURATION_SECONDS,
+    GetSleepSummaryField.REM_SLEEP_DURATION: Measurement.SLEEP_REM_DURATION_SECONDS,
+    GetSleepSummaryField.RR_AVERAGE: Measurement.SLEEP_RESPIRATORY_RATE_AVERAGE,
+    GetSleepSummaryField.RR_MAX: Measurement.SLEEP_RESPIRATORY_RATE_MAX,
+    GetSleepSummaryField.RR_MIN: Measurement.SLEEP_RESPIRATORY_RATE_MIN,
+    GetSleepSummaryField.SLEEP_SCORE: Measurement.SLEEP_SCORE,
+    GetSleepSummaryField.SNORING: Measurement.SLEEP_SNORING,
+    GetSleepSummaryField.SNORING_EPISODE_COUNT: Measurement.SLEEP_SNORING_EPISODE_COUNT,
+    GetSleepSummaryField.WAKEUP_COUNT: Measurement.SLEEP_WAKEUP_COUNT,
+    GetSleepSummaryField.WAKEUP_DURATION: Measurement.SLEEP_WAKEUP_DURATION_SECONDS,
+    NotifyAppli.BED_IN: Measurement.IN_BED,
+}
 
 
 class ConfigEntryWithingsApi(AbstractWithingsApi):
@@ -528,7 +181,7 @@ class WebhookUpdateCoordinator:
         self._hass = hass
         self._user_id = user_id
         self._listeners: list[CALLBACK_TYPE] = []
-        self.data: MeasurementData = {}
+        self.data: dict[Measurement, Any] = {}
 
     def async_add_listener(self, listener: CALLBACK_TYPE) -> Callable[[], None]:
         """Add a listener."""
@@ -743,14 +396,14 @@ class DataManager:
 
             raise exception
 
-    async def _async_get_all_data(self) -> dict[MeasureType, Any] | None:
+    async def _async_get_all_data(self) -> dict[Measurement, Any] | None:
         _LOGGER.info("Updating all withings data")
         return {
             **await self.async_get_measures(),
             **await self.async_get_sleep_summary(),
         }
 
-    async def async_get_measures(self) -> dict[MeasureType, Any]:
+    async def async_get_measures(self) -> dict[Measurement, Any]:
         """Get the measures data."""
         _LOGGER.debug("Updating withings measures")
         now = dt.utcnow()
@@ -770,7 +423,7 @@ class DataManager:
         )
 
         return {
-            WITHINGS_MEASURE_TYPE_MAP[measure.type].measurement: round(
+            WITHINGS_MEASURE_TYPE_MAP[measure.type]: round(
                 float(measure.value * pow(10, measure.unit)), 2
             )
             for group in groups
@@ -778,7 +431,7 @@ class DataManager:
             if measure.type in WITHINGS_MEASURE_TYPE_MAP
         }
 
-    async def async_get_sleep_summary(self) -> dict[MeasureType, Any]:
+    async def async_get_sleep_summary(self) -> dict[Measurement, Any]:
         """Get the sleep summary data."""
         _LOGGER.debug("Updating withing sleep summary")
         now = dt.utcnow()
@@ -862,7 +515,7 @@ class DataManager:
         set_value(GetSleepSummaryField.WAKEUP_DURATION, average)
 
         return {
-            WITHINGS_MEASURE_TYPE_MAP[field].measurement: round(value, 4)
+            WITHINGS_MEASURE_TYPE_MAP[field]: round(value, 4)
             if value is not None
             else None
             for field, value in values.items()
@@ -884,77 +537,46 @@ class DataManager:
             )
 
 
-def get_attribute_unique_id(attribute: WithingsAttribute, user_id: int) -> str:
+def get_attribute_unique_id(
+    description: WithingsEntityDescription, user_id: int
+) -> str:
     """Get a entity unique id for a user's attribute."""
-    return f"withings_{user_id}_{attribute.measurement.value}"
-
-
-async def async_get_entity_id(
-    hass: HomeAssistant, attribute: WithingsAttribute, user_id: int
-) -> str | None:
-    """Get an entity id for a user's attribute."""
-    entity_registry = er.async_get(hass)
-    unique_id = get_attribute_unique_id(attribute, user_id)
-
-    entity_id = entity_registry.async_get_entity_id(
-        attribute.platform, const.DOMAIN, unique_id
-    )
-
-    if entity_id is None:
-        _LOGGER.error("Cannot find entity id for unique_id: %s", unique_id)
-        return None
-
-    return entity_id
+    return f"withings_{user_id}_{description.measurement.value}"
 
 
 class BaseWithingsSensor(Entity):
     """Base class for withings sensors."""
 
     _attr_should_poll = False
+    entity_description: WithingsEntityDescription
 
-    def __init__(self, data_manager: DataManager, attribute: WithingsAttribute) -> None:
+    def __init__(
+        self, data_manager: DataManager, description: WithingsEntityDescription
+    ) -> None:
         """Initialize the Withings sensor."""
         self._data_manager = data_manager
-        self._attribute = attribute
-        self._profile = self._data_manager.profile
-        self._user_id = self._data_manager.user_id
-        self._name = f"Withings {self._attribute.measurement.value} {self._profile}"
-        self._unique_id = get_attribute_unique_id(self._attribute, self._user_id)
+        self.entity_description = description
+        self._attr_name = (
+            f"Withings {description.measurement.value} {data_manager.profile}"
+        )
+        self._attr_unique_id = get_attribute_unique_id(
+            description, data_manager.user_id
+        )
         self._state_data: Any | None = None
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return self._name
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        if self._attribute.update_type == UpdateType.POLL:
+        if self.entity_description.update_type == UpdateType.POLL:
             return self._data_manager.poll_data_update_coordinator.last_update_success
 
-        if self._attribute.update_type == UpdateType.WEBHOOK:
+        if self.entity_description.update_type == UpdateType.WEBHOOK:
             return self._data_manager.webhook_config.enabled and (
-                self._attribute.measurement
+                self.entity_description.measurement
                 in self._data_manager.webhook_update_coordinator.data
             )
 
         return True
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique, Home Assistant friendly identifier for this entity."""
-        return self._unique_id
-
-    @property
-    def icon(self) -> str | None:
-        """Icon to use in the frontend, if any."""
-        return self._attribute.icon
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return self._attribute.enabled_by_default
 
     @callback
     def _on_poll_data_updated(self) -> None:
@@ -968,14 +590,14 @@ class BaseWithingsSensor(Entity):
             self._data_manager.webhook_update_coordinator.data or {}
         )
 
-    def _update_state_data(self, data: MeasurementData) -> None:
+    def _update_state_data(self, data: dict[Measurement, Any]) -> None:
         """Update the state data."""
-        self._state_data = data.get(self._attribute.measurement)
+        self._state_data = data.get(self.entity_description.measurement)
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Register update dispatcher."""
-        if self._attribute.update_type == UpdateType.POLL:
+        if self.entity_description.update_type == UpdateType.POLL:
             self.async_on_remove(
                 self._data_manager.poll_data_update_coordinator.async_add_listener(
                     self._on_poll_data_updated
@@ -983,7 +605,7 @@ class BaseWithingsSensor(Entity):
             )
             self._on_poll_data_updated()
 
-        elif self._attribute.update_type == UpdateType.WEBHOOK:
+        elif self.entity_description.update_type == UpdateType.WEBHOOK:
             self.async_on_remove(
                 self._data_manager.webhook_update_coordinator.async_add_listener(
                     self._on_webhook_data_updated
@@ -1055,28 +677,6 @@ def get_all_data_managers(hass: HomeAssistant) -> tuple[DataManager, ...]:
 def async_remove_data_manager(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Remove a data manager for a config entry."""
     del hass.data[const.DOMAIN][config_entry.entry_id][const.DATA_MANAGER]
-
-
-async def async_create_entities(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    create_func: Callable[[DataManager, WithingsAttribute], Entity],
-    platform: str,
-) -> list[Entity]:
-    """Create withings entities from config entry."""
-    data_manager = await async_get_data_manager(hass, entry)
-
-    return [
-        create_func(data_manager, attribute)
-        for attribute in get_platform_attributes(platform)
-    ]
-
-
-def get_platform_attributes(platform: str) -> tuple[WithingsAttribute, ...]:
-    """Get withings attributes used for a specific platform."""
-    return tuple(
-        attribute for attribute in WITHINGS_ATTRIBUTES if attribute.platform == platform
-    )
 
 
 class WithingsLocalOAuth2Implementation(AuthImplementation):

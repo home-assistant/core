@@ -83,5 +83,18 @@
                 "description": "Vyberte sp\u00f4sob pripojenia k br\u00e1ne"
             }
         }
+    },
+    "issues": {
+        "deprecated_service": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Aktualizujte v\u0161etky automatiz\u00e1cie alebo skripty, ktor\u00e9 pou\u017e\u00edvaj\u00fa t\u00fato slu\u017ebu, aby namiesto nej pou\u017e\u00edvali slu\u017ebu `{alternate_service}` s ID cie\u013eovej entity `{alternate_target}`.",
+                        "title": "Slu\u017eba {deprecated_service} bude odstr\u00e1nen\u00e1"
+                    }
+                }
+            },
+            "title": "Slu\u017eba {deprecated_service} bude odstr\u00e1nen\u00e1"
+        }
     }
 }

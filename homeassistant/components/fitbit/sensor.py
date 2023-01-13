@@ -86,7 +86,10 @@ def request_app_setup(
         if os.path.isfile(config_path):
             config_file = load_json(config_path)
             if config_file == DEFAULT_CONFIG:
-                error_msg = f"You didn't correctly modify {FITBIT_CONFIG_FILE}, please try again."
+                error_msg = (
+                    f"You didn't correctly modify {FITBIT_CONFIG_FILE}, please try"
+                    " again."
+                )
 
                 configurator.notify_errors(hass, _CONFIGURING["fitbit"], error_msg)
             else:
@@ -446,7 +449,7 @@ class FitbitSensor(SensorEntity):
                     self._attr_native_value = raw_state
                 else:
                     try:
-                        self._attr_native_value = f"{int(raw_state):,}"
+                        self._attr_native_value = int(raw_state)
                     except TypeError:
                         self._attr_native_value = raw_state
 

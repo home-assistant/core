@@ -4,7 +4,7 @@ import pytest
 from homeassistant.core import callback
 from homeassistant.helpers import area_registry
 
-from tests.common import flush_store, mock_area_registry
+from tests.common import ANY, flush_store, mock_area_registry
 
 
 @pytest.fixture
@@ -38,17 +38,39 @@ async def test_list_areas(registry):
 
 async def test_create_area(hass, registry, update_events):
     """Make sure that we can create an area."""
+    # Create area with only mandatory parameters
     area = registry.async_create("mock")
 
-    assert area.id == "mock"
-    assert area.name == "mock"
+    assert area == area_registry.AreaEntry(
+        name="mock", normalized_name=ANY, aliases=set(), id=ANY, picture=None
+    )
     assert len(registry.areas) == 1
 
     await hass.async_block_till_done()
 
     assert len(update_events) == 1
-    assert update_events[0]["action"] == "create"
-    assert update_events[0]["area_id"] == area.id
+    assert update_events[-1]["action"] == "create"
+    assert update_events[-1]["area_id"] == area.id
+
+    # Create area with all parameters
+    area = registry.async_create(
+        "mock 2", aliases={"alias_1", "alias_2"}, picture="/image/example.png"
+    )
+
+    assert area == area_registry.AreaEntry(
+        name="mock 2",
+        normalized_name=ANY,
+        aliases={"alias_1", "alias_2"},
+        id=ANY,
+        picture="/image/example.png",
+    )
+    assert len(registry.areas) == 2
+
+    await hass.async_block_till_done()
+
+    assert len(update_events) == 2
+    assert update_events[-1]["action"] == "create"
+    assert update_events[-1]["area_id"] == area.id
 
 
 async def test_create_area_with_name_already_in_use(hass, registry, update_events):
@@ -70,7 +92,7 @@ async def test_create_area_with_id_already_in_use(registry):
     """Make sure that we can't create an area with a name already in use."""
     area1 = registry.async_create("mock")
 
-    updated_area1 = registry.async_update(area1.id, "New Name")
+    updated_area1 = registry.async_update(area1.id, name="New Name")
     assert updated_area1.id == area1.id
 
     area2 = registry.async_create("mock")
@@ -108,10 +130,21 @@ async def test_update_area(hass, registry, update_events):
     """Make sure that we can read areas."""
     area = registry.async_create("mock")
 
-    updated_area = registry.async_update(area.id, name="mock1")
+    updated_area = registry.async_update(
+        area.id,
+        aliases={"alias_1", "alias_2"},
+        name="mock1",
+        picture="/image/example.png",
+    )
 
     assert updated_area != area
-    assert updated_area.name == "mock1"
+    assert updated_area == area_registry.AreaEntry(
+        name="mock1",
+        normalized_name=ANY,
+        aliases={"alias_1", "alias_2"},
+        id=ANY,
+        picture="/image/example.png",
+    )
     assert len(registry.areas) == 1
 
     await hass.async_block_till_done()
@@ -196,14 +229,51 @@ async def test_load_area(hass, registry):
 async def test_loading_area_from_storage(hass, hass_storage):
     """Test loading stored areas on start."""
     hass_storage[area_registry.STORAGE_KEY] = {
-        "version": area_registry.STORAGE_VERSION,
-        "data": {"areas": [{"id": "12345A", "name": "mock"}]},
+        "version": area_registry.STORAGE_VERSION_MAJOR,
+        "minor_version": area_registry.STORAGE_VERSION_MINOR,
+        "data": {
+            "areas": [
+                {
+                    "aliases": ["alias_1", "alias_2"],
+                    "id": "12345A",
+                    "name": "mock",
+                    "picture": "blah",
+                }
+            ]
+        },
     }
 
     await area_registry.async_load(hass)
     registry = area_registry.async_get(hass)
 
     assert len(registry.areas) == 1
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_migration_from_1_1(hass, hass_storage):
+    """Test migration from version 1.1."""
+    hass_storage[area_registry.STORAGE_KEY] = {
+        "version": 1,
+        "data": {"areas": [{"id": "12345A", "name": "mock"}]},
+    }
+
+    await area_registry.async_load(hass)
+    registry = area_registry.async_get(hass)
+
+    # Test data was loaded
+    entry = registry.async_get_or_create("mock")
+    assert entry.id == "12345A"
+
+    # Check we store migrated data
+    await flush_store(registry._store)
+    assert hass_storage[area_registry.STORAGE_KEY] == {
+        "version": area_registry.STORAGE_VERSION_MAJOR,
+        "minor_version": area_registry.STORAGE_VERSION_MINOR,
+        "key": area_registry.STORAGE_KEY,
+        "data": {
+            "areas": [{"aliases": [], "id": "12345A", "name": "mock", "picture": None}]
+        },
+    }
 
 
 async def test_async_get_or_create(hass, registry):

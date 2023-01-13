@@ -7,10 +7,9 @@ from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
-from .coordinator import SleepIQData
+from .coordinator import SleepIQData, SleepIQDataUpdateCoordinator
 from .entity import SleepIQBedEntity
 
 
@@ -28,13 +27,16 @@ async def async_setup_entry(
     )
 
 
-class SleepIQSelectEntity(SleepIQBedEntity, SelectEntity):
+class SleepIQSelectEntity(SleepIQBedEntity[SleepIQDataUpdateCoordinator], SelectEntity):
     """Representation of a SleepIQ select entity."""
 
     _attr_options = list(BED_PRESETS)
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, bed: SleepIQBed, preset: SleepIQPreset
+        self,
+        coordinator: SleepIQDataUpdateCoordinator,
+        bed: SleepIQBed,
+        preset: SleepIQPreset,
     ) -> None:
         """Initialize the select entity."""
         self.preset = preset

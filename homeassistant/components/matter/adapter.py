@@ -1,11 +1,10 @@
 """Matter to Home Assistant adapter."""
 from __future__ import annotations
 
-import asyncio
-import logging
 from typing import TYPE_CHECKING
 
 from chip.clusters import Objects as all_clusters
+from matter_server.common.models.events import EventType
 from matter_server.common.models.node_device import AbstractMatterNodeDevice
 
 from homeassistant.config_entries import ConfigEntry
@@ -14,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER
 from .device_platform import DEVICE_PLATFORM
 
 if TYPE_CHECKING:
@@ -35,32 +34,40 @@ class MatterAdapter:
         self.matter_client = matter_client
         self.hass = hass
         self.config_entry = config_entry
-        self.logger = logging.getLogger(__name__)
         self.platform_handlers: dict[Platform, AddEntitiesCallback] = {}
-        self._platforms_set_up = asyncio.Event()
 
     def register_platform_handler(
         self, platform: Platform, add_entities: AddEntitiesCallback
     ) -> None:
         """Register a platform handler."""
         self.platform_handlers[platform] = add_entities
-        if len(self.platform_handlers) == len(DEVICE_PLATFORM):
-            self._platforms_set_up.set()
 
     async def setup_nodes(self) -> None:
-        """Set up all existing nodes."""
-        await self._platforms_set_up.wait()
+        """Set up all existing nodes and subscribe to new nodes."""
         for node in await self.matter_client.get_nodes():
-            await self._setup_node(node)
+            self._setup_node(node)
 
-    async def _setup_node(self, node: MatterNode) -> None:
+        def node_added_callback(event: EventType, node: MatterNode | None) -> None:
+            """Handle node added event."""
+            if node is None:
+                # We can clean this up when we've improved the typing in the library.
+                # https://github.com/home-assistant-libs/python-matter-server/pull/153
+                raise RuntimeError("Node added event without node")
+            self._setup_node(node)
+
+        self.config_entry.async_on_unload(
+            self.matter_client.subscribe(node_added_callback, EventType.NODE_ADDED)
+        )
+
+    def _setup_node(self, node: MatterNode) -> None:
         """Set up an node."""
-        self.logger.debug("Setting up entities for node %s", node.node_id)
+        LOGGER.debug("Setting up entities for node %s", node.node_id)
 
         bridge_unique_id: str | None = None
 
-        if node.aggregator_device_type_instance is not None:
-            node_info = node.root_device_type_instance.get_cluster(all_clusters.Basic)
+        if node.aggregator_device_type_instance is not None and (
+            node_info := node.root_device_type_instance.get_cluster(all_clusters.Basic)
+        ):
             self._create_device_registry(
                 node_info, node_info.nodeLabel or "Hub device", None
             )
@@ -115,7 +122,7 @@ class MatterAdapter:
 
                 entities = []
                 for entity_description in entity_descriptions:
-                    self.logger.debug(
+                    LOGGER.debug(
                         "Creating %s entity for %s (%s)",
                         platform,
                         instance.device_type.__name__,
@@ -134,7 +141,7 @@ class MatterAdapter:
                 created = True
 
             if not created:
-                self.logger.warning(
+                LOGGER.warning(
                     "Found unsupported device %s (%s)",
                     type(instance).__name__,
                     hex(instance.device_type.device_type),

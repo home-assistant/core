@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_MONITORED_CONDITIONS,
     CONF_SCAN_INTERVAL,
-    TIME_SECONDS,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -43,7 +43,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="last_build_duration",
         name="Last Build Duration",
-        native_unit_of_measurement=TIME_SECONDS,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         icon="mdi:timelapse",
     ),
     SensorEntityDescription(
@@ -106,9 +106,7 @@ def setup_platform(
         _LOGGER.error("Unable to connect to Travis CI service: %s", str(ex))
         persistent_notification.create(
             hass,
-            "Error: {}<br />"
-            "You will need to restart hass after fixing."
-            "".format(ex),
+            f"Error: {ex}<br />You will need to restart hass after fixing.",
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,
         )

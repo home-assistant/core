@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Port-Nummer",
+                    "ssl": "SSL benotzen"
+                }
+            }
+        }
+    }
+}
