@@ -67,6 +67,7 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         key=OralBSensor.BATTERY_PERCENT,
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 }
 
