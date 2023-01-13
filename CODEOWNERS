@@ -201,8 +201,8 @@ build.json @home-assistant/supervisor
 /tests/components/coinbase/ @tombrien
 /homeassistant/components/color_extractor/ @GenericStudent
 /tests/components/color_extractor/ @GenericStudent
-/homeassistant/components/comfoconnect/ @michaelarnauts
-/tests/components/comfoconnect/ @michaelarnauts
+/homeassistant/components/comfoconnect/ @michaelarnauts @N3rdix
+/tests/components/comfoconnect/ @michaelarnauts @N3rdix
 /homeassistant/components/compensation/ @Petro31
 /tests/components/compensation/ @Petro31
 /homeassistant/components/config/ @home-assistant/core
