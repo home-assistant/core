@@ -1,11 +1,13 @@
 """Constants used for mocking data."""
 
 from devolo_plc_api.device_api import (
+    UPDATE_AVAILABLE,
     WIFI_BAND_2G,
     WIFI_BAND_5G,
     WIFI_VAP_MAIN_AP,
     ConnectedStationInfo,
     NeighborAPInfo,
+    UpdateFirmwareCheck,
     WifiGuestAccessGet,
 )
 from devolo_plc_api.plcnet_api import LogicalNetwork
@@ -77,6 +79,10 @@ DISCOVERY_INFO_WRONG_DEVICE = ZeroconfServiceInfo(
     port=None,
     properties={"MT": "2600"},
     type="mock_type",
+)
+
+FIRMWARE_UPDATE_AVAILABLE = UpdateFirmwareCheck(
+    result=UPDATE_AVAILABLE, new_firmware_version="5.6.2"
 )
 
 GUEST_WIFI = WifiGuestAccessGet(
