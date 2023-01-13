@@ -84,7 +84,7 @@ async def test_sensors_battery(hass):
     assert len(hass.states.async_all()) == 0
     inject_bluetooth_service_info_bleak(hass, ORALB_IO_SERIES_6_SERVICE_INFO)
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_all()) == 7
 
     bat_sensor = hass.states.get("sensor.battery_percentage")
     assert bat_sensor.state == 49
