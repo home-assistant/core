@@ -64,11 +64,12 @@ async def async_setup_entry(
 class EcoNetThermostat(EcoNetEntity, ClimateEntity):
     """Define a Econet thermostat."""
 
+    _attr_should_poll = True
+
     def __init__(self, thermostat):
         """Initialize."""
         super().__init__(thermostat)
         self._running = thermostat.running
-        self._poll = True
         self.econet_state_to_ha = {}
         self.ha_state_to_econet = {}
         self.op_list = []
