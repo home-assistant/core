@@ -155,26 +155,21 @@ class MqttLock(MqttEntity, LockEntity):
         def message_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages."""
             payload = self._value_template(msg.payload)
-            if payload == self._config[CONF_STATE_LOCKED]:
-                self._attr_is_locked = True
-                self._attr_is_locking = False
-                self._attr_is_unlocking = False
-                self._attr_is_jammed = False
-            elif payload == self._config[CONF_STATE_UNLOCKED]:
-                self._attr_is_locked = False
-                self._attr_is_locking = False
-                self._attr_is_unlocking = False
-                self._attr_is_jammed = False
-            elif payload == self._config[CONF_STATE_LOCKING]:
-                self._attr_is_locking = True
-                self._attr_is_unlocking = False
-                self._attr_is_jammed = False
-            elif payload == self._config[CONF_STATE_UNLOCKING]:
-                self._attr_is_locking = False
-                self._attr_is_unlocking = True
-                self._attr_is_jammed = False
-            elif payload == self._config[CONF_STATE_JAMMED]:
-                self._attr_is_jammed = True
+            valid_states = (
+                self._config[state]
+                for state in (
+                    CONF_STATE_JAMMED,
+                    CONF_STATE_LOCKED,
+                    CONF_STATE_LOCKING,
+                    CONF_STATE_UNLOCKED,
+                    CONF_STATE_UNLOCKING,
+                )
+            )
+            if payload in valid_states:
+                self._attr_is_jammed = payload == self._config[CONF_STATE_JAMMED]
+                self._attr_is_locked = payload == self._config[CONF_STATE_LOCKED]
+                self._attr_is_locking = payload == self._config[CONF_STATE_LOCKING]
+                self._attr_is_unlocking = payload == self._config[CONF_STATE_UNLOCKING]
 
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
