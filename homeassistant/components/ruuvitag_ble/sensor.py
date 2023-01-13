@@ -77,7 +77,7 @@ SENSOR_DESCRIPTIONS = {
     ),
     (SSDSensorDeviceClass.COUNT, None): SensorEntityDescription(
         key="movement_counter",
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
     ),
 }
