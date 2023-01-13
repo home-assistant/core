@@ -304,7 +304,12 @@ async def test_reauth(hass):
 
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
-        context={"source": config_entries.SOURCE_REAUTH},
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": config_entry.entry_id,
+            "title_placeholders": {"name": TEST_NVR_NAME},
+            "unique_id": format_mac(TEST_MAC),
+        },
         data=config_entry.data,
     )
 
