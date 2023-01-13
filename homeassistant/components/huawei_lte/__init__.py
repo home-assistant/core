@@ -55,7 +55,7 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     ADMIN_SERVICES,
     ALL_KEYS,
-    ATTR_UNIQUE_ID,
+    ATTR_CONFIG_ENTRY_ID,
     CONF_MANUFACTURER,
     CONF_UNAUTHENTICATED_MODE,
     CONNECTION_TIMEOUT,
@@ -387,7 +387,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             return False
 
     # Store reference to router
-    hass.data[DOMAIN].routers[entry.unique_id] = router
+    hass.data[DOMAIN].routers[entry.entry_id] = router
 
     # Clear all subscriptions, enabled entities will push back theirs
     router.subscriptions.clear()
@@ -449,7 +449,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         Platform.NOTIFY,
         DOMAIN,
         {
-            ATTR_UNIQUE_ID: entry.unique_id,
+            ATTR_CONFIG_ENTRY_ID: entry.entry_id,
             CONF_NAME: entry.options.get(CONF_NAME, DEFAULT_NOTIFY_SERVICE_NAME),
             CONF_RECIPIENT: entry.options.get(CONF_RECIPIENT),
         },
@@ -484,7 +484,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
     # Forget about the router and invoke its cleanup
-    router = hass.data[DOMAIN].routers.pop(config_entry.unique_id)
+    router = hass.data[DOMAIN].routers.pop(config_entry.entry_id)
     await hass.async_add_executor_job(router.cleanup)
 
     return True

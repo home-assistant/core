@@ -27,6 +27,12 @@ RUN \
             --no-index \
             homeassistant/home_assistant_frontend-*.whl; \
     fi \
+    && if ls homeassistant/home_assistant_intents*.whl 1> /dev/null 2>&1; then \
+        pip3 install \
+            --no-cache-dir \
+            --no-index \
+            homeassistant/home_assistant_intents-*.whl; \
+    fi \
     && \
         LD_PRELOAD="/usr/local/lib/libjemalloc.so.2" \
         MALLOC_CONF="background_thread:true,metadata_thp:auto,dirty_decay_ms:20000,muzzy_decay_ms:20000" \
