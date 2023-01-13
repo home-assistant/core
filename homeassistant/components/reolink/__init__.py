@@ -62,7 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         async with async_timeout.timeout(host.api.timeout):
             try:
                 await host.update_states()
-            except ReolinkError as err
+            except ReolinkError as err:
                 raise UpdateFailed(f"Error updating Reolink {host.api.nvr_name}") from err
         async with async_timeout.timeout(host.api.timeout):
             try:
