@@ -528,6 +528,9 @@ jobs:
       - name: Install additional OS dependencies
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
+          # Workaround for https://github.com/actions/runner-images/issues/675#issuecomment-1381389712
+          sudo sed -i 's/azure\.//g' /etc/apt/sources.list
+
           sudo apt-get update
           sudo apt-get -y install \
             bluez \
@@ -770,6 +773,9 @@ jobs:
     steps:
       - name: Install additional OS dependencies
         run: |
+          # Workaround for https://github.com/actions/runner-images/issues/675#issuecomment-1381389712
+          sudo sed -i 's/azure\.//g' /etc/apt/sources.list
+
           sudo apt-get update
           sudo apt-get -y install \
             bluez \
@@ -892,6 +898,9 @@ jobs:
     steps:
       - name: Install additional OS dependencies
         run: |
+          # Workaround for https://github.com/actions/runner-images/issues/675#issuecomment-1381389712
+          sudo sed -i 's/azure\.//g' /etc/apt/sources.list
+
           sudo apt-get update
           sudo apt-get -y install \
             bluez \
