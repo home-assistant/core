@@ -302,20 +302,18 @@ async def test_device_setup(hass):
         return_value=True,
     ) as forward_entry_setup:
         config_entry = await setup_axis_integration(hass)
-        device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
+        device = hass.data[AXIS_DOMAIN][config_entry.entry_id]
 
     assert device.api.vapix.firmware_version == "9.10.1"
     assert device.api.vapix.product_number == "M1065-LW"
     assert device.api.vapix.product_type == "Network Camera"
     assert device.api.vapix.serial_number == "00408C123456"
 
-    entry = device.config_entry
-
     assert len(forward_entry_setup.mock_calls) == 4
-    assert forward_entry_setup.mock_calls[0][1] == (entry, "binary_sensor")
-    assert forward_entry_setup.mock_calls[1][1] == (entry, "camera")
-    assert forward_entry_setup.mock_calls[2][1] == (entry, "light")
-    assert forward_entry_setup.mock_calls[3][1] == (entry, "switch")
+    assert forward_entry_setup.mock_calls[0][1] == (config_entry, "binary_sensor")
+    assert forward_entry_setup.mock_calls[1][1] == (config_entry, "camera")
+    assert forward_entry_setup.mock_calls[2][1] == (config_entry, "light")
+    assert forward_entry_setup.mock_calls[3][1] == (config_entry, "switch")
 
     assert device.host == ENTRY_CONFIG[CONF_HOST]
     assert device.model == ENTRY_CONFIG[CONF_MODEL]
@@ -337,7 +335,7 @@ async def test_device_info(hass):
 
     with patch.dict(API_DISCOVERY_RESPONSE, api_discovery):
         config_entry = await setup_axis_integration(hass)
-        device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
+        device = hass.data[AXIS_DOMAIN][config_entry.entry_id]
 
     assert device.api.vapix.firmware_version == "9.80.1"
     assert device.api.vapix.product_number == "M1065-LW"
@@ -371,7 +369,7 @@ async def test_device_support_mqtt(hass, mqtt_mock):
 async def test_update_address(hass):
     """Test update address works."""
     config_entry = await setup_axis_integration(hass)
-    device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
+    device = hass.data[AXIS_DOMAIN][config_entry.entry_id]
     assert device.api.config.host == "1.2.3.4"
 
     with patch(
@@ -435,7 +433,7 @@ async def test_device_unavailable(hass, mock_rtsp_event, mock_rtsp_signal_state)
 async def test_device_reset(hass):
     """Successfully reset device."""
     config_entry = await setup_axis_integration(hass)
-    device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
+    device = hass.data[AXIS_DOMAIN][config_entry.entry_id]
     result = await device.async_reset()
     assert result is True
 
