@@ -1,4 +1,3 @@
-
 """Support for QNAP NAS Sensors."""
 import logging
 
