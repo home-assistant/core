@@ -141,7 +141,7 @@ async def async_setup_entry(
 
 def calc_min(
     sensor_values: list[tuple[str, float, State]], round_digits: int
-) -> tuple[dict[str, Any], float]:
+) -> tuple[dict[str, str | None], float]:
     """Calculate min value."""
     val: float | None = None
     entity_id: str | None = None
@@ -157,7 +157,7 @@ def calc_min(
 
 def calc_max(
     sensor_values: list[tuple[str, float, State]], round_digits: int
-) -> tuple[dict[str, Any], float]:
+) -> tuple[dict[str, str | None], float]:
     """Calculate max value."""
     val: float | None = None
     entity_id: str | None = None
@@ -173,7 +173,7 @@ def calc_max(
 
 def calc_mean(
     sensor_values: list[tuple[str, float, State]], round_digits: int
-) -> tuple[dict[str, Any], float]:
+) -> tuple[dict[str, str | None], float]:
     """Calculate mean value."""
     result = [sensor_value for _, sensor_value, _ in sensor_values]
 
@@ -183,7 +183,7 @@ def calc_mean(
 
 def calc_median(
     sensor_values: list[tuple[str, float, State]], round_digits: int
-) -> tuple[dict[str, Any], float]:
+) -> tuple[dict[str, str | None], float]:
     """Calculate median value."""
     result = [sensor_value for _, sensor_value, _ in sensor_values]
 
@@ -193,9 +193,10 @@ def calc_median(
 
 def calc_last(
     sensor_values: list[tuple[str, float, State]], round_digits: int
-) -> tuple[dict[str, Any], float]:
+) -> tuple[dict[str, str | None], float]:
     """Calculate last value."""
     last_updated: datetime | None = None
+    last_entity_id: str | None = None
     for entity_id, state_f, state in sensor_values:
         if last_updated is None or state.last_updated > last_updated:
             last_updated = state.last_updated
@@ -208,7 +209,7 @@ def calc_last(
 
 def calc_range(
     sensor_values: list[tuple[str, float, State]], round_digits: int
-) -> tuple[dict[str, Any], float]:
+) -> tuple[dict[str, str | None], float]:
     """Calculate range value."""
     result = [sensor_value for _, sensor_value, _ in sensor_values]
 
@@ -218,7 +219,7 @@ def calc_range(
 
 def calc_sum(
     sensor_values: list[tuple[str, float, State]], round_digits: int
-) -> tuple[dict[str, Any], float]:
+) -> tuple[dict[str, str | None], float]:
     """Calculate a sum of values."""
     result = 0.0
     for _, sensor_value, _ in sensor_values:
@@ -229,7 +230,10 @@ def calc_sum(
 
 
 CALC_TYPES: dict[
-    str, Callable[[list[tuple[str, float, State]], int], tuple[dict[str, str], float]]
+    str,
+    Callable[
+        [list[tuple[str, float, State]], int], tuple[dict[str, str | None], float]
+    ],
 ] = {
     "min": calc_min,
     "max": calc_max,
@@ -277,7 +281,8 @@ class SensorGroup(GroupEntity, SensorEntity):
         self._attr_unique_id = unique_id
         self.mode = all if mode else any
         self._state_calc: Callable[
-            [list[tuple[str, float, State]], int], tuple[dict[str, str], float | None]
+            [list[tuple[str, float, State]], int],
+            tuple[dict[str, str | None], float | None],
         ] = CALC_TYPES[self._sensor_type]
         self._state_incorrect: set[str] = set()
         self._extra_state_attribute: dict[str, Any] = {}
