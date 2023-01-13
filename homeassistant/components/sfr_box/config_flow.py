@@ -1,6 +1,7 @@
 """SFR Box config flow."""
 from __future__ import annotations
 
+from httpx import ConnectTimeout
 from sfrbox_api.bridge import SFRBox
 from sfrbox_api.exceptions import SFRBoxAuthenticationError, SFRBoxError
 import voluptuous as vol
@@ -51,7 +52,7 @@ class SFRBoxFlowHandler(ConfigFlow, domain=DOMAIN):
                     await box.authenticate(username=username, password=password)
             except SFRBoxAuthenticationError:
                 errors["base"] = "invalid_auth"
-            except SFRBoxError:
+            except (SFRBoxError, ConnectTimeout):
                 errors["base"] = "cannot_connect"
             else:
                 await self.async_set_unique_id(system_info.mac_addr)
