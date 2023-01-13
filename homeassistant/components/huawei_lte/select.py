@@ -1,10 +1,10 @@
 """Support for Huawei LTE selects."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from functools import partial
 import logging
-from typing import Callable
 
 from huawei_lte_api.enums.net import LTEBandEnum, NetworkBandEnum
 
@@ -19,7 +19,7 @@ from homeassistant.helpers.entity import Entity, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HuaweiLteBaseEntityWithDevice
-from .const import DOMAIN, KEY_NET_NET_MODE
+from .const import DOMAIN, KEY_NET_NET_MODE, NETWORKMODE_TO_STRING
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,16 +42,8 @@ async def async_setup_entry(
             description=desc,
             key=KEY_NET_NET_MODE,
             item="NetworkMode",
-            choices={
-                "00": "4G/3G/2G",
-                "01": "2G",
-                "02": "3G",
-                "03": "4G",
-                "0301": "4G/2G",
-                "0302": "4G/3G",
-                "0201": "3G/2G",
-            },
-            setter_method=partial(
+            choices=NETWORKMODE_TO_STRING,
+            setter_fn=partial(
                 router.client.net.set_net_mode,
                 LTEBandEnum.ALL,
                 NetworkBandEnum.ALL,
@@ -70,14 +62,14 @@ class HuaweiLteBaseSelect(HuaweiLteBaseEntityWithDevice, SelectEntity):
     key: str
     item: str
     choices: dict[str, str]
-    setter_method: Callable
+    setter_fn: Callable
 
     _raw_state: str | None = field(default=None, init=False)
 
     def select_option(self, option: str) -> None:
         """Change the selected option."""
         choices_reverse = {v: k for k, v in self.choices.items()}
-        self.setter_method(choices_reverse.get(option))
+        self.setter_fn(choices_reverse.get(option))
 
     @property
     def current_option(self) -> str | None:

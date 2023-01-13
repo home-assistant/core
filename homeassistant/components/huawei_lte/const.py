@@ -1,5 +1,7 @@
 """Huawei LTE constants."""
 
+from huawei_lte_api.enums.net import NetworkModeEnum
+
 DOMAIN = "huawei_lte"
 
 ATTR_CONFIG_ENTRY_ID = "config_entry_id"
@@ -79,3 +81,13 @@ ALL_KEYS = (
     | SWITCH_KEYS
     | {KEY_DEVICE_BASIC_INFORMATION}
 )
+
+NETWORKMODE_TO_STRING = {
+    NetworkModeEnum.MODE_AUTO.value: "4G/3G/2G",
+    NetworkModeEnum.MODE_4G_3G_AUTO.value: "4G/3G",
+    NetworkModeEnum.MODE_4G_2G_AUTO.value: "4G/2G",
+    NetworkModeEnum.MODE_4G_ONLY.value: "4G",
+    NetworkModeEnum.MODE_3G_2G_AUTO.value: "3G/2G",
+    NetworkModeEnum.MODE_3G_ONLY.value: "3G",
+    NetworkModeEnum.MODE_2G_ONLY.value: "2G",
+}
