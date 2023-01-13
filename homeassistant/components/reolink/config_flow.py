@@ -128,7 +128,7 @@ async def async_obtain_host_settings(
     host = ReolinkHost(hass, user_input, DEFAULT_OPTIONS)
 
     try:
-        await host.async_init():
+        await host.async_init()
     finally:
         await host.stop()
 
