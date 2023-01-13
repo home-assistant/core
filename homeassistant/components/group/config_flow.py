@@ -79,13 +79,12 @@ BINARY_SENSOR_CONFIG_SCHEMA = basic_group_config_schema("binary_sensor").extend(
 )
 
 SENSOR_CONFIG_EXTENDS = {
-    vol.Required(CONF_IGNORE_NON_NUMERIC, default=True): selector.BooleanSelector(),
     vol.Required(CONF_TYPE): selector.SelectSelector(
         selector.SelectSelectorConfig(options=_STATISTIC_MEASURES),
     ),
 }
 SENSOR_OPTIONS = {
-    vol.Required(CONF_IGNORE_NON_NUMERIC, default=True): selector.BooleanSelector(),
+    vol.Optional(CONF_IGNORE_NON_NUMERIC, default=True): selector.BooleanSelector(),
     vol.Required(CONF_TYPE): selector.SelectSelector(
         selector.SelectSelectorConfig(options=_STATISTIC_MEASURES),
     ),

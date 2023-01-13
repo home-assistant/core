@@ -128,7 +128,7 @@ async def async_setup_entry(
                 config_entry.entry_id,
                 config_entry.title,
                 entities,
-                config_entry.options[CONF_IGNORE_NON_NUMERIC],
+                config_entry.options.get(CONF_IGNORE_NON_NUMERIC, True),
                 config_entry.options[CONF_TYPE],
                 int(config_entry.options.get(CONF_ROUND_DIGITS, 2)),
                 None,
