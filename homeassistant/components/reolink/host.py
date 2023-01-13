@@ -17,6 +17,7 @@ from reolink_aio.exceptions import (
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from .const import CONF_PROTOCOL, CONF_USE_HTTPS, DEFAULT_TIMEOUT
 
@@ -69,11 +70,7 @@ class ReolinkHost:
             return False
 
         if not self._api.is_admin:
-            _LOGGER.warning(
-                "User '%s' has authorisation level '%s'. Only admin users can change camera settings! Not everything will work",
-                self._api.username,
-                self._api.user_level,
-            )
+            raise ConfigEntryAuthFailed(f"User '{self._api.username}' has authorisation level '{self._api.user_level}'. Only admin users can change camera settings! Not everything will work")
 
         enable_onvif = None
         enable_rtmp = None

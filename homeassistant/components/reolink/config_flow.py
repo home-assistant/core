@@ -53,6 +53,12 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    def __init__(self) -> None:
+        """Initialize."""
+        self._host: str | None = None
+        self._username: str = "admin"
+        self._password: str | None = None
+
     @staticmethod
     @callback
     def async_get_options_flow(
@@ -60,6 +66,21 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> ReolinkOptionsFlowHandler:
         """Options callback for Reolink."""
         return ReolinkOptionsFlowHandler(config_entry)
+
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+        """Perform reauth upon an authentication error or no admin privileges."""
+        self._host = entry_data[CONF_HOST]
+        self._username = entry_data[CONF_USERNAME]
+        self._password = entry_data[CONF_PASSWORD]
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Dialog that informs the user that reauth is required."""
+        if user_input is not None:
+            return await self.async_step_user()
+        return self.async_show_form(step_id="reauth_confirm")
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -102,9 +123,9 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         data_schema = vol.Schema(
             {
-                vol.Required(CONF_USERNAME, default="admin"): str,
-                vol.Required(CONF_PASSWORD): str,
-                vol.Required(CONF_HOST): str,
+                vol.Required(CONF_USERNAME, default=self._username): str,
+                vol.Required(CONF_PASSWORD, default=self._password): str,
+                vol.Required(CONF_HOST, default=self._host): str,
             }
         )
         if errors:

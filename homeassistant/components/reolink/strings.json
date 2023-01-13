@@ -10,6 +10,10 @@
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The Reolink integration needs to re-authenticate your connection details"
       }
     },
     "error": {
