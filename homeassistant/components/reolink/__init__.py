@@ -40,6 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     try:
         if not await host.async_init():
+            host.stop()
             raise ConfigEntryNotReady(
                 f"Error while trying to setup {host.api.host}:{host.api.port}: "
                 "failed to obtain data from device."
@@ -50,6 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         ApiError,
         InvalidContentTypeError,
     ) as err:
+        host.stop()
         raise ConfigEntryNotReady(
             f'Error while trying to setup {host.api.host}:{host.api.port}: "{str(err)}".'
         ) from err

@@ -59,6 +59,7 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._host: str | None = None
         self._username: str = "admin"
         self._password: str | None = None
+        self._reauth: bool = False
 
     @staticmethod
     @callback
@@ -73,6 +74,7 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._host = entry_data[CONF_HOST]
         self._username = entry_data[CONF_USERNAME]
         self._password = entry_data[CONF_PASSWORD]
+        self._reauth = True
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -113,7 +115,17 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_PORT] = host.api.port
                 user_input[CONF_USE_HTTPS] = host.api.use_https
 
-                await self.async_set_unique_id(host.unique_id, raise_on_progress=False)
+                existing_entry = await self.async_set_unique_id(
+                    host.unique_id, raise_on_progress=False
+                )
+                if existing_entry and self._reauth:
+                    if self.hass.config_entries.async_update_entry(
+                        existing_entry, data=user_input
+                    ):
+                        await self.hass.config_entries.async_reload(
+                            existing_entry.entry_id
+                        )
+                    return self.async_abort(reason="reauth_successful")
                 self._abort_if_unique_id_configured(updates=user_input)
 
                 return self.async_create_entry(

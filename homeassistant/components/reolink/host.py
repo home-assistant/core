@@ -70,8 +70,9 @@ class ReolinkHost:
             return False
 
         if not self._api.is_admin:
+            self.stop()
             raise ConfigEntryAuthFailed(
-                f"User '{self._api.username}' has authorisation level '{self._api.user_level}'. Only admin users can change camera settings! Not everything will work"
+                f"User '{self._api.username}' has authorisation level '{self._api.user_level}', only admin users can change camera settings"
             )
 
         enable_onvif = None
