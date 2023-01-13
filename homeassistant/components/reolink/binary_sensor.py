@@ -19,8 +19,8 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ReolinkData
 from .const import DOMAIN
@@ -120,6 +120,7 @@ class ReolinkBinarySensorEntity(ReolinkCoordinatorEntity, BinarySensorEntity):
     """An implementation of a base binary-sensor class for Reolink IP camera motion sensors."""
 
     _attr_has_entity_name = True
+    entity_description: ReolinkBinarySensorDescription
 
     def __init__(
         self,

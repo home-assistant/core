@@ -7,14 +7,14 @@ from typing import Any
 from reolink_aio.exceptions import ApiError, CredentialsInvalidError, ReolinkError
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant import config_entries, core
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 
-from .exceptions import ReolinkException
 from .const import CONF_PROTOCOL, CONF_USE_HTTPS, DEFAULT_PROTOCOL, DOMAIN
+from .exceptions import ReolinkException
 from .host import ReolinkHost
 
 _LOGGER = logging.getLogger(__name__)
@@ -133,4 +133,3 @@ async def async_obtain_host_settings(
         await host.stop()
 
     return host
-

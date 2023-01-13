@@ -19,10 +19,9 @@ from homeassistant.components import webhook
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 
-from .exceptions import ReolinkWebhookException, ReolinkSetupException
 from .const import (
     CONF_PROTOCOL,
     CONF_USE_HTTPS,
@@ -30,6 +29,7 @@ from .const import (
     DOMAIN,
     SUBSCRIPTION_RENEW_THRESHOLD,
 )
+from .exceptions import ReolinkSetupException, ReolinkWebhookException
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,10 +76,10 @@ class ReolinkHost:
         """Connect to Reolink host."""
         self._api.expire_session()
 
-        await self._api.get_host_data():
+        await self._api.get_host_data()
 
         if self._api.mac_address is None:
-            raise ReolinkSetupException(f"Could not get mac address")
+            raise ReolinkSetupException("Could not get mac address")
 
         enable_onvif = None
         enable_rtmp = None
@@ -130,7 +130,7 @@ class ReolinkHost:
         await self.subscribe()
 
     async def update_states(self) -> None:
-        """Call the API of the camera device to update the internall states."""
+        """Call the API of the camera device to update the internal states."""
         await self._api.get_states()
 
     async def disconnect(self):
@@ -198,7 +198,9 @@ class ReolinkHost:
                 self._webhook_url,
             )
         else:
-            raise ReolinkWebhookException(f"Host {self._api.host}: webhook subscription failed")
+            raise ReolinkWebhookException(
+                f"Host {self._api.host}: webhook subscription failed"
+            )
 
     async def renew(self) -> None:
         """Renew the subscription of the motion events (lease time is set to 15 minutes)."""
@@ -214,7 +216,7 @@ class ReolinkHost:
         timer = self._api.renewtimer
         if timer > SUBSCRIPTION_RENEW_THRESHOLD:
             return
-        
+
         if timer > 0:
             if await self._api.renew():
                 _LOGGER.debug(
@@ -227,9 +229,11 @@ class ReolinkHost:
             )
 
         if not await self._api.subscribe(self._webhook_url):
-            raise ReolinkWebhookException(f"Host {self._api.host}: webhook re-subscription failed")
+            raise ReolinkWebhookException(
+                f"Host {self._api.host}: webhook re-subscription failed"
+            )
         _LOGGER.debug(
-            "Host %s: Reolink re-subscription succesfull after it was expired",
+            "Host %s: Reolink re-subscription successful after it was expired",
             self._api.host,
         )
 

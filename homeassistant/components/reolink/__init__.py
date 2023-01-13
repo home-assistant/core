@@ -9,7 +9,12 @@ import logging
 
 from aiohttp import ClientConnectorError
 import async_timeout
-from reolink_aio.exceptions import ApiError, InvalidContentTypeError, NoDataError, ReolinkError
+from reolink_aio.exceptions import (
+    ApiError,
+    InvalidContentTypeError,
+    NoDataError,
+    ReolinkError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
@@ -17,8 +22,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .exceptions import ReolinkException
 from .const import DOMAIN
+from .exceptions import ReolinkException, ReolinkWebhookException
 from .host import ReolinkHost
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,12 +68,18 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             try:
                 await host.update_states()
             except ReolinkError as err:
-                raise UpdateFailed(f"Error updating Reolink {host.api.nvr_name}") from err
+                raise UpdateFailed(
+                    f"Error updating Reolink {host.api.nvr_name}"
+                ) from err
         async with async_timeout.timeout(host.api.timeout):
             try:
-                await host.renew():
+                await host.renew()
             except ReolinkWebhookException as err:
-                _LOGGER.error("Reolink %s event subscription lost: %s", host.api.nvr_name, str(err))
+                _LOGGER.error(
+                    "Reolink %s event subscription lost: %s",
+                    host.api.nvr_name,
+                    str(err),
+                )
 
     coordinator_device_config_update = DataUpdateCoordinator(
         hass,
