@@ -35,7 +35,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_RESOURCES,
     PERCENTAGE,
@@ -49,7 +49,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, ComfoConnectBridge
@@ -103,6 +105,7 @@ SENSOR_TYPES = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         sensor_id=SENSOR_TEMPERATURE_EXTRACT,
         multiplier=0.1,
+        entity_registry_enabled_default=False,
     ),
     ComfoconnectSensorEntityDescription(
         key=ATTR_CURRENT_HUMIDITY,
@@ -111,6 +114,7 @@ SENSOR_TYPES = (
         name="Inside humidity",
         native_unit_of_measurement=PERCENTAGE,
         sensor_id=SENSOR_HUMIDITY_EXTRACT,
+        entity_registry_enabled_default=False,
     ),
     ComfoconnectSensorEntityDescription(
         key=ATTR_CURRENT_RMOT,
@@ -120,6 +124,7 @@ SENSOR_TYPES = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         sensor_id=SENSOR_CURRENT_RMOT,
         multiplier=0.1,
+        entity_registry_enabled_default=False,
     ),
     ComfoconnectSensorEntityDescription(
         key=ATTR_OUTSIDE_TEMPERATURE,
@@ -129,6 +134,7 @@ SENSOR_TYPES = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         sensor_id=SENSOR_TEMPERATURE_OUTDOOR,
         multiplier=0.1,
+        entity_registry_enabled_default=False,
     ),
     ComfoconnectSensorEntityDescription(
         key=ATTR_OUTSIDE_HUMIDITY,
@@ -137,6 +143,7 @@ SENSOR_TYPES = (
         name="Outside humidity",
         native_unit_of_measurement=PERCENTAGE,
         sensor_id=SENSOR_HUMIDITY_OUTDOOR,
+        entity_registry_enabled_default=False,
     ),
     ComfoconnectSensorEntityDescription(
         key=ATTR_SUPPLY_TEMPERATURE,
@@ -146,6 +153,7 @@ SENSOR_TYPES = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         sensor_id=SENSOR_TEMPERATURE_SUPPLY,
         multiplier=0.1,
+        entity_registry_enabled_default=False,
     ),
     ComfoconnectSensorEntityDescription(
         key=ATTR_SUPPLY_HUMIDITY,
@@ -154,6 +162,7 @@ SENSOR_TYPES = (
         name="Supply humidity",
         native_unit_of_measurement=PERCENTAGE,
         sensor_id=SENSOR_HUMIDITY_SUPPLY,
+        entity_registry_enabled_default=False,
     ),
     ComfoconnectSensorEntityDescription(
         key=ATTR_SUPPLY_FAN_SPEED,
@@ -162,6 +171,7 @@ SENSOR_TYPES = (
         native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         icon="mdi:fan-plus",
         sensor_id=SENSOR_FAN_SUPPLY_SPEED,
+        entity_registry_enabled_default=False,
     ),
     ComfoconnectSensorEntityDescription(
         key=ATTR_SUPPLY_FAN_DUTY,
@@ -170,6 +180,7 @@ SENSOR_TYPES = (
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:fan-plus",
         sensor_id=SENSOR_FAN_SUPPLY_DUTY,
+        entity_registry_enabled_default=False,
     ),
     ComfoconnectSensorEntityDescription(
         key=ATTR_EXHAUST_FAN_SPEED,
@@ -178,6 +189,7 @@ SENSOR_TYPES = (
         native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         icon="mdi:fan-minus",
         sensor_id=SENSOR_FAN_EXHAUST_SPEED,
+        entity_registry_enabled_default=False,
     ),
     ComfoconnectSensorEntityDescription(
         key=ATTR_EXHAUST_FAN_DUTY,
@@ -186,6 +198,7 @@ SENSOR_TYPES = (
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:fan-minus",
         sensor_id=SENSOR_FAN_EXHAUST_DUTY,
+        entity_registry_enabled_default=False,
     ),
     ComfoconnectSensorEntityDescription(
         key=ATTR_EXHAUST_TEMPERATURE,
@@ -195,6 +208,7 @@ SENSOR_TYPES = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         sensor_id=SENSOR_TEMPERATURE_EXHAUST,
         multiplier=0.1,
+        entity_registry_enabled_default=False,
     ),
     ComfoconnectSensorEntityDescription(
         key=ATTR_EXHAUST_HUMIDITY,
@@ -203,6 +217,7 @@ SENSOR_TYPES = (
         name="Exhaust humidity",
         native_unit_of_measurement=PERCENTAGE,
         sensor_id=SENSOR_HUMIDITY_EXHAUST,
+        entity_registry_enabled_default=False,
     ),
     ComfoconnectSensorEntityDescription(
         key=ATTR_AIR_FLOW_SUPPLY,
@@ -211,6 +226,7 @@ SENSOR_TYPES = (
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         icon="mdi:fan-plus",
         sensor_id=SENSOR_FAN_SUPPLY_FLOW,
+        entity_registry_enabled_default=False,
     ),
     ComfoconnectSensorEntityDescription(
         key=ATTR_AIR_FLOW_EXHAUST,
@@ -219,6 +235,7 @@ SENSOR_TYPES = (
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         icon="mdi:fan-minus",
         sensor_id=SENSOR_FAN_EXHAUST_FLOW,
+        entity_registry_enabled_default=False,
     ),
     ComfoconnectSensorEntityDescription(
         key=ATTR_BYPASS_STATE,
@@ -227,6 +244,7 @@ SENSOR_TYPES = (
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:camera-iris",
         sensor_id=SENSOR_BYPASS_STATE,
+        entity_registry_enabled_default=False,
     ),
     ComfoconnectSensorEntityDescription(
         key=ATTR_DAYS_TO_REPLACE_FILTER,
@@ -234,6 +252,7 @@ SENSOR_TYPES = (
         native_unit_of_measurement=UnitOfTime.DAYS,
         icon="mdi:calendar",
         sensor_id=SENSOR_DAYS_TO_REPLACE_FILTER,
+        entity_registry_enabled_default=False,
     ),
     ComfoconnectSensorEntityDescription(
         key=ATTR_POWER_CURRENT,
@@ -242,6 +261,7 @@ SENSOR_TYPES = (
         name="Power usage",
         native_unit_of_measurement=UnitOfPower.WATT,
         sensor_id=SENSOR_POWER_CURRENT,
+        entity_registry_enabled_default=False,
     ),
     ComfoconnectSensorEntityDescription(
         key=ATTR_POWER_TOTAL,
@@ -250,6 +270,7 @@ SENSOR_TYPES = (
         name="Energy total",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         sensor_id=SENSOR_POWER_TOTAL,
+        entity_registry_enabled_default=False,
     ),
     ComfoconnectSensorEntityDescription(
         key=ATTR_PREHEATER_POWER_CURRENT,
@@ -258,6 +279,7 @@ SENSOR_TYPES = (
         name="Preheater power usage",
         native_unit_of_measurement=UnitOfPower.WATT,
         sensor_id=SENSOR_PREHEATER_POWER_CURRENT,
+        entity_registry_enabled_default=False,
     ),
     ComfoconnectSensorEntityDescription(
         key=ATTR_PREHEATER_POWER_TOTAL,
@@ -266,6 +288,7 @@ SENSOR_TYPES = (
         name="Preheater energy total",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         sensor_id=SENSOR_PREHEATER_POWER_TOTAL,
+        entity_registry_enabled_default=False,
     ),
 )
 
@@ -285,16 +308,60 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the ComfoConnect sensor platform."""
-    ccb = hass.data[DOMAIN]
+    # migrated_entry = hass.data[DOMAIN].get(SOURCE_IMPORT)
 
-    resources = config[CONF_RESOURCES]
-    sensors = [
-        ComfoConnectSensor(ccb, resources, description)
-        for description in SENSOR_TYPES
-        if description.key in resources
-    ]
+    # if migrated_entry is None:
+    #     return
 
-    async_add_entities(sensors, True)
+    _LOGGER.warning(
+        "Configuring ComfoConnect sensors using YAML is being removed. All available sensors"
+        "have been imported into the UI automatically (disabled by default). Remove "
+        "the ComfoConnect sensor configuration from your configuration.yaml file and "
+        "restart Home Assistant to fix this issue"
+    )
+
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_sensor",
+        breaks_in_ha_version="2023.5.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_sensor",
+    )
+
+    # # No more setup from configuration.yaml, just do a one-time import
+    # # We only import configs from YAML if it hasn't been imported. If there is a config
+    # # entry marked with SOURCE_IMPORT, it means the YAML config has been imported.
+    # for entry in hass.config_entries.async_entries(DOMAIN):
+    #     if entry.source == SOURCE_IMPORT:
+    #         # Remove the artificial entry since it's no longer needed.
+    #         hass.data[DOMAIN].pop(SOURCE_IMPORT)
+
+    # Remove the artificial entry since it's no longer needed.
+    hass.data[DOMAIN].pop(SOURCE_IMPORT)
+    return
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the ComfoConnect sensor platform."""
+    # ccb = hass.data[DOMAIN]
+    ccb = hass.data[DOMAIN][entry.entry_id]
+
+    # # Import from config
+    # conf = hass.data[DOMAIN].get(SOURCE_IMPORT)
+    # if conf is not None:
+    #     return
+
+    # For user input from config flow
+    async_add_entities(
+        [ComfoConnectSensor(ccb, entry, description) for description in SENSOR_TYPES],
+        True,
+    )
 
 
 class ComfoConnectSensor(SensorEntity):
@@ -314,14 +381,9 @@ class ComfoConnectSensor(SensorEntity):
         self.entity_description = description
         self._attr_name = f"{ccb.name} {description.name}"
         self._attr_unique_id = f"{ccb.unique_id}-{description.key}"
-        # self._attr_unique_id = "_".join(
-        #     [
-        #         DOMAIN,
-        #         ccb.name,
-        #         "sensor",
-        #         description.key,
-        #     ]
-        # )
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, ccb.unique_id)},
+        )
 
     async def async_added_to_hass(self) -> None:
         """Register for sensor updates."""

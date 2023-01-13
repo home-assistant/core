@@ -22,7 +22,11 @@
   "issues": {
     "deprecated_yaml": {
       "title": "The ComfoConnect YAML configuration is being removed",
-      "description": "Configuring ComfoConnect using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the ComfoConnect YAML configuration and the ComfoConnect sensor YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+      "description": "Configuring ComfoConnect using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the ComfoConnect YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+    },
+    "deprecated_sensor": {
+      "title": "The ComfoConnect sensor configuration is being removed",
+      "description": "Configuring ComfoConnect sensors using YAML is being removed.\n\nYour existing sensors have been imported into the UI automatically (disabled by default).\n\nRemove the ComfoConnect sensor configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
     }
   }
 }

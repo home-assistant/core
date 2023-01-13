@@ -1,7 +1,6 @@
 """Platform to control a Zehnder ComfoAir Q350/450/600 ventilation unit."""
 from __future__ import annotations
 
-import logging
 import math
 from typing import Any
 
@@ -17,8 +16,10 @@ from pycomfoconnect import (
 )
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.percentage import (
@@ -28,8 +29,7 @@ from homeassistant.util.percentage import (
 )
 
 from . import DOMAIN, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, ComfoConnectBridge
-
-_LOGGER = logging.getLogger(__name__)
+from .const import _LOGGER
 
 CMD_MAPPING = {
     0: CMD_FAN_MODE_AWAY,
@@ -51,7 +51,45 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the ComfoConnect fan platform."""
-    ccb = hass.data[DOMAIN]
+
+    # # No more setup from configuration.yaml, just do a one-time import
+    # # We only import configs from YAML if it hasn't been imported. If there is a config
+    # # entry marked with SOURCE_IMPORT, it means the YAML config has been imported.
+    # for entry in hass.config_entries.async_entries(DOMAIN):
+    #     if entry.source == SOURCE_IMPORT:
+    #         hass.data[DOMAIN].pop(SOURCE_IMPORT)
+    #         return
+
+    # conf = hass.data[DOMAIN].get(SOURCE_IMPORT)
+    # if conf is None:
+    #     return
+
+    # Remove the artificial entry since it's no longer needed.
+    hass.data[DOMAIN].pop(SOURCE_IMPORT)
+    return
+
+    # # Our config flow supports CONF_RESOURCES and will properly import it to disable
+    # # entities not listed in CONF_RESOURCES by default. Note that this designed to
+    # # support YAML config import only (i.e., not shown in UI during setup).
+    # conf[CONF_RESOURCES] = config[CONF_RESOURCES]
+
+    # hass.async_create_task(
+    #     hass.config_entries.flow.async_init(
+    #         DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
+    #     )
+    # )
+
+    # ccb = hass.data[DOMAIN]
+    # async_add_entities([ComfoConnectFan(ccb)], True)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the ComfoConnect fan platform."""
+    ccb = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities([ComfoConnectFan(ccb)], True)
 
@@ -71,6 +109,9 @@ class ComfoConnectFan(FanEntity):
         self._attr_name = ccb.name
         self._attr_unique_id = ccb.unique_id
         self._attr_preset_mode = None
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, ccb.unique_id)},
+        )
 
     async def async_added_to_hass(self) -> None:
         """Register for sensor updates."""

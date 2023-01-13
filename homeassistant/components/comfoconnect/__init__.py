@@ -2,6 +2,7 @@
 from pycomfoconnect import Bridge, ComfoConnect
 import voluptuous as vol
 
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -11,9 +12,10 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import discovery
+from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -44,31 +46,77 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+PLATFORMS = [Platform.FAN, Platform.SENSOR]
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the ComfoConnect bridge."""
 
-    if DOMAIN not in config:
+    # No more setup from configuration.yaml, only remember config for import
+
+    conf = config.get(DOMAIN)
+    if conf is None:
         return True
 
-    conf = config[DOMAIN]
-    host = conf[CONF_HOST]
-    name = conf[CONF_NAME]
-    token = conf[CONF_TOKEN]
-    user_agent = conf[CONF_USER_AGENT]
-    pin = conf[CONF_PIN]
+    _LOGGER.warning(
+        "Configuring ComfoConnect using YAML is being removed. Your existing "
+        "YAML configuration has been imported into the UI automatically. Remove "
+        "the ComfoConnect YAML configuration from your configuration.yaml file and "
+        "restart Home Assistant to fix this issue"
+    )
+
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2023.5.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+    )
+
+    # Already imported, then quit
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if entry.source == SOURCE_IMPORT:
+            return True
+
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][SOURCE_IMPORT] = conf
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
+        )
+    )
+
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up the ComfoConnect bridge."""
+
+    host = entry.data[CONF_HOST]
+    name = entry.data[CONF_NAME]
+    token = entry.data[CONF_TOKEN]
+    user_agent = entry.data[CONF_USER_AGENT]
+    pin = entry.data[CONF_PIN]
 
     # Run discovery on the configured ip
-    bridges = Bridge.discover(host)
+    bridges = Bridge.discover(entry.data[CONF_HOST])
     if not bridges:
         _LOGGER.error("Could not connect to ComfoConnect bridge on %s", host)
-        return False
+        raise ConfigEntryNotReady
+
     bridge = bridges[0]
-    _LOGGER.info("Bridge found: %s (%s)", bridge.uuid.hex(), bridge.host)
 
     # Setup ComfoConnect Bridge
     ccb = ComfoConnectBridge(hass, bridge, name, token, user_agent, pin)
-    hass.data[DOMAIN] = ccb
+
+    # hass.data[DOMAIN] = ccb
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = ccb
 
     # Start connection with bridge
     ccb.connect()
@@ -80,12 +128,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
 
     # Load platforms
-    # discovery.async_load_platform(hass, Platform.FAN, DOMAIN, {}, config)
-    hass.async_create_task(
-        discovery.async_load_platform(hass, Platform.FAN, DOMAIN, {}, config)
-    )
-
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload Comfoconnect config entry."""
+
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        hass.data[DOMAIN].pop(entry.entry_id)
+    # if not hass.data[DOMAIN]:
+    #     del hass.data[DOMAIN]
+
+    return unload_ok
 
 
 class ComfoConnectBridge:

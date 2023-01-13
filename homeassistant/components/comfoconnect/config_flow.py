@@ -6,7 +6,7 @@ from typing import Any
 from pycomfoconnect import Bridge
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PIN, CONF_TOKEN
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
@@ -29,18 +29,17 @@ class ComfoConnectFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
         """Import a config entry."""
-        if DOMAIN not in import_config:
-            return self.async_abort(reason="not_needed")
+        import_config = import_config.get(DOMAIN, import_config)
 
-        import_config = import_config[DOMAIN]
         for entry in self._async_current_entries():
             if entry.data[CONF_HOST] == import_config[CONF_HOST]:
                 _LOGGER.warning(
-                    "YAML config for ComfoConnect bridge on %s has been imported. Please remove it",
+                    "YAML config for ComfoConnect bridge on %s has been imported. Please remove it from your configuration.YAML",
                     import_config[CONF_HOST],
                 )
                 return self.async_abort(reason="already_configured")
 
+        # Enhance with defaults if necessary
         import_config[CONF_NAME] = import_config.get(CONF_NAME, DEFAULT_NAME)
         import_config[CONF_TOKEN] = import_config.get(CONF_TOKEN, DEFAULT_TOKEN)
         import_config[CONF_PIN] = import_config.get(CONF_PIN, DEFAULT_PIN)
@@ -49,13 +48,6 @@ class ComfoConnectFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
         return await self.async_step_user(import_config)
-
-        # self._async_abort_entries_match({CONF_HOST: config[CONF_HOST]})
-        # title = config.pop(CONF_NAME, DEFAULT_NAME)
-        # return await self.async_create_entry(
-        #     title="configuration.yaml",
-        #     data=config,
-        # )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -80,8 +72,9 @@ class ComfoConnectFlowHandler(ConfigFlow, domain=DOMAIN):
             bridge = bridges[0]
             _LOGGER.info("Bridge found: %s (%s)", bridge.uuid.hex(), bridge.host)
 
+            title = "configuration.yaml" if self.source == SOURCE_IMPORT else name
             return self.async_create_entry(
-                title=user_input[CONF_NAME],
+                title=title,
                 data={
                     CONF_HOST: host,
                     CONF_NAME: name,
