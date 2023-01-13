@@ -330,8 +330,8 @@ class SensorGroup(GroupEntity, SensorEntity):
                     continue
                 valid_states.append(True)
 
-        # Set group as unavailable if any/all members do not have numeric values
-        self._attr_available = any(state != STATE_UNAVAILABLE for state in states)
+        # Set group as unavailable if all members do not have numeric values
+        self._attr_available = any(numeric_state for numeric_state in valid_states)
 
         valid_state = self.mode(
             state not in (STATE_UNKNOWN, STATE_UNAVAILABLE) for state in states
