@@ -50,7 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         ReolinkException,
     ) as err:
         raise ConfigEntryNotReady(
-            f"Error while trying to setup {host.api.host}:{host.api.port}: '{str(err)}'"
+            f"Error while trying to setup {host.api.host}:{host.api.port}: {str(err)}"
         ) from err
 
     config_entry.async_on_unload(
@@ -68,7 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             try:
                 await host.renew():
             except ReolinkWebhookException as err:
-                _LOGGER.error("Reolink %s event subscription lost: '%s'", host.api.nvr_name, str(err))
+                _LOGGER.error("Reolink %s event subscription lost: %s", host.api.nvr_name, str(err))
 
     coordinator_device_config_update = DataUpdateCoordinator(
         hass,
