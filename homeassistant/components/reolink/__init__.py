@@ -9,7 +9,7 @@ import logging
 
 from aiohttp import ClientConnectorError
 import async_timeout
-from reolink_aio.exceptions import ApiError, InvalidContentTypeError
+from reolink_aio.exceptions import ApiError, InvalidContentTypeError, NoDataError, ReolinkError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
@@ -17,6 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .exceptions import ReolinkException
 from .const import DOMAIN
 from .host import ReolinkHost
 
@@ -39,19 +40,17 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     host = ReolinkHost(hass, config_entry.data, config_entry.options)
 
     try:
-        if not await host.async_init():
-            raise ConfigEntryNotReady(
-                f"Error while trying to setup {host.api.host}:{host.api.port}: "
-                "failed to obtain data from device."
-            )
+        await host.async_init()
     except (
         ClientConnectorError,
         asyncio.TimeoutError,
         ApiError,
         InvalidContentTypeError,
+        NoDataError,
+        ReolinkException,
     ) as err:
         raise ConfigEntryNotReady(
-            f'Error while trying to setup {host.api.host}:{host.api.port}: "{str(err)}".'
+            f"Error while trying to setup {host.api.host}:{host.api.port}: '{str(err)}'"
         ) from err
 
     config_entry.async_on_unload(
@@ -61,11 +60,15 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     async def async_device_config_update():
         """Update the host state cache and renew the ONVIF-subscription."""
         async with async_timeout.timeout(host.api.timeout):
-            if not await host.update_states():
-                raise UpdateFailed(f"Error updating Reolink {host.api.nvr_name}")
+            try:
+                await host.update_states()
+            except ReolinkError as err
+                raise UpdateFailed(f"Error updating Reolink {host.api.nvr_name}") from err
         async with async_timeout.timeout(host.api.timeout):
-            if not await host.renew():
-                _LOGGER.error("Reolink %s event subscription lost", host.api.nvr_name)
+            try:
+                await host.renew():
+            except ReolinkWebhookException as err:
+                _LOGGER.error("Reolink %s event subscription lost: '%s'", host.api.nvr_name, str(err))
 
     coordinator_device_config_update = DataUpdateCoordinator(
         hass,

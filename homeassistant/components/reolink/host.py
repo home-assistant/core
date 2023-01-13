@@ -22,6 +22,7 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
+from .exceptions import ReolinkWebhookException, ReolinkSetupException
 from .const import (
     CONF_PROTOCOL,
     CONF_USE_HTTPS,
@@ -71,15 +72,14 @@ class ReolinkHost:
         """Return the API object."""
         return self._api
 
-    async def async_init(self) -> bool:
+    async def async_init(self) -> None:
         """Connect to Reolink host."""
         self._api.expire_session()
 
-        if not await self._api.get_host_data():
-            return False
+        await self._api.get_host_data():
 
         if self._api.mac_address is None:
-            return False
+            raise ReolinkSetupException(f"Could not get mac address")
 
         enable_onvif = None
         enable_rtmp = None
@@ -127,16 +127,11 @@ class ReolinkHost:
 
         self._unique_id = format_mac(self._api.mac_address)
 
-        if not await self.register_webhook():
-            return False
-
         await self.subscribe()
 
-        return True
-
-    async def update_states(self) -> bool:
-        """Call the API of the camera device to update the states."""
-        return await self._api.get_states()
+    async def update_states(self) -> None:
+        """Call the API of the camera device to update the internall states."""
+        await self._api.get_states()
 
     async def disconnect(self):
         """Disconnect from the API, so the connection will be released."""
@@ -183,11 +178,10 @@ class ReolinkHost:
         await self.unregister_webhook()
         await self.disconnect()
 
-    async def subscribe(self) -> bool:
+    async def subscribe(self) -> None:
         """Subscribe to motion events and register the webhook as a callback."""
         if self.webhook_id is None:
-            if not self.register_webhook():
-                return False
+            await self.register_webhook()
 
         if self._api.subscribed:
             _LOGGER.debug(
@@ -195,7 +189,7 @@ class ReolinkHost:
                 self._api.host,
                 self._webhook_url,
             )
-            return True
+            return
 
         if await self._api.subscribe(self._webhook_url):
             _LOGGER.info(
@@ -204,12 +198,9 @@ class ReolinkHost:
                 self._webhook_url,
             )
         else:
-            _LOGGER.error("Host %s: webhook subscription failed", self._api.host)
-            return False
+            raise ReolinkWebhookException(f"Host {self._api.host}: webhook subscription failed")
 
-        return True
-
-    async def renew(self) -> bool:
+    async def renew(self) -> None:
         """Renew the subscription of the motion events (lease time is set to 15 minutes)."""
 
         if not self._api.subscribed:
@@ -217,29 +208,32 @@ class ReolinkHost:
                 "Host %s: requested to renew a non-existing Reolink subscription, trying to subscribe from scratch",
                 self._api.host,
             )
-            return await self.subscribe()
+            await self.subscribe()
+            return
 
         timer = self._api.renewtimer
-        if timer <= 0:
+        if timer > SUBSCRIPTION_RENEW_THRESHOLD:
+            return
+        
+        if timer > 0:
+            if await self._api.renew():
+                _LOGGER.debug(
+                    "Host %s successfully renewed Reolink subscription", self._api.host
+                )
+                return
             _LOGGER.debug(
-                "Host %s: Reolink subscription expired, trying to subscribe again",
+                "Host %s: error renewing Reolink subscription, trying to subscribe again",
                 self._api.host,
             )
-            return await self._api.subscribe(self._webhook_url)
-        if timer <= SUBSCRIPTION_RENEW_THRESHOLD:
-            if not await self._api.renew():
-                _LOGGER.debug(
-                    "Host %s: error renewing Reolink subscription, trying to subscribe again",
-                    self._api.host,
-                )
-                return await self._api.subscribe(self._webhook_url)
-            _LOGGER.debug(
-                "Host %s successfully renewed Reolink subscription", self._api.host
-            )
 
-        return True
+        if not await self._api.subscribe(self._webhook_url):
+            raise ReolinkWebhookException(f"Host {self._api.host}: webhook re-subscription failed")
+        _LOGGER.debug(
+            "Host %s: Reolink re-subscription succesfull after it was expired",
+            self._api.host,
+        )
 
-    async def register_webhook(self) -> bool:
+    async def register_webhook(self) -> None:
         """Register the webhook for motion events."""
         self.webhook_id = f"reolink_{self.unique_id.replace(':', '')}"
         event_id = self.webhook_id
@@ -258,34 +252,26 @@ class ReolinkHost:
                 webhook.async_register(
                     self._hass, DOMAIN, event_id, self.webhook_id, self.handle_webhook
                 )
-            except ValueError:
-                _LOGGER.error(
-                    "Error registering a webhook %s for %s",
-                    self.webhook_id,
-                    self.api.nvr_name,
-                )
+            except ValueError as err:
+                mess = f"Error registering a webhook {self.webhook_id} for {self.api.nvr_name}"
                 self.webhook_id = None
-                return False
+                raise ReolinkWebhookException(mess) from err
 
         try:
             base_url = get_url(self._hass, prefer_external=False)
         except NoURLAvailableError:
             try:
                 base_url = get_url(self._hass, prefer_external=True)
-            except NoURLAvailableError:
-                _LOGGER.error(
-                    "Error registering URL for webhook %s: HomeAssistant URL is not available",
-                    self.webhook_id,
-                )
+            except NoURLAvailableError as err:
                 webhook.async_unregister(self._hass, self.webhook_id)
+                mess = f"Error registering URL for webhook {self.webhook_id}: HomeAssistant URL is not available"
                 self.webhook_id = None
-                return False
+                raise ReolinkWebhookException(mess) from err
 
         webhook_path = webhook.async_generate_path(self.webhook_id)
         self._webhook_url = f"{base_url}{webhook_path}"
 
         _LOGGER.info("Registered webhook: %s", self.webhook_id)
-        return True
 
     async def unregister_webhook(self):
         """Unregister the webhook for motion events."""
