@@ -11,7 +11,7 @@ from pyisy.constants import (
     PROTO_ZWAVE,
 )
 from pyisy.helpers import EventListener, NodeProperty
-from pyisy.nodes import Node
+from pyisy.nodes import Group, Node
 from pyisy.programs import Program
 from pyisy.variables import Variable
 
@@ -30,7 +30,11 @@ class ISYEntity(Entity):
     _attr_should_poll = False
     _node: Node | Program | Variable
 
-    def __init__(self, node: Node, device_info: DeviceInfo | None = None) -> None:
+    def __init__(
+        self,
+        node: Node | Group | Variable | Program,
+        device_info: DeviceInfo | None = None,
+    ) -> None:
         """Initialize the insteon device."""
         self._node = node
         self._attr_name = node.name
@@ -89,10 +93,7 @@ class ISYNodeEntity(ISYEntity):
         attr = {}
         node = self._node
         # Insteon aux_properties are now their own sensors
-        if (
-            hasattr(self._node, "aux_properties")
-            and getattr(node, "protocol", None) != PROTO_INSTEON
-        ):
+        if hasattr(self._node, "aux_properties") and node.protocol != PROTO_INSTEON:
             for name, value in self._node.aux_properties.items():
                 attr_name = COMMAND_FRIENDLY_NAME.get(name, name)
                 attr[attr_name] = str(value.formatted).lower()
@@ -128,7 +129,7 @@ class ISYNodeEntity(ISYEntity):
 
     async def async_get_zwave_parameter(self, parameter: Any) -> None:
         """Respond to an entity service command to request a Z-Wave device parameter from the ISY."""
-        if not hasattr(self._node, "protocol") or self._node.protocol != PROTO_ZWAVE:
+        if self._node.protocol != PROTO_ZWAVE:
             raise HomeAssistantError(
                 "Invalid service call: cannot request Z-Wave Parameter for non-Z-Wave"
                 f" device {self.entity_id}"
@@ -139,7 +140,7 @@ class ISYNodeEntity(ISYEntity):
         self, parameter: Any, value: Any | None, size: int | None
     ) -> None:
         """Respond to an entity service command to set a Z-Wave device parameter via the ISY."""
-        if not hasattr(self._node, "protocol") or self._node.protocol != PROTO_ZWAVE:
+        if self._node.protocol != PROTO_ZWAVE:
             raise HomeAssistantError(
                 "Invalid service call: cannot set Z-Wave Parameter for non-Z-Wave"
                 f" device {self.entity_id}"
@@ -155,7 +156,10 @@ class ISYNodeEntity(ISYEntity):
 class ISYProgramEntity(ISYEntity):
     """Representation of an ISY program base."""
 
-    def __init__(self, name: str, status: Any | None, actions: Program = None) -> None:
+    _actions: Program
+    _status: Program
+
+    def __init__(self, name: str, status: Program, actions: Program = None) -> None:
         """Initialize the ISY program-based entity."""
         super().__init__(status)
         self._attr_name = name
