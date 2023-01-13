@@ -94,6 +94,7 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             uom = user_input.get(CONF_UNIT_OF_MEASUREMENT)
             value_template = user_input.get(CONF_VALUE_TEMPLATE)
             name = user_input[CONF_NAME]
+            db_url_for_validation = None
 
             try:
                 validate_sql_select(query)
@@ -106,12 +107,16 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except ValueError:
                 errors["query"] = "query_invalid"
 
+            add_db_url = (
+                {CONF_DB_URL: db_url} if db_url == db_url_for_validation else {}
+            )
+
             if not errors:
                 return self.async_create_entry(
                     title=name,
                     data={},
                     options={
-                        CONF_DB_URL: db_url,
+                        **add_db_url,
                         CONF_QUERY: query,
                         CONF_COLUMN_NAME: column,
                         CONF_UNIT_OF_MEASUREMENT: uom,
@@ -157,12 +162,14 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlow):
             except ValueError:
                 errors["query"] = "query_invalid"
             else:
+                new_user_input = user_input
+                if new_user_input.get(CONF_DB_URL) and db_url == db_url_for_validation:
+                    new_user_input.pop(CONF_DB_URL)
                 return self.async_create_entry(
                     title="",
                     data={
                         CONF_NAME: name,
-                        CONF_DB_URL: db_url,
-                        **user_input,
+                        **new_user_input,
                     },
                 )
 
@@ -173,7 +180,7 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Optional(
                         CONF_DB_URL,
                         description={
-                            "suggested_value": self.entry.options[CONF_DB_URL]
+                            "suggested_value": self.entry.options.get(CONF_DB_URL)
                         },
                     ): selector.TextSelector(),
                     vol.Required(

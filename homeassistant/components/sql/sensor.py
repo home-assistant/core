@@ -88,7 +88,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the SQL sensor from config entry."""
 
-    db_url: str = resolve_db_url(hass, entry.options[CONF_DB_URL])
+    db_url: str = resolve_db_url(hass, entry.options.get(CONF_DB_URL))
     name: str = entry.options[CONF_NAME]
     query_str: str = entry.options[CONF_QUERY]
     unit: str | None = entry.options.get(CONF_UNIT_OF_MEASUREMENT)
