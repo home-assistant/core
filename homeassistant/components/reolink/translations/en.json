@@ -11,6 +11,10 @@
             "unknown": "Unexpected error"
         },
         "step": {
+            "reauth_confirm": {
+                "description": "The Reolink integration needs to re-authenticate your connection details",
+                "title": "Reauthenticate Integration"
+            },
             "user": {
                 "data": {
                     "host": "Host",
