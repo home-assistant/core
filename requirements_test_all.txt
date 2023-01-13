@@ -1436,6 +1436,9 @@ python-miio==0.5.12
 # homeassistant.components.nest
 python-nest==4.2.0
 
+# homeassistant.components.otbr
+python-otbr-api==1.0.0
+
 # homeassistant.components.picnic
 python-picnic-api==1.1.0
 

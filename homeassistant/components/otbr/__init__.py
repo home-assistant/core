@@ -2,9 +2,8 @@
 from __future__ import annotations
 
 import dataclasses
-from http import HTTPStatus
 
-import aiohttp
+import python_otbr_api
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -44,14 +43,6 @@ def _async_get_thread_rest_service_url(hass) -> str:
     return otbr_data.url
 
 
-def _raise_for_status(response: aiohttp.ClientResponse) -> None:
-    """Raise if status >= 400."""
-    try:
-        response.raise_for_status()
-    except aiohttp.ClientResponseError as exc:
-        raise HomeAssistantError(f"unexpected http status {response.status}") from exc
-
-
 async def async_get_active_dataset_tlvs(hass: HomeAssistant) -> bytes | None:
     """Get current active operational dataset in TLVS format, or None.
 
@@ -59,21 +50,10 @@ async def async_get_active_dataset_tlvs(hass: HomeAssistant) -> bytes | None:
     Raises if the http status is 400 or higher or if the response is invalid.
     """
 
-    response = await async_get_clientsession(hass).get(
-        f"{_async_get_thread_rest_service_url(hass)}/node/dataset/active",
-        headers={"Accept": "text/plain"},
-        timeout=aiohttp.ClientTimeout(total=10),
+    api = python_otbr_api.OTBR(
+        _async_get_thread_rest_service_url(hass), async_get_clientsession(hass), 10
     )
-
-    _raise_for_status(response)
-    if response.status == HTTPStatus.NO_CONTENT:
-        return None
-
-    if response.status != HTTPStatus.OK:
-        raise HomeAssistantError(f"unexpected http status {response.status}")
-
     try:
-        tmp = await response.read()
-        return bytes.fromhex(tmp.decode("ASCII"))
-    except ValueError as exc:
-        raise HomeAssistantError("unexpected API response") from exc
+        return await api.get_active_dataset_tlvs()
+    except python_otbr_api.OTBRError as exc:
+        raise HomeAssistantError("Failed to call OTBR API") from exc
