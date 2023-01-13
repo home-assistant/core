@@ -175,7 +175,7 @@ def calc_mean(
     sensor_values: list[tuple[str, float, State]], round_digits: int
 ) -> tuple[dict[str, str | None], float]:
     """Calculate mean value."""
-    result = [sensor_value for _, sensor_value, _ in sensor_values]
+    result = (sensor_value for _, sensor_value, _ in sensor_values)
 
     value: float = round(statistics.mean(result), round_digits)
     return {}, value
@@ -185,7 +185,7 @@ def calc_median(
     sensor_values: list[tuple[str, float, State]], round_digits: int
 ) -> tuple[dict[str, str | None], float]:
     """Calculate median value."""
-    result = [sensor_value for _, sensor_value, _ in sensor_values]
+    result = (sensor_value for _, sensor_value, _ in sensor_values)
 
     value: float = round(statistics.median(result), round_digits)
     return {}, value
@@ -211,9 +211,10 @@ def calc_range(
     sensor_values: list[tuple[str, float, State]], round_digits: int
 ) -> tuple[dict[str, str | None], float]:
     """Calculate range value."""
-    result = [sensor_value for _, sensor_value, _ in sensor_values]
+    max_result = max((sensor_value for _, sensor_value, _ in sensor_values))
+    min_result = min((sensor_value for _, sensor_value, _ in sensor_values))
 
-    value: float = round(max(result) - min(result), round_digits)
+    value: float = round(max_result - min_result, round_digits)
     return {}, value
 
 
