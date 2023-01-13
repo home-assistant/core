@@ -16,4 +16,3 @@ class ReolinkWebhookException(ReolinkException):
 
 class UserNotAdmin(ReolinkException):
     """Raised when user is not admin."""
-
