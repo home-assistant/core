@@ -72,7 +72,7 @@ class ReolinkHost:
         if not self._api.is_admin:
             await self.stop()
             raise UserNotAdmin(
-                f"User '{self._api.username}' has authorisation level '{self._api.user_level}', only admin users can change camera settings"
+                f"User '{self._api.username}' has authorization level '{self._api.user_level}', only admin users can change camera settings"
             )
 
         enable_onvif = None
