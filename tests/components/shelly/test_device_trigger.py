@@ -324,7 +324,7 @@ async def test_validate_trigger_rpc_device_not_ready(
     assert calls[0].data["some"] == "test_trigger_single_push"
 
 
-async def test_validate_trigger_invalid_triggers(hass, mock_block_device):
+async def test_validate_trigger_invalid_triggers(hass, mock_block_device, caplog):
     """Test for click_event with invalid triggers."""
     entry = await init_integration(hass, 1)
     dev_reg = async_get_dev_reg(hass)
@@ -352,8 +352,4 @@ async def test_validate_trigger_invalid_triggers(hass, mock_block_device):
         },
     )
 
-    assert len(notifications := hass.states.async_all("persistent_notification")) == 1
-    assert (
-        "The following integrations and platforms could not be set up"
-        in notifications[0].attributes["message"]
-    )
+    assert "Invalid (type,subtype): ('single', 'button3')" in caplog.text

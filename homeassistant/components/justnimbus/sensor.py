@@ -14,9 +14,9 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_CLIENT_ID,
-    PRESSURE_BAR,
-    TEMP_CELSIUS,
-    TIME_HOURS,
+    UnitOfPressure,
+    UnitOfTemperature,
+    UnitOfTime,
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
@@ -65,7 +65,7 @@ SENSOR_TYPES = (
     JustNimbusEntityDescription(
         key="pump_pressure",
         name="Pump pressure",
-        native_unit_of_measurement=PRESSURE_BAR,
+        native_unit_of_measurement=UnitOfPressure.BAR,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -84,7 +84,7 @@ SENSOR_TYPES = (
         name="Pump hours",
         icon="mdi:clock",
         device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=TIME_HOURS,
+        native_unit_of_measurement=UnitOfTime.HOURS,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda coordinator: coordinator.data.pump_hours,
@@ -92,7 +92,7 @@ SENSOR_TYPES = (
     JustNimbusEntityDescription(
         key="reservoir_temp",
         name="Reservoir Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,

@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TIME_DAYS, UnitOfInformation
+from homeassistant.const import UnitOfInformation, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
@@ -113,13 +113,13 @@ SENSOR_DESCRIPTIONS: tuple[SensorValueEntityDescription, ...] = (
     SensorValueEntityDescription(
         key="daysTotal",
         name="Billing cycle length",
-        native_unit_of_measurement=TIME_DAYS,
+        native_unit_of_measurement=UnitOfTime.DAYS,
         icon="mdi:calendar-range",
     ),
     SensorValueEntityDescription(
         key="daysRemaining",
         name="Billing cycle remaining",
-        native_unit_of_measurement=TIME_DAYS,
+        native_unit_of_measurement=UnitOfTime.DAYS,
         icon="mdi:calendar-clock",
     ),
 )

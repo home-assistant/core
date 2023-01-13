@@ -62,7 +62,9 @@
         "step": {
             "add_sensor": {
                 "data": {
-                    "distance": "Suchradius"
+                    "distance": "Suchradius",
+                    "latitude": "Breitengrad",
+                    "longitude": "L\u00e4ngengrad"
                 },
                 "data_description": {
                     "distance": "Der Radius (in Kilometern) des Kreises, in dem gesucht werden soll",

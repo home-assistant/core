@@ -87,7 +87,6 @@ class GuardianDataUpdateCoordinator(DataUpdateCoordinator[dict]):
         self._api_coro = api_coro
         self._api_lock = api_lock
         self._client = client
-        self._signal_handler_unsubs: list[Callable[..., None]] = []
 
         self.config_entry = entry
         self.signal_reboot_requested = SIGNAL_REBOOT_REQUESTED.format(
@@ -112,16 +111,8 @@ class GuardianDataUpdateCoordinator(DataUpdateCoordinator[dict]):
             self.last_update_success = False
             self.async_update_listeners()
 
-        self._signal_handler_unsubs.append(
+        self.config_entry.async_on_unload(
             async_dispatcher_connect(
                 self.hass, self.signal_reboot_requested, async_reboot_requested
             )
         )
-
-        @callback
-        def async_teardown() -> None:
-            """Tear the coordinator down appropriately."""
-            for unsub in self._signal_handler_unsubs:
-                unsub()
-
-        self.config_entry.async_on_unload(async_teardown)

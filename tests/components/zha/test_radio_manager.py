@@ -105,7 +105,7 @@ async def test_migrate_matching_port(
     mock_connect_zigpy_app,
 ) -> None:
     """Test automatic migration."""
-    # Setup the config entry
+    # Set up the config entry
     config_entry = MockConfigEntry(
         data={"device": {"path": "/dev/ttyTEST123"}, "radio_type": "ezsp"},
         domain=DOMAIN,
@@ -165,7 +165,7 @@ async def test_migrate_matching_port_usb(
     mock_connect_zigpy_app,
 ) -> None:
     """Test automatic migration."""
-    # Setup the config entry
+    # Set up the config entry
     config_entry = MockConfigEntry(
         data={"device": {"path": "/dev/ttyTEST123"}, "radio_type": "ezsp"},
         domain=DOMAIN,
@@ -212,7 +212,7 @@ async def test_migrate_matching_port_config_entry_not_loaded(
     mock_connect_zigpy_app,
 ) -> None:
     """Test automatic migration."""
-    # Setup the config entry
+    # Set up the config entry
     config_entry = MockConfigEntry(
         data={"device": {"path": "/dev/ttyTEST123"}, "radio_type": "ezsp"},
         domain=DOMAIN,
@@ -272,7 +272,7 @@ async def test_migrate_matching_port_retry(
     mock_connect_zigpy_app,
 ) -> None:
     """Test automatic migration."""
-    # Setup the config entry
+    # Set up the config entry
     config_entry = MockConfigEntry(
         data={"device": {"path": "/dev/ttyTEST123"}, "radio_type": "ezsp"},
         domain=DOMAIN,
@@ -329,7 +329,7 @@ async def test_migrate_non_matching_port(
     mock_connect_zigpy_app,
 ) -> None:
     """Test automatic migration."""
-    # Setup the config entry
+    # Set up the config entry
     config_entry = MockConfigEntry(
         data={"device": {"path": "/dev/ttyTEST123"}, "radio_type": "ezsp"},
         domain=DOMAIN,

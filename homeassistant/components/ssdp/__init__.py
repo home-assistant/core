@@ -424,7 +424,7 @@ class Scanner:
             source = fix_ipv6_address_scope_id(source) or source
             self._ssdp_listeners.append(
                 SsdpListener(
-                    async_callback=self._ssdp_listener_callback,
+                    callback=self._ssdp_listener_callback,
                     source=source,
                     target=target,
                     device_tracker=device_tracker,
@@ -458,7 +458,7 @@ class Scanner:
             if _async_headers_match(combined_headers, lower_match_dict)
         ]
 
-    async def _ssdp_listener_callback(
+    def _ssdp_listener_callback(
         self,
         ssdp_device: SsdpDevice,
         dst: DeviceOrServiceType,
@@ -469,15 +469,49 @@ class Scanner:
             "SSDP: ssdp_device: %s, dst: %s, source: %s", ssdp_device, dst, source
         )
 
+        assert self._description_cache
+
         location = ssdp_device.location
-        info_desc = None
+        _, info_desc = self._description_cache.peek_description_dict(location)
+        if info_desc is None:
+            # Fetch info desc in separate task and process from there.
+            self.hass.async_create_task(
+                self._ssdp_listener_process_with_lookup(ssdp_device, dst, source)
+            )
+            return
+
+        # Info desc known, process directly.
+        self._ssdp_listener_process(ssdp_device, dst, source, info_desc)
+
+    async def _ssdp_listener_process_with_lookup(
+        self,
+        ssdp_device: SsdpDevice,
+        dst: DeviceOrServiceType,
+        source: SsdpSource,
+    ) -> None:
+        """Handle a device/service change."""
+        location = ssdp_device.location
+        self._ssdp_listener_process(
+            ssdp_device,
+            dst,
+            source,
+            await self._async_get_description_dict(location),
+        )
+
+    def _ssdp_listener_process(
+        self,
+        ssdp_device: SsdpDevice,
+        dst: DeviceOrServiceType,
+        source: SsdpSource,
+        info_desc: Mapping[str, Any],
+    ) -> None:
+        """Handle a device/service change."""
+        matching_domains: set[str] = set()
         combined_headers = ssdp_device.combined_headers(dst)
         callbacks = self._async_get_matching_callbacks(combined_headers)
-        matching_domains: set[str] = set()
 
         # If there are no changes from a search, do not trigger a config flow
         if source != SsdpSource.SEARCH_ALIVE:
-            info_desc = await self._async_get_description_dict(location) or {}
             matching_domains = self.integration_matchers.async_matching_domains(
                 CaseInsensitiveDict(combined_headers.as_dict(), **info_desc)
             )
@@ -485,21 +519,24 @@ class Scanner:
         if not callbacks and not matching_domains:
             return
 
-        if info_desc is None:
-            info_desc = await self._async_get_description_dict(location) or {}
         discovery_info = discovery_info_from_headers_and_description(
             combined_headers, info_desc
         )
         discovery_info.x_homeassistant_matching_domains = matching_domains
-        ssdp_change = SSDP_SOURCE_SSDP_CHANGE_MAPPING[source]
-        await _async_process_callbacks(callbacks, discovery_info, ssdp_change)
+
+        if callbacks:
+            ssdp_change = SSDP_SOURCE_SSDP_CHANGE_MAPPING[source]
+            self.hass.async_create_task(
+                _async_process_callbacks(callbacks, discovery_info, ssdp_change)
+            )
 
         # Config flows should only be created for alive/update messages from alive devices
-        if ssdp_change == SsdpChange.BYEBYE:
+        if source == SsdpSource.ADVERTISEMENT_BYEBYE:
             return
 
         _LOGGER.debug("Discovery info: %s", discovery_info)
 
+        location = ssdp_device.location
         for domain in matching_domains:
             _LOGGER.debug("Discovered %s at %s", domain, location)
             discovery_flow.async_create_flow(
@@ -514,6 +551,13 @@ class Scanner:
     ) -> Mapping[str, str]:
         """Get description dict."""
         assert self._description_cache is not None
+
+        has_description, description = self._description_cache.peek_description_dict(
+            location
+        )
+        if has_description:
+            return description or {}
+
         return await self._description_cache.async_get_description_dict(location) or {}
 
     async def _async_headers_to_discovery_info(
@@ -524,10 +568,9 @@ class Scanner:
         Building this is a bit expensive so we only do it on demand.
         """
         assert self._description_cache is not None
+
         location = headers["location"]
-        info_desc = (
-            await self._description_cache.async_get_description_dict(location) or {}
-        )
+        info_desc = await self._async_get_description_dict(location)
         return discovery_info_from_headers_and_description(headers, info_desc)
 
     async def async_get_discovery_info_by_udn_st(  # pylint: disable=invalid-name
@@ -663,11 +706,12 @@ async def _async_find_next_available_port(source: AddressTupleVXType) -> int:
     test_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
     for port in range(UPNP_SERVER_MIN_PORT, UPNP_SERVER_MAX_PORT):
+        addr = (source[0],) + (port,) + source[2:]
         try:
-            test_socket.bind(source)
+            test_socket.bind(addr)
             return port
         except OSError:
-            if port == UPNP_SERVER_MAX_PORT:
+            if port == UPNP_SERVER_MAX_PORT - 1:
                 raise
 
     raise RuntimeError("unreachable")

@@ -261,7 +261,10 @@ class RequirementsManager:
         for req in missing:
             if req in self.install_failure_history:
                 _LOGGER.info(
-                    "Multiple attempts to install %s failed, install will be retried after next configuration check or restart",
+                    (
+                        "Multiple attempts to install %s failed, install will be"
+                        " retried after next configuration check or restart"
+                    ),
                     req,
                 )
                 raise RequirementsNotFound(integration, [req])

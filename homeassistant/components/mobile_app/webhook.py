@@ -268,8 +268,10 @@ async def webhook_call_service(
         )
     except (vol.Invalid, ServiceNotFound, Exception) as ex:
         _LOGGER.error(
-            "Error when calling service during mobile_app "
-            "webhook (device name: %s): %s",
+            (
+                "Error when calling service during mobile_app "
+                "webhook (device name: %s): %s"
+            ),
             config_entry.data[ATTR_DEVICE_NAME],
             ex,
         )

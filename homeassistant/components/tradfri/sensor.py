@@ -18,8 +18,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     PERCENTAGE,
-    TIME_HOURS,
     Platform,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry
@@ -98,7 +98,7 @@ SENSOR_DESCRIPTIONS_FAN: tuple[TradfriSensorEntityDescription, ...] = (
         key="filter_life_remaining",
         name="filter time left",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TIME_HOURS,
+        native_unit_of_measurement=UnitOfTime.HOURS,
         icon="mdi:clock-outline",
         value=_get_filter_time_left,
     ),

@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Final
 
 from aiohttp import CookieJar
-from pybravia import BraviaTV
+from pybravia import BraviaClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MAC, Platform
@@ -30,7 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     session = async_create_clientsession(
         hass, cookie_jar=CookieJar(unsafe=True, quote_cookie=False)
     )
-    client = BraviaTV(host, mac, session=session)
+    client = BraviaClient(host, mac, session=session)
     coordinator = BraviaTVCoordinator(
         hass=hass,
         client=client,

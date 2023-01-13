@@ -122,7 +122,7 @@
                     "birth_enable": "Birth bericht inschakelen",
                     "birth_payload": "Birth bericht inhoud",
                     "birth_qos": "Birth bericht QoS",
-                    "birth_retain": "Verbind bericht onthouden",
+                    "birth_retain": "Birth bericht vasthouden",
                     "birth_topic": "Birth bericht topic",
                     "discovery": "Discovery inschakelen",
                     "discovery_prefix": "Discovery-voorvoegsel",

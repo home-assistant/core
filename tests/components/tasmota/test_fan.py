@@ -154,6 +154,33 @@ async def test_sending_mqtt_commands(hass, mqtt_mock, setup_tasmota):
         "tasmota_49A3BC/cmnd/FanSpeed", "3", 0, False
     )
 
+    # Test the last known fan speed is restored
+    # First, get a fan speed update
+    async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/STATE", '{"FanSpeed":3}')
+    state = hass.states.get("fan.tasmota")
+    assert state.state == STATE_ON
+    assert state.attributes["percentage"] == 100
+    mqtt_mock.async_publish.reset_mock()
+
+    # Then turn the fan off and get a fan state update
+    await common.async_turn_off(hass, "fan.tasmota")
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tasmota_49A3BC/cmnd/FanSpeed", "0", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/RESULT", '{"FanSpeed":0}')
+    state = hass.states.get("fan.tasmota")
+    assert state.state == STATE_OFF
+    assert state.attributes["percentage"] == 0
+    mqtt_mock.async_publish.reset_mock()
+
+    # Finally, turn the fan on again and verify MQTT message is sent with last known speed
+    await common.async_turn_on(hass, "fan.tasmota")
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tasmota_49A3BC/cmnd/FanSpeed", "3", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+
 
 async def test_invalid_fan_speed_percentage(hass, mqtt_mock, setup_tasmota):
     """Test the sending MQTT commands."""

@@ -19,7 +19,10 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 _LOGGER = logging.getLogger(__name__)
 
 DESCRIPTION_NORMALIZED = "Voltage normalized. Everything is working as intended."
-DESCRIPTION_UNDER_VOLTAGE = "Under-voltage was detected. Consider getting a uninterruptible power supply for your Raspberry Pi."
+DESCRIPTION_UNDER_VOLTAGE = (
+    "Under-voltage was detected. Consider getting a uninterruptible power supply for"
+    " your Raspberry Pi."
+)
 
 
 async def async_setup_entry(

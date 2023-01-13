@@ -110,7 +110,8 @@ def find_hsbk(hass: HomeAssistant, **kwargs: Any) -> list[float | int | None] | 
 
     if ATTR_KELVIN in kwargs:
         _LOGGER.warning(
-            "The 'kelvin' parameter is deprecated. Please use 'color_temp_kelvin' for all service calls"
+            "The 'kelvin' parameter is deprecated. Please use 'color_temp_kelvin' for"
+            " all service calls"
         )
         kelvin = kwargs.pop(ATTR_KELVIN)
         saturation = 0

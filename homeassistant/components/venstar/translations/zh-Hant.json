@@ -19,5 +19,18 @@
                 "title": "\u9023\u7dda\u81f3 Venstar \u6eab\u63a7\u5668"
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "schedule_part": {
+                "state": {
+                    "day": "\u65e5\u9593",
+                    "evening": "\u508d\u665a",
+                    "inactive": "\u9592\u7f6e",
+                    "morning": "\u6e05\u6668",
+                    "night": "\u591c\u665a"
+                }
+            }
+        }
     }
 }

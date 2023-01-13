@@ -11,15 +11,15 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ENERGY_WATT_HOUR,
     PERCENTAGE,
     POWER_VOLT_AMPERE_REACTIVE,
-    TEMP_CELSIUS,
     UnitOfApparentPower,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
+    UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPower,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
@@ -80,21 +80,21 @@ INVERTER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="energy_day",
         name="Energy day",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="energy_year",
         name="Energy year",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="energy_total",
         name="Energy total",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -255,7 +255,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="energy_real_ac_minus",
         name="Energy real AC minus",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
@@ -263,7 +263,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="energy_real_ac_plus",
         name="Energy real AC plus",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
@@ -271,14 +271,14 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="energy_real_consumed",
         name="Energy real consumed",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="energy_real_produced",
         name="Energy real produced",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -478,7 +478,7 @@ OHMPILOT_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="energy_real_ac_consumed",
         name="Energy consumed",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -492,7 +492,7 @@ OHMPILOT_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="temperature_channel_1",
         name="Temperature channel 1",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -517,7 +517,7 @@ POWER_FLOW_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="energy_day",
         name="Energy day",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
@@ -525,7 +525,7 @@ POWER_FLOW_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="energy_year",
         name="Energy year",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
@@ -533,7 +533,7 @@ POWER_FLOW_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="energy_total",
         name="Energy total",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
@@ -591,13 +591,13 @@ STORAGE_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="capacity_maximum",
         name="Capacity maximum",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="capacity_designed",
         name="Capacity designed",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
@@ -644,7 +644,7 @@ STORAGE_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="temperature_cell",
         name="Temperature cell",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),

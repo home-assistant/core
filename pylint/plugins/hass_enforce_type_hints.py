@@ -375,7 +375,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 0: "HomeAssistant",
                 1: "ConfigEntry",
             },
-            return_type=_Special.UNDEFINED,
+            return_type="Mapping[str, Any]",
         ),
         TypeHintMatch(
             function_name="async_get_device_diagnostics",
@@ -384,7 +384,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 1: "ConfigEntry",
                 2: "DeviceEntry",
             },
-            return_type=_Special.UNDEFINED,
+            return_type="Mapping[str, Any]",
         ),
     ],
     "notify": [
@@ -1441,7 +1441,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="set_humidity",
-                    arg_types={1: "str"},
+                    arg_types={1: "int"},
                     return_type=None,
                     has_async_counterpart=True,
                 ),

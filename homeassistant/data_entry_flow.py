@@ -10,6 +10,7 @@ import logging
 from types import MappingProxyType
 from typing import Any, TypedDict
 
+from typing_extensions import Required
 import voluptuous as vol
 
 from .backports.enum import StrEnum
@@ -91,8 +92,8 @@ class FlowResult(TypedDict, total=False):
     description: str | None
     errors: dict[str, str] | None
     extra: str
-    flow_id: str
-    handler: str
+    flow_id: Required[str]
+    handler: Required[str]
     last_step: bool | None
     menu_options: list[str] | dict[str, str]
     options: Mapping[str, Any]
@@ -308,7 +309,8 @@ class FlowManager(abc.ABC):
                 FlowResultType.SHOW_PROGRESS_DONE,
             ):
                 raise ValueError(
-                    "Show progress can only transition to show progress or show progress done."
+                    "Show progress can only transition to show progress or show"
+                    " progress done."
                 )
 
             # If the result has changed from last result, fire event to update
@@ -386,8 +388,10 @@ class FlowManager(abc.ABC):
         if not isinstance(result["type"], FlowResultType):
             result["type"] = FlowResultType(result["type"])  # type: ignore[unreachable]
             report(
-                "does not use FlowResultType enum for data entry flow result type. "
-                "This is deprecated and will stop working in Home Assistant 2022.9",
+                (
+                    "does not use FlowResultType enum for data entry flow result type. "
+                    "This is deprecated and will stop working in Home Assistant 2022.9"
+                ),
                 error_if_core=False,
             )
 

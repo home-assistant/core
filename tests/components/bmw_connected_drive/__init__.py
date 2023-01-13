@@ -3,8 +3,10 @@
 import json
 from pathlib import Path
 
-from bimmer_connected.account import MyBMWAccount
-from bimmer_connected.api.utils import log_to_to_file
+from bimmer_connected.api.authentication import MyBMWAuthentication
+from bimmer_connected.const import VEHICLE_STATE_URL, VEHICLES_URL
+import httpx
+import respx
 
 from homeassistant import config_entries
 from homeassistant.components.bmw_connected_drive.const import (
@@ -14,7 +16,6 @@ from homeassistant.components.bmw_connected_drive.const import (
 )
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry, get_fixture_path, load_fixture
 
@@ -40,66 +41,46 @@ FIXTURE_CONFIG_ENTRY = {
     "unique_id": f"{FIXTURE_USER_INPUT[CONF_REGION]}-{FIXTURE_USER_INPUT[CONF_REGION]}",
 }
 
+FIXTURE_PATH = Path(get_fixture_path("", integration=BMW_DOMAIN))
 
-async def mock_vehicles_from_fixture(account: MyBMWAccount) -> None:
-    """Load MyBMWVehicle from fixtures and add them to the account."""
 
-    fixture_path = Path(get_fixture_path("", integration=BMW_DOMAIN))
+def vehicles_sideeffect(request: httpx.Request) -> httpx.Response:
+    """Return /vehicles response based on x-user-agent."""
+    x_user_agent = request.headers.get("x-user-agent", "").split(";")
+    brand = x_user_agent[1]
+    vehicles = []
+    for vehicle_file in FIXTURE_PATH.rglob(f"vehicles_v2_{brand}_*.json"):
+        vehicles.extend(json.loads(load_fixture(vehicle_file, integration=BMW_DOMAIN)))
+    return httpx.Response(200, json=vehicles)
 
-    fixture_vehicles_bmw = list(fixture_path.rglob("vehicles_v2_bmw_*.json"))
-    fixture_vehicles_mini = list(fixture_path.rglob("vehicles_v2_mini_*.json"))
 
-    # Load vehicle base lists as provided by vehicles/v2 API
-    vehicles = {
-        "bmw": [
-            vehicle
-            for bmw_file in fixture_vehicles_bmw
-            for vehicle in json.loads(load_fixture(bmw_file, integration=BMW_DOMAIN))
-        ],
-        "mini": [
-            vehicle
-            for mini_file in fixture_vehicles_mini
-            for vehicle in json.loads(load_fixture(mini_file, integration=BMW_DOMAIN))
-        ],
-    }
-    fetched_at = utcnow()
-
-    # simulate storing fingerprints
-    if account.config.log_response_path:
-        for brand in ["bmw", "mini"]:
-            log_to_to_file(
-                json.dumps(vehicles[brand]),
-                account.config.log_response_path,
-                f"vehicles_v2_{brand}",
-            )
-
-    # Create a vehicle with base + specific state as provided by state/VIN API
-    for vehicle_base in [vehicle for brand in vehicles.values() for vehicle in brand]:
-        vehicle_state_path = (
-            Path("vehicles")
-            / vehicle_base["attributes"]["bodyType"]
-            / f"state_{vehicle_base['vin']}_0.json"
+def vehicle_state_sideeffect(request: httpx.Request) -> httpx.Response:
+    """Return /vehicles/state response."""
+    state_file = next(FIXTURE_PATH.rglob(f"state_{request.headers['bmw-vin']}_*.json"))
+    try:
+        return httpx.Response(
+            200, json=json.loads(load_fixture(state_file, integration=BMW_DOMAIN))
         )
-        vehicle_state = json.loads(
-            load_fixture(
-                vehicle_state_path,
-                integration=BMW_DOMAIN,
-            )
-        )
+    except KeyError:
+        return httpx.Response(404)
 
-        account.add_vehicle(
-            vehicle_base,
-            vehicle_state,
-            fetched_at,
-        )
 
-        # simulate storing fingerprints
-        if account.config.log_response_path:
-            log_to_to_file(
-                json.dumps(vehicle_state),
-                account.config.log_response_path,
-                f"state_{vehicle_base['vin']}",
-            )
+def mock_vehicles() -> respx.Router:
+    """Return mocked adapter for vehicles."""
+    router = respx.mock(assert_all_called=False)
+
+    # Get vehicle list
+    router.get(VEHICLES_URL).mock(side_effect=vehicles_sideeffect)
+
+    # Get vehicle state
+    router.get(VEHICLE_STATE_URL).mock(side_effect=vehicle_state_sideeffect)
+
+    return router
+
+
+async def mock_login(auth: MyBMWAuthentication) -> None:
+    """Mock a successful login."""
+    auth.access_token = "SOME_ACCESS_TOKEN"
 
 
 async def setup_mocked_integration(hass: HomeAssistant) -> MockConfigEntry:

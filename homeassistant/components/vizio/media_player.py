@@ -32,8 +32,8 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
+from . import VizioAppsDataUpdateCoordinator
 from .const import (
     CONF_ADDITIONAL_CONFIGS,
     CONF_APPS,
@@ -136,7 +136,7 @@ class VizioDevice(MediaPlayerEntity):
         device: VizioAsync,
         name: str,
         device_class: MediaPlayerDeviceClass,
-        apps_coordinator: DataUpdateCoordinator,
+        apps_coordinator: VizioAppsDataUpdateCoordinator,
     ) -> None:
         """Initialize Vizio device."""
         self._config_entry = config_entry
@@ -264,7 +264,9 @@ class VizioDevice(MediaPlayerEntity):
 
         # Create list of available known apps from known app list after
         # filtering by CONF_INCLUDE/CONF_EXCLUDE
-        self._available_apps = self._apps_list([app["name"] for app in self._all_apps])
+        self._available_apps = self._apps_list(
+            [app["name"] for app in self._all_apps or ()]
+        )
 
         self._current_app_config = await self._device.get_current_app_config(
             log_api_exception=False
@@ -272,7 +274,7 @@ class VizioDevice(MediaPlayerEntity):
 
         self._attr_app_name = find_app_name(
             self._current_app_config,
-            [APP_HOME, *self._all_apps, *self._additional_app_configs],
+            [APP_HOME, *(self._all_apps or ()), *self._additional_app_configs],
         )
 
         if self._attr_app_name == NO_APP_RUNNING:

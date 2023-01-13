@@ -773,7 +773,7 @@ class CameraMjpegStream(CameraView):
             # Compose camera stream from stills
             interval = float(interval_str)
             if interval < MIN_STREAM_INTERVAL:
-                raise ValueError(f"Stream interval must be be > {MIN_STREAM_INTERVAL}")
+                raise ValueError(f"Stream interval must be > {MIN_STREAM_INTERVAL}")
             return await camera.handle_async_still_stream(request, interval)
         except ValueError as err:
             raise web.HTTPBadRequest() from err
@@ -836,7 +836,10 @@ async def ws_camera_web_rtc_offer(
         connection.send_error(
             msg["id"],
             "web_rtc_offer_failed",
-            f"Camera does not support WebRTC, frontend_stream_type={camera.frontend_stream_type}",
+            (
+                "Camera does not support WebRTC,"
+                f" frontend_stream_type={camera.frontend_stream_type}"
+            ),
         )
         return
     try:

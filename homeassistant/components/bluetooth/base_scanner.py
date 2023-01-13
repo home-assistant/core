@@ -4,6 +4,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
+from dataclasses import dataclass
 import datetime
 from datetime import timedelta
 import logging
@@ -29,7 +30,6 @@ from homeassistant.util.dt import monotonic_time_coarse
 from . import models
 from .const import (
     CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
-    FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
     SCANNER_WATCHDOG_INTERVAL,
     SCANNER_WATCHDOG_TIMEOUT,
 )
@@ -39,11 +39,21 @@ MONOTONIC_TIME: Final = monotonic_time_coarse
 _LOGGER = logging.getLogger(__name__)
 
 
+@dataclass
+class BluetoothScannerDevice:
+    """Data for a bluetooth device from a given scanner."""
+
+    scanner: BaseHaScanner
+    ble_device: BLEDevice
+    advertisement: AdvertisementData
+
+
 class BaseHaScanner(ABC):
     """Base class for Ha Scanners."""
 
     __slots__ = (
         "hass",
+        "adapter",
         "connectable",
         "source",
         "connector",
@@ -68,6 +78,7 @@ class BaseHaScanner(ABC):
         self.source = source
         self.connector = connector
         self._connecting = 0
+        self.adapter = adapter
         self.name = adapter_human_name(adapter, source) if adapter != source else source
         self.scanning = True
         self._last_detection = 0.0
@@ -101,14 +112,19 @@ class BaseHaScanner(ABC):
         )
         return time_since_last_detection > SCANNER_WATCHDOG_TIMEOUT
 
-    async def _async_scanner_watchdog(self, now: datetime.datetime) -> None:
+    @hass_callback
+    def _async_scanner_watchdog(self, now: datetime.datetime) -> None:
         """Check if the scanner is running.
 
-        Override this method if you need to do something else when the watchdog is triggered.
+        Override this method if you need to do something else when the watchdog
+        is triggered.
         """
         if self._async_watchdog_triggered():
             _LOGGER.info(
-                "%s: Bluetooth scanner has gone quiet for %ss, check logs on the scanner device for more information",
+                (
+                    "%s: Bluetooth scanner has gone quiet for %ss, check logs on the"
+                    " scanner device for more information"
+                ),
                 self.name,
                 SCANNER_WATCHDOG_TIMEOUT,
             )
@@ -138,6 +154,7 @@ class BaseHaScanner(ABC):
 
     async def async_diagnostics(self) -> dict[str, Any]:
         """Return diagnostic information about the scanner."""
+        device_adv_datas = self.discovered_devices_and_advertisement_data.values()
         return {
             "name": self.name,
             "start_time": self._start_time,
@@ -154,7 +171,7 @@ class BaseHaScanner(ABC):
                     "advertisement_data": device_adv[1],
                     "details": device_adv[0].details,
                 }
-                for device_adv in self.discovered_devices_and_advertisement_data.values()
+                for device_adv in device_adv_datas
             ],
         }
 
@@ -177,7 +194,7 @@ class BaseHaRemoteScanner(BaseHaScanner):
         scanner_id: str,
         name: str,
         new_info_callback: Callable[[BluetoothServiceInfoBleak], None],
-        connector: HaBluetoothConnector,
+        connector: HaBluetoothConnector | None,
         connectable: bool,
     ) -> None:
         """Initialize the scanner."""
@@ -189,13 +206,11 @@ class BaseHaRemoteScanner(BaseHaScanner):
         self._discovered_device_timestamps: dict[str, float] = {}
         self.connectable = connectable
         self._details: dict[str, str | HaBluetoothConnector] = {"source": scanner_id}
-        self._expire_seconds = FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
+        # Scanners only care about connectable devices. The manager
+        # will handle taking care of availability for non-connectable devices
+        self._expire_seconds = CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
         assert models.MANAGER is not None
         self._storage = models.MANAGER.storage
-        if connectable:
-            self._expire_seconds = (
-                CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
-            )
 
     @hass_callback
     def async_setup(self) -> CALLBACK_TYPE:
@@ -252,9 +267,10 @@ class BaseHaRemoteScanner(BaseHaScanner):
     @property
     def discovered_devices(self) -> list[BLEDevice]:
         """Return a list of discovered devices."""
+        device_adv_datas = self._discovered_device_advertisement_datas.values()
         return [
             device_advertisement_data[0]
-            for device_advertisement_data in self._discovered_device_advertisement_datas.values()
+            for device_advertisement_data in device_adv_datas
         ]
 
     @property
@@ -291,17 +307,26 @@ class BaseHaRemoteScanner(BaseHaScanner):
                 and len(prev_device.name) > len(local_name)
             ):
                 local_name = prev_device.name
-            if prev_advertisement.service_uuids:
+            if service_uuids and service_uuids != prev_advertisement.service_uuids:
                 service_uuids = list(
                     set(service_uuids + prev_advertisement.service_uuids)
                 )
-            if prev_advertisement.service_data:
+            elif not service_uuids:
+                service_uuids = prev_advertisement.service_uuids
+            if service_data and service_data != prev_advertisement.service_data:
                 service_data = {**prev_advertisement.service_data, **service_data}
-            if prev_advertisement.manufacturer_data:
+            elif not service_data:
+                service_data = prev_advertisement.service_data
+            if (
+                manufacturer_data
+                and manufacturer_data != prev_advertisement.manufacturer_data
+            ):
                 manufacturer_data = {
                     **prev_advertisement.manufacturer_data,
                     **manufacturer_data,
                 }
+            elif not manufacturer_data:
+                manufacturer_data = prev_advertisement.manufacturer_data
 
         advertisement_data = AdvertisementData(
             local_name=None if local_name == "" else local_name,

@@ -59,8 +59,10 @@ async def async_setup_scanner(
                 data = GPS_JSON_PAYLOAD_SCHEMA(json.loads(msg.payload))
             except vol.MultipleInvalid:
                 _LOGGER.error(
-                    "Skipping update for following data "
-                    "because of missing or malformatted data: %s",
+                    (
+                        "Skipping update for following data "
+                        "because of missing or malformatted data: %s"
+                    ),
                     msg.payload,
                 )
                 return

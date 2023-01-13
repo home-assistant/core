@@ -94,7 +94,10 @@ async def async_attach_trigger(
 
         if not (zone_state := hass.states.get(zone_entity_id)):
             _LOGGER.warning(
-                "Automation '%s' is referencing non-existing zone '%s' in a zone trigger",
+                (
+                    "Automation '%s' is referencing non-existing zone '%s' in a zone"
+                    " trigger"
+                ),
                 trigger_info["name"],
                 zone_entity_id,
             )

@@ -48,9 +48,6 @@ async def test_gps_sensor(
     message_string = f"1;1;1;0;49;{new_coords},{altitude}\n"
 
     receive_message(message_string)
-    # the integration adds multiple jobs to do the update currently
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -144,9 +141,6 @@ async def test_temperature_sensor(
     message_string = f"1;1;1;0;0;{temperature}\n"
 
     receive_message(message_string)
-    # the integration adds multiple jobs to do the update currently
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)

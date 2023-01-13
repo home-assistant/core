@@ -15,7 +15,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_MONITORED_CONDITIONS,
@@ -45,6 +44,7 @@ from .const import (
     DOMAIN,
     MANUFACTURER_URL,
 )
+from .coordinator import ZamgDataUpdateCoordinator
 
 _DType = Union[type[int], type[float], type[str]]
 
@@ -190,9 +190,7 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
 
 SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
-API_FIELDS: dict[str, tuple[str, _DType]] = {
-    desc.para_name: (desc.key, desc.dtype) for desc in SENSOR_TYPES
-}
+API_FIELDS: list[str] = [desc.para_name for desc in SENSOR_TYPES]
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
     {
@@ -219,10 +217,12 @@ async def async_setup_platform(
 ) -> None:
     """Set up the ZAMG sensor platform."""
     # trigger import flow
-    await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=config,
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
+        )
     )
 
 
@@ -245,8 +245,12 @@ class ZamgSensor(CoordinatorEntity, SensorEntity):
     entity_description: ZamgSensorEntityDescription
 
     def __init__(
-        self, coordinator, name, station_id, description: ZamgSensorEntityDescription
-    ):
+        self,
+        coordinator: ZamgDataUpdateCoordinator,
+        name: str,
+        station_id: str,
+        description: ZamgSensorEntityDescription,
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
@@ -260,21 +264,24 @@ class ZamgSensor(CoordinatorEntity, SensorEntity):
             configuration_url=MANUFACTURER_URL,
             name=coordinator.name,
         )
+        coordinator.api_fields = API_FIELDS
 
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self.coordinator.data[self.station_id].get(
-            self.entity_description.para_name
-        )["data"]
+        try:
+            return self.coordinator.data[self.station_id][
+                self.entity_description.para_name
+            ]["data"]
+        except (KeyError):
+            return None
 
     @property
     def extra_state_attributes(self) -> Mapping[str, str]:
         """Return the state attributes."""
-        update_time = self.coordinator.data.get("last_update", "")
+        if (update_time := self.coordinator.data["last_update"]) is not None:
+            update_time = update_time.isoformat()
         return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-            ATTR_STATION: self.coordinator.data.get("Name"),
-            CONF_STATION_ID: self.station_id,
-            ATTR_UPDATED: update_time.isoformat(),
+            ATTR_STATION: self.coordinator.data["Name"],
+            ATTR_UPDATED: update_time,
         }

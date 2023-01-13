@@ -3,16 +3,24 @@ from __future__ import annotations
 
 from datetime import datetime, time, timedelta
 import logging
-from typing import Any
+from typing import Any, Optional
 
 import here_routing
-from here_routing import HERERoutingApi, Return, RoutingMode, Spans, TransportMode
+from here_routing import (
+    HERERoutingApi,
+    HERERoutingTooManyRequestsError,
+    Return,
+    RoutingMode,
+    Spans,
+    TransportMode,
+)
 import here_transit
 from here_transit import (
     HERETransitApi,
     HERETransitConnectionError,
     HERETransitDepartureArrivalTooCloseError,
     HERETransitNoRouteFoundError,
+    HERETransitTooManyRequestsError,
 )
 import voluptuous as vol
 
@@ -27,10 +35,12 @@ from homeassistant.util.unit_conversion import DistanceConverter
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, ROUTE_MODE_FASTEST
 from .model import HERETravelTimeConfig, HERETravelTimeData
 
+BACKOFF_MULTIPLIER = 1.1
+
 _LOGGER = logging.getLogger(__name__)
 
 
-class HERERoutingDataUpdateCoordinator(DataUpdateCoordinator):
+class HERERoutingDataUpdateCoordinator(DataUpdateCoordinator[HERETravelTimeData]):
     """here_routing DataUpdateCoordinator."""
 
     def __init__(
@@ -49,7 +59,7 @@ class HERERoutingDataUpdateCoordinator(DataUpdateCoordinator):
         self._api = HERERoutingApi(api_key)
         self.config = config
 
-    async def _async_update_data(self) -> HERETravelTimeData | None:
+    async def _async_update_data(self) -> HERETravelTimeData:
         """Get the latest data from the HERE Routing API."""
         origin, destination, arrival, departure = prepare_parameters(
             self.hass, self.config
@@ -62,7 +72,10 @@ class HERERoutingDataUpdateCoordinator(DataUpdateCoordinator):
         )
 
         _LOGGER.debug(
-            "Requesting route for origin: %s, destination: %s, route_mode: %s, mode: %s, arrival: %s, departure: %s",
+            (
+                "Requesting route for origin: %s, destination: %s, route_mode: %s,"
+                " mode: %s, arrival: %s, departure: %s"
+            ),
             origin,
             destination,
             route_mode,
@@ -71,19 +84,35 @@ class HERERoutingDataUpdateCoordinator(DataUpdateCoordinator):
             departure,
         )
 
-        response = await self._api.route(
-            transport_mode=TransportMode(self.config.travel_mode),
-            origin=here_routing.Place(origin[0], origin[1]),
-            destination=here_routing.Place(destination[0], destination[1]),
-            routing_mode=route_mode,
-            arrival_time=arrival,
-            departure_time=departure,
-            return_values=[Return.POLYINE, Return.SUMMARY],
-            spans=[Spans.NAMES],
-        )
-
+        try:
+            response = await self._api.route(
+                transport_mode=TransportMode(self.config.travel_mode),
+                origin=here_routing.Place(origin[0], origin[1]),
+                destination=here_routing.Place(destination[0], destination[1]),
+                routing_mode=route_mode,
+                arrival_time=arrival,
+                departure_time=departure,
+                return_values=[Return.POLYINE, Return.SUMMARY],
+                spans=[Spans.NAMES],
+            )
+        except HERERoutingTooManyRequestsError as error:
+            assert self.update_interval is not None
+            _LOGGER.debug(
+                "Rate limit has been reached. Increasing update interval to %s",
+                self.update_interval.total_seconds() * BACKOFF_MULTIPLIER,
+            )
+            self.update_interval = timedelta(
+                seconds=self.update_interval.total_seconds() * BACKOFF_MULTIPLIER
+            )
+            raise UpdateFailed("Rate limit has been reached") from error
         _LOGGER.debug("Raw response is: %s", response)
 
+        if self.update_interval != timedelta(seconds=DEFAULT_SCAN_INTERVAL):
+            _LOGGER.debug(
+                "Resetting update interval to %s",
+                DEFAULT_SCAN_INTERVAL,
+            )
+            self.update_interval = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
         return self._parse_routing_response(response)
 
     def _parse_routing_response(self, response: dict[str, Any]) -> HERETravelTimeData:
@@ -115,7 +144,9 @@ class HERERoutingDataUpdateCoordinator(DataUpdateCoordinator):
         )
 
 
-class HERETransitDataUpdateCoordinator(DataUpdateCoordinator):
+class HERETransitDataUpdateCoordinator(
+    DataUpdateCoordinator[Optional[HERETravelTimeData]]
+):
     """HERETravelTime DataUpdateCoordinator."""
 
     def __init__(
@@ -141,7 +172,10 @@ class HERETransitDataUpdateCoordinator(DataUpdateCoordinator):
         )
 
         _LOGGER.debug(
-            "Requesting transit route for origin: %s, destination: %s, arrival: %s, departure: %s",
+            (
+                "Requesting transit route for origin: %s, destination: %s, arrival: %s,"
+                " departure: %s"
+            ),
             origin,
             destination,
             arrival,
@@ -160,15 +194,30 @@ class HERETransitDataUpdateCoordinator(DataUpdateCoordinator):
                     here_transit.Return.TRAVEL_SUMMARY,
                 ],
             )
-
-            _LOGGER.debug("Raw response is: %s", response)
-
-            return self._parse_transit_response(response)
+        except HERETransitTooManyRequestsError as error:
+            assert self.update_interval is not None
+            _LOGGER.debug(
+                "Rate limit has been reached. Increasing update interval to %s",
+                self.update_interval.total_seconds() * BACKOFF_MULTIPLIER,
+            )
+            self.update_interval = timedelta(
+                seconds=self.update_interval.total_seconds() * BACKOFF_MULTIPLIER
+            )
+            raise UpdateFailed("Rate limit has been reached") from error
         except HERETransitDepartureArrivalTooCloseError:
             _LOGGER.debug("Ignoring HERETransitDepartureArrivalTooCloseError")
             return None
         except (HERETransitConnectionError, HERETransitNoRouteFoundError) as error:
             raise UpdateFailed from error
+
+        _LOGGER.debug("Raw response is: %s", response)
+        if self.update_interval != timedelta(seconds=DEFAULT_SCAN_INTERVAL):
+            _LOGGER.debug(
+                "Resetting update interval to %s",
+                DEFAULT_SCAN_INTERVAL,
+            )
+            self.update_interval = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
+        return self._parse_transit_response(response)
 
     def _parse_transit_response(self, response: dict[str, Any]) -> HERETravelTimeData:
         """Parse the transit response dict to a HERETravelTimeData."""

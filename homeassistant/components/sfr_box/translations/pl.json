@@ -1,0 +1,46 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP"
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "line_status": {
+                "state": {
+                    "loss_of_power": "utrata zasilania",
+                    "loss_of_signal": "utrata sygna\u0142u",
+                    "loss_of_signal_quality": "utrata jako\u015bci sygna\u0142u",
+                    "no_defect": "brak uszkodze\u0144",
+                    "of_frame": "ramka",
+                    "unknown": "nieznany"
+                }
+            },
+            "training": {
+                "state": {
+                    "g_922_channel_analysis": "analiza kana\u0142u G.922",
+                    "g_992_message_exchange": "wymiana komunikat\u00f3w G.992",
+                    "g_992_started": "G.992 rozpocz\u0119ty",
+                    "g_993_channel_analysis": "analiza kana\u0142u G.993",
+                    "g_993_message_exchange": "wymiana komunikat\u00f3w G.993",
+                    "g_993_started": "G.993 rozpocz\u0119ty",
+                    "g_994_training": "trenowanie G.994",
+                    "idle": "bezczynny",
+                    "showtime": "showtime",
+                    "unknown": "nieznany"
+                }
+            }
+        }
+    }
+}
