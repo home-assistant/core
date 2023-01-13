@@ -60,12 +60,8 @@ async def async_setup_entry(hass, config_entry):
     async def async_update_data():
         datas = {}
         datas["system_stats"] = await hass.async_add_executor_job(api.get_system_stats)
-        datas["system_health"] = await hass.async_add_executor_job(
-            api.get_system_health
-        )
-        datas["smart_drive_health"] = await hass.async_add_executor_job(
-            api.get_smart_disk_health
-        )
+        datas["system_health"] = await hass.async_add_executor_job(api.get_system_health)
+        datas["smart_drive_health"] = await hass.async_add_executor_job(api.get_smart_disk_health)
         datas["volumes"] = await hass.async_add_executor_job(api.get_volumes)
         datas["bandwidth"] = await hass.async_add_executor_job(api.get_bandwidth)
         return datas
