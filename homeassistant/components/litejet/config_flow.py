@@ -61,10 +61,10 @@ class LiteJetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 system = await pylitejet.open(port)
-                await system.close()
             except SerialException:
                 errors[CONF_PORT] = "open_failed"
             else:
+                await system.close()
                 return self.async_create_entry(
                     title=port,
                     data={CONF_PORT: port},
