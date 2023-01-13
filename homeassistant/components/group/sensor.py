@@ -40,6 +40,7 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
 from . import GroupEntity
+from .const import CONF_IGNORE_NON_NUMERIC
 
 DEFAULT_NAME = "Sensor Group"
 CONF_ALL = "all"
@@ -77,7 +78,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
         vol.Required(CONF_TYPE): vol.All(cv.string, vol.In(SENSOR_TYPES.values())),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Optional(CONF_ALL, default=False): cv.boolean,
+        vol.Optional(CONF_IGNORE_NON_NUMERIC, default=True): cv.boolean,
         vol.Optional(CONF_ROUND_DIGITS, default=2): vol.Coerce(int),
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): str,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
@@ -101,7 +102,7 @@ async def async_setup_platform(
                 config.get(CONF_UNIQUE_ID),
                 config[CONF_NAME],
                 config[CONF_ENTITIES],
-                config[CONF_ALL],
+                config[CONF_IGNORE_NON_NUMERIC],
                 config[CONF_TYPE],
                 config[CONF_ROUND_DIGITS],
                 config.get(CONF_UNIT_OF_MEASUREMENT),
@@ -128,7 +129,7 @@ async def async_setup_entry(
                 config_entry.entry_id,
                 config_entry.title,
                 entities,
-                config_entry.options[CONF_ALL],
+                config_entry.options[CONF_IGNORE_NON_NUMERIC],
                 config_entry.options[CONF_TYPE],
                 int(config_entry.options.get(CONF_ROUND_DIGITS, 2)),
                 None,
@@ -280,7 +281,7 @@ class SensorGroup(GroupEntity, SensorEntity):
             self._attr_name = f"{DEFAULT_NAME} {sensor_type}".capitalize()
         self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
         self._attr_unique_id = unique_id
-        self.mode = all if mode else any
+        self.mode = all if mode is False else any
         self._state_calc: Callable[
             [list[tuple[str, float, State]], int],
             tuple[dict[str, str | None], float | None],

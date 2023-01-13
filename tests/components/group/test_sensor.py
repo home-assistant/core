@@ -296,7 +296,7 @@ async def test_sensor_require_all_states(hass: HomeAssistant) -> None:
             "platform": GROUP_DOMAIN,
             "name": "test_sum",
             "type": "sum",
-            "all": True,
+            "ignore_non_numeric": False,
             "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
             "unique_id": "very_unique_id_sum_sensor",
             "state_class": SensorStateClass.MEASUREMENT,

@@ -21,7 +21,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
 
 from . import DOMAIN
 from .binary_sensor import CONF_ALL
-from .const import CONF_HIDE_MEMBERS
+from .const import CONF_HIDE_MEMBERS, CONF_IGNORE_NON_NUMERIC
 from .sensor import CONF_ROUND_DIGITS
 
 _STATISTIC_MEASURES = [
@@ -79,13 +79,13 @@ BINARY_SENSOR_CONFIG_SCHEMA = basic_group_config_schema("binary_sensor").extend(
 )
 
 SENSOR_CONFIG_EXTENDS = {
-    vol.Required(CONF_ALL, default=False): selector.BooleanSelector(),
+    vol.Required(CONF_IGNORE_NON_NUMERIC, default=True): selector.BooleanSelector(),
     vol.Required(CONF_TYPE): selector.SelectSelector(
         selector.SelectSelectorConfig(options=_STATISTIC_MEASURES),
     ),
 }
 SENSOR_OPTIONS = {
-    vol.Required(CONF_ALL, default=False): selector.BooleanSelector(),
+    vol.Required(CONF_IGNORE_NON_NUMERIC, default=True): selector.BooleanSelector(),
     vol.Required(CONF_TYPE): selector.SelectSelector(
         selector.SelectSelectorConfig(options=_STATISTIC_MEASURES),
     ),

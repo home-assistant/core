@@ -68,9 +68,9 @@
       },
       "sensor": {
         "title": "[%key:component::group::config::step::user::title%]",
-        "description": "If \"all entities\" is enabled, the group's state is only calculated if all members have values. If \"all entities\" is disabled, calculation will be done on available values.",
+        "description": "If \"ignore non-numeric\" is enabled, the group's state is calculated if at least one member has a numerical value. If \"ignore non-numeric\" is disabled, the group's state is calculated only be if all group members have numerical values.",
         "data": {
-          "all": "All entities",
+          "ignore_non_numeric": "Ignore non-numeric",
           "entities": "Members",
           "hide_members": "Hide members",
           "name": "Name",
@@ -134,9 +134,9 @@
         }
       },
       "sensor": {
-        "description": "[%key:component::group::config::step::binary_sensor::description%]",
+        "description": "[%key:component::group::config::step::sensor::description%]",
         "data": {
-          "all": "[%key:component::group::config::step::sensor::data::all%]",
+          "ignore_non_numeric": "[%key:component::group::config::step::sensor::data::ignore_non_numeric%]",
           "entities": "[%key:component::group::config::step::sensor::data::entities%]",
           "hide_members": "[%key:component::group::config::step::sensor::data::hide_members%]",
           "type": "[%key:component::group::config::step::sensor::data::type%]",
