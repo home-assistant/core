@@ -4,10 +4,9 @@ from unittest.mock import AsyncMock, Mock, patch
 from homeassistant.components import axis
 from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN
 from homeassistant.const import CONF_MAC
-from homeassistant.helpers.device_registry import format_mac
 from homeassistant.setup import async_setup_component
 
-from .test_device import MAC, setup_axis_integration
+from .test_device import setup_axis_integration
 
 from tests.common import MockConfigEntry
 
@@ -20,9 +19,9 @@ async def test_setup_no_config(hass):
 
 async def test_setup_entry(hass):
     """Test successful setup of entry."""
-    await setup_axis_integration(hass)
+    config_entry = await setup_axis_integration(hass)
     assert len(hass.data[AXIS_DOMAIN]) == 1
-    assert format_mac(MAC) in hass.data[AXIS_DOMAIN]
+    assert config_entry.entry_id in hass.data[AXIS_DOMAIN]
 
 
 async def test_setup_entry_fails(hass):
@@ -44,10 +43,9 @@ async def test_setup_entry_fails(hass):
 async def test_unload_entry(hass):
     """Test successful unload of entry."""
     config_entry = await setup_axis_integration(hass)
-    device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
     assert hass.data[AXIS_DOMAIN]
 
-    assert await hass.config_entries.async_unload(device.config_entry.entry_id)
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
     assert not hass.data[AXIS_DOMAIN]
 
 
