@@ -55,10 +55,10 @@ from .services import async_setup_services, async_unload_services
 from .util import _async_cleanup_registry_entries
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            vol.All(
-                cv.deprecated(DOMAIN),
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
                 {
                     vol.Required(CONF_HOST): cv.url,
                     vol.Required(CONF_USERNAME): cv.string,
@@ -78,11 +78,10 @@ CONFIG_SCHEMA = vol.Schema(
                     ): bool,
                 },
             )
-        )
-    },
+        }
+    ),
     extra=vol.ALLOW_EXTRA,
 )
-
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the isy994 integration from YAML."""
