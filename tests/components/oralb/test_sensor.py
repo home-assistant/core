@@ -31,7 +31,7 @@ async def test_sensors(hass, entity_registry_enabled_by_default):
     assert len(hass.states.async_all("sensor")) == 0
     inject_bluetooth_service_info(hass, ORALB_SERVICE_INFO)
     await hass.async_block_till_done()
-    assert len(hass.states.async_all("sensor")) == 8
+    assert len(hass.states.async_all("sensor")) == 9
 
     toothbrush_sensor = hass.states.get(
         "sensor.smart_series_7000_48be_toothbrush_state"
@@ -61,7 +61,7 @@ async def test_sensors_io_series_4(hass, entity_registry_enabled_by_default):
     assert len(hass.states.async_all("sensor")) == 0
     inject_bluetooth_service_info(hass, ORALB_IO_SERIES_4_SERVICE_INFO)
     await hass.async_block_till_done()
-    assert len(hass.states.async_all("sensor")) == 8
+    assert len(hass.states.async_all("sensor")) == 9
 
     toothbrush_sensor = hass.states.get("sensor.io_series_4_48be_mode")
     toothbrush_sensor_attrs = toothbrush_sensor.attributes
@@ -86,8 +86,8 @@ async def test_sensors_battery(hass):
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 7
 
-    bat_sensor = hass.states.get("sensor.battery_percentage")
-    assert bat_sensor.state == 49
+    bat_sensor = hass.states.get("sensor.io_series_6_7_1dcf_battery")
+    assert bat_sensor.state == "49"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
