@@ -31,15 +31,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up from config entry."""
     router = hass.data[DOMAIN].routers[config_entry.unique_id]
-    switches: list[Entity] = []
+    selects: list[Entity] = []
 
     desc = SelectEntityDescription(
         key="network_mode", name="Preferred mode", entity_category=EntityCategory.CONFIG
     )
-    switches.append(
+    selects.append(
         HuaweiLteBaseSelect(
             router,
-            description=desc,
+            entity_description=desc,
             key=KEY_NET_NET_MODE,
             item="NetworkMode",
             choices=NETWORKMODE_TO_STRING,
@@ -51,20 +51,24 @@ async def async_setup_entry(
         )
     )
 
-    async_add_entities(switches, True)
+    async_add_entities(selects, True)
 
 
 @dataclass
 class HuaweiLteBaseSelect(HuaweiLteBaseEntityWithDevice, SelectEntity):
     """Huawei LTE select base class."""
 
-    description: SelectEntityDescription
+    entity_description: SelectEntityDescription
     key: str
     item: str
     choices: dict[str, str]
     setter_fn: Callable
 
     _raw_state: str | None = field(default=None, init=False)
+
+    def __post_init__(self) -> None:
+        """Initialize remaining attributes."""
+        self._attr_name = self.entity_description.name or self.item
 
     def select_option(self, option: str) -> None:
         """Change the selected option."""
@@ -74,7 +78,7 @@ class HuaweiLteBaseSelect(HuaweiLteBaseEntityWithDevice, SelectEntity):
     @property
     def current_option(self) -> str | None:
         """Return current option."""
-        state_str = self.choices.get(self._raw_state)  # type: ignore[arg-type]
+        state_str = self.choices.get(self._raw_state)
         if state_str is None:
             _LOGGER.warning("Unknown state: %s", self._raw_state)
 
