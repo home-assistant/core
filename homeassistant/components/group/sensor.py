@@ -43,7 +43,6 @@ from . import GroupEntity
 from .const import CONF_IGNORE_NON_NUMERIC
 
 DEFAULT_NAME = "Sensor Group"
-CONF_ALL = "all"
 CONF_ROUND_DIGITS = "round_digits"
 
 ATTR_MIN_VALUE = "min_value"
