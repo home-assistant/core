@@ -769,7 +769,7 @@ geopy==2.3.0
 georss_generic_client==0.6
 
 # homeassistant.components.ign_sismologia
-georss_ign_sismologia_client==0.3
+georss_ign_sismologia_client==0.6
 
 # homeassistant.components.qld_bushfire
 georss_qld_bushfire_alert_client==0.5
@@ -1696,7 +1696,7 @@ pyirishrail==0.0.2
 pyiss==1.0.1
 
 # homeassistant.components.isy994
-pyisy==3.1.3
+pyisy==3.1.4
 
 # homeassistant.components.itach
 pyitachip2ir==0.0.7
