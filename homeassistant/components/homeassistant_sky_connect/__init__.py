@@ -85,6 +85,7 @@ async def _async_usb_scan_done(hass: HomeAssistant, entry: ConfigEntry) -> None:
     if not usb.async_is_plugged_in(hass, matcher):
         # The USB dongle is not plugged in, remove the config entry
         hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
+        return
 
     addon_info = await _multi_pan_addon_info(hass, entry)
 
