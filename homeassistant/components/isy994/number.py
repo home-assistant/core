@@ -105,8 +105,7 @@ async def async_setup_entry(
             )
         )
 
-    aux_properties = isy_data.aux_props[Platform.NUMBER]
-    for node, control in aux_properties:
+    for node, control in isy_data.aux_properties[Platform.NUMBER]:
         control_detail = CONTROL_DESC[control]
         name = COMMAND_FRIENDLY_NAME.get(control, control).replace("_", " ").title()
         if node.address != node.primary_node:
