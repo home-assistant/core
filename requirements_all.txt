@@ -769,7 +769,7 @@ geopy==2.3.0
 georss_generic_client==0.6
 
 # homeassistant.components.ign_sismologia
-georss_ign_sismologia_client==0.3
+georss_ign_sismologia_client==0.6
 
 # homeassistant.components.qld_bushfire
 georss_qld_bushfire_alert_client==0.5
@@ -1290,7 +1290,7 @@ openwrt-luci-rpc==1.1.11
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.oralb
-oralb-ble==0.14.3
+oralb-ble==0.17.1
 
 # homeassistant.components.oru
 oru==0.1.11
