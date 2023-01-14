@@ -1,5 +1,6 @@
 {
   "config": {
+    "flow_title": "{short_mac} ({ip_address})",
     "step": {
       "user": {
         "description": "{error}",
