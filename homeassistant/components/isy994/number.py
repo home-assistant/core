@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import Any
 
-from pyisy.constants import COMMAND_FRIENDLY_NAME, ISY_VALUE_UNKNOWN, PROP_ON_LEVEL
+from pyisy.constants import ISY_VALUE_UNKNOWN, PROP_ON_LEVEL
 from pyisy.helpers import EventListener, NodeProperty
 from pyisy.variables import Variable
 
