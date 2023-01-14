@@ -43,9 +43,12 @@ def ensure_config_path(config_dir: str) -> None:
     # Test if configuration directory exists
     if not os.path.isdir(config_dir):
         if config_dir != config_util.get_default_config_dir():
+            if os.path.exists(config_dir):
+                reason = "is not a directory"
+            else:
+                reason = "does not exist"
             print(
-                f"Fatal Error: Specified configuration directory {config_dir} "
-                "does not exist",
+                f"Fatal Error: Specified configuration directory {config_dir} {reason}",
                 file=sys.stderr,
             )
             sys.exit(1)
