@@ -585,20 +585,19 @@ async def ws_stream(
 
     entity_ids = msg.get("entity_ids")
     include_start_time_state = msg["include_start_time_state"]
-
-    if (
-        not include_start_time_state
-        and entity_ids
-        and not _entities_may_have_state_changes_after(hass, entity_ids, start_time)
-    ):
-        _async_send_empty_response(connection, msg_id, start_time, end_time)
-        return
-
     significant_changes_only = msg["significant_changes_only"]
     no_attributes = msg["no_attributes"]
     minimal_response = msg["minimal_response"]
 
     if end_time and end_time <= utc_now:
+        if (
+            not include_start_time_state
+            and entity_ids
+            and not _entities_may_have_state_changes_after(hass, entity_ids, start_time)
+        ):
+            _async_send_empty_response(connection, msg_id, start_time, end_time)
+            return
+
         connection.subscriptions[msg_id] = callback(lambda: None)
         connection.send_result(msg_id)
         # Fetch everything from history
