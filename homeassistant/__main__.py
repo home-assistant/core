@@ -15,7 +15,10 @@ FAULT_LOG_FILENAME = "home-assistant.log.fault"
 def validate_os() -> None:
     """Validate that Home Assistant is running in a supported operating system."""
     if not sys.platform.startswith(("darwin", "linux")):
-        print("Home Assistant only supports Linux, OSX and Windows using WSL")
+        print(
+            "Home Assistant only supports Linux, OSX and Windows using WSL",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
 
@@ -24,7 +27,8 @@ def validate_python() -> None:
     if sys.version_info[:3] < REQUIRED_PYTHON_VER:
         print(
             "Home Assistant requires at least Python "
-            f"{REQUIRED_PYTHON_VER[0]}.{REQUIRED_PYTHON_VER[1]}.{REQUIRED_PYTHON_VER[2]}"
+            f"{REQUIRED_PYTHON_VER[0]}.{REQUIRED_PYTHON_VER[1]}.{REQUIRED_PYTHON_VER[2]}",
+            file=sys.stderr,
         )
         sys.exit(1)
 
@@ -41,7 +45,8 @@ def ensure_config_path(config_dir: str) -> None:
         if config_dir != config_util.get_default_config_dir():
             print(
                 f"Fatal Error: Specified configuration directory {config_dir} "
-                "does not exist"
+                "does not exist",
+                file=sys.stderr,
             )
             sys.exit(1)
 
@@ -50,7 +55,8 @@ def ensure_config_path(config_dir: str) -> None:
         except OSError as ex:
             print(
                 "Fatal Error: Unable to create default configuration "
-                f"directory {config_dir}: {ex}"
+                f"directory {config_dir}: {ex}",
+                file=sys.stderr,
             )
             sys.exit(1)
 
@@ -59,7 +65,10 @@ def ensure_config_path(config_dir: str) -> None:
         try:
             os.mkdir(lib_dir)
         except OSError as ex:
-            print(f"Fatal Error: Unable to create library directory {lib_dir}: {ex}")
+            print(
+                f"Fatal Error: Unable to create library directory {lib_dir}: {ex}",
+                file=sys.stderr,
+            )
             sys.exit(1)
 
 
