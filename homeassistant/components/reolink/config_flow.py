@@ -94,7 +94,7 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(mac_address)
         self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
 
-        short_mac = mac_address[-6:].upper()
+        short_mac = mac_address[-8:].upper()
         self.context["title_placeholders"] = {
             "short_mac": short_mac,
             "ip_address": discovery_info.ip,
