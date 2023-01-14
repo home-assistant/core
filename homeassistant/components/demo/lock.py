@@ -33,6 +33,7 @@ async def async_setup_platform(
             DemoLock("Kitchen Door", STATE_UNLOCKED),
             DemoLock("Poorly Installed Door", STATE_UNLOCKED, False, True),
             DemoLock("Openable Lock", STATE_LOCKED, True),
+            DemoLock("Another Openable Lock", STATE_UNLOCKED, True),
         ]
     )
 

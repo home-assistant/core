@@ -179,8 +179,8 @@ async def test_service_calls(hass, enable_custom_integrations):
                 {
                     "platform": DOMAIN,
                     "entities": [
-                        "lock.front_door",
-                        "lock.kitchen_door",
+                        "lock.openable_lock",
+                        "lock.another_openable_lock",
                     ],
                 },
             ]
@@ -190,8 +190,8 @@ async def test_service_calls(hass, enable_custom_integrations):
 
     group_state = hass.states.get("lock.lock_group")
     assert group_state.state == STATE_UNLOCKED
-    assert hass.states.get("lock.front_door").state == STATE_LOCKED
-    assert hass.states.get("lock.kitchen_door").state == STATE_UNLOCKED
+    assert hass.states.get("lock.openable_lock").state == STATE_LOCKED
+    assert hass.states.get("lock.another_openable_lock").state == STATE_UNLOCKED
 
     await hass.services.async_call(
         LOCK_DOMAIN,
@@ -199,8 +199,8 @@ async def test_service_calls(hass, enable_custom_integrations):
         {ATTR_ENTITY_ID: "lock.lock_group"},
         blocking=True,
     )
-    assert hass.states.get("lock.front_door").state == STATE_UNLOCKED
-    assert hass.states.get("lock.kitchen_door").state == STATE_UNLOCKED
+    assert hass.states.get("lock.openable_lock").state == STATE_UNLOCKED
+    assert hass.states.get("lock.another_openable_lock").state == STATE_UNLOCKED
 
     await hass.services.async_call(
         LOCK_DOMAIN,
@@ -208,8 +208,8 @@ async def test_service_calls(hass, enable_custom_integrations):
         {ATTR_ENTITY_ID: "lock.lock_group"},
         blocking=True,
     )
-    assert hass.states.get("lock.front_door").state == STATE_LOCKED
-    assert hass.states.get("lock.kitchen_door").state == STATE_LOCKED
+    assert hass.states.get("lock.openable_lock").state == STATE_LOCKED
+    assert hass.states.get("lock.another_openable_lock").state == STATE_LOCKED
 
     await hass.services.async_call(
         LOCK_DOMAIN,
@@ -217,8 +217,8 @@ async def test_service_calls(hass, enable_custom_integrations):
         {ATTR_ENTITY_ID: "lock.lock_group"},
         blocking=True,
     )
-    assert hass.states.get("lock.front_door").state == STATE_UNLOCKED
-    assert hass.states.get("lock.kitchen_door").state == STATE_UNLOCKED
+    assert hass.states.get("lock.openable_lock").state == STATE_UNLOCKED
+    assert hass.states.get("lock.another_openable_lock").state == STATE_UNLOCKED
 
 
 async def test_reload(hass):

@@ -25,7 +25,6 @@ from homeassistant.const import (
     STATE_UNLOCKING,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -109,7 +108,8 @@ async def _async_unlock(entity: LockEntity, service_call: ServiceCall) -> None:
 async def _async_open(entity: LockEntity, service_call: ServiceCall) -> None:
     """Open the door latch."""
     if not (entity.supported_features & LockEntityFeature.OPEN):
-        raise HomeAssistantError(f"Lock {entity.name} doesn't support ")
+        _LOGGER.warning("Lock %s doesn't support feature `open`", entity.name)
+        return
 
     code: str = service_call.data.get(ATTR_CODE, "")
     if entity.code_format_cmp and not entity.code_format_cmp.match(code):

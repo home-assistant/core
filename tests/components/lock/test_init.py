@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from typing import Any
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -23,7 +24,6 @@ from homeassistant.components.lock import (
     _async_unlock,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import HomeAssistantError
 
 
 class MockLockEntity(LockEntity):
@@ -36,6 +36,7 @@ class MockLockEntity(LockEntity):
     ) -> None:
         """Initialize mock lock entity."""
         self._attr_supported_features = supported_features
+        self.calls_open = MagicMock()
         if code_format is not None:
             self._attr_code_format = code_format
 
@@ -51,6 +52,7 @@ class MockLockEntity(LockEntity):
 
     async def async_open(self, **kwargs: Any) -> None:
         """Open the door latch."""
+        self.calls_open(kwargs)
 
 
 async def test_lock_default(hass: HomeAssistant) -> None:
@@ -67,8 +69,8 @@ async def test_lock_open_without_support(hass: HomeAssistant) -> None:
     lock = MockLockEntity()
     lock.hass = hass
 
-    with pytest.raises(HomeAssistantError):
-        await _async_open(lock, ServiceCall(DOMAIN, SERVICE_OPEN, {}))
+    await _async_open(lock, ServiceCall(DOMAIN, SERVICE_OPEN, {}))
+    assert lock.calls_open.call_count == 0
 
 
 async def test_lock_states(hass: HomeAssistant) -> None:
@@ -118,6 +120,7 @@ async def test_lock_open_with_code(hass: HomeAssistant) -> None:
     with pytest.raises(ValueError):
         await _async_open(lock, ServiceCall(DOMAIN, SERVICE_OPEN, {ATTR_CODE: "HELLO"}))
     await _async_open(lock, ServiceCall(DOMAIN, SERVICE_OPEN, {ATTR_CODE: "1234"}))
+    assert lock.calls_open.call_count == 1
 
 
 async def test_lock_lock_with_code(hass: HomeAssistant) -> None:
