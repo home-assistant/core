@@ -15,9 +15,15 @@ import voluptuous as vol
 
 from homeassistant.components import frontend, websocket_api
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.recorder import get_instance, history
+from homeassistant.components.recorder import (
+    DOMAIN as RECORDER_DOMAIN,
+    get_instance,
+    history,
+)
 from homeassistant.components.recorder.filters import (
     Filters,
+    extract_include_exclude_filter_conf,
+    merge_include_exclude_filters,
     sqlalchemy_filter_from_include_exclude_conf,
 )
 from homeassistant.components.recorder.util import session_scope
@@ -81,12 +87,24 @@ class HistoryLiveStream:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the history hooks."""
     conf = config.get(DOMAIN, {})
+    recorder_conf = config.get(RECORDER_DOMAIN, {})
+    history_conf = config.get(DOMAIN, {})
+    recorder_filter = extract_include_exclude_filter_conf(recorder_conf)
+    logbook_filter = extract_include_exclude_filter_conf(history_conf)
+    merged_filter = merge_include_exclude_filters(recorder_filter, logbook_filter)
 
-    hass.data[HISTORY_FILTERS] = filters = sqlalchemy_filter_from_include_exclude_conf(
-        conf
-    )
+    possible_merged_entities_filter = convert_include_exclude_filter(merged_filter)
+
+    if not possible_merged_entities_filter.empty_filter:
+        hass.data[
+            HISTORY_FILTERS
+        ] = filters = sqlalchemy_filter_from_include_exclude_conf(conf)
+        hass.data[HISTORY_ENTITIES_FILTER] = possible_merged_entities_filter
+    else:
+        hass.data[HISTORY_FILTERS] = filters = None
+        hass.data[HISTORY_ENTITIES_FILTER] = None
+
     hass.data[HISTORY_USE_INCLUDE_ORDER] = use_include_order = conf.get(CONF_ORDER)
-    hass.data[HISTORY_ENTITIES_FILTER] = convert_include_exclude_filter(conf)
 
     hass.http.register_view(HistoryPeriodView(filters, use_include_order))
     frontend.async_register_built_in_panel(hass, "history", "history", "hass:chart-box")
