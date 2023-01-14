@@ -13,14 +13,21 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
 
-from .const import DOMAIN
+from .const import (
+    DATA_INVERTER_SN,
+    DATA_PASSWORD,
+    DATA_USERNAME,
+    DOMAIN,
+    STEP_INVERTER,
+    STEP_USER,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required("username"): str,
-        vol.Required("password"): str,
+        vol.Required(DATA_USERNAME): str,
+        vol.Required(DATA_PASSWORD): str,
     }
 )
 
@@ -53,12 +60,12 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> SunsynkHu
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
 
-    if "username" not in data or "password" not in data:
+    if DATA_USERNAME not in data or DATA_PASSWORD not in data:
         raise InvalidAuth
 
     hub = SunsynkHub()
 
-    if not await hub.authenticate(data["username"], data["password"]):
+    if not await hub.authenticate(data[DATA_USERNAME], data[DATA_PASSWORD]):
         raise InvalidAuth
 
     return hub
@@ -79,15 +86,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
+                step_id=STEP_USER, data_schema=STEP_USER_DATA_SCHEMA
             )
 
         errors = {}
 
         try:
             self.hub = await validate_input(self.hass, user_input)
-            self.username = user_input["username"]
-            self.password = user_input["password"]
+            self.username = user_input[DATA_USERNAME]
+            self.password = user_input[DATA_PASSWORD]
         except CannotConnect:
             errors["base"] = "cannot_connect"
         except InvalidAuth:
@@ -99,7 +106,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_inverter()
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id=STEP_USER, data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
     async def async_step_inverter(
@@ -114,20 +121,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ]
             inverter_schema = vol.Schema(
                 {
-                    vol.Required("inverter_sn"): selector.SelectSelector(
+                    vol.Required(DATA_INVERTER_SN): selector.SelectSelector(
                         selector.SelectSelectorConfig(
                             options=options, mode=selector.SelectSelectorMode.DROPDOWN
                         )
                     )
                 }
             )
-            return self.async_show_form(step_id="inverter", data_schema=inverter_schema)
+            return self.async_show_form(
+                step_id=STEP_INVERTER, data_schema=inverter_schema
+            )
 
         assert user_input is not None
-        user_input["username"] = self.username
-        user_input["password"] = self.password
+        user_input[DATA_USERNAME] = self.username
+        user_input[DATA_PASSWORD] = self.password
         return self.async_create_entry(
-            title=f"Inverter {user_input['inverter_sn']}", data=user_input
+            title=f"Inverter {user_input[DATA_INVERTER_SN]}", data=user_input
         )
 
 

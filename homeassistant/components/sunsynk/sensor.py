@@ -15,7 +15,15 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import (
+    BATTERY_ENERGY,
+    DATA_INVERTER_SN,
+    DATA_PASSWORD,
+    DATA_USERNAME,
+    DOMAIN,
+    GRID_ENERGY,
+    SOLAR_ENERGY,
+)
 from .coordinator import SunsynkCoordinator
 
 
@@ -25,9 +33,9 @@ async def async_setup_entry(
     add_entities: AddEntitiesCallback,
 ) -> None:
     """Add a Sunsynk entry."""
-    username = entry.data["username"]
-    password = entry.data["password"]
-    inverter_sn = entry.data["inverter_sn"]
+    username = entry.data[DATA_USERNAME]
+    password = entry.data[DATA_PASSWORD]
+    inverter_sn = entry.data[DATA_INVERTER_SN]
 
     api = await SunsynkClient.create(username, password)
 
@@ -77,7 +85,7 @@ class SunsynkGridEnergySensor(SunsynkSensor):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_native_value = self.coordinator.data["grid_energy"]
+        self._attr_native_value = self.coordinator.data[GRID_ENERGY]
         self.async_write_ha_state()
 
 
@@ -97,7 +105,7 @@ class SunsynkBatteryEnergySensor(SunsynkSensor):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_native_value = self.coordinator.data["battery_energy"]
+        self._attr_native_value = self.coordinator.data[BATTERY_ENERGY]
         self.async_write_ha_state()
 
 
@@ -117,5 +125,5 @@ class SunsynkSolarEnergySensor(SunsynkSensor):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_native_value = self.coordinator.data["solar_energy"]
+        self._attr_native_value = self.coordinator.data[SOLAR_ENERGY]
         self.async_write_ha_state()

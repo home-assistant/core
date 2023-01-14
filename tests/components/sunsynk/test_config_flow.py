@@ -12,7 +12,12 @@ from homeassistant.components.sunsynk.config_flow import (
     SunsynkHub,
     validate_input,
 )
-from homeassistant.components.sunsynk.const import DOMAIN
+from homeassistant.components.sunsynk.const import (
+    DATA_INVERTER_SN,
+    DATA_PASSWORD,
+    DATA_USERNAME,
+    DOMAIN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -66,14 +71,14 @@ async def test_validate_input_handles_bad_data(hass: HomeAssistant) -> None:
 async def test_validate_input_authenticates(hass: HomeAssistant) -> None:
     """Test validate_input authenticates successfully."""
     with patch(SUNSYNK_HUB_AUTHENTICATE, return_value=True):
-        data = {"username": "myuser", "password": "letmein"}
+        data = {DATA_USERNAME: "myuser", DATA_PASSWORD: "letmein"}
         assert isinstance(await validate_input(hass, data), SunsynkHub)
 
 
 async def test_validate_input_handles_auth_failure(hass: HomeAssistant) -> None:
     """Test validate_input authenticates handles auth failure."""
     with patch(SUNSYNK_HUB_AUTHENTICATE, return_value=False):
-        data = {"username": "myuser", "password": "invalidpwd"}
+        data = {DATA_USERNAME: "myuser", DATA_PASSWORD: "invalidpwd"}
         with pytest.raises(InvalidAuth):
             await validate_input(hass, data)
 
@@ -96,8 +101,8 @@ async def test_form_configures_inverter_integration(hass: HomeAssistant) -> None
         user_form_result = await hass.config_entries.flow.async_configure(
             initial_form_result["flow_id"],
             {
-                "username": "test-username",
-                "password": "test-password",
+                DATA_USERNAME: "test-username",
+                DATA_PASSWORD: "test-password",
             },
         )
         await hass.async_block_till_done()
@@ -113,7 +118,7 @@ async def test_form_configures_inverter_integration(hass: HomeAssistant) -> None
         inverter_form_result = await hass.config_entries.flow.async_configure(
             initial_form_result["flow_id"],
             {
-                "inverter_sn": "INV123",
+                DATA_INVERTER_SN: "INV123",
             },
         )
         await hass.async_block_till_done()
@@ -121,9 +126,9 @@ async def test_form_configures_inverter_integration(hass: HomeAssistant) -> None
     assert inverter_form_result["type"] == FlowResultType.CREATE_ENTRY
     assert inverter_form_result["title"] == "Inverter INV123"
     assert inverter_form_result["data"] == {
-        "username": "test-username",
-        "password": "test-password",
-        "inverter_sn": "INV123",
+        DATA_USERNAME: "test-username",
+        DATA_PASSWORD: "test-password",
+        DATA_INVERTER_SN: "INV123",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -138,8 +143,8 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "username": "test-username",
-                "password": "test-password",
+                DATA_USERNAME: "test-username",
+                DATA_PASSWORD: "test-password",
             },
         )
 
@@ -157,8 +162,8 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "username": "test-username",
-                "password": "test-password",
+                DATA_USERNAME: "test-username",
+                DATA_PASSWORD: "test-password",
             },
         )
 
