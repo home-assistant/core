@@ -15,16 +15,19 @@ import psutil
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
     PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_RESOURCES,
     CONF_SCAN_INTERVAL,
     CONF_TYPE,
+    CONF_UNIQUE_ID,
     EVENT_HOMEASSISTANT_STOP,
     PERCENTAGE,
     STATE_OFF,
@@ -43,12 +46,12 @@ from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
+
+from .const import CONF_ARG
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ARG = "arg"
 
 if sys.maxsize > 2**32:
     CPU_ICON = "mdi:cpu-64-bit"
@@ -371,6 +374,51 @@ async def async_setup_platform(
     async_add_entities(entities)
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the system monitor sensors."""
+    entities = []
+    sensor_registry: dict[tuple[str, str], SensorData] = {}
+
+    for sensor in entry.options[SENSOR_DOMAIN]:
+        type_ = sensor[CONF_TYPE]
+        # Initialize the sensor argument if none was provided.
+        # For disk monitoring default to "/" (root) to prevent runtime errors, if argument was not specified.
+        if CONF_ARG not in sensor:
+            argument = ""
+            if sensor[CONF_TYPE].startswith("disk_"):
+                argument = "/"
+        else:
+            argument = sensor[CONF_ARG]
+
+        # Verify if we can retrieve CPU / processor temperatures.
+        # If not, do not create the entity and add a warning to the log
+        if (
+            type_ == "processor_temperature"
+            and await hass.async_add_executor_job(_read_cpu_temperature) is None
+        ):
+            _LOGGER.warning("Cannot read CPU / processor temperature information")
+            continue
+
+        sensor_registry[(type_, argument)] = SensorData(
+            argument, None, None, None, None
+        )
+        unique_id = sensor[CONF_UNIQUE_ID]
+        entities.append(
+            SystemMonitorSensor(
+                sensor_registry, SENSOR_TYPES[type_], unique_id, argument
+            )
+        )
+
+    scan_interval = DEFAULT_SCAN_INTERVAL
+    await async_setup_sensor_registry_updates(hass, sensor_registry, scan_interval)
+
+    async_add_entities(entities)
+
+
 async def async_setup_sensor_registry_updates(
     hass: HomeAssistant,
     sensor_registry: dict[tuple[str, str], SensorData],
@@ -439,12 +487,13 @@ class SystemMonitorSensor(SensorEntity):
         self,
         sensor_registry: dict[tuple[str, str], SensorData],
         sensor_description: SysMonitorSensorEntityDescription,
+        unique_id: str,
         argument: str = "",
     ) -> None:
         """Initialize the sensor."""
         self.entity_description = sensor_description
-        self._attr_name: str = f"{sensor_description.name} {argument}".rstrip()
-        self._attr_unique_id: str = slugify(f"{sensor_description.key}_{argument}")
+        self._attr_name = f"{sensor_description.name} {argument}".rstrip()
+        self._attr_unique_id = unique_id
         self._sensor_registry = sensor_registry
         self._argument: str = argument
 
