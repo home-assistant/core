@@ -133,7 +133,6 @@ class ISYAuxControlNumberEntity(NumberEntity):
         self._attr_has_entity_name = node.address == node.primary_node
         self._attr_unique_id = unique_id
         self._attr_device_info = device_info
-        self._attr_native_value = None
         self._change_handler: EventListener | None = None
 
     async def async_added_to_hass(self) -> None:
