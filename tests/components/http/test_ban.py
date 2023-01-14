@@ -2,7 +2,7 @@
 from http import HTTPStatus
 
 # pylint: disable=protected-access
-from ipaddress import ip_address
+from ipaddress import ip_address, ip_network
 import os
 from unittest.mock import Mock, mock_open, patch
 
@@ -55,7 +55,7 @@ async def test_access_from_banned_ip(hass, aiohttp_client):
     """Test accessing to server from banned IP. Both trusted and not."""
     app = web.Application()
     app["hass"] = hass
-    setup_bans(hass, app, 5)
+    setup_bans(hass, app, 5, [])
     set_real_ip = mock_real_ip(app)
 
     with patch(
@@ -82,7 +82,7 @@ async def test_access_from_banned_ip_with_partially_broken_yaml_file(
     """
     app = web.Application()
     app["hass"] = hass
-    setup_bans(hass, app, 5)
+    setup_bans(hass, app, 5, [])
     set_real_ip = mock_real_ip(app)
 
     data = {banned_ip: {"banned_at": "2016-11-16T19:20:03"} for banned_ip in BANNED_IPS}
@@ -111,7 +111,7 @@ async def test_no_ip_bans_file(hass, aiohttp_client):
     """Test no ip bans file."""
     app = web.Application()
     app["hass"] = hass
-    setup_bans(hass, app, 5)
+    setup_bans(hass, app, 5, [])
     set_real_ip = mock_real_ip(app)
 
     with patch(
@@ -129,7 +129,7 @@ async def test_failure_loading_ip_bans_file(hass, aiohttp_client):
     """Test failure loading ip bans file."""
     app = web.Application()
     app["hass"] = hass
-    setup_bans(hass, app, 5)
+    setup_bans(hass, app, 5, [])
     set_real_ip = mock_real_ip(app)
 
     with patch(
@@ -147,7 +147,7 @@ async def test_ip_ban_manager_never_started(hass, aiohttp_client, caplog):
     """Test we handle the ip ban manager not being started."""
     app = web.Application()
     app["hass"] = hass
-    setup_bans(hass, app, 5)
+    setup_bans(hass, app, 5, [])
     set_real_ip = mock_real_ip(app)
 
     with patch(
@@ -187,7 +187,7 @@ async def test_access_from_supervisor_ip(
         raise HTTPUnauthorized
 
     app.router.add_get("/", unauth_handler)
-    setup_bans(hass, app, 1)
+    setup_bans(hass, app, 1, [])
     mock_real_ip(app)(remote_addr)
 
     with patch(
@@ -254,7 +254,7 @@ async def test_ip_bans_file_creation(hass, aiohttp_client, caplog):
         raise HTTPUnauthorized
 
     app.router.add_get("/example", unauth_handler)
-    setup_bans(hass, app, 2)
+    setup_bans(hass, app, 2, [])
     mock_real_ip(app)("200.201.202.204")
 
     with patch(
@@ -318,7 +318,7 @@ async def test_failed_login_attempts_counter(hass, aiohttp_client):
         "/", request_handler_factory(Mock(requires_auth=False), auth_handler)
     )
 
-    setup_bans(hass, app, 5)
+    setup_bans(hass, app, 5, [])
     remote_ip = ip_address("200.201.202.204")
     mock_real_ip(app)("200.201.202.204")
 
@@ -352,3 +352,41 @@ async def test_failed_login_attempts_counter(hass, aiohttp_client):
     resp = await client.get("/auth_true")
     assert resp.status == HTTPStatus.OK
     assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 2
+
+
+async def test_failed_login_whitelist_counter(hass, aiohttp_client):
+    """Testing if failed login attempts counter does not increase from IP in  whitelisted network ."""
+    app = web.Application()
+    app["hass"] = hass
+
+    async def auth_handler(request):
+        """Return 200 status code."""
+        return None, 200
+
+    app.router.add_get(
+        "/auth_false", request_handler_factory(Mock(requires_auth=True), auth_handler)
+    )
+
+    setup_bans(
+        hass, app, 5, [ip_network("192.168.0.0/24"), ip_network("192.168.1.0/24")]
+    )
+    remote_ip = ip_address("192.168.1.29")
+    mock_real_ip(app)("192.168.1.29")
+
+    @middleware
+    async def mock_auth(request, handler):
+        """Mock auth middleware."""
+        if "auth_true" in request.path:
+            request[KEY_AUTHENTICATED] = True
+        else:
+            request[KEY_AUTHENTICATED] = False
+        return await handler(request)
+
+    app.middlewares.append(mock_auth)
+
+    client = await aiohttp_client(app)
+
+    # Check that failed auth from whitelisted network is ignored
+    resp = await client.get("/auth_false")
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+    assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 0

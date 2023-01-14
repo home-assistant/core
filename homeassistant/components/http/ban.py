@@ -6,7 +6,7 @@ from collections.abc import Awaitable, Callable, Coroutine
 from contextlib import suppress
 from datetime import datetime
 from http import HTTPStatus
-from ipaddress import IPv4Address, IPv6Address, ip_address
+from ipaddress import IPv4Address, IPv4Network, IPv6Address, IPv6Network, ip_address
 import logging
 from socket import gethostbyaddr, herror
 from typing import Any, Final, TypeVar
@@ -33,6 +33,7 @@ _LOGGER: Final = logging.getLogger(__name__)
 KEY_BAN_MANAGER: Final = "ha_banned_ips_manager"
 KEY_FAILED_LOGIN_ATTEMPTS: Final = "ha_failed_login_attempts"
 KEY_LOGIN_THRESHOLD: Final = "ha_login_threshold"
+KEY_IP_BAN_WHITELIST: Final = "ha_ip_ban_whitelist"
 
 NOTIFICATION_ID_BAN: Final = "ip-ban"
 NOTIFICATION_ID_LOGIN: Final = "http-login"
@@ -40,18 +41,25 @@ NOTIFICATION_ID_LOGIN: Final = "http-login"
 IP_BANS_FILE: Final = "ip_bans.yaml"
 ATTR_BANNED_AT: Final = "banned_at"
 
+
 SCHEMA_IP_BAN_ENTRY: Final = vol.Schema(
     {vol.Optional("banned_at"): vol.Any(None, cv.datetime)}
 )
 
 
 @callback
-def setup_bans(hass: HomeAssistant, app: Application, login_threshold: int) -> None:
+def setup_bans(
+    hass: HomeAssistant,
+    app: Application,
+    login_threshold: int,
+    ip_ban_whitelist: list[IPv4Network | IPv6Network],
+) -> None:
     """Create IP Ban middleware for the app."""
     app.middlewares.append(ban_middleware)
     app[KEY_FAILED_LOGIN_ATTEMPTS] = defaultdict(int)
     app[KEY_LOGIN_THRESHOLD] = login_threshold
     app[KEY_BAN_MANAGER] = IpBanManager(hass)
+    app[KEY_IP_BAN_WHITELIST] = ip_ban_whitelist
 
     async def ban_startup(app: Application) -> None:
         """Initialize bans when app starts up."""
@@ -132,6 +140,11 @@ async def process_wrong_login(request: Request) -> None:
     persistent_notification.async_create(
         hass, notification_msg, "Login attempt failed", NOTIFICATION_ID_LOGIN
     )
+
+    # if remote ip is in whitelist no further processing
+    for network in request.app[KEY_IP_BAN_WHITELIST]:
+        if remote_addr in network:
+            return
 
     # Check if ban middleware is loaded
     if KEY_BAN_MANAGER not in request.app or request.app[KEY_LOGIN_THRESHOLD] < 1:

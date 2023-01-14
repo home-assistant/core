@@ -61,6 +61,7 @@ CONF_TRUSTED_PROXIES: Final = "trusted_proxies"
 CONF_LOGIN_ATTEMPTS_THRESHOLD: Final = "login_attempts_threshold"
 CONF_IP_BAN_ENABLED: Final = "ip_ban_enabled"
 CONF_SSL_PROFILE: Final = "ssl_profile"
+CONF_IP_BAN_WHITELIST: Final = "ip_ban_whitelist"
 
 SSL_MODERN: Final = "modern"
 SSL_INTERMEDIATE: Final = "intermediate"
@@ -106,6 +107,7 @@ HTTP_SCHEMA: Final = vol.All(
             vol.Optional(CONF_SSL_PROFILE, default=SSL_MODERN): vol.In(
                 [SSL_INTERMEDIATE, SSL_MODERN]
             ),
+            vol.Optional(CONF_IP_BAN_WHITELIST): vol.All(cv.ensure_list, [ip_network]),
         }
     ),
 )
@@ -128,6 +130,7 @@ class ConfData(TypedDict, total=False):
     login_attempts_threshold: int
     ip_ban_enabled: bool
     ssl_profile: str
+    ip_ban_whitelist: list[IPv4Network | IPv6Network]
 
 
 @bind_hass
@@ -172,6 +175,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     is_ban_enabled = conf[CONF_IP_BAN_ENABLED]
     login_threshold = conf[CONF_LOGIN_ATTEMPTS_THRESHOLD]
     ssl_profile = conf[CONF_SSL_PROFILE]
+    ip_ban_whitelist = conf.get(CONF_IP_BAN_WHITELIST) or []
 
     server = HomeAssistantHTTP(
         hass,
@@ -188,6 +192,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         use_x_forwarded_for=use_x_forwarded_for,
         login_threshold=login_threshold,
         is_ban_enabled=is_ban_enabled,
+        ip_ban_whitelist=ip_ban_whitelist,
     )
 
     async def stop_server(event: Event) -> None:
@@ -262,6 +267,7 @@ class HomeAssistantHTTP:
         use_x_forwarded_for: bool,
         login_threshold: int,
         is_ban_enabled: bool,
+        ip_ban_whitelist: list[IPv4Network | IPv6Network],
     ) -> None:
         """Initialize the server."""
         self.app[KEY_HASS] = self.hass
@@ -275,7 +281,7 @@ class HomeAssistantHTTP:
         setup_request_context(self.app, current_request)
 
         if is_ban_enabled:
-            setup_bans(self.hass, self.app, login_threshold)
+            setup_bans(self.hass, self.app, login_threshold, ip_ban_whitelist)
 
         await async_setup_auth(self.hass, self.app)
 
