@@ -6,7 +6,82 @@ from unittest.mock import patch
 from axis.rtsp import Signal, State
 import pytest
 
+from homeassistant.components.axis.const import CONF_EVENTS, DOMAIN as AXIS_DOMAIN
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MODEL,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+)
+
+from tests.common import MockConfigEntry
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
+
+MAC = "00408C123456"
+FORMATTED_MAC = "00:40:8c:12:34:56"
+MODEL = "model"
+NAME = "name"
+
+DEFAULT_HOST = "1.2.3.4"
+
+ENTRY_OPTIONS = {CONF_EVENTS: True}
+
+ENTRY_CONFIG = {
+    CONF_HOST: DEFAULT_HOST,
+    CONF_USERNAME: "root",
+    CONF_PASSWORD: "pass",
+    CONF_PORT: 80,
+    CONF_MODEL: MODEL,
+    CONF_NAME: NAME,
+}
+
+
+@pytest.fixture(name="config_entry")
+def config_entry_fixture(hass, config, options, config_entry_version):
+    """Define a config entry fixture."""
+    entry = MockConfigEntry(
+        domain=AXIS_DOMAIN,
+        unique_id=FORMATTED_MAC,
+        data=config,
+        options=options,
+        version=config_entry_version,
+    )
+    entry.add_to_hass(hass)
+    return entry
+
+
+@pytest.fixture(name="config_entry_version")
+def config_entry_version_fixture(request):
+    """Define a config entry version fixture.
+
+    @pytest.mark.config_entry_version(int)
+    """
+    marker = request.node.get_closest_marker("config_entry_version")
+    version = 3
+    if marker:
+        version = marker.args[0]
+    return version
+
+
+@pytest.fixture(name="config")
+def config_fixture():
+    """Define a config entry data fixture."""
+    return ENTRY_CONFIG.copy()
+
+
+@pytest.fixture(name="options")
+def options_fixture(request):
+    """Define a config entry options fixture.
+
+    @pytest.mark.config_entry_options(dict)
+    """
+    marker = request.node.get_closest_marker("config_entry_options")
+    options = ENTRY_OPTIONS.copy()
+    if marker:
+        options = marker.args[0]
+    return options
 
 
 @pytest.fixture(autouse=True)
