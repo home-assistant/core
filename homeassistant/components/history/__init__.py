@@ -1,7 +1,9 @@
 """Provide pre-made queries on top of the recorder component."""
 from __future__ import annotations
 
-from collections.abc import Iterable
+import asyncio
+from collections.abc import Callable, Iterable, MutableMapping
+from dataclasses import dataclass
 from datetime import datetime as dt, timedelta
 from http import HTTPStatus
 import logging
@@ -20,9 +22,26 @@ from homeassistant.components.recorder.filters import (
 )
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.components.websocket_api import messages
-from homeassistant.core import HomeAssistant
+from homeassistant.components.websocket_api.connection import ActiveConnection
+from homeassistant.const import COMPRESSED_STATE_LAST_UPDATED, EVENT_STATE_CHANGED
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    HomeAssistant,
+    State,
+    callback,
+    is_callback,
+)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entityfilter import INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA
+from homeassistant.helpers.entityfilter import (
+    INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
+    EntityFilter,
+    convert_include_exclude_filter,
+)
+from homeassistant.helpers.event import (
+    async_track_point_in_utc_time,
+    async_track_state_change_event,
+)
 from homeassistant.helpers.json import JSON_DUMP
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
@@ -31,10 +50,12 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "history"
 HISTORY_FILTERS = "history_filters"
+HISTORY_ENTITIES_FILTER = "history_entities_filter"
 HISTORY_USE_INCLUDE_ORDER = "history_use_include_order"
+EVENT_COALESCE_TIME = 0.35
 
 CONF_ORDER = "use_include_order"
-
+MAX_PENDING_HISTORY_STATES = 1024
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -46,6 +67,17 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
+@dataclass
+class HistoryLiveStream:
+    """Track a history live stream."""
+
+    stream_queue: asyncio.Queue[Event]
+    subscriptions: list[CALLBACK_TYPE]
+    end_time_unsub: CALLBACK_TYPE | None = None
+    task: asyncio.Task | None = None
+    wait_sync_task: asyncio.Task | None = None
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the history hooks."""
     conf = config.get(DOMAIN, {})
@@ -54,6 +86,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         conf
     )
     hass.data[HISTORY_USE_INCLUDE_ORDER] = use_include_order = conf.get(CONF_ORDER)
+    hass.data[HISTORY_ENTITIES_FILTER] = convert_include_exclude_filter(conf)
 
     hass.http.register_view(HistoryPeriodView(filters, use_include_order))
     frontend.async_register_built_in_panel(hass, "history", "history", "hass:chart-box")
@@ -310,3 +343,361 @@ def _entities_may_have_state_changes_after(
             return True
 
     return False
+
+
+def _generate_stream_message(
+    states: MutableMapping[str, list[dict[str, Any]]],
+    start_day: dt,
+    end_day: dt,
+) -> dict[str, Any]:
+    """Generate a logbook stream message response."""
+    return {
+        "states": states,
+        "start_time": dt_util.utc_to_timestamp(start_day),
+        "end_time": dt_util.utc_to_timestamp(end_day),
+    }
+
+
+@callback
+def _async_send_empty_response(
+    connection: ActiveConnection, msg_id: int, start_time: dt, end_time: dt | None
+) -> None:
+    """Send an empty response.
+
+    The current case for this is when they ask for entity_ids
+    that will all be filtered away because they have UOMs or
+    state_class.
+    """
+    connection.send_result(msg_id)
+    stream_end_time = end_time or dt_util.utcnow()
+    empty_stream_message = _generate_stream_message({}, start_time, stream_end_time)
+    empty_response = messages.event_message(msg_id, empty_stream_message)
+    connection.send_message(JSON_DUMP(empty_response))
+
+
+async def _async_send_historical_events(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg_id: int,
+    start_time: dt,
+    end_time: dt,
+    entity_ids: list[str] | None,
+    filters: Filters | None,
+    include_start_time_state: bool,
+    significant_changes_only: bool,
+    minimal_response: bool,
+    no_attributes: bool,
+) -> dt | None:
+    """Fetch history significant_states and convert them to json in the executor."""
+    states = cast(
+        MutableMapping[str, list[dict[str, Any]]],
+        await hass.async_add_executor_job(
+            history.get_significant_states,
+            hass,
+            start_time,
+            end_time,
+            entity_ids,
+            filters,
+            include_start_time_state,
+            significant_changes_only,
+            minimal_response,
+            no_attributes,
+            True,
+        ),
+    )
+    last_time = 0
+
+    for state_list in states.values():
+        if (
+            state_list
+            and (state_last_time := state_list[-1][COMPRESSED_STATE_LAST_UPDATED])
+            > last_time
+        ):
+            last_time = state_last_time
+
+    stream_message = _generate_stream_message(states, start_time, end_time)
+    stream_response = messages.event_message(msg_id, stream_message)
+    connection.send_message(JSON_DUMP(stream_response))
+
+    if last_time == 0:
+        return None
+    return dt_util.utc_from_timestamp(last_time)
+
+
+def _events_to_compressed_states(
+    events: Iterable[Event],
+) -> MutableMapping[str, list[dict[str, Any]]]:
+    """Convert events to a compressed states."""
+    states_by_entity_ids: dict[str, list[dict[str, Any]]] = {}
+    for event in events:
+        state: State | None = event.data.get("new_state")
+        if state is None:
+            continue
+        entity_id: str = state.entity_id
+        states_by_entity_ids.setdefault(entity_id, []).append(
+            state.as_compressed_state()
+        )
+    return states_by_entity_ids
+
+
+async def _async_events_consumer(
+    subscriptions_setup_complete_time: dt,
+    connection: ActiveConnection,
+    msg_id: int,
+    stream_queue: asyncio.Queue[Event],
+) -> None:
+    """Stream events from the queue."""
+    while True:
+        events: list[Event] = [await stream_queue.get()]
+        # If the event is older than the last db
+        # event we already sent it so we skip it.
+        if events[0].time_fired <= subscriptions_setup_complete_time:
+            continue
+        # We sleep for the EVENT_COALESCE_TIME so
+        # we can group events together to minimize
+        # the number of websocket messages when the
+        # system is overloaded with an event storm
+        await asyncio.sleep(EVENT_COALESCE_TIME)
+        while not stream_queue.empty():
+            events.append(stream_queue.get_nowait())
+
+        if history_states := _events_to_compressed_states(events):
+            connection.send_message(
+                JSON_DUMP(
+                    messages.event_message(
+                        msg_id,
+                        {"states": history_states},
+                    )
+                )
+            )
+
+
+@callback
+def _async_subscribe_events(
+    hass: HomeAssistant,
+    subscriptions: list[CALLBACK_TYPE],
+    target: Callable[[Event], None],
+    entities_filter: EntityFilter | None,
+    entity_ids: list[str] | None,
+    significant_changes_only: bool = False,
+) -> None:
+    """Subscribe to events for the entities and devices or all.
+
+    These are the events we need to listen for to do
+    the live history stream.
+    """
+    assert is_callback(target), "target must be a callback"
+
+    @callback
+    def _forward_state_events_filtered(event: Event) -> None:
+        if event.data.get("old_state") is None or event.data.get("new_state") is None:
+            return
+        new_state: State = event.data["new_state"]
+        if entities_filter and not entities_filter(new_state.entity_id):
+            return
+        if significant_changes_only:
+            old_state: State = event.data["old_state"]
+            if new_state.state == old_state.state:
+                return
+        target(event)
+
+    if entity_ids:
+        subscriptions.append(
+            async_track_state_change_event(
+                hass, entity_ids, _forward_state_events_filtered
+            )
+        )
+        return
+
+    # We want the firehose
+    subscriptions.append(
+        hass.bus.async_listen(
+            EVENT_STATE_CHANGED,
+            _forward_state_events_filtered,
+            run_immediately=True,
+        )
+    )
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "history/stream",
+        vol.Required("start_time"): str,
+        vol.Optional("end_time"): str,
+        vol.Optional("entity_ids"): [str],
+        vol.Optional("include_start_time_state", default=True): bool,
+        vol.Optional("significant_changes_only", default=True): bool,
+        vol.Optional("minimal_response", default=False): bool,
+        vol.Optional("no_attributes", default=False): bool,
+    }
+)
+@websocket_api.async_response
+async def ws_stream(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle history stream websocket command."""
+    start_time_str = msg["start_time"]
+    msg_id: int = msg["id"]
+    entity_ids: list[str] | None = msg.get("entity_ids")
+    utc_now = dt_util.utcnow()
+    filters: Filters | None = None
+    entities_filter: EntityFilter | None = None
+    if not entity_ids:
+        filters = hass.data[HISTORY_FILTERS]
+        entities_filter = hass.data[HISTORY_ENTITIES_FILTER]
+
+    if start_time := dt_util.parse_datetime(start_time_str):
+        start_time = dt_util.as_utc(start_time)
+
+    if not start_time or start_time > utc_now:
+        connection.send_error(msg_id, "invalid_start_time", "Invalid start_time")
+        return
+
+    end_time_str = msg.get("end_time")
+    end_time: dt | None = None
+    if end_time_str:
+        if not (end_time := dt_util.parse_datetime(end_time_str)):
+            connection.send_error(msg_id, "invalid_end_time", "Invalid end_time")
+            return
+        end_time = dt_util.as_utc(end_time)
+        if end_time < start_time:
+            connection.send_error(msg_id, "invalid_end_time", "Invalid end_time")
+            return
+
+    entity_ids = msg.get("entity_ids")
+    include_start_time_state = msg["include_start_time_state"]
+
+    if (
+        not include_start_time_state
+        and entity_ids
+        and not _entities_may_have_state_changes_after(hass, entity_ids, start_time)
+    ):
+        _async_send_empty_response(connection, msg_id, start_time, end_time)
+        return
+
+    significant_changes_only = msg["significant_changes_only"]
+    no_attributes = msg["no_attributes"]
+    minimal_response = msg["minimal_response"]
+
+    if end_time and end_time <= utc_now:
+        # Not live stream but we it might be a big query
+        connection.subscriptions[msg_id] = callback(lambda: None)
+        connection.send_result(msg_id)
+        # Fetch everything from history
+        await _async_send_historical_events(
+            hass,
+            connection,
+            msg_id,
+            start_time,
+            end_time,
+            entity_ids,
+            filters,
+            include_start_time_state,
+            significant_changes_only,
+            minimal_response,
+            no_attributes,
+        )
+        return
+
+    subscriptions: list[CALLBACK_TYPE] = []
+    stream_queue: asyncio.Queue[Event] = asyncio.Queue(MAX_PENDING_HISTORY_STATES)
+    live_stream = HistoryLiveStream(
+        subscriptions=subscriptions, stream_queue=stream_queue
+    )
+
+    @callback
+    def _unsub(*_utc_time: Any) -> None:
+        """Unsubscribe from all events."""
+        for subscription in subscriptions:
+            subscription()
+        subscriptions.clear()
+        if live_stream.task:
+            live_stream.task.cancel()
+        if live_stream.wait_sync_task:
+            live_stream.wait_sync_task.cancel()
+        if live_stream.end_time_unsub:
+            live_stream.end_time_unsub()
+            live_stream.end_time_unsub = None
+
+    if end_time:
+        live_stream.end_time_unsub = async_track_point_in_utc_time(
+            hass, _unsub, end_time
+        )
+
+    @callback
+    def _queue_or_cancel(event: Event) -> None:
+        """Queue an event to be processed or cancel."""
+        try:
+            stream_queue.put_nowait(event)
+        except asyncio.QueueFull:
+            _LOGGER.debug(
+                "Client exceeded max pending messages of %s",
+                MAX_PENDING_HISTORY_STATES,
+            )
+            _unsub()
+
+    _async_subscribe_events(
+        hass,
+        subscriptions,
+        _queue_or_cancel,
+        entities_filter,
+        entity_ids,
+        significant_changes_only=significant_changes_only,
+    )
+    subscriptions_setup_complete_time = dt_util.utcnow()
+    connection.subscriptions[msg_id] = _unsub
+    connection.send_result(msg_id)
+    # Fetch everything from history
+    last_event_time = await _async_send_historical_events(
+        hass,
+        connection,
+        msg_id,
+        start_time,
+        subscriptions_setup_complete_time,
+        entity_ids,
+        filters,
+        include_start_time_state,
+        significant_changes_only,
+        minimal_response,
+        no_attributes,
+    )
+
+    live_stream.task = asyncio.create_task(
+        _async_events_consumer(
+            subscriptions_setup_complete_time,
+            connection,
+            msg_id,
+            stream_queue,
+        )
+    )
+
+    if msg_id not in connection.subscriptions:
+        # Unsubscribe happened while sending historical events
+        return
+
+    live_stream.wait_sync_task = asyncio.create_task(
+        get_instance(hass).async_block_till_done()
+    )
+    await live_stream.wait_sync_task
+
+    #
+    # Fetch any events from the database that have
+    # not been committed since the original fetch
+    # so we can switch over to using the subscriptions
+    #
+    # We only want events that happened after the last event
+    # we had from the last database query
+    #
+    await _async_send_historical_events(
+        hass,
+        connection,
+        msg_id,
+        last_event_time or start_time,
+        subscriptions_setup_complete_time,
+        entity_ids,
+        filters,
+        include_start_time_state,
+        significant_changes_only,
+        minimal_response,
+        no_attributes,
+    )
