@@ -61,6 +61,7 @@ class ReolinkHost:
 
         self.webhook_id: str | None = None
         self._webhook_url: str | None = None
+        self.lost_subscription: bool = False
 
     @property
     def unique_id(self) -> str:
