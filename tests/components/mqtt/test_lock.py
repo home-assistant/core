@@ -8,7 +8,6 @@ from homeassistant.components.lock import (
     SERVICE_LOCK,
     SERVICE_OPEN,
     SERVICE_UNLOCK,
-    STATE_JAMMED,
     STATE_LOCKED,
     STATE_LOCKING,
     STATE_UNLOCKED,
@@ -71,7 +70,6 @@ def lock_platform_only():
 @pytest.mark.parametrize(
     "payload,lock_state",
     [
-        ("JAMMED", STATE_JAMMED),
         ("LOCKED", STATE_LOCKED),
         ("LOCKING", STATE_LOCKING),
         ("UNLOCKED", STATE_UNLOCKED),
@@ -94,7 +92,6 @@ async def test_controlling_state_via_topic(
                     "payload_lock": "LOCK",
                     "payload_unlock": "UNLOCK",
                     "state_locked": "LOCKED",
-                    "state_jammed": "JAMMED",
                     "state_locking": "LOCKING",
                     "state_unlocked": "UNLOCKED",
                     "state_unlocking": "UNLOCKING",
@@ -119,7 +116,6 @@ async def test_controlling_state_via_topic(
 @pytest.mark.parametrize(
     "payload,lock_state",
     [
-        ("blocked", STATE_JAMMED),
         ("closed", STATE_LOCKED),
         ("closing", STATE_LOCKING),
         ("open", STATE_UNLOCKED),
@@ -141,7 +137,6 @@ async def test_controlling_non_default_state_via_topic(
                     "command_topic": "command-topic",
                     "payload_lock": "LOCK",
                     "payload_unlock": "UNLOCK",
-                    "state_jammed": "blocked",
                     "state_locked": "closed",
                     "state_locking": "closing",
                     "state_unlocked": "open",
@@ -166,7 +161,6 @@ async def test_controlling_non_default_state_via_topic(
 @pytest.mark.parametrize(
     "payload,lock_state",
     [
-        ('{"val":"JAMMED"}', STATE_JAMMED),
         ('{"val":"LOCKED"}', STATE_LOCKED),
         ('{"val":"LOCKING"}', STATE_LOCKING),
         ('{"val":"UNLOCKED"}', STATE_UNLOCKED),
@@ -188,7 +182,6 @@ async def test_controlling_state_via_topic_and_json_message(
                     "command_topic": "command-topic",
                     "payload_lock": "LOCK",
                     "payload_unlock": "UNLOCK",
-                    "state_jammed": "JAMMED",
                     "state_locked": "LOCKED",
                     "state_locking": "LOCKING",
                     "state_unlocked": "UNLOCKED",
@@ -213,7 +206,6 @@ async def test_controlling_state_via_topic_and_json_message(
 @pytest.mark.parametrize(
     "payload,lock_state",
     [
-        ('{"val":"blocked"}', STATE_JAMMED),
         ('{"val":"closed"}', STATE_LOCKED),
         ('{"val":"closing"}', STATE_LOCKING),
         ('{"val":"open"}', STATE_UNLOCKED),
@@ -235,7 +227,6 @@ async def test_controlling_non_default_state_via_topic_and_json_message(
                     "command_topic": "command-topic",
                     "payload_lock": "LOCK",
                     "payload_unlock": "UNLOCK",
-                    "state_jammed": "blocked",
                     "state_locked": "closed",
                     "state_locking": "closing",
                     "state_unlocked": "open",
