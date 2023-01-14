@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
 
 import aiohttp
 from esphome_dashboard_api import ConfiguredDevice, ESPHomeDashboardAPI
@@ -12,9 +11,6 @@ from esphome_dashboard_api import ConfiguredDevice, ESPHomeDashboardAPI
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-
-if TYPE_CHECKING:
-    pass
 
 KEY_DASHBOARD = "esphome_dashboard"
 

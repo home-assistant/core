@@ -17,6 +17,7 @@ from homeassistant.const import (
     LENGTH_YARD,
     MASS_GRAMS,
     MASS_OUNCES,
+    PERCENTAGE,
     PRESSURE_HPA,
     PRESSURE_INHG,
     PRESSURE_KPA,
@@ -546,6 +547,31 @@ async def test_custom_unit(
             1000,
             SensorDeviceClass.ENERGY,
         ),
+        # Power factor
+        (
+            None,
+            PERCENTAGE,
+            PERCENTAGE,
+            1.0,
+            100,
+            SensorDeviceClass.POWER_FACTOR,
+        ),
+        (
+            PERCENTAGE,
+            None,
+            None,
+            100,
+            1,
+            SensorDeviceClass.POWER_FACTOR,
+        ),
+        (
+            "Cos φ",
+            None,
+            "Cos φ",
+            1.0,
+            1.0,
+            SensorDeviceClass.POWER_FACTOR,
+        ),
         # Pressure
         # Smaller to larger unit, InHg is ~33x larger than hPa -> 1 more decimal
         (
@@ -686,7 +712,7 @@ async def test_custom_unit_change(
 
     state = hass.states.get(entity0.entity_id)
     assert float(state.state) == approx(float(native_value))
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == native_unit
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == native_unit
 
     entity_registry.async_update_entity_options(
         "sensor.test", "sensor", {"unit_of_measurement": custom_unit}
@@ -695,7 +721,7 @@ async def test_custom_unit_change(
 
     state = hass.states.get(entity0.entity_id)
     assert float(state.state) == approx(float(custom_value))
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == state_unit
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == state_unit
 
     entity_registry.async_update_entity_options(
         "sensor.test", "sensor", {"unit_of_measurement": native_unit}
@@ -704,14 +730,14 @@ async def test_custom_unit_change(
 
     state = hass.states.get(entity0.entity_id)
     assert float(state.state) == approx(float(native_value))
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == native_unit
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == native_unit
 
     entity_registry.async_update_entity_options("sensor.test", "sensor", None)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity0.entity_id)
     assert float(state.state) == approx(float(native_value))
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == native_unit
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == native_unit
 
 
 @pytest.mark.parametrize(
