@@ -119,6 +119,9 @@ async def validate_sensor_setup(
 ) -> dict[str, Any]:
     """Validate sensor input."""
     user_input[CONF_UNIQUE_ID] = str(uuid.uuid1())
+    user_input[
+        CONF_NAME
+    ] = f"{SENSOR_CONFIG[user_input[CONF_TYPE]].name} {user_input.get(CONF_ARG, '')}".rstrip()
 
     if (
         SENSOR_CONFIG[user_input[CONF_TYPE]].mandatory_arg is True
