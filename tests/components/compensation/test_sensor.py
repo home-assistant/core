@@ -217,3 +217,54 @@ async def test_new_state_is_none(hass):
     )
 
     assert last_changed == hass.states.get(expected_entity_id).last_changed
+
+
+async def test_limits(hass):
+    """Test compensation sensor state."""
+    info = [
+        ("sensor.minimum", True, False),
+        ("sensor.maximum", False, True),
+        ("sensor.both", True, True),
+    ]
+    config = {
+        "compensation": {
+            f"test{i}": {
+                "source": values[0],
+                "data_points": [
+                    [1.0, 0.0],
+                    [3.0, 2.0],
+                    [2.0, 1.0],
+                ],
+                "precision": 2,
+                "clip_lower_limit": values[1],
+                "clip_upper_limit": values[2],
+                "unit_of_measurement": "a",
+            }
+            for i, values in enumerate(info)
+        }
+    }
+    await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    for source, lower, upper in info:
+        entity_id = f"sensor.compensation_{source.replace('.', '_')}"
+
+        if lower:
+            hass.states.async_set(source, 0, {})
+
+            await hass.async_block_till_done()
+
+            state = hass.states.get(entity_id)
+
+            assert float(state.state) == 0.0
+
+        if upper:
+            hass.states.async_set(source, 5, {})
+
+            await hass.async_block_till_done()
+
+            state = hass.states.get(entity_id)
+
+            assert float(state.state) == 2.0

@@ -7,6 +7,8 @@ import voluptuous as vol
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     CONF_ATTRIBUTE,
+    CONF_MAXIMUM,
+    CONF_MINIMUM,
     CONF_SOURCE,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
@@ -17,6 +19,8 @@ from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    CONF_CLIP_LOWER_LIMIT,
+    CONF_CLIP_UPPER_LIMIT,
     CONF_COMPENSATION,
     CONF_DATAPOINTS,
     CONF_DEGREE,
@@ -50,6 +54,8 @@ COMPENSATION_SCHEMA = vol.Schema(
         ],
         vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_ATTRIBUTE): cv.string,
+        vol.Optional(CONF_CLIP_UPPER_LIMIT, default=False): cv.boolean,
+        vol.Optional(CONF_CLIP_LOWER_LIMIT, default=False): cv.boolean,
         vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): cv.positive_int,
         vol.Optional(CONF_DEGREE, default=DEFAULT_DEGREE): vol.All(
             vol.Coerce(int),
@@ -78,8 +84,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         degree = conf[CONF_DEGREE]
 
+        initial_coefficients: list[tuple[float, float]] = conf[CONF_DATAPOINTS]
+        sorted_coefficients = sorted(initial_coefficients, key=lambda x: x[0])
+
         # get x values and y values from the x,y point pairs
-        x_values, y_values = zip(*conf[CONF_DATAPOINTS])
+        x_values, y_values = zip(*initial_coefficients)
 
         # try to get valid coefficients for a polynomial
         coefficients = None
@@ -98,6 +107,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 k: v for k, v in conf.items() if k not in [CONF_DEGREE, CONF_DATAPOINTS]
             }
             data[CONF_POLYNOMIAL] = np.poly1d(coefficients)
+            data[CONF_MINIMUM] = (
+                sorted_coefficients[0] if data[CONF_CLIP_LOWER_LIMIT] else None
+            )
+            data[CONF_MAXIMUM] = (
+                sorted_coefficients[-1] if data[CONF_CLIP_UPPER_LIMIT] else None
+            )
 
             hass.data[DATA_COMPENSATION][compensation] = data
 
