@@ -82,6 +82,13 @@ PLATFORM_SCHEMA = vol.All(
 
 DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA)
 
+STATE_CONFIG_KEYS = [
+    CONF_STATE_LOCKED,
+    CONF_STATE_LOCKING,
+    CONF_STATE_UNLOCKED,
+    CONF_STATE_UNLOCKING,
+]
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -113,6 +120,7 @@ class MqttLock(MqttEntity, LockEntity):
     _attributes_extra_blocked = MQTT_LOCK_ATTRIBUTES_BLOCKED
 
     _optimistic: bool
+    _valid_states: list[str]
     _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
 
     def __init__(
@@ -144,6 +152,8 @@ class MqttLock(MqttEntity, LockEntity):
         if CONF_PAYLOAD_OPEN in config:
             self._attr_supported_features |= LockEntityFeature.OPEN
 
+        self._valid_states = [config[state] for state in STATE_CONFIG_KEYS]
+
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
 
@@ -152,16 +162,7 @@ class MqttLock(MqttEntity, LockEntity):
         def message_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages."""
             payload = self._value_template(msg.payload)
-            valid_states = (
-                self._config[state]
-                for state in (
-                    CONF_STATE_LOCKED,
-                    CONF_STATE_LOCKING,
-                    CONF_STATE_UNLOCKED,
-                    CONF_STATE_UNLOCKING,
-                )
-            )
-            if payload in valid_states:
+            if payload in self._valid_states:
                 self._attr_is_locked = payload == self._config[CONF_STATE_LOCKED]
                 self._attr_is_locking = payload == self._config[CONF_STATE_LOCKING]
                 self._attr_is_unlocking = payload == self._config[CONF_STATE_UNLOCKING]
