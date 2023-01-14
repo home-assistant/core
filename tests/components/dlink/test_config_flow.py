@@ -168,17 +168,9 @@ async def test_dhcp_already_configured(
 
 
 async def test_dhcp_unique_id_assignment(
-    hass: HomeAssistant, mocked_plug: MagicMock, config_entry_with_uid: MockConfigEntry
+    hass: HomeAssistant, mocked_plug: MagicMock
 ) -> None:
     """Test dhcp initialized flow with no unique id for matching entry."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_DHCP}, data=CONF_DHCP_FLOW_NEW_IP
-    )
-
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-    assert config_entry_with_uid.data[CONF_HOST] == "5.6.7.8"
-
     dhcp_data = dhcp.DhcpServiceInfo(
         ip="2.3.4.5",
         macaddress="11:22:33:44:55:66",
@@ -197,3 +189,16 @@ async def test_dhcp_unique_id_assignment(
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"] == CONF_DATA | {CONF_HOST: "2.3.4.5"}
     assert result["result"].unique_id == "11:22:33:44:55:66"
+
+
+async def test_dhcp_changed_ip(
+    hass: HomeAssistant, config_entry_with_uid: MockConfigEntry
+) -> None:
+    """Test that we successfully change IP address for device with known mac address."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_DHCP}, data=CONF_DHCP_FLOW_NEW_IP
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry_with_uid.data[CONF_HOST] == "5.6.7.8"

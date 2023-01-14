@@ -45,10 +45,11 @@ class DLinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Allow the user to confirm adding the device."""
         errors = {}
         if user_input is not None:
-            error = await self.hass.async_add_executor_job(
-                self._try_connect, user_input
-            )
-            if error is None:
+            if (
+                error := await self.hass.async_add_executor_job(
+                    self._try_connect, user_input
+                )
+            ) is None:
                 return self.async_create_entry(
                     title=DEFAULT_NAME,
                     data=user_input | {CONF_HOST: self.ip_address},
@@ -88,10 +89,11 @@ class DLinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
 
-            error = await self.hass.async_add_executor_job(
-                self._try_connect, user_input
-            )
-            if error is None:
+            if (
+                error := await self.hass.async_add_executor_job(
+                    self._try_connect, user_input
+                )
+            ) is None:
                 return self.async_create_entry(
                     title=DEFAULT_NAME,
                     data=user_input,

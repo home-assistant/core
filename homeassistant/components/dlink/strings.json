@@ -11,9 +11,9 @@
       },
       "confirm_discovery": {
         "data": {
-          "password": "Password (default: PIN code on the back)",
+          "password": "[%key:component::dlink::config::step::user::data::password%]",
           "username": "[%key:common::config_flow::data::username%]",
-          "use_legacy_protocol": "Use legacy protocol"
+          "use_legacy_protocol": "[%key:component::dlink::config::step::user::data::use_legacy_protocol%]"
         }
       }
     },
