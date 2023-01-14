@@ -17,11 +17,14 @@
     }
   },
   "options": {
+    "error": {
+      "missing_arg": "Mandatory argument missing for requested type"
+    },
     "step": {
       "init": {
         "menu_options": {
           "add_sensor": "Add sensor",
-          "type_edit_sensor": "Configure sensor",
+          "select_edit_sensor": "Configure sensor",
           "remove_sensor": "Remove sensor"
         }
       },
@@ -35,6 +38,11 @@
           "arg": "[%key:component::systemmonitor::config::step::user::data_description::arg%]"
         }
       },
+      "select_edit_sensor": {
+        "data": {
+          "index": "Sensor to configure"
+        }
+      },
       "edit_sensor": {
         "data": {
           "type": "[%key:component::systemmonitor::config::step::user::data::type%]",
@@ -45,14 +53,9 @@
           "arg": "[%key:component::systemmonitor::config::step::user::data_description::arg%]"
         }
       },
-      "resource": {
+      "remove_sensor": {
         "data": {
-          "type": "[%key:component::systemmonitor::config::step::user::data::type%]",
-          "arg": "[%key:component::systemmonitor::config::step::user::data::arg%]"
-        },
-        "data_description": {
-          "type": "[%key:component::systemmonitor::config::step::user::data_description::type%]",
-          "arg": "[%key:component::systemmonitor::config::step::user::data_description::arg%]"
+          "index": "Sensor(s) to remove"
         }
       }
     }

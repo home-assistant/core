@@ -23,6 +23,9 @@
         }
     },
     "options": {
+        "error": {
+            "missing_arg": "Mandatory argument missing for requested type"
+        },
         "step": {
             "add_sensor": {
                 "data": {
@@ -48,17 +51,17 @@
                 "menu_options": {
                     "add_sensor": "Add sensor",
                     "remove_sensor": "Remove sensor",
-                    "type_edit_sensor": "Configure sensor"
+                    "select_edit_sensor": "Configure sensor"
                 }
             },
-            "resource": {
+            "remove_sensor": {
                 "data": {
-                    "arg": "Argument",
-                    "type": "Type"
-                },
-                "data_description": {
-                    "arg": "Argument to use, see documentation for mandatory usage.",
-                    "type": "The type of the information to display"
+                    "index": "Sensor(s) to remove"
+                }
+            },
+            "select_edit_sensor": {
+                "data": {
+                    "index": "Sensor to configure"
                 }
             }
         }
