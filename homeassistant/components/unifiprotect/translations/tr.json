@@ -41,6 +41,28 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "license_plate": {
+                "state": {
+                    "none": "Temiz"
+                }
+            }
+        }
+    },
+    "issues": {
+        "deprecated_service_set_doorbell_message": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "\"unifiprotect.set_doorbell_message\" hizmeti, her Kap\u0131 Zili cihaz\u0131na eklenen yeni Kap\u0131 Zili Metni varl\u0131\u011f\u0131 lehine kullan\u0131mdan kald\u0131r\u0131lm\u0131\u015ft\u0131r. v2023.3.0'da kald\u0131r\u0131lacakt\u0131r. L\u00fctfen [`text.set_value` hizmetini]( {link} ) kullanmak i\u00e7in g\u00fcncelleyin.",
+                        "title": "set_doorbell_message Kullan\u0131mdan Kald\u0131r\u0131ld\u0131"
+                    }
+                }
+            },
+            "title": "set_doorbell_message Kullan\u0131mdan Kald\u0131r\u0131ld\u0131"
+        }
+    },
     "options": {
         "step": {
             "init": {

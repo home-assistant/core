@@ -2,6 +2,7 @@
     "device_automation": {
         "condition_type": {
             "is_apparent_power": "Mevcut {entity_name} g\u00f6r\u00fcn\u00fcr g\u00fc\u00e7",
+            "is_atmospheric_pressure": "Mevcut {entity_name} atmosferik bas\u0131n\u00e7",
             "is_battery_level": "Mevcut {entity_name} pil seviyesi",
             "is_carbon_dioxide": "Mevcut {entity_name} karbondioksit konsantrasyon seviyesi",
             "is_carbon_monoxide": "Mevcut {entity_name} karbon monoksit konsantrasyon seviyesi",
@@ -37,6 +38,7 @@
         },
         "trigger_type": {
             "apparent_power": "{entity_name} g\u00f6r\u00fcn\u00fcr g\u00fc\u00e7 de\u011fi\u015fiklikleri",
+            "atmospheric_pressure": "{entity_name} atmosferik bas\u0131n\u00e7 de\u011fi\u015fiklikleri",
             "battery_level": "{entity_name} pil seviyesi de\u011fi\u015fiklikleri",
             "carbon_dioxide": "{entity_name} karbondioksit konsantrasyonu de\u011fi\u015fiklikleri",
             "carbon_monoxide": "{entity_name} karbon monoksit konsantrasyonu de\u011fi\u015fiklikleri",
@@ -60,6 +62,7 @@
             "pressure": "{entity_name} bas\u0131n\u00e7 de\u011fi\u015fiklikleri",
             "reactive_power": "{entity_name} reaktif g\u00fc\u00e7 de\u011fi\u015fiklikleri",
             "signal_strength": "{entity_name} sinyal g\u00fcc\u00fc de\u011fi\u015fiklikleri",
+            "sound_pressure": "{entity_name} ses bas\u0131nc\u0131 de\u011fi\u015fiklikleri",
             "speed": "{entity_name} h\u0131z de\u011fi\u015fiklikleri",
             "sulphur_dioxide": "{entity_name} k\u00fck\u00fcrt dioksit konsantrasyonu de\u011fi\u015fiklikleri",
             "temperature": "{entity_name} s\u0131cakl\u0131k de\u011fi\u015fiklikleri",

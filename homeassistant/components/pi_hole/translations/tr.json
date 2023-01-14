@@ -1,16 +1,25 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Hizmet zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+            "already_configured": "Hizmet zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu"
         },
         "error": {
-            "cannot_connect": "Ba\u011flanma hatas\u0131"
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama"
         },
         "step": {
             "api_key": {
                 "data": {
                     "api_key": "API Anahtar\u0131"
                 }
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API Anahtar\u0131"
+                },
+                "description": "L\u00fctfen {host} / {location} adresinde PI-Hole i\u00e7in yeni bir api anahtar\u0131 girin",
+                "title": "PI-Hole Entegrasyonu Yeniden Do\u011frula"
             },
             "user": {
                 "data": {
@@ -24,6 +33,12 @@
                     "verify_ssl": "SSL sertifikas\u0131n\u0131 do\u011frulay\u0131n"
                 }
             }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "YAML kullanarak PI-Hole yap\u0131land\u0131rmas\u0131 kald\u0131r\u0131l\u0131yor. \n\n Mevcut YAML yap\u0131land\u0131rman\u0131z, kullan\u0131c\u0131 aray\u00fcz\u00fcne otomatik olarak aktar\u0131ld\u0131. \n\n PI-Hole YAML yap\u0131land\u0131rmas\u0131n\u0131 configuration.yaml dosyan\u0131zdan kald\u0131r\u0131n ve bu sorunu \u00e7\u00f6zmek i\u00e7in Home Assistant'\u0131 yeniden ba\u015flat\u0131n.",
+            "title": "PI-Hole YAML yap\u0131land\u0131rmas\u0131 kald\u0131r\u0131l\u0131yor"
         }
     }
 }

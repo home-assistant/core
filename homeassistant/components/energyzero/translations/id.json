@@ -1,0 +1,12 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi"
+        },
+        "step": {
+            "user": {
+                "description": "Ingin memulai penyiapan?"
+            }
+        }
+    }
+}

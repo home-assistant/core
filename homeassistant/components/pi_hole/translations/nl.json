@@ -1,16 +1,24 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Dienst is al geconfigureerd"
+            "already_configured": "Dienst is al geconfigureerd",
+            "reauth_successful": "Herauthenticatie geslaagd"
         },
         "error": {
-            "cannot_connect": "Kan geen verbinding maken"
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_auth": "Ongeldige authenticatie"
         },
         "step": {
             "api_key": {
                 "data": {
                     "api_key": "API-sleutel"
                 }
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API-sleutel"
+                },
+                "title": "Pi-Hole-Integratie herauthenticeren"
             },
             "user": {
                 "data": {

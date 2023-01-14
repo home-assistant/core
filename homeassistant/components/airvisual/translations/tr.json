@@ -50,6 +50,12 @@
             }
         }
     },
+    "issues": {
+        "airvisual_pro_migration": {
+            "description": "AirVisual Pro birimleri art\u0131k kendi Ev Asistan\u0131 entegrasyonudur (AirVisual bulut API'sini kullanan orijinal AirVisual entegrasyonuna dahil edilmek yerine). ` {ip_address} ` konumunda bulunan Pro cihaz\u0131 otomatik olarak ta\u015f\u0131nd\u0131. \n\n Bu ge\u00e7i\u015fin bir par\u00e7as\u0131 olarak, Uzman\u0131n \" {old_device_id}\" olan cihaz kimli\u011fi \" {old_device_id} {new_device_id} olarak de\u011fi\u015fti. L\u00fctfen bu otomasyonlar\u0131 yeni cihaz kimli\u011fini kullanacak \u015fekilde g\u00fcncelleyin: {device_automations_string} .",
+            "title": "{ip_address} art\u0131k AirVisual Pro entegrasyonunun bir par\u00e7as\u0131"
+        }
+    },
     "options": {
         "step": {
             "init": {

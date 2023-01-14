@@ -44,6 +44,8 @@
             "button_2": "Tweede knop",
             "button_3": "Derde knop",
             "button_4": "Vierde knop",
+            "clock_wise": "Rotatie met de klok mee",
+            "counter_clock_wise": "Rotatie tegen de klok in",
             "dim_down": "Dim omlaag",
             "dim_up": "Dim omhoog",
             "double_buttons_1_3": "Eerste en derde knop",
