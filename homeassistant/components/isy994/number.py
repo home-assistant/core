@@ -1,7 +1,8 @@
 """Support for ISY number entities."""
 from __future__ import annotations
 
-from typing import Any, cast
+from dataclasses import replace
+from typing import Any
 
 from pyisy.constants import COMMAND_FRIENDLY_NAME, ISY_VALUE_UNKNOWN, PROP_ON_LEVEL
 from pyisy.helpers import EventListener, NodeProperty
@@ -9,20 +10,12 @@ from pyisy.nodes import Node
 from pyisy.variables import Variable
 
 from homeassistant.components.number import (
-    ATTR_MAX,
-    ATTR_MIN,
-    ATTR_STEP,
     NumberEntity,
     NumberEntityDescription,
     NumberMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT,
-    CONF_VARIABLES,
-    PERCENTAGE,
-    Platform,
-)
+from homeassistant.const import CONF_VARIABLES, PERCENTAGE, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -42,12 +35,14 @@ from .helpers import convert_isy_value_to_hass
 ISY_MAX_SIZE = (2**32) / 2
 ON_RANGE = (1, 255)  # Off is not included
 CONTROL_DESC = {
-    PROP_ON_LEVEL: {
-        ATTR_MIN: 1.0,
-        ATTR_MAX: 100.0,
-        ATTR_STEP: 1.0,
-        ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
-    }
+    PROP_ON_LEVEL: NumberEntityDescription(
+        key=PROP_ON_LEVEL,
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.CONFIG,
+        native_min_value=1.0,
+        native_max_value=100.0,
+        native_step=1.0,
+    )
 }
 
 
@@ -75,15 +70,10 @@ async def async_setup_entry(
             native_min_value=-min_max,
             native_max_value=min_max,
         )
-        description_init = NumberEntityDescription(
+        description_init = replace(
+            description,
             key=f"{node.address}_init",
             name=f"{node.name} Initial Value",
-            icon="mdi:counter",
-            entity_registry_enabled_default=False,
-            native_unit_of_measurement=None,
-            native_step=step,
-            native_min_value=-min_max,
-            native_max_value=min_max,
             entity_category=EntityCategory.CONFIG,
         )
 
@@ -106,28 +96,12 @@ async def async_setup_entry(
         )
 
     for node, control in isy_data.aux_properties[Platform.NUMBER]:
-        control_detail = CONTROL_DESC[control]
-        name = COMMAND_FRIENDLY_NAME.get(control, control).replace("_", " ").title()
-        if node.address != node.primary_node:
-            name = f"{node.name} {name}"
-        description_on_level = NumberEntityDescription(
-            key=f"{isy_data.uid_base(node)}_{control}",
-            name=name,
-            native_unit_of_measurement=cast(
-                str, control_detail[ATTR_UNIT_OF_MEASUREMENT]
-            ),
-            entity_category=EntityCategory.CONFIG,
-            native_min_value=cast(float, control_detail[ATTR_MIN]),
-            native_max_value=cast(float, control_detail[ATTR_MAX]),
-            native_step=cast(float, control_detail[ATTR_STEP]),
-        )
-
         entities.append(
             ISYAuxControlNumberEntity(
                 node=node,
                 control=control,
                 unique_id=f"{isy_data.uid_base(node)}_{control}",
-                description=description_on_level,
+                description=CONTROL_DESC[control],
                 device_info=device_info.get(node.primary_node),
             )
         )
@@ -139,7 +113,6 @@ class ISYAuxControlNumberEntity(NumberEntity):
 
     _attr_mode = NumberMode.SLIDER
     _attr_should_poll = False
-    _aux_control: NodeProperty | None
 
     def __init__(
         self,
@@ -151,6 +124,10 @@ class ISYAuxControlNumberEntity(NumberEntity):
     ) -> None:
         """Initialize the ISY Aux Control Number entity."""
         self._node = node
+        name = COMMAND_FRIENDLY_NAME.get(control, control).replace("_", " ").title()
+        if node.address != node.primary_node:
+            name = f"{node.name} {name}"
+        self._attr_name = name
         self._control = control
         self.entity_description = description
         self._attr_has_entity_name = node.address == node.primary_node
