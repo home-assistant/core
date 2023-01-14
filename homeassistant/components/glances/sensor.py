@@ -8,35 +8,41 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
+    StateType,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_HOST,
     CONF_NAME,
-    DATA_GIBIBYTES,
-    DATA_MEBIBYTES,
     PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
     STATE_UNAVAILABLE,
-    TEMP_CELSIUS,
     Platform,
+    UnitOfInformation,
+    UnitOfTemperature,
 )
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import GlancesData
-from .const import CPU_ICON, DATA_UPDATED, DOMAIN
+from . import GlancesDataUpdateCoordinator
+from .const import CPU_ICON, DOMAIN
 
 
 @dataclass
-class GlancesSensorEntityDescription(SensorEntityDescription):
-    """Describe Glances sensor entity."""
+class GlancesSensorEntityDescriptionMixin:
+    """Mixin for required keys."""
 
-    type: str | None = None
-    name_suffix: str | None = None
+    type: str
+    name_suffix: str
+
+
+@dataclass
+class GlancesSensorEntityDescription(
+    SensorEntityDescription, GlancesSensorEntityDescriptionMixin
+):
+    """Describe Glances sensor entity."""
 
 
 SENSOR_TYPES: tuple[GlancesSensorEntityDescription, ...] = (
@@ -52,7 +58,8 @@ SENSOR_TYPES: tuple[GlancesSensorEntityDescription, ...] = (
         key="disk_use",
         type="fs",
         name_suffix="used",
-        native_unit_of_measurement=DATA_GIBIBYTES,
+        native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:harddisk",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -60,7 +67,8 @@ SENSOR_TYPES: tuple[GlancesSensorEntityDescription, ...] = (
         key="disk_free",
         type="fs",
         name_suffix="free",
-        native_unit_of_measurement=DATA_GIBIBYTES,
+        native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:harddisk",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -76,7 +84,8 @@ SENSOR_TYPES: tuple[GlancesSensorEntityDescription, ...] = (
         key="memory_use",
         type="mem",
         name_suffix="RAM used",
-        native_unit_of_measurement=DATA_MEBIBYTES,
+        native_unit_of_measurement=UnitOfInformation.MEBIBYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:memory",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -84,7 +93,8 @@ SENSOR_TYPES: tuple[GlancesSensorEntityDescription, ...] = (
         key="memory_free",
         type="mem",
         name_suffix="RAM free",
-        native_unit_of_measurement=DATA_MEBIBYTES,
+        native_unit_of_measurement=UnitOfInformation.MEBIBYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:memory",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -100,7 +110,8 @@ SENSOR_TYPES: tuple[GlancesSensorEntityDescription, ...] = (
         key="swap_use",
         type="memswap",
         name_suffix="Swap used",
-        native_unit_of_measurement=DATA_GIBIBYTES,
+        native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:memory",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -108,7 +119,8 @@ SENSOR_TYPES: tuple[GlancesSensorEntityDescription, ...] = (
         key="swap_free",
         type="memswap",
         name_suffix="Swap free",
-        native_unit_of_measurement=DATA_GIBIBYTES,
+        native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:memory",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -159,7 +171,7 @@ SENSOR_TYPES: tuple[GlancesSensorEntityDescription, ...] = (
         key="temperature_core",
         type="sensors",
         name_suffix="Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -167,7 +179,7 @@ SENSOR_TYPES: tuple[GlancesSensorEntityDescription, ...] = (
         key="temperature_hdd",
         type="sensors",
         name_suffix="Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -206,7 +218,8 @@ SENSOR_TYPES: tuple[GlancesSensorEntityDescription, ...] = (
         key="docker_memory_use",
         type="docker",
         name_suffix="Containers RAM used",
-        native_unit_of_measurement=DATA_MEBIBYTES,
+        native_unit_of_measurement=UnitOfInformation.MEBIBYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:docker",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -234,9 +247,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Glances sensors."""
 
-    client: GlancesData = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: GlancesDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     name = config_entry.data.get(CONF_NAME)
-    dev = []
+    entities = []
 
     @callback
     def _migrate_old_unique_ids(
@@ -256,15 +269,15 @@ async def async_setup_entry(
     for description in SENSOR_TYPES:
         if description.type == "fs":
             # fs will provide a list of disks attached
-            for disk in client.api.data[description.type]:
+            for disk in coordinator.data[description.type]:
                 _migrate_old_unique_ids(
                     hass,
-                    f"{client.host}-{name} {disk['mnt_point']} {description.name_suffix}",
+                    f"{coordinator.host}-{name} {disk['mnt_point']} {description.name_suffix}",
                     f"{disk['mnt_point']}-{description.key}",
                 )
-                dev.append(
+                entities.append(
                     GlancesSensor(
-                        client,
+                        coordinator,
                         name,
                         disk["mnt_point"],
                         description,
@@ -272,101 +285,80 @@ async def async_setup_entry(
                 )
         elif description.type == "sensors":
             # sensors will provide temp for different devices
-            for sensor in client.api.data[description.type]:
+            for sensor in coordinator.data[description.type]:
                 if sensor["type"] == description.key:
                     _migrate_old_unique_ids(
                         hass,
-                        f"{client.host}-{name} {sensor['label']} {description.name_suffix}",
+                        f"{coordinator.host}-{name} {sensor['label']} {description.name_suffix}",
                         f"{sensor['label']}-{description.key}",
                     )
-                    dev.append(
+                    entities.append(
                         GlancesSensor(
-                            client,
+                            coordinator,
                             name,
                             sensor["label"],
                             description,
                         )
                     )
         elif description.type == "raid":
-            for raid_device in client.api.data[description.type]:
+            for raid_device in coordinator.data[description.type]:
                 _migrate_old_unique_ids(
                     hass,
-                    f"{client.host}-{name} {raid_device} {description.name_suffix}",
+                    f"{coordinator.host}-{name} {raid_device} {description.name_suffix}",
                     f"{raid_device}-{description.key}",
                 )
-                dev.append(GlancesSensor(client, name, raid_device, description))
-        elif client.api.data[description.type]:
+                entities.append(
+                    GlancesSensor(coordinator, name, raid_device, description)
+                )
+        elif coordinator.data[description.type]:
             _migrate_old_unique_ids(
                 hass,
-                f"{client.host}-{name}  {description.name_suffix}",
+                f"{coordinator.host}-{name}  {description.name_suffix}",
                 f"-{description.key}",
             )
-            dev.append(
+            entities.append(
                 GlancesSensor(
-                    client,
+                    coordinator,
                     name,
                     "",
                     description,
                 )
             )
 
-    async_add_entities(dev, True)
+    async_add_entities(entities)
 
 
-class GlancesSensor(SensorEntity):
+class GlancesSensor(CoordinatorEntity[GlancesDataUpdateCoordinator], SensorEntity):
     """Implementation of a Glances sensor."""
 
     entity_description: GlancesSensorEntityDescription
     _attr_has_entity_name = True
-    _attr_should_poll = False
 
     def __init__(
         self,
-        glances_data: GlancesData,
+        coordinator: GlancesDataUpdateCoordinator,
         name: str | None,
         sensor_name_prefix: str,
         description: GlancesSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        self.glances_data = glances_data
+        super().__init__(coordinator)
         self._sensor_name_prefix = sensor_name_prefix
-        self.unsub_update: CALLBACK_TYPE | None = None
-
         self.entity_description = description
-        self._attr_name = f"{sensor_name_prefix} {description.name_suffix}"
+        self._attr_name = f"{sensor_name_prefix} {description.name_suffix}".strip()
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, glances_data.config_entry.entry_id)},
+            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
             manufacturer="Glances",
-            name=name or glances_data.config_entry.data[CONF_HOST],
+            name=name or coordinator.host,
         )
-        self._attr_unique_id = f"{self.glances_data.config_entry.entry_id}-{sensor_name_prefix}-{description.key}"
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}-{sensor_name_prefix}-{description.key}"
 
     @property
-    def available(self) -> bool:
-        """Could the device be accessed during the last update call."""
-        return self.glances_data.available
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        self.unsub_update = async_dispatcher_connect(
-            self.hass, DATA_UPDATED, self._schedule_immediate_update
-        )
-
-    @callback
-    def _schedule_immediate_update(self) -> None:
-        self.async_schedule_update_ha_state(True)
-
-    async def will_remove_from_hass(self) -> None:
-        """Unsubscribe from update dispatcher."""
-        if self.unsub_update:
-            self.unsub_update()
-        self.unsub_update = None
-
-    async def async_update(self) -> None:  # noqa: C901
-        """Get the latest data from REST API."""
-        if (value := self.glances_data.api.data) is None:
-            return
-
+    def native_value(self) -> StateType:  # noqa: C901
+        """Return the state of the resources."""
+        if (value := self.coordinator.data) is None:
+            return None
+        state: StateType = None
         if self.entity_description.type == "fs":
             for var in value["fs"]:
                 if var["mnt_point"] == self._sensor_name_prefix:
@@ -374,100 +366,102 @@ class GlancesSensor(SensorEntity):
                     break
             if self.entity_description.key == "disk_free":
                 try:
-                    self._attr_native_value = round(disk["free"] / 1024**3, 1)
+                    state = round(disk["free"] / 1024**3, 1)
                 except KeyError:
-                    self._attr_native_value = round(
+                    state = round(
                         (disk["size"] - disk["used"]) / 1024**3,
                         1,
                     )
             elif self.entity_description.key == "disk_use":
-                self._attr_native_value = round(disk["used"] / 1024**3, 1)
+                state = round(disk["used"] / 1024**3, 1)
             elif self.entity_description.key == "disk_use_percent":
-                self._attr_native_value = disk["percent"]
+                state = disk["percent"]
         elif self.entity_description.key == "battery":
             for sensor in value["sensors"]:
                 if (
                     sensor["type"] == "battery"
                     and sensor["label"] == self._sensor_name_prefix
                 ):
-                    self._attr_native_value = sensor["value"]
+                    state = sensor["value"]
         elif self.entity_description.key == "fan_speed":
             for sensor in value["sensors"]:
                 if (
                     sensor["type"] == "fan_speed"
                     and sensor["label"] == self._sensor_name_prefix
                 ):
-                    self._attr_native_value = sensor["value"]
+                    state = sensor["value"]
         elif self.entity_description.key == "temperature_core":
             for sensor in value["sensors"]:
                 if (
                     sensor["type"] == "temperature_core"
                     and sensor["label"] == self._sensor_name_prefix
                 ):
-                    self._attr_native_value = sensor["value"]
+                    state = sensor["value"]
         elif self.entity_description.key == "temperature_hdd":
             for sensor in value["sensors"]:
                 if (
                     sensor["type"] == "temperature_hdd"
                     and sensor["label"] == self._sensor_name_prefix
                 ):
-                    self._attr_native_value = sensor["value"]
+                    state = sensor["value"]
         elif self.entity_description.key == "memory_use_percent":
-            self._attr_native_value = value["mem"]["percent"]
+            state = value["mem"]["percent"]
         elif self.entity_description.key == "memory_use":
-            self._attr_native_value = round(value["mem"]["used"] / 1024**2, 1)
+            state = round(value["mem"]["used"] / 1024**2, 1)
         elif self.entity_description.key == "memory_free":
-            self._attr_native_value = round(value["mem"]["free"] / 1024**2, 1)
+            state = round(value["mem"]["free"] / 1024**2, 1)
         elif self.entity_description.key == "swap_use_percent":
-            self._attr_native_value = value["memswap"]["percent"]
+            state = value["memswap"]["percent"]
         elif self.entity_description.key == "swap_use":
-            self._attr_native_value = round(value["memswap"]["used"] / 1024**3, 1)
+            state = round(value["memswap"]["used"] / 1024**3, 1)
         elif self.entity_description.key == "swap_free":
-            self._attr_native_value = round(value["memswap"]["free"] / 1024**3, 1)
+            state = round(value["memswap"]["free"] / 1024**3, 1)
         elif self.entity_description.key == "processor_load":
             # Windows systems don't provide load details
             try:
-                self._attr_native_value = value["load"]["min15"]
+                state = value["load"]["min15"]
             except KeyError:
-                self._attr_native_value = value["cpu"]["total"]
+                state = value["cpu"]["total"]
         elif self.entity_description.key == "process_running":
-            self._attr_native_value = value["processcount"]["running"]
+            state = value["processcount"]["running"]
         elif self.entity_description.key == "process_total":
-            self._attr_native_value = value["processcount"]["total"]
+            state = value["processcount"]["total"]
         elif self.entity_description.key == "process_thread":
-            self._attr_native_value = value["processcount"]["thread"]
+            state = value["processcount"]["thread"]
         elif self.entity_description.key == "process_sleeping":
-            self._attr_native_value = value["processcount"]["sleeping"]
+            state = value["processcount"]["sleeping"]
         elif self.entity_description.key == "cpu_use_percent":
-            self._attr_native_value = value["quicklook"]["cpu"]
+            state = value["quicklook"]["cpu"]
         elif self.entity_description.key == "docker_active":
             count = 0
             try:
                 for container in value["docker"]["containers"]:
                     if container["Status"] == "running" or "Up" in container["Status"]:
                         count += 1
-                self._attr_native_value = count
+                state = count
             except KeyError:
-                self._attr_native_value = count
+                state = count
         elif self.entity_description.key == "docker_cpu_use":
             cpu_use = 0.0
             try:
                 for container in value["docker"]["containers"]:
                     if container["Status"] == "running" or "Up" in container["Status"]:
                         cpu_use += container["cpu"]["total"]
-                    self._attr_native_value = round(cpu_use, 1)
+                    state = round(cpu_use, 1)
             except KeyError:
-                self._attr_native_value = STATE_UNAVAILABLE
+                state = STATE_UNAVAILABLE
         elif self.entity_description.key == "docker_memory_use":
             mem_use = 0.0
             try:
                 for container in value["docker"]["containers"]:
                     if container["Status"] == "running" or "Up" in container["Status"]:
                         mem_use += container["memory"]["usage"]
-                    self._attr_native_value = round(mem_use / 1024**2, 1)
+                    state = round(mem_use / 1024**2, 1)
             except KeyError:
-                self._attr_native_value = STATE_UNAVAILABLE
+                state = STATE_UNAVAILABLE
         elif self.entity_description.type == "raid":
             for raid_device, raid in value["raid"].items():
                 if raid_device == self._sensor_name_prefix:
-                    self._attr_native_value = raid[self.entity_description.key]
+                    state = raid[self.entity_description.key]
+
+        return state

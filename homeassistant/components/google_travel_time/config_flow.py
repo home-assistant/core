@@ -8,7 +8,7 @@ from homeassistant.const import CONF_API_KEY, CONF_MODE, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .const import (
     ALL_LANGUAGES,
@@ -46,7 +46,7 @@ def default_options(hass: HomeAssistant) -> dict[str, str | None]:
     return {
         CONF_MODE: "driving",
         CONF_UNITS: (
-            UNITS_IMPERIAL if hass.config.units is IMPERIAL_SYSTEM else UNITS_METRIC
+            UNITS_IMPERIAL if hass.config.units is US_CUSTOMARY_SYSTEM else UNITS_METRIC
         ),
     }
 

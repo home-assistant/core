@@ -9,7 +9,7 @@
             "bulb_time_out": "Es kann keine Verbindung zur Gl\u00fchbirne hergestellt werden. Vielleicht ist die Gl\u00fchbirne offline oder es wurde eine falsche IP eingegeben. Bitte schalte das Licht ein und versuche es erneut!",
             "cannot_connect": "Verbindung fehlgeschlagen",
             "no_ip": "Keine g\u00fcltige IP-Adresse.",
-            "no_wiz_light": "Die Gl\u00fchbirne kann nicht \u00fcber die Integration der WiZ-Plattform verbunden werden.",
+            "no_wiz_light": "Die Gl\u00fchbirne kann nicht \u00fcber die Integration der WiZ Plattform verbunden werden.",
             "unknown": "Unerwarteter Fehler"
         },
         "flow_title": "{name} ({host})",

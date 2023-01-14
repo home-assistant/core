@@ -26,7 +26,7 @@
                 "description": "Kas h\u00e4\u00e4lestada seade {device}? Kui varem pole Home Assistantiga \u00fchendutud peaks teler kuvama h\u00fcpikakna tuvastusteabe sisestamiseks."
             },
             "reauth_confirm": {
-                "description": "P\u00e4rast esitamist n\u00f5ustu {device} h\u00fcpikaknaga, mis taotleb autoriseerimist 30 sekundi jooksul v\u00f5i sisesta PIN."
+                "description": "P\u00e4rast esitamist n\u00f5ustu {device} h\u00fcpikaknaga mis taotleb autoriseerimist 30 sekundi jooksul v\u00f5i sisesta PIN."
             },
             "reauth_confirm_encrypted": {
                 "description": "Sisesta seadmes {device} kuvatav PIN-kood."

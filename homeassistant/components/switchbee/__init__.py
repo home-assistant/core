@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from switchbee.api import CentralUnitAPI, SwitchBeeError
+from switchbee.api import CentralUnitPolling, CentralUnitWsRPC, is_wsrpc_api
+from switchbee.api.central_unit import SwitchBeeError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
@@ -24,16 +25,26 @@ PLATFORMS: list[Platform] = [
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up SwitchBee Smart Home from a config entry."""
+
     hass.data.setdefault(DOMAIN, {})
     central_unit = entry.data[CONF_HOST]
     user = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
     websession = async_get_clientsession(hass, verify_ssl=False)
-    api = CentralUnitAPI(central_unit, user, password, websession)
+    api: CentralUnitPolling | CentralUnitWsRPC = CentralUnitPolling(
+        central_unit, user, password, websession
+    )
+
+    # First try to connect and fetch the version
     try:
         await api.connect()
     except SwitchBeeError as exp:
         raise ConfigEntryNotReady("Failed to connect to the Central Unit") from exp
+
+    # Check if websocket version
+    if is_wsrpc_api(api):
+        api = CentralUnitWsRPC(central_unit, user, password, websession)
+        await api.connect()
 
     coordinator = SwitchBeeCoordinator(
         hass,

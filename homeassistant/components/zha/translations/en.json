@@ -36,10 +36,10 @@
                 "title": "Select a Serial Port"
             },
             "confirm": {
-                "description": "Do you want to setup {name}?"
+                "description": "Do you want to set up {name}?"
             },
             "confirm_hardware": {
-                "description": "Do you want to setup {name}?"
+                "description": "Do you want to set up {name}?"
             },
             "manual_pick_radio_type": {
                 "data": {
@@ -64,35 +64,12 @@
                 "description": "Your backup has a different IEEE address than your radio.  For your network to function properly, the IEEE address of your radio should also be changed.\n\nThis is a permanent operation.",
                 "title": "Overwrite Radio IEEE Address"
             },
-            "pick_radio": {
-                "data": {
-                    "radio_type": "Radio Type"
-                },
-                "description": "Pick a type of your Zigbee radio",
-                "title": "Radio Type"
-            },
-            "port_config": {
-                "data": {
-                    "baudrate": "port speed",
-                    "flow_control": "data flow control",
-                    "path": "Serial device path"
-                },
-                "description": "Enter port specific settings",
-                "title": "Settings"
-            },
             "upload_manual_backup": {
                 "data": {
                     "uploaded_backup_file": "Upload a file"
                 },
                 "description": "Restore your network settings from an uploaded backup JSON file. You can download one from a different ZHA installation from **Network Settings**, or use a Zigbee2MQTT `coordinator_backup.json` file.",
                 "title": "Upload a Manual Backup"
-            },
-            "user": {
-                "data": {
-                    "path": "Serial Device Path"
-                },
-                "description": "Select serial port for Zigbee radio",
-                "title": "ZHA"
             }
         }
     },

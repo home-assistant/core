@@ -1,12 +1,13 @@
 {
     "state": {
         "xiaomi_miio__display_orientation": {
+            "forward": "Vooruit",
             "left": "Links",
             "right": "Rechts"
         },
         "xiaomi_miio__led_brightness": {
             "bright": "Helder",
-            "dim": "Dim",
+            "dim": "Dimmen",
             "off": "Uit"
         },
         "xiaomi_miio__ptc_level": {

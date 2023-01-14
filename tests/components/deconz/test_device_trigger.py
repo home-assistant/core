@@ -349,6 +349,7 @@ async def test_functional_device_trigger(
     assert automation_calls[0].data["some"] == "test_trigger_button_press"
 
 
+@pytest.mark.skip(reason="Temporarily disabled until automation validation is improved")
 async def test_validate_trigger_unknown_device(hass, aioclient_mock):
     """Test unknown device does not return a trigger config."""
     await setup_deconz_integration(hass, aioclient_mock)

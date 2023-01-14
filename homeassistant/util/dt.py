@@ -4,7 +4,10 @@ from __future__ import annotations
 import bisect
 from contextlib import suppress
 import datetime as dt
+from functools import partial
+import platform
 import re
+import time
 from typing import Any
 import zoneinfo
 
@@ -13,6 +16,7 @@ import ciso8601
 DATE_STR_FORMAT = "%Y-%m-%d"
 UTC = dt.timezone.utc
 DEFAULT_TIME_ZONE: dt.tzinfo = dt.timezone.utc
+CLOCK_MONOTONIC_COARSE = 6
 
 # EPOCHORDINAL is not exposed as a constant
 # https://github.com/python/cpython/blob/3.10/Lib/zoneinfo/_zoneinfo.py#L12
@@ -95,9 +99,10 @@ def get_time_zone(time_zone_str: str) -> dt.tzinfo | None:
         return None
 
 
-def utcnow() -> dt.datetime:
-    """Get now in UTC time."""
-    return dt.datetime.now(UTC)
+# We use a partial here since it is implemented in native code
+# and avoids the global lookup of UTC
+utcnow: partial[dt.datetime] = partial(dt.datetime.now, UTC)
+utcnow.__doc__ = "Get now in UTC time."
 
 
 def now(time_zone: dt.tzinfo | None = None) -> dt.datetime:
@@ -262,8 +267,7 @@ def parse_time(time_str: str) -> dt.time | None:
 
 
 def get_age(date: dt.datetime) -> str:
-    """
-    Take a datetime and return its "age" as a string.
+    """Take a datetime and return its "age" as a string.
 
     The age can be in second, minute, hour, day, month or year. Only the
     biggest unit is considered, e.g. if it's 2 days and 3 hours, "2 days" will
@@ -323,7 +327,9 @@ def parse_time_expression(parameter: Any, min_value: int, max_value: int) -> lis
 def _dst_offset_diff(dattim: dt.datetime) -> dt.timedelta:
     """Return the offset when crossing the DST barrier."""
     delta = dt.timedelta(hours=24)
-    return (dattim + delta).utcoffset() - (dattim - delta).utcoffset()  # type: ignore[operator]
+    return (dattim + delta).utcoffset() - (  # type: ignore[operator]
+        dattim - delta
+    ).utcoffset()
 
 
 def _lower_bound(arr: list[int], cmp: int) -> int | None:
@@ -355,7 +361,8 @@ def find_next_time_expression_time(
         raise ValueError("Cannot find a next time: Time expression never matches!")
 
     while True:
-        # Reset microseconds and fold; fold (for ambiguous DST times) will be handled later
+        # Reset microseconds and fold; fold (for ambiguous DST times) will be
+        # handled later.
         result = now.replace(microsecond=0, fold=0)
 
         # Match next second
@@ -403,11 +410,12 @@ def find_next_time_expression_time(
             # -> trigger on the next time that 1. matches the pattern and 2. does exist
             # for example:
             #   on 2021.03.28 02:00:00 in CET timezone clocks are turned forward an hour
-            #   with pattern "02:30", don't run on 28 mar (such a wall time does not exist on this day)
-            #   instead run at 02:30 the next day
+            #   with pattern "02:30", don't run on 28 mar (such a wall time does not
+            #   exist on this day) instead run at 02:30 the next day
 
-            # We solve this edge case by just iterating one second until the result exists
-            # (max. 3600 operations, which should be fine for an edge case that happens once a year)
+            # We solve this edge case by just iterating one second until the result
+            # exists (max. 3600 operations, which should be fine for an edge case that
+            # happens once a year)
             now += dt.timedelta(seconds=1)
             continue
 
@@ -415,29 +423,34 @@ def find_next_time_expression_time(
             return result
 
         # When leaving DST and clocks are turned backward.
-        # Then there are wall clock times that are ambiguous i.e. exist with DST and without DST
-        # The logic above does not take into account if a given pattern matches _twice_
-        # in a day.
-        # Example: on 2021.10.31 02:00:00 in CET timezone clocks are turned backward an hour
+        # Then there are wall clock times that are ambiguous i.e. exist with DST and
+        # without DST. The logic above does not take into account if a given pattern
+        # matches _twice_ in a day.
+        # Example: on 2021.10.31 02:00:00 in CET timezone clocks are turned
+        # backward an hour.
 
         if _datetime_ambiguous(result):
             # `now` and `result` are both ambiguous, so the next match happens
             # _within_ the current fold.
 
             # Examples:
-            #  1. 2021.10.31 02:00:00+02:00 with pattern 02:30 -> 2021.10.31 02:30:00+02:00
-            #  2. 2021.10.31 02:00:00+01:00 with pattern 02:30 -> 2021.10.31 02:30:00+01:00
+            #  1. 2021.10.31 02:00:00+02:00 with pattern 02:30
+            #       -> 2021.10.31 02:30:00+02:00
+            #  2. 2021.10.31 02:00:00+01:00 with pattern 02:30
+            #       -> 2021.10.31 02:30:00+01:00
             return result.replace(fold=now.fold)
 
         if now.fold == 0:
-            # `now` is in the first fold, but result is not ambiguous (meaning it no longer matches
-            # within the fold).
-            # -> Check if result matches in the next fold. If so, emit that match
+            # `now` is in the first fold, but result is not ambiguous (meaning it no
+            # longer matches within the fold).
+            #   -> Check if result matches in the next fold. If so, emit that match
 
-            # Turn back the time by the DST offset, effectively run the algorithm on the first fold
-            # If it matches on the first fold, that means it will also match on the second one.
+            # Turn back the time by the DST offset, effectively run the algorithm on
+            # the first fold. If it matches on the first fold, that means it will also
+            # match on the second one.
 
-            # Example: 2021.10.31 02:45:00+02:00 with pattern 02:30 -> 2021.10.31 02:30:00+01:00
+            # Example: 2021.10.31 02:45:00+02:00 with pattern 02:30
+            #   -> 2021.10.31 02:30:00+01:00
 
             check_result = find_next_time_expression_time(
                 now + _dst_offset_diff(now), seconds, minutes, hours
@@ -461,3 +474,29 @@ def _datetime_ambiguous(dattim: dt.datetime) -> bool:
     assert dattim.tzinfo is not None
     opposite_fold = dattim.replace(fold=not dattim.fold)
     return _datetime_exists(dattim) and dattim.utcoffset() != opposite_fold.utcoffset()
+
+
+def __gen_monotonic_time_coarse() -> partial[float]:
+    """Return a function that provides monotonic time in seconds.
+
+    This is the coarse version of time_monotonic, which is faster but less accurate.
+
+    Since many arm64 and 32-bit platforms don't support VDSO with time.monotonic
+    because of errata, we can't rely on the kernel to provide a fast
+    monotonic time.
+
+    https://lore.kernel.org/lkml/20170404171826.25030-1-marc.zyngier@arm.com/
+    """
+    # We use a partial here since its implementation is in native code
+    # which allows us to avoid the overhead of the global lookup
+    # of CLOCK_MONOTONIC_COARSE.
+    return partial(time.clock_gettime, CLOCK_MONOTONIC_COARSE)
+
+
+monotonic_time_coarse = time.monotonic
+with suppress(Exception):
+    if (
+        platform.system() == "Linux"
+        and abs(time.monotonic() - __gen_monotonic_time_coarse()()) < 1
+    ):
+        monotonic_time_coarse = __gen_monotonic_time_coarse()

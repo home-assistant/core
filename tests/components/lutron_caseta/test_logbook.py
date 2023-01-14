@@ -15,6 +15,7 @@ from homeassistant.components.lutron_caseta.const import (
     DOMAIN,
     LUTRON_CASETA_BUTTON_EVENT,
 )
+from homeassistant.components.lutron_caseta.models import LutronCasetaData
 from homeassistant.const import ATTR_DEVICE_ID, CONF_HOST
 from homeassistant.setup import async_setup_component
 
@@ -49,25 +50,30 @@ async def test_humanify_lutron_caseta_button_event(hass):
 
     await hass.async_block_till_done()
 
+    data: LutronCasetaData = hass.data[DOMAIN][config_entry.entry_id]
+    keypads = data.keypad_data.keypads
+    keypad = keypads["9"]
+    dr_device_id = keypad["dr_device_id"]
+
     (event1,) = mock_humanify(
         hass,
         [
             MockRow(
                 LUTRON_CASETA_BUTTON_EVENT,
                 {
-                    ATTR_SERIAL: "123",
-                    ATTR_DEVICE_ID: "1234",
+                    ATTR_SERIAL: "68551522",
+                    ATTR_DEVICE_ID: dr_device_id,
                     ATTR_TYPE: "Pico3ButtonRaiseLower",
-                    ATTR_LEAP_BUTTON_NUMBER: 3,
-                    ATTR_BUTTON_NUMBER: 3,
+                    ATTR_LEAP_BUTTON_NUMBER: 1,
+                    ATTR_BUTTON_NUMBER: 1,
                     ATTR_DEVICE_NAME: "Pico",
-                    ATTR_AREA_NAME: "Living Room",
+                    ATTR_AREA_NAME: "Dining Room",
                     ATTR_ACTION: "press",
                 },
             ),
         ],
     )
 
-    assert event1["name"] == "Living Room Pico"
+    assert event1["name"] == "Dining Room Pico"
     assert event1["domain"] == DOMAIN
-    assert event1["message"] == "press raise"
+    assert event1["message"] == "press stop"

@@ -3,11 +3,10 @@ from __future__ import annotations
 
 import logging
 
-from pycarwings2.pycarwings2 import Leaf
 from voluptuous.validators import Number
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.const import LENGTH_KILOMETERS, LENGTH_MILES, PERCENTAGE
+from homeassistant.const import PERCENTAGE, UnitOfLength
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
@@ -15,7 +14,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.unit_conversion import DistanceConverter
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from . import LeafEntity
+from . import LeafDataStore, LeafEntity
 from .const import (
     DATA_BATTERY,
     DATA_CHARGING,
@@ -25,8 +24,6 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-ICON_RANGE = "mdi:speedometer"
 
 
 def setup_platform(
@@ -52,7 +49,10 @@ def setup_platform(
 class LeafBatterySensor(LeafEntity, SensorEntity):
     """Nissan Leaf Battery Sensor."""
 
-    def __init__(self, car: Leaf) -> None:
+    _attr_device_class = SensorDeviceClass.BATTERY
+    _attr_native_unit_of_measurement = PERCENTAGE
+
+    def __init__(self, car: LeafDataStore) -> None:
         """Set up battery sensor."""
         super().__init__(car)
         self._attr_unique_id = f"{self.car.leaf.vin.lower()}_soc"
@@ -63,21 +63,11 @@ class LeafBatterySensor(LeafEntity, SensorEntity):
         return f"{self.car.leaf.nickname} Charge"
 
     @property
-    def device_class(self) -> str:
-        """Return the device class of the sensor."""
-        return SensorDeviceClass.BATTERY
-
-    @property
     def native_value(self) -> Number | None:
         """Battery state percentage."""
         if self.car.data[DATA_BATTERY] is None:
             return None
         return round(self.car.data[DATA_BATTERY])
-
-    @property
-    def native_unit_of_measurement(self) -> str:
-        """Battery state measured in percentage."""
-        return PERCENTAGE
 
     @property
     def icon(self) -> str:
@@ -89,7 +79,9 @@ class LeafBatterySensor(LeafEntity, SensorEntity):
 class LeafRangeSensor(LeafEntity, SensorEntity):
     """Nissan Leaf Range Sensor."""
 
-    def __init__(self, car: Leaf, ac_on: bool) -> None:
+    _attr_icon = "mdi:speedometer"
+
+    def __init__(self, car: LeafDataStore, ac_on: bool) -> None:
         """Set up range sensor. Store if AC on."""
         self._ac_on = ac_on
         super().__init__(car)
@@ -115,6 +107,7 @@ class LeafRangeSensor(LeafEntity, SensorEntity):
     @property
     def native_value(self) -> float | None:
         """Battery range in miles or kms."""
+        ret: float | None
         if self._ac_on:
             ret = self.car.data[DATA_RANGE_AC]
         else:
@@ -124,7 +117,9 @@ class LeafRangeSensor(LeafEntity, SensorEntity):
             return None
 
         if self.car.hass.config.units is US_CUSTOMARY_SYSTEM or self.car.force_miles:
-            ret = DistanceConverter.convert(ret, LENGTH_KILOMETERS, LENGTH_MILES)
+            ret = DistanceConverter.convert(
+                ret, UnitOfLength.KILOMETERS, UnitOfLength.MILES
+            )
 
         return round(ret)
 
@@ -132,10 +127,5 @@ class LeafRangeSensor(LeafEntity, SensorEntity):
     def native_unit_of_measurement(self) -> str:
         """Battery range unit."""
         if self.car.hass.config.units is US_CUSTOMARY_SYSTEM or self.car.force_miles:
-            return LENGTH_MILES
-        return LENGTH_KILOMETERS
-
-    @property
-    def icon(self) -> str:
-        """Nice icon for range."""
-        return ICON_RANGE
+            return UnitOfLength.MILES
+        return UnitOfLength.KILOMETERS

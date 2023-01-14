@@ -26,7 +26,7 @@
             "reauth_confirm": {
                 "data": {
                     "password": "Senha",
-                    "username": "Nome de usu\u00e1rio"
+                    "username": "Usu\u00e1rio"
                 }
             },
             "user": {
@@ -57,6 +57,19 @@
             "single_long": "{subtype} \u00fanico clicado e, em seguida, clique longo",
             "single_push": "{subtype} \u00fanico empurr\u00e3o",
             "triple": "{subtype} triplo clicado"
+        }
+    },
+    "options": {
+        "abort": {
+            "ble_unsupported": "O suporte a Bluetooth requer a vers\u00e3o de firmware {ble_min_version} ou mais recente."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "ble_scanner_mode": "Modo de varredura Bluetooth"
+                },
+                "description": "A varredura Bluetooth pode ser ativa ou passiva. Com ativo, o Shelly solicita dados de dispositivos pr\u00f3ximos; com passivo, o Shelly recebe dados n\u00e3o solicitados de dispositivos pr\u00f3ximos."
+            }
         }
     }
 }

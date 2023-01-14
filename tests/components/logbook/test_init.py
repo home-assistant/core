@@ -313,16 +313,17 @@ def create_state_changed_event_from_old_new(
     row = collections.namedtuple(
         "Row",
         [
-            "event_type"
-            "event_data"
-            "time_fired"
-            "context_id"
-            "context_user_id"
-            "context_parent_id"
-            "state"
-            "entity_id"
-            "domain"
-            "attributes"
+            "event_type",
+            "event_data",
+            "time_fired",
+            "time_fired_ts",
+            "context_id",
+            "context_user_id",
+            "context_parent_id",
+            "state",
+            "entity_id",
+            "domain",
+            "attributes",
             "state_id",
             "old_state_id",
             "shared_attrs",
@@ -337,6 +338,7 @@ def create_state_changed_event_from_old_new(
     row.attributes = attributes_json
     row.shared_attrs = attributes_json
     row.time_fired = event_time_fired
+    row.time_fired_ts = dt_util.utc_to_timestamp(event_time_fired)
     row.state = new_state and new_state.get("state")
     row.entity_id = entity_id
     row.domain = entity_id and ha.split_entity_id(entity_id)[0]
@@ -489,7 +491,15 @@ async def test_logbook_describe_event(recorder_mock, hass, hass_client):
         await async_wait_recording_done(hass)
 
     client = await hass_client()
-    response = await client.get("/api/logbook")
+    # Today time 00:00:00
+    start = dt_util.utcnow().date()
+    start_date = datetime(start.year, start.month, start.day)
+
+    # Test today entries with filter by end_time
+    end_time = start + timedelta(hours=24)
+    response = await client.get(
+        f"/api/logbook/{start_date.isoformat()}?end_time={end_time}"
+    )
     results = await response.json()
     assert len(results) == 1
     event = results[0]
@@ -553,7 +563,15 @@ async def test_exclude_described_event(recorder_mock, hass, hass_client):
         await async_wait_recording_done(hass)
 
     client = await hass_client()
-    response = await client.get("/api/logbook")
+    # Today time 00:00:00
+    start = dt_util.utcnow().date()
+    start_date = datetime(start.year, start.month, start.day)
+
+    # Test today entries with filter by end_time
+    end_time = start + timedelta(hours=24)
+    response = await client.get(
+        f"/api/logbook/{start_date.isoformat()}?end_time={end_time}"
+    )
     results = await response.json()
     assert len(results) == 1
     event = results[0]

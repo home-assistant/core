@@ -10,10 +10,6 @@ import pytest
 from homeassistant.components import history
 from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.components.recorder.models import process_timestamp
-from homeassistant.components.recorder.websocket_api import (
-    ws_handle_get_statistics_during_period,
-    ws_handle_list_statistic_ids,
-)
 from homeassistant.const import CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_INCLUDE
 import homeassistant.core as ha
 from homeassistant.helpers.json import JSONEncoder
@@ -31,7 +27,6 @@ from tests.components.recorder.common import (
 def test_setup():
     """Test setup method of history."""
     # Verification occurs in the fixture
-    pass
 
 
 def test_get_significant_states(hass_history):
@@ -842,76 +837,6 @@ async def test_entity_ids_limit_via_api_with_skip_initial_state(
     assert len(response_json) == 2
     assert response_json[0][0]["entity_id"] == "light.kitchen"
     assert response_json[1][0]["entity_id"] == "light.cow"
-
-
-async def test_statistics_during_period(recorder_mock, hass, hass_ws_client, caplog):
-    """Test history/statistics_during_period forwards to recorder."""
-    now = dt_util.utcnow()
-    await async_setup_component(hass, "history", {})
-    client = await hass_ws_client()
-
-    # Test the WS API works and issues a warning
-    await client.send_json(
-        {
-            "id": 1,
-            "type": "history/statistics_during_period",
-            "start_time": now.isoformat(),
-            "end_time": now.isoformat(),
-            "statistic_ids": ["sensor.test"],
-            "period": "hour",
-        }
-    )
-    response = await client.receive_json()
-    assert response["success"]
-    assert response["result"] == {}
-
-    assert (
-        "WS API 'history/statistics_during_period' is deprecated and will be removed in "
-        "Home Assistant Core 2022.12. Use 'recorder/statistics_during_period' instead"
-    ) in caplog.text
-
-    # Test the WS API forwards to recorder
-    with patch(
-        "homeassistant.components.history.recorder_ws.ws_handle_get_statistics_during_period",
-        wraps=ws_handle_get_statistics_during_period,
-    ) as ws_mock:
-        await client.send_json(
-            {
-                "id": 2,
-                "type": "history/statistics_during_period",
-                "start_time": now.isoformat(),
-                "end_time": now.isoformat(),
-                "statistic_ids": ["sensor.test"],
-                "period": "hour",
-            }
-        )
-        await client.receive_json()
-        ws_mock.assert_awaited_once()
-
-
-async def test_list_statistic_ids(recorder_mock, hass, hass_ws_client, caplog):
-    """Test history/list_statistic_ids forwards to recorder."""
-    await async_setup_component(hass, "history", {})
-    client = await hass_ws_client()
-
-    # Test the WS API works and issues a warning
-    await client.send_json({"id": 1, "type": "history/list_statistic_ids"})
-    response = await client.receive_json()
-    assert response["success"]
-    assert response["result"] == []
-
-    assert (
-        "WS API 'history/list_statistic_ids' is deprecated and will be removed in "
-        "Home Assistant Core 2022.12. Use 'recorder/list_statistic_ids' instead"
-    ) in caplog.text
-
-    with patch(
-        "homeassistant.components.history.recorder_ws.ws_handle_list_statistic_ids",
-        wraps=ws_handle_list_statistic_ids,
-    ) as ws_mock:
-        await client.send_json({"id": 2, "type": "history/list_statistic_ids"})
-        await client.receive_json()
-        ws_mock.assert_called_once()
 
 
 async def test_history_during_period(recorder_mock, hass, hass_ws_client):

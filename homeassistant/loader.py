@@ -264,7 +264,6 @@ async def async_get_integration_descriptions(
     custom_integrations = await async_get_custom_components(hass)
     custom_flows: dict[str, Any] = {
         "integration": {},
-        "hardware": {},
         "helper": {},
     }
 
@@ -273,14 +272,14 @@ async def async_get_integration_descriptions(
         if integration.integration_type in ("entity", "system"):
             continue
 
-        for integration_type in ("integration", "hardware", "helper"):
+        for integration_type in ("integration", "helper"):
             if integration.domain not in core_flows[integration_type]:
                 continue
             del core_flows[integration_type][integration.domain]
         if integration.domain in core_flows["translated_name"]:
             core_flows["translated_name"].remove(integration.domain)
 
-        if integration.integration_type in ("hardware", "helper"):
+        if integration.integration_type == "helper":
             integration_key: str = integration.integration_type
         else:
             integration_key = "integration"
@@ -319,7 +318,11 @@ def async_process_zeroconf_match_dict(entry: dict[str, Any]) -> dict[str, Any]:
     for moved_prop in MOVED_ZEROCONF_PROPS:
         if value := entry_without_type.pop(moved_prop, None):
             _LOGGER.warning(
-                'Matching the zeroconf property "%s" at top-level is deprecated and should be moved into a properties dict; Check the developer documentation',
+                (
+                    'Matching the zeroconf property "%s" at top-level is deprecated and'
+                    " should be moved into a properties dict; Check the developer"
+                    " documentation"
+                ),
                 moved_prop,
             )
             if "properties" not in entry_without_type:
@@ -490,9 +493,12 @@ class Integration:
             _LOGGER.warning(CUSTOM_WARNING, integration.domain)
             if integration.version is None:
                 _LOGGER.error(
-                    "The custom integration '%s' does not have a "
-                    "version key in the manifest file and was blocked from loading. "
-                    "See https://developers.home-assistant.io/blog/2021/01/29/custom-integration-changes#versions for more details",
+                    (
+                        "The custom integration '%s' does not have a version key in the"
+                        " manifest file and was blocked from loading. See"
+                        " https://developers.home-assistant.io/blog/2021/01/29/custom-integration-changes#versions"
+                        " for more details"
+                    ),
                     integration.domain,
                 )
                 return None
@@ -509,9 +515,12 @@ class Integration:
                 )
             except AwesomeVersionException:
                 _LOGGER.error(
-                    "The custom integration '%s' does not have a "
-                    "valid version key (%s) in the manifest file and was blocked from loading. "
-                    "See https://developers.home-assistant.io/blog/2021/01/29/custom-integration-changes#versions for more details",
+                    (
+                        "The custom integration '%s' does not have a valid version key"
+                        " (%s) in the manifest file and was blocked from loading. See"
+                        " https://developers.home-assistant.io/blog/2021/01/29/custom-integration-changes#versions"
+                        " for more details"
+                    ),
                     integration.domain,
                     integration.version,
                 )
@@ -684,14 +693,20 @@ class Integration:
             self._all_dependencies_resolved = True
         except IntegrationNotFound as err:
             _LOGGER.error(
-                "Unable to resolve dependencies for %s:  we are unable to resolve (sub)dependency %s",
+                (
+                    "Unable to resolve dependencies for %s:  we are unable to resolve"
+                    " (sub)dependency %s"
+                ),
                 self.domain,
                 err.domain,
             )
             self._all_dependencies_resolved = False
         except CircularDependency as err:
             _LOGGER.error(
-                "Unable to resolve dependencies for %s:  it contains a circular dependency: %s -> %s",
+                (
+                    "Unable to resolve dependencies for %s:  it contains a circular"
+                    " dependency: %s -> %s"
+                ),
                 self.domain,
                 err.from_domain,
                 err.to_domain,
@@ -920,7 +935,7 @@ def _load_file(
 
             if str(err) not in white_listed_errors:
                 _LOGGER.exception(
-                    ("Error loading %s. Make sure all dependencies are installed"), path
+                    "Error loading %s. Make sure all dependencies are installed", path
                 )
 
     return None

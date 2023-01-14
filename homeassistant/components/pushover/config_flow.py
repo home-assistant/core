@@ -44,10 +44,6 @@ class PushBulletConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     _reauth_entry: config_entries.ConfigEntry | None
 
-    async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
-        """Handle import from config."""
-        return await self.async_step_user(import_config)
-
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
         self._reauth_entry = self.hass.config_entries.async_get_entry(

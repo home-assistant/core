@@ -194,3 +194,12 @@ class ReplaceFilter(BinarySensor, id_suffix="replace_filter"):
 
     SENSOR_ATTR = "replace_filter"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.PROBLEM
+
+
+@MULTI_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
+class AqaraPetFeederErrorDetected(BinarySensor, id_suffix="error_detected"):
+    """ZHA aqara pet feeder error detected binary sensor."""
+
+    SENSOR_ATTR = "error_detected"
+    _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.PROBLEM
+    _attr_name: str = "Error detected"

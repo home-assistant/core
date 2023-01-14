@@ -1,10 +1,24 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
+            "cannot_connect": "Nepodarilo sa pripoji\u0165"
+        },
+        "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165"
+        },
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
-                    "port": "Port"
-                }
+                    "host": "Hostite\u013e",
+                    "passkey": "Passkey String",
+                    "password": "Heslo",
+                    "port": "Port",
+                    "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
+                },
+                "description": "Nastavte svoje zariadenie BSB-Lan na integr\u00e1ciu s Home Assistant.",
+                "title": "Pripojenie k zariadeniu BSB-Lan"
             }
         }
     }

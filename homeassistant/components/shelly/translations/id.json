@@ -58,5 +58,18 @@
             "single_push": "Push tunggal {subtype}",
             "triple": "{subtype} diklik tiga kali"
         }
+    },
+    "options": {
+        "abort": {
+            "ble_unsupported": "Dukungan Bluetooth memerlukan versi firmware {ble_min_version} atau yang lebih baru."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "ble_scanner_mode": "Mode pemindai Bluetooth"
+                },
+                "description": "Mode pemindaian Bluetooth bisa berupa mode aktif atau pasif. Pada mode aktif, Shelly akan meminta data dari perangkat di dekatnya; pada mode pasif, Shelly akan menerima data yang tidak diminta dari perangkat di dekatnya."
+            }
+        }
     }
 }

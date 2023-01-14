@@ -64,35 +64,12 @@
                 "description": "Twoja kopia zapasowa ma inny adres IEEE ni\u017c twoje radio. Aby sie\u0107 dzia\u0142a\u0142a prawid\u0142owo, nale\u017cy r\u00f3wnie\u017c zmieni\u0107 adres IEEE radia. \n\nTo jest trwa\u0142a operacja.",
                 "title": "Nadpisanie adresu IEEE radia"
             },
-            "pick_radio": {
-                "data": {
-                    "radio_type": "Typ radia"
-                },
-                "description": "Wyb\u00f3r typu radia Zigbee",
-                "title": "Typ radia"
-            },
-            "port_config": {
-                "data": {
-                    "baudrate": "pr\u0119dko\u015b\u0107 portu",
-                    "flow_control": "kontrola przep\u0142ywu danych",
-                    "path": "\u015acie\u017cka urz\u0105dzenia szeregowego"
-                },
-                "description": "Wprowadzanie ustawie\u0144 dla portu",
-                "title": "Ustawienia"
-            },
             "upload_manual_backup": {
                 "data": {
                     "uploaded_backup_file": "Prze\u015blij plik"
                 },
                 "description": "Przywr\u00f3\u0107 ustawienia sieciowe z pliku kopii zapasowej JSON. Mo\u017cesz go pobra\u0107 z innej instalacji ZHA z **Ustawienia sieci** lub u\u017cy\u0107 pliku `coordinator_backup.json` z Zigbee2MQTT.",
                 "title": "Przesy\u0142anie r\u0119cznej kopii zapasowej"
-            },
-            "user": {
-                "data": {
-                    "path": "\u015acie\u017cka urz\u0105dzenia szeregowego"
-                },
-                "description": "Wyb\u00f3r portu szeregowego dla radia Zigbee",
-                "title": "ZHA"
             }
         }
     },

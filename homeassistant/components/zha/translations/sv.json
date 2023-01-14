@@ -64,35 +64,12 @@
                 "description": "Din s\u00e4kerhetskopia har en annan IEEE-adress \u00e4n din radio. F\u00f6r att ditt n\u00e4tverk ska fungera korrekt b\u00f6r IEEE-adressen f\u00f6r din radio ocks\u00e5 \u00e4ndras. \n\n Detta \u00e4r en permanent \u00e5tg\u00e4rd.",
                 "title": "Skriv \u00f6ver Radio IEEE-adress"
             },
-            "pick_radio": {
-                "data": {
-                    "radio_type": "Radiotyp"
-                },
-                "description": "V\u00e4lj en typ av Zigbee radio",
-                "title": "Radiotyp"
-            },
-            "port_config": {
-                "data": {
-                    "baudrate": "port hastighet",
-                    "flow_control": "datafl\u00f6deskontroll",
-                    "path": "Seriell enhetsv\u00e4g"
-                },
-                "description": "Ange portspecifika inst\u00e4llningar",
-                "title": "Inst\u00e4llningar"
-            },
             "upload_manual_backup": {
                 "data": {
                     "uploaded_backup_file": "Ladda upp en fil"
                 },
                 "description": "\u00c5terst\u00e4ll dina n\u00e4tverksinst\u00e4llningar fr\u00e5n en uppladdad backup-JSON-fil. Du kan ladda ner en fr\u00e5n en annan ZHA-installation fr\u00e5n **N\u00e4tverksinst\u00e4llningar**, eller anv\u00e4nda en Zigbee2MQTT `coordinator_backup.json`-fil.",
                 "title": "Ladda upp en manuell s\u00e4kerhetskopia"
-            },
-            "user": {
-                "data": {
-                    "path": "Seriell enhetsv\u00e4g"
-                },
-                "description": "V\u00e4lj serieport f\u00f6r Zigbee-radio",
-                "title": "ZHA"
             }
         }
     },

@@ -2,9 +2,13 @@
   "domain": "august",
   "name": "August",
   "documentation": "https://www.home-assistant.io/integrations/august",
-  "requirements": ["yalexs==1.2.6"],
+  "requirements": ["yalexs==1.2.6", "yalexs_ble==1.12.5"],
   "codeowners": ["@bdraco"],
   "dhcp": [
+    {
+      "hostname": "yale-connect-plus",
+      "macaddress": "00177A*"
+    },
     {
       "hostname": "connect",
       "macaddress": "D86162*"
@@ -24,6 +28,5 @@
   ],
   "config_flow": true,
   "iot_class": "cloud_push",
-  "loggers": ["pubnub", "yalexs"],
-  "after_dependencies": ["yalexs_ble"]
+  "loggers": ["pubnub", "yalexs"]
 }

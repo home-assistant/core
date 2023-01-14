@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "wrong_ip_address": "Az IP-c\u00edm helytelen, vagy az SHC nem \u00e9rhet\u0151 el a helyi h\u00e1l\u00f3zatban.",
+            "wrong_password": "A jelsz\u00f3 helytelen."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "IP c\u00edm",
+                    "password": "Jelsz\u00f3"
+                },
+                "description": "Adja meg az SHC helyi IP-c\u00edm\u00e9t \u00e9s jelszav\u00e1t."
+            }
+        }
+    }
+}

@@ -4,9 +4,11 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 from typing import Any, cast
 
-from pyopenuv.errors import OpenUvError
+from pyopenuv.errors import InvalidApiKeyError, OpenUvError
 
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -18,12 +20,14 @@ DEFAULT_DEBOUNCER_COOLDOWN_SECONDS = 15 * 60
 class OpenUvCoordinator(DataUpdateCoordinator):
     """Define an OpenUV data coordinator."""
 
+    config_entry: ConfigEntry
     update_method: Callable[[], Awaitable[dict[str, Any]]]
 
     def __init__(
         self,
         hass: HomeAssistant,
         *,
+        entry: ConfigEntry,
         name: str,
         latitude: str,
         longitude: str,
@@ -43,6 +47,7 @@ class OpenUvCoordinator(DataUpdateCoordinator):
             ),
         )
 
+        self._entry = entry
         self.latitude = latitude
         self.longitude = longitude
 
@@ -50,6 +55,19 @@ class OpenUvCoordinator(DataUpdateCoordinator):
         """Fetch data from OpenUV."""
         try:
             data = await self.update_method()
+        except InvalidApiKeyError as err:
+            raise ConfigEntryAuthFailed("Invalid API key") from err
         except OpenUvError as err:
-            raise UpdateFailed(f"Error during protection data update: {err}") from err
+            raise UpdateFailed(str(err)) from err
+
+        # OpenUV uses HTTP 403 to indicate both an invalid API key and an API key that
+        # has hit its daily/monthly limit; both cases will result in a reauth flow. If
+        # coordinator update succeeds after a reauth flow has been started, terminate
+        # it:
+        if reauth_flow := next(
+            iter(self._entry.async_get_active_flows(self.hass, {SOURCE_REAUTH})),
+            None,
+        ):
+            self.hass.config_entries.flow.async_abort(reauth_flow["flow_id"])
+
         return cast(dict[str, Any], data["result"])

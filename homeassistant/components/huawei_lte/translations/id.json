@@ -39,7 +39,7 @@
         "step": {
             "init": {
                 "data": {
-                    "name": "Nama layanan notifikasi (perubahan harus dimulai ulang)",
+                    "name": "Nama layanan notifikasi (perubahan membutuhkan proses mulai ulang)",
                     "recipient": "Penerima notifikasi SMS",
                     "track_wired_clients": "Lacak klien jaringan kabel",
                     "unauthenticated_mode": "Mode tidak diautentikasi (perubahan memerlukan pemuatan ulang)"

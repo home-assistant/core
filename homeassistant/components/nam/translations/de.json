@@ -37,5 +37,20 @@
                 "description": "Einrichten der Nettigo Air Monitor Integration."
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "caqi_level": {
+                "state": {
+                    "high": "Hoch",
+                    "low": "Niedrig",
+                    "medium": "Mittel",
+                    "very high": "Sehr hoch",
+                    "very low": "Sehr niedrig",
+                    "very_high": "Sehr hoch",
+                    "very_low": "Sehr niedrig"
+                }
+            }
+        }
     }
 }

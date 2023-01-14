@@ -116,7 +116,7 @@ async def test_window_cover(hass, client, chain_actuator_zws12, integration):
         blocking=True,
     )
 
-    assert len(client.async_send_command.call_args_list) == 2
+    assert len(client.async_send_command.call_args_list) == 1
     open_args = client.async_send_command.call_args_list[0][0][0]
     assert open_args["command"] == "node.set_value"
     assert open_args["nodeId"] == 6
@@ -126,16 +126,6 @@ async def test_window_cover(hass, client, chain_actuator_zws12, integration):
         "property": "Open",
     }
     assert not open_args["value"]
-
-    close_args = client.async_send_command.call_args_list[1][0][0]
-    assert close_args["command"] == "node.set_value"
-    assert close_args["nodeId"] == 6
-    assert close_args["valueId"] == {
-        "commandClass": 38,
-        "endpoint": 0,
-        "property": "Close",
-    }
-    assert not close_args["value"]
 
     # Test position update from value updated event
     event = Event(
@@ -189,7 +179,7 @@ async def test_window_cover(hass, client, chain_actuator_zws12, integration):
         blocking=True,
     )
 
-    assert len(client.async_send_command.call_args_list) == 2
+    assert len(client.async_send_command.call_args_list) == 1
     open_args = client.async_send_command.call_args_list[0][0][0]
     assert open_args["command"] == "node.set_value"
     assert open_args["nodeId"] == 6
@@ -199,16 +189,6 @@ async def test_window_cover(hass, client, chain_actuator_zws12, integration):
         "property": "Open",
     }
     assert not open_args["value"]
-
-    close_args = client.async_send_command.call_args_list[1][0][0]
-    assert close_args["command"] == "node.set_value"
-    assert close_args["nodeId"] == 6
-    assert close_args["valueId"] == {
-        "commandClass": 38,
-        "endpoint": 0,
-        "property": "Close",
-    }
-    assert not close_args["value"]
 
     client.async_send_command.reset_mock()
 
@@ -287,6 +267,31 @@ async def test_fibaro_FGR222_shutter_cover(
     }
     assert args["value"] == 0
 
+    # Test some tilt
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 42,
+            "args": {
+                "commandClassName": "Manufacturer Proprietary",
+                "commandClass": 145,
+                "endpoint": 0,
+                "property": "fibaro",
+                "propertyKey": "venetianBlindsTilt",
+                "newValue": 99,
+                "prevValue": 0,
+                "propertyName": "fibaro",
+                "propertyKeyName": "venetianBlindsTilt",
+            },
+        },
+    )
+    fibaro_fgr222_shutter.receive_event(event)
+    state = hass.states.get(FIBARO_SHUTTER_COVER_ENTITY)
+    assert state
+    assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 100
+
 
 async def test_aeotec_nano_shutter_cover(
     hass, client, aeotec_nano_shutter, integration
@@ -329,7 +334,7 @@ async def test_aeotec_nano_shutter_cover(
         blocking=True,
     )
 
-    assert len(client.async_send_command.call_args_list) == 2
+    assert len(client.async_send_command.call_args_list) == 1
     open_args = client.async_send_command.call_args_list[0][0][0]
     assert open_args["command"] == "node.set_value"
     assert open_args["nodeId"] == 3
@@ -339,16 +344,6 @@ async def test_aeotec_nano_shutter_cover(
         "property": "On",
     }
     assert not open_args["value"]
-
-    close_args = client.async_send_command.call_args_list[1][0][0]
-    assert close_args["command"] == "node.set_value"
-    assert close_args["nodeId"] == 3
-    assert close_args["valueId"] == {
-        "commandClass": 38,
-        "endpoint": 0,
-        "property": "Off",
-    }
-    assert not close_args["value"]
 
     # Test position update from value updated event
     event = Event(
@@ -403,7 +398,7 @@ async def test_aeotec_nano_shutter_cover(
         blocking=True,
     )
 
-    assert len(client.async_send_command.call_args_list) == 2
+    assert len(client.async_send_command.call_args_list) == 1
     open_args = client.async_send_command.call_args_list[0][0][0]
     assert open_args["command"] == "node.set_value"
     assert open_args["nodeId"] == 3
@@ -413,16 +408,6 @@ async def test_aeotec_nano_shutter_cover(
         "property": "On",
     }
     assert not open_args["value"]
-
-    close_args = client.async_send_command.call_args_list[1][0][0]
-    assert close_args["command"] == "node.set_value"
-    assert close_args["nodeId"] == 3
-    assert close_args["valueId"] == {
-        "commandClass": 38,
-        "endpoint": 0,
-        "property": "Off",
-    }
-    assert not close_args["value"]
 
 
 async def test_blind_cover(hass, client, iblinds_v2, integration):

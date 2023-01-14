@@ -14,7 +14,7 @@
             "authentication_error": "Kode HomeKit salah. Periksa dan coba lagi.",
             "insecure_setup_code": "Kode penyiapan yang diminta tidak aman karena sifatnya yang sepele. Aksesori ini gagal memenuhi persyaratan keamanan dasar.",
             "max_peers_error": "Perangkat menolak untuk menambahkan pemasangan karena tidak memiliki penyimpanan pemasangan yang tersedia.",
-            "pairing_failed": "Terjadi kesalahan yang tidak tertangani saat mencoba memasangkan dengan perangkat ini. Ini mungkin kegagalan sementara atau perangkat Anda mungkin tidak didukung saat ini.",
+            "pairing_failed": "Terjadi kesalahan yang tidak tertangani saat mencoba memasangkan dengan perangkat ini. Ini mungkin kegagalan sementara atau perangkat Anda mungkin tidak didukung saat ini: {error}",
             "unable_to_pair": "Gagal memasangkan, coba lagi.",
             "unknown_error": "Perangkat melaporkan kesalahan yang tidak diketahui. Pemasangan gagal."
         },
@@ -67,6 +67,40 @@
             "double_press": "\"{subtype}\" ditekan dua kali",
             "long_press": "\"{subtype}\" ditekan dan ditahan",
             "single_press": "\"{subtype}\" ditekan"
+        }
+    },
+    "entity": {
+        "select": {
+            "ecobee_mode": {
+                "state": {
+                    "away": "Keluar",
+                    "home": "Di Rumah",
+                    "sleep": "Tidur"
+                }
+            }
+        },
+        "sensor": {
+            "thread_node_capabilities": {
+                "state": {
+                    "border_router_capable": "Kemampuan Router Perbatasan",
+                    "full": "Perangkat Akhir Lengkap",
+                    "minimal": "Perangkat Akhir Minimal",
+                    "none": "Tidak Ada",
+                    "router_eligible": "Perangkat Akhir yang Memenuhi Syarat Router",
+                    "sleepy": "Perangkat Akhir yang Jenak"
+                }
+            },
+            "thread_status": {
+                "state": {
+                    "border_router": "Router Perbatasan",
+                    "child": "Anakan",
+                    "detached": "Terpisah",
+                    "disabled": "Dinonaktifkan",
+                    "joining": "Bergabung",
+                    "leader": "Kepala",
+                    "router": "Router"
+                }
+            }
         }
     },
     "title": "Pengontrol HomeKit"

@@ -24,11 +24,6 @@
                 }
             },
             "user": {
-                "data": {
-                    "password": "Contrase\u00f1a",
-                    "pin": "C\u00f3digo PIN",
-                    "username": "Nombre de usuario"
-                },
                 "menu_options": {
                     "cloud": "Risco Cloud (recomendado)",
                     "local": "Panel Risco local (avanzado)"

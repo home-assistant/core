@@ -1,0 +1,9 @@
+{
+    "state": {
+        "homekit_controller__ecobee_mode": {
+            "away": "Pre\u010d",
+            "home": "Doma",
+            "sleep": "Sp\u00e1nok"
+        }
+    }
+}

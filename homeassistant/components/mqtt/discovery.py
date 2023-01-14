@@ -7,6 +7,7 @@ import functools
 import logging
 import re
 import time
+from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
@@ -19,7 +20,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.json import json_loads
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.loader import async_get_mqtt
 
 from .. import mqtt
@@ -62,6 +63,8 @@ SUPPORTED_COMPONENTS = [
     "sensor",
     "switch",
     "tag",
+    "text",
+    "update",
     "vacuum",
 ]
 
@@ -72,8 +75,8 @@ MQTT_DISCOVERY_DONE = "mqtt_discovery_done_{}"
 TOPIC_BASE = "~"
 
 
-class MQTTConfig(dict):
-    """Dummy class to allow adding attributes."""
+class MQTTDiscoveryPayload(dict[str, Any]):
+    """Class to hold and MQTT discovery payload and discovery data."""
 
     discovery_data: DiscoveryInfoType
 
@@ -95,7 +98,7 @@ async def async_start(  # noqa: C901
     mqtt_data = get_mqtt_data(hass)
     mqtt_integrations = {}
 
-    async def async_discovery_message_received(msg):
+    async def async_discovery_message_received(msg: ReceiveMessage) -> None:
         """Process the received message."""
         mqtt_data.last_discovery = time.time()
         payload = msg.payload
@@ -105,9 +108,12 @@ async def async_start(  # noqa: C901
         if not (match := TOPIC_MATCHER.match(topic_trimmed)):
             if topic_trimmed.endswith("config"):
                 _LOGGER.warning(
-                    "Received message on illegal discovery topic '%s'. The topic contains "
-                    "not allowed characters. For more information see "
-                    "https://www.home-assistant.io/docs/mqtt/discovery/#discovery-topic",
+                    (
+                        "Received message on illegal discovery topic '%s'. The topic"
+                        " contains "
+                        "not allowed characters. For more information see "
+                        "https://www.home-assistant.io/docs/mqtt/discovery/#discovery-topic"
+                    ),
                     topic,
                 )
             return
@@ -120,46 +126,50 @@ async def async_start(  # noqa: C901
 
         if payload:
             try:
-                payload = json_loads(payload)
+                discovery_payload = MQTTDiscoveryPayload(json_loads(payload))
             except ValueError:
                 _LOGGER.warning("Unable to parse JSON %s: '%s'", object_id, payload)
                 return
+        else:
+            discovery_payload = MQTTDiscoveryPayload({})
 
-        payload = MQTTConfig(payload)
-
-        for key in list(payload):
+        for key in list(discovery_payload):
             abbreviated_key = key
             key = ABBREVIATIONS.get(key, key)
-            payload[key] = payload.pop(abbreviated_key)
+            discovery_payload[key] = discovery_payload.pop(abbreviated_key)
 
-        if CONF_DEVICE in payload:
-            device = payload[CONF_DEVICE]
+        if CONF_DEVICE in discovery_payload:
+            device = discovery_payload[CONF_DEVICE]
             for key in list(device):
                 abbreviated_key = key
                 key = DEVICE_ABBREVIATIONS.get(key, key)
                 device[key] = device.pop(abbreviated_key)
 
-        if CONF_AVAILABILITY in payload:
-            for availability_conf in cv.ensure_list(payload[CONF_AVAILABILITY]):
+        if CONF_AVAILABILITY in discovery_payload:
+            for availability_conf in cv.ensure_list(
+                discovery_payload[CONF_AVAILABILITY]
+            ):
                 if isinstance(availability_conf, dict):
                     for key in list(availability_conf):
                         abbreviated_key = key
                         key = ABBREVIATIONS.get(key, key)
                         availability_conf[key] = availability_conf.pop(abbreviated_key)
 
-        if TOPIC_BASE in payload:
-            base = payload.pop(TOPIC_BASE)
-            for key, value in payload.items():
+        if TOPIC_BASE in discovery_payload:
+            base = discovery_payload.pop(TOPIC_BASE)
+            for key, value in discovery_payload.items():
                 if isinstance(value, str) and value:
                     if value[0] == TOPIC_BASE and key.endswith("topic"):
-                        payload[key] = f"{base}{value[1:]}"
+                        discovery_payload[key] = f"{base}{value[1:]}"
                     if value[-1] == TOPIC_BASE and key.endswith("topic"):
-                        payload[key] = f"{value[:-1]}{base}"
-            if payload.get(CONF_AVAILABILITY):
-                for availability_conf in cv.ensure_list(payload[CONF_AVAILABILITY]):
+                        discovery_payload[key] = f"{value[:-1]}{base}"
+            if discovery_payload.get(CONF_AVAILABILITY):
+                for availability_conf in cv.ensure_list(
+                    discovery_payload[CONF_AVAILABILITY]
+                ):
                     if not isinstance(availability_conf, dict):
                         continue
-                    if topic := availability_conf.get(CONF_TOPIC):
+                    if topic := str(availability_conf.get(CONF_TOPIC)):
                         if topic[0] == TOPIC_BASE:
                             availability_conf[CONF_TOPIC] = f"{base}{topic[1:]}"
                         if topic[-1] == TOPIC_BASE:
@@ -169,32 +179,38 @@ async def async_start(  # noqa: C901
         discovery_id = " ".join((node_id, object_id)) if node_id else object_id
         discovery_hash = (component, discovery_id)
 
-        if payload:
+        if discovery_payload:
             # Attach MQTT topic to the payload, used for debug prints
-            setattr(payload, "__configuration_source__", f"MQTT (topic: '{topic}')")
+            setattr(
+                discovery_payload,
+                "__configuration_source__",
+                f"MQTT (topic: '{topic}')",
+            )
             discovery_data = {
                 ATTR_DISCOVERY_HASH: discovery_hash,
-                ATTR_DISCOVERY_PAYLOAD: payload,
+                ATTR_DISCOVERY_PAYLOAD: discovery_payload,
                 ATTR_DISCOVERY_TOPIC: topic,
             }
-            setattr(payload, "discovery_data", discovery_data)
+            setattr(discovery_payload, "discovery_data", discovery_data)
 
-            payload[CONF_PLATFORM] = "mqtt"
+            discovery_payload[CONF_PLATFORM] = "mqtt"
 
         if discovery_hash in mqtt_data.discovery_pending_discovered:
             pending = mqtt_data.discovery_pending_discovered[discovery_hash]["pending"]
-            pending.appendleft(payload)
-            _LOGGER.info(
+            pending.appendleft(discovery_payload)
+            _LOGGER.debug(
                 "Component has already been discovered: %s %s, queuing update",
                 component,
                 discovery_id,
             )
             return
 
-        await async_process_discovery_payload(component, discovery_id, payload)
+        await async_process_discovery_payload(
+            component, discovery_id, discovery_payload
+        )
 
     async def async_process_discovery_payload(
-        component: str, discovery_id: str, payload: ConfigType
+        component: str, discovery_id: str, payload: MQTTDiscoveryPayload
     ) -> None:
         """Process the payload of a new discovery."""
 
@@ -202,7 +218,7 @@ async def async_start(  # noqa: C901
         discovery_hash = (component, discovery_id)
         if discovery_hash in mqtt_data.discovery_already_discovered or payload:
 
-            async def discovery_done(_) -> None:
+            async def discovery_done(_: Any) -> None:
                 pending = mqtt_data.discovery_pending_discovered[discovery_hash][
                     "pending"
                 ]

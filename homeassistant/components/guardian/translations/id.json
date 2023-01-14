@@ -29,17 +29,6 @@
                 }
             },
             "title": "Layanan {deprecated_service} akan dihapus"
-        },
-        "replaced_old_entity": {
-            "fix_flow": {
-                "step": {
-                    "confirm": {
-                        "description": "Perbarui setiap otomasi atau skrip yang menggunakan entitas ini untuk menggunakan `{replacement_entity_id}`.",
-                        "title": "Entitas {old_entity_id} akan dihapus"
-                    }
-                }
-            },
-            "title": "Entitas {old_entity_id} akan dihapus"
         }
     }
 }

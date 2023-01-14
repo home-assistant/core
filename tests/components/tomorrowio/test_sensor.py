@@ -192,7 +192,7 @@ async def test_v4_sensor_imperial(hass: HomeAssistant) -> None:
     check_sensor_state(hass, TREE_POLLEN, "none")
     check_sensor_state(hass, FEELS_LIKE, "214.3")
     check_sensor_state(hass, DEW_POINT, "163.08")
-    check_sensor_state(hass, PRESSURE_SURFACE_LEVEL, "29.47")
+    check_sensor_state(hass, PRESSURE_SURFACE_LEVEL, "0.427")
     check_sensor_state(hass, GHI, "0.0")
     check_sensor_state(hass, CLOUD_BASE, "0.46")
     check_sensor_state(hass, CLOUD_COVER, "100")

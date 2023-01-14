@@ -190,6 +190,12 @@ RPC_SENSORS: Final = {
         entity_category=EntityCategory.DIAGNOSTIC,
         supported=lambda status: status.get("apower") is not None,
     ),
+    "smoke": RpcBinarySensorDescription(
+        key="smoke",
+        sub_key="alarm",
+        name="Smoke",
+        device_class=BinarySensorDeviceClass.SMOKE,
+    ),
 }
 
 
@@ -268,10 +274,8 @@ class RestBinarySensor(ShellyRestAttributeEntity, BinarySensorEntity):
     entity_description: RestBinarySensorDescription
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """Return true if REST sensor state is on."""
-        if self.attribute_value is None:
-            return None
         return bool(self.attribute_value)
 
 
@@ -281,10 +285,8 @@ class RpcBinarySensor(ShellyRpcAttributeEntity, BinarySensorEntity):
     entity_description: RpcBinarySensorDescription
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """Return true if RPC sensor state is on."""
-        if self.attribute_value is None:
-            return None
         return bool(self.attribute_value)
 
 
@@ -308,7 +310,7 @@ class RpcSleepingBinarySensor(ShellySleepingRpcAttributeEntity, BinarySensorEnti
     entity_description: RpcBinarySensorDescription
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """Return true if RPC sensor state is on."""
         if self.coordinator.device.initialized:
             return bool(self.attribute_value)

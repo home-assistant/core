@@ -13,7 +13,7 @@ from script.hassfest.model import Integration
 def integration():
     """Fixture for hassfest integration model."""
     integration = Integration("")
-    integration.manifest = {
+    integration._manifest = {
         "domain": "test",
         "documentation": "https://example.com",
         "name": "test",

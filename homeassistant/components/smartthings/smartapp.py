@@ -338,7 +338,10 @@ async def smartapp_sync_subscriptions(
         try:
             await api.delete_subscription(installed_app_id, sub.subscription_id)
             _LOGGER.debug(
-                "Removed subscription for '%s' under app '%s' because it was no longer needed",
+                (
+                    "Removed subscription for '%s' under app '%s' because it was no"
+                    " longer needed"
+                ),
                 sub.capability,
                 installed_app_id,
             )
@@ -361,9 +364,11 @@ async def smartapp_sync_subscriptions(
     capability_count = len(capabilities)
     if capability_count > SUBSCRIPTION_WARNING_LIMIT:
         _LOGGER.warning(
-            "Some device attributes may not receive push updates and there may be subscription "
-            "creation failures under app '%s' because %s subscriptions are required but "
-            "there is a limit of %s per app",
+            (
+                "Some device attributes may not receive push updates and there may be"
+                " subscription creation failures under app '%s' because %s"
+                " subscriptions are required but there is a limit of %s per app"
+            ),
             installed_app_id,
             capability_count,
             SUBSCRIPTION_WARNING_LIMIT,

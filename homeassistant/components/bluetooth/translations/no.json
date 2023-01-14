@@ -7,10 +7,7 @@
         "flow_title": "{name}",
         "step": {
             "bluetooth_confirm": {
-                "description": "Vil du konfigurere {name}?"
-            },
-            "enable_bluetooth": {
-                "description": "Vil du konfigurere Bluetooth?"
+                "description": "Vil du sette opp {name} ?"
             },
             "multiple_adapters": {
                 "data": {
@@ -19,7 +16,7 @@
                 "description": "Velg en Bluetooth-adapter for \u00e5 konfigurere"
             },
             "single_adapter": {
-                "description": "Vil du konfigurere Bluetooth-adapteren {name} ?"
+                "description": "Vil du sette opp Bluetooth-adapteren {name} ?"
             },
             "user": {
                 "data": {
@@ -39,10 +36,8 @@
         "step": {
             "init": {
                 "data": {
-                    "adapter": "Bluetooth-adapteren som skal brukes til skanning",
                     "passive": "Passiv skanning"
-                },
-                "description": "Passiv lytting krever BlueZ 5.63 eller nyere med eksperimentelle funksjoner aktivert."
+                }
             }
         }
     }

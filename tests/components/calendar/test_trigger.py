@@ -105,6 +105,15 @@ class FakeSchedule:
 
     async def fire_until(self, end: datetime.timedelta) -> None:
         """Simulate the passage of time by firing alarms until the time is reached."""
+
+        current_time = dt_util.as_utc(self.freezer())
+        if (end - current_time) > (TEST_UPDATE_INTERVAL * 2):
+            # Jump ahead to right before the target alarm them to remove
+            # unnecessary waiting, before advancing in smaller increments below.
+            # This leaves time for multiple update intervals to refresh the set
+            # of upcoming events
+            await self.fire_time(end - TEST_UPDATE_INTERVAL * 2)
+
         while dt_util.utcnow() < end:
             self.freezer.tick(TEST_TIME_ADVANCE_INTERVAL)
             await self.fire_time(dt_util.utcnow())
@@ -453,7 +462,7 @@ async def test_invalid_calendar_id(hass, caplog):
         },
     )
     await hass.async_block_till_done()
-    assert "Invalid config for [automation]" in caplog.text
+    assert "Entity ID invalid-calendar-id is an invalid entity ID" in caplog.text
 
 
 async def test_legacy_entity_type(hass, caplog):

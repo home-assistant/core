@@ -44,14 +44,14 @@
                 "data": {
                     "entities": "Entit\u00e4ten"
                 },
-                "description": "Alle \"{domains}\"-Entit\u00e4ten werden einbezogen, mit Ausnahme der ausgeschlossenen Entit\u00e4ten und kategorisierten Entit\u00e4ten.",
+                "description": "Alle \"{domains}\" Entit\u00e4ten werden einbezogen, mit Ausnahme der ausgeschlossenen Entit\u00e4ten und kategorisierten Entit\u00e4ten.",
                 "title": "W\u00e4hle die auszuschlie\u00dfenden Einheiten aus"
             },
             "include": {
                 "data": {
                     "entities": "Entit\u00e4ten"
                 },
-                "description": "Alle \"{domains}\"-Entit\u00e4ten werden einbezogen, sofern nicht bestimmte Entit\u00e4ten ausgew\u00e4hlt werden.",
+                "description": "Alle \"{domains}\" Entit\u00e4ten werden einbezogen, sofern nicht bestimmte Entit\u00e4ten ausgew\u00e4hlt werden.",
                 "title": "W\u00e4hle die einzuschlie\u00dfenden Entit\u00e4ten aus"
             },
             "init": {

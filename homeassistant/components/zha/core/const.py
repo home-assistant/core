@@ -49,6 +49,7 @@ ATTR_POWER_SOURCE = "power_source"
 ATTR_PROFILE_ID = "profile_id"
 ATTR_QUIRK_APPLIED = "quirk_applied"
 ATTR_QUIRK_CLASS = "quirk_class"
+ATTR_ROUTES = "routes"
 ATTR_RSSI = "rssi"
 ATTR_SIGNATURE = "signature"
 ATTR_TYPE = "type"
@@ -395,7 +396,6 @@ ZHA_GW_MSG_GROUP_REMOVED = "group_removed"
 ZHA_GW_MSG_LOG_ENTRY = "log_entry"
 ZHA_GW_MSG_LOG_OUTPUT = "log_output"
 ZHA_GW_MSG_RAW_INIT = "raw_device_initialized"
-ZHA_DEVICES_LOADED_EVENT = "zha_devices_loaded_event"
 
 
 class Strobe(t.enum8):

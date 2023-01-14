@@ -176,8 +176,8 @@ class NetatmoDataHandler:
     @callback
     def async_force_update(self, signal_name: str) -> None:
         """Prioritize data retrieval for given data class entry."""
-        # self.publisher[signal_name].next_scan = time()
-        # self._queue.rotate(-(self._queue.index(self.publisher[signal_name])))
+        self.publisher[signal_name].next_scan = time()
+        self._queue.rotate(-(self._queue.index(self.publisher[signal_name])))
 
     async def handle_event(self, event: dict) -> None:
         """Handle webhook events."""
@@ -252,7 +252,7 @@ class NetatmoDataHandler:
         self, signal_name: str, update_callback: CALLBACK_TYPE | None
     ) -> None:
         """Unsubscribe from publisher."""
-        if update_callback in self.publisher[signal_name].subscriptions:
+        if update_callback not in self.publisher[signal_name].subscriptions:
             return
 
         self.publisher[signal_name].subscriptions.remove(update_callback)
@@ -287,6 +287,9 @@ class NetatmoDataHandler:
             self.hass.data[DOMAIN][DATA_PERSONS][home.entity_id] = {
                 person.entity_id: person.pseudo for person in home.persons.values()
             }
+
+        await self.unsubscribe(WEATHER, None)
+        await self.unsubscribe(AIR_CARE, None)
 
     def setup_air_care(self) -> None:
         """Set up home coach/air care modules."""

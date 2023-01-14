@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El compte ja est\u00e0 configurat",
             "already_configured_account": "El compte ja est\u00e0 configurat",
             "already_configured_device": "El dispositiu ja est\u00e0 configurat",
             "no_devices_found": "No s'han trobat dispositius a la xarxa",
@@ -26,9 +25,6 @@
                 "description": "Vols configurar {model} ({device_id})?"
             },
             "local": {
-                "data": {
-                    "host": "Adre\u00e7a IP"
-                },
                 "description": "Segueix [aquestes instruccions]({url}) per com activar l'API local d'Awair.\n\nPrem 'envia' quan hagis acabat."
             },
             "local_pick": {
@@ -36,13 +32,6 @@
                     "device": "Dispositiu",
                     "host": "Adre\u00e7a IP"
                 }
-            },
-            "reauth": {
-                "data": {
-                    "access_token": "Token d'acc\u00e9s",
-                    "email": "Correu electr\u00f2nic"
-                },
-                "description": "Torna a introduir el token d'acc\u00e9s de desenvolupador d'Awair."
             },
             "reauth_confirm": {
                 "data": {
@@ -52,10 +41,6 @@
                 "description": "Torna a introduir el 'token' d'acc\u00e9s de desenvolupador d'Awair."
             },
             "user": {
-                "data": {
-                    "access_token": "Token d'acc\u00e9s",
-                    "email": "Correu electr\u00f2nic"
-                },
                 "description": "Tria local per a la millor experi\u00e8ncia. Utilitza 'al n\u00favol' si el teu dispositiu no est\u00e0 connectat a la mateixa xarxa que Home Assistant, o si tens un dispositiu antic.",
                 "menu_options": {
                     "cloud": "Connecta't a trav\u00e9s del n\u00favol",

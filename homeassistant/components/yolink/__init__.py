@@ -28,6 +28,7 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
     Platform.COVER,
+    Platform.LIGHT,
     Platform.LOCK,
     Platform.SENSOR,
     Platform.SIREN,

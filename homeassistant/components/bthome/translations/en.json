@@ -13,7 +13,7 @@
         "flow_title": "{name}",
         "step": {
             "bluetooth_confirm": {
-                "description": "Do you want to setup {name}?"
+                "description": "Do you want to set up {name}?"
             },
             "get_encryption_key": {
                 "data": {
@@ -25,7 +25,7 @@
                 "data": {
                     "address": "Device"
                 },
-                "description": "Choose a device to setup"
+                "description": "Choose a device to set up"
             }
         }
     }
