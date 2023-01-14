@@ -53,6 +53,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> SunsynkHu
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
 
+    if "username" not in data or "password" not in data:
+        raise InvalidAuth
+
     hub = SunsynkHub()
 
     if not await hub.authenticate(data["username"], data["password"]):
