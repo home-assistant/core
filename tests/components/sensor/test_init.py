@@ -1242,12 +1242,21 @@ async def test_device_classes_with_invalid_unit_of_measurement(
         (None, None, UnitOfTemperature.CELSIUS),
     ],
 )
-@pytest.mark.parametrize("native_value", ("abc", "13.7.1"))
+@pytest.mark.parametrize(
+    "native_value,expected",
+    [
+        ("abc", "abc"),
+        ("13.7.1", "13.7.1"),
+        (datetime(2012, 11, 10, 7, 35, 1), "2012-11-10 07:35:01"),
+        (date(2012, 11, 10), "2012-11-10"),
+    ],
+)
 async def test_non_numeric_validation(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     enable_custom_integrations: None,
     native_value: Any,
+    expected: str,
     device_class: SensorDeviceClass | None,
     state_class: SensorStateClass | None,
     unit: str | None,
@@ -1268,7 +1277,7 @@ async def test_non_numeric_validation(
     await hass.async_block_till_done()
 
     state = hass.states.get(entity0.entity_id)
-    assert state.state == native_value
+    assert state.state == expected
 
     assert (
         "thus indicating it has a numeric value; "
