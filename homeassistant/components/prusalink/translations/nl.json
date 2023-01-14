@@ -14,5 +14,14 @@
                 }
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "printer_state": {
+                "state": {
+                    "idle": "Inactief"
+                }
+            }
+        }
     }
 }

@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd",
             "authorize_url_timeout": "Time-out bij het genereren van autorisatie-URL.",
+            "missing_configuration": "De LaMetric-integratie is niet geconfigureerd. Volg de documentatie.",
             "no_url_available": "Geen URL beschikbaar. Voor informatie over deze fout, [raadpleeg de documentatie]({docs_url})",
             "reauth_successful": "Herauthenticatie geslaagd",
             "unknown": "Onverwachte fout"

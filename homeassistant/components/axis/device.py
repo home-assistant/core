@@ -157,7 +157,7 @@ class AxisNetworkDevice:
         This is a static method because a class method (bound method),
         can not be used with weak references.
         """
-        device: AxisNetworkDevice = hass.data[AXIS_DOMAIN][entry.unique_id]
+        device: AxisNetworkDevice = hass.data[AXIS_DOMAIN][entry.entry_id]
         device.api.config.host = device.host
         async_dispatcher_send(hass, device.signal_new_address)
 

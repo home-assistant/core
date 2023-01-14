@@ -22,5 +22,41 @@
                 "title": "Smile'a Ba\u011flan\u0131n"
             }
         }
+    },
+    "entity": {
+        "climate": {
+            "plugwise": {
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "asleep": "Gece",
+                            "away": "D\u0131\u015far\u0131da",
+                            "home": "Evde",
+                            "no_frost": "Anti-don",
+                            "vacation": "Tatil"
+                        }
+                    }
+                }
+            }
+        },
+        "select": {
+            "dhw_mode": {
+                "state": {
+                    "auto": "Otomatik",
+                    "boost": "G\u00fc\u00e7l\u00fc",
+                    "comfort": "Konfor",
+                    "off": "Kapal\u0131"
+                }
+            },
+            "regulation_mode": {
+                "state": {
+                    "bleeding_cold": "So\u011futma",
+                    "bleeding_hot": "Is\u0131tma",
+                    "cooling": "So\u011futuluyor",
+                    "heating": "Is\u0131t\u0131l\u0131yor",
+                    "off": "Kapal\u0131"
+                }
+            }
+        }
     }
 }

@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
+        "error": {
+            "api_error": "API hatas\u0131 olu\u015ftu: {error}",
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "unknown": "Beklenmeyen hata: {error}"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Sunucu",
+                    "password": "Parola",
+                    "port": "Port",
+                    "use_https": "HTTPS'yi Etkinle\u015ftir",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "protocol": "Protokol"
+                }
+            }
+        }
+    }
+}

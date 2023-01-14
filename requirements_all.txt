@@ -177,7 +177,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==2.4.3
+aiohomekit==2.4.4
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -1290,7 +1290,7 @@ openwrt-luci-rpc==1.1.11
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.oralb
-oralb-ble==0.14.3
+oralb-ble==0.17.1
 
 # homeassistant.components.oru
 oru==0.1.11
@@ -2060,7 +2060,7 @@ python-kasa==0.5.0
 # python-lirc==1.2.3
 
 # homeassistant.components.matter
-python-matter-server==1.0.8
+python-matter-server==1.1.0
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
@@ -2212,7 +2212,7 @@ regenmaschine==2022.11.0
 renault-api==0.1.11
 
 # homeassistant.components.reolink
-reolink-aio==0.2.1
+reolink-aio==0.2.2
 
 # homeassistant.components.python_script
 restrictedpython==6.0
@@ -2278,7 +2278,7 @@ satel_integra==0.3.7
 scapy==2.5.0
 
 # homeassistant.components.screenlogic
-screenlogicpy==0.6.2
+screenlogicpy==0.6.3
 
 # homeassistant.components.scsgate
 scsgate==0.1.0
