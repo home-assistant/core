@@ -168,6 +168,9 @@ async def validate_sensor_edit(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
     """Update edited sensor."""
+    user_input[
+        CONF_NAME
+    ] = f"{SENSOR_CONFIG[user_input[CONF_TYPE]].name} {user_input.get(CONF_ARG, '')}".rstrip()
 
     # Standard behavior is to merge the result with the options.
     # In this case, we want to add a sub-item so we update the options directly.
