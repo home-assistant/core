@@ -8,7 +8,7 @@ from typing import Any
 from reolink_aio.exceptions import ApiError, CredentialsInvalidError, ReolinkError
 import voluptuous as vol
 
-from homeassistant import config_entries, exceptions
+from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
@@ -96,7 +96,7 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             host = ReolinkHost(self.hass, user_input, DEFAULT_OPTIONS)
             try:
-                await async_obtain_host_settings(host)
+                await host.async_init()
             except UserNotAdmin:
                 errors[CONF_USERNAME] = "not_admin"
                 placeholders["username"] = host.api.username
@@ -113,6 +113,8 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 placeholders["error"] = str(err)
                 errors[CONF_HOST] = "unknown"
+            finally:
+                await host.stop()
 
             if not errors:
                 user_input[CONF_PORT] = host.api.port
@@ -158,11 +160,3 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders=placeholders,
         )
-
-
-async def async_obtain_host_settings(host: ReolinkHost) -> None:
-    """Initialize the Reolink host and get the host information."""
-    try:
-        await host.async_init()
-    finally:
-        await host.stop()
