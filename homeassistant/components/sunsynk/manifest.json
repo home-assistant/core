@@ -3,7 +3,7 @@
   "name": "Sunsynk",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/sunsynk",
-  "requirements": ["sunsynk-api-client==1.0.3"],
+  "requirements": ["sunsynk-api-client==1.0.4"],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},

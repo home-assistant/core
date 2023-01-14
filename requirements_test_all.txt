@@ -1854,7 +1854,7 @@ stringcase==1.2.0
 subarulink==0.7.6
 
 # homeassistant.components.sunsynk
-sunsynk-api-client==1.0.3
+sunsynk-api-client==1.0.4
 
 # homeassistant.components.solarlog
 sunwatcher==0.2.1
