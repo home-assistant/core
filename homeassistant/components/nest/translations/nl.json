@@ -22,6 +22,11 @@
             "wrong_project_id": "Voer een geldig Cloud Project ID in (found Device Acces Project ID)"
         },
         "step": {
+            "cloud_project": {
+                "data": {
+                    "cloud_project_id": "Google Cloud project-ID"
+                }
+            },
             "init": {
                 "data": {
                     "flow_impl": "Leverancier"

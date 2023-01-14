@@ -69,5 +69,16 @@
             "single_press": "\" {subtype} \" bas\u0131ld\u0131"
         }
     },
+    "entity": {
+        "select": {
+            "ecobee_mode": {
+                "state": {
+                    "away": "D\u0131\u015far\u0131da",
+                    "home": "Evde",
+                    "sleep": "Uyku"
+                }
+            }
+        }
+    },
     "title": "HomeKit Denetleyicisi"
 }

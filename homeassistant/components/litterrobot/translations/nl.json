@@ -29,7 +29,9 @@
             "status_code": {
                 "state": {
                     "cd": "Kat gedetecteerd",
-                    "p": "Gepauzeerd"
+                    "p": "Gepauzeerd",
+                    "pwru": "Opstarten",
+                    "rdy": "Klaar"
                 }
             }
         }

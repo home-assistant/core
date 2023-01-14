@@ -5,7 +5,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from reolink_aio.exceptions import ApiError, CredentialsInvalidError
+from reolink_aio.exceptions import ApiError, CredentialsInvalidError, ReolinkError
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
@@ -108,6 +108,9 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except ApiError as err:
                 placeholders["error"] = str(err)
                 errors[CONF_HOST] = "api_error"
+            except ReolinkError as err:
+                placeholders["error"] = str(err)
+                errors[CONF_HOST] = "cannot_connect"
             except Exception as err:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 placeholders["error"] = str(err)
