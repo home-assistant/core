@@ -598,7 +598,6 @@ async def ws_stream(
     minimal_response = msg["minimal_response"]
 
     if end_time and end_time <= utc_now:
-        # Not live stream but we it might be a big query
         connection.subscriptions[msg_id] = callback(lambda: None)
         connection.send_result(msg_id)
         # Fetch everything from history
