@@ -198,17 +198,19 @@ async def ws_get_history_during_period(
 
     entity_ids = msg.get("entity_ids")
     include_start_time_state = msg["include_start_time_state"]
+    no_attributes = msg["no_attributes"]
 
     if (
         not include_start_time_state
         and entity_ids
-        and not _entities_may_have_state_changes_after(hass, entity_ids, start_time)
+        and not _entities_may_have_state_changes_after(
+            hass, entity_ids, start_time, no_attributes
+        )
     ):
         connection.send_result(msg["id"], {})
         return
 
     significant_changes_only = msg["significant_changes_only"]
-    no_attributes = msg["no_attributes"]
     minimal_response = msg["minimal_response"]
 
     connection.send_message(
@@ -284,7 +286,9 @@ class HistoryPeriodView(HomeAssistantView):
         if (
             not include_start_time_state
             and entity_ids
-            and not _entities_may_have_state_changes_after(hass, entity_ids, start_time)
+            and not _entities_may_have_state_changes_after(
+                hass, entity_ids, start_time, no_attributes
+            )
         ):
             return self.json([])
 
@@ -352,13 +356,16 @@ class HistoryPeriodView(HomeAssistantView):
 
 
 def _entities_may_have_state_changes_after(
-    hass: HomeAssistant, entity_ids: Iterable, start_time: dt
+    hass: HomeAssistant, entity_ids: Iterable, start_time: dt, no_attributes: bool
 ) -> bool:
     """Check the state machine to see if entities have changed since start time."""
     for entity_id in entity_ids:
         state = hass.states.get(entity_id)
+        if state is None:
+            return True
 
-        if state is None or state.last_changed > start_time:
+        state_time = state.last_changed if no_attributes else state.last_updated
+        if state_time > start_time:
             return True
 
     return False
@@ -593,7 +600,9 @@ async def ws_stream(
         if (
             not include_start_time_state
             and entity_ids
-            and not _entities_may_have_state_changes_after(hass, entity_ids, start_time)
+            and not _entities_may_have_state_changes_after(
+                hass, entity_ids, start_time, no_attributes
+            )
         ):
             _async_send_empty_response(connection, msg_id, start_time, end_time)
             return
