@@ -111,6 +111,9 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         placeholders = {"error": ""}
 
         if user_input is not None:
+            if CONF_HOST not in user_input:
+                user_input[CONF_HOST] = self._host
+
             host = ReolinkHost(self.hass, user_input, DEFAULT_OPTIONS)
             try:
                 await async_obtain_host_settings(host)
@@ -160,9 +163,14 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(CONF_USERNAME, default=self._username): str,
                 vol.Required(CONF_PASSWORD, default=self._password): str,
-                vol.Required(CONF_HOST, default=self._host): str,
             }
         )
+        if self._host is not None or errors:
+            data_schema = data_schema.extend(
+                {
+                    vol.Required(CONF_HOST, default=self._host): str,
+                }
+            )
         if errors:
             data_schema = data_schema.extend(
                 {
