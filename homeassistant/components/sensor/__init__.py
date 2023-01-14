@@ -493,7 +493,7 @@ class SensorEntity(Entity):
         if not isinstance(value, (int, float, Decimal)):
             try:
                 _ = float(value)  # type: ignore[arg-type]
-            except ValueError:
+            except (TypeError, ValueError):
                 _LOGGER.warning(
                     "Sensor %s has device class %s, state class %s and unit %s "
                     "thus indicating it has a numeric value; however, it has the "
