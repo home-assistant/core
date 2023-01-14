@@ -6,6 +6,7 @@ from typing import cast
 from pyisy import ISY
 from pyisy.constants import (
     COMMAND_FRIENDLY_NAME,
+    INSTEON_RAMP_RATES,
     ISY_VALUE_UNKNOWN,
     PROP_RAMP_RATE,
     UOM_TO_STATES,
@@ -14,13 +15,23 @@ from pyisy.helpers import NodeProperty
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import Platform, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, INSTEON_RAMP_RATES, UOM_INDEX
+from .const import _LOGGER, DOMAIN, UOM_INDEX
 from .entity import ISYAuxControlEntity
+
+
+def time_string(i: int) -> str:
+    """Return a formatted ramp rate time string."""
+    if i >= 60:
+        return f"{(float(i)/60):.1f} {UnitOfTime.MINUTES}"
+    return f"{i} {UnitOfTime.SECONDS}"
+
+
+RAMP_RATE_OPTIONS = [time_string(rate) for rate in INSTEON_RAMP_RATES.values()]
 
 
 async def async_setup_entry(
@@ -32,7 +43,7 @@ async def async_setup_entry(
     isy_data = hass.data[DOMAIN][config_entry.entry_id]
     isy: ISY = isy_data.root
     device_info = isy_data.devices
-    entities: list[ISYAuxControlSelectEntity] = []
+    entities: list[ISYAuxControlIndexSelectEntity | ISYRampRateSelectEntity] = []
 
     for node, control in isy_data.aux_properties[Platform.SELECT]:
         name = COMMAND_FRIENDLY_NAME.get(control, control).replace("_", " ").title()
@@ -42,9 +53,7 @@ async def async_setup_entry(
         node_prop: NodeProperty = node.aux_properties[control]
 
         options = []
-        if control == PROP_RAMP_RATE:
-            options = INSTEON_RAMP_RATES
-        elif node_prop.uom == UOM_INDEX:
+        if node_prop.uom == UOM_INDEX:
             if options_dict := UOM_TO_STATES.get(node_prop.uom):
                 options = options_dict.values()
 
@@ -54,21 +63,29 @@ async def async_setup_entry(
             entity_category=EntityCategory.CONFIG,
             options=options,
         )
+        entity_detail = {
+            "node": node,
+            "control": control,
+            "unique_id": f"{isy.uuid}_{node.address}_{control}",
+            "description": description,
+            "device_info": device_info.get(node.primary_node),
+        }
 
-        entities.append(
-            ISYAuxControlSelectEntity(
-                node=node,
-                control=control,
-                unique_id=f"{isy.uuid}_{node.address}_{control}",
-                description=description,
-                device_info=device_info.get(node.primary_node),
-            )
+        if control == PROP_RAMP_RATE:
+            description.options = RAMP_RATE_OPTIONS
+            entities.append(ISYRampRateSelectEntity(**entity_detail))
+            continue
+        if node.uom == UOM_INDEX and options:
+            entities.append(ISYAuxControlIndexSelectEntity(**entity_detail))
+        # Future: support Node Server custom index UOMs
+        _LOGGER.info(
+            "ISY missing node index unit definitions for %s: %s", node.name, name
         )
     async_add_entities(entities)
 
 
-class ISYAuxControlSelectEntity(ISYAuxControlEntity, SelectEntity):
-    """Representation of a ISY/IoX Aux Control Select entity."""
+class ISYRampRateSelectEntity(ISYAuxControlEntity, SelectEntity):
+    """Representation of a ISY/IoX Aux Control Ramp Rate Select entity."""
 
     @property
     def current_option(self) -> str | None:
@@ -77,21 +94,32 @@ class ISYAuxControlSelectEntity(ISYAuxControlEntity, SelectEntity):
         if node_prop.value == ISY_VALUE_UNKNOWN:
             return None
 
-        if self._control == PROP_RAMP_RATE:
-            return INSTEON_RAMP_RATES[int(node_prop.value)]
-        if node_prop.uom == UOM_INDEX:
-            if options_dict := UOM_TO_STATES.get(node_prop.uom):
-                return cast(str, options_dict.get(node_prop.value, node_prop.value))
+        return RAMP_RATE_OPTIONS[int(node_prop.value)]
+
+    async def async_select_option(self, option: str) -> None:
+        """Change the selected option."""
+
+        await self._node.set_ramp_rate(RAMP_RATE_OPTIONS.index(option))
+
+
+class ISYAuxControlIndexSelectEntity(ISYAuxControlEntity, SelectEntity):
+    """Representation of a ISY/IoX Aux Control Index Select entity."""
+
+    @property
+    def current_option(self) -> str | None:
+        """Return the selected entity option to represent the entity state."""
+        node_prop: NodeProperty = self._node.aux_properties[self._control]
+        if node_prop.value == ISY_VALUE_UNKNOWN:
+            return None
+
+        if options_dict := UOM_TO_STATES.get(node_prop.uom):
+            return cast(str, options_dict.get(node_prop.value, node_prop.value))
         return cast(str, node_prop.formatted)
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         node_prop: NodeProperty = self._node.aux_properties[self._control]
 
-        if self._control == PROP_RAMP_RATE:
-            await self._node.set_ramp_rate(INSTEON_RAMP_RATES.index(option))
-            return
-        if node_prop.uom == UOM_INDEX:
-            await self._node.send_cmd(
-                self._control, val=self.options.index(option), uom=node_prop.uom
-            )
+        await self._node.send_cmd(
+            self._control, val=self.options.index(option), uom=node_prop.uom
+        )
