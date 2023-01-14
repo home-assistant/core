@@ -109,6 +109,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.http.register_view(HistoryPeriodView(filters, use_include_order))
     frontend.async_register_built_in_panel(hass, "history", "history", "hass:chart-box")
     websocket_api.async_register_command(hass, ws_get_history_during_period)
+    websocket_api.async_register_command(hass, ws_stream)
 
     return True
 
