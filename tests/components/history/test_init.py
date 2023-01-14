@@ -1245,6 +1245,62 @@ async def test_history_during_period_bad_end_time(recorder_mock, hass, hass_ws_c
     assert response["error"]["code"] == "invalid_end_time"
 
 
+async def test_history_during_period_with_use_include_order(
+    recorder_mock, hass, hass_ws_client
+):
+    """Test history_during_period."""
+    now = dt_util.utcnow()
+    sort_order = ["sensor.two", "sensor.four", "sensor.one"]
+    await async_setup_component(
+        hass,
+        "history",
+        {
+            history.DOMAIN: {
+                history.CONF_ORDER: True,
+                CONF_INCLUDE: {
+                    CONF_ENTITIES: sort_order,
+                    CONF_DOMAINS: ["sensor"],
+                },
+            }
+        },
+    )
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.one", "on", attributes={"any": "attr"})
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.two", "off", attributes={"any": "attr"})
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.three", "off", attributes={"any": "changed"})
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.four", "off", attributes={"any": "again"})
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("switch.excluded", "off", attributes={"any": "again"})
+    await async_wait_recording_done(hass)
+
+    await async_wait_recording_done(hass)
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "history/history_during_period",
+            "start_time": now.isoformat(),
+            "include_start_time_state": True,
+            "significant_changes_only": False,
+            "no_attributes": True,
+            "minimal_response": True,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["id"] == 1
+
+    assert list(response["result"]) == [
+        *sort_order,
+        "sensor.three",
+    ]
+
+
 async def test_history_stream_historical_only(recorder_mock, hass, hass_ws_client):
     """Test history stream."""
     now = dt_util.utcnow()
@@ -1515,3 +1571,48 @@ async def test_history_stream_significant_domain_historical_only(
     assert sensor_test_history[0]["a"] == {"temperature": "5"}
     assert sensor_test_history[0]["lu"] == later.timestamp()
     assert "lc" not in sensor_test_history[0]  # skipped if the same a last_updated (lu)
+
+
+async def test_history_stream_bad_start_time(recorder_mock, hass, hass_ws_client):
+    """Test history stream bad state time."""
+    await async_setup_component(
+        hass,
+        "history",
+        {"history": {}},
+    )
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "history/stream",
+            "start_time": "cats",
+        }
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "invalid_start_time"
+
+
+async def test_history_stream_bad_end_time(recorder_mock, hass, hass_ws_client):
+    """Test history stream bad end time."""
+    now = dt_util.utcnow()
+
+    await async_setup_component(
+        hass,
+        "history",
+        {"history": {}},
+    )
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "history/stream",
+            "start_time": now.isoformat(),
+            "end_time": "dogs",
+        }
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "invalid_end_time"
