@@ -29,6 +29,8 @@
         "_": {
             "hvac_action": {
                 "state": {
+                    "heating": "Chauffe",
+                    "idle": "Inactif",
                     "off": "Arr\u00eat"
                 }
             },

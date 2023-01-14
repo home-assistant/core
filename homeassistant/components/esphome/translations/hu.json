@@ -4,7 +4,8 @@
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
             "already_in_progress": "A be\u00e1ll\u00edt\u00e1si folyamat m\u00e1r el lett kezdve",
             "mdns_missing_mac": "Hi\u00e1nyz\u00f3 MAC-c\u00edm az MDNS-tulajdons\u00e1gokban.",
-            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt."
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt.",
+            "service_received": "Szolg\u00e1ltat\u00e1s meg\u00e9rkezett"
         },
         "error": {
             "connection_error": "Nem lehet csatlakozni az ESP-hez. K\u00e9rem, gy\u0151z\u0151dj\u00f6n meg r\u00f3la, hogy a YAML konfigur\u00e1ci\u00f3 tartalmaz egy \"api:\" sort.",
