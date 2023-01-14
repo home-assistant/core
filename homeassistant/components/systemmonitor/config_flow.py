@@ -26,9 +26,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import CONF_ARG, DOMAIN
-
-CONF_INDEX = "index"
+from .const import CONF_ARG, CONF_INDEX, DOMAIN
 
 
 @dataclass
