@@ -35,6 +35,7 @@ from .const import (
     ISY_GROUP_PLATFORM,
     KEY_ACTIONS,
     KEY_STATUS,
+    NODE_AUX_FILTERS,
     NODE_FILTERS,
     NODE_PLATFORMS,
     PROGRAM_PLATFORMS,
@@ -331,7 +332,10 @@ def _categorize_nodes(
             if getattr(node, "is_dimmable", False):
                 aux_controls = ROOT_AUX_CONTROLS.intersection(node.aux_properties)
                 for control in aux_controls:
+                    # Deprecated all aux properties as sensors. Update in 2023.5.0 to remove extras.
                     isy_data.aux_properties[Platform.SENSOR].append((node, control))
+                    platform = NODE_AUX_FILTERS[control]
+                    isy_data.aux_properties[platform].append((node, control))
 
         if node.protocol == PROTO_GROUP:
             isy_data.nodes[ISY_GROUP_PLATFORM].append(node)
