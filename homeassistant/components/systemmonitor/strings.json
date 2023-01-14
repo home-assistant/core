@@ -1,0 +1,66 @@
+{
+  "config": {
+    "error": {
+      "missing_arg": "Mandatory argument missing for requested type"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "type": "Type",
+          "arg": "Argument"
+        },
+        "data_description": {
+          "type": "The type of the information to display",
+          "arg": "Argument to use, see documentation for mandatory usage."
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "menu_options": {
+          "add_sensor": "Add sensor",
+          "type_edit_sensor": "Configure sensor",
+          "remove_sensor": "Remove sensor"
+        }
+      },
+      "add_sensor": {
+        "data": {
+          "type": "[%key:component::systemmonitor::config::step::user::data::type%]",
+          "arg": "[%key:component::systemmonitor::config::step::user::data::arg%]"
+        },
+        "data_description": {
+          "type": "[%key:component::systemmonitor::config::step::user::data_description::type%]",
+          "arg": "[%key:component::systemmonitor::config::step::user::data_description::arg%]"
+        }
+      },
+      "edit_sensor": {
+        "data": {
+          "type": "[%key:component::systemmonitor::config::step::user::data::type%]",
+          "arg": "[%key:component::systemmonitor::config::step::user::data::arg%]"
+        },
+        "data_description": {
+          "type": "[%key:component::systemmonitor::config::step::user::data_description::type%]",
+          "arg": "[%key:component::systemmonitor::config::step::user::data_description::arg%]"
+        }
+      },
+      "resource": {
+        "data": {
+          "type": "[%key:component::systemmonitor::config::step::user::data::type%]",
+          "arg": "[%key:component::systemmonitor::config::step::user::data::arg%]"
+        },
+        "data_description": {
+          "type": "[%key:component::systemmonitor::config::step::user::data_description::type%]",
+          "arg": "[%key:component::systemmonitor::config::step::user::data_description::arg%]"
+        }
+      }
+    }
+  },
+  "issues": {
+    "moved_yaml": {
+      "title": "The systemmonitor YAML configuration has been moved",
+      "description": "Configuring systemmonitor using YAML has been moved to integration key.\n\nYour existing YAML configuration will be working for 2 more versions.\n\nMigrate your YAML configuration to the integration key according to the documentation."
+    }
+  }
+}
