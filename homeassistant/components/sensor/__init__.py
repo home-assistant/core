@@ -401,7 +401,12 @@ class SensorEntity(Entity):
         native_unit_of_measurement = self.native_unit_of_measurement
         unit_of_measurement = self.unit_of_measurement
         value = self.native_value
-        device_class = self.device_class
+        device_class: SensorDeviceClass | None = None
+        with suppress(ValueError):
+            # For the sake of validation, we can ignore custom device classes
+            # (customization and legacy style translations)
+            device_class = SensorDeviceClass(str(self.device_class))
+        state_class = self.state_class
 
         # Sensors with device classes indicating a non-numeric value
         # should not have a state class or unit of measurement
@@ -478,6 +483,29 @@ class SensorEntity(Entity):
                     f"Sensor {self.entity_id} provides state value '{value}', "
                     "which is not in the list of options provided"
                 )
+            return value
+
+        # If the sensor has neither a device class, a state class nor
+        # a unit_of measurement then there are no further checks or conversions
+        if not device_class and not state_class and not unit_of_measurement:
+            return value
+
+        if not isinstance(value, (int, float, Decimal)):
+            try:
+                _ = float(value)  # type: ignore[arg-type]
+            except ValueError:
+                _LOGGER.warning(
+                    "Sensor %s has device class %s, state class %s and unit %s "
+                    "thus indicating it has a numeric value; however, it has the "
+                    "non-numeric value: %s (%s). This will stop working in 2023.4",
+                    self.entity_id,
+                    device_class,
+                    state_class,
+                    unit_of_measurement,
+                    value,
+                    type(value),
+                )
+                return value
 
         if (
             native_unit_of_measurement != unit_of_measurement
