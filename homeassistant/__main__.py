@@ -47,10 +47,10 @@ def ensure_config_path(config_dir: str) -> None:
 
         try:
             os.mkdir(config_dir)
-        except OSError:
+        except OSError as ex:
             print(
                 "Fatal Error: Unable to create default configuration "
-                f"directory {config_dir}"
+                f"directory {config_dir}: {ex}"
             )
             sys.exit(1)
 
@@ -58,8 +58,8 @@ def ensure_config_path(config_dir: str) -> None:
     if not os.path.isdir(lib_dir):
         try:
             os.mkdir(lib_dir)
-        except OSError:
-            print(f"Fatal Error: Unable to create library directory {lib_dir}")
+        except OSError as ex:
+            print(f"Fatal Error: Unable to create library directory {lib_dir}: {ex}")
             sys.exit(1)
 
 
