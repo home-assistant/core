@@ -1,4 +1,46 @@
 {
+    "entity": {
+        "climate": {
+            "ubercool": {
+                "state_attributes": {
+                    "fan_mode": {
+                        "state": {
+                            "auto_high": "Otomatik Y\u00fcksek",
+                            "auto_low": "Otomatik D\u00fc\u015f\u00fck",
+                            "on_high": "Y\u00fcksekte",
+                            "on_low": "D\u00fc\u015f\u00fckte"
+                        }
+                    },
+                    "swing_mode": {
+                        "state": {
+                            "1": "1",
+                            "2": "2",
+                            "3": "3",
+                            "auto": "Otomatik",
+                            "off": "Kapal\u0131"
+                        }
+                    }
+                }
+            }
+        },
+        "select": {
+            "speed": {
+                "state": {
+                    "light_speed": "I\u015f\u0131k h\u0131z\u0131",
+                    "ludicrous_speed": "Sa\u00e7ma H\u0131z"
+                }
+            }
+        },
+        "vacuum": {
+            "model_s": {
+                "state_attributes": {
+                    "cleaned_area": {
+                        "name": "Temizlenmi\u015f Alan"
+                    }
+                }
+            }
+        }
+    },
     "issues": {
         "bad_psu": {
             "fix_flow": {

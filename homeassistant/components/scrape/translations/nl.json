@@ -55,7 +55,20 @@
                 "data": {
                     "attribute": "Attribuut",
                     "device_class": "Apparaatklasse (device_class)",
-                    "index": "Index"
+                    "index": "Index",
+                    "select": "Selecteer",
+                    "state_class": "Statusklasse (state_class)",
+                    "unit_of_measurement": "Eenheid",
+                    "value_template": "Waardesjabloon (template)"
+                },
+                "data_description": {
+                    "attribute": "Bepaal de waarde van een attribuut op van de geselecteerde tag",
+                    "device_class": "Type/klasse van de sensor voor het icoon in de frontend",
+                    "index": "Bepaalt welke van de elementen worden teruggegeven door de CSS selector om te gebruiken",
+                    "select": "Bepaalt de tag om naar te zoeken. Zie Beautifulsoup CSS selectors voor meer details",
+                    "state_class": "De state_class van de sensor",
+                    "unit_of_measurement": "Kies een temperatuurmeting of cre\u00eber er zelf een",
+                    "value_template": "Definieert een template om de status van de sensor te bepalen"
                 }
             },
             "edit_sensor": {
@@ -90,8 +103,10 @@
                     "authentication": "Authenticatie",
                     "headers": "Headers",
                     "method": "Methode",
+                    "password": "Wachtwoord",
                     "resource": "Bron",
-                    "timeout": "Wachttijd verstreken"
+                    "timeout": "Wachttijd verstreken",
+                    "username": "Gebruikersnaam"
                 },
                 "data_description": {
                     "authentication": "Type van de HTTP-authenticatie. Ofwel basic of digest",
