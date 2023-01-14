@@ -125,7 +125,7 @@ async def validate_sensor_setup(
 
     if (
         SENSOR_CONFIG[user_input[CONF_TYPE]].mandatory_arg is True
-        and user_input[CONF_ARG] is None
+        and user_input.get(CONF_ARG) is None
     ):
         raise SchemaFlowError("missing_arg")
 
