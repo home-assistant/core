@@ -1,5 +1,8 @@
 """Test sensor of Airly integration."""
 from datetime import timedelta
+from http import HTTPStatus
+
+from airly.exceptions import AirlyError
 
 from homeassistant.components.airly.sensor import ATTRIBUTION
 from homeassistant.components.sensor import (
@@ -195,7 +198,9 @@ async def test_availability(hass, aioclient_mock):
     assert state.state == "68.3"
 
     aioclient_mock.clear_requests()
-    aioclient_mock.get(API_POINT_URL, exc=ConnectionError())
+    aioclient_mock.get(
+        API_POINT_URL, exc=AirlyError(HTTPStatus.NOT_FOUND, {"message": "Not found"})
+    )
     future = utcnow() + timedelta(minutes=60)
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()

@@ -518,7 +518,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
         else:
             self._radio_mgr.radio_type = RadioType.znp
 
-        node_name = local_name[: -len(".local")]
+        node_name = local_name.removesuffix(".local")
         device_path = f"socket://{discovery_info.host}:{port}"
 
         await self._set_unique_id_or_update_path(

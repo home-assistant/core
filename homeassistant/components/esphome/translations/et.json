@@ -4,7 +4,8 @@
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
             "already_in_progress": "Seadistamine on juba k\u00e4imas",
             "mdns_missing_mac": "MDNS-i atribuutides puudub MAC-aadress.",
-            "reauth_successful": "Taastuvastamine \u00f5nnestus"
+            "reauth_successful": "Taastuvastamine \u00f5nnestus",
+            "service_received": "Saadud teenus"
         },
         "error": {
             "connection_error": "ESP-ga ei saa \u00fchendust luua. Veendu, et YAML-fail sisaldab rida 'api:'.",

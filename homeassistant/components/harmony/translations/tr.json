@@ -22,6 +22,15 @@
             }
         }
     },
+    "entity": {
+        "select": {
+            "activities": {
+                "state": {
+                    "power_off": "G\u00fc\u00e7 Kapal\u0131"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {

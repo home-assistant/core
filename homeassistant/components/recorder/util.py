@@ -225,7 +225,7 @@ def validate_or_move_away_sqlite_database(dburl: str) -> bool:
 
 def dburl_to_path(dburl: str) -> str:
     """Convert the db url into a filesystem path."""
-    return dburl[len(SQLITE_URL_PREFIX) :]
+    return dburl.removeprefix(SQLITE_URL_PREFIX)
 
 
 def last_run_was_recently_clean(cursor: CursorFetchStrategy) -> bool:

@@ -179,7 +179,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         mac_address = format_mac(mac_address)
 
         # Hostname is format: livingroom.local.
-        self._name = discovery_info.hostname[: -len(".local.")]
+        self._name = discovery_info.hostname.removesuffix(".local.")
         self._device_name = self._name
         self._host = discovery_info.host
         self._port = discovery_info.port

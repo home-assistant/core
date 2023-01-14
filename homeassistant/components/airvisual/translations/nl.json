@@ -50,6 +50,17 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "pollutant_level": {
+                "state": {
+                    "good": "Goed",
+                    "hazardous": "Gevaarlijk",
+                    "unhealthy": "Ongezond"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {

@@ -1,14 +1,18 @@
 """Support for interface with an LG webOS Smart TV."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
 from contextlib import suppress
 from datetime import timedelta
 from functools import wraps
+from http import HTTPStatus
 import logging
+from ssl import SSLContext
 from typing import Any, TypeVar, cast
 
 from aiowebostv import WebOsClient, WebOsTvPairError
+import async_timeout
 from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant import util
@@ -28,6 +32,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -466,3 +471,25 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
     async def async_command(self, command: str, **kwargs: Any) -> None:
         """Send a command."""
         await self._client.request(command, payload=kwargs.get(ATTR_PAYLOAD))
+
+    async def _async_fetch_image(self, url: str) -> tuple[bytes | None, str | None]:
+        """Retrieve an image.
+
+        webOS uses self-signed certificates, thus we need to use an empty
+        SSLContext to bypass validation errors if url starts with https.
+        """
+        content = None
+        ssl_context = None
+        if url.startswith("https"):
+            ssl_context = SSLContext()
+
+        websession = async_get_clientsession(self.hass)
+        with suppress(asyncio.TimeoutError), async_timeout.timeout(10):
+            response = await websession.get(url, ssl=ssl_context)
+            if response.status == HTTPStatus.OK:
+                content = await response.read()
+
+        if content is None:
+            _LOGGER.warning("Error retrieving proxied image from %s", url)
+
+        return content, None
