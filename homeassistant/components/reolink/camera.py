@@ -31,6 +31,9 @@ async def async_setup_entry(
             streams.append("ext")
 
         for stream in streams:
+            stream_URL = await self._host.api.get_stream_source(channel, stream)
+            if stream_URL is None and stream is not "snapshots":
+                continue
             cameras.append(ReolinkCamera(reolink_data, config_entry, channel, stream))
 
     async_add_entities(cameras, update_before_add=True)
