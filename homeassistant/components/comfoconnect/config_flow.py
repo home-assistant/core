@@ -15,6 +15,7 @@ from .const import (
     _LOGGER,
     CONF_USER_AGENT,
     DEFAULT_NAME,
+    DEFAULT_NAME_IMPORT,
     DEFAULT_PIN,
     DEFAULT_TOKEN,
     DEFAULT_USER_AGENT,
@@ -72,7 +73,7 @@ class ComfoConnectFlowHandler(ConfigFlow, domain=DOMAIN):
             bridge = bridges[0]
             _LOGGER.info("Bridge found: %s (%s)", bridge.uuid.hex(), bridge.host)
 
-            title = "configuration.yaml" if self.source == SOURCE_IMPORT else name
+            title = DEFAULT_NAME_IMPORT if self.source == SOURCE_IMPORT else name
             return self.async_create_entry(
                 title=title,
                 data={
