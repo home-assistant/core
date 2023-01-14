@@ -165,7 +165,7 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_PASSWORD, default=self._password): str,
             }
         )
-        if self._host is not None or errors:
+        if self._host is None or errors:
             data_schema = data_schema.extend(
                 {
                     vol.Required(CONF_HOST, default=self._host): str,
