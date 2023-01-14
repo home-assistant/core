@@ -9,13 +9,18 @@ import logging
 
 from aiohttp import ClientConnectorError
 import async_timeout
-from reolink_aio.exceptions import ApiError, InvalidContentTypeError
+from reolink_aio.exceptions import (
+    ApiError,
+    InvalidContentTypeError,
+    NoDataError,
+    ReolinkError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
 from .exceptions import UserNotAdmin
@@ -53,6 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         asyncio.TimeoutError,
         ApiError,
         InvalidContentTypeError,
+        NoDataError,
     ) as err:
         await host.stop()
         raise ConfigEntryNotReady(
@@ -66,8 +72,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     async def async_device_config_update():
         """Update the host state cache and renew the ONVIF-subscription."""
         async with async_timeout.timeout(host.api.timeout):
-            # Login session is implicitly updated here
-            await host.update_states()
+            try:
+                await host.update_states()
+            except ReolinkError as err:
+                raise UpdateFailed(
+                    f"Error updating Reolink {host.api.nvr_name}"
+                ) from err
 
     coordinator_device_config_update = DataUpdateCoordinator(
         hass,
