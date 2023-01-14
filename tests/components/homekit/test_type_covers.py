@@ -20,6 +20,7 @@ from homeassistant.components.homekit.const import (
     PROP_MIN_VALUE,
 )
 from homeassistant.components.homekit.type_covers import (
+    Door,
     GarageDoorOpener,
     Window,
     WindowCovering,
@@ -116,6 +117,72 @@ async def test_garage_door_open_close(hass, hk_driver, events):
     assert acc.char_current_state.value == HK_DOOR_OPENING
     assert acc.char_target_state.value == HK_DOOR_OPEN
     assert len(events) == 3
+    assert events[-1].data[ATTR_VALUE] is None
+
+    hass.states.async_set(entity_id, STATE_OPEN)
+    await hass.async_block_till_done()
+
+    acc.char_target_state.client_update_value(0)
+    await hass.async_block_till_done()
+    assert acc.char_current_state.value == HK_DOOR_OPEN
+    assert acc.char_target_state.value == HK_DOOR_OPEN
+    assert len(events) == 4
+    assert events[-1].data[ATTR_VALUE] is None
+
+
+async def test_door_open_close(hass, hk_driver, events):
+    """Test if accessory and HA are updated accordingly."""
+    entity_id = "cover.door"
+
+    hass.states.async_set(entity_id, None)
+    await hass.async_block_till_done()
+    acc = Door(hass, hk_driver, "Door", entity_id, 2, None)
+    await acc.run()
+    await hass.async_block_till_done()
+
+    assert acc.aid == 2
+    assert acc.category == 12  # GarageDoorOpener
+
+    assert acc.char_current_state.value == HK_DOOR_OPEN
+    assert acc.char_target_state.value == HK_DOOR_OPEN
+
+    hass.states.async_set(entity_id, STATE_CLOSED, {ATTR_OBSTRUCTION_DETECTED: False})
+    await hass.async_block_till_done()
+    assert acc.char_current_state.value == HK_DOOR_CLOSED
+    assert acc.char_target_state.value == HK_DOOR_CLOSED
+    assert acc.char_obstruction_detected.value is False
+
+    hass.states.async_set(entity_id, STATE_OPEN, {ATTR_OBSTRUCTION_DETECTED: True})
+    await hass.async_block_till_done()
+    assert acc.char_current_state.value == HK_DOOR_OPEN
+    assert acc.char_target_state.value == HK_DOOR_OPEN
+    assert acc.char_obstruction_detected.value is True
+
+    hass.states.async_set(
+        entity_id, STATE_UNAVAILABLE, {ATTR_OBSTRUCTION_DETECTED: False}
+    )
+    await hass.async_block_till_done()
+    assert acc.char_current_state.value == HK_DOOR_OPEN
+    assert acc.char_target_state.value == HK_DOOR_OPEN
+    assert acc.char_obstruction_detected.value is False
+
+    hass.states.async_set(entity_id, STATE_UNKNOWN)
+    await hass.async_block_till_done()
+    assert acc.char_current_state.value == HK_DOOR_OPEN
+    assert acc.char_target_state.value == HK_DOOR_OPEN
+
+    # Set from HomeKit
+    call_close_cover = async_mock_service(hass, DOMAIN, "close_cover")
+    call_open_cover = async_mock_service(hass, DOMAIN, "open_cover")
+
+    hass.states.async_set(entity_id, STATE_CLOSED)
+    await hass.async_block_till_done()
+
+    acc.char_target_state.client_update_value(1)
+    await hass.async_block_till_done()
+    assert acc.char_current_state.value == HK_DOOR_CLOSED
+    assert acc.char_target_state.value == HK_DOOR_CLOSED
+    assert len(events) == 2
     assert events[-1].data[ATTR_VALUE] is None
 
     hass.states.async_set(entity_id, STATE_OPEN)
