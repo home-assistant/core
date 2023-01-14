@@ -47,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     try:
         await host.async_init()
     except UserNotAdmin as err:
-        raise ConfigEntryAuthFailed(err) from UserNotAdmin
+        raise ConfigEntryAuthFailed(err) from err
     except (
         ClientConnectorError,
         asyncio.TimeoutError,
