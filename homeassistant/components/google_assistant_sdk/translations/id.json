@@ -34,8 +34,10 @@
         "step": {
             "init": {
                 "data": {
+                    "enable_conversation_agent": "Aktifkan agen percakapan",
                     "language_code": "Kode bahasa"
-                }
+                },
+                "description": "Tetapkan bahasa untuk interaksi dengan Asisten Google dan apakah Anda ingin mengaktifkan agen percakapan."
             }
         }
     }

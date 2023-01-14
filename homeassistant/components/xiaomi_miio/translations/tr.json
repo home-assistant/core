@@ -51,6 +51,31 @@
             }
         }
     },
+    "entity": {
+        "select": {
+            "display_orientation": {
+                "state": {
+                    "forward": "\u0130leri",
+                    "left": "Sol",
+                    "right": "Sa\u011f"
+                }
+            },
+            "led_brightness": {
+                "state": {
+                    "bright": "Ayd\u0131nl\u0131k",
+                    "dim": "Dim",
+                    "off": "Kapal\u0131"
+                }
+            },
+            "ptc_level": {
+                "state": {
+                    "high": "Y\u00fcksek",
+                    "low": "D\u00fc\u015f\u00fck",
+                    "medium": "Orta"
+                }
+            }
+        }
+    },
     "options": {
         "error": {
             "cloud_credentials_incomplete": "Bulut kimlik bilgileri eksik, l\u00fctfen kullan\u0131c\u0131 ad\u0131n\u0131, \u015fifreyi ve \u00fclkeyi girin"

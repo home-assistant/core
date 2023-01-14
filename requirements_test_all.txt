@@ -161,7 +161,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==2.4.3
+aiohomekit==2.4.4
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -1456,7 +1456,7 @@ python-juicenet==1.1.0
 python-kasa==0.5.0
 
 # homeassistant.components.matter
-python-matter-server==1.0.8
+python-matter-server==1.1.0
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12

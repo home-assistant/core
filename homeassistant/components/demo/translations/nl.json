@@ -51,6 +51,9 @@
                 }
             },
             "title": "De thee is koud"
+        },
+        "unfixable_problem": {
+            "title": "Dit is geen oplosbaar probleem"
         }
     },
     "options": {
