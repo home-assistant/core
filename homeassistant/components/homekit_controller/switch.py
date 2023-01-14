@@ -69,6 +69,12 @@ SWITCH_ENTITIES: dict[str, DeclarativeSwitchEntityDescription] = {
         icon="mdi:volume-mute",
         entity_category=EntityCategory.CONFIG,
     ),
+    CharacteristicsTypes.VENDOR_AIRVERSA_SLEEP_MODE: DeclarativeSwitchEntityDescription(
+        key=CharacteristicsTypes.VENDOR_AIRVERSA_SLEEP_MODE,
+        name="Sleep Mode",
+        icon="mdi:power-sleep",
+        entity_category=EntityCategory.CONFIG,
+    ),
 }
 
 

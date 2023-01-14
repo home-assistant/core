@@ -64,6 +64,13 @@ async def test_airversa_ap2_setup(hass):
                     state="on",
                 ),
                 EntityTestInfo(
+                    entity_id="switch.airversa_ap2_1808_sleep_mode",
+                    friendly_name="Airversa AP2 1808 Sleep Mode",
+                    unique_id="00:00:00:00:00:00_1_32832_32842",
+                    entity_category=EntityCategory.CONFIG,
+                    state="off",
+                ),
+                EntityTestInfo(
                     entity_id="sensor.airversa_ap2_1808_air_quality",
                     friendly_name="Airversa AP2 1808 Air Quality",
                     unique_id="00:00:00:00:00:00_1_2576_2579",

@@ -99,6 +99,7 @@ CHARACTERISTIC_PLATFORMS = {
     CharacteristicsTypes.AIR_PURIFIER_STATE_TARGET: "switch",
     CharacteristicsTypes.MUTE: "switch",
     CharacteristicsTypes.FILTER_LIFE_LEVEL: "sensor",
+    CharacteristicsTypes.VENDOR_AIRVERSA_SLEEP_MODE: "switch",
 }
 
 STARTUP_EXCEPTIONS = (
