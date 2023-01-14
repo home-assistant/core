@@ -9,7 +9,7 @@ import uuid
 import voluptuous as vol
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import CONF_NAME, CONF_TYPE, CONF_UNIQUE_ID
+from homeassistant.const import CONF_NAME, CONF_RESOURCES, CONF_TYPE, CONF_UNIQUE_ID
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
@@ -134,6 +134,29 @@ async def validate_sensor_setup(
     return {}
 
 
+async def validate_sensor_setup_import(
+    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+) -> dict[str, Any]:
+    """Validate sensor input."""
+    sensors: list[dict[str, Any]] = handler.options.setdefault(SENSOR_DOMAIN, [])
+
+    for sensor_config in user_input[CONF_RESOURCES]:
+        sensor = {}
+        sensor[CONF_UNIQUE_ID] = str(uuid.uuid1())
+        sensor[
+            CONF_NAME
+        ] = f"{SENSOR_CONFIG[sensor_config[CONF_TYPE]].name} {sensor_config.get(CONF_ARG, '')}".rstrip()
+
+        if (
+            SENSOR_CONFIG[sensor_config[CONF_TYPE]].mandatory_arg is True
+            and sensor_config.get(CONF_ARG) is None
+        ):
+            raise SchemaFlowError("missing_arg")
+
+        sensors.append(sensor_config)
+    return {}
+
+
 async def validate_select_sensor(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
@@ -221,6 +244,10 @@ CONFIG_FLOW = {
     "user": SchemaFlowFormStep(
         schema=DATA_SCHEMA_SENSOR,
         validate_user_input=validate_sensor_setup,
+    ),
+    "import": SchemaFlowFormStep(
+        schema=DATA_SCHEMA_SENSOR,
+        validate_user_input=validate_sensor_setup_import,
     ),
 }
 OPTIONS_FLOW = {

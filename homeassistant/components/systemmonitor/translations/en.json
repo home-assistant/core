@@ -17,9 +17,9 @@
         }
     },
     "issues": {
-        "moved_yaml": {
-            "description": "Configuring systemmonitor using YAML has been moved to integration key.\n\nYour existing YAML configuration will be working for 2 more versions.\n\nMigrate your YAML configuration to the integration key according to the documentation.",
-            "title": "The systemmonitor YAML configuration has been moved"
+        "deprecated_yaml": {
+            "description": "Configuring Systemmonitor using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the Systemmonitor YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue.",
+            "title": "The Systemmonitor YAML configuration is being removed"
         }
     },
     "options": {

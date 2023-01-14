@@ -241,3 +241,69 @@ async def test_options_edit_sensor_flow(
 
     # Check the entity was updated
     assert len(hass.states.async_all()) == 1
+
+
+async def test_import_flow_success(hass: HomeAssistant) -> None:
+    """Test we can import."""
+
+    with patch(
+        "homeassistant.components.systemmonitor.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                "resources": [
+                    {
+                        CONF_TYPE: "network_in",
+                        CONF_ARG: "eth0",
+                    },
+                    {
+                        CONF_TYPE: "network_in",
+                        CONF_ARG: "eth1",
+                    },
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["version"] == 1
+    assert result["options"] == {
+        "sensor": [
+            {
+                CONF_TYPE: "network_in",
+                CONF_ARG: "eth0",
+            },
+            {
+                CONF_TYPE: "network_in",
+                CONF_ARG: "eth1",
+            },
+        ],
+    }
+
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_import_flow_fails(hass: HomeAssistant) -> None:
+    """Test import fails with missing argument."""
+
+    with patch(
+        "homeassistant.components.systemmonitor.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                "resources": [
+                    {
+                        CONF_TYPE: "network_in",
+                    },
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["errors"] == {"base": "missing_arg"}
