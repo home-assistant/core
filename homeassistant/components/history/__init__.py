@@ -401,7 +401,7 @@ def _async_send_empty_response(
     connection.send_message(JSON_DUMP(empty_response))
 
 
-async def _async_send_historical_events(
+async def _async_send_historical_states(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg_id: int,
@@ -609,8 +609,7 @@ async def ws_stream(
 
         connection.subscriptions[msg_id] = callback(lambda: None)
         connection.send_result(msg_id)
-        # Fetch everything from history
-        await _async_send_historical_events(
+        await _async_send_historical_states(
             hass,
             connection,
             msg_id,
@@ -674,7 +673,7 @@ async def ws_stream(
     connection.subscriptions[msg_id] = _unsub
     connection.send_result(msg_id)
     # Fetch everything from history
-    last_event_time = await _async_send_historical_events(
+    last_event_time = await _async_send_historical_states(
         hass,
         connection,
         msg_id,
@@ -698,7 +697,7 @@ async def ws_stream(
     )
 
     if msg_id not in connection.subscriptions:
-        # Unsubscribe happened while sending historical events
+        # Unsubscribe happened while sending historical states
         return
 
     live_stream.wait_sync_task = asyncio.create_task(
@@ -707,14 +706,14 @@ async def ws_stream(
     await live_stream.wait_sync_task
 
     #
-    # Fetch any events from the database that have
+    # Fetch any states from the database that have
     # not been committed since the original fetch
     # so we can switch over to using the subscriptions
     #
-    # We only want events that happened after the last event
+    # We only want states that happened after the last state
     # we had from the last database query
     #
-    await _async_send_historical_events(
+    await _async_send_historical_states(
         hass,
         connection,
         msg_id,
