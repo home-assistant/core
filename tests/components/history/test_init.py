@@ -1245,10 +1245,8 @@ async def test_history_during_period_bad_end_time(recorder_mock, hass, hass_ws_c
     assert response["error"]["code"] == "invalid_end_time"
 
 
-async def test_history_during_period_with_use_include_order(
-    recorder_mock, hass, hass_ws_client
-):
-    """Test history_during_period."""
+async def test_history_stream_historical_only(recorder_mock, hass, hass_ws_client):
+    """Test history stream."""
     now = dt_util.utcnow()
     sort_order = ["sensor.two", "sensor.four", "sensor.one"]
     await async_setup_component(
@@ -1267,24 +1265,30 @@ async def test_history_during_period_with_use_include_order(
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
     hass.states.async_set("sensor.one", "on", attributes={"any": "attr"})
+    sensor_one_last_updated = hass.states.get("sensor.one").last_updated
     await async_recorder_block_till_done(hass)
     hass.states.async_set("sensor.two", "off", attributes={"any": "attr"})
+    sensor_two_last_updated = hass.states.get("sensor.two").last_updated
     await async_recorder_block_till_done(hass)
     hass.states.async_set("sensor.three", "off", attributes={"any": "changed"})
+    sensor_three_last_updated = hass.states.get("sensor.three").last_updated
     await async_recorder_block_till_done(hass)
     hass.states.async_set("sensor.four", "off", attributes={"any": "again"})
+    sensor_four_last_updated = hass.states.get("sensor.four").last_updated
     await async_recorder_block_till_done(hass)
     hass.states.async_set("switch.excluded", "off", attributes={"any": "again"})
     await async_wait_recording_done(hass)
 
     await async_wait_recording_done(hass)
+    end_time = dt_util.utcnow()
 
     client = await hass_ws_client()
     await client.send_json(
         {
             "id": 1,
-            "type": "history/history_during_period",
+            "type": "history/stream",
             "start_time": now.isoformat(),
+            "end_time": end_time.isoformat(),
             "include_start_time_state": True,
             "significant_changes_only": False,
             "no_attributes": True,
@@ -1294,8 +1298,220 @@ async def test_history_during_period_with_use_include_order(
     response = await client.receive_json()
     assert response["success"]
     assert response["id"] == 1
+    assert response["type"] == "result"
 
-    assert list(response["result"]) == [
-        *sort_order,
-        "sensor.three",
-    ]
+    response = await client.receive_json()
+
+    assert response == {
+        "event": {
+            "end_time": end_time.timestamp(),
+            "start_time": now.timestamp(),
+            "states": {
+                "sensor.four": [
+                    {"a": {}, "lu": sensor_four_last_updated.timestamp(), "s": "off"}
+                ],
+                "sensor.one": [
+                    {"a": {}, "lu": sensor_one_last_updated.timestamp(), "s": "on"}
+                ],
+                "sensor.three": [
+                    {"a": {}, "lu": sensor_three_last_updated.timestamp(), "s": "off"}
+                ],
+                "sensor.two": [
+                    {"a": {}, "lu": sensor_two_last_updated.timestamp(), "s": "off"}
+                ],
+            },
+        },
+        "id": 1,
+        "type": "event",
+    }
+
+
+async def test_history_stream_significant_domain_historical_only(
+    recorder_mock, hass, hass_ws_client
+):
+    """Test the stream with climate domain with historical states only."""
+    now = dt_util.utcnow()
+
+    await async_setup_component(hass, "history", {})
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("climate.test", "on", attributes={"temperature": "1"})
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("climate.test", "off", attributes={"temperature": "2"})
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("climate.test", "off", attributes={"temperature": "3"})
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("climate.test", "off", attributes={"temperature": "4"})
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("climate.test", "on", attributes={"temperature": "5"})
+    await async_wait_recording_done(hass)
+
+    await async_wait_recording_done(hass)
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "history/stream",
+            "start_time": now.isoformat(),
+            "end_time": now.isoformat(),
+            "entity_ids": ["climate.test"],
+            "include_start_time_state": True,
+            "significant_changes_only": False,
+            "no_attributes": True,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["id"] == 1
+    assert response["type"] == "result"
+    response = await client.receive_json()
+    assert response == {
+        "event": {
+            "end_time": now.timestamp(),
+            "start_time": now.timestamp(),
+            "states": {},
+        },
+        "id": 1,
+        "type": "event",
+    }
+
+    end_time = dt_util.utcnow()
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "history/stream",
+            "start_time": now.isoformat(),
+            "end_time": end_time.isoformat(),
+            "entity_ids": ["climate.test"],
+            "include_start_time_state": True,
+            "significant_changes_only": False,
+            "no_attributes": True,
+            "minimal_response": True,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["id"] == 2
+    assert response["type"] == "result"
+
+    response = await client.receive_json()
+    sensor_test_history = response["event"]["states"]["climate.test"]
+    assert len(sensor_test_history) == 5
+
+    assert sensor_test_history[0]["s"] == "on"
+    assert sensor_test_history[0]["a"] == {}
+    assert isinstance(sensor_test_history[0]["lu"], float)
+    assert "lc" not in sensor_test_history[0]  # skipped if the same a last_updated (lu)
+
+    assert "a" in sensor_test_history[1]
+    assert sensor_test_history[1]["s"] == "off"
+    assert "lc" not in sensor_test_history[1]  # skipped if the same a last_updated (lu)
+
+    assert sensor_test_history[4]["s"] == "on"
+    assert sensor_test_history[4]["a"] == {}
+
+    await client.send_json(
+        {
+            "id": 3,
+            "type": "history/stream",
+            "start_time": now.isoformat(),
+            "end_time": end_time.isoformat(),
+            "entity_ids": ["climate.test"],
+            "include_start_time_state": True,
+            "significant_changes_only": False,
+            "no_attributes": False,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["id"] == 3
+    assert response["type"] == "result"
+
+    response = await client.receive_json()
+    sensor_test_history = response["event"]["states"]["climate.test"]
+
+    assert len(sensor_test_history) == 5
+
+    assert sensor_test_history[0]["s"] == "on"
+    assert sensor_test_history[0]["a"] == {"temperature": "1"}
+    assert isinstance(sensor_test_history[0]["lu"], float)
+    assert "lc" not in sensor_test_history[0]  # skipped if the same a last_updated (lu)
+
+    assert sensor_test_history[1]["s"] == "off"
+    assert isinstance(sensor_test_history[1]["lu"], float)
+    assert "lc" not in sensor_test_history[1]  # skipped if the same a last_updated (lu)
+    assert sensor_test_history[1]["a"] == {"temperature": "2"}
+
+    assert sensor_test_history[4]["s"] == "on"
+    assert sensor_test_history[4]["a"] == {"temperature": "5"}
+
+    await client.send_json(
+        {
+            "id": 4,
+            "type": "history/stream",
+            "start_time": now.isoformat(),
+            "end_time": end_time.isoformat(),
+            "entity_ids": ["climate.test"],
+            "include_start_time_state": True,
+            "significant_changes_only": True,
+            "no_attributes": False,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["id"] == 4
+    assert response["type"] == "result"
+
+    response = await client.receive_json()
+    sensor_test_history = response["event"]["states"]["climate.test"]
+
+    assert len(sensor_test_history) == 5
+
+    assert sensor_test_history[0]["s"] == "on"
+    assert sensor_test_history[0]["a"] == {"temperature": "1"}
+    assert isinstance(sensor_test_history[0]["lu"], float)
+    assert "lc" not in sensor_test_history[0]  # skipped if the same a last_updated (lu)
+
+    assert sensor_test_history[1]["s"] == "off"
+    assert isinstance(sensor_test_history[1]["lu"], float)
+    assert "lc" not in sensor_test_history[1]  # skipped if the same a last_updated (lu)
+    assert sensor_test_history[1]["a"] == {"temperature": "2"}
+
+    assert sensor_test_history[2]["s"] == "off"
+    assert sensor_test_history[2]["a"] == {"temperature": "3"}
+
+    assert sensor_test_history[3]["s"] == "off"
+    assert sensor_test_history[3]["a"] == {"temperature": "4"}
+
+    assert sensor_test_history[4]["s"] == "on"
+    assert sensor_test_history[4]["a"] == {"temperature": "5"}
+
+    # Test we impute the state time state
+    later = dt_util.utcnow()
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "history/stream",
+            "start_time": later.isoformat(),
+            "end_time": later.isoformat(),
+            "entity_ids": ["climate.test"],
+            "include_start_time_state": True,
+            "significant_changes_only": True,
+            "no_attributes": False,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["id"] == 5
+    assert response["type"] == "result"
+
+    response = await client.receive_json()
+    sensor_test_history = response["event"]["states"]["climate.test"]
+
+    assert len(sensor_test_history) == 1
+
+    assert sensor_test_history[0]["s"] == "on"
+    assert sensor_test_history[0]["a"] == {"temperature": "5"}
+    assert sensor_test_history[0]["lu"] == later.timestamp()
+    assert "lc" not in sensor_test_history[0]  # skipped if the same a last_updated (lu)
