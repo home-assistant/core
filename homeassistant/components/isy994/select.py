@@ -21,7 +21,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import _LOGGER, DOMAIN, UOM_INDEX
 from .entity import ISYAuxControlEntity
-from .model import IsyData
+from .models import IsyData
+
 
 def time_string(i: int) -> str:
     """Return a formatted ramp rate time string."""
