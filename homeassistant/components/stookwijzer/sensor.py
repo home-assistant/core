@@ -5,7 +5,7 @@ from datetime import timedelta
 
 from stookwijzer import Stookwijzer
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
@@ -37,6 +37,7 @@ class StookwijzerSensor(SensorEntity):
     def __init__(self, client: Stookwijzer, entry: ConfigEntry) -> None:
         """Initialize a Stookwijzer device."""
         self._client = client
+        self._attr_device_class = SensorDeviceClass.ENUM
         self._attr_unique_id = entry.unique_id
         self._attr_translation_key = "stookwijzer"
         self._attr_device_info = DeviceInfo(
