@@ -95,10 +95,10 @@ class BasePlatform(Entity):
         self._attr_unit_of_measurement = None
         self._lazy_error_count = entry[CONF_LAZY_ERROR]
         self._lazy_errors = self._lazy_error_count
-        self._min_value = entry.get(CONF_MIN_VALUE)
-        self._min_value_threshold = entry.get(CONF_MIN_VALUE_THRESHOLD, self._min_value)
-        self._max_value = entry.get(CONF_MAX_VALUE)
-        self._max_value_threshold = entry.get(CONF_MAX_VALUE_THRESHOLD, self._max_value)
+        self._min_value: float | int = entry.get(CONF_MIN_VALUE)
+        self._min_value_threshold: float | int = entry.get(CONF_MIN_VALUE_THRESHOLD, self._min_value)
+        self._max_value: float | int = entry.get(CONF_MAX_VALUE)
+        self._max_value_threshold: float | int = entry.get(CONF_MAX_VALUE_THRESHOLD, self._max_value)
 
     @abstractmethod
     async def async_update(self, now: datetime | None = None) -> None:
@@ -193,9 +193,15 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
             v_result = []
             for entry in val:
                 v_temp = self._scale * entry + self._offset
-                if self._min_value_threshold is not None and v_temp < self._min_value_threshold:
+                if (
+                    self._min_value_threshold is not None
+                    and v_temp < self._min_value_threshold
+                ):
                     v_temp = self._min_value
-                elif self._max_value_threshold is not None and v_temp > self._max_value_threshold:
+                elif (
+                    self._max_value_threshold is not None
+                    and v_temp > self._max_value_threshold
+                ):
                     v_temp = self._max_value
 
                 # We could convert int to float, and the code would still work; however
@@ -209,9 +215,15 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
 
         # Apply scale and precision to floats and ints
         val_result: float | int = self._scale * val[0] + self._offset
-        if self._min_value_threshold is not None and val_result < self._min_value_threshold:
-            val_result = self._min_value
-        elif self._max_value_threshold is not None and val_result > self._max_value_threshold:
+        if (
+            self._min_value_threshold is not None
+            and val_result < self._min_value_threshold
+        ):
+             val_result = self._min_value
+        elif (
+            self._max_value_threshold is not None
+            and val_result > self._max_value_threshold
+        ):
             val_result = self._max_value
 
         # We could convert int to float, and the code would still work; however
