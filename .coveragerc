@@ -612,6 +612,7 @@ omit =
     homeassistant/components/isy994/lock.py
     homeassistant/components/isy994/models.py
     homeassistant/components/isy994/number.py
+    homeassistant/components/isy994/select.py
     homeassistant/components/isy994/sensor.py
     homeassistant/components/isy994/services.py
     homeassistant/components/isy994/switch.py

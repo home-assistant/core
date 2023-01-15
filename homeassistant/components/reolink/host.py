@@ -142,7 +142,7 @@ class ReolinkHost:
 
     async def disconnect(self):
         """Disconnect from the API, so the connection will be released."""
-        await self._api.unsubscribe_all()
+        await self._api.unsubscribe()
 
         try:
             await self._api.logout()

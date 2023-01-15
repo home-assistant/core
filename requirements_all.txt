@@ -300,7 +300,7 @@ aiovlc==0.1.0
 aiowatttime==0.1.1
 
 # homeassistant.components.webostv
-aiowebostv==0.3.0
+aiowebostv==0.3.1
 
 # homeassistant.components.yandex_transport
 aioymaps==1.2.2
@@ -807,7 +807,7 @@ google-cloud-pubsub==2.13.11
 google-cloud-texttospeech==2.12.3
 
 # homeassistant.components.nest
-google-nest-sdm==2.1.2
+google-nest-sdm==2.2.2
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -1696,7 +1696,7 @@ pyirishrail==0.0.2
 pyiss==1.0.1
 
 # homeassistant.components.isy994
-pyisy==3.1.4
+pyisy==3.1.5
 
 # homeassistant.components.itach
 pyitachip2ir==0.0.7
@@ -2212,7 +2212,7 @@ regenmaschine==2022.11.0
 renault-api==0.1.11
 
 # homeassistant.components.reolink
-reolink-aio==0.2.2
+reolink-aio==0.2.3
 
 # homeassistant.components.python_script
 restrictedpython==6.0
@@ -2487,13 +2487,13 @@ tmb==0.0.4
 todoist-api-python==2.0.2
 
 # homeassistant.components.tolo
-tololib==0.1.0b3
+tololib==0.1.0b4
 
 # homeassistant.components.toon
 toonapi==0.2.1
 
 # homeassistant.components.totalconnect
-total_connect_client==2022.10
+total_connect_client==2023.1
 
 # homeassistant.components.tplink_lte
 tp-connected==0.0.4

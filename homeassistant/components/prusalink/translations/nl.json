@@ -19,7 +19,8 @@
         "sensor": {
             "printer_state": {
                 "state": {
-                    "idle": "Inactief"
+                    "idle": "Inactief",
+                    "paused": "Gepauzeerd"
                 }
             }
         }
