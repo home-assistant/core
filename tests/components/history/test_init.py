@@ -11,17 +11,33 @@ import pytest
 from homeassistant.components import history
 from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.components.recorder.models import process_timestamp
-from homeassistant.const import CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_INCLUDE
+from homeassistant.const import (
+    CONF_DOMAINS,
+    CONF_ENTITIES,
+    CONF_EXCLUDE,
+    CONF_INCLUDE,
+    EVENT_HOMEASSISTANT_FINAL_WRITE,
+)
 import homeassistant.core as ha
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
+from tests.common import async_fire_time_changed
 from tests.components.recorder.common import (
     async_recorder_block_till_done,
     async_wait_recording_done,
     wait_recording_done,
 )
+
+
+def listeners_without_writes(listeners: dict[str, int]) -> dict[str, int]:
+    """Return listeners without final write listeners since we are not testing for these."""
+    return {
+        key: value
+        for key, value in listeners.items()
+        if key != EVENT_HOMEASSISTANT_FINAL_WRITE
+    }
 
 
 @pytest.mark.usefixtures("hass_history")
@@ -1996,3 +2012,97 @@ async def test_history_stream_live_no_attributes_minimal_response_specific_entit
         "id": 1,
         "type": "event",
     }
+
+
+async def test_history_stream_live_with_future_end_time(
+    recorder_mock, hass, hass_ws_client
+):
+    """Test history stream with history and live data with future end time."""
+    now = dt_util.utcnow()
+    wanted_entities = ["sensor.two", "sensor.four", "sensor.one"]
+    await async_setup_component(
+        hass,
+        "history",
+        {history.DOMAIN: {}},
+    )
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.one", "on", attributes={"any": "attr"})
+    sensor_one_last_updated = hass.states.get("sensor.one").last_updated
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.two", "off", attributes={"any": "attr"})
+    sensor_two_last_updated = hass.states.get("sensor.two").last_updated
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("switch.excluded", "off", attributes={"any": "again"})
+    await async_wait_recording_done(hass)
+
+    await async_wait_recording_done(hass)
+
+    future = now + timedelta(seconds=10)
+
+    client = await hass_ws_client()
+    init_listeners = hass.bus.async_listeners()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "history/stream",
+            "entity_ids": wanted_entities,
+            "start_time": now.isoformat(),
+            "end_time": future.isoformat(),
+            "include_start_time_state": True,
+            "significant_changes_only": False,
+            "no_attributes": True,
+            "minimal_response": True,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["id"] == 1
+    assert response["type"] == "result"
+
+    response = await client.receive_json()
+    first_end_time = sensor_two_last_updated.timestamp()
+
+    assert response == {
+        "event": {
+            "end_time": first_end_time,
+            "start_time": now.timestamp(),
+            "states": {
+                "sensor.one": [
+                    {"a": {}, "lu": sensor_one_last_updated.timestamp(), "s": "on"}
+                ],
+                "sensor.two": [
+                    {"a": {}, "lu": sensor_two_last_updated.timestamp(), "s": "off"}
+                ],
+            },
+        },
+        "id": 1,
+        "type": "event",
+    }
+
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.one", "one", attributes={"any": "attr"})
+    hass.states.async_set("sensor.two", "two", attributes={"any": "attr"})
+    await async_recorder_block_till_done(hass)
+
+    sensor_one_last_updated = hass.states.get("sensor.one").last_updated
+    sensor_two_last_updated = hass.states.get("sensor.two").last_updated
+    response = await client.receive_json()
+    assert response == {
+        "event": {
+            "states": {
+                "sensor.one": [{"lu": sensor_one_last_updated.timestamp(), "s": "one"}],
+                "sensor.two": [{"lu": sensor_two_last_updated.timestamp(), "s": "two"}],
+            },
+        },
+        "id": 1,
+        "type": "event",
+    }
+
+    async_fire_time_changed(hass, future)
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.two", "future", attributes={"any": "attr"})
+    # Check our listener got unsubscribed
+    assert listeners_without_writes(
+        hass.bus.async_listeners()
+    ) == listeners_without_writes(init_listeners)
