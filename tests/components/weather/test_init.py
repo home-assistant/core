@@ -50,10 +50,12 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-from homeassistant.util.distance import convert as convert_distance
-from homeassistant.util.pressure import convert as convert_pressure
-from homeassistant.util.speed import convert as convert_speed
-from homeassistant.util.temperature import convert as convert_temperature
+from homeassistant.util.unit_conversion import (
+    DistanceConverter,
+    PressureConverter,
+    SpeedConverter,
+    TemperatureConverter,
+)
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from tests.testing_config.custom_components.test import weather as WeatherPlatform
@@ -155,7 +157,7 @@ async def test_temperature(
     """Test temperature."""
     hass.config.units = unit_system
     native_value = 38
-    state_value = convert_temperature(native_value, native_unit, state_unit)
+    state_value = TemperatureConverter.convert(native_value, native_unit, state_unit)
 
     entity0 = await create_entity(
         hass, native_temperature=native_value, native_temperature_unit=native_unit
@@ -221,7 +223,7 @@ async def test_pressure(
     """Test pressure."""
     hass.config.units = unit_system
     native_value = 30
-    state_value = convert_pressure(native_value, native_unit, state_unit)
+    state_value = PressureConverter.convert(native_value, native_unit, state_unit)
 
     entity0 = await create_entity(
         hass, native_pressure=native_value, native_pressure_unit=native_unit
@@ -283,7 +285,7 @@ async def test_wind_speed(
     """Test wind speed."""
     hass.config.units = unit_system
     native_value = 10
-    state_value = convert_speed(native_value, native_unit, state_unit)
+    state_value = SpeedConverter.convert(native_value, native_unit, state_unit)
 
     entity0 = await create_entity(
         hass, native_wind_speed=native_value, native_wind_speed_unit=native_unit
@@ -351,7 +353,7 @@ async def test_visibility(
     """Test visibility."""
     hass.config.units = unit_system
     native_value = 10
-    state_value = convert_distance(native_value, native_unit, state_unit)
+    state_value = DistanceConverter.convert(native_value, native_unit, state_unit)
 
     entity0 = await create_entity(
         hass, native_visibility=native_value, native_visibility_unit=native_unit
@@ -413,7 +415,7 @@ async def test_precipitation(
     """Test precipitation."""
     hass.config.units = unit_system
     native_value = 30
-    state_value = convert_distance(native_value, native_unit, state_unit)
+    state_value = DistanceConverter.convert(native_value, native_unit, state_unit)
 
     entity0 = await create_entity(
         hass, native_precipitation=native_value, native_precipitation_unit=native_unit
@@ -554,22 +556,24 @@ async def test_custom_units(hass: HomeAssistant, enable_custom_integrations) -> 
     forecast = state.attributes[ATTR_FORECAST][0]
 
     expected_wind_speed = round(
-        convert_speed(wind_speed_value, wind_speed_unit, SPEED_MILES_PER_HOUR),
+        SpeedConverter.convert(wind_speed_value, wind_speed_unit, SPEED_MILES_PER_HOUR),
         ROUNDING_PRECISION,
     )
-    expected_temperature = convert_temperature(
+    expected_temperature = TemperatureConverter.convert(
         temperature_value, temperature_unit, TEMP_FAHRENHEIT
     )
     expected_pressure = round(
-        convert_pressure(pressure_value, pressure_unit, PRESSURE_INHG),
+        PressureConverter.convert(pressure_value, pressure_unit, PRESSURE_INHG),
         ROUNDING_PRECISION,
     )
     expected_visibility = round(
-        convert_distance(visibility_value, visibility_unit, LENGTH_MILES),
+        DistanceConverter.convert(visibility_value, visibility_unit, LENGTH_MILES),
         ROUNDING_PRECISION,
     )
     expected_precipitation = round(
-        convert_distance(precipitation_value, precipitation_unit, LENGTH_INCHES),
+        DistanceConverter.convert(
+            precipitation_value, precipitation_unit, LENGTH_INCHES
+        ),
         ROUNDING_PRECISION,
     )
 
@@ -750,22 +754,24 @@ async def test_backwards_compatibility_convert_values(
     state = hass.states.get(entity0.entity_id)
 
     expected_wind_speed = round(
-        convert_speed(wind_speed_value, wind_speed_unit, SPEED_MILES_PER_HOUR),
+        SpeedConverter.convert(wind_speed_value, wind_speed_unit, SPEED_MILES_PER_HOUR),
         ROUNDING_PRECISION,
     )
-    expected_temperature = convert_temperature(
+    expected_temperature = TemperatureConverter.convert(
         temperature_value, temperature_unit, TEMP_FAHRENHEIT
     )
     expected_pressure = round(
-        convert_pressure(pressure_value, pressure_unit, PRESSURE_INHG),
+        PressureConverter.convert(pressure_value, pressure_unit, PRESSURE_INHG),
         ROUNDING_PRECISION,
     )
     expected_visibility = round(
-        convert_distance(visibility_value, visibility_unit, LENGTH_MILES),
+        DistanceConverter.convert(visibility_value, visibility_unit, LENGTH_MILES),
         ROUNDING_PRECISION,
     )
     expected_precipitation = round(
-        convert_distance(precipitation_value, precipitation_unit, LENGTH_INCHES),
+        DistanceConverter.convert(
+            precipitation_value, precipitation_unit, LENGTH_INCHES
+        ),
         ROUNDING_PRECISION,
     )
 
