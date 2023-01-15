@@ -27,6 +27,14 @@
                     "unknown": "\u672a\u77e5"
                 }
             },
+            "net_infra": {
+                "state": {
+                    "adsl": "ADSL",
+                    "ftth": "FTTH",
+                    "gprs": "GPRS",
+                    "unknown": "\u672a\u77e5"
+                }
+            },
             "training": {
                 "state": {
                     "g_922_channel_analysis": "G.992 \u983b\u9053\u5206\u6790",

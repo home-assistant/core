@@ -27,6 +27,14 @@
                     "unknown": "Teadmata"
                 }
             },
+            "net_infra": {
+                "state": {
+                    "adsl": "ADSL",
+                    "ftth": "FTTH",
+                    "gprs": "GPRS",
+                    "unknown": "Teadmata"
+                }
+            },
             "training": {
                 "state": {
                     "g_922_channel_analysis": "G.922 kanali anal\u00fc\u00fcs",

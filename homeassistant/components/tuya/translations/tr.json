@@ -19,8 +19,40 @@
     },
     "entity": {
         "select": {
+            "basic_anti_flicker": {
+                "state": {
+                    "0": "Devre d\u0131\u015f\u0131",
+                    "1": "50 Hz",
+                    "2": "60 Hz"
+                }
+            },
+            "basic_nightvision": {
+                "state": {
+                    "0": "Otomatik",
+                    "1": "Kapal\u0131",
+                    "2": "A\u00e7\u0131k"
+                }
+            },
+            "countdown": {
+                "state": {
+                    "1h": "1 saat",
+                    "2h": "2 saat",
+                    "3h": "3 saat",
+                    "4h": "4 saat",
+                    "5h": "5 saat",
+                    "6h": "6 saat",
+                    "cancel": "\u0130ptal"
+                }
+            },
+            "curtain_mode": {
+                "state": {
+                    "morning": "Sabah",
+                    "night": "Gece"
+                }
+            },
             "curtain_motor_mode": {
                 "state": {
+                    "back": "Geri",
                     "forward": "\u0130leri"
                 }
             },
@@ -173,7 +205,10 @@
                     "heating": "Is\u0131t\u0131l\u0131yor",
                     "heating_temp": "Is\u0131tma s\u0131cakl\u0131\u011f\u0131",
                     "reserve_1": "Rezerv 1",
-                    "reserve_2": "Rezerv 2"
+                    "reserve_2": "Rezerv 2",
+                    "reserve_3": "Rezerv 3",
+                    "standby": "Bekleme modu",
+                    "warm": "Is\u0131 korumas\u0131"
                 }
             }
         }

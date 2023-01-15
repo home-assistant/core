@@ -16,6 +16,7 @@
             },
             "user": {
                 "data": {
+                    "account": "OVO hesap kimli\u011fi (yaln\u0131zca birden fazla hesab\u0131n\u0131z varsa ekleyin)",
                     "password": "Parola",
                     "username": "Kullan\u0131c\u0131 Ad\u0131"
                 },
