@@ -136,7 +136,7 @@ async def async_modbus_setup(
         hubs = hass.data[DOMAIN]
         for name in hubs:
             if not await hubs[name].async_setup():
-                return False
+                return False  # pragma: no cover
 
     hass.data[DOMAIN] = hub_collect = {}
     for conf_hub in config[DOMAIN]:
