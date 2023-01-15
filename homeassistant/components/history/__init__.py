@@ -493,13 +493,12 @@ def _events_to_compressed_states(
     """Convert events to a compressed states."""
     states_by_entity_ids: dict[str, list[dict[str, Any]]] = {}
     for event in events:
-        state: State | None = event.data.get("new_state")
-        if state is None:
-            continue
-        entity_id: str = state.entity_id
-        states_by_entity_ids.setdefault(entity_id, []).append(
-            _history_compressed_state(state, no_attributes)
-        )
+        if (state := event.data.get("new_state")) is not None:
+            assert isinstance(state, State)
+            entity_id: str = state.entity_id
+            states_by_entity_ids.setdefault(entity_id, []).append(
+                _history_compressed_state(state, no_attributes)
+            )
     return states_by_entity_ids
 
 
