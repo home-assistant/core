@@ -500,7 +500,6 @@ class APCUPSdSensor(SensorEntity):
 
         self.entity_description = description
         self._data_service = data_service
-        self._attr_available = False
 
     def update(self) -> None:
         """Get the latest status and use it to update our sensor state."""

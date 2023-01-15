@@ -62,7 +62,6 @@ class OnlineStatus(BinarySensorEntity):
             )
         self.entity_description = description
         self._data_service = data_service
-        self._attr_available = False
 
     def update(self) -> None:
         """Get the status report from APCUPSd and set this entity's state."""
