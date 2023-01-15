@@ -351,7 +351,10 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
             "txpower": HuaweiSensorEntityDescription(
                 key="txpower",
                 name="Transmit power",
-                device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+                # This is state_class=SensorDeviceClass.SIGNAL_STRENGTH by nature,
+                # but the value tends to consist of several, e.g.
+                #     PPusch:15dBm PPucch:2dBm PSrs:42dBm PPrach:1dBm
+                # SIGNAL_STRENGTH would assume one in dB or dBm.
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
             "ul_mcs": HuaweiSensorEntityDescription(
