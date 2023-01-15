@@ -29,14 +29,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up the EufyLife sensors."""
     data: EufyLifeData = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
-        [
-            EufyLifeWeightSensorEntity(data),
-            EufyLifeRealTimeWeightSensorEntity(data),
-        ]
-    )
+
+    entities = [
+        EufyLifeWeightSensorEntity(data),
+        EufyLifeRealTimeWeightSensorEntity(data),
+    ]
+
     if data.client.supports_heart_rate:
-        async_add_entities([EufyLifeHeartRateSensorEntity(data)])
+        entities.append(EufyLifeHeartRateSensorEntity(data))
+
+    async_add_entities(entities)
 
 
 class EufyLifeSensorEntity(SensorEntity):
