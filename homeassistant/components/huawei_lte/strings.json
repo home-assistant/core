@@ -14,6 +14,8 @@
       "invalid_url": "Invalid URL",
       "login_attempts_exceeded": "Maximum login attempts exceeded, please try again later",
       "response_error": "Unknown error from device",
+      "ssl_error_try_plain": "HTTPS error, please try a plain HTTP URL",
+      "ssl_error_try_unverified": "HTTPS error, please try unverified HTTPS or a plain HTTP URL",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "flow_title": "{name}",
@@ -29,6 +31,7 @@
       "user": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
+          "unverified_https": "Use unverified HTTPS",
           "url": "[%key:common::config_flow::data::url%]",
           "username": "[%key:common::config_flow::data::username%]"
         },

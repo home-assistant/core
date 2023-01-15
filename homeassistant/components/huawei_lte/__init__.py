@@ -59,6 +59,7 @@ from .const import (
     ATTR_CONFIG_ENTRY_ID,
     CONF_MANUFACTURER,
     CONF_UNAUTHENTICATED_MODE,
+    CONF_UNVERIFIED_HTTPS,
     CONNECTION_TIMEOUT,
     DEFAULT_DEVICE_NAME,
     DEFAULT_MANUFACTURER,
@@ -86,7 +87,7 @@ from .const import (
     SERVICE_SUSPEND_INTEGRATION,
     UPDATE_SIGNAL,
 )
-from .utils import get_device_macs
+from .utils import get_device_macs, non_verifying_requests_session
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -329,16 +330,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     def _connect() -> Connection:
         """Set up a connection."""
+        kwargs: dict[str, Any] = {
+            "timeout": CONNECTION_TIMEOUT,
+        }
+        if entry.data.get(CONF_UNVERIFIED_HTTPS):
+            kwargs["requests_session"] = non_verifying_requests_session(url)
         if entry.options.get(CONF_UNAUTHENTICATED_MODE):
             _LOGGER.debug("Connecting in unauthenticated mode, reduced feature set")
-            connection = Connection(url, timeout=CONNECTION_TIMEOUT)
+            connection = Connection(url, **kwargs)
         else:
             _LOGGER.debug("Connecting in authenticated mode, full feature set")
             username = entry.data.get(CONF_USERNAME) or ""
             password = entry.data.get(CONF_PASSWORD) or ""
-            connection = Connection(
-                url, username=username, password=password, timeout=CONNECTION_TIMEOUT
-            )
+            connection = Connection(url, username=username, password=password, **kwargs)
         return connection
 
     try:

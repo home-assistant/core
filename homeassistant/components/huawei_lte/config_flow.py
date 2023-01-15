@@ -16,7 +16,7 @@ from huawei_lte_api.exceptions import (
     ResponseErrorException,
 )
 from huawei_lte_api.Session import GetResponseType
-from requests.exceptions import Timeout
+from requests.exceptions import SSLError, Timeout
 from url_normalize import url_normalize
 import voluptuous as vol
 
@@ -37,6 +37,7 @@ from .const import (
     CONF_MANUFACTURER,
     CONF_TRACK_WIRED_CLIENTS,
     CONF_UNAUTHENTICATED_MODE,
+    CONF_UNVERIFIED_HTTPS,
     CONNECTION_TIMEOUT,
     DEFAULT_DEVICE_NAME,
     DEFAULT_NOTIFY_SERVICE_NAME,
@@ -44,7 +45,7 @@ from .const import (
     DEFAULT_UNAUTHENTICATED_MODE,
     DOMAIN,
 )
-from .utils import get_device_macs
+from .utils import get_device_macs, non_verifying_requests_session
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,6 +81,13 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                             self.context.get(CONF_URL, ""),
                         ),
                     ): str,
+                    vol.Optional(
+                        CONF_UNVERIFIED_HTTPS,
+                        default=user_input.get(
+                            CONF_UNVERIFIED_HTTPS,
+                            False,
+                        ),
+                    ): bool,
                     vol.Optional(
                         CONF_USERNAME, default=user_input.get(CONF_USERNAME) or ""
                     ): str,
@@ -119,11 +127,17 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         password = user_input.get(CONF_PASSWORD) or ""
 
         def _get_connection() -> Connection:
+            if user_input.get(CONF_UNVERIFIED_HTTPS):
+                requests_session = non_verifying_requests_session(user_input[CONF_URL])
+            else:
+                requests_session = None
+
             return Connection(
                 url=user_input[CONF_URL],
                 username=username,
                 password=password,
                 timeout=CONNECTION_TIMEOUT,
+                requests_session=requests_session,
             )
 
         conn = None
@@ -140,6 +154,12 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         except ResponseErrorException:
             _LOGGER.warning("Response error", exc_info=True)
             errors["base"] = "response_error"
+        except SSLError:
+            _LOGGER.warning("SSL error", exc_info=True)
+            if user_input.get(CONF_UNVERIFIED_HTTPS):
+                errors[CONF_URL] = "ssl_error_try_plain"
+            else:
+                errors[CONF_URL] = "ssl_error_try_unverified"
         except Timeout:
             _LOGGER.warning("Connection timeout", exc_info=True)
             errors[CONF_URL] = "connection_timeout"
@@ -152,6 +172,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def _disconnect(conn: Connection) -> None:
         try:
             conn.close()
+            conn.requests_session.close()
         except Exception:  # pylint: disable=broad-except
             _LOGGER.debug("Disconnect error", exc_info=True)
 
