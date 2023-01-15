@@ -87,7 +87,7 @@ NODE_PLATFORMS = [
     Platform.SENSOR,
     Platform.SWITCH,
 ]
-NODE_AUX_PROP_PLATFORMS = [Platform.SENSOR, Platform.NUMBER]
+NODE_AUX_PROP_PLATFORMS = [Platform.SELECT, Platform.SENSOR, Platform.NUMBER]
 PROGRAM_PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.COVER,
@@ -309,7 +309,7 @@ NODE_FILTERS: dict[Platform, dict[str, list[str]]] = {
 }
 NODE_AUX_FILTERS: dict[str, Platform] = {
     PROP_ON_LEVEL: Platform.NUMBER,
-    PROP_RAMP_RATE: Platform.SENSOR,
+    PROP_RAMP_RATE: Platform.SELECT,
 }
 
 UOM_FRIENDLY_NAME = {
