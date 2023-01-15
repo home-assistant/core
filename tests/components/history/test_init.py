@@ -6,6 +6,7 @@ import json
 from unittest.mock import patch, sentinel
 
 import async_timeout
+from freezegun import freeze_time
 import pytest
 
 from homeassistant.components import history
@@ -2238,8 +2239,9 @@ async def test_history_stream_live_with_future_end_time(
     ) == listeners_without_writes(init_listeners)
 
 
+@pytest.mark.parametrize("include_start_time_state", (True, False))
 async def test_history_stream_before_history_starts(
-    recorder_mock, hass, hass_ws_client
+    recorder_mock, hass, hass_ws_client, include_start_time_state
 ):
     """Test history stream before we have history."""
     sort_order = ["sensor.two", "sensor.four", "sensor.one"]
@@ -2272,7 +2274,7 @@ async def test_history_stream_before_history_starts(
             "entity_ids": ["sensor.one"],
             "start_time": far_past.isoformat(),
             "end_time": far_past_end.isoformat(),
-            "include_start_time_state": True,
+            "include_start_time_state": include_start_time_state,
             "significant_changes_only": False,
             "no_attributes": True,
             "minimal_response": True,
@@ -2293,3 +2295,63 @@ async def test_history_stream_before_history_starts(
         "id": 1,
         "type": "event",
     }
+
+
+async def test_history_stream_for_entity_with_no_possible_changes(
+    recorder_mock, hass, hass_ws_client
+):
+    """Test history stream for future with no possible changes where end time is less than or equal to now."""
+    sort_order = ["sensor.two", "sensor.four", "sensor.one"]
+    await async_setup_component(
+        hass,
+        "history",
+        {
+            history.DOMAIN: {
+                history.CONF_ORDER: True,
+                CONF_INCLUDE: {
+                    CONF_ENTITIES: sort_order,
+                    CONF_DOMAINS: ["sensor"],
+                },
+            }
+        },
+    )
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.one", "on", attributes={"any": "attr"})
+    await async_recorder_block_till_done(hass)
+    await async_wait_recording_done(hass)
+
+    last_updated = hass.states.get("sensor.one").last_updated
+    start_time = last_updated + timedelta(seconds=10)
+    end_time = start_time + timedelta(seconds=10)
+
+    with freeze_time(end_time):
+        client = await hass_ws_client()
+        await client.send_json(
+            {
+                "id": 1,
+                "type": "history/stream",
+                "entity_ids": ["sensor.one"],
+                "start_time": start_time.isoformat(),
+                "end_time": end_time.isoformat(),
+                "include_start_time_state": False,
+                "significant_changes_only": False,
+                "no_attributes": True,
+                "minimal_response": True,
+            }
+        )
+        response = await client.receive_json()
+        assert response["success"]
+        assert response["id"] == 1
+        assert response["type"] == "result"
+
+        response = await client.receive_json()
+        assert response == {
+            "event": {
+                "end_time": end_time.timestamp(),
+                "start_time": start_time.timestamp(),
+                "states": {},
+            },
+            "id": 1,
+            "type": "event",
+        }

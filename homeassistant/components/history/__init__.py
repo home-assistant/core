@@ -560,10 +560,8 @@ def _async_subscribe_events(
         ) is None:
             return
         assert isinstance(new_state, State)
-        if entities_filter and not entities_filter(new_state.entity_id):
-            return
         assert isinstance(old_state, State)
-        if (
+        if (entities_filter and not entities_filter(new_state.entity_id)) or (
             (significant_changes_only or minimal_response)
             and new_state.state == old_state.state
             and new_state.domain not in history.SIGNIFICANT_DOMAINS
