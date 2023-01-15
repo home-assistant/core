@@ -17,6 +17,7 @@ from starlink_grpc import (
 )
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 _LOGGER = logging.getLogger(__name__)
@@ -61,4 +62,4 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
             try:
                 await self.hass.async_add_executor_job(reboot, self.channel_context)
             except GrpcError as exc:
-                raise UpdateFailed from exc
+                raise HomeAssistantError from exc
