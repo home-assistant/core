@@ -145,8 +145,8 @@ class EufyLifeWeightSensorEntity(RestoreEntity, EufyLifeSensorEntity):
     def _handle_state_update(self, *args: Any) -> None:
         """Handle state update."""
         state = self._data.client.state
-        if state is not None and state.is_final:
-            self._weight_kg = state.weight_kg
+        if state is not None and state.final_weight_kg is not None:
+            self._weight_kg = state.final_weight_kg
 
         super()._handle_state_update(args)
 
@@ -197,7 +197,7 @@ class EufyLifeHeartRateSensorEntity(RestoreEntity, EufyLifeSensorEntity):
     def _handle_state_update(self, *args: Any) -> None:
         """Handle state update."""
         state = self._data.client.state
-        if state is not None and state.is_final:
+        if state is not None and state.heart_rate is not None:
             self._heart_rate = state.heart_rate
 
         super()._handle_state_update(args)
