@@ -80,7 +80,7 @@ async def async_setup_entry(
             entities.append(ISYAuxControlIndexSelectEntity(**entity_detail))
             continue
         # Future: support Node Server custom index UOMs
-        _LOGGER.info(
+        _LOGGER.debug(
             "ISY missing node index unit definitions for %s: %s", node.name, name
         )
     async_add_entities(entities)
