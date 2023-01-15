@@ -1,5 +1,4 @@
-"""Test sensor of APCUPSd integration."""
-
+"""Test sensors of APCUPSd integration."""
 import pytest
 
 from homeassistant.components.sensor import (
