@@ -35,6 +35,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import DiscoveryInfoType
 
@@ -172,9 +173,8 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
             else:
                 port = DEFAULT_PORT
 
-        api = SynologyDSM(
-            host, port, username, password, use_ssl, verify_ssl, timeout=30
-        )
+        session = async_get_clientsession(self.hass, verify_ssl)
+        api = SynologyDSM(session, host, port, username, password, use_ssl, timeout=30)
 
         errors = {}
         try:
