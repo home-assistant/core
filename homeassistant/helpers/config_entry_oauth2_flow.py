@@ -194,6 +194,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
         if self.client_secret is not None:
             data["client_secret"] = self.client_secret
 
+        _LOGGER.debug("Sending token request to %s", self.token_url)
         resp = await session.post(self.token_url, data=data)
         if resp.status >= 400 and _LOGGER.isEnabledFor(logging.DEBUG):
             body = await resp.text()
@@ -303,7 +304,17 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Create config entry from external data."""
-        token = await self.flow_impl.async_resolve_external_data(self.external_data)
+        _LOGGER.debug("Creating config entry from external data")
+
+        try:
+            async with async_timeout.timeout(10):
+                token = await self.flow_impl.async_resolve_external_data(
+                    self.external_data
+                )
+        except asyncio.TimeoutError as err:
+            _LOGGER.error("Timeout while exchanging OAuth token: %s", str(err))
+            return self.async_abort(reason="oauth2_timeout")
+
         # Force int for non-compliant oauth2 providers
         try:
             token["expires_in"] = int(token["expires_in"])
@@ -436,7 +447,7 @@ class OAuth2AuthorizeCallbackView(http.HomeAssistantView):
         await hass.config_entries.flow.async_configure(
             flow_id=state["flow_id"], user_input=user_input
         )
-
+        _LOGGER.debug("Resumed OAuth configuration flow")
         return web.Response(
             headers={"content-type": "text/html"},
             text="<script>window.close()</script>",
