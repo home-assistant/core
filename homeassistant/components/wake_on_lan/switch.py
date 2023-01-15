@@ -31,6 +31,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 CONF_OFF_ACTION = "turn_off"
+CONF_IP_VERSION = "ip_version"
 
 DEFAULT_NAME = "Wake on LAN"
 DEFAULT_PING_TIMEOUT = 1
@@ -41,6 +42,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_BROADCAST_ADDRESS): cv.string,
         vol.Optional(CONF_BROADCAST_PORT): cv.port,
         vol.Optional(CONF_HOST): cv.string,
+        vol.Optional(CONF_IP_VERSION): cv.positive_int,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
     }
@@ -57,6 +59,7 @@ def setup_platform(
     broadcast_address: str | None = config.get(CONF_BROADCAST_ADDRESS)
     broadcast_port: int | None = config.get(CONF_BROADCAST_PORT)
     host: str | None = config.get(CONF_HOST)
+    ip_version: int | None = config.get(CONF_IP_VERSION)
     mac_address: str = config[CONF_MAC]
     name: str = config[CONF_NAME]
     off_action: list[Any] | None = config.get(CONF_OFF_ACTION)
@@ -67,6 +70,7 @@ def setup_platform(
                 hass,
                 name,
                 host,
+                ip_version,
                 mac_address,
                 off_action,
                 broadcast_address,
@@ -85,6 +89,7 @@ class WolSwitch(SwitchEntity):
         hass: HomeAssistant,
         name: str,
         host: str | None,
+        ip_version: int | None,
         mac_address: str,
         off_action: list[Any] | None,
         broadcast_address: str | None,
@@ -93,6 +98,9 @@ class WolSwitch(SwitchEntity):
         """Initialize the WOL switch."""
         self._attr_name = name
         self._host = host
+        self._ip_version = (
+            "-4" if ip_version == 4 else "-6" if ip_version == 6 else None
+        )
         self._mac_address = mac_address
         self._broadcast_address = broadcast_address
         self._broadcast_port = broadcast_port
@@ -149,6 +157,7 @@ class WolSwitch(SwitchEntity):
             str(DEFAULT_PING_TIMEOUT),
             str(self._host),
         ]
+        ping_cmd += [str(self._ip_version)] if self._ip_version is not None else []
 
         status = sp.call(ping_cmd, stdout=sp.DEVNULL, stderr=sp.DEVNULL)
         self._state = not bool(status)
