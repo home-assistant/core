@@ -506,19 +506,20 @@ class APCUPSdSensor(SensorEntity):
         """Get the latest status and use it to update our sensor state."""
         try:
             self._data_service.update()
-            self._attr_available = True
-
-            key = self.entity_description.key.upper()
-            if key not in self._data_service.status:
-                self._attr_native_value = None
-                return
-
-            self._attr_native_value, inferred_unit = infer_unit(
-                self._data_service.status[key]
-            )
-            if not self.native_unit_of_measurement:
-                self._attr_native_unit_of_measurement = inferred_unit
         except OSError as ex:
             if self._attr_available:
                 self._attr_available = False
                 _LOGGER.exception("Got exception while fetching state: %s", ex)
+            return
+
+        self._attr_available = True
+        key = self.entity_description.key.upper()
+        if key not in self._data_service.status:
+            self._attr_native_value = None
+            return
+
+        self._attr_native_value, inferred_unit = infer_unit(
+            self._data_service.status[key]
+        )
+        if not self.native_unit_of_measurement:
+            self._attr_native_unit_of_measurement = inferred_unit
