@@ -11,12 +11,6 @@
             "invalid_auth": "Ung\u00fcltige Authentifizierung"
         },
         "step": {
-            "reauth": {
-                "data": {
-                    "password": "Passwort"
-                },
-                "description": "Authentifizierungs-Tokens sind ung\u00fcltig, melde dich an, um sie neu zu erstellen."
-            },
             "reauth_confirm": {
                 "data": {
                     "password": "Passwort"

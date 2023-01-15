@@ -27,13 +27,9 @@
         }
     },
     "issues": {
-        "deprecated_yaml": {
-            "description": "Configuring Radarr using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the Radarr YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue.",
-            "title": "The Radarr YAML configuration is being removed"
-        },
-        "removed_attributes": {
-            "description": "Some breaking changes has been made in disabling the Movies count sensor out of caution.\n\nThis sensor can cause problems with massive databases. If you still wish to use it, you may do so.\n\nMovie names are no longer included as attributes in the movies sensor.\n\nUpcoming has been removed. It is being modernized as calendar items should be. Disk space is now split into different sensors, one for each folder.\n\nStatus and commands have been removed as they don't appear to have real value for automations.",
-            "title": "Changes to the Radarr integration"
+        "removed_yaml": {
+            "description": "Configuring Radarr using YAML has been removed.\n\nYour existing YAML configuration is not used by Home Assistant.\n\nRemove the YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue.",
+            "title": "The Radarr YAML configuration has been removed"
         }
     },
     "options": {

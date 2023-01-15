@@ -84,8 +84,7 @@ def valid_subscribe_topic(topic: Any) -> str:
         if index != len(validated_topic) - 1:
             # If there are multiple wildcards, this will also trigger
             raise vol.Invalid(
-                "Multi-level wildcard must be the last "
-                "character in the topic filter."
+                "Multi-level wildcard must be the last character in the topic filter."
             )
         if len(validated_topic) > 1 and validated_topic[index - 1] != "/":
             raise vol.Invalid(
@@ -97,7 +96,7 @@ def valid_subscribe_topic(topic: Any) -> str:
 
 def valid_subscribe_topic_template(value: Any) -> template.Template:
     """Validate either a jinja2 template or a valid MQTT subscription topic."""
-    tpl = template.Template(value)
+    tpl = cv.template(value)
 
     if tpl.is_static:
         valid_subscribe_topic(value)
@@ -115,7 +114,8 @@ def valid_publish_topic(topic: Any) -> str:
 
 def valid_qos_schema(qos: Any) -> int:
     """Validate that QOS value is valid."""
-    return _VALID_QOS_SCHEMA(qos)
+    validated_qos: int = _VALID_QOS_SCHEMA(qos)
+    return validated_qos
 
 
 _MQTT_WILL_BIRTH_SCHEMA = vol.Schema(
@@ -138,9 +138,12 @@ def valid_birth_will(config: ConfigType) -> ConfigType:
 
 def get_mqtt_data(hass: HomeAssistant, ensure_exists: bool = False) -> MqttData:
     """Return typed MqttData from hass.data[DATA_MQTT]."""
+    mqtt_data: MqttData
     if ensure_exists:
-        return hass.data.setdefault(DATA_MQTT, MqttData())
-    return hass.data[DATA_MQTT]
+        mqtt_data = hass.data.setdefault(DATA_MQTT, MqttData())
+        return mqtt_data
+    mqtt_data = hass.data[DATA_MQTT]
+    return mqtt_data
 
 
 async def async_create_certificate_temp_files(
@@ -173,7 +176,7 @@ async def async_create_certificate_temp_files(
     await hass.async_add_executor_job(_create_temp_dir_and_files)
 
 
-def get_file_path(option: str, default: str | None = None) -> Path | str | None:
+def get_file_path(option: str, default: str | None = None) -> str | None:
     """Get file path of a certificate file."""
     temp_dir = Path(tempfile.gettempdir()) / TEMP_DIR_NAME
     if not temp_dir.exists():
@@ -183,7 +186,7 @@ def get_file_path(option: str, default: str | None = None) -> Path | str | None:
     if not file_path.exists():
         return default
 
-    return temp_dir / option
+    return str(temp_dir / option)
 
 
 def migrate_certificate_file_to_content(file_name_or_auto: str) -> str | None:

@@ -12,7 +12,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, ENERGY_KILO_WATT_HOUR, POWER_WATT
+from homeassistant.const import CONF_HOST, UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -40,7 +40,7 @@ SENSORS: tuple[PureEnergieSensorEntityDescription, ...] = (
     PureEnergieSensorEntityDescription(
         key="power_flow",
         name="Power Flow",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.smartbridge.power_flow,
@@ -48,7 +48,7 @@ SENSORS: tuple[PureEnergieSensorEntityDescription, ...] = (
     PureEnergieSensorEntityDescription(
         key="energy_consumption_total",
         name="Energy Consumption",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda data: data.smartbridge.energy_consumption_total,
@@ -56,7 +56,7 @@ SENSORS: tuple[PureEnergieSensorEntityDescription, ...] = (
     PureEnergieSensorEntityDescription(
         key="energy_production_total",
         name="Energy Production",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda data: data.smartbridge.energy_production_total,

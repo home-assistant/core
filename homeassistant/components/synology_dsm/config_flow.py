@@ -164,6 +164,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         use_ssl = user_input.get(CONF_SSL, DEFAULT_USE_SSL)
         verify_ssl = user_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
         otp_code = user_input.get(CONF_OTP_CODE)
+        friendly_name = user_input.get(CONF_NAME)
 
         if not port:
             if use_ssl is True:
@@ -229,7 +230,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="reauth_successful")
             return self.async_abort(reason="reconfigure_successful")
 
-        return self.async_create_entry(title=host, data=config_data)
+        return self.async_create_entry(title=friendly_name or host, data=config_data)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -303,6 +304,8 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
         self.reauth_conf = entry_data
+        self.context["title_placeholders"][CONF_HOST] = entry_data[CONF_HOST]
+
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(

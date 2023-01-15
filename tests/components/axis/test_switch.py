@@ -14,10 +14,10 @@ from homeassistant.const import (
 )
 from homeassistant.setup import async_setup_component
 
+from .conftest import NAME
 from .test_device import (
     API_DISCOVERY_PORT_MANAGEMENT,
     API_DISCOVERY_RESPONSE,
-    NAME,
     setup_axis_integration,
 )
 
@@ -31,17 +31,17 @@ async def test_platform_manually_configured(hass):
     assert AXIS_DOMAIN not in hass.data
 
 
-async def test_no_switches(hass):
+async def test_no_switches(hass, config_entry):
     """Test that no output events in Axis results in no switch entities."""
-    await setup_axis_integration(hass)
+    await setup_axis_integration(hass, config_entry)
 
     assert not hass.states.async_entity_ids(SWITCH_DOMAIN)
 
 
-async def test_switches_with_port_cgi(hass, mock_rtsp_event):
+async def test_switches_with_port_cgi(hass, config_entry, mock_rtsp_event):
     """Test that switches are loaded properly using port.cgi."""
-    config_entry = await setup_axis_integration(hass)
-    device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
+    await setup_axis_integration(hass, config_entry)
+    device = hass.data[AXIS_DOMAIN][config_entry.entry_id]
 
     device.api.vapix.ports = {"0": AsyncMock(), "1": AsyncMock()}
     device.api.vapix.ports["0"].name = "Doorbell"
@@ -94,16 +94,14 @@ async def test_switches_with_port_cgi(hass, mock_rtsp_event):
     device.api.vapix.ports["0"].open.assert_called_once()
 
 
-async def test_switches_with_port_management(
-    hass, mock_axis_rtspclient, mock_rtsp_event
-):
+async def test_switches_with_port_management(hass, config_entry, mock_rtsp_event):
     """Test that switches are loaded properly using port management."""
     api_discovery = deepcopy(API_DISCOVERY_RESPONSE)
     api_discovery["data"]["apiList"].append(API_DISCOVERY_PORT_MANAGEMENT)
 
     with patch.dict(API_DISCOVERY_RESPONSE, api_discovery):
-        config_entry = await setup_axis_integration(hass)
-        device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
+        await setup_axis_integration(hass, config_entry)
+        device = hass.data[AXIS_DOMAIN][config_entry.entry_id]
 
     device.api.vapix.ports = {"0": AsyncMock(), "1": AsyncMock()}
     device.api.vapix.ports["0"].name = "Doorbell"

@@ -44,4 +44,5 @@ class ShellyBLEScanner(BaseHaRemoteScanner):
             parsed.service_data,
             parsed.manufacturer_data,
             parsed.tx_power,
+            {},
         )

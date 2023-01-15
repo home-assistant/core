@@ -2,10 +2,11 @@
 
 DOMAIN = "homeassistant_yellow"
 
+RADIO_DEVICE = "/dev/ttyAMA1"
 ZHA_HW_DISCOVERY_DATA = {
     "name": "Yellow",
     "port": {
-        "path": "/dev/ttyAMA1",
+        "path": RADIO_DEVICE,
         "baudrate": 115200,
         "flow_control": "hardware",
     },

@@ -87,9 +87,9 @@ def test_async_add_hass_job_schedule_partial_callback():
     assert len(hass.add_job.mock_calls) == 0
 
 
-def test_async_add_hass_job_schedule_coroutinefunction(loop):
+def test_async_add_hass_job_schedule_coroutinefunction(event_loop):
     """Test that we schedule coroutines and add jobs to the job pool."""
-    hass = MagicMock(loop=MagicMock(wraps=loop))
+    hass = MagicMock(loop=MagicMock(wraps=event_loop))
 
     async def job():
         pass
@@ -100,9 +100,9 @@ def test_async_add_hass_job_schedule_coroutinefunction(loop):
     assert len(hass.add_job.mock_calls) == 0
 
 
-def test_async_add_hass_job_schedule_partial_coroutinefunction(loop):
+def test_async_add_hass_job_schedule_partial_coroutinefunction(event_loop):
     """Test that we schedule partial coros and add jobs to the job pool."""
-    hass = MagicMock(loop=MagicMock(wraps=loop))
+    hass = MagicMock(loop=MagicMock(wraps=event_loop))
 
     async def job():
         pass
@@ -128,9 +128,9 @@ def test_async_add_job_add_hass_threaded_job_to_pool():
     assert len(hass.loop.run_in_executor.mock_calls) == 1
 
 
-def test_async_create_task_schedule_coroutine(loop):
+def test_async_create_task_schedule_coroutine(event_loop):
     """Test that we schedule coroutines and add jobs to the job pool."""
-    hass = MagicMock(loop=MagicMock(wraps=loop))
+    hass = MagicMock(loop=MagicMock(wraps=event_loop))
 
     async def job():
         pass
@@ -398,6 +398,58 @@ def test_state_as_dict():
     # 2nd time to verify cache
     assert state.as_dict() == expected
     assert state.as_dict() is as_dict_1
+
+
+def test_state_as_compressed_state():
+    """Test a State as compressed state."""
+    last_time = datetime(1984, 12, 8, 12, 0, 0, tzinfo=dt_util.UTC)
+    state = ha.State(
+        "happy.happy",
+        "on",
+        {"pig": "dog"},
+        last_updated=last_time,
+        last_changed=last_time,
+    )
+    expected = {
+        "a": {"pig": "dog"},
+        "c": state.context.id,
+        "lc": last_time.timestamp(),
+        "s": "on",
+    }
+    as_compressed_state = state.as_compressed_state()
+    # We are not too concerned about these being ReadOnlyDict
+    # since we don't expect them to be called by external callers
+    assert as_compressed_state == expected
+    # 2nd time to verify cache
+    assert state.as_compressed_state() == expected
+    assert state.as_compressed_state() is as_compressed_state
+
+
+def test_state_as_compressed_state_unique_last_updated():
+    """Test a State as compressed state where last_changed is not last_updated."""
+    last_changed = datetime(1984, 12, 8, 11, 0, 0, tzinfo=dt_util.UTC)
+    last_updated = datetime(1984, 12, 8, 12, 0, 0, tzinfo=dt_util.UTC)
+    state = ha.State(
+        "happy.happy",
+        "on",
+        {"pig": "dog"},
+        last_updated=last_updated,
+        last_changed=last_changed,
+    )
+    expected = {
+        "a": {"pig": "dog"},
+        "c": state.context.id,
+        "lc": last_changed.timestamp(),
+        "lu": last_updated.timestamp(),
+        "s": "on",
+    }
+    as_compressed_state = state.as_compressed_state()
+    # We are not too concerned about these being ReadOnlyDict
+    # since we don't expect them to be called by external callers
+    assert as_compressed_state == expected
+    # 2nd time to verify cache
+    assert state.as_compressed_state() == expected
+    assert state.as_compressed_state() is as_compressed_state
 
 
 async def test_eventbus_add_remove_listener(hass):
@@ -939,6 +991,7 @@ async def test_config_defaults():
     assert config.external_url is None
     assert config.config_source is ha.ConfigSource.DEFAULT
     assert config.skip_pip is False
+    assert config.skip_pip_packages == []
     assert config.components == set()
     assert config.api is None
     assert config.config_dir is None
@@ -948,6 +1001,8 @@ async def test_config_defaults():
     assert config.safe_mode is False
     assert config.legacy_templates is False
     assert config.currency == "EUR"
+    assert config.country is None
+    assert config.language == "en"
 
 
 async def test_config_path_with_file():
@@ -989,6 +1044,8 @@ async def test_config_as_dict():
         "external_url": None,
         "internal_url": None,
         "currency": "EUR",
+        "country": None,
+        "language": "en",
     }
 
     assert expected == config.as_dict()
@@ -1075,7 +1132,7 @@ async def test_bad_timezone_raises_value_error(hass):
         await hass.config.async_update(time_zone="not_a_timezone")
 
 
-async def test_start_taking_too_long(loop, caplog):
+async def test_start_taking_too_long(event_loop, caplog):
     """Test when async_start takes too long."""
     hass = ha.HomeAssistant()
     caplog.set_level(logging.WARNING)
@@ -1094,7 +1151,7 @@ async def test_start_taking_too_long(loop, caplog):
         assert hass.state == ha.CoreState.stopped
 
 
-async def test_track_task_functions(loop):
+async def test_track_task_functions(event_loop):
     """Test function to start/stop track task and initial state."""
     hass = ha.HomeAssistant()
     try:
@@ -1123,7 +1180,12 @@ async def test_service_executed_with_subservices(hass):
         call2 = hass.services.async_call(
             "test", "inner", blocking=True, context=call.context
         )
-        await asyncio.wait([call1, call2])
+        await asyncio.wait(
+            [
+                hass.async_create_task(call1),
+                hass.async_create_task(call2),
+            ]
+        )
         calls.append(call)
 
     hass.services.async_register("test", "outer", handle_outer)

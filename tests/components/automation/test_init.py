@@ -1332,20 +1332,81 @@ async def test_automation_not_trigger_on_bootstrap(hass):
     assert ["hello.world"] == calls[0].data.get(ATTR_ENTITY_ID)
 
 
-async def test_automation_bad_trigger(hass, caplog):
-    """Test bad trigger configuration."""
+@pytest.mark.parametrize(
+    "broken_config, problem, details",
+    (
+        (
+            {},
+            "could not be validated",
+            "required key not provided @ data['action']",
+        ),
+        (
+            {
+                "trigger": {"platform": "automation"},
+                "action": [],
+            },
+            "failed to setup triggers",
+            "Integration 'automation' does not provide trigger support.",
+        ),
+        (
+            {
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "condition": {
+                    "condition": "state",
+                    # The UUID will fail being resolved to en entity_id
+                    "entity_id": "abcdabcdabcdabcdabcdabcdabcdabcd",
+                    "state": "blah",
+                },
+                "action": [],
+            },
+            "failed to setup conditions",
+            "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd.",
+        ),
+        (
+            {
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "action": {
+                    "condition": "state",
+                    # The UUID will fail being resolved to en entity_id
+                    "entity_id": "abcdabcdabcdabcdabcdabcdabcdabcd",
+                    "state": "blah",
+                },
+            },
+            "failed to setup actions",
+            "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd.",
+        ),
+    ),
+)
+async def test_automation_bad_config_validation(
+    hass: HomeAssistant, caplog, broken_config, problem, details
+):
+    """Test bad automation configuration which can be detected during validation."""
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
         {
-            automation.DOMAIN: {
-                "alias": "hello",
-                "trigger": {"platform": "automation"},
-                "action": [],
-            }
+            automation.DOMAIN: [
+                {"alias": "bad_automation", **broken_config},
+                {
+                    "alias": "good_automation",
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "action": {
+                        "service": "test.automation",
+                        "entity_id": "hello.world",
+                    },
+                },
+            ]
         },
     )
-    assert "Integration 'automation' does not provide trigger support." in caplog.text
+
+    # Check we get the expected error message
+    assert (
+        f"Automation with alias 'bad_automation' {problem} and has been disabled: {details}"
+        in caplog.text
+    )
+
+    # Make sure one bad automation does not prevent other automations from setting up
+    assert hass.states.async_entity_ids("automation") == ["automation.good_automation"]
 
 
 async def test_automation_with_error_in_script(
@@ -1885,7 +1946,36 @@ async def test_blueprint_automation(hass, calls):
     ]
 
 
-async def test_blueprint_automation_bad_config(hass, caplog):
+@pytest.mark.parametrize(
+    "blueprint_inputs, problem, details",
+    (
+        (
+            # No input
+            {},
+            "Failed to generate automation from blueprint",
+            "Missing input a_number, service_to_call, trigger_event",
+        ),
+        (
+            # Missing input
+            {"trigger_event": "blueprint_event", "a_number": 5},
+            "Failed to generate automation from blueprint",
+            "Missing input service_to_call",
+        ),
+        (
+            # Wrong input
+            {
+                "trigger_event": "blueprint_event",
+                "service_to_call": {"dict": "not allowed"},
+                "a_number": 5,
+            },
+            "Blueprint 'Call service based on event' generated invalid automation",
+            "value should be a string for dictionary value @ data['action'][0]['service']",
+        ),
+    ),
+)
+async def test_blueprint_automation_bad_config(
+    hass, caplog, blueprint_inputs, problem, details
+):
     """Test blueprint automation with bad inputs."""
     assert await async_setup_component(
         hass,
@@ -1894,16 +1984,42 @@ async def test_blueprint_automation_bad_config(hass, caplog):
             "automation": {
                 "use_blueprint": {
                     "path": "test_event_service.yaml",
-                    "input": {
-                        "trigger_event": "blueprint_event",
-                        "service_to_call": {"dict": "not allowed"},
-                        "a_number": 5,
-                    },
+                    "input": blueprint_inputs,
                 }
             }
         },
     )
-    assert "generated invalid automation" in caplog.text
+    assert problem in caplog.text
+    assert details in caplog.text
+
+
+async def test_blueprint_automation_fails_substitution(hass, caplog):
+    """Test blueprint automation with bad inputs."""
+    with patch(
+        "homeassistant.components.blueprint.models.BlueprintInputs.async_substitute",
+        side_effect=yaml.UndefinedSubstitution("blah"),
+    ):
+        assert await async_setup_component(
+            hass,
+            "automation",
+            {
+                "automation": {
+                    "use_blueprint": {
+                        "path": "test_event_service.yaml",
+                        "input": {
+                            "trigger_event": "test_event",
+                            "service_to_call": "test.automation",
+                            "a_number": 5,
+                        },
+                    }
+                }
+            },
+        )
+    assert (
+        "Blueprint 'Call service based on event' failed to generate automation with inputs "
+        "{'trigger_event': 'test_event', 'service_to_call': 'test.automation', 'a_number': 5}:"
+        " No substitution found for input blah" in caplog.text
+    )
 
 
 async def test_trigger_service(hass, calls):
@@ -2140,12 +2256,12 @@ async def test_recursive_automation_starting_script(
         hass.bus.async_listen("automation_triggered", async_automation_triggered)
 
         hass.bus.async_fire("trigger_automation")
-        await asyncio.wait_for(script_done_event.wait(), 1)
+        await asyncio.wait_for(script_done_event.wait(), 10)
 
         # Trigger 1st stage script shutdown
         hass.state = CoreState.stopping
         hass.bus.async_fire("homeassistant_stop")
-        await asyncio.wait_for(stop_scripts_at_shutdown_called.wait(), 1)
+        await asyncio.wait_for(stop_scripts_at_shutdown_called.wait(), 10)
 
         # Trigger 2nd stage script shutdown
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))

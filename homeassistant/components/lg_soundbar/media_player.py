@@ -25,7 +25,7 @@ async def async_setup_entry(
             LGDevice(
                 config_entry.data[CONF_HOST],
                 config_entry.data[CONF_PORT],
-                config_entry.unique_id,
+                config_entry.unique_id or config_entry.entry_id,
             )
         ]
     )
@@ -82,7 +82,7 @@ class LGDevice(MediaPlayerEntity):
 
     def handle_event(self, response):
         """Handle responses from the speakers."""
-        data = response["data"]
+        data = response["data"] if "data" in response else {}
         if response["msg"] == "EQ_VIEW_INFO":
             if "i_bass" in data:
                 self._bass = data["i_bass"]

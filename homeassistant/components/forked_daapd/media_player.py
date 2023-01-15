@@ -926,7 +926,8 @@ class ForkedDaapdUpdater:
         else:
             _LOGGER.error("Invalid websocket port")
 
-    def _disconnected_callback(self):
+    async def _disconnected_callback(self):
+        """Send update signals when the websocket gets disconnected."""
         async_dispatcher_send(
             self.hass, SIGNAL_UPDATE_MASTER.format(self._entry_id), False
         )

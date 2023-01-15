@@ -90,7 +90,7 @@ MOCK_BLOCKS = [
         ),
     ),
     Mock(
-        sensor_ids={},
+        sensor_ids={"mode": "color", "effect": 0},
         channel="0",
         output=mock_light_set_state()["ison"],
         colorTemp=mock_light_set_state()["temp"],
@@ -115,6 +115,8 @@ MOCK_BLOCKS = [
         cfgChanged=0,
         mode=0,
         valvePos=50,
+        inputEvent="S",
+        wakeupEvent=["button"],
         description="device_0",
         type="device",
     ),
@@ -122,11 +124,13 @@ MOCK_BLOCKS = [
 
 MOCK_CONFIG = {
     "input:0": {"id": 0, "type": "button"},
+    "light:0": {"name": "test light_0"},
     "switch:0": {"name": "test switch_0"},
     "cover:0": {"name": "test cover_0"},
     "sys": {
         "ui_data": {},
         "device": {"name": "Test name"},
+        "wakeup_period": 0,
     },
 }
 
@@ -166,6 +170,7 @@ MOCK_STATUS_COAP = {
 
 MOCK_STATUS_RPC = {
     "switch:0": {"output": True},
+    "light:0": {"output": True, "brightness": 53.0},
     "cloud": {"connected": False},
     "cover:0": {
         "state": "stopped",
@@ -255,6 +260,7 @@ def _mock_rpc_device(version: str | None = None):
         event={},
         shelly=MOCK_SHELLY_RPC,
         version=version or "0.12.0",
+        hostname="test-host",
         status=MOCK_STATUS_RPC,
         firmware_version="some fw string",
         initialized=True,
@@ -295,8 +301,14 @@ async def mock_rpc_device():
                 {}, UpdateType.EVENT
             )
 
+        def disconnected():
+            rpc_device_mock.return_value.subscribe_updates.call_args[0][0](
+                {}, UpdateType.DISCONNECTED
+            )
+
         device = _mock_rpc_device("0.12.0")
         rpc_device_mock.return_value = device
+        rpc_device_mock.return_value.mock_disconnected = Mock(side_effect=disconnected)
         rpc_device_mock.return_value.mock_update = Mock(side_effect=update)
         rpc_device_mock.return_value.mock_event = Mock(side_effect=event)
 

@@ -78,11 +78,9 @@ def inject_rpc_device_event(
     mock_rpc_device.mock_event()
 
 
-async def mock_rest_update(hass: HomeAssistant):
+async def mock_rest_update(hass: HomeAssistant, seconds=REST_SENSORS_UPDATE_INTERVAL):
     """Move time to create REST sensors update event."""
-    async_fire_time_changed(
-        hass, dt.utcnow() + timedelta(seconds=REST_SENSORS_UPDATE_INTERVAL)
-    )
+    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=seconds))
     await hass.async_block_till_done()
 
 

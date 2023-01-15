@@ -41,13 +41,36 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "license_plate": {
+                "state": {
+                    "none": "Limpar"
+                }
+            }
+        }
+    },
     "issues": {
+        "deprecate_smart_sensor": {
+            "description": "O sensor unificado de \"objeto detectado\" para detec\u00e7\u00f5es inteligentes agora est\u00e1 obsoleto. Ele foi substitu\u00eddo por sensores bin\u00e1rios de detec\u00e7\u00e3o inteligente individuais para cada tipo de detec\u00e7\u00e3o inteligente. \n\n Abaixo est\u00e3o as automa\u00e7\u00f5es ou scripts detectados que usam uma ou mais entidades obsoletas:\n {items}\n A lista acima pode estar incompleta e n\u00e3o inclui nenhum uso de modelo dentro dos pain\u00e9is. Atualize quaisquer modelos, automa\u00e7\u00f5es ou scripts de acordo.",
+            "title": "Sensor de detec\u00e7\u00e3o inteligente obsoleto"
+        },
+        "deprecated_service_set_doorbell_message": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "O servi\u00e7o `unifiprotect.set_doorbell_message` est\u00e1 obsoleto em favor da nova entidade de texto de campainha adicionada a cada dispositivo de campainha. Ele ser\u00e1 removido em v2023.3.0. Atualize para usar o servi\u00e7o [`text.set_value`]( {link} ).",
+                        "title": "set_doorbell_message est\u00e1 obsoleto"
+                    }
+                }
+            },
+            "title": "set_doorbell_message est\u00e1 obsoleto"
+        },
         "ea_setup_failed": {
             "description": "Voc\u00ea est\u00e1 usando v {version} do UniFi Protect, que \u00e9 uma vers\u00e3o de acesso antecipado. Ocorreu um erro irrecuper\u00e1vel ao tentar carregar a integra\u00e7\u00e3o. Fa\u00e7a [downgrade para uma vers\u00e3o est\u00e1vel](https://www.home-assistant.io/integrations/unifiprotect#downgrading-unifi-protect) do UniFi Protect para continuar usando a integra\u00e7\u00e3o. \n\n Erro: {error}",
             "title": "Erro de configura\u00e7\u00e3o usando a vers\u00e3o de acesso antecipado"
         },
         "ea_warning": {
-            "description": "Voc\u00ea est\u00e1 usando v {version} do UniFi Protect, que \u00e9 uma vers\u00e3o de acesso antecipado. As vers\u00f5es de acesso antecipado n\u00e3o s\u00e3o suportadas pelo Home Assistant e podem fazer com que a integra\u00e7\u00e3o do UniFi Protect seja interrompida ou n\u00e3o funcione conforme o esperado.",
             "fix_flow": {
                 "step": {
                     "confirm": {
@@ -64,16 +87,12 @@
         }
     },
     "options": {
-        "error": {
-            "invalid_mac_list": "Deve ser uma lista de endere\u00e7os MAC separados por v\u00edrgulas"
-        },
         "step": {
             "init": {
                 "data": {
                     "all_updates": "M\u00e9tricas em tempo real (AVISO: aumenta muito o uso da CPU)",
                     "allow_ea": "Permitir vers\u00f5es de acesso antecipado do Protect (AVISO: marcar\u00e1 sua integra\u00e7\u00e3o como n\u00e3o suportada)",
                     "disable_rtsp": "Desativar o fluxo RTSP",
-                    "ignored_devices": "Lista separada por v\u00edrgulas de endere\u00e7os MAC de dispositivos a serem ignorados",
                     "max_media": "N\u00famero m\u00e1ximo de eventos a serem carregados para o Media Browser (aumenta o uso de RAM)",
                     "override_connection_host": "Anular o host de conex\u00e3o"
                 },

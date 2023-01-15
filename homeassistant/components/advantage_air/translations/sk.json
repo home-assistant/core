@@ -12,6 +12,7 @@
                     "ip_address": "IP adresa",
                     "port": "Port"
                 },
+                "description": "Pripojte sa k API v\u00e1\u0161ho n\u00e1stenn\u00e9ho tabletu Advantage Air.",
                 "title": "Pripoji\u0165"
             }
         }

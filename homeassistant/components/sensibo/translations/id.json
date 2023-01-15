@@ -29,5 +29,36 @@
                 }
             }
         }
+    },
+    "entity": {
+        "select": {
+            "horizontalswing": {
+                "state": {
+                    "stopped": "Terhenti"
+                }
+            },
+            "light": {
+                "state": {
+                    "dim": "Redup",
+                    "off": "Mati",
+                    "on": "Nyala"
+                }
+            }
+        },
+        "sensor": {
+            "sensitivity": {
+                "state": {
+                    "n": "Normal",
+                    "s": "Sensitif"
+                }
+            },
+            "smart_type": {
+                "state": {
+                    "feelslike": "Terasa seperti",
+                    "humidity": "Kelembaban",
+                    "temperature": "Suhu"
+                }
+            }
+        }
     }
 }

@@ -2,10 +2,12 @@
     "config": {
         "abort": {
             "already_configured": "Perangkat sudah dikonfigurasi",
-            "cannot_connect": "Gagal terhubung"
+            "cannot_connect": "Gagal terhubung",
+            "station_not_found": "ID stasiun tidak ditemukan di zamg"
         },
         "error": {
-            "cannot_connect": "Gagal terhubung"
+            "cannot_connect": "Gagal terhubung",
+            "station_not_found": "ID stasiun tidak ditemukan di zamg"
         },
         "flow_title": "{name}",
         "step": {

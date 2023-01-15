@@ -11,12 +11,6 @@
             "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida"
         },
         "step": {
-            "reauth": {
-                "data": {
-                    "password": "Senha"
-                },
-                "description": "Os tokens de autentica\u00e7\u00e3o se tornaram inv\u00e1lidos, fa\u00e7a login para recri\u00e1-los."
-            },
             "reauth_confirm": {
                 "data": {
                     "password": "Senha"

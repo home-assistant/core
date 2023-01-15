@@ -63,7 +63,6 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "mqtt_template"
 
 DEFAULT_NAME = "MQTT Template Light"
-DEFAULT_OPTIMISTIC = False
 
 CONF_BLUE_TEMPLATE = "blue_template"
 CONF_BRIGHTNESS_TEMPLATE = "brightness_template"
@@ -103,7 +102,6 @@ _PLATFORM_SCHEMA_BASE = (
             vol.Optional(CONF_MAX_MIREDS): cv.positive_int,
             vol.Optional(CONF_MIN_MIREDS): cv.positive_int,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
             vol.Optional(CONF_RED_TEMPLATE): cv.template,
             vol.Optional(CONF_STATE_TEMPLATE): cv.template,
         }
@@ -112,7 +110,7 @@ _PLATFORM_SCHEMA_BASE = (
     .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema)
 )
 
-# Configuring MQTT Lights under the light platform key is deprecated in HA Core 2022.6
+# Configuring MQTT Lights under the light platform key was deprecated in HA Core 2022.6
 PLATFORM_SCHEMA_TEMPLATE = vol.All(
     cv.PLATFORM_SCHEMA.extend(_PLATFORM_SCHEMA_BASE.schema),
 )

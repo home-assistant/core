@@ -27,6 +27,7 @@ CONF_TRANSPORT = "transport"
 CONF_WS_PATH = "ws_path"
 CONF_WS_HEADERS = "ws_headers"
 CONF_WILL_MESSAGE = "will_message"
+CONF_PAYLOAD_RESET = "payload_reset"
 
 CONF_CERTIFICATE = "certificate"
 CONF_CLIENT_KEY = "client_key"
@@ -40,6 +41,7 @@ DEFAULT_PREFIX = "homeassistant"
 DEFAULT_BIRTH_WILL_TOPIC = DEFAULT_PREFIX + "/status"
 DEFAULT_DISCOVERY = True
 DEFAULT_ENCODING = "utf-8"
+DEFAULT_OPTIMISTIC = False
 DEFAULT_QOS = 0
 DEFAULT_PAYLOAD_AVAILABLE = "online"
 DEFAULT_PAYLOAD_NOT_AVAILABLE = "offline"
@@ -101,6 +103,7 @@ PLATFORMS = [
     Platform.SENSOR,
     Platform.SIREN,
     Platform.SWITCH,
+    Platform.TEXT,
     Platform.UPDATE,
     Platform.VACUUM,
 ]
@@ -122,6 +125,7 @@ RELOADABLE_PLATFORMS = [
     Platform.SENSOR,
     Platform.SIREN,
     Platform.SWITCH,
+    Platform.TEXT,
     Platform.UPDATE,
     Platform.VACUUM,
 ]

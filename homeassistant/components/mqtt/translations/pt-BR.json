@@ -8,10 +8,11 @@
             "bad_birth": "T\u00f3pico de nascimento inv\u00e1lido",
             "bad_certificate": "O certificado CA \u00e9 inv\u00e1lido",
             "bad_client_cert": "Certificado de cliente inv\u00e1lido, certifique-se de que um arquivo codificado PEM seja fornecido",
-            "bad_client_cert_key": "Certificado de cliente e privado n\u00e3o s\u00e3o pares v\u00e1lidos",
+            "bad_client_cert_key": "O certificado do cliente e a chave privada n\u00e3o s\u00e3o um par v\u00e1lido",
             "bad_client_key": "Chave privada inv\u00e1lida, certifique-se de que um arquivo codificado PEM seja fornecido sem senha",
             "bad_discovery_prefix": "Prefixo de descoberta inv\u00e1lido",
             "bad_will": "T\u00f3pico de vontade inv\u00e1lido",
+            "bad_ws_headers": "Forne\u00e7a cabe\u00e7alhos HTTP v\u00e1lidos como um objeto JSON",
             "cannot_connect": "Falha ao conectar",
             "invalid_inclusion": "O certificado do cliente e a chave privada devem ser configurados juntos"
         },
@@ -24,7 +25,6 @@
                     "client_cert": "Carregar arquivo de certificado do cliente",
                     "client_id": "ID do cliente (deixe em branco para um gerado aleatoriamente)",
                     "client_key": "Carregar arquivo de chave privada",
-                    "discovery": "Ativar descoberta",
                     "keepalive": "O tempo entre o envio de mensagens de manuten\u00e7\u00e3o viva",
                     "password": "Senha",
                     "port": "Porta",
@@ -32,7 +32,10 @@
                     "set_ca_cert": "Valida\u00e7\u00e3o do certificado do corretor",
                     "set_client_cert": "Usar um certificado de cliente",
                     "tls_insecure": "Ignorar a valida\u00e7\u00e3o do certificado do corretor",
-                    "username": "Usu\u00e1rio"
+                    "transport": "Transporte MQTT",
+                    "username": "Usu\u00e1rio",
+                    "ws_headers": "Cabe\u00e7alhos WebSocket no formato JSON",
+                    "ws_path": "Caminho do WebSocket"
                 },
                 "description": "Por favor, insira as informa\u00e7\u00f5es de conex\u00e3o do seu agente MQTT."
             },
@@ -82,10 +85,11 @@
             "bad_birth": "T\u00f3pico de nascimento inv\u00e1lido",
             "bad_certificate": "O certificado CA \u00e9 inv\u00e1lido",
             "bad_client_cert": "Certificado de cliente inv\u00e1lido, certifique-se de que um arquivo codificado PEM seja fornecido",
-            "bad_client_cert_key": "Certificado de cliente e privado n\u00e3o s\u00e3o pares v\u00e1lidos",
+            "bad_client_cert_key": "O certificado do cliente e a chave privada n\u00e3o s\u00e3o um par v\u00e1lido",
             "bad_client_key": "Chave privada inv\u00e1lida, certifique-se de que um arquivo codificado PEM seja fornecido sem senha",
             "bad_discovery_prefix": "Prefixo de descoberta inv\u00e1lido",
             "bad_will": "T\u00f3pico de vontade inv\u00e1lido",
+            "bad_ws_headers": "Forne\u00e7a cabe\u00e7alhos HTTP v\u00e1lidos como um objeto JSON",
             "cannot_connect": "Falha ao conectar",
             "invalid_inclusion": "O certificado do cliente e a chave privada devem ser configurados juntos"
         },
@@ -105,7 +109,10 @@
                     "set_ca_cert": "Valida\u00e7\u00e3o do certificado do corretor",
                     "set_client_cert": "Usar um certificado de cliente",
                     "tls_insecure": "Ignorar a valida\u00e7\u00e3o do certificado do corretor",
-                    "username": "Usu\u00e1rio"
+                    "transport": "Transporte MQTT",
+                    "username": "Usu\u00e1rio",
+                    "ws_headers": "Cabe\u00e7alhos WebSocket no formato JSON",
+                    "ws_path": "Caminho do WebSocket"
                 },
                 "description": "Por favor, insira as informa\u00e7\u00f5es de conex\u00e3o do seu agente MQTT.",
                 "title": "Op\u00e7\u00f5es do broker"

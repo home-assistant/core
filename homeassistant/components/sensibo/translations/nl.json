@@ -29,5 +29,28 @@
                 }
             }
         }
+    },
+    "entity": {
+        "select": {
+            "light": {
+                "state": {
+                    "off": "Uit",
+                    "on": "Aan"
+                }
+            }
+        },
+        "sensor": {
+            "sensitivity": {
+                "state": {
+                    "n": "Normaal"
+                }
+            },
+            "smart_type": {
+                "state": {
+                    "humidity": "Vochtigheid",
+                    "temperature": "Temperatuur"
+                }
+            }
+        }
     }
 }

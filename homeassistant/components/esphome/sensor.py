@@ -1,6 +1,7 @@
 """Support for esphome sensors."""
 from __future__ import annotations
 
+from contextlib import suppress
 from datetime import datetime
 import math
 
@@ -14,7 +15,6 @@ from aioesphomeapi import (
 from aioesphomeapi.model import LastResetType
 
 from homeassistant.components.sensor import (
-    DEVICE_CLASSES,
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
@@ -96,11 +96,11 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
         return self._static_info.unit_of_measurement
 
     @property
-    def device_class(self) -> str | None:
+    def device_class(self) -> SensorDeviceClass | None:
         """Return the class of this device, from component DEVICE_CLASSES."""
-        if self._static_info.device_class not in DEVICE_CLASSES:
-            return None
-        return self._static_info.device_class
+        with suppress(ValueError):
+            return SensorDeviceClass(self._static_info.device_class)
+        return None
 
     @property
     def state_class(self) -> SensorStateClass | None:

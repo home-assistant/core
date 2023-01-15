@@ -44,6 +44,16 @@
             }
         }
     },
+    "entity": {
+        "select": {
+            "brightness_mode": {
+                "state": {
+                    "auto": "Automaatne",
+                    "manual": "K\u00e4sitsi"
+                }
+            }
+        }
+    },
     "issues": {
         "manual_migration": {
             "description": "LaMetricu integratsioon on moderniseeritud: see on n\u00fc\u00fcd konfigureeritud ja seadistatud kasutajaliidese kaudu ning \u00fchendused on n\u00fc\u00fcd kohalikud.\n\nKahjuks pole automaatset migreerimisteed v\u00f5imalik ja seega peate oma LaMetricu koduabilisega uuesti seadistama. Palun tutvuge koduabilise LaMetric integratsiooni dokumentatsiooniga, kuidas seda seadistada.\n\nEemaldage vana LaMetric YAML-i konfiguratsioon failist configuration.yaml ja taask\u00e4ivitage selle probleemi lahendamiseks Home Assistant.",

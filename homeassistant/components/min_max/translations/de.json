@@ -9,10 +9,10 @@
                     "type": "Statistisches Merkmal"
                 },
                 "data_description": {
-                    "round_digits": "Steuert die Anzahl der Dezimalstellen in der Ausgabe, wenn das Statistikmerkmal Mittelwert oder Median ist."
+                    "round_digits": "Steuert die Anzahl der Dezimalstellen in der Ausgabe, wenn das Statistikmerkmal Mittelwert, Median oder Summe ist."
                 },
-                "description": "Erstelle einen Sensor, der einen Mindest-, H\u00f6chst-, Mittel- oder Medianwert aus einer Liste von Eingabesensoren berechnet.",
-                "title": "Min/Max/Mittelwert/Median-Sensor hinzuf\u00fcgen"
+                "description": "Erstelle einen Sensor, der einen Mindest-, H\u00f6chst-, Mittelwert, Median oder eine Summe aus einer Liste von Eingabesensoren berechnet.",
+                "title": "Kombiniere den Zustand mehrerer Sensoren"
             }
         }
     },
@@ -25,10 +25,10 @@
                     "type": "Statistisches Merkmal"
                 },
                 "data_description": {
-                    "round_digits": "Steuert die Anzahl der Dezimalstellen in der Ausgabe, wenn das Statistikmerkmal Mittelwert oder Median ist."
+                    "round_digits": "Steuert die Anzahl der Dezimalstellen in der Ausgabe, wenn das Statistikmerkmal Mittelwert, Median oder Summe ist."
                 }
             }
         }
     },
-    "title": "Min / Max / Mittelwert / Mediansensor"
+    "title": "Kombiniere den Zustand mehrerer Sensoren"
 }

@@ -14,13 +14,13 @@ from .test_device import (
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 
 
-async def test_entry_diagnostics(hass, hass_client):
+async def test_entry_diagnostics(hass, hass_client, config_entry):
     """Test config entry diagnostics."""
     api_discovery = deepcopy(API_DISCOVERY_RESPONSE)
     api_discovery["data"]["apiList"].append(API_DISCOVERY_BASIC_DEVICE_INFO)
 
     with patch.dict(API_DISCOVERY_RESPONSE, api_discovery):
-        config_entry = await setup_axis_integration(hass)
+        await setup_axis_integration(hass, config_entry)
 
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "config": {

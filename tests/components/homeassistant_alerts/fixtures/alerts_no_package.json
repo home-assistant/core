@@ -1,5 +1,6 @@
 [
   {
+    "id": "dark_sky",
     "title": "Dark Sky API closed for new users",
     "created": "2020-03-31T14:40:00.000Z",
     "integrations": [
@@ -16,6 +17,7 @@
     "alert_url": "https://alerts.home-assistant.io/#dark_sky.markdown"
   },
   {
+    "id": "hikvision",
     "title": "Hikvision Security Vulnerability",
     "created": "2021-09-20T22:08:00.000Z",
     "integrations": [

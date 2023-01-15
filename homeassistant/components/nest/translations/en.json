@@ -10,7 +10,6 @@
             "missing_configuration": "The component is not configured. Please follow the documentation.",
             "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
             "reauth_successful": "Re-authentication was successful",
-            "single_instance_allowed": "Already configured. Only a single configuration possible.",
             "unknown_authorize_url_generation": "Unknown error generating an authorize URL."
         },
         "create_entry": {
@@ -26,13 +25,6 @@
             "wrong_project_id": "Please enter a valid Cloud Project ID (was same as Device Access Project ID)"
         },
         "step": {
-            "auth": {
-                "data": {
-                    "code": "Access Token"
-                },
-                "description": "To link your Google account, [authorize your account]({url}).\n\nAfter authorization, copy-paste the provided Auth Token code below.",
-                "title": "Link Google Account"
-            },
             "auth_upgrade": {
                 "description": "App Auth has been deprecated by Google to improve security, and you need to take action by creating new application credentials.\n\nOpen the [documentation]({more_info_url}) to follow along as the next steps will guide you through the steps you need to take to restore access to your Nest devices.",
                 "title": "Nest: App Auth Deprecation"

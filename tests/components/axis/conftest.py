@@ -3,34 +3,89 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from axis.rtsp import (
-    SIGNAL_DATA,
-    SIGNAL_FAILED,
-    SIGNAL_PLAYING,
-    STATE_PLAYING,
-    STATE_STOPPED,
-)
+from axis.rtsp import Signal, State
 import pytest
 
+from homeassistant.components.axis.const import CONF_EVENTS, DOMAIN as AXIS_DOMAIN
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MODEL,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+)
+
+from tests.common import MockConfigEntry
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
+
+MAC = "00408C123456"
+FORMATTED_MAC = "00:40:8c:12:34:56"
+MODEL = "model"
+NAME = "name"
+
+DEFAULT_HOST = "1.2.3.4"
+
+ENTRY_OPTIONS = {CONF_EVENTS: True}
+
+ENTRY_CONFIG = {
+    CONF_HOST: DEFAULT_HOST,
+    CONF_USERNAME: "root",
+    CONF_PASSWORD: "pass",
+    CONF_PORT: 80,
+    CONF_MODEL: MODEL,
+    CONF_NAME: NAME,
+}
+
+
+@pytest.fixture(name="config_entry")
+def config_entry_fixture(hass, config, options, config_entry_version):
+    """Define a config entry fixture."""
+    entry = MockConfigEntry(
+        domain=AXIS_DOMAIN,
+        unique_id=FORMATTED_MAC,
+        data=config,
+        options=options,
+        version=config_entry_version,
+    )
+    entry.add_to_hass(hass)
+    return entry
+
+
+@pytest.fixture(name="config_entry_version")
+def config_entry_version_fixture(request):
+    """Define a config entry version fixture."""
+    return 3
+
+
+@pytest.fixture(name="config")
+def config_fixture():
+    """Define a config entry data fixture."""
+    return ENTRY_CONFIG.copy()
+
+
+@pytest.fixture(name="options")
+def options_fixture(request):
+    """Define a config entry options fixture."""
+    return ENTRY_OPTIONS.copy()
 
 
 @pytest.fixture(autouse=True)
 def mock_axis_rtspclient():
     """No real RTSP communication allowed."""
-    with patch("axis.streammanager.RTSPClient") as rtsp_client_mock:
+    with patch("axis.stream_manager.RTSPClient") as rtsp_client_mock:
 
-        rtsp_client_mock.return_value.session.state = STATE_STOPPED
+        rtsp_client_mock.return_value.session.state = State.STOPPED
 
         async def start_stream():
             """Set state to playing when calling RTSPClient.start."""
-            rtsp_client_mock.return_value.session.state = STATE_PLAYING
+            rtsp_client_mock.return_value.session.state = State.PLAYING
 
         rtsp_client_mock.return_value.start = start_stream
 
         def stop_stream():
             """Set state to stopped when calling RTSPClient.stop."""
-            rtsp_client_mock.return_value.session.state = STATE_STOPPED
+            rtsp_client_mock.return_value.session.state = State.STOPPED
 
         rtsp_client_mock.return_value.stop = stop_stream
 
@@ -40,7 +95,7 @@ def mock_axis_rtspclient():
 
             if data:
                 rtsp_client_mock.return_value.rtp.data = data
-                axis_streammanager_session_callback(signal=SIGNAL_DATA)
+                axis_streammanager_session_callback(signal=Signal.DATA)
             elif state:
                 axis_streammanager_session_callback(signal=state)
             else:
@@ -106,7 +161,7 @@ def mock_rtsp_signal_state(mock_axis_rtspclient):
 
     def send_signal(connected: bool) -> None:
         """Signal state change of RTSP connection."""
-        signal = SIGNAL_PLAYING if connected else SIGNAL_FAILED
+        signal = Signal.PLAYING if connected else Signal.FAILED
         mock_axis_rtspclient(state=signal)
 
     yield send_signal

@@ -32,14 +32,8 @@ from homeassistant.const import (
 )
 from homeassistant.data_entry_flow import FlowResultType
 
-from .test_device import (
-    DEFAULT_HOST,
-    MAC,
-    MODEL,
-    NAME,
-    mock_default_vapix_requests,
-    setup_axis_integration,
-)
+from .conftest import DEFAULT_HOST, MAC, MODEL, NAME
+from .test_device import mock_default_vapix_requests, setup_axis_integration
 
 from tests.common import MockConfigEntry
 
@@ -79,10 +73,10 @@ async def test_flow_manual_configuration(hass):
     }
 
 
-async def test_manual_configuration_update_configuration(hass):
+async def test_manual_configuration_update_configuration(hass, config_entry):
     """Test that config flow fails on already configured device."""
-    config_entry = await setup_axis_integration(hass)
-    device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
+    await setup_axis_integration(hass, config_entry)
+    device = hass.data[AXIS_DOMAIN][config_entry.entry_id]
 
     result = await hass.config_entries.flow.async_init(
         AXIS_DOMAIN, context={"source": SOURCE_USER}
@@ -211,10 +205,10 @@ async def test_flow_create_entry_multiple_existing_entries_of_same_model(hass):
     assert result["data"][CONF_NAME] == "M1065-LW 2"
 
 
-async def test_reauth_flow_update_configuration(hass):
+async def test_reauth_flow_update_configuration(hass, config_entry):
     """Test that config flow fails on already configured device."""
-    config_entry = await setup_axis_integration(hass)
-    device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
+    await setup_axis_integration(hass, config_entry)
+    device = hass.data[AXIS_DOMAIN][config_entry.entry_id]
 
     result = await hass.config_entries.flow.async_init(
         AXIS_DOMAIN,
@@ -383,10 +377,10 @@ async def test_discovery_flow(hass, source: str, discovery_info: dict):
     ],
 )
 async def test_discovered_device_already_configured(
-    hass, source: str, discovery_info: dict
+    hass, config_entry, source: str, discovery_info: dict
 ):
     """Test that discovery doesn't setup already configured devices."""
-    config_entry = await setup_axis_integration(hass)
+    await setup_axis_integration(hass, config_entry)
     assert config_entry.data[CONF_HOST] == DEFAULT_HOST
 
     result = await hass.config_entries.flow.async_init(
@@ -439,10 +433,10 @@ async def test_discovered_device_already_configured(
     ],
 )
 async def test_discovery_flow_updated_configuration(
-    hass, source: str, discovery_info: dict, expected_port: int
+    hass, config_entry, source: str, discovery_info: dict, expected_port: int
 ):
     """Test that discovery flow update configuration with new parameters."""
-    config_entry = await setup_axis_integration(hass)
+    await setup_axis_integration(hass, config_entry)
     assert config_entry.data == {
         CONF_HOST: DEFAULT_HOST,
         CONF_PORT: 80,
@@ -573,18 +567,16 @@ async def test_discovery_flow_ignore_link_local_address(
     assert result["reason"] == "link_local_address"
 
 
-async def test_option_flow(hass):
+async def test_option_flow(hass, config_entry):
     """Test config flow options."""
-    config_entry = await setup_axis_integration(hass)
-    device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
+    await setup_axis_integration(hass, config_entry)
+    device = hass.data[AXIS_DOMAIN][config_entry.entry_id]
     assert device.option_stream_profile == DEFAULT_STREAM_PROFILE
     assert device.option_video_source == DEFAULT_VIDEO_SOURCE
 
     with respx.mock:
         mock_default_vapix_requests(respx)
-        result = await hass.config_entries.options.async_init(
-            device.config_entry.entry_id
-        )
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "configure_stream"

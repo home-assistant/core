@@ -3,19 +3,15 @@
         "abort": {
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
             "already_in_progress": "Seadistamine juba k\u00e4ib",
-            "no_devices_found": "V\u00f5rgust ei leitud seadmeid",
-            "single_instance_allowed": "Juba seadistatud, lubatud on ainult \u00fcks sidumine."
+            "no_devices_found": "V\u00f5rgust ei leitud seadmeid"
         },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus"
         },
-        "flow_title": "{label} ({host}) {serial}",
+        "flow_title": "{label} ({group})",
         "step": {
-            "confirm": {
-                "description": "Kas soovid seadistada LIFX-i?"
-            },
             "discovery_confirm": {
-                "description": "Kas seadistada {label} ( {host} ) {serial} ?"
+                "description": "Kas seadistada {label} ({group})?"
             },
             "pick_device": {
                 "data": {

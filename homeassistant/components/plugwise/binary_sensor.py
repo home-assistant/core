@@ -37,6 +37,12 @@ BINARY_SENSORS: tuple[PlugwiseBinarySensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PlugwiseBinarySensorEntityDescription(
+        key="cooling_enabled",
+        name="Cooling enabled",
+        icon="mdi:snowflake-thermometer",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    PlugwiseBinarySensorEntityDescription(
         key="dhw_state",
         name="DHW state",
         icon="mdi:water-pump",

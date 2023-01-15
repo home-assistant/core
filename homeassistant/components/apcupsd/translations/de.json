@@ -13,7 +13,7 @@
                     "host": "Host",
                     "port": "Port"
                 },
-                "description": "Gib den Host und den Port ein, auf dem das apcupsd-NIS bereitgestellt wird."
+                "description": "Gib den Host und den Port ein, auf dem das apcupsd NIS bereitgestellt wird."
             }
         }
     },

@@ -1,0 +1,8 @@
+{
+    "issues": {
+        "moved_yaml": {
+            "description": "Konfigurace Wake on Lan pomoc\u00ed YAML byla p\u0159esunuta do integra\u010dn\u00edho kl\u00ed\u010de. \n\n Va\u0161e st\u00e1vaj\u00edc\u00ed konfigurace YAML bude fungovat pro dal\u0161\u00ed 2 verze. \n\n Prove\u010fte migraci konfigurace YAML na integra\u010dn\u00ed kl\u00ed\u010d podle dokumentace.",
+            "title": "Konfigurace Wake on Lan YAML byla p\u0159esunuta"
+        }
+    }
+}

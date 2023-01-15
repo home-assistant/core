@@ -112,7 +112,8 @@ PLATFORM_SCHEMA_MODERN = MQTT_BASE_SCHEMA.extend(
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-# Configuring MQTT alarm control panels under the alarm_control_panel platform key is deprecated in HA Core 2022.6
+# Configuring MQTT alarm control panels under the alarm_control_panel platform key
+# was deprecated in HA Core 2022.6;
 # Setup for the legacy YAML format was removed in HA Core 2022.12
 PLATFORM_SCHEMA = vol.All(
     warn_for_legacy_schema(alarm.DOMAIN),
@@ -126,7 +127,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT alarm control panel through configuration.yaml and dynamically through MQTT discovery."""
+    """Set up MQTT alarm control panel through YAML and through MQTT discovery."""
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -249,7 +250,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
     @property
     def code_arm_required(self) -> bool:
         """Whether the code is required for arm actions."""
-        return self._config[CONF_CODE_ARM_REQUIRED]
+        return bool(self._config[CONF_CODE_ARM_REQUIRED])
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command.

@@ -8,7 +8,7 @@
             "bad_birth": "Invalid birth topic",
             "bad_certificate": "The CA certificate is invalid",
             "bad_client_cert": "Invalid client certificate, ensure a PEM coded file is supplied",
-            "bad_client_cert_key": "Client certificate and private are no valid pair",
+            "bad_client_cert_key": "Client certificate and private key are not a valid pair",
             "bad_client_key": "Invalid private key, ensure a PEM coded file is supplied without password",
             "bad_discovery_prefix": "Invalid discovery prefix",
             "bad_will": "Invalid will topic",
@@ -25,7 +25,6 @@
                     "client_cert": "Upload client certificate file",
                     "client_id": "Client ID (leave empty to randomly generated one)",
                     "client_key": "Upload private key file",
-                    "discovery": "Enable discovery",
                     "keepalive": "The time between sending keep alive messages",
                     "password": "Password",
                     "port": "Port",
@@ -35,8 +34,8 @@
                     "tls_insecure": "Ignore broker certificate validation",
                     "transport": "MQTT transport",
                     "username": "Username",
-                    "ws_path": "WebSocket path",
-                    "ws_headers": "WebSocket headers"
+                    "ws_headers": "WebSocket headers in JSON format",
+                    "ws_path": "WebSocket path"
                 },
                 "description": "Please enter the connection information of your MQTT broker."
             },
@@ -86,7 +85,7 @@
             "bad_birth": "Invalid birth topic",
             "bad_certificate": "The CA certificate is invalid",
             "bad_client_cert": "Invalid client certificate, ensure a PEM coded file is supplied",
-            "bad_client_cert_key": "Client certificate and private are no valid pair",
+            "bad_client_cert_key": "Client certificate and private key are not a valid pair",
             "bad_client_key": "Invalid private key, ensure a PEM coded file is supplied without password",
             "bad_discovery_prefix": "Invalid discovery prefix",
             "bad_will": "Invalid will topic",
@@ -112,8 +111,8 @@
                     "tls_insecure": "Ignore broker certificate validation",
                     "transport": "MQTT transport",
                     "username": "Username",
-                    "ws_path": "WebSocket path",
-                    "ws_headers": "WebSocket headers"
+                    "ws_headers": "WebSocket headers in JSON format",
+                    "ws_path": "WebSocket path"
                 },
                 "description": "Please enter the connection information of your MQTT broker.",
                 "title": "Broker options"

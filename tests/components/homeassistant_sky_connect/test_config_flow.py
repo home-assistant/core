@@ -1,13 +1,20 @@
 """Test the Home Assistant Sky Connect config flow."""
 import copy
-from unittest.mock import patch
+from unittest.mock import Mock, patch
+
+import pytest
 
 from homeassistant.components import homeassistant_sky_connect, usb
 from homeassistant.components.homeassistant_sky_connect.const import DOMAIN
+from homeassistant.components.zha.core.const import (
+    CONF_DEVICE_PATH,
+    DOMAIN as ZHA_DOMAIN,
+    RadioType,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, MockModule, mock_integration
 
 USB_DATA = usb.UsbServiceInfo(
     device="bla_device",
@@ -143,3 +150,192 @@ async def test_config_flow_update_device(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(mock_unload_entry.mock_calls) == 1
+
+
+@pytest.mark.skip(reason="Temporarily disabled")
+async def test_option_flow_install_multi_pan_addon(
+    hass: HomeAssistant,
+    addon_store_info,
+    addon_info,
+    install_addon,
+    set_addon_options,
+    start_addon,
+) -> None:
+    """Test installing the multi pan addon."""
+    mock_integration(hass, MockModule("hassio"))
+
+    # Setup the config entry
+    config_entry = MockConfigEntry(
+        data={
+            "device": USB_DATA.device,
+            "vid": USB_DATA.vid,
+            "pid": USB_DATA.pid,
+            "serial_number": USB_DATA.serial_number,
+            "manufacturer": USB_DATA.manufacturer,
+            "description": USB_DATA.description,
+        },
+        domain=DOMAIN,
+        options={},
+        title="Home Assistant Sky Connect",
+        unique_id=f"{USB_DATA.vid}:{USB_DATA.pid}_{USB_DATA.serial_number}_{USB_DATA.manufacturer}_{USB_DATA.description}",
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
+        side_effect=Mock(return_value=True),
+    ):
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "addon_not_installed"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "enable_multi_pan": True,
+        },
+    )
+    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "install_addon"
+    assert result["progress_action"] == "install_addon"
+
+    result = await hass.config_entries.options.async_configure(result["flow_id"])
+    assert result["type"] == FlowResultType.SHOW_PROGRESS_DONE
+    assert result["step_id"] == "configure_addon"
+    install_addon.assert_called_once_with(hass, "core_silabs_multiprotocol")
+
+    result = await hass.config_entries.options.async_configure(result["flow_id"])
+    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "start_addon"
+    set_addon_options.assert_called_once_with(
+        hass,
+        "core_silabs_multiprotocol",
+        {
+            "options": {
+                "autoflash_firmware": True,
+                "device": "bla_device",
+                "baudrate": "115200",
+                "flow_control": True,
+            }
+        },
+    )
+
+    result = await hass.config_entries.options.async_configure(result["flow_id"])
+    assert result["type"] == FlowResultType.SHOW_PROGRESS_DONE
+    assert result["step_id"] == "finish_addon_setup"
+    start_addon.assert_called_once_with(hass, "core_silabs_multiprotocol")
+
+    result = await hass.config_entries.options.async_configure(result["flow_id"])
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+
+
+def mock_detect_radio_type(radio_type=RadioType.ezsp, ret=True):
+    """Mock `detect_radio_type` that just sets the appropriate attributes."""
+
+    async def detect(self):
+        self.radio_type = radio_type
+        self.device_settings = radio_type.controller.SCHEMA_DEVICE(
+            {CONF_DEVICE_PATH: self.device_path}
+        )
+
+        return ret
+
+    return detect
+
+
+@pytest.mark.skip(reason="Temporarily disabled")
+@patch(
+    "homeassistant.components.zha.radio_manager.ZhaRadioManager.detect_radio_type",
+    mock_detect_radio_type(),
+)
+async def test_option_flow_install_multi_pan_addon_zha(
+    hass: HomeAssistant,
+    addon_store_info,
+    addon_info,
+    install_addon,
+    set_addon_options,
+    start_addon,
+) -> None:
+    """Test installing the multi pan addon when a zha config entry exists."""
+    mock_integration(hass, MockModule("hassio"))
+
+    # Setup the config entry
+    config_entry = MockConfigEntry(
+        data={
+            "device": USB_DATA.device,
+            "vid": USB_DATA.vid,
+            "pid": USB_DATA.pid,
+            "serial_number": USB_DATA.serial_number,
+            "manufacturer": USB_DATA.manufacturer,
+            "description": USB_DATA.description,
+        },
+        domain=DOMAIN,
+        options={},
+        title="Home Assistant Sky Connect",
+        unique_id=f"{USB_DATA.vid}:{USB_DATA.pid}_{USB_DATA.serial_number}_{USB_DATA.manufacturer}_{USB_DATA.description}",
+    )
+    config_entry.add_to_hass(hass)
+
+    zha_config_entry = MockConfigEntry(
+        data={"device": {"path": "bla_device"}, "radio_type": "ezsp"},
+        domain=ZHA_DOMAIN,
+        options={},
+        title="Yellow",
+    )
+    zha_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
+        side_effect=Mock(return_value=True),
+    ):
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "addon_not_installed"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "enable_multi_pan": True,
+        },
+    )
+    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "install_addon"
+    assert result["progress_action"] == "install_addon"
+
+    result = await hass.config_entries.options.async_configure(result["flow_id"])
+    assert result["type"] == FlowResultType.SHOW_PROGRESS_DONE
+    assert result["step_id"] == "configure_addon"
+    install_addon.assert_called_once_with(hass, "core_silabs_multiprotocol")
+
+    result = await hass.config_entries.options.async_configure(result["flow_id"])
+    assert result["type"] == FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "start_addon"
+    set_addon_options.assert_called_once_with(
+        hass,
+        "core_silabs_multiprotocol",
+        {
+            "options": {
+                "autoflash_firmware": True,
+                "device": "bla_device",
+                "baudrate": "115200",
+                "flow_control": True,
+            }
+        },
+    )
+    # Check the ZHA config entry data is updated
+    assert zha_config_entry.data == {
+        "device": {
+            "path": "socket://core-silabs-multiprotocol:9999",
+            "baudrate": 57600,  # ZHA default
+            "flow_control": "software",  # ZHA default
+        },
+        "radio_type": "ezsp",
+    }
+
+    result = await hass.config_entries.options.async_configure(result["flow_id"])
+    assert result["type"] == FlowResultType.SHOW_PROGRESS_DONE
+    assert result["step_id"] == "finish_addon_setup"
+    start_addon.assert_called_once_with(hass, "core_silabs_multiprotocol")
+
+    result = await hass.config_entries.options.async_configure(result["flow_id"])
+    assert result["type"] == FlowResultType.CREATE_ENTRY

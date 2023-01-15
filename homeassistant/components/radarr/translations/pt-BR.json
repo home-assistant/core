@@ -27,13 +27,9 @@
         }
     },
     "issues": {
-        "deprecated_yaml": {
-            "description": "A configura\u00e7\u00e3o do Radarr usando YAML est\u00e1 sendo removida. \n\n Sua configura\u00e7\u00e3o YAML existente foi importada para a interface do usu\u00e1rio automaticamente. \n\n Remova a configura\u00e7\u00e3o YAML do Radarr do arquivo configuration.yaml e reinicie o Home Assistant para corrigir esse problema.",
-            "title": "A configura\u00e7\u00e3o YAML do Radarr est\u00e1 sendo removida"
-        },
-        "removed_attributes": {
-            "description": "Algumas mudan\u00e7as importantes foram feitas na desativa\u00e7\u00e3o do sensor de contagem de filmes por precau\u00e7\u00e3o. \n\n Este sensor pode causar problemas com bancos de dados massivos. Se voc\u00ea ainda deseja us\u00e1-lo, voc\u00ea pode faz\u00ea-lo. \n\n Os nomes dos filmes n\u00e3o s\u00e3o mais inclu\u00eddos como atributos no sensor de filmes. \n\n O pr\u00f3ximo foi removido. Ele est\u00e1 sendo modernizado como os itens do calend\u00e1rio devem ser. O espa\u00e7o em disco agora \u00e9 dividido em diferentes sensores, um para cada pasta. \n\n Status e comandos foram removidos, pois n\u00e3o parecem ter valor real para automa\u00e7\u00f5es.",
-            "title": "Mudan\u00e7as na integra\u00e7\u00e3o do Radarr"
+        "removed_yaml": {
+            "description": "A configura\u00e7\u00e3o do Radarr usando YAML foi removida. \n\n Sua configura\u00e7\u00e3o YAML existente n\u00e3o \u00e9 usada pelo Home Assistant. \n\n Remova a configura\u00e7\u00e3o YAML do arquivo configuration.yaml e reinicie o Home Assistant para corrigir esse problema.",
+            "title": "A configura\u00e7\u00e3o YAML de Radarr foi removida"
         }
     },
     "options": {

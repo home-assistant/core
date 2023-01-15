@@ -3,6 +3,7 @@ import asyncio
 from unittest.mock import ANY, call, patch
 
 import pytest
+from pytest_unordered import unordered
 
 from homeassistant.components import camera
 from homeassistant.components.climate import ATTR_MAX_TEMP, ATTR_MIN_TEMP, HVACMode
@@ -20,7 +21,7 @@ from homeassistant.components.google_assistant import (
     trait,
 )
 from homeassistant.config import async_process_ha_core_config
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, __version__
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, UnitOfTemperature, __version__
 from homeassistant.core import EVENT_CALL_SERVICE, State
 from homeassistant.helpers import device_registry, entity_platform
 from homeassistant.setup import async_setup_component
@@ -101,10 +102,21 @@ async def test_async_handle_message(hass):
     await hass.async_block_till_done()
 
 
-async def test_sync_message(hass):
+async def test_sync_message(hass, registries):
     """Test a sync message."""
+    entity = registries.entity.async_get_or_create(
+        "light",
+        "test",
+        "unique-demo-light",
+        suggested_object_id="demo_light",
+    )
+    registries.entity.async_update_entity(
+        entity.entity_id,
+        aliases={"Stay", "Healthy"},
+    )
+
     light = DemoLight(
-        None,
+        "unique-demo-light",
         "Demo Light",
         state=False,
         hs_color=(180, 75),
@@ -150,7 +162,15 @@ async def test_sync_message(hass):
                     "id": "light.demo_light",
                     "name": {
                         "name": "Demo Light",
-                        "nicknames": ["Demo Light", "Hello", "World"],
+                        "nicknames": unordered(
+                            [
+                                "Demo Light",
+                                "Hello",
+                                "World",
+                                "Stay",
+                                "Healthy",
+                            ]
+                        ),
                     },
                     "traits": [
                         trait.TRAIT_BRIGHTNESS,
@@ -181,7 +201,10 @@ async def test_sync_message(hass):
                                     {
                                         "setting_name": "none",
                                         "setting_values": [
-                                            {"lang": "en", "setting_synonym": ["none"]}
+                                            {
+                                                "lang": "en",
+                                                "setting_synonym": ["none"],
+                                            }
                                         ],
                                     },
                                 ],
@@ -804,7 +827,11 @@ async def test_raising_error_trait(hass):
     hass.states.async_set(
         "climate.bla",
         HVACMode.HEAT,
-        {ATTR_MIN_TEMP: 15, ATTR_MAX_TEMP: 30, ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+        {
+            ATTR_MIN_TEMP: 15,
+            ATTR_MAX_TEMP: 30,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
+        },
     )
 
     events = async_capture_events(hass, EVENT_COMMAND_RECEIVED)

@@ -95,6 +95,7 @@ from .const import (
     CONF_SECRET,
     DATA_CONFIG_ENTRIES,
     DATA_DELETED_IDS,
+    DATA_DEVICES,
     DOMAIN,
     ERR_ENCRYPTION_ALREADY_ENABLED,
     ERR_ENCRYPTION_NOT_AVAILABLE,
@@ -267,8 +268,10 @@ async def webhook_call_service(
         )
     except (vol.Invalid, ServiceNotFound, Exception) as ex:
         _LOGGER.error(
-            "Error when calling service during mobile_app "
-            "webhook (device name: %s): %s",
+            (
+                "Error when calling service during mobile_app "
+                "webhook (device name: %s): %s"
+            ),
             config_entry.data[ATTR_DEVICE_NAME],
             ex,
         )
@@ -692,8 +695,9 @@ async def webhook_get_config(
     if CONF_CLOUDHOOK_URL in config_entry.data:
         resp[CONF_CLOUDHOOK_URL] = config_entry.data[CONF_CLOUDHOOK_URL]
 
-    with suppress(hass.components.cloud.CloudNotAvailable):
-        resp[CONF_REMOTE_UI_URL] = cloud.async_remote_ui_url(hass)
+    if cloud.async_active_subscription(hass):
+        with suppress(hass.components.cloud.CloudNotAvailable):
+            resp[CONF_REMOTE_UI_URL] = cloud.async_remote_ui_url(hass)
 
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
 
@@ -722,7 +726,7 @@ async def webhook_scan_tag(
     await tag.async_scan_tag(
         hass,
         data["tag_id"],
-        config_entry.data[ATTR_DEVICE_ID],
+        hass.data[DOMAIN][DATA_DEVICES][config_entry.data[CONF_WEBHOOK_ID]].id,
         registration_context(config_entry.data),
     )
     return empty_okay_response()

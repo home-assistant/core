@@ -1,53 +1,59 @@
-"""Support for ISY994 switches."""
+"""Support for ISY switches."""
 from __future__ import annotations
 
 from typing import Any
 
 from pyisy.constants import ISY_VALUE_UNKNOWN, PROTO_GROUP
 
-from homeassistant.components.switch import DOMAIN as SWITCH, SwitchEntity
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import _LOGGER, DOMAIN as ISY994_DOMAIN, ISY994_NODES, ISY994_PROGRAMS
+from .const import _LOGGER, DOMAIN
 from .entity import ISYNodeEntity, ISYProgramEntity
-from .helpers import migrate_old_unique_ids
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the ISY994 switch platform."""
-    hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
+    """Set up the ISY switch platform."""
+    isy_data = hass.data[DOMAIN][entry.entry_id]
     entities: list[ISYSwitchProgramEntity | ISYSwitchEntity] = []
-    for node in hass_isy_data[ISY994_NODES][SWITCH]:
-        entities.append(ISYSwitchEntity(node))
+    devices: dict[str, DeviceInfo] = isy_data.devices
+    for node in isy_data.nodes[Platform.SWITCH]:
+        primary = node.primary_node
+        if node.protocol == PROTO_GROUP and len(node.controllers) == 1:
+            # If Group has only 1 Controller, link to that device instead of the hub
+            primary = node.isy.nodes.get_by_id(node.controllers[0]).primary_node
 
-    for name, status, actions in hass_isy_data[ISY994_PROGRAMS][SWITCH]:
+        entities.append(ISYSwitchEntity(node, devices.get(primary)))
+
+    for name, status, actions in isy_data.programs[Platform.SWITCH]:
         entities.append(ISYSwitchProgramEntity(name, status, actions))
 
-    await migrate_old_unique_ids(hass, SWITCH, entities)
     async_add_entities(entities)
 
 
 class ISYSwitchEntity(ISYNodeEntity, SwitchEntity):
-    """Representation of an ISY994 switch device."""
+    """Representation of an ISY switch device."""
 
     @property
     def is_on(self) -> bool | None:
-        """Get whether the ISY994 device is in the on state."""
+        """Get whether the ISY device is in the on state."""
         if self._node.status == ISY_VALUE_UNKNOWN:
             return None
         return bool(self._node.status)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Send the turn off command to the ISY994 switch."""
+        """Send the turn off command to the ISY switch."""
         if not await self._node.turn_off():
             _LOGGER.debug("Unable to turn off switch")
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Send the turn on command to the ISY994 switch."""
+        """Send the turn on command to the ISY switch."""
         if not await self._node.turn_on():
             _LOGGER.debug("Unable to turn on switch")
 
@@ -60,20 +66,20 @@ class ISYSwitchEntity(ISYNodeEntity, SwitchEntity):
 
 
 class ISYSwitchProgramEntity(ISYProgramEntity, SwitchEntity):
-    """A representation of an ISY994 program switch."""
+    """A representation of an ISY program switch."""
 
     @property
     def is_on(self) -> bool:
-        """Get whether the ISY994 switch program is on."""
+        """Get whether the ISY switch program is on."""
         return bool(self._node.status)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Send the turn on command to the ISY994 switch program."""
+        """Send the turn on command to the ISY switch program."""
         if not await self._actions.run_then():
             _LOGGER.error("Unable to turn on switch")
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Send the turn off command to the ISY994 switch program."""
+        """Send the turn off command to the ISY switch program."""
         if not await self._actions.run_else():
             _LOGGER.error("Unable to turn off switch")
 

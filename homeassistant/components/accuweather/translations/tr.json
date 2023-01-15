@@ -22,9 +22,20 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "pressure_tendency": {
+                "state": {
+                    "falling": "D\u00fc\u015f\u00fcyor",
+                    "rising": "Y\u00fckseliyor",
+                    "steady": "Sabit"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
-            "user": {
+            "init": {
                 "data": {
                     "forecast": "Hava Durumu tahmini"
                 },

@@ -16,6 +16,7 @@ from datetime import timedelta
 import logging
 from unittest import mock
 
+from freezegun.api import FrozenDateTimeFactory
 from pymodbus.exceptions import ModbusException
 from pymodbus.pdu import ExceptionResponse, IllegalFunctionRequest
 import pytest
@@ -529,7 +530,7 @@ async def test_pb_service_write(
         data[do_write[DATA]],
     )
     if do_return[DATA]:
-        assert caplog.messages[-1].startswith("Pymodbus:")
+        assert any(message.startswith("Pymodbus:") for message in caplog.messages)
 
 
 @pytest.fixture(name="mock_modbus_read_pymodbus")
@@ -542,6 +543,7 @@ async def mock_modbus_read_pymodbus_fixture(
     do_exception,
     caplog,
     mock_pymodbus,
+    freezer: FrozenDateTimeFactory,
 ):
     """Load integration modbus using mocked pymodbus."""
     caplog.clear()
@@ -573,16 +575,13 @@ async def mock_modbus_read_pymodbus_fixture(
             }
         ],
     }
-    now = dt_util.utcnow()
-    with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
-        assert await async_setup_component(hass, DOMAIN, config) is True
-        await hass.async_block_till_done()
+    assert await async_setup_component(hass, DOMAIN, config) is True
+    await hass.async_block_till_done()
     assert DOMAIN in hass.config.components
     assert caplog.text == ""
-    now = now + timedelta(seconds=DEFAULT_SCAN_INTERVAL + 60)
-    with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
-        async_fire_time_changed(hass, now)
-        await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL + 60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
     yield mock_pymodbus
 
 
@@ -690,7 +689,7 @@ async def test_pymodbus_connect_fail(hass, caplog, mock_pymodbus):
     assert ExceptionMessage in caplog.text
 
 
-async def test_delay(hass, mock_pymodbus):
+async def test_delay(hass, mock_pymodbus, freezer: FrozenDateTimeFactory):
     """Run test for startup delay."""
 
     # the purpose of this test is to test startup delay
@@ -720,11 +719,8 @@ async def test_delay(hass, mock_pymodbus):
     }
     mock_pymodbus.read_coils.return_value = ReadResult([0x01])
     start_time = dt_util.utcnow()
-    with mock.patch(
-        "homeassistant.helpers.event.dt_util.utcnow", return_value=start_time
-    ):
-        assert await async_setup_component(hass, DOMAIN, config) is True
-        await hass.async_block_till_done()
+    assert await async_setup_component(hass, DOMAIN, config) is True
+    await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
     time_sensor_active = start_time + timedelta(seconds=2)
@@ -736,19 +732,15 @@ async def test_delay(hass, mock_pymodbus):
         # This test assumed listeners are always fired at 0
         # microseconds which is impossible in production so
         # we use 999999 microseconds to simulate the real world.
-        now += timedelta(seconds=1, microseconds=999999)
-        with mock.patch(
-            "homeassistant.helpers.event.dt_util.utcnow",
-            return_value=now,
-            autospec=True,
-        ):
-            async_fire_time_changed(hass, now)
-            await hass.async_block_till_done()
-            if now > time_sensor_active:
-                if now <= time_after_delay:
-                    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
-                elif now > time_after_scan:
-                    assert hass.states.get(entity_id).state == STATE_ON
+        freezer.tick(timedelta(seconds=1, microseconds=999999))
+        now = dt_util.utcnow()
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
+        if now > time_sensor_active:
+            if now <= time_after_delay:
+                assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+            elif now > time_after_scan:
+                assert hass.states.get(entity_id).state == STATE_ON
 
 
 @pytest.mark.parametrize(
@@ -853,19 +845,20 @@ async def test_write_no_client(hass, mock_modbus):
 
 
 @pytest.mark.parametrize("do_config", [{}])
-async def test_integration_reload(hass, caplog, mock_modbus):
+async def test_integration_reload(
+    hass, caplog, mock_modbus, freezer: FrozenDateTimeFactory
+):
     """Run test for integration reload."""
 
     caplog.set_level(logging.INFO)
     caplog.clear()
 
     yaml_path = get_fixture_path("configuration.yaml", "modbus")
-    now = dt_util.utcnow()
     with mock.patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
         await hass.async_block_till_done()
         for i in range(4):
-            now = now + timedelta(seconds=1)
-            async_fire_time_changed(hass, now)
+            freezer.tick(timedelta(seconds=1))
+            async_fire_time_changed(hass)
             await hass.async_block_till_done()
     assert "Modbus reloading" in caplog.text

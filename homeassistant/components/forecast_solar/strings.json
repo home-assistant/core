@@ -15,6 +15,9 @@
     }
   },
   "options": {
+    "error": {
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]"
+    },
     "step": {
       "init": {
         "description": "These values allow tweaking the Forecast.Solar result. Please refer to the documentation if a field is unclear.",

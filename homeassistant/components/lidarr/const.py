@@ -2,35 +2,25 @@
 import logging
 from typing import Final
 
-from homeassistant.const import (
-    DATA_BYTES,
-    DATA_EXABYTES,
-    DATA_GIGABYTES,
-    DATA_KILOBYTES,
-    DATA_MEGABYTES,
-    DATA_PETABYTES,
-    DATA_TERABYTES,
-    DATA_YOTTABYTES,
-    DATA_ZETTABYTES,
-)
+from homeassistant.const import UnitOfInformation
 
 BYTE_SIZES = [
-    DATA_BYTES,
-    DATA_KILOBYTES,
-    DATA_MEGABYTES,
-    DATA_GIGABYTES,
-    DATA_TERABYTES,
-    DATA_PETABYTES,
-    DATA_EXABYTES,
-    DATA_ZETTABYTES,
-    DATA_YOTTABYTES,
+    UnitOfInformation.BYTES,
+    UnitOfInformation.KILOBYTES,
+    UnitOfInformation.MEGABYTES,
+    UnitOfInformation.GIGABYTES,
+    UnitOfInformation.TERABYTES,
+    UnitOfInformation.PETABYTES,
+    UnitOfInformation.EXABYTES,
+    UnitOfInformation.ZETTABYTES,
+    UnitOfInformation.YOTTABYTES,
 ]
 
 # Defaults
 DEFAULT_DAYS = "1"
 DEFAULT_HOST = "localhost"
 DEFAULT_NAME = "Lidarr"
-DEFAULT_UNIT = DATA_GIGABYTES
+DEFAULT_UNIT = UnitOfInformation.GIGABYTES
 DEFAULT_MAX_RECORDS = 20
 
 DOMAIN: Final = "lidarr"

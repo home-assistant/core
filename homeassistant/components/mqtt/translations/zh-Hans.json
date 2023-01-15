@@ -5,16 +5,19 @@
             "single_instance_allowed": "\u8be5\u96c6\u6210\u5df2\u7ecf\u914d\u7f6e\u8fc7\u4e86\uff0c\u4e14\u53ea\u80fd\u914d\u7f6e\u4e00\u6b21\u3002\u82e5\u8981\u91cd\u65b0\u914d\u7f6e\uff0c\u8bf7\u5148\u5220\u9664\u65e7\u96c6\u6210\u3002"
         },
         "error": {
+            "bad_ws_headers": "\u63d0\u4f9b\u4ee5JSON\u5bf9\u8c61\u5f62\u5f0f\u7684\u6709\u6548HTTP headers",
             "cannot_connect": "\u65e0\u6cd5\u8fde\u63a5\u5230\u670d\u52a1\u5668\u3002"
         },
         "step": {
             "broker": {
                 "data": {
                     "broker": "\u670d\u52a1\u5668",
-                    "discovery": "\u542f\u7528\u53d1\u73b0",
                     "password": "\u5bc6\u7801",
                     "port": "\u7aef\u53e3",
-                    "username": "\u7528\u6237\u540d"
+                    "transport": "MQTT\u4f20\u8f93",
+                    "username": "\u7528\u6237\u540d",
+                    "ws_headers": "WebSocket headers \uff08JSON\u683c\u5f0f\uff09",
+                    "ws_path": "WebSocket \u8def\u5f84"
                 },
                 "description": "\u8bf7\u8f93\u5165\u60a8\u7684 MQTT \u670d\u52a1\u5668\u7684\u8fde\u63a5\u4fe1\u606f\u3002"
             },
@@ -53,6 +56,7 @@
         "error": {
             "bad_birth": "\u51fa\u751f\u6d88\u606f\u4e3b\u9898\u65e0\u6548",
             "bad_will": "\u9057\u5631\u6d88\u606f\u4e3b\u9898\u65e0\u6548",
+            "bad_ws_headers": "\u63d0\u4f9b\u4ee5JSON\u5bf9\u8c61\u5f62\u5f0f\u7684\u6709\u6548HTTP headers",
             "cannot_connect": "\u8fde\u63a5\u5931\u8d25"
         },
         "step": {
@@ -61,7 +65,10 @@
                     "broker": "\u670d\u52a1\u5668",
                     "password": "\u5bc6\u7801",
                     "port": "\u7aef\u53e3",
-                    "username": "\u7528\u6237\u540d"
+                    "transport": "MQTT\u4f20\u8f93",
+                    "username": "\u7528\u6237\u540d",
+                    "ws_headers": "WebSocket headers \uff08JSON\u683c\u5f0f\uff09",
+                    "ws_path": "WebSocket\u5730\u5740"
                 },
                 "description": "\u8bf7\u8f93\u5165 MQTT \u670d\u52a1\u5668\u7684\u8fde\u63a5\u4fe1\u606f\u3002",
                 "title": "\u670d\u52a1\u5668\u9009\u9879"

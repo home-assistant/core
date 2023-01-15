@@ -31,7 +31,7 @@ class LookinFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Start a discovery flow from zeroconf."""
-        uid: str = discovery_info.hostname[: -len(".local.")]
+        uid: str = discovery_info.hostname.removesuffix(".local.")
         host: str = discovery_info.host
         await self.async_set_unique_id(uid.upper())
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})

@@ -1,5 +1,9 @@
 {
     "issues": {
+        "country_not_configured": {
+            "description": "Belum ada negara yang dikonfigurasi, perbarui konfigurasi dengan mengeklik tombol \"pelajari selengkapnya\" di bawah ini.",
+            "title": "Negara belum dikonfigurasi"
+        },
         "historic_currency": {
             "description": "Mata uang {currency} tidak lagi digunakan, konfigurasikan ulang konfigurasi mata uang.",
             "title": "Mata uang yang dikonfigurasi tidak lagi digunakan"

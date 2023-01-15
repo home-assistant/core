@@ -9,10 +9,10 @@
                     "type": "Karakteristik statistik"
                 },
                 "data_description": {
-                    "round_digits": "Mengontrol jumlah digit desimal dalam output ketika karakteristik statistik adalah rata-rata atau median."
+                    "round_digits": "Mengontrol jumlah digit desimal dalam output ketika karakteristik statistik adalah rata-rata, median, atau jumlah."
                 },
-                "description": "Buat sensor yang menghitung nilai min, maks, rata-rata, atau median dari sejumlah sensor input.",
-                "title": "Tambahkan sensor min/maks/rata-rata/median"
+                "description": "Buat sensor yang menghitung nilai min, maks, rata-rata, median, atau jumlah dari sejumlah sensor input.",
+                "title": "Gabungkan status beberapa sensor"
             }
         }
     },
@@ -25,10 +25,10 @@
                     "type": "Karakteristik statistik"
                 },
                 "data_description": {
-                    "round_digits": "Mengontrol jumlah digit desimal dalam output ketika karakteristik statistik adalah rata-rata atau median."
+                    "round_digits": "Mengontrol jumlah digit desimal dalam output ketika karakteristik statistik adalah rata-rata, median, atau jumlah."
                 }
             }
         }
     },
-    "title": "Sensor min/maks/rata-rata/median"
+    "title": "Gabungkan status beberapa sensor"
 }

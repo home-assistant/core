@@ -1,0 +1,35 @@
+{
+    "mfa_setup": {
+        "notify": {
+            "abort": {
+                "no_available_service": "Nie s\u00fa k dispoz\u00edcii \u017eiadne notifika\u010dn\u00e9 slu\u017eby."
+            },
+            "error": {
+                "invalid_code": "Neplatn\u00fd k\u00f3d, sk\u00faste to znova."
+            },
+            "step": {
+                "init": {
+                    "description": "Vyberte si jednu z notifika\u010dn\u00fdch slu\u017eieb:",
+                    "title": "Nastavenie jednorazov\u00e9ho hesla doru\u010den\u00e9ho prostredn\u00edctvom komponentu notifik\u00e1cie"
+                },
+                "setup": {
+                    "description": "Jednorazov\u00e9 heslo bolo odoslan\u00e9 prostredn\u00edctvom **notify.{notify_service}**. Zadajte ho, pros\u00edm, ni\u017e\u0161ie:",
+                    "title": "Overenie nastavenia"
+                }
+            },
+            "title": "Ozn\u00e1menie jednorazov\u00e9ho hesla"
+        },
+        "totp": {
+            "error": {
+                "invalid_code": "Neplatn\u00fd k\u00f3d, sk\u00faste to znovu. Pokia\u013e sa t\u00e1to chyba opakuje, uistite sa, \u017ee hodiny syst\u00e9mu Home Assistant s\u00fa spr\u00e1vne nastaven\u00e9."
+            },
+            "step": {
+                "init": {
+                    "description": "Chcete aktivova\u0165 dvojfaktorov\u00fa autentiz\u00e1ciu pomocou jednor\u00e1zov\u00fdch hesiel zalo\u017een\u00fdch na \u010dase, na\u010d\u00edtajte k\u00f3d QR pomocou va\u0161ej autentiza\u010dnej aplik\u00e1cie. Pokia\u013e ju nem\u00e1te, doporu\u010dujeme alebo [Google Authenticator](https://support.google.com/accounts/answer/1066447) alebo [Authy](https://authy.com/). \n\n{qr_code} \n \nPo skenovan\u00ed k\u00f3du zadajte \u0161es\u0165cifern\u00fd k\u00f3d z aplik\u00e1cie a overte nastavenie. Pokia\u013e m\u00e1te probl\u00e9my so skenovan\u00edm k\u00f3du QR, preve\u010fte ru\u010dn\u00e9 nastavenie s k\u00f3dom **`{code}`**.",
+                    "title": "Nastavte dvjfaktorov\u00e9 overovanie pomocou TOTP"
+                }
+            },
+            "title": "TOTP"
+        }
+    }
+}

@@ -267,6 +267,31 @@ async def test_fibaro_FGR222_shutter_cover(
     }
     assert args["value"] == 0
 
+    # Test some tilt
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 42,
+            "args": {
+                "commandClassName": "Manufacturer Proprietary",
+                "commandClass": 145,
+                "endpoint": 0,
+                "property": "fibaro",
+                "propertyKey": "venetianBlindsTilt",
+                "newValue": 99,
+                "prevValue": 0,
+                "propertyName": "fibaro",
+                "propertyKeyName": "venetianBlindsTilt",
+            },
+        },
+    )
+    fibaro_fgr222_shutter.receive_event(event)
+    state = hass.states.get(FIBARO_SHUTTER_COVER_ENTITY)
+    assert state
+    assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 100
+
 
 async def test_aeotec_nano_shutter_cover(
     hass, client, aeotec_nano_shutter, integration

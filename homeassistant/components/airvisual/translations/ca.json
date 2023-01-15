@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "La ubicaci\u00f3 ja est\u00e0 configurada o el Node/Pro ID ja est\u00e0 registrat.",
+            "already_configured": "La ubicaci\u00f3 ja est\u00e0 configurada",
             "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
         },
         "error": {
@@ -48,6 +48,36 @@
                 "description": "Tria quin tipus de dades d'AirVisual vols monitoritzar.",
                 "title": "Configura AirVisual"
             }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "pollutant_label": {
+                "state": {
+                    "co": "Mon\u00f2xid de carboni",
+                    "n2": "Di\u00f2xid de nitrogen",
+                    "o3": "Oz\u00f3",
+                    "p1": "PM10",
+                    "p2": "PM2.5",
+                    "s2": "Di\u00f2xid de sofre"
+                }
+            },
+            "pollutant_level": {
+                "state": {
+                    "good": "Bo",
+                    "hazardous": "Perill\u00f3s",
+                    "moderate": "Moderat",
+                    "unhealthy": "No saludable",
+                    "unhealthy_sensitive": "No saludable per a grups sensibles",
+                    "very_unhealthy": "Gens saludable"
+                }
+            }
+        }
+    },
+    "issues": {
+        "airvisual_pro_migration": {
+            "description": "Les unitats d'AirVisual Pro s\u00f3n ara la seva pr\u00f2pia integraci\u00f3 de Home Assistant (en lloc de ser incloses a trav\u00e9s de la integraci\u00f3 AirVisual original que utilitza l'API del n\u00favol d'AirVisual). El dispositiu Pro que es troba a `{ip_address}` s'ha migrat autom\u00e0ticament. \n\nCom a part de la migraci\u00f3, l'identificador (ID) del dispositiu Pro ha canviat de `{old_device_id}` a `{new_device_id}`. Actualitza les seg\u00fcents automatitzacions amb el nou ID de dispositiu: {device_automations_string}.",
+            "title": "{ip_address} ara forma part de la integraci\u00f3 AirVisual Pro"
         }
     },
     "options": {

@@ -9,10 +9,10 @@
                     "type": "Caracter\u00edstica estat\u00edstica"
                 },
                 "data_description": {
-                    "round_digits": "Controla o n\u00famero de d\u00edgitos decimais na sa\u00edda quando a caracter\u00edstica estat\u00edstica \u00e9 m\u00e9dia ou mediana."
+                    "round_digits": "Controla o n\u00famero de d\u00edgitos decimais na sa\u00edda quando a caracter\u00edstica estat\u00edstica \u00e9 m\u00e9dia, mediana ou soma."
                 },
-                "description": "Crie um sensor que calcula um valor m\u00ednimo, m\u00e1ximo, m\u00e9dio ou mediano de uma lista de sensores de entrada.",
-                "title": "Adicionar sensor de m\u00ednima / m\u00e1xima / m\u00e9dia / mediana"
+                "description": "Crie um sensor que calcule um m\u00ednimo, m\u00e1ximo, m\u00e9dia, mediana ou soma de uma lista de sensores de entrada.",
+                "title": "Combine o estado de v\u00e1rios sensores"
             }
         }
     },
@@ -25,10 +25,10 @@
                     "type": "Caracter\u00edstica estat\u00edstica"
                 },
                 "data_description": {
-                    "round_digits": "Controla o n\u00famero de d\u00edgitos decimais na sa\u00edda quando a caracter\u00edstica estat\u00edstica \u00e9 m\u00e9dia ou mediana."
+                    "round_digits": "Controla o n\u00famero de d\u00edgitos decimais na sa\u00edda quando a caracter\u00edstica estat\u00edstica \u00e9 m\u00e9dia, mediana ou soma."
                 }
             }
         }
     },
-    "title": "Sensor m\u00edn./m\u00e1x./m\u00e9dio/mediano"
+    "title": "Combine o estado de v\u00e1rios sensores"
 }

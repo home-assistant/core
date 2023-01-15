@@ -8,12 +8,19 @@
             "invalid_system_id": "ID do sistema Airzone inv\u00e1lido"
         },
         "step": {
+            "discovered_connection": {
+                "data": {
+                    "host": "Nome do host",
+                    "id": "ID do sistema",
+                    "port": "Porta"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Nome do host",
+                    "id": "ID do sistema",
                     "port": "Porta"
-                },
-                "description": "Configure a integra\u00e7\u00e3o Airzone."
+                }
             }
         }
     }

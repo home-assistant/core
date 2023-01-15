@@ -37,7 +37,6 @@
         "step": {
             "init": {
                 "data": {
-                    "scan_interval": "Interval pembaruan",
                     "show_on_map": "Tampilkan SPBU di peta",
                     "stations": "SPBU"
                 },

@@ -28,11 +28,11 @@
                     "device_name": "Assegna un nome al dispositivo",
                     "device_type": "Tipo di dispositivo Plaato"
                 },
-                "description": "Vuoi iniziare la configurazione?",
+                "description": "Vuoi avviare la configurazione?",
                 "title": "Imposta i dispositivi Plaato"
             },
             "webhook": {
-                "description": "Per inviare eventi a Home Assistant, dovrai configurare la funzione webhook in Plaato Airlock. \n\n Compila le seguenti informazioni: \n\n - URL: \"{webhook_url}\"\n - Metodo: POST \n\n Vedi [la documentazione] ({docs_url}) per ulteriori dettagli.",
+                "description": "Per inviare eventi a Home Assistant, \u00e8 necessario configurare la funzione webhook in Plaato Airlock.\n\nInserisci le seguenti informazioni:\n\n- URL: `{webhook_url}`\n- Metodo: POST\n\nVedere [la documentazione]({docs_url}) per ulteriori dettagli.",
                 "title": "Webhook da utilizzare"
             }
         }

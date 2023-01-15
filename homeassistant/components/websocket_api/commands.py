@@ -311,7 +311,7 @@ def handle_subscribe_entities(
     connection.send_result(msg["id"])
     data: dict[str, dict[str, dict]] = {
         messages.ENTITY_EVENT_ADD: {
-            state.entity_id: messages.compressed_state_dict_add(state)
+            state.entity_id: state.as_compressed_state()
             for state in states
             if not entity_ids or state.entity_id in entity_ids
         }
@@ -446,7 +446,7 @@ async def handle_render_template(
 ) -> None:
     """Handle render_template command."""
     template_str = msg["template"]
-    template_obj = template.Template(template_str, hass)  # type: ignore[no-untyped-call]
+    template_obj = template.Template(template_str, hass)
     variables = msg.get("variables")
     timeout = msg.get("timeout")
     info = None

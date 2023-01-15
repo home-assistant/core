@@ -1,8 +1,11 @@
 """Support for MQTT message handling."""
+# pylint: disable=deprecated-typing-alias
+#   In Python 3.9.0 and 3.9.1 collections.abc.Callable
+#   can't be used inside typing.Union or typing.Optional
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine, Iterable
+from collections.abc import Coroutine, Iterable
 from functools import lru_cache, partial, wraps
 import inspect
 from itertools import groupby
@@ -10,7 +13,7 @@ import logging
 from operator import attrgetter
 import ssl
 import time
-from typing import TYPE_CHECKING, Any, Union, cast
+from typing import TYPE_CHECKING, Any, Callable, Union, cast
 import uuid
 
 import attr
@@ -80,7 +83,6 @@ if TYPE_CHECKING:
     # because integrations should be able to optionally rely on MQTT.
     import paho.mqtt.client as mqtt
 
-
 _LOGGER = logging.getLogger(__name__)
 
 DISCOVERY_COOLDOWN = 2
@@ -119,7 +121,10 @@ async def async_publish(
     if not isinstance(payload, bytes):
         if not encoding:
             _LOGGER.error(
-                "Can't pass-through payload for publishing %s on %s with no encoding set, need 'bytes' got %s",
+                (
+                    "Can't pass-through payload for publishing %s on %s with no"
+                    " encoding set, need 'bytes' got %s"
+                ),
                 payload,
                 topic,
                 type(payload),
@@ -127,7 +132,8 @@ async def async_publish(
             return
         outgoing_payload = str(payload)
         if encoding != DEFAULT_ENCODING:
-            # a string is encoded as utf-8 by default, other encoding requires bytes as payload
+            # A string is encoded as utf-8 by default, other encoding
+            # requires bytes as payload
             try:
                 outgoing_payload = outgoing_payload.encode(encoding)
             except (AttributeError, LookupError, UnicodeEncodeError):
@@ -148,16 +154,20 @@ AsyncDeprecatedMessageCallbackType = Callable[
     [str, ReceivePayloadType, int], Coroutine[Any, Any, None]
 ]
 DeprecatedMessageCallbackType = Callable[[str, ReceivePayloadType, int], None]
+DeprecatedMessageCallbackTypes = Union[
+    AsyncDeprecatedMessageCallbackType, DeprecatedMessageCallbackType
+]
 
 
+# Support for a deprecated callback type will be removed from HA core 2023.2.0
 def wrap_msg_callback(
-    msg_callback: AsyncDeprecatedMessageCallbackType | DeprecatedMessageCallbackType,
+    msg_callback: DeprecatedMessageCallbackTypes,
 ) -> AsyncMessageCallbackType | MessageCallbackType:
     """Wrap an MQTT message callback to support deprecated signature."""
     # Check for partials to properly determine if coroutine function
     check_func = msg_callback
     while isinstance(check_func, partial):
-        check_func = check_func.func
+        check_func = check_func.func  # type: ignore[unreachable]
 
     wrapper_func: AsyncMessageCallbackType | MessageCallbackType
     if asyncio.iscoroutinefunction(check_func):
@@ -170,14 +180,15 @@ def wrap_msg_callback(
             )
 
         wrapper_func = async_wrapper
-    else:
+        return wrapper_func
 
-        @wraps(msg_callback)
-        def wrapper(msg: ReceiveMessage) -> None:
-            """Call with deprecated signature."""
-            msg_callback(msg.topic, msg.payload, msg.qos)
+    @wraps(msg_callback)
+    def wrapper(msg: ReceiveMessage) -> None:
+        """Call with deprecated signature."""
+        msg_callback(msg.topic, msg.payload, msg.qos)
 
-        wrapper_func = wrapper
+    wrapper_func = wrapper
+
     return wrapper_func
 
 
@@ -187,8 +198,7 @@ async def async_subscribe(
     topic: str,
     msg_callback: AsyncMessageCallbackType
     | MessageCallbackType
-    | DeprecatedMessageCallbackType
-    | AsyncDeprecatedMessageCallbackType,
+    | DeprecatedMessageCallbackTypes,
     qos: int = DEFAULT_QOS,
     encoding: str | None = DEFAULT_ENCODING,
 ) -> CALLBACK_TYPE:
@@ -201,6 +211,7 @@ async def async_subscribe(
         raise HomeAssistantError(
             f"Cannot subscribe to topic '{topic}', MQTT is not enabled"
         )
+    # Support for a deprecated callback type will be removed from HA core 2023.2.0
     # Count callback parameters which don't have a default value
     non_default = 0
     if msg_callback:
@@ -214,12 +225,15 @@ async def async_subscribe(
     if non_default == 3:
         module = inspect.getmodule(msg_callback)
         _LOGGER.warning(
-            "Signature of MQTT msg_callback '%s.%s' is deprecated",
+            (
+                "Signature of MQTT msg_callback '%s.%s' is deprecated, "
+                "this will stop working with HA core 2023.2"
+            ),
             module.__name__ if module else "<unknown>",
             msg_callback.__name__,
         )
         wrapped_msg_callback = wrap_msg_callback(
-            cast(DeprecatedMessageCallbackType, msg_callback)
+            cast(DeprecatedMessageCallbackTypes, msg_callback)
         )
 
     async_remove = await mqtt_data.client.async_subscribe(
@@ -295,8 +309,8 @@ class MqttClientSetup:
         # Enable logging
         self._client.enable_logger()
 
-        username = config.get(CONF_USERNAME)
-        password = config.get(CONF_PASSWORD)
+        username: str | None = config.get(CONF_USERNAME)
+        password: str | None = config.get(CONF_PASSWORD)
         if username is not None:
             self._client.username_pw_set(username, password)
 
@@ -309,8 +323,8 @@ class MqttClientSetup:
         client_cert = get_file_path(CONF_CLIENT_CERT, config.get(CONF_CLIENT_CERT))
         tls_insecure = config.get(CONF_TLS_INSECURE)
         if transport == TRANSPORT_WEBSOCKETS:
-            ws_path = config.get(CONF_WS_PATH)
-            ws_headers = config.get(CONF_WS_HEADERS)
+            ws_path: str = config[CONF_WS_PATH]
+            ws_headers: dict[str, str] = config[CONF_WS_HEADERS]
             self._client.ws_set_options(ws_path, ws_headers)
         if certificate is not None:
             self._client.tls_set(
@@ -332,6 +346,8 @@ class MqttClientSetup:
 class MQTT:
     """Home Assistant MQTT client."""
 
+    _mqttc: mqtt.Client
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -339,10 +355,6 @@ class MQTT:
         conf: ConfigType,
     ) -> None:
         """Initialize Home Assistant MQTT client."""
-        # We don't import on the top because some integrations
-        # should be able to optionally rely on MQTT.
-        import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
-
         self._mqtt_data = get_mqtt_data(hass)
 
         self.hass = hass
@@ -352,7 +364,6 @@ class MQTT:
         self.connected = False
         self._ha_started = asyncio.Event()
         self._last_subscribe = time.time()
-        self._mqttc: mqtt.Client = None
         self._cleanup_on_unload: list[Callable[[], None]] = []
 
         self._paho_lock = asyncio.Lock()  # Prevents parallel calls to the MQTT client
@@ -419,11 +430,12 @@ class MQTT:
                 self._mqttc.publish, topic, payload, qos, retain
             )
             _LOGGER.debug(
-                "Transmitting%s message on %s: '%s', mid: %s",
+                "Transmitting%s message on %s: '%s', mid: %s, qos: %s",
                 " retained" if retain else "",
                 topic,
                 payload,
                 msg_info.mid,
+                qos,
             )
             _raise_on_error(msg_info.rc)
         await self._wait_for_mid(msg_info.mid)
@@ -517,12 +529,9 @@ class MQTT:
         """
 
         def _client_unsubscribe(topic: str) -> int:
-            result: int | None = None
-            mid: int | None = None
             result, mid = self._mqttc.unsubscribe(topic)
             _LOGGER.debug("Unsubscribing from %s, mid: %s", topic, mid)
             _raise_on_error(result)
-            assert mid
             return mid
 
         if any(other.topic == topic for other in self.subscriptions):
@@ -546,7 +555,7 @@ class MQTT:
             for topic, qos in subscriptions:
                 result, mid = self._mqttc.subscribe(topic, qos)
                 subscribe_result_list.append((result, mid))
-                _LOGGER.debug("Subscribing to %s, mid: %s", topic, mid)
+                _LOGGER.debug("Subscribing to %s, mid: %s, qos: %s", topic, mid, qos)
             return subscribe_result_list
 
         async with self._paho_lock:
@@ -554,8 +563,8 @@ class MQTT:
                 _process_client_subscriptions
             )
 
-        tasks = []
-        errors = []
+        tasks: list[Coroutine[Any, Any, None]] = []
+        errors: list[int] = []
         for result, mid in results:
             if result == 0:
                 tasks.append(self._wait_for_mid(mid))
@@ -649,9 +658,10 @@ class MQTT:
     @callback
     def _mqtt_handle_message(self, msg: mqtt.MQTTMessage) -> None:
         _LOGGER.debug(
-            "Received%s message on %s: %s",
+            "Received%s message on %s (qos=%s): %s",
             " retained" if msg.retain else "",
             msg.topic,
+            msg.qos,
             msg.payload[0:8192],
         )
         timestamp = dt_util.utcnow()
@@ -767,7 +777,7 @@ class MQTT:
             )
 
 
-def _raise_on_errors(result_codes: Iterable[int | None]) -> None:
+def _raise_on_errors(result_codes: Iterable[int]) -> None:
     """Raise error if error result."""
     # pylint: disable-next=import-outside-toplevel
     import paho.mqtt.client as mqtt
@@ -780,7 +790,7 @@ def _raise_on_errors(result_codes: Iterable[int | None]) -> None:
         raise HomeAssistantError(f"Error talking to MQTT: {', '.join(messages)}")
 
 
-def _raise_on_error(result_code: int | None) -> None:
+def _raise_on_error(result_code: int) -> None:
     """Raise error if error result."""
     _raise_on_errors((result_code,))
 

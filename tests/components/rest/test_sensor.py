@@ -20,10 +20,10 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
     CONTENT_TYPE_JSON,
-    DATA_MEGABYTES,
     SERVICE_RELOAD,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
+    UnitOfInformation,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -193,7 +193,7 @@ async def test_setup_get(hass: HomeAssistant) -> None:
                 "method": "GET",
                 "value_template": "{{ value_json.key }}",
                 "name": "foo",
-                "unit_of_measurement": TEMP_CELSIUS,
+                "unit_of_measurement": UnitOfTemperature.CELSIUS,
                 "verify_ssl": "true",
                 "timeout": 30,
                 "authentication": "basic",
@@ -220,7 +220,7 @@ async def test_setup_get(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     state = hass.states.get("sensor.foo")
     assert state.state == ""
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
     assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.MEASUREMENT
 
@@ -243,7 +243,6 @@ async def test_setup_timestamp(
                 "method": "GET",
                 "value_template": "{{ value_json.key }}",
                 "device_class": SensorDeviceClass.TIMESTAMP,
-                "state_class": SensorStateClass.MEASUREMENT,
             }
         },
     )
@@ -255,7 +254,6 @@ async def test_setup_timestamp(
     state = hass.states.get("sensor.rest_sensor")
     assert state.state == "2021-11-11T11:39:00+00:00"
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TIMESTAMP
-    assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.MEASUREMENT
     assert "sensor.rest_sensor rendered invalid timestamp" not in caplog.text
     assert "sensor.rest_sensor rendered timestamp without timezone" not in caplog.text
 
@@ -338,7 +336,7 @@ async def test_setup_get_digest_auth(hass: HomeAssistant) -> None:
                 "method": "GET",
                 "value_template": "{{ value_json.key }}",
                 "name": "foo",
-                "unit_of_measurement": DATA_MEGABYTES,
+                "unit_of_measurement": UnitOfInformation.MEGABYTES,
                 "verify_ssl": "true",
                 "timeout": 30,
                 "authentication": "digest",
@@ -368,7 +366,7 @@ async def test_setup_post(hass: HomeAssistant) -> None:
                 "value_template": "{{ value_json.key }}",
                 "payload": '{ "device": "toaster"}',
                 "name": "foo",
-                "unit_of_measurement": DATA_MEGABYTES,
+                "unit_of_measurement": UnitOfInformation.MEGABYTES,
                 "verify_ssl": "true",
                 "timeout": 30,
                 "authentication": "basic",
@@ -400,7 +398,7 @@ async def test_setup_get_xml(hass: HomeAssistant) -> None:
                 "method": "GET",
                 "value_template": "{{ value_json.dog }}",
                 "name": "foo",
-                "unit_of_measurement": DATA_MEGABYTES,
+                "unit_of_measurement": UnitOfInformation.MEGABYTES,
                 "verify_ssl": "true",
                 "timeout": 30,
             }
@@ -411,7 +409,7 @@ async def test_setup_get_xml(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.foo")
     assert state.state == "abc"
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == DATA_MEGABYTES
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfInformation.MEGABYTES
 
 
 @respx.mock
@@ -453,7 +451,7 @@ async def test_update_with_json_attrs(hass: HomeAssistant) -> None:
                 "value_template": "{{ value_json.key }}",
                 "json_attributes": ["key"],
                 "name": "foo",
-                "unit_of_measurement": DATA_MEGABYTES,
+                "unit_of_measurement": UnitOfInformation.MEGABYTES,
                 "verify_ssl": "true",
                 "timeout": 30,
             }
@@ -485,7 +483,7 @@ async def test_update_with_no_template(hass: HomeAssistant) -> None:
                 "method": "GET",
                 "json_attributes": ["key"],
                 "name": "foo",
-                "unit_of_measurement": DATA_MEGABYTES,
+                "unit_of_measurement": UnitOfInformation.MEGABYTES,
                 "verify_ssl": "true",
                 "timeout": 30,
                 "headers": {"Accept": "text/xml"},
@@ -521,7 +519,7 @@ async def test_update_with_json_attrs_no_data(
                 "value_template": "{{ value_json.key }}",
                 "json_attributes": ["key"],
                 "name": "foo",
-                "unit_of_measurement": DATA_MEGABYTES,
+                "unit_of_measurement": UnitOfInformation.MEGABYTES,
                 "verify_ssl": "true",
                 "timeout": 30,
                 "headers": {"Accept": "text/xml"},
@@ -558,7 +556,7 @@ async def test_update_with_json_attrs_not_dict(
                 "value_template": "{{ value_json.key }}",
                 "json_attributes": ["key"],
                 "name": "foo",
-                "unit_of_measurement": DATA_MEGABYTES,
+                "unit_of_measurement": UnitOfInformation.MEGABYTES,
                 "verify_ssl": "true",
                 "timeout": 30,
                 "headers": {"Accept": "text/xml"},
@@ -596,7 +594,7 @@ async def test_update_with_json_attrs_bad_JSON(
                 "value_template": "{{ value_json.key }}",
                 "json_attributes": ["key"],
                 "name": "foo",
-                "unit_of_measurement": DATA_MEGABYTES,
+                "unit_of_measurement": UnitOfInformation.MEGABYTES,
                 "verify_ssl": "true",
                 "timeout": 30,
                 "headers": {"Accept": "text/xml"},
@@ -640,7 +638,7 @@ async def test_update_with_json_attrs_with_json_attrs_path(hass: HomeAssistant) 
                 "json_attributes_path": "$.toplevel.second_level",
                 "json_attributes": ["some_json_key", "some_json_key2"],
                 "name": "foo",
-                "unit_of_measurement": DATA_MEGABYTES,
+                "unit_of_measurement": UnitOfInformation.MEGABYTES,
                 "verify_ssl": "true",
                 "timeout": 30,
                 "headers": {"Accept": "text/xml"},
@@ -679,7 +677,7 @@ async def test_update_with_xml_convert_json_attrs_with_json_attrs_path(
                 "json_attributes_path": "$.toplevel.second_level",
                 "json_attributes": ["some_json_key", "some_json_key2"],
                 "name": "foo",
-                "unit_of_measurement": DATA_MEGABYTES,
+                "unit_of_measurement": UnitOfInformation.MEGABYTES,
                 "verify_ssl": "true",
                 "timeout": 30,
             }
@@ -717,7 +715,7 @@ async def test_update_with_xml_convert_json_attrs_with_jsonattr_template(
                 "json_attributes_path": "$.response",
                 "json_attributes": ["led0", "led1", "temp0", "time0", "ver"],
                 "name": "foo",
-                "unit_of_measurement": DATA_MEGABYTES,
+                "unit_of_measurement": UnitOfInformation.MEGABYTES,
                 "verify_ssl": "true",
                 "timeout": 30,
             }
@@ -758,7 +756,7 @@ async def test_update_with_application_xml_convert_json_attrs_with_jsonattr_temp
                 "json_attributes_path": "$.main",
                 "json_attributes": ["dog", "cat"],
                 "name": "foo",
-                "unit_of_measurement": DATA_MEGABYTES,
+                "unit_of_measurement": UnitOfInformation.MEGABYTES,
                 "verify_ssl": "true",
                 "timeout": 30,
             }
@@ -795,7 +793,7 @@ async def test_update_with_xml_convert_bad_xml(
                 "value_template": "{{ value_json.toplevel.master_value }}",
                 "json_attributes": ["key"],
                 "name": "foo",
-                "unit_of_measurement": DATA_MEGABYTES,
+                "unit_of_measurement": UnitOfInformation.MEGABYTES,
                 "verify_ssl": "true",
                 "timeout": 30,
             }
@@ -832,7 +830,7 @@ async def test_update_with_failed_get(
                 "value_template": "{{ value_json.toplevel.master_value }}",
                 "json_attributes": ["key"],
                 "name": "foo",
-                "unit_of_measurement": DATA_MEGABYTES,
+                "unit_of_measurement": UnitOfInformation.MEGABYTES,
                 "verify_ssl": "true",
                 "timeout": 30,
             }
@@ -904,7 +902,7 @@ async def test_entity_config(hass: HomeAssistant) -> None:
             "name": "{{'REST' + ' ' + 'Sensor'}}",
             "state_class": "measurement",
             "unique_id": "very_unique",
-            "unit_of_measurement": "beardsecond",
+            "unit_of_measurement": "°C",
         },
     }
 
@@ -923,5 +921,5 @@ async def test_entity_config(hass: HomeAssistant) -> None:
         "friendly_name": "REST Sensor",
         "icon": "mdi:one_two_three",
         "state_class": "measurement",
-        "unit_of_measurement": "beardsecond",
+        "unit_of_measurement": "°C",
     }

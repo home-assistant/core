@@ -18,5 +18,15 @@
                 "description": "Introdueix el nom d'amfitri\u00f3 o l'adre\u00e7a IP del dispositiu TOLO Sauna."
             }
         }
+    },
+    "entity": {
+        "select": {
+            "lamp_mode": {
+                "state": {
+                    "automatic": "Autom\u00e0tic",
+                    "manual": "Manual"
+                }
+            }
+        }
     }
 }

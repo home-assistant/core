@@ -14,7 +14,11 @@ def install_multiple_zeroconf_catcher(hass_zc: HaZeroconf) -> None:
 
     def new_zeroconf_new(self: zeroconf.Zeroconf, *k: Any, **kw: Any) -> HaZeroconf:
         report(
-            "attempted to create another Zeroconf instance. Please use the shared Zeroconf via await homeassistant.components.zeroconf.async_get_instance(hass)",
+            (
+                "attempted to create another Zeroconf instance. Please use the shared"
+                " Zeroconf via await"
+                " homeassistant.components.zeroconf.async_get_instance(hass)"
+            ),
             exclude_integrations={"zeroconf"},
             error_if_core=False,
         )
