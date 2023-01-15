@@ -52,35 +52,9 @@ async def async_setup_platform(
 ) -> None:
     """Set up the ComfoConnect fan platform."""
 
-    # # No more setup from configuration.yaml, just do a one-time import
-    # # We only import configs from YAML if it hasn't been imported. If there is a config
-    # # entry marked with SOURCE_IMPORT, it means the YAML config has been imported.
-    # for entry in hass.config_entries.async_entries(DOMAIN):
-    #     if entry.source == SOURCE_IMPORT:
-    #         hass.data[DOMAIN].pop(SOURCE_IMPORT)
-    #         return
-
-    # conf = hass.data[DOMAIN].get(SOURCE_IMPORT)
-    # if conf is None:
-    #     return
-
     # Remove the artificial entry since it's no longer needed.
     hass.data[DOMAIN].pop(SOURCE_IMPORT)
     return
-
-    # # Our config flow supports CONF_RESOURCES and will properly import it to disable
-    # # entities not listed in CONF_RESOURCES by default. Note that this designed to
-    # # support YAML config import only (i.e., not shown in UI during setup).
-    # conf[CONF_RESOURCES] = config[CONF_RESOURCES]
-
-    # hass.async_create_task(
-    #     hass.config_entries.flow.async_init(
-    #         DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
-    #     )
-    # )
-
-    # ccb = hass.data[DOMAIN]
-    # async_add_entities([ComfoConnectFan(ccb)], True)
 
 
 async def async_setup_entry(

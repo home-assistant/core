@@ -64,14 +64,11 @@ class ComfoConnectFlowHandler(ConfigFlow, domain=DOMAIN):
 
             self._async_abort_entries_match({CONF_HOST: host})
 
-            # Run discovery on the configured ip
+            # Run discovery on the configured ip, just to verify it's reachable
             bridges = Bridge.discover(host)
             if not bridges:
                 errors["base"] = "cannot_connect"
                 return await self._show_setup_form(errors)
-
-            bridge = bridges[0]
-            _LOGGER.info("Bridge found: %s (%s)", bridge.uuid.hex(), bridge.host)
 
             title = DEFAULT_NAME_IMPORT if self.source == SOURCE_IMPORT else name
             return self.async_create_entry(

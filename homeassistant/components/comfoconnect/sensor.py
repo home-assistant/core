@@ -308,10 +308,10 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the ComfoConnect sensor platform."""
-    # migrated_entry = hass.data[DOMAIN].get(SOURCE_IMPORT)
 
-    # if migrated_entry is None:
-    #     return
+    # No more setup from configuration.yaml, just do a one-time import
+    # We only import configs from YAML if it hasn't been imported. If there is a config
+    # entry marked with SOURCE_IMPORT, it means the YAML config has been imported.
 
     _LOGGER.warning(
         "Configuring ComfoConnect sensors using YAML is being removed. All available sensors"
@@ -330,14 +330,6 @@ async def async_setup_platform(
         translation_key="deprecated_sensor",
     )
 
-    # # No more setup from configuration.yaml, just do a one-time import
-    # # We only import configs from YAML if it hasn't been imported. If there is a config
-    # # entry marked with SOURCE_IMPORT, it means the YAML config has been imported.
-    # for entry in hass.config_entries.async_entries(DOMAIN):
-    #     if entry.source == SOURCE_IMPORT:
-    #         # Remove the artificial entry since it's no longer needed.
-    #         hass.data[DOMAIN].pop(SOURCE_IMPORT)
-
     # Remove the artificial entry since it's no longer needed.
     hass.data[DOMAIN].pop(SOURCE_IMPORT)
     return
@@ -349,13 +341,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the ComfoConnect sensor platform."""
-    # ccb = hass.data[DOMAIN]
     ccb = hass.data[DOMAIN][entry.entry_id]
-
-    # # Import from config
-    # conf = hass.data[DOMAIN].get(SOURCE_IMPORT)
-    # if conf is not None:
-    #     return
 
     # For user input from config flow
     async_add_entities(
