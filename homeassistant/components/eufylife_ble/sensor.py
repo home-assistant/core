@@ -25,6 +25,8 @@ from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 from .const import DOMAIN
 from .models import EufyLifeData
 
+IGNORED_STATES = {STATE_UNAVAILABLE, STATE_UNKNOWN}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -155,7 +157,7 @@ class EufyLifeWeightSensorEntity(RestoreEntity, EufyLifeSensorEntity):
         await super().async_added_to_hass()
 
         last_state = await self.async_get_last_state()
-        if not last_state or last_state.state in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
+        if not last_state or last_state.state in IGNORED_STATES:
             return
 
         last_weight = float(last_state.state)
@@ -207,7 +209,7 @@ class EufyLifeHeartRateSensorEntity(RestoreEntity, EufyLifeSensorEntity):
         await super().async_added_to_hass()
 
         last_state = await self.async_get_last_state()
-        if not last_state or last_state.state in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
+        if not last_state or last_state.state in IGNORED_STATES:
             return
 
         self._heart_rate = int(last_state.state)
