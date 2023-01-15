@@ -58,7 +58,6 @@ class TasmotaBinarySensor(
 ):
     """Representation a Tasmota binary sensor."""
 
-    _attr_force_update = True
     _tasmota_entity: tasmota_switch.TasmotaSwitch
 
     def __init__(self, **kwds: Any) -> None:
