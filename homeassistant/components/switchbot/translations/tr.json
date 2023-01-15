@@ -17,7 +17,7 @@
         "flow_title": "{name} ({address})",
         "step": {
             "confirm": {
-                "description": "{name} kurulumunu yapmak istiyor musunuz?"
+                "description": "{name} 'i kurmak istiyor musunuz?"
             },
             "lock_auth": {
                 "data": {

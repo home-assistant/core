@@ -15,6 +15,9 @@
             "default": "Authenticatie geslaagd"
         },
         "step": {
+            "auth": {
+                "title": "Google-account koppelen"
+            },
             "pick_implementation": {
                 "title": "Kies een authenticatie methode"
             },
