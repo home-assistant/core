@@ -2,7 +2,13 @@
 from __future__ import annotations
 
 from pyisy import ISY
-from pyisy.constants import NC_NODE_ENABLED, PROTO_INSTEON
+from pyisy.constants import (
+    ATTR_ACTION,
+    NC_NODE_ENABLED,
+    PROTO_INSTEON,
+    TAG_ADDRESS,
+    TAG_ENABLED,
+)
 from pyisy.helpers import EventListener, NodeProperty
 from pyisy.networking import NetworkCommand
 from pyisy.nodes import Node
@@ -99,7 +105,7 @@ class ISYNodeButtonEntity(ButtonEntity):
         self._attr_entity_category = entity_category
         self._attr_unique_id = unique_id
         self._attr_device_info = device_info
-        self._node_enabled = getattr(node, "enabled", True)
+        self._node_enabled = getattr(node, TAG_ENABLED, True)
         self._availability_handler: EventListener | None = None
 
     @property
@@ -114,14 +120,18 @@ class ISYNodeButtonEntity(ButtonEntity):
             return
         self._availability_handler = self._node.isy.nodes.status_events.subscribe(
             self.async_on_update,
-            event_filter={"address": self._node.address, "action": NC_NODE_ENABLED},
+            event_filter={
+                TAG_ADDRESS: self._node.address,
+                ATTR_ACTION: NC_NODE_ENABLED,
+            },
             key=self.unique_id,
         )
 
     @callback
-    def async_on_update(self, event: NodeProperty) -> None:
+    def async_on_update(self, event: NodeProperty, key: str) -> None:
         """Handle the update event from the ISY Node."""
         # Watch for node availability/enabled changes only
+        self._node_enabled = getattr(self._node, TAG_ENABLED, True)
         self.async_write_ha_state()
 
 
