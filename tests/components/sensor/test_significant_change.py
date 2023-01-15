@@ -5,8 +5,7 @@ from homeassistant.components.sensor import SensorDeviceClass, significant_chang
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 
 AQI_ATTRS = {
@@ -23,12 +22,12 @@ HUMIDITY_ATTRS = {
 
 TEMP_CELSIUS_ATTRS = {
     ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
-    ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+    ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
 }
 
 TEMP_FREEDOM_ATTRS = {
     ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
-    ATTR_UNIT_OF_MEASUREMENT: TEMP_FAHRENHEIT,
+    ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
 }
 
 
@@ -47,9 +46,9 @@ TEMP_FREEDOM_ATTRS = {
         ("100", "99", BATTERY_ATTRS, True),
         ("100", "100", HUMIDITY_ATTRS, False),
         ("100", "99", HUMIDITY_ATTRS, True),
-        ("12", "12", TEMP_CELSIUS_ATTRS, False),
-        ("12", "13", TEMP_CELSIUS_ATTRS, True),
-        ("12.1", "12.2", TEMP_CELSIUS_ATTRS, False),
+        ("12", "12", UnitOfTemperature.CELSIUS_ATTRS, False),
+        ("12", "13", UnitOfTemperature.CELSIUS_ATTRS, True),
+        ("12.1", "12.2", UnitOfTemperature.CELSIUS_ATTRS, False),
         ("70", "71", TEMP_FREEDOM_ATTRS, True),
         ("70", "70.5", TEMP_FREEDOM_ATTRS, False),
         ("fail", "70", TEMP_FREEDOM_ATTRS, True),
