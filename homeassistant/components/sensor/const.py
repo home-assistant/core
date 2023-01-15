@@ -487,7 +487,8 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
         UnitOfTemperature.FAHRENHEIT,
     },
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: {
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        CONCENTRATION_PARTS_PER_MILLION,
     },
     SensorDeviceClass.VOLTAGE: set(UnitOfElectricPotential),
     SensorDeviceClass.VOLUME: set(UnitOfVolume),
