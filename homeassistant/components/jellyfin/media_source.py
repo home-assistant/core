@@ -247,7 +247,11 @@ class JellyfinSource(MediaSource):
                 k.get(ITEM_KEY_INDEX_NUMBER, None),
             ),
         )
-        return [self._build_track(track) for track in tracks]
+        return [
+            self._build_track(track)
+            for track in tracks
+            if _media_mime_type(track) is not None
+        ]
 
     def _build_track(self, track: dict[str, Any]) -> BrowseMediaSource:
         """Return a single track as a browsable media source."""
