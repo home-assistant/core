@@ -1,57 +1,40 @@
 """Tests for the comfoconnect sensor platform."""
-# import json
-from unittest.mock import patch
+from homeassistant.helpers import entity_registry as er
 
-import pytest
+from .const import COMPONENT, CONF_DATA as VALID_CONFIG
 
-from homeassistant.components.sensor import DOMAIN
-from homeassistant.setup import async_setup_component
-
-from tests.common import assert_setup_component
-
-COMPONENT = "comfoconnect"
-VALID_CONFIG = {
-    COMPONENT: {"host": "1.2.3.4"},
-    DOMAIN: {
-        "platform": COMPONENT,
-        "resources": [
-            "current_humidity",
-            "current_temperature",
-            "supply_fan_duty",
-            "power_usage",
-            "preheater_power_total",
-        ],
-    },
-}
+from tests.common import MockConfigEntry
 
 
-@pytest.fixture
-def mock_bridge_discover():
-    """Mock the bridge discover method."""
-    with patch("pycomfoconnect.bridge.Bridge.discover") as mock_bridge_discover:
-        mock_bridge_discover.return_value[0].uuid.hex.return_value = "00"
-        yield mock_bridge_discover
+async def _enable_entity(hass, entity_id: str, entry):
+    entity_registry = er.async_get(hass)
+    updated_entity = entity_registry.async_update_entity(entity_id, disabled_by=None)
+    await hass.async_block_till_done()
+
+    assert not updated_entity.disabled
 
 
-@pytest.fixture
-def mock_comfoconnect_command():
-    """Mock the ComfoConnect connect method."""
-    with patch(
-        "pycomfoconnect.comfoconnect.ComfoConnect._command"
-    ) as mock_comfoconnect_command:
-        yield mock_comfoconnect_command
-
-
-@pytest.fixture
-async def setup_sensor(hass, mock_bridge_discover, mock_comfoconnect_command):
-    """Set up demo sensor component."""
-    with assert_setup_component(1, DOMAIN):
-        await async_setup_component(hass, DOMAIN, VALID_CONFIG)
-        await hass.async_block_till_done()
-
-
-async def test_sensors(hass, setup_sensor):
+async def test_sensors(hass, mock_bridge_discover, mock_comfoconnect_command):
     """Test the sensors."""
+    config_entry = MockConfigEntry(
+        domain=COMPONENT,
+        data=VALID_CONFIG,
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await _enable_entity(hass, "sensor.comfoairq_inside_humidity", config_entry)
+    await _enable_entity(hass, "sensor.comfoairq_inside_temperature", config_entry)
+    await _enable_entity(hass, "sensor.comfoairq_supply_fan_duty", config_entry)
+    await _enable_entity(hass, "sensor.comfoairq_power_usage", config_entry)
+    await _enable_entity(hass, "sensor.comfoairq_preheater_energy_total", config_entry)
+
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Test some random sensors after activation
     state = hass.states.get("sensor.comfoairq_inside_humidity")
     assert state is not None
     assert state.name == "ComfoAirQ Inside humidity"
