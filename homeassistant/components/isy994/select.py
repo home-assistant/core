@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from typing import cast
 
-from pyisy import ISY
 from pyisy.constants import (
     COMMAND_FRIENDLY_NAME,
     INSTEON_RAMP_RATES,
@@ -22,7 +21,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import _LOGGER, DOMAIN, UOM_INDEX
 from .entity import ISYAuxControlEntity
-
+from .model import IsyData
 
 def time_string(i: int) -> str:
     """Return a formatted ramp rate time string."""
@@ -40,8 +39,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up ISY/IoX select entities from config entry."""
-    isy_data = hass.data[DOMAIN][config_entry.entry_id]
-    isy: ISY = isy_data.root
+    isy_data: IsyData = hass.data[DOMAIN][config_entry.entry_id]
+    isy = isy_data.root
     device_info = isy_data.devices
     entities: list[ISYAuxControlIndexSelectEntity | ISYRampRateSelectEntity] = []
 
