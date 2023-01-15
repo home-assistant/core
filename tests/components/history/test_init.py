@@ -2236,3 +2236,60 @@ async def test_history_stream_live_with_future_end_time(
     assert listeners_without_writes(
         hass.bus.async_listeners()
     ) == listeners_without_writes(init_listeners)
+
+
+async def test_history_stream_before_history_starts(
+    recorder_mock, hass, hass_ws_client
+):
+    """Test history stream before we have history."""
+    sort_order = ["sensor.two", "sensor.four", "sensor.one"]
+    await async_setup_component(
+        hass,
+        "history",
+        {
+            history.DOMAIN: {
+                history.CONF_ORDER: True,
+                CONF_INCLUDE: {
+                    CONF_ENTITIES: sort_order,
+                    CONF_DOMAINS: ["sensor"],
+                },
+            }
+        },
+    )
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.one", "on", attributes={"any": "attr"})
+    await async_recorder_block_till_done(hass)
+    await async_wait_recording_done(hass)
+    far_past = dt_util.utcnow() - timedelta(days=1000)
+    far_past_end = far_past + timedelta(seconds=10)
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "history/stream",
+            "entity_ids": ["sensor.one"],
+            "start_time": far_past.isoformat(),
+            "end_time": far_past_end.isoformat(),
+            "include_start_time_state": True,
+            "significant_changes_only": False,
+            "no_attributes": True,
+            "minimal_response": True,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["id"] == 1
+    assert response["type"] == "result"
+
+    response = await client.receive_json()
+    assert response == {
+        "event": {
+            "end_time": far_past_end.timestamp(),
+            "start_time": far_past.timestamp(),
+            "states": {},
+        },
+        "id": 1,
+        "type": "event",
+    }
