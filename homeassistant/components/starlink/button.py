@@ -1,4 +1,4 @@
-"""Contains buttons exposed by the Starlink ingegration."""
+"""Contains buttons exposed by the Starlink integration."""
 
 from __future__ import annotations
 
