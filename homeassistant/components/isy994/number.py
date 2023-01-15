@@ -4,9 +4,8 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import Any
 
-from pyisy.constants import COMMAND_FRIENDLY_NAME, ISY_VALUE_UNKNOWN, PROP_ON_LEVEL
+from pyisy.constants import ISY_VALUE_UNKNOWN, PROP_ON_LEVEL
 from pyisy.helpers import EventListener, NodeProperty
-from pyisy.nodes import Node
 from pyisy.variables import Variable
 
 from homeassistant.components.number import (
@@ -30,6 +29,7 @@ from .const import (
     DOMAIN,
     UOM_8_BIT_RANGE,
 )
+from .entity import ISYAuxControlEntity
 from .helpers import convert_isy_value_to_hass
 
 ISY_MAX_SIZE = (2**32) / 2
@@ -58,12 +58,11 @@ async def async_setup_entry(
     var_id = config_entry.options.get(CONF_VAR_SENSOR_STRING, DEFAULT_VAR_SENSOR_STRING)
 
     for node in isy_data.variables[Platform.NUMBER]:
-        step = 10 ** (-1 * node.prec)
-        min_max = ISY_MAX_SIZE / (10**node.prec)
+        step = 10 ** (-1 * int(node.prec))
+        min_max = ISY_MAX_SIZE / (10 ** int(node.prec))
         description = NumberEntityDescription(
             key=node.address,
             name=node.name,
-            icon="mdi:counter",
             entity_registry_enabled_default=var_id in node.name,
             native_unit_of_measurement=None,
             native_step=step,
@@ -108,43 +107,10 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ISYAuxControlNumberEntity(NumberEntity):
+class ISYAuxControlNumberEntity(ISYAuxControlEntity, NumberEntity):
     """Representation of a ISY/IoX Aux Control Number entity."""
 
     _attr_mode = NumberMode.SLIDER
-    _attr_should_poll = False
-
-    def __init__(
-        self,
-        node: Node,
-        control: str,
-        unique_id: str,
-        description: NumberEntityDescription,
-        device_info: DeviceInfo | None,
-    ) -> None:
-        """Initialize the ISY Aux Control Number entity."""
-        self._node = node
-        name = COMMAND_FRIENDLY_NAME.get(control, control).replace("_", " ").title()
-        if node.address != node.primary_node:
-            name = f"{node.name} {name}"
-        self._attr_name = name
-        self._control = control
-        self.entity_description = description
-        self._attr_has_entity_name = node.address == node.primary_node
-        self._attr_unique_id = unique_id
-        self._attr_device_info = device_info
-        self._change_handler: EventListener | None = None
-
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to the node control change events."""
-        self._change_handler = self._node.control_events.subscribe(self.async_on_update)
-
-    @callback
-    def async_on_update(self, event: NodeProperty) -> None:
-        """Handle a control event from the ISY Node."""
-        if event.control != self._control:
-            return
-        self.async_write_ha_state()
 
     @property
     def native_value(self) -> float | int | None:
