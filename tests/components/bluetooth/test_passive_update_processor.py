@@ -29,7 +29,7 @@ from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothProcessorEntity,
 )
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import CoreState, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.setup import async_setup_component
@@ -87,7 +87,7 @@ GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
     entity_descriptions={
         PassiveBluetoothEntityKey("temperature", None): SensorEntityDescription(
             key="temperature",
-            native_unit_of_measurement=TEMP_CELSIUS,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_class=SensorDeviceClass.TEMPERATURE,
         ),
         PassiveBluetoothEntityKey("pressure", None): SensorEntityDescription(
@@ -898,7 +898,7 @@ NO_DEVICES_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
         PassiveBluetoothEntityKey("temperature", None): SensorEntityDescription(
             key="temperature",
             name="Temperature",
-            native_unit_of_measurement=TEMP_CELSIUS,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_class=SensorDeviceClass.TEMPERATURE,
         ),
         PassiveBluetoothEntityKey("pressure", None): SensorEntityDescription(
