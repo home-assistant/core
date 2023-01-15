@@ -559,7 +559,6 @@ def _async_subscribe_events(
         if (new_state := event.data.get("new_state")) is None:
             return
         assert isinstance(new_state, State)
-
         if entities_filter and not entities_filter(new_state.entity_id):
             return
         if (old_state := event.data.get("old_state")) is None:
