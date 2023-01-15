@@ -320,6 +320,13 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
     @callback
     def async_cleanup_registry_entries(service: ServiceCall) -> None:
         """Remove extra entities that are no longer part of the integration."""
+        async_log_deprecated_service_call(
+            hass,
+            call=service,
+            alternate_service="isy994.reload",
+            alternate_target=None,
+            breaks_in_ha_version="2023.5.0",
+        )
         for config_entry_id in hass.data[DOMAIN]:
             _async_cleanup_registry_entries(hass, config_entry_id)
 
@@ -492,13 +499,18 @@ def async_log_deprecated_service_call(
         },
     )
 
+    alternate = (
+        f' and pass it a target entity ID of "{alternate_target}"'
+        if alternate_target
+        else ""
+    )
     _LOGGER.warning(
         (
             'The "%s" service is deprecated and will be removed in %s; use the "%s" '
-            'service and pass it a target entity ID of "%s"'
+            "service %s"
         ),
         deprecated_service,
         breaks_in_ha_version,
         alternate_service,
-        alternate_target,
+        alternate,
     )
