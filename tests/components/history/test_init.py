@@ -1951,11 +1951,13 @@ async def test_history_stream_live_minimal_response(
     await async_recorder_block_till_done(hass)
     hass.states.async_set("sensor.one", "on", attributes={"diff": "attr"})
     hass.states.async_set("sensor.two", "two", attributes={"any": "attr"})
-    await async_recorder_block_till_done(hass)
-
     # Only sensor.two has changed
     sensor_one_last_updated = hass.states.get("sensor.one").last_updated
     sensor_two_last_updated = hass.states.get("sensor.two").last_updated
+    hass.states.async_remove("sensor.one")
+    hass.states.async_remove("sensor.two")
+    await async_recorder_block_till_done(hass)
+
     response = await client.receive_json()
     assert response == {
         "event": {
