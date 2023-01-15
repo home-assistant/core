@@ -11,7 +11,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.components.melissa import DATA_MELISSA, climate as melissa
 from homeassistant.components.melissa.climate import MelissaClimate
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 
 from tests.common import load_fixture
 
@@ -194,7 +194,7 @@ async def test_temperature_unit(hass):
         api = melissa_mock()
         device = (await api.async_fetch_devices())[_SERIAL]
         thermostat = MelissaClimate(api, _SERIAL, device)
-        assert thermostat.temperature_unit == TEMP_CELSIUS
+        assert thermostat.temperature_unit == UnitOfTemperature.CELSIUS
 
 
 async def test_min_temp(hass):
