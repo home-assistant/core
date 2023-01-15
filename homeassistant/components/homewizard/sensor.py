@@ -15,10 +15,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, DeviceResponseEntry
 from .coordinator import HWEnergyDeviceUpdateCoordinator
+from .entity import HomeWizardEntity
 
 PARALLEL_UPDATES = 1
 
@@ -145,10 +145,8 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class HWEnergySensor(CoordinatorEntity[HWEnergyDeviceUpdateCoordinator], SensorEntity):
+class HWEnergySensor(HomeWizardEntity, SensorEntity):
     """Representation of a HomeWizard Sensor."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -165,7 +163,6 @@ class HWEnergySensor(CoordinatorEntity[HWEnergyDeviceUpdateCoordinator], SensorE
         # Config attributes.
         self.data_type = description.key
         self._attr_unique_id = f"{entry.unique_id}_{description.key}"
-        self._attr_device_info = coordinator.device_info
 
         # Special case for export, not everyone has solarpanels
         # The chance that 'export' is non-zero when you have solar panels is nil
