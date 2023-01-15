@@ -566,7 +566,7 @@ def _async_subscribe_events(
         if (
             (significant_changes_only or minimal_response)
             and new_state.state == old_state.state
-            and not new_state.domain not in history.SIGNIFICANT_DOMAINS
+            and new_state.domain not in history.SIGNIFICANT_DOMAINS
         ):
             return
         target(event)

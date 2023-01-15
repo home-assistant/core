@@ -1761,6 +1761,115 @@ async def test_history_stream_live_no_attributes_minimal_response(
     }
 
 
+async def test_history_stream_live(recorder_mock, hass, hass_ws_client):
+    """Test history stream with history and live data."""
+    now = dt_util.utcnow()
+    sort_order = ["sensor.two", "sensor.four", "sensor.one"]
+    await async_setup_component(
+        hass,
+        "history",
+        {
+            history.DOMAIN: {
+                history.CONF_ORDER: True,
+                CONF_INCLUDE: {
+                    CONF_ENTITIES: sort_order,
+                    CONF_DOMAINS: ["sensor"],
+                },
+            }
+        },
+    )
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.one", "on", attributes={"any": "attr"})
+    sensor_one_last_updated = hass.states.get("sensor.one").last_updated
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.two", "off", attributes={"any": "attr"})
+    sensor_two_last_updated = hass.states.get("sensor.two").last_updated
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("switch.excluded", "off", attributes={"any": "again"})
+    await async_wait_recording_done(hass)
+
+    await async_wait_recording_done(hass)
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "history/stream",
+            "start_time": now.isoformat(),
+            "include_start_time_state": True,
+            "significant_changes_only": False,
+            "no_attributes": False,
+            "minimal_response": False,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["id"] == 1
+    assert response["type"] == "result"
+
+    response = await client.receive_json()
+    first_end_time = sensor_two_last_updated.timestamp()
+
+    assert response == {
+        "event": {
+            "end_time": first_end_time,
+            "start_time": now.timestamp(),
+            "states": {
+                "sensor.one": [
+                    {
+                        "a": {"any": "attr"},
+                        "lu": sensor_one_last_updated.timestamp(),
+                        "s": "on",
+                    }
+                ],
+                "sensor.two": [
+                    {
+                        "a": {"any": "attr"},
+                        "lu": sensor_two_last_updated.timestamp(),
+                        "s": "off",
+                    }
+                ],
+            },
+        },
+        "id": 1,
+        "type": "event",
+    }
+
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.one", "on", attributes={"diff": "attr"})
+    hass.states.async_set("sensor.two", "two", attributes={"any": "attr"})
+    await async_recorder_block_till_done(hass)
+
+    sensor_one_last_updated = hass.states.get("sensor.one").last_updated
+    sensor_one_last_changed = hass.states.get("sensor.one").last_changed
+    sensor_two_last_updated = hass.states.get("sensor.two").last_updated
+    response = await client.receive_json()
+    assert response == {
+        "event": {
+            "states": {
+                "sensor.one": [
+                    {
+                        "lc": sensor_one_last_changed.timestamp(),
+                        "lu": sensor_one_last_updated.timestamp(),
+                        "s": "on",
+                        "a": {"diff": "attr"},
+                    }
+                ],
+                "sensor.two": [
+                    {
+                        "lu": sensor_two_last_updated.timestamp(),
+                        "s": "two",
+                        "a": {"any": "attr"},
+                    }
+                ],
+            },
+        },
+        "id": 1,
+        "type": "event",
+    }
+
+
 async def test_history_stream_live_minimal_response(
     recorder_mock, hass, hass_ws_client
 ):
@@ -1843,21 +1952,13 @@ async def test_history_stream_live_minimal_response(
     hass.states.async_set("sensor.two", "two", attributes={"any": "attr"})
     await async_recorder_block_till_done(hass)
 
+    # Only sensor.two has changed
     sensor_one_last_updated = hass.states.get("sensor.one").last_updated
-    sensor_one_last_changed = hass.states.get("sensor.one").last_changed
     sensor_two_last_updated = hass.states.get("sensor.two").last_updated
     response = await client.receive_json()
     assert response == {
         "event": {
             "states": {
-                "sensor.one": [
-                    {
-                        "lc": sensor_one_last_changed.timestamp(),
-                        "lu": sensor_one_last_updated.timestamp(),
-                        "s": "on",
-                        "a": {"diff": "attr"},
-                    }
-                ],
                 "sensor.two": [
                     {
                         "lu": sensor_two_last_updated.timestamp(),
