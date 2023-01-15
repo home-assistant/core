@@ -39,6 +39,10 @@
                     "confirm": {
                         "description": "V\u00e4rskenda k\u00f5iki automaatikaid v\u00f5i skripte, mis seda teenust kasutavad, et kasutada selle asemel teenust '{alternate_service}', mille sihtolemi ID on '{alternate_target}'.",
                         "title": "Teenus {deprecated_service} eemaldatakse"
+                    },
+                    "deprecated_yaml": {
+                        "description": "Universal Devices ISY/IoX konfigureerimine YAML-i abil eemaldatakse.\n\nTeie olemasolev YAML-i konfiguratsioon imporditakse kasutajaliidesesse automaatselt.\n\nEemaldage failist configuration.yaml YAML-i konfiguratsioon \"isy994\" ja taask\u00e4ivitage selle probleemi lahendamiseks koduabiline.",
+                        "title": "ISY/IoX YAML-i konfiguratsiooni eemaldatakse"
                     }
                 }
             },

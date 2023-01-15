@@ -14,7 +14,7 @@
         },
         "step": {
             "discovery_confirm": {
-                "description": "{ip_address} konumuna {product_type} ({serial}) kurmak istiyor musunuz?",
+                "description": "{product_type} ( {serial} ) {ip_address} adresinde kurmak istiyor musunuz?",
                 "title": "Onayla"
             },
             "reauth_confirm": {
