@@ -555,19 +555,18 @@ def _async_subscribe_events(
     @callback
     def _forward_state_events_filtered(event: Event) -> None:
         """Filter state events and forward them."""
-        if (new_state := event.data.get("new_state")) is None:
+        if (new_state := event.data.get("new_state")) is None or (
+            old_state := event.data.get("old_state")
+        ) is None:
             return
         assert isinstance(new_state, State)
         if entities_filter and not entities_filter(new_state.entity_id):
             return
-        if (old_state := event.data.get("old_state")) is None:
-            return
         assert isinstance(old_state, State)
-        state_changed = new_state.state != old_state.state
         if (
-            not state_changed
+            (significant_changes_only or minimal_response)
+            and new_state.state == old_state.state
             and not new_state.domain not in history.SIGNIFICANT_DOMAINS
-            and (significant_changes_only or minimal_response)
         ):
             return
         target(event)
