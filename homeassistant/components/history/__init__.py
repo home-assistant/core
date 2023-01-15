@@ -450,7 +450,8 @@ async def _async_send_historical_states(
 
     if last_time == 0:
         # If we did not send any states ever, we need to send an empty response
-        # so the websocket client knows we are done.
+        # so the websocket client knows it should render/process/consume the
+        # data.
         if not send_empty:
             return None
         last_time_dt = end_time
