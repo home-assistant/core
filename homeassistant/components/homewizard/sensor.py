@@ -53,6 +53,8 @@ SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
         key="active_tariff",
         name="Active tariff",
         icon="mdi:calendar-clock",
+        device_class=SensorDeviceClass.ENUM,
+        options=["1", "2", "3", "4"],
     ),
     SensorEntityDescription(
         key="wifi_strength",
@@ -362,6 +364,9 @@ class HWEnergySensor(HomeWizardEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return state of meter."""
+        if self.data_type == "active_tariff":
+            return str(getattr(self.data.data, "active_tariff"))
+
         return cast(StateType, getattr(self.data.data, self.data_type))
 
     @property
