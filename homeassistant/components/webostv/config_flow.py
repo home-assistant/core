@@ -116,7 +116,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         host = urlparse(discovery_info.ssdp_location).hostname
         assert host
         self._host = host
-        self._name = discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME]
+        self._name = discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME, DEFAULT_NAME)
 
         uuid = discovery_info.upnp[ssdp.ATTR_UPNP_UDN]
         assert uuid
