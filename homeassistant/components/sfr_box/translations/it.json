@@ -27,6 +27,14 @@
                     "unknown": "Sconosciuto"
                 }
             },
+            "net_infra": {
+                "state": {
+                    "adsl": "ADSL",
+                    "ftth": "FTTH",
+                    "gprs": "GPRS",
+                    "unknown": "Sconosciuto"
+                }
+            },
             "training": {
                 "state": {
                     "g_922_channel_analysis": "G.992 Analisi del canale",

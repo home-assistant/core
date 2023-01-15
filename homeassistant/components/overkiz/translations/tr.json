@@ -28,6 +28,21 @@
         }
     },
     "entity": {
+        "select": {
+            "memorized_simple_volume": {
+                "state": {
+                    "highest": "En y\u00fcksek",
+                    "standard": "Standart"
+                }
+            },
+            "open_closed_pedestrian": {
+                "state": {
+                    "closed": "Kapal\u0131",
+                    "open": "A\u00e7\u0131k",
+                    "pedestrian": "Yaya"
+                }
+            }
+        },
         "sensor": {
             "battery": {
                 "state": {

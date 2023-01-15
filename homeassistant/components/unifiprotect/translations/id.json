@@ -52,7 +52,7 @@
     },
     "issues": {
         "deprecate_smart_sensor": {
-            "description": "Sensor \"Objek Terdeteksi\" terpadu untuk deteksi cerdas sekarang sudah tidak digunakan lagi. Sensor ini telah diganti dengan sensor biner deteksi cerdas individual untuk setiap jenis deteksi cerdas. Perbarui semua templat atau otomasi yang terkait.",
+            "description": "Sensor \"Objek Terdeteksi\" terpadu untuk deteksi cerdas sekarang sudah tidak digunakan lagi. Sensor ini telah diganti dengan sensor biner deteksi cerdas individual untuk setiap jenis deteksi cerdas. Perbarui semua templat atau otomasi yang terkait.\n\nDi bawah ini adalah otomasi atau skrip yang terdeteksi yang menggunakan satu atau lebih entitas yang sudah tidak digunakan lagi:\n{items}\nDaftar di atas mungkin tidak lengkap dan tidak termasuk penggunaan semua templat dalam dasbor. Perbarui templat, otomatisasi, atau skrip apa pun yang sesuai.",
             "title": "Sensor Deteksi Cerdas Tidak Digunakan Lagi"
         },
         "deprecated_service_set_doorbell_message": {

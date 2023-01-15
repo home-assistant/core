@@ -9,7 +9,15 @@
                 "data": {
                     "host": "Host",
                     "password": "Wachtwoord"
-                }
+                },
+                "title": "Rain Bird configureren"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Rain Bird configureren"
             }
         }
     }

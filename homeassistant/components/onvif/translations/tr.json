@@ -48,7 +48,8 @@
             "onvif_devices": {
                 "data": {
                     "extra_arguments": "Ekstra FFMPEG arg\u00fcmanlar\u0131",
-                    "rtsp_transport": "RTSP ta\u015f\u0131ma mekanizmas\u0131"
+                    "rtsp_transport": "RTSP ta\u015f\u0131ma mekanizmas\u0131",
+                    "use_wallclock_as_timestamps": "Duvar saatini zaman damgas\u0131 olarak kullanma"
                 },
                 "title": "ONVIF Cihaz Se\u00e7enekleri"
             }
