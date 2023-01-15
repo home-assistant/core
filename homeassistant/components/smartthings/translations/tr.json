@@ -2,10 +2,10 @@
     "config": {
         "abort": {
             "invalid_webhook_url": "Home Assistant, SmartThings'ten g\u00fcncellemeleri almak i\u00e7in do\u011fru \u015fekilde yap\u0131land\u0131r\u0131lmam\u0131\u015f. Webhook URL'si ge\u00e7ersiz:\n > {webhook_url} \n\n L\u00fctfen yap\u0131land\u0131rman\u0131z\u0131 [talimatlara]( {component_url} ) g\u00f6re g\u00fcncelleyin, Home Assistant'\u0131 yeniden ba\u015flat\u0131n ve tekrar deneyin.",
-            "no_available_locations": "Home Assistant'ta kurulacak kullan\u0131labilir SmartThings Locations yok."
+            "no_available_locations": "Home Assistant'ta kurulabilecek SmartThings Konumu yok."
         },
         "error": {
-            "app_setup_error": "SmartApp kurulamad\u0131. L\u00fctfen tekrar deneyin.",
+            "app_setup_error": "SmartApp ayarlanam\u0131yor. L\u00fctfen tekrar deneyin.",
             "token_forbidden": "Anahtar, gerekli OAuth kapsam\u0131na sahip de\u011fil.",
             "token_invalid_format": "Anahtar UID/GUID bi\u00e7iminde olmal\u0131d\u0131r",
             "token_unauthorized": "Anahtar art\u0131k ge\u00e7ersiz veya yetkilendirilmemi\u015f.",

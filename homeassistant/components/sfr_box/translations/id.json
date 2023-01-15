@@ -27,6 +27,14 @@
                     "unknown": "Tidak Dikenal"
                 }
             },
+            "net_infra": {
+                "state": {
+                    "adsl": "ADSL",
+                    "ftth": "FTTH",
+                    "gprs": "GPRS",
+                    "unknown": "Tidak Dikenal"
+                }
+            },
             "training": {
                 "state": {
                     "g_922_channel_analysis": "Analisis Saluran G.922",

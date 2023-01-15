@@ -29,13 +29,13 @@
                 "data": {
                     "noise_psk": "\u015eifreleme anahtar\u0131"
                 },
-                "description": "{name} i\u00e7in yap\u0131land\u0131rman\u0131zda belirledi\u011finiz \u015fifreleme anahtar\u0131n\u0131 girin."
+                "description": "L\u00fctfen {name} i\u00e7in \u015fifreleme anahtar\u0131n\u0131 girin. Bunu ESPHome Dashboard'da veya cihaz yap\u0131land\u0131rman\u0131zda bulabilirsiniz."
             },
             "reauth_confirm": {
                 "data": {
                     "noise_psk": "\u015eifreleme anahtar\u0131"
                 },
-                "description": "ESPHome cihaz\u0131 {name} aktar\u0131m \u015fifrelemesini etkinle\u015ftirdi veya \u015fifreleme anahtar\u0131n\u0131 de\u011fi\u015ftirdi. L\u00fctfen g\u00fcncellenmi\u015f anahtar\u0131 girin."
+                "description": "{name} ESPHome cihaz\u0131 aktar\u0131m \u015fifrelemesini etkinle\u015ftirdi veya \u015fifreleme anahtar\u0131n\u0131 de\u011fi\u015ftirdi. L\u00fctfen g\u00fcncellenmi\u015f anahtar\u0131 girin. Bunu ESPHome Dashboard'da veya cihaz yap\u0131land\u0131rman\u0131zda bulabilirsiniz."
             },
             "user": {
                 "data": {
@@ -44,6 +44,12 @@
                 },
                 "description": "L\u00fctfen [ESPHome]( {esphome_url} ) d\u00fc\u011f\u00fcm\u00fcn\u00fcz\u00fcn ba\u011flant\u0131 ayarlar\u0131n\u0131 girin."
             }
+        }
+    },
+    "issues": {
+        "ble_firmware_outdated": {
+            "description": "Bluetooth g\u00fcvenilirli\u011fini ve performans\u0131n\u0131 art\u0131rmak i\u00e7in {name} \u00fcr\u00fcn\u00fcn\u00fc ESPHome {version} veya sonraki bir s\u00fcr\u00fcmle g\u00fcncellemenizi \u00f6nemle tavsiye ederiz. Cihaz\u0131 ESPHome {version} olarak g\u00fcncellerken, yeni b\u00f6l\u00fcm \u015femas\u0131ndan yararlanmak i\u00e7in kablosuz g\u00fcncelleme yerine seri kablo kullan\u0131lmas\u0131 \u00f6nerilir.",
+            "title": "{name} \u00fcr\u00fcn\u00fcn\u00fc ESPHome {version} veya sonraki bir s\u00fcr\u00fcmle g\u00fcncelleyin"
         }
     }
 }

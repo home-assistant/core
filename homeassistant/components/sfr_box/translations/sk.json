@@ -27,6 +27,14 @@
                     "unknown": "Nezn\u00e1me"
                 }
             },
+            "net_infra": {
+                "state": {
+                    "adsl": "ADSL",
+                    "ftth": "FTTH",
+                    "gprs": "GPRS",
+                    "unknown": "Nezn\u00e1my"
+                }
+            },
             "training": {
                 "state": {
                     "g_922_channel_analysis": "G.922 Anal\u00fdza kan\u00e1lov",
