@@ -111,7 +111,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
-    async def _try_connect(
+    async def _connect(
         self, user_input: dict[str, Any], errors: dict[str, str]
     ) -> Connection | None:
         """Try connecting with given data."""
@@ -197,7 +197,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 wlan_settings = {}
             return device_info, wlan_settings
 
-        conn = await self._try_connect(user_input, errors)
+        conn = await self._connect(user_input, errors)
         if errors:
             return await self._async_show_user_form(
                 user_input=user_input, errors=errors
@@ -299,7 +299,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         new_data = {**entry.data, **user_input}
         errors: dict[str, str] = {}
-        conn = await self._try_connect(new_data, errors)
+        conn = await self._connect(new_data, errors)
         if conn:
             await self.hass.async_add_executor_job(self._disconnect, conn)
         if errors:
