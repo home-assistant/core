@@ -2459,6 +2459,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "inels": {
+      "name": "iNELS",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "influxdb": {
       "name": "InfluxDB",
       "integration_type": "hub",

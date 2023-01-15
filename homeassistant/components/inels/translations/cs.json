@@ -1,0 +1,48 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Integrace je již nakonfigurována",
+            "single_instance_allowed": "Již nakonfigurováno. Poze jedna integrace iNELS je možná."
+        },
+        "error": {
+            "cannot_connect": "Nelze se připojit"
+        },
+        "step": {
+            "setup": {
+                "data": {
+                    "discovery": "Zapnout vyhledávání",
+                    "host": "Broker",
+                    "port": "Port",
+                    "username": "Uživatelské jméno",
+                    "password": "Heslo"
+                },
+                "title": "iNELS MQTT broker",
+                "description": "Prosím připojte se k MQTT brokeru pro načtení iNELS komponent."
+            },
+            "confirm": {
+                "data": {
+                    "discovery": "Zapnout vyhledávání"
+                },
+                "title": "MQTT broker jako add-on",
+                "description": "Přejete si připojit MQTT broker k Home Assistant jako add-on {addon}?"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "cannot_connect": "Nelze se připojit"
+        },
+        "step": {
+            "setup": {
+                "data": {
+                    "host": "Broker",
+                    "port": "Port",
+                    "username": "Uživatelské jméno",
+                    "password": "Heslo"
+                },
+                "title": "iNELS MQTT broker nastavení",
+                "description": "Prosím vyplňte údaje pro připojení k MQTT brokeru."
+            }
+        }
+    }
+}

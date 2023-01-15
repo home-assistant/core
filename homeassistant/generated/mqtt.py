@@ -7,6 +7,9 @@ MQTT = {
     "dsmr_reader": [
         "dsmr/#",
     ],
+    "inels": [
+        "inels/status/#",
+    ],
     "tasmota": [
         "tasmota/discovery/#",
     ],
