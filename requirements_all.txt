@@ -807,7 +807,7 @@ google-cloud-pubsub==2.13.11
 google-cloud-texttospeech==2.12.3
 
 # homeassistant.components.nest
-google-nest-sdm==2.1.2
+google-nest-sdm==2.2.2
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -1433,7 +1433,7 @@ py-schluter==0.1.7
 py-sucks==0.9.8
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==1.0.8
+py-synologydsm-api==2.0.0
 
 # homeassistant.components.zabbix
 py-zabbix==1.1.7
@@ -2487,7 +2487,7 @@ tmb==0.0.4
 todoist-api-python==2.0.2
 
 # homeassistant.components.tolo
-tololib==0.1.0b3
+tololib==0.1.0b4
 
 # homeassistant.components.toon
 toonapi==0.2.1

@@ -617,7 +617,7 @@ google-api-python-client==2.71.0
 google-cloud-pubsub==2.13.11
 
 # homeassistant.components.nest
-google-nest-sdm==2.1.2
+google-nest-sdm==2.2.2
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -1042,7 +1042,7 @@ py-melissa-climate==2.1.4
 py-nightscout==1.2.2
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==1.0.8
+py-synologydsm-api==2.0.0
 
 # homeassistant.components.seventeentrack
 py17track==2021.12.2
@@ -1739,7 +1739,7 @@ tilt-ble==0.2.3
 todoist-api-python==2.0.2
 
 # homeassistant.components.tolo
-tololib==0.1.0b3
+tololib==0.1.0b4
 
 # homeassistant.components.toon
 toonapi==0.2.1
