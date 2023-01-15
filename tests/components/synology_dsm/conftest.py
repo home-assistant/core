@@ -1,5 +1,4 @@
 """Configure Synology DSM tests."""
-from unittest import mock
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -27,7 +26,7 @@ def bypass_setup_fixture(request):
 @pytest.fixture(name="mock_dsm")
 def fixture_dsm():
     """Set up SynologyDSM API fixture."""
-    with mock.patch("homeassistant.components.synology_dsm.common.SynologyDSM") as dsm:
+    with patch("homeassistant.components.synology_dsm.common.SynologyDSM") as dsm:
         dsm.login = AsyncMock(return_value=True)
         dsm.update = AsyncMock(return_value=True)
 
