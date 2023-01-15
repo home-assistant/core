@@ -1,7 +1,6 @@
 """Support for EufyLife sensors."""
 from __future__ import annotations
 
-from contextlib import suppress
 from typing import Any
 
 from eufylife_ble_client import MODEL_TO_NAME
@@ -159,16 +158,15 @@ class EufyLifeWeightSensorEntity(RestoreEntity, EufyLifeSensorEntity):
         if not last_state or last_state.state in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
             return
 
-        with suppress(ValueError):
-            last_weight = float(last_state.state)
-            last_weight_unit = last_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        last_weight = float(last_state.state)
+        last_weight_unit = last_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
-            # Since the RestoreEntity stores the state using the displayed unit,
-            # not the native unit, we need to convert the state back to the native
-            # unit.
-            self._weight_kg = MassConverter.convert(
-                last_weight, last_weight_unit, self.native_unit_of_measurement
-            )
+        # Since the RestoreEntity stores the state using the displayed unit,
+        # not the native unit, we need to convert the state back to the native
+        # unit.
+        self._weight_kg = MassConverter.convert(
+            last_weight, last_weight_unit, self.native_unit_of_measurement
+        )
 
 
 class EufyLifeHeartRateSensorEntity(RestoreEntity, EufyLifeSensorEntity):
@@ -212,5 +210,4 @@ class EufyLifeHeartRateSensorEntity(RestoreEntity, EufyLifeSensorEntity):
         if not last_state or last_state.state in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
             return
 
-        with suppress(ValueError):
-            self._heart_rate = int(last_state.state)
+        self._heart_rate = int(last_state.state)
