@@ -52,8 +52,7 @@ from homeassistant.const import (
     STATE_STANDBY,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 from homeassistant.core import DOMAIN as HA_DOMAIN, EVENT_CALL_SERVICE, State
 from homeassistant.util import color
@@ -833,7 +832,7 @@ async def test_temperature_setting_climate_onoff(hass):
     assert helpers.get_google_type(climate.DOMAIN, None) is not None
     assert trait.TemperatureSettingTrait.supported(climate.DOMAIN, 0, None, None)
 
-    hass.config.units.temperature_unit = TEMP_FAHRENHEIT
+    hass.config.units.temperature_unit = UnitOfTemperature.FAHRENHEIT
 
     trt = trait.TemperatureSettingTrait(
         hass,
@@ -878,7 +877,7 @@ async def test_temperature_setting_climate_no_modes(hass):
     assert helpers.get_google_type(climate.DOMAIN, None) is not None
     assert trait.TemperatureSettingTrait.supported(climate.DOMAIN, 0, None, None)
 
-    hass.config.units.temperature_unit = TEMP_CELSIUS
+    hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
 
     trt = trait.TemperatureSettingTrait(
         hass,
@@ -904,7 +903,7 @@ async def test_temperature_setting_climate_range(hass):
     assert helpers.get_google_type(climate.DOMAIN, None) is not None
     assert trait.TemperatureSettingTrait.supported(climate.DOMAIN, 0, None, None)
 
-    hass.config.units.temperature_unit = TEMP_FAHRENHEIT
+    hass.config.units.temperature_unit = UnitOfTemperature.FAHRENHEIT
 
     trt = trait.TemperatureSettingTrait(
         hass,
@@ -978,7 +977,7 @@ async def test_temperature_setting_climate_range(hass):
             {},
         )
     assert err.value.code == const.ERR_VALUE_OUT_OF_RANGE
-    hass.config.units.temperature_unit = TEMP_CELSIUS
+    hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
 
 
 async def test_temperature_setting_climate_setpoint(hass):
@@ -986,7 +985,7 @@ async def test_temperature_setting_climate_setpoint(hass):
     assert helpers.get_google_type(climate.DOMAIN, None) is not None
     assert trait.TemperatureSettingTrait.supported(climate.DOMAIN, 0, None, None)
 
-    hass.config.units.temperature_unit = TEMP_CELSIUS
+    hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
 
     trt = trait.TemperatureSettingTrait(
         hass,
@@ -1041,7 +1040,7 @@ async def test_temperature_setting_climate_setpoint_auto(hass):
 
     Setpoint in auto mode.
     """
-    hass.config.units.temperature_unit = TEMP_CELSIUS
+    hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
 
     trt = trait.TemperatureSettingTrait(
         hass,
@@ -1088,7 +1087,7 @@ async def test_temperature_setting_climate_setpoint_auto(hass):
 
 async def test_temperature_control(hass):
     """Test TemperatureControl trait support for sensor domain."""
-    hass.config.units.temperature_unit = TEMP_CELSIUS
+    hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
 
     trt = trait.TemperatureControlTrait(
         hass,
@@ -2891,10 +2890,10 @@ async def test_temperature_control_sensor(hass):
 @pytest.mark.parametrize(
     "unit_in,unit_out,state,ambient",
     [
-        (TEMP_FAHRENHEIT, "F", "70", 21.1),
-        (TEMP_CELSIUS, "C", "21.1", 21.1),
-        (TEMP_FAHRENHEIT, "F", "unavailable", None),
-        (TEMP_FAHRENHEIT, "F", "unknown", None),
+        (UnitOfTemperature.FAHRENHEIT, "F", "70", 21.1),
+        (UnitOfTemperature.CELSIUS, "C", "21.1", 21.1),
+        (UnitOfTemperature.FAHRENHEIT, "F", "unavailable", None),
+        (UnitOfTemperature.FAHRENHEIT, "F", "unknown", None),
     ],
 )
 async def test_temperature_control_sensor_data(hass, unit_in, unit_out, state, ambient):
@@ -2924,7 +2923,7 @@ async def test_temperature_control_sensor_data(hass, unit_in, unit_out, state, a
         }
     else:
         assert trt.query_attributes() == {}
-    hass.config.units.temperature_unit = TEMP_CELSIUS
+    hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
 
 
 async def test_humidity_setting_sensor(hass):

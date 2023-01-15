@@ -15,7 +15,8 @@ from .helpers.typing import UNDEFINED, UndefinedType
 from .loader import Integration, IntegrationNotFound, async_get_integration
 from .util import package as pkg_util
 
-PIP_TIMEOUT = 60  # The default is too low when the internet connection is satellite or high latency
+# The default is too low when the internet connection is satellite or high latency
+PIP_TIMEOUT = 60
 MAX_INSTALL_FAILURES = 3
 DATA_REQUIREMENTS_MANAGER = "requirements_manager"
 CONSTRAINT_FILE = "package_constraints.txt"
@@ -132,7 +133,7 @@ class RequirementsManager:
     async def async_get_integration_with_requirements(
         self, domain: str, done: set[str] | None = None
     ) -> Integration:
-        """Get an integration with all requirements installed, including the dependencies.
+        """Get an integration with all requirements installed, including dependencies.
 
         This can raise IntegrationNotFound if manifest or integration
         is invalid, RequirementNotFound if there was some type of
@@ -257,7 +258,11 @@ class RequirementsManager:
     def _raise_for_failed_requirements(
         self, integration: str, missing: list[str]
     ) -> None:
-        """Raise RequirementsNotFound so we do not keep trying requirements that have already failed."""
+        """Raise for failed installing integration requirements.
+
+        Raise RequirementsNotFound so we do not keep trying requirements
+        that have already failed.
+        """
         for req in missing:
             if req in self.install_failure_history:
                 _LOGGER.info(

@@ -7,7 +7,6 @@ from pyisy.constants import (
     COMMAND_FRIENDLY_NAME,
     ISY_VALUE_UNKNOWN,
     PROP_BATTERY_LEVEL,
-    PROP_BUSY,
     PROP_COMMS_ERROR,
     PROP_ENERGY_MODE,
     PROP_HEAT_COOL_STATE,
@@ -28,7 +27,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform, UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -47,13 +46,13 @@ from .helpers import convert_isy_value_to_hass
 # Disable general purpose and redundant sensors by default
 AUX_DISABLED_BY_DEFAULT_MATCH = ["GV", "DO"]
 AUX_DISABLED_BY_DEFAULT_EXACT = {
+    PROP_COMMS_ERROR,
     PROP_ENERGY_MODE,
     PROP_HEAT_COOL_STATE,
     PROP_ON_LEVEL,
     PROP_RAMP_RATE,
     PROP_STATUS,
 }
-SKIP_AUX_PROPERTIES = {PROP_BUSY, PROP_COMMS_ERROR, PROP_STATUS}
 
 # Reference pyisy.constants.COMMAND_FRIENDLY_NAME for API details.
 #   Note: "LUMIN"/Illuminance removed, some devices use non-conformant "%" unit
@@ -259,6 +258,22 @@ class ISYAuxSensorEntity(ISYSensorEntity):
     def target_value(self) -> Any:
         """Return the target value."""
         return None if self.target is None else self.target.value
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to the node control change events.
+
+        Overloads the default ISYNodeEntity updater to only update when
+        this control is changed on the device and prevent duplicate firing
+        of `isy994_control` events.
+        """
+        self._change_handler = self._node.control_events.subscribe(self.async_on_update)
+
+    @callback
+    def async_on_update(self, event: NodeProperty) -> None:
+        """Handle a control event from the ISY Node."""
+        if event.control != self._control:
+            return
+        self.async_write_ha_state()
 
 
 class ISYSensorVariableEntity(ISYEntity, SensorEntity):

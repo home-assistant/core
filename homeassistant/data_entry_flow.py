@@ -175,7 +175,10 @@ class FlowManager(abc.ABC):
     def async_has_matching_flow(
         self, handler: str, context: dict[str, Any], data: Any
     ) -> bool:
-        """Check if an existing matching flow is in progress with the same handler, context, and data."""
+        """Check if an existing matching flow is in progress.
+
+        A flow with the same handler, context, and data.
+        """
         return any(
             flow
             for flow in self._async_progress_by_handler(handler)

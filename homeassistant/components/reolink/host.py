@@ -63,8 +63,7 @@ class ReolinkHost:
         """Connect to Reolink host."""
         self._api.expire_session()
 
-        if not await self._api.get_host_data():
-            return False
+        await self._api.get_host_data()
 
         if self._api.mac_address is None:
             return False
@@ -123,13 +122,13 @@ class ReolinkHost:
 
         return True
 
-    async def update_states(self) -> bool:
-        """Call the API of the camera device to update the states."""
-        return await self._api.get_states()
+    async def update_states(self) -> None:
+        """Call the API of the camera device to update the internal states."""
+        await self._api.get_states()
 
     async def disconnect(self):
         """Disconnect from the API, so the connection will be released."""
-        await self._api.unsubscribe_all()
+        await self._api.unsubscribe()
 
         try:
             await self._api.logout()

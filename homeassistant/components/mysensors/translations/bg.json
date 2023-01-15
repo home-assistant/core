@@ -38,5 +38,17 @@
                 }
             }
         }
+    },
+    "issues": {
+        "deprecated_service": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "title": "\u0423\u0441\u043b\u0443\u0433\u0430\u0442\u0430 {deprecated_service} \u0449\u0435 \u0431\u044a\u0434\u0435 \u043f\u0440\u0435\u043c\u0430\u0445\u043d\u0430\u0442\u0430"
+                    }
+                }
+            },
+            "title": "\u0423\u0441\u043b\u0443\u0433\u0430\u0442\u0430 {deprecated_service} \u0449\u0435 \u0431\u044a\u0434\u0435 \u043f\u0440\u0435\u043c\u0430\u0445\u043d\u0430\u0442\u0430"
+        }
     }
 }

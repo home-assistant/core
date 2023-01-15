@@ -42,7 +42,9 @@ dependencies    = [
     "lru-dict==1.1.8",
     "PyJWT==2.5.0",
     # PyJWT has loose dependency. We want the latest one.
-    "cryptography==38.0.3",
+    "cryptography==39.0.0",
+    # pyOpenSSL 23.0.0 is required to work with cryptography 39+
+    "pyOpenSSL==23.0.0",
     "orjson==3.8.4",
     "pip>=21.0,<22.4",
     "python-slugify==4.0.1",
