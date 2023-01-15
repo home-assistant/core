@@ -88,7 +88,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry, data={**entry.data, CONF_MAC: api.dsm.network.macs}
         )
 
-    # These all create executor jobs so we do not gather here
     coordinator_central = SynologyDSMCentralUpdateCoordinator(hass, entry, api)
     await coordinator_central.async_config_entry_first_refresh()
 
