@@ -107,6 +107,12 @@ class SynoDSMCamera(SynologyDSMBaseEntity[SynologyDSMCameraUpdateCoordinator], C
     @property
     def available(self) -> bool:
         """Return the availability of the camera."""
+        _LOGGER.warning(
+            "SynoDSMCamera.available(%s) enabled=%s last_update_success=%s",
+            self.camera_data.name,
+            self.camera_data.is_enabled,
+            self.coordinator.last_update_success,
+        )
         return self.camera_data.is_enabled and self.coordinator.last_update_success
 
     @property
