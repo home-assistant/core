@@ -378,9 +378,9 @@ class Template:
             wanted_env = _ENVIRONMENT
         ret: TemplateEnvironment | None = self.hass.data.get(wanted_env)
         if ret is None:
-            ret = self.hass.data[wanted_env] = TemplateEnvironment(  # type: ignore[no-untyped-call]
+            ret = self.hass.data[wanted_env] = TemplateEnvironment(
                 self.hass,
-                self._limited,
+                self._limited,  # type: ignore[no-untyped-call]
                 self._strict,
             )
         return ret
