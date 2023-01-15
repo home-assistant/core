@@ -2231,6 +2231,8 @@ async def test_history_stream_live_with_future_end_time(
     await async_recorder_block_till_done(hass)
     hass.states.async_set("sensor.two", "future", attributes={"any": "attr"})
     # Check our listener got unsubscribed
+    await async_recorder_block_till_done(hass)
+
     assert listeners_without_writes(
         hass.bus.async_listeners()
     ) == listeners_without_writes(init_listeners)
