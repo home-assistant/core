@@ -59,9 +59,8 @@ class StarlinkSensorEntity(StarlinkEntity, SensorEntity):
         description: StarlinkSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, description)
         self.entity_description = description
-        self._attr_unique_id = f"{self.coordinator.data.status['id']}_{description.key}"
 
     @property
     def native_value(self) -> StateType | datetime:

@@ -57,9 +57,8 @@ class StarlinkBinarySensorEntity(StarlinkEntity, BinarySensorEntity):
         description: StarlinkBinarySensorEntityDescription,
     ) -> None:
         """Initialize the binary sensor."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, description)
         self.entity_description = description
-        self._attr_unique_id = f"{self.coordinator.data.status['id']}_{description.key}"
 
     @property
     def is_on(self) -> bool | None:
