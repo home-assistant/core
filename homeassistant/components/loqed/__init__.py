@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import re
 
 from loqedAPI import loqed
 
@@ -30,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data["lock_key_key"],
         entry.data["bridge_key"],
         int(entry.data["lock_key_local_id"]),
-        entry.data["bridge_ip"],
+        re.sub(r"LOQED-([a-f0-9]+)\.local", r"\1", entry.data["bridge_mdns_hostname"]),
     )
     coordinator = LoqedDataCoordinator(hass, api, lock, entry)
     await coordinator.ensure_webhooks()
