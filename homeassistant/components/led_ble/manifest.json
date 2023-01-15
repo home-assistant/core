@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/led_ble/",
   "requirements": ["bluetooth-data-tools==0.3.1", "led-ble==1.0.0"],
-  "dependencies": ["bluetooth"],
+  "dependencies": ["bluetooth_adapters"],
   "codeowners": ["@bdraco"],
   "bluetooth": [
     { "local_name": "LEDnet*" },
