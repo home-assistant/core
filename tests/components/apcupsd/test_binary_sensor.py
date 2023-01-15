@@ -1,6 +1,4 @@
 """Test binary sensors of APCUPSd integration."""
-
-
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
