@@ -1621,6 +1621,33 @@ async def test_history_stream_bad_start_time(recorder_mock, hass, hass_ws_client
     assert response["error"]["code"] == "invalid_start_time"
 
 
+async def test_history_stream_end_time_before_start_time(
+    recorder_mock, hass, hass_ws_client
+):
+    """Test history stream with an end_time before the start_time."""
+    end_time = dt_util.utcnow()
+    start_time = dt_util.utcnow()
+
+    await async_setup_component(
+        hass,
+        "history",
+        {"history": {}},
+    )
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "history/stream",
+            "start_time": start_time.isoformat(),
+            "end_time": end_time.isoformat(),
+        }
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "invalid_end_time"
+
+
 async def test_history_stream_bad_end_time(recorder_mock, hass, hass_ws_client):
     """Test history stream bad end time."""
     now = dt_util.utcnow()
