@@ -30,3 +30,4 @@ class StarlinkEntity(CoordinatorEntity[StarlinkUpdateCoordinator], Entity):
             model="Starlink",
         )
         self._attr_unique_id = f"{self.coordinator.data.status['id']}_{description.key}"
+        self.entity_description = description

@@ -16,7 +16,7 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import StarlinkData, StarlinkUpdateCoordinator
+from .coordinator import StarlinkData
 from .entity import StarlinkEntity
 
 
@@ -50,15 +50,6 @@ class StarlinkBinarySensorEntity(StarlinkEntity, BinarySensorEntity):
     """A BinarySensorEntity for Starlink devices. Handles creating unique IDs."""
 
     entity_description: StarlinkBinarySensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: StarlinkUpdateCoordinator,
-        description: StarlinkBinarySensorEntityDescription,
-    ) -> None:
-        """Initialize the binary sensor."""
-        super().__init__(coordinator, description)
-        self.entity_description = description
 
     @property
     def is_on(self) -> bool | None:

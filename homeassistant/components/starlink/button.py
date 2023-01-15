@@ -50,15 +50,6 @@ class StarlinkButtonEntity(StarlinkEntity, ButtonEntity):
 
     entity_description: StarlinkButtonEntityDescription
 
-    def __init__(
-        self,
-        coordinator: StarlinkUpdateCoordinator,
-        description: StarlinkButtonEntityDescription,
-    ) -> None:
-        """Initialize the button."""
-        super().__init__(coordinator, description)
-        self.entity_description = description
-
     async def async_press(self) -> None:
         """Press the button."""
         return await self.entity_description.press_fn(self.coordinator)
