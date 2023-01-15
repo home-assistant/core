@@ -9,7 +9,12 @@ from eufylife_ble_client import MODEL_TO_NAME
 from homeassistant import config_entries
 from homeassistant.components.bluetooth import async_address_present
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_UNAVAILABLE, UnitOfMass
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    UnitOfMass,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
@@ -151,7 +156,7 @@ class EufyLifeWeightSensorEntity(RestoreEntity, EufyLifeSensorEntity):
         await super().async_added_to_hass()
 
         last_state = await self.async_get_last_state()
-        if not last_state or last_state.state == STATE_UNAVAILABLE:
+        if not last_state or last_state.state in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
             return
 
         with suppress(ValueError):
@@ -204,7 +209,7 @@ class EufyLifeHeartRateSensorEntity(RestoreEntity, EufyLifeSensorEntity):
         await super().async_added_to_hass()
 
         last_state = await self.async_get_last_state()
-        if not last_state or last_state.state == STATE_UNAVAILABLE:
+        if not last_state or last_state.state in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
             return
 
         with suppress(ValueError):
