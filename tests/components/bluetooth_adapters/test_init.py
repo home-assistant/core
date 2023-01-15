@@ -1,6 +1,6 @@
 """Test the Bluetooth Adapters setup."""
 
-from homeassistant.components.bluetooth_adapters.const import DOMAIN
+from homeassistant.components.bluetooth_adapters import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
