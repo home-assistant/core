@@ -7,6 +7,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
+    ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
     UnitOfElectricPotential,
@@ -15,6 +16,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
+from homeassistant.util.dt import utcnow
 
 from . import MOCK_STATUS, async_init_integration
 
@@ -105,3 +108,23 @@ async def test_sensor_disabled(hass: HomeAssistant) -> None:
 
     assert updated_entry != entry
     assert updated_entry.disabled is False
+
+
+async def test_manual_update_entity(hass):
+    """Test manual update entity via service homeassistant/update_entity."""
+    await init_integration(hass)
+    await async_setup_component(hass, "homeassistant", {})
+
+    with patch("apcaccess.status.parse", return_value=MOCK_STATUS) as mock_parse, patch(
+        "apcaccess.status.get", return_value=b""
+    ) as mock_get, patch(
+        "homeassistant.util.dt.utcnow", return_value=utcnow() + timedelta(minutes=60)
+    ):
+        await hass.services.async_call(
+            "homeassistant",
+            "update_entity",
+            {ATTR_ENTITY_ID: ["sensor.ups_load"]},
+            blocking=True,
+        )
+        assert mock_get.call_count == 1
+        assert mock_parse.call_count == 1
