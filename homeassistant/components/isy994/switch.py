@@ -21,10 +21,11 @@ from homeassistant.components.switch import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory, EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import _LOGGER, DOMAIN
+from .const import DOMAIN
 from .entity import ISYAuxControlEntity, ISYNodeEntity, ISYProgramEntity
 from .models import IsyData
 
@@ -83,12 +84,12 @@ class ISYSwitchEntity(ISYNodeEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Send the turn off command to the ISY switch."""
         if not await self._node.turn_off():
-            _LOGGER.debug("Unable to turn off switch")
+            HomeAssistantError(f"Unable to turn off switch {self._node.address}")
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Send the turn on command to the ISY switch."""
         if not await self._node.turn_on():
-            _LOGGER.debug("Unable to turn on switch")
+            HomeAssistantError(f"Unable to turn on switch {self._node.address}")
 
     @property
     def icon(self) -> str | None:
@@ -109,12 +110,16 @@ class ISYSwitchProgramEntity(ISYProgramEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Send the turn on command to the ISY switch program."""
         if not await self._actions.run_then():
-            _LOGGER.error("Unable to turn on switch")
+            HomeAssistantError(
+                f"Unable to run 'then' clause on program switch {self._actions.address}"
+            )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Send the turn off command to the ISY switch program."""
         if not await self._actions.run_else():
-            _LOGGER.error("Unable to turn off switch")
+            HomeAssistantError(
+                f"Unable to run 'else' clause on program switch {self._actions.address}"
+            )
 
     @property
     def icon(self) -> str:
@@ -173,9 +178,9 @@ class ISYEnableSwitchEntity(ISYAuxControlEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Send the turn off command to the ISY switch."""
         if not await self._node.disable():
-            _LOGGER.debug("Unable to disable device")
+            raise HomeAssistantError(f"Unable to disable device {self._node.address}")
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Send the turn on command to the ISY switch."""
         if not await self._node.enable():
-            _LOGGER.debug("Unable to enable device")
+            raise HomeAssistantError(f"Unable to enable device {self._node.address}")
