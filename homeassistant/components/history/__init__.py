@@ -475,7 +475,7 @@ async def _async_send_historical_states(
 
 def _history_compressed_state(state: State, no_attributes: bool) -> dict[str, Any]:
     comp_state: dict[str, Any] = {COMPRESSED_STATE_STATE: state.state}
-    if not no_attributes:
+    if not no_attributes or state.domain in history.NEED_ATTRIBUTE_DOMAINS:
         comp_state[COMPRESSED_STATE_ATTRIBUTES] = state.attributes
     comp_state[COMPRESSED_STATE_LAST_UPDATED] = dt_util.utc_to_timestamp(
         state.last_updated
@@ -558,12 +558,20 @@ def _async_subscribe_events(
         """Filter state events and forward them."""
         if (new_state := event.data.get("new_state")) is None:
             return
+        assert isinstance(new_state, State)
+
         if entities_filter and not entities_filter(new_state.entity_id):
             return
-        if not significant_changes_only and not minimal_response:
-            old_state: State = event.data["old_state"]
-            if new_state.state == old_state.state:
-                return
+        if (old_state := event.data.get("old_state")) is None:
+            return
+        assert isinstance(old_state, State)
+        state_changed = new_state.state != old_state.state
+        if (
+            not state_changed
+            and not new_state.domain not in history.SIGNIFICANT_DOMAINS
+            and (significant_changes_only or minimal_response)
+        ):
+            return
         target(event)
 
     if entity_ids:
