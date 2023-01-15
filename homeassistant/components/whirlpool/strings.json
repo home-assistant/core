@@ -51,9 +51,6 @@
         "state": {
           "unknown": "Unknown",
           "empty": "Empty",
-          "25_percent": "25%",
-          "50_percent": "50%",
-          "100_percent": "100%",
           "active": "[%key:common::state::active%]"
         }
       }
