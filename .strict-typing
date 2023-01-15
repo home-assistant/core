@@ -157,7 +157,6 @@ homeassistant.components.homekit_controller.lock
 homeassistant.components.homekit_controller.select
 homeassistant.components.homekit_controller.storage
 homeassistant.components.homekit_controller.utils
-homeassistant.components.homewizard.*
 homeassistant.components.http.*
 homeassistant.components.huawei_lte.*
 homeassistant.components.hyperion.*
