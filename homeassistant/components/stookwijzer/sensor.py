@@ -13,7 +13,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN, StookwijzerState
+from .const import DOMAIN, TRANSLATION_KEY, StookwijzerState
 
 SCAN_INTERVAL = timedelta(minutes=60)
 
@@ -39,7 +39,7 @@ class StookwijzerSensor(SensorEntity):
         self._client = client
         self._attr_device_class = SensorDeviceClass.ENUM
         self._attr_unique_id = entry.unique_id
-        self._attr_translation_key = "stookwijzer"
+        self._attr_translation_key = TRANSLATION_KEY
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{entry.entry_id}")},
             name="Stookwijzer",
