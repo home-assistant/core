@@ -18,9 +18,9 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     PERCENTAGE,
-    PRESSURE_HPA,
     STATE_UNAVAILABLE,
-    TEMP_CELSIUS,
+    UnitOfPressure,
+    UnitOfTemperature,
 )
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -167,7 +167,7 @@ async def test_sensor(hass, aioclient_mock):
     assert state
     assert state.state == "1020"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PRESSURE_HPA
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPressure.HPA
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PRESSURE
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
@@ -179,7 +179,7 @@ async def test_sensor(hass, aioclient_mock):
     assert state
     assert state.state == "14.4"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TEMPERATURE
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
