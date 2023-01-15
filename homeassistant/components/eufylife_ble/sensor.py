@@ -4,6 +4,8 @@ from __future__ import annotations
 from contextlib import suppress
 from typing import Any
 
+from eufylife_ble_client import MODEL_TO_NAME
+
 from homeassistant import config_entries
 from homeassistant.components.bluetooth import async_address_present
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
@@ -16,7 +18,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util.unit_conversion import MassConverter
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from .const import DOMAIN, EUFYLIFE_MODEL_TO_NAME
+from .const import DOMAIN
 from .models import EufyLifeData
 
 
@@ -47,7 +49,7 @@ class EufyLifeSensorEntity(SensorEntity):
         self._data = data
 
         self._attr_device_info = DeviceInfo(
-            name=EUFYLIFE_MODEL_TO_NAME[data.model],
+            name=MODEL_TO_NAME[data.model],
             connections={(dr.CONNECTION_BLUETOOTH, data.address)},
         )
 

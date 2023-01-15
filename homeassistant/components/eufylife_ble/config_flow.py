@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from eufylife_ble_client import MODEL_TO_NAME
 import voluptuous as vol
 
 from homeassistant.components.bluetooth import (
@@ -13,7 +14,7 @@ from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import CONF_MODEL, DOMAIN, EUFYLIFE_MODEL_TO_NAME
+from .const import CONF_MODEL, DOMAIN
 
 
 class EufyLifeConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -33,7 +34,7 @@ class EufyLifeConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
 
-        if discovery_info.name not in EUFYLIFE_MODEL_TO_NAME:
+        if discovery_info.name not in MODEL_TO_NAME:
             return self.async_abort(reason="not_supported")
 
         self._discovery_info = discovery_info
@@ -46,7 +47,7 @@ class EufyLifeConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self._discovery_info is not None
         discovery_info = self._discovery_info
 
-        model_name = EUFYLIFE_MODEL_TO_NAME.get(discovery_info.name)
+        model_name = MODEL_TO_NAME.get(discovery_info.name)
         assert model_name is not None
 
         if user_input is not None:
@@ -72,7 +73,7 @@ class EufyLifeConfigFlow(ConfigFlow, domain=DOMAIN):
 
             model = self._discovered_devices[address]
             return self.async_create_entry(
-                title=EUFYLIFE_MODEL_TO_NAME[model],
+                title=MODEL_TO_NAME[model],
                 data={CONF_MODEL: model},
             )
 
@@ -82,7 +83,7 @@ class EufyLifeConfigFlow(ConfigFlow, domain=DOMAIN):
             if (
                 address in current_addresses
                 or address in self._discovered_devices
-                or discovery_info.name not in EUFYLIFE_MODEL_TO_NAME
+                or discovery_info.name not in MODEL_TO_NAME
             ):
                 continue
             self._discovered_devices[address] = discovery_info.name
