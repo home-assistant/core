@@ -1126,14 +1126,14 @@ async def test_cleanup_triggers_and_restoring_state(
     config1["expire_after"] = 30
     config1["state_topic"] = "test-topic1"
     config1["device_class"] = "temperature"
-    config1["unit_of_measurement"] = str(UnitOfTemperature.FAHRENHEIT)
+    config1["unit_of_measurement"] = UnitOfTemperature.FAHRENHEIT.value
 
     config2 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][domain])
     config2["name"] = "test2"
     config2["expire_after"] = 5
     config2["state_topic"] = "test-topic2"
     config2["device_class"] = "temperature"
-    config2["unit_of_measurement"] = str(UnitOfTemperature.CELSIUS)
+    config2["unit_of_measurement"] = UnitOfTemperature.CELSIUS.value
 
     freezer.move_to("2022-02-02 12:01:00+01:00")
 
