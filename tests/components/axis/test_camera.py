@@ -50,7 +50,7 @@ async def test_camera(hass, config_entry):
     )
 
 
-@pytest.mark.config_entry_options({CONF_STREAM_PROFILE: "profile_1"})
+@pytest.mark.parametrize("options", [{CONF_STREAM_PROFILE: "profile_1"}])
 async def test_camera_with_stream_profile(hass, config_entry):
     """Test that Axis camera entity is using the correct path with stream profike."""
     await setup_axis_integration(hass, config_entry)
