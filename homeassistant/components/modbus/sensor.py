@@ -6,7 +6,12 @@ import logging
 from typing import Any, Optional
 
 from homeassistant.components.sensor import CONF_STATE_CLASS, SensorEntity
-from homeassistant.const import CONF_NAME, CONF_SENSORS, CONF_UNIT_OF_MEASUREMENT, CONF_UNIQUE_ID
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_SENSORS,
+    CONF_UNIQUE_ID,
+    CONF_UNIT_OF_MEASUREMENT,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
