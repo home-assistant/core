@@ -14,6 +14,7 @@ from pyisy.constants import (
     PROTO_INSTEON,
     PROTO_PROGRAM,
     PROTO_ZWAVE,
+    TAG_ENABLED,
     TAG_FOLDER,
 )
 from pyisy.nodes import Group, Node, Nodes
@@ -336,6 +337,8 @@ def _categorize_nodes(
                     isy_data.aux_properties[Platform.SENSOR].append((node, control))
                     platform = NODE_AUX_FILTERS[control]
                     isy_data.aux_properties[platform].append((node, control))
+            if hasattr(node, TAG_ENABLED):
+                isy_data.aux_properties[Platform.SWITCH].append((node, TAG_ENABLED))
 
         if node.protocol == PROTO_GROUP:
             isy_data.nodes[ISY_GROUP_PLATFORM].append(node)
