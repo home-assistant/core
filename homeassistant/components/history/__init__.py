@@ -29,7 +29,13 @@ from homeassistant.components.recorder.filters import (
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.components.websocket_api import messages
 from homeassistant.components.websocket_api.connection import ActiveConnection
-from homeassistant.const import COMPRESSED_STATE_LAST_UPDATED, EVENT_STATE_CHANGED
+from homeassistant.const import (
+    COMPRESSED_STATE_ATTRIBUTES,
+    COMPRESSED_STATE_LAST_CHANGED,
+    COMPRESSED_STATE_LAST_UPDATED,
+    COMPRESSED_STATE_STATE,
+    EVENT_STATE_CHANGED,
+)
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
@@ -376,7 +382,7 @@ def _generate_stream_message(
     start_day: dt,
     end_day: dt,
 ) -> dict[str, Any]:
-    """Generate a logbook stream message response."""
+    """Generate a history stream message response."""
     return {
         "states": states,
         "start_time": dt_util.utc_to_timestamp(start_day),
@@ -441,17 +447,35 @@ async def _async_send_historical_states(
         ):
             last_time = state_last_time
 
-    stream_message = _generate_stream_message(states, start_time, end_time)
+    if last_time == 0:
+        last_time_dt = end_time
+    else:
+        last_time_dt = dt_util.utc_from_timestamp(last_time)
+    stream_message = _generate_stream_message(states, start_time, last_time_dt)
     stream_response = messages.event_message(msg_id, stream_message)
     connection.send_message(JSON_DUMP(stream_response))
 
     if last_time == 0:
         return None
-    return dt_util.utc_from_timestamp(last_time)
+    return last_time_dt
+
+
+def _history_compressed_state(state: State, no_attributes: bool) -> dict[str, Any]:
+    comp_state: dict[str, Any] = {COMPRESSED_STATE_STATE: state.state}
+    if not no_attributes:
+        comp_state[COMPRESSED_STATE_ATTRIBUTES] = state.attributes
+    comp_state[COMPRESSED_STATE_LAST_UPDATED] = dt_util.utc_to_timestamp(
+        state.last_updated
+    )
+    if state.last_changed != state.last_updated:
+        comp_state[COMPRESSED_STATE_LAST_CHANGED] = dt_util.utc_to_timestamp(
+            state.last_changed
+        )
+    return comp_state
 
 
 def _events_to_compressed_states(
-    events: Iterable[Event],
+    events: Iterable[Event], no_attributes: bool
 ) -> MutableMapping[str, list[dict[str, Any]]]:
     """Convert events to a compressed states."""
     states_by_entity_ids: dict[str, list[dict[str, Any]]] = {}
@@ -461,7 +485,7 @@ def _events_to_compressed_states(
             continue
         entity_id: str = state.entity_id
         states_by_entity_ids.setdefault(entity_id, []).append(
-            state.as_compressed_state()
+            _history_compressed_state(state, no_attributes)
         )
     return states_by_entity_ids
 
@@ -471,6 +495,7 @@ async def _async_events_consumer(
     connection: ActiveConnection,
     msg_id: int,
     stream_queue: asyncio.Queue[Event],
+    no_attributes: bool,
 ) -> None:
     """Stream events from the queue."""
     while True:
@@ -487,7 +512,7 @@ async def _async_events_consumer(
         while not stream_queue.empty():
             events.append(stream_queue.get_nowait())
 
-        if history_states := _events_to_compressed_states(events):
+        if history_states := _events_to_compressed_states(events, no_attributes):
             connection.send_message(
                 JSON_DUMP(
                     messages.event_message(
@@ -505,7 +530,8 @@ def _async_subscribe_events(
     target: Callable[[Event], None],
     entities_filter: EntityFilter | None,
     entity_ids: list[str] | None,
-    significant_changes_only: bool = False,
+    significant_changes_only: bool,
+    minimal_response: bool,
 ) -> None:
     """Subscribe to events for the entities and devices or all.
 
@@ -516,12 +542,12 @@ def _async_subscribe_events(
 
     @callback
     def _forward_state_events_filtered(event: Event) -> None:
-        if event.data.get("old_state") is None or event.data.get("new_state") is None:
+        """Filter state events and forward them."""
+        if (new_state := event.data.get("new_state")) is None:
             return
-        new_state: State = event.data["new_state"]
         if entities_filter and not entities_filter(new_state.entity_id):
             return
-        if significant_changes_only:
+        if not significant_changes_only and not minimal_response:
             old_state: State = event.data["old_state"]
             if new_state.state == old_state.state:
                 return
@@ -668,6 +694,7 @@ async def ws_stream(
         entities_filter,
         entity_ids,
         significant_changes_only=significant_changes_only,
+        minimal_response=minimal_response,
     )
     subscriptions_setup_complete_time = dt_util.utcnow()
     connection.subscriptions[msg_id] = _unsub
@@ -693,6 +720,7 @@ async def ws_stream(
             connection,
             msg_id,
             stream_queue,
+            no_attributes,
         )
     )
 
@@ -721,7 +749,7 @@ async def ws_stream(
         subscriptions_setup_complete_time,
         entity_ids,
         filters,
-        include_start_time_state,
+        False,  # We don't want the start time state again
         significant_changes_only,
         minimal_response,
         no_attributes,
