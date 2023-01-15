@@ -90,10 +90,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {"name": self._name}
         errors = {}
 
-        if (
-            self.context["source"] == config_entries.SOURCE_IMPORT
-            or user_input is not None
-        ):
+        if user_input is not None:
             try:
                 client = await async_control_connect(self._host, None)
             except WebOsTvPairError:
