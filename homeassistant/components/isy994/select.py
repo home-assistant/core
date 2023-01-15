@@ -53,9 +53,11 @@ async def async_setup_entry(
         node_prop: NodeProperty = node.aux_properties[control]
 
         options = []
+        if control == PROP_RAMP_RATE:
+            options = RAMP_RATE_OPTIONS
         if node_prop.uom == UOM_INDEX:
             if options_dict := UOM_TO_STATES.get(node_prop.uom):
-                options = options_dict.values()
+                options = list(options_dict.values())
 
         description = SelectEntityDescription(
             key=f"{node.address}_{control}",
@@ -72,11 +74,11 @@ async def async_setup_entry(
         }
 
         if control == PROP_RAMP_RATE:
-            description.options = RAMP_RATE_OPTIONS
             entities.append(ISYRampRateSelectEntity(**entity_detail))
             continue
         if node.uom == UOM_INDEX and options:
             entities.append(ISYAuxControlIndexSelectEntity(**entity_detail))
+            continue
         # Future: support Node Server custom index UOMs
         _LOGGER.info(
             "ISY missing node index unit definitions for %s: %s", node.name, name
