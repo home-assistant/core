@@ -118,7 +118,7 @@ def process_plex_payload(
 
     if content_id.startswith(PLEX_URI_SCHEME + "{"):
         # Handle the special payload of 'plex://{<json>}'
-        content_id = content_id[len(PLEX_URI_SCHEME) :]
+        content_id = content_id.removeprefix(PLEX_URI_SCHEME)
         content = json.loads(content_id)
     elif content_id.startswith(PLEX_URI_SCHEME):
         # Handle standard media_browser payloads

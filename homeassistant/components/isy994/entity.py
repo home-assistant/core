@@ -11,14 +11,14 @@ from pyisy.constants import (
     PROTO_ZWAVE,
 )
 from pyisy.helpers import EventListener, NodeProperty
-from pyisy.nodes import Node
+from pyisy.nodes import Group, Node
 from pyisy.programs import Program
 from pyisy.variables import Variable
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 
 from .const import DOMAIN
 
@@ -30,7 +30,11 @@ class ISYEntity(Entity):
     _attr_should_poll = False
     _node: Node | Program | Variable
 
-    def __init__(self, node: Node, device_info: DeviceInfo | None = None) -> None:
+    def __init__(
+        self,
+        node: Node | Group | Variable | Program,
+        device_info: DeviceInfo | None = None,
+    ) -> None:
         """Initialize the insteon device."""
         self._node = node
         self._attr_name = node.name
@@ -89,10 +93,7 @@ class ISYNodeEntity(ISYEntity):
         attr = {}
         node = self._node
         # Insteon aux_properties are now their own sensors
-        if (
-            hasattr(self._node, "aux_properties")
-            and getattr(node, "protocol", None) != PROTO_INSTEON
-        ):
+        if hasattr(self._node, "aux_properties") and node.protocol != PROTO_INSTEON:
             for name, value in self._node.aux_properties.items():
                 attr_name = COMMAND_FRIENDLY_NAME.get(name, name)
                 attr[attr_name] = str(value.formatted).lower()
@@ -128,7 +129,7 @@ class ISYNodeEntity(ISYEntity):
 
     async def async_get_zwave_parameter(self, parameter: Any) -> None:
         """Respond to an entity service command to request a Z-Wave device parameter from the ISY."""
-        if not hasattr(self._node, "protocol") or self._node.protocol != PROTO_ZWAVE:
+        if self._node.protocol != PROTO_ZWAVE:
             raise HomeAssistantError(
                 "Invalid service call: cannot request Z-Wave Parameter for non-Z-Wave"
                 f" device {self.entity_id}"
@@ -139,7 +140,7 @@ class ISYNodeEntity(ISYEntity):
         self, parameter: Any, value: Any | None, size: int | None
     ) -> None:
         """Respond to an entity service command to set a Z-Wave device parameter via the ISY."""
-        if not hasattr(self._node, "protocol") or self._node.protocol != PROTO_ZWAVE:
+        if self._node.protocol != PROTO_ZWAVE:
             raise HomeAssistantError(
                 "Invalid service call: cannot set Z-Wave Parameter for non-Z-Wave"
                 f" device {self.entity_id}"
@@ -155,7 +156,10 @@ class ISYNodeEntity(ISYEntity):
 class ISYProgramEntity(ISYEntity):
     """Representation of an ISY program base."""
 
-    def __init__(self, name: str, status: Any | None, actions: Program = None) -> None:
+    _actions: Program
+    _status: Program
+
+    def __init__(self, name: str, status: Program, actions: Program = None) -> None:
         """Initialize the ISY program-based entity."""
         super().__init__(status)
         self._attr_name = name
@@ -185,3 +189,42 @@ class ISYProgramEntity(ISYEntity):
         if self._node.last_update != EMPTY_TIME:
             attr["status_last_update"] = self._node.last_update
         return attr
+
+
+class ISYAuxControlEntity(Entity):
+    """Representation of a ISY/IoX Aux Control base entity."""
+
+    _attr_should_poll = False
+
+    def __init__(
+        self,
+        node: Node,
+        control: str,
+        unique_id: str,
+        description: EntityDescription,
+        device_info: DeviceInfo | None,
+    ) -> None:
+        """Initialize the ISY Aux Control Number entity."""
+        self._node = node
+        self._control = control
+        name = COMMAND_FRIENDLY_NAME.get(control, control).replace("_", " ").title()
+        if node.address != node.primary_node:
+            name = f"{node.name} {name}"
+        self._attr_name = name
+        self.entity_description = description
+        self._attr_has_entity_name = node.address == node.primary_node
+        self._attr_unique_id = unique_id
+        self._attr_device_info = device_info
+        self._change_handler: EventListener | None = None
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to the node control change events."""
+        self._change_handler = self._node.control_events.subscribe(self.async_on_update)
+
+    @callback
+    def async_on_update(self, event: NodeProperty) -> None:
+        """Handle a control event from the ISY Node."""
+        # Only watch for our control changing or the node being enabled/disabled
+        if event.control != self._control:
+            return
+        self.async_write_ha_state()

@@ -1,23 +1,49 @@
 """Support for ISY number entities."""
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import Any
 
-from pyisy import ISY
+from pyisy.constants import ISY_VALUE_UNKNOWN, PROP_ON_LEVEL
 from pyisy.helpers import EventListener, NodeProperty
 from pyisy.variables import Variable
 
-from homeassistant.components.number import NumberEntity, NumberEntityDescription
+from homeassistant.components.number import (
+    NumberEntity,
+    NumberEntityDescription,
+    NumberMode,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_VARIABLES, Platform
+from homeassistant.const import CONF_VARIABLES, PERCENTAGE, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.percentage import (
+    percentage_to_ranged_value,
+    ranged_value_to_percentage,
+)
 
-from .const import DOMAIN, ISY_DEVICES, ISY_ROOT, ISY_VARIABLES
+from .const import (
+    CONF_VAR_SENSOR_STRING,
+    DEFAULT_VAR_SENSOR_STRING,
+    DOMAIN,
+    UOM_8_BIT_RANGE,
+)
+from .entity import ISYAuxControlEntity
 from .helpers import convert_isy_value_to_hass
 
 ISY_MAX_SIZE = (2**32) / 2
+ON_RANGE = (1, 255)  # Off is not included
+CONTROL_DESC = {
+    PROP_ON_LEVEL: NumberEntityDescription(
+        key=PROP_ON_LEVEL,
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.CONFIG,
+        native_min_value=1.0,
+        native_max_value=100.0,
+        native_step=1.0,
+    )
+}
 
 
 async def async_setup_entry(
@@ -26,40 +52,34 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up ISY/IoX number entities from config entry."""
-    hass_isy_data = hass.data[DOMAIN][config_entry.entry_id]
-    isy: ISY = hass_isy_data[ISY_ROOT]
-    device_info = hass_isy_data[ISY_DEVICES]
-    entities: list[ISYVariableNumberEntity] = []
+    isy_data = hass.data[DOMAIN][config_entry.entry_id]
+    device_info = isy_data.devices
+    entities: list[ISYVariableNumberEntity | ISYAuxControlNumberEntity] = []
+    var_id = config_entry.options.get(CONF_VAR_SENSOR_STRING, DEFAULT_VAR_SENSOR_STRING)
 
-    for node, enable_by_default in hass_isy_data[ISY_VARIABLES][Platform.NUMBER]:
-        step = 10 ** (-1 * node.prec)
-        min_max = ISY_MAX_SIZE / (10**node.prec)
+    for node in isy_data.variables[Platform.NUMBER]:
+        step = 10 ** (-1 * int(node.prec))
+        min_max = ISY_MAX_SIZE / (10 ** int(node.prec))
         description = NumberEntityDescription(
             key=node.address,
             name=node.name,
-            icon="mdi:counter",
-            entity_registry_enabled_default=enable_by_default,
+            entity_registry_enabled_default=var_id in node.name,
             native_unit_of_measurement=None,
             native_step=step,
             native_min_value=-min_max,
             native_max_value=min_max,
         )
-        description_init = NumberEntityDescription(
+        description_init = replace(
+            description,
             key=f"{node.address}_init",
             name=f"{node.name} Initial Value",
-            icon="mdi:counter",
-            entity_registry_enabled_default=False,
-            native_unit_of_measurement=None,
-            native_step=step,
-            native_min_value=-min_max,
-            native_max_value=min_max,
             entity_category=EntityCategory.CONFIG,
         )
 
         entities.append(
             ISYVariableNumberEntity(
                 node,
-                unique_id=f"{isy.uuid}_{node.address}",
+                unique_id=isy_data.uid_base(node),
                 description=description,
                 device_info=device_info[CONF_VARIABLES],
             )
@@ -67,14 +87,60 @@ async def async_setup_entry(
         entities.append(
             ISYVariableNumberEntity(
                 node=node,
-                unique_id=f"{isy.uuid}_{node.address}_init",
+                unique_id=f"{isy_data.uid_base(node)}_init",
                 description=description_init,
                 device_info=device_info[CONF_VARIABLES],
                 init_entity=True,
             )
         )
 
+    for node, control in isy_data.aux_properties[Platform.NUMBER]:
+        entities.append(
+            ISYAuxControlNumberEntity(
+                node=node,
+                control=control,
+                unique_id=f"{isy_data.uid_base(node)}_{control}",
+                description=CONTROL_DESC[control],
+                device_info=device_info.get(node.primary_node),
+            )
+        )
     async_add_entities(entities)
+
+
+class ISYAuxControlNumberEntity(ISYAuxControlEntity, NumberEntity):
+    """Representation of a ISY/IoX Aux Control Number entity."""
+
+    _attr_mode = NumberMode.SLIDER
+
+    @property
+    def native_value(self) -> float | int | None:
+        """Return the state of the variable."""
+        node_prop: NodeProperty = self._node.aux_properties[self._control]
+        if node_prop.value == ISY_VALUE_UNKNOWN:
+            return None
+
+        if (
+            self.entity_description.native_unit_of_measurement == PERCENTAGE
+            and node_prop.uom == UOM_8_BIT_RANGE  # Insteon 0-255
+        ):
+            return ranged_value_to_percentage(ON_RANGE, node_prop.value)
+        return int(node_prop.value)
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Update the current value."""
+        node_prop: NodeProperty = self._node.aux_properties[self._control]
+
+        if self.entity_description.native_unit_of_measurement == PERCENTAGE:
+            value = (
+                percentage_to_ranged_value(ON_RANGE, round(value))
+                if node_prop.uom == UOM_8_BIT_RANGE
+                else value
+            )
+        if self._control == PROP_ON_LEVEL:
+            await self._node.set_on_level(value)
+            return
+
+        await self._node.send_cmd(self._control, val=value, uom=node_prop.uom)
 
 
 class ISYVariableNumberEntity(NumberEntity):
