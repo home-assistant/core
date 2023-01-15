@@ -480,6 +480,9 @@ discovery30303==0.2.1
 # homeassistant.components.doorbird
 doorbirdpy==2.1.0
 
+# homeassistant.components.dremel_3d_printer
+dremel3dpy==2.1.1
+
 # homeassistant.components.dsmr
 dsmr_parser==0.33
 
@@ -1787,6 +1790,9 @@ url-normalize==1.4.3
 
 # homeassistant.components.uvc
 uvcclient==0.11.0
+
+# homeassistant.components.dremel_3d_printer
+validators==0.19.0
 
 # homeassistant.components.vallox
 vallox-websocket-api==3.0.0

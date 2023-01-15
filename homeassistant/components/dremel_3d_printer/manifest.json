@@ -1,0 +1,10 @@
+{
+  "domain": "dremel_3d_printer",
+  "name": "Dremel 3D Printer",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/dremel_3d_printer",
+  "requirements": ["validators==0.19.0", "dremel3dpy==2.1.1"],
+  "codeowners": ["@tkdrob"],
+  "iot_class": "local_polling",
+  "integration_type": "device"
+}
