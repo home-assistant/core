@@ -419,6 +419,7 @@ async def _async_send_historical_states(
     significant_changes_only: bool,
     minimal_response: bool,
     no_attributes: bool,
+    send_empty: bool,
 ) -> dt | None:
     """Fetch history significant_states and convert them to json in the executor."""
     states = cast(
@@ -448,6 +449,10 @@ async def _async_send_historical_states(
             last_time = state_last_time
 
     if last_time == 0:
+        # If we did not send any states ever, we need to send an empty response
+        # so the websocket client knows we are done.
+        if not send_empty:
+            return None
         last_time_dt = end_time
     else:
         last_time_dt = dt_util.utc_from_timestamp(last_time)
@@ -647,6 +652,7 @@ async def ws_stream(
             significant_changes_only,
             minimal_response,
             no_attributes,
+            True,
         )
         return
 
@@ -712,6 +718,7 @@ async def ws_stream(
         significant_changes_only,
         minimal_response,
         no_attributes,
+        True,
     )
 
     live_stream.task = asyncio.create_task(
@@ -753,4 +760,5 @@ async def ws_stream(
         significant_changes_only,
         minimal_response,
         no_attributes,
+        send_empty=not last_event_time,
     )
