@@ -61,6 +61,7 @@ from homeassistant.components.modbus.const import (
     UDP,
     DataType,
 )
+from homeassistant.components.modbus.modbus import async_modbus_setup
 from homeassistant.components.modbus.validators import (
     duplicate_entity_validator,
     duplicate_modbus_validator,
@@ -433,6 +434,25 @@ async def test_duplicate_entity_validator(do_config):
 )
 async def test_config_modbus(hass, caplog, mock_modbus_with_pymodbus):
     """Run configuration test for modbus."""
+
+
+async def test_failing_setup(hass):
+    """Test setup fails."""
+    config = {
+        DOMAIN: {
+            CONF_TYPE: TCP,
+            CONF_HOST: TEST_MODBUS_HOST,
+            CONF_PORT: TEST_PORT_TCP,
+            CONF_NAME: TEST_MODBUS_NAME,
+        },
+    }
+    assert await async_setup_component(hass, DOMAIN, config) is True
+    hub = hass.data[DOMAIN][TEST_MODBUS_NAME]
+    hub.async_setup = mock.AsyncMock(return_value=False)
+    setup_config = {
+        DOMAIN: [],
+    }
+    await async_modbus_setup(hass, setup_config)
 
 
 VALUE = "value"
