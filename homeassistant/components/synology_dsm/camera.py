@@ -160,6 +160,7 @@ class SynoDSMCamera(SynologyDSMBaseEntity[SynologyDSMCameraUpdateCoordinator], C
                 self.camera_data.name,
                 result,
             )
+            return result
         except (
             SynologyDSMAPIErrorException,
             SynologyDSMRequestException,
