@@ -62,4 +62,4 @@ class StookwijzerSensor(SensorEntity):
         """Return the state of the device."""
         if self._client.state is None:
             return None
-        return StookwijzerState(self._client.state).value.lower()
+        return StookwijzerState(self._client.state).value
