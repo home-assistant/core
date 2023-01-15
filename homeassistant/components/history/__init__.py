@@ -402,7 +402,19 @@ def _async_send_empty_response(
     """
     connection.send_result(msg_id)
     stream_end_time = end_time or dt_util.utcnow()
-    empty_stream_message = _generate_stream_message({}, start_time, stream_end_time)
+    _async_send_response(connection, msg_id, start_time, stream_end_time, {})
+
+
+@callback
+def _async_send_response(
+    connection: ActiveConnection,
+    msg_id: int,
+    start_time: dt,
+    end_time: dt,
+    states: MutableMapping[str, list[dict[str, Any]]],
+) -> None:
+    """Send a response."""
+    empty_stream_message = _generate_stream_message(states, start_time, end_time)
     empty_response = messages.event_message(msg_id, empty_stream_message)
     connection.send_message(JSON_DUMP(empty_response))
 
@@ -457,9 +469,7 @@ async def _async_send_historical_states(
         last_time_dt = end_time
     else:
         last_time_dt = dt_util.utc_from_timestamp(last_time)
-    stream_message = _generate_stream_message(states, start_time, last_time_dt)
-    stream_response = messages.event_message(msg_id, stream_message)
-    connection.send_message(JSON_DUMP(stream_response))
+    _async_send_response(connection, msg_id, start_time, last_time_dt, states)
     return last_time_dt if last_time != 0 else None
 
 
