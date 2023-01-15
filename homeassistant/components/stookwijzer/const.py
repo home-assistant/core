@@ -11,6 +11,6 @@ LOGGER = logging.getLogger(__package__)
 class StookwijzerState(StrEnum):
     """Stookwijzer states for sensor entity."""
 
-    BLUE = "Blauw"
-    ORANGE = "Oranje"
-    RED = "Rood"
+    BLUE = "blauw"
+    ORANGE = "oranje"
+    RED = "rood"
