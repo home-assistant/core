@@ -41,6 +41,9 @@ MY_AUTH_CALLBACK_PATH = "https://my.home-assistant.io/redirect/oauth"
 
 CLOCK_OUT_OF_SYNC_MAX_SEC = 20
 
+OAUTH_AUTHORIZE_URL_TIMEOUT_SEC = 10
+OAUTH_TOKEN_TIMEOUT_SEC = 30
+
 
 class AbstractOAuth2Implementation(ABC):
     """Base class to abstract OAuth2 authentication."""
@@ -284,7 +287,7 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
             return self.async_external_step_done(next_step_id=next_step)
 
         try:
-            async with async_timeout.timeout(10):
+            async with async_timeout.timeout(OAUTH_AUTHORIZE_URL_TIMEOUT_SEC):
                 url = await self.async_generate_authorize_url()
         except asyncio.TimeoutError:
             return self.async_abort(reason="authorize_url_timeout")
@@ -307,7 +310,7 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         _LOGGER.debug("Creating config entry from external data")
 
         try:
-            async with async_timeout.timeout(10):
+            async with async_timeout.timeout(OAUTH_TOKEN_TIMEOUT_SEC):
                 token = await self.flow_impl.async_resolve_external_data(
                     self.external_data
                 )
