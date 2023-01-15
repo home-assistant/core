@@ -194,9 +194,9 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
             for entry in val:
                 v_temp = self._scale * entry + self._offset
                 if self._min_value_threshold is not None and v_temp < self._min_value_threshold:
-                  v_temp = self._min_value
+                    v_temp = self._min_value
                 elif self._max_value_threshold is not None and v_temp > self._max_value_threshold:
-                  v_temp = self._max_value
+                    v_temp = self._max_value
 
                 # We could convert int to float, and the code would still work; however
                 # we lose some precision, and unit tests will fail. Therefore, we do
@@ -210,9 +210,9 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         # Apply scale and precision to floats and ints
         val_result: float | int = self._scale * val[0] + self._offset
         if self._min_value_threshold is not None and val_result < self._min_value_threshold:
-          val_result = self._min_value
+            val_result = self._min_value
         elif self._max_value_threshold is not None and val_result > self._max_value_threshold:
-          val_result = self._max_value
+            val_result = self._max_value
 
         # We could convert int to float, and the code would still work; however
         # we lose some precision, and unit tests will fail. Therefore, we do
