@@ -52,6 +52,7 @@
             "discrete_rssi_level": {
                 "state": {
                     "good": "Goed",
+                    "low": "Laag",
                     "verylow": "Heel laag"
                 }
             },
@@ -62,6 +63,7 @@
                     "rain": "Regen",
                     "security": "Beveiliging",
                     "temperature": "Temperatuur",
+                    "timer": "Timer",
                     "user": "Gebruiker",
                     "wind": "Wind"
                 }

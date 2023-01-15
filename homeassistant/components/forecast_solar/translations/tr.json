@@ -15,6 +15,9 @@
         }
     },
     "options": {
+        "error": {
+            "invalid_api_key": "Ge\u00e7ersiz API anahtar\u0131"
+        },
         "step": {
             "init": {
                 "data": {
@@ -25,7 +28,7 @@
                     "inverter_size": "\u0130nverter boyutu (Watt)",
                     "modules power": "Solar mod\u00fcllerinizin toplam en y\u00fcksek Watt g\u00fcc\u00fc"
                 },
-                "description": "Bu de\u011ferler Solar.Forecast sonucunun ayarlanmas\u0131na izin verir. Bir alan net de\u011filse l\u00fctfen belgelere bak\u0131n."
+                "description": "Bu de\u011ferler, Forecast.Solar sonucunun de\u011fi\u015ftirilmesine izin verir. Bir alan net de\u011filse l\u00fctfen belgelere bak\u0131n."
             }
         }
     }
