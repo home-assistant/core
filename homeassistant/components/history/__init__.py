@@ -459,10 +459,7 @@ async def _async_send_historical_states(
     stream_message = _generate_stream_message(states, start_time, last_time_dt)
     stream_response = messages.event_message(msg_id, stream_message)
     connection.send_message(JSON_DUMP(stream_response))
-
-    if last_time == 0:
-        return None
-    return last_time_dt
+    return last_time_dt if last_time != 0 else None
 
 
 def _history_compressed_state(state: State, no_attributes: bool) -> dict[str, Any]:
