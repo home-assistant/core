@@ -154,7 +154,12 @@ class SynoDSMCamera(SynologyDSMBaseEntity[SynologyDSMCameraUpdateCoordinator], C
         if not self.available:
             return None
         try:
-            return await self._api.surveillance_station.get_camera_image(self.entity_description.key, self.snapshot_quality)  # type: ignore[no-any-return]
+            result = await self._api.surveillance_station.get_camera_image(self.entity_description.key, self.snapshot_quality)  # type: ignore[no-any-return]
+            _LOGGER.warning(
+                "SynoDSMCamera.camera_image(%s) - result:%s",
+                self.camera_data.name,
+                result,
+            )
         except (
             SynologyDSMAPIErrorException,
             SynologyDSMRequestException,
