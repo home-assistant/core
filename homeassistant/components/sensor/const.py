@@ -332,7 +332,7 @@ class SensorDeviceClass(StrEnum):
     VOLATILE_ORGANIC_COMPOUNDS = "volatile_organic_compounds"
     """Amount of VOC.
 
-    Unit of measurement: `µg/m³`
+    Unit of measurement: `µg/m³`, `ppb`
     """
 
     VOLTAGE = "voltage"
