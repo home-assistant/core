@@ -59,14 +59,14 @@ async def test_connection_error(hass: HomeAssistant) -> None:
 
     entry.add_to_hass(hass)
 
-    with patch("apcaccess.status.parse", side_effect=ConnectionError), patch(
+    with patch("apcaccess.status.parse", side_effect=OSError), patch(
         "apcaccess.status.get"
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_unload_entry(hass):
+async def test_unload_remove(hass):
     """Test successful unload of entry."""
     # Load two integrations from two mock hosts.
     entries = (
@@ -92,3 +92,10 @@ async def test_unload_entry(hass):
 
     # We should never leave any garbage in the data dict.
     assert len(hass.data[DOMAIN]) == 0
+
+    # Remove both entries.
+    for entry in entries:
+        await hass.config_entries.async_remove(entry.entry_id)
+        await hass.async_block_till_done()
+        state = hass.states.get(entry.entry_id)
+        assert state is None
