@@ -272,14 +272,12 @@ SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
         name="Active average demand",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="montly_power_peak_w",
         name="Peak demand current month",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="total_gas_m3",
