@@ -3,7 +3,7 @@ import json
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from reolink_ip.exceptions import ApiError, CredentialsInvalidError
+from reolink_aio.exceptions import ApiError, CredentialsInvalidError, ReolinkError
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.reolink import const
@@ -24,14 +24,14 @@ TEST_NVR_NAME = "test_reolink_name"
 TEST_USE_HTTPS = True
 
 
-def get_mock_info(error=None, host_data_return=True):
+def get_mock_info(error=None, user_level="admin"):
     """Return a mock gateway info instance."""
     host_mock = Mock()
     if error is None:
-        host_mock.get_host_data = AsyncMock(return_value=host_data_return)
+        host_mock.get_host_data = AsyncMock(return_value=None)
     else:
         host_mock.get_host_data = AsyncMock(side_effect=error)
-    host_mock.unsubscribe_all = AsyncMock(return_value=True)
+    host_mock.unsubscribe = AsyncMock(return_value=True)
     host_mock.logout = AsyncMock(return_value=True)
     host_mock.mac_address = TEST_MAC
     host_mock.onvif_enabled = True
@@ -40,6 +40,8 @@ def get_mock_info(error=None, host_data_return=True):
     host_mock.nvr_name = TEST_NVR_NAME
     host_mock.port = TEST_PORT
     host_mock.use_https = TEST_USE_HTTPS
+    host_mock.is_admin = user_level == "admin"
+    host_mock.user_level = user_level
     return host_mock
 
 
@@ -82,6 +84,9 @@ async def test_config_flow_manual_success(hass):
         CONF_PORT: TEST_PORT,
         const.CONF_USE_HTTPS: TEST_USE_HTTPS,
     }
+    assert result["options"] == {
+        const.CONF_PROTOCOL: const.DEFAULT_PROTOCOL,
+    }
 
 
 async def test_config_flow_errors(hass):
@@ -94,7 +99,7 @@ async def test_config_flow_errors(hass):
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    host_mock = get_mock_info(host_data_return=False)
+    host_mock = get_mock_info(error=ReolinkError("Test error"))
     with patch("homeassistant.components.reolink.host.Host", return_value=host_mock):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -107,7 +112,22 @@ async def test_config_flow_errors(hass):
 
     assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {"host": "cannot_connect"}
+    assert result["errors"] == {CONF_HOST: "cannot_connect"}
+
+    host_mock = get_mock_info(user_level="guest")
+    with patch("homeassistant.components.reolink.host.Host", return_value=host_mock):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: TEST_USERNAME,
+                CONF_PASSWORD: TEST_PASSWORD,
+                CONF_HOST: TEST_HOST,
+            },
+        )
+
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {CONF_USERNAME: "not_admin"}
 
     host_mock = get_mock_info(error=json.JSONDecodeError("test_error", "test", 1))
     with patch("homeassistant.components.reolink.host.Host", return_value=host_mock):
@@ -122,7 +142,7 @@ async def test_config_flow_errors(hass):
 
     assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {"host": "unknown"}
+    assert result["errors"] == {CONF_HOST: "unknown"}
 
     host_mock = get_mock_info(error=CredentialsInvalidError("Test error"))
     with patch("homeassistant.components.reolink.host.Host", return_value=host_mock):
@@ -137,7 +157,7 @@ async def test_config_flow_errors(hass):
 
     assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {"host": "invalid_auth"}
+    assert result["errors"] == {CONF_HOST: "invalid_auth"}
 
     host_mock = get_mock_info(error=ApiError("Test error"))
     with patch("homeassistant.components.reolink.host.Host", return_value=host_mock):
@@ -152,7 +172,7 @@ async def test_config_flow_errors(hass):
 
     assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {"host": "api_error"}
+    assert result["errors"] == {CONF_HOST: "api_error"}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -174,6 +194,9 @@ async def test_config_flow_errors(hass):
         CONF_PORT: TEST_PORT,
         const.CONF_USE_HTTPS: TEST_USE_HTTPS,
     }
+    assert result["options"] == {
+        const.CONF_PROTOCOL: const.DEFAULT_PROTOCOL,
+    }
 
 
 async def test_options_flow(hass):
@@ -187,6 +210,9 @@ async def test_options_flow(hass):
             CONF_PASSWORD: TEST_PASSWORD,
             CONF_PORT: TEST_PORT,
             const.CONF_USE_HTTPS: TEST_USE_HTTPS,
+        },
+        options={
+            const.CONF_PROTOCOL: "rtsp",
         },
         title=TEST_NVR_NAME,
     )
@@ -202,12 +228,12 @@ async def test_options_flow(hass):
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={const.CONF_PROTOCOL: "rtsp"},
+        user_input={const.CONF_PROTOCOL: "rtmp"},
     )
 
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
-        const.CONF_PROTOCOL: "rtsp",
+        const.CONF_PROTOCOL: "rtmp",
     }
 
 
@@ -222,6 +248,9 @@ async def test_change_connection_settings(hass):
             CONF_PASSWORD: TEST_PASSWORD,
             CONF_PORT: TEST_PORT,
             const.CONF_USE_HTTPS: TEST_USE_HTTPS,
+        },
+        options={
+            const.CONF_PROTOCOL: const.DEFAULT_PROTOCOL,
         },
         title=TEST_NVR_NAME,
     )
@@ -245,6 +274,68 @@ async def test_change_connection_settings(hass):
     )
 
     assert result["type"] is data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry.data[CONF_HOST] == TEST_HOST2
+    assert config_entry.data[CONF_USERNAME] == TEST_USERNAME2
+    assert config_entry.data[CONF_PASSWORD] == TEST_PASSWORD2
+
+
+async def test_reauth(hass):
+    """Test a reauth flow."""
+    config_entry = MockConfigEntry(
+        domain=const.DOMAIN,
+        unique_id=format_mac(TEST_MAC),
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_PORT: TEST_PORT,
+            const.CONF_USE_HTTPS: TEST_USE_HTTPS,
+        },
+        options={
+            const.CONF_PROTOCOL: const.DEFAULT_PROTOCOL,
+        },
+        title=TEST_NVR_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": config_entry.entry_id,
+            "title_placeholders": {"name": TEST_NVR_NAME},
+            "unique_id": format_mac(TEST_MAC),
+        },
+        data=config_entry.data,
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: TEST_HOST2,
+            CONF_USERNAME: TEST_USERNAME2,
+            CONF_PASSWORD: TEST_PASSWORD2,
+        },
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "reauth_successful"
     assert config_entry.data[CONF_HOST] == TEST_HOST2
     assert config_entry.data[CONF_USERNAME] == TEST_USERNAME2
     assert config_entry.data[CONF_PASSWORD] == TEST_PASSWORD2

@@ -1,6 +1,7 @@
 """Manifest validation."""
 from __future__ import annotations
 
+from enum import IntEnum
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
@@ -23,7 +24,17 @@ DOCUMENTATION_URL_HOST = "www.home-assistant.io"
 DOCUMENTATION_URL_PATH_PREFIX = "/integrations/"
 DOCUMENTATION_URL_EXCEPTIONS = {"https://www.home-assistant.io/hassio"}
 
-SUPPORTED_QUALITY_SCALES = ["gold", "internal", "platinum", "silver"]
+
+class QualityScale(IntEnum):
+    """Supported manifest quality scales."""
+
+    INTERNAL = -1
+    SILVER = 1
+    GOLD = 2
+    PLATINUM = 3
+
+
+SUPPORTED_QUALITY_SCALES = [enum.name.lower() for enum in QualityScale]
 SUPPORTED_IOT_CLASSES = [
     "assumed_state",
     "calculated",
@@ -309,25 +320,19 @@ def validate_manifest(integration: Integration, core_components_dir: Path) -> No
             "manifest", f"Invalid manifest: {humanize_error(integration.manifest, err)}"
         )
 
-    if integration.manifest["domain"] != integration.path.name:
+    if (domain := integration.manifest["domain"]) != integration.path.name:
         integration.add_error("manifest", "Domain does not match dir name")
 
-    if (
-        not integration.core
-        and (core_components_dir / integration.manifest["domain"]).exists()
-    ):
+    if not integration.core and (core_components_dir / domain).exists():
         integration.add_warning(
             "manifest", "Domain collides with built-in core integration"
         )
 
-    if (
-        integration.manifest["domain"] in NO_IOT_CLASS
-        and "iot_class" in integration.manifest
-    ):
+    if domain in NO_IOT_CLASS and "iot_class" in integration.manifest:
         integration.add_error("manifest", "Domain should not have an IoT Class")
 
     if (
-        integration.manifest["domain"] not in NO_IOT_CLASS
+        domain not in NO_IOT_CLASS
         and "iot_class" not in integration.manifest
         and integration.manifest.get("integration_type") != "virtual"
     ):
@@ -341,6 +346,16 @@ def validate_manifest(integration: Integration, core_components_dir: Path) -> No
         integration.add_error(
             "manifest",
             "Virtual integration points to non-existing supported_by integration",
+        )
+
+    if (
+        (quality_scale := integration.manifest.get("quality_scale"))
+        and QualityScale[quality_scale.upper()] > QualityScale.SILVER
+        and not integration.manifest.get("codeowners")
+    ):
+        integration.add_error(
+            "manifest",
+            f"{quality_scale} integration does not have a code owner",
         )
 
     if not integration.core:

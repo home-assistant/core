@@ -88,6 +88,7 @@ CONF_EFFECT_COMMAND_TOPIC = "effect_command_topic"
 CONF_EFFECT_LIST = "effect_list"
 CONF_EFFECT_STATE_TOPIC = "effect_state_topic"
 CONF_EFFECT_VALUE_TEMPLATE = "effect_value_template"
+CONF_HS_COMMAND_TEMPLATE = "hs_command_template"
 CONF_HS_COMMAND_TOPIC = "hs_command_topic"
 CONF_HS_STATE_TOPIC = "hs_state_topic"
 CONF_HS_VALUE_TEMPLATE = "hs_value_template"
@@ -105,6 +106,7 @@ CONF_RGBWW_COMMAND_TEMPLATE = "rgbww_command_template"
 CONF_RGBWW_COMMAND_TOPIC = "rgbww_command_topic"
 CONF_RGBWW_STATE_TOPIC = "rgbww_state_topic"
 CONF_RGBWW_VALUE_TEMPLATE = "rgbww_value_template"
+CONF_XY_COMMAND_TEMPLATE = "xy_command_template"
 CONF_XY_COMMAND_TOPIC = "xy_command_topic"
 CONF_XY_STATE_TOPIC = "xy_state_topic"
 CONF_XY_VALUE_TEMPLATE = "xy_value_template"
@@ -136,7 +138,6 @@ MQTT_LIGHT_ATTRIBUTES_BLOCKED = frozenset(
 
 DEFAULT_BRIGHTNESS_SCALE = 255
 DEFAULT_NAME = "MQTT LightEntity"
-DEFAULT_OPTIMISTIC = False
 DEFAULT_PAYLOAD_OFF = "OFF"
 DEFAULT_PAYLOAD_ON = "ON"
 DEFAULT_WHITE_SCALE = 255
@@ -148,9 +149,11 @@ COMMAND_TEMPLATE_KEYS = [
     CONF_BRIGHTNESS_COMMAND_TEMPLATE,
     CONF_COLOR_TEMP_COMMAND_TEMPLATE,
     CONF_EFFECT_COMMAND_TEMPLATE,
+    CONF_HS_COMMAND_TEMPLATE,
     CONF_RGB_COMMAND_TEMPLATE,
     CONF_RGBW_COMMAND_TEMPLATE,
     CONF_RGBWW_COMMAND_TEMPLATE,
+    CONF_XY_COMMAND_TEMPLATE,
 ]
 VALUE_TEMPLATE_KEYS = [
     CONF_BRIGHTNESS_VALUE_TEMPLATE,
@@ -186,6 +189,7 @@ _PLATFORM_SCHEMA_BASE = (
             vol.Optional(CONF_EFFECT_LIST): vol.All(cv.ensure_list, [cv.string]),
             vol.Optional(CONF_EFFECT_STATE_TOPIC): valid_subscribe_topic,
             vol.Optional(CONF_EFFECT_VALUE_TEMPLATE): cv.template,
+            vol.Optional(CONF_HS_COMMAND_TEMPLATE): cv.template,
             vol.Optional(CONF_HS_COMMAND_TOPIC): valid_publish_topic,
             vol.Optional(CONF_HS_STATE_TOPIC): valid_subscribe_topic,
             vol.Optional(CONF_HS_VALUE_TEMPLATE): cv.template,
@@ -195,7 +199,6 @@ _PLATFORM_SCHEMA_BASE = (
             vol.Optional(CONF_ON_COMMAND_TYPE, default=DEFAULT_ON_COMMAND_TYPE): vol.In(
                 VALUES_ON_COMMAND_TYPE
             ),
-            vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
             vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
             vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
             vol.Optional(CONF_RGB_COMMAND_TEMPLATE): cv.template,
@@ -215,6 +218,7 @@ _PLATFORM_SCHEMA_BASE = (
             vol.Optional(CONF_WHITE_SCALE, default=DEFAULT_WHITE_SCALE): vol.All(
                 vol.Coerce(int), vol.Range(min=1)
             ),
+            vol.Optional(CONF_XY_COMMAND_TEMPLATE): cv.template,
             vol.Optional(CONF_XY_COMMAND_TOPIC): valid_publish_topic,
             vol.Optional(CONF_XY_STATE_TOPIC): valid_subscribe_topic,
             vol.Optional(CONF_XY_VALUE_TEMPLATE): cv.template,
@@ -765,7 +769,11 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         hs_color: str | None = kwargs.get(ATTR_HS_COLOR)
 
         if hs_color and self._topic[CONF_HS_COMMAND_TOPIC] is not None:
-            await publish(CONF_HS_COMMAND_TOPIC, f"{hs_color[0]},{hs_color[1]}")
+            device_hs_payload = self._command_templates[CONF_HS_COMMAND_TEMPLATE](
+                f"{hs_color[0]},{hs_color[1]}",
+                {"hue": hs_color[0], "sat": hs_color[1]},
+            )
+            await publish(CONF_HS_COMMAND_TOPIC, device_hs_payload)
             should_update |= set_optimistic(ATTR_HS_COLOR, hs_color, ColorMode.HS)
 
         rgb: tuple[int, int, int] | None
@@ -799,7 +807,11 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         if (xy_color := kwargs.get(ATTR_XY_COLOR)) and self._topic[
             CONF_XY_COMMAND_TOPIC
         ] is not None:
-            await publish(CONF_XY_COMMAND_TOPIC, f"{xy_color[0]},{xy_color[1]}")
+            device_xy_payload = self._command_templates[CONF_XY_COMMAND_TEMPLATE](
+                f"{xy_color[0]},{xy_color[1]}",
+                {"x": xy_color[0], "y": xy_color[1]},
+            )
+            await publish(CONF_XY_COMMAND_TOPIC, device_xy_payload)
             should_update |= set_optimistic(ATTR_XY_COLOR, xy_color, ColorMode.XY)
 
         if (

@@ -9,18 +9,27 @@ import logging
 
 from aiohttp import ClientConnectorError
 import async_timeout
-from reolink_ip.exceptions import ApiError, InvalidContentTypeError
+from reolink_aio.exceptions import (
+    ApiError,
+    InvalidContentTypeError,
+    NoDataError,
+    ReolinkError,
+)
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEVICE_UPDATE_INTERVAL, DOMAIN, PLATFORMS
+from .const import DOMAIN
+from .exceptions import UserNotAdmin
 from .host import ReolinkHost
 
 _LOGGER = logging.getLogger(__name__)
+
+PLATFORMS = [Platform.CAMERA]
+DEVICE_UPDATE_INTERVAL = 60
 
 
 @dataclass
@@ -31,33 +40,44 @@ class ReolinkData:
     device_coordinator: DataUpdateCoordinator
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up Reolink from a config entry."""
-    host = ReolinkHost(hass, dict(entry.data), dict(entry.options))
+    host = ReolinkHost(hass, config_entry.data, config_entry.options)
 
     try:
         if not await host.async_init():
+            await host.stop()
             raise ConfigEntryNotReady(
-                f"Error while trying to setup {host.api.host}:{host.api.port}: failed to obtain data from device."
+                f"Error while trying to setup {host.api.host}:{host.api.port}: "
+                "failed to obtain data from device."
             )
+    except UserNotAdmin as err:
+        raise ConfigEntryAuthFailed(err) from UserNotAdmin
     except (
         ClientConnectorError,
         asyncio.TimeoutError,
         ApiError,
         InvalidContentTypeError,
+        NoDataError,
     ) as err:
+        await host.stop()
         raise ConfigEntryNotReady(
             f'Error while trying to setup {host.api.host}:{host.api.port}: "{str(err)}".'
         ) from err
 
-    entry.async_on_unload(
+    config_entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, host.stop)
     )
 
     async def async_device_config_update():
-        """Perform the update of the host config-state cache, and renew the ONVIF-subscription."""
+        """Update the host state cache and renew the ONVIF-subscription."""
         async with async_timeout.timeout(host.api.timeout):
-            await host.update_states()  # Login session is implicitly updated here, so no need to explicitly do it in a timer
+            try:
+                await host.update_states()
+            except ReolinkError as err:
+                raise UpdateFailed(
+                    f"Error updating Reolink {host.api.nvr_name}"
+                ) from err
 
     coordinator_device_config_update = DataUpdateCoordinator(
         hass,
@@ -69,30 +89,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Fetch initial data so we have data when entities subscribe
     await coordinator_device_config_update.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = ReolinkData(
+    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = ReolinkData(
         host=host,
         device_coordinator=coordinator_device_config_update,
     )
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    entry.async_on_unload(entry.add_update_listener(entry_update_listener))
+    config_entry.async_on_unload(
+        config_entry.add_update_listener(entry_update_listener)
+    )
 
     return True
 
 
-async def entry_update_listener(hass: HomeAssistant, entry: ConfigEntry):
+async def entry_update_listener(hass: HomeAssistant, config_entry: ConfigEntry):
     """Update the configuration of the host entity."""
-    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    host: ReolinkHost = hass.data[DOMAIN][entry.entry_id].host
+    host: ReolinkHost = hass.data[DOMAIN][config_entry.entry_id].host
 
     await host.stop()
 
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
+    if unload_ok := await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
+    ):
+        hass.data[DOMAIN].pop(config_entry.entry_id)
 
     return unload_ok

@@ -755,7 +755,6 @@ class RSSISensor(Sensor, id_suffix="rssi"):
     """RSSI sensor for a device."""
 
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _attr_device_class: SensorDeviceClass = SensorDeviceClass.SIGNAL_STRENGTH
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_entity_registry_enabled_default = False
     _attr_should_poll = True  # BaseZhaEntity defaults to False
@@ -871,7 +870,7 @@ class AqaraPetFeederPortionsDispensed(Sensor, id_suffix="portions_dispensed"):
 
 @MULTI_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
 class AqaraPetFeederWeightDispensed(Sensor, id_suffix="weight_dispensed"):
-    """Sensor that displays the weight weight dispensed by the pet feeder."""
+    """Sensor that displays the weight dispensed by the pet feeder."""
 
     SENSOR_ATTR = "weight_dispensed"
     _attr_name: str = "Weight dispensed today"

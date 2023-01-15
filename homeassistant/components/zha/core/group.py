@@ -65,7 +65,7 @@ class ZHAGroupMember(LogMixin):
 
     @property
     def device(self) -> ZHADevice:
-        """Return the zha device for this group member."""
+        """Return the ZHA device for this group member."""
         return self._zha_device
 
     @property

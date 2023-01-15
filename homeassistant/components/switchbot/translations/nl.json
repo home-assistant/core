@@ -21,6 +21,11 @@
                     "username": "Gebruikersnaam"
                 }
             },
+            "lock_choose_method": {
+                "menu_options": {
+                    "lock_auth": "SwitchBot-account (aanbevolen)"
+                }
+            },
             "lock_chose_method": {
                 "description": "Kies configuratiemethode, informatie kan gevonden worden in de documentatie.",
                 "menu_options": {

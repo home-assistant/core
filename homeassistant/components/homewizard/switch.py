@@ -8,10 +8,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import HWEnergyDeviceUpdateCoordinator
+from .entity import HomeWizardEntity
+from .helpers import homewizard_exception_handler
 
 
 async def async_setup_entry(
@@ -34,12 +35,8 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class HWEnergySwitchEntity(
-    CoordinatorEntity[HWEnergyDeviceUpdateCoordinator], SwitchEntity
-):
+class HWEnergySwitchEntity(HomeWizardEntity, SwitchEntity):
     """Representation switchable entity."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -50,7 +47,6 @@ class HWEnergySwitchEntity(
         """Initialize the switch."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{entry.unique_id}_{key}"
-        self._attr_device_info = coordinator.device_info
 
 
 class HWEnergyMainSwitchEntity(HWEnergySwitchEntity):
@@ -64,11 +60,13 @@ class HWEnergyMainSwitchEntity(HWEnergySwitchEntity):
         """Initialize the switch."""
         super().__init__(coordinator, entry, "power_on")
 
+    @homewizard_exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.coordinator.api.state_set(power_on=True)
         await self.coordinator.async_refresh()
 
+    @homewizard_exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.coordinator.api.state_set(power_on=False)
@@ -107,11 +105,13 @@ class HWEnergySwitchLockEntity(HWEnergySwitchEntity):
         """Initialize the switch."""
         super().__init__(coordinator, entry, "switch_lock")
 
+    @homewizard_exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch-lock on."""
         await self.coordinator.api.state_set(switch_lock=True)
         await self.coordinator.async_refresh()
 
+    @homewizard_exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn switch-lock off."""
         await self.coordinator.api.state_set(switch_lock=False)
@@ -146,11 +146,13 @@ class HWEnergyEnableCloudEntity(HWEnergySwitchEntity):
         self.hass = hass
         self.entry = entry
 
+    @homewizard_exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn cloud connection on."""
         await self.coordinator.api.system_set(cloud_enabled=True)
         await self.coordinator.async_refresh()
 
+    @homewizard_exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn cloud connection off."""
         await self.coordinator.api.system_set(cloud_enabled=False)

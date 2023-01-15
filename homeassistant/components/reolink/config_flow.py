@@ -1,22 +1,26 @@
 """Config flow for the Reolink camera component."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
-from typing import cast
+from typing import Any
 
-from reolink_ip.exceptions import ApiError, CredentialsInvalidError
+from reolink_aio.exceptions import ApiError, CredentialsInvalidError, ReolinkError
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 
 from .const import CONF_PROTOCOL, CONF_USE_HTTPS, DEFAULT_PROTOCOL, DOMAIN
+from .exceptions import UserNotAdmin
 from .host import ReolinkHost
 
 _LOGGER = logging.getLogger(__name__)
+
+DEFAULT_OPTIONS = {CONF_PROTOCOL: DEFAULT_PROTOCOL}
 
 
 class ReolinkOptionsFlowHandler(config_entries.OptionsFlow):
@@ -26,10 +30,12 @@ class ReolinkOptionsFlowHandler(config_entries.OptionsFlow):
         """Initialize ReolinkOptionsFlowHandler."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None) -> FlowResult:
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage the Reolink options."""
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            return self.async_create_entry(data=user_input)
 
         return self.async_show_form(
             step_id="init",
@@ -37,10 +43,8 @@ class ReolinkOptionsFlowHandler(config_entries.OptionsFlow):
                 {
                     vol.Required(
                         CONF_PROTOCOL,
-                        default=self.config_entry.options.get(
-                            CONF_PROTOCOL, DEFAULT_PROTOCOL
-                        ),
-                    ): vol.In(["rtsp", "rtmp"]),
+                        default=self.config_entry.options[CONF_PROTOCOL],
+                    ): vol.In(["rtsp", "rtmp", "flv"]),
                 }
             ),
         )
@@ -51,7 +55,12 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    host: ReolinkHost | None = None
+    def __init__(self) -> None:
+        """Initialize."""
+        self._host: str | None = None
+        self._username: str = "admin"
+        self._password: str | None = None
+        self._reauth: bool = False
 
     @staticmethod
     @callback
@@ -61,14 +70,37 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Options callback for Reolink."""
         return ReolinkOptionsFlowHandler(config_entry)
 
-    async def async_step_user(self, user_input=None) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+        """Perform reauth upon an authentication error or no admin privileges."""
+        self._host = entry_data[CONF_HOST]
+        self._username = entry_data[CONF_USERNAME]
+        self._password = entry_data[CONF_PASSWORD]
+        self._reauth = True
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Dialog that informs the user that reauth is required."""
+        if user_input is not None:
+            return await self.async_step_user()
+        return self.async_show_form(step_id="reauth_confirm")
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
         errors = {}
-        placeholders = {}
+        placeholders = {"error": ""}
 
         if user_input is not None:
+            host = ReolinkHost(self.hass, user_input, DEFAULT_OPTIONS)
             try:
-                await self.async_obtain_host_settings(self.hass, user_input)
+                await async_obtain_host_settings(host)
+            except UserNotAdmin:
+                errors[CONF_USERNAME] = "not_admin"
+                placeholders["username"] = host.api.username
+                placeholders["userlevel"] = host.api.user_level
             except CannotConnect:
                 errors[CONF_HOST] = "cannot_connect"
             except CredentialsInvalidError:
@@ -76,31 +108,42 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except ApiError as err:
                 placeholders["error"] = str(err)
                 errors[CONF_HOST] = "api_error"
+            except ReolinkError as err:
+                placeholders["error"] = str(err)
+                errors[CONF_HOST] = "cannot_connect"
             except Exception as err:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 placeholders["error"] = str(err)
                 errors[CONF_HOST] = "unknown"
 
-            self.host = cast(ReolinkHost, self.host)
-
             if not errors:
-                user_input[CONF_PORT] = self.host.api.port
-                user_input[CONF_USE_HTTPS] = self.host.api.use_https
+                user_input[CONF_PORT] = host.api.port
+                user_input[CONF_USE_HTTPS] = host.api.use_https
 
-                await self.async_set_unique_id(
-                    self.host.unique_id, raise_on_progress=False
+                existing_entry = await self.async_set_unique_id(
+                    host.unique_id, raise_on_progress=False
                 )
+                if existing_entry and self._reauth:
+                    if self.hass.config_entries.async_update_entry(
+                        existing_entry, data=user_input
+                    ):
+                        await self.hass.config_entries.async_reload(
+                            existing_entry.entry_id
+                        )
+                    return self.async_abort(reason="reauth_successful")
                 self._abort_if_unique_id_configured(updates=user_input)
 
                 return self.async_create_entry(
-                    title=str(self.host.api.nvr_name), data=user_input
+                    title=str(host.api.nvr_name),
+                    data=user_input,
+                    options=DEFAULT_OPTIONS,
                 )
 
         data_schema = vol.Schema(
             {
-                vol.Required(CONF_USERNAME, default="admin"): str,
-                vol.Required(CONF_PASSWORD): str,
-                vol.Required(CONF_HOST): str,
+                vol.Required(CONF_USERNAME, default=self._username): str,
+                vol.Required(CONF_PASSWORD, default=self._password): str,
+                vol.Required(CONF_HOST, default=self._host): str,
             }
         )
         if errors:
@@ -118,19 +161,14 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders=placeholders,
         )
 
-    async def async_obtain_host_settings(
-        self, hass: core.HomeAssistant, user_input: dict
-    ):
-        """Initialize the Reolink host and get the host information."""
-        host = ReolinkHost(hass, user_input, {})
 
-        try:
-            if not await host.async_init():
-                raise CannotConnect
-        finally:
-            await host.stop()
-
-        self.host = host
+async def async_obtain_host_settings(host: ReolinkHost) -> None:
+    """Initialize the Reolink host and get the host information."""
+    try:
+        if not await host.async_init():
+            raise CannotConnect
+    finally:
+        await host.stop()
 
 
 class CannotConnect(exceptions.HomeAssistantError):

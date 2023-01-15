@@ -186,7 +186,7 @@ class Recorder(threading.Thread):
         self.run_history = RunHistory()
 
         self.entity_filter = entity_filter
-        self.exclude_t = exclude_t
+        self.exclude_t = set(exclude_t)
 
         self.schema_version = 0
         self._commits_without_expire = 0
@@ -377,7 +377,8 @@ class Recorder(threading.Thread):
         # Unknown what it is.
         return True
 
-    def _empty_queue(self, event: Event) -> None:
+    @callback
+    def _async_empty_queue(self, event: Event) -> None:
         """Empty the queue if its still present at final write."""
 
         # If the queue is full of events to be processed because
@@ -411,7 +412,7 @@ class Recorder(threading.Thread):
     def async_register(self) -> None:
         """Post connection initialize."""
         bus = self.hass.bus
-        bus.async_listen_once(EVENT_HOMEASSISTANT_FINAL_WRITE, self._empty_queue)
+        bus.async_listen_once(EVENT_HOMEASSISTANT_FINAL_WRITE, self._async_empty_queue)
         bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_shutdown)
         async_at_started(self.hass, self._async_hass_started)
 
@@ -1020,6 +1021,10 @@ class Recorder(threading.Thread):
         """Open the event session."""
         self.event_session = self.get_session()
         self.event_session.expire_on_commit = False
+
+    def _post_schema_migration(self, old_version: int, new_version: int) -> None:
+        """Run post schema migration tasks."""
+        migration.post_schema_migration(self.event_session, old_version, new_version)
 
     def _send_keep_alive(self) -> None:
         """Send a keep alive to keep the db connection open."""

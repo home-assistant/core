@@ -30,14 +30,11 @@ class SFRBoxFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
+            box = SFRBox(ip=user_input[CONF_HOST], client=get_async_client(self.hass))
             try:
-                box = SFRBox(
-                    ip=user_input[CONF_HOST],
-                    client=get_async_client(self.hass),
-                )
                 system_info = await box.system_get_info()
             except SFRBoxError:
-                errors["base"] = "unknown"
+                errors["base"] = "cannot_connect"
             else:
                 await self.async_set_unique_id(system_info.mac_addr)
                 self._abort_if_unique_id_configured()

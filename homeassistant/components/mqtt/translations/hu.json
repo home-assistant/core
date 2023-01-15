@@ -76,7 +76,7 @@
             "title": "A manu\u00e1lisan konfigur\u00e1lt MQTT {platform} figyelmet ig\u00e9nyel"
         },
         "deprecated_yaml_broker_settings": {
-            "description": "A k\u00f6vetkez\u0151 be\u00e1ll\u00edt\u00e1sok a `configuration.yaml'-ben tal\u00e1lhat\u00f3ak, \u00e1tker\u00fcltek az MQTT config bejegyz\u00e9sbe, \u00e9s mostant\u00f3l fel\u00fcl\u00edrj\u00e1k a `configuration.yaml'-ben tal\u00e1lhat\u00f3 be\u00e1ll\u00edt\u00e1sokat:\n`{deprecated_settings}`\n\nK\u00e9rj\u00fck, t\u00e1vol\u00edtsa el ezeket a be\u00e1ll\u00edt\u00e1sokat a `configuration.yaml` f\u00e1jlb\u00f3l \u00e9s ind\u00edtsa \u00fajra a Home Assistant-ot a probl\u00e9ma megold\u00e1s\u00e1hoz. Tov\u00e1bbi inform\u00e1ci\u00f3 a [document\u00e1ci\u00f3ban]({more_info_url}).",
+            "description": "A k\u00f6vetkez\u0151 be\u00e1ll\u00edt\u00e1sok a `configuration.yaml'-ben tal\u00e1lhat\u00f3ak, \u00e1tker\u00fcltek az MQTT config bejegyz\u00e9sbe, \u00e9s mostant\u00f3l fel\u00fcl\u00edrj\u00e1k a `configuration.yaml'-ben tal\u00e1lhat\u00f3 be\u00e1ll\u00edt\u00e1sokat:\n`{deprecated_settings}`\n\nK\u00e9rem, t\u00e1vol\u00edtsa el ezeket a be\u00e1ll\u00edt\u00e1sokat a `configuration.yaml` f\u00e1jlb\u00f3l \u00e9s ind\u00edtsa \u00fajra a Home Assistant-ot a probl\u00e9ma megold\u00e1s\u00e1hoz. Tov\u00e1bbi inform\u00e1ci\u00f3 a [document\u00e1ci\u00f3ban]({more_info_url}).",
             "title": "Elavult MQTT-be\u00e1ll\u00edt\u00e1sok tal\u00e1lhat\u00f3k a \"configuration.yaml\" f\u00e1jlban"
         }
     },

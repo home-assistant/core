@@ -16,7 +16,7 @@
         "flow_title": "{name}",
         "step": {
             "confirm": {
-                "description": "Kuruluma ba\u015flamak ister misiniz?"
+                "description": "Kurulumu ba\u015flatmak istiyor musunuz?"
             },
             "import_turn_on": {
                 "description": "L\u00fctfen cihaz\u0131 a\u00e7\u0131n ve ta\u015f\u0131maya devam etmek i\u00e7in g\u00f6nder'i t\u0131klay\u0131n"

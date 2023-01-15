@@ -268,8 +268,7 @@ class TemplateEntity(Entity):
         on_update: Callable[[Any], None] | None = None,
         none_on_template_error: bool = False,
     ) -> None:
-        """
-        Call in the constructor to add a template linked to a attribute.
+        """Call in the constructor to add a template linked to a attribute.
 
         Parameters
         ----------

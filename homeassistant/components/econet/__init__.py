@@ -116,6 +116,8 @@ class EcoNetEntity(Entity):
     def __init__(self, econet):
         """Initialize."""
         self._econet = econet
+        self._attr_name = econet.device_name
+        self._attr_unique_id = f"{econet.device_id}_{econet.device_name}"
 
     async def async_added_to_hass(self):
         """Subscribe to device events."""
@@ -142,16 +144,6 @@ class EcoNetEntity(Entity):
             manufacturer="Rheem",
             name=self._econet.device_name,
         )
-
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return self._econet.device_name
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of the entity."""
-        return f"{self._econet.device_id}_{self._econet.device_name}"
 
     @property
     def temperature_unit(self):

@@ -1,4 +1,4 @@
-"""Support for ISY994 sensors."""
+"""Support for ISY sensors."""
 from __future__ import annotations
 
 from typing import Any, cast
@@ -7,7 +7,6 @@ from pyisy.constants import (
     COMMAND_FRIENDLY_NAME,
     ISY_VALUE_UNKNOWN,
     PROP_BATTERY_LEVEL,
-    PROP_BUSY,
     PROP_COMMS_ERROR,
     PROP_ENERGY_MODE,
     PROP_HEAT_COOL_STATE,
@@ -19,25 +18,22 @@ from pyisy.constants import (
 )
 from pyisy.helpers import NodeProperty
 from pyisy.nodes import Node
+from pyisy.variables import Variable
 
 from homeassistant.components.sensor import (
-    DOMAIN as SENSOR,
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfTemperature
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.const import Platform, UnitOfTemperature
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     _LOGGER,
-    DOMAIN as ISY994_DOMAIN,
-    ISY994_NODES,
-    ISY994_VARIABLES,
-    SENSOR_AUX,
+    DOMAIN,
     UOM_DOUBLE_TEMP,
     UOM_FRIENDLY_NAME,
     UOM_INDEX,
@@ -45,28 +41,56 @@ from .const import (
     UOM_TO_STATES,
 )
 from .entity import ISYEntity, ISYNodeEntity
-from .helpers import convert_isy_value_to_hass, migrate_old_unique_ids
+from .helpers import convert_isy_value_to_hass
 
 # Disable general purpose and redundant sensors by default
 AUX_DISABLED_BY_DEFAULT_MATCH = ["GV", "DO"]
 AUX_DISABLED_BY_DEFAULT_EXACT = {
+    PROP_COMMS_ERROR,
     PROP_ENERGY_MODE,
     PROP_HEAT_COOL_STATE,
     PROP_ON_LEVEL,
     PROP_RAMP_RATE,
     PROP_STATUS,
 }
-SKIP_AUX_PROPERTIES = {PROP_BUSY, PROP_COMMS_ERROR, PROP_STATUS}
 
+# Reference pyisy.constants.COMMAND_FRIENDLY_NAME for API details.
+#   Note: "LUMIN"/Illuminance removed, some devices use non-conformant "%" unit
+#         "VOCLVL"/VOC removed, uses qualitative UOM not ug/m^3
 ISY_CONTROL_TO_DEVICE_CLASS = {
     PROP_BATTERY_LEVEL: SensorDeviceClass.BATTERY,
     PROP_HUMIDITY: SensorDeviceClass.HUMIDITY,
     PROP_TEMPERATURE: SensorDeviceClass.TEMPERATURE,
-    "BARPRES": SensorDeviceClass.PRESSURE,
+    "BARPRES": SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+    "CC": SensorDeviceClass.CURRENT,
     "CO2LVL": SensorDeviceClass.CO2,
+    "CPW": SensorDeviceClass.POWER,
     "CV": SensorDeviceClass.VOLTAGE,
-    "LUMIN": SensorDeviceClass.ILLUMINANCE,
+    "DEWPT": SensorDeviceClass.TEMPERATURE,
+    "DISTANC": SensorDeviceClass.DISTANCE,
+    "ETO": SensorDeviceClass.PRECIPITATION_INTENSITY,
+    "FATM": SensorDeviceClass.WEIGHT,
+    "FREQ": SensorDeviceClass.FREQUENCY,
+    "MUSCLEM": SensorDeviceClass.WEIGHT,
     "PF": SensorDeviceClass.POWER_FACTOR,
+    "PM10": SensorDeviceClass.PM10,
+    "PM25": SensorDeviceClass.PM25,
+    "PRECIP": SensorDeviceClass.PRECIPITATION,
+    "RAINRT": SensorDeviceClass.PRECIPITATION_INTENSITY,
+    "RFSS": SensorDeviceClass.SIGNAL_STRENGTH,
+    "SOILH": SensorDeviceClass.MOISTURE,
+    "SOILT": SensorDeviceClass.TEMPERATURE,
+    "SOLRAD": SensorDeviceClass.IRRADIANCE,
+    "SPEED": SensorDeviceClass.SPEED,
+    "TEMPEXH": SensorDeviceClass.TEMPERATURE,
+    "TEMPOUT": SensorDeviceClass.TEMPERATURE,
+    "TPW": SensorDeviceClass.ENERGY,
+    "WATERP": SensorDeviceClass.PRESSURE,
+    "WATERT": SensorDeviceClass.TEMPERATURE,
+    "WATERTB": SensorDeviceClass.TEMPERATURE,
+    "WATERTD": SensorDeviceClass.TEMPERATURE,
+    "WEIGHT": SensorDeviceClass.WEIGHT,
+    "WINDCH": SensorDeviceClass.TEMPERATURE,
 }
 ISY_CONTROL_TO_STATE_CLASS = {
     control: SensorStateClass.MEASUREMENT for control in ISY_CONTROL_TO_DEVICE_CLASS
@@ -81,38 +105,39 @@ ISY_CONTROL_TO_ENTITY_CATEGORY = {
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the ISY994 sensor platform."""
-    hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
+    """Set up the ISY sensor platform."""
+    isy_data = hass.data[DOMAIN][entry.entry_id]
     entities: list[ISYSensorEntity | ISYSensorVariableEntity] = []
+    devices: dict[str, DeviceInfo] = isy_data.devices
 
-    for node in hass_isy_data[ISY994_NODES][SENSOR]:
+    for node in isy_data.nodes[Platform.SENSOR]:
         _LOGGER.debug("Loading %s", node.name)
-        entities.append(ISYSensorEntity(node))
+        entities.append(ISYSensorEntity(node, devices.get(node.primary_node)))
 
-    aux_nodes = set()
-    for node, control in hass_isy_data[ISY994_NODES][SENSOR_AUX]:
-        aux_nodes.add(node)
-        if control in SKIP_AUX_PROPERTIES:
-            continue
-        _LOGGER.debug("Loading %s %s", node.name, node.aux_properties[control])
+    aux_sensors_list = isy_data.aux_properties[Platform.SENSOR]
+    for node, control in aux_sensors_list:
+        _LOGGER.debug("Loading %s %s", node.name, COMMAND_FRIENDLY_NAME.get(control))
         enabled_default = control not in AUX_DISABLED_BY_DEFAULT_EXACT and not any(
             control.startswith(match) for match in AUX_DISABLED_BY_DEFAULT_MATCH
         )
-        entities.append(ISYAuxSensorEntity(node, control, enabled_default))
+        entities.append(
+            ISYAuxSensorEntity(
+                node=node,
+                control=control,
+                enabled_default=enabled_default,
+                unique_id=f"{isy_data.uid_base(node)}_{control}",
+                device_info=devices.get(node.primary_node),
+            )
+        )
 
-    for node in aux_nodes:
-        # Any node in SENSOR_AUX can potentially have communication errors
-        entities.append(ISYAuxSensorEntity(node, PROP_COMMS_ERROR, False))
+    for variable in isy_data.variables[Platform.SENSOR]:
+        entities.append(ISYSensorVariableEntity(variable))
 
-    for vname, vobj in hass_isy_data[ISY994_VARIABLES]:
-        entities.append(ISYSensorVariableEntity(vname, vobj))
-
-    await migrate_old_unique_ids(hass, SENSOR, entities)
     async_add_entities(entities)
 
 
 class ISYSensorEntity(ISYNodeEntity, SensorEntity):
-    """Representation of an ISY994 sensor device."""
+    """Representation of an ISY sensor device."""
 
     @property
     def target(self) -> Node | NodeProperty | None:
@@ -126,7 +151,7 @@ class ISYSensorEntity(ISYNodeEntity, SensorEntity):
 
     @property
     def raw_unit_of_measurement(self) -> dict | str | None:
-        """Get the raw unit of measurement for the ISY994 sensor device."""
+        """Get the raw unit of measurement for the ISY sensor device."""
         if self.target is None:
             return None
 
@@ -148,7 +173,7 @@ class ISYSensorEntity(ISYNodeEntity, SensorEntity):
 
     @property
     def native_value(self) -> float | int | str | None:
-        """Get the state of the ISY994 sensor device."""
+        """Get the state of the ISY sensor device."""
         if self.target is None:
             return None
 
@@ -199,16 +224,27 @@ class ISYSensorEntity(ISYNodeEntity, SensorEntity):
 
 
 class ISYAuxSensorEntity(ISYSensorEntity):
-    """Representation of an ISY994 aux sensor device."""
+    """Representation of an ISY aux sensor device."""
 
-    def __init__(self, node: Node, control: str, enabled_default: bool) -> None:
-        """Initialize the ISY994 aux sensor."""
-        super().__init__(node)
+    def __init__(
+        self,
+        node: Node,
+        control: str,
+        enabled_default: bool,
+        unique_id: str,
+        device_info: DeviceInfo | None = None,
+    ) -> None:
+        """Initialize the ISY aux sensor."""
+        super().__init__(node, device_info=device_info)
         self._control = control
         self._attr_entity_registry_enabled_default = enabled_default
         self._attr_entity_category = ISY_CONTROL_TO_ENTITY_CATEGORY.get(control)
         self._attr_device_class = ISY_CONTROL_TO_DEVICE_CLASS.get(control)
         self._attr_state_class = ISY_CONTROL_TO_STATE_CLASS.get(control)
+        self._attr_unique_id = unique_id
+
+        name = COMMAND_FRIENDLY_NAME.get(self._control, self._control)
+        self._attr_name = f"{node.name} {name.replace('_', ' ').title()}"
 
     @property
     def target(self) -> Node | NodeProperty | None:
@@ -223,28 +259,33 @@ class ISYAuxSensorEntity(ISYSensorEntity):
         """Return the target value."""
         return None if self.target is None else self.target.value
 
-    @property
-    def unique_id(self) -> str | None:
-        """Get the unique identifier of the device and aux sensor."""
-        if not hasattr(self._node, "address"):
-            return None
-        return f"{self._node.isy.configuration['uuid']}_{self._node.address}_{self._control}"
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to the node control change events.
 
-    @property
-    def name(self) -> str:
-        """Get the name of the device and aux sensor."""
-        base_name = self._name or str(self._node.name)
-        name = COMMAND_FRIENDLY_NAME.get(self._control, self._control)
-        return f"{base_name} {name.replace('_', ' ').title()}"
+        Overloads the default ISYNodeEntity updater to only update when
+        this control is changed on the device and prevent duplicate firing
+        of `isy994_control` events.
+        """
+        self._change_handler = self._node.control_events.subscribe(self.async_on_update)
+
+    @callback
+    def async_on_update(self, event: NodeProperty) -> None:
+        """Handle a control event from the ISY Node."""
+        if event.control != self._control:
+            return
+        self.async_write_ha_state()
 
 
 class ISYSensorVariableEntity(ISYEntity, SensorEntity):
-    """Representation of an ISY994 variable as a sensor device."""
+    """Representation of an ISY variable as a sensor device."""
 
-    def __init__(self, vname: str, vobj: object) -> None:
-        """Initialize the ISY994 binary sensor program."""
-        super().__init__(vobj)
-        self._name = vname
+    # Deprecated sensors, will be removed in 2023.5.0
+    _attr_entity_registry_enabled_default = False
+
+    def __init__(self, variable_node: Variable) -> None:
+        """Initialize the ISY binary sensor program."""
+        super().__init__(variable_node)
+        self._name = variable_node.name
 
     @property
     def native_value(self) -> float | int | None:

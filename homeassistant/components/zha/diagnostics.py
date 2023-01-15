@@ -69,7 +69,7 @@ def shallow_asdict(obj: Any) -> dict:
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry
-) -> dict:
+) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     config: dict = hass.data[DATA_ZHA].get(DATA_ZHA_CONFIG, {})
     gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
@@ -94,7 +94,7 @@ async def async_get_config_entry_diagnostics(
 
 async def async_get_device_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry, device: dr.DeviceEntry
-) -> dict:
+) -> dict[str, Any]:
     """Return diagnostics for a device."""
     zha_device: ZHADevice = async_get_zha_device(hass, device.id)
     device_info: dict[str, Any] = zha_device.zha_device_info
