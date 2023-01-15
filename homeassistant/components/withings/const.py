@@ -1,6 +1,5 @@
 """Constants used by the Withings component."""
 from homeassistant.backports.enum import StrEnum
-from homeassistant.const import UnitOfTime
 
 CONF_PROFILES = "profiles"
 CONF_USE_WEBHOOK = "use_webhook"
@@ -55,6 +54,6 @@ class Measurement(StrEnum):
 
 SCORE_POINTS = "points"
 UOM_BEATS_PER_MINUTE = "bpm"
-UOM_BREATHS_PER_MINUTE = f"br/{UnitOfTime.MINUTES}"
+UOM_BREATHS_PER_MINUTE = "br/min"
 UOM_FREQUENCY = "times"
 UOM_MMHG = "mmhg"
