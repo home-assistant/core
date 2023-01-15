@@ -87,7 +87,7 @@ class EufyLifeRealTimeWeightSensorEntity(EufyLifeSensorEntity):
     def __init__(self, data: EufyLifeData) -> None:
         """Initialize the real-time weight sensor entity."""
         super().__init__(data)
-        self._attr_unique_id = data.address + "_real_time_weight"
+        self._attr_unique_id = f"{data.address}_real_time_weight"
 
     @property
     def native_value(self) -> float | None:
@@ -117,7 +117,7 @@ class EufyLifeWeightSensorEntity(RestoreEntity, EufyLifeSensorEntity):
     def __init__(self, data: EufyLifeData) -> None:
         """Initialize the weight sensor entity."""
         super().__init__(data)
-        self._attr_unique_id = data.address + "_weight"
+        self._attr_unique_id = f"{data.address}_weight"
 
     @property
     def available(self) -> bool:
@@ -178,7 +178,7 @@ class EufyLifeHeartRateSensorEntity(RestoreEntity, EufyLifeSensorEntity):
     def __init__(self, data: EufyLifeData) -> None:
         """Initialize the heart rate sensor entity."""
         super().__init__(data)
-        self._attr_unique_id = data.address + "_heart_rate"
+        self._attr_unique_id = f"{data.address}_heart_rate"
 
     @property
     def available(self) -> bool:
