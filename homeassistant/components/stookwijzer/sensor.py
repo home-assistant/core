@@ -38,6 +38,7 @@ class StookwijzerSensor(SensorEntity):
         """Initialize a Stookwijzer device."""
         self._client = client
         self._attr_unique_id = entry.unique_id
+        self._attr_translation_key = "stookwijzer"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{entry.entry_id}")},
             name="Stookwijzer",
@@ -56,8 +57,8 @@ class StookwijzerSensor(SensorEntity):
         return self._client.state is not None
 
     @property
-    def native_value(self) -> StateType | str | None:
+    def native_value(self) -> StateType | None:
         """Return the state of the device."""
         if self._client.state is None:
             return None
-        return StookwijzerState(self._client.state).value
+        return StookwijzerState(self._client.state).value.lower()

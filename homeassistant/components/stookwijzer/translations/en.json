@@ -11,5 +11,16 @@
                 }
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "stookwijzer": {
+                "state": {
+                    "groen": "Green",
+                    "oranje": "Orange",
+                    "rood": "Red"
+                }
+            }
+        }
     }
 }
