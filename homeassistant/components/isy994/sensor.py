@@ -46,6 +46,7 @@ from .helpers import convert_isy_value_to_hass
 # Disable general purpose and redundant sensors by default
 AUX_DISABLED_BY_DEFAULT_MATCH = ["GV", "DO"]
 AUX_DISABLED_BY_DEFAULT_EXACT = {
+    PROP_COMMS_ERROR,
     PROP_ENERGY_MODE,
     PROP_HEAT_COOL_STATE,
     PROP_ON_LEVEL,
