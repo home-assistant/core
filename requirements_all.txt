@@ -678,6 +678,9 @@ esphome-dashboard-api==1.1
 # homeassistant.components.netgear_lte
 eternalegypt==0.0.12
 
+# homeassistant.components.eufylife_ble
+eufylife_ble_client==0.1.2
+
 # homeassistant.components.keyboard_remote
 # evdev==1.4.0
 

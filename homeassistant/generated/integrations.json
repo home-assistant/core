@@ -1479,6 +1479,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "eufylife_ble": {
+      "name": "EufyLife",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "everlights": {
       "name": "EverLights",
       "integration_type": "hub",
