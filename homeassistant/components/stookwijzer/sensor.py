@@ -11,9 +11,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN, TRANSLATION_KEY, StookwijzerState
+from .const import DOMAIN, StookwijzerState
 
 SCAN_INTERVAL = timedelta(minutes=60)
 
@@ -32,14 +31,14 @@ class StookwijzerSensor(SensorEntity):
     """Defines a Stookwijzer binary sensor."""
 
     _attr_attribution = "Data provided by stookwijzer.nu"
+    _attr_device_class = SensorDeviceClass.ENUM
     _attr_has_entity_name = True
+    _attr_translation_key = "stookwijzer"
 
     def __init__(self, client: Stookwijzer, entry: ConfigEntry) -> None:
         """Initialize a Stookwijzer device."""
         self._client = client
-        self._attr_device_class = SensorDeviceClass.ENUM
         self._attr_unique_id = entry.unique_id
-        self._attr_translation_key = TRANSLATION_KEY
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{entry.entry_id}")},
             name="Stookwijzer",
@@ -58,7 +57,7 @@ class StookwijzerSensor(SensorEntity):
         return self._client.state is not None
 
     @property
-    def native_value(self) -> StateType | None:
+    def native_value(self) -> str | None:
         """Return the state of the device."""
         if self._client.state is None:
             return None

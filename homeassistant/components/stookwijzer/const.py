@@ -5,7 +5,6 @@ from typing import Final
 from homeassistant.backports.enum import StrEnum
 
 DOMAIN: Final = "stookwijzer"
-TRANSLATION_KEY: Final = "stookwijzer"
 LOGGER = logging.getLogger(__package__)
 
 
