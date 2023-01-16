@@ -315,7 +315,7 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
                     self.external_data
                 )
         except asyncio.TimeoutError as err:
-            _LOGGER.error("Timeout while exchanging OAuth token: %s", str(err))
+            _LOGGER.error("Timeout while exchanging OAuth token: %s", err)
             return self.async_abort(reason="oauth2_timeout")
 
         # Force int for non-compliant oauth2 providers
