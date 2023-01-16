@@ -11,23 +11,35 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME, Platform
 from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import discovery, intent
+from homeassistant.helpers import config_validation as cv, discovery, intent
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
     async_get_config_entry_implementation,
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_ENABLE_CONVERSATION_AGENT, CONF_LANGUAGE_CODE, DOMAIN
-from .helpers import async_send_text_commands, default_language_code
+from .const import (
+    CONF_ENABLE_CONVERSATION_AGENT,
+    CONF_LANGUAGE_CODE,
+    DATA_AUDIO_VIEW,
+    DATA_SESSION,
+    DOMAIN,
+)
+from .helpers import (
+    GoogleAssistantSDKAudioView,
+    async_send_text_commands,
+    default_language_code,
+)
 
 SERVICE_SEND_TEXT_COMMAND = "send_text_command"
 SERVICE_SEND_TEXT_COMMAND_FIELD_COMMAND = "command"
+SERVICE_SEND_TEXT_COMMAND_FIELD_MEDIA_PLAYER = "media_player"
 SERVICE_SEND_TEXT_COMMAND_SCHEMA = vol.All(
     {
         vol.Required(SERVICE_SEND_TEXT_COMMAND_FIELD_COMMAND): vol.All(
             str, vol.Length(min=1)
         ),
+        vol.Optional(SERVICE_SEND_TEXT_COMMAND_FIELD_MEDIA_PLAYER): cv.comp_entity_ids,
     },
 )
 
@@ -45,6 +57,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Google Assistant SDK from a config entry."""
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {}
+
     implementation = await async_get_config_entry_implementation(hass, entry)
     session = OAuth2Session(hass, entry, implementation)
     try:
@@ -57,7 +71,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from err
     except aiohttp.ClientError as err:
         raise ConfigEntryNotReady from err
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = session
+    hass.data[DOMAIN][entry.entry_id][DATA_SESSION] = session
+
+    audio_view = GoogleAssistantSDKAudioView(hass)
+    hass.http.register_view(audio_view)
+    hass.data[DOMAIN][entry.entry_id][DATA_AUDIO_VIEW] = audio_view
 
     await async_setup_service(hass)
 
@@ -88,7 +106,10 @@ async def async_setup_service(hass: HomeAssistant) -> None:
     async def send_text_command(call: ServiceCall) -> None:
         """Send a text command to Google Assistant SDK."""
         command: str = call.data[SERVICE_SEND_TEXT_COMMAND_FIELD_COMMAND]
-        await async_send_text_commands([command], hass)
+        media_players: list[str] | None = call.data.get(
+            SERVICE_SEND_TEXT_COMMAND_FIELD_MEDIA_PLAYER
+        )
+        await async_send_text_commands(hass, [command], media_players)
 
     hass.services.async_register(
         DOMAIN,
@@ -136,7 +157,7 @@ class GoogleAssistantConversationAgent(conversation.AbstractConversationAgent):
         if self.session:
             session = self.session
         else:
-            session = self.hass.data[DOMAIN].get(self.entry.entry_id)
+            session = self.hass.data[DOMAIN][self.entry.entry_id][DATA_SESSION]
             self.session = session
         if not session.valid_token:
             await session.async_ensure_token_valid()
