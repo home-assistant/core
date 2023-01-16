@@ -1462,7 +1462,7 @@ async def test_light_service_call_color_conversion(
     _, data = entity6.last_call("turn_on")
     assert data == {"brightness": 255, "rgbww_color": (0, 0, 255, 0, 0)}
     _, data = entity7.last_call("turn_on")
-    assert data == {"brightness": 255, "color_temp_kelvin": 1739}
+    assert data == {"brightness": 255, "color_temp_kelvin": 1739, "color_temp": 575}
 
     await hass.services.async_call(
         "light",
@@ -1499,7 +1499,7 @@ async def test_light_service_call_color_conversion(
     # The midpoint of the the white channels is warm, compensated by adding green + blue
     assert data == {"brightness": 255, "rgbww_color": (0, 76, 141, 255, 255)}
     _, data = entity7.last_call("turn_on")
-    assert data == {"brightness": 255, "color_temp_kelvin": 5962}
+    assert data == {"brightness": 255, "color_temp_kelvin": 5962, "color_temp": 167}
 
     await hass.services.async_call(
         "light",
@@ -1535,7 +1535,7 @@ async def test_light_service_call_color_conversion(
     _, data = entity6.last_call("turn_on")
     assert data == {"brightness": 128, "rgbww_color": (128, 0, 0, 0, 0)}
     _, data = entity7.last_call("turn_on")
-    assert data == {"brightness": 128, "color_temp_kelvin": 6279}
+    assert data == {"brightness": 128, "color_temp_kelvin": 6279, "color_temp": 159}
 
     await hass.services.async_call(
         "light",
@@ -1572,7 +1572,7 @@ async def test_light_service_call_color_conversion(
     # The midpoint the the white channels is warm, compensated by adding green + blue
     assert data == {"brightness": 128, "rgbww_color": (0, 76, 141, 255, 255)}
     _, data = entity7.last_call("turn_on")
-    assert data == {"brightness": 128, "color_temp_kelvin": 5962}
+    assert data == {"brightness": 128, "color_temp_kelvin": 5962, "color_temp": 167}
 
     await hass.services.async_call(
         "light",
@@ -1608,7 +1608,7 @@ async def test_light_service_call_color_conversion(
     _, data = entity6.last_call("turn_on")
     assert data == {"brightness": 128, "rgbww_color": (0, 255, 22, 0, 0)}
     _, data = entity7.last_call("turn_on")
-    assert data == {"brightness": 128, "color_temp_kelvin": 8645}
+    assert data == {"brightness": 128, "color_temp_kelvin": 8645, "color_temp": 115}
 
     await hass.services.async_call(
         "light",
@@ -1645,7 +1645,7 @@ async def test_light_service_call_color_conversion(
     # The midpoint the the white channels is warm, compensated by adding green + blue
     assert data == {"brightness": 128, "rgbww_color": (0, 75, 140, 255, 255)}
     _, data = entity7.last_call("turn_on")
-    assert data == {"brightness": 128, "color_temp_kelvin": 5962}
+    assert data == {"brightness": 128, "color_temp_kelvin": 5962, "color_temp": 167}
 
     await hass.services.async_call(
         "light",
@@ -1682,7 +1682,7 @@ async def test_light_service_call_color_conversion(
     # The midpoint the the white channels is warm, compensated by adding green + blue
     assert data == {"brightness": 128, "rgbww_color": (128, 0, 30, 117, 117)}
     _, data = entity7.last_call("turn_on")
-    assert data == {"brightness": 128, "color_temp_kelvin": 3011}
+    assert data == {"brightness": 128, "color_temp_kelvin": 3011, "color_temp": 332}
 
     await hass.services.async_call(
         "light",
@@ -1719,7 +1719,7 @@ async def test_light_service_call_color_conversion(
     # The midpoint the the white channels is warm, compensated by adding green + blue
     assert data == {"brightness": 128, "rgbww_color": (0, 76, 141, 255, 255)}
     _, data = entity7.last_call("turn_on")
-    assert data == {"brightness": 128, "color_temp_kelvin": 5962}
+    assert data == {"brightness": 128, "color_temp_kelvin": 5962, "color_temp": 167}
 
     await hass.services.async_call(
         "light",
@@ -1755,7 +1755,7 @@ async def test_light_service_call_color_conversion(
     _, data = entity6.last_call("turn_on")
     assert data == {"brightness": 128, "rgbww_color": (128, 0, 0, 64, 32)}
     _, data = entity7.last_call("turn_on")
-    assert data == {"brightness": 128, "color_temp_kelvin": 3845}
+    assert data == {"brightness": 128, "color_temp_kelvin": 3845, "color_temp": 260}
 
     await hass.services.async_call(
         "light",
@@ -1792,7 +1792,7 @@ async def test_light_service_call_color_conversion(
     _, data = entity6.last_call("turn_on")
     assert data == {"brightness": 128, "rgbww_color": (255, 255, 255, 255, 255)}
     _, data = entity7.last_call("turn_on")
-    assert data == {"brightness": 128, "color_temp_kelvin": 3451}
+    assert data == {"brightness": 128, "color_temp_kelvin": 3451, "color_temp": 289}
 
 
 async def test_light_service_call_color_conversion_named_tuple(
