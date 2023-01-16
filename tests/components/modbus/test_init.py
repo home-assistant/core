@@ -866,7 +866,7 @@ async def test_integration_reload(
 
 @pytest.mark.parametrize("do_config", [{}])
 async def test_integration_reload_failed(hass, caplog, mock_modbus) -> None:
-    """Test setup fails."""
+    """Run test for integration connect failure on reload."""
     caplog.set_level(logging.INFO)
     caplog.clear()
 
