@@ -153,6 +153,70 @@ async def test_discovery_flow_during_onboarding(
     assert len(mock_onboarding.mock_calls) == 1
 
 
+async def test_discovery_flow_during_onboarding_disabled_api(
+    hass, aioclient_mock: AiohttpClientMocker, mock_onboarding: MagicMock
+) -> None:
+    """Test discovery setup flow during onboarding with a disabled API."""
+
+    def mock_initialize():
+        raise DisabledError
+
+    device = get_mock_device()
+    device.device.side_effect = mock_initialize
+
+    with patch(
+        "homeassistant.components.homewizard.config_flow.HomeWizardEnergy",
+        return_value=device,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=zeroconf.ZeroconfServiceInfo(
+                host="192.168.43.183",
+                addresses=["192.168.43.183"],
+                port=80,
+                hostname="p1meter-ddeeff.local.",
+                type="mock_type",
+                name="mock_name",
+                properties={
+                    "api_enabled": "0",
+                    "path": "/api/v1",
+                    "product_name": "P1 meter",
+                    "product_type": "HWE-P1",
+                    "serial": "aabbccddeeff",
+                },
+            ),
+        )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+    assert result["errors"] == {"base": "api_not_enabled"}
+
+    # User enabled API again and picks up from discovery/config flow
+    device.device.side_effect = None
+
+    with patch(
+        "homeassistant.components.homewizard.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry, patch(
+        "homeassistant.components.homewizard.config_flow.HomeWizardEnergy",
+        return_value=device,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={"ip_address": "192.168.43.183"}
+        )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "P1 meter (aabbccddeeff)"
+    assert result["data"][CONF_IP_ADDRESS] == "192.168.43.183"
+
+    assert result["result"]
+    assert result["result"].unique_id == "HWE-P1_aabbccddeeff"
+
+    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_onboarding.mock_calls) == 1
+
+
 async def test_discovery_disabled_api(hass, aioclient_mock):
     """Test discovery detecting disabled api."""
 
