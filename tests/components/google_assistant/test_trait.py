@@ -1095,7 +1095,7 @@ async def test_temperature_control(hass):
         BASIC_CONFIG,
     )
     assert trt.sync_attributes() == {
-        "queryOnlyTemperatureSetting": True,
+        "queryOnlyTemperatureControl": True,
         "temperatureUnitForUX": "C",
         "temperatureRange": {"maxThresholdCelsius": 100, "minThresholdCelsius": -100},
     }
@@ -2911,7 +2911,7 @@ async def test_temperature_control_sensor_data(hass, unit_in, unit_out, state, a
     )
 
     assert trt.sync_attributes() == {
-        "queryOnlyTemperatureSetting": True,
+        "queryOnlyTemperatureControl": True,
         "temperatureUnitForUX": unit_out,
         "temperatureRange": {"maxThresholdCelsius": 100, "minThresholdCelsius": -100},
     }
