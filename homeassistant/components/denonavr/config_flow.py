@@ -39,6 +39,7 @@ DEFAULT_ZONE2 = False
 DEFAULT_ZONE3 = False
 DEFAULT_UPDATE_AUDYSSEY = False
 DEFAULT_USE_TELNET = False
+DEFAULT_USE_TELNET_NEW_INSTALL = True
 
 CONFIG_SCHEMA = vol.Schema({vol.Optional(CONF_HOST): str})
 
@@ -105,7 +106,7 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.show_all_sources = DEFAULT_SHOW_SOURCES
         self.zone2 = DEFAULT_ZONE2
         self.zone3 = DEFAULT_ZONE3
-        self.use_telnet = DEFAULT_USE_TELNET
+        self.use_telnet = DEFAULT_USE_TELNET_NEW_INSTALL
         self.d_receivers: list[dict[str, Any]] = []
 
     @staticmethod
@@ -185,7 +186,7 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.show_all_sources,
             self.zone2,
             self.zone3,
-            self.use_telnet,
+            False,
             lambda: get_async_client(self.hass),
         )
 
@@ -226,6 +227,7 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_MANUFACTURER: receiver.manufacturer,
                 CONF_SERIAL_NUMBER: self.serial_number,
             },
+            options={CONF_USE_TELNET: DEFAULT_USE_TELNET_NEW_INSTALL},
         )
 
     async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:

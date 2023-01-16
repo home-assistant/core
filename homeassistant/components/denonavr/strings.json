@@ -3,7 +3,7 @@
     "flow_title": "{name}",
     "step": {
       "user": {
-        "description": "By default this integration will poll your device to receive updates. You can enable the Telnet option after setting up the integration by using the Configure button which will enable local push updates. Note that this may interfere with the Denon AVR Remote app on your phone.",
+        "description": "By default this integration use a Telnet connection to your receiver to receive realtime updates. Note that this may interfere with the Denon AVR Remote app on your phone. You can turn this option off after setting up the integration by clicking the Configure button.",
         "data": {
           "host": "[%key:common::config_flow::data::ip%]"
         },
