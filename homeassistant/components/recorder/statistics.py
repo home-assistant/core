@@ -1672,7 +1672,10 @@ def _get_last_statistics_short_term_stmt(
     metadata_id: int,
     number_of_stats: int,
 ) -> StatementLambdaElement:
-    """Generate a statement for number_of_stats short term statistics for a given statistic_id."""
+    """Generate a statement for number_of_stats short term statistics.
+
+    For a given statistic_id.
+    """
     return lambda_stmt(
         lambda: select(*QUERY_STATISTICS_SHORT_TERM)
         .filter_by(metadata_id=metadata_id)
@@ -1881,7 +1884,10 @@ def _sorted_statistics_to_dict(
             result[stat_id] = []
 
     # Identify metadata IDs for which no data was available at the requested start time
-    for meta_id, group in groupby(stats, lambda stat: stat.metadata_id):  # type: ignore[no-any-return]
+    for meta_id, group in groupby(
+        stats,
+        lambda stat: stat.metadata_id,  # type: ignore[no-any-return]
+    ):
         first_start_time = process_timestamp(next(group).start)
         if start_time and first_start_time > start_time:
             need_stat_at_start_time.add(meta_id)
@@ -1897,7 +1903,10 @@ def _sorted_statistics_to_dict(
                 stats_at_start_time[stat.metadata_id] = (stat,)
 
     # Append all statistic entries, and optionally do unit conversion
-    for meta_id, group in groupby(stats, lambda stat: stat.metadata_id):  # type: ignore[no-any-return]
+    for meta_id, group in groupby(
+        stats,
+        lambda stat: stat.metadata_id,  # type: ignore[no-any-return]
+    ):
         state_unit = unit = metadata[meta_id]["unit_of_measurement"]
         statistic_id = metadata[meta_id]["statistic_id"]
         if state := hass.states.get(statistic_id):
@@ -1964,7 +1973,7 @@ def _async_import_statistics(
     metadata: StatisticMetaData,
     statistics: Iterable[StatisticData],
 ) -> None:
-    """Validate timestamps and insert an import_statistics job in the recorder's queue."""
+    """Validate timestamps and insert an import_statistics job in the queue."""
     for statistic in statistics:
         start = statistic["start"]
         if start.tzinfo is None or start.tzinfo.utcoffset(start) is None:
