@@ -15,10 +15,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, DeviceResponseEntry
 from .coordinator import HWEnergyDeviceUpdateCoordinator
+from .entity import HomeWizardEntity
 
 PARALLEL_UPDATES = 1
 
@@ -137,18 +137,18 @@ async def async_setup_entry(
     """Initialize sensors."""
     coordinator: HWEnergyDeviceUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    entities = []
-    if coordinator.data["data"] is not None:
-        for description in SENSORS:
-            if getattr(coordinator.data["data"], description.key) is not None:
-                entities.append(HWEnergySensor(coordinator, entry, description))
+    entities: list[HWEnergySensor] = []
+    if coordinator.data.data is not None:
+        entities.extend(
+            HWEnergySensor(coordinator, entry, description)
+            for description in SENSORS
+            if getattr(coordinator.data.data, description.key) is not None
+        )
     async_add_entities(entities)
 
 
-class HWEnergySensor(CoordinatorEntity[HWEnergyDeviceUpdateCoordinator], SensorEntity):
+class HWEnergySensor(HomeWizardEntity, SensorEntity):
     """Representation of a HomeWizard Sensor."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -165,16 +165,18 @@ class HWEnergySensor(CoordinatorEntity[HWEnergyDeviceUpdateCoordinator], SensorE
         # Config attributes.
         self.data_type = description.key
         self._attr_unique_id = f"{entry.unique_id}_{description.key}"
-        self._attr_device_info = coordinator.device_info
 
         # Special case for export, not everyone has solarpanels
         # The chance that 'export' is non-zero when you have solar panels is nil
-        if self.data_type in [
-            "total_power_export_t1_kwh",
-            "total_power_export_t2_kwh",
-        ]:
-            if self.native_value == 0:
-                self._attr_entity_registry_enabled_default = False
+        if (
+            self.data_type
+            in [
+                "total_power_export_t1_kwh",
+                "total_power_export_t2_kwh",
+            ]
+            and self.native_value == 0
+        ):
+            self._attr_entity_registry_enabled_default = False
 
     @property
     def data(self) -> DeviceResponseEntry:
@@ -184,7 +186,7 @@ class HWEnergySensor(CoordinatorEntity[HWEnergyDeviceUpdateCoordinator], SensorE
     @property
     def native_value(self) -> StateType:
         """Return state of meter."""
-        return cast(StateType, getattr(self.data["data"], self.data_type))
+        return cast(StateType, getattr(self.data.data, self.data_type))
 
     @property
     def available(self) -> bool:

@@ -168,7 +168,7 @@ async def test_turn_on_multiple_intent(hass):
     calls = async_mock_service(hass, "light", SERVICE_TURN_ON)
 
     response = await intent.async_handle(
-        hass, "test", "HassTurnOn", {"name": {"value": "test lights"}}
+        hass, "test", "HassTurnOn", {"name": {"value": "test lights 2"}}
     )
     await hass.async_block_till_done()
 

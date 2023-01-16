@@ -4,7 +4,8 @@
             "already_configured": "Device is already configured",
             "already_in_progress": "Configuration flow is already in progress",
             "mdns_missing_mac": "Missing MAC address in MDNS properties.",
-            "reauth_successful": "Re-authentication was successful"
+            "reauth_successful": "Re-authentication was successful",
+            "service_received": "Service received"
         },
         "error": {
             "connection_error": "Can't connect to ESP. Please make sure your YAML file contains an 'api:' line.",

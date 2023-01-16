@@ -160,6 +160,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_show_form(
                     step_id="discovery_confirm",
                     errors={"base": ex.error_code},
+                    description_placeholders={
+                        CONF_PRODUCT_TYPE: cast(str, self.config[CONF_PRODUCT_TYPE]),
+                        CONF_SERIAL: cast(str, self.config[CONF_SERIAL]),
+                        CONF_IP_ADDRESS: cast(str, self.config[CONF_IP_ADDRESS]),
+                    },
                 )
 
             return self.async_create_entry(
@@ -246,7 +251,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             raise AbortFlow("unknown_error") from ex
 
         finally:
-            await energy_api.close()
+            await energy_api.close()  # type: ignore[no-untyped-call]
 
     async def _async_set_and_check_unique_id(self, entry_info: dict[str, Any]) -> None:
         """Validate if entry exists."""

@@ -68,8 +68,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_TEMPERATURE_UNIT,
     EVENT_HOMEASSISTANT_START,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 from homeassistant.core import CoreState
 from homeassistant.helpers import entity_registry as er
@@ -877,7 +876,9 @@ async def test_thermostat_fahrenheit(hass, hk_driver, events):
         },
     )
     await hass.async_block_till_done()
-    with patch.object(hass.config.units, CONF_TEMPERATURE_UNIT, new=TEMP_FAHRENHEIT):
+    with patch.object(
+        hass.config.units, CONF_TEMPERATURE_UNIT, new=UnitOfTemperature.FAHRENHEIT
+    ):
         acc = Thermostat(hass, hk_driver, "Climate", entity_id, 1, None)
     hk_driver.add_accessory(acc)
     await acc.run()
@@ -986,7 +987,7 @@ async def test_thermostat_get_temperature_range(hass, hk_driver):
     await hass.async_block_till_done()
     assert acc.get_temperature_range() == (20, 25)
 
-    acc._unit = TEMP_FAHRENHEIT
+    acc._unit = UnitOfTemperature.FAHRENHEIT
     hass.states.async_set(
         entity_id, HVACMode.OFF, {ATTR_MIN_TEMP: 60, ATTR_MAX_TEMP: 70}
     )
@@ -1761,7 +1762,7 @@ async def test_water_heater(hass, hk_driver, events):
     assert call_set_temperature[0].data[ATTR_TEMPERATURE] == 52.0
     assert acc.char_target_temp.value == 52.0
     assert len(events) == 1
-    assert events[-1].data[ATTR_VALUE] == f"52.0{TEMP_CELSIUS}"
+    assert events[-1].data[ATTR_VALUE] == f"52.0{UnitOfTemperature.CELSIUS}"
 
     acc.char_target_heat_cool.client_update_value(1)
     await hass.async_block_till_done()
@@ -1779,7 +1780,9 @@ async def test_water_heater_fahrenheit(hass, hk_driver, events):
 
     hass.states.async_set(entity_id, HVACMode.HEAT)
     await hass.async_block_till_done()
-    with patch.object(hass.config.units, CONF_TEMPERATURE_UNIT, new=TEMP_FAHRENHEIT):
+    with patch.object(
+        hass.config.units, CONF_TEMPERATURE_UNIT, new=UnitOfTemperature.FAHRENHEIT
+    ):
         acc = WaterHeater(hass, hk_driver, "WaterHeater", entity_id, 2, None)
     await acc.run()
     await hass.async_block_till_done()
@@ -1819,7 +1822,7 @@ async def test_water_heater_get_temperature_range(hass, hk_driver):
     await hass.async_block_till_done()
     assert acc.get_temperature_range() == (20, 25)
 
-    acc._unit = TEMP_FAHRENHEIT
+    acc._unit = UnitOfTemperature.FAHRENHEIT
     hass.states.async_set(
         entity_id, HVACMode.OFF, {ATTR_MIN_TEMP: 60, ATTR_MAX_TEMP: 70}
     )

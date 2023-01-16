@@ -25,9 +25,15 @@
                 "description": "Wil je beginnen met instellen?"
             },
             "pin": {
+                "data": {
+                    "pin": "Pincode"
+                },
                 "title": "Autoriseer Sony Bravia TV"
             },
             "psk": {
+                "data": {
+                    "pin": "PSK"
+                },
                 "title": "Autoriseer Sony Bravia TV"
             },
             "reauth_confirm": {

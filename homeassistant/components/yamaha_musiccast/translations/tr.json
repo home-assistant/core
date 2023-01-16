@@ -10,13 +10,85 @@
         "flow_title": "MusicCast: {name}",
         "step": {
             "confirm": {
-                "description": "Kuruluma ba\u015flamak ister misiniz?"
+                "description": "Kurulumu ba\u015flatmak istiyor musunuz?"
             },
             "user": {
                 "data": {
                     "host": "Sunucu"
                 },
                 "description": "Home Assistant ile entegre etmek i\u00e7in MusicCast'i kurun."
+            }
+        }
+    },
+    "entity": {
+        "select": {
+            "dimmer": {
+                "state": {
+                    "auto": "Otomatik"
+                }
+            },
+            "zone_equalizer_mode": {
+                "state": {
+                    "auto": "Otomatik",
+                    "bypass": "Atlatma",
+                    "manual": "Manuel"
+                }
+            },
+            "zone_link_audio_delay": {
+                "state": {
+                    "audio_sync": "Ses Senkronizasyonu",
+                    "audio_sync_off": "Ses Senkronizasyonu Kapal\u0131",
+                    "audio_sync_on": "Ses Senkronizasyonu A\u00e7\u0131k",
+                    "balanced": "Dengeli",
+                    "lip_sync": "Dudak Senkronizasyonu"
+                }
+            },
+            "zone_link_audio_quality": {
+                "state": {
+                    "compressed": "S\u0131k\u0131\u015ft\u0131r\u0131lm\u0131\u015f",
+                    "uncompressed": "S\u0131k\u0131\u015ft\u0131r\u0131lmam\u0131\u015f"
+                }
+            },
+            "zone_link_control": {
+                "state": {
+                    "speed": "H\u0131z",
+                    "stability": "Stabilite",
+                    "standard": "Standart"
+                }
+            },
+            "zone_sleep": {
+                "state": {
+                    "120 min": "120 Dakika",
+                    "120_min": "120 Dakika",
+                    "30 min": "30 Dakika",
+                    "30_min": "30 Dakika",
+                    "60 min": "60 Dakika",
+                    "60_min": "60 Dakika",
+                    "90 min": "90 Dakika",
+                    "90_min": "90 Dakika",
+                    "off": "Kapal\u0131"
+                }
+            },
+            "zone_surr_decoder_type": {
+                "state": {
+                    "auto": "Otomatik",
+                    "dolby_pl": "Dolby ProLogic",
+                    "dolby_pl2x_game": "Dolby ProLogic 2x Oyun",
+                    "dolby_pl2x_movie": "Dolby ProLogic 2x Film",
+                    "dolby_pl2x_music": "Dolby ProLogic 2x M\u00fczik",
+                    "dolby_surround": "Dolby Surround",
+                    "dts_neo6_cinema": "DTS Neo:6 Sinema",
+                    "dts_neo6_music": "DTS Neo:6 M\u00fczik",
+                    "dts_neural_x": "DTS Neural:X",
+                    "toggle": "De\u011fi\u015ftir"
+                }
+            },
+            "zone_tone_control_mode": {
+                "state": {
+                    "auto": "Otomatik",
+                    "bypass": "Atlatma",
+                    "manual": "Manuel"
+                }
             }
         }
     }
