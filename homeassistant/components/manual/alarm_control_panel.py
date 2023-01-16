@@ -291,7 +291,7 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
 
         self._state = STATE_ALARM_DISARMED
         self._state_ts = dt_util.utcnow()
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
@@ -357,7 +357,7 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
         self._previous_state = self._state
         self._state = state
         self._state_ts = dt_util.utcnow()
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
         self._async_set_state_update_events()
 
     def _async_set_state_update_events(self) -> None:

@@ -250,6 +250,24 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured(updates={CONF_URL: url})
 
+        def _is_supported_device() -> bool:
+            """
+            See if we are looking at a possibly supported device.
+
+            Matching solely on SSDP data does not yield reliable enough results.
+            """
+            try:
+                with Connection(url=url, timeout=CONNECTION_TIMEOUT) as conn:
+                    basic_info = Client(conn).device.basic_information()
+            except ResponseErrorException:  # API compatible error
+                return True
+            except Exception:  # API incompatible error # pylint: disable=broad-except
+                return False
+            return isinstance(basic_info, dict)  # Crude content check
+
+        if not await self.hass.async_add_executor_job(_is_supported_device):
+            return self.async_abort(reason="unsupported_device")
+
         self.context.update(
             {
                 "title_placeholders": {

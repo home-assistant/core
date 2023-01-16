@@ -70,10 +70,12 @@ async def async_setup_entry(
 
     if deprecated_sensors:
         _LOGGER.warning(
-            "The following binary_sensor entities are deprecated and may "
-            "no longer behave as expected. They will be removed in a "
-            "future version. You can force removal of these entities by "
-            "disabling them and restarting Home Assistant.\n%s",
+            (
+                "The following binary_sensor entities are deprecated and may "
+                "no longer behave as expected. They will be removed in a "
+                "future version. You can force removal of these entities by "
+                "disabling them and restarting Home Assistant.\n%s"
+            ),
             pformat([s.entity_id for s in deprecated_sensors]),
         )
 

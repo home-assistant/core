@@ -26,7 +26,6 @@ async def test_full_user_flow_implementation(
     assert result.get("type") == FlowResultType.FORM
     LOGGER.debug(result)
     assert result.get("data_schema") != ""
-    assert "flow_id" in result
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_STATION_ID: TEST_STATION_ID},
@@ -68,7 +67,6 @@ async def test_error_update(
     LOGGER.debug(result)
     assert result.get("data_schema") != ""
     mock_zamg.update.side_effect = ZamgApiError
-    assert "flow_id" in result
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_STATION_ID: TEST_STATION_ID},
@@ -105,7 +103,6 @@ async def test_user_flow_duplicate(
 
     assert result.get("step_id") == "user"
     assert result.get("type") == FlowResultType.FORM
-    assert "flow_id" in result
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_STATION_ID: TEST_STATION_ID},
@@ -143,7 +140,6 @@ async def test_import_flow_duplicate(
 
     assert result.get("step_id") == "user"
     assert result.get("type") == FlowResultType.FORM
-    assert "flow_id" in result
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_STATION_ID: TEST_STATION_ID},
@@ -176,7 +172,6 @@ async def test_import_flow_duplicate_after_position(
 
     assert result.get("step_id") == "user"
     assert result.get("type") == FlowResultType.FORM
-    assert "flow_id" in result
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_STATION_ID: TEST_STATION_ID},

@@ -1,3 +1,23 @@
 {
+    "issues": {
+        "entity_unexpected_unit_energy": {
+            "title": "Onverwachte meeteenheid"
+        },
+        "entity_unexpected_unit_energy_price": {
+            "title": "Onverwachte meeteenheid"
+        },
+        "entity_unexpected_unit_gas": {
+            "title": "Onverwachte meeteenheid"
+        },
+        "entity_unexpected_unit_gas_price": {
+            "title": "Onverwachte meeteenheid"
+        },
+        "entity_unexpected_unit_water": {
+            "title": "Onverwachte meeteenheid"
+        },
+        "entity_unexpected_unit_water_price": {
+            "title": "Onverwachte meeteenheid"
+        }
+    },
     "title": "Energie"
 }

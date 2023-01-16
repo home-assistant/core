@@ -106,9 +106,7 @@ def setup_platform(
         _LOGGER.error("Unable to connect to Travis CI service: %s", str(ex))
         persistent_notification.create(
             hass,
-            "Error: {}<br />"
-            "You will need to restart hass after fixing."
-            "".format(ex),
+            f"Error: {ex}<br />You will need to restart hass after fixing.",
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,
         )

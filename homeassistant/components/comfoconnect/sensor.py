@@ -40,11 +40,11 @@ from homeassistant.const import (
     CONF_RESOURCES,
     PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
-    VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
     UnitOfEnergy,
     UnitOfPower,
     UnitOfTemperature,
     UnitOfTime,
+    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -209,7 +209,7 @@ SENSOR_TYPES = (
         key=ATTR_AIR_FLOW_SUPPLY,
         state_class=SensorStateClass.MEASUREMENT,
         name="Supply airflow",
-        native_unit_of_measurement=VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         icon="mdi:fan-plus",
         sensor_id=SENSOR_FAN_SUPPLY_FLOW,
     ),
@@ -217,7 +217,7 @@ SENSOR_TYPES = (
         key=ATTR_AIR_FLOW_EXHAUST,
         state_class=SensorStateClass.MEASUREMENT,
         name="Exhaust airflow",
-        native_unit_of_measurement=VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         icon="mdi:fan-minus",
         sensor_id=SENSOR_FAN_EXHAUST_FLOW,
     ),

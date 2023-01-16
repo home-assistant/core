@@ -10,6 +10,7 @@ import logging
 from types import MappingProxyType
 from typing import Any, TypedDict
 
+from typing_extensions import Required
 import voluptuous as vol
 
 from .backports.enum import StrEnum
@@ -91,8 +92,8 @@ class FlowResult(TypedDict, total=False):
     description: str | None
     errors: dict[str, str] | None
     extra: str
-    flow_id: str
-    handler: str
+    flow_id: Required[str]
+    handler: Required[str]
     last_step: bool | None
     menu_options: list[str] | dict[str, str]
     options: Mapping[str, Any]
@@ -174,7 +175,10 @@ class FlowManager(abc.ABC):
     def async_has_matching_flow(
         self, handler: str, context: dict[str, Any], data: Any
     ) -> bool:
-        """Check if an existing matching flow is in progress with the same handler, context, and data."""
+        """Check if an existing matching flow is in progress.
+
+        A flow with the same handler, context, and data.
+        """
         return any(
             flow
             for flow in self._async_progress_by_handler(handler)
@@ -308,7 +312,8 @@ class FlowManager(abc.ABC):
                 FlowResultType.SHOW_PROGRESS_DONE,
             ):
                 raise ValueError(
-                    "Show progress can only transition to show progress or show progress done."
+                    "Show progress can only transition to show progress or show"
+                    " progress done."
                 )
 
             # If the result has changed from last result, fire event to update
@@ -386,8 +391,10 @@ class FlowManager(abc.ABC):
         if not isinstance(result["type"], FlowResultType):
             result["type"] = FlowResultType(result["type"])  # type: ignore[unreachable]
             report(
-                "does not use FlowResultType enum for data entry flow result type. "
-                "This is deprecated and will stop working in Home Assistant 2022.9",
+                (
+                    "does not use FlowResultType enum for data entry flow result type. "
+                    "This is deprecated and will stop working in Home Assistant 2022.9"
+                ),
                 error_if_core=False,
             )
 
@@ -450,7 +457,7 @@ class FlowHandler:
         return self.context.get("show_advanced_options", False)
 
     def add_suggested_values_to_schema(
-        self, data_schema: vol.Schema, suggested_values: Mapping[str, Any]
+        self, data_schema: vol.Schema, suggested_values: Mapping[str, Any] | None
     ) -> vol.Schema:
         """Make a copy of the schema, populated with suggested values.
 
@@ -470,7 +477,11 @@ class FlowHandler:
                     continue
 
             new_key = key
-            if key in suggested_values and isinstance(key, vol.Marker):
+            if (
+                suggested_values
+                and key in suggested_values
+                and isinstance(key, vol.Marker)
+            ):
                 # Copy the marker to not modify the flow schema
                 new_key = copy.copy(key)
                 new_key.description = {"suggested_value": suggested_values[key]}

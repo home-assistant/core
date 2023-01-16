@@ -2,6 +2,13 @@
     "config": {
         "error": {
             "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "user": {
+                "menu_options": {
+                    "nibegw": "NibeGW"
+                }
+            }
         }
     }
 }

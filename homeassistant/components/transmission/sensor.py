@@ -9,7 +9,9 @@ from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, STATE_IDLE, UnitOfDataRate
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TransmissionClient
@@ -58,6 +60,12 @@ class TransmissionSensor(SensorEntity):
         self._name = sensor_name
         self._sub_type = sub_type
         self._state = None
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, tm_client.config_entry.entry_id)},
+            manufacturer="Transmission",
+            name=client_name,
+        )
 
     @property
     def name(self):

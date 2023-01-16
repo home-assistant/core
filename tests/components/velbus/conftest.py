@@ -1,5 +1,6 @@
 """Fixtures for the Velbus tests."""
-from unittest.mock import AsyncMock, patch
+from collections.abc import Generator
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -14,10 +15,9 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="controller")
-def mock_controller():
+def mock_controller() -> Generator[MagicMock, None, None]:
     """Mock a successful velbus controller."""
-    controller = AsyncMock()
-    with patch("velbusaio.controller.Velbus", return_value=controller):
+    with patch("homeassistant.components.velbus.Velbus", autospec=True) as controller:
         yield controller
 
 

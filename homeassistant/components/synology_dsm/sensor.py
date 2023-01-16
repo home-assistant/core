@@ -26,11 +26,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.dt import utcnow
 
 from . import SynoApi
 from .const import CONF_VOLUMES, DOMAIN, ENTITY_UNIT_LOAD
+from .coordinator import SynologyDSMCentralUpdateCoordinator
 from .entity import (
     SynologyDSMBaseEntity,
     SynologyDSMDeviceEntity,
@@ -328,7 +328,9 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class SynoDSMSensor(SynologyDSMBaseEntity, SensorEntity):
+class SynoDSMSensor(
+    SynologyDSMBaseEntity[SynologyDSMCentralUpdateCoordinator], SensorEntity
+):
     """Mixin for sensor specific attributes."""
 
     entity_description: SynologyDSMSensorEntityDescription
@@ -336,7 +338,7 @@ class SynoDSMSensor(SynologyDSMBaseEntity, SensorEntity):
     def __init__(
         self,
         api: SynoApi,
-        coordinator: DataUpdateCoordinator[dict[str, dict[str, Any]]],
+        coordinator: SynologyDSMCentralUpdateCoordinator,
         description: SynologyDSMSensorEntityDescription,
     ) -> None:
         """Initialize the Synology DSM sensor entity."""
@@ -383,7 +385,7 @@ class SynoDSMStorageSensor(SynologyDSMDeviceEntity, SynoDSMSensor):
     def __init__(
         self,
         api: SynoApi,
-        coordinator: DataUpdateCoordinator[dict[str, dict[str, Any]]],
+        coordinator: SynologyDSMCentralUpdateCoordinator,
         description: SynologyDSMSensorEntityDescription,
         device_id: str | None = None,
     ) -> None:
@@ -410,7 +412,7 @@ class SynoDSMInfoSensor(SynoDSMSensor):
     def __init__(
         self,
         api: SynoApi,
-        coordinator: DataUpdateCoordinator[dict[str, dict[str, Any]]],
+        coordinator: SynologyDSMCentralUpdateCoordinator,
         description: SynologyDSMSensorEntityDescription,
     ) -> None:
         """Initialize the Synology SynoDSMInfoSensor entity."""

@@ -12,7 +12,6 @@ from aioesphomeapi import (
     APIConnectionError,
     APIIntEnum,
     APIVersion,
-    BadNameAPIError,
     DeviceInfo as EsphomeDeviceInfo,
     EntityCategory as EsphomeEntityCategory,
     EntityInfo,
@@ -27,7 +26,6 @@ from aioesphomeapi import (
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
-from homeassistant import const
 from homeassistant.components import tag, zeroconf
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -37,6 +35,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
+    __version__ as ha_version,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall, State, callback
 from homeassistant.exceptions import TemplateError
@@ -57,11 +56,13 @@ from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.template import Template
 
 from .bluetooth import async_connect_scanner
+from .dashboard import async_get_dashboard
 from .domain_data import DOMAIN, DomainData
 
 # Import config flow so that it's added to the registry
 from .entry_data import RuntimeEntryData
 
+CONF_DEVICE_NAME = "device_name"
 CONF_NOISE_PSK = "noise_psk"
 _LOGGER = logging.getLogger(__name__)
 _R = TypeVar("_R")
@@ -121,7 +122,7 @@ async def async_setup_entry(  # noqa: C901
         host,
         port,
         password,
-        client_info=f"Home Assistant {const.__version__}",
+        client_info=f"Home Assistant {ha_version}",
         zeroconf_instance=zeroconf_instance,
         noise_psk=noise_psk,
     )
@@ -268,12 +269,18 @@ async def async_setup_entry(  # noqa: C901
                     entry, unique_id=format_mac(device_info.mac_address)
                 )
 
+            # Make sure we have the correct device name stored
+            # so we can map the device to ESPHome Dashboard config
+            if entry.data.get(CONF_DEVICE_NAME) != device_info.name:
+                hass.config_entries.async_update_entry(
+                    entry, data={**entry.data, CONF_DEVICE_NAME: device_info.name}
+                )
+
             entry_data.device_info = device_info
             assert cli.api_version is not None
             entry_data.api_version = cli.api_version
             entry_data.available = True
             if entry_data.device_info.name:
-                cli.expected_name = entry_data.device_info.name
                 reconnect_logic.name = entry_data.device_info.name
 
             if device_info.bluetooth_proxy_version:
@@ -315,12 +322,6 @@ async def async_setup_entry(  # noqa: C901
         """Start reauth flow if appropriate connect error type."""
         if isinstance(err, (RequiresEncryptionAPIError, InvalidEncryptionKeyAPIError)):
             entry.async_start_reauth(hass)
-        if isinstance(err, BadNameAPIError):
-            _LOGGER.warning(
-                "Name of device %s changed to %s, potentially due to IP reassignment",
-                cli.expected_name,
-                err.received_name,
-            )
 
     reconnect_logic = ReconnectLogic(
         client=cli,
@@ -336,11 +337,10 @@ async def async_setup_entry(  # noqa: C901
     await _setup_services(hass, entry_data, services)
 
     if entry_data.device_info is not None and entry_data.device_info.name:
-        cli.expected_name = entry_data.device_info.name
         reconnect_logic.name = entry_data.device_info.name
         if entry.unique_id is None:
             hass.config_entries.async_update_entry(
-                entry, unique_id=entry_data.device_info.name
+                entry, unique_id=format_mac(entry_data.device_info.mac_address)
             )
 
     await reconnect_logic.start()
@@ -361,6 +361,8 @@ def _async_setup_device_registry(
     configuration_url = None
     if device_info.webserver_port > 0:
         configuration_url = f"http://{entry.data['host']}:{device_info.webserver_port}"
+    elif dashboard := async_get_dashboard(hass):
+        configuration_url = f"homeassistant://hassio/ingress/{dashboard.addon_slug}"
 
     manufacturer = "espressif"
     if device_info.manufacturer:
@@ -378,7 +380,7 @@ def _async_setup_device_registry(
         config_entry_id=entry.entry_id,
         configuration_url=configuration_url,
         connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)},
-        name=device_info.name,
+        name=device_info.friendly_name or device_info.name,
         manufacturer=manufacturer,
         model=model,
         sw_version=sw_version,
@@ -480,7 +482,10 @@ async def _register_service(
     )
 
     service_desc = {
-        "description": f"Calls the service {service.name} of the node {entry_data.device_info.name}",
+        "description": (
+            f"Calls the service {service.name} of the node"
+            f" {entry_data.device_info.name}"
+        ),
         "fields": fields,
     }
 
@@ -700,16 +705,15 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         self._component_key = component_key
         self._key = key
         self._state_type = state_type
+        if entry_data.device_info is not None and entry_data.device_info.friendly_name:
+            self._attr_has_entity_name = True
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                (
-                    f"esphome_{self._entry_id}_remove_"
-                    f"{self._component_key}_{self._key}"
-                ),
+                f"esphome_{self._entry_id}_remove_{self._component_key}_{self._key}",
                 functools.partial(self.async_remove, force_remove=True),
             )
         )

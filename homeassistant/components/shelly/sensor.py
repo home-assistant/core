@@ -361,7 +361,6 @@ RPC_SENSORS: Final = {
         value=lambda status, _: round(status, 1),
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        entity_registry_enabled_default=True,
     ),
     "rssi": RpcSensorDescription(
         key="wifi",
@@ -392,7 +391,6 @@ RPC_SENSORS: Final = {
         value=lambda status, _: round(status, 1),
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
-        entity_registry_enabled_default=True,
     ),
     "battery": RpcSensorDescription(
         key="devicepower:0",
@@ -402,7 +400,6 @@ RPC_SENSORS: Final = {
         value=lambda status, _: status["percent"],
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
-        entity_registry_enabled_default=True,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "voltmeter": RpcSensorDescription(
@@ -413,7 +410,6 @@ RPC_SENSORS: Final = {
         value=lambda status, _: round(float(status), 2),
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        entity_registry_enabled_default=True,
         available=lambda status: status is not None,
     ),
     "analoginput": RpcSensorDescription(
@@ -423,7 +419,6 @@ RPC_SENSORS: Final = {
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
-        entity_registry_enabled_default=True,
     ),
 }
 

@@ -4,7 +4,8 @@
             "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
             "already_in_progress": "Konfigur\u00e1cia u\u017e prebieha",
             "mdns_missing_mac": "Ch\u00fdba MAC adresa vo vlastnostiach MDNS.",
-            "reauth_successful": "Op\u00e4tovn\u00e9 overenie bolo \u00faspe\u0161n\u00e9"
+            "reauth_successful": "Op\u00e4tovn\u00e9 overenie bolo \u00faspe\u0161n\u00e9",
+            "service_received": "Slu\u017eba prijat\u00e1"
         },
         "error": {
             "connection_error": "Ned\u00e1 sa pripoji\u0165 k ESP. Uistite sa, \u017ee v\u00e1\u0161 s\u00fabor YAML obsahuje riadok \u201eapi:\u201c.",
@@ -28,13 +29,13 @@
                 "data": {
                     "noise_psk": "\u0160ifrovac\u00ed k\u013e\u00fa\u010d"
                 },
-                "description": "Pros\u00edm, zadajte \u0161ifrovac\u00ed k\u013e\u00fa\u010d, ktor\u00fd ste nastavili v konfigur\u00e1cii pre {name}."
+                "description": "Zadajte \u0161ifrovac\u00ed k\u013e\u00fa\u010d pre {name}. N\u00e1jdete ho v ESPHome Dashboard alebo v konfigur\u00e1cii v\u00e1\u0161ho zariadenia."
             },
             "reauth_confirm": {
                 "data": {
                     "noise_psk": "\u0160ifrovac\u00ed k\u013e\u00fa\u010d"
                 },
-                "description": "Zariadenie ESPHome {name} povolilo transportn\u00e9 \u0161ifrovanie alebo zmenilo \u0161ifrovac\u00ed k\u013e\u00fa\u010d. Pros\u00edm, zadajte aktualizovan\u00fd k\u013e\u00fa\u010d."
+                "description": "Zariadenie ESPHome {name} povolilo prenosov\u00e9 \u0161ifrovanie alebo zmenilo \u0161ifrovac\u00ed k\u013e\u00fa\u010d. Zadajte aktualizovan\u00fd k\u013e\u00fa\u010d. N\u00e1jdete ho v ESPHome Dashboard alebo v konfigur\u00e1cii v\u00e1\u0161ho zariadenia."
             },
             "user": {
                 "data": {

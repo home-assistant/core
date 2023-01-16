@@ -10,9 +10,8 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
-    LENGTH_KILOMETERS,
-    LENGTH_MILES,
     PERCENTAGE,
+    UnitOfLength,
     UnitOfPressure,
 )
 from homeassistant.helpers import entity_registry as er
@@ -49,7 +48,8 @@ async def test_sensors(hass):
         state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Fuel distance remaining"
     )
     assert state.attributes.get(ATTR_ICON) == "mdi:gas-station"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == LENGTH_KILOMETERS
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DISTANCE
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfLength.KILOMETERS
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert state.state == "381"
     entry = entity_registry.async_get("sensor.my_mazda3_fuel_distance_remaining")
@@ -61,7 +61,8 @@ async def test_sensors(hass):
     assert state
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Odometer"
     assert state.attributes.get(ATTR_ICON) == "mdi:speedometer"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == LENGTH_KILOMETERS
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DISTANCE
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfLength.KILOMETERS
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL_INCREASING
     assert state.state == "2795"
     entry = entity_registry.async_get("sensor.my_mazda3_odometer")
@@ -130,22 +131,26 @@ async def test_sensors(hass):
     assert entry.unique_id == "JM000000000000000_rear_right_tire_pressure"
 
 
-async def test_sensors_imperial_units(hass):
-    """Test that the sensors work properly with imperial units."""
+async def test_sensors_us_customary_units(hass):
+    """Test that the sensors work properly with US customary units."""
     hass.config.units = US_CUSTOMARY_SYSTEM
 
     await init_integration(hass)
 
+    # In the US, miles are used for vehicle odometers.
+    # These tests verify that the unit conversion logic for the distance
+    # sensor device class automatically converts the unit to miles.
+
     # Fuel Distance Remaining
     state = hass.states.get("sensor.my_mazda3_fuel_distance_remaining")
     assert state
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == LENGTH_MILES
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfLength.MILES
     assert state.state == "237"
 
     # Odometer
     state = hass.states.get("sensor.my_mazda3_odometer")
     assert state
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == LENGTH_MILES
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfLength.MILES
     assert state.state == "1737"
 
 
@@ -181,7 +186,8 @@ async def test_electric_vehicle_sensors(hass):
     assert state
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Remaining range"
     assert state.attributes.get(ATTR_ICON) == "mdi:ev-station"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == LENGTH_KILOMETERS
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DISTANCE
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfLength.KILOMETERS
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert state.state == "218"
     entry = entity_registry.async_get("sensor.my_mazda3_remaining_range")

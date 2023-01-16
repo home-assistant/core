@@ -1,6 +1,6 @@
 {
     "application_credentials": {
-        "description": "Segueix les [instruccions]({more_info_url}) de [la pantalla de consentiment OAuth]({oauth_consent_url}) perqu\u00e8 Home Assistant tingui acc\u00e9s als teu Google Assistant SDK. Tamb\u00e9 has de crear les credencials d'aplicaci\u00f3 enlla\u00e7ades al teu compte:\n 1. V\u00e9s a [Credencials]({oauth_creds_url}) i fes clic a **Crear credencials**.\n 2. A la llista desplegable, selecciona **ID de client OAuth**.\n 3. Selecciona **Aplicaci\u00f3 Web** al tipus d'aplicaci\u00f3.\n \n "
+        "description": "Seguiu les [instruccions]({more_info_url}) de [la pantalla de consentiment OAuth]({oauth_consent_url}) perqu\u00e8 Home Assistant tingui acc\u00e9s al vostre Google Assistant SDK. Tamb\u00e9 heu de crear les credencials d'aplicaci\u00f3 enlla\u00e7ades al vostre compte:\n 1. Aneu a [Credencials]({oauth_creds_url}) i feu clic a **Crear credencials**.\n 2. A la llista desplegable, seleccioneu **ID de client OAuth**.\n 3. Seleccioneu **Aplicaci\u00f3 Web** al tipus d'aplicaci\u00f3.\n \n "
     },
     "config": {
         "abort": {
@@ -34,8 +34,10 @@
         "step": {
             "init": {
                 "data": {
+                    "enable_conversation_agent": "Activa l'agent de conversa",
                     "language_code": "Codi d'idioma"
-                }
+                },
+                "description": "Defineix l'idioma de les interaccions amb Google Assisant i tria si voleu activar l'agent de conversa."
             }
         }
     }

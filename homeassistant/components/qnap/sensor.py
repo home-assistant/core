@@ -462,7 +462,10 @@ class QNAPDriveSensor(QNAPSensor):
         """Return the name of the sensor, if any."""
         server_name = self._api.data["system_stats"]["system"]["name"]
 
-        return f"{server_name} {self.entity_description.name} (Drive {self.monitor_device})"
+        return (
+            f"{server_name} {self.entity_description.name} (Drive"
+            f" {self.monitor_device})"
+        )
 
     @property
     def extra_state_attributes(self):
@@ -506,5 +509,7 @@ class QNAPVolumeSensor(QNAPSensor):
             total_gb = int(data["total_size"]) / 1024 / 1024 / 1024
 
             return {
-                ATTR_VOLUME_SIZE: f"{round_nicely(total_gb)} {UnitOfInformation.GIBIBYTES}"
+                ATTR_VOLUME_SIZE: (
+                    f"{round_nicely(total_gb)} {UnitOfInformation.GIBIBYTES}"
+                )
             }

@@ -90,7 +90,8 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if not unique_id and info[CONF_SERIAL]:
             _LOGGER.debug(
-                "Printer UUID is missing from IPP response. Falling back to IPP serial number"
+                "Printer UUID is missing from IPP response. Falling back to IPP serial"
+                " number"
             )
             unique_id = info[CONF_SERIAL]
         elif not unique_id:
@@ -154,7 +155,8 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
             unique_id = self.discovery_info[CONF_UUID] = info[CONF_UUID]
         elif not unique_id and info[CONF_SERIAL]:
             _LOGGER.debug(
-                "Printer UUID is missing from discovery info and IPP response. Falling back to IPP serial number"
+                "Printer UUID is missing from discovery info and IPP response. Falling"
+                " back to IPP serial number"
             )
             unique_id = info[CONF_SERIAL]
         elif not unique_id:

@@ -7,7 +7,7 @@ from .backports.enum import StrEnum
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2023
-MINOR_VERSION: Final = 1
+MINOR_VERSION: Final = 2
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -1030,6 +1030,13 @@ DATA_RATE_MEBIBYTES_PER_SECOND: Final = "MiB/s"
 DATA_RATE_GIBIBYTES_PER_SECOND: Final = "GiB/s"
 """Deprecated: please use UnitOfDataRate.GIBIBYTES_PER_SECOND"""
 
+
+# States
+COMPRESSED_STATE_STATE = "s"
+COMPRESSED_STATE_ATTRIBUTES = "a"
+COMPRESSED_STATE_CONTEXT = "c"
+COMPRESSED_STATE_LAST_CHANGED = "lc"
+COMPRESSED_STATE_LAST_UPDATED = "lu"
 
 # #### SERVICES ####
 SERVICE_HOMEASSISTANT_STOP: Final = "stop"

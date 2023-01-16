@@ -98,7 +98,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # value, so if host isn't present, config entry will not be configured.
     if not entry.data.get(CONF_HOST):
         LOGGER.warning(
-            "The config entry %s probably comes from a custom integration, please remove it if you want to use core Shelly integration",
+            (
+                "The config entry %s probably comes from a custom integration, please"
+                " remove it if you want to use core Shelly integration"
+            ),
             entry.title,
         )
         return False

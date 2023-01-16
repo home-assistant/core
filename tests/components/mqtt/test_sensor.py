@@ -12,9 +12,8 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
     Platform,
+    UnitOfTemperature,
 )
 import homeassistant.core as ha
 from homeassistant.helpers import device_registry as dr
@@ -293,7 +292,6 @@ async def test_setting_sensor_value_via_mqtt_json_message(
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
-                    "unit_of_measurement": "fav unit",
                     "value_template": "{{ value_json.val }}",
                 }
             }
@@ -326,7 +324,6 @@ async def test_setting_sensor_value_via_mqtt_json_message_and_default_current_st
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
-                    "unit_of_measurement": "fav unit",
                     "value_template": "{{ value_json.val | is_defined }}-{{ value_json.par }}",
                 }
             }
@@ -410,7 +407,7 @@ async def test_setting_sensor_bad_last_reset_via_mqtt_message(
 
 
 async def test_setting_sensor_empty_last_reset_via_mqtt_message(
-    hass, caplog, mqtt_mock_entry_with_yaml_config
+    hass, mqtt_mock_entry_with_yaml_config
 ):
     """Test the setting of the last_reset property via MQTT."""
     assert await async_setup_component(
@@ -434,7 +431,6 @@ async def test_setting_sensor_empty_last_reset_via_mqtt_message(
     async_fire_mqtt_message(hass, "last-reset-topic", "")
     state = hass.states.get("sensor.test")
     assert state.attributes.get("last_reset") is None
-    assert "Ignoring empty last_reset message" in caplog.text
 
 
 async def test_setting_sensor_last_reset_via_mqtt_json_message(
@@ -690,6 +686,11 @@ async def test_valid_device_class(hass, mqtt_mock_entry_with_yaml_config):
                         "device_class": "temperature",
                     },
                     {"name": "Test 2", "state_topic": "test-topic"},
+                    {
+                        "name": "Test 3",
+                        "state_topic": "test-topic",
+                        "device_class": None,
+                    },
                 ]
             }
         },
@@ -700,6 +701,8 @@ async def test_valid_device_class(hass, mqtt_mock_entry_with_yaml_config):
     state = hass.states.get("sensor.test_1")
     assert state.attributes["device_class"] == "temperature"
     state = hass.states.get("sensor.test_2")
+    assert "device_class" not in state.attributes
+    state = hass.states.get("sensor.test_3")
     assert "device_class" not in state.attributes
 
 
@@ -739,6 +742,11 @@ async def test_valid_state_class(hass, mqtt_mock_entry_with_yaml_config):
                         "state_class": "measurement",
                     },
                     {"name": "Test 2", "state_topic": "test-topic"},
+                    {
+                        "name": "Test 3",
+                        "state_topic": "test-topic",
+                        "state_class": None,
+                    },
                 ]
             }
         },
@@ -749,6 +757,8 @@ async def test_valid_state_class(hass, mqtt_mock_entry_with_yaml_config):
     state = hass.states.get("sensor.test_1")
     assert state.attributes["state_class"] == "measurement"
     state = hass.states.get("sensor.test_2")
+    assert "state_class" not in state.attributes
+    state = hass.states.get("sensor.test_3")
     assert "state_class" not in state.attributes
 
 
@@ -1114,14 +1124,14 @@ async def test_cleanup_triggers_and_restoring_state(
     config1["expire_after"] = 30
     config1["state_topic"] = "test-topic1"
     config1["device_class"] = "temperature"
-    config1["unit_of_measurement"] = TEMP_FAHRENHEIT
+    config1["unit_of_measurement"] = UnitOfTemperature.FAHRENHEIT.value
 
     config2 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][domain])
     config2["name"] = "test2"
     config2["expire_after"] = 5
     config2["state_topic"] = "test-topic2"
     config2["device_class"] = "temperature"
-    config2["unit_of_measurement"] = TEMP_CELSIUS
+    config2["unit_of_measurement"] = UnitOfTemperature.CELSIUS.value
 
     freezer.move_to("2022-02-02 12:01:00+01:00")
 
@@ -1147,14 +1157,6 @@ async def test_cleanup_triggers_and_restoring_state(
     )
     await hass.async_block_till_done()
 
-    assert "Clean up expire after trigger for sensor.test1" in caplog.text
-    assert "Clean up expire after trigger for sensor.test2" not in caplog.text
-    assert (
-        "State recovered after reload for sensor.test1, remaining time before expiring"
-        in caplog.text
-    )
-    assert "State recovered after reload for sensor.test2" not in caplog.text
-
     state = hass.states.get("sensor.test1")
     assert state.state == "38"  # 100 °F -> 38 °C
 
@@ -1171,7 +1173,7 @@ async def test_cleanup_triggers_and_restoring_state(
 
 
 async def test_skip_restoring_state_with_over_due_expire_trigger(
-    hass, mqtt_mock_entry_with_yaml_config, caplog, freezer
+    hass, mqtt_mock_entry_with_yaml_config, freezer
 ):
     """Test restoring a state with over due expire timer."""
 
@@ -1195,7 +1197,8 @@ async def test_skip_restoring_state_with_over_due_expire_trigger(
     )
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
-    assert "Skip state recovery after reload for sensor.test3" in caplog.text
+    state = hass.states.get("sensor.test3")
+    assert state.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(

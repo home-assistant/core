@@ -1,6 +1,7 @@
 """Config flow for PurpleAir integration."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Mapping
 from copy import deepcopy
 from dataclasses import dataclass, field
@@ -14,13 +15,15 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import (
     aiohttp_client,
     config_validation as cv,
     device_registry as dr,
+    entity_registry as er,
 )
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -28,7 +31,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import CONF_LAST_UPDATE_SENSOR_ADD, CONF_SENSOR_INDICES, DOMAIN, LOGGER
+from .const import CONF_SENSOR_INDICES, DOMAIN, LOGGER
 
 CONF_DISTANCE = "distance"
 CONF_NEARBY_SENSOR_OPTIONS = "nearby_sensor_options"
@@ -74,8 +77,7 @@ def async_get_nearby_sensors_options(
     """Return a set of nearby sensors as SelectOptionDict objects."""
     return [
         SelectOptionDict(
-            value=str(result.sensor.sensor_index),
-            label=f"{result.sensor.name} ({round(result.distance, 1)} km away)",
+            value=str(result.sensor.sensor_index), label=cast(str, result.sensor.name)
         )
         for result in nearby_sensor_results
     ]
@@ -116,50 +118,6 @@ def async_get_remove_sensor_schema(sensors: list[SelectOptionDict]) -> vol.Schem
             )
         }
     )
-
-
-@callback
-def async_get_sensor_index(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
-) -> int:
-    """Get the sensor index related to a config and device entry.
-
-    Note that this method expects that there will always be a single sensor index per
-    DeviceEntry.
-    """
-    [sensor_index] = [
-        sensor_index
-        for sensor_index in config_entry.options[CONF_SENSOR_INDICES]
-        if (DOMAIN, str(sensor_index)) in device_entry.identifiers
-    ]
-
-    return cast(int, sensor_index)
-
-
-@callback
-def async_remove_sensor_by_device_id(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    device_id: str,
-    *,
-    remove_device: bool = True,
-) -> dict[str, Any]:
-    """Remove a sensor and return update config entry options."""
-    device_registry = dr.async_get(hass)
-    device_entry = device_registry.async_get(device_id)
-    assert device_entry
-
-    removed_sensor_index = async_get_sensor_index(hass, config_entry, device_entry)
-    options = deepcopy({**config_entry.options})
-    options[CONF_LAST_UPDATE_SENSOR_ADD] = False
-    options[CONF_SENSOR_INDICES].remove(removed_sensor_index)
-
-    if remove_device:
-        device_registry.async_update_device(
-            device_entry.id, remove_config_entry_id=config_entry.entry_id
-        )
-
-    return options
 
 
 @dataclass
@@ -408,9 +366,8 @@ class PurpleAirOptionsFlowHandler(config_entries.OptionsFlow):
             return self.async_abort(reason="already_configured")
 
         options = deepcopy({**self.config_entry.options})
-        options[CONF_LAST_UPDATE_SENSOR_ADD] = True
         options[CONF_SENSOR_INDICES].append(sensor_index)
-        return self.async_create_entry(title="", data=options)
+        return self.async_create_entry(data=options)
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -433,8 +390,50 @@ class PurpleAirOptionsFlowHandler(config_entries.OptionsFlow):
                 ),
             )
 
-        new_entry_options = async_remove_sensor_by_device_id(
-            self.hass, self.config_entry, user_input[CONF_SENSOR_DEVICE_ID]
+        device_registry = dr.async_get(self.hass)
+        entity_registry = er.async_get(self.hass)
+
+        device_id = user_input[CONF_SENSOR_DEVICE_ID]
+        device_entry = cast(dr.DeviceEntry, device_registry.async_get(device_id))
+
+        # Determine the entity entries that belong to this device.
+        entity_entries = er.async_entries_for_device(
+            entity_registry, device_id, include_disabled_entities=True
         )
 
-        return self.async_create_entry(title="", data=new_entry_options)
+        device_entities_removed_event = asyncio.Event()
+
+        @callback
+        def async_device_entity_state_changed(_: Event) -> None:
+            """Listen and respond when all device entities are removed."""
+            if all(
+                self.hass.states.get(entity_entry.entity_id) is None
+                for entity_entry in entity_entries
+            ):
+                device_entities_removed_event.set()
+
+        # Track state changes for this device's entities and when they're removed,
+        # finish the flow:
+        cancel_state_track = async_track_state_change_event(
+            self.hass,
+            [entity_entry.entity_id for entity_entry in entity_entries],
+            async_device_entity_state_changed,
+        )
+        device_registry.async_update_device(
+            device_id, remove_config_entry_id=self.config_entry.entry_id
+        )
+        await device_entities_removed_event.wait()
+
+        # Once we're done, we can cancel the state change tracker callback:
+        cancel_state_track()
+
+        # Build new config entry options:
+        removed_sensor_index = next(
+            sensor_index
+            for sensor_index in self.config_entry.options[CONF_SENSOR_INDICES]
+            if (DOMAIN, str(sensor_index)) in device_entry.identifiers
+        )
+        options = deepcopy({**self.config_entry.options})
+        options[CONF_SENSOR_INDICES].remove(removed_sensor_index)
+
+        return self.async_create_entry(data=options)

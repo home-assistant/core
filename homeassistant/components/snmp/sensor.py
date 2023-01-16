@@ -4,6 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
+from pysnmp.error import PySnmpError
 import pysnmp.hlapi.asyncio as hlapi
 from pysnmp.hlapi.asyncio import (
     CommunityData,
@@ -11,6 +12,7 @@ from pysnmp.hlapi.asyncio import (
     ObjectIdentity,
     ObjectType,
     SnmpEngine,
+    Udp6TransportTarget,
     UdpTransportTarget,
     UsmUserData,
     getCmd,
@@ -106,6 +108,17 @@ async def async_setup_platform(
     default_value = config.get(CONF_DEFAULT_VALUE)
     unique_id = config.get(CONF_UNIQUE_ID)
 
+    try:
+        # Try IPv4 first.
+        target = UdpTransportTarget((host, port), timeout=DEFAULT_TIMEOUT)
+    except PySnmpError:
+        # Then try IPv6.
+        try:
+            target = Udp6TransportTarget((host, port), timeout=DEFAULT_TIMEOUT)
+        except PySnmpError as err:
+            _LOGGER.error("Invalid SNMP host: %s", err)
+            return
+
     if version == "3":
 
         if not authkey:
@@ -122,14 +135,14 @@ async def async_setup_platform(
                 authProtocol=getattr(hlapi, MAP_AUTH_PROTOCOLS[authproto]),
                 privProtocol=getattr(hlapi, MAP_PRIV_PROTOCOLS[privproto]),
             ),
-            UdpTransportTarget((host, port), timeout=DEFAULT_TIMEOUT),
+            target,
             ContextData(),
         ]
     else:
         request_args = [
             SnmpEngine(),
             CommunityData(community, mpModel=SNMP_VERSIONS[version]),
-            UdpTransportTarget((host, port), timeout=DEFAULT_TIMEOUT),
+            target,
             ContextData(),
         ]
     get_result = await getCmd(*request_args, ObjectType(ObjectIdentity(baseoid)))

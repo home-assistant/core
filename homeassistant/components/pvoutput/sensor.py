@@ -62,7 +62,9 @@ SENSORS: tuple[PVOutputSensorEntityDescription, ...] = (
     PVOutputSensorEntityDescription(
         key="normalized_output",
         name="Efficiency",
-        native_unit_of_measurement=f"{UnitOfEnergy.KILO_WATT_HOUR}/{UnitOfPower.KILO_WATT}",
+        native_unit_of_measurement=(
+            f"{UnitOfEnergy.KILO_WATT_HOUR}/{UnitOfPower.KILO_WATT}"
+        ),
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda status: status.normalized_output,
     ),

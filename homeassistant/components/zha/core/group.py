@@ -65,7 +65,7 @@ class ZHAGroupMember(LogMixin):
 
     @property
     def device(self) -> ZHADevice:
-        """Return the zha device for this group member."""
+        """Return the ZHA device for this group member."""
         return self._zha_device
 
     @property
@@ -103,7 +103,10 @@ class ZHAGroupMember(LogMixin):
             ].remove_from_group(self._zha_group.group_id)
         except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
             self.debug(
-                "Failed to remove endpoint: %s for device '%s' from group: 0x%04x ex: %s",
+                (
+                    "Failed to remove endpoint: %s for device '%s' from group: 0x%04x"
+                    " ex: %s"
+                ),
                 self._endpoint_id,
                 self._zha_device.ieee,
                 self._zha_group.group_id,

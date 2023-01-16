@@ -20,6 +20,9 @@
                     "email": "E-mail"
                 }
             },
+            "discovery_confirm": {
+                "description": "Wil je {model} ({device_id}) instellen?"
+            },
             "local_pick": {
                 "data": {
                     "device": "Apparaat",

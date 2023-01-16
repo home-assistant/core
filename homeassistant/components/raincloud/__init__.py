@@ -107,7 +107,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER.error("Unable to connect to Rain Cloud service: %s", str(ex))
         persistent_notification.create(
             hass,
-            f"Error: {ex}<br />" "You will need to restart hass after fixing.",
+            f"Error: {ex}<br />You will need to restart hass after fixing.",
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,
         )

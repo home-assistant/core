@@ -15,7 +15,7 @@ from homeassistant.setup import async_setup_component
 def hlapi_mock():
     """Mock out 3rd party API."""
     mock_data = MagicMock()
-    mock_data.prettyPrint = Mock(return_value="hello")
+    mock_data.prettyPrint = Mock(return_value="13.5")
     future = asyncio.get_event_loop().create_future()
     future.set_result((None, None, None, [[mock_data]]))
     with patch(
@@ -40,7 +40,7 @@ async def test_basic_config(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.snmp")
-    assert state.state == "hello"
+    assert state.state == "13.5"
     assert state.attributes == {"friendly_name": "SNMP"}
 
 
@@ -60,7 +60,7 @@ async def test_entity_config(hass: HomeAssistant) -> None:
             "name": "{{'SNMP' + ' ' + 'Sensor'}}",
             "state_class": "measurement",
             "unique_id": "very_unique",
-            "unit_of_measurement": "beardsecond",
+            "unit_of_measurement": "°C",
         },
     }
 
@@ -71,12 +71,12 @@ async def test_entity_config(hass: HomeAssistant) -> None:
     assert entity_registry.async_get("sensor.snmp_sensor").unique_id == "very_unique"
 
     state = hass.states.get("sensor.snmp_sensor")
-    assert state.state == "hello"
+    assert state.state == "13.5"
     assert state.attributes == {
         "device_class": "temperature",
         "entity_picture": "blabla.png",
         "friendly_name": "SNMP Sensor",
         "icon": "mdi:one_two_three",
         "state_class": "measurement",
-        "unit_of_measurement": "beardsecond",
+        "unit_of_measurement": "°C",
     }

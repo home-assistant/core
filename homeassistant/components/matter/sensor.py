@@ -21,10 +21,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
-    VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
     Platform,
     UnitOfPressure,
     UnitOfTemperature,
+    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -139,7 +139,7 @@ DEVICE_ENTITY: dict[
         name="Flow",
         measurement_to_ha=lambda x: x / 10,
         subscribe_attributes=(clusters.FlowMeasurement.Attributes.MeasuredValue,),
-        native_unit_of_measurement=VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
     ),
     device_types.HumiditySensor: MatterSensorEntityDescriptionFactory(
         key=device_types.HumiditySensor,

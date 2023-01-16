@@ -9,7 +9,7 @@ import logging
 from typing import TYPE_CHECKING, Any, Final
 
 from bleak.backends.scanner import AdvertisementDataCallback
-from bleak_retry_connector import NO_RSSI_VALUE, RSSI_SWITCH_THRESHOLD
+from bleak_retry_connector import NO_RSSI_VALUE, RSSI_SWITCH_THRESHOLD, BleakSlotManager
 from bluetooth_adapters import (
     ADAPTER_ADDRESS,
     ADAPTER_PASSIVE_SCAN,
@@ -28,8 +28,11 @@ from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.dt import monotonic_time_coarse
 
-from .advertisement_tracker import AdvertisementTracker
-from .base_scanner import BaseHaScanner
+from .advertisement_tracker import (
+    TRACKER_BUFFERING_WOBBLE_SECONDS,
+    AdvertisementTracker,
+)
+from .base_scanner import BaseHaScanner, BluetoothScannerDevice
 from .const import (
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
     UNAVAILABLE_TRACK_SECONDS,
@@ -104,6 +107,7 @@ class BluetoothManager:
         integration_matcher: IntegrationMatcher,
         bluetooth_adapters: BluetoothAdapters,
         storage: BluetoothStorage,
+        slot_manager: BleakSlotManager,
     ) -> None:
         """Init bluetooth manager."""
         self.hass = hass
@@ -131,6 +135,7 @@ class BluetoothManager:
         self._sources: dict[str, BaseHaScanner] = {}
         self._bluetooth_adapters = bluetooth_adapters
         self.storage = storage
+        self.slot_manager = slot_manager
 
     @property
     def supports_passive_scan(self) -> bool:
@@ -155,6 +160,7 @@ class BluetoothManager:
         )
         return {
             "adapters": self._adapters,
+            "slot_manager": self.slot_manager.diagnostics(),
             "scanners": scanner_diagnostics,
             "connectable_history": [
                 service_info.as_dict()
@@ -214,24 +220,29 @@ class BluetoothManager:
         uninstall_multiple_bleak_catcher()
 
     @hass_callback
-    def async_get_discovered_devices_and_advertisement_data_by_address(
+    def async_scanner_devices_by_address(
         self, address: str, connectable: bool
-    ) -> list[tuple[BLEDevice, AdvertisementData]]:
-        """Get devices and advertisement_data by address."""
-        types_ = (True,) if connectable else (True, False)
+    ) -> list[BluetoothScannerDevice]:
+        """Get BluetoothScannerDevice by address."""
+        scanners = self._get_scanners_by_type(True)
+        if not connectable:
+            scanners.extend(self._get_scanners_by_type(False))
         return [
-            device_advertisement_data
-            for device_advertisement_data in (
-                scanner.discovered_devices_and_advertisement_data.get(address)
-                for type_ in types_
-                for scanner in self._get_scanners_by_type(type_)
+            BluetoothScannerDevice(scanner, *device_adv)
+            for scanner in scanners
+            if (
+                device_adv := scanner.discovered_devices_and_advertisement_data.get(
+                    address
+                )
             )
-            if device_advertisement_data is not None
         ]
 
     @hass_callback
     def _async_all_discovered_addresses(self, connectable: bool) -> Iterable[str]:
-        """Return all of discovered addresses from all the scanners including duplicates."""
+        """Return all of discovered addresses.
+
+        Include addresses from all the scanners including duplicates.
+        """
         yield from itertools.chain.from_iterable(
             scanner.discovered_devices_and_advertisement_data
             for scanner in self._get_scanners_by_type(True)
@@ -279,13 +290,18 @@ class BluetoothManager:
                     #
                     # For non-connectable devices we also check the device has exceeded
                     # the advertising interval before we mark it as unavailable
-                    # since it may have gone to sleep and since we do not need an active connection
-                    # to it we can only determine its availability by the lack of advertisements
-                    #
+                    # since it may have gone to sleep and since we do not need an active
+                    # connection to it we can only determine its availability
+                    # by the lack of advertisements
                     if advertising_interval := intervals.get(address):
-                        time_since_seen = monotonic_now - all_history[address].time
-                        if time_since_seen <= advertising_interval:
-                            continue
+                        advertising_interval += TRACKER_BUFFERING_WOBBLE_SECONDS
+                    else:
+                        advertising_interval = (
+                            FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
+                        )
+                    time_since_seen = monotonic_now - all_history[address].time
+                    if time_since_seen <= advertising_interval:
+                        continue
 
                     # The second loop (connectable=False) is responsible for removing
                     # the device from all the interval tracking since it is no longer
@@ -318,7 +334,10 @@ class BluetoothManager:
             # If the old advertisement is stale, any new advertisement is preferred
             if debug:
                 _LOGGER.debug(
-                    "%s (%s): Switching from %s to %s (time elapsed:%s > stale seconds:%s)",
+                    (
+                        "%s (%s): Switching from %s to %s (time elapsed:%s > stale"
+                        " seconds:%s)"
+                    ),
                     new.name,
                     new.address,
                     self._async_describe_source(old),
@@ -330,10 +349,14 @@ class BluetoothManager:
         if (new.rssi or NO_RSSI_VALUE) - RSSI_SWITCH_THRESHOLD > (
             old.rssi or NO_RSSI_VALUE
         ):
-            # If new advertisement is RSSI_SWITCH_THRESHOLD more, the new one is preferred
+            # If new advertisement is RSSI_SWITCH_THRESHOLD more,
+            # the new one is preferred.
             if debug:
                 _LOGGER.debug(
-                    "%s (%s): Switching from %s to %s (new rssi:%s - threshold:%s > old rssi:%s)",
+                    (
+                        "%s (%s): Switching from %s to %s (new rssi:%s - threshold:%s >"
+                        " old rssi:%s)"
+                    ),
                     new.name,
                     new.address,
                     self._async_describe_source(old),
@@ -373,19 +396,21 @@ class BluetoothManager:
 
         source = service_info.source
         debug = _LOGGER.isEnabledFor(logging.DEBUG)
-        # This logic is complex due to the many combinations of scanners that are supported.
+        # This logic is complex due to the many combinations of scanners
+        # that are supported.
         #
         # We need to handle multiple connectable and non-connectable scanners
         # and we need to handle the case where a device is connectable on one scanner
         # but not on another.
         #
-        # The device may also be connectable only by a scanner that has worse signal strength
-        # than a non-connectable scanner.
+        # The device may also be connectable only by a scanner that has worse
+        # signal strength than a non-connectable scanner.
         #
-        # all_history - the history of all advertisements from all scanners with the best
-        #               advertisement from each scanner
-        # connectable_history - the history of all connectable advertisements from all scanners
-        #                       with the best advertisement from each connectable scanner
+        # all_history - the history of all advertisements from all scanners with the
+        #               best advertisement from each scanner
+        # connectable_history - the history of all connectable advertisements from all
+        #                       scanners with the best advertisement from each
+        #                       connectable scanner
         #
         if (
             (old_service_info := all_history.get(address))
@@ -636,7 +661,10 @@ class BluetoothManager:
         return self._connectable_history if connectable else self._all_history
 
     def async_register_scanner(
-        self, scanner: BaseHaScanner, connectable: bool
+        self,
+        scanner: BaseHaScanner,
+        connectable: bool,
+        connection_slots: int | None = None,
     ) -> CALLBACK_TYPE:
         """Register a new scanner."""
         _LOGGER.debug("Registering scanner %s", scanner.name)
@@ -647,9 +675,13 @@ class BluetoothManager:
             self._advertisement_tracker.async_remove_source(scanner.source)
             scanners.remove(scanner)
             del self._sources[scanner.source]
+            if connection_slots:
+                self.slot_manager.remove_adapter(scanner.adapter)
 
         scanners.append(scanner)
         self._sources[scanner.source] = scanner
+        if connection_slots:
+            self.slot_manager.register_adapter(scanner.adapter, connection_slots)
         return _unregister_scanner
 
     @hass_callback
@@ -673,3 +705,13 @@ class BluetoothManager:
             )
 
         return _remove_callback
+
+    @hass_callback
+    def async_release_connection_slot(self, device: BLEDevice) -> None:
+        """Release a connection slot."""
+        self.slot_manager.release_slot(device)
+
+    @hass_callback
+    def async_allocate_connection_slot(self, device: BLEDevice) -> bool:
+        """Allocate a connection slot."""
+        return self.slot_manager.allocate_slot(device)

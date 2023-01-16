@@ -62,6 +62,22 @@ async def test_invalid_location(hass, aioclient_mock):
     assert result["errors"] == {"base": "wrong_location"}
 
 
+async def test_invalid_location_for_point_and_nearest(hass, aioclient_mock):
+    """Test an abort when the location is wrong for the point and nearest methods."""
+
+    aioclient_mock.get(API_POINT_URL, text=load_fixture("no_station.json", "airly"))
+
+    aioclient_mock.get(API_NEAREST_URL, text=load_fixture("no_station.json", "airly"))
+
+    with patch("homeassistant.components.airly.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+        )
+
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "wrong_location"
+
+
 async def test_duplicate_error(hass, aioclient_mock):
     """Test that errors are shown when duplicates are added."""
     aioclient_mock.get(API_POINT_URL, text=load_fixture("valid_station.json", "airly"))

@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Optional, Union
 
 from govee_ble import DeviceClass, DeviceKey, SensorUpdate, Units
+from govee_ble.parser import ERROR
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth.passive_update_processor import (
@@ -116,13 +117,21 @@ async def async_setup_entry(
 
 class GoveeBluetoothSensorEntity(
     PassiveBluetoothProcessorEntity[
-        PassiveBluetoothDataProcessor[Optional[Union[float, int]]]
+        PassiveBluetoothDataProcessor[Optional[Union[float, int, str]]]
     ],
     SensorEntity,
 ):
     """Representation of a govee ble sensor."""
 
     @property
-    def native_value(self) -> int | float | None:
+    def available(self) -> bool:
+        """Return False if sensor is in error."""
+        return (
+            self.processor.entity_data.get(self.entity_key) != ERROR
+            and super().available
+        )
+
+    @property
+    def native_value(self) -> float | int | str | None:
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)

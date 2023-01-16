@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from typing import cast
 
 import async_timeout
 from matter_server.client import MatterClient
@@ -245,7 +244,7 @@ def _async_init_services(hass: HomeAssistant) -> None:
         # This could be more efficient
         for node in await matter_client.get_nodes():
             if node.unique_id == unique_id:
-                return cast(int, node.node_id)
+                return node.node_id
 
         return None
 

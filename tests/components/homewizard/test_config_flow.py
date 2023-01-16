@@ -112,39 +112,6 @@ async def test_discovery_flow_works(hass, aioclient_mock):
     assert result["result"].unique_id == "HWE-P1_aabbccddeeff"
 
 
-async def test_config_flow_imports_entry(aioclient_mock, hass):
-    """Test config flow accepts imported configuration."""
-
-    device = get_mock_device()
-
-    mock_entry = MockConfigEntry(domain="homewizard_energy", data={"host": "1.2.3.4"})
-    mock_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.homewizard.config_flow.HomeWizardEnergy",
-        return_value=device,
-    ), patch(
-        "homeassistant.components.homewizard.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": config_entries.SOURCE_IMPORT,
-                "old_config_entry_id": mock_entry.entry_id,
-            },
-            data=mock_entry.data,
-        )
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == "P1 meter (aabbccddeeff)"
-    assert result["data"][CONF_IP_ADDRESS] == "1.2.3.4"
-
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert len(device.device.mock_calls) == len(device.close.mock_calls)
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
 async def test_discovery_disabled_api(hass, aioclient_mock):
     """Test discovery detecting disabled api."""
 
@@ -385,6 +352,9 @@ async def test_reauth_flow(hass, aioclient_mock):
 
     device = get_mock_device()
     with patch(
+        "homeassistant.components.homewizard.async_setup_entry",
+        return_value=True,
+    ), patch(
         "homeassistant.components.homewizard.config_flow.HomeWizardEnergy",
         return_value=device,
     ):
