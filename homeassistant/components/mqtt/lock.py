@@ -38,13 +38,13 @@ from .util import get_mqtt_data, valid_subscribe_topic
 CONF_PAYLOAD_LOCK = "payload_lock"
 CONF_PAYLOAD_UNLOCK = "payload_unlock"
 CONF_PAYLOAD_OPEN = "payload_open"
-CONF_PAYLOAD_JAMMED = "payload_jammed"
-CONF_PAYLOAD_SOLVED = "payload_solved"
 
 CONF_STATE_LOCKED = "state_locked"
 CONF_STATE_LOCKING = "state_locking"
 CONF_STATE_UNLOCKED = "state_unlocked"
 CONF_STATE_UNLOCKING = "state_unlocking"
+CONF_STATE_JAMMED = "state_jammed"
+CONF_STATE_OK = "state_ok"
 CONF_JAMMED_STATE_TOPIC = "jammed_state_topic"
 CONF_JAMMED_VALUE_TEMPLATE = "jammed_value_template"
 
@@ -52,12 +52,12 @@ DEFAULT_NAME = "MQTT Lock"
 DEFAULT_PAYLOAD_LOCK = "LOCK"
 DEFAULT_PAYLOAD_UNLOCK = "UNLOCK"
 DEFAULT_PAYLOAD_OPEN = "OPEN"
-DEFAULT_PAYLOAD_JAMMED = "JAMMED"
-DEFAULT_PAYLOAD_SOLVED = "SOLVED"
 DEFAULT_STATE_LOCKED = "LOCKED"
 DEFAULT_STATE_LOCKING = "LOCKING"
 DEFAULT_STATE_UNLOCKED = "UNLOCKED"
 DEFAULT_STATE_UNLOCKING = "UNLOCKING"
+DEFAULT_STATE_JAMMED = "MOTOR_JAMMED"
+DEFAULT_STATE_OK = "MOTOR_OK"
 
 MQTT_LOCK_ATTRIBUTES_BLOCKED = frozenset(
     {
@@ -69,15 +69,15 @@ MQTT_LOCK_ATTRIBUTES_BLOCKED = frozenset(
 PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PAYLOAD_JAMMED, default=DEFAULT_PAYLOAD_JAMMED): cv.string,
+        vol.Optional(CONF_STATE_JAMMED, default=DEFAULT_STATE_JAMMED): cv.string,
         vol.Optional(CONF_PAYLOAD_LOCK, default=DEFAULT_PAYLOAD_LOCK): cv.string,
         vol.Optional(CONF_PAYLOAD_UNLOCK, default=DEFAULT_PAYLOAD_UNLOCK): cv.string,
         vol.Optional(CONF_PAYLOAD_OPEN): cv.string,
         vol.Optional(CONF_JAMMED_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_JAMMED_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_PAYLOAD_SOLVED, default=DEFAULT_PAYLOAD_SOLVED): cv.string,
         vol.Optional(CONF_STATE_LOCKED, default=DEFAULT_STATE_LOCKED): cv.string,
         vol.Optional(CONF_STATE_LOCKING, default=DEFAULT_STATE_LOCKING): cv.string,
+        vol.Optional(CONF_STATE_OK, default=DEFAULT_STATE_OK): cv.string,
         vol.Optional(CONF_STATE_UNLOCKED, default=DEFAULT_STATE_UNLOCKED): cv.string,
         vol.Optional(CONF_STATE_UNLOCKING, default=DEFAULT_STATE_UNLOCKING): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
@@ -93,8 +93,8 @@ PLATFORM_SCHEMA = vol.All(
 DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA)
 
 JAMMED_STATE_CONFIG_KEYS = [
-    CONF_PAYLOAD_JAMMED,
-    CONF_PAYLOAD_SOLVED,
+    CONF_STATE_JAMMED,
+    CONF_STATE_OK,
 ]
 
 STATE_CONFIG_KEYS = [
@@ -208,12 +208,13 @@ class MqttLock(MqttEntity, LockEntity):
                 CONF_ENCODING: encoding,
             }
 
+        @callback
         @log_messages(self.hass, self.entity_id)
         def jammed_message_received(msg: ReceiveMessage) -> None:
             """Handle new jammed state messages."""
             payload = self._jammed_value_template(msg.payload)
             if payload in self._valid_jammed_states:
-                self._attr_is_jammed = payload == self._config[CONF_PAYLOAD_JAMMED]
+                self._attr_is_jammed = payload == self._config[CONF_STATE_JAMMED]
 
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
