@@ -101,7 +101,8 @@ class BasePlatform(Entity):
             default_val: int | float | None) -> int | float | None:
             if (val := entry.get(config_name, default_val)) is None:
                 return None
-            return float(val) if '.' in val else int(val)
+            assert isinstance(val, float) or isinstance(val, int)
+            return val
 
         self._min_value = get_optional_numeric_config(CONF_MIN_VALUE, None)
         self._min_value_threshold = get_optional_numeric_config(CONF_MIN_VALUE_THRESHOLD, self._min_value)
