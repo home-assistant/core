@@ -12,7 +12,14 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN
 from .coordinator import HWEnergyDeviceUpdateCoordinator
 
-TO_REDACT = {CONF_IP_ADDRESS, "serial", "wifi_ssid"}
+TO_REDACT = {
+    CONF_IP_ADDRESS,
+    "serial",
+    "wifi_ssid",
+    "unique_meter_id",
+    "unique_id",
+    "gas_unique_id",
+}
 
 
 async def async_get_config_entry_diagnostics(
