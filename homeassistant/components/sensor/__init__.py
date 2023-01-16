@@ -411,7 +411,7 @@ class SensorEntity(Entity):
         state_class = self.state_class
 
         # Sensors with device classes indicating a non-numeric value
-        # should not have a state class or unit of measurement
+        # should not have a unit of measurement
         if (
             device_class
             in {
