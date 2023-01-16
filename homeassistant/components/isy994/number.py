@@ -247,7 +247,7 @@ class ISYBacklightNumberEntity(ISYAuxControlEntity, RestoreNumber):
         description: NumberEntityDescription,
         device_info: DeviceInfo | None,
     ) -> None:
-        """Initialize the ISY Backlight Select entity."""
+        """Initialize the ISY Backlight number entity."""
         super().__init__(node, control, unique_id, description, device_info)
         self._attr_native_value = 0
 
