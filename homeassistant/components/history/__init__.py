@@ -431,7 +431,7 @@ async def _async_send_historical_states(
     """Fetch history significant_states and send them to the client."""
     states = cast(
         MutableMapping[str, list[dict[str, Any]]],
-        await hass.async_add_executor_job(
+        await get_instance(hass).async_add_executor_job(
             history.get_significant_states,
             hass,
             start_time,
