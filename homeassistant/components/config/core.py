@@ -104,6 +104,9 @@ async def websocket_detect_config(
     if location_info.longitude:
         info["longitude"] = location_info.longitude
 
+    if location_info.elevation:
+        info["elevation"] = location_info.elevation
+
     if location_info.time_zone:
         info["time_zone"] = location_info.time_zone
 

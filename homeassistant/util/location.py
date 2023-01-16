@@ -44,6 +44,7 @@ class LocationInfo(NamedTuple):
     latitude: float
     longitude: float
     use_metric: bool
+    elevation: float
 
 
 async def async_detect_location_info(
@@ -157,6 +158,24 @@ def vincenty(
     return round(s, 6)
 
 
+async def _get_elevation(session: aiohttp.ClientSession, lat: float, lon: float) -> int:
+    """Query open-elevation for elevation data in meters."""
+
+    try:
+        resp = await session.get(
+            f"https://api.open-elevation.com/api/v1/lookup?locations={lat},{lon}"
+        )
+    except (aiohttp.ClientError, asyncio.TimeoutError):
+        return 0
+
+    try:
+        data = await resp.json()
+        altitude = data["results"][0]["elevation"]
+        return int(altitude)
+    except (aiohttp.ClientError, ValueError):
+        return 0
+
+
 async def _get_whoami(session: aiohttp.ClientSession) -> dict[str, Any] | None:
     """Query whoami.home-assistant.io for location data."""
     try:
@@ -171,6 +190,10 @@ async def _get_whoami(session: aiohttp.ClientSession) -> dict[str, Any] | None:
     except (aiohttp.ClientError, ValueError):
         return None
 
+    latitude = float(raw_info.get("latitude"))
+    longitude = float(raw_info.get("longitude"))
+    elevation = await _get_elevation(session, latitude, longitude)
+
     return {
         "ip": raw_info.get("ip"),
         "country_code": raw_info.get("country"),
@@ -180,6 +203,7 @@ async def _get_whoami(session: aiohttp.ClientSession) -> dict[str, Any] | None:
         "city": raw_info.get("city"),
         "zip_code": raw_info.get("postal_code"),
         "time_zone": raw_info.get("timezone"),
-        "latitude": float(raw_info.get("latitude")),
-        "longitude": float(raw_info.get("longitude")),
+        "latitude": latitude,
+        "longitude": longitude,
+        "elevation": elevation,
     }
