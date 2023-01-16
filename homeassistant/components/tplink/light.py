@@ -66,6 +66,9 @@ SEQUENCE_EFFECT_DICT: Final = {
         vol.Length(min=1, max=16),
         [vol.All(vol.Coerce(tuple), HSV_SEQUENCE)],
     ),
+    vol.Optional("repeat_times", default=0): vol.All(
+        vol.Coerce(int), vol.Range(min=0, max=10)
+    ),
     vol.Optional("spread", default=1): vol.All(
         vol.Coerce(int), vol.Range(min=1, max=16)
     ),
@@ -397,6 +400,7 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
         transition: int,
         segments: list[int],
         sequence: Sequence[tuple[int, int, int]],
+        repeat_times: int,
         spread: int,
         direction: int,
     ) -> None:
@@ -405,7 +409,7 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
             **_async_build_base_effect(brightness, duration, transition, segments),
             "type": "sequence",
             "sequence": sequence,
-            "repeat_times": 0,
+            "repeat_times": repeat_times,
             "spread": spread,
             "direction": direction,
         }
