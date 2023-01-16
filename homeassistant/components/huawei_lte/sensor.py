@@ -759,7 +759,7 @@ class HuaweiLteSensor(HuaweiLteBaseEntityWithDevice, SensorEntity):
         if self.entity_description.device_class_fn:
             # Note: using self.state could infloop here.
             return self.entity_description.device_class_fn(self.native_value)
-        return self.entity_description.device_class
+        return super().device_class
 
     @property
     def last_reset(self) -> datetime | None:
