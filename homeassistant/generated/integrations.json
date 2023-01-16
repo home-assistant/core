@@ -191,6 +191,12 @@
           "iot_class": "cloud_push",
           "name": "Amazon Web Services (AWS)"
         },
+        "fire_tv": {
+          "integration_type": "virtual",
+          "config_flow": false,
+          "supported_by": "androidtv",
+          "name": "Amazon Fire TV"
+        },
         "route53": {
           "integration_type": "hub",
           "config_flow": false,

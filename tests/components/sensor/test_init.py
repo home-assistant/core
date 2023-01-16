@@ -1,6 +1,9 @@
 """The test for sensor entity."""
+from __future__ import annotations
+
 from datetime import date, datetime, timezone
 from decimal import Decimal
+from typing import Any
 
 import pytest
 from pytest import approx
@@ -1101,40 +1104,6 @@ async def test_invalid_enumeration_entity_without_device_class(
         SensorDeviceClass.TIMESTAMP,
     ),
 )
-async def test_non_numeric_device_class_with_state_class(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    enable_custom_integrations: None,
-    device_class: SensorDeviceClass,
-):
-    """Test error on numeric entities that provide an state class."""
-    platform = getattr(hass.components, "test.sensor")
-    platform.init(empty=True)
-    platform.ENTITIES["0"] = platform.MockSensor(
-        name="Test",
-        native_value=None,
-        device_class=device_class,
-        state_class=SensorStateClass.MEASUREMENT,
-        options=["option1", "option2"],
-    )
-
-    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
-    await hass.async_block_till_done()
-
-    assert (
-        "Sensor sensor.test has a state class and thus indicating it has a numeric "
-        f"value; however, it has the non-numeric device class: {device_class}"
-    ) in caplog.text
-
-
-@pytest.mark.parametrize(
-    "device_class",
-    (
-        SensorDeviceClass.DATE,
-        SensorDeviceClass.ENUM,
-        SensorDeviceClass.TIMESTAMP,
-    ),
-)
 async def test_non_numeric_device_class_with_unit_of_measurement(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
@@ -1230,4 +1199,164 @@ async def test_device_classes_with_invalid_unit_of_measurement(
     assert (
         "is using native unit of measurement 'INVALID!' which is not a valid "
         f"unit for the device class ('{device_class}') it is using"
+    ) in caplog.text
+
+
+@pytest.mark.parametrize(
+    "device_class,state_class,unit",
+    [
+        (SensorDeviceClass.AQI, None, None),
+        (None, SensorStateClass.MEASUREMENT, None),
+        (None, None, UnitOfTemperature.CELSIUS),
+    ],
+)
+@pytest.mark.parametrize(
+    "native_value,expected",
+    [
+        ("abc", "abc"),
+        ("13.7.1", "13.7.1"),
+        (datetime(2012, 11, 10, 7, 35, 1), "2012-11-10 07:35:01"),
+        (date(2012, 11, 10), "2012-11-10"),
+    ],
+)
+async def test_non_numeric_validation(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+    native_value: Any,
+    expected: str,
+    device_class: SensorDeviceClass | None,
+    state_class: SensorStateClass | None,
+    unit: str | None,
+) -> None:
+    """Test error on expected numeric entities."""
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test",
+        native_value=native_value,
+        device_class=device_class,
+        native_unit_of_measurement=unit,
+        state_class=state_class,
+    )
+    entity0 = platform.ENTITIES["0"]
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity0.entity_id)
+    assert state.state == expected
+
+    assert (
+        "thus indicating it has a numeric value; "
+        f"however, it has the non-numeric value: {native_value}"
+    ) in caplog.text
+
+
+@pytest.mark.parametrize(
+    "device_class,state_class,unit",
+    [
+        (SensorDeviceClass.AQI, None, None),
+        (None, SensorStateClass.MEASUREMENT, None),
+        (None, None, UnitOfTemperature.CELSIUS),
+    ],
+)
+@pytest.mark.parametrize(
+    "native_value,expected",
+    [
+        (13, "13"),
+        (17.50, "17.5"),
+        (Decimal(18.50), "18.5"),
+        ("19.70", "19.70"),
+        (None, STATE_UNKNOWN),
+    ],
+)
+async def test_numeric_validation(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+    native_value: Any,
+    expected: str,
+    device_class: SensorDeviceClass | None,
+    state_class: SensorStateClass | None,
+    unit: str | None,
+) -> None:
+    """Test does not error on expected numeric entities."""
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test",
+        native_value=native_value,
+        device_class=device_class,
+        native_unit_of_measurement=unit,
+        state_class=state_class,
+    )
+    entity0 = platform.ENTITIES["0"]
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity0.entity_id)
+    assert state.state == expected
+
+    assert (
+        "thus indicating it has a numeric value; "
+        f"however, it has the non-numeric value: {native_value}"
+    ) not in caplog.text
+
+
+async def test_numeric_validation_ignores_custom_device_class(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+) -> None:
+    """Test does not error on expected numeric entities."""
+    native_value = "Three elephants"
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test",
+        native_value=native_value,
+        device_class="custom__deviceclass",
+    )
+    entity0 = platform.ENTITIES["0"]
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity0.entity_id)
+    assert state.state == "Three elephants"
+
+    assert (
+        "thus indicating it has a numeric value; "
+        f"however, it has the non-numeric value: {native_value}"
+    ) not in caplog.text
+
+
+@pytest.mark.parametrize(
+    "device_class",
+    list(SensorDeviceClass),
+)
+async def test_device_classes_with_invalid_state_class(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+    device_class: SensorDeviceClass,
+):
+    """Test error when unit of measurement is not valid for used device class."""
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test",
+        native_value=None,
+        state_class="INVALID!",
+        device_class=device_class,
+    )
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    assert (
+        "is using state class 'INVALID!' which is impossible considering device "
+        f"class ('{device_class}') it is using"
     ) in caplog.text

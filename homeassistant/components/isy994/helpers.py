@@ -4,6 +4,8 @@ from __future__ import annotations
 from typing import cast
 
 from pyisy.constants import (
+    BACKLIGHT_SUPPORT,
+    CMD_BACKLIGHT,
     ISY_VALUE_UNKNOWN,
     PROP_BUSY,
     PROP_COMMS_ERROR,
@@ -16,6 +18,7 @@ from pyisy.constants import (
     PROTO_ZWAVE,
     TAG_ENABLED,
     TAG_FOLDER,
+    UOM_INDEX,
 )
 from pyisy.nodes import Group, Node, Nodes
 from pyisy.programs import Programs
@@ -278,6 +281,16 @@ def _is_sensor_a_binary_sensor(isy_data: IsyData, node: Group | Node) -> bool:
     return False
 
 
+def _add_backlight_if_supported(isy_data: IsyData, node: Node) -> None:
+    """Check if a node supports setting a backlight and add entity."""
+    if not getattr(node, "is_backlight_supported", False):
+        return
+    if BACKLIGHT_SUPPORT[node.node_def_id] == UOM_INDEX:
+        isy_data.aux_properties[Platform.SELECT].append((node, CMD_BACKLIGHT))
+        return
+    isy_data.aux_properties[Platform.NUMBER].append((node, CMD_BACKLIGHT))
+
+
 def _generate_device_info(node: Node) -> DeviceInfo:
     """Generate the device info for a root node device."""
     isy = node.isy
@@ -339,6 +352,7 @@ def _categorize_nodes(
                     isy_data.aux_properties[platform].append((node, control))
             if hasattr(node, TAG_ENABLED):
                 isy_data.aux_properties[Platform.SWITCH].append((node, TAG_ENABLED))
+            _add_backlight_if_supported(isy_data, node)
 
         if node.protocol == PROTO_GROUP:
             isy_data.nodes[ISY_GROUP_PLATFORM].append(node)

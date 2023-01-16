@@ -3,7 +3,7 @@ import asyncio
 import logging
 
 from aiohttp.client_exceptions import ClientError
-from kostal.plenticore import PlenticoreApiClient, PlenticoreAuthenticationException
+from pykoplenti import ApiClient, AuthenticationException
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -30,7 +30,7 @@ async def test_connection(hass: HomeAssistant, data) -> str:
     """
 
     session = async_get_clientsession(hass)
-    async with PlenticoreApiClient(session, data["host"]) as client:
+    async with ApiClient(session, data["host"]) as client:
         await client.login(data["password"])
         values = await client.get_setting_values("scb:network", "Hostname")
 
@@ -52,7 +52,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 hostname = await test_connection(self.hass, user_input)
-            except PlenticoreAuthenticationException as ex:
+            except AuthenticationException as ex:
                 errors[CONF_PASSWORD] = "invalid_auth"
                 _LOGGER.error("Error response: %s", ex)
             except (ClientError, asyncio.TimeoutError):

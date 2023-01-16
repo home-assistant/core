@@ -64,6 +64,7 @@ from .const import (  # noqa: F401
     ATTR_OPTIONS,
     ATTR_STATE_CLASS,
     CONF_STATE_CLASS,
+    DEVICE_CLASS_STATE_CLASSES,
     DEVICE_CLASS_UNITS,
     DEVICE_CLASSES,
     DEVICE_CLASSES_SCHEMA,
@@ -155,6 +156,8 @@ class SensorEntity(Entity):
     _attr_unit_of_measurement: None = (
         None  # Subclasses of SensorEntity should not set this
     )
+    _invalid_numeric_value_reported = False
+    _invalid_state_class_reported = False
     _invalid_unit_of_measurement_reported = False
     _last_reset_reported = False
     _sensor_option_unit_of_measurement: str | None | UndefinedType = UNDEFINED
@@ -401,28 +404,53 @@ class SensorEntity(Entity):
         native_unit_of_measurement = self.native_unit_of_measurement
         unit_of_measurement = self.unit_of_measurement
         value = self.native_value
-        device_class = self.device_class
+        device_class: SensorDeviceClass | None = None
+        with suppress(ValueError):
+            # For the sake of validation, we can ignore custom device classes
+            # (customization and legacy style translations)
+            device_class = SensorDeviceClass(str(self.device_class))
+        state_class = self.state_class
 
         # Sensors with device classes indicating a non-numeric value
-        # should not have a state class or unit of measurement
-        if device_class in {
-            SensorDeviceClass.DATE,
-            SensorDeviceClass.ENUM,
-            SensorDeviceClass.TIMESTAMP,
-        }:
-            if self.state_class:
-                raise ValueError(
-                    f"Sensor {self.entity_id} has a state class and thus indicating "
-                    "it has a numeric value; however, it has the non-numeric "
-                    f"device class: {device_class}"
-                )
+        # should not have a unit of measurement
+        if (
+            device_class
+            in {
+                SensorDeviceClass.DATE,
+                SensorDeviceClass.ENUM,
+                SensorDeviceClass.TIMESTAMP,
+            }
+            and unit_of_measurement
+        ):
+            raise ValueError(
+                f"Sensor {self.entity_id} has a unit of measurement and thus "
+                "indicating it has a numeric value; however, it has the "
+                f"non-numeric device class: {device_class}"
+            )
 
-            if unit_of_measurement:
-                raise ValueError(
-                    f"Sensor {self.entity_id} has a unit of measurement and thus "
-                    "indicating it has a numeric value; however, it has the "
-                    f"non-numeric device class: {device_class}"
-                )
+        # Validate state class for sensors with a device class
+        if (
+            state_class
+            and not self._invalid_state_class_reported
+            and device_class
+            and (classes := DEVICE_CLASS_STATE_CLASSES.get(device_class)) is not None
+            and state_class not in classes
+        ):
+            self._invalid_state_class_reported = True
+            report_issue = self._suggest_report_issue()
+
+            # This should raise in Home Assistant Core 2023.6
+            _LOGGER.warning(
+                "Entity %s (%s) is using state class '%s' which "
+                "is impossible considering device class ('%s') it is using; "
+                "Please update your configuration if your entity is manually "
+                "configured, otherwise %s",
+                self.entity_id,
+                type(self),
+                state_class,
+                device_class,
+                report_issue,
+            )
 
         # Checks below only apply if there is a value
         if value is None:
@@ -478,6 +506,36 @@ class SensorEntity(Entity):
                     f"Sensor {self.entity_id} provides state value '{value}', "
                     "which is not in the list of options provided"
                 )
+            return value
+
+        # If the sensor has neither a device class, a state class nor
+        # a unit_of measurement then there are no further checks or conversions
+        if not device_class and not state_class and not unit_of_measurement:
+            return value
+
+        if not self._invalid_numeric_value_reported and not isinstance(
+            value, (int, float, Decimal)
+        ):
+            try:
+                _ = float(value)  # type: ignore[arg-type]
+            except (TypeError, ValueError):
+                # This should raise in Home Assistant Core 2023.4
+                self._invalid_numeric_value_reported = True
+                report_issue = self._suggest_report_issue()
+                _LOGGER.warning(
+                    "Sensor %s has device class %s, state class %s and unit %s "
+                    "thus indicating it has a numeric value; however, it has the "
+                    "non-numeric value: %s (%s); Please update your configuration "
+                    "if your entity is manually configured, otherwise %s",
+                    self.entity_id,
+                    device_class,
+                    state_class,
+                    unit_of_measurement,
+                    value,
+                    type(value),
+                    report_issue,
+                )
+                return value
 
         if (
             native_unit_of_measurement != unit_of_measurement
