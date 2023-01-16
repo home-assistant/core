@@ -7,8 +7,7 @@
           "latitude": "[%key:common::config_flow::data::latitude%]",
           "longitude": "[%key:common::config_flow::data::longitude%]",
           "radius": "Radius",
-          "categories": "Categories",
-          "scan_interval": "Update Interval (seconds)"
+          "categories": "Categories"
         }
       }
     },

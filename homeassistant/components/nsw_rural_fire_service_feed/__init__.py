@@ -12,13 +12,7 @@ from aio_geojson_nsw_rfs_incidents.feed_entry import (
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_RADIUS,
-    CONF_SCAN_INTERVAL,
-    Platform,
-)
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -52,9 +46,6 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS_IN_KM): vol.Coerce(
                     float
                 ),
-                vol.Optional(
-                    CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-                ): cv.positive_int,
                 vol.Optional(CONF_CATEGORIES, default=[]): vol.All(
                     cv.ensure_list, [vol.In(VALID_CATEGORIES)]
                 ),
@@ -73,7 +64,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     conf = config[DOMAIN]
     latitude = conf.get(CONF_LATITUDE, hass.config.latitude)
     longitude = conf.get(CONF_LONGITUDE, hass.config.longitude)
-    scan_interval = conf[CONF_SCAN_INTERVAL]
     categories = conf[CONF_CATEGORIES]
 
     hass.async_create_task(
@@ -84,7 +74,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 CONF_LATITUDE: latitude,
                 CONF_LONGITUDE: longitude,
                 CONF_RADIUS: conf[CONF_RADIUS],
-                CONF_SCAN_INTERVAL: scan_interval,
                 CONF_CATEGORIES: categories,
             },
         )
@@ -142,9 +131,6 @@ class NswRuralFireServiceFeedEntityManager:
         )
         radius_in_km = config_entry.data[CONF_RADIUS]
         categories = config_entry.data.get(CONF_CATEGORIES, [])
-        scan_interval: timedelta = timedelta(
-            seconds=config_entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-        )
         websession = aiohttp_client.async_get_clientsession(hass)
         self._feed_manager = NswRuralFireServiceIncidentsFeedManager(
             websession,
@@ -156,7 +142,7 @@ class NswRuralFireServiceFeedEntityManager:
             filter_categories=categories,
         )
         self._config_entry_id = config_entry.entry_id
-        self._scan_interval = scan_interval
+        self._scan_interval = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
         self._track_time_remove_callback: Callable[[], None] | None = None
         self.listeners: list[Callable[[], None]] = []
 

@@ -8,12 +8,7 @@ from homeassistant.components.nsw_rural_fire_service_feed.const import (
     CONF_CATEGORIES,
     DOMAIN,
 )
-from homeassistant.const import (
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_RADIUS,
-    CONF_SCAN_INTERVAL,
-)
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
 
 
 @pytest.fixture(name="nsw_rural_fire_service_feed_setup", autouse=True)
@@ -53,7 +48,6 @@ async def test_step_import(hass):
         CONF_LATITUDE: -41.2,
         CONF_LONGITUDE: 174.7,
         CONF_RADIUS: 25,
-        CONF_SCAN_INTERVAL: 240,
     }
 
     result = await hass.config_entries.flow.async_init(
@@ -65,7 +59,6 @@ async def test_step_import(hass):
         CONF_LATITUDE: -41.2,
         CONF_LONGITUDE: 174.7,
         CONF_RADIUS: 25,
-        CONF_SCAN_INTERVAL: 240,
         CONF_CATEGORIES: [],
     }
 
@@ -85,6 +78,5 @@ async def test_step_user(hass):
         CONF_LATITUDE: -41.2,
         CONF_LONGITUDE: 174.7,
         CONF_RADIUS: 25,
-        CONF_SCAN_INTERVAL: 300,
         CONF_CATEGORIES: ["Advice"],
     }

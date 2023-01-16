@@ -9,8 +9,7 @@
                     "categories": "Categories",
                     "latitude": "Latitude",
                     "longitude": "Longitude",
-                    "radius": "Radius",
-                    "scan_interval": "Update Interval (seconds)"
+                    "radius": "Radius"
                 },
                 "title": "Fill in your filter details."
             }
