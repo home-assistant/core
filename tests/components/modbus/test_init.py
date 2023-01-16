@@ -61,7 +61,6 @@ from homeassistant.components.modbus.const import (
     UDP,
     DataType,
 )
-from homeassistant.components.modbus.modbus import async_modbus_setup
 from homeassistant.components.modbus.validators import (
     duplicate_entity_validator,
     duplicate_modbus_validator,
@@ -434,25 +433,6 @@ async def test_duplicate_entity_validator(do_config):
 )
 async def test_config_modbus(hass, caplog, mock_modbus_with_pymodbus):
     """Run configuration test for modbus."""
-
-
-async def test_failing_setup(hass):
-    """Test setup fails."""
-    config = {
-        DOMAIN: {
-            CONF_TYPE: TCP,
-            CONF_HOST: TEST_MODBUS_HOST,
-            CONF_PORT: TEST_PORT_TCP,
-            CONF_NAME: TEST_MODBUS_NAME,
-        },
-    }
-    assert await async_setup_component(hass, DOMAIN, config) is True
-    hub = hass.data[DOMAIN][TEST_MODBUS_NAME]
-    hub.async_setup = mock.AsyncMock(return_value=False)
-    setup_config = {
-        DOMAIN: [],
-    }
-    await async_modbus_setup(hass, setup_config)
 
 
 VALUE = "value"
@@ -882,3 +862,20 @@ async def test_integration_reload(
             async_fire_time_changed(hass)
             await hass.async_block_till_done()
     assert "Modbus reloading" in caplog.text
+
+
+@pytest.mark.parametrize("do_config", [{}])
+async def test_integration_reload_failed(hass, caplog, mock_modbus) -> None:
+    """Test setup fails."""
+    caplog.set_level(logging.INFO)
+    caplog.clear()
+
+    yaml_path = get_fixture_path("configuration.yaml", "modbus")
+    with mock.patch.object(
+        hass_config, "YAML_CONFIG_FILE", yaml_path
+    ), mock.patch.object(mock_modbus, "connect", side_effect=ModbusException("error")):
+        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.async_block_till_done()
+
+    assert "Modbus reloading" in caplog.text
+    assert "connect failed, retry in pymodbus" in caplog.text
