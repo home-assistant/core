@@ -18,7 +18,7 @@ from pyisy.variables import Variable
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 
 from .const import DOMAIN
 
@@ -189,3 +189,42 @@ class ISYProgramEntity(ISYEntity):
         if self._node.last_update != EMPTY_TIME:
             attr["status_last_update"] = self._node.last_update
         return attr
+
+
+class ISYAuxControlEntity(Entity):
+    """Representation of a ISY/IoX Aux Control base entity."""
+
+    _attr_should_poll = False
+
+    def __init__(
+        self,
+        node: Node,
+        control: str,
+        unique_id: str,
+        description: EntityDescription,
+        device_info: DeviceInfo | None,
+    ) -> None:
+        """Initialize the ISY Aux Control Number entity."""
+        self._node = node
+        self._control = control
+        name = COMMAND_FRIENDLY_NAME.get(control, control).replace("_", " ").title()
+        if node.address != node.primary_node:
+            name = f"{node.name} {name}"
+        self._attr_name = name
+        self.entity_description = description
+        self._attr_has_entity_name = node.address == node.primary_node
+        self._attr_unique_id = unique_id
+        self._attr_device_info = device_info
+        self._change_handler: EventListener | None = None
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to the node control change events."""
+        self._change_handler = self._node.control_events.subscribe(self.async_on_update)
+
+    @callback
+    def async_on_update(self, event: NodeProperty) -> None:
+        """Handle a control event from the ISY Node."""
+        # Only watch for our control changing or the node being enabled/disabled
+        if event.control != self._control:
+            return
+        self.async_write_ha_state()

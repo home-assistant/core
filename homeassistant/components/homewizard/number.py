@@ -9,10 +9,11 @@ from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import HWEnergyDeviceUpdateCoordinator
+from .entity import HomeWizardEntity
+from .helpers import homewizard_exception_handler
 
 
 async def async_setup_entry(
@@ -31,13 +32,10 @@ async def async_setup_entry(
         )
 
 
-class HWEnergyNumberEntity(
-    CoordinatorEntity[HWEnergyDeviceUpdateCoordinator], NumberEntity
-):
+class HWEnergyNumberEntity(HomeWizardEntity, NumberEntity):
     """Representation of status light number."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -50,8 +48,8 @@ class HWEnergyNumberEntity(
         self._attr_name = "Status light brightness"
         self._attr_native_unit_of_measurement = PERCENTAGE
         self._attr_icon = "mdi:lightbulb-on"
-        self._attr_device_info = coordinator.device_info
 
+    @homewizard_exception_handler
     async def async_set_native_value(self, value: float) -> None:
         """Set a new value."""
         await self.coordinator.api.state_set(brightness=value * (255 / 100))
