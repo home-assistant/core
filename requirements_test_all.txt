@@ -146,7 +146,7 @@ aioecowitt==2022.11.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==13.0.4
+aioesphomeapi==13.1.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -1444,7 +1444,7 @@ python-forecastio==1.4.0
 python-fullykiosk==0.0.12
 
 # homeassistant.components.homewizard
-python-homewizard-energy==1.4.0
+python-homewizard-energy==1.5.0
 
 # homeassistant.components.izone
 python-izone==1.2.9
