@@ -13,6 +13,7 @@ from zeroconf.asyncio import AsyncZeroconf
 from .const import (
     CONNECTED_STATIONS,
     DISCOVERY_INFO,
+    GUEST_WIFI,
     IP,
     NEIGHBOR_ACCESS_POINTS,
     PLCNET,
@@ -43,9 +44,11 @@ class MockDevice(Device):
         """Reset mock to starting point."""
         self.async_disconnect = AsyncMock()
         self.device = DeviceApi(IP, None, DISCOVERY_INFO)
+        self.device.async_get_led_setting = AsyncMock(return_value=False)
         self.device.async_get_wifi_connected_station = AsyncMock(
             return_value=CONNECTED_STATIONS
         )
+        self.device.async_get_wifi_guest_access = AsyncMock(return_value=GUEST_WIFI)
         self.device.async_get_wifi_neighbor_access_points = AsyncMock(
             return_value=NEIGHBOR_ACCESS_POINTS
         )

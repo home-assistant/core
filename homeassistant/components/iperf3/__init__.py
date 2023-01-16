@@ -11,6 +11,7 @@ from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -48,16 +49,22 @@ ATTR_UPLOAD = "upload"
 ATTR_VERSION = "Version"
 ATTR_HOST = "host"
 
+ICON = "mdi:speedometer"
+
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_DOWNLOAD,
         name=ATTR_DOWNLOAD.capitalize(),
+        icon=ICON,
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
     ),
     SensorEntityDescription(
         key=ATTR_UPLOAD,
         name=ATTR_UPLOAD.capitalize(),
+        icon=ICON,
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
     ),

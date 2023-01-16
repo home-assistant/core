@@ -63,14 +63,14 @@ SOURCE_USB = "usb"
 SOURCE_USER = "user"
 SOURCE_ZEROCONF = "zeroconf"
 
-# If a user wants to hide a discovery from the UI they can "Ignore" it. The config_entries/ignore_flow
-# websocket command creates a config entry with this source and while it exists normal discoveries
-# with the same unique id are ignored.
+# If a user wants to hide a discovery from the UI they can "Ignore" it. The
+# config_entries/ignore_flow websocket command creates a config entry with this
+# source and while it exists normal discoveries with the same unique id are ignored.
 SOURCE_IGNORE = "ignore"
 
 # This is used when a user uses the "Stop Ignoring" button in the UI (the
-# config_entries/ignore_flow websocket command). It's triggered after the "ignore" config entry has
-# been removed and unloaded.
+# config_entries/ignore_flow websocket command). It's triggered after the
+# "ignore" config entry has been removed and unloaded.
 SOURCE_UNIGNORE = "unignore"
 
 # This is used to signal that re-authentication is required by the user.
@@ -643,7 +643,8 @@ class ConfigEntry:
         Returns function to unlisten.
         """
         weak_listener: Any
-        # weakref.ref is not applicable to a bound method, e.g. method of a class instance, as reference will die immediately
+        # weakref.ref is not applicable to a bound method, e.g.,
+        # method of a class instance, as reference will die immediately.
         if hasattr(listener, "__self__"):
             weak_listener = weakref.WeakMethod(cast(MethodType, listener))
         else:
@@ -994,10 +995,10 @@ class ConfigEntries:
             ):
                 self.hass.config_entries.flow.async_abort(progress_flow["flow_id"])
 
-        # After we have fully removed an "ignore" config entry we can try and rediscover it so that a
-        # user is able to immediately start configuring it. We do this by starting a new flow with
-        # the 'unignore' step. If the integration doesn't implement async_step_unignore then
-        # this will be a no-op.
+        # After we have fully removed an "ignore" config entry we can try and rediscover
+        # it so that a user is able to immediately start configuring it. We do this by
+        # starting a new flow with the 'unignore' step. If the integration doesn't
+        # implement async_step_unignore then this will be a no-op.
         if entry.source == SOURCE_IGNORE:
             self.hass.async_create_task(
                 self.hass.config_entries.flow.async_init(
@@ -1040,7 +1041,8 @@ class ConfigEntries:
         for entry in config["entries"]:
             pref_disable_new_entities = entry.get("pref_disable_new_entities")
 
-            # Between 0.98 and 2021.6 we stored 'disable_new_entities' in a system options dictionary
+            # Between 0.98 and 2021.6 we stored 'disable_new_entities' in a
+            # system options dictionary.
             if pref_disable_new_entities is None and "system_options" in entry:
                 pref_disable_new_entities = entry.get("system_options", {}).get(
                     "disable_new_entities"
@@ -1100,7 +1102,9 @@ class ConfigEntries:
             if not result:
                 return result
 
-        return entry.state is ConfigEntryState.LOADED  # type: ignore[comparison-overlap] # mypy bug?
+        return (
+            entry.state is ConfigEntryState.LOADED  # type: ignore[comparison-overlap]
+        )
 
     async def async_unload(self, entry_id: str) -> bool:
         """Unload a config entry."""
@@ -1382,7 +1386,11 @@ class ConfigFlow(data_entry_flow.FlowHandler):
             match_dict = {}  # Match any entry
         for entry in self._async_current_entries(include_ignore=False):
             if all(
-                item in ChainMap(entry.options, entry.data).items()  # type: ignore[arg-type]
+                item
+                in ChainMap(
+                    entry.options,  # type: ignore[arg-type]
+                    entry.data,  # type: ignore[arg-type]
+                ).items()
                 for item in match_dict.items()
             ):
                 raise data_entry_flow.AbortFlow("already_configured")
@@ -1474,7 +1482,8 @@ class ConfigFlow(data_entry_flow.FlowHandler):
     ) -> list[ConfigEntry]:
         """Return current entries.
 
-        If the flow is user initiated, filter out ignored entries unless include_ignore is True.
+        If the flow is user initiated, filter out ignored entries,
+        unless include_ignore is True.
         """
         config_entries = self.hass.config_entries.async_entries(self.handler)
 
@@ -1737,7 +1746,7 @@ class OptionsFlowWithConfigEntry(OptionsFlow):
 
 
 class EntityRegistryDisabledHandler:
-    """Handler to handle when entities related to config entries updating disabled_by."""
+    """Handler when entities related to config entries updated disabled_by."""
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the handler."""

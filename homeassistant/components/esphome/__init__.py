@@ -26,7 +26,6 @@ from aioesphomeapi import (
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
-from homeassistant import const
 from homeassistant.components import tag, zeroconf
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -36,6 +35,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
+    __version__ as ha_version,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall, State, callback
 from homeassistant.exceptions import TemplateError
@@ -56,11 +56,13 @@ from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.template import Template
 
 from .bluetooth import async_connect_scanner
+from .dashboard import async_get_dashboard
 from .domain_data import DOMAIN, DomainData
 
 # Import config flow so that it's added to the registry
 from .entry_data import RuntimeEntryData
 
+CONF_DEVICE_NAME = "device_name"
 CONF_NOISE_PSK = "noise_psk"
 _LOGGER = logging.getLogger(__name__)
 _R = TypeVar("_R")
@@ -120,7 +122,7 @@ async def async_setup_entry(  # noqa: C901
         host,
         port,
         password,
-        client_info=f"Home Assistant {const.__version__}",
+        client_info=f"Home Assistant {ha_version}",
         zeroconf_instance=zeroconf_instance,
         noise_psk=noise_psk,
     )
@@ -267,6 +269,13 @@ async def async_setup_entry(  # noqa: C901
                     entry, unique_id=format_mac(device_info.mac_address)
                 )
 
+            # Make sure we have the correct device name stored
+            # so we can map the device to ESPHome Dashboard config
+            if entry.data.get(CONF_DEVICE_NAME) != device_info.name:
+                hass.config_entries.async_update_entry(
+                    entry, data={**entry.data, CONF_DEVICE_NAME: device_info.name}
+                )
+
             entry_data.device_info = device_info
             assert cli.api_version is not None
             entry_data.api_version = cli.api_version
@@ -352,6 +361,8 @@ def _async_setup_device_registry(
     configuration_url = None
     if device_info.webserver_port > 0:
         configuration_url = f"http://{entry.data['host']}:{device_info.webserver_port}"
+    elif dashboard := async_get_dashboard(hass):
+        configuration_url = f"homeassistant://hassio/ingress/{dashboard.addon_slug}"
 
     manufacturer = "espressif"
     if device_info.manufacturer:
@@ -369,7 +380,7 @@ def _async_setup_device_registry(
         config_entry_id=entry.entry_id,
         configuration_url=configuration_url,
         connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)},
-        name=device_info.name,
+        name=device_info.friendly_name or device_info.name,
         manufacturer=manufacturer,
         model=model,
         sw_version=sw_version,
@@ -694,6 +705,8 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         self._component_key = component_key
         self._key = key
         self._state_type = state_type
+        if entry_data.device_info is not None and entry_data.device_info.friendly_name:
+            self._attr_has_entity_name = True
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""

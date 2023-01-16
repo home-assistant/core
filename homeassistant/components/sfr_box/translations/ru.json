@@ -26,6 +26,14 @@
                     "unknown": "\u041d\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043d\u043e"
                 }
             },
+            "net_infra": {
+                "state": {
+                    "adsl": "ADSL",
+                    "ftth": "FTTH",
+                    "gprs": "GPRS",
+                    "unknown": "\u041d\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043d\u043e"
+                }
+            },
             "training": {
                 "state": {
                     "g_922_channel_analysis": "\u0410\u043d\u0430\u043b\u0438\u0437 \u043a\u0430\u043d\u0430\u043b\u043e\u0432 G.992",

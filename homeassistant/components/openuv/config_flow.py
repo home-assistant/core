@@ -103,7 +103,6 @@ class OpenUvFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Verify the credentials and create/re-auth the entry."""
         websession = aiohttp_client.async_get_clientsession(self.hass)
         client = Client(data.api_key, 0, 0, session=websession)
-        client.disable_request_retries()
 
         try:
             await client.uv_index()

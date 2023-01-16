@@ -35,6 +35,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import DiscoveryInfoType
 
@@ -172,15 +173,12 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
             else:
                 port = DEFAULT_PORT
 
-        api = SynologyDSM(
-            host, port, username, password, use_ssl, verify_ssl, timeout=30
-        )
+        session = async_get_clientsession(self.hass, verify_ssl)
+        api = SynologyDSM(session, host, port, username, password, use_ssl, timeout=30)
 
         errors = {}
         try:
-            serial = await self.hass.async_add_executor_job(
-                _login_and_fetch_syno_info, api, otp_code
-            )
+            serial = await _login_and_fetch_syno_info(api, otp_code)
         except SynologyDSMLogin2SARequiredException:
             return await self.async_step_2sa(user_input)
         except SynologyDSMLogin2SAFailedException:
@@ -386,13 +384,13 @@ class SynologyDSMOptionsFlowHandler(OptionsFlow):
         return self.async_show_form(step_id="init", data_schema=data_schema)
 
 
-def _login_and_fetch_syno_info(api: SynologyDSM, otp_code: str | None) -> str:
+async def _login_and_fetch_syno_info(api: SynologyDSM, otp_code: str | None) -> str:
     """Login to the NAS and fetch basic data."""
     # These do i/o
-    api.login(otp_code)
-    api.utilisation.update()
-    api.storage.update()
-    api.network.update()
+    await api.login(otp_code)
+    await api.utilisation.update()
+    await api.storage.update()
+    await api.network.update()
 
     if (
         not api.information.serial
