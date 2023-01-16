@@ -482,7 +482,7 @@ async def test_sending_mqtt_commands_pessimistic(
                 lock.DOMAIN: {
                     "name": "test",
                     "command_topic": "command-topic",
-                    "jammed_state_topic": "jammed-state-topic",
+                    "motor_state_topic": "motor-state-topic",
                     "state_topic": "state-topic",
                     "payload_lock": "LOCK",
                     "payload_unlock": "UNLOCK",
@@ -564,14 +564,14 @@ async def test_sending_mqtt_commands_pessimistic(
     assert state.state is STATE_LOCKING
 
     # receive jammed state from lock
-    async_fire_mqtt_message(hass, "jammed-state-topic", "MOTOR_JAMMED")
+    async_fire_mqtt_message(hass, "motor-state-topic", "MOTOR_JAMMED")
     await hass.async_block_till_done()
 
     state = hass.states.get("lock.test")
     assert state.state is STATE_JAMMED
 
     # receive solved state from lock
-    async_fire_mqtt_message(hass, "jammed-state-topic", "MOTOR_OK")
+    async_fire_mqtt_message(hass, "motor-state-topic", "MOTOR_OK")
     async_fire_mqtt_message(hass, "state-topic", "LOCKED")
     await hass.async_block_till_done()
 
