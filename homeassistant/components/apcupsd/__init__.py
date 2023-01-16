@@ -58,10 +58,9 @@ class APCUPSdCoordinator(DataUpdateCoordinator[OrderedDict[str, str]]):
 
     def __init__(self, hass: HomeAssistant, host: str, port: int) -> None:
         """Initialize the data object."""
+        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
         self._host = host
         self._port = port
-
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
 
     @property
     def ups_name(self) -> str | None:
