@@ -49,7 +49,7 @@ UPDATE_TYPES: dict[str, DevoloUpdateEntityDescription] = {
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
         name="Firmware Update",
-        latest_version=lambda data: data.new_firmware_version,
+        latest_version=lambda data: data.new_firmware_version.split("_")[0],
         update_func=lambda device: device.device.async_start_firmware_update(),  # type: ignore[union-attr]
     ),
 }
@@ -64,10 +64,10 @@ async def async_setup_entry(
         entry.entry_id
     ]["coordinators"]
 
-    entities: list[DevoloSwitchEntity] = []
+    entities: list[DevoloUpdateEntity] = []
     if device.device and "update" in device.device.features:
         entities.append(
-            DevoloSwitchEntity(
+            DevoloUpdateEntity(
                 entry,
                 coordinators[REGULAR_FIRMWARE],
                 UPDATE_TYPES[REGULAR_FIRMWARE],
@@ -77,10 +77,12 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class DevoloSwitchEntity(DevoloEntity, UpdateEntity):
+class DevoloUpdateEntity(DevoloEntity, UpdateEntity):
     """Representation of a devolo switch."""
 
-    _attr_supported_features = UpdateEntityFeature.INSTALL
+    _attr_supported_features = (
+        UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
+    )
 
     entity_description: DevoloUpdateEntityDescription
 
@@ -94,6 +96,7 @@ class DevoloSwitchEntity(DevoloEntity, UpdateEntity):
         """Initialize entity."""
         self.entity_description = description
         super().__init__(entry, coordinator, device)
+        self._in_progress_old_version: str | None = None
 
     @property
     def installed_version(self) -> str:
@@ -109,10 +112,16 @@ class DevoloSwitchEntity(DevoloEntity, UpdateEntity):
             return latest_version
         return self.device.firmware_version
 
+    @property
+    def in_progress(self) -> bool:
+        """Update installation in progress."""
+        return self._in_progress_old_version == self.installed_version
+
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Turn the entity on."""
+        self._in_progress_old_version = self.installed_version
         try:
             await self.entity_description.update_func(self.device)
         except DevicePasswordProtected:

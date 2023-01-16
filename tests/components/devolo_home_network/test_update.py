@@ -57,7 +57,7 @@ async def test_update_firmware(hass: HomeAssistant, mock_device: MockDevice):
     assert state.attributes["installed_version"] == mock_device.firmware_version
     assert (
         state.attributes["latest_version"]
-        == FIRMWARE_UPDATE_AVAILABLE.new_firmware_version
+        == FIRMWARE_UPDATE_AVAILABLE.new_firmware_version.split("_")[0]
     )
 
     assert er.async_get(state_key).entity_category == EntityCategory.CONFIG

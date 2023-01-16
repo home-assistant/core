@@ -82,7 +82,7 @@ DISCOVERY_INFO_WRONG_DEVICE = ZeroconfServiceInfo(
 )
 
 FIRMWARE_UPDATE_AVAILABLE = UpdateFirmwareCheck(
-    result=UPDATE_AVAILABLE, new_firmware_version="5.6.2"
+    result=UPDATE_AVAILABLE, new_firmware_version="5.6.2_2023-01-15"
 )
 
 GUEST_WIFI = WifiGuestAccessGet(
