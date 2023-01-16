@@ -87,7 +87,12 @@ NODE_PLATFORMS = [
     Platform.SENSOR,
     Platform.SWITCH,
 ]
-NODE_AUX_PROP_PLATFORMS = [Platform.SELECT, Platform.SENSOR, Platform.NUMBER]
+NODE_AUX_PROP_PLATFORMS = [
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 PROGRAM_PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.COVER,
