@@ -9,7 +9,8 @@ from homeassistant.components import zha
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.homeassistant_sky_connect.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant
+from homeassistant.core import EVENT_HOMEASSISTANT_STARTED, HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -55,6 +56,9 @@ async def test_setup_entry(
     num_flows,
 ) -> None:
     """Test setup of a config entry, including setup of zha."""
+    assert await async_setup_component(hass, "usb", {})
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+
     # Setup the config entry
     config_entry = MockConfigEntry(
         data=CONFIG_ENTRY_DATA,
@@ -100,6 +104,9 @@ async def test_setup_zha(
     mock_zha_config_flow_setup, hass: HomeAssistant, addon_store_info
 ) -> None:
     """Test zha gets the right config."""
+    assert await async_setup_component(hass, "usb", {})
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+
     # Setup the config entry
     config_entry = MockConfigEntry(
         data=CONFIG_ENTRY_DATA,
@@ -146,6 +153,9 @@ async def test_setup_zha_multipan(
     hass: HomeAssistant, addon_info, addon_running
 ) -> None:
     """Test zha gets the right config."""
+    assert await async_setup_component(hass, "usb", {})
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+
     addon_info.return_value["options"]["device"] = CONFIG_ENTRY_DATA["device"]
 
     # Setup the config entry
@@ -197,6 +207,9 @@ async def test_setup_zha_multipan_other_device(
     mock_zha_config_flow_setup, hass: HomeAssistant, addon_info, addon_running
 ) -> None:
     """Test zha gets the right config."""
+    assert await async_setup_component(hass, "usb", {})
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+
     addon_info.return_value["options"]["device"] = "/dev/not_our_sky_connect"
 
     # Setup the config entry
@@ -258,16 +271,23 @@ async def test_setup_entry_wait_usb(hass: HomeAssistant) -> None:
         "homeassistant.components.homeassistant_sky_connect.usb.async_is_plugged_in",
         return_value=False,
     ) as mock_is_plugged_in:
-        assert not await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        assert config_entry.state == ConfigEntryState.LOADED
+        assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+        # USB discovery starts, config entry should be removed
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
         assert len(mock_is_plugged_in.mock_calls) == 1
-        assert config_entry.state == ConfigEntryState.SETUP_RETRY
+        assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
 
 async def test_setup_entry_addon_info_fails(
     hass: HomeAssistant, addon_store_info
 ) -> None:
     """Test setup of a config entry when fetching addon info fails."""
+    assert await async_setup_component(hass, "usb", {})
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+
     addon_store_info.side_effect = HassioAPIError("Boom")
 
     # Setup the config entry
@@ -296,6 +316,9 @@ async def test_setup_entry_addon_not_running(
     hass: HomeAssistant, addon_installed, start_addon
 ) -> None:
     """Test the addon is started if it is not running."""
+    assert await async_setup_component(hass, "usb", {})
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+
     # Setup the config entry
     config_entry = MockConfigEntry(
         data=CONFIG_ENTRY_DATA,
