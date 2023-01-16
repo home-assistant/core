@@ -62,9 +62,13 @@ class MatterEntity(Entity):
         server_info = matter_client.server_info
         # The server info is set when the client connects to the server.
         assert server_info is not None
+        # create unique_id based on "Operational Instance Name" and endpoint/device type
+        fab_id_hex = f"{server_info.compressed_fabric_id:016X}"
+        node_id_hex = f"{node.node_id:016X}"
+        operational_instance_name = f"{fab_id_hex.upper()}-{node_id_hex.upper()}"
+        # NOTE: use 'operational instance name' property of the node instance later
         self._attr_unique_id = (
-            f"{server_info.compressed_fabric_id}-"
-            f"{node.unique_id}-"
+            f"{operational_instance_name}-"
             f"{device_type_instance.endpoint}-"
             f"{device_type_instance.device_type.device_type}"
         )
