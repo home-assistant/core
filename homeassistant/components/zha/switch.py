@@ -20,6 +20,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .core import discovery
 from .core.const import (
     CHANNEL_BASIC,
+    CHANNEL_COLOR,
     CHANNEL_INOVELLI,
     CHANNEL_ON_OFF,
     DATA_ZHA,
@@ -273,6 +274,16 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
                 self._zcl_inverter_attribute, from_cache=False
             )
             self.debug("read value=%s, inverted=%s", value, self.inverted)
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_COLOR)
+class ColorOptionsConfigurationEntity(
+    ZHASwitchConfigurationEntity, id_suffix="options"
+):
+    """Representation of a ZHA color options configuration entity."""
+
+    _zcl_attribute: str = "options"
+    _attr_name = "Send color when off"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
