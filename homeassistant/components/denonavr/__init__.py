@@ -1,6 +1,7 @@
 """The denonavr component."""
 import logging
 
+from denonavr import DenonAVR
 from denonavr.exceptions import AvrNetworkError, AvrTimoutError
 
 from homeassistant.config_entries import ConfigEntry
@@ -12,10 +13,12 @@ from homeassistant.helpers.httpx_client import get_async_client
 
 from .config_flow import (
     CONF_SHOW_ALL_SOURCES,
+    CONF_USE_TELNET,
     CONF_ZONE2,
     CONF_ZONE3,
     DEFAULT_SHOW_SOURCES,
     DEFAULT_TIMEOUT,
+    DEFAULT_USE_TELNET,
     DEFAULT_ZONE2,
     DEFAULT_ZONE3,
     DOMAIN,
@@ -40,6 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.options.get(CONF_SHOW_ALL_SOURCES, DEFAULT_SHOW_SOURCES),
         entry.options.get(CONF_ZONE2, DEFAULT_ZONE2),
         entry.options.get(CONF_ZONE3, DEFAULT_ZONE3),
+        entry.options.get(CONF_USE_TELNET, DEFAULT_USE_TELNET),
         lambda: get_async_client(hass),
     )
     try:
@@ -65,6 +69,10 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     unload_ok = await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
     )
+
+    if config_entry.options.get(CONF_USE_TELNET, DEFAULT_USE_TELNET):
+        receiver: DenonAVR = hass.data[DOMAIN][config_entry.entry_id][CONF_RECEIVER]
+        await receiver.async_telnet_disconnect()
 
     hass.data[DOMAIN][config_entry.entry_id][UNDO_UPDATE_LISTENER]()
 

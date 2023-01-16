@@ -31,12 +31,14 @@ CONF_ZONE3 = "zone3"
 CONF_MANUFACTURER = "manufacturer"
 CONF_SERIAL_NUMBER = "serial_number"
 CONF_UPDATE_AUDYSSEY = "update_audyssey"
+CONF_USE_TELNET = "use_telnet"
 
 DEFAULT_SHOW_SOURCES = False
 DEFAULT_TIMEOUT = 5
 DEFAULT_ZONE2 = False
 DEFAULT_ZONE3 = False
 DEFAULT_UPDATE_AUDYSSEY = False
+DEFAULT_USE_TELNET = False
 
 CONFIG_SCHEMA = vol.Schema({vol.Optional(CONF_HOST): str})
 
@@ -77,6 +79,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         CONF_UPDATE_AUDYSSEY, DEFAULT_UPDATE_AUDYSSEY
                     ),
                 ): bool,
+                vol.Optional(
+                    CONF_USE_TELNET,
+                    default=self.config_entry.options.get(
+                        CONF_USE_TELNET, DEFAULT_USE_TELNET
+                    ),
+                ): bool,
             }
         )
 
@@ -97,6 +105,7 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.show_all_sources = DEFAULT_SHOW_SOURCES
         self.zone2 = DEFAULT_ZONE2
         self.zone3 = DEFAULT_ZONE3
+        self.use_telnet = DEFAULT_USE_TELNET
         self.d_receivers: list[dict[str, Any]] = []
 
     @staticmethod
@@ -176,6 +185,7 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.show_all_sources,
             self.zone2,
             self.zone3,
+            self.use_telnet,
             lambda: get_async_client(self.hass),
         )
 
