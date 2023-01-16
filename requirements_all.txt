@@ -2053,7 +2053,7 @@ python-mystrom==1.1.2
 python-nest==4.2.0
 
 # homeassistant.components.otbr
-python-otbr-api==1.0.0
+python-otbr-api==1.0.1
 
 # homeassistant.components.picnic
 python-picnic-api==1.1.0
