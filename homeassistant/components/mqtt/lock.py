@@ -33,21 +33,27 @@ from .mixins import (
     warn_for_legacy_schema,
 )
 from .models import MqttValueTemplate, ReceiveMessage, ReceivePayloadType
-from .util import get_mqtt_data
+from .util import get_mqtt_data, valid_subscribe_topic
 
 CONF_PAYLOAD_LOCK = "payload_lock"
 CONF_PAYLOAD_UNLOCK = "payload_unlock"
 CONF_PAYLOAD_OPEN = "payload_open"
+CONF_PAYLOAD_JAMMED = "payload_jammed"
+CONF_PAYLOAD_SOLVED = "payload_solved"
 
 CONF_STATE_LOCKED = "state_locked"
 CONF_STATE_LOCKING = "state_locking"
 CONF_STATE_UNLOCKED = "state_unlocked"
 CONF_STATE_UNLOCKING = "state_unlocking"
+CONF_JAMMED_STATE_TOPIC = "jammed_state_topic"
+CONF_JAMMED_VALUE_TEMPLATE = "jammed_value_template"
 
 DEFAULT_NAME = "MQTT Lock"
 DEFAULT_PAYLOAD_LOCK = "LOCK"
 DEFAULT_PAYLOAD_UNLOCK = "UNLOCK"
 DEFAULT_PAYLOAD_OPEN = "OPEN"
+DEFAULT_PAYLOAD_JAMMED = "JAMMED"
+DEFAULT_PAYLOAD_SOLVED = "SOLVED"
 DEFAULT_STATE_LOCKED = "LOCKED"
 DEFAULT_STATE_LOCKING = "LOCKING"
 DEFAULT_STATE_UNLOCKED = "UNLOCKED"
@@ -63,9 +69,13 @@ MQTT_LOCK_ATTRIBUTES_BLOCKED = frozenset(
 PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_PAYLOAD_JAMMED, default=DEFAULT_PAYLOAD_JAMMED): cv.string,
         vol.Optional(CONF_PAYLOAD_LOCK, default=DEFAULT_PAYLOAD_LOCK): cv.string,
         vol.Optional(CONF_PAYLOAD_UNLOCK, default=DEFAULT_PAYLOAD_UNLOCK): cv.string,
         vol.Optional(CONF_PAYLOAD_OPEN): cv.string,
+        vol.Optional(CONF_JAMMED_STATE_TOPIC): valid_subscribe_topic,
+        vol.Optional(CONF_JAMMED_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_PAYLOAD_SOLVED, default=DEFAULT_PAYLOAD_SOLVED): cv.string,
         vol.Optional(CONF_STATE_LOCKED, default=DEFAULT_STATE_LOCKED): cv.string,
         vol.Optional(CONF_STATE_LOCKING, default=DEFAULT_STATE_LOCKING): cv.string,
         vol.Optional(CONF_STATE_UNLOCKED, default=DEFAULT_STATE_UNLOCKED): cv.string,
@@ -81,6 +91,11 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA)
+
+JAMMED_STATE_CONFIG_KEYS = [
+    CONF_PAYLOAD_JAMMED,
+    CONF_PAYLOAD_SOLVED,
+]
 
 STATE_CONFIG_KEYS = [
     CONF_STATE_LOCKED,
@@ -121,6 +136,7 @@ class MqttLock(MqttEntity, LockEntity):
 
     _optimistic: bool
     _valid_states: list[str]
+    _value_jammed_template: Callable[[ReceivePayloadType], ReceivePayloadType]
     _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
 
     def __init__(
@@ -148,19 +164,31 @@ class MqttLock(MqttEntity, LockEntity):
             entity=self,
         ).async_render_with_possible_json_value
 
+        self._jammed_value_template = MqttValueTemplate(
+            config.get(CONF_JAMMED_VALUE_TEMPLATE),
+            entity=self,
+        ).async_render_with_possible_json_value
+
         self._attr_supported_features = LockEntityFeature(0)
         if CONF_PAYLOAD_OPEN in config:
             self._attr_supported_features |= LockEntityFeature.OPEN
 
+        self._valid_jammed_states = [
+            config[state] for state in JAMMED_STATE_CONFIG_KEYS
+        ]
         self._valid_states = [config[state] for state in STATE_CONFIG_KEYS]
 
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
 
+        topics: dict[str, dict[str, Any]] = {}
+        qos: int = self._config[CONF_QOS]
+        encoding: str | None = self._config[CONF_ENCODING] or None
+
         @callback
         @log_messages(self.hass, self.entity_id)
         def message_received(msg: ReceiveMessage) -> None:
-            """Handle new MQTT messages."""
+            """Handle new lock state messages."""
             payload = self._value_template(msg.payload)
             if payload in self._valid_states:
                 self._attr_is_locked = payload == self._config[CONF_STATE_LOCKED]
@@ -173,18 +201,35 @@ class MqttLock(MqttEntity, LockEntity):
             # Force into optimistic mode.
             self._optimistic = True
         else:
-            self._sub_state = subscription.async_prepare_subscribe_topics(
-                self.hass,
-                self._sub_state,
-                {
-                    "state_topic": {
-                        "topic": self._config.get(CONF_STATE_TOPIC),
-                        "msg_callback": message_received,
-                        "qos": self._config[CONF_QOS],
-                        "encoding": self._config[CONF_ENCODING] or None,
-                    }
-                },
-            )
+            topics[CONF_STATE_TOPIC] = {
+                "topic": self._config.get(CONF_STATE_TOPIC),
+                "msg_callback": message_received,
+                CONF_QOS: qos,
+                CONF_ENCODING: encoding,
+            }
+
+        @log_messages(self.hass, self.entity_id)
+        def jammed_message_received(msg: ReceiveMessage) -> None:
+            """Handle new jammed state messages."""
+            payload = self._jammed_value_template(msg.payload)
+            if payload in self._valid_jammed_states:
+                self._attr_is_jammed = payload == self._config[CONF_JAMMED_STATE_TOPIC]
+
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+
+        if self._config.get(CONF_JAMMED_STATE_TOPIC):
+            topics[CONF_JAMMED_STATE_TOPIC] = {
+                "topic": self._config.get(CONF_JAMMED_STATE_TOPIC),
+                "msg_callback": jammed_message_received,
+                CONF_QOS: qos,
+                CONF_ENCODING: encoding,
+            }
+
+        self._sub_state = subscription.async_prepare_subscribe_topics(
+            self.hass,
+            self._sub_state,
+            topics,
+        )
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
