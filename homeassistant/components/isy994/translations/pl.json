@@ -37,12 +37,16 @@
             "fix_flow": {
                 "step": {
                     "confirm": {
-                        "description": "Zaktualizuj wszystkie automatyzacje lub skrypty tak, aby u\u017cywa\u0142y `{alternate_service}`z ID encji `{alternate_target}`.",
-                        "title": "Proces {deprecated_service} zostanie usuni\u0119ty"
+                        "description": "Zaktualizuj wszelkie automatyzacje lub skrypty korzystaj\u0105ce z tej us\u0142ugi, aby zamiast tego korzysta\u0142y z us\u0142ugi `{alternate_service}` z identyfikatorem encji docelowej `{alternate_target}`.",
+                        "title": "Us\u0142uga {deprecated_service} zostanie usuni\u0119ta"
+                    },
+                    "deprecated_yaml": {
+                        "description": "Konfiguracja urz\u0105dze\u0144 uniwersalnych ISY/iox przy u\u017cyciu YAML zostanie usuni\u0119ta. \n\nTwoja istniej\u0105ca konfiguracja YAML zosta\u0142a automatycznie zaimportowana do interfejsu u\u017cytkownika. \n\nUsu\u0144 konfiguracj\u0119 YAML 'isy995' z pliku configuration.yaml i uruchom ponownie Home Assistanta, aby rozwi\u0105za\u0107 ten problem.",
+                        "title": "Konfiguracja YAML dla ISY/iox zostanie usuni\u0119ta"
                     }
                 }
             },
-            "title": "Proces {deprecated_service} zostanie usuni\u0119ty"
+            "title": "Us\u0142uga {deprecated_service} zostanie usuni\u0119ta"
         }
     },
     "options": {
