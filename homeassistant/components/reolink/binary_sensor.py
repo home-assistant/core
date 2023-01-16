@@ -36,7 +36,7 @@ class ReolinkBinarySensorDescription(BinarySensorEntityDescription):
 
     icon: str = "mdi:motion-sensor"
     icon_off: str = "mdi:motion-sensor-off"
-    value: Callable[[ReolinkHost, int | None], bool] = lambda host, ch: None
+    value: Callable[[ReolinkHost, int | None], bool | None] = lambda host, ch: None
     supported: Callable[[ReolinkHost, int | None], bool] = lambda host, ch: True
 
 
