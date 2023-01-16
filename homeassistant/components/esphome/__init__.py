@@ -706,7 +706,7 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         self._key = key
         self._state_type = state_type
         if entry_data.device_info is not None and entry_data.device_info.friendly_name:
-            self._attr_has_entity_name = entry_data.device_info.friendly_name
+            self._attr_has_entity_name = True
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
