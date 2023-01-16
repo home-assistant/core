@@ -128,7 +128,7 @@ class ISYSwitchProgramEntity(ISYProgramEntity, SwitchEntity):
 
 
 class ISYEnableSwitchEntity(ISYAuxControlEntity, SwitchEntity):
-    """A representation of an ISY program switch."""
+    """A representation of an ISY enable/disable switch."""
 
     def __init__(
         self,
