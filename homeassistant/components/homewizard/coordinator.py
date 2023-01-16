@@ -42,11 +42,11 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
             data = DeviceResponseEntry(
                 device=await self.api.device(),
                 data=await self.api.data(),
+                features=await self.api.features(),
                 state=await self.api.state(),
             )
 
-            features = await self.api.features()
-            if features.has_system:
+            if data.features.has_system:
                 data.system = await self.api.system()
 
         except RequestError as ex:
