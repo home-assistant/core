@@ -137,11 +137,13 @@ async def async_setup_entry(
     """Initialize sensors."""
     coordinator: HWEnergyDeviceUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    entities = []
-    if coordinator.data["data"] is not None:
-        for description in SENSORS:
-            if getattr(coordinator.data["data"], description.key) is not None:
-                entities.append(HWEnergySensor(coordinator, entry, description))
+    entities: list[HWEnergySensor] = []
+    if coordinator.data.data is not None:
+        entities.extend(
+            HWEnergySensor(coordinator, entry, description)
+            for description in SENSORS
+            if getattr(coordinator.data.data, description.key) is not None
+        )
     async_add_entities(entities)
 
 
@@ -166,12 +168,15 @@ class HWEnergySensor(HomeWizardEntity, SensorEntity):
 
         # Special case for export, not everyone has solarpanels
         # The chance that 'export' is non-zero when you have solar panels is nil
-        if self.data_type in [
-            "total_power_export_t1_kwh",
-            "total_power_export_t2_kwh",
-        ]:
-            if self.native_value == 0:
-                self._attr_entity_registry_enabled_default = False
+        if (
+            self.data_type
+            in [
+                "total_power_export_t1_kwh",
+                "total_power_export_t2_kwh",
+            ]
+            and self.native_value == 0
+        ):
+            self._attr_entity_registry_enabled_default = False
 
     @property
     def data(self) -> DeviceResponseEntry:
@@ -181,7 +186,7 @@ class HWEnergySensor(HomeWizardEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return state of meter."""
-        return cast(StateType, getattr(self.data["data"], self.data_type))
+        return cast(StateType, getattr(self.data.data, self.data_type))
 
     @property
     def available(self) -> bool:

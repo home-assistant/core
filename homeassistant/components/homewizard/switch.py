@@ -25,11 +25,11 @@ async def async_setup_entry(
 
     entities: list[SwitchEntity] = []
 
-    if coordinator.data["state"]:
+    if coordinator.data.state:
         entities.append(HWEnergyMainSwitchEntity(coordinator, entry))
         entities.append(HWEnergySwitchLockEntity(coordinator, entry))
 
-    if coordinator.data["system"]:
+    if coordinator.data.system:
         entities.append(HWEnergyEnableCloudEntity(hass, coordinator, entry))
 
     async_add_entities(entities)
@@ -79,12 +79,18 @@ class HWEnergyMainSwitchEntity(HWEnergySwitchEntity):
 
         This switch becomes unavailable when switch_lock is enabled.
         """
-        return super().available and not self.coordinator.data["state"].switch_lock
+        return (
+            super().available
+            and self.coordinator.data.state is not None
+            and not self.coordinator.data.state.switch_lock
+        )
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if switch is on."""
-        return bool(self.coordinator.data["state"].power_on)
+        if self.coordinator.data.state is None:
+            return None
+        return self.coordinator.data.state.power_on
 
 
 class HWEnergySwitchLockEntity(HWEnergySwitchEntity):
@@ -118,9 +124,11 @@ class HWEnergySwitchLockEntity(HWEnergySwitchEntity):
         await self.coordinator.async_refresh()
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if switch is on."""
-        return bool(self.coordinator.data["state"].switch_lock)
+        if self.coordinator.data.state is None:
+            return None
+        return self.coordinator.data.state.switch_lock
 
 
 class HWEnergyEnableCloudEntity(HWEnergySwitchEntity):
@@ -164,6 +172,8 @@ class HWEnergyEnableCloudEntity(HWEnergySwitchEntity):
         return "mdi:cloud" if self.is_on else "mdi:cloud-off-outline"
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if cloud connection is active."""
-        return bool(self.coordinator.data["system"].cloud_enabled)
+        if self.coordinator.data.system is None:
+            return None
+        return self.coordinator.data.system.cloud_enabled
