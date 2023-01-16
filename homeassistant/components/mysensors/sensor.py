@@ -127,7 +127,6 @@ SENSORS: dict[str, SensorEntityDescription] = {
         # Better not to set a device class here yet.
         key="V_FLOW",
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
-        device_class=SensorDeviceClass.WATER_FLOW,
         icon="mdi:gauge",
     ),
     "V_VOLUME": SensorEntityDescription(

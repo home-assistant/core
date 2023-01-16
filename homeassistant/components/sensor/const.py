@@ -359,14 +359,6 @@ class SensorDeviceClass(StrEnum):
     USCS/imperial units are currently assumed to be US volumes)
     """
 
-    WATER_FLOW = "water_flow"
-    """Volume flow of water.
-
-    Unit of measurement:
-    - SI / metric: `m³/h`
-    - USCS / imperial: `ft³/m`
-    """
-
     WEIGHT = "weight"
     """Generic weight, represents a measurement of an object's mass.
 
