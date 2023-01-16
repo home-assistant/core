@@ -132,7 +132,6 @@ class ReolinkBinarySensorEntity(ReolinkCoordinatorEntity, BinarySensorEntity):
         ReolinkCoordinatorEntity.__init__(self, reolink_data, channel)
         self.entity_description = entity_description
 
-        self._attr_name = entity_description.name
         self._attr_unique_id = (
             f"{self._host.unique_id}_{self._channel}_{entity_description.key}"
         )
