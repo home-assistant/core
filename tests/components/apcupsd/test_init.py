@@ -1,18 +1,20 @@
 """Test init of APCUPSd integration."""
 from collections import OrderedDict
+from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.apcupsd import DOMAIN
+from homeassistant.components.apcupsd import DOMAIN, UPDATE_INTERVAL
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.util import utcnow
 
 from . import CONF_DATA, MOCK_MINIMAL_STATUS, MOCK_STATUS, async_init_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize("status", (MOCK_STATUS, MOCK_MINIMAL_STATUS))
@@ -142,3 +144,68 @@ async def test_unload_remove(hass: HomeAssistant) -> None:
         await hass.config_entries.async_remove(entry.entry_id)
     await hass.async_block_till_done()
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
+
+
+async def test_state_update(hass: HomeAssistant) -> None:
+    """Ensure the sensor state changes after updating the data."""
+    await init_integration(hass)
+
+    state = hass.states.get("sensor.ups_load")
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+    assert pytest.approx(float(state.state)) == 14.0
+
+    future = utcnow() + timedelta(minutes=2)
+
+    new_status = MOCK_STATUS | {"LOADPCT": "15.0 Percent"}
+    with patch("apcaccess.status.parse", return_value=new_status), patch(
+        "apcaccess.status.get", return_value=b""
+    ):
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+        state = hass.states.get("sensor.ups_load")
+        assert state
+        assert state.state != STATE_UNAVAILABLE
+        assert pytest.approx(float(state.state)) == 15.0
+
+
+async def test_availability(hass: HomeAssistant) -> None:
+    """Ensure that we mark the entities unavailable correctly when service is offline."""
+    await init_integration(hass)
+
+    state = hass.states.get("sensor.ups_input_voltage")
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+    assert pytest.approx(float(state.state)) == 124.0
+
+    future = utcnow() + timedelta(minutes=2)
+    with patch("apcaccess.status.parse", side_effect=OSError()), patch(
+        "apcaccess.status.get", return_value=b""
+    ):
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+        state = hass.states.get("sensor.ups_input_voltage")
+        assert state
+        assert state.state == STATE_UNAVAILABLE
+
+
+async def test_throttle(hass: HomeAssistant) -> None:
+    """Ensure that we only send network once for sensor updates."""
+    await init_integration(hass)
+
+    with patch("apcaccess.status.parse", return_value=MOCK_STATUS) as mock_parse, patch(
+        "apcaccess.status.get", return_value=b""
+    ) as mock_get:
+        # No network call 1 second before the update interval.
+        async_fire_time_changed(hass, utcnow() + UPDATE_INTERVAL - timedelta(seconds=1))
+        await hass.async_block_till_done()
+        assert mock_parse.call_count == 0
+        assert mock_get.call_count == 0
+
+        # Just _one_ network call 1 second after the update interval.
+        async_fire_time_changed(hass, utcnow() + UPDATE_INTERVAL + timedelta(seconds=1))
+        await hass.async_block_till_done()
+        assert mock_parse.call_count == 1
+        assert mock_get.call_count == 1
