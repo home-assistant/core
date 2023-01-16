@@ -1,6 +1,6 @@
 """Test sensors of APCUPSd integration."""
 
-from homeassistant.components.apcupsd import UPDATE_INTERVAL
+from homeassistant.components.apcupsd import REQUEST_REFRESH_COOLDOWN, UPDATE_INTERVAL
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     SensorDeviceClass,
@@ -138,7 +138,7 @@ async def test_state_update(hass: HomeAssistant) -> None:
         assert pytest.approx(float(state.state)) == 15.0
 
 
-async def test_manual_update_entity(hass):
+async def test_manual_update_entity(hass: HomeAssistant) -> None:
     """Test manual update entity via service homeassistant/update_entity."""
     await init_integration(hass)
 
@@ -154,9 +154,11 @@ async def test_manual_update_entity(hass):
     with patch("apcaccess.status.parse") as mock_parse, patch(
         "apcaccess.status.get", return_value=b""
     ) as mock_get:
-        # Now, we fast-forward the time to pass the debouncer time limit, but put it
+        # Now, we fast-forward the time to pass the debouncer cooldown, but put it
         # before the normal update interval to see if the manual update works.
-        async_fire_time_changed(hass, utcnow() + UPDATE_INTERVAL / 2)
+        async_fire_time_changed(
+            hass, utcnow() + timedelta(seconds=REQUEST_REFRESH_COOLDOWN + 1)
+        )
 
         mock_parse.return_value = MOCK_STATUS | {"LOADPCT": "15.0 Percent"}
         await hass.services.async_call(
@@ -188,7 +190,7 @@ async def test_manual_update_entity(hass):
         assert pytest.approx(float(state.state)) == 16.0
 
 
-async def test_multiple_manual_update_entity(hass):
+async def test_multiple_manual_update_entity(hass: HomeAssistant) -> None:
     """Test multiple simultaneous manual update entity via service homeassistant/update_entity.
 
     We should only do network call once for the multiple simultaneous update entity services.
@@ -197,13 +199,14 @@ async def test_multiple_manual_update_entity(hass):
 
     # Setup HASS for calling the update_entity service.
     await async_setup_component(hass, "homeassistant", {})
-    # Fast-forward time to pass the debouncer time limit, but do not reach the normal
-    # update interval in order not to trigger periodic normal sensor updates.
-    async_fire_time_changed(hass, utcnow() + UPDATE_INTERVAL - timedelta(seconds=1))
 
     with patch("apcaccess.status.parse", return_value=MOCK_STATUS) as mock_parse, patch(
         "apcaccess.status.get", return_value=b""
     ) as mock_get:
+        # Fast-forward time to just pass the initial debouncer cooldown.
+        async_fire_time_changed(
+            hass, utcnow() + timedelta(seconds=REQUEST_REFRESH_COOLDOWN + 1)
+        )
         await hass.services.async_call(
             "homeassistant",
             "update_entity",

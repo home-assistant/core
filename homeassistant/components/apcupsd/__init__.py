@@ -15,12 +15,19 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.update_coordinator import (
+    REQUEST_REFRESH_DEFAULT_IMMEDIATE,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN: Final = "apcupsd"
 PLATFORMS: Final = (Platform.BINARY_SENSOR, Platform.SENSOR)
 UPDATE_INTERVAL: Final = timedelta(seconds=60)
+REQUEST_REFRESH_COOLDOWN: Final = 5
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
@@ -58,7 +65,18 @@ class APCUPSdCoordinator(DataUpdateCoordinator[OrderedDict[str, str]]):
 
     def __init__(self, hass: HomeAssistant, host: str, port: int) -> None:
         """Initialize the data object."""
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_interval=UPDATE_INTERVAL,
+            request_refresh_debouncer=Debouncer(
+                hass,
+                _LOGGER,
+                cooldown=REQUEST_REFRESH_COOLDOWN,
+                immediate=REQUEST_REFRESH_DEFAULT_IMMEDIATE,
+            ),
+        )
         self._host = host
         self._port = port
 
