@@ -5,13 +5,18 @@ from dataclasses import replace
 from typing import Any
 
 from pyisy.constants import (
+    ATTR_ACTION,
     CMD_BACKLIGHT,
+    DEV_BL_ADDR,
+    DEV_CMD_MEMORY_WRITE,
+    DEV_MEMORY,
     ISY_VALUE_UNKNOWN,
     PROP_ON_LEVEL,
+    TAG_ADDRESS,
     UOM_PERCENTAGE,
 )
 from pyisy.helpers import EventListener, NodeProperty
-from pyisy.nodes import Node
+from pyisy.nodes import Node, NodeChangedEvent
 from pyisy.variables import Variable
 
 from homeassistant.components.number import (
@@ -66,6 +71,7 @@ CONTROL_DESC = {
         native_step=1.0,
     ),
 }
+BACKLIGHT_MEMORY_FILTER = {"memory": DEV_BL_ADDR, "cmd1": DEV_CMD_MEMORY_WRITE}
 
 
 async def async_setup_entry(
@@ -126,11 +132,10 @@ async def async_setup_entry(
             "description": CONTROL_DESC[control],
             "device_info": device_info.get(node.primary_node),
         }
-        entities.append(
-            ISYBacklightNumberEntity(**entity_init_info)
-            if control == CMD_BACKLIGHT
-            else ISYAuxControlNumberEntity(**entity_init_info)
-        )
+        if control == CMD_BACKLIGHT:
+            entities.append(ISYBacklightNumberEntity(**entity_init_info))
+            continue
+        entities.append(ISYAuxControlNumberEntity(**entity_init_info))
     async_add_entities(entities)
 
 
@@ -249,6 +254,7 @@ class ISYBacklightNumberEntity(ISYAuxControlEntity, RestoreNumber):
     ) -> None:
         """Initialize the ISY Backlight number entity."""
         super().__init__(node, control, unique_id, description, device_info)
+        self._memory_change_handler: EventListener | None = None
         self._attr_native_value = 0
 
     async def async_added_to_hass(self) -> None:
@@ -259,6 +265,27 @@ class ISYBacklightNumberEntity(ISYAuxControlEntity, RestoreNumber):
         ):
             if last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
                 self._attr_native_value = last_number_data.native_value
+
+        # Listen to memory writing events to update state if changed in ISY
+        self._memory_change_handler = self._node.isy.nodes.status_events.subscribe(
+            self.async_on_memory_write,
+            event_filter={
+                TAG_ADDRESS: self._node.address,
+                ATTR_ACTION: DEV_MEMORY,
+            },
+            key=self.unique_id,
+        )
+
+    @callback
+    def async_on_memory_write(self, event: NodeChangedEvent, key: str) -> None:
+        """Handle a memory write event from the ISY Node."""
+        if not (BACKLIGHT_MEMORY_FILTER.items() <= event.event_info.items()):
+            return  # This was not a backlight event
+        value = ranged_value_to_percentage((0, 127), event.event_info["value"])
+        if value == self._attr_native_value:
+            return  # Change was from this entity, don't update twice
+        self._attr_native_value = value
+        self.async_write_ha_state()
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
