@@ -36,8 +36,8 @@ class ReolinkBinarySensorDescription(BinarySensorEntityDescription):
 
     icon: str = "mdi:motion-sensor"
     icon_off: str = "mdi:motion-sensor-off"
-    value: Callable[[ReolinkHost, int], bool] = lambda host, ch: None
-    supported: Callable[[ReolinkHost, int], bool] = lambda host, ch: True
+    value: Callable[[ReolinkHost, int | None], bool] = lambda host, ch: None
+    supported: Callable[[ReolinkHost, int | None], bool] = lambda host, ch: True
 
 
 BINARY_SENSORS = (
@@ -138,14 +138,14 @@ class ReolinkBinarySensorEntity(ReolinkCoordinatorEntity, BinarySensorEntity):
         )
 
     @property
-    def icon(self) -> str:
+    def icon(self) -> str | None:
         """Icon of the sensor."""
         if self.entity_description.value(self._host, self._channel) is False:
             return self.entity_description.icon_off
         return super().icon
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """State of the sensor."""
         return self.entity_description.value(self._host, self._channel)
 
