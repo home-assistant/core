@@ -932,7 +932,7 @@ open-garage==0.2.0
 open-meteo==0.2.1
 
 # homeassistant.components.openerz
-openerz-api==0.1.0
+openerz-api==0.2.0
 
 # homeassistant.components.oralb
 oralb-ble==0.17.1
