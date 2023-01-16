@@ -16,6 +16,7 @@ from pyisy.constants import (
     PROTO_INSTEON,
     PROTO_PROGRAM,
     PROTO_ZWAVE,
+    TAG_ENABLED,
     TAG_FOLDER,
     UOM_INDEX,
 )
@@ -349,6 +350,8 @@ def _categorize_nodes(
                     isy_data.aux_properties[Platform.SENSOR].append((node, control))
                     platform = NODE_AUX_FILTERS[control]
                     isy_data.aux_properties[platform].append((node, control))
+            if hasattr(node, TAG_ENABLED):
+                isy_data.aux_properties[Platform.SWITCH].append((node, TAG_ENABLED))
             _add_backlight_if_supported(isy_data, node)
 
         if node.protocol == PROTO_GROUP:
