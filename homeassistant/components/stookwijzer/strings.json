@@ -16,9 +16,9 @@
     "sensor": {
       "stookwijzer": {
         "state": {
-          "rood": "Red",
+          "blauw": "Blue",
           "oranje": "Orange",
-          "groen": "Green"
+          "rood": "Red"
         }
       }
     }
