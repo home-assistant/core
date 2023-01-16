@@ -39,6 +39,7 @@ class OneWireEntity(Entity):
     ) -> None:
         """Initialize the entity."""
         self.entity_description = description
+        self._last_update_success = True
         self._attr_unique_id = f"/{device_id}/{description.key}"
         self._attr_device_info = device_info
         self._attr_name = name
@@ -69,9 +70,14 @@ class OneWireEntity(Entity):
         try:
             self._value_raw = float(self._read_value())
         except protocol.Error as exc:
-            _LOGGER.error("Failure to read server value, got: %s", exc)
+            if self._last_update_success:
+                _LOGGER.error("Error fetching %s data: %s", self.name, exc)
+                self._last_update_success = False
             self._state = None
         else:
+            if not self._last_update_success:
+                self._last_update_success = True
+                _LOGGER.info("Fetching %s data recovered", self.name)
             if self.entity_description.read_mode == READ_MODE_INT:
                 self._state = int(self._value_raw)
             elif self.entity_description.read_mode == READ_MODE_BOOL:
