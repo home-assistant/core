@@ -147,24 +147,39 @@ async def test_unload_remove(hass: HomeAssistant) -> None:
 
 
 async def test_availability(hass: HomeAssistant) -> None:
-    """Ensure that we mark the entities as unavailable correctly when service is offline."""
+    """Ensure that we mark the entity's availability properly when network is down / back up."""
     await init_integration(hass)
 
-    state = hass.states.get("sensor.ups_input_voltage")
+    state = hass.states.get("sensor.ups_load")
     assert state
     assert state.state != STATE_UNAVAILABLE
-    assert pytest.approx(float(state.state)) == 124.0
+    assert pytest.approx(float(state.state)) == 14.0
 
-    future = utcnow() + UPDATE_INTERVAL + timedelta(seconds=1)
-    with patch("apcaccess.status.parse", side_effect=OSError()), patch(
+    with patch("apcaccess.status.parse") as mock_parse, patch(
         "apcaccess.status.get", return_value=b""
     ):
+        # Mock a network error and then trigger an auto-polling event.
+        mock_parse.side_effect = OSError()
+        future = utcnow() + UPDATE_INTERVAL + timedelta(seconds=1)
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-        state = hass.states.get("sensor.ups_input_voltage")
+        # Sensors should be marked as unavailable.
+        state = hass.states.get("sensor.ups_load")
         assert state
         assert state.state == STATE_UNAVAILABLE
+
+        # Reset the API to return a new status and update.
+        mock_parse.side_effect = None
+        mock_parse.return_value = MOCK_STATUS | {"LOADPCT": "15.0 Percent"}
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+        # Sensors should be online now with the new value.
+        state = hass.states.get("sensor.ups_load")
+        assert state
+        assert state.state != STATE_UNAVAILABLE
+        assert pytest.approx(float(state.state)) == 15.0
 
 
 async def test_throttle(hass: HomeAssistant) -> None:
