@@ -3,8 +3,7 @@ from __future__ import annotations
 
 from contextlib import suppress
 import logging
-
-from pyneevo.tank import Tank
+from typing import Any
 
 from homeassistant.components.sensor import (
     SensorEntity,
@@ -17,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import NeeVoEntity
-from .const import DOMAIN, TANKS
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,12 +43,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up Nee-Vo sensor based on a config entry."""
 
-    tanks = hass.data[DOMAIN][TANKS][entry.entry_id]
-    all_tanks = tanks.copy()
+    instance = hass.data[DOMAIN][entry.entry_id]
 
     sensors = [
-        NeeVoSensor(_equip, description)
-        for _equip in all_tanks.values()
+        NeeVoSensor(instance, tank_id, description)
+        for tank_id, _equip in instance["coordinator"].data.items()
         for description in SENSOR_TYPES
         if getattr(_equip, description.key, False) is not False
     ]
@@ -60,13 +58,18 @@ async def async_setup_entry(
 class NeeVoSensor(NeeVoEntity, SensorEntity):
     """Define a Nee-Vo sensor."""
 
-    def __init__(self, neevo_tank: Tank, description: SensorEntityDescription) -> None:
+    def __init__(
+        self,
+        instance: dict[str, Any],
+        tank_id: str,
+        description: SensorEntityDescription,
+    ) -> None:
         """Initialize."""
-        super().__init__(neevo_tank)
+        super().__init__(instance, tank_id)
         self.entity_description = description
         self._attr_has_entity_name = True
         self._attr_name = f"{description.name}"
-        self._attr_unique_id = f"{neevo_tank.id}_{neevo_tank.name}_{description.key}"
+        self._attr_unique_id = f"{self._neevo.id}_{self._neevo.name}_{description.key}"
 
     @property
     def native_value(self) -> float:

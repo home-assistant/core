@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 from aiohttp.client_exceptions import ClientError
 from pyneevo import NeeVoApiInterface
@@ -17,27 +18,22 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
-from homeassistant.helpers.entity import DeviceInfo, Entity
-from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
-from .const import API_CLIENT, DOMAIN, TANKS
+from .const import DOMAIN, TANKS
 
 _LOGGER = logging.getLogger(__name__)
 
 PUSH_UPDATE = "neevo.push_update"
-INTERVAL = timedelta(minutes=60)
+INTERVAL = 60
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Nee-Vo component."""
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][API_CLIENT] = {}
-    hass.data[DOMAIN][TANKS] = {}
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -60,25 +56,30 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     except (ClientError, GenericHTTPError, InvalidResponseFormat) as err:
         raise ConfigEntryNotReady from err
 
-    hass.data[DOMAIN][API_CLIENT][config_entry.entry_id] = api
-    hass.data[DOMAIN][TANKS][config_entry.entry_id] = tanks
+    async def fetch_update():
+        """Fetch the latest changes from the API."""
+        try:
+            return await api.get_tanks_info()
+        except PyNeeVoError as err:
+            raise UpdateFailed(err) from err
+
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name="Neevo",
+        update_method=fetch_update,
+        update_interval=timedelta(minutes=INTERVAL),
+    )
+
+    await coordinator.async_config_entry_first_refresh()
+
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][config_entry.entry_id] = {
+        "coordinator": coordinator,
+        TANKS: tanks,
+    }
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-
-    def update_published():
-        """Handle a push update."""
-        dispatcher_send(hass, PUSH_UPDATE)
-
-    for _tank in tanks.values():
-        _tank.set_update_callback(update_published)
-
-    async def fetch_update(now):
-        """Fetch the latest changes from the API."""
-        await api.refresh_tanks()
-
-    config_entry.async_on_unload(
-        async_track_time_interval(hass, fetch_update, INTERVAL)
-    )
 
     return True
 
@@ -89,21 +90,22 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         config_entry, PLATFORMS
     )
     if unload_ok:
-        hass.data[DOMAIN][API_CLIENT].pop(config_entry.entry_id)
-        hass.data[DOMAIN][TANKS].pop(config_entry.entry_id)
+        hass.data[DOMAIN].pop(config_entry.entry_id)
+
     return unload_ok
 
 
-class NeeVoEntity(Entity):
+class NeeVoEntity(CoordinatorEntity):
     """Define a base Nee-Vo entity."""
 
     _attr_should_poll = False
 
-    def __init__(self, neevo):
+    def __init__(self, instance: dict[str, Any], tank_id: str) -> None:
         """Initialize."""
-        self._neevo = neevo
-        self._attr_name = neevo.name
-        self._attr_unique_id = f"{neevo.id}_{neevo.name}"
+        super().__init__(instance["coordinator"])
+        self._neevo = self.coordinator.data[tank_id]
+        self._attr_name = self._neevo.name
+        self._attr_unique_id = f"{self._neevo.id}_{self._neevo.name}"
 
     async def async_added_to_hass(self):
         """Subscribe to device events."""
