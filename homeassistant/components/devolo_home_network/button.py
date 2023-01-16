@@ -15,6 +15,7 @@ from homeassistant.components.button import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, IDENTIFY, PAIRING, RESTART, START_WPS
@@ -40,6 +41,7 @@ class DevoloButtonEntityDescription(
 BUTTON_TYPES: dict[str, DevoloButtonEntityDescription] = {
     IDENTIFY: DevoloButtonEntityDescription(
         key=IDENTIFY,
+        entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:led-on",
         name="Identify device with a blinking LED",
         press_func=lambda device: device.plcnet.async_identify_device_start(),  # type: ignore[union-attr]
@@ -53,6 +55,7 @@ BUTTON_TYPES: dict[str, DevoloButtonEntityDescription] = {
     RESTART: DevoloButtonEntityDescription(
         key=RESTART,
         device_class=ButtonDeviceClass.RESTART,
+        entity_category=EntityCategory.CONFIG,
         name="Restart device",
         press_func=lambda device: device.device.async_restart(),  # type: ignore[union-attr]
     ),

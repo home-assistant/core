@@ -14,6 +14,8 @@ from homeassistant.components.devolo_home_network.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry
+from homeassistant.helpers.entity import EntityCategory
 
 from . import configure_integration
 from .mock import MockDevice
@@ -44,13 +46,14 @@ async def test_identify_device(hass: HomeAssistant, mock_device: MockDevice):
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
     state_key = f"{PLATFORM}.{device_name}_identify_device_with_a_blinking_led"
-
+    er = entity_registry.async_get(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     state = hass.states.get(state_key)
     assert state is not None
     assert state.state == STATE_UNKNOWN
+    assert er.async_get(state_key).entity_category is EntityCategory.DIAGNOSTIC
 
     # Emulate button press
     await hass.services.async_call(
@@ -74,7 +77,6 @@ async def test_start_plc_pairing(hass: HomeAssistant, mock_device: MockDevice):
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
     state_key = f"{PLATFORM}.{device_name}_start_plc_pairing"
-
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
@@ -104,7 +106,7 @@ async def test_restart(hass: HomeAssistant, mock_device: MockDevice):
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
     state_key = f"{PLATFORM}.{device_name}_restart_device"
-
+    er = entity_registry.async_get(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
@@ -112,6 +114,7 @@ async def test_restart(hass: HomeAssistant, mock_device: MockDevice):
     assert state is not None
     assert state.state == STATE_UNKNOWN
     assert state.attributes["device_class"] == ButtonDeviceClass.RESTART
+    assert er.async_get(state_key).entity_category is EntityCategory.CONFIG
 
     # Emulate button press
     await hass.services.async_call(
