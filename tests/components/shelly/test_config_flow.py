@@ -718,7 +718,7 @@ async def test_zeroconf_ignored(hass):
     entry.add_to_hass(hass)
 
     with patch(
-        "aioshelly.common.get_info",
+        "homeassistant.components.shelly.config_flow.aioshelly.common.get_info",
         return_value={"mac": "test-mac", "type": "SHSW-1", "auth": False},
     ):
         result = await hass.config_entries.flow.async_init(
