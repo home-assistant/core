@@ -1630,8 +1630,8 @@ async def test_history_stream_end_time_before_start_time(
     recorder_mock, hass, hass_ws_client
 ):
     """Test history stream with an end_time before the start_time."""
-    end_time = dt_util.utcnow()
-    start_time = dt_util.utcnow()
+    end_time = dt_util.utcnow() - timedelta(seconds=2)
+    start_time = dt_util.utcnow() - timedelta(seconds=1)
 
     await async_setup_component(
         hass,
