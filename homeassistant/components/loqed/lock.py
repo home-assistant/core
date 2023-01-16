@@ -7,13 +7,11 @@ from typing import Any
 from homeassistant.components.lock import LockEntity, LockEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import LoqedDataCoordinator
 from .const import DOMAIN
+from .entity import LoqedEntity
 
 WEBHOOK_API_ENDPOINT = "/api/loqed/webhook"
 
@@ -29,7 +27,7 @@ async def async_setup_entry(
     async_add_entities([LoqedLock(coordinator)])
 
 
-class LoqedLock(CoordinatorEntity[LoqedDataCoordinator], LockEntity):
+class LoqedLock(LoqedEntity, LockEntity):
     """Representation of a loqed lock."""
 
     _attr_supported_features = LockEntityFeature.OPEN
@@ -40,11 +38,6 @@ class LoqedLock(CoordinatorEntity[LoqedDataCoordinator], LockEntity):
         self._lock = coordinator.lock
         self._attr_unique_id = self._lock.id
         self._attr_name = self._lock.name
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._lock.id)},
-            name="Loqed Lock",
-            connections={(CONNECTION_NETWORK_MAC, self._lock.id)},
-        )
 
     @property
     def changed_by(self) -> str:
