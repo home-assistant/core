@@ -15,6 +15,7 @@ from homeassistant.const import __version__ as HA_VERSION
 
 WHOAMI_URL = "https://services.home-assistant.io/whoami/v1"
 WHOAMI_URL_DEV = "https://services-dev.home-assistant.workers.dev/whoami/v1"
+ELEVATION_API_URL = "https://api.open-elevation.com/api/v1/lookup"
 
 # Constants from https://github.com/maurycyp/vincenty
 # Earth ellipsoid according to WGS 84
@@ -44,7 +45,7 @@ class LocationInfo(NamedTuple):
     latitude: float
     longitude: float
     use_metric: bool
-    elevation: float
+    elevation: int
 
 
 async def async_detect_location_info(
@@ -162,9 +163,7 @@ async def _get_elevation(session: aiohttp.ClientSession, lat: float, lon: float)
     """Query open-elevation for elevation data in meters."""
 
     try:
-        resp = await session.get(
-            f"https://api.open-elevation.com/api/v1/lookup?locations={lat},{lon}"
-        )
+        resp = await session.get(f"{ELEVATION_API_URL}?locations={lat},{lon}")
     except (aiohttp.ClientError, asyncio.TimeoutError):
         return 0
 

@@ -73,6 +73,7 @@ MOCK_LOCATION = location.LocationInfo(
     32.8594,
     -117.2073,
     True,
+    81,
 )
 
 

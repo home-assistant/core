@@ -65,6 +65,7 @@ MOCK_LOCATION = location.LocationInfo(
     32.8594,
     -117.2073,
     True,
+    81,
 )
 
 MOCK_DEVICE_VERSION_1 = {
