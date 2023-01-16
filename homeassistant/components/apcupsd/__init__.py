@@ -50,7 +50,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 class APCUPSdCoordinator(DataUpdateCoordinator[OrderedDict[str, str]]):
-    """Stores the data retrieved from APCUPSd.
+    """Store and coordinate the data retrieved from APCUPSd for all sensors.
 
     For each entity to use, acts as the single point responsible for fetching
     updates from the server.
