@@ -30,8 +30,7 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 from homeassistant.core import State
 
@@ -269,13 +268,13 @@ def test_type_media_player(type_name, entity_id, state, attrs, config):
             "TemperatureSensor",
             "sensor.temperature",
             "23",
-            {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
         ),
         (
             "TemperatureSensor",
             "sensor.temperature",
             "74",
-            {ATTR_UNIT_OF_MEASUREMENT: TEMP_FAHRENHEIT},
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT},
         ),
     ],
 )

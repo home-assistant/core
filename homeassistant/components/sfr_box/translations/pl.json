@@ -27,6 +27,14 @@
                     "unknown": "nieznany"
                 }
             },
+            "net_infra": {
+                "state": {
+                    "adsl": "ADSL",
+                    "ftth": "FTTH",
+                    "gprs": "GPRS",
+                    "unknown": "nieznany"
+                }
+            },
             "training": {
                 "state": {
                     "g_922_channel_analysis": "analiza kana\u0142u G.922",

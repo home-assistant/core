@@ -146,7 +146,7 @@ aioecowitt==2022.11.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==13.0.4
+aioesphomeapi==13.1.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -278,7 +278,7 @@ aiovlc==0.1.0
 aiowatttime==0.1.1
 
 # homeassistant.components.webostv
-aiowebostv==0.3.0
+aiowebostv==0.3.1
 
 # homeassistant.components.yandex_transport
 aioymaps==1.2.2
@@ -1042,7 +1042,7 @@ py-melissa-climate==2.1.4
 py-nightscout==1.2.2
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==1.0.8
+py-synologydsm-api==2.0.1
 
 # homeassistant.components.seventeentrack
 py17track==2021.12.2
@@ -1215,7 +1215,7 @@ pyiqvia==2022.04.0
 pyiss==1.0.1
 
 # homeassistant.components.isy994
-pyisy==3.1.5
+pyisy==3.1.6
 
 # homeassistant.components.kaleidescape
 pykaleidescape==1.0.1
@@ -1272,7 +1272,7 @@ pymeteoclimatic==0.0.6
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==2.5.3
+pymodbus==3.1.0
 
 # homeassistant.components.monoprice
 pymonoprice==0.4
@@ -1444,7 +1444,7 @@ python-forecastio==1.4.0
 python-fullykiosk==0.0.12
 
 # homeassistant.components.homewizard
-python-homewizard-energy==1.4.0
+python-homewizard-energy==1.5.0
 
 # homeassistant.components.izone
 python-izone==1.2.9
@@ -1557,7 +1557,7 @@ regenmaschine==2022.11.0
 renault-api==0.1.11
 
 # homeassistant.components.reolink
-reolink-aio==0.2.2
+reolink-aio==0.2.3
 
 # homeassistant.components.python_script
 restrictedpython==6.0
