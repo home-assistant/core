@@ -1475,15 +1475,20 @@
     },
     "eufy": {
       "name": "eufy",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
-    },
-    "eufylife_ble": {
-      "name": "EufyLife",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_push"
+      "integrations": {
+        "eufy": {
+          "integration_type": "hub",
+          "config_flow": false,
+          "iot_class": "local_polling",
+          "name": "eufy"
+        },
+        "eufylife_ble": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "EufyLife"
+        }
+      }
     },
     "everlights": {
       "name": "EverLights",
