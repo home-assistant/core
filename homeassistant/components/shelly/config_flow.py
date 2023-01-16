@@ -217,7 +217,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Abort and reconnect soon if the device with the mac address is already configured."""
         if (
             current_entry := await self.async_set_unique_id(mac)
-        ) and current_entry.data[CONF_HOST] == host:
+        ) and current_entry.data.get(CONF_HOST) == host:
             await async_reconnect_soon(self.hass, current_entry)
         if host == INTERNAL_WIFI_AP_IP:
             # If the device is broadcasting the internal wifi ap ip
