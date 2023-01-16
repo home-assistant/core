@@ -135,7 +135,6 @@ class ReolinkBinarySensorEntity(ReolinkCoordinatorEntity, BinarySensorEntity):
         self._attr_unique_id = (
             f"{self._host.unique_id}_{self._channel}_{entity_description.key}"
         )
-        self._attr_device_class = entity_description.device_class
 
     @property
     def icon(self) -> str:
