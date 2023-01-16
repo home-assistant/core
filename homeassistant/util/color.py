@@ -579,6 +579,17 @@ def _white_levels_to_color_temperature(
     ), min(255, round(brightness * 255))
 
 
+def color_xy_to_temperature(x: float, y: float) -> int:
+    """Convert an xy color to a color temperature.
+
+    Uses McCamy's approximation, close enough for uses between 2000 K and 10_000 K.
+    """
+    n = (x - 0.3320) / (0.1858 - y)
+    CCT = 437 * (n**3) + 3601 * (n**2) + 6861 * n + 5517
+
+    return int(CCT)
+
+
 def _clamp(color_component: float, minimum: float = 0, maximum: float = 255) -> float:
     """Clamp the given color component value between the given min and max values.
 
