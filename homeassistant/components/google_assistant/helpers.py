@@ -127,6 +127,11 @@ class AbstractConfig(ABC):
         return None
 
     @property
+    def local_fulfilment_port(self):
+        """Return manually-configured local SDK port."""
+        return None
+
+    @property
     def is_reporting_state(self):
         """Return if we're actively reporting states."""
         return self._unsub_report_state is not None
@@ -627,7 +632,8 @@ class GoogleEntity:
             device["otherDeviceIds"] = [{"deviceId": self.entity_id}]
             device["customData"] = {
                 "webhookId": self.config.get_local_webhook_id(agent_user_id),
-                "httpPort": URL(get_url(self.hass, allow_external=False)).port,
+                "httpPort": self.config.local_fulfilment_port
+                or URL(get_url(self.hass, allow_external=False)).port,
                 "uuid": instance_uuid,
             }
 
