@@ -192,8 +192,9 @@ async def test_discovery_flow_during_onboarding_disabled_api(
     assert result["step_id"] == "discovery_confirm"
     assert result["errors"] == {"base": "api_not_enabled"}
 
-    # User enabled API again and picks up from discovery/config flow
+    # We are onboarded, user enabled API again and picks up from discovery/config flow
     device.device.side_effect = None
+    mock_onboarding.return_value = True
 
     with patch(
         "homeassistant.components.homewizard.async_setup_entry",
