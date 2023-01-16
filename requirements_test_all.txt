@@ -278,7 +278,7 @@ aiovlc==0.1.0
 aiowatttime==0.1.1
 
 # homeassistant.components.webostv
-aiowebostv==0.3.1
+aiowebostv==0.3.2
 
 # homeassistant.components.yandex_transport
 aioymaps==1.2.2
@@ -1212,7 +1212,7 @@ pyiqvia==2022.04.0
 pyiss==1.0.1
 
 # homeassistant.components.isy994
-pyisy==3.1.6
+pyisy==3.1.8
 
 # homeassistant.components.kaleidescape
 pykaleidescape==1.0.1
