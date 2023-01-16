@@ -1433,7 +1433,7 @@ py-schluter==0.1.7
 py-sucks==0.9.8
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==1.0.8
+py-synologydsm-api==2.0.1
 
 # homeassistant.components.zabbix
 py-zabbix==1.1.7
@@ -1696,7 +1696,7 @@ pyirishrail==0.0.2
 pyiss==1.0.1
 
 # homeassistant.components.isy994
-pyisy==3.1.5
+pyisy==3.1.6
 
 # homeassistant.components.itach
 pyitachip2ir==0.0.7
@@ -1774,7 +1774,7 @@ pymitv==1.4.3
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==2.5.3
+pymodbus==3.1.0
 
 # homeassistant.components.monoprice
 pymonoprice==0.4
