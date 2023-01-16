@@ -92,20 +92,20 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         if (discovery_info.properties[CONF_PATH]) != "/api/v1":
             return self.async_abort(reason="unsupported_api_version")
 
-        await self.async_set_unique_id(
-            f"{discovery_info.properties[CONF_PRODUCT_TYPE]}"
-            f"_{discovery_info.properties[CONF_SERIAL]}"
-        )
-        self._abort_if_unique_id_configured(
-            updates={CONF_IP_ADDRESS: discovery_info.host}
-        )
-
         self.discovery = DiscoveryData(
             ip=discovery_info.host,
             product_type=discovery_info.properties[CONF_PRODUCT_TYPE],
             product_name=discovery_info.properties[CONF_PRODUCT_NAME],
             serial=discovery_info.properties[CONF_SERIAL],
         )
+
+        await self.async_set_unique_id(
+            f"{self.discovery.product_type}_{self.discovery.serial}"
+        )
+        self._abort_if_unique_id_configured(
+            updates={CONF_IP_ADDRESS: discovery_info.host}
+        )
+
         return await self.async_step_discovery_confirm()
 
     async def async_step_discovery_confirm(
