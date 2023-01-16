@@ -156,6 +156,7 @@ class SensorEntity(Entity):
     _attr_unit_of_measurement: None = (
         None  # Subclasses of SensorEntity should not set this
     )
+    _invalid_numeric_value_reported = False
     _invalid_state_class_reported = False
     _invalid_unit_of_measurement_reported = False
     _last_reset_reported = False
@@ -512,20 +513,27 @@ class SensorEntity(Entity):
         if not device_class and not state_class and not unit_of_measurement:
             return value
 
-        if not isinstance(value, (int, float, Decimal)):
+        if not self._invalid_numeric_value_reported and not isinstance(
+            value, (int, float, Decimal)
+        ):
             try:
                 _ = float(value)  # type: ignore[arg-type]
             except (TypeError, ValueError):
+                # This should raise in Home Assistant Core 2023.4
+                self._invalid_numeric_value_reported = True
+                report_issue = self._suggest_report_issue()
                 _LOGGER.warning(
                     "Sensor %s has device class %s, state class %s and unit %s "
                     "thus indicating it has a numeric value; however, it has the "
-                    "non-numeric value: %s (%s). This will stop working in 2023.4",
+                    "non-numeric value: %s (%s); Please update your configuration "
+                    "if your entity is manually configured, otherwise %s",
                     self.entity_id,
                     device_class,
                     state_class,
                     unit_of_measurement,
                     value,
                     type(value),
+                    report_issue,
                 )
                 return value
 

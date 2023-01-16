@@ -84,6 +84,7 @@ async def config_entry_fixture(hass):
             zha_const.CUSTOM_CONFIGURATION: {
                 zha_const.ZHA_OPTIONS: {
                     zha_const.CONF_ENABLE_ENHANCED_LIGHT_TRANSITION: True,
+                    zha_const.CONF_GROUP_MEMBERS_ASSUME_STATE: False,
                 },
                 zha_const.ZHA_ALARM_OPTIONS: {
                     zha_const.CONF_ALARM_ARM_REQUIRES_CODE: False,
