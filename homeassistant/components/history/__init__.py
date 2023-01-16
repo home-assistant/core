@@ -428,7 +428,7 @@ async def _async_send_historical_states(
     no_attributes: bool,
     send_empty: bool,
 ) -> dt | None:
-    """Fetch history significant_states and convert them to json in the executor."""
+    """Fetch history significant_states and send them to the client."""
     states = cast(
         MutableMapping[str, list[dict[str, Any]]],
         await hass.async_add_executor_job(
