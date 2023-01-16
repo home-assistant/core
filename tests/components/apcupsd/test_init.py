@@ -146,32 +146,8 @@ async def test_unload_remove(hass: HomeAssistant) -> None:
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
 
-async def test_state_update(hass: HomeAssistant) -> None:
-    """Ensure the sensor state changes after updating the data."""
-    await init_integration(hass)
-
-    state = hass.states.get("sensor.ups_load")
-    assert state
-    assert state.state != STATE_UNAVAILABLE
-    assert pytest.approx(float(state.state)) == 14.0
-
-    future = utcnow() + timedelta(minutes=2)
-
-    new_status = MOCK_STATUS | {"LOADPCT": "15.0 Percent"}
-    with patch("apcaccess.status.parse", return_value=new_status), patch(
-        "apcaccess.status.get", return_value=b""
-    ):
-        async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
-
-        state = hass.states.get("sensor.ups_load")
-        assert state
-        assert state.state != STATE_UNAVAILABLE
-        assert pytest.approx(float(state.state)) == 15.0
-
-
 async def test_availability(hass: HomeAssistant) -> None:
-    """Ensure that we mark the entities unavailable correctly when service is offline."""
+    """Ensure that we mark the entities as unavailable correctly when service is offline."""
     await init_integration(hass)
 
     state = hass.states.get("sensor.ups_input_voltage")
@@ -179,7 +155,7 @@ async def test_availability(hass: HomeAssistant) -> None:
     assert state.state != STATE_UNAVAILABLE
     assert pytest.approx(float(state.state)) == 124.0
 
-    future = utcnow() + timedelta(minutes=2)
+    future = utcnow() + UPDATE_INTERVAL + timedelta(seconds=1)
     with patch("apcaccess.status.parse", side_effect=OSError()), patch(
         "apcaccess.status.get", return_value=b""
     ):

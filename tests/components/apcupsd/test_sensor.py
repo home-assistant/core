@@ -1,5 +1,6 @@
 """Test sensors of APCUPSd integration."""
 
+from homeassistant.components.apcupsd import UPDATE_INTERVAL
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     SensorDeviceClass,
@@ -10,6 +11,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
+    STATE_UNAVAILABLE,
     UnitOfElectricPotential,
     UnitOfPower,
     UnitOfTime,
@@ -20,6 +22,8 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from . import MOCK_STATUS, async_init_integration
+
+from tests.common import async_fire_time_changed
 
 
 async def test_sensor(hass: HomeAssistant) -> None:
@@ -110,21 +114,101 @@ async def test_sensor_disabled(hass: HomeAssistant) -> None:
     assert updated_entry.disabled is False
 
 
+async def test_state_update(hass: HomeAssistant) -> None:
+    """Ensure the sensor state changes after updating the data."""
+    await init_integration(hass)
+
+    state = hass.states.get("sensor.ups_load")
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+    assert pytest.approx(float(state.state)) == 14.0
+
+    future = utcnow() + timedelta(minutes=2)
+
+    new_status = MOCK_STATUS | {"LOADPCT": "15.0 Percent"}
+    with patch("apcaccess.status.parse", return_value=new_status), patch(
+        "apcaccess.status.get", return_value=b""
+    ):
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+        state = hass.states.get("sensor.ups_load")
+        assert state
+        assert state.state != STATE_UNAVAILABLE
+        assert pytest.approx(float(state.state)) == 15.0
+
+
 async def test_manual_update_entity(hass):
     """Test manual update entity via service homeassistant/update_entity."""
     await init_integration(hass)
+
+    # Assert the initial state of sensor.ups_load.
+    state = hass.states.get("sensor.ups_load")
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+    assert pytest.approx(float(state.state)) == 14.0
+
+    # Setup HASS for calling the update_entity service.
     await async_setup_component(hass, "homeassistant", {})
 
-    with patch("apcaccess.status.parse", return_value=MOCK_STATUS) as mock_parse, patch(
+    with patch("apcaccess.status.parse") as mock_parse, patch(
         "apcaccess.status.get", return_value=b""
-    ) as mock_get, patch(
-        "homeassistant.util.dt.utcnow", return_value=utcnow() + timedelta(minutes=60)
-    ):
+    ) as mock_get:
+        # Now, we fast-forward the time to pass the debouncer time limit, but put it
+        # before the normal update interval to see if the manual update works.
+        async_fire_time_changed(hass, utcnow() + UPDATE_INTERVAL / 2)
+
+        mock_parse.return_value = MOCK_STATUS | {"LOADPCT": "15.0 Percent"}
         await hass.services.async_call(
             "homeassistant",
             "update_entity",
             {ATTR_ENTITY_ID: ["sensor.ups_load"]},
             blocking=True,
         )
-        assert mock_get.call_count == 1
         assert mock_parse.call_count == 1
+        assert mock_get.call_count == 1
+
+        # The new state should be effective.
+        state = hass.states.get("sensor.ups_load")
+        assert state
+        assert state.state != STATE_UNAVAILABLE
+        assert pytest.approx(float(state.state)) == 15.0
+
+        # Now fast-forward the time to pass the normal update interval, the sensor
+        # should be updated again (due to auto-polling).
+        mock_parse.return_value = MOCK_STATUS | {"LOADPCT": "16.0 Percent"}
+        async_fire_time_changed(hass, utcnow() + UPDATE_INTERVAL + timedelta(seconds=1))
+        await hass.async_block_till_done()
+
+        assert mock_parse.call_count == 2
+        assert mock_get.call_count == 2
+        state = hass.states.get("sensor.ups_load")
+        assert state
+        assert state.state != STATE_UNAVAILABLE
+        assert pytest.approx(float(state.state)) == 16.0
+
+
+async def test_multiple_manual_update_entity(hass):
+    """Test multiple simultaneous manual update entity via service homeassistant/update_entity.
+
+    We should only do network call once for the multiple simultaneous update entity services.
+    """
+    await init_integration(hass)
+
+    # Setup HASS for calling the update_entity service.
+    await async_setup_component(hass, "homeassistant", {})
+    # Fast-forward time to pass the debouncer time limit, but do not reach the normal
+    # update interval in order not to trigger periodic normal sensor updates.
+    async_fire_time_changed(hass, utcnow() + UPDATE_INTERVAL - timedelta(seconds=1))
+
+    with patch("apcaccess.status.parse", return_value=MOCK_STATUS) as mock_parse, patch(
+        "apcaccess.status.get", return_value=b""
+    ) as mock_get:
+        await hass.services.async_call(
+            "homeassistant",
+            "update_entity",
+            {ATTR_ENTITY_ID: ["sensor.ups_load", "sensor.ups_input_voltage"]},
+            blocking=True,
+        )
+        assert mock_parse.call_count == 1
+        assert mock_get.call_count == 1
