@@ -429,7 +429,8 @@ class SensorEntity(Entity):
 
         # Validate state class for sensors with a device class
         if (
-            not self._invalid_state_class_reported
+            state_class
+            and not self._invalid_state_class_reported
             and device_class
             and (classes := DEVICE_CLASS_STATE_CLASSES.get(device_class)) is not None
             and state_class not in classes
