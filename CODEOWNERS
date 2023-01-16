@@ -997,6 +997,8 @@ build.json @home-assistant/supervisor
 /tests/components/ruuvi_gateway/ @akx
 /homeassistant/components/ruuvitag_ble/ @akx
 /tests/components/ruuvitag_ble/ @akx
+/homeassistant/components/rympro/ @OnFreund
+/tests/components/rympro/ @OnFreund
 /homeassistant/components/sabnzbd/ @shaiu
 /tests/components/sabnzbd/ @shaiu
 /homeassistant/components/safe_mode/ @home-assistant/core
