@@ -31,7 +31,7 @@ from .entity import ReolinkCoordinatorEntity
 class ReolinkBinarySensorEntityDescriptionMixin:
     """Mixin values for Reolink binary sensor entities."""
 
-    value: Callable[[Host, int], bool]
+    value: Callable[[Host, int | None], bool]
 
 
 @dataclass
@@ -42,7 +42,7 @@ class ReolinkBinarySensorEntityDescription(
 
     icon: str = "mdi:motion-sensor"
     icon_off: str = "mdi:motion-sensor-off"
-    supported: Callable[[Host, int], bool] = lambda host, ch: True
+    supported: Callable[[Host, int | None], bool] = lambda host, ch: True
 
 
 BINARY_SENSORS = (
