@@ -48,8 +48,8 @@ from .const import DEVICES, DOMAIN, ICON_BUTTON, ICON_MINUS, ICON_PLUS
 class InelsButtonDescription(ButtonEntityDescription):
     """A class that describes button entity."""
 
-    var: str | None = None
-    index: int | None = None
+    var: str = ""
+    index: int = 0
 
 
 supported_devices = [
@@ -211,11 +211,14 @@ class InelsBusButton(InelsBaseEntity, ButtonEntity):
     def _callback(self, new_value: Any) -> None:
         super()._callback(new_value)
         key_index = int(self.entity_description.key)
-        if self.entity_description.var != "plusminus":
-            entity_id = f"{Platform.BUTTON}.{self._device_id}_{self.entity_description.var}_{key_index}"
+        if self.entity_description.name:
+            if self.entity_description.var != "plusminus":
+                entity_id = f"{Platform.BUTTON}.{self._device_id}_{self.entity_description.name.lower().replace(' ', '_')}"
+            else:
+                name = "plus" if key_index == 1 else "minus"
+                entity_id = f"{Platform.BUTTON}.{self._device_id}_{name}"
         else:
-            name = "plus" if key_index == 1 else "minus"
-            entity_id = f"{Platform.BUTTON}.{self._device_id}_{name}"
+            entity_id = f"{Platform.BUTTON}.{self._device_id}_{self.entity_description.var}_{self.entity_description.index}"
 
         curr_val = self._device.values.ha_value
         last_val = self._device.last_values.ha_value
