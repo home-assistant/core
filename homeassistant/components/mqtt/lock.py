@@ -213,7 +213,7 @@ class MqttLock(MqttEntity, LockEntity):
             """Handle new jammed state messages."""
             payload = self._jammed_value_template(msg.payload)
             if payload in self._valid_jammed_states:
-                self._attr_is_jammed = payload == self._config[CONF_JAMMED_STATE_TOPIC]
+                self._attr_is_jammed = payload == self._config[CONF_PAYLOAD_JAMMED]
 
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
