@@ -111,7 +111,7 @@ async def test_connection_error(hass: HomeAssistant) -> None:
         "apcaccess.status.get"
     ):
         await hass.config_entries.async_setup(entry.entry_id)
-        assert entry.state is ConfigEntryState.SETUP_ERROR
+        assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_unload_remove(hass: HomeAssistant) -> None:

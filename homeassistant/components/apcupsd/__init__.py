@@ -1,44 +1,40 @@
 """Support for APCUPSd via its Network Information Server (NIS)."""
 from __future__ import annotations
 
+from collections import OrderedDict
 from datetime import timedelta
 import logging
-from typing import Any, Final
+from typing import Final
 
 from apcaccess import status
+import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.util import Throttle
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN: Final = "apcupsd"
-VALUE_ONLINE: Final = 8
 PLATFORMS: Final = (Platform.BINARY_SENSOR, Platform.SENSOR)
-MIN_TIME_BETWEEN_UPDATES: Final = timedelta(seconds=60)
+UPDATE_INTERVAL: Final = timedelta(seconds=60)
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Use config values to set up a function enabling status retrieval."""
-    data_service = APCUPSdData(
-        config_entry.data[CONF_HOST], config_entry.data[CONF_PORT]
-    )
+    host, port = config_entry.data[CONF_HOST], config_entry.data[CONF_PORT]
+    coordinator = APCUPSdCoordinator(hass, host, port)
 
-    try:
-        await hass.async_add_executor_job(data_service.update)
-    except OSError as ex:
-        _LOGGER.error("Failure while testing APCUPSd status retrieval: %s", ex)
-        return False
+    await coordinator.async_config_entry_first_refresh()
 
     # Store the data service object.
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][config_entry.entry_id] = data_service
+    hass.data[DOMAIN][config_entry.entry_id] = coordinator
 
     # Forward the config entries to the supported platforms.
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
@@ -53,23 +49,24 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class APCUPSdData:
+class APCUPSdCoordinator(DataUpdateCoordinator[OrderedDict[str, str]]):
     """Stores the data retrieved from APCUPSd.
 
     For each entity to use, acts as the single point responsible for fetching
     updates from the server.
     """
 
-    def __init__(self, host: str, port: int) -> None:
+    def __init__(self, hass: HomeAssistant, host: str, port: int) -> None:
         """Initialize the data object."""
         self._host = host
         self._port = port
-        self.status: dict[str, str] = {}
+
+        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
 
     @property
-    def name(self) -> str | None:
+    def ups_name(self) -> str | None:
         """Return the name of the UPS, if available."""
-        return self.status.get("UPSNAME")
+        return self.data.get("UPSNAME")
 
     @property
     def model(self) -> str | None:
@@ -77,19 +74,19 @@ class APCUPSdData:
         # Different UPS models may report slightly different keys for model, here we
         # try them all.
         for model_key in ("APCMODEL", "MODEL"):
-            if model_key in self.status:
-                return self.status[model_key]
+            if model_key in self.data:
+                return self.data[model_key]
         return None
 
     @property
     def serial_no(self) -> str | None:
         """Return the unique serial number of the UPS, if available."""
-        return self.status.get("SERIALNO")
+        return self.data.get("SERIALNO")
 
     @property
     def statflag(self) -> str | None:
         """Return the STATFLAG indicating the status of the UPS, if available."""
-        return self.status.get("STATFLAG")
+        return self.data.get("STATFLAG")
 
     @property
     def device_info(self) -> DeviceInfo | None:
@@ -106,11 +103,19 @@ class APCUPSdData:
             sw_version=self.status.get("VERSION"),
         )
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self, **kwargs: Any) -> None:
+    async def _async_update_data(self) -> OrderedDict[str, str]:
         """Fetch the latest status from APCUPSd.
 
         Note that the result dict uses upper case for each resource, where our
         integration uses lower cases as keys internally.
         """
-        self.status = status.parse(status.get(host=self._host, port=self._port))
+
+        async with async_timeout.timeout(10):
+            try:
+                raw = await self.hass.async_add_executor_job(
+                    status.get, self._host, self._port
+                )
+                result: OrderedDict[str, str] = status.parse(raw)
+                return result
+            except OSError as error:
+                raise UpdateFailed(error) from error
