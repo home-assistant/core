@@ -29,6 +29,7 @@
             "status_code": {
                 "state": {
                     "cd": "Kat gedetecteerd",
+                    "off": "Uit",
                     "p": "Gepauzeerd",
                     "pwru": "Opstarten",
                     "rdy": "Klaar"

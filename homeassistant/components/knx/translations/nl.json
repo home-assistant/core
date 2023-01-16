@@ -12,6 +12,9 @@
             "invalid_signature": "Het wachtwoord om het `.knxkeys`-bestand te decoderen is verkeerd."
         },
         "step": {
+            "connection_type": {
+                "title": "KNX-verbinding"
+            },
             "manual_tunnel": {
                 "data": {
                     "host": "Host",
@@ -78,7 +81,8 @@
             "connection_type": {
                 "data": {
                     "connection_type": "KNX-verbindingstype"
-                }
+                },
+                "title": "KNX-verbinding"
             },
             "manual_tunnel": {
                 "data": {

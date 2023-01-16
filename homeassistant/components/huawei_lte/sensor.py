@@ -118,6 +118,7 @@ class HuaweiSensorEntityDescription(SensorEntityDescription):
 
     format_fn: Callable[[str], tuple[StateType, str | None]] = format_default
     icon_fn: Callable[[StateType], str] | None = None
+    device_class_fn: Callable[[StateType], SensorDeviceClass | None] | None = None
     last_reset_item: str | None = None
     last_reset_format_fn: Callable[[str | None], datetime | None] | None = None
 
@@ -351,7 +352,15 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
             "txpower": HuaweiSensorEntityDescription(
                 key="txpower",
                 name="Transmit power",
-                device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+                # The value we get from the API tends to consist of several, e.g.
+                #     PPusch:15dBm PPucch:2dBm PSrs:42dBm PPrach:1dBm
+                # Present as SIGNAL_STRENGTH only if it was parsed to a number.
+                # We could try to parse this to separate component sensors sometime.
+                device_class_fn=lambda x: (
+                    SensorDeviceClass.SIGNAL_STRENGTH
+                    if isinstance(x, (float, int))
+                    else None
+                ),
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
             "ul_mcs": HuaweiSensorEntityDescription(
@@ -743,6 +752,14 @@ class HuaweiLteSensor(HuaweiLteBaseEntityWithDevice, SensorEntity):
         if self.entity_description.icon_fn:
             return self.entity_description.icon_fn(self.state)
         return self.entity_description.icon
+
+    @property
+    def device_class(self) -> SensorDeviceClass | None:
+        """Return device class for sensor."""
+        if self.entity_description.device_class_fn:
+            # Note: using self.state could infloop here.
+            return self.entity_description.device_class_fn(self.native_value)
+        return super().device_class
 
     @property
     def last_reset(self) -> datetime | None:

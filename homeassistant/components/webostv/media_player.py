@@ -39,7 +39,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.trigger import PluggableAction
 
-from . import WebOsClientWrapper
 from .const import (
     ATTR_PAYLOAD,
     ATTR_SOUND_OUTPUT,
@@ -83,9 +82,9 @@ async def async_setup_entry(
     assert unique_id
     name = config_entry.title
     sources = config_entry.options.get(CONF_SOURCES)
-    wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id]
+    client = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id]
 
-    async_add_entities([LgWebOSMediaPlayerEntity(wrapper, name, sources, unique_id)])
+    async_add_entities([LgWebOSMediaPlayerEntity(client, name, sources, unique_id)])
 
 
 _T = TypeVar("_T", bound="LgWebOSMediaPlayerEntity")
@@ -126,14 +125,13 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
 
     def __init__(
         self,
-        wrapper: WebOsClientWrapper,
+        client: WebOsClient,
         name: str,
         sources: list[str] | None,
         unique_id: str,
     ) -> None:
         """Initialize the webos device."""
-        self._wrapper = wrapper
-        self._client: WebOsClient = wrapper.client
+        self._client = client
         self._attr_assumed_state = True
         self._attr_name = name
         self._attr_unique_id = unique_id

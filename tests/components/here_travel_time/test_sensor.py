@@ -59,8 +59,8 @@ from homeassistant.const import (
     CONF_MODE,
     CONF_NAME,
     EVENT_HOMEASSISTANT_START,
-    TIME_MINUTES,
     UnitOfLength,
+    UnitOfTime,
 )
 from homeassistant.core import CoreState, HomeAssistant, State
 from homeassistant.setup import async_setup_component
@@ -146,7 +146,7 @@ async def test_sensor(
     await hass.async_block_till_done()
 
     duration = hass.states.get("sensor.test_duration")
-    assert duration.attributes.get("unit_of_measurement") == TIME_MINUTES
+    assert duration.attributes.get("unit_of_measurement") == UnitOfTime.MINUTES
     assert duration.attributes.get(ATTR_ICON) == icon
     assert duration.state == "26"
 
@@ -485,13 +485,13 @@ async def test_restore_state(hass):
                     "1234",
                     attributes={
                         ATTR_LAST_RESET: last_reset,
-                        ATTR_UNIT_OF_MEASUREMENT: TIME_MINUTES,
+                        ATTR_UNIT_OF_MEASUREMENT: UnitOfTime.MINUTES,
                         ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                     },
                 ),
                 {
                     "native_value": 1234,
-                    "native_unit_of_measurement": TIME_MINUTES,
+                    "native_unit_of_measurement": UnitOfTime.MINUTES,
                     "icon": "mdi:car",
                     "last_reset": last_reset,
                 },
@@ -502,13 +502,13 @@ async def test_restore_state(hass):
                     "5678",
                     attributes={
                         ATTR_LAST_RESET: last_reset,
-                        ATTR_UNIT_OF_MEASUREMENT: TIME_MINUTES,
+                        ATTR_UNIT_OF_MEASUREMENT: UnitOfTime.MINUTES,
                         ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                     },
                 ),
                 {
                     "native_value": 5678,
-                    "native_unit_of_measurement": TIME_MINUTES,
+                    "native_unit_of_measurement": UnitOfTime.MINUTES,
                     "icon": "mdi:car",
                     "last_reset": last_reset,
                 },
@@ -581,12 +581,12 @@ async def test_restore_state(hass):
     # restore from cache
     state = hass.states.get("sensor.test_duration")
     assert state.state == "1234"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TIME_MINUTES
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTime.MINUTES
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
     state = hass.states.get("sensor.test_duration_in_traffic")
     assert state.state == "5678"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TIME_MINUTES
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTime.MINUTES
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
     state = hass.states.get("sensor.test_distance")

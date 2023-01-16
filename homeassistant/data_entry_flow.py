@@ -175,7 +175,10 @@ class FlowManager(abc.ABC):
     def async_has_matching_flow(
         self, handler: str, context: dict[str, Any], data: Any
     ) -> bool:
-        """Check if an existing matching flow is in progress with the same handler, context, and data."""
+        """Check if an existing matching flow is in progress.
+
+        A flow with the same handler, context, and data.
+        """
         return any(
             flow
             for flow in self._async_progress_by_handler(handler)
@@ -454,7 +457,7 @@ class FlowHandler:
         return self.context.get("show_advanced_options", False)
 
     def add_suggested_values_to_schema(
-        self, data_schema: vol.Schema, suggested_values: Mapping[str, Any]
+        self, data_schema: vol.Schema, suggested_values: Mapping[str, Any] | None
     ) -> vol.Schema:
         """Make a copy of the schema, populated with suggested values.
 
@@ -474,7 +477,11 @@ class FlowHandler:
                     continue
 
             new_key = key
-            if key in suggested_values and isinstance(key, vol.Marker):
+            if (
+                suggested_values
+                and key in suggested_values
+                and isinstance(key, vol.Marker)
+            ):
                 # Copy the marker to not modify the flow schema
                 new_key = copy.copy(key)
                 new_key.description = {"suggested_value": suggested_values[key]}

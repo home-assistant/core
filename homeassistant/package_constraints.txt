@@ -21,14 +21,16 @@ cryptography==39.0.0
 dbus-fast==1.84.0
 fnvhash==0.1.0
 hass-nabucasa==0.61.0
+hassil==0.2.3
 home-assistant-bluetooth==1.9.2
 home-assistant-frontend==20230110.0
+home-assistant-intents==0.0.1
 httpx==0.23.2
 ifaddr==0.1.7
 janus==1.0.0
 jinja2==3.1.2
 lru-dict==1.1.8
-orjson==3.8.4
+orjson==3.8.5
 paho-mqtt==1.6.1
 pillow==9.4.0
 pip>=21.0,<22.4

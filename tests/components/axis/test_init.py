@@ -45,7 +45,7 @@ async def test_unload_entry(hass, config_entry):
     assert not hass.data[AXIS_DOMAIN]
 
 
-@pytest.mark.config_entry_version(1)
+@pytest.mark.parametrize("config_entry_version", [1])
 async def test_migrate_entry(hass, config_entry):
     """Test successful migration of entry data."""
     assert config_entry.version == 1
