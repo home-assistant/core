@@ -5,8 +5,6 @@ from dataclasses import dataclass
 from datetime import timedelta
 
 from homewizard_energy.features import Features
-
-# Set up.
 from homewizard_energy.models import Data, Device, State, System
 
 from homeassistant.const import Platform
