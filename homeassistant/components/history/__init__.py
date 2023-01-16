@@ -394,12 +394,7 @@ def _generate_stream_message(
 def _async_send_empty_response(
     connection: ActiveConnection, msg_id: int, start_time: dt, end_time: dt | None
 ) -> None:
-    """Send an empty response.
-
-    The current case for this is when they ask for entity_ids
-    that will all be filtered away because they have UOMs or
-    state_class.
-    """
+    """Send an empty response when we know all results are filtered away."""
     connection.send_result(msg_id)
     stream_end_time = end_time or dt_util.utcnow()
     _async_send_response(connection, msg_id, start_time, stream_end_time, {})
