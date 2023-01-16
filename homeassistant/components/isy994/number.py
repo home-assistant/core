@@ -4,18 +4,32 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import Any
 
-from pyisy.constants import ISY_VALUE_UNKNOWN, PROP_ON_LEVEL
+from pyisy.constants import (
+    CMD_BACKLIGHT,
+    ISY_VALUE_UNKNOWN,
+    PROP_ON_LEVEL,
+    UOM_PERCENTAGE,
+)
 from pyisy.helpers import EventListener, NodeProperty
+from pyisy.nodes import Node
 from pyisy.variables import Variable
 
 from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
     NumberMode,
+    RestoreNumber,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_VARIABLES, PERCENTAGE, Platform
+from homeassistant.const import (
+    CONF_VARIABLES,
+    PERCENTAGE,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
@@ -42,7 +56,15 @@ CONTROL_DESC = {
         native_min_value=1.0,
         native_max_value=100.0,
         native_step=1.0,
-    )
+    ),
+    CMD_BACKLIGHT: NumberEntityDescription(
+        key=CMD_BACKLIGHT,
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.CONFIG,
+        native_min_value=0.0,
+        native_max_value=100.0,
+        native_step=1.0,
+    ),
 }
 
 
@@ -54,7 +76,9 @@ async def async_setup_entry(
     """Set up ISY/IoX number entities from config entry."""
     isy_data = hass.data[DOMAIN][config_entry.entry_id]
     device_info = isy_data.devices
-    entities: list[ISYVariableNumberEntity | ISYAuxControlNumberEntity] = []
+    entities: list[
+        ISYVariableNumberEntity | ISYAuxControlNumberEntity | ISYBacklightNumberEntity
+    ] = []
     var_id = config_entry.options.get(CONF_VAR_SENSOR_STRING, DEFAULT_VAR_SENSOR_STRING)
 
     for node in isy_data.variables[Platform.NUMBER]:
@@ -95,14 +119,17 @@ async def async_setup_entry(
         )
 
     for node, control in isy_data.aux_properties[Platform.NUMBER]:
+        entity_init_info = {
+            "node": node,
+            "control": control,
+            "unique_id": f"{isy_data.uid_base(node)}_{control}",
+            "description": CONTROL_DESC[control],
+            "device_info": device_info.get(node.primary_node),
+        }
         entities.append(
-            ISYAuxControlNumberEntity(
-                node=node,
-                control=control,
-                unique_id=f"{isy_data.uid_base(node)}_{control}",
-                description=CONTROL_DESC[control],
-                device_info=device_info.get(node.primary_node),
-            )
+            ISYBacklightNumberEntity(**entity_init_info)
+            if control == CMD_BACKLIGHT
+            else ISYAuxControlNumberEntity(**entity_init_info)
         )
     async_add_entities(entities)
 
@@ -140,7 +167,10 @@ class ISYAuxControlNumberEntity(ISYAuxControlEntity, NumberEntity):
             await self._node.set_on_level(value)
             return
 
-        await self._node.send_cmd(self._control, val=value, uom=node_prop.uom)
+        if not await self._node.send_cmd(self._control, val=value, uom=node_prop.uom):
+            raise HomeAssistantError(
+                f"Could not set {self.name} to {value} for {self._node.address}"
+            )
 
 
 class ISYVariableNumberEntity(NumberEntity):
@@ -198,4 +228,46 @@ class ISYVariableNumberEntity(NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
-        await self._node.set_value(value, init=self._init_entity)
+        if not await self._node.set_value(value, init=self._init_entity):
+            raise HomeAssistantError(
+                f"Could not set {self.name} to {value} for {self._node.address}"
+            )
+
+
+class ISYBacklightNumberEntity(ISYAuxControlEntity, RestoreNumber):
+    """Representation of a ISY/IoX Backlight Number entity."""
+
+    _assumed_state = True  # Backlight values aren't read from device
+
+    def __init__(
+        self,
+        node: Node,
+        control: str,
+        unique_id: str,
+        description: NumberEntityDescription,
+        device_info: DeviceInfo | None,
+    ) -> None:
+        """Initialize the ISY Backlight Select entity."""
+        super().__init__(node, control, unique_id, description, device_info)
+        self._attr_native_value = 0
+
+    async def async_added_to_hass(self) -> None:
+        """Load the last known state when added to hass."""
+        await super().async_added_to_hass()
+        if (last_state := await self.async_get_last_state()) and (
+            last_number_data := await self.async_get_last_number_data()
+        ):
+            if last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+                self._attr_native_value = last_number_data.native_value
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Update the current value."""
+
+        if not await self._node.send_cmd(
+            CMD_BACKLIGHT, val=int(value), uom=UOM_PERCENTAGE
+        ):
+            raise HomeAssistantError(
+                f"Could not set backlight to {value}% for {self._node.address}"
+            )
+        self._attr_native_value = value
+        self.async_write_ha_state()
