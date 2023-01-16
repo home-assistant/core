@@ -499,11 +499,10 @@ def async_log_deprecated_service_call(
         },
     )
 
-    alternate = (
-        f' and pass it a target entity ID of "{alternate_target}"'
-        if alternate_target
-        else ""
-    )
+    alternate_text = ""
+    if alternate_target:
+        alternate_text = f' and pass it a target entity ID of "{alternate_target}"'
+
     _LOGGER.warning(
         (
             'The "%s" service is deprecated and will be removed in %s; use the "%s" '
@@ -512,5 +511,5 @@ def async_log_deprecated_service_call(
         deprecated_service,
         breaks_in_ha_version,
         alternate_service,
-        alternate,
+        alternate_text,
     )
