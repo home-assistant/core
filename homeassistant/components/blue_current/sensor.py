@@ -9,8 +9,8 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ELECTRIC_CURRENT_AMPERE,
-    ELECTRIC_POTENTIAL_VOLT,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfPower,
 )
@@ -26,7 +26,7 @@ TIMESTAMP_KEYS = ("start_datetime", "stop_datetime", "offline_since")
 SENSORS = (
     SensorEntityDescription(
         key="actual_v1",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         name="Voltage Phase 1",
         entity_registry_enabled_default=False,
@@ -35,7 +35,7 @@ SENSORS = (
     ),
     SensorEntityDescription(
         key="actual_v2",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         name="Voltage Phase 2",
         entity_registry_enabled_default=False,
@@ -44,7 +44,7 @@ SENSORS = (
     ),
     SensorEntityDescription(
         key="actual_v3",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         name="Voltage Phase 3",
         entity_registry_enabled_default=False,
@@ -53,7 +53,7 @@ SENSORS = (
     ),
     SensorEntityDescription(
         key="avg_voltage",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         name="Average Voltage",
         state_class=SensorStateClass.MEASUREMENT,
@@ -61,7 +61,7 @@ SENSORS = (
     ),
     SensorEntityDescription(
         key="actual_p1",
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         name="Current Phase 1",
         entity_registry_enabled_default=False,
@@ -70,7 +70,7 @@ SENSORS = (
     ),
     SensorEntityDescription(
         key="actual_p2",
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         name="Current Phase 2",
         entity_registry_enabled_default=False,
@@ -79,7 +79,7 @@ SENSORS = (
     ),
     SensorEntityDescription(
         key="actual_p3",
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         name="Current Phase 3",
         entity_registry_enabled_default=False,
@@ -88,7 +88,7 @@ SENSORS = (
     ),
     SensorEntityDescription(
         key="avg_current",
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         name="Average Current",
         state_class=SensorStateClass.MEASUREMENT,
@@ -139,21 +139,25 @@ SENSORS = (
         key="vehicle_status",
         name="Vehicle Status",
         icon="mdi:car",
-        device_class="blue_current__vehicle_status",
+        device_class=SensorDeviceClass.ENUM,
         has_entity_name=True,
+        options=["standby", "vehicle_detected", "ready", "no_power", "vehicle_error"],
+        translation_key="vehicle_status",
     ),
     SensorEntityDescription(
         key="activity",
         name="Activity",
         icon="mdi:ev-station",
-        device_class="blue_current__activity",
+        device_class=SensorDeviceClass.ENUM,
         has_entity_name=True,
+        options=["available", "charging", "unavailable", "error", "offline"],
+        translation_key="activity",
     ),
     SensorEntityDescription(
         key="max_usage",
         name="Max Usage",
         icon="mdi:gauge-full",
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         has_entity_name=True,
@@ -162,7 +166,7 @@ SENSORS = (
         key="smartcharging_max_usage",
         name="Smart Charging Max Usage",
         icon="mdi:gauge-full",
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -172,7 +176,7 @@ SENSORS = (
         key="max_offline",
         name="Offline Max Usage",
         icon="mdi:gauge-full",
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -182,7 +186,7 @@ SENSORS = (
         key="current_left",
         name="Remaining current",
         icon="mdi:gauge",
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -193,7 +197,7 @@ SENSORS = (
 GRID_SENSORS = (
     SensorEntityDescription(
         key="grid_actual_p1",
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         name="Grid Current Phase 1",
         entity_registry_enabled_default=False,
@@ -202,7 +206,7 @@ GRID_SENSORS = (
     ),
     SensorEntityDescription(
         key="grid_actual_p2",
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         name="Grid Current Phase 2",
         entity_registry_enabled_default=False,
@@ -211,7 +215,7 @@ GRID_SENSORS = (
     ),
     SensorEntityDescription(
         key="grid_actual_p3",
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         name="Grid Current Phase 3",
         entity_registry_enabled_default=False,
@@ -220,7 +224,7 @@ GRID_SENSORS = (
     ),
     SensorEntityDescription(
         key="grid_avg_current",
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         name="Average Grid Current",
         state_class=SensorStateClass.MEASUREMENT,
@@ -228,7 +232,7 @@ GRID_SENSORS = (
     ),
     SensorEntityDescription(
         key="grid_max_current",
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         name="Max Grid Current",
         state_class=SensorStateClass.MEASUREMENT,

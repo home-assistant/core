@@ -32,7 +32,7 @@ charge_point = {
     "avg_current": 16,
     "avg_voltage": 15.7,
     "total_kw": 251.2,
-    "vehicle_status": "offline",
+    "vehicle_status": "standby",
     "actual_kwh": 11,
     "max_usage": 10,
     "max_offline": 7,

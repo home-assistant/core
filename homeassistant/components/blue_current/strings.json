@@ -20,5 +20,27 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "activity": {
+        "state": {
+          "available": "Available",
+          "charging": "Charging",
+          "unavailable": "Unavailable",
+          "error": "Error",
+          "offline": "Offline"
+        }
+      },
+      "vehicle_status": {
+        "state": {
+          "standby": "Standby",
+          "vehicle_detected": "Detected",
+          "ready": "Ready",
+          "no_power": "No power",
+          "vehicle_error": "Error"
+        }
+      }
+    }
   }
 }
