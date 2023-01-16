@@ -4,22 +4,27 @@ from __future__ import annotations
 from typing import cast
 
 from pyisy.constants import (
+    ATTR_ACTION,
     BACKLIGHT_INDEX,
     CMD_BACKLIGHT,
     COMMAND_FRIENDLY_NAME,
+    DEV_BL_ADDR,
+    DEV_CMD_MEMORY_WRITE,
+    DEV_MEMORY,
     INSTEON_RAMP_RATES,
     ISY_VALUE_UNKNOWN,
     PROP_RAMP_RATE,
+    TAG_ADDRESS,
     UOM_INDEX as ISY_UOM_INDEX,
     UOM_TO_STATES,
 )
-from pyisy.helpers import NodeProperty
-from pyisy.nodes import Node
+from pyisy.helpers import EventListener, NodeProperty
+from pyisy.nodes import Node, NodeChangedEvent
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform, UnitOfTime
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -38,6 +43,7 @@ def time_string(i: int) -> str:
 
 
 RAMP_RATE_OPTIONS = [time_string(rate) for rate in INSTEON_RAMP_RATES.values()]
+BACKLIGHT_MEMORY_FILTER = {"memory": DEV_BL_ADDR, "cmd1": DEV_CMD_MEMORY_WRITE}
 
 
 async def async_setup_entry(
@@ -155,6 +161,7 @@ class ISYBacklightSelectEntity(ISYAuxControlEntity, SelectEntity, RestoreEntity)
     ) -> None:
         """Initialize the ISY Backlight Select entity."""
         super().__init__(node, control, unique_id, description, device_info)
+        self._memory_change_handler: EventListener | None = None
         self._attr_current_option = None
 
     async def async_added_to_hass(self) -> None:
@@ -164,6 +171,27 @@ class ISYBacklightSelectEntity(ISYAuxControlEntity, SelectEntity, RestoreEntity)
             last_state := await self.async_get_last_state()
         ) and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
             self._attr_current_option = last_state.state
+
+        # Listen to memory writing events to update state if changed in ISY
+        self._memory_change_handler = self._node.isy.nodes.status_events.subscribe(
+            self.async_on_memory_write,
+            event_filter={
+                TAG_ADDRESS: self._node.address,
+                ATTR_ACTION: DEV_MEMORY,
+            },
+            key=self.unique_id,
+        )
+
+    @callback
+    def async_on_memory_write(self, event: NodeChangedEvent, key: str) -> None:
+        """Handle a memory write event from the ISY Node."""
+        if not (BACKLIGHT_MEMORY_FILTER.items() <= event.event_info.items()):
+            return  # This was not a backlight event
+        option = BACKLIGHT_INDEX[event.event_info["value"]]
+        if option == self._attr_current_option:
+            return  # Change was from this entity, don't update twice
+        self._attr_current_option = option
+        self.async_write_ha_state()
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
