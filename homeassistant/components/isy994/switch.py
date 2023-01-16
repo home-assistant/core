@@ -9,27 +9,27 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import _LOGGER, DOMAIN
 from .entity import ISYNodeEntity, ISYProgramEntity
+from .models import IsyData
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the ISY switch platform."""
-    isy_data = hass.data[DOMAIN][entry.entry_id]
+    isy_data: IsyData = hass.data[DOMAIN][entry.entry_id]
     entities: list[ISYSwitchProgramEntity | ISYSwitchEntity] = []
-    devices: dict[str, DeviceInfo] = isy_data.devices
+    device_info = isy_data.devices
     for node in isy_data.nodes[Platform.SWITCH]:
         primary = node.primary_node
         if node.protocol == PROTO_GROUP and len(node.controllers) == 1:
             # If Group has only 1 Controller, link to that device instead of the hub
             primary = node.isy.nodes.get_by_id(node.controllers[0]).primary_node
 
-        entities.append(ISYSwitchEntity(node, devices.get(primary)))
+        entities.append(ISYSwitchEntity(node, device_info.get(primary)))
 
     for name, status, actions in isy_data.programs[Platform.SWITCH]:
         entities.append(ISYSwitchProgramEntity(name, status, actions))
