@@ -47,7 +47,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up ISY/IoX select entities from config entry."""
     isy_data: IsyData = hass.data[DOMAIN][config_entry.entry_id]
-    isy = isy_data.root
     device_info = isy_data.devices
     entities: list[
         ISYAuxControlIndexSelectEntity
@@ -79,7 +78,7 @@ async def async_setup_entry(
         entity_detail = {
             "node": node,
             "control": control,
-            "unique_id": f"{isy.uuid}_{node.address}_{control}",
+            "unique_id": f"{isy_data.uid_base(node)}_{control}",
             "description": description,
             "device_info": device_info.get(node.primary_node),
         }
