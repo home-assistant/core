@@ -1,7 +1,9 @@
 """The Media Source implementation for the Jellyfin integration."""
 from __future__ import annotations
 
+import logging
 import mimetypes
+import os
 from typing import Any
 
 from jellyfin_apiclient_python.api import jellyfin_url
@@ -41,6 +43,8 @@ from .const import (
 )
 from .models import JellyfinData
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
     """Set up Jellyfin media source."""
@@ -74,6 +78,9 @@ class JellyfinSource(MediaSource):
 
         stream_url = self._get_stream_url(media_item)
         mime_type = _media_mime_type(media_item)
+
+        # Media Sources without a mime type have been filtered out during library creation
+        assert mime_type is not None
 
         return PlayMedia(stream_url, mime_type)
 
@@ -240,7 +247,11 @@ class JellyfinSource(MediaSource):
                 k.get(ITEM_KEY_INDEX_NUMBER, None),
             ),
         )
-        return [self._build_track(track) for track in tracks]
+        return [
+            self._build_track(track)
+            for track in tracks
+            if _media_mime_type(track) is not None
+        ]
 
     def _build_track(self, track: dict[str, Any]) -> BrowseMediaSource:
         """Return a single track as a browsable media source."""
@@ -289,7 +300,11 @@ class JellyfinSource(MediaSource):
         """Return all movies in the movie library."""
         movies = await self._get_children(library_id, ITEM_TYPE_MOVIE)
         movies = sorted(movies, key=lambda k: k[ITEM_KEY_NAME])  # type: ignore[no-any-return]
-        return [self._build_movie(movie) for movie in movies]
+        return [
+            self._build_movie(movie)
+            for movie in movies
+            if _media_mime_type(movie) is not None
+        ]
 
     def _build_movie(self, movie: dict[str, Any]) -> BrowseMediaSource:
         """Return a single movie as a browsable media source."""
@@ -349,20 +364,24 @@ class JellyfinSource(MediaSource):
         raise BrowseError(f"Unsupported media type {media_type}")
 
 
-def _media_mime_type(media_item: dict[str, Any]) -> str:
+def _media_mime_type(media_item: dict[str, Any]) -> str | None:
     """Return the mime type of a media item."""
     if not media_item.get(ITEM_KEY_MEDIA_SOURCES):
-        raise BrowseError("Unable to determine mime type for item without media source")
+        _LOGGER.debug("Unable to determine mime type for item without media source")
+        return None
 
     media_source = media_item[ITEM_KEY_MEDIA_SOURCES][0]
 
     if MEDIA_SOURCE_KEY_PATH not in media_source:
-        raise BrowseError("Unable to determine mime type for media source without path")
+        _LOGGER.debug("Unable to determine mime type for media source without path")
+        return None
 
     path = media_source[MEDIA_SOURCE_KEY_PATH]
     mime_type, _ = mimetypes.guess_type(path)
 
     if mime_type is None:
-        raise BrowseError(f"Unable to determine mime type for path {path}")
+        _LOGGER.debug(
+            "Unable to determine mime type for path %s", os.path.basename(path)
+        )
 
     return mime_type

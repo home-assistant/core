@@ -35,6 +35,7 @@ from .const import (
     ISY_GROUP_PLATFORM,
     KEY_ACTIONS,
     KEY_STATUS,
+    NODE_AUX_FILTERS,
     NODE_FILTERS,
     NODE_PLATFORMS,
     PROGRAM_PLATFORMS,
@@ -279,32 +280,32 @@ def _is_sensor_a_binary_sensor(isy_data: IsyData, node: Group | Node) -> bool:
 def _generate_device_info(node: Node) -> DeviceInfo:
     """Generate the device info for a root node device."""
     isy = node.isy
-    basename = node.name
     device_info = DeviceInfo(
         identifiers={(DOMAIN, f"{isy.uuid}_{node.address}")},
-        manufacturer=node.protocol,
-        name=f"{basename} ({(str(node.address).rpartition(' ')[0] or node.address)})",
+        manufacturer=node.protocol.title(),
+        name=node.name,
         via_device=(DOMAIN, isy.uuid),
         configuration_url=isy.conn.url,
         suggested_area=node.folder,
     )
 
     # ISYv5 Device Types can provide model and manufacturer
-    model: str = "Unknown"
+    model: str = str(node.address).rpartition(" ")[0] or node.address
     if node.node_def_id is not None:
-        model = str(node.node_def_id)
+        model += f": {node.node_def_id}"
 
     # Numerical Device Type
     if node.type is not None:
         model += f" ({node.type})"
 
     # Get extra information for Z-Wave Devices
-    if node.protocol == PROTO_ZWAVE:
-        device_info[ATTR_MANUFACTURER] = f"Z-Wave MfrID:{node.zwave_props.mfr_id}"
+    if node.protocol == PROTO_ZWAVE and node.zwave_props.mfr_id != "0":
+        device_info[
+            ATTR_MANUFACTURER
+        ] = f"Z-Wave MfrID:{int(node.zwave_props.mfr_id):#0{6}x}"
         model += (
-            f" Type:{node.zwave_props.devtype_gen} "
-            f"ProductTypeID:{node.zwave_props.prod_type_id} "
-            f"ProductID:{node.zwave_props.product_id}"
+            f"Type:{int(node.zwave_props.prod_type_id):#0{6}x} "
+            f"Product:{int(node.zwave_props.product_id):#0{6}x}"
         )
     device_info[ATTR_MODEL] = model
 
@@ -331,7 +332,10 @@ def _categorize_nodes(
             if getattr(node, "is_dimmable", False):
                 aux_controls = ROOT_AUX_CONTROLS.intersection(node.aux_properties)
                 for control in aux_controls:
+                    # Deprecated all aux properties as sensors. Update in 2023.5.0 to remove extras.
                     isy_data.aux_properties[Platform.SENSOR].append((node, control))
+                    platform = NODE_AUX_FILTERS[control]
+                    isy_data.aux_properties[platform].append((node, control))
 
         if node.protocol == PROTO_GROUP:
             isy_data.nodes[ISY_GROUP_PLATFORM].append(node)

@@ -12,10 +12,12 @@ from starlink_grpc import (
     GrpcError,
     ObstructionDict,
     StatusDict,
+    reboot,
     status_data,
 )
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 _LOGGER = logging.getLogger(__name__)
@@ -53,3 +55,11 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
                 return StarlinkData(*status)
             except GrpcError as exc:
                 raise UpdateFailed from exc
+
+    async def reboot_starlink(self):
+        """Reboot the Starlink system tied to this coordinator."""
+        async with async_timeout.timeout(4):
+            try:
+                await self.hass.async_add_executor_job(reboot, self.channel_context)
+            except GrpcError as exc:
+                raise HomeAssistantError from exc

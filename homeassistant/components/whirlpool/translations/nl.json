@@ -13,5 +13,27 @@
                 }
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "whirlpool_machine": {
+                "state": {
+                    "door_open": "Deur open",
+                    "pause": "Gepauzeerd",
+                    "setting": "Instelling",
+                    "standby": "Stand-by"
+                }
+            },
+            "whirlpool_tank": {
+                "state": {
+                    "100%": "100%",
+                    "25%": "25%",
+                    "50%": "50%",
+                    "active": "Actief",
+                    "empty": "Leeg",
+                    "unknown": "Onbekend"
+                }
+            }
+        }
     }
 }
