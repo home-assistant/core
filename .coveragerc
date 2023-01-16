@@ -1224,6 +1224,9 @@ omit =
     homeassistant/components/stookalert/__init__.py
     homeassistant/components/stookalert/binary_sensor.py
     homeassistant/components/stookalert/diagnostics.py
+    homeassistant/components/stookwijzer/__init__.py
+    homeassistant/components/stookwijzer/diagnostics.py
+    homeassistant/components/stookwijzer/sensor.py
     homeassistant/components/stream/*
     homeassistant/components/streamlabswater/*
     homeassistant/components/suez_water/*
