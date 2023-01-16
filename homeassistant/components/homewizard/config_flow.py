@@ -115,7 +115,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] | None = None
         if user_input is not None:
             try:
-                await self._async_try_connect(str(self.discovery.ip))
+                await self._async_try_connect(self.discovery.ip)
             except RecoverableError as ex:
                 _LOGGER.error(ex)
                 errors = {"base": ex.error_code}
