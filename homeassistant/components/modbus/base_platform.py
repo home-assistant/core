@@ -95,10 +95,18 @@ class BasePlatform(Entity):
         self._attr_unit_of_measurement = None
         self._lazy_error_count = entry[CONF_LAZY_ERROR]
         self._lazy_errors = self._lazy_error_count
-        self._min_value: float | int = entry.get(CONF_MIN_VALUE)
-        self._min_value_threshold: float | int = entry.get(CONF_MIN_VALUE_THRESHOLD, self._min_value)
-        self._max_value: float | int = entry.get(CONF_MAX_VALUE)
-        self._max_value_threshold: float | int = entry.get(CONF_MAX_VALUE_THRESHOLD, self._max_value)
+
+        def get_optional_numeric_config(
+            config_name: str, 
+            default_val: int | float | None) -> int | float | None:
+            if (val := entry.get(config_name, default_val)) is None:
+                return None
+            return float(val) if '.' in val else int(val)
+
+        self._min_value = get_optional_numeric_config(CONF_MIN_VALUE, None)
+        self._min_value_threshold = get_optional_numeric_config(CONF_MIN_VALUE_THRESHOLD, self._min_value)
+        self._max_value = get_optional_numeric_config(CONF_MAX_VALUE, None)
+        self._max_value_threshold = get_optional_numeric_config(CONF_MAX_VALUE_THRESHOLD, self._max_value)
 
     @abstractmethod
     async def async_update(self, now: datetime | None = None) -> None:
@@ -217,12 +225,14 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         val_result: float | int = self._scale * val[0] + self._offset
         if (
             self._min_value_threshold is not None
-            and val_result < self._min_value_threshold
+            and val_result < self._min_value_threshold and
+            self._min_value is not None
         ):
-             val_result = self._min_value
+            val_result = self._min_value
         elif (
             self._max_value_threshold is not None
-            and val_result > self._max_value_threshold
+            and val_result > self._max_value_threshold and
+            self._max_value is not None
         ):
             val_result = self._max_value
 
