@@ -107,12 +107,6 @@ class SynoDSMCamera(SynologyDSMBaseEntity[SynologyDSMCameraUpdateCoordinator], C
     @property
     def available(self) -> bool:
         """Return the availability of the camera."""
-        _LOGGER.warning(
-            "SynoDSMCamera.available(%s) enabled=%s last_update_success=%s",
-            self.camera_data.name,
-            self.camera_data.is_enabled,
-            self.coordinator.last_update_success,
-        )
         return self.camera_data.is_enabled and self.coordinator.last_update_success
 
     @property
@@ -160,18 +154,7 @@ class SynoDSMCamera(SynologyDSMBaseEntity[SynologyDSMCameraUpdateCoordinator], C
         if not self.available:
             return None
         try:
-            _LOGGER.warning(
-                "SynoDSMCamera.camera_image(%s) - snapshot_quality:%s",
-                self.camera_data.name,
-                self.snapshot_quality,
-            )
-            result = await self._api.surveillance_station.get_camera_image(self.entity_description.key, self.snapshot_quality)  # type: ignore[no-any-return]
-            _LOGGER.warning(
-                "SynoDSMCamera.camera_image(%s) - result:%s",
-                self.camera_data.name,
-                result,
-            )
-            return result
+            return await self._api.surveillance_station.get_camera_image(self.entity_description.key, self.snapshot_quality)  # type: ignore[no-any-return]
         except (
             SynologyDSMAPIErrorException,
             SynologyDSMRequestException,

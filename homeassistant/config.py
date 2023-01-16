@@ -864,8 +864,8 @@ async def async_process_component_config(  # noqa: C901
         config_validator, "async_validate_config"
     ):
         try:
-            return await config_validator.async_validate_config(  # type: ignore[no-any-return]
-                hass, config
+            return (  # type: ignore[no-any-return]
+                await config_validator.async_validate_config(hass, config)
             )
         except (vol.Invalid, HomeAssistantError) as ex:
             async_log_exception(ex, domain, config, hass, integration.documentation)
