@@ -25,6 +25,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import ReolinkData
 from .const import DOMAIN
 from .entity import ReolinkCoordinatorEntity
+from .host import ReolinkHost
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,8 +36,8 @@ class ReolinkBinarySensorDescription(BinarySensorEntityDescription):
 
     icon: str = "mdi:motion-sensor"
     icon_off: str = "mdi:motion-sensor-off"
-    value: Callable = lambda host, ch: None
-    supported: Callable = lambda host, ch: True
+    value: Callable[[ReolinkHost, int], bool] = lambda host, ch: None
+    supported: Callable[[ReolinkHost, int], bool] = lambda host, ch: True
 
 
 BINARY_SENSORS = (
