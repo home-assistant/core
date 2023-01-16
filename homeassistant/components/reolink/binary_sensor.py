@@ -3,13 +3,13 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
 
 from reolink_aio.api import (
     FACE_DETECTION_TYPE,
     PERSON_DETECTION_TYPE,
     PET_DETECTION_TYPE,
     VEHICLE_DETECTION_TYPE,
+    Host,
 )
 
 from homeassistant.components.binary_sensor import (
@@ -25,29 +25,34 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import ReolinkData
 from .const import DOMAIN
 from .entity import ReolinkCoordinatorEntity
-from .host import ReolinkHost
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
-class ReolinkBinarySensorDescription(BinarySensorEntityDescription):
+class ReolinkBinarySensorEntityDescriptionMixin:
+    """Mixin values for Reolink binary sensor entities."""
+
+    value: Callable[[Host, int], bool]
+
+
+@dataclass
+class ReolinkBinarySensorEntityDescription(
+    BinarySensorEntityDescription, ReolinkBinarySensorEntityDescriptionMixin
+):
     """A class that describes binary sensor entities."""
 
     icon: str = "mdi:motion-sensor"
     icon_off: str = "mdi:motion-sensor-off"
-    value: Callable[[ReolinkHost, int | None], bool | None] = lambda host, ch: None
-    supported: Callable[[ReolinkHost, int | None], bool] = lambda host, ch: True
+    supported: Callable[[Host, int], bool] = lambda host, ch: True
 
 
 BINARY_SENSORS = (
-    ReolinkBinarySensorDescription(
+    ReolinkBinarySensorEntityDescription(
         key="motion",
         name="Motion",
         device_class=BinarySensorDeviceClass.MOTION,
-        value=lambda host, ch: host.api.motion_detected(ch),
+        value=lambda api, ch: api.motion_detected(ch),
     ),
-    ReolinkBinarySensorDescription(
+    ReolinkBinarySensorEntityDescription(
         key=FACE_DETECTION_TYPE,
         name=FACE_DETECTION_TYPE,
         icon="mdi:face-recognition",
