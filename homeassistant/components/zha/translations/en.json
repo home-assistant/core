@@ -87,6 +87,7 @@
             "default_light_transition": "Default light transition time (seconds)",
             "enable_identify_on_join": "Enable identify effect when devices join the network",
             "enhanced_light_transition": "Enable enhanced light color/temperature transition from an off-state",
+            "group_members_assume_state": "Group members assume state of group",
             "light_transitioning_flag": "Enable enhanced brightness slider during light transition",
             "title": "Global Options"
         }
