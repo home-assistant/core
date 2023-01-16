@@ -300,7 +300,7 @@ aiovlc==0.1.0
 aiowatttime==0.1.1
 
 # homeassistant.components.webostv
-aiowebostv==0.3.1
+aiowebostv==0.3.2
 
 # homeassistant.components.yandex_transport
 aioymaps==1.2.2
@@ -1017,9 +1017,6 @@ kiwiki-client==0.1.1
 # homeassistant.components.konnected
 konnected==1.2.0
 
-# homeassistant.components.kostal_plenticore
-kostal_plenticore==0.2.0
-
 # homeassistant.components.kraken
 krakenex==2.1.0
 
@@ -1713,6 +1710,9 @@ pykmtronic==0.3.0
 # homeassistant.components.kodi
 pykodi==0.2.7
 
+# homeassistant.components.kostal_plenticore
+pykoplenti==1.0.0
+
 # homeassistant.components.kraken
 pykrakenapi==0.1.8
 
@@ -2039,7 +2039,7 @@ python-gc100==1.0.3a0
 python-gitlab==1.6.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==1.4.0
+python-homewizard-energy==1.5.0
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.3
