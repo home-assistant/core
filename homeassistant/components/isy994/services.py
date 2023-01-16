@@ -323,7 +323,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         async_log_deprecated_service_call(
             hass,
             call=service,
-            alternate_service="isy994.reload",
+            alternate_service="homeassistant.reload_core_config",
             alternate_target=None,
             breaks_in_ha_version="2023.5.0",
         )
@@ -332,6 +332,13 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
 
     async def async_reload_config_entries(service: ServiceCall) -> None:
         """Trigger a reload of all ISY config entries."""
+        async_log_deprecated_service_call(
+            hass,
+            call=service,
+            alternate_service="homeassistant.reload_core_config",
+            alternate_target=None,
+            breaks_in_ha_version="2023.5.0",
+        )
         for config_entry_id in hass.data[DOMAIN]:
             hass.async_create_task(hass.config_entries.async_reload(config_entry_id))
 
