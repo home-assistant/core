@@ -1,6 +1,7 @@
 {
   "domain": "eufylife_ble",
   "name": "EufyLife",
+  "integration_type": "device",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/eufylife_ble",
   "bluetooth": [
