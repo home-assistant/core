@@ -94,7 +94,7 @@ class ISYNodeEntity(ISYEntity):
     ) -> None:
         """Initialize the ISY/IoX node entity."""
         super().__init__(node, device_info=device_info)
-        if node.address == node.primary_node:
+        if hasattr(node, "parent_node") and node.parent_node is None:
             self._attr_has_entity_name = True
             self._attr_name = None
 
