@@ -10,7 +10,8 @@ import re
 
 from huawei_lte_api.enums.net import NetworkModeEnum
 
-from homeassistant.components.sensor import (
+from homeassistant.components.sensor import (  # pylint: disable=hass-deprecated-import # no other way to look up supported units besides DEVICE_CLASS_UNITS?
+    DEVICE_CLASS_UNITS,
     DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
@@ -118,6 +119,9 @@ class HuaweiSensorEntityDescription(SensorEntityDescription):
 
     format_fn: Callable[[str], tuple[StateType, str | None]] = format_default
     icon_fn: Callable[[StateType], str] | None = None
+    device_class_fn: Callable[
+        [StateType, str | None], SensorDeviceClass | None
+    ] | None = None
     last_reset_item: str | None = None
     last_reset_format_fn: Callable[[str | None], datetime | None] | None = None
 
@@ -351,10 +355,17 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
             "txpower": HuaweiSensorEntityDescription(
                 key="txpower",
                 name="Transmit power",
-                # This is state_class=SensorDeviceClass.SIGNAL_STRENGTH by nature,
-                # but the value tends to consist of several, e.g.
+                # The value we get from the API tends to consist of several, e.g.
                 #     PPusch:15dBm PPucch:2dBm PSrs:42dBm PPrach:1dBm
-                # SIGNAL_STRENGTH would assume one in dB or dBm.
+                # Present as SIGNAL_STRENGTH only if it was parsed to a number
+                # with compatible unit. We could try to parse this to separate
+                # component sensors sometime.
+                device_class_fn=lambda value, unit: (
+                    SensorDeviceClass.SIGNAL_STRENGTH
+                    if isinstance(value, (float, int))
+                    and unit in DEVICE_CLASS_UNITS[SensorDeviceClass.SIGNAL_STRENGTH]
+                    else None
+                ),
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
             "ul_mcs": HuaweiSensorEntityDescription(
@@ -746,6 +757,17 @@ class HuaweiLteSensor(HuaweiLteBaseEntityWithDevice, SensorEntity):
         if self.entity_description.icon_fn:
             return self.entity_description.icon_fn(self.state)
         return self.entity_description.icon
+
+    @property
+    def device_class(self) -> SensorDeviceClass | None:
+        """Return device class for sensor."""
+        if self.entity_description.device_class_fn:
+            return self.entity_description.device_class_fn(
+                # Note: self.state and/or self.unit_of_measurement could infloop here.
+                self.native_value,
+                self.native_unit_of_measurement,
+            )
+        return self.entity_description.device_class
 
     @property
     def last_reset(self) -> datetime | None:
