@@ -398,7 +398,11 @@ def get_full_significant_states_with_session(
     significant_changes_only: bool = True,
     no_attributes: bool = False,
 ) -> MutableMapping[str, list[State]]:
-    """Variant of get_significant_states_with_session that does not return minimal responses."""
+    """Variant of get_significant_states_with_session.
+
+    Difference with get_significant_states_with_session is that it does not
+    return minimal responses.
+    """
     return cast(
         MutableMapping[str, list[State]],
         get_significant_states_with_session(
