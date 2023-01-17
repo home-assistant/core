@@ -6,6 +6,6 @@
   "config_flow": true,
   "codeowners": ["@vaskivskyi"],
   "iot_class": "local_polling",
-  "requirements": ["asusrouter==0.18.1"],
+  "requirements": ["asusrouter==0.18.2"],
   "loggers": ["asusrouter"]
 }
