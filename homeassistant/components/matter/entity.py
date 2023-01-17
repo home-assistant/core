@@ -113,7 +113,7 @@ class MatterEntity(Entity):
 
     @callback
     def get_matter_attribute(self, attribute: type) -> MatterAttribute | None:
-        """Lookup MatterAttribute instance on device instance by providing the attribute class."""
+        """Lookup MatterAttribute on device by providing the attribute class."""
         return next(
             (
                 x
