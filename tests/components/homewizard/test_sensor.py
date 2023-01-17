@@ -15,6 +15,7 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
+    ATTR_OPTIONS,
     ATTR_UNIT_OF_MEASUREMENT,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -181,6 +182,7 @@ async def test_sensor_entity_active_tariff(
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
     assert state.attributes.get(ATTR_ICON) == "mdi:calendar-clock"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENUM
+    assert state.attributes.get(ATTR_OPTIONS) == ["1", "2", "3", "4"]
 
 
 async def test_sensor_entity_wifi_strength(
