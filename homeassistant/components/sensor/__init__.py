@@ -501,7 +501,7 @@ class SensorEntity(Entity):
                     f"Sensor {self.entity_id} is providing enum options, but {reason}"
                 )
 
-            if (options := self.options) and value not in options:
+            if (options := self.options) and str(value) not in options:
                 raise ValueError(
                     f"Sensor {self.entity_id} provides state value '{value}', "
                     "which is not in the list of options provided"
