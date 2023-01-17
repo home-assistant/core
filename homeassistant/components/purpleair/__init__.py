@@ -1,6 +1,9 @@
 """The PurpleAir integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
+from typing import Any
+
 from aiopurpleair.models.sensors import SensorModel
 
 from homeassistant.config_entries import ConfigEntry
@@ -9,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import CONF_SHOW_ON_MAP, DOMAIN
 from .coordinator import PurpleAirDataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
@@ -55,6 +58,7 @@ class PurpleAirEntity(CoordinatorEntity[PurpleAirDataUpdateCoordinator]):
         """Initialize."""
         super().__init__(coordinator)
 
+        self._entry = entry
         self._sensor_index = sensor_index
 
         self._attr_device_info = DeviceInfo(
@@ -70,6 +74,23 @@ class PurpleAirEntity(CoordinatorEntity[PurpleAirDataUpdateCoordinator]):
             ATTR_LATITUDE: self.sensor_data.latitude,
             ATTR_LONGITUDE: self.sensor_data.longitude,
         }
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any]:
+        """Return entity specific state attributes."""
+        attrs = {}
+
+        # Displaying the geography on the map relies upon putting the latitude/longitude
+        # in the entity attributes with "latitude" and "longitude" as the keys.
+        # Conversely, we can hide the location on the map by using other keys, like
+        # "lati" and "long".
+        if self._entry.options.get(CONF_SHOW_ON_MAP):
+            attrs[ATTR_LATITUDE] = self.sensor_data.latitude
+            attrs[ATTR_LONGITUDE] = self.sensor_data.longitude
+        else:
+            attrs["lati"] = self.sensor_data.latitude
+            attrs["long"] = self.sensor_data.longitude
+        return attrs
 
     @property
     def sensor_data(self) -> SensorModel:
