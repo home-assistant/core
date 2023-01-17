@@ -4,6 +4,7 @@ from datetime import datetime
 from unittest.mock import patch
 
 import pytest
+from renault_api.exceptions import RenaultException
 from renault_api.kamereon import schemas
 from renault_api.kamereon.models import ChargeSchedule
 
@@ -27,6 +28,7 @@ from homeassistant.const import (
     ATTR_SW_VERSION,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
 from .const import MOCK_VEHICLES
@@ -89,15 +91,12 @@ async def test_service_set_ac_cancel(
 
     with patch(
         "renault_api.renault_vehicle.RenaultVehicle.set_ac_stop",
-        return_value=(
-            schemas.KamereonVehicleHvacStartActionDataSchema.loads(
-                load_fixture("renault/action.set_ac_stop.json")
-            )
-        ),
+        side_effect=RenaultException("Didn't work"),
     ) as mock_action:
-        await hass.services.async_call(
-            DOMAIN, SERVICE_AC_CANCEL, service_data=data, blocking=True
-        )
+        with pytest.raises(HomeAssistantError, match="Didn't work"):
+            await hass.services.async_call(
+                DOMAIN, SERVICE_AC_CANCEL, service_data=data, blocking=True
+            )
     assert len(mock_action.mock_calls) == 1
     assert mock_action.mock_calls[0][1] == ()
 
