@@ -7,6 +7,7 @@ from homewizard_energy.errors import DisabledError, RequestError
 from homewizard_energy.models import Data
 
 from homeassistant.components.sensor import (
+    ATTR_OPTIONS,
     ATTR_STATE_CLASS,
     SensorDeviceClass,
     SensorStateClass,
@@ -15,7 +16,6 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
-    ATTR_OPTIONS,
     ATTR_UNIT_OF_MEASUREMENT,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
