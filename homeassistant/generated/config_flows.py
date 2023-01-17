@@ -46,6 +46,7 @@ FLOWS = {
         "aranet",
         "arcam_fmj",
         "aseko_pool_live",
+        "asus_router",
         "asuswrt",
         "atag",
         "august",

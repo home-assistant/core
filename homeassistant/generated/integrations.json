@@ -415,6 +415,12 @@
         }
       }
     },
+    "asus_router": {
+      "name": "Asus Router",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "asuswrt": {
       "name": "ASUSWRT",
       "integration_type": "hub",

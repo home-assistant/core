@@ -1,0 +1,54 @@
+{
+    "config": {
+        "step": {
+            "find": {
+                "title": "Device location",
+                "description": "How to find your device",
+                "data": {
+                    "host": "Hostname / IP address"
+                }
+            },
+            "credentials": {
+                "title": "Credentials",
+                "description": "The same as for the device web panel",
+                "data": {
+                    "username": "Username",
+                    "password": "Password",
+                    "port": "Port (0 to use default value)",
+                    "ssl": "Use SSL connection"
+                }
+            }
+        },
+        "error": {
+            "cannot_resolve_host": "Cannot resolve hostname. Try with the IP address",
+            "connection_refused": "Connection refused",
+            "error": "Failed to connect",
+            "login_blocked": "Login is blocked by the device. Please, wait",
+            "password_missing": "Password is missing",
+            "unknown": "Unknown error",
+            "wrong_credentials": "Wrong credentials"
+        }
+    },
+    "options": {
+        "step": {
+            "credentials": {
+                "title": "Device settings",
+                "description": "Parameters to connect to the device",
+                "data": {
+                    "username": "Username",
+                    "password": "Password",
+                    "port": "Port (0 to use default value)",
+                    "ssl": "Use SSL connection"
+                }
+            }
+        },
+        "error": {
+            "connection_refused": "Connection refused",
+            "error": "Failed to connect",
+            "login_blocked": "Login is blocked by the device. Please, wait",
+            "not_confirmed": "You have to confirm",
+            "unknown": "Unknown error",
+            "wrong_credentials": "Wrong credentials"
+        }
+    }
+}

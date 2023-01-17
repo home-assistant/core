@@ -105,6 +105,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/arris_tg2492lg/ @vanbalken
 /homeassistant/components/aseko_pool_live/ @milanmeu
 /tests/components/aseko_pool_live/ @milanmeu
+/homeassistant/components/asus_router/ @vaskivskyi
+/tests/components/asus_router/ @vaskivskyi
 /homeassistant/components/asuswrt/ @kennedyshead @ollo69
 /tests/components/asuswrt/ @kennedyshead @ollo69
 /homeassistant/components/atag/ @MatsNL
