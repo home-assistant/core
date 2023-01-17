@@ -459,7 +459,7 @@ class SensorEntity(Entity):
 
     @final
     @property
-    def state(self) -> Any:
+    def state(self) -> Any:  # noqa: C901
         """Return the state of the sensor and perform unit conversions, if needed."""
         native_unit_of_measurement = self.native_unit_of_measurement
         unit_of_measurement = self.unit_of_measurement
@@ -570,12 +570,18 @@ class SensorEntity(Entity):
 
         numerical_value: int | float | Decimal | None = None
         numerical_conversion_failed = None
-        if not isinstance(value, (int, float, Decimal)):
-            try:
-                numerical_value = float(value)  # type:ignore[arg-type]
-            except (TypeError, ValueError):
-                numerical_conversion_failed = True
-        else:
+        if isinstance(value, str):
+            if "." in value:
+                try:
+                    numerical_value = float(value)
+                except (TypeError, ValueError):
+                    numerical_conversion_failed = True
+            else:
+                try:
+                    numerical_value = int(value)
+                except (TypeError, ValueError):
+                    numerical_conversion_failed = True
+        elif isinstance(value, (int, float, Decimal)):
             numerical_value = value
 
         if (
