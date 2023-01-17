@@ -120,6 +120,7 @@ FLOWS = {
         "epson",
         "escea",
         "esphome",
+        "eufylife_ble",
         "evil_genius_labs",
         "ezviz",
         "faa_delays",
