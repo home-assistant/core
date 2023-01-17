@@ -113,9 +113,12 @@ async def test_opening(hass):
     state = hass.states.get(OPENABLE_LOCK)
     assert state.state == STATE_UNLOCKED
     assert state.attributes == {
+        "changed_by": None,
+        "code_format": None,
         "is_jammed": False,
         "is_locked": False,
         "is_locking": False,
+        "is_unlocking": False,
         "friendly_name": "Openable Lock",
         "supported_features": LockEntityFeature.OPEN,
     }

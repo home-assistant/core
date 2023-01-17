@@ -40,7 +40,7 @@ ATTR_CHANGED_BY = "changed_by"
 ATTR_IS_JAMMED = "is_jammed"
 ATTR_IS_LOCKED = "is_locked"
 ATTR_IS_LOCKING = "is_locking"
-ATTR_UNLOCKING = "is_unlocking"
+ATTR_IS_UNLOCKING = "is_unlocking"
 
 DOMAIN = "lock"
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -68,6 +68,7 @@ PROP_TO_ATTR = {
     "is_jammed": ATTR_IS_JAMMED,
     "is_locked": ATTR_IS_LOCKED,
     "is_locking": ATTR_IS_LOCKING,
+    "is_unlocking": ATTR_IS_UNLOCKING,
 }
 
 # mypy: disallow-any-generics
@@ -182,11 +183,7 @@ class LockEntity(Entity):
     @property
     def state_attributes(self) -> dict[str, StateType]:
         """Return the state attributes."""
-        state_attr = {}
-        for prop, attr in PROP_TO_ATTR.items():
-            if (value := getattr(self, prop)) is not None:
-                state_attr[attr] = value
-        return state_attr
+        return {attr: getattr(self, prop) for prop, attr in PROP_TO_ATTR.items()}
 
     @final
     @property
