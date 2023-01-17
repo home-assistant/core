@@ -32,6 +32,11 @@ async def test_device_registry_single_node_device(
     )
     assert entry is not None
 
+    # test unique id present as additional identifier
+    assert (DOMAIN, "mock-onoff-light") in entry.identifiers
+    # test serial NOT added as additional identifier
+    assert (DOMAIN, "TEST_SN") not in entry.identifiers
+
     assert entry.name == "Mock OnOff Light"
     assert entry.manufacturer == "Nabu Casa"
     assert entry.model == "Mock Light"
