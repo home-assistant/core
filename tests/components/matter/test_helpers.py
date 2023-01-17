@@ -12,7 +12,7 @@ from .common import setup_integration_with_node_fixture
 async def test_get_device_id(
     hass: HomeAssistant,
     matter_client: MagicMock,
-):
+) -> None:
     """Test get_device_id."""
     node = await setup_integration_with_node_fixture(
         hass, "device_diagnostics", matter_client

@@ -44,7 +44,7 @@ def device_diagnostics_fixture() -> dict[str, Any]:
     return json.loads(load_fixture("nodes/device_diagnostics.json", DOMAIN))
 
 
-async def test_matter_attribute_redact(device_diagnostics: dict[str, Any]):
+async def test_matter_attribute_redact(device_diagnostics: dict[str, Any]) -> None:
     """Test the matter attribute redact helper."""
     assert device_diagnostics["attributes"]["0/40/6"]["value"] == "XX"
 
@@ -67,7 +67,7 @@ async def test_config_entry_diagnostics(
     integration: MockConfigEntry,
     config_entry_diagnostics: dict[str, Any],
     config_entry_diagnostics_redacted: dict[str, Any],
-):
+) -> None:
     """Test the config entry level diagnostics."""
     matter_client.get_diagnostics.return_value = dataclass_from_dict(
         ServerDiagnostics, config_entry_diagnostics
@@ -84,7 +84,7 @@ async def test_device_diagnostics(
     matter_client: MagicMock,
     config_entry_diagnostics: dict[str, Any],
     device_diagnostics: dict[str, Any],
-):
+) -> None:
     """Test the device diagnostics."""
     node = await setup_integration_with_node_fixture(
         hass, "device_diagnostics", matter_client
