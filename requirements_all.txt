@@ -678,6 +678,9 @@ esphome-dashboard-api==1.1
 # homeassistant.components.netgear_lte
 eternalegypt==0.0.12
 
+# homeassistant.components.eufylife_ble
+eufylife_ble_client==0.1.7
+
 # homeassistant.components.keyboard_remote
 # evdev==1.4.0
 
@@ -1970,7 +1973,7 @@ pysnmplib==5.0.20
 pysnooz==0.8.3
 
 # homeassistant.components.soma
-pysoma==0.0.10
+pysoma==0.0.12
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
@@ -2076,6 +2079,9 @@ python-mystrom==1.1.2
 
 # homeassistant.components.nest
 python-nest==4.2.0
+
+# homeassistant.components.otbr
+python-otbr-api==1.0.1
 
 # homeassistant.components.picnic
 python-picnic-api==1.1.0

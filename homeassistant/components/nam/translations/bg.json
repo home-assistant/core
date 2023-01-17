@@ -33,5 +33,15 @@
                 }
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "caqi_level": {
+                "state": {
+                    "very_high": "\u041c\u043d\u043e\u0433\u043e \u0432\u0438\u0441\u043e\u043a\u043e",
+                    "very_low": "\u041c\u043d\u043e\u0433\u043e \u043d\u0438\u0441\u043a\u043e"
+                }
+            }
+        }
     }
 }

@@ -351,6 +351,8 @@ omit =
     homeassistant/components/esphome/switch.py
     homeassistant/components/etherscan/sensor.py
     homeassistant/components/eufy/*
+    homeassistant/components/eufylife_ble/__init__.py
+    homeassistant/components/eufylife_ble/sensor.py
     homeassistant/components/everlights/light.py
     homeassistant/components/evohome/*
     homeassistant/components/ezviz/__init__.py

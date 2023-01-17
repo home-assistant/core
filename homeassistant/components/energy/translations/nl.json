@@ -1,5 +1,24 @@
 {
     "issues": {
+        "entity_negative_state": {
+            "description": "De volgende entiteiten hebben een negatieve status terwijl een positieve status wordt verwacht:",
+            "title": "Entiteit heeft een negatieve status"
+        },
+        "entity_not_defined": {
+            "title": "Entiteit niet gedefinieerd"
+        },
+        "entity_state_class_measurement_no_last_reset": {
+            "title": "Laatste reset ontbreekt"
+        },
+        "entity_state_non_numeric": {
+            "title": "Entiteit heeft een niet-numerieke status"
+        },
+        "entity_unavailable": {
+            "description": "De status van deze geconfigureerde entiteiten zijn momenteel niet beschikbaar:"
+        },
+        "entity_unexpected_device_class": {
+            "title": "Onverwachte apparaatklasse"
+        },
         "entity_unexpected_unit_energy": {
             "title": "Onverwachte meeteenheid"
         },

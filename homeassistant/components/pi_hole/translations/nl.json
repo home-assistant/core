@@ -18,6 +18,7 @@
                 "data": {
                     "api_key": "API-sleutel"
                 },
+                "description": "Voer een nieuwe API-sleutel in van Pi-Hole op {host}/{location}",
                 "title": "Pi-Hole-Integratie herauthenticeren"
             },
             "user": {

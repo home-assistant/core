@@ -25,7 +25,8 @@
             "cloud_project": {
                 "data": {
                     "cloud_project_id": "Google Cloud project-ID"
-                }
+                },
+                "title": "Nest: Voer Cloud Project ID in"
             },
             "init": {
                 "data": {
