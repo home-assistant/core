@@ -935,7 +935,7 @@ open-garage==0.2.0
 open-meteo==0.2.1
 
 # homeassistant.components.openerz
-openerz-api==0.1.0
+openerz-api==0.2.0
 
 # homeassistant.components.oralb
 oralb-ble==0.17.1
@@ -1064,7 +1064,7 @@ pyMetno==0.9.0
 pyRFXtrx==0.30.0
 
 # homeassistant.components.tibber
-pyTibber==0.26.8
+pyTibber==0.26.9
 
 # homeassistant.components.dlink
 pyW215==0.7.0
@@ -1832,7 +1832,7 @@ watchdog==2.2.1
 whirlpool-sixth-sense==0.18.2
 
 # homeassistant.components.whois
-whois==0.9.16
+whois==0.9.23
 
 # homeassistant.components.wiffi
 wiffi==1.1.0

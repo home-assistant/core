@@ -1269,7 +1269,7 @@ open-meteo==0.2.1
 # opencv-python-headless==4.6.0.66
 
 # homeassistant.components.openerz
-openerz-api==0.1.0
+openerz-api==0.2.0
 
 # homeassistant.components.openevse
 openevsewifi==1.1.2
@@ -1461,7 +1461,7 @@ pyRFXtrx==0.30.0
 pySwitchmate==0.5.1
 
 # homeassistant.components.tibber
-pyTibber==0.26.8
+pyTibber==0.26.9
 
 # homeassistant.components.dlink
 pyW215==0.7.0
@@ -2601,7 +2601,7 @@ webexteamssdk==1.1.1
 whirlpool-sixth-sense==0.18.2
 
 # homeassistant.components.whois
-whois==0.9.16
+whois==0.9.23
 
 # homeassistant.components.wiffi
 wiffi==1.1.0

@@ -266,12 +266,10 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle a discovered synology_dsm via ssdp."""
         parsed_url = urlparse(discovery_info.ssdp_location)
-        friendly_name = (
-            discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME].split("(", 1)[0].strip()
-        )
-        discovered_macs = [
-            format_synology_mac(discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL].upper())
-        ]
+        upnp_friendly_name: str = discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME]
+        friendly_name = upnp_friendly_name.split("(", 1)[0].strip()
+        mac_address = discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL]
+        discovered_macs = [format_synology_mac(mac_address)]
         # Synology NAS can broadcast on multiple IP addresses, since they can be connected to multiple ethernets.
         # The serial of the NAS is actually its MAC address.
         host = cast(str, parsed_url.hostname)
