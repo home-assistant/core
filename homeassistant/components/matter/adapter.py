@@ -108,10 +108,9 @@ class MatterAdapter:
         )
         identifiers = {(DOMAIN, node_unique_id)}
         # if available, we also add the uniqueID or serialnumber as identifier
-        # prefer uniqueID here because test devices may have "test" as serial number
         if basic_info.uniqueID:
             identifiers.add((DOMAIN, basic_info.uniqueID))
-        elif basic_info.serialNumber:
+        if basic_info.serialNumber and "test" not in basic_info.serialNumber.lower():
             identifiers.add((DOMAIN, basic_info.serialNumber))
 
         dr.async_get(self.hass).async_get_or_create(
