@@ -8,7 +8,7 @@
             "unknown": "Errore imprevisto"
         },
         "error": {
-            "auth_failed": "Autenticazione fallita",
+            "auth_failed": "Autenticazione non riuscita: {error_detail}",
             "encryption_key_invalid": "L'ID chiave o la chiave crittografica non sono validi",
             "key_id_invalid": "L'ID chiave o la chiave crittografica non sono validi",
             "one": "Vuoto",
@@ -24,7 +24,14 @@
                     "password": "Password",
                     "username": "Nome utente"
                 },
-                "description": "Fornisci il nome utente e la password dell'app SwitchBot. Questi dati non verranno salvati e utilizzati solo per recuperare la chiave crittografica delle serrature."
+                "description": "Fornisci il nome utente e la password dell'app SwitchBot. Questi dati non verranno salvati e utilizzati solo per recuperare la chiave crittografica delle serrature. I nomi utente e le password fanno distinzione tra maiuscole e minuscole."
+            },
+            "lock_choose_method": {
+                "description": "Una serratura SwitchBot pu\u00f2 essere impostata in Home Assistant in due modi diversi.\n\n\u00c8 possibile inserire personalmente l'id della chiave e la chiave di crittografia, oppure Home Assistant pu\u00f2 importarli dall'account SwitchBot.",
+                "menu_options": {
+                    "lock_auth": "Account SwitchBot (consigliato)",
+                    "lock_key": "Inserire manualmente la chiave di crittografia della serratura"
+                }
             },
             "lock_chose_method": {
                 "description": "Scegli il metodo di configurazione, i dettagli possono essere trovati nella documentazione.",

@@ -17,6 +17,7 @@ from zigpy.application import ControllerApplication
 from zigpy.config import CONF_DEVICE
 import zigpy.device
 import zigpy.endpoint
+import zigpy.exceptions
 import zigpy.group
 from zigpy.types.named import EUI64
 
@@ -24,6 +25,7 @@ from homeassistant import __path__ as HOMEASSISTANT_PATH
 from homeassistant.components.system_log import LogEntry, _figure_out_source
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo
@@ -172,6 +174,8 @@ class ZHAGateway:
                 self.application_controller = await app_controller_cls.new(
                     app_config, auto_form=True, start_radio=True
                 )
+            except zigpy.exceptions.TransientConnectionError as exc:
+                raise ConfigEntryNotReady from exc
             except Exception as exc:  # pylint: disable=broad-except
                 _LOGGER.warning(
                     "Couldn't start %s coordinator (attempt %s of %s)",

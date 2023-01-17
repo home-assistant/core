@@ -9,25 +9,15 @@ from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.components.webostv.const import CONF_SOURCES, DOMAIN, LIVE_TV_APP_ID
 from homeassistant.config_entries import SOURCE_SSDP
-from homeassistant.const import (
-    CONF_CLIENT_SECRET,
-    CONF_HOST,
-    CONF_ICON,
-    CONF_NAME,
-    CONF_SOURCE,
-    CONF_UNIQUE_ID,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_SOURCE
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import setup_webostv
-from .const import CLIENT_KEY, FAKE_UUID, HOST, MOCK_APPS, MOCK_INPUTS, TV_NAME
+from .const import FAKE_UUID, HOST, MOCK_APPS, MOCK_INPUTS, TV_NAME
 
-MOCK_YAML_CONFIG = {
+MOCK_USER_CONFIG = {
     CONF_HOST: HOST,
     CONF_NAME: TV_NAME,
-    CONF_ICON: "mdi:test",
-    CONF_CLIENT_SECRET: CLIENT_KEY,
-    CONF_UNIQUE_ID: FAKE_UUID,
 }
 
 MOCK_DISCOVERY_INFO = ssdp.SsdpServiceInfo(
@@ -57,7 +47,7 @@ async def test_form(hass, client):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={CONF_SOURCE: config_entries.SOURCE_USER},
-        data=MOCK_YAML_CONFIG,
+        data=MOCK_USER_CONFIG,
     )
     await hass.async_block_till_done()
 
@@ -67,7 +57,7 @@ async def test_form(hass, client):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={CONF_SOURCE: config_entries.SOURCE_USER},
-        data=MOCK_YAML_CONFIG,
+        data=MOCK_USER_CONFIG,
     )
     await hass.async_block_till_done()
 
@@ -141,7 +131,7 @@ async def test_form_cannot_connect(hass, client):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={CONF_SOURCE: config_entries.SOURCE_USER},
-        data=MOCK_YAML_CONFIG,
+        data=MOCK_USER_CONFIG,
     )
 
     client.connect = Mock(side_effect=ConnectionRefusedError())
@@ -159,7 +149,7 @@ async def test_form_pairexception(hass, client):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={CONF_SOURCE: config_entries.SOURCE_USER},
-        data=MOCK_YAML_CONFIG,
+        data=MOCK_USER_CONFIG,
     )
 
     client.connect = Mock(side_effect=WebOsTvPairError("error"))
@@ -180,7 +170,7 @@ async def test_entry_already_configured(hass, client):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={CONF_SOURCE: config_entries.SOURCE_USER},
-        data=MOCK_YAML_CONFIG,
+        data=MOCK_USER_CONFIG,
     )
 
     assert result["type"] == FlowResultType.ABORT
@@ -208,7 +198,7 @@ async def test_ssdp_in_progress(hass, client):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={CONF_SOURCE: config_entries.SOURCE_USER},
-        data=MOCK_YAML_CONFIG,
+        data=MOCK_USER_CONFIG,
     )
     await hass.async_block_till_done()
 

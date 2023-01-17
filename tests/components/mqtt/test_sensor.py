@@ -12,9 +12,8 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
     Platform,
+    UnitOfTemperature,
 )
 import homeassistant.core as ha
 from homeassistant.helpers import device_registry as dr
@@ -689,6 +688,11 @@ async def test_valid_device_class(hass, mqtt_mock_entry_with_yaml_config):
                         "device_class": "temperature",
                     },
                     {"name": "Test 2", "state_topic": "test-topic"},
+                    {
+                        "name": "Test 3",
+                        "state_topic": "test-topic",
+                        "device_class": None,
+                    },
                 ]
             }
         },
@@ -699,6 +703,8 @@ async def test_valid_device_class(hass, mqtt_mock_entry_with_yaml_config):
     state = hass.states.get("sensor.test_1")
     assert state.attributes["device_class"] == "temperature"
     state = hass.states.get("sensor.test_2")
+    assert "device_class" not in state.attributes
+    state = hass.states.get("sensor.test_3")
     assert "device_class" not in state.attributes
 
 
@@ -738,6 +744,11 @@ async def test_valid_state_class(hass, mqtt_mock_entry_with_yaml_config):
                         "state_class": "measurement",
                     },
                     {"name": "Test 2", "state_topic": "test-topic"},
+                    {
+                        "name": "Test 3",
+                        "state_topic": "test-topic",
+                        "state_class": None,
+                    },
                 ]
             }
         },
@@ -748,6 +759,8 @@ async def test_valid_state_class(hass, mqtt_mock_entry_with_yaml_config):
     state = hass.states.get("sensor.test_1")
     assert state.attributes["state_class"] == "measurement"
     state = hass.states.get("sensor.test_2")
+    assert "state_class" not in state.attributes
+    state = hass.states.get("sensor.test_3")
     assert "state_class" not in state.attributes
 
 
@@ -1113,14 +1126,14 @@ async def test_cleanup_triggers_and_restoring_state(
     config1["expire_after"] = 30
     config1["state_topic"] = "test-topic1"
     config1["device_class"] = "temperature"
-    config1["unit_of_measurement"] = TEMP_FAHRENHEIT
+    config1["unit_of_measurement"] = UnitOfTemperature.FAHRENHEIT.value
 
     config2 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][domain])
     config2["name"] = "test2"
     config2["expire_after"] = 5
     config2["state_topic"] = "test-topic2"
     config2["device_class"] = "temperature"
-    config2["unit_of_measurement"] = TEMP_CELSIUS
+    config2["unit_of_measurement"] = UnitOfTemperature.CELSIUS.value
 
     freezer.move_to("2022-02-02 12:01:00+01:00")
 

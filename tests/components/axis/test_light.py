@@ -14,10 +14,10 @@ from homeassistant.const import (
 )
 from homeassistant.setup import async_setup_component
 
+from .conftest import NAME
 from .test_device import (
     API_DISCOVERY_RESPONSE,
     LIGHT_CONTROL_RESPONSE,
-    NAME,
     setup_axis_integration,
 )
 
@@ -37,15 +37,15 @@ async def test_platform_manually_configured(hass):
     assert AXIS_DOMAIN not in hass.data
 
 
-async def test_no_lights(hass):
+async def test_no_lights(hass, config_entry):
     """Test that no light events in Axis results in no light entities."""
-    await setup_axis_integration(hass)
+    await setup_axis_integration(hass, config_entry)
 
     assert not hass.states.async_entity_ids(LIGHT_DOMAIN)
 
 
 async def test_no_light_entity_without_light_control_representation(
-    hass, mock_rtsp_event
+    hass, config_entry, mock_rtsp_event
 ):
     """Verify no lights entities get created without light control representation."""
     api_discovery = deepcopy(API_DISCOVERY_RESPONSE)
@@ -57,7 +57,7 @@ async def test_no_light_entity_without_light_control_representation(
     with patch.dict(API_DISCOVERY_RESPONSE, api_discovery), patch.dict(
         LIGHT_CONTROL_RESPONSE, light_control
     ):
-        await setup_axis_integration(hass)
+        await setup_axis_integration(hass, config_entry)
 
     mock_rtsp_event(
         topic="tns1:Device/tnsaxis:Light/Status",
@@ -71,20 +71,20 @@ async def test_no_light_entity_without_light_control_representation(
     assert not hass.states.async_entity_ids(LIGHT_DOMAIN)
 
 
-async def test_lights(hass, mock_rtsp_event):
+async def test_lights(hass, config_entry, mock_rtsp_event):
     """Test that lights are loaded properly."""
     api_discovery = deepcopy(API_DISCOVERY_RESPONSE)
     api_discovery["data"]["apiList"].append(API_DISCOVERY_LIGHT_CONTROL)
 
     with patch.dict(API_DISCOVERY_RESPONSE, api_discovery):
-        await setup_axis_integration(hass)
+        await setup_axis_integration(hass, config_entry)
 
     # Add light
     with patch(
-        "axis.light_control.LightControl.get_current_intensity",
+        "axis.vapix.interfaces.light_control.LightControl.get_current_intensity",
         return_value={"data": {"intensity": 100}},
     ), patch(
-        "axis.light_control.LightControl.get_valid_intensity",
+        "axis.vapix.interfaces.light_control.LightControl.get_valid_intensity",
         return_value={"data": {"ranges": [{"high": 150}]}},
     ):
         mock_rtsp_event(
@@ -106,11 +106,11 @@ async def test_lights(hass, mock_rtsp_event):
 
     # Turn on, set brightness, light already on
     with patch(
-        "axis.light_control.LightControl.activate_light"
+        "axis.vapix.interfaces.light_control.LightControl.activate_light"
     ) as mock_activate, patch(
-        "axis.light_control.LightControl.set_manual_intensity"
+        "axis.vapix.interfaces.light_control.LightControl.set_manual_intensity"
     ) as mock_set_intensity, patch(
-        "axis.light_control.LightControl.get_current_intensity",
+        "axis.vapix.interfaces.light_control.LightControl.get_current_intensity",
         return_value={"data": {"intensity": 100}},
     ):
         await hass.services.async_call(
@@ -124,9 +124,9 @@ async def test_lights(hass, mock_rtsp_event):
 
     # Turn off
     with patch(
-        "axis.light_control.LightControl.deactivate_light"
+        "axis.vapix.interfaces.light_control.LightControl.deactivate_light"
     ) as mock_deactivate, patch(
-        "axis.light_control.LightControl.get_current_intensity",
+        "axis.vapix.interfaces.light_control.LightControl.get_current_intensity",
         return_value={"data": {"intensity": 100}},
     ):
         await hass.services.async_call(
@@ -152,11 +152,11 @@ async def test_lights(hass, mock_rtsp_event):
 
     # Turn on, set brightness
     with patch(
-        "axis.light_control.LightControl.activate_light"
+        "axis.vapix.interfaces.light_control.LightControl.activate_light"
     ) as mock_activate, patch(
-        "axis.light_control.LightControl.set_manual_intensity"
+        "axis.vapix.interfaces.light_control.LightControl.set_manual_intensity"
     ) as mock_set_intensity, patch(
-        "axis.light_control.LightControl.get_current_intensity",
+        "axis.vapix.interfaces.light_control.LightControl.get_current_intensity",
         return_value={"data": {"intensity": 100}},
     ):
         await hass.services.async_call(
@@ -170,9 +170,9 @@ async def test_lights(hass, mock_rtsp_event):
 
     # Turn off, light already off
     with patch(
-        "axis.light_control.LightControl.deactivate_light"
+        "axis.vapix.interfaces.light_control.LightControl.deactivate_light"
     ) as mock_deactivate, patch(
-        "axis.light_control.LightControl.get_current_intensity",
+        "axis.vapix.interfaces.light_control.LightControl.get_current_intensity",
         return_value={"data": {"intensity": 100}},
     ):
         await hass.services.async_call(

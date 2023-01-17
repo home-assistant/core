@@ -31,5 +31,16 @@
       "parse_error": "Failed to parse response from printer.",
       "unique_id_required": "Device missing unique identification required for discovery."
     }
+  },
+  "entity": {
+    "sensor": {
+      "printer": {
+        "state": {
+          "printing": "Printing",
+          "idle": "Idle",
+          "stopped": "Stopped"
+        }
+      }
+    }
   }
 }

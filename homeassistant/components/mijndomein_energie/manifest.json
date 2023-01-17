@@ -1,0 +1,6 @@
+{
+  "domain": "mijndomein_energie",
+  "name": "Mijndomein Energie",
+  "integration_type": "virtual",
+  "supported_by": "energyzero"
+}

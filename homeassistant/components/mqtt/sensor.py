@@ -98,13 +98,13 @@ def validate_options(conf: ConfigType) -> ConfigType:
 
 _PLATFORM_SCHEMA_BASE = MQTT_RO_SCHEMA.extend(
     {
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_DEVICE_CLASS): vol.Any(DEVICE_CLASSES_SCHEMA, None),
         vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
         vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
         vol.Optional(CONF_LAST_RESET_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_LAST_RESET_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
+        vol.Optional(CONF_STATE_CLASS): vol.Any(STATE_CLASSES_SCHEMA, None),
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
@@ -114,7 +114,8 @@ PLATFORM_SCHEMA_MODERN = vol.All(
     validate_options,
 )
 
-# Configuring MQTT Sensors under the sensor platform key was deprecated in HA Core 2022.6
+# Configuring MQTT Sensors under the sensor platform key was deprecated in
+# HA Core 2022.6
 PLATFORM_SCHEMA = vol.All(
     warn_for_legacy_schema(sensor.DOMAIN),
 )
@@ -131,7 +132,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT sensor through configuration.yaml and dynamically through MQTT discovery."""
+    """Set up MQTT sensor through YAML and through MQTT discovery."""
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -248,7 +249,8 @@ class MqttSensor(MqttEntity, RestoreSensor):
         def _update_state(msg: ReceiveMessage) -> None:
             # auto-expire enabled?
             if self._expire_after is not None and self._expire_after > 0:
-                # When self._expire_after is set, and we receive a message, assume device is not expired since it has to be to receive the message
+                # When self._expire_after is set, and we receive a message, assume
+                # device is not expired since it has to be to receive the message
                 self._expired = False
 
                 # Reset old trigger

@@ -8,7 +8,7 @@ import functools
 import logging
 import os
 import time
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, NoReturn, TypeVar
 
 from awesomeversion import (
     AwesomeVersion,
@@ -225,7 +225,7 @@ def validate_or_move_away_sqlite_database(dburl: str) -> bool:
 
 def dburl_to_path(dburl: str) -> str:
     """Convert the db url into a filesystem path."""
-    return dburl[len(SQLITE_URL_PREFIX) :]
+    return dburl.removeprefix(SQLITE_URL_PREFIX)
 
 
 def last_run_was_recently_clean(cursor: CursorFetchStrategy) -> bool:
@@ -341,7 +341,7 @@ def query_on_connection(dbapi_connection: Any, statement: str) -> Any:
     return result
 
 
-def _fail_unsupported_dialect(dialect_name: str) -> None:
+def _fail_unsupported_dialect(dialect_name: str) -> NoReturn:
     """Warn about unsupported database version."""
     _LOGGER.error(
         (
@@ -357,7 +357,7 @@ def _fail_unsupported_dialect(dialect_name: str) -> None:
 
 def _fail_unsupported_version(
     server_version: str, dialect_name: str, minimum_version: str
-) -> None:
+) -> NoReturn:
     """Warn about unsupported database version."""
     _LOGGER.error(
         (

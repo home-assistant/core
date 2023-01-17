@@ -7,12 +7,20 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ScreenlogicEntity
 from .const import DOMAIN
 
 SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS = {DEVICE_TYPE.ALARM: BinarySensorDeviceClass.PROBLEM}
+
+SUPPORTED_CONFIG_BINARY_SENSORS = (
+    "freeze_mode",
+    "pool_delay",
+    "spa_delay",
+    "cleaner_delay",
+)
 
 
 async def async_setup_entry(
@@ -26,6 +34,14 @@ async def async_setup_entry(
 
     # Generic binary sensor
     entities.append(ScreenLogicBinarySensor(coordinator, "chem_alarm"))
+
+    entities.extend(
+        [
+            ScreenlogicConfigBinarySensor(coordinator, cfg_sensor)
+            for cfg_sensor in coordinator.data[SL_DATA.KEY_CONFIG]
+            if cfg_sensor in SUPPORTED_CONFIG_BINARY_SENSORS
+        ]
+    )
 
     if (
         coordinator.data[SL_DATA.KEY_CONFIG]["equipment_flags"]
@@ -64,10 +80,13 @@ async def async_setup_entry(
 class ScreenLogicBinarySensor(ScreenlogicEntity, BinarySensorEntity):
     """Representation of the basic ScreenLogic binary sensor entity."""
 
+    _attr_has_entity_name = True
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
     @property
     def name(self):
         """Return the sensor name."""
-        return f"{self.gateway_name} {self.sensor['name']}"
+        return self.sensor["name"]
 
     @property
     def device_class(self):
@@ -115,3 +134,12 @@ class ScreenlogicSCGBinarySensor(ScreenLogicBinarySensor):
     def sensor(self):
         """Shortcut to access the sensor data."""
         return self.coordinator.data[SL_DATA.KEY_SCG][self._data_key]
+
+
+class ScreenlogicConfigBinarySensor(ScreenLogicBinarySensor):
+    """Representation of a ScreenLogic config data binary sensor entity."""
+
+    @property
+    def sensor(self):
+        """Shortcut to access the sensor data."""
+        return self.coordinator.data[SL_DATA.KEY_CONFIG][self._data_key]

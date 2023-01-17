@@ -206,7 +206,7 @@ class UniFiController:
                 """Create UniFi entity."""
                 if not description.allowed_fn(
                     self, obj_id
-                ) or not description.supported_fn(self.api, obj_id):
+                ) or not description.supported_fn(self, obj_id):
                     return
 
                 entity = unifi_platform_entity(obj_id, self, description)
