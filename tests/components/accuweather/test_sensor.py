@@ -60,7 +60,7 @@ async def test_sensor_without_forecast(hass):
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfLength.MILLIMETERS
     assert state.attributes.get(ATTR_ICON) is None
     assert state.attributes.get("type") is None
-    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL_INCREASING
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PRECIPITATION
 
     entry = registry.async_get("sensor.home_precipitation")
