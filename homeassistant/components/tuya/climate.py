@@ -76,7 +76,7 @@ CLIMATE_DESCRIPTIONS: dict[str, TuyaClimateEntityDescription] = {
     # https://developer.tuya.com/en/docs/iot/f?id=K9gf45ld5l0t9
     "wk": TuyaClimateEntityDescription(
         key="wk",
-        switch_only_hvac_mode=HVACMode.HEAT_COOL,
+        switch_only_hvac_mode=HVACMode.HEAT,
     ),
     # Thermostatic Radiator Valve
     # Not documented
@@ -200,8 +200,8 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         # it to define min, max & step temperatures
         if self._set_temperature:
             self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
-            self._attr_max_temp = self._set_temperature.max_scaled
-            self._attr_min_temp = self._set_temperature.min_scaled
+            self._attr_max_temp = self._set_temperature.max_scaled * 5
+            self._attr_min_temp = self._set_temperature.min_scaled * 5
             self._attr_target_temperature_step = self._set_temperature.step_scaled
 
         # Determine HVAC modes
@@ -396,7 +396,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         temperature = self.device.status.get(self._set_temperature.dpcode)
         if temperature is None:
             return None
-
+        temperature = temperature * 5
         return self._set_temperature.scale_value(temperature)
 
     @property
