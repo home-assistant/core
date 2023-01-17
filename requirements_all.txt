@@ -913,7 +913,7 @@ home-assistant-intents==0.0.1
 homeconnect==0.7.2
 
 # homeassistant.components.homely
-homelypy==0.0.10
+homelypy==0.0.11
 
 # homeassistant.components.homematicip_cloud
 homematicip==1.0.13
