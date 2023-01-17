@@ -91,10 +91,7 @@ class MatterAdapter:
     ) -> None:
         """Create a device registry entry."""
         server_info = cast(ServerInfo, self.matter_client.server_info)
-        node_unique_id = get_device_id(
-            server_info,
-            node_device,
-        )
+
         basic_info = node_device.device_info()
         device_type_instances = node_device.device_type_instances()
 
@@ -103,16 +100,24 @@ class MatterAdapter:
             # fallback name for Bridge
             name = "Hub device"
         elif not name and device_type_instances:
-            # fallback name based on device type
-            name = (
-                f"{device_type_instances[0].device_type.__doc__[:-1]}"
-                f" {node_device.node().node_id}"
-            )
+            # use the productName if no node label is present
+            name = basic_info.productName
+        node_unique_id = get_device_id(
+            server_info,
+            node_device,
+        )
+        identifiers = {(DOMAIN, node_unique_id)}
+        # if available, we also add the uniqueID or serialnumber as identifier
+        # prefer uniqueID here because test devices may have "test" as serial number
+        if basic_info.uniqueID:
+            identifiers.add((DOMAIN, basic_info.uniqueID))
+        elif basic_info.serialNumber:
+            identifiers.add((DOMAIN, basic_info.serialNumber))
 
         dr.async_get(self.hass).async_get_or_create(
             name=name,
             config_entry_id=self.config_entry.entry_id,
-            identifiers={(DOMAIN, node_unique_id)},
+            identifiers=identifiers,
             hw_version=basic_info.hardwareVersionString,
             sw_version=basic_info.softwareVersionString,
             manufacturer=basic_info.vendorName,
