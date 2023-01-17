@@ -83,7 +83,7 @@ class PurpleAirEntity(CoordinatorEntity[PurpleAirDataUpdateCoordinator]):
         # Displaying the geography on the map relies upon putting the latitude/longitude
         # in the entity attributes with "latitude" and "longitude" as the keys.
         # Conversely, we can hide the location on the map by using other keys, like
-        # "lati" and "long".
+        # "lati" and "long":
         if self._entry.options.get(CONF_SHOW_ON_MAP):
             attrs[ATTR_LATITUDE] = self.sensor_data.latitude
             attrs[ATTR_LONGITUDE] = self.sensor_data.longitude
