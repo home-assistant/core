@@ -109,8 +109,6 @@ ABBREVIATIONS = {
     "mode_stat_t": "mode_state_topic",
     "mode_stat_tpl": "mode_state_template",
     "modes": "modes",
-    "mot_stat_t": "motor_state_topic",
-    "mot_val_tmp": "motor_value_template",
     "name": "name",
     "obj_id": "object_id",
     "off_dly": "off_delay",
