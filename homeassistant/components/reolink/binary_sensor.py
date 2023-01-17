@@ -108,7 +108,7 @@ async def async_setup_entry(
     entities = []
     for channel in host.api.channels:
         for entity_description in BINARY_SENSORS:
-            if not entity_description.supported(host, channel):
+            if not entity_description.supported(host.api, channel):
                 continue
 
             entities.append(
