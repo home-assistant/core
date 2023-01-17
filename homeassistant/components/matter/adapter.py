@@ -102,16 +102,15 @@ class MatterAdapter:
         elif not name and device_type_instances:
             # use the productName if no node label is present
             name = basic_info.productName
-        node_unique_id = get_device_id(
+        node_device_id = get_device_id(
             server_info,
             node_device,
         )
-        identifiers = {(DOMAIN, node_unique_id)}
-        # if available, we also add the uniqueID or serialnumber as identifier
-        if basic_info.uniqueID:
-            identifiers.add((DOMAIN, basic_info.uniqueID))
+        identifiers = {(DOMAIN, node_device_id)}
+        # if available, we also add the serialnumber as identifier
         if basic_info.serialNumber and "test" not in basic_info.serialNumber.lower():
-            identifiers.add((DOMAIN, basic_info.serialNumber))
+            # prefix identifier with 'serial_' to be able to filter it
+            identifiers.add((DOMAIN, f"serial_{basic_info.serialNumber}"))
 
         dr.async_get(self.hass).async_get_or_create(
             name=name,
