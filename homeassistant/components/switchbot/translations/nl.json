@@ -37,6 +37,11 @@
                 "data": {
                     "password": "Wachtwoord"
                 }
+            },
+            "user": {
+                "data": {
+                    "address": "Apparaatadres"
+                }
             }
         }
     },

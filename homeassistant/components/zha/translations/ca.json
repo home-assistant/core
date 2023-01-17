@@ -87,6 +87,7 @@
             "default_light_transition": "Temps de transici\u00f3 predeterminat (segons)",
             "enable_identify_on_join": "Activa l'efecte d'identificaci\u00f3 quan els dispositius s'uneixin a la xarxa",
             "enhanced_light_transition": "Activa la transici\u00f3 millorada de color/temperatura de llum des de l'estat apagat",
+            "group_members_assume_state": "Els membres del grup assumeixen l'estat del grup",
             "light_transitioning_flag": "Activa el control lliscant de brillantor millorat durant la transici\u00f3",
             "title": "Opcions globals"
         }
