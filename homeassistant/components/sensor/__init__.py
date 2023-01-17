@@ -584,13 +584,14 @@ class SensorEntity(Entity):
             _LOGGER.warning(
                 (
                     "Entity %s (%s) is using native unit of measurement '%s' which "
-                    "is not a valid unit for the device class ('%s') it is using; "
+                    "is not a valid unit %s for the device class ('%s') it is using; "
                     "Please update your configuration if your entity is manually "
                     "configured, otherwise %s"
                 ),
                 self.entity_id,
                 type(self),
                 native_unit_of_measurement,
+                tuple(str(unit) if unit else None for unit in units),
                 device_class,
                 report_issue,
             )

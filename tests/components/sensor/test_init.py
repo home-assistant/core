@@ -9,7 +9,11 @@ import pytest
 from pytest import approx
 
 from homeassistant.components.number import NumberDeviceClass
-from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.components.sensor import (
+    DEVICE_CLASS_UNITS,
+    SensorDeviceClass,
+    SensorStateClass,
+)
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
@@ -1192,13 +1196,16 @@ async def test_device_classes_with_invalid_unit_of_measurement(
         device_class=device_class,
         native_unit_of_measurement="INVALID!",
     )
-
+    units = tuple(
+        str(unit) if unit else None
+        for unit in DEVICE_CLASS_UNITS.get(device_class, set())
+    )
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
     assert (
-        "is using native unit of measurement 'INVALID!' which is not a valid "
-        f"unit for the device class ('{device_class}') it is using"
+        f"is using native unit of measurement 'INVALID!' which is not a valid "
+        f"unit {units} for the device class ('{device_class}') it is using"
     ) in caplog.text
 
 
