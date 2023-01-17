@@ -59,10 +59,9 @@ class MatterEntity(Entity):
         self.entity_description = entity_description
         self._unsubscribes: list[Callable] = []
         # for fast lookups we create a mapping to the attribute paths
+        # The server info is set when the client connects to the server.
         self._attributes_map: dict[type, str] = {}
         server_info = cast(ServerInfo, self.matter_client.server_info)
-        # The server info is set when the client connects to the server.
-        assert server_info is not None
         # create unique_id based on "Operational Instance Name" and endpoint/device type
         self._attr_unique_id = (
             f"{get_operational_instance_id(server_info, self._node_device.node())}-"
