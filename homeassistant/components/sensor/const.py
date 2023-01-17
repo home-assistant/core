@@ -436,6 +436,19 @@ UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] =
     SensorDeviceClass.WIND_SPEED: SpeedConverter,
 }
 
+DEVICE_CLASS_PRECISION: dict[
+    tuple[SensorDeviceClass | None, StrEnum | str | None], int
+] = {
+    (SensorDeviceClass.ATMOSPHERIC_PRESSURE, UnitOfPressure.HPA): 0,
+    (SensorDeviceClass.ATMOSPHERIC_PRESSURE, UnitOfPressure.INHG): 0,
+    (SensorDeviceClass.ATMOSPHERIC_PRESSURE, UnitOfPressure.MMHG): 0,
+    (SensorDeviceClass.BATTERY, PERCENTAGE): 0,
+    (SensorDeviceClass.HUMIDITY, PERCENTAGE): 0,
+    (SensorDeviceClass.MOISTURE, PERCENTAGE): 0,
+    (SensorDeviceClass.TEMPERATURE, UnitOfTemperature.CELSIUS): 1,
+    (SensorDeviceClass.TEMPERATURE, UnitOfTemperature.FAHRENHEIT): 1,
+}
+
 DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.APPARENT_POWER: set(UnitOfApparentPower),
     SensorDeviceClass.AQI: {None},

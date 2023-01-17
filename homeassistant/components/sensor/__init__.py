@@ -64,6 +64,7 @@ from .const import (  # noqa: F401
     ATTR_OPTIONS,
     ATTR_STATE_CLASS,
     CONF_STATE_CLASS,
+    DEVICE_CLASS_PRECISION,
     DEVICE_CLASS_STATE_CLASSES,
     DEVICE_CLASS_UNITS,
     DEVICE_CLASSES,
@@ -133,11 +134,12 @@ class SensorEntityDescription(EntityDescription):
     """A class that describes sensor entities."""
 
     device_class: SensorDeviceClass | None = None
-    suggested_unit_of_measurement: str | None = None
     last_reset: datetime | None = None
+    native_precision: int | None = None
     native_unit_of_measurement: str | None = None
-    state_class: SensorStateClass | str | None = None
     options: list[str] | None = None
+    state_class: SensorStateClass | str | None = None
+    suggested_unit_of_measurement: str | None = None
     unit_of_measurement: None = None  # Type override, use native_unit_of_measurement
 
 
@@ -147,6 +149,7 @@ class SensorEntity(Entity):
     entity_description: SensorEntityDescription
     _attr_device_class: SensorDeviceClass | None
     _attr_last_reset: datetime | None
+    _attr_native_precision: int | None
     _attr_native_unit_of_measurement: str | None
     _attr_native_value: StateType | date | datetime | Decimal = None
     _attr_options: list[str] | None
@@ -160,6 +163,7 @@ class SensorEntity(Entity):
     _invalid_state_class_reported = False
     _invalid_unit_of_measurement_reported = False
     _last_reset_reported = False
+    _sensor_option_precision: int | None = None
     _sensor_option_unit_of_measurement: str | None | UndefinedType = UNDEFINED
 
     @callback
@@ -338,6 +342,62 @@ class SensorEntity(Entity):
         return self._attr_native_value
 
     @property
+    def native_precision(self) -> int | None:
+        """Return the number of digits after the decimal point for the sensor's state.
+
+        If native_precision is None, a default rounding will be made according
+        to the sensor's unit.
+
+        The display precision is influenced by unit conversion, a sensor which has
+        native_unit_of_measurement 'Wh' and is converted to 'kWh' will have its
+        native_precision increased by 3.
+        """
+        if hasattr(self, "_attr_precision"):
+            return self._attr_native_precision
+        if hasattr(self, "entity_description"):
+            return self.entity_description.native_precision
+        return None
+
+    @final
+    @property
+    def precision(self) -> int | None:
+        """Return the number of digits after the decimal point for the sensor's state.
+
+        This is the precision after unit conversion.
+        """
+        # Highest priority, for registered entities: precision set by user
+        if self._sensor_option_precision is not None:
+            return self._sensor_option_precision
+
+        # Second priority, native precision with fallback to no decimals
+        device_class = self.device_class
+        native_unit_of_measurement = self.native_unit_of_measurement
+        unit_of_measurement = self.unit_of_measurement
+        if self.native_precision is None:
+            precision = DEVICE_CLASS_PRECISION.get(
+                (device_class, native_unit_of_measurement), 2
+            )
+        else:
+            precision = self.native_precision
+
+        if (
+            native_unit_of_measurement != unit_of_measurement
+            and device_class in UNIT_CONVERTERS
+        ):
+            converter = UNIT_CONVERTERS[device_class]
+
+            # Scale the precision when converting to a larger unit
+            # For example 1.1 Wh should be rendered as 0.0011 kWh, not 0.0 kWh
+            ratio_log = log10(
+                converter.get_unit_ratio(
+                    native_unit_of_measurement, unit_of_measurement
+                )
+            )
+            precision = max(0, precision + floor(ratio_log))
+
+        return precision
+
+    @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the sensor, if any."""
         if hasattr(self, "_attr_native_unit_of_measurement"):
@@ -508,67 +568,62 @@ class SensorEntity(Entity):
                 )
             return value
 
+        numerical_value: int | float | Decimal | None = None
+        numerical_conversion_failed = None
+        if not isinstance(value, (int, float, Decimal)):
+            try:
+                numerical_value = float(value)  # type:ignore[arg-type]
+            except (TypeError, ValueError):
+                numerical_conversion_failed = True
+        else:
+            numerical_value = value
+
+        if (
+            numerical_value is not None
+            and (self._sensor_option_precision or not isinstance(value, int))
+            and (
+                native_unit_of_measurement == unit_of_measurement
+                or device_class not in UNIT_CONVERTERS
+            )
+        ):
+            value = f"{numerical_value:.{self.precision}f}"
+
         # If the sensor has neither a device class, a state class nor
         # a unit_of measurement then there are no further checks or conversions
         if not device_class and not state_class and not unit_of_measurement:
             return value
 
-        if not self._invalid_numeric_value_reported and not isinstance(
-            value, (int, float, Decimal)
-        ):
-            try:
-                _ = float(value)  # type: ignore[arg-type]
-            except (TypeError, ValueError):
-                # This should raise in Home Assistant Core 2023.4
-                self._invalid_numeric_value_reported = True
-                report_issue = self._suggest_report_issue()
-                _LOGGER.warning(
-                    "Sensor %s has device class %s, state class %s and unit %s "
-                    "thus indicating it has a numeric value; however, it has the "
-                    "non-numeric value: %s (%s); Please update your configuration "
-                    "if your entity is manually configured, otherwise %s",
-                    self.entity_id,
-                    device_class,
-                    state_class,
-                    unit_of_measurement,
-                    value,
-                    type(value),
-                    report_issue,
-                )
-                return value
+        if not self._invalid_numeric_value_reported and numerical_conversion_failed:
+            # This should raise in Home Assistant Core 2023.4
+            self._invalid_numeric_value_reported = True
+            report_issue = self._suggest_report_issue()
+            _LOGGER.warning(
+                "Sensor %s has device class %s, state class %s and unit %s "
+                "thus indicating it has a numeric value; however, it has the "
+                "non-numeric value: %s (%s); Please update your configuration "
+                "if your entity is manually configured, otherwise %s",
+                self.entity_id,
+                device_class,
+                state_class,
+                unit_of_measurement,
+                value,
+                type(value),
+                report_issue,
+            )
+            return value
 
         if (
             native_unit_of_measurement != unit_of_measurement
             and device_class in UNIT_CONVERTERS
+            and numerical_value is not None
         ):
             converter = UNIT_CONVERTERS[device_class]
-
-            value_s = str(value)
-            prec = len(value_s) - value_s.index(".") - 1 if "." in value_s else 0
-
-            # Scale the precision when converting to a larger unit
-            # For example 1.1 Wh should be rendered as 0.0011 kWh, not 0.0 kWh
-            ratio_log = max(
-                0,
-                log10(
-                    converter.get_unit_ratio(
-                        native_unit_of_measurement, unit_of_measurement
-                    )
-                ),
+            converted_numerical_value = converter.convert(
+                float(numerical_value),
+                native_unit_of_measurement,
+                unit_of_measurement,
             )
-            prec = prec + floor(ratio_log)
-
-            # Suppress ValueError (Could not convert sensor_value to float)
-            with suppress(ValueError):
-                value_f = float(value)  # type: ignore[arg-type]
-                value_f_new = converter.convert(
-                    value_f,
-                    native_unit_of_measurement,
-                    unit_of_measurement,
-                )
-
-                # Round to the wanted precision
-                value = round(value_f_new) if prec == 0 else round(value_f_new, prec)
+            value = f"{converted_numerical_value:.{self.precision}f}"
 
         # Validate unit of measurement used for sensors with a device class
         if (
@@ -608,6 +663,15 @@ class SensorEntity(Entity):
 
         return super().__repr__()
 
+    def _custom_precision_or_none(self) -> int | None:
+        """Return a custom precisions or None if not set."""
+        assert self.registry_entry
+        if (sensor_options := self.registry_entry.options.get(DOMAIN)) and (
+            precision := sensor_options.get("precision")
+        ) is not None:
+            return int(precision)
+        return None
+
     def _custom_unit_or_undef(
         self, primary_key: str, secondary_key: str
     ) -> str | None | UndefinedType:
@@ -628,6 +692,7 @@ class SensorEntity(Entity):
     @callback
     def async_registry_entry_updated(self) -> None:
         """Run when the entity registry entry has been updated."""
+        self._sensor_option_precision = self._custom_precision_or_none()
         self._sensor_option_unit_of_measurement = self._custom_unit_or_undef(
             DOMAIN, CONF_UNIT_OF_MEASUREMENT
         )
