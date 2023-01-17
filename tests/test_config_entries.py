@@ -3537,3 +3537,29 @@ async def test_options_flow_options_not_mutated() -> None:
         "sub_list": ["one", "two"],
     }
     assert entry.options == {"sub_dict": {"1": "one"}, "sub_list": ["one"]}
+
+
+async def test_initializing_flows_canceled_on_shutdown(hass: HomeAssistant, manager):
+    """Test that initializing flows are canceled on shutdown."""
+
+    class MockFlowHandler(config_entries.ConfigFlow):
+        """Define a mock flow handler."""
+
+        VERSION = 1
+
+        async def async_step_reauth(self, data):
+            """Mock Reauth."""
+            await asyncio.sleep(1)
+
+    with patch.dict(
+        config_entries.HANDLERS, {"comp": MockFlowHandler, "test": MockFlowHandler}
+    ):
+
+        task = asyncio.create_task(
+            manager.flow.async_init("test", context={"source": "reauth"})
+        )
+    await hass.async_block_till_done()
+    await manager.flow.async_shutdown()
+
+    with pytest.raises(asyncio.exceptions.CancelledError):
+        await task
