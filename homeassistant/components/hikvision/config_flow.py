@@ -52,13 +52,10 @@ class PlaceholderHub:
         username = data[CONF_USERNAME]
         password = data[CONF_PASSWORD]
 
-        print(url, port, username, password)
-        print(type(url), type(port), type(username), type(password))
         hikdata = await hass.async_add_executor_job(
             HikCamera, url, port, username, password
         )
-        connected = hikdata.name is not None
-        return connected
+        return hikdata.name is not None
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
