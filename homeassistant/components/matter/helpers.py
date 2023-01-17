@@ -40,11 +40,11 @@ def get_operational_instance_id(
     node: MatterNode,
 ) -> str:
     """Return `Operational Instance Name` for given MatterNode."""
-    fab_id_hex = f"{server_info.compressed_fabric_id:016X}"
+    fabric_id_hex = f"{server_info.compressed_fabric_id:016X}"
     node_id_hex = f"{node.node_id:016X}"
     # operational instance id matches the mdns advertisement for the node
     # this is the recommended ID to recognize a unique matter node (within a fabric)
-    return f"{fab_id_hex}-{node_id_hex}"
+    return f"{fabric_id_hex}-{node_id_hex}"
 
 
 def get_device_id(
