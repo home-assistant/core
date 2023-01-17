@@ -16,7 +16,7 @@ PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.SWITCH]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Ridwell from a config entry."""
-    coordinator = RidwellDataUpdateCoordinator(hass, entry=entry)
+    coordinator = RidwellDataUpdateCoordinator(hass, name=entry.title)
     await coordinator.async_initialize()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 

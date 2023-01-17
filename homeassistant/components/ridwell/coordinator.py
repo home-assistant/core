@@ -26,19 +26,17 @@ class RidwellDataUpdateCoordinator(
 ):
     """Class to manage fetching data from single endpoint."""
 
-    def __init__(self, hass: HomeAssistant, *, entry: ConfigEntry) -> None:
-        """Initialize global data updater."""
-        self._entry = entry
+    config_entry: ConfigEntry
 
+    def __init__(self, hass: HomeAssistant, *, name: str) -> None:
+        """Initialize global data updater."""
         # These will be filled in by async_initialize; we give them these defaults to
         # avoid arduous typing checks down the line:
         self.accounts: dict[str, RidwellAccount] = {}
         self.dashboard_url = ""
         self.user_id = ""
 
-        super().__init__(
-            hass, LOGGER, name=entry.title, update_interval=UPDATE_INTERVAL
-        )
+        super().__init__(hass, LOGGER, name=name, update_interval=UPDATE_INTERVAL)
 
     async def _async_update_data(self) -> dict[str, RidwellPickupEvent]:
         """Fetch the latest data from the source."""
@@ -64,8 +62,8 @@ class RidwellDataUpdateCoordinator(
 
         try:
             client = await async_get_client(
-                self._entry.data[CONF_USERNAME],
-                self._entry.data[CONF_PASSWORD],
+                self.config_entry.data[CONF_USERNAME],
+                self.config_entry.data[CONF_PASSWORD],
                 session=session,
             )
         except InvalidCredentialsError as err:
