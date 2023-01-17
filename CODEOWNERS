@@ -337,6 +337,8 @@ build.json @home-assistant/supervisor
 /tests/components/escea/ @lazdavila
 /homeassistant/components/esphome/ @OttoWinter @jesserockz
 /tests/components/esphome/ @OttoWinter @jesserockz
+/homeassistant/components/eufylife_ble/ @bdr99
+/tests/components/eufylife_ble/ @bdr99
 /homeassistant/components/evil_genius_labs/ @balloob
 /tests/components/evil_genius_labs/ @balloob
 /homeassistant/components/evohome/ @zxdavb
@@ -856,6 +858,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/oralb/ @bdraco @conway20
 /tests/components/oralb/ @bdraco @conway20
 /homeassistant/components/oru/ @bvlaicu
+/homeassistant/components/otbr/ @home-assistant/core
+/tests/components/otbr/ @home-assistant/core
 /homeassistant/components/overkiz/ @imicknl @vlebourl @tetienne @nyroDev
 /tests/components/overkiz/ @imicknl @vlebourl @tetienne @nyroDev
 /homeassistant/components/ovo_energy/ @timmo001

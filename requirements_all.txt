@@ -303,7 +303,7 @@ aiovlc==0.1.0
 aiowatttime==0.1.1
 
 # homeassistant.components.webostv
-aiowebostv==0.3.1
+aiowebostv==0.3.2
 
 # homeassistant.components.yandex_transport
 aioymaps==1.2.2
@@ -680,6 +680,9 @@ esphome-dashboard-api==1.1
 
 # homeassistant.components.netgear_lte
 eternalegypt==0.0.12
+
+# homeassistant.components.eufylife_ble
+eufylife_ble_client==0.1.7
 
 # homeassistant.components.keyboard_remote
 # evdev==1.4.0
@@ -1269,7 +1272,7 @@ open-meteo==0.2.1
 # opencv-python-headless==4.6.0.66
 
 # homeassistant.components.openerz
-openerz-api==0.1.0
+openerz-api==0.2.0
 
 # homeassistant.components.openevse
 openevsewifi==1.1.2
@@ -1461,7 +1464,7 @@ pyRFXtrx==0.30.0
 pySwitchmate==0.5.1
 
 # homeassistant.components.tibber
-pyTibber==0.26.8
+pyTibber==0.26.9
 
 # homeassistant.components.dlink
 pyW215==0.7.0
@@ -1696,7 +1699,7 @@ pyirishrail==0.0.2
 pyiss==1.0.1
 
 # homeassistant.components.isy994
-pyisy==3.1.6
+pyisy==3.1.8
 
 # homeassistant.components.itach
 pyitachip2ir==0.0.7
@@ -1741,7 +1744,7 @@ pylgnetcast==0.3.7
 pylibrespot-java==0.1.1
 
 # homeassistant.components.litejet
-pylitejet==0.3.0
+pylitejet==0.4.6
 
 # homeassistant.components.litterrobot
 pylitterbot==2023.1.1
@@ -1970,7 +1973,7 @@ pysnmplib==5.0.20
 pysnooz==0.8.3
 
 # homeassistant.components.soma
-pysoma==0.0.10
+pysoma==0.0.12
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
@@ -2076,6 +2079,9 @@ python-mystrom==1.1.2
 
 # homeassistant.components.nest
 python-nest==4.2.0
+
+# homeassistant.components.otbr
+python-otbr-api==1.0.1
 
 # homeassistant.components.picnic
 python-picnic-api==1.1.0
@@ -2598,7 +2604,7 @@ webexteamssdk==1.1.1
 whirlpool-sixth-sense==0.18.2
 
 # homeassistant.components.whois
-whois==0.9.16
+whois==0.9.23
 
 # homeassistant.components.wiffi
 wiffi==1.1.0

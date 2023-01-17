@@ -26,8 +26,11 @@
             },
             "whirlpool_tank": {
                 "state": {
+                    "100": "Vol",
                     "100%": "100%",
+                    "25": "Bijna leeg",
                     "25%": "25%",
+                    "50": "Half vol",
                     "50%": "50%",
                     "active": "Actief",
                     "empty": "Leeg",
