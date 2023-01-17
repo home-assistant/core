@@ -72,6 +72,7 @@ from .const import (
     MODEL_AIRPURIFIER_2S,
     MODEL_AIRPURIFIER_3C,
     MODEL_AIRPURIFIER_4,
+    MODEL_AIRPURIFIER_4_COMPACT,
     MODEL_AIRPURIFIER_4_LITE_RMA1,
     MODEL_AIRPURIFIER_4_LITE_RMB1,
     MODEL_AIRPURIFIER_4_PRO,
@@ -156,6 +157,7 @@ AVAILABLE_ATTRIBUTES_AIRFRESH = {
 }
 
 PRESET_MODES_AIRPURIFIER = ["Auto", "Silent", "Favorite", "Idle"]
+PRESET_MODES_AIRPURIFIER_4_COMPACT = ["Auto", "Silent", "Favorite"]
 PRESET_MODES_AIRPURIFIER_4_LITE = ["Auto", "Silent", "Favorite"]
 PRESET_MODES_AIRPURIFIER_MIOT = ["Auto", "Silent", "Favorite", "Fan"]
 PRESET_MODES_AIRPURIFIER_PRO = ["Auto", "Silent", "Favorite"]
@@ -423,7 +425,11 @@ class XiaomiAirPurifier(XiaomiGenericAirPurifier):
             self._preset_modes = PRESET_MODES_AIRPURIFIER_PRO
             self._attr_supported_features = FanEntityFeature.PRESET_MODE
             self._speed_count = 1
-        elif self._model in [MODEL_AIRPURIFIER_4, MODEL_AIRPURIFIER_4_PRO]:
+        elif self._model in [
+            MODEL_AIRPURIFIER_4,
+            MODEL_AIRPURIFIER_4_PRO,
+            MODEL_AIRPURIFIER_4_COMPACT,
+        ]:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_4
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_MIOT
             self._preset_modes = PRESET_MODES_AIRPURIFIER_MIOT
