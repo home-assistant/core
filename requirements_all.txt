@@ -258,7 +258,7 @@ aioqsw==0.3.1
 aiorecollect==1.0.8
 
 # homeassistant.components.ridwell
-aioridwell==2022.11.0
+aioridwell==2023.01.0
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.0.2
@@ -1741,7 +1741,7 @@ pylgnetcast==0.3.7
 pylibrespot-java==0.1.1
 
 # homeassistant.components.litejet
-pylitejet==0.3.0
+pylitejet==0.4.6
 
 # homeassistant.components.litterrobot
 pylitterbot==2023.1.1
@@ -1970,7 +1970,7 @@ pysnmplib==5.0.20
 pysnooz==0.8.3
 
 # homeassistant.components.soma
-pysoma==0.0.10
+pysoma==0.0.12
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
@@ -2076,6 +2076,9 @@ python-mystrom==1.1.2
 
 # homeassistant.components.nest
 python-nest==4.2.0
+
+# homeassistant.components.otbr
+python-otbr-api==1.0.1
 
 # homeassistant.components.picnic
 python-picnic-api==1.1.0

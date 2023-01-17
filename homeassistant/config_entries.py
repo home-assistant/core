@@ -761,6 +761,15 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         super().__init__(hass)
         self.config_entries = config_entries
         self._hass_config = hass_config
+        self._initializing: dict[str, dict[str, asyncio.Future]] = {}
+        self._initialize_tasks: dict[str, list[asyncio.Task]] = {}
+
+    async def async_wait_init_flow_finish(self, handler: str) -> None:
+        """Wait till all flows in progress are initialized."""
+        if not (current := self._initializing.get(handler)):
+            return
+
+        await asyncio.wait(current.values())
 
     @callback
     def _async_has_other_discovery_flows(self, flow_id: str) -> bool:
@@ -770,11 +779,75 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
             for flow in self._progress.values()
         )
 
+    async def async_init(
+        self, handler: str, *, context: dict[str, Any] | None = None, data: Any = None
+    ) -> FlowResult:
+        """Start a configuration flow."""
+        if context is None:
+            context = {}
+
+        flow_id = uuid_util.random_uuid_hex()
+        init_done: asyncio.Future = asyncio.Future()
+        self._initializing.setdefault(handler, {})[flow_id] = init_done
+
+        task = asyncio.create_task(self._async_init(flow_id, handler, context, data))
+        self._initialize_tasks.setdefault(handler, []).append(task)
+
+        try:
+            flow, result = await task
+        finally:
+            self._initialize_tasks[handler].remove(task)
+            self._initializing[handler].pop(flow_id)
+
+        if result["type"] != data_entry_flow.FlowResultType.ABORT:
+            await self.async_post_init(flow, result)
+
+        return result
+
+    async def _async_init(
+        self,
+        flow_id: str,
+        handler: str,
+        context: dict,
+        data: Any,
+    ) -> tuple[data_entry_flow.FlowHandler, FlowResult]:
+        """Run the init in a task to allow it to be canceled at shutdown."""
+        flow = await self.async_create_flow(handler, context=context, data=data)
+        if not flow:
+            raise data_entry_flow.UnknownFlow("Flow was not created")
+        flow.hass = self.hass
+        flow.handler = handler
+        flow.flow_id = flow_id
+        flow.context = context
+        flow.init_data = data
+        self._async_add_flow_progress(flow)
+        try:
+            result = await self._async_handle_step(flow, flow.init_step, data)
+        finally:
+            init_done = self._initializing[handler][flow_id]
+            if not init_done.done():
+                init_done.set_result(None)
+        return flow, result
+
+    async def async_shutdown(self) -> None:
+        """Cancel any initializing flows."""
+        for task_list in self._initialize_tasks.values():
+            for task in task_list:
+                task.cancel()
+
     async def async_finish_flow(
         self, flow: data_entry_flow.FlowHandler, result: data_entry_flow.FlowResult
     ) -> data_entry_flow.FlowResult:
         """Finish a config flow and add an entry."""
         flow = cast(ConfigFlow, flow)
+
+        # Mark the step as done.
+        # We do this to avoid a circular dependency where async_finish_flow sets up a
+        # new entry, which needs the integration to be set up, which is waiting for
+        # init to be done.
+        init_done = self._initializing[flow.handler].get(flow.flow_id)
+        if init_done and not init_done.done():
+            init_done.set_result(None)
 
         # Remove notification if no other discovery config entries in progress
         if not self._async_has_other_discovery_flows(flow.flow_id):

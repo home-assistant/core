@@ -136,5 +136,14 @@
                 "title": "MQTT options"
             }
         }
+    },
+    "selector": {
+        "set_ca_cert": {
+          "options": {
+            "off": "Off",
+            "auto": "Auto",
+            "custom": "Custom"
+          }
+        }
     }
 }
