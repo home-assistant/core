@@ -761,12 +761,12 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         super().__init__(hass)
         self.config_entries = config_entries
         self._hass_config = hass_config
-        self._initializing: dict[str, dict[str, asyncio.Future]] = {}
+        self._pending_import_flows: dict[str, dict[str, asyncio.Future]] = {}
         self._initialize_tasks: dict[str, list[asyncio.Task]] = {}
 
-    async def async_wait_init_flow_finish(self, handler: str) -> None:
-        """Wait till all flows in progress are initialized."""
-        if not (current := self._initializing.get(handler)):
+    async def async_wait_import_flow_initialized(self, handler: str) -> None:
+        """Wait till all import flows in progress are initialized."""
+        if not (current := self._pending_import_flows.get(handler)):
             return
 
         await asyncio.wait(current.values())
@@ -783,12 +783,13 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         self, handler: str, *, context: dict[str, Any] | None = None, data: Any = None
     ) -> FlowResult:
         """Start a configuration flow."""
-        if context is None:
-            context = {}
+        if not context or "source" not in context:
+            raise KeyError("Context not set or doesn't have a source set")
 
         flow_id = uuid_util.random_uuid_hex()
-        init_done: asyncio.Future = asyncio.Future()
-        self._initializing.setdefault(handler, {})[flow_id] = init_done
+        if context["source"] == SOURCE_IMPORT:
+            init_done: asyncio.Future = asyncio.Future()
+            self._pending_import_flows.setdefault(handler, {})[flow_id] = init_done
 
         task = asyncio.create_task(self._async_init(flow_id, handler, context, data))
         self._initialize_tasks.setdefault(handler, []).append(task)
@@ -797,7 +798,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
             flow, result = await task
         finally:
             self._initialize_tasks[handler].remove(task)
-            self._initializing[handler].pop(flow_id)
+            self._pending_import_flows.get(handler, {}).pop(flow_id, None)
 
         if result["type"] != data_entry_flow.FlowResultType.ABORT:
             await self.async_post_init(flow, result)
@@ -824,8 +825,8 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         try:
             result = await self._async_handle_step(flow, flow.init_step, data)
         finally:
-            init_done = self._initializing[handler][flow_id]
-            if not init_done.done():
+            init_done = self._pending_import_flows.get(handler, {}).get(flow_id)
+            if init_done and not init_done.done():
                 init_done.set_result(None)
         return flow, result
 
@@ -845,7 +846,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         # We do this to avoid a circular dependency where async_finish_flow sets up a
         # new entry, which needs the integration to be set up, which is waiting for
         # init to be done.
-        init_done = self._initializing[flow.handler].get(flow.flow_id)
+        init_done = self._pending_import_flows.get(flow.handler, {}).get(flow.flow_id)
         if init_done and not init_done.done():
             init_done.set_result(None)
 

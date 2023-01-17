@@ -1428,7 +1428,7 @@ async def test_init_custom_integration(hass):
         "homeassistant.loader.async_get_integration",
         return_value=integration,
     ):
-        await hass.config_entries.flow.async_init("bla")
+        await hass.config_entries.flow.async_init("bla", context={"source": "user"})
 
 
 async def test_support_entry_unload(hass):
