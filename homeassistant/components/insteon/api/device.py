@@ -27,12 +27,6 @@ def compute_device_name(ha_device):
     return ha_device.name_by_user if ha_device.name_by_user else ha_device.name
 
 
-async def async_add_devices(address, multiple):
-    """Add one or more Insteon devices."""
-    async for _ in devices.async_add_device(address=address, multiple=multiple):
-        pass
-
-
 def get_insteon_device_from_ha_device(ha_device):
     """Return the Insteon device from an HA device."""
     for identifier in ha_device.identifiers:
