@@ -371,7 +371,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             # rounding, Home Assistant doesn't need to round but we will always
             # need to divide the value by 10^1 in case of 0 as scale.
             # https://developer.tuya.com/en/docs/iot/shift-temperature-scale-follow-the-setting-of-app-account-center?id=Ka9qo7so58efq#title-7-Round%20values
-            temperature = temperature / 10
+            temperature = temperature / 2
 
         return self._current_temperature.scale_value(temperature)
 
