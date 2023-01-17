@@ -123,7 +123,7 @@ async def async_setup_entry(
 
 
 class ReolinkBinarySensorEntity(ReolinkCoordinatorEntity, BinarySensorEntity):
-    """An implementation of a base binary-sensor class for Reolink IP camera motion sensors."""
+    """Base binary-sensor class for Reolink IP camera motion sensors."""
 
     _attr_has_entity_name = True
     entity_description: ReolinkBinarySensorEntityDescription
