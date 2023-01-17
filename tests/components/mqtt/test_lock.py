@@ -490,8 +490,8 @@ async def test_sending_mqtt_commands_pessimistic(
                     "state_locking": "LOCKING",
                     "state_unlocked": "UNLOCKED",
                     "state_unlocking": "UNLOCKING",
-                    "state_jammed": "MOTOR_JAMMED",
-                    "state_ok": "MOTOR_OK",
+                    "state_jammed": "JAMMED",
+                    "state_unjammed": "UNJAMMED",
                 }
             }
         },
@@ -563,14 +563,14 @@ async def test_sending_mqtt_commands_pessimistic(
     assert state.state is STATE_LOCKING
 
     # receive jammed state from lock
-    async_fire_mqtt_message(hass, "state-topic", "MOTOR_JAMMED")
+    async_fire_mqtt_message(hass, "state-topic", "JAMMED")
     await hass.async_block_till_done()
 
     state = hass.states.get("lock.test")
     assert state.state is STATE_JAMMED
 
     # receive solved state from lock
-    async_fire_mqtt_message(hass, "state-topic", "MOTOR_OK")
+    async_fire_mqtt_message(hass, "state-topic", "UNJAMMED")
     async_fire_mqtt_message(hass, "state-topic", "LOCKED")
     await hass.async_block_till_done()
 
