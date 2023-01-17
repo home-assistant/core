@@ -75,7 +75,7 @@ OPTIMISTIC_COLOR_TEMP_LIGHT_CONFIG = {
 }
 
 
-OPTIMISTIC_HS_COLOR_RETRO_LIGHT_CONFIG = {
+OPTIMISTIC_LEGACY_COLOR_LIGHT_CONFIG = {
     **OPTIMISTIC_ON_OFF_LIGHT_CONFIG,
     "set_color": {
         "service": "test.automation",
@@ -87,6 +87,7 @@ OPTIMISTIC_HS_COLOR_RETRO_LIGHT_CONFIG = {
         },
     },
 }
+
 
 OPTIMISTIC_HS_COLOR_LIGHT_CONFIG = {
     **OPTIMISTIC_ON_OFF_LIGHT_CONFIG,
@@ -100,6 +101,7 @@ OPTIMISTIC_HS_COLOR_LIGHT_CONFIG = {
         },
     },
 }
+
 
 OPTIMISTIC_RGB_COLOR_LIGHT_CONFIG = {
     **OPTIMISTIC_ON_OFF_LIGHT_CONFIG,
@@ -115,6 +117,7 @@ OPTIMISTIC_RGB_COLOR_LIGHT_CONFIG = {
     },
 }
 
+
 OPTIMISTIC_RGBW_COLOR_LIGHT_CONFIG = {
     **OPTIMISTIC_ON_OFF_LIGHT_CONFIG,
     "set_rgbw": {
@@ -129,6 +132,7 @@ OPTIMISTIC_RGBW_COLOR_LIGHT_CONFIG = {
         },
     },
 }
+
 
 OPTIMISTIC_RGBWW_COLOR_LIGHT_CONFIG = {
     **OPTIMISTIC_ON_OFF_LIGHT_CONFIG,
@@ -852,6 +856,95 @@ async def test_entity_picture_template(hass: HomeAssistant, setup_light) -> None
     assert state.attributes["entity_picture"] == "/local/light.png"
 
 
+# TODO Cleanup or implement
+# @pytest.mark.parametrize("count", [1])
+# @pytest.mark.parametrize(
+#     "light_config",
+#     [
+#         {
+#             "test_template_light": {
+#                 **OPTIMISTIC_ON_OFF_LIGHT_CONFIG,
+#                 "value_template": "{{1 == 1}}",
+#                 "set_hs": {
+#                     "service": "test.automation",
+#                     "data_template": {
+#                         "entity_id": "test.test_state",
+#                         "h": "{{h}}",
+#                         "s": "{{s}}",
+#                     },
+#                 },
+#                 "set_color": {
+#                     "service": "test.automation",
+#                     "data_template": {
+#                         "caller": "{{ this.entity_id }}",
+#                         "s": "{{s}}",
+#                         "h": "{{h}}",
+#                     },
+#                 },
+#             }
+#         },
+#         {
+#             "test_template_light": {
+#                 **OPTIMISTIC_ON_OFF_LIGHT_CONFIG,
+#                 "value_template": "{{ 1 == 1 }}",
+#                 "hs_template": "{{(360, 100)}}",
+#                 "color_template": "{{(360, 100)}}",
+#             }
+#         },
+#     ],
+# )
+# async def test_exclusion_legacy_color_and_hs_colors(
+#     hass,
+#     setup_light,
+#     calls,
+# ):
+#     """Test that Invalid config is rejected"""
+#     with pytest.raises(Exception):
+#         hass.states.get("light.test_template_light")
+
+
+@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(
+    "light_config",
+    [
+        {
+            "test_template_light": {
+                **OPTIMISTIC_LEGACY_COLOR_LIGHT_CONFIG,
+                "value_template": "{{1 == 1}}",
+            }
+        },
+    ],
+)
+async def test_legacy_color_action_no_template(
+    hass,
+    setup_light,
+    calls,
+):
+    """Test setting color with optimistic template."""
+    state = hass.states.get("light.test_template_light")
+    assert state.attributes.get("hs_color") is None
+
+    await hass.services.async_call(
+        light.DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "light.test_template_light", ATTR_HS_COLOR: (40, 50)},
+        blocking=True,
+    )
+
+    assert len(calls) == 1
+    assert calls[-1].data["action"] == "set_color"
+    assert calls[-1].data["caller"] == "light.test_template_light"
+    assert calls[-1].data["h"] == 40
+    assert calls[-1].data["s"] == 50
+
+    state = hass.states.get("light.test_template_light")
+    assert state.state == STATE_ON
+    assert state.attributes["color_mode"] == ColorMode.HS
+    assert state.attributes.get("hs_color") == (40, 50)
+    assert state.attributes["supported_color_modes"] == [ColorMode.HS]
+    assert state.attributes["supported_features"] == 0
+
+
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
     "light_config",
@@ -1029,6 +1122,44 @@ async def test_rgbww_color_action_no_template(
     assert state.attributes["color_mode"] == ColorMode.RGBWW
     assert state.attributes.get("rgbww_color") == (160, 78, 192, 25, 55)
     assert state.attributes["supported_color_modes"] == [ColorMode.RGBWW]
+    assert state.attributes["supported_features"] == 0
+
+
+@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(
+    "expected_hs,color_template,expected_color_mode",
+    [
+        ((360, 100), "{{(360, 100)}}", ColorMode.HS),
+        ((359.9, 99.9), "{{(359.9, 99.9)}}", ColorMode.HS),
+        (None, "{{(361, 100)}}", ColorMode.HS),
+        (None, "{{(360, 101)}}", ColorMode.HS),
+        (None, "[{{(360)}},{{null}}]", ColorMode.HS),
+        (None, "{{x - 12}}", ColorMode.HS),
+        (None, "", ColorMode.HS),
+        (None, "{{ none }}", ColorMode.HS),
+    ],
+)
+async def test_legacy_color_template(
+    hass,
+    expected_hs,
+    expected_color_mode,
+    count,
+    color_template,
+):
+    """Test the template for the color."""
+    light_config = {
+        "test_template_light": {
+            **OPTIMISTIC_LEGACY_COLOR_LIGHT_CONFIG,
+            "value_template": "{{ 1 == 1 }}",
+            "color_template": color_template,
+        }
+    }
+    await async_setup_light(hass, count, light_config)
+    state = hass.states.get("light.test_template_light")
+    assert state.attributes.get("hs_color") == expected_hs
+    assert state.state == STATE_ON
+    assert state.attributes["color_mode"] == expected_color_mode
+    assert state.attributes["supported_color_modes"] == [ColorMode.HS]
     assert state.attributes["supported_features"] == 0
 
 

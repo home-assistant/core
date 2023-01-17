@@ -49,6 +49,10 @@ from .template_entity import (
 _LOGGER = logging.getLogger(__name__)
 _VALID_STATES = [STATE_ON, STATE_OFF, "true", "false"]
 
+# Legacy
+CONF_COLOR_ACTION = "set_color"
+CONF_COLOR_TEMPLATE = "color_template"
+
 CONF_HS_ACTION = "set_hs"
 CONF_HS_TEMPLATE = "hs_template"
 CONF_RGB_ACTION = "set_rgb"
@@ -76,8 +80,10 @@ LIGHT_SCHEMA = vol.All(
     cv.deprecated(CONF_ENTITY_ID),
     vol.Schema(
         {
-            vol.Optional(CONF_HS_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_HS_TEMPLATE): cv.template,
+            vol.Exclusive(CONF_COLOR_ACTION, "hs_legacy_action"): cv.SCRIPT_SCHEMA,
+            vol.Exclusive(CONF_COLOR_TEMPLATE, "hs_legacy_template"): cv.template,
+            vol.Exclusive(CONF_HS_ACTION, "hs_legacy_action"): cv.SCRIPT_SCHEMA,
+            vol.Exclusive(CONF_HS_TEMPLATE, "hs_legacy_template"): cv.template,
             vol.Optional(CONF_RGB_ACTION): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_RGB_TEMPLATE): cv.template,
             vol.Optional(CONF_RGBW_ACTION): cv.SCRIPT_SCHEMA,
@@ -177,6 +183,10 @@ class LightTemplate(TemplateEntity, LightEntity):
                 hass, temperature_action, friendly_name, DOMAIN
             )
         self._temperature_template = config.get(CONF_TEMPERATURE_TEMPLATE)
+        self._color_script = None
+        if (color_action := config.get(CONF_COLOR_ACTION)) is not None:
+            self._color_script = Script(hass, color_action, friendly_name, DOMAIN)
+        self._color_template = config.get(CONF_COLOR_TEMPLATE)
         self._hs_script = None
         if (hs_action := config.get(CONF_HS_ACTION)) is not None:
             self._hs_script = Script(hass, hs_action, friendly_name, DOMAIN)
@@ -223,6 +233,8 @@ class LightTemplate(TemplateEntity, LightEntity):
         if self._temperature_script is not None:
             color_modes.add(ColorMode.COLOR_TEMP)
         if self._hs_script is not None:
+            color_modes.add(ColorMode.HS)
+        if self._color_script is not None:
             color_modes.add(ColorMode.HS)
         if self._rgb_script is not None:
             color_modes.add(ColorMode.RGB)
@@ -357,6 +369,14 @@ class LightTemplate(TemplateEntity, LightEntity):
                 self._update_temperature,
                 none_on_template_error=True,
             )
+        if self._color_template:
+            self.add_template_attribute(
+                "_hs_color",
+                self._color_template,
+                None,
+                self._update_hs,
+                none_on_template_error=True,
+            )
         if self._hs_template:
             self.add_template_attribute(
                 "_hs_color",
@@ -436,7 +456,7 @@ class LightTemplate(TemplateEntity, LightEntity):
                 kwargs[ATTR_COLOR_TEMP],
             )
             self._temperature = kwargs[ATTR_COLOR_TEMP]
-            if self._hs_template is None:
+            if self._hs_template is None and self._color_template is None:
                 self._hs_color = None
             if self._rgb_template is None:
                 self._rgb_color = None
@@ -446,7 +466,11 @@ class LightTemplate(TemplateEntity, LightEntity):
                 self._rgbww_color = None
             optimistic_set = True
 
-        if self._hs_template is None and ATTR_HS_COLOR in kwargs:
+        if (
+            self._hs_template is None
+            and self._color_template is None
+            and ATTR_HS_COLOR in kwargs
+        ):
             _LOGGER.debug(
                 "Optimistically setting hs color to %s",
                 kwargs[ATTR_HS_COLOR],
@@ -470,7 +494,7 @@ class LightTemplate(TemplateEntity, LightEntity):
             self._rgb_color = kwargs[ATTR_RGB_COLOR]
             if self._temperature_template is None:
                 self._temperature = None
-            if self._hs_template is None:
+            if self._hs_template is None and self._color_template is None:
                 self._hs_color = None
             if self._rgbw_template is None:
                 self._rgbw_color = None
@@ -486,7 +510,7 @@ class LightTemplate(TemplateEntity, LightEntity):
             self._rgbw_color = kwargs[ATTR_RGBW_COLOR]
             if self._temperature_template is None:
                 self._temperature = None
-            if self._hs_template is None:
+            if self._hs_template is None and self._color_template is None:
                 self._hs_color = None
             if self._rgb_template is None:
                 self._rgb_color = None
@@ -502,7 +526,7 @@ class LightTemplate(TemplateEntity, LightEntity):
             self._rgbww_color = kwargs[ATTR_RGBWW_COLOR]
             if self._temperature_template is None:
                 self._temperature = None
-            if self._hs_template is None:
+            if self._hs_template is None and self._color_template is None:
                 self._hs_color = None
             if self._rgb_template is None:
                 self._rgb_color = None
@@ -543,6 +567,16 @@ class LightTemplate(TemplateEntity, LightEntity):
             await self.async_run_script(
                 self._effect_script, run_variables=common_params, context=self._context
             )
+        elif ATTR_HS_COLOR in kwargs and self._color_script:
+            hs_value = kwargs[ATTR_HS_COLOR]
+            common_params["hs"] = hs_value
+            common_params["h"] = int(hs_value[0])
+            common_params["s"] = int(hs_value[1])
+
+            await self.async_run_script(
+                self._color_script, run_variables=common_params, context=self._context
+            )
+            self._color_mode = ColorMode.HS
         elif ATTR_HS_COLOR in kwargs and self._hs_script:
             hs_value = kwargs[ATTR_HS_COLOR]
             common_params["hs"] = hs_value
