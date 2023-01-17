@@ -29,8 +29,8 @@ class MatterEntryData:
 def get_matter(hass: HomeAssistant) -> MatterAdapter:
     """Return MatterAdapter instance."""
     # NOTE: This assumes only one Matter connection/fabric can exist.
-    # Shall we support connecting to multiple servers in the client or by config entries?
-    # In case of the config entry we need to fix this.
+    # Shall we support connecting to multiple servers in the client or by
+    # config entries? In case of the config entry we need to fix this.
     matter_entry_data: MatterEntryData = next(iter(hass.data[DOMAIN].values()))
     return matter_entry_data.adapter
 
@@ -42,8 +42,8 @@ def get_operational_instance_id(
     """Return `Operational Instance Name` for given MatterNode."""
     fabric_id_hex = f"{server_info.compressed_fabric_id:016X}"
     node_id_hex = f"{node.node_id:016X}"
-    # operational instance id matches the mdns advertisement for the node
-    # this is the recommended ID to recognize a unique matter node (within a fabric)
+    # Operational instance id matches the mDNS advertisement for the node
+    # this is the recommended ID to recognize a unique matter node (within a fabric).
     return f"{fabric_id_hex}-{node_id_hex}"
 
 
@@ -55,5 +55,6 @@ def get_device_id(
     operational_instance_id = get_operational_instance_id(
         server_info, node_device.node()
     )
-    # append nodedevice(type) to differentiate between a root node and bridge within HA devices.
+    # Append nodedevice(type) to differentiate between a root node
+    # and bridge within Home Assistant devices.
     return f"{operational_instance_id}-{node_device.__class__.__name__}"
