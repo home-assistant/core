@@ -219,7 +219,7 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
             vol.Optional("selector"): cv.schema_with_slug_keys(
                 {
                     "options": cv.schema_with_slug_keys(
-                        cv.string_with_no_html, slug_validator=lowercase_validator
+                        cv.string_with_no_html, slug_validator=translation_key_validator
                     )
                 },
                 slug_validator=vol.Any("_", cv.slug),

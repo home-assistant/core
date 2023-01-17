@@ -435,7 +435,6 @@ def test_text_selector_schema(schema, valid_selections, invalid_selections):
                     {"value": "green", "label": "Emerald Green"},
                 ],
                 "translation_key": "color",
-                "translation_domain": "demo",
             },
             ("red", "green"),
             ("cat", 0, None, ["red"]),

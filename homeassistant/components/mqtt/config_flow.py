@@ -138,7 +138,6 @@ BROKER_VERIFICATION_SELECTOR = SelectSelector(
         options=CA_VERIFICATION_MODES,
         mode=SelectSelectorMode.DROPDOWN,
         translation_key=SET_CA_CERT,
-        translation_domain=DOMAIN,
     )
 )
 
