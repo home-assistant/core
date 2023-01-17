@@ -3,11 +3,12 @@ from __future__ import annotations
 
 from pyhik.hikvision import HikCamera
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
+    CONF_PLATFORM,
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
@@ -16,6 +17,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 
@@ -73,6 +75,33 @@ class HikvisionData:
     def get_attributes(self, sensor, channel):
         """Return attribute list for sensor/channel."""
         return self.camdata.fetch_attributes(sensor, channel)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Import configuration from yaml."""
+
+    # check if already configured
+    if hass.config_entries.async_entries(DOMAIN):
+        return True
+
+    # Iterate all entries for notify to only get Slack
+    for entry in config.get(Platform.BINARY_SENSOR, []):
+        if entry[CONF_PLATFORM] == DOMAIN:
+            user_input = {
+                "host": entry["host"],
+                "username": entry["username"],
+                "password": entry["password"],
+                "ssl": entry.get("ssl", False),
+                "port": entry.get("port", 80),
+                "name": entry.get("name", "hikvision"),
+            }
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN, context={"source": SOURCE_IMPORT}, data=user_input
+                )
+            )
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

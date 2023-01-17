@@ -27,10 +27,10 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_NAME): cv.string,
+        vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_SSL, default=False): cv.boolean,
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Required(CONF_SSL, default=False): cv.boolean,
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
     }
@@ -66,7 +66,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         raise InvalidAuth
 
     # Return info that you want to store in the config entry.
-    return {"title": "Hikvision"}
+    return {"title": data["name"]}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -100,6 +100,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
+
+    async def async_step_import(self, user_input):
+        """Handle import."""
+        return await self.async_step_user(user_input)
 
 
 class CannotConnect(HomeAssistantError):
