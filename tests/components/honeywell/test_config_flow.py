@@ -34,6 +34,15 @@ async def test_show_authenticate_form(hass: HomeAssistant) -> None:
 
 
 async def test_connection_error(hass: HomeAssistant, client: MagicMock) -> None:
+    """Test that an error message is shown on connection fail."""
+    client.login.side_effect = AIOSomecomfort.ConnectionError
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=FAKE_CONFIG
+    )
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_auth_error(hass: HomeAssistant, client: MagicMock) -> None:
     """Test that an error message is shown on login fail."""
     client.login.side_effect = AIOSomecomfort.AuthError
     result = await hass.config_entries.flow.async_init(
