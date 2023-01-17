@@ -2,6 +2,8 @@
 from http import HTTPStatus
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components import hassio, otbr
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -51,7 +53,7 @@ async def test_user_flow(
     assert config_entry.data == expected_data
     assert config_entry.options == {}
     assert config_entry.title == "Thread"
-    assert config_entry.unique_id is None
+    assert config_entry.unique_id == otbr.DOMAIN
 
 
 async def test_user_flow_404(
@@ -101,10 +103,11 @@ async def test_hassio_discovery_flow(hass: HomeAssistant) -> None:
     assert config_entry.data == expected_data
     assert config_entry.options == {}
     assert config_entry.title == "Thread"
-    assert config_entry.unique_id is None
+    assert config_entry.unique_id == otbr.DOMAIN
 
 
-async def test_config_flow_single_entry(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("source", ("hassio", "user"))
+async def test_config_flow_single_entry(hass: HomeAssistant, source: str) -> None:
     """Test only a single entry is allowed."""
     mock_integration(hass, MockModule("hassio"))
 
@@ -122,7 +125,7 @@ async def test_config_flow_single_entry(hass: HomeAssistant) -> None:
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
-            otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
+            otbr.DOMAIN, context={"source": source}
         )
 
     assert result["type"] == FlowResultType.ABORT
