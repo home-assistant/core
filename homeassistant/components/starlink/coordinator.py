@@ -12,6 +12,7 @@ from starlink_grpc import (
     GrpcError,
     ObstructionDict,
     StatusDict,
+    reboot,
     set_stow_state,
     status_data,
 )
@@ -57,11 +58,19 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
                 raise UpdateFailed from exc
 
     async def stow_starlink(self, stow: bool):
-        """Set whether Starlink should be stowed."""
+        """Set whether Starlink system tied to this coordinator should be stowed."""
         async with async_timeout.timeout(4):
             try:
                 await self.hass.async_add_executor_job(
                     set_stow_state, not stow, self.channel_context
                 )
+            except GrpcError as exc:
+                raise HomeAssistantError from exc
+
+    async def reboot_starlink(self):
+        """Reboot the Starlink system tied to this coordinator."""
+        async with async_timeout.timeout(4):
+            try:
+                await self.hass.async_add_executor_job(reboot, self.channel_context)
             except GrpcError as exc:
                 raise HomeAssistantError from exc

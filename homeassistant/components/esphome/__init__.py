@@ -26,7 +26,6 @@ from aioesphomeapi import (
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
-from homeassistant import const
 from homeassistant.components import tag, zeroconf
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -36,6 +35,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
+    __version__ as ha_version,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall, State, callback
 from homeassistant.exceptions import TemplateError
@@ -122,7 +122,7 @@ async def async_setup_entry(  # noqa: C901
         host,
         port,
         password,
-        client_info=f"Home Assistant {const.__version__}",
+        client_info=f"Home Assistant {ha_version}",
         zeroconf_instance=zeroconf_instance,
         noise_psk=noise_psk,
     )
@@ -380,7 +380,7 @@ def _async_setup_device_registry(
         config_entry_id=entry.entry_id,
         configuration_url=configuration_url,
         connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)},
-        name=device_info.name,
+        name=device_info.friendly_name or device_info.name,
         manufacturer=manufacturer,
         model=model,
         sw_version=sw_version,
@@ -705,6 +705,8 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         self._component_key = component_key
         self._key = key
         self._state_type = state_type
+        if entry_data.device_info is not None and entry_data.device_info.friendly_name:
+            self._attr_has_entity_name = True
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""

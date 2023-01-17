@@ -1,6 +1,8 @@
 """Constants for the ISY Platform."""
 import logging
 
+from pyisy.constants import PROP_ON_LEVEL, PROP_RAMP_RATE
+
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.climate import (
     FAN_AUTO,
@@ -85,6 +87,12 @@ NODE_PLATFORMS = [
     Platform.SENSOR,
     Platform.SWITCH,
 ]
+NODE_AUX_PROP_PLATFORMS = [
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 PROGRAM_PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.COVER,
@@ -98,6 +106,7 @@ VARIABLE_PLATFORMS = [Platform.NUMBER, Platform.SENSOR]
 # Set of all platforms used by integration
 PLATFORMS = {
     *NODE_PLATFORMS,
+    *NODE_AUX_PROP_PLATFORMS,
     *PROGRAM_PLATFORMS,
     *ROOT_NODE_PLATFORMS,
     *VARIABLE_PLATFORMS,
@@ -108,14 +117,6 @@ SUPPORTED_BIN_SENS_CLASSES = ["moisture", "opening", "motion", "climate"]
 # ISY Scenes are more like Switches than Home Assistant Scenes
 # (they can turn off, and report their state)
 ISY_GROUP_PLATFORM = Platform.SWITCH
-
-ISY_ROOT = "isy"
-ISY_ROOT_NODES = "isy_root_nodes"
-ISY_NET_RES = "isy_net_res"
-ISY_NODES = "isy_nodes"
-ISY_PROGRAMS = "isy_programs"
-ISY_VARIABLES = "isy_variables"
-ISY_DEVICES = "isy_devices"
 
 ISY_CONF_NETWORKING = "Networking Module"
 ISY_CONF_UUID = "uuid"
@@ -185,8 +186,6 @@ UOM_FAN_MODES = "99"
 UOM_INDEX = "25"
 UOM_ON_OFF = "2"
 UOM_PERCENTAGE = "51"
-
-SENSOR_AUX = "sensor_aux"
 
 # Do not use the Home Assistant consts for the states here - we're matching exact API
 # responses, not using them for Home Assistant states
@@ -312,6 +311,10 @@ NODE_FILTERS: dict[Platform, dict[str, list[str]]] = {
         FILTER_INSTEON_TYPE: ["4.8", TYPE_CATEGORY_CLIMATE],
         FILTER_ZWAVE_CAT: ["140"],
     },
+}
+NODE_AUX_FILTERS: dict[str, Platform] = {
+    PROP_ON_LEVEL: Platform.NUMBER,
+    PROP_RAMP_RATE: Platform.SELECT,
 }
 
 UOM_FRIENDLY_NAME = {

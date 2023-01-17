@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Standort ist bereits konfiguriert"
+            "already_configured": "Standort ist bereits konfiguriert",
+            "wrong_location": "Keine Airly Luftmessstation an diesem Ort"
         },
         "error": {
             "invalid_api_key": "Ung\u00fcltiger API-Schl\u00fcssel",

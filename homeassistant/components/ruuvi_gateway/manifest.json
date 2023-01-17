@@ -4,6 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ruuvi_gateway",
   "codeowners": ["@akx"],
+  "dependencies": ["bluetooth"],
   "requirements": ["aioruuvigateway==0.0.2"],
   "iot_class": "local_polling",
   "dhcp": [

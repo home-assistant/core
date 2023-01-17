@@ -191,6 +191,12 @@
           "iot_class": "cloud_push",
           "name": "Amazon Web Services (AWS)"
         },
+        "fire_tv": {
+          "integration_type": "virtual",
+          "config_flow": false,
+          "supported_by": "androidtv",
+          "name": "Amazon Fire TV"
+        },
         "route53": {
           "integration_type": "hub",
           "config_flow": false,
@@ -1475,9 +1481,20 @@
     },
     "eufy": {
       "name": "eufy",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
+      "integrations": {
+        "eufy": {
+          "integration_type": "hub",
+          "config_flow": false,
+          "iot_class": "local_polling",
+          "name": "eufy"
+        },
+        "eufylife_ble": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "EufyLife"
+        }
+      }
     },
     "everlights": {
       "name": "EverLights",
@@ -5618,7 +5635,7 @@
       "name": "Torque",
       "integration_type": "hub",
       "config_flow": false,
-      "iot_class": "cloud_polling"
+      "iot_class": "local_push"
     },
     "totalconnect": {
       "name": "Total Connect",

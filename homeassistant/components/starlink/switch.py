@@ -52,16 +52,6 @@ class StarlinkSwitchEntity(StarlinkEntity, SwitchEntity):
 
     entity_description: StarlinkSwitchEntityDescription
 
-    def __init__(
-        self,
-        coordinator: StarlinkUpdateCoordinator,
-        description: StarlinkSwitchEntityDescription,
-    ) -> None:
-        """Initialize the binary sensor."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        self._attr_unique_id = f"{self.coordinator.data.status['id']}_{description.key}"
-
     @property
     def is_on(self) -> bool | None:
         """Return True if entity is on."""

@@ -156,6 +156,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/bluesound/ @thrawnarn
 /homeassistant/components/bluetooth/ @bdraco
 /tests/components/bluetooth/ @bdraco
+/homeassistant/components/bluetooth_adapters/ @bdraco
+/tests/components/bluetooth_adapters/ @bdraco
 /homeassistant/components/bmw_connected_drive/ @gerard33 @rikroe
 /tests/components/bmw_connected_drive/ @gerard33 @rikroe
 /homeassistant/components/bond/ @bdraco @prystupa @joshs85 @marciogranzotto
@@ -335,6 +337,8 @@ build.json @home-assistant/supervisor
 /tests/components/escea/ @lazdavila
 /homeassistant/components/esphome/ @OttoWinter @jesserockz
 /tests/components/esphome/ @OttoWinter @jesserockz
+/homeassistant/components/eufylife_ble/ @bdr99
+/tests/components/eufylife_ble/ @bdr99
 /homeassistant/components/evil_genius_labs/ @balloob
 /tests/components/evil_genius_labs/ @balloob
 /homeassistant/components/evohome/ @zxdavb
@@ -851,8 +855,8 @@ build.json @home-assistant/supervisor
 /tests/components/openweathermap/ @fabaff @freekode @nzapponi
 /homeassistant/components/opnsense/ @mtreinish
 /tests/components/opnsense/ @mtreinish
-/homeassistant/components/oralb/ @bdraco
-/tests/components/oralb/ @bdraco
+/homeassistant/components/oralb/ @bdraco @conway20
+/tests/components/oralb/ @bdraco @conway20
 /homeassistant/components/oru/ @bvlaicu
 /homeassistant/components/overkiz/ @imicknl @vlebourl @tetienne @nyroDev
 /tests/components/overkiz/ @imicknl @vlebourl @tetienne @nyroDev
@@ -1310,8 +1314,8 @@ build.json @home-assistant/supervisor
 /tests/components/weather/ @home-assistant/core
 /homeassistant/components/webhook/ @home-assistant/core
 /tests/components/webhook/ @home-assistant/core
-/homeassistant/components/webostv/ @bendavid @thecode
-/tests/components/webostv/ @bendavid @thecode
+/homeassistant/components/webostv/ @thecode
+/tests/components/webostv/ @thecode
 /homeassistant/components/websocket_api/ @home-assistant/core
 /tests/components/websocket_api/ @home-assistant/core
 /homeassistant/components/wemo/ @esev

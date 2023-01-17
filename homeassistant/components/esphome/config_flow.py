@@ -179,8 +179,10 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         mac_address = format_mac(mac_address)
 
         # Hostname is format: livingroom.local.
-        self._name = discovery_info.hostname[: -len(".local.")]
-        self._device_name = self._name
+        device_name = discovery_info.hostname.removesuffix(".local.")
+
+        self._name = discovery_info.properties.get("friendly_name", device_name)
+        self._device_name = device_name
         self._host = discovery_info.host
         self._port = discovery_info.port
 
@@ -306,7 +308,8 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         finally:
             await cli.disconnect(force=True)
 
-        self._name = self._device_name = self._device_info.name
+        self._name = self._device_info.friendly_name or self._device_info.name
+        self._device_name = self._device_info.name
         await self.async_set_unique_id(
             self._device_info.mac_address, raise_on_progress=False
         )

@@ -28,7 +28,7 @@
                     "username": "Kullan\u0131c\u0131 Ad\u0131",
                     "verify_ssl": "SSL sertifikalar\u0131n\u0131 do\u011frula"
                 },
-                "description": "{name} ( {host} ) kurulumu yapmak istiyor musunuz?"
+                "description": "{name} ( {host} ) kurmak istiyor musunuz?"
             },
             "reauth_confirm": {
                 "data": {
