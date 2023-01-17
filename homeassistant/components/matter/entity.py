@@ -13,7 +13,7 @@ from matter_server.common.models.node_device import AbstractMatterNodeDevice
 from matter_server.common.models.server_information import ServerInfo
 
 from homeassistant.core import callback
-from homeassistant.helpers.entity import Entity, EntityDescription
+from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 
 from .const import DOMAIN
 from .helpers import get_device_id, get_operational_instance_id
@@ -68,9 +68,9 @@ class MatterEntity(Entity):
             f"{device_type_instance.endpoint}-"
             f"{device_type_instance.device_type.device_type}"
         )
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, get_device_id(server_info, node_device))}
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, get_device_id(server_info, node_device))}
+        )
 
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""
