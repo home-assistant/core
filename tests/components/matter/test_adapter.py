@@ -28,7 +28,7 @@ async def test_device_registry_single_node_device(
 
     dev_reg = dr.async_get(hass)
     entry = dev_reg.async_get_device(
-        {(DOMAIN, "00000000000004D2-0000000000000001-MatterNodeDevice")}
+        {(DOMAIN, "device_id_00000000000004D2-0000000000000001-MatterNodeDevice")}
     )
     assert entry is not None
 
@@ -55,7 +55,7 @@ async def test_device_registry_single_node_device_alt(
 
     dev_reg = dr.async_get(hass)
     entry = dev_reg.async_get_device(
-        {(DOMAIN, "00000000000004D2-0000000000000001-MatterNodeDevice")}
+        {(DOMAIN, "device_id_00000000000004D2-0000000000000001-MatterNodeDevice")}
     )
     assert entry is not None
 

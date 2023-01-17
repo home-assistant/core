@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, ID_TYPE_DEVICE_ID, ID_TYPE_SERIAL, LOGGER
 from .device_platform import DEVICE_PLATFORM
 from .helpers import get_device_id
 
@@ -106,11 +106,11 @@ class MatterAdapter:
             server_info,
             node_device,
         )
-        identifiers = {(DOMAIN, node_device_id)}
+        identifiers = {(DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")}
         # if available, we also add the serialnumber as identifier
         if basic_info.serialNumber and "test" not in basic_info.serialNumber.lower():
             # prefix identifier with 'serial_' to be able to filter it
-            identifiers.add((DOMAIN, f"serial_{basic_info.serialNumber}"))
+            identifiers.add((DOMAIN, f"{ID_TYPE_SERIAL}_{basic_info.serialNumber}"))
 
         dr.async_get(self.hass).async_get_or_create(
             name=name,

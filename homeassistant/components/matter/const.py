@@ -8,3 +8,7 @@ CONF_USE_ADDON = "use_addon"
 
 DOMAIN = "matter"
 LOGGER = logging.getLogger(__package__)
+
+# prefixes to identify device identifier id types
+ID_TYPE_DEVICE_ID = "device_id"
+ID_TYPE_SERIAL = "serial"
