@@ -164,7 +164,6 @@ SET_FAN_MIN_ON_TIME_SCHEMA = vol.Schema(
 SUPPORT_FLAGS = (
     ClimateEntityFeature.TARGET_TEMPERATURE
     | ClimateEntityFeature.PRESET_MODE
-    | ClimateEntityFeature.AUX_HEAT
     | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
     | ClimateEntityFeature.FAN_MODE
 )

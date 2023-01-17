@@ -4,10 +4,15 @@ from unittest import mock
 
 import pytest
 
-from homeassistant.components.climate.const import SUPPORT_AUX_HEAT
-from homeassistant.components.ecobee import climate as ecobee
+from homeassistant.components.climate.const import ClimateEntityFeature
+from homeassistant.components.ecobee import DOMAIN as CLIMATE_DOMAIN, climate as ecobee
 import homeassistant.const as const
-from homeassistant.const import STATE_OFF
+from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_OFF
+
+from tests.components.ecobee import GENERIC_THERMOSTAT_INFO
+from tests.components.ecobee.common import setup_platform
+
+DEVICE_ID = "climate.ecobee"
 
 
 @pytest.fixture
@@ -77,15 +82,35 @@ async def test_name(thermostat):
     assert thermostat.name == "Ecobee"
 
 
-async def test_aux_heat_not_supported_by_default(ecobee_fixture, thermostat):
+async def test_aux_heat_not_supported_by_default(hass):
     """Default setup should not support Aux heat."""
-    assert not thermostat.supported_features & SUPPORT_AUX_HEAT
+    await setup_platform(hass, CLIMATE_DOMAIN)
+    state = hass.states.get(DEVICE_ID)
+    assert (
+        state.attributes.get(ATTR_SUPPORTED_FEATURES)
+        == ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+        | ClimateEntityFeature.TARGET_TEMPERATURE
+    )
 
 
-async def test_aux_heat_supported_with_heat_pump(ecobee_fixture, thermostat):
+async def test_aux_heat_supported_with_heat_pump(hass):
     """Aux Heat shouuld be supported if thermostat has heatpump."""
-    ecobee_fixture["settings"]["hasHeatPump"] = True
-    assert thermostat.supported_features & SUPPORT_AUX_HEAT
+    mock_get_themostat = mock.Mock()
+    mock_get_themostat.return_value = GENERIC_THERMOSTAT_INFO
+    mock_get_themostat.return_value["settings"]["hasHeatPump"] = True
+    with mock.patch("pyecobee.Ecobee.get_thermostat", mock_get_themostat):
+        await setup_platform(hass, CLIMATE_DOMAIN)
+    state = hass.states.get(DEVICE_ID)
+    assert (
+        state.attributes.get(ATTR_SUPPORTED_FEATURES)
+        == ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+        | ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.AUX_HEAT
+    )
 
 
 async def test_current_temperature(ecobee_fixture, thermostat):
