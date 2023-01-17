@@ -9,7 +9,7 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     CONF_PLATFORM,
-    DATA_GIGABYTES,
+    UnitOfInformation,
 )
 from homeassistant.core import HomeAssistant
 
@@ -58,7 +58,9 @@ def test_sensor(hass: HomeAssistant):
 
         device.update()
 
-        if device.unit_of_measurement == DATA_GIGABYTES:  # Test Bandwidth Used
+        if (
+            device.unit_of_measurement == UnitOfInformation.GIGABYTES
+        ):  # Test Bandwidth Used
             if device.subscription == "576965":
                 assert device.name == "Vultr my new server Current Bandwidth Used"
                 assert device.icon == "mdi:chart-histogram"

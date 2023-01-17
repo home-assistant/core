@@ -5,8 +5,8 @@ from unittest.mock import patch
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
-    DATA_MEGABYTES,
-    DATA_RATE_MEGABYTES_PER_SECOND,
+    UnitOfDataRate,
+    UnitOfInformation,
 )
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -28,32 +28,32 @@ async def test_sensors(hass, nzbget_api) -> None:
         "article_cache": (
             "ArticleCacheMB",
             "64",
-            DATA_MEGABYTES,
+            UnitOfInformation.MEGABYTES,
             SensorDeviceClass.DATA_SIZE,
         ),
         "average_speed": (
             "AverageDownloadRate",
             "1.19",
-            DATA_RATE_MEGABYTES_PER_SECOND,
+            UnitOfDataRate.MEGABYTES_PER_SECOND,
             SensorDeviceClass.DATA_RATE,
         ),
         "download_paused": ("DownloadPaused", "False", None, None),
         "speed": (
             "DownloadRate",
             "2.38",
-            DATA_RATE_MEGABYTES_PER_SECOND,
+            UnitOfDataRate.MEGABYTES_PER_SECOND,
             SensorDeviceClass.DATA_RATE,
         ),
         "size": (
             "DownloadedSizeMB",
             "256",
-            DATA_MEGABYTES,
+            UnitOfInformation.MEGABYTES,
             SensorDeviceClass.DATA_SIZE,
         ),
         "disk_free": (
             "FreeDiskSpaceMB",
             "1024",
-            DATA_MEGABYTES,
+            UnitOfInformation.MEGABYTES,
             SensorDeviceClass.DATA_SIZE,
         ),
         "post_processing_jobs": ("PostJobCount", "2", "Jobs", None),
@@ -61,14 +61,14 @@ async def test_sensors(hass, nzbget_api) -> None:
         "queue_size": (
             "RemainingSizeMB",
             "512",
-            DATA_MEGABYTES,
+            UnitOfInformation.MEGABYTES,
             SensorDeviceClass.DATA_SIZE,
         ),
         "uptime": ("UpTimeSec", uptime.isoformat(), None, SensorDeviceClass.TIMESTAMP),
         "speed_limit": (
             "DownloadLimit",
             "0.95",
-            DATA_RATE_MEGABYTES_PER_SECOND,
+            UnitOfDataRate.MEGABYTES_PER_SECOND,
             SensorDeviceClass.DATA_RATE,
         ),
     }

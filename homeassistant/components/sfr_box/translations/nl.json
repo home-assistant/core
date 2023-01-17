@@ -17,6 +17,19 @@
     },
     "entity": {
         "sensor": {
+            "line_status": {
+                "state": {
+                    "unknown": "Onbekend"
+                }
+            },
+            "net_infra": {
+                "state": {
+                    "adsl": "ADSL",
+                    "ftth": "FTTH",
+                    "gprs": "GPRS",
+                    "unknown": "Onbekend"
+                }
+            },
             "training": {
                 "state": {
                     "idle": "Inactief",

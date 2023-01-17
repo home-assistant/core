@@ -54,15 +54,8 @@ def config_entry_fixture(hass, config, options, config_entry_version):
 
 @pytest.fixture(name="config_entry_version")
 def config_entry_version_fixture(request):
-    """Define a config entry version fixture.
-
-    @pytest.mark.config_entry_version(int)
-    """
-    marker = request.node.get_closest_marker("config_entry_version")
-    version = 3
-    if marker:
-        version = marker.args[0]
-    return version
+    """Define a config entry version fixture."""
+    return 3
 
 
 @pytest.fixture(name="config")
@@ -73,15 +66,8 @@ def config_fixture():
 
 @pytest.fixture(name="options")
 def options_fixture(request):
-    """Define a config entry options fixture.
-
-    @pytest.mark.config_entry_options(dict)
-    """
-    marker = request.node.get_closest_marker("config_entry_options")
-    options = ENTRY_OPTIONS.copy()
-    if marker:
-        options = marker.args[0]
-    return options
+    """Define a config entry options fixture."""
+    return ENTRY_OPTIONS.copy()
 
 
 @pytest.fixture(autouse=True)

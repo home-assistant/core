@@ -2,7 +2,7 @@
   "domain": "ibeacon",
   "name": "iBeacon Tracker",
   "documentation": "https://www.home-assistant.io/integrations/ibeacon",
-  "dependencies": ["bluetooth"],
+  "dependencies": ["bluetooth_adapters"],
   "bluetooth": [{ "manufacturer_id": 76, "manufacturer_data_start": [2, 21] }],
   "requirements": ["ibeacon_ble==1.0.1"],
   "codeowners": ["@bdraco"],

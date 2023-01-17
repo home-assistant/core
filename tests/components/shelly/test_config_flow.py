@@ -706,6 +706,30 @@ async def test_zeroconf_already_configured(hass):
     assert entry.data["host"] == "1.1.1.1"
 
 
+async def test_zeroconf_ignored(hass):
+    """Test zeroconf when the device was previously ignored."""
+
+    entry = MockConfigEntry(
+        domain="shelly",
+        unique_id="test-mac",
+        data={},
+        source=config_entries.SOURCE_IGNORE,
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "aioshelly.common.get_info",
+        return_value={"mac": "test-mac", "type": "SHSW-1", "auth": False},
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=DISCOVERY_INFO,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["reason"] == "already_configured"
+
+
 async def test_zeroconf_with_wifi_ap_ip(hass):
     """Test we ignore the Wi-FI AP IP."""
 

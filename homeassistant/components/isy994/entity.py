@@ -1,24 +1,29 @@
 """Representation of ISYEntity Types."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from pyisy.constants import (
+    ATTR_ACTION,
+    ATTR_CONTROL,
     COMMAND_FRIENDLY_NAME,
     EMPTY_TIME,
     EVENT_PROPS_IGNORED,
+    NC_NODE_ENABLED,
     PROTO_INSTEON,
     PROTO_ZWAVE,
+    TAG_ADDRESS,
+    TAG_ENABLED,
 )
 from pyisy.helpers import EventListener, NodeProperty
-from pyisy.nodes import Group, Node
+from pyisy.nodes import Group, Node, NodeChangedEvent
 from pyisy.programs import Program
 from pyisy.variables import Variable
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 
 from .const import DOMAIN
 
@@ -35,7 +40,7 @@ class ISYEntity(Entity):
         node: Node | Group | Variable | Program,
         device_info: DeviceInfo | None = None,
     ) -> None:
-        """Initialize the insteon device."""
+        """Initialize the ISY/IoX entity."""
         self._node = node
         self._attr_name = node.name
         if device_info is None:
@@ -81,6 +86,22 @@ class ISYEntity(Entity):
 
 class ISYNodeEntity(ISYEntity):
     """Representation of a ISY Nodebase (Node/Group) entity."""
+
+    def __init__(
+        self,
+        node: Node | Group | Variable | Program,
+        device_info: DeviceInfo | None = None,
+    ) -> None:
+        """Initialize the ISY/IoX node entity."""
+        super().__init__(node, device_info=device_info)
+        if hasattr(node, "parent_node") and node.parent_node is None:
+            self._attr_has_entity_name = True
+            self._attr_name = None
+
+    @property
+    def available(self) -> bool:
+        """Return entity availability."""
+        return getattr(self._node, TAG_ENABLED, True)
 
     @property
     def extra_state_attributes(self) -> dict:
@@ -189,3 +210,57 @@ class ISYProgramEntity(ISYEntity):
         if self._node.last_update != EMPTY_TIME:
             attr["status_last_update"] = self._node.last_update
         return attr
+
+
+class ISYAuxControlEntity(Entity):
+    """Representation of a ISY/IoX Aux Control base entity."""
+
+    _attr_should_poll = False
+
+    def __init__(
+        self,
+        node: Node,
+        control: str,
+        unique_id: str,
+        description: EntityDescription,
+        device_info: DeviceInfo | None,
+    ) -> None:
+        """Initialize the ISY Aux Control Number entity."""
+        self._node = node
+        self._control = control
+        name = COMMAND_FRIENDLY_NAME.get(control, control).replace("_", " ").title()
+        if node.address != node.primary_node:
+            name = f"{node.name} {name}"
+        self._attr_name = name
+        self.entity_description = description
+        self._attr_has_entity_name = node.address == node.primary_node
+        self._attr_unique_id = unique_id
+        self._attr_device_info = device_info
+        self._change_handler: EventListener = None
+        self._availability_handler: EventListener = None
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to the node control change events."""
+        self._change_handler = self._node.control_events.subscribe(
+            self.async_on_update,
+            event_filter={ATTR_CONTROL: self._control},
+            key=self.unique_id,
+        )
+        self._availability_handler = self._node.isy.nodes.status_events.subscribe(
+            self.async_on_update,
+            event_filter={
+                TAG_ADDRESS: self._node.address,
+                ATTR_ACTION: NC_NODE_ENABLED,
+            },
+            key=self.unique_id,
+        )
+
+    @callback
+    def async_on_update(self, event: NodeProperty | NodeChangedEvent, key: str) -> None:
+        """Handle a control event from the ISY Node."""
+        self.async_write_ha_state()
+
+    @property
+    def available(self) -> bool:
+        """Return entity availability."""
+        return cast(bool, self._node.enabled)

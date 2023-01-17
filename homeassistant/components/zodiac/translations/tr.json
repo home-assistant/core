@@ -3,6 +3,7 @@
         "sensor": {
             "sign": {
                 "state": {
+                    "aquarius": "Kova",
                     "aries": "Ko\u00e7",
                     "cancer": "Yenge\u00e7",
                     "capricorn": "O\u011flak",
