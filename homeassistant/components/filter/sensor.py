@@ -417,7 +417,7 @@ class Filter:
         else:
             self.states = deque(maxlen=0)
             self.window_unit = WINDOW_SIZE_UNIT_TIME
-        self.precision = precision
+        self._precision = precision
         self._name = name
         self._entity = entity
         self._skip_processing = False
@@ -451,7 +451,7 @@ class Filter:
             raise ValueError(f"State <{fstate.state}> is not a Number")
 
         filtered = self._filter_state(fstate)
-        filtered.set_precision(self.precision)
+        filtered.set_precision(self._precision)
         if self._store_raw:
             self.states.append(copy(FilterState(new_state)))
         else:
