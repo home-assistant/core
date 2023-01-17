@@ -97,6 +97,7 @@ async def test_integration_services(hass, cfupdate):
             32.8594,
             -117.2073,
             True,
+            81,
         ),
     ):
 

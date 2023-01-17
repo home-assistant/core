@@ -233,6 +233,7 @@ async def test_register_view_with_location(mock_cognito, cloud_client):
                 "latitude": "12.34567",
                 "longitude": "12.34567",
                 "use_metric": True,
+                "elevation": "331",
             }
         ),
     ):

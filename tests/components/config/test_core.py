@@ -159,7 +159,7 @@ async def test_detect_config_fail(hass, client):
             longitude=None,
             use_metric=True,
             time_zone="Europe/Amsterdam",
-            elevatio=0,
+            elevation=0,
         ),
     ):
         await client.send_json({"id": 1, "type": "config/core/detect"})
