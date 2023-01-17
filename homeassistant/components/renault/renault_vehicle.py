@@ -37,7 +37,7 @@ def with_error_wrapping(
         *args: _P.args,
         **kwargs: _P.kwargs,
     ) -> _T:
-        """Catch BraviaClient errors and log message."""
+        """Catch RenaultException errors and raise HomeAssistantError."""
         try:
             return await func(self, *args, **kwargs)
         except RenaultException as err:
