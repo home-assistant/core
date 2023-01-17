@@ -97,7 +97,12 @@ async def test_detect_location_info_whoami(aioclient_mock, session):
 
 async def test_dev_url(aioclient_mock, session):
     """Test usage of dev URL."""
+
     aioclient_mock.get(location_util.WHOAMI_URL_DEV, text=load_fixture("whoami.json"))
+    aioclient_mock.get(
+        f"{location_util.ELEVATION_API_URL}?locations=12.34567,123.4567",
+        text=load_fixture("elevation.json"),
+    )
     with patch("homeassistant.util.location.HA_VERSION", "1.0.dev0"):
         info = await location_util.async_detect_location_info(session, _test_real=True)
 
