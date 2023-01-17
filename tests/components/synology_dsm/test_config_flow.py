@@ -11,7 +11,7 @@ from synology_dsm.exceptions import (
 )
 
 from homeassistant import data_entry_flow
-from homeassistant.components import ssdp
+from homeassistant.components import ssdp, zeroconf
 from homeassistant.components.synology_dsm.config_flow import CONF_OTP_CODE
 from homeassistant.components.synology_dsm.const import (
     CONF_SNAPSHOT_QUALITY,
@@ -25,7 +25,12 @@ from homeassistant.components.synology_dsm.const import (
     DEFAULT_VERIFY_SSL,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_SSDP, SOURCE_USER
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_SSDP,
+    SOURCE_USER,
+    SOURCE_ZEROCONF,
+)
 from homeassistant.const import (
     CONF_DISKS,
     CONF_HOST,
@@ -629,3 +634,70 @@ async def test_options_flow(hass: HomeAssistant, service: MagicMock):
     assert config_entry.options[CONF_SCAN_INTERVAL] == 2
     assert config_entry.options[CONF_TIMEOUT] == 30
     assert config_entry.options[CONF_SNAPSHOT_QUALITY] == 0
+
+
+async def test_discovered_via_zeroconf(hass: HomeAssistant, service: MagicMock):
+    """Test we can setup from zeroconf."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=zeroconf.ZeroconfServiceInfo(
+            host="192.168.1.5",
+            addresses=["192.168.1.5"],
+            port=5000,
+            hostname="mydsm.local.",
+            type="_http._tcp.local.",
+            name="mydsm._http._tcp.local.",
+            properties={
+                "mac_address": "00:11:32:XX:XX:99|00:11:22:33:44:55",  # MAC address, but SSDP does not have `-`
+            },
+        ),
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "link"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.synology_dsm.config_flow.SynologyDSM",
+        return_value=service,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
+        )
+
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == SERIAL
+    assert result["title"] == "mydsm"
+    assert result["data"][CONF_HOST] == "192.168.1.5"
+    assert result["data"][CONF_PORT] == 5001
+    assert result["data"][CONF_SSL] == DEFAULT_USE_SSL
+    assert result["data"][CONF_VERIFY_SSL] == DEFAULT_VERIFY_SSL
+    assert result["data"][CONF_USERNAME] == USERNAME
+    assert result["data"][CONF_PASSWORD] == PASSWORD
+    assert result["data"][CONF_MAC] == MACS
+    assert result["data"].get("device_token") is None
+    assert result["data"].get(CONF_DISKS) is None
+    assert result["data"].get(CONF_VOLUMES) is None
+
+
+async def test_discovered_via_zeroconf_missing_mac(
+    hass: HomeAssistant, service: MagicMock
+):
+    """Test we abort if the mac address is missing."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=zeroconf.ZeroconfServiceInfo(
+            host="192.168.1.5",
+            addresses=["192.168.1.5"],
+            port=5000,
+            hostname="mydsm.local.",
+            type="_http._tcp.local.",
+            name="mydsm._http._tcp.local.",
+            properties={},
+        ),
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "no_mac_address"

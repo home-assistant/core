@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from ipaddress import ip_address
 import logging
-from typing import Any
+from typing import Any, cast
 from urllib.parse import urlparse
 
 from synology_dsm import SynologyDSM
@@ -57,7 +57,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_OTP_CODE = "otp_code"
 
-HTTP_SUFFIX = "_http._tcp.local."
+HTTP_SUFFIX = "._http._tcp.local."
 
 
 def _discovery_schema_with_defaults(discovery_info: DiscoveryInfoType) -> vol.Schema:
@@ -105,6 +105,11 @@ def _is_valid_ip(text: str) -> bool:
     except ValueError:
         return False
     return True
+
+
+def format_synology_mac(mac: str) -> str:
+    """Format a mac address to the format used by Synology DSM."""
+    return mac.replace(":", "").replace("-", "").upper()
 
 
 class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -245,12 +250,12 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle a discovered synology_dsm via zeroconf."""
-        if not (
-            discovered_macs := [
-                mac.upper()
-                for mac in discovery_info.properties.get("mac_address", "").split("|")
-            ]
-        ):
+        discovered_macs = [
+            format_synology_mac(mac)
+            for mac in discovery_info.properties.get("mac_address", "").split("|")
+            if mac
+        ]
+        if not discovered_macs:
             return self.async_abort(reason="no_mac_address")
         host = discovery_info.host
         friendly_name = discovery_info.name.removesuffix(HTTP_SUFFIX)
@@ -264,12 +269,12 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         friendly_name = (
             discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME].split("(", 1)[0].strip()
         )
-        discovered_macs = [discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL].upper()]
+        discovered_macs = [
+            format_synology_mac(discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL].upper())
+        ]
         # Synology NAS can broadcast on multiple IP addresses, since they can be connected to multiple ethernets.
         # The serial of the NAS is actually its MAC address.
-        host = parsed_url.hostname
-        if not isinstance(host, str):
-            return self.async_abort(reason="invalid_host")
+        host = cast(str, parsed_url.hostname)
         return await self._async_step_from_discovery(
             host, friendly_name, discovered_macs
         )
@@ -368,7 +373,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         """See if we already have a configured NAS with this MAC address."""
         for entry in self._async_current_entries():
             if discovered_mac in [
-                mac.replace("-", "") for mac in entry.data.get(CONF_MAC, [])
+                format_synology_mac(mac) for mac in entry.data.get(CONF_MAC, [])
             ]:
                 return entry
         return None
