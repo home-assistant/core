@@ -295,7 +295,7 @@ class TestWorkdaySetup:
 
     # Freeze time to test mon, without standard holidays, but added as a holiday - Feb 24th 2020
     @patch(FUNCTION_PATH, return_value=date(2020, 2, 24))
-    def test_config_example1_holiday(self, mock_date):
+    def test_config_example1_add_holiday(self, mock_date):
         """Test if custom holidays are reported correctly."""
         with assert_setup_component(1, "binary_sensor"):
             setup_component(self.hass, "binary_sensor", self.config_example1)
