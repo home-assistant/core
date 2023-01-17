@@ -51,8 +51,7 @@ async def async_get_device_config(hass, config_entry):
 
     load_aldb = 2 if devices.modem.aldb.read_write_mode == ReadWriteMode.UNKNOWN else 1
     await devices.async_load(id_devices=1, load_modem_aldb=load_aldb)
-    device_addrs = list(devices)
-    for addr in device_addrs:
+    for addr in list(devices):
         device = devices[addr]
         flags = True
         for name in device.operating_flags:
