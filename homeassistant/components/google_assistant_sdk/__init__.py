@@ -21,12 +21,13 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     CONF_ENABLE_CONVERSATION_AGENT,
     CONF_LANGUAGE_CODE,
-    DATA_AUDIO_VIEW,
+    DATA_MEM_STORAGE,
     DATA_SESSION,
     DOMAIN,
 )
 from .helpers import (
     GoogleAssistantSDKAudioView,
+    InMemoryStorage,
     async_send_text_commands,
     default_language_code,
 )
@@ -73,9 +74,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from err
     hass.data[DOMAIN][entry.entry_id][DATA_SESSION] = session
 
-    audio_view = GoogleAssistantSDKAudioView(hass)
-    hass.http.register_view(audio_view)
-    hass.data[DOMAIN][entry.entry_id][DATA_AUDIO_VIEW] = audio_view
+    mem_storage = InMemoryStorage(hass)
+    hass.data[DOMAIN][entry.entry_id][DATA_MEM_STORAGE] = mem_storage
+    hass.http.register_view(GoogleAssistantSDKAudioView(mem_storage))
 
     await async_setup_service(hass)
 

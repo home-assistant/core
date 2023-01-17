@@ -1,4 +1,5 @@
 """Tests for Google Assistant SDK."""
+from datetime import timedelta
 import http
 import time
 from unittest.mock import call, patch
@@ -10,10 +11,11 @@ from homeassistant.components.google_assistant_sdk import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util.dt import utcnow
 
 from .conftest import ComponentSetup, ExpectedCredentials
 
-from tests.common import async_mock_service
+from tests.common import async_fire_time_changed, async_mock_service
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -240,16 +242,10 @@ async def test_send_text_command_media_player(
     audio_url2 = play_media_calls[1].data["media_content_id"]
     assert audio_url1 != audio_url2
 
-    # Assert that both audio responses can be served multiple times.
+    # Assert that both audio responses can be served
     status, response = await fetch_api_url(hass_client, audio_url1)
     assert status == http.HTTPStatus.OK
     assert response == audio_response1
-    status, response = await fetch_api_url(hass_client, audio_url1)
-    assert status == http.HTTPStatus.OK
-    assert response == audio_response1
-    status, response = await fetch_api_url(hass_client, audio_url2)
-    assert status == http.HTTPStatus.OK
-    assert response == audio_response2
     status, response = await fetch_api_url(hass_client, audio_url2)
     assert status == http.HTTPStatus.OK
     assert response == audio_response2
@@ -258,6 +254,22 @@ async def test_send_text_command_media_player(
     status, _ = await fetch_api_url(
         hass_client, "/api/google_assistant_sdk/audio/nonexistent"
     )
+    assert status == http.HTTPStatus.NOT_FOUND
+
+    # Assert that both audio responses can still be served before the 5 minutes expiration
+    async_fire_time_changed(hass, utcnow() + timedelta(minutes=4))
+    status, response = await fetch_api_url(hass_client, audio_url1)
+    assert status == http.HTTPStatus.OK
+    assert response == audio_response1
+    status, response = await fetch_api_url(hass_client, audio_url2)
+    assert status == http.HTTPStatus.OK
+    assert response == audio_response2
+
+    # Assert that they cannot be served after the 5 minutes expiration
+    async_fire_time_changed(hass, utcnow() + timedelta(minutes=6))
+    status, response = await fetch_api_url(hass_client, audio_url1)
+    assert status == http.HTTPStatus.NOT_FOUND
+    status, response = await fetch_api_url(hass_client, audio_url2)
     assert status == http.HTTPStatus.NOT_FOUND
 
 

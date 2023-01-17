@@ -22,10 +22,7 @@ from homeassistant.helpers.network import (
 from .const import CONTENT_AUTH_EXPIRY_TIME, MediaClass, MediaType
 
 # Paths that we don't need to sign
-PATHS_WITHOUT_AUTH = (
-    "/api/google_assistant_sdk/audio/",
-    "/api/tts_proxy/",
-)
+PATHS_WITHOUT_AUTH = ("/api/tts_proxy/",)
 
 
 @callback

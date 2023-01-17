@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from http import HTTPStatus
 import logging
+from typing import Any
 import uuid
 
 import aiohttp
@@ -23,10 +24,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
+from homeassistant.helpers.event import async_call_later
 
 from .const import (
     CONF_LANGUAGE_CODE,
-    DATA_AUDIO_VIEW,
+    DATA_MEM_STORAGE,
     DATA_SESSION,
     DOMAIN,
     SUPPORTED_LANGUAGE_CODES,
@@ -72,17 +74,18 @@ async def async_send_text_commands(
             _LOGGER.debug("command: %s\nresponse: %s", command, text_response)
             audio_response = resp[2]
             if media_players and audio_response:
-                audio_view: GoogleAssistantSDKAudioView = hass.data[DOMAIN][
-                    entry.entry_id
-                ][DATA_AUDIO_VIEW]
+                mem_storage: InMemoryStorage = hass.data[DOMAIN][entry.entry_id][
+                    DATA_MEM_STORAGE
+                ]
+                audio_url = GoogleAssistantSDKAudioView.url.format(
+                    filename=mem_storage.store_and_get_identifier(audio_response)
+                )
                 await hass.services.async_call(
                     DOMAIN_MP,
                     SERVICE_PLAY_MEDIA,
                     {
                         ATTR_ENTITY_ID: media_players,
-                        ATTR_MEDIA_CONTENT_ID: audio_view.memcache_store_and_get_url(
-                            audio_response
-                        ),
+                        ATTR_MEDIA_CONTENT_ID: audio_url,
                         ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
                         ATTR_MEDIA_ANNOUNCE: True,
                     },
@@ -98,35 +101,51 @@ def default_language_code(hass: HomeAssistant):
     return DEFAULT_LANGUAGE_CODES.get(hass.config.language, "en-US")
 
 
+class InMemoryStorage:
+    """Temporarily store and retrieve data from in memory storage."""
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize InMemoryStorage."""
+        self.hass: HomeAssistant = hass
+        self.mem: dict[str, bytes] = {}
+
+    def store_and_get_identifier(self, data: bytes) -> str:
+        """
+        Temporarily store data and return identifier to be able to retrieve it.
+
+        Data expires after 5 minutes.
+        """
+        identifier: str = uuid.uuid1().hex
+        self.mem[identifier] = data
+
+        def async_remove_from_mem(*_: Any) -> None:
+            """Cleanup memory."""
+            self.mem.pop(identifier, None)
+
+        # Remove the entry from memory 5 minutes later
+        async_call_later(self.hass, 5 * 60, async_remove_from_mem)
+
+        return identifier
+
+    def retrieve(self, identifier: str) -> bytes | None:
+        """Retrieve previously stored data."""
+        return self.mem.get(identifier)
+
+
 class GoogleAssistantSDKAudioView(HomeAssistantView):
     """Google Assistant SDK view to serve audio responses."""
 
-    requires_auth = False
+    requires_auth = True
     url = "/api/google_assistant_sdk/audio/{filename}"
     name = "api:google_assistant_sdk:audio"
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, mem_storage: InMemoryStorage) -> None:
         """Initialize GoogleAssistantSDKView."""
-        self.hass: HomeAssistant = hass
-        self.mem_cache: dict[str, bytes] = {}
-
-    def memcache_store_and_get_url(self, audio: bytes) -> str:
-        """Write audio to memcache and return URL to serve it."""
-        filename: str = uuid.uuid1().hex
-        self.mem_cache[filename] = audio
-
-        def async_remove_from_mem() -> None:
-            """Cleanup memcache."""
-            self.mem_cache.pop(filename, None)
-
-        # Remove the entry from memcache 5 minutes later
-        self.hass.loop.call_later(5 * 60, async_remove_from_mem)
-
-        return self.url.format(filename=filename)
+        self.mem_storage: InMemoryStorage = mem_storage
 
     async def get(self, request: web.Request, filename: str) -> web.Response:
         """Start a get request."""
-        audio = self.mem_cache.get(filename)
+        audio = self.mem_storage.retrieve(filename)
         if not audio:
             return web.Response(status=HTTPStatus.NOT_FOUND)
         return web.Response(body=audio, content_type="audio/mpeg")
