@@ -384,10 +384,7 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.SOUND_PRESSURE: set(UnitOfSoundPressure),
     NumberDeviceClass.SPEED: set(UnitOfSpeed).union(set(UnitOfVolumetricFlux)),
     NumberDeviceClass.SULPHUR_DIOXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
-    NumberDeviceClass.TEMPERATURE: {
-        UnitOfTemperature.CELSIUS,
-        UnitOfTemperature.FAHRENHEIT,
-    },
+    NumberDeviceClass.TEMPERATURE: set(UnitOfTemperature),
     NumberDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: {
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     },
