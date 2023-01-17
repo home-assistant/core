@@ -35,7 +35,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
             except python_otbr_api.OTBRError:
                 errors["base"] = "cannot_connect"
             else:
-                await self.async_set_unique_id(url)
+                await self.async_set_unique_id(DOMAIN)
                 return self.async_create_entry(
                     title="Thread",
                     data={"url": url},
@@ -53,7 +53,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
 
         config = discovery_info.config
         url = f"http://{config['host']}:{config['port']}"
-        await self.async_set_unique_id(url)
+        await self.async_set_unique_id(DOMAIN)
         return self.async_create_entry(
             title="Thread",
             data={"url": url},
