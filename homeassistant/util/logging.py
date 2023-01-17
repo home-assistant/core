@@ -73,6 +73,7 @@ class HomeAssistantQueueHandler(logging.handlers.QueueHandler):
         if not self.listener:
             return
         self.listener.stop()
+        self.listener = None
 
 
 @callback
