@@ -3,13 +3,31 @@ from __future__ import annotations
 
 import melissa
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 
 PLATFORMS: list[Platform] = [Platform.CLIMATE]
+
+
+async def async_setup(hass, config):
+    """Import configuration from yaml."""
+    hass.data[DOMAIN] = {}
+    if DOMAIN not in config:
+        return True
+
+    conf = config.get(DOMAIN, {})
+
+    if not hass.config_entries.async_entries(DOMAIN):
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
+            )
+        )
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
