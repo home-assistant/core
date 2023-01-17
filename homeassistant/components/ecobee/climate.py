@@ -61,10 +61,13 @@ PRESET_HOLD_INDEFINITE = "indefinite"
 AWAY_MODE = "awayMode"
 PRESET_HOME = "home"
 PRESET_SLEEP = "sleep"
+HAS_HEAT_PUMP = "hasHeatPump"
 
 DEFAULT_MIN_HUMIDITY = 15
 DEFAULT_MAX_HUMIDITY = 50
 HUMIDIFIER_MANUAL_MODE = "manual"
+
+ECOBEE_AUX_HEAT_ONLY = "auxHeatOnly"
 
 
 # Order matters, because for reverse mapping we don't want to map HEAT to AUX
@@ -355,9 +358,12 @@ class Thermostat(ClimateEntity):
     @property
     def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
+        supported = SUPPORT_FLAGS
         if self.has_humidifier_control:
-            return SUPPORT_FLAGS | ClimateEntityFeature.TARGET_HUMIDITY
-        return SUPPORT_FLAGS
+            supported = supported | ClimateEntityFeature.TARGET_HUMIDITY
+        if self.has_aux_heat:
+            supported = supported | ClimateEntityFeature.AUX_HEAT
+        return supported
 
     @property
     def name(self):
@@ -414,8 +420,16 @@ class Thermostat(ClimateEntity):
     def has_humidifier_control(self):
         """Return true if humidifier connected to thermostat and set to manual/on mode."""
         return (
-            self.thermostat["settings"]["hasHumidifier"]
+            "hasHumidifer" in self.thermostat["settings"]
             and self.thermostat["settings"]["humidifierMode"] == HUMIDIFIER_MANUAL_MODE
+        )
+
+    @property
+    def has_aux_heat(self):
+        """Return true if the ecobee has a heat pump."""
+        return (
+            HAS_HEAT_PUMP in self.thermostat["settings"]
+            and self.thermostat["settings"][HAS_HEAT_PUMP]
         )
 
     @property
@@ -547,17 +561,18 @@ class Thermostat(ClimateEntity):
     @property
     def is_aux_heat(self):
         """Return true if aux heater."""
-        return "auxHeat" in self.thermostat["equipmentStatus"]
+        return self.thermostat["settings"]["hvacMode"] == ECOBEE_AUX_HEAT_ONLY
 
-    async def async_turn_aux_heat_on(self) -> None:
+    def turn_aux_heat_on(self):
         """Turn auxiliary heater on."""
-        if not self.is_aux_heat:
-            _LOGGER.warning("# Changing aux heat is not supported")
+        _LOGGER.debug("Setting HVAC mode to auxHeatOnly to turn on aux heat")
+        self.data.ecobee.set_hvac_mode(self.thermostat_index, ECOBEE_AUX_HEAT_ONLY)
+        self.update_without_throttle = True
 
-    async def async_turn_aux_heat_off(self) -> None:
+    def turn_aux_heat_off(self) -> None:
         """Turn auxiliary heater off."""
-        if self.is_aux_heat:
-            _LOGGER.warning("# Changing aux heat is not supported")
+        _LOGGER.debug("Setting HVAC mode to heat to disable aux heat")
+        self.set_hvac_mode(self._last_active_hvac_mode)
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Activate a preset."""
