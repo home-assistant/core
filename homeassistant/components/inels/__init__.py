@@ -14,15 +14,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from .const import BROKER, BROKER_CONFIG, DEVICES, DOMAIN, LOGGER
 
 PLATFORMS: list[Platform] = [
-    Platform.BUTTON,
-    Platform.SWITCH,
-    Platform.LIGHT,
     Platform.COVER,
-    Platform.SENSOR,
-    Platform.WATER_HEATER,
-    Platform.CLIMATE,
-    Platform.BINARY_SENSOR,
-    Platform.SELECT,
 ]
 
 
