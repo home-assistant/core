@@ -121,8 +121,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 async_update_entry_from_discovery(
                     self.hass, entry, device, None, allow_update_mac
                 )
-                or entry.state == config_entries.ConfigEntryState.SETUP_RETRY
-            ):
+                and entry.state
+                not in (
+                    config_entries.ConfigEntryState.SETUP_IN_PROGRESS,
+                    config_entries.ConfigEntryState.NOT_LOADED,
+                )
+            ) or entry.state == config_entries.ConfigEntryState.SETUP_RETRY:
                 self.hass.async_create_task(
                     self.hass.config_entries.async_reload(entry.entry_id)
                 )
