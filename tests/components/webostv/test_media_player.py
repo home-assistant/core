@@ -1,6 +1,7 @@
 """The tests for the LG webOS media player platform."""
 import asyncio
 from datetime import timedelta
+from http import HTTPStatus
 from unittest.mock import Mock
 
 import pytest
@@ -697,3 +698,68 @@ async def test_supported_features_ignore_cache(hass, client):
     attrs = hass.states.get(ENTITY_ID).attributes
 
     assert attrs[ATTR_SUPPORTED_FEATURES] == supported
+
+
+async def test_get_image_http(
+    hass, client, hass_client_no_auth, aioclient_mock, monkeypatch
+):
+    """Test get image via http."""
+    url = "http://something/valid_icon"
+    monkeypatch.setitem(client.apps[LIVE_TV_APP_ID], "icon", url)
+    await setup_webostv(hass)
+    await client.mock_state_update()
+
+    attrs = hass.states.get(ENTITY_ID).attributes
+    assert "entity_picture_local" not in attrs
+
+    aioclient_mock.get(url, text="image")
+    client = await hass_client_no_auth()
+
+    resp = await client.get(attrs["entity_picture"])
+    content = await resp.read()
+
+    assert content == b"image"
+
+
+async def test_get_image_http_error(
+    hass, client, hass_client_no_auth, aioclient_mock, caplog, monkeypatch
+):
+    """Test get image via http error."""
+    url = "http://something/icon_error"
+    monkeypatch.setitem(client.apps[LIVE_TV_APP_ID], "icon", url)
+    await setup_webostv(hass)
+    await client.mock_state_update()
+
+    attrs = hass.states.get(ENTITY_ID).attributes
+    assert "entity_picture_local" not in attrs
+
+    aioclient_mock.get(url, exc=asyncio.TimeoutError())
+    client = await hass_client_no_auth()
+
+    resp = await client.get(attrs["entity_picture"])
+    content = await resp.read()
+
+    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert f"Error retrieving proxied image from {url}" in caplog.text
+    assert content == b""
+
+
+async def test_get_image_https(
+    hass, client, hass_client_no_auth, aioclient_mock, monkeypatch
+):
+    """Test get image via http."""
+    url = "https://something/valid_icon_https"
+    monkeypatch.setitem(client.apps[LIVE_TV_APP_ID], "icon", url)
+    await setup_webostv(hass)
+    await client.mock_state_update()
+
+    attrs = hass.states.get(ENTITY_ID).attributes
+    assert "entity_picture_local" not in attrs
+
+    aioclient_mock.get(url, text="https_image")
+    client = await hass_client_no_auth()
+
+    resp = await client.get(attrs["entity_picture"])
+    content = await resp.read()
+
+    assert content == b"https_image"
