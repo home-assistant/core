@@ -326,7 +326,7 @@ class SensorDeviceClass(StrEnum):
     TEMPERATURE = "temperature"
     """Temperature.
 
-    Unit of measurement: `°C`, `°F`
+    Unit of measurement: `°C`, `°F`, `K`
     """
 
     VOLATILE_ORGANIC_COMPOUNDS = "volatile_organic_compounds"
