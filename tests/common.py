@@ -456,7 +456,7 @@ def _async_fire_time_changed(
 
         if fire_all or mock_seconds_into_future >= future_seconds:
             with patch(
-                "homeassistant.helpers.event.time_tracker_utcnow",
+                "homeassistant.helpers.event.dt_util.utcnow",
                 return_value=utc_datetime,
             ), patch(
                 "homeassistant.helpers.event.time_tracker_timestamp",

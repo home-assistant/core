@@ -1487,7 +1487,6 @@ def async_track_sunset(
 track_sunset = threaded_listener_factory(async_track_sunset)
 
 # For targeted patching in tests
-time_tracker_utcnow = dt_util.utcnow
 time_tracker_timestamp = time.time
 
 
@@ -1535,7 +1534,7 @@ def async_track_utc_time_change(
         """Listen for matching time_changed events."""
         nonlocal time_listener
 
-        now = time_tracker_utcnow()
+        now = dt_util.utcnow()
         hass.async_run_hass_job(job, dt_util.as_local(now) if local else now)
 
         time_listener = async_track_point_in_utc_time(
