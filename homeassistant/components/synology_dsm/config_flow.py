@@ -259,9 +259,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_mac_address")
         host = discovery_info.host
         friendly_name = discovery_info.name.removesuffix(HTTP_SUFFIX)
-        return await self._async_step_from_discovery(
-            host, friendly_name, discovered_macs
-        )
+        return await self._async_from_discovery(host, friendly_name, discovered_macs)
 
     async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle a discovered synology_dsm via ssdp."""
@@ -273,11 +271,9 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         # Synology NAS can broadcast on multiple IP addresses, since they can be connected to multiple ethernets.
         # The serial of the NAS is actually its MAC address.
         host = cast(str, parsed_url.hostname)
-        return await self._async_step_from_discovery(
-            host, friendly_name, discovered_macs
-        )
+        return await self._async_from_discovery(host, friendly_name, discovered_macs)
 
-    async def _async_step_from_discovery(
+    async def _async_from_discovery(
         self, host: str, friendly_name: str, discovered_macs: list[str]
     ) -> FlowResult:
         """Handle a discovered synology_dsm via zeroconf or ssdp."""
