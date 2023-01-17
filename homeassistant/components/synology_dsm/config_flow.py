@@ -264,7 +264,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
-        """Handle a discovered synology_dsm vis ssdp."""
+        """Handle a discovered synology_dsm via ssdp."""
         parsed_url = urlparse(discovery_info.ssdp_location)
         friendly_name = (
             discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME].split("(", 1)[0].strip()
