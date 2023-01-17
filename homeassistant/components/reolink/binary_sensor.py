@@ -103,21 +103,17 @@ async def async_setup_entry(
 ) -> None:
     """Set up a Reolink IP Camera."""
     reolink_data: ReolinkData = hass.data[DOMAIN][config_entry.entry_id]
-    host = reolink_data.host
 
-    entities = []
-    for channel in host.api.channels:
-        for entity_description in BINARY_SENSORS:
-            if not entity_description.supported(host.api, channel):
-                continue
-
-            entities.append(
-                ReolinkBinarySensorEntity(
-                    reolink_data,
-                    channel,
-                    entity_description,
-                )
+    entities: list[ReolinkBinarySensorEntity] = []
+    for channel in reolink_data.host.api.channels:
+        entities.extend(
+            ReolinkBinarySensorEntity(
+                reolink_data,
+                channel,
+                entity_description,
             )
+            for entity_description in BINARY_SENSORS
+            if entity_description.supported(reolink_data.host.api, channel)
 
     async_add_entities(entities)
 
