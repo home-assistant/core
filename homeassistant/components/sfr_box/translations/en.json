@@ -8,11 +8,22 @@
             "invalid_auth": "Invalid authentication"
         },
         "step": {
-            "user": {
+            "auth": {
                 "data": {
-                    "host": "Host",
                     "password": "Password",
                     "username": "Username"
+                }
+            },
+            "choose_auth": {
+                "description": "Setting credentials enables additional functionality.",
+                "menu_options": {
+                    "auth": "Set credentials (recommended)",
+                    "skip_auth": "Skip authentication"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
                 },
                 "description": "Setting the credentials is optional, but enables additional functionality."
             }
