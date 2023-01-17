@@ -423,7 +423,6 @@ def test_text_selector_schema(schema, valid_selections, invalid_selections):
             {
                 "options": ["red", "green", "blue"],
                 "translation_key": "color",
-                "translation_domain": "demo",
             },
             ("red", "green", "blue"),
             ("cat", 0, None, ["red"]),
