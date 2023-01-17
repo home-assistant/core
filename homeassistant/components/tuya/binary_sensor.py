@@ -201,6 +201,15 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         ),
         TAMPER_BINARY_SENSOR,
     ),
+    # Access Control
+    # https://developer.tuya.com/en/docs/iot/s?id=Kb0o2xhlkxbet
+    "mk": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.CLOSED_OPENED_KIT,
+            device_class=BinarySensorDeviceClass.LOCK,
+            on_value={"AQAB"},
+        ),
+    ),
     # Luminance Sensor
     # https://developer.tuya.com/en/docs/iot/categoryldcg?id=Kaiuz3n7u69l8
     "ldcg": (

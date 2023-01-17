@@ -1,12 +1,11 @@
 """Support for Axis switches."""
 from typing import Any
 
-from axis.event_stream import CLASS_OUTPUT, AxisBinaryEvent, AxisEvent
+from axis.models.event import Event, EventOperation, EventTopic
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .axis_base import AxisEventBase
@@ -20,27 +19,24 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Axis switch."""
-    device: AxisNetworkDevice = hass.data[AXIS_DOMAIN][config_entry.unique_id]
+    device: AxisNetworkDevice = hass.data[AXIS_DOMAIN][config_entry.entry_id]
 
     @callback
-    def async_add_switch(event_id):
-        """Add switch from Axis device."""
-        event: AxisEvent = device.api.event[event_id]
+    def async_create_entity(event: Event) -> None:
+        """Create Axis switch entity."""
+        async_add_entities([AxisSwitch(event, device)])
 
-        if event.CLASS == CLASS_OUTPUT:
-            async_add_entities([AxisSwitch(event, device)])
-
-    config_entry.async_on_unload(
-        async_dispatcher_connect(hass, device.signal_new_event, async_add_switch)
+    device.api.event.subscribe(
+        async_create_entity,
+        topic_filter=EventTopic.RELAY,
+        operation_filter=EventOperation.INITIALIZED,
     )
 
 
 class AxisSwitch(AxisEventBase, SwitchEntity):
     """Representation of a Axis switch."""
 
-    event: AxisBinaryEvent
-
-    def __init__(self, event: AxisEvent, device: AxisNetworkDevice) -> None:
+    def __init__(self, event: Event, device: AxisNetworkDevice) -> None:
         """Initialize the Axis switch."""
         super().__init__(event, device)
 

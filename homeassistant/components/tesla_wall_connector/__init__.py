@@ -62,7 +62,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             ) from ex
         except WallConnectorConnectionError as ex:
             raise UpdateFailed(
-                f"Could not fetch data from Tesla WallConnector at {hostname}: Cannot connect"
+                f"Could not fetch data from Tesla WallConnector at {hostname}: Cannot"
+                " connect"
             ) from ex
         except WallConnectorError as ex:
             raise UpdateFailed(

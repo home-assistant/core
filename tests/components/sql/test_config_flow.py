@@ -1,7 +1,7 @@
 """Test the SQL config flow."""
 from __future__ import annotations
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -21,7 +21,7 @@ from . import (
 from tests.common import MockConfigEntry
 
 
-async def test_form(hass: HomeAssistant, recorder_mock) -> None:
+async def test_form(recorder_mock: AsyncMock, hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -53,57 +53,7 @@ async def test_form(hass: HomeAssistant, recorder_mock) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_import_flow_success(hass: HomeAssistant, recorder_mock) -> None:
-    """Test a successful import of yaml."""
-
-    with patch(
-        "homeassistant.components.sql.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=ENTRY_CONFIG,
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Get Value"
-    assert result2["options"] == {
-        "db_url": "sqlite://",
-        "name": "Get Value",
-        "query": "SELECT 5 as value",
-        "column": "value",
-        "unit_of_measurement": "MiB",
-        "value_template": None,
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_import_flow_already_exist(hass: HomeAssistant, recorder_mock) -> None:
-    """Test import of yaml already exist."""
-
-    MockConfigEntry(
-        domain=DOMAIN,
-        data=ENTRY_CONFIG,
-    ).add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.sql.async_setup_entry",
-        return_value=True,
-    ):
-        result3 = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=ENTRY_CONFIG,
-        )
-        await hass.async_block_till_done()
-
-    assert result3["type"] == FlowResultType.ABORT
-    assert result3["reason"] == "already_configured"
-
-
-async def test_flow_fails_db_url(hass: HomeAssistant, recorder_mock) -> None:
+async def test_flow_fails_db_url(recorder_mock: AsyncMock, hass: HomeAssistant) -> None:
     """Test config flow fails incorrect db url."""
     result4 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -124,7 +74,9 @@ async def test_flow_fails_db_url(hass: HomeAssistant, recorder_mock) -> None:
     assert result4["errors"] == {"db_url": "db_url_invalid"}
 
 
-async def test_flow_fails_invalid_query(hass: HomeAssistant, recorder_mock) -> None:
+async def test_flow_fails_invalid_query(
+    recorder_mock: AsyncMock, hass: HomeAssistant
+) -> None:
     """Test config flow fails incorrect db url."""
     result4 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -170,7 +122,7 @@ async def test_flow_fails_invalid_query(hass: HomeAssistant, recorder_mock) -> N
     }
 
 
-async def test_options_flow(hass: HomeAssistant, recorder_mock) -> None:
+async def test_options_flow(recorder_mock: AsyncMock, hass: HomeAssistant) -> None:
     """Test options config flow."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -219,7 +171,7 @@ async def test_options_flow(hass: HomeAssistant, recorder_mock) -> None:
 
 
 async def test_options_flow_name_previously_removed(
-    hass: HomeAssistant, recorder_mock
+    recorder_mock: AsyncMock, hass: HomeAssistant
 ) -> None:
     """Test options config flow where the name was missing."""
     entry = MockConfigEntry(
@@ -270,7 +222,9 @@ async def test_options_flow_name_previously_removed(
     }
 
 
-async def test_options_flow_fails_db_url(hass: HomeAssistant, recorder_mock) -> None:
+async def test_options_flow_fails_db_url(
+    recorder_mock: AsyncMock, hass: HomeAssistant
+) -> None:
     """Test options flow fails incorrect db url."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -313,7 +267,7 @@ async def test_options_flow_fails_db_url(hass: HomeAssistant, recorder_mock) -> 
 
 
 async def test_options_flow_fails_invalid_query(
-    hass: HomeAssistant, recorder_mock
+    recorder_mock: AsyncMock, hass: HomeAssistant
 ) -> None:
     """Test options flow fails incorrect query and template."""
     entry = MockConfigEntry(
@@ -369,7 +323,9 @@ async def test_options_flow_fails_invalid_query(
     }
 
 
-async def test_options_flow_db_url_empty(hass: HomeAssistant, recorder_mock) -> None:
+async def test_options_flow_db_url_empty(
+    recorder_mock: AsyncMock, hass: HomeAssistant
+) -> None:
     """Test options config flow with leaving db_url empty."""
     entry = MockConfigEntry(
         domain=DOMAIN,

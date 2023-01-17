@@ -17,7 +17,7 @@
         "step": {
             "init": {
                 "data": {
-                    "scan_interval": "Interval pembaruan (dalam detik, minimal 30)"
+                    "scan_interval": "Interval pembaruan dalam detik, minimal 30"
                 }
             }
         }

@@ -118,7 +118,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
     """Representation of a powerview shade."""
 
     _attr_device_class = CoverDeviceClass.SHADE
-    _attr_supported_features = 0
+    _attr_supported_features = CoverEntityFeature(0)
 
     def __init__(
         self,

@@ -11,13 +11,6 @@
             "validate_verification_code": "\u9a57\u8b49\u8f38\u5165\u9a57\u8b49\u78bc\u5931\u6557\uff0c\u8acb\u518d\u8a66\u4e00\u6b21\u3002"
         },
         "step": {
-            "reauth": {
-                "data": {
-                    "password": "\u5bc6\u78bc"
-                },
-                "description": "\u5148\u524d\u91dd\u5c0d\u5e33\u865f {username} \u6240\u8f38\u5165\u7684\u5bc6\u78bc\u5df2\u5931\u6548\u3002\u8acb\u66f4\u65b0\u5bc6\u78bc\u4ee5\u4f7f\u7528\u6b64\u6574\u5408\u3002",
-                "title": "\u91cd\u65b0\u8a8d\u8b49\u6574\u5408"
-            },
             "reauth_confirm": {
                 "data": {
                     "password": "\u5bc6\u78bc"

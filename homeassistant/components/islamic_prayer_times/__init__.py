@@ -105,11 +105,13 @@ class IslamicPrayerClient:
         if now > dt_util.as_utc(midnight_dt):
             next_update_at = midnight_dt + timedelta(days=1, minutes=1)
             _LOGGER.debug(
-                "Midnight is after day the changes so schedule update for after Midnight the next day"
+                "Midnight is after day the changes so schedule update for after"
+                " Midnight the next day"
             )
         else:
             _LOGGER.debug(
-                "Midnight is before the day changes so schedule update for the next start of day"
+                "Midnight is before the day changes so schedule update for the next"
+                " start of day"
             )
             next_update_at = dt_util.start_of_local_day(now + timedelta(days=1))
 

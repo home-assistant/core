@@ -24,10 +24,6 @@
                 "description": "Geef een unieke profielnaam op voor deze gegevens. Meestal is dit de naam van het profiel dat u in de vorige stap hebt geselecteerd.",
                 "title": "Gebruikersprofiel."
             },
-            "reauth": {
-                "description": "Het {profile} \" moet opnieuw worden geverifieerd om Withings-gegevens te blijven ontvangen.",
-                "title": "Integratie herauthenticeren"
-            },
             "reauth_confirm": {
                 "title": "Integratie herauthenticeren"
             }

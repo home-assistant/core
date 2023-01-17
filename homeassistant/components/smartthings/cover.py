@@ -70,8 +70,6 @@ def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
 class SmartThingsCover(SmartThingsEntity, CoverEntity):
     """Define a SmartThings cover."""
 
-    _attr_supported_features: int
-
     def __init__(self, device):
         """Initialize the cover class."""
         super().__init__(device)
@@ -102,7 +100,7 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        if not self._attr_supported_features & CoverEntityFeature.SET_POSITION:
+        if not self.supported_features & CoverEntityFeature.SET_POSITION:
             return
         # Do not set_status=True as device will report progress.
         await self._device.set_level(kwargs[ATTR_POSITION], 0)
@@ -144,7 +142,7 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
     @property
     def current_cover_position(self) -> int | None:
         """Return current position of cover."""
-        if not self._attr_supported_features & CoverEntityFeature.SET_POSITION:
+        if not self.supported_features & CoverEntityFeature.SET_POSITION:
             return None
         return self._device.status.level
 

@@ -43,11 +43,11 @@ DURATION_SECONDS = "duration_in_s"
 POSITION_SECONDS = "position_in_s"
 
 
-def _timespan_secs(timespan: str | None) -> None | float:
+def _timespan_secs(timespan: str | None) -> None | int:
     """Parse a time-span into number of seconds."""
     if timespan in UNAVAILABLE_VALUES:
         return None
-    return time_period_str(timespan).total_seconds()  # type: ignore[arg-type]
+    return int(time_period_str(timespan).total_seconds())  # type: ignore[arg-type]
 
 
 class SonosMedia:
@@ -73,7 +73,7 @@ class SonosMedia:
         self.title: str | None = None
         self.uri: str | None = None
 
-        self.position: float | None = None
+        self.position: int | None = None
         self.position_updated_at: datetime.datetime | None = None
 
     def clear(self) -> None:

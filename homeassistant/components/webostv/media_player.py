@@ -1,14 +1,18 @@
 """Support for interface with an LG webOS Smart TV."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
 from contextlib import suppress
 from datetime import timedelta
 from functools import wraps
+from http import HTTPStatus
 import logging
+from ssl import SSLContext
 from typing import Any, TypeVar, cast
 
 from aiowebostv import WebOsClient, WebOsTvPairError
+import async_timeout
 from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant import util
@@ -28,12 +32,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.trigger import PluggableAction
 
-from . import WebOsClientWrapper
 from .const import (
     ATTR_PAYLOAD,
     ATTR_SOUND_OUTPUT,
@@ -43,6 +48,7 @@ from .const import (
     LIVE_TV_APP_ID,
     WEBOSTV_EXCEPTIONS,
 )
+from .triggers.turn_on import async_get_turn_on_trigger
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,9 +82,9 @@ async def async_setup_entry(
     assert unique_id
     name = config_entry.title
     sources = config_entry.options.get(CONF_SOURCES)
-    wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id]
+    client = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id]
 
-    async_add_entities([LgWebOSMediaPlayerEntity(wrapper, name, sources, unique_id)])
+    async_add_entities([LgWebOSMediaPlayerEntity(client, name, sources, unique_id)])
 
 
 _T = TypeVar("_T", bound="LgWebOSMediaPlayerEntity")
@@ -98,7 +104,8 @@ def cmd(
         except WEBOSTV_EXCEPTIONS as exc:
             if self.state != MediaPlayerState.OFF:
                 raise HomeAssistantError(
-                    f"Error calling {func.__name__} on entity {self.entity_id}, state:{self.state}"
+                    f"Error calling {func.__name__} on entity {self.entity_id},"
+                    f" state:{self.state}"
                 ) from exc
             _LOGGER.warning(
                 "Error calling %s on entity %s, state:%s, error: %r",
@@ -118,14 +125,13 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
 
     def __init__(
         self,
-        wrapper: WebOsClientWrapper,
+        client: WebOsClient,
         name: str,
         sources: list[str] | None,
         unique_id: str,
     ) -> None:
         """Initialize the webos device."""
-        self._wrapper = wrapper
-        self._client: WebOsClient = wrapper.client
+        self._client = client
         self._attr_assumed_state = True
         self._attr_name = name
         self._attr_unique_id = unique_id
@@ -133,16 +139,23 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
 
         # Assume that the TV is not paused
         self._paused = False
-
+        self._turn_on = PluggableAction(self.async_write_ha_state)
         self._current_source = None
         self._source_list: dict = {}
 
-        self._supported_features: int = 0
+        self._supported_features = MediaPlayerEntityFeature(0)
         self._update_states()
 
     async def async_added_to_hass(self) -> None:
         """Connect and subscribe to dispatcher signals and state updates."""
         await super().async_added_to_hass()
+
+        if (entry := self.registry_entry) and entry.device_id:
+            self.async_on_remove(
+                self._turn_on.async_register(
+                    self.hass, async_get_turn_on_trigger(entry.device_id)
+                )
+            )
 
         self.async_on_remove(
             async_dispatcher_connect(self.hass, DOMAIN, self.async_signal_handler)
@@ -157,7 +170,9 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
             and (state := await self.async_get_last_state()) is not None
         ):
             self._supported_features = (
-                state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+                state.attributes.get(
+                    ATTR_SUPPORTED_FEATURES, MediaPlayerEntityFeature(0)
+                )
                 & ~MediaPlayerEntityFeature.TURN_ON
             )
 
@@ -314,9 +329,9 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
             await self._client.connect()
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
-        if self._wrapper.turn_on:
+        if self._turn_on:
             return self._supported_features | MediaPlayerEntityFeature.TURN_ON
 
         return self._supported_features
@@ -328,7 +343,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
 
     async def async_turn_on(self) -> None:
         """Turn on media player."""
-        self._wrapper.turn_on.async_run(self.hass, self._context)
+        await self._turn_on.async_run(self.hass, self._context)
 
     @cmd
     async def async_volume_up(self) -> None:
@@ -454,3 +469,25 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
     async def async_command(self, command: str, **kwargs: Any) -> None:
         """Send a command."""
         await self._client.request(command, payload=kwargs.get(ATTR_PAYLOAD))
+
+    async def _async_fetch_image(self, url: str) -> tuple[bytes | None, str | None]:
+        """Retrieve an image.
+
+        webOS uses self-signed certificates, thus we need to use an empty
+        SSLContext to bypass validation errors if url starts with https.
+        """
+        content = None
+        ssl_context = None
+        if url.startswith("https"):
+            ssl_context = SSLContext()
+
+        websession = async_get_clientsession(self.hass)
+        with suppress(asyncio.TimeoutError), async_timeout.timeout(10):
+            response = await websession.get(url, ssl=ssl_context)
+            if response.status == HTTPStatus.OK:
+                content = await response.read()
+
+        if content is None:
+            _LOGGER.warning("Error retrieving proxied image from %s", url)
+
+        return content, None

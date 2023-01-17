@@ -6,7 +6,9 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, SWITCH_TYPES
@@ -36,15 +38,21 @@ class TransmissionSwitch(SwitchEntity):
 
     _attr_should_poll = False
 
-    def __init__(self, switch_type, switch_name, tm_client, name):
+    def __init__(self, switch_type, switch_name, tm_client, client_name):
         """Initialize the Transmission switch."""
         self._name = switch_name
-        self.client_name = name
+        self.client_name = client_name
         self.type = switch_type
         self._tm_client = tm_client
         self._state = STATE_OFF
         self._data = None
         self.unsub_update = None
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, tm_client.config_entry.entry_id)},
+            manufacturer="Transmission",
+            name=client_name,
+        )
 
     @property
     def name(self):

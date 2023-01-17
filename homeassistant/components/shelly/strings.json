@@ -3,7 +3,7 @@
     "flow_title": "{name}",
     "step": {
       "user": {
-        "description": "Before set up, battery-powered devices must be woken up, you can now wake the device up using a button on it.",
+        "description": "Before setup, battery-powered devices must be woken up, you can now wake the device up using a button on it.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         }
@@ -57,6 +57,19 @@
       "single_push": "{subtype} single push",
       "double_push": "{subtype} double push",
       "long_push": "{subtype} long push"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "Bluetooth scanning can be active or passive. With active, the Shelly requests data from nearby devices; with passive, the Shelly receives unsolicited data from nearby devices.",
+        "data": {
+          "ble_scanner_mode": "Bluetooth scanner mode"
+        }
+      }
+    },
+    "abort": {
+      "ble_unsupported": "Bluetooth support requires firmware version {ble_min_version} or newer."
     }
   }
 }

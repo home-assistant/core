@@ -7,6 +7,7 @@ import aiohttp
 from google.auth.exceptions import RefreshError
 from google.oauth2.credentials import Credentials
 from gspread import Client
+from gspread.utils import ValueInputOption
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -20,9 +21,10 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import ConfigEntrySelector
 
-from .const import DATA_CONFIG_ENTRY, DEFAULT_ACCESS, DOMAIN
+from .const import DEFAULT_ACCESS, DOMAIN
 
 DATA = "data"
+DATA_CONFIG_ENTRY = "config_entry"
 WORKSHEET = "worksheet"
 
 SERVICE_APPEND_SHEET = "append_sheet"
@@ -100,7 +102,7 @@ async def async_setup_service(hass: HomeAssistant) -> None:
                 columns.append(key)
                 worksheet.update_cell(1, len(columns), key)
                 row.append(value)
-        worksheet.append_row(row)
+        worksheet.append_row(row, value_input_option=ValueInputOption.user_entered)
 
     async def append_to_sheet(call: ServiceCall) -> None:
         """Append new line of data to a Google Sheets document."""

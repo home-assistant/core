@@ -73,6 +73,12 @@ def mock_api() -> MagicMock:
     jf_api.get_user_settings.return_value = load_json_fixture("get-user-settings.json")
     jf_api.sessions.return_value = load_json_fixture("sessions.json")
 
+    jf_api.artwork.side_effect = api_artwork_side_effect
+    jf_api.user_items.side_effect = api_user_items_side_effect
+    jf_api.get_item.side_effect = api_get_item_side_effect
+    jf_api.get_media_folders.return_value = load_json_fixture("get-media-folders.json")
+    jf_api.user_items.side_effect = api_user_items_side_effect
+
     return jf_api
 
 
@@ -121,3 +127,27 @@ async def init_integration(
     await hass.async_block_till_done()
 
     return mock_config_entry
+
+
+def api_artwork_side_effect(*args, **kwargs):
+    """Handle variable responses for artwork method."""
+    item_id = args[0]
+    art = args[1]
+    ext = "jpg"
+
+    return f"http://localhost/Items/{item_id}/Images/{art}.{ext}"
+
+
+def api_get_item_side_effect(*args):
+    """Handle variable responses for get_item method."""
+    return load_json_fixture("get-item-collection.json")
+
+
+def api_user_items_side_effect(*args, **kwargs):
+    """Handle variable responses for items  method."""
+    params = kwargs.get("params", {}) if kwargs else {}
+
+    if "parentId" in params:
+        return load_json_fixture("user-items-parent-id.json")
+
+    return load_json_fixture("user-items.json")

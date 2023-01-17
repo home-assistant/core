@@ -126,7 +126,8 @@ class HarmonyData(HarmonySubscriberMixin):
         except (ValueError, AttributeError) as err:
             await self._client.close()
             raise ConfigEntryNotReady(
-                f"{self._name}: Error {err} while connected HUB at: {self._address}:8088"
+                f"{self._name}: Error {err} while connected HUB at:"
+                f" {self._address}:8088"
             ) from err
         if not connected:
             await self._client.close()
@@ -219,8 +220,10 @@ class HarmonyData(HarmonySubscriberMixin):
             return
 
         _LOGGER.debug(
-            "Sending commands to device %s holding for %s seconds "
-            "with a delay of %s seconds",
+            (
+                "Sending commands to device %s holding for %s seconds "
+                "with a delay of %s seconds"
+            ),
             device,
             hold_secs,
             delay_secs,

@@ -88,7 +88,7 @@ def discovery_info_side_effect_fixture():
 def mock_get_addon_discovery_info(discovery_info, discovery_info_side_effect):
     """Mock get add-on discovery info."""
     with patch(
-        "homeassistant.components.zwave_js.addon.async_get_addon_discovery_info",
+        "homeassistant.components.hassio.addon_manager.async_get_addon_discovery_info",
         side_effect=discovery_info_side_effect,
         return_value=discovery_info,
     ) as get_addon_discovery_info:
@@ -162,7 +162,12 @@ def mock_list_ports_fixture(serial_port) -> Generator[MagicMock, None, None]:
         another_port.description = "New serial port"
         another_port.serial_number = "5678"
         another_port.pid = 8765
-        mock_list_ports.return_value = [serial_port, another_port]
+        no_vid_port = copy(serial_port)
+        no_vid_port.device = "/no_vid"
+        no_vid_port.description = "Port without vid"
+        no_vid_port.serial_number = "9123"
+        no_vid_port.vid = None
+        mock_list_ports.return_value = [serial_port, another_port, no_vid_port]
         yield mock_list_ports
 
 
@@ -531,6 +536,7 @@ async def test_abort_hassio_discovery_for_other_addon(
 async def test_usb_discovery(
     hass,
     supervisor,
+    addon_not_installed,
     install_addon,
     addon_options,
     get_addon_discovery_info,

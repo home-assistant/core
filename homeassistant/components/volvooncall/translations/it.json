@@ -11,10 +11,9 @@
         "step": {
             "user": {
                 "data": {
-                    "mutable": "Consenti da remoto l'avvio / il blocco / ecc.",
+                    "mutable": "Consenti da remoto l'avvio / la chiusura / ecc.",
                     "password": "Password",
                     "region": "Regione",
-                    "scandinavian_miles": "Usa le miglia scandinave",
                     "unit_system": "Unit\u00e0 di misura",
                     "username": "Nome utente"
                 }

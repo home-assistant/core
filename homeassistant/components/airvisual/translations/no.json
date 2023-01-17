@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Plasseringen er allerede konfigurert eller Node / Pro ID er allerede registrert.",
+            "already_configured": "Plasseringen er allerede konfigurert",
             "reauth_successful": "Re-autentisering var vellykket"
         },
         "error": {
@@ -48,6 +48,36 @@
                 "description": "Velg hvilken type AirVisual-data du vil overv\u00e5ke.",
                 "title": "Konfigurer AirVisual"
             }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "pollutant_label": {
+                "state": {
+                    "co": "Karbonmonoksid",
+                    "n2": "Nitrogendioksid",
+                    "o3": "Ozon",
+                    "p1": "PM10",
+                    "p2": "PM2.5",
+                    "s2": "Svoveldioksid"
+                }
+            },
+            "pollutant_level": {
+                "state": {
+                    "good": "Bra",
+                    "hazardous": "Farlig",
+                    "moderate": "Moderat",
+                    "unhealthy": "Usunt",
+                    "unhealthy_sensitive": "Usunt for sensitive grupper",
+                    "very_unhealthy": "Veldig usunt"
+                }
+            }
+        }
+    },
+    "issues": {
+        "airvisual_pro_migration": {
+            "description": "AirVisual Pro-enheter er n\u00e5 deres egen Home Assistant-integrasjon (i motsetning til \u00e5 v\u00e6re inkludert i den originale AirVisual-integrasjonen som bruker AirVisual cloud API). Pro-enheten som ligger p\u00e5 ` {ip_address} ` er automatisk blitt migrert. \n\n Som en del av den migreringen har Pro-ens enhets-ID endret fra ` {old_device_id} ` til ` {new_device_id} `. Oppdater disse automatiseringene for \u00e5 bruke den nye enhets-ID-en: {device_automations_string} .",
+            "title": "{ip_address} er n\u00e5 en del av AirVisual Pro-integrasjonen"
         }
     },
     "options": {

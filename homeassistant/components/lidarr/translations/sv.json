@@ -28,15 +28,5 @@
                 "description": "API-nyckel kan h\u00e4mtas automatiskt om inloggningsuppgifter inte st\u00e4llts in i applikationen.\n Din API-nyckel finns i Inst\u00e4llningar > Allm\u00e4nt i Lidarr Web UI."
             }
         }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "max_records": "Antal maximala poster att visa p\u00e5 \u00f6nskad och k\u00f6",
-                    "upcoming_days": "Antal kommande dagar att visa i kalendern"
-                }
-            }
-        }
     }
 }

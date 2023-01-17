@@ -16,7 +16,7 @@ from tests.components.recorder.common import (
 
 
 @pytest.fixture(autouse=True)
-async def setup_integration(hass, recorder_mock):
+async def setup_integration(recorder_mock, hass):
     """Set up the integration."""
     assert await async_setup_component(hass, "energy", {})
 
@@ -289,7 +289,7 @@ async def test_get_solar_forecast(hass, hass_ws_client, mock_energy_platform) ->
 
 
 @pytest.mark.freeze_time("2021-08-01 00:00:00+00:00")
-async def test_fossil_energy_consumption_no_co2(hass, hass_ws_client, recorder_mock):
+async def test_fossil_energy_consumption_no_co2(recorder_mock, hass, hass_ws_client):
     """Test fossil_energy_consumption when co2 data is missing."""
     now = dt_util.utcnow()
     later = dt_util.as_utc(dt_util.parse_datetime("2022-09-01 00:00:00"))
@@ -450,7 +450,7 @@ async def test_fossil_energy_consumption_no_co2(hass, hass_ws_client, recorder_m
 
 
 @pytest.mark.freeze_time("2021-08-01 00:00:00+00:00")
-async def test_fossil_energy_consumption_hole(hass, hass_ws_client, recorder_mock):
+async def test_fossil_energy_consumption_hole(recorder_mock, hass, hass_ws_client):
     """Test fossil_energy_consumption when some data points lack sum."""
     now = dt_util.utcnow()
     later = dt_util.as_utc(dt_util.parse_datetime("2022-09-01 00:00:00"))
@@ -611,7 +611,7 @@ async def test_fossil_energy_consumption_hole(hass, hass_ws_client, recorder_moc
 
 
 @pytest.mark.freeze_time("2021-08-01 00:00:00+00:00")
-async def test_fossil_energy_consumption_no_data(hass, hass_ws_client, recorder_mock):
+async def test_fossil_energy_consumption_no_data(recorder_mock, hass, hass_ws_client):
     """Test fossil_energy_consumption when there is no data."""
     now = dt_util.utcnow()
     later = dt_util.as_utc(dt_util.parse_datetime("2022-09-01 00:00:00"))
@@ -759,7 +759,7 @@ async def test_fossil_energy_consumption_no_data(hass, hass_ws_client, recorder_
 
 
 @pytest.mark.freeze_time("2021-08-01 00:00:00+00:00")
-async def test_fossil_energy_consumption(hass, hass_ws_client, recorder_mock):
+async def test_fossil_energy_consumption(recorder_mock, hass, hass_ws_client):
     """Test fossil_energy_consumption with co2 sensor data."""
     now = dt_util.utcnow()
     later = dt_util.as_utc(dt_util.parse_datetime("2022-09-01 00:00:00"))

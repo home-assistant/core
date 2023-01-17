@@ -3,11 +3,13 @@ from __future__ import annotations
 
 import asyncio
 from collections import ChainMap
-from collections.abc import Callable, Coroutine, Iterable, Mapping
+from collections.abc import Callable, Coroutine, Generator, Iterable, Mapping
 from contextvars import ContextVar
+from copy import deepcopy
 from enum import Enum
 import functools
 import logging
+from random import randint
 from types import MappingProxyType, MethodType
 from typing import TYPE_CHECKING, Any, Optional, TypeVar, cast
 import weakref
@@ -17,13 +19,23 @@ from .backports.enum import StrEnum
 from .components import persistent_notification
 from .const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP, Platform
 from .core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
-from .exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady, HomeAssistantError
+from .data_entry_flow import FlowResult
+from .exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from .helpers import device_registry, entity_registry, storage
 from .helpers.dispatcher import async_dispatcher_send
-from .helpers.event import async_call_later
+from .helpers.event import (
+    RANDOM_MICROSECOND_MAX,
+    RANDOM_MICROSECOND_MIN,
+    async_call_later,
+)
 from .helpers.frame import report
 from .helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType, UndefinedType
-from .setup import async_process_deps_reqs, async_setup_component
+from .setup import DATA_SETUP_DONE, async_process_deps_reqs, async_setup_component
 from .util import uuid as uuid_util
 from .util.decorator import Registry
 
@@ -51,14 +63,14 @@ SOURCE_USB = "usb"
 SOURCE_USER = "user"
 SOURCE_ZEROCONF = "zeroconf"
 
-# If a user wants to hide a discovery from the UI they can "Ignore" it. The config_entries/ignore_flow
-# websocket command creates a config entry with this source and while it exists normal discoveries
-# with the same unique id are ignored.
+# If a user wants to hide a discovery from the UI they can "Ignore" it. The
+# config_entries/ignore_flow websocket command creates a config entry with this
+# source and while it exists normal discoveries with the same unique id are ignored.
 SOURCE_IGNORE = "ignore"
 
 # This is used when a user uses the "Stop Ignoring" button in the UI (the
-# config_entries/ignore_flow websocket command). It's triggered after the "ignore" config entry has
-# been removed and unloaded.
+# config_entries/ignore_flow websocket command). It's triggered after the
+# "ignore" config entry has been removed and unloaded.
 SOURCE_UNIGNORE = "unignore"
 
 # This is used to signal that re-authentication is required by the user.
@@ -271,9 +283,11 @@ class ConfigEntry:
             disabled_by, ConfigEntryDisabler
         ):
             report(  # type: ignore[unreachable]
-                "uses str for config entry disabled_by. This is deprecated and will "
-                "stop working in Home Assistant 2022.3, it should be updated to use "
-                "ConfigEntryDisabler instead",
+                (
+                    "uses str for config entry disabled_by. This is deprecated and will"
+                    " stop working in Home Assistant 2022.3, it should be updated to"
+                    " use ConfigEntryDisabler instead"
+                ),
                 error_if_core=False,
             )
             disabled_by = ConfigEntryDisabler(disabled_by)
@@ -346,7 +360,10 @@ class ConfigEntry:
                 integration.get_platform("config_flow")
             except ImportError as err:
                 _LOGGER.error(
-                    "Error importing platform config_flow from integration %s to set up %s configuration entry: %s",
+                    (
+                        "Error importing platform config_flow from integration %s to"
+                        " set up %s configuration entry: %s"
+                    ),
                     integration.domain,
                     self.domain,
                     err,
@@ -369,6 +386,16 @@ class ConfigEntry:
                     "%s.async_setup_entry did not return boolean", integration.domain
                 )
                 result = False
+        except ConfigEntryError as ex:
+            error_reason = str(ex) or "Unknown fatal config entry error"
+            _LOGGER.exception(
+                "Error setting up entry %s for %s: %s",
+                self.title,
+                self.domain,
+                error_reason,
+            )
+            await self._async_process_on_unload()
+            result = False
         except ConfigEntryAuthFailed as ex:
             message = str(ex)
             auth_base_message = "could not authenticate"
@@ -387,20 +414,28 @@ class ConfigEntry:
             result = False
         except ConfigEntryNotReady as ex:
             self.async_set_state(hass, ConfigEntryState.SETUP_RETRY, str(ex) or None)
-            wait_time = 2 ** min(tries, 4) * 5
+            wait_time = 2 ** min(tries, 4) * 5 + (
+                randint(RANDOM_MICROSECOND_MIN, RANDOM_MICROSECOND_MAX) / 1000000
+            )
             tries += 1
             message = str(ex)
             ready_message = f"ready yet: {message}" if message else "ready yet"
             if tries == 1:
                 _LOGGER.warning(
-                    "Config entry '%s' for %s integration not %s; Retrying in background",
+                    (
+                        "Config entry '%s' for %s integration not %s; Retrying in"
+                        " background"
+                    ),
                     self.title,
                     self.domain,
                     ready_message,
                 )
             else:
                 _LOGGER.debug(
-                    "Config entry '%s' for %s integration not %s; Retrying in %d seconds",
+                    (
+                        "Config entry '%s' for %s integration not %s; Retrying in %d"
+                        " seconds"
+                    ),
                     self.title,
                     self.domain,
                     ready_message,
@@ -608,7 +643,8 @@ class ConfigEntry:
         Returns function to unlisten.
         """
         weak_listener: Any
-        # weakref.ref is not applicable to a bound method, e.g. method of a class instance, as reference will die immediately
+        # weakref.ref is not applicable to a bound method, e.g.,
+        # method of a class instance, as reference will die immediately.
         if hasattr(listener, "__self__"):
             weak_listener = weakref.WeakMethod(cast(MethodType, listener))
         else:
@@ -660,26 +696,34 @@ class ConfigEntry:
         data: dict[str, Any] | None = None,
     ) -> None:
         """Start a reauth flow."""
-        flow_context = {
-            "source": SOURCE_REAUTH,
-            "entry_id": self.entry_id,
-            "title_placeholders": {"name": self.title},
-            "unique_id": self.unique_id,
-        }
-
-        if context:
-            flow_context.update(context)
-
-        for flow in hass.config_entries.flow.async_progress_by_handler(self.domain):
-            if flow["context"] == flow_context:
-                return
+        if any(self.async_get_active_flows(hass, {SOURCE_REAUTH})):
+            # Reauth flow already in progress for this entry
+            return
 
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 self.domain,
-                context=flow_context,
+                context={
+                    "source": SOURCE_REAUTH,
+                    "entry_id": self.entry_id,
+                    "title_placeholders": {"name": self.title},
+                    "unique_id": self.unique_id,
+                }
+                | (context or {}),
                 data=self.data | (data or {}),
             )
+        )
+
+    @callback
+    def async_get_active_flows(
+        self, hass: HomeAssistant, sources: set[str]
+    ) -> Generator[FlowResult, None, None]:
+        """Get any active flows of certain sources for this entry."""
+        return (
+            flow
+            for flow in hass.config_entries.flow.async_progress_by_handler(self.domain)
+            if flow["context"].get("source") in sources
+            and flow["context"].get("entry_id") == self.entry_id
         )
 
     @callback
@@ -788,7 +832,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         return result
 
     async def async_create_flow(
-        self, handler_key: Any, *, context: dict | None = None, data: Any = None
+        self, handler_key: str, *, context: dict | None = None, data: Any = None
     ) -> ConfigFlow:
         """Create a flow for specified handler.
 
@@ -951,10 +995,10 @@ class ConfigEntries:
             ):
                 self.hass.config_entries.flow.async_abort(progress_flow["flow_id"])
 
-        # After we have fully removed an "ignore" config entry we can try and rediscover it so that a
-        # user is able to immediately start configuring it. We do this by starting a new flow with
-        # the 'unignore' step. If the integration doesn't implement async_step_unignore then
-        # this will be a no-op.
+        # After we have fully removed an "ignore" config entry we can try and rediscover
+        # it so that a user is able to immediately start configuring it. We do this by
+        # starting a new flow with the 'unignore' step. If the integration doesn't
+        # implement async_step_unignore then this will be a no-op.
         if entry.source == SOURCE_IGNORE:
             self.hass.async_create_task(
                 self.hass.config_entries.flow.async_init(
@@ -997,7 +1041,8 @@ class ConfigEntries:
         for entry in config["entries"]:
             pref_disable_new_entities = entry.get("pref_disable_new_entities")
 
-            # Between 0.98 and 2021.6 we stored 'disable_new_entities' in a system options dictionary
+            # Between 0.98 and 2021.6 we stored 'disable_new_entities' in a
+            # system options dictionary.
             if pref_disable_new_entities is None and "system_options" in entry:
                 pref_disable_new_entities = entry.get("system_options", {}).get(
                     "disable_new_entities"
@@ -1040,8 +1085,9 @@ class ConfigEntries:
 
         if entry.state is not ConfigEntryState.NOT_LOADED:
             raise OperationNotAllowed(
-                f"The config entry {entry.title} ({entry.domain}) with entry_id {entry.entry_id}"
-                f" cannot be setup because is already loaded in the {entry.state} state"
+                f"The config entry {entry.title} ({entry.domain}) with entry_id"
+                f" {entry.entry_id} cannot be setup because is already loaded in the"
+                f" {entry.state} state"
             )
 
         # Setup Component if not set up yet
@@ -1056,7 +1102,9 @@ class ConfigEntries:
             if not result:
                 return result
 
-        return entry.state is ConfigEntryState.LOADED  # type: ignore[comparison-overlap] # mypy bug?
+        return (
+            entry.state is ConfigEntryState.LOADED  # type: ignore[comparison-overlap]
+        )
 
     async def async_unload(self, entry_id: str) -> bool:
         """Unload a config entry."""
@@ -1065,8 +1113,9 @@ class ConfigEntries:
 
         if not entry.state.recoverable:
             raise OperationNotAllowed(
-                f"The config entry {entry.title} ({entry.domain}) with entry_id "
-                f"{entry.entry_id} cannot be unloaded because it is not in a recoverable state ({entry.state})"
+                f"The config entry {entry.title} ({entry.domain}) with entry_id"
+                f" {entry.entry_id} cannot be unloaded because it is not in a"
+                f" recoverable state ({entry.state})"
             )
 
         return await entry.async_unload(self.hass)
@@ -1101,9 +1150,11 @@ class ConfigEntries:
             disabled_by, ConfigEntryDisabler
         ):
             report(  # type: ignore[unreachable]
-                "uses str for config entry disabled_by. This is deprecated and will "
-                "stop working in Home Assistant 2022.3, it should be updated to use "
-                "ConfigEntryDisabler instead",
+                (
+                    "uses str for config entry disabled_by. This is deprecated and will"
+                    " stop working in Home Assistant 2022.3, it should be updated to"
+                    " use ConfigEntryDisabler instead"
+                ),
                 error_if_core=False,
             )
             disabled_by = ConfigEntryDisabler(disabled_by)
@@ -1200,8 +1251,10 @@ class ConfigEntries:
     ) -> None:
         """Forward the setup of an entry to platforms."""
         report(
-            "called async_setup_platforms instead of awaiting async_forward_entry_setups; "
-            "this will fail in version 2022.12",
+            (
+                "called async_setup_platforms instead of awaiting"
+                " async_forward_entry_setups; this will fail in version 2022.12"
+            ),
             # Raise this to warning once all core integrations have been migrated
             level=logging.DEBUG,
             error_if_core=False,
@@ -1273,6 +1326,22 @@ class ConfigEntries:
         """Return data to save."""
         return {"entries": [entry.as_dict() for entry in self._entries.values()]}
 
+    async def async_wait_component(self, entry: ConfigEntry) -> bool:
+        """Wait for an entry's component to load and return if the entry is loaded.
+
+        This is primarily intended for existing config entries which are loaded at
+        startup, awaiting this function will block until the component and all its
+        config entries are loaded.
+        Config entries which are created after Home Assistant is started can't be waited
+        for, the function will just return if the config entry is loaded or not.
+        """
+        if setup_event := self.hass.data.get(DATA_SETUP_DONE, {}).get(entry.domain):
+            await setup_event.wait()
+        # The component was not loaded.
+        if entry.domain not in self.hass.config.components:
+            return False
+        return entry.state == ConfigEntryState.LOADED
+
 
 async def _old_conf_migrator(old_config: dict[str, Any]) -> dict[str, Any]:
     """Migrate the pre-0.73 config format to the latest version."""
@@ -1317,7 +1386,11 @@ class ConfigFlow(data_entry_flow.FlowHandler):
             match_dict = {}  # Match any entry
         for entry in self._async_current_entries(include_ignore=False):
             if all(
-                item in ChainMap(entry.options, entry.data).items()  # type: ignore[arg-type]
+                item
+                in ChainMap(
+                    entry.options,  # type: ignore[arg-type]
+                    entry.data,  # type: ignore[arg-type]
+                ).items()
                 for item in match_dict.items()
             ):
                 raise data_entry_flow.AbortFlow("already_configured")
@@ -1409,7 +1482,8 @@ class ConfigFlow(data_entry_flow.FlowHandler):
     ) -> list[ConfigEntry]:
         """Return current entries.
 
-        If the flow is user initiated, filter out ignored entries unless include_ignore is True.
+        If the flow is user initiated, filter out ignored entries,
+        unless include_ignore is True.
         """
         config_entries = self.hass.config_entries.async_entries(self.handler)
 
@@ -1579,7 +1653,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         return await self._async_step_discovery_without_unique_id()
 
     @callback
-    def async_create_entry(
+    def async_create_entry(  # type: ignore[override]
         self,
         *,
         title: str,
@@ -1606,7 +1680,7 @@ class OptionsFlowManager(data_entry_flow.FlowManager):
 
     async def async_create_flow(
         self,
-        handler_key: Any,
+        handler_key: str,
         *,
         context: dict[str, Any] | None = None,
         data: dict[str, Any] | None = None,
@@ -1647,13 +1721,32 @@ class OptionsFlowManager(data_entry_flow.FlowManager):
 
 
 class OptionsFlow(data_entry_flow.FlowHandler):
-    """Base class for config option flows."""
+    """Base class for config options flows."""
 
     handler: str
 
 
+class OptionsFlowWithConfigEntry(OptionsFlow):
+    """Base class for options flows with config entry and options."""
+
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialize options flow."""
+        self._config_entry = config_entry
+        self._options = deepcopy(dict(config_entry.options))
+
+    @property
+    def config_entry(self) -> ConfigEntry:
+        """Return the config entry."""
+        return self._config_entry
+
+    @property
+    def options(self) -> dict[str, Any]:
+        """Return a mutable copy of the config entry options."""
+        return self._options
+
+
 class EntityRegistryDisabledHandler:
-    """Handler to handle when entities related to config entries updating disabled_by."""
+    """Handler when entities related to config entries updated disabled_by."""
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the handler."""
@@ -1717,8 +1810,11 @@ class EntityRegistryDisabledHandler:
         self.changed = set()
 
         _LOGGER.info(
-            "Reloading configuration entries because disabled_by changed in entity registry: %s",
-            ", ".join(self.changed),
+            (
+                "Reloading configuration entries because disabled_by changed in entity"
+                " registry: %s"
+            ),
+            ", ".join(to_reload),
         )
 
         await asyncio.gather(

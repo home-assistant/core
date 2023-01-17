@@ -109,6 +109,7 @@ class ZHAIdentifyButton(ZHAButton):
 
     _attr_device_class: ButtonDeviceClass = ButtonDeviceClass.UPDATE
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_name = "Identify"
     _command_name = "identify"
 
     def get_args(self) -> list[Any]:
@@ -118,7 +119,7 @@ class ZHAIdentifyButton(ZHAButton):
 
 
 class ZHAAttributeButton(ZhaEntity, ButtonEntity):
-    """Defines a ZHA button, which stes value to an attribute."""
+    """Defines a ZHA button, which writes a value to an attribute."""
 
     _attribute_name: str
     _attribute_value: Any = None
@@ -176,3 +177,12 @@ class NoPresenceStatusResetButton(
     _attribute_value = 1
     _attr_device_class = ButtonDeviceClass.RESTART
     _attr_entity_category = EntityCategory.CONFIG
+
+
+@MULTI_MATCH(channel_names="opple_cluster", models={"aqara.feeder.acn001"})
+class AqaraPetFeederFeedButton(ZHAAttributeButton, id_suffix="feeding"):
+    """Defines a feed button for the aqara c1 pet feeder."""
+
+    _attribute_name = "feeding"
+    _attr_name = "Feed"
+    _attribute_value = 1

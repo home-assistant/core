@@ -9,5 +9,10 @@
             }
         }
     },
+    "issues": {
+        "removed_yaml": {
+            "title": "De Uptime YAML-configuratie is verwijderd"
+        }
+    },
     "title": "Uptime"
 }

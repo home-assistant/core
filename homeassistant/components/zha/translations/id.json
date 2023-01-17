@@ -61,24 +61,8 @@
                 "data": {
                     "overwrite_coordinator_ieee": "Ganti alamat radio IEEE secara permanen"
                 },
-                "description": "Cadangan Anda memiliki alamat IEEE yang berbeda dari radio Anda.  Agar jaringan berfungsi dengan baik, alamat IEEE radio Anda juga harus diubah.\n\nOperasi ini bersifat permanen.",
+                "description": "Cadangan Anda memiliki alamat IEEE yang berbeda dari radio Anda. Agar jaringan berfungsi dengan baik, alamat IEEE radio Anda juga harus diubah.\n\nOperasi ini bersifat permanen.",
                 "title": "Timpa Alamat IEEE Radio"
-            },
-            "pick_radio": {
-                "data": {
-                    "radio_type": "Jenis Radio"
-                },
-                "description": "Pilih jenis radio Zigbee Anda",
-                "title": "Jenis Radio"
-            },
-            "port_config": {
-                "data": {
-                    "baudrate": "kecepatan port",
-                    "flow_control": "kontrol data flow",
-                    "path": "Jalur perangkat serial"
-                },
-                "description": "Masukkan pengaturan khusus port",
-                "title": "Setelan"
             },
             "upload_manual_backup": {
                 "data": {
@@ -86,13 +70,6 @@
                 },
                 "description": "Pulihkan pengaturan jaringan Anda dari file JSON cadangan yang diunggah. Anda dapat mengunduhnya dari instalasi ZHA yang berbeda dari **Pengaturan Jaringan**, atau menggunakan file Zigbee2MQTT 'coordinator_backup.json'.",
                 "title": "Unggah Cadangan Manual"
-            },
-            "user": {
-                "data": {
-                    "path": "Jalur Perangkat Serial"
-                },
-                "description": "Pilih port serial untuk radio Zigbee",
-                "title": "ZHA"
             }
         }
     },
@@ -207,7 +184,7 @@
                 "title": "Pilih Port Serial"
             },
             "init": {
-                "description": "ZHA akan dihentikan.  Ingin melanjutkan?",
+                "description": "ZHA akan dihentikan. Ingin melanjutkan?",
                 "title": "Konfigurasi Ulang ZHA"
             },
             "instruct_unplug": {
@@ -215,7 +192,7 @@
                 "title": "Cabut radio lama Anda"
             },
             "intent_migrate": {
-                "description": "Radio lama Anda akan disetel ulang ke setelan pabrikan.  Jika Anda menggunakan adaptor gabungan Z-Wave dan Zigbee seperti HUSBZB-1, ini hanya akan mengatur ulang bagian Zigbee.\n\nApakah Anda ingin melanjutkan?",
+                "description": "Radio lama Anda akan disetel ulang ke setelan pabrikan. Jika Anda menggunakan adaptor gabungan Z-Wave dan Zigbee seperti HUSBZB-1, ini hanya akan mengatur ulang bagian Zigbee.\n\nApakah Anda ingin melanjutkan?",
                 "title": "Migrasikan ke radio baru"
             },
             "manual_pick_radio_type": {
@@ -238,7 +215,7 @@
                 "data": {
                     "overwrite_coordinator_ieee": "Ganti alamat radio IEEE secara permanen"
                 },
-                "description": "Cadangan Anda memiliki alamat IEEE yang berbeda dari radio Anda.  Agar jaringan berfungsi dengan baik, alamat IEEE radio Anda juga harus diubah.\n\nOperasi ini bersifat permanen.",
+                "description": "Cadangan Anda memiliki alamat IEEE yang berbeda dari radio Anda. Agar jaringan berfungsi dengan baik, alamat IEEE radio Anda juga harus diubah.\n\nOperasi ini bersifat permanen.",
                 "title": "Timpa Alamat IEEE Radio"
             },
             "prompt_migrate_or_reconfigure": {

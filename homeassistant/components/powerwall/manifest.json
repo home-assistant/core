@@ -8,6 +8,9 @@
   "dhcp": [
     {
       "hostname": "1118431-*"
+    },
+    {
+      "hostname": "1232100-*"
     }
   ],
   "iot_class": "local_polling",

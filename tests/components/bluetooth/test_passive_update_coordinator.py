@@ -3,15 +3,16 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+import time
 from typing import Any
 from unittest.mock import MagicMock, patch
 
 from homeassistant.components.bluetooth import (
     DOMAIN,
+    FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
     BluetoothChange,
     BluetoothScanningMode,
 )
-from homeassistant.components.bluetooth.const import UNAVAILABLE_TRACK_SECONDS
 from homeassistant.components.bluetooth.passive_update_coordinator import (
     PassiveBluetoothCoordinatorEntity,
     PassiveBluetoothDataUpdateCoordinator,
@@ -126,9 +127,10 @@ async def test_unavailable_callbacks_mark_the_coordinator_unavailable(
     hass, mock_bleak_scanner_start, mock_bluetooth_adapters
 ):
     """Test that the coordinator goes unavailable when the bluetooth stack no longer sees the device."""
+    start_monotonic = time.monotonic()
     with patch(
-        "bleak.BleakScanner.discovered_devices",  # Must patch before we setup
-        [MagicMock(address="44:44:33:11:23:45")],
+        "bleak.BleakScanner.discovered_devices_and_advertisement_data",  # Must patch before we setup
+        {"44:44:33:11:23:45": (MagicMock(address="44:44:33:11:23:45"), MagicMock())},
     ):
         await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
@@ -146,9 +148,16 @@ async def test_unavailable_callbacks_mark_the_coordinator_unavailable(
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
     assert coordinator.available is True
 
-    with patch_all_discovered_devices([MagicMock(address="44:44:33:11:23:45")]):
+    monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
+
+    with patch(
+        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
+        return_value=monotonic_now,
+    ), patch_all_discovered_devices([MagicMock(address="44:44:33:11:23:45")]):
         async_fire_time_changed(
-            hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
+            hass,
+            dt_util.utcnow()
+            + timedelta(seconds=FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1),
         )
         await hass.async_block_till_done()
     assert coordinator.available is False
@@ -156,9 +165,16 @@ async def test_unavailable_callbacks_mark_the_coordinator_unavailable(
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
     assert coordinator.available is True
 
-    with patch_all_discovered_devices([MagicMock(address="44:44:33:11:23:45")]):
+    monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 2
+
+    with patch(
+        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
+        return_value=monotonic_now,
+    ), patch_all_discovered_devices([MagicMock(address="44:44:33:11:23:45")]):
         async_fire_time_changed(
-            hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
+            hass,
+            dt_util.utcnow()
+            + timedelta(seconds=FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 2),
         )
         await hass.async_block_till_done()
     assert coordinator.available is False

@@ -64,7 +64,10 @@ class SolarlogData(update_coordinator.DataUpdateCoordinator):
             )
 
         self.logger.debug(
-            "Connection to Solarlog successful. Retrieving latest Solarlog update of %s",
+            (
+                "Connection to Solarlog successful. Retrieving latest Solarlog update"
+                " of %s"
+            ),
             data.time,
         )
 

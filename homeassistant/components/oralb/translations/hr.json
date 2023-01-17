@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ure\u0111aj je ve\u0107 konfiguriran",
+            "already_in_progress": "Konfiguracije je ve\u0107 u tijeku",
+            "no_devices_found": "Nijedan ure\u0111aj nije prona\u0111en na mre\u017ei",
+            "not_supported": "Ure\u0111aj nije podr\u017ean"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "bluetooth_confirm": {
+                "description": "\u017delite li postaviti {name}?"
+            },
+            "user": {
+                "data": {
+                    "address": "Ure\u0111aj"
+                },
+                "description": "Odaberite ure\u0111aj za postavljanje"
+            }
+        }
+    }
+}

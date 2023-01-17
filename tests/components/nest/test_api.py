@@ -53,7 +53,9 @@ async def test_auth(hass, aioclient_mock):
     # Prepare to capture credentials for Subscriber
     captured_creds = None
 
-    async def async_new_subscriber(creds, subscription_name, loop, async_callback):
+    async def async_new_subscriber(
+        creds, subscription_name, event_loop, async_callback
+    ):
         """Capture credentials for tests."""
         nonlocal captured_creds
         captured_creds = creds
@@ -112,7 +114,9 @@ async def test_auth_expired_token(hass, aioclient_mock):
     # Prepare to capture credentials for Subscriber
     captured_creds = None
 
-    async def async_new_subscriber(creds, subscription_name, loop, async_callback):
+    async def async_new_subscriber(
+        creds, subscription_name, event_loop, async_callback
+    ):
         """Capture credentials for tests."""
         nonlocal captured_creds
         captured_creds = creds

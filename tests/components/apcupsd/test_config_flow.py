@@ -5,8 +5,8 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.apcupsd import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_RESOURCES, CONF_SOURCE
+from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -160,26 +160,4 @@ async def test_flow_minimal_status(
         assert result["type"] == FlowResultType.CREATE_ENTRY
         assert result["data"] == CONF_DATA
         assert result["title"] == expected_title
-        mock_setup.assert_called_once()
-
-
-async def test_flow_import(hass: HomeAssistant) -> None:
-    """Test successful creation of config entries via YAML import."""
-    with patch("apcaccess.status.parse", return_value=MOCK_STATUS), patch(
-        "apcaccess.status.get", return_value=b""
-    ), _patch_setup() as mock_setup:
-        # Importing from YAML will create an extra field CONF_RESOURCES in the config
-        # entry, here we test if it is properly stored.
-        resources = ["MODEL"]
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=CONF_DATA | {CONF_RESOURCES: resources},
-        )
-        await hass.async_block_till_done()
-        assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["title"] == MOCK_STATUS["MODEL"]
-        assert result["data"] == CONF_DATA | {CONF_RESOURCES: resources}
-
         mock_setup.assert_called_once()

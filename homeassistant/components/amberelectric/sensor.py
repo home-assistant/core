@@ -20,7 +20,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CURRENCY_DOLLAR, ENERGY_KILO_WATT_HOUR, PERCENTAGE
+from homeassistant.const import CURRENCY_DOLLAR, PERCENTAGE, UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -34,7 +34,7 @@ ICONS = {
     "feed_in": "mdi:solar-power",
 }
 
-UNIT = f"{CURRENCY_DOLLAR}/{ENERGY_KILO_WATT_HOUR}"
+UNIT = f"{CURRENCY_DOLLAR}/{UnitOfEnergy.KILO_WATT_HOUR}"
 
 
 def format_cents_to_dollars(cents: float) -> float:
@@ -227,7 +227,10 @@ async def async_setup_entry(
     for channel_type in current:
         description = SensorEntityDescription(
             key="descriptors",
-            name=f"{entry.title} - {friendly_channel_type(channel_type)} Price Descriptor",
+            name=(
+                f"{entry.title} - {friendly_channel_type(channel_type)} Price"
+                " Descriptor"
+            ),
             icon=ICONS[channel_type],
         )
         entities.append(

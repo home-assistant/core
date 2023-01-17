@@ -70,12 +70,14 @@ class Coordinator(DataUpdateCoordinator[State]):
         log_failures: bool = True,
         raise_on_auth_failed: bool = False,
         scheduled: bool = False,
+        raise_on_entry_error: bool = False,
     ) -> None:
         self._refresh_was_scheduled = scheduled
         await super()._async_refresh(
             log_failures=log_failures,
             raise_on_auth_failed=raise_on_auth_failed,
             scheduled=scheduled,
+            raise_on_entry_error=raise_on_entry_error,
         )
 
     async def _async_update_data(self) -> State:

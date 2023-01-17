@@ -260,7 +260,7 @@ async def _async_events_consumer(
 )
 @websocket_api.async_response
 async def ws_event_stream(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle logbook stream events websocket command."""
     start_time_str = msg["start_time"]
@@ -451,7 +451,7 @@ def _ws_formatted_get_events(
 )
 @websocket_api.async_response
 async def ws_get_events(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle logbook get events websocket command."""
     start_time_str = msg["start_time"]

@@ -37,7 +37,6 @@
         "step": {
             "init": {
                 "data": {
-                    "scan_interval": "Friss\u00edt\u00e9si id\u0151k\u00f6z",
                     "show_on_map": "\u00c1llom\u00e1sok megjelen\u00edt\u00e9se a t\u00e9rk\u00e9pen",
                     "stations": "\u00c1llom\u00e1sok"
                 },

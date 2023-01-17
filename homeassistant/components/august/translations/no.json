@@ -24,7 +24,7 @@
                     "username": "Brukernavn"
                 },
                 "description": "Hvis p\u00e5loggingsmetoden er 'e-post', er brukernavnet e-postadressen. Hvis p\u00e5loggingsmetoden er 'telefon', er brukernavn telefonnummeret i formatet '+ NNNNNNNNN'.",
-                "title": "Sett opp en August konto"
+                "title": "Sett opp en augustkonto"
             },
             "validation": {
                 "data": {

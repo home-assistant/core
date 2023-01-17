@@ -6,8 +6,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Nazwa hosta lub adres IP",
-                    "name": "Nazwa"
+                    "host": "Nazwa hosta lub adres IP"
                 },
                 "data_description": {
                     "host": "Adres IP lub nazwa hosta instalacji monitora P1."

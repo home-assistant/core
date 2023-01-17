@@ -1,0 +1,104 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert",
+            "reauth_successful": "Re-autentisering var vellykket"
+        },
+        "error": {
+            "invalid_api_key": "Ugyldig API-n\u00f8kkel",
+            "no_sensors_near_coordinates": "Ingen sensorer funnet i n\u00e6rheten av koordinater (innenfor avstand)",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "by_coordinates": {
+                "data": {
+                    "distance": "S\u00f8k radius",
+                    "latitude": "Breddegrad",
+                    "longitude": "Lengdegrad"
+                },
+                "data_description": {
+                    "distance": "Radiusen (i kilometer) av sirkelen som skal s\u00f8kes innenfor",
+                    "latitude": "Breddegraden for \u00e5 s\u00f8ke etter sensorer",
+                    "longitude": "Lengdegraden for \u00e5 s\u00f8ke etter sensorer"
+                },
+                "description": "S\u00f8k etter en PurpleAir-sensor innenfor en viss avstand fra en breddegrad/lengdegrad."
+            },
+            "choose_sensor": {
+                "data": {
+                    "sensor_index": "Sensor"
+                },
+                "data_description": {
+                    "sensor_index": "Sensoren \u00e5 spore"
+                },
+                "description": "Hvilken av sensorene i n\u00e6rheten vil du spore?"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API-n\u00f8kkel"
+                },
+                "data_description": {
+                    "api_key": "PurpleAir API-n\u00f8kkelen din (hvis du har b\u00e5de lese- og skriven\u00f8kler, bruk lesen\u00f8kkelen)"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "API-n\u00f8kkel"
+                },
+                "data_description": {
+                    "api_key": "PurpleAir API-n\u00f8kkelen din (hvis du har b\u00e5de lese- og skriven\u00f8kler, bruk lesen\u00f8kkelen)"
+                }
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert"
+        },
+        "error": {
+            "invalid_api_key": "Ugyldig API-n\u00f8kkel",
+            "no_sensors_near_coordinates": "Ingen sensorer funnet i n\u00e6rheten av koordinater (innenfor avstand)",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "add_sensor": {
+                "data": {
+                    "distance": "S\u00f8k radius",
+                    "latitude": "Breddegrad",
+                    "longitude": "Lengdegrad"
+                },
+                "data_description": {
+                    "distance": "Radiusen (i kilometer) av sirkelen som skal s\u00f8kes innenfor",
+                    "latitude": "Breddegraden for \u00e5 s\u00f8ke etter sensorer",
+                    "longitude": "Lengdegraden for \u00e5 s\u00f8ke etter sensorer"
+                },
+                "description": "S\u00f8k etter en PurpleAir-sensor innenfor en viss avstand fra en breddegrad/lengdegrad.",
+                "title": "Legg til sensor"
+            },
+            "choose_sensor": {
+                "data": {
+                    "sensor_index": "Sensor"
+                },
+                "data_description": {
+                    "sensor_index": "Sensoren \u00e5 spore"
+                },
+                "description": "Hvilken av sensorene i n\u00e6rheten vil du spore?",
+                "title": "Velg Sensor \u00e5 legge til"
+            },
+            "init": {
+                "menu_options": {
+                    "add_sensor": "Legg til sensor",
+                    "remove_sensor": "Fjern sensoren"
+                }
+            },
+            "remove_sensor": {
+                "data": {
+                    "sensor_device_id": "Sensornavn"
+                },
+                "data_description": {
+                    "sensor_device_id": "Sensoren som skal fjernes"
+                },
+                "title": "Fjern sensoren"
+            }
+        }
+    }
+}

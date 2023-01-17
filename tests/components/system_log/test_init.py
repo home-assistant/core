@@ -136,6 +136,28 @@ async def test_warning(hass, hass_ws_client):
     assert_log(log, "", "warning message", "WARNING")
 
 
+async def test_warning_good_format(hass, hass_ws_client):
+    """Test that warning with good format arguments are logged and retrieved correctly."""
+    await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
+    await hass.async_block_till_done()
+    _LOGGER.warning("warning message: %s", "test")
+    await hass.async_block_till_done()
+
+    log = find_log(await get_error_log(hass_ws_client), "WARNING")
+    assert_log(log, "", "warning message: test", "WARNING")
+
+
+async def test_warning_missing_format_args(hass, hass_ws_client):
+    """Test that warning with missing format arguments are logged and retrieved correctly."""
+    await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
+    await hass.async_block_till_done()
+    _LOGGER.warning("warning message missing a format arg %s")
+    await hass.async_block_till_done()
+
+    log = find_log(await get_error_log(hass_ws_client), "WARNING")
+    assert_log(log, "", ["warning message missing a format arg %s"], "WARNING")
+
+
 async def test_error(hass, hass_ws_client):
     """Test that errors are logged and retrieved correctly."""
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)

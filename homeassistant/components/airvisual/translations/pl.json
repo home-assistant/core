@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Lokalizacja jest ju\u017c skonfigurowana lub ID Node/Pro jest ju\u017c zarejestrowane",
+            "already_configured": "Lokalizacja jest ju\u017c skonfigurowana",
             "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
         },
         "error": {
@@ -48,6 +48,36 @@
                 "description": "Wybierz, kt\u00f3re dane AirVisual chcesz monitorowa\u0107.",
                 "title": "Konfiguracja AirVisual"
             }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "pollutant_label": {
+                "state": {
+                    "co": "tlenek w\u0119gla",
+                    "n2": "dwutlenek azotu",
+                    "o3": "ozon",
+                    "p1": "PM10",
+                    "p2": "PM2.5",
+                    "s2": "dwutlenek siarki"
+                }
+            },
+            "pollutant_level": {
+                "state": {
+                    "good": "dobry",
+                    "hazardous": "niebezpieczny",
+                    "moderate": "umiarkowany",
+                    "unhealthy": "niezdrowy",
+                    "unhealthy_sensitive": "niezdrowy dla grup wra\u017cliwych",
+                    "very_unhealthy": "bardzo niezdrowy"
+                }
+            }
+        }
+    },
+    "issues": {
+        "airvisual_pro_migration": {
+            "description": "Urz\u0105dzenia AirVisual Pro maj\u0105 teraz w\u0142asn\u0105 integracj\u0119 z Home Assistant (w przeciwie\u0144stwie do oryginalnej integracji AirVisual, kt\u00f3ra wykorzystuje interfejs API chmury AirVisual). Urz\u0105dzenie Pro znajduj\u0105ce si\u0119 pod adresem `{ip_address}` zosta\u0142o automatycznie przeniesione.\n\nW ramach tej migracji identyfikator urz\u0105dzenia Pro zmieni\u0142 si\u0119 z `{old_device_id}` na `{new_device_id}`. Zaktualizuj te automatyzacje, aby u\u017cywa\u0142y nowego identyfikatora urz\u0105dzenia: {device_automations_string}.",
+            "title": "{ip_address} jest teraz cz\u0119\u015bci\u0105 integracji AirVisual Pro"
         }
     },
     "options": {

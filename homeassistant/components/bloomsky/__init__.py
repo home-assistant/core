@@ -12,6 +12,7 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +34,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     api_key = config[DOMAIN][CONF_API_KEY]
 
     try:
-        bloomsky = BloomSky(api_key, hass.config.units.is_metric)
+        bloomsky = BloomSky(api_key, hass.config.units is METRIC_SYSTEM)
     except RuntimeError:
         return False
 

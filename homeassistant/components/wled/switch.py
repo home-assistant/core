@@ -65,10 +65,11 @@ class WLEDNightlightSwitch(WLEDEntity, SwitchEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the entity."""
+        state = self.coordinator.data.state
         return {
-            ATTR_DURATION: self.coordinator.data.state.nightlight.duration,
-            ATTR_FADE: self.coordinator.data.state.nightlight.fade,
-            ATTR_TARGET_BRIGHTNESS: self.coordinator.data.state.nightlight.target_brightness,
+            ATTR_DURATION: state.nightlight.duration,
+            ATTR_FADE: state.nightlight.fade,
+            ATTR_TARGET_BRIGHTNESS: state.nightlight.target_brightness,
         }
 
     @property
@@ -215,5 +216,4 @@ def async_update_segments(
         current_ids.add(segment_id)
         new_entities.append(WLEDReverseSwitch(coordinator, segment_id))
 
-    if new_entities:
-        async_add_entities(new_entities)
+    async_add_entities(new_entities)

@@ -413,7 +413,7 @@ class HeosMediaPlayer(MediaPlayerEntity):
         return self._source_manager.source_list
 
     @property
-    def state(self) -> str:
+    def state(self) -> MediaPlayerState:
         """State of the player."""
         return PLAY_STATE_TO_STATE[self._player.state]
 

@@ -37,12 +37,12 @@ FAILED_SCAN_INTERVAL = datetime.timedelta(minutes=1)
 DEBOUNCE_TIME = 60  # in seconds
 
 
-def base_unique_id(latitude, longitude):
+def base_unique_id(latitude: float, longitude: float) -> str:
     """Return unique id for entries in configuration."""
     return f"{latitude}_{longitude}"
 
 
-class NwsDataUpdateCoordinator(DataUpdateCoordinator):
+class NwsDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """
     NWS data update coordinator.
 
@@ -57,7 +57,7 @@ class NwsDataUpdateCoordinator(DataUpdateCoordinator):
         name: str,
         update_interval: datetime.timedelta,
         failed_update_interval: datetime.timedelta,
-        update_method: Callable[[], Awaitable] | None = None,
+        update_method: Callable[[], Awaitable[None]] | None = None,
         request_refresh_debouncer: debounce.Debouncer | None = None,
     ) -> None:
         """Initialize NWS coordinator."""
@@ -174,7 +174,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-def device_info(latitude, longitude) -> DeviceInfo:
+def device_info(latitude: float, longitude: float) -> DeviceInfo:
     """Return device registry information."""
     return DeviceInfo(
         entry_type=DeviceEntryType.SERVICE,

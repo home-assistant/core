@@ -22,7 +22,7 @@
     "issues": {
         "removed_yaml": {
             "description": "Die Konfiguration von Spotify \u00fcber YAML wurde entfernt.\n\nDeine bestehende YAML-Konfiguration wird von Home Assistant nicht verwendet.\n\nEntferne die YAML-Konfiguration aus deiner configuration.yaml-Datei und starte den Home Assistant neu, um dieses Problem zu beheben.",
-            "title": "Die Spotify-YAML-Konfiguration wurde entfernt"
+            "title": "Die Spotify YAML-Konfiguration wurde entfernt"
         }
     },
     "system_health": {

@@ -6,11 +6,11 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 
 
 async def test_entry_diagnostics(
-    hass, config_entry, hass_client, setup_ambient_station, station_data
+    hass, config_entry, hass_client, data_station, setup_config_entry
 ):
     """Test config entry diagnostics."""
     ambient = hass.data[DOMAIN][config_entry.entry_id]
-    ambient.stations = station_data
+    ambient.stations = data_station
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "entry": {
             "entry_id": config_entry.entry_id,

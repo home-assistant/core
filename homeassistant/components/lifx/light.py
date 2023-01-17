@@ -221,7 +221,10 @@ class LIFXLight(LIFXEntity, LightEntity):
                     Platform.SELECT, INFRARED_BRIGHTNESS
                 )
                 _LOGGER.warning(
-                    "The 'infrared' attribute of 'lifx.set_state' is deprecated: call 'select.select_option' targeting '%s' instead",
+                    (
+                        "The 'infrared' attribute of 'lifx.set_state' is deprecated:"
+                        " call 'select.select_option' targeting '%s' instead"
+                    ),
                     infrared_entity_id,
                 )
                 bulb.set_infrared(convert_8_to_16(kwargs[ATTR_INFRARED]))
@@ -271,7 +274,9 @@ class LIFXLight(LIFXEntity, LightEntity):
                 "This device does not support setting HEV cycle state"
             )
 
-        await self.coordinator.async_set_hev_cycle_state(power, duration or 0)
+        await self.coordinator.sensor_coordinator.async_set_hev_cycle_state(
+            power, duration or 0
+        )
         await self.update_during_transition(duration or 0)
 
     async def set_power(

@@ -8,10 +8,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import HWEnergyDeviceUpdateCoordinator
+from .entity import HomeWizardEntity
+from .helpers import homewizard_exception_handler
 
 
 async def async_setup_entry(
@@ -22,21 +23,20 @@ async def async_setup_entry(
     """Set up switches."""
     coordinator: HWEnergyDeviceUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    if coordinator.data["state"]:
-        async_add_entities(
-            [
-                HWEnergyMainSwitchEntity(coordinator, entry),
-                HWEnergySwitchLockEntity(coordinator, entry),
-            ]
-        )
+    entities: list[SwitchEntity] = []
+
+    if coordinator.data.state:
+        entities.append(HWEnergyMainSwitchEntity(coordinator, entry))
+        entities.append(HWEnergySwitchLockEntity(coordinator, entry))
+
+    if coordinator.data.system:
+        entities.append(HWEnergyEnableCloudEntity(hass, coordinator, entry))
+
+    async_add_entities(entities)
 
 
-class HWEnergySwitchEntity(
-    CoordinatorEntity[HWEnergyDeviceUpdateCoordinator], SwitchEntity
-):
+class HWEnergySwitchEntity(HomeWizardEntity, SwitchEntity):
     """Representation switchable entity."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -47,13 +47,6 @@ class HWEnergySwitchEntity(
         """Initialize the switch."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{entry.unique_id}_{key}"
-        self._attr_device_info = {
-            "name": entry.title,
-            "manufacturer": "HomeWizard",
-            "sw_version": coordinator.data["device"].firmware_version,
-            "model": coordinator.data["device"].product_type,
-            "identifiers": {(DOMAIN, coordinator.data["device"].serial)},
-        }
 
 
 class HWEnergyMainSwitchEntity(HWEnergySwitchEntity):
@@ -67,11 +60,13 @@ class HWEnergyMainSwitchEntity(HWEnergySwitchEntity):
         """Initialize the switch."""
         super().__init__(coordinator, entry, "power_on")
 
+    @homewizard_exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.coordinator.api.state_set(power_on=True)
         await self.coordinator.async_refresh()
 
+    @homewizard_exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.coordinator.api.state_set(power_on=False)
@@ -84,12 +79,18 @@ class HWEnergyMainSwitchEntity(HWEnergySwitchEntity):
 
         This switch becomes unavailable when switch_lock is enabled.
         """
-        return super().available and not self.coordinator.data["state"].switch_lock
+        return (
+            super().available
+            and self.coordinator.data.state is not None
+            and not self.coordinator.data.state.switch_lock
+        )
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if switch is on."""
-        return bool(self.coordinator.data["state"].power_on)
+        if self.coordinator.data.state is None:
+            return None
+        return self.coordinator.data.state.power_on
 
 
 class HWEnergySwitchLockEntity(HWEnergySwitchEntity):
@@ -110,17 +111,69 @@ class HWEnergySwitchLockEntity(HWEnergySwitchEntity):
         """Initialize the switch."""
         super().__init__(coordinator, entry, "switch_lock")
 
+    @homewizard_exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch-lock on."""
         await self.coordinator.api.state_set(switch_lock=True)
         await self.coordinator.async_refresh()
 
+    @homewizard_exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn switch-lock off."""
         await self.coordinator.api.state_set(switch_lock=False)
         await self.coordinator.async_refresh()
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if switch is on."""
-        return bool(self.coordinator.data["state"].switch_lock)
+        if self.coordinator.data.state is None:
+            return None
+        return self.coordinator.data.state.switch_lock
+
+
+class HWEnergyEnableCloudEntity(HWEnergySwitchEntity):
+    """
+    Representation of the enable cloud configuration.
+
+    Turning off 'cloud connection' turns off all communication to HomeWizard Cloud.
+    At this point, the device is fully local.
+    """
+
+    _attr_name = "Cloud connection"
+    _attr_device_class = SwitchDeviceClass.SWITCH
+    _attr_entity_category = EntityCategory.CONFIG
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        coordinator: HWEnergyDeviceUpdateCoordinator,
+        entry: ConfigEntry,
+    ) -> None:
+        """Initialize the switch."""
+        super().__init__(coordinator, entry, "cloud_connection")
+        self.hass = hass
+        self.entry = entry
+
+    @homewizard_exception_handler
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn cloud connection on."""
+        await self.coordinator.api.system_set(cloud_enabled=True)
+        await self.coordinator.async_refresh()
+
+    @homewizard_exception_handler
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn cloud connection off."""
+        await self.coordinator.api.system_set(cloud_enabled=False)
+        await self.coordinator.async_refresh()
+
+    @property
+    def icon(self) -> str | None:
+        """Return the icon."""
+        return "mdi:cloud" if self.is_on else "mdi:cloud-off-outline"
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if cloud connection is active."""
+        if self.coordinator.data.system is None:
+            return None
+        return self.coordinator.data.system.cloud_enabled

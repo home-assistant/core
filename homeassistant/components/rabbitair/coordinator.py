@@ -60,6 +60,7 @@ class RabbitAirDataUpdateCoordinator(DataUpdateCoordinator[State]):
         log_failures: bool = True,
         raise_on_auth_failed: bool = False,
         scheduled: bool = False,
+        raise_on_entry_error: bool = False,
     ) -> None:
         """Refresh data."""
 
@@ -68,4 +69,6 @@ class RabbitAirDataUpdateCoordinator(DataUpdateCoordinator[State]):
         if scheduled and debouncer.has_pending_call():
             return
 
-        await super()._async_refresh(log_failures, raise_on_auth_failed, scheduled)
+        await super()._async_refresh(
+            log_failures, raise_on_auth_failed, scheduled, raise_on_entry_error
+        )

@@ -27,13 +27,9 @@
         }
     },
     "issues": {
-        "deprecated_yaml": {
-            "description": "Radarri seadistamine YAML-i abil eemaldatakse.\n\nTeie olemasolev YAML-i konfiguratsioon imporditakse kasutajaliidesesse automaatselt.\n\nEemaldage failist configuration.yaml radarr YAML konfiguratsioon ja taask\u00e4ivitage selle probleemi lahendamiseks Home Assistant.",
-            "title": "Radarr YAML-i konfiguratsiooni eemaldatakse"
-        },
-        "removed_attributes": {
-            "description": "M\u00f5ned murrangulised muudatused on tehtud liikumiste arvuanduri v\u00e4ljal\u00fclitamisel ettevaatusabin\u00f5ude t\u00f5ttu.\n\nSee andur v\u00f5ib p\u00f5hjustada probleeme massiivsete andmebaaside puhul. Kui soovite seda siiski kasutada, v\u00f5ite seda teha.\n\nFilmide nimed ei ole enam filmide anduri atribuutidena lisatud.\n\nTulevikus on eemaldatud. Seda ajakohastatakse, nagu kalendrielemendid peaksid olema. Kettaruum on n\u00fc\u00fcd jagatud erinevateks anduriteks, \u00fcks iga kausta jaoks.\n\nStaatus ja k\u00e4sud on eemaldatud, kuna neil ei tundu olevat t\u00f5elist v\u00e4\u00e4rtust automaatika jaoks.",
-            "title": "Muudatused Radarri integratsioonis"
+        "removed_yaml": {
+            "description": "Radarri konfigureerimine YAML-i abil on eemaldatud.\n\nTeie olemasolevat YAML-konfiguratsiooni ei kasuta Home Assistant.\n\nProbleemi lahendamiseks eemaldage YAML-konfiguratsioon failist configuration.yaml ja k\u00e4ivitage Home Assistant uuesti.",
+            "title": "Radarr YAML-i konfiguratsioon on eemaldatud"
         }
     },
     "options": {
