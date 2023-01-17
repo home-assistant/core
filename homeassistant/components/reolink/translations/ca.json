@@ -5,11 +5,11 @@
             "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
         },
         "error": {
-            "api_error": "S'ha produ\u00eft un error a l'API: {error}",
+            "api_error": "S'ha produ\u00eft un error a l'API",
             "cannot_connect": "Ha fallat la connexi\u00f3",
             "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
             "not_admin": "L'usuari ha de ser administrador, l'usuari ''{username}'' t\u00e9 nivell d'autoritzaci\u00f3 ''{userlevel}''",
-            "unknown": "Error inesperat: {error}"
+            "unknown": "Error inesperat"
         },
         "step": {
             "reauth_confirm": {
