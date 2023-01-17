@@ -38,7 +38,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(DOMAIN)
                 return self.async_create_entry(
                     title="Thread",
-                    data={"url": url},
+                    data=user_input,
                 )
 
         data_schema = vol.Schema({CONF_URL: str})
