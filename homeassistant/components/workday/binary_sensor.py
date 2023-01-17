@@ -109,6 +109,10 @@ def setup_platform(
             _LOGGER.error("There is no subdivision %s in country %s", province, country)
             return
 
+    # clear the holiday list if public holidays are not included
+    if "holiday" not in excludes and "holiday" not in workdays:
+        obj_holidays.clear()
+
     # Add custom holidays
     try:
         obj_holidays.append(add_holidays)
@@ -198,7 +202,7 @@ class IsWorkdaySensor(BinarySensorEntity):
         """Check if given day is in the excludes list."""
         if day in self._excludes:
             return True
-        if "holiday" in self._excludes and now in self._obj_holidays:
+        if "holiday" not in self._workdays and now in self._obj_holidays:
             return True
 
         return False
