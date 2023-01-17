@@ -16,7 +16,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 
 from .const import DOMAIN
-from .helpers import get_node_unique_id
+from .helpers import get_device_id, get_operational_instance_id
 
 if TYPE_CHECKING:
     from matter_server.client import MatterClient
@@ -57,7 +57,6 @@ class MatterEntity(Entity):
         self._node_device = node_device
         self._device_type_instance = device_type_instance
         self.entity_description = entity_description
-        node = device_type_instance.node
         self._unsubscribes: list[Callable] = []
         # for fast lookups we create a mapping to the attribute paths
         self._attributes_map: dict[type, str] = {}
@@ -66,7 +65,7 @@ class MatterEntity(Entity):
         assert server_info is not None
         # create unique_id based on "Operational Instance Name" and endpoint/device type
         self._attr_unique_id = (
-            f"{get_node_unique_id(server_info, node)}-"
+            f"{get_operational_instance_id(server_info, self._node_device.node())}-"
             f"{device_type_instance.endpoint}-"
             f"{device_type_instance.device_type.device_type}"
         )
@@ -75,8 +74,8 @@ class MatterEntity(Entity):
     def device_info(self) -> DeviceInfo | None:
         """Return device info for device registry."""
         server_info = cast(ServerInfo, self.matter_client.server_info)
-        node_unique_id = get_node_unique_id(server_info, self._node_device.node())
-        return {"identifiers": {(DOMAIN, node_unique_id)}}
+        dev_id = get_device_id(server_info, self._node_device)
+        return {"identifiers": {(DOMAIN, dev_id)}}
 
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""

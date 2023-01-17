@@ -10,7 +10,8 @@ from homeassistant.core import HomeAssistant, callback
 from .const import DOMAIN
 
 if TYPE_CHECKING:
-    from matter_server.common.models.node_device import MatterNode
+    from matter_server.common.models.node import MatterNode
+    from matter_server.common.models.node_device import AbstractMatterNodeDevice
     from matter_server.common.models.server_information import ServerInfo
 
     from .adapter import MatterAdapter
@@ -34,14 +35,25 @@ def get_matter(hass: HomeAssistant) -> MatterAdapter:
     return matter_entry_data.adapter
 
 
-def get_node_unique_id(
-    server_info: ServerInfo, node: MatterNode, is_bridge: bool = False
+def get_operational_instance_id(
+    server_info: ServerInfo,
+    node: MatterNode,
 ) -> str:
-    """Return unique id for a Matter node based on `Operational Instance Name`."""
+    """Return `Operational Instance Name` for given MatterNode."""
     fab_id_hex = f"{server_info.compressed_fabric_id:016X}"
     node_id_hex = f"{node.node_id:016X}"
-    node_unique_id = f"{fab_id_hex}-{node_id_hex}"
-    if is_bridge:
-        # create 'virtual' device(id) for a root/bridge device
-        node_unique_id += "-bridge"
-    return node_unique_id
+    # operational instance id matches the mdns advertisement for the node
+    # this is the recommended ID to recognize a unique matter node (within a fabric)
+    return f"{fab_id_hex}-{node_id_hex}"
+
+
+def get_device_id(
+    server_info: ServerInfo,
+    node_device: AbstractMatterNodeDevice,
+) -> str:
+    """Return HA device_id for the given MatterNodeDevice."""
+    operational_instance_id = get_operational_instance_id(
+        server_info, node_device.node()
+    )
+    # append nodedevice(type) to differentiate between a root node and bridge within HA devices.
+    return f"{operational_instance_id}-{node_device.__class__.__name__}"
