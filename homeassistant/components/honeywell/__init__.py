@@ -1,6 +1,5 @@
 """Support for Honeywell (US) Total Connect Comfort climate systems."""
 import asyncio
-from datetime import timedelta
 
 import AIOSomecomfort
 
@@ -20,7 +19,6 @@ from .const import (
 )
 
 UPDATE_LOOP_SLEEP_TIME = 5
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 PLATFORMS = [Platform.CLIMATE, Platform.SENSOR]
 
 MIGRATE_OPTIONS_KEYS = {CONF_COOL_AWAY_TEMPERATURE, CONF_HEAT_AWAY_TEMPERATURE}
@@ -157,7 +155,8 @@ class HoneywellData:
             else:
                 _LOGGER.info(
                     "New device with ID %s detected, reload the honeywell integration"
-                    " if you want to access it in Home Assistant"
+                    " if you want to access it in Home Assistant",
+                    updated_device.deviceid,
                 )
 
         await self._hass.config_entries.async_reload(self._config.entry_id)
