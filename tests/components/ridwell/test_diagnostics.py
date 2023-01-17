@@ -25,7 +25,7 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_config_e
                 "_async_request": None,
                 "event_id": "event_123",
                 "pickup_date": {
-                    "__type": "<class 'datetime.date'>",
+                    "__type": "<class 'freezegun.api.FakeDate'>",
                     "isoformat": "2022-01-24",
                 },
                 "pickups": [
