@@ -104,7 +104,10 @@ class MatterAdapter:
             name = "Hub device"
         elif not name and device_type_instances:
             # fallback name based on device type
-            name = f"{device_type_instances[0].device_type.__doc__[:-1]} {node_device.node().node_id}"
+            name = (
+                f"{device_type_instances[0].device_type.__doc__[:-1]}"
+                f" {node_device.node().node_id}"
+            )
 
         dr.async_get(self.hass).async_get_or_create(
             name=name,
