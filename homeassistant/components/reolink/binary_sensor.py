@@ -126,16 +126,16 @@ class ReolinkBinarySensorEntity(ReolinkCoordinatorEntity, BinarySensorEntity):
     """An implementation of a base binary-sensor class for Reolink IP camera motion sensors."""
 
     _attr_has_entity_name = True
-    entity_description: ReolinkBinarySensorDescription
+    entity_description: ReolinkBinarySensorEntityDescription
 
     def __init__(
         self,
         reolink_data: ReolinkData,
         channel: int,
-        entity_description: ReolinkBinarySensorDescription,
+        entity_description: ReolinkBinarySensorEntityDescription,
     ) -> None:
         """Initialize Reolink binary sensor."""
-        ReolinkCoordinatorEntity.__init__(self, reolink_data, channel)
+        super().__init__(reolink_data, channel)
         self.entity_description = entity_description
 
         self._attr_unique_id = (
@@ -145,14 +145,14 @@ class ReolinkBinarySensorEntity(ReolinkCoordinatorEntity, BinarySensorEntity):
     @property
     def icon(self) -> str | None:
         """Icon of the sensor."""
-        if self.entity_description.value(self._host, self._channel) is False:
+        if self.is_on is False:
             return self.entity_description.icon_off
         return super().icon
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """State of the sensor."""
-        return self.entity_description.value(self._host, self._channel)
+        return self.entity_description.value(self._host.api, self._channel)
 
     async def async_added_to_hass(self) -> None:
         """Entity created."""
