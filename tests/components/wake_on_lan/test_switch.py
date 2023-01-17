@@ -257,3 +257,52 @@ async def test_no_hostname_state(
 
         state = hass.states.get("switch.wake_on_lan")
         assert state.state == STATE_OFF
+
+
+async def test_ip_version(
+    hass: HomeAssistant, mock_send_magic_packet: AsyncMock
+) -> None:
+    """Test with IP version."""
+
+    mac = "00-01-02-03-04-05"
+    hostname = "validhostname"
+    ip_version = 4
+
+    assert await async_setup_component(
+        hass,
+        switch.DOMAIN,
+        {
+            "switch": {
+                "platform": "wake_on_lan",
+                "mac": mac,
+                "host": hostname,
+                "ip_version": ip_version,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.wake_on_lan")
+    assert state.state == STATE_OFF
+
+    with patch.object(subprocess, "call", return_value=0):
+
+        await hass.services.async_call(
+            switch.DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.wake_on_lan"},
+            blocking=True,
+        )
+
+        state = hass.states.get("switch.wake_on_lan")
+        assert state.state == STATE_ON
+
+        await hass.services.async_call(
+            switch.DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "switch.wake_on_lan"},
+            blocking=True,
+        )
+
+        state = hass.states.get("switch.wake_on_lan")
+        assert state.state == STATE_ON

@@ -157,7 +157,7 @@ class WolSwitch(SwitchEntity):
             str(DEFAULT_PING_TIMEOUT),
             str(self._host),
         ]
-        ping_cmd += [str(self._ip_version)] if self._ip_version is not None else []
+        ping_cmd += [self._ip_version] if self._ip_version is not None else []
 
         status = sp.call(ping_cmd, stdout=sp.DEVNULL, stderr=sp.DEVNULL)
         self._state = not bool(status)
