@@ -37,6 +37,10 @@ from homeassistant.helpers.typing import ConfigType, StateType
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_CHANGED_BY = "changed_by"
+ATTR_IS_JAMMED = "is_jammed"
+ATTR_IS_LOCKED = "is_locked"
+ATTR_IS_LOCKING = "is_locking"
+ATTR_UNLOCKING = "is_unlocking"
 
 DOMAIN = "lock"
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -58,7 +62,13 @@ class LockEntityFeature(IntFlag):
 # Please use the LockEntityFeature enum instead.
 SUPPORT_OPEN = 1
 
-PROP_TO_ATTR = {"changed_by": ATTR_CHANGED_BY, "code_format": ATTR_CODE_FORMAT}
+PROP_TO_ATTR = {
+    "changed_by": ATTR_CHANGED_BY,
+    "code_format": ATTR_CODE_FORMAT,
+    "is_jammed": ATTR_IS_JAMMED,
+    "is_locked": ATTR_IS_LOCKED,
+    "is_locking": ATTR_IS_LOCKING,
+}
 
 # mypy: disallow-any-generics
 

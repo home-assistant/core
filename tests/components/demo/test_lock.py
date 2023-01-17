@@ -14,6 +14,7 @@ from homeassistant.components.lock import (
     STATE_LOCKING,
     STATE_UNLOCKED,
     STATE_UNLOCKING,
+    LockEntityFeature,
 )
 from homeassistant.const import ATTR_ENTITY_ID, EVENT_STATE_CHANGED
 from homeassistant.setup import async_setup_component
@@ -111,3 +112,10 @@ async def test_opening(hass):
     )
     state = hass.states.get(OPENABLE_LOCK)
     assert state.state == STATE_UNLOCKED
+    assert state.attributes == {
+        "is_jammed": False,
+        "is_locked": False,
+        "is_locking": False,
+        "friendly_name": "Openable Lock",
+        "supported_features": LockEntityFeature.OPEN,
+    }
