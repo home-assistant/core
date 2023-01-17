@@ -14,6 +14,40 @@ HASSIO_DATA = hassio.HassioServiceInfo(
 )
 
 
+async def test_user_flow(hass: HomeAssistant) -> None:
+    """Test the user flow."""
+    result = await hass.config_entries.flow.async_init(
+        otbr.DOMAIN, context={"source": "user"}
+    )
+
+    expected_data = {"url": "http://custom_url:1234"}
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] is None
+
+    with patch(
+        "homeassistant.components.otbr.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "url": "http://custom_url:1234",
+            },
+        )
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Thread"
+    assert result["data"] == expected_data
+    assert result["options"] == {}
+    assert len(mock_setup_entry.mock_calls) == 1
+
+    config_entry = hass.config_entries.async_entries(otbr.DOMAIN)[0]
+    assert config_entry.data == expected_data
+    assert config_entry.options == {}
+    assert config_entry.title == "Thread"
+    assert config_entry.unique_id is None
+
+
 async def test_hassio_discovery_flow(hass: HomeAssistant) -> None:
     """Test the hassio discovery flow."""
     with patch(
