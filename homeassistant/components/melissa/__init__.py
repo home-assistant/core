@@ -1,40 +1,37 @@
-"""Support for Melissa climate."""
-import melissa
-import voluptuous as vol
+"""The Melissa integration."""
+from __future__ import annotations
 
+import melissa
+
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.discovery import async_load_platform
-from homeassistant.helpers.typing import ConfigType
 
-DOMAIN = "melissa"
-DATA_MELISSA = "MELISSA"
+from .const import DOMAIN
+
+PLATFORMS: list[Platform] = [Platform.CLIMATE]
 
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Melissa from a config entry."""
+    username = entry.data.get(CONF_USERNAME)
+    password = entry.data.get(CONF_PASSWORD)
 
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Melissa Climate component."""
-    conf = config[DOMAIN]
-    username = conf.get(CONF_USERNAME)
-    password = conf.get(CONF_PASSWORD)
+    hass.data.setdefault(DOMAIN, {})
     api = melissa.AsyncMelissa(username=username, password=password)
     await api.async_connect()
-    hass.data[DATA_MELISSA] = api
+    hass.data[DOMAIN][entry.entry_id] = api
 
-    hass.async_create_task(
-        async_load_platform(hass, Platform.CLIMATE, DOMAIN, {}, config)
-    )
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        api = hass.data[DOMAIN].pop(entry.entry_id)
+        if api.session is not None:
+            await api.session.close()
+
+    return unload_ok

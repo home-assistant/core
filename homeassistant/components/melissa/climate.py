@@ -13,12 +13,13 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DATA_MELISSA
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,21 +34,20 @@ OP_MODES = [
 FAN_MODES = [FAN_AUTO, FAN_HIGH, FAN_MEDIUM, FAN_LOW]
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Iterate through and add all Melissa devices."""
-    api = hass.data[DATA_MELISSA]
+    api = hass.data[DOMAIN][entry.entry_id]
     devices = (await api.async_fetch_devices()).values()
 
     all_devices = []
 
     for device in devices:
         if device["type"] == "melissa":
-            all_devices.append(MelissaClimate(api, device["serial_number"], device))
+            all_devices.append(MelissaClimate(api, device))
 
     async_add_entities(all_devices)
 
@@ -61,12 +61,15 @@ class MelissaClimate(ClimateEntity):
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
-    def __init__(self, api, serial_number, init_data):
+    def __init__(self, api, device):
         """Initialize the climate device."""
-        self._name = init_data["name"]
+        self.device = device
+        self._attr_unique_id = device["serial_number"]
+        self._attr_entity_id = device["serial_number"]
+        self._name = device["name"]
         self._api = api
-        self._serial_number = serial_number
-        self._data = init_data["controller_log"]
+        self._serial_number = device["serial_number"]
+        self._data = device["controller_log"]
         self._state = None
         self._cur_settings = None
 
@@ -135,6 +138,17 @@ class MelissaClimate(ClimateEntity):
     def max_temp(self):
         """Return the maximum supported temperature for the thermostat."""
         return 30
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device info."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.device["serial_number"])},
+            name=self.name,
+            manufacturer=self.device["device_group"],
+            model=self.device["type"],
+            sw_version=self.device["controller_log"]["version"],
+        )
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""

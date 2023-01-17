@@ -698,8 +698,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/mediaroom/ @dgomes
 /homeassistant/components/melcloud/ @vilppuvuorinen
 /tests/components/melcloud/ @vilppuvuorinen
-/homeassistant/components/melissa/ @kennedyshead
-/tests/components/melissa/ @kennedyshead
+/homeassistant/components/melissa/ @kennedyshead @bkbilly
+/tests/components/melissa/ @kennedyshead @bkbilly
 /homeassistant/components/melnor/ @vanstinator
 /tests/components/melnor/ @vanstinator
 /homeassistant/components/met/ @danielhiversen @thimic

@@ -247,6 +247,7 @@ FLOWS = {
         "mazda",
         "meater",
         "melcloud",
+        "melissa",
         "melnor",
         "met",
         "met_eireann",
