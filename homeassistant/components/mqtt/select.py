@@ -78,7 +78,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT select through configuration.yaml and dynamically through MQTT discovery."""
+    """Set up MQTT select through YAML and through MQTT discovery."""
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -113,6 +113,7 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
         discovery_data: DiscoveryInfoType | None,
     ) -> None:
         """Initialize the MQTT select."""
+        self._attr_current_option = None
         SelectEntity.__init__(self)
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
@@ -123,7 +124,6 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
 
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
-        self._attr_current_option = None
         self._optimistic = config[CONF_OPTIMISTIC]
         self._attr_options = config[CONF_OPTIONS]
 

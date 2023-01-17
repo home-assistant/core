@@ -79,8 +79,6 @@ async def async_setup_entry(
 class HueSensorBase(HueBaseEntity, SensorEntity):
     """Representation of a Hue sensor."""
 
-    _attr_state_class = SensorStateClass.MEASUREMENT
-
     def __init__(
         self,
         bridge: HueBridge,
@@ -98,6 +96,7 @@ class HueTemperatureSensor(HueSensorBase):
 
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
     _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     @property
     def native_value(self) -> float:
@@ -115,6 +114,7 @@ class HueLightLevelSensor(HueSensorBase):
 
     _attr_native_unit_of_measurement = LIGHT_LUX
     _attr_device_class = SensorDeviceClass.ILLUMINANCE
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     @property
     def native_value(self) -> int:
@@ -140,6 +140,7 @@ class HueBatterySensor(HueSensorBase):
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_device_class = SensorDeviceClass.BATTERY
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     @property
     def native_value(self) -> int:

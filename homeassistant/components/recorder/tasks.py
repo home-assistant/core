@@ -121,7 +121,10 @@ class PurgeEntitiesTask(RecorderTask):
 
 @dataclass
 class PerodicCleanupTask(RecorderTask):
-    """An object to insert into the recorder to trigger cleanup tasks when auto purge is disabled."""
+    """An object to insert into the recorder to trigger cleanup tasks.
+
+    Trigger cleanup tasks when auto purge is disabled.
+    """
 
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
@@ -195,7 +198,10 @@ class AdjustStatisticsTask(RecorderTask):
 
 @dataclass
 class WaitTask(RecorderTask):
-    """An object to insert into the recorder queue to tell it set the _queue_watch event."""
+    """An object to insert into the recorder queue.
+
+    Tell it set the _queue_watch event.
+    """
 
     commit_before = False
 

@@ -4,7 +4,8 @@
             "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado",
             "already_in_progress": "O fluxo de configura\u00e7\u00e3o j\u00e1 est\u00e1 em andamento",
             "mdns_missing_mac": "Endere\u00e7o MAC ausente nas propriedades MDNS.",
-            "reauth_successful": "A reautentica\u00e7\u00e3o foi bem-sucedida"
+            "reauth_successful": "A reautentica\u00e7\u00e3o foi bem-sucedida",
+            "service_received": "Servi\u00e7o recebido"
         },
         "error": {
             "connection_error": "N\u00e3o \u00e9 poss\u00edvel conectar-se ao ESP. Por favor, verifique se o seu arquivo YAML cont\u00e9m uma linha 'api:'.",

@@ -11,7 +11,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_DEVICES,
     PERCENTAGE,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
@@ -36,7 +36,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock):
     assert state
     assert state.state == "1.23"
     assert state.attributes[ATTR_FRIENDLY_NAME] == f"{CONF_FAKE_NAME} Temperature"
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
     assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
     state = hass.states.get(f"{ENTITY_ID}_humidity")

@@ -3,8 +3,9 @@
 import pytest
 import voluptuous as vol
 
+from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import State
-from homeassistant.helpers import config_validation as cv, intent
+from homeassistant.helpers import config_validation as cv, entity_registry, intent
 
 
 class MockIntentHandler(intent.IntentHandler):
@@ -15,13 +16,25 @@ class MockIntentHandler(intent.IntentHandler):
         self.slot_schema = slot_schema
 
 
-def test_async_match_state():
+async def test_async_match_state(hass):
     """Test async_match_state helper."""
-    state1 = State("light.kitchen", "on")
-    state2 = State("switch.kitchen", "on")
+    state1 = State(
+        "light.kitchen", "on", attributes={ATTR_FRIENDLY_NAME: "kitchen light"}
+    )
+    state2 = State(
+        "switch.kitchen", "on", attributes={ATTR_FRIENDLY_NAME: "kitchen switch"}
+    )
+    registry = entity_registry.async_get(hass)
+    registry.async_get_or_create(
+        "switch", "demo", "1234", suggested_object_id="kitchen"
+    )
+    registry.async_update_entity(state2.entity_id, aliases={"kill switch"})
 
-    state = intent.async_match_state(None, "kitch", [state1, state2])
+    state = intent.async_match_state(hass, "kitchen light", [state1, state2])
     assert state is state1
+
+    state = intent.async_match_state(hass, "kill switch", [state1, state2])
+    assert state is state2
 
 
 def test_async_validate_slots():
@@ -38,21 +51,3 @@ def test_async_validate_slots():
     handler1.async_validate_slots(
         {"name": {"value": "kitchen"}, "probability": {"value": "0.5"}}
     )
-
-
-def test_fuzzy_match():
-    """Test _fuzzymatch."""
-    state1 = State("light.living_room_northwest", "off")
-    state2 = State("light.living_room_north", "off")
-    state3 = State("light.living_room_northeast", "off")
-    state4 = State("light.living_room_west", "off")
-    state5 = State("light.living_room", "off")
-    states = [state1, state2, state3, state4, state5]
-
-    state = intent._fuzzymatch("Living Room", states, lambda state: state.name)
-    assert state == state5
-
-    state = intent._fuzzymatch(
-        "Living Room Northwest", states, lambda state: state.name
-    )
-    assert state == state1

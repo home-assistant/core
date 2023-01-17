@@ -1,0 +1,34 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "timeout_connect": "Limit czasu na nawi\u0105zanie po\u0142\u0105czenia"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP",
+                    "password": "Has\u0142o"
+                },
+                "description": "Wprowad\u017a informacje o module LNK WiFi dla swojego urz\u0105dzenia Rain Bird.",
+                "title": "Konfiguracja Rain Bird"
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Konfiguracja Rain Bird w configuration.yaml zostanie usuni\u0119ta w Home Assistant 2023.4. \n\nTwoja konfiguracja zosta\u0142a automatycznie zaimportowana do interfejsu u\u017cytkownika, jednak domy\u015blne czasy nawadniania dla poszczeg\u00f3lnych stref nie s\u0105 ju\u017c obs\u0142ugiwane. Usu\u0144 konfiguracj\u0119 YAML z pliku configuration.yaml i uruchom ponownie Home Assistanta, aby rozwi\u0105za\u0107 ten problem.",
+            "title": "Konfiguracja YAML dla Rain Bird zostanie usuni\u0119ta"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "duration": "Domy\u015blny czas nawadniania w minutach"
+                },
+                "title": "Konfiguracja Rain Bird"
+            }
+        }
+    }
+}

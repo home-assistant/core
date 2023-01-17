@@ -90,10 +90,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {"name": self._name}
         errors = {}
 
-        if (
-            self.context["source"] == config_entries.SOURCE_IMPORT
-            or user_input is not None
-        ):
+        if user_input is not None:
             try:
                 client = await async_control_connect(self._host, None)
             except WebOsTvPairError:
@@ -116,7 +113,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         host = urlparse(discovery_info.ssdp_location).hostname
         assert host
         self._host = host
-        self._name = discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME]
+        self._name = discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME, DEFAULT_NAME)
 
         uuid = discovery_info.upnp[ssdp.ATTR_UPNP_UDN]
         assert uuid

@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import AsyncGenerator, Callable, Generator
 from contextlib import asynccontextmanager
+import datetime
 import functools
 import gc
 import itertools
@@ -34,7 +35,6 @@ from homeassistant import core as ha, loader, runner, util
 from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
 from homeassistant.auth.models import Credentials
 from homeassistant.auth.providers import homeassistant, legacy_api_password
-from homeassistant.components import mqtt, recorder
 from homeassistant.components.network.models import Adapter, IPv4ConfiguredAddress
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
@@ -44,7 +44,11 @@ from homeassistant.components.websocket_api.auth import (
 from homeassistant.components.websocket_api.http import URL
 from homeassistant.const import HASSIO_USER_NAME
 from homeassistant.core import CoreState, HomeAssistant
-from homeassistant.helpers import config_entry_oauth2_flow, recorder as recorder_helper
+from homeassistant.helpers import (
+    config_entry_oauth2_flow,
+    event,
+    recorder as recorder_helper,
+)
 from homeassistant.helpers.json import json_loads
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
@@ -77,6 +81,15 @@ _LOGGER = logging.getLogger(__name__)
 asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))
 # Disable fixtures overriding our beautiful policy
 asyncio.set_event_loop_policy = lambda policy: None
+
+
+def _utcnow():
+    """Make utcnow patchable by freezegun."""
+    return datetime.datetime.now(datetime.timezone.utc)
+
+
+dt_util.utcnow = _utcnow
+event.time_tracker_utcnow = _utcnow
 
 
 def pytest_addoption(parser):
@@ -619,7 +632,7 @@ def current_request():
             "GET",
             "/some/request",
             headers={"Host": "example.com"},
-            sslcontext=ssl.SSLContext(ssl.PROTOCOL_TLS),
+            sslcontext=ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT),
         )
         mock_request_context.get.return_value = mocked_request
         yield mock_request_context
@@ -737,6 +750,10 @@ async def mqtt_mock(
 @asynccontextmanager
 async def _mqtt_mock_entry(hass, mqtt_client_mock, mqtt_config_entry_data):
     """Fixture to mock a delayed setup of the MQTT config entry."""
+    # Local import to avoid processing MQTT modules when running a testcase
+    # which does not use MQTT.
+    from homeassistant.components import mqtt
+
     if mqtt_config_entry_data is None:
         mqtt_config_entry_data = {
             mqtt.CONF_BROKER: "mock-broker",
@@ -956,6 +973,10 @@ def hass_recorder(
     hass_storage,
 ):
     """Home Assistant fixture with in-memory recorder."""
+    # Local import to avoid processing recorder and SQLite modules when running a
+    # testcase which does not use the recorder.
+    from homeassistant.components import recorder
+
     original_tz = dt_util.DEFAULT_TIME_ZONE
 
     hass = get_test_home_assistant()
@@ -997,6 +1018,10 @@ def hass_recorder(
 
 async def _async_init_recorder_component(hass, add_config=None, db_url=None):
     """Initialize the recorder asynchronously."""
+    # Local import to avoid processing recorder and SQLite modules when running a
+    # testcase which does not use the recorder.
+    from homeassistant.components import recorder
+
     config = dict(add_config) if add_config else {}
     if recorder.CONF_DB_URL not in config:
         config[recorder.CONF_DB_URL] = db_url
@@ -1026,6 +1051,10 @@ async def async_setup_recorder_instance(
 ) -> AsyncGenerator[SetupRecorderInstanceT, None]:
     """Yield callable to setup recorder instance."""
     assert not hass_fixture_setup
+
+    # Local import to avoid processing recorder and SQLite modules when running a
+    # testcase which does not use the recorder.
+    from homeassistant.components import recorder
 
     nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
     stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None

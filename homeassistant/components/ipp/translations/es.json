@@ -31,5 +31,16 @@
                 "title": "Impresora descubierta"
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "printer": {
+                "state": {
+                    "idle": "Inactivo",
+                    "printing": "Imprimiendo",
+                    "stopped": "Detenido"
+                }
+            }
+        }
     }
 }

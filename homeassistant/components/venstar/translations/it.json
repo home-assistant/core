@@ -19,5 +19,18 @@
                 "title": "Connettiti al termostato Venstar"
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "schedule_part": {
+                "state": {
+                    "day": "Giorno",
+                    "evening": "Sera",
+                    "inactive": "Inattivo",
+                    "morning": "Mattina",
+                    "night": "Notte"
+                }
+            }
+        }
     }
 }

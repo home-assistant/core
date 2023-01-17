@@ -213,7 +213,7 @@ async def test_entry_unload_not_connected(hass, mock_rpc_device, monkeypatch):
     assert entry.state is ConfigEntryState.LOADED
 
 
-async def test_entry_unload_not_connected_but_we_with_we_are(
+async def test_entry_unload_not_connected_but_we_think_we_are(
     hass, mock_rpc_device, monkeypatch
 ):
     """Test entry unload when not connected but we think we are still connected."""
@@ -238,3 +238,17 @@ async def test_entry_unload_not_connected_but_we_with_we_are(
 
     assert not mock_stop_scanner.call_count
     assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_no_attempt_to_stop_scanner_with_sleepy_devices(hass, mock_rpc_device):
+    """Test we do not try to stop the scanner if its disabled with a sleepy device."""
+    with patch(
+        "homeassistant.components.shelly.coordinator.async_stop_scanner",
+    ) as mock_stop_scanner:
+        entry = await init_integration(hass, 2, sleep_period=7200)
+        assert entry.state is ConfigEntryState.LOADED
+        assert not mock_stop_scanner.call_count
+
+        mock_rpc_device.mock_update()
+        await hass.async_block_till_done()
+        assert not mock_stop_scanner.call_count

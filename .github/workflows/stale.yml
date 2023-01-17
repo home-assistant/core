@@ -22,6 +22,8 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           days-before-stale: 90
           days-before-close: 7
+          days-before-issue-stale: -1
+          days-before-issue-close: -1
           operations-per-run: 150
           remove-stale-when-updated: true
           stale-pr-label: "stale"
@@ -56,6 +58,7 @@ jobs:
           repo-token: ${{ steps.token.outputs.token }}
           days-before-stale: 90
           days-before-close: 7
+          days-before-pr-stale: -1
           days-before-pr-close: -1
           operations-per-run: 250
           remove-stale-when-updated: true
@@ -86,6 +89,7 @@ jobs:
           only-labels: "needs-more-information"
           days-before-stale: 14
           days-before-close: 7
+          days-before-pr-stale: -1
           days-before-pr-close: -1
           operations-per-run: 250
           remove-stale-when-updated: true

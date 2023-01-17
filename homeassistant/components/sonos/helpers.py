@@ -5,6 +5,7 @@ from collections.abc import Callable
 import logging
 from typing import TYPE_CHECKING, Any, TypeVar, overload
 
+from requests.exceptions import Timeout
 from soco import SoCo
 from soco.exceptions import SoCoException, SoCoUPnPException
 from typing_extensions import Concatenate, ParamSpec
@@ -65,7 +66,7 @@ def soco_error(
             args_soco = next((arg for arg in args if isinstance(arg, SoCo)), None)
             try:
                 result = funct(self, *args, **kwargs)
-            except (OSError, SoCoException, SoCoUPnPException) as err:
+            except (OSError, SoCoException, SoCoUPnPException, Timeout) as err:
                 error_code = getattr(err, "error_code", None)
                 function = funct.__qualname__
                 if errorcodes and error_code in errorcodes:
@@ -114,9 +115,9 @@ def _find_target_identifier(instance: Any, fallback_soco: SoCo | None) -> str | 
 def hostname_to_uid(hostname: str) -> str:
     """Convert a Sonos hostname to a uid."""
     if hostname.startswith("Sonos-"):
-        baseuid = hostname.split("-")[1].replace(".local.", "")
+        baseuid = hostname.removeprefix("Sonos-").replace(".local.", "")
     elif hostname.startswith("sonos"):
-        baseuid = hostname[5:].replace(".local.", "")
+        baseuid = hostname.removeprefix("sonos").replace(".local.", "")
     else:
         raise ValueError(f"{hostname} is not a sonos device.")
     return f"{UID_PREFIX}{baseuid}{UID_POSTFIX}"
