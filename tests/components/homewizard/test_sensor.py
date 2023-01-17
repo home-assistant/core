@@ -7,6 +7,7 @@ from homewizard_energy.errors import DisabledError, RequestError
 from homewizard_energy.models import Data
 
 from homeassistant.components.sensor import (
+    ATTR_OPTIONS,
     ATTR_STATE_CLASS,
     SensorDeviceClass,
     SensorStateClass,
@@ -143,6 +144,45 @@ async def test_sensor_entity_wifi_ssid(hass, mock_config_entry_data, mock_config
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
     assert ATTR_DEVICE_CLASS not in state.attributes
     assert state.attributes.get(ATTR_ICON) == "mdi:wifi"
+
+
+async def test_sensor_entity_active_tariff(
+    hass, mock_config_entry_data, mock_config_entry
+):
+    """Test entity loads active_tariff."""
+
+    api = get_mock_device()
+    api.data = AsyncMock(return_value=Data.from_dict({"active_tariff": 2}))
+
+    with patch(
+        "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
+        return_value=api,
+    ):
+        entry = mock_config_entry
+        entry.data = mock_config_entry_data
+        entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    entity_registry = er.async_get(hass)
+
+    state = hass.states.get("sensor.product_name_aabbccddeeff_active_tariff")
+    entry = entity_registry.async_get("sensor.product_name_aabbccddeeff_active_tariff")
+    assert entry
+    assert state
+    assert entry.unique_id == "aabbccddeeff_active_tariff"
+    assert not entry.disabled
+    assert state.state == "2"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == "Product Name (aabbccddeeff) Active tariff"
+    )
+    assert ATTR_STATE_CLASS not in state.attributes
+    assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
+    assert state.attributes.get(ATTR_ICON) == "mdi:calendar-clock"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENUM
+    assert state.attributes.get(ATTR_OPTIONS) == ["1", "2", "3", "4"]
 
 
 async def test_sensor_entity_wifi_strength(
