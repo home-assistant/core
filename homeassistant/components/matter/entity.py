@@ -5,16 +5,18 @@ from abc import abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from matter_server.common.models.device_type_instance import MatterDeviceTypeInstance
 from matter_server.common.models.events import EventType
 from matter_server.common.models.node_device import AbstractMatterNodeDevice
+from matter_server.common.models.server_information import ServerInfo
 
 from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 
 from .const import DOMAIN
+from .helpers import get_node_unique_id
 
 if TYPE_CHECKING:
     from matter_server.client import MatterClient
@@ -59,16 +61,12 @@ class MatterEntity(Entity):
         self._unsubscribes: list[Callable] = []
         # for fast lookups we create a mapping to the attribute paths
         self._attributes_map: dict[type, str] = {}
-        server_info = matter_client.server_info
+        server_info = cast(ServerInfo, self.matter_client.server_info)
         # The server info is set when the client connects to the server.
         assert server_info is not None
         # create unique_id based on "Operational Instance Name" and endpoint/device type
-        fab_id_hex = f"{server_info.compressed_fabric_id:016X}"
-        node_id_hex = f"{node.node_id:016X}"
-        operational_instance_name = f"{fab_id_hex.upper()}-{node_id_hex.upper()}"
-        # NOTE: use 'operational instance name' property of the node instance later
         self._attr_unique_id = (
-            f"{operational_instance_name}-"
+            f"{get_node_unique_id(server_info, node)}-"
             f"{device_type_instance.endpoint}-"
             f"{device_type_instance.device_type.device_type}"
         )
@@ -76,7 +74,9 @@ class MatterEntity(Entity):
     @property
     def device_info(self) -> DeviceInfo | None:
         """Return device info for device registry."""
-        return {"identifiers": {(DOMAIN, self._node_device.device_info().uniqueID)}}
+        server_info = cast(ServerInfo, self.matter_client.server_info)
+        node_unique_id = get_node_unique_id(server_info, self._node_device.node())
+        return {"identifiers": {(DOMAIN, node_unique_id)}}
 
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""

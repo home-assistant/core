@@ -1,11 +1,12 @@
 """Matter to Home Assistant adapter."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from chip.clusters import Objects as all_clusters
 from matter_server.common.models.events import EventType
 from matter_server.common.models.node_device import AbstractMatterNodeDevice
+from matter_server.common.models.server_information import ServerInfo
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -15,6 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, LOGGER
 from .device_platform import DEVICE_PLATFORM
+from .helpers import get_node_unique_id
 
 if TYPE_CHECKING:
     from matter_server.client import MatterClient
@@ -69,24 +71,33 @@ class MatterAdapter:
             node_info := node.root_device_type_instance.get_cluster(all_clusters.Basic)
         ):
             self._create_device_registry(
-                node_info, node_info.nodeLabel or "Hub device", None
+                node, node_info, node_info.nodeLabel or "Hub device", None
             )
-            bridge_unique_id = node_info.uniqueID
+            server_info = cast(ServerInfo, self.matter_client.server_info)
+            bridge_unique_id = get_node_unique_id(server_info, node, is_bridge=True)
 
         for node_device in node.node_devices:
             self._setup_node_device(node_device, bridge_unique_id)
 
     def _create_device_registry(
         self,
+        node: MatterNode,
         info: all_clusters.Basic | all_clusters.BridgedDeviceBasic,
         name: str,
         bridge_unique_id: str | None,
+        is_bridge: bool = False,
     ) -> None:
         """Create a device registry entry."""
+        server_info = cast(ServerInfo, self.matter_client.server_info)
+        node_unique_id = get_node_unique_id(
+            server_info,
+            node,
+            is_bridge=is_bridge,
+        )
         dr.async_get(self.hass).async_get_or_create(
             name=name,
             config_entry_id=self.config_entry.entry_id,
-            identifiers={(DOMAIN, info.uniqueID)},
+            identifiers={(DOMAIN, node_unique_id)},
             hw_version=info.hardwareVersionString,
             sw_version=info.softwareVersionString,
             manufacturer=info.vendorName,
@@ -106,7 +117,7 @@ class MatterAdapter:
         if not name and device_type_instances:
             name = f"{device_type_instances[0].device_type.__doc__[:-1]} {node.node_id}"
 
-        self._create_device_registry(basic_info, name, bridge_unique_id)
+        self._create_device_registry(node, basic_info, name, bridge_unique_id)
 
         for instance in device_type_instances:
             created = False
