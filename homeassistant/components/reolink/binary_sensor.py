@@ -107,13 +107,13 @@ async def async_setup_entry(
     entities: list[ReolinkBinarySensorEntity] = []
     for channel in reolink_data.host.api.channels:
         entities.extend(
-            ReolinkBinarySensorEntity(
+            [ReolinkBinarySensorEntity(
                 reolink_data,
                 channel,
                 entity_description,
             )
             for entity_description in BINARY_SENSORS
-            if entity_description.supported(reolink_data.host.api, channel)
+            if entity_description.supported(reolink_data.host.api, channel)]
 
     async_add_entities(entities)
 
