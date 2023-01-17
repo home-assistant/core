@@ -141,7 +141,7 @@ async def test_door_open_close(hass, hk_driver, events):
     await hass.async_block_till_done()
 
     assert acc.aid == 2
-    assert acc.category == 12  # GarageDoorOpener
+    assert acc.category == 12  # Door
 
     assert acc.char_current_state.value == HK_DOOR_OPEN
     assert acc.char_target_state.value == HK_DOOR_OPEN
