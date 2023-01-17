@@ -74,9 +74,9 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         key="active_tariff",
         name="Active tariff",
         icon="mdi:calendar-clock",
-        value_fn=lambda data: str(data.active_tariff)
-        if data.active_tariff is not None
-        else None,
+        value_fn=lambda data: (
+            None if data.active_tariff is None else str(data.active_tariff)
+        ),
         device_class=SensorDeviceClass.ENUM,
         options=["1", "2", "3", "4"],
     ),
