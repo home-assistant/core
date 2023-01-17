@@ -63,13 +63,7 @@ SERVICE_CHARGE_SET_SCHEDULES_SCHEMA = SERVICE_VEHICLE_SCHEMA.extend(
 SERVICE_AC_CANCEL = "ac_cancel"
 SERVICE_AC_START = "ac_start"
 SERVICE_CHARGE_SET_SCHEDULES = "charge_set_schedules"
-SERVICE_CHARGE_START = "charge_start"
-SERVICES = [
-    SERVICE_AC_CANCEL,
-    SERVICE_AC_START,
-    SERVICE_CHARGE_SET_SCHEDULES,
-    SERVICE_CHARGE_START,
-]
+SERVICES = [SERVICE_AC_CANCEL, SERVICE_AC_START, SERVICE_CHARGE_SET_SCHEDULES]
 
 
 def setup_services(hass: HomeAssistant) -> None:
@@ -110,22 +104,6 @@ def setup_services(hass: HomeAssistant) -> None:
             "It may take some time before these changes are reflected in your vehicle"
         )
 
-    async def charge_start(service_call: ServiceCall) -> None:
-        """Start charge."""
-        # The Renault start charge service has been replaced by a
-        # dedicated button entity and marked as deprecated
-        LOGGER.warning(
-            "The 'renault.charge_start' service is deprecated and "
-            "replaced by a dedicated start charge button entity; please "
-            "use that entity to start the charge instead"
-        )
-
-        proxy = get_vehicle_proxy(service_call.data)
-
-        LOGGER.debug("Charge start attempt")
-        result = await proxy.vehicle.set_charge_start()
-        LOGGER.debug("Charge start result: %s", result)
-
     def get_vehicle_proxy(service_call_data: Mapping) -> RenaultVehicleProxy:
         """Get vehicle from service_call data."""
         device_registry = dr.async_get(hass)
@@ -158,12 +136,6 @@ def setup_services(hass: HomeAssistant) -> None:
         SERVICE_CHARGE_SET_SCHEDULES,
         charge_set_schedules,
         schema=SERVICE_CHARGE_SET_SCHEDULES_SCHEMA,
-    )
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_CHARGE_START,
-        charge_start,
-        schema=SERVICE_VEHICLE_SCHEMA,
     )
 
 
