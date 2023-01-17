@@ -91,6 +91,12 @@ omit =
     homeassistant/components/aseko_pool_live/sensor.py
     homeassistant/components/asterisk_cdr/mailbox.py
     homeassistant/components/asterisk_mbox/*
+    homeassistant/components/asus_router/__init__.py
+    homeassistant/components/asus_router/bridge.py
+    homeassistant/components/asus_router/entity.py
+    homeassistant/components/asus_router/helpers.py
+    homeassistant/components/asus_router/router.py
+    homeassistant/components/asus_router/sensor.py
     homeassistant/components/asuswrt/diagnostics.py
     homeassistant/components/aten_pe/*
     homeassistant/components/atome/*
