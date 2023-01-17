@@ -2,13 +2,13 @@
 import asyncio
 from datetime import timedelta
 
-import somecomfort
+import AIOSomecomfort
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.util import Throttle
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     _LOGGER,
@@ -20,7 +20,7 @@ from .const import (
 )
 
 UPDATE_LOOP_SLEEP_TIME = 5
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 PLATFORMS = [Platform.CLIMATE, Platform.SENSOR]
 
 MIGRATE_OPTIONS_KEYS = {CONF_COOL_AWAY_TEMPERATURE, CONF_HEAT_AWAY_TEMPERATURE}
@@ -51,18 +51,29 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     username = config_entry.data[CONF_USERNAME]
     password = config_entry.data[CONF_PASSWORD]
 
-    client = await hass.async_add_executor_job(
-        get_somecomfort_client, username, password
+    client = AIOSomecomfort.AIOSomeComfort(
+        username, password, session=async_get_clientsession(hass)
     )
+    try:
+        await client.login()
+        await client.discover()
 
-    if client is None:
-        return False
-
+    except AIOSomecomfort.AuthError as ex:
+        # change to reauth flow in next PR that adds reauth flow.
+        raise ConfigEntryNotReady(
+            "Failed to initialize the Honeywell client: "
+            "Check your configuration (username, password), "
+            "or maybe you have exceeded the API rate limit?"
+        ) from ex
+    except (AIOSomecomfort.ConnectionError, AIOSomecomfort.ConnectionTimeout) as ex:
+        raise ConfigEntryNotReady(
+            "Failed to initialize the Honeywell client: "
+            "Connection error: maybe you have exceeded the API rate limit?"
+        ) from ex
     loc_id = config_entry.data.get(CONF_LOC_ID)
     dev_id = config_entry.data.get(CONF_DEV_ID)
 
     devices = {}
-
     for location in client.locations_by_id.values():
         if not loc_id or location.locationid == loc_id:
             for device in location.devices_by_id.values():
@@ -99,21 +110,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     return unload_ok
 
 
-def get_somecomfort_client(username: str, password: str) -> somecomfort.SomeComfort:
-    """Initialize the somecomfort client."""
-    try:
-        return somecomfort.SomeComfort(username, password)
-    except somecomfort.AuthError:
-        _LOGGER.error("Failed to login to honeywell account %s", username)
-        return None
-    except somecomfort.SomeComfortError as ex:
-        raise ConfigEntryNotReady(
-            "Failed to initialize the Honeywell client: "
-            "Check your configuration (username, password), "
-            "or maybe you have exceeded the API rate limit?"
-        ) from ex
-
-
 class HoneywellData:
     """Get the latest data and update."""
 
@@ -121,10 +117,10 @@ class HoneywellData:
         self,
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        client: somecomfort.SomeComfort,
+        client: AIOSomecomfort.AIOSomeComfort,
         username: str,
         password: str,
-        devices: dict[str, somecomfort.Device],
+        devices: dict[str, AIOSomecomfort.device.Device],
     ) -> None:
         """Initialize the data object."""
         self._hass = hass
@@ -138,13 +134,11 @@ class HoneywellData:
         """Recreate a new somecomfort client.
 
         When we got an error, the best way to be sure that the next query
-        will succeed, is to recreate a new somecomfort client.
+        will succeed, is to try to login.
         """
-        self._client = await self._hass.async_add_executor_job(
-            get_somecomfort_client, self._username, self._password
-        )
-
-        if self._client is None:
+        try:
+            await self._client.login()
+        except AIOSomecomfort.SomeComfortError:
             return False
 
         refreshed_devices = [
@@ -172,10 +166,9 @@ class HoneywellData:
     async def _refresh_devices(self):
         """Refresh each enabled device."""
         for device in self.devices.values():
-            await self._hass.async_add_executor_job(device.refresh)
+            await device.refresh()
             await asyncio.sleep(UPDATE_LOOP_SLEEP_TIME)
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
         """Update the state."""
         retries = 3
@@ -184,9 +177,9 @@ class HoneywellData:
                 await self._refresh_devices()
                 break
             except (
-                somecomfort.client.APIRateLimited,
-                somecomfort.client.ConnectionError,
-                somecomfort.client.ConnectionTimeout,
+                AIOSomecomfort.APIRateLimited,
+                AIOSomecomfort.ConnectionError,
+                AIOSomecomfort.ConnectionTimeout,
                 OSError,
             ) as exp:
                 retries -= 1

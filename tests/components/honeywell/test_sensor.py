@@ -1,5 +1,6 @@
 """Test honeywell sensor."""
-from somecomfort import Device, Location
+from AIOSomecomfort.device import Device
+from AIOSomecomfort.location import Location
 
 from homeassistant.core import HomeAssistant
 
