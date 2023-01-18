@@ -368,4 +368,12 @@ class HoneywellUSThermostat(ClimateEntity):
 
     async def async_update(self) -> None:
         """Get the latest state from the service."""
-        await self._data.async_update()
+        try:
+            await self._device.refresh()
+        except (
+            AIOSomecomfort.device.APIRateLimited,
+            AIOSomecomfort.device.ConnectionError,
+            AIOSomecomfort.device.ConnectionTimeout,
+            OSError,
+        ):
+            await self._data.retry_login()

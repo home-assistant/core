@@ -60,13 +60,18 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         raise ConfigEntryNotReady(
             "Failed to initialize the Honeywell client: "
             "Check your configuration (username, password), "
-            "or maybe you have exceeded the API rate limit?"
         ) from ex
-    except (AIOSomecomfort.ConnectionError, AIOSomecomfort.ConnectionTimeout) as ex:
+
+    except (
+        AIOSomecomfort.ConnectionError,
+        AIOSomecomfort.ConnectionTimeout,
+        asyncio.TimeoutError,
+    ) as ex:
         raise ConfigEntryNotReady(
             "Failed to initialize the Honeywell client: "
             "Connection error: maybe you have exceeded the API rate limit?"
         ) from ex
+
     loc_id = config_entry.data.get(CONF_LOC_ID)
     dev_id = config_entry.data.get(CONF_DEV_ID)
 
@@ -82,7 +87,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         return False
 
     data = HoneywellData(hass, config_entry, client, username, password, devices)
-    await data.async_update()
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = data
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
@@ -127,71 +131,13 @@ class HoneywellData:
         self._password = password
         self.devices = devices
 
-    async def _retry(self) -> bool:
-        """Recreate a new somecomfort client.
+    async def retry_login(self) -> bool:
+        """Fire of a login retry."""
 
-        When we got an error, the best way to be sure that the next query
-        will succeed, is to try to login.
-        """
         try:
             await self._client.login()
         except AIOSomecomfort.SomeComfortError:
-            return False
-
-        refreshed_devices = [
-            device
-            for location in self._client.locations_by_id.values()
-            for device in location.devices_by_id.values()
-        ]
-
-        if len(refreshed_devices) == 0:
-            _LOGGER.error("Failed to find any devices after retry")
-            return False
-
-        for updated_device in refreshed_devices:
-            if updated_device.deviceid in self.devices:
-                self.devices[updated_device.deviceid] = updated_device
-            else:
-                _LOGGER.info(
-                    "New device with ID %s detected, reload the honeywell integration"
-                    " if you want to access it in Home Assistant",
-                    updated_device.deviceid,
-                )
-
-        await self._hass.config_entries.async_reload(self._config.entry_id)
-        return True
-
-    async def _refresh_devices(self):
-        """Refresh each enabled device."""
-        for device in self.devices.values():
-            await device.refresh()
             await asyncio.sleep(UPDATE_LOOP_SLEEP_TIME)
+            return False
 
-    async def async_update(self) -> None:
-        """Update the state."""
-        retries = 3
-        while retries > 0:
-            try:
-                await self._refresh_devices()
-                break
-            except (
-                AIOSomecomfort.APIRateLimited,
-                AIOSomecomfort.ConnectionError,
-                AIOSomecomfort.ConnectionTimeout,
-                OSError,
-            ) as exp:
-                retries -= 1
-                if retries == 0:
-                    _LOGGER.error(
-                        "Ran out of retry attempts (3 attempts allocated). Error: %s",
-                        exp,
-                    )
-                    raise exp
-
-                result = await self._retry()
-
-                if not result:
-                    _LOGGER.error("Retry result was empty. Error: %s", exp)
-                    raise exp
-
-                _LOGGER.info("SomeComfort update failed, retrying. Error: %s", exp)
+        return True

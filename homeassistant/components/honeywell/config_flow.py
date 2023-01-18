@@ -1,6 +1,8 @@
 """Config flow to configure the honeywell integration."""
 from __future__ import annotations
 
+import asyncio
+
 import AIOSomecomfort
 import voluptuous as vol
 
@@ -33,7 +35,11 @@ class HoneywellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 valid = await self.is_valid(**user_input)
             except AIOSomecomfort.AuthError:
                 errors["base"] = "invalid_auth"
-            except (AIOSomecomfort.ConnectionError, AIOSomecomfort.ConnectionTimeout):
+            except (
+                AIOSomecomfort.ConnectionError,
+                AIOSomecomfort.ConnectionTimeout,
+                asyncio.TimeoutError,
+            ):
                 errors["base"] = "cannot_connect"
 
             if valid:
