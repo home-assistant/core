@@ -49,7 +49,6 @@ async def async_setup_entry(
             unsub()  # type: ignore[unreachable]
 
         assert dashboard is not None
-        await dashboard.ensure_data()
         async_add_entities([ESPHomeUpdateEntity(entry_data, dashboard)])
 
     if entry_data.available:
