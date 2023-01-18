@@ -64,6 +64,51 @@ async def async_setup_entry(
     async_add_entities([entity], update_before_add=True)
 
 
+def twinkly_function(func):
+    """Decorate twinkly functions."""
+
+    def twinkly_command(*args, **kwargs):
+        """Decorate function."""
+        try:
+            return func(*args, **kwargs)
+        except TwinklyError as error:
+            _LOGGER.error(error)
+            return
+
+    return twinkly_command
+
+
+class TwinklyWrapper(Twinkly):
+    """Wrap Twinkly to validate responses."""
+
+    def _valid_response(
+        self, response: dict[Any, Any], check_for: str | None = None
+    ) -> dict[Any, Any]:
+        """Validate twinkly-responses from the API."""
+        if (
+            response
+            and response.get(TWINKLY_RETURN_CODE) == TWINKLY_RETURN_CODE_OK
+            and (not check_for or check_for in response)
+        ):
+            _LOGGER.debug("Twinkly response: %s", response)
+            return response
+        raise TwinklyError(f"Invalid response from Twinkly: {response}")
+
+    async def get_saved_movies(self):
+        """Get saved movies."""
+        return self._valid_response(
+            await super().get_saved_movies(), check_for="movies"
+        )
+
+    async def get_current_movie(self):
+        """Get current active movie."""
+        return self._valid_response(await super().get_current_movie())
+
+    async def get_current_colour(self):
+        """Get current set color."""
+        return self._valid_response(await super().get_current_colour())
+
+
 class TwinklyLight(LightEntity):
     """Implementation of the light for the Twinkly service."""
 
@@ -312,7 +357,7 @@ class TwinklyLight(LightEntity):
                         self.async_update_current_color(),
                     ]
                 )
-                if len(self._movies) == 0:
+                if not self._movies:
                     self._client.default_mode = "effect"
 
             if not self._is_available:
@@ -329,35 +374,22 @@ class TwinklyLight(LightEntity):
                 )
             self._is_available = False
 
+    @twinkly_function
     async def async_update_movies(self) -> None:
         """Update the list of movies (effects)."""
-        try:
-            movies = self._valid_twinkly_response(
-                await self._client.get_saved_movies(), check_for="movies"
-            )
-        except TwinklyError as error:
-            _LOGGER.warning(error)
-            return
-        self._movies = movies["movies"]
+        movies = await self._client.get_saved_movies()
+        if movies:
+            self._movies = movies["movies"]
 
+    @twinkly_function
     async def async_update_current_movie(self) -> None:
         """Update the current active movie."""
-        try:
-            self._current_movie = self._valid_twinkly_response(
-                await self._client.get_current_movie()
-            )
-        except TwinklyError as error:
-            _LOGGER.warning(error)
+        self._current_movie = await self._client.get_current_movie()
 
+    @twinkly_function
     async def async_update_current_color(self) -> None:
         """Update the current active color."""
-        try:
-            current_color = self._valid_twinkly_response(
-                await self._client.get_current_colour()
-            )
-        except TwinklyError as error:
-            _LOGGER.warning(error)
-            return
+        current_color = await self._client.get_current_colour()
         if self._attr_color_mode == ColorMode.RGBW:
             self._attr_rgbw_color = color_rgb_to_rgbw(
                 current_color["red"],
@@ -370,16 +402,3 @@ class TwinklyLight(LightEntity):
                 current_color["green"],
                 current_color["blue"],
             )
-
-    def _valid_twinkly_response(
-        self, response: dict[Any, Any], check_for: str | None = None
-    ) -> dict[Any, Any]:
-        """Validate twinkly-responses from the API."""
-        if (
-            response
-            and response.get(TWINKLY_RETURN_CODE) == TWINKLY_RETURN_CODE_OK
-            and (not check_for or check_for in response)
-        ):
-            _LOGGER.debug("Twinkly response: %s", response)
-            return response
-        raise TwinklyError(f"Invalid response from Twinkly: {response}")
