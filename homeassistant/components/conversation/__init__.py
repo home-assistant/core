@@ -31,7 +31,6 @@ DATA_CONFIG = "conversation_config"
 
 SERVICE_PROCESS = "process"
 SERVICE_RELOAD = "reload"
-SERVICE_PREPARE = "prepare"
 
 SERVICE_PROCESS_SCHEMA = vol.Schema(
     {vol.Required(ATTR_TEXT): cv.string, vol.Optional(ATTR_LANGUAGE): cv.string}
@@ -40,8 +39,6 @@ SERVICE_PROCESS_SCHEMA = vol.Schema(
 
 SERVICE_RELOAD_SCHEMA = vol.Schema({vol.Optional(ATTR_LANGUAGE): cv.string})
 
-
-SERVICE_PREPARE_SCHEMA = vol.Schema({vol.Optional(ATTR_LANGUAGE): cv.string})
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -82,11 +79,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         except intent.IntentHandleError as err:
             _LOGGER.error("Error processing %s: %s", text, err)
 
-    async def handle_prepare(service: core.ServiceCall) -> None:
-        """Preload intents."""
-        agent = await _get_agent(hass)
-        await agent.async_preload(language=service.data.get(ATTR_LANGUAGE))
-
     async def handle_reload(service: core.ServiceCall) -> None:
         """Reload intents."""
         agent = await _get_agent(hass)
@@ -94,9 +86,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.services.async_register(
         DOMAIN, SERVICE_PROCESS, handle_process, schema=SERVICE_PROCESS_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_PREPARE, handle_prepare, schema=SERVICE_PREPARE_SCHEMA
     )
     hass.services.async_register(
         DOMAIN, SERVICE_RELOAD, handle_reload, schema=SERVICE_RELOAD_SCHEMA
@@ -136,24 +125,6 @@ async def websocket_process(
 
 @websocket_api.websocket_command(
     {
-        "type": "conversation/preload",
-        vol.Optional("language"): str,
-    }
-)
-@websocket_api.async_response
-async def websocket_preload(
-    hass: HomeAssistant,
-    connection: websocket_api.ActiveConnection,
-    msg: dict[str, Any],
-) -> None:
-    """Preload intents."""
-    agent = await _get_agent(hass)
-    await agent.async_preload(msg.get("language"))
-    connection.send_result(msg["id"])
-
-
-@websocket_api.websocket_command(
-    {
         "type": "conversation/reload",
         vol.Optional("language"): str,
     }
@@ -164,7 +135,7 @@ async def websocket_reload(
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
-    """Preload intents."""
+    """Reload intents."""
     agent = await _get_agent(hass)
     await agent.async_reload(msg.get("language"))
     connection.send_result(msg["id"])

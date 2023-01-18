@@ -329,23 +329,6 @@ async def test_ws_api(hass, hass_ws_client, payload):
     }
 
 
-async def test_ws_preload(hass, hass_ws_client):
-    """Test the Websocket preload conversation API."""
-    assert await async_setup_component(hass, "conversation", {})
-    client = await hass_ws_client(hass)
-
-    await client.send_json(
-        {
-            "id": 5,
-            "type": "conversation/preload",
-        }
-    )
-
-    msg = await client.receive_json()
-
-    assert msg["id"] == 5
-
-
 async def test_ws_reload(hass, hass_ws_client):
     """Test the Websocket preload conversation API."""
     assert await async_setup_component(hass, "conversation", {})
