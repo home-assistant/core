@@ -77,10 +77,11 @@ def verify_connected(func: _WrapFuncType) -> _WrapFuncType:
             task.cancel()
             with contextlib.suppress(asyncio.CancelledError):
                 await task
-            # pylint: disable=protected-access
+
             raise BleakError(
-                f"{self._source_name}: "
-                f"{self._ble_device.name} - {self._ble_device.address}: "
+                f"{self._source_name}: "  # pylint: disable=protected-access
+                f"{self._ble_device.name} - "  # pylint: disable=protected-access
+                f" {self._ble_device.address}: "  # pylint: disable=protected-access
                 "Disconnected during operation"
             )
         return next(iter(done)).result()
@@ -107,8 +108,8 @@ def api_error_as_bleak_error(func: _WrapFuncType) -> _WrapFuncType:
             # that we find out about the disconnection during the operation
             # before the callback is delivered.
 
-            # pylint: disable=protected-access
             if ex.error.error == -1:
+                # pylint: disable=protected-access
                 _LOGGER.debug(
                     "%s: %s - %s: BLE device disconnected during %s operation",
                     self._source_name,
