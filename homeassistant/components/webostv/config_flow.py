@@ -148,10 +148,10 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="error_pairing")
             except WEBOSTV_EXCEPTIONS:
                 return self.async_abort(reason="reauth_unsuccessful")
-            else:
-                update_client_key(self.hass, self._entry, client)
-                await self.hass.config_entries.async_reload(self._entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
+
+            update_client_key(self.hass, self._entry, client)
+            await self.hass.config_entries.async_reload(self._entry.entry_id)
+            return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(step_id="reauth_confirm")
 
