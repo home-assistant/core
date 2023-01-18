@@ -6,7 +6,7 @@ import AIOSomecomfort
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
@@ -57,9 +57,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         await client.discover()
 
     except AIOSomecomfort.AuthError as ex:
-        raise ConfigEntryNotReady(
-            "Failed to initialize the Honeywell client: "
-            "Check your configuration (username, password), "
+        raise ConfigEntryAuthFailed(
+            "Failed to initialize the Honeywell client: Check your password"
         ) from ex
 
     except (
