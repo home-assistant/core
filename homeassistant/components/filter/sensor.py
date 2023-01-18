@@ -472,8 +472,8 @@ class RangeFilter(Filter, SensorEntity):
         self,
         entity: str,
         precision: int,
-        lower_bound: float,
-        upper_bound: float,
+        lower_bound: float | None = None,
+        upper_bound: float | None = None,
     ) -> None:
         """Initialize Filter.
 
