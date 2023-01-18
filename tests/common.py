@@ -301,7 +301,10 @@ async def async_test_home_assistant(event_loop, load_registries=True):
     hass.config_entries = config_entries.ConfigEntries(
         hass,
         {
-            "_": "Not empty or else some bad checks for hass config in discovery.py breaks"
+            "_": (
+                "Not empty or else some bad checks for hass config in discovery.py"
+                " breaks"
+            )
         },
     )
 
