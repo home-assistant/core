@@ -5,7 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from somecomfort import Device
+from AIOSomecomfort.device import Device
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,

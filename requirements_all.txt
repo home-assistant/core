@@ -278,6 +278,9 @@ aioskybell==22.7.0
 # homeassistant.components.slimproto
 aioslimproto==2.1.1
 
+# homeassistant.components.honeywell
+aiosomecomfort==0.0.2
+
 # homeassistant.components.steamist
 aiosteamist==0.3.2
 
@@ -2361,9 +2364,6 @@ solaredge==0.0.2
 
 # homeassistant.components.solax
 solax==0.3.0
-
-# homeassistant.components.honeywell
-somecomfort==0.8.0
 
 # homeassistant.components.somfy_mylink
 somfy-mylink-synergy==1.0.6

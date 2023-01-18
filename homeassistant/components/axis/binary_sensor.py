@@ -1,6 +1,7 @@
 """Support for Axis binary sensors."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import timedelta
 
 from axis.models.event import Event, EventGroup, EventOperation, EventTopic
@@ -15,9 +16,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
-from .axis_base import AxisEventBase
 from .const import DOMAIN as AXIS_DOMAIN
 from .device import AxisNetworkDevice
+from .entity import AxisEventEntity
 
 DEVICE_CLASS = {
     EventGroup.INPUT: BinarySensorDeviceClass.CONNECTIVITY,
@@ -62,24 +63,23 @@ async def async_setup_entry(
     )
 
 
-class AxisBinarySensor(AxisEventBase, BinarySensorEntity):
+class AxisBinarySensor(AxisEventEntity, BinarySensorEntity):
     """Representation of a binary Axis event."""
 
     def __init__(self, event: Event, device: AxisNetworkDevice) -> None:
         """Initialize the Axis binary sensor."""
         super().__init__(event, device)
-        self.cancel_scheduled_update = None
+        self.cancel_scheduled_update: Callable[[], None] | None = None
 
-        self._attr_device_class = DEVICE_CLASS.get(self.event.group)
+        self._attr_device_class = DEVICE_CLASS.get(event.group)
         self._attr_is_on = event.is_tripped
 
-    @callback
-    def update_callback(self, no_delay=False):
-        """Update the sensor's state, if needed.
+        self._set_name(event)
 
-        Parameter no_delay is True when device_event_reachable is sent.
-        """
-        self._attr_is_on = self.event.is_tripped
+    @callback
+    def async_event_callback(self, event: Event) -> None:
+        """Update the sensor's state, if needed."""
+        self._attr_is_on = event.is_tripped
 
         @callback
         def scheduled_update(now):
@@ -91,7 +91,7 @@ class AxisBinarySensor(AxisEventBase, BinarySensorEntity):
             self.cancel_scheduled_update()
             self.cancel_scheduled_update = None
 
-        if self.is_on or self.device.option_trigger_time == 0 or no_delay:
+        if self.is_on or self.device.option_trigger_time == 0:
             self.async_write_ha_state()
             return
 
@@ -101,17 +101,17 @@ class AxisBinarySensor(AxisEventBase, BinarySensorEntity):
             utcnow() + timedelta(seconds=self.device.option_trigger_time),
         )
 
-    @property
-    def name(self) -> str | None:
-        """Return the name of the event."""
+    @callback
+    def _set_name(self, event: Event) -> None:
+        """Set binary sensor name."""
         if (
-            self.event.group == EventGroup.INPUT
-            and self.event.id in self.device.api.vapix.ports
-            and self.device.api.vapix.ports[self.event.id].name
+            event.group == EventGroup.INPUT
+            and event.id in self.device.api.vapix.ports
+            and self.device.api.vapix.ports[event.id].name
         ):
-            return self.device.api.vapix.ports[self.event.id].name
+            self._attr_name = self.device.api.vapix.ports[event.id].name
 
-        if self.event.group == EventGroup.MOTION:
+        elif event.group == EventGroup.MOTION:
 
             for event_topic, event_data in (
                 (EventTopic.FENCE_GUARD, self.device.api.vapix.fence_guard),
@@ -122,10 +122,9 @@ class AxisBinarySensor(AxisEventBase, BinarySensorEntity):
             ):
 
                 if (
-                    self.event.topic_base == event_topic
+                    event.topic_base == event_topic
                     and event_data
-                    and self.event.id in event_data
+                    and event.id in event_data
                 ):
-                    return f"{self.event_type} {event_data[self.event.id].name}"
-
-        return self._attr_name
+                    self._attr_name = f"{self._event_type} {event_data[event.id].name}"
+                    break

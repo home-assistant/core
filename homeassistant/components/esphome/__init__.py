@@ -56,8 +56,9 @@ from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.template import Template
 
 from .bluetooth import async_connect_scanner
+from .const import DOMAIN
 from .dashboard import async_get_dashboard
-from .domain_data import DOMAIN, DomainData
+from .domain_data import DomainData
 
 # Import config flow so that it's added to the registry
 from .entry_data import RuntimeEntryData
