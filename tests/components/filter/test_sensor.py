@@ -5,7 +5,6 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config as hass_config
-from homeassistant.components import recorder
 from homeassistant.components.filter.sensor import (
     DOMAIN,
     LowPassFilter,
@@ -15,6 +14,7 @@ from homeassistant.components.filter.sensor import (
     TimeSMAFilter,
     TimeThrottleFilter,
 )
+from homeassistant.components.recorder import Recorder
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     SensorDeviceClass,
@@ -63,7 +63,7 @@ async def test_setup_fail(hass: HomeAssistant) -> None:
 
 
 async def test_chain(
-    recorder_mock: recorder.Recorder, hass: HomeAssistant, values: list[State]
+    recorder_mock: Recorder, hass: HomeAssistant, values: list[State]
 ) -> None:
     """Test if filter chaining works."""
     config = {
@@ -93,7 +93,7 @@ async def test_chain(
 
 @pytest.mark.parametrize("missing", (True, False))
 async def test_chain_history(
-    recorder_mock: recorder.Recorder,
+    recorder_mock: Recorder,
     hass: HomeAssistant,
     values: list[State],
     missing: bool,
@@ -151,9 +151,7 @@ async def test_chain_history(
             assert state.state == "17.05"
 
 
-async def test_source_state_none(
-    recorder_mock: recorder.Recorder, hass: HomeAssistant
-) -> None:
+async def test_source_state_none(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test is source sensor state is null and sets state to STATE_UNKNOWN."""
 
     config = {
@@ -213,9 +211,7 @@ async def test_source_state_none(
     assert state.state == STATE_UNKNOWN
 
 
-async def test_history_time(
-    recorder_mock: recorder.Recorder, hass: HomeAssistant
-) -> None:
+async def test_history_time(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test loading from history based on a time window."""
     config = {
         "sensor": {
@@ -253,7 +249,7 @@ async def test_history_time(
         assert state.state == "18.0"
 
 
-async def test_setup(recorder_mock: recorder.Recorder, hass: HomeAssistant) -> None:
+async def test_setup(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test if filter attributes are inherited."""
     config = {
         "sensor": {
@@ -295,9 +291,7 @@ async def test_setup(recorder_mock: recorder.Recorder, hass: HomeAssistant) -> N
         assert entity_id == "sensor.test"
 
 
-async def test_invalid_state(
-    recorder_mock: recorder.Recorder, hass: HomeAssistant
-) -> None:
+async def test_invalid_state(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test if filter attributes are inherited."""
     config = {
         "sensor": {
@@ -327,9 +321,7 @@ async def test_invalid_state(
         assert state.state == STATE_UNAVAILABLE
 
 
-async def test_timestamp_state(
-    recorder_mock: recorder.Recorder, hass: HomeAssistant
-) -> None:
+async def test_timestamp_state(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test if filter state is a datetime."""
     config = {
         "sensor": {
@@ -488,7 +480,7 @@ def test_time_sma(values: list[State]) -> None:
     assert filtered.state == 21.5
 
 
-async def test_reload(recorder_mock: recorder.Recorder, hass: HomeAssistant) -> None:
+async def test_reload(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Verify we can reload filter sensors."""
     hass.states.async_set("sensor.test_monitored", 12345)
     await async_setup_component(
