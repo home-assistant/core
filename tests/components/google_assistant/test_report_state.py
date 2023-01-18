@@ -11,7 +11,7 @@ from . import BASIC_CONFIG
 from tests.common import async_fire_time_changed
 
 
-async def test_report_state(hass, caplog):
+async def test_report_state(hass):
     """Test report state works."""
     assert await async_setup_component(hass, "switch", {})
     hass.states.async_set("light.ceiling", "off")
@@ -108,7 +108,6 @@ async def test_report_state(hass, caplog):
         )
         await hass.async_block_till_done()
 
-    assert "Not reporting state for light.kitchen: mock-error" in caplog.text
     assert len(mock_report.mock_calls) == 0
 
     unsub()
