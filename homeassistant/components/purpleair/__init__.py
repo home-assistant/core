@@ -58,22 +58,17 @@ class PurpleAirEntity(CoordinatorEntity[PurpleAirDataUpdateCoordinator]):
         """Initialize."""
         super().__init__(coordinator)
 
-        self._entry = entry
-        self._sensor_index = sensor_index
-
         self._attr_device_info = DeviceInfo(
             configuration_url=self.coordinator.async_get_map_url(sensor_index),
             hw_version=self.sensor_data.hardware,
-            identifiers={(DOMAIN, str(self._sensor_index))},
+            identifiers={(DOMAIN, str(sensor_index))},
             manufacturer="PurpleAir, Inc.",
             model=self.sensor_data.model,
             name=self.sensor_data.name,
             sw_version=self.sensor_data.firmware_version,
         )
-        self._attr_extra_state_attributes = {
-            ATTR_LATITUDE: self.sensor_data.latitude,
-            ATTR_LONGITUDE: self.sensor_data.longitude,
-        }
+        self._entry = entry
+        self._sensor_index = sensor_index
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any]:
