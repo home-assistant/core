@@ -2,7 +2,7 @@
 
 from unittest.mock import create_autospec, patch
 
-import somecomfort
+import AIOSomecomfort
 
 from homeassistant.components.honeywell.const import (
     CONF_COOL_AWAY_TEMPERATURE,
@@ -46,7 +46,7 @@ async def test_setup_multiple_thermostats_with_same_deviceid(
     hass: HomeAssistant, caplog, config_entry: MockConfigEntry, device, client
 ) -> None:
     """Test Honeywell TCC API returning duplicate device IDs."""
-    mock_location2 = create_autospec(somecomfort.Location, instance=True)
+    mock_location2 = create_autospec(AIOSomecomfort.Location, instance=True)
     mock_location2.locationid.return_value = "location2"
     mock_location2.devices_by_id = {device.deviceid: device}
     client.locations_by_id["location2"] = mock_location2
@@ -71,13 +71,10 @@ async def test_away_temps_migration(hass: HomeAssistant) -> None:
         options={},
     )
 
-    with patch(
-        "homeassistant.components.honeywell.somecomfort.SomeComfort",
-    ):
-        legacy_config.add_to_hass(hass)
-        await hass.config_entries.async_setup(legacy_config.entry_id)
-        await hass.async_block_till_done()
-        assert legacy_config.options == {
-            CONF_COOL_AWAY_TEMPERATURE: 1,
-            CONF_HEAT_AWAY_TEMPERATURE: 2,
-        }
+    legacy_config.add_to_hass(hass)
+    await hass.config_entries.async_setup(legacy_config.entry_id)
+    await hass.async_block_till_done()
+    assert legacy_config.options == {
+        CONF_COOL_AWAY_TEMPERATURE: 1,
+        CONF_HEAT_AWAY_TEMPERATURE: 2,
+    }
