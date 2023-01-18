@@ -84,7 +84,7 @@ def serialize_response(response: web.Response) -> dict[str, Any]:
     if (body := response.body) is None:
         body_decoded = None
     elif isinstance(body, payload.StringPayload):
-        # pylint: disable=protected-access
+        # pylint: disable-next=protected-access
         body_decoded = body._value.decode(body.encoding)
     elif isinstance(body, bytes):
         body_decoded = body.decode(response.charset or "utf-8")
