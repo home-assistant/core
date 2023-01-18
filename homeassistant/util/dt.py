@@ -268,36 +268,61 @@ def parse_time(time_str: str) -> dt.time | None:
         return None
 
 
-def get_age(date: dt.datetime) -> str:
+def get_age(date: dt.datetime, is_future: bool = False, depth: int = 1) -> str:
     """Take a datetime and return its "age" as a string.
 
-    The age can be in second, minute, hour, day, month or year. Only the
-    biggest unit is considered, e.g. if it's 2 days and 3 hours, "2 days" will
-    be returned.
-    Make sure date is not in the future, or else it won't work.
+    The age can be in second, minute, hour, day, month and year.
+
+    depth number of units will be returned, with the last unit rounded
+
+    The date must be in the past or a ValueException will be raised
+    if is_future is False.
+
+    If is_future is set, and the date is in the past, 0 seconds is returned
     """
 
     def formatn(number: int, unit: str) -> str:
         """Add "unit" if it's plural."""
         if number == 1:
-            return f"1 {unit}"
-        return f"{number:d} {unit}s"
+            return f"1 {unit} "
+        return f"{number:d} {unit}s "
 
-    delta = (now() - date).total_seconds()
+    if not is_future:
+        delta = (now() - date).total_seconds()
+    else:
+        delta = (date - now()).total_seconds()
+
     rounded_delta = round(delta)
 
-    units = ["second", "minute", "hour", "day", "month"]
-    factors = [60, 60, 24, 30, 12]
-    selected_unit = "year"
+    if rounded_delta < 0:
+        if is_future:
+            return "0 seconds"
+        raise ValueError("Time value is in the future")
 
-    for i, next_factor in enumerate(factors):
-        if rounded_delta < next_factor:
-            selected_unit = units[i]
-            break
-        delta /= next_factor
-        rounded_delta = round(delta)
+    if rounded_delta == 0:
+        return "0 seconds"
 
-    return formatn(rounded_delta, selected_unit)
+    units = ("year", "month", "day", "hour", "minute", "second")
+
+    factors = (365 * 24 * 60 * 60, 30 * 24 * 60 * 60, 24 * 60 * 60, 60 * 60, 60, 1)
+
+    result_string: str = ""
+    current_depth = 0
+
+    for i, current_factor in enumerate(factors):
+        selected_unit = units[i]
+        if rounded_delta < current_factor:
+            continue
+        current_depth = current_depth + 1
+        if current_depth == depth:
+            return (
+                result_string
+                + formatn(round(rounded_delta / current_factor), selected_unit)
+            ).rstrip()
+        result_string += formatn(rounded_delta // current_factor, selected_unit)
+        rounded_delta -= (rounded_delta // current_factor) * current_factor
+
+    return result_string.rstrip()
 
 
 def parse_time_expression(parameter: Any, min_value: int, max_value: int) -> list[int]:

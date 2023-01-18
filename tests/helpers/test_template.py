@@ -1991,6 +1991,30 @@ def test_relative_time(mock_is_safe, hass: HomeAssistant) -> None:
         ).async_render()
         assert result == "1 hour"
 
+        result = template.Template(
+            '{{relative_time(strptime("2000-01-01 03:30:00 -06:00", "%Y-%m-%d %H:%M:%S %z"))}}',
+            hass,
+        ).async_render()
+        assert result == "30 minutes"
+
+        result = template.Template(
+            '{{relative_time(strptime("2000-01-01 08:20:00", "%Y-%m-%d %H:%M:%S"))}}',
+            hass,
+        ).async_render()
+        assert result == "2 hours"
+
+        result = template.Template(
+            '{{relative_time(strptime("2000-01-01 08:20:00", "%Y-%m-%d %H:%M:%S"),depth=2)}}',
+            hass,
+        ).async_render()
+        assert result == "1 hour 40 minutes"
+
+        result = template.Template(
+            '{{relative_time(strptime("2000-01-01 08:00:59", "%Y-%m-%d %H:%M:%S"),depth=10)}}',
+            hass,
+        ).async_render()
+        assert result == "1 hour 59 minutes 1 second"
+
         result1 = str(
             template.strptime("2000-01-01 11:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
         )
@@ -2008,6 +2032,18 @@ def test_relative_time(mock_is_safe, hass: HomeAssistant) -> None:
             hass,
         ).async_render()
         assert result1 == result2
+
+        result = template.Template(
+            '{{relative_time(strptime("2000-01-01 11:00:00", "%Y-%m-%d %H:%M:%S"),is_future=True)}}',
+            hass,
+        ).async_render()
+        assert result == "1 hour"
+
+        result = template.Template(
+            '{{relative_time(strptime("2000-01-01 09:59:59", "%Y-%m-%d %H:%M:%S"),is_future=True)}}',
+            hass,
+        ).async_render()
+        assert result == "0 seconds"
 
         result = template.Template(
             '{{relative_time("string")}}',

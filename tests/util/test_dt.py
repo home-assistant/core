@@ -178,12 +178,21 @@ def test_get_age() -> None:
     """Test get_age."""
     diff = dt_util.now() - timedelta(seconds=0)
     assert dt_util.get_age(diff) == "0 seconds"
+    assert dt_util.get_age(diff, is_future=True) == "0 seconds"
+    assert dt_util.get_age(diff, is_future=True, depth=2) == "0 seconds"
 
     diff = dt_util.now() - timedelta(seconds=1)
     assert dt_util.get_age(diff) == "1 second"
+    assert dt_util.get_age(diff, is_future=True) == "0 seconds"
+
+    diff = dt_util.now() + timedelta(seconds=1)
+    pytest.raises(ValueError, dt_util.get_age, diff)
+    assert dt_util.get_age(diff, is_future=True) == "1 second"
 
     diff = dt_util.now() - timedelta(seconds=30)
     assert dt_util.get_age(diff) == "30 seconds"
+    diff = dt_util.now() + timedelta(seconds=30)
+    assert dt_util.get_age(diff, is_future=True) == "30 seconds"
 
     diff = dt_util.now() - timedelta(minutes=5)
     assert dt_util.get_age(diff) == "5 minutes"
@@ -196,15 +205,27 @@ def test_get_age() -> None:
 
     diff = dt_util.now() - timedelta(minutes=320)
     assert dt_util.get_age(diff) == "5 hours"
+    assert dt_util.get_age(diff, depth=2) == "5 hours 20 minutes"
+    assert dt_util.get_age(diff, depth=3) == "5 hours 20 minutes"
 
     diff = dt_util.now() - timedelta(minutes=1.6 * 60 * 24)
     assert dt_util.get_age(diff) == "2 days"
+    assert dt_util.get_age(diff, depth=2) == "1 day 14 hours"
+    assert dt_util.get_age(diff, depth=3) == "1 day 14 hours 24 minutes"
+    diff = dt_util.now() + timedelta(minutes=1.6 * 60 * 24)
+    assert (
+        dt_util.get_age(diff, is_future=True, depth=10) == "1 day 14 hours 24 minutes"
+    )
 
     diff = dt_util.now() - timedelta(minutes=2 * 60 * 24)
     assert dt_util.get_age(diff) == "2 days"
 
     diff = dt_util.now() - timedelta(minutes=32 * 60 * 24)
     assert dt_util.get_age(diff) == "1 month"
+    assert dt_util.get_age(diff, depth=10) == "1 month 2 days"
+
+    diff = dt_util.now() - timedelta(minutes=32 * 60 * 24 + 1)
+    assert dt_util.get_age(diff, depth=3) == "1 month 2 days 1 minute"
 
     diff = dt_util.now() - timedelta(minutes=365 * 60 * 24)
     assert dt_util.get_age(diff) == "1 year"

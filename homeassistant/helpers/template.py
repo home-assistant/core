@@ -2163,15 +2163,23 @@ def today_at(hass: HomeAssistant, time_str: str = "") -> datetime:
     return datetime.combine(today, time_today, today.tzinfo)
 
 
-def relative_time(hass: HomeAssistant, value: Any) -> Any:
-    """Take a datetime and return its "age" as a string.
+def relative_time(
+    value: Any | datetime, is_future: bool = False, depth: int = 1
+) -> Any | str:
+    """
+    Take a datetime and return its "age" as a string.
 
-    The age can be in second, minute, hour, day, month or year. Only the
-    biggest unit is considered, e.g. if it's 2 days and 3 hours, "2 days" will
-    be returned.
-    Make sure date is not in the future, or else it will return None.
+    The age can be in second, minute, hour, day, month and year.
 
-    If the input are not a datetime object the input will be returned unmodified.
+    depth number of units will be returned, with the last unit rounded.
+
+    If is_future is False, the date must be in the past, or else the object
+    will be returned unmodified.
+
+    If is_future is True, the date must be in the future, or else
+    "0 seconds" will be returned
+
+    If the value not a datetime object the input will be returned unmodified.
     """
     if (render_info := _render_info.get()) is not None:
         render_info.has_time = True
@@ -2180,9 +2188,10 @@ def relative_time(hass: HomeAssistant, value: Any) -> Any:
         return value
     if not value.tzinfo:
         value = dt_util.as_local(value)
-    if dt_util.now() < value:
+    if dt_util.now() < value and not is_future:
         return value
-    return dt_util.get_age(value)
+
+    return dt_util.get_age(value, is_future=is_future, depth=depth)
 
 
 def urlencode(value):
