@@ -40,10 +40,10 @@ from tests.common import assert_setup_component, get_fixture_path
 def values_fixture() -> list[State]:
     """Fixture for a list of test States."""
     values = []
-    raw_values = ["20", "19", "18", "21", "22", "0"]
+    raw_values = [20, 19, 18, 21, 22, 0]
     timestamp = dt_util.utcnow()
     for val in raw_values:
-        values.append(State("sensor.test_monitored", val, last_updated=timestamp))
+        values.append(State("sensor.test_monitored", str(val), last_updated=timestamp))
         timestamp += timedelta(minutes=1)
     return values
 
