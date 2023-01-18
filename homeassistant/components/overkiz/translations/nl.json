@@ -28,6 +28,12 @@
     },
     "entity": {
         "select": {
+            "memorized_simple_volume": {
+                "state": {
+                    "highest": "Hoogste",
+                    "standard": "Standaard"
+                }
+            },
             "open_closed_pedestrian": {
                 "state": {
                     "closed": "Gesloten",
@@ -45,13 +51,28 @@
             },
             "discrete_rssi_level": {
                 "state": {
-                    "good": "Goed"
+                    "good": "Goed",
+                    "low": "Laag",
+                    "verylow": "Heel laag"
                 }
             },
             "priority_lock_originator": {
                 "state": {
+                    "external_gateway": "Externe gateway",
+                    "local_user": "Lokale gebruiker",
+                    "rain": "Regen",
+                    "security": "Beveiliging",
                     "temperature": "Temperatuur",
-                    "user": "Gebruiker"
+                    "timer": "Timer",
+                    "user": "Gebruiker",
+                    "wind": "Wind"
+                }
+            },
+            "sensor_defect": {
+                "state": {
+                    "low_battery": "Batterij bijna leeg",
+                    "maintenance_required": "Onderhoud vereist",
+                    "no_defect": "Geen defect"
                 }
             },
             "sensor_room": {

@@ -87,6 +87,7 @@
             "default_light_transition": "Tempo de transi\u00e7\u00e3o de luz padr\u00e3o (segundos)",
             "enable_identify_on_join": "Ativar o efeito de identifica\u00e7\u00e3o quando os dispositivos ingressarem na rede",
             "enhanced_light_transition": "Ative a transi\u00e7\u00e3o de cor/temperatura da luz aprimorada de um estado desligado",
+            "group_members_assume_state": "Os membros do grupo assumem o estado do grupo",
             "light_transitioning_flag": "Ative o controle deslizante de brilho aprimorado durante a transi\u00e7\u00e3o de luz",
             "title": "Op\u00e7\u00f5es globais"
         }

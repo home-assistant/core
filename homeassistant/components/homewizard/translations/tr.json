@@ -5,12 +5,20 @@
             "api_not_enabled": "API etkin de\u011fil. Ayarlar alt\u0131nda HomeWizard Energy Uygulamas\u0131nda API'yi etkinle\u015ftirin",
             "device_not_supported": "Bu cihaz desteklenmiyor",
             "invalid_discovery_parameters": "Desteklenmeyen API s\u00fcr\u00fcm\u00fc alg\u0131land\u0131",
+            "reauth_successful": "API'yi etkinle\u015ftirme ba\u015far\u0131l\u0131 oldu",
             "unknown_error": "Beklenmeyen hata"
+        },
+        "error": {
+            "api_not_enabled": "API etkin de\u011fil. Ayarlar alt\u0131nda HomeWizard Energy Uygulamas\u0131nda API'yi etkinle\u015ftirin",
+            "network_error": "Cihaza eri\u015filemiyor, do\u011fru IP adresini girdi\u011finizden ve cihaz\u0131n a\u011f\u0131n\u0131zda mevcut oldu\u011fundan emin olun."
         },
         "step": {
             "discovery_confirm": {
-                "description": "{ip_address} konumuna {product_type} ({serial}) kurmak istiyor musunuz?",
+                "description": "{product_type} ( {serial} ) {ip_address} adresinde kurmak istiyor musunuz?",
                 "title": "Onayla"
+            },
+            "reauth_confirm": {
+                "description": "Yerel API devre d\u0131\u015f\u0131 b\u0131rak\u0131ld\u0131. HomeWizard Energy uygulamas\u0131na gidin ve cihaz ayarlar\u0131nda API'yi etkinle\u015ftirin."
             },
             "user": {
                 "data": {

@@ -87,6 +87,7 @@
             "default_light_transition": "Predvolen\u00fd \u010das prechodu svetla (sekundy)",
             "enable_identify_on_join": "Povoli\u0165 efekt identifik\u00e1cie, ke\u010f sa zariadenia prip\u00e1jaj\u00fa k sieti",
             "enhanced_light_transition": "Povoli\u0165 vylep\u0161en\u00fd prechod farby svetla/teploty z vypnut\u00e9ho stavu",
+            "group_members_assume_state": "\u010clenovia skupiny prevezm\u00fa stav skupiny",
             "light_transitioning_flag": "Povolenie vylep\u0161en\u00e9ho posuvn\u00edka jasu po\u010das prechodu svetla",
             "title": "Glob\u00e1lne mo\u017enosti"
         }

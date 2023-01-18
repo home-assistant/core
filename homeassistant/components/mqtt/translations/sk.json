@@ -136,5 +136,14 @@
                 "title": "MQTT mo\u017enosti"
             }
         }
+    },
+    "selector": {
+        "set_ca_cert": {
+            "options": {
+                "auto": "Auto",
+                "custom": "Vlastn\u00e9",
+                "off": "Vypnut\u00e9"
+            }
+        }
     }
 }

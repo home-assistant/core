@@ -527,8 +527,9 @@ async def test_doorbell_event_fail(hass, aioclient_mock, caplog):
 
     # Check we log the entity id of the failing entity
     assert (
-        "Error when sending DoorbellPress event for binary_sensor.test_doorbell to Alexa: "
-        "THROTTLING_EXCEPTION: Request could not be processed due to throttling"
+        "Error when sending DoorbellPress event for binary_sensor.test_doorbell"
+        " to Alexa: THROTTLING_EXCEPTION: Request could not be processed"
+        " due to throttling"
     ) in caplog.text
 
 

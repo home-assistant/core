@@ -87,6 +87,7 @@
             "default_light_transition": "Waktu transisi lampu default (detik)",
             "enable_identify_on_join": "Aktifkan efek identifikasi saat perangkat bergabung dengan jaringan",
             "enhanced_light_transition": "Aktifkan versi canggih untuk transisi warna/suhu cahaya dari keadaan tidak aktif",
+            "group_members_assume_state": "Anggota kelompok mengasumsikan status grup",
             "light_transitioning_flag": "Aktifkan penggeser kecerahan yang lebih canggih pada waktu transisi lampu",
             "title": "Opsi Global"
         }

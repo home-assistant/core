@@ -87,6 +87,7 @@
             "default_light_transition": "\u9810\u8a2d\u71c8\u5149\u8f49\u63db\u6642\u9593\uff08\u79d2\uff09",
             "enable_identify_on_join": "\u7576\u88dd\u7f6e\u52a0\u5165\u7db2\u8def\u6642\u3001\u958b\u555f\u8b58\u5225\u6548\u679c",
             "enhanced_light_transition": "\u958b\u555f\u7531\u95dc\u9589\u72c0\u614b\u589e\u5f37\u5149\u8272/\u8272\u6eab\u8f49\u63db",
+            "group_members_assume_state": "\u7fa4\u7d44\u6210\u54e1\u5448\u73fe\u7fa4\u7d44\u72c0\u614b",
             "light_transitioning_flag": "\u958b\u555f\u71c8\u5149\u8f49\u63db\u589e\u5f37\u4eae\u5ea6\u8abf\u6574\u5217",
             "title": "Global \u9078\u9805"
         }

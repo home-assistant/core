@@ -71,7 +71,8 @@
             "select_gateway_type": {
                 "menu_options": {
                     "gw_mqtt": "Configureer een MQTT-gateway",
-                    "gw_serial": "Configureer een seri\u00eble gateway"
+                    "gw_serial": "Configureer een seri\u00eble gateway",
+                    "gw_tcp": "Configureer een TCP-gateway"
                 }
             },
             "user": {

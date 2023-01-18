@@ -27,6 +27,14 @@
                     "unknown": "Ismeretlen"
                 }
             },
+            "net_infra": {
+                "state": {
+                    "adsl": "ADSL",
+                    "ftth": "FTTH",
+                    "gprs": "GPRS",
+                    "unknown": "Ismeretlen"
+                }
+            },
             "training": {
                 "state": {
                     "g_922_channel_analysis": "G.922 csatornaelemz\u00e9s",

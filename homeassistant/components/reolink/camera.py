@@ -27,10 +27,13 @@ async def async_setup_entry(
     cameras = []
     for channel in host.api.channels:
         streams = ["sub", "main", "snapshots"]
-        if host.api.protocol == "rtmp":
+        if host.api.protocol in ["rtmp", "flv"]:
             streams.append("ext")
 
         for stream in streams:
+            stream_url = await host.api.get_stream_source(channel, stream)
+            if stream_url is None and stream != "snapshots":
+                continue
             cameras.append(ReolinkCamera(reolink_data, config_entry, channel, stream))
 
     async_add_entities(cameras, update_before_add=True)

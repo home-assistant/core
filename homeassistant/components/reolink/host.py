@@ -19,6 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import CONF_PROTOCOL, CONF_USE_HTTPS, DEFAULT_TIMEOUT
+from .exceptions import UserNotAdmin
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,11 +63,16 @@ class ReolinkHost:
         """Connect to Reolink host."""
         self._api.expire_session()
 
-        if not await self._api.get_host_data():
-            return False
+        await self._api.get_host_data()
 
         if self._api.mac_address is None:
             return False
+
+        if not self._api.is_admin:
+            await self.stop()
+            raise UserNotAdmin(
+                f"User '{self._api.username}' has authorization level '{self._api.user_level}', only admin users can change camera settings"
+            )
 
         enable_onvif = None
         enable_rtmp = None
@@ -116,13 +122,13 @@ class ReolinkHost:
 
         return True
 
-    async def update_states(self) -> bool:
-        """Call the API of the camera device to update the states."""
-        return await self._api.get_states()
+    async def update_states(self) -> None:
+        """Call the API of the camera device to update the internal states."""
+        await self._api.get_states()
 
     async def disconnect(self):
         """Disconnect from the API, so the connection will be released."""
-        await self._api.unsubscribe_all()
+        await self._api.unsubscribe()
 
         try:
             await self._api.logout()

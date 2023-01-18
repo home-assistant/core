@@ -230,6 +230,9 @@ omit =
     homeassistant/components/discord/notify.py
     homeassistant/components/dlib_face_detect/image_processing.py
     homeassistant/components/dlib_face_identify/image_processing.py
+    homeassistant/components/dlink/__init__.py
+    homeassistant/components/dlink/data.py
+    homeassistant/components/dlink/entity.py
     homeassistant/components/dlink/switch.py
     homeassistant/components/dominos/*
     homeassistant/components/doods/*
@@ -348,6 +351,8 @@ omit =
     homeassistant/components/esphome/switch.py
     homeassistant/components/etherscan/sensor.py
     homeassistant/components/eufy/*
+    homeassistant/components/eufylife_ble/__init__.py
+    homeassistant/components/eufylife_ble/sensor.py
     homeassistant/components/everlights/light.py
     homeassistant/components/evohome/*
     homeassistant/components/ezviz/__init__.py
@@ -583,6 +588,7 @@ omit =
     homeassistant/components/intellifire/coordinator.py
     homeassistant/components/intellifire/entity.py
     homeassistant/components/intellifire/fan.py
+    homeassistant/components/intellifire/light.py
     homeassistant/components/intellifire/number.py
     homeassistant/components/intellifire/sensor.py
     homeassistant/components/intellifire/switch.py
@@ -606,6 +612,9 @@ omit =
     homeassistant/components/isy994/helpers.py
     homeassistant/components/isy994/light.py
     homeassistant/components/isy994/lock.py
+    homeassistant/components/isy994/models.py
+    homeassistant/components/isy994/number.py
+    homeassistant/components/isy994/select.py
     homeassistant/components/isy994/sensor.py
     homeassistant/components/isy994/services.py
     homeassistant/components/isy994/switch.py
@@ -676,6 +685,7 @@ omit =
     homeassistant/components/ld2410_ble/__init__.py
     homeassistant/components/ld2410_ble/binary_sensor.py
     homeassistant/components/ld2410_ble/coordinator.py
+    homeassistant/components/ld2410_ble/sensor.py
     homeassistant/components/led_ble/__init__.py
     homeassistant/components/led_ble/light.py
     homeassistant/components/lg_netcast/media_player.py
@@ -1064,6 +1074,8 @@ omit =
     homeassistant/components/rest/switch.py
     homeassistant/components/rfxtrx/diagnostics.py
     homeassistant/components/ridwell/__init__.py
+    homeassistant/components/ridwell/coordinator.py
+    homeassistant/components/ridwell/entity.py
     homeassistant/components/ridwell/sensor.py
     homeassistant/components/ridwell/switch.py
     homeassistant/components/ring/camera.py
@@ -1219,6 +1231,7 @@ omit =
     homeassistant/components/squeezebox/__init__.py
     homeassistant/components/squeezebox/browse_media.py
     homeassistant/components/squeezebox/media_player.py
+    homeassistant/components/starlink/binary_sensor.py
     homeassistant/components/starlink/coordinator.py
     homeassistant/components/starlink/entity.py
     homeassistant/components/starlink/sensor.py
