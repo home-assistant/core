@@ -1,6 +1,7 @@
 """Test the Insteon Scenes APIs."""
 
 import json
+import os
 from unittest.mock import AsyncMock, patch
 
 from pyinsteon.constants import ResponseStatus
@@ -19,6 +20,15 @@ from tests.common import load_fixture
 def aldb_data_fixture():
     """Load the controller state fixture data."""
     return json.loads(load_fixture("insteon/scene_data.json"))
+
+
+@pytest.fixture(name="remove_json")
+def remove_insteon_devices_json(hass):
+    """Fixture to remove insteon_devices.json at the end of the test."""
+    yield
+    file = os.path.join(hass.config.config_dir, "insteon_devices.json")
+    if os.path.exists(file):
+        os.remove(file)
 
 
 def _scene_to_array(scene):
@@ -71,7 +81,7 @@ async def test_get_scene(hass, hass_ws_client, scene_data):
         assert len(result["devices"]) == 3
 
 
-async def test_save_scene(hass, hass_ws_client, scene_data):
+async def test_save_scene(hass, hass_ws_client, scene_data, remove_json):
     """Test saving an Insteon scene."""
     ws_client, devices = await _setup(hass, hass_ws_client, scene_data)
 
@@ -98,7 +108,7 @@ async def test_save_scene(hass, hass_ws_client, scene_data):
         assert result["scene_id"] == 20
 
 
-async def test_save_new_scene(hass, hass_ws_client, scene_data):
+async def test_save_new_scene(hass, hass_ws_client, scene_data, remove_json):
     """Test saving a new Insteon scene."""
     ws_client, devices = await _setup(hass, hass_ws_client, scene_data)
 
@@ -125,7 +135,7 @@ async def test_save_new_scene(hass, hass_ws_client, scene_data):
         assert result["scene_id"] == 21
 
 
-async def test_save_scene_error(hass, hass_ws_client, scene_data):
+async def test_save_scene_error(hass, hass_ws_client, scene_data, remove_json):
     """Test saving an Insteon scene with error."""
     ws_client, devices = await _setup(hass, hass_ws_client, scene_data)
 
@@ -152,7 +162,7 @@ async def test_save_scene_error(hass, hass_ws_client, scene_data):
         assert result["scene_id"] == 20
 
 
-async def test_delete_scene(hass, hass_ws_client, scene_data):
+async def test_delete_scene(hass, hass_ws_client, scene_data, remove_json):
     """Test delete an Insteon scene."""
     ws_client, devices = await _setup(hass, hass_ws_client, scene_data)
 
