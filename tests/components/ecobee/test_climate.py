@@ -1,4 +1,5 @@
 """The test for the Ecobee thermostat module."""
+import copy
 from http import HTTPStatus
 from unittest import mock
 
@@ -9,7 +10,7 @@ from homeassistant.components.ecobee import DOMAIN as CLIMATE_DOMAIN, climate as
 import homeassistant.const as const
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_OFF
 
-from tests.components.ecobee import GENERIC_THERMOSTAT_INFO
+from tests.components.ecobee import GENERIC_THERMOSTAT_INFO_WITH_HEATPUMP
 from tests.components.ecobee.common import setup_platform
 
 DEVICE_ID = "climate.ecobee"
@@ -96,11 +97,10 @@ async def test_aux_heat_not_supported_by_default(hass):
 
 
 async def test_aux_heat_supported_with_heat_pump(hass):
-    """Aux Heat shouuld be supported if thermostat has heatpump."""
-    mock_get_themostat = mock.Mock()
-    mock_get_themostat.return_value = GENERIC_THERMOSTAT_INFO
-    mock_get_themostat.return_value["settings"]["hasHeatPump"] = True
-    with mock.patch("pyecobee.Ecobee.get_thermostat", mock_get_themostat):
+    """Aux Heat should be supported if thermostat has heatpump."""
+    mock_get_thermostat = mock.Mock()
+    mock_get_thermostat.return_value = GENERIC_THERMOSTAT_INFO_WITH_HEATPUMP
+    with mock.patch("pyecobee.Ecobee.get_thermostat", mock_get_thermostat):
         await setup_platform(hass, CLIMATE_DOMAIN)
     state = hass.states.get(DEVICE_ID)
     assert (
@@ -238,13 +238,27 @@ async def test_extra_state_attributes(ecobee_fixture, thermostat):
     } == thermostat.extra_state_attributes
 
 
-async def test_is_aux_heat_on(ecobee_fixture, thermostat):
+async def test_is_aux_heat_on(hass):
     """Test aux heat property is only enabled for auxHeatOnly."""
-    assert not thermostat.is_aux_heat
-    ecobee_fixture["equipmentStatus"] = "fan, auxHeat"
-    assert not thermostat.is_aux_heat
-    ecobee_fixture["settings"]["hvacMode"] = "auxHeatOnly"
-    assert thermostat.is_aux_heat
+    mock_get_thermostat = mock.Mock()
+    mock_get_thermostat.return_value = copy.deepcopy(
+        GENERIC_THERMOSTAT_INFO_WITH_HEATPUMP
+    )
+    mock_get_thermostat.return_value["settings"]["hvacMode"] = "auxHeatOnly"
+    with mock.patch("pyecobee.Ecobee.get_thermostat", mock_get_thermostat):
+        await setup_platform(hass, CLIMATE_DOMAIN)
+    state = hass.states.get(DEVICE_ID)
+    assert state.attributes.get("aux_heat") == "on"
+
+
+async def test_is_aux_heat_off(hass):
+    """Test aux heat property is only enabled for auxHeatOnly."""
+    mock_get_thermostat = mock.Mock()
+    mock_get_thermostat.return_value = GENERIC_THERMOSTAT_INFO_WITH_HEATPUMP
+    with mock.patch("pyecobee.Ecobee.get_thermostat", mock_get_thermostat):
+        await setup_platform(hass, CLIMATE_DOMAIN)
+    state = hass.states.get(DEVICE_ID)
+    assert state.attributes.get("aux_heat") == "off"
 
 
 async def test_set_temperature(ecobee_fixture, thermostat, data):
