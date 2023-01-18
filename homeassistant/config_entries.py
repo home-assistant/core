@@ -761,7 +761,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         super().__init__(hass)
         self.config_entries = config_entries
         self._hass_config = hass_config
-        self._pending_import_flows: dict[str, dict[str, asyncio.Future]] = {}
+        self._pending_import_flows: dict[str, dict[str, asyncio.Future[None]]] = {}
         self._initialize_tasks: dict[str, list[asyncio.Task]] = {}
 
     async def async_wait_import_flow_initialized(self, handler: str) -> None:
@@ -788,7 +788,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
 
         flow_id = uuid_util.random_uuid_hex()
         if context["source"] == SOURCE_IMPORT:
-            init_done: asyncio.Future = asyncio.Future()
+            init_done: asyncio.Future[None] = asyncio.Future()
             self._pending_import_flows.setdefault(handler, {})[flow_id] = init_done
 
         task = asyncio.create_task(self._async_init(flow_id, handler, context, data))
