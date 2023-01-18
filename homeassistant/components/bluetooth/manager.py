@@ -377,13 +377,13 @@ class BluetoothManager:
 
         # Pre-filter noisy apple devices as they can account for 20-35% of the
         # traffic on a typical network.
-        advertisement_data = service_info.advertisement
-        manufacturer_data = advertisement_data.manufacturer_data
+        manufacturer_data = service_info.manufacturer_data
+        service_data = service_info.service_data
         if (
             len(manufacturer_data) == 1
+            and not service_data
             and (apple_data := manufacturer_data.get(APPLE_MFR_ID))
             and apple_data[0] not in APPLE_START_BYTES_WANTED
-            and not advertisement_data.service_data
         ):
             return
 
@@ -476,8 +476,8 @@ class BluetoothManager:
             # Than check if advertisement data is the same
             and old_service_info
             and not (
-                service_info.manufacturer_data != old_service_info.manufacturer_data
-                or service_info.service_data != old_service_info.service_data
+                manufacturer_data != old_service_info.manufacturer_data
+                or service_data != old_service_info.service_data
                 or service_info.service_uuids != old_service_info.service_uuids
                 or service_info.name != old_service_info.name
             )
@@ -509,11 +509,12 @@ class BluetoothManager:
                 "%s: %s %s match: %s",
                 self._async_describe_source(service_info),
                 address,
-                advertisement_data,
+                service_info.advertisement,
                 matched_domains,
             )
 
         if connectable or old_connectable_service_info:
+            advertisement_data = service_info.advertisement
             # Bleak callbacks must get a connectable device
             for callback_filters in self._bleak_callbacks:
                 _dispatch_bleak_callback(*callback_filters, device, advertisement_data)
