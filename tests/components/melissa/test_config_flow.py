@@ -1,9 +1,9 @@
-"""Test the testme config flow."""
+"""Test the Melissa config flow."""
 from unittest.mock import patch
 
 from homeassistant import config_entries
-from homeassistant.components.testme.config_flow import CannotConnect, InvalidAuth
-from homeassistant.components.testme.const import DOMAIN
+from homeassistant.components.melissa.config_flow import CannotConnect, InvalidAuth
+from homeassistant.components.melissa.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -17,10 +17,10 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.testme.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.melissa.config_flow.PlaceholderHub.authenticate",
         return_value=True,
     ), patch(
-        "homeassistant.components.testme.async_setup_entry",
+        "homeassistant.components.melissa.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -50,7 +50,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.testme.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.melissa.config_flow.PlaceholderHub.authenticate",
         side_effect=InvalidAuth,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -73,7 +73,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.testme.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.melissa.config_flow.PlaceholderHub.authenticate",
         side_effect=CannotConnect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
