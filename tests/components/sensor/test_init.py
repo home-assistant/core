@@ -1196,16 +1196,17 @@ async def test_device_classes_with_invalid_unit_of_measurement(
         device_class=device_class,
         native_unit_of_measurement="INVALID!",
     )
-    units = tuple(
-        str(unit) if unit else None
+    units = [
+        str(unit) if unit else "no unit of measurement"
         for unit in DEVICE_CLASS_UNITS.get(device_class, set())
-    )
+    ]
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
     assert (
-        f"is using native unit of measurement 'INVALID!' which is not a valid "
-        f"unit {units} for the device class ('{device_class}') it is using"
+        "is using native unit of measurement 'INVALID!' which is not a valid "
+        f"unit for the device class ('{device_class}') it is using; "
+        f"expected one of {units}"
     ) in caplog.text
 
 
