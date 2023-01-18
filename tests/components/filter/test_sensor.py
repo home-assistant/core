@@ -232,9 +232,9 @@ async def test_history_time(
 
     fake_states = {
         "sensor.test_monitored": [
-            State("sensor.test_monitored", 18.0, last_changed=t_0),
-            State("sensor.test_monitored", 19.0, last_changed=t_1),
-            State("sensor.test_monitored", 18.2, last_changed=t_2),
+            State("sensor.test_monitored", "18.0", last_changed=t_0),
+            State("sensor.test_monitored", "19.0", last_changed=t_1),
+            State("sensor.test_monitored", "18.2", last_changed=t_2),
         ]
     }
     with patch(
@@ -384,7 +384,7 @@ def test_outlier_step(values: list[State]) -> None:
 def test_initial_outlier(values: list[State]) -> None:
     """Test issue #13363."""
     filt = OutlierFilter(window_size=3, precision=2, entity=None, radius=4.0)
-    out = State("sensor.test_monitored", 4000)
+    out = State("sensor.test_monitored", "4000")
     for state in [out] + values:
         filtered = filt.filter_state(state)
     assert filtered.state == 21
