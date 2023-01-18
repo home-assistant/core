@@ -30,10 +30,18 @@ DATA_AGENT = "conversation_agent"
 DATA_CONFIG = "conversation_config"
 
 SERVICE_PROCESS = "process"
+SERVICE_RELOAD = "reload"
+SERVICE_PREPARE = "prepare"
 
 SERVICE_PROCESS_SCHEMA = vol.Schema(
     {vol.Required(ATTR_TEXT): cv.string, vol.Optional(ATTR_LANGUAGE): cv.string}
 )
+
+
+SERVICE_RELOAD_SCHEMA = vol.Schema({vol.Optional(ATTR_LANGUAGE): cv.string})
+
+
+SERVICE_PREPARE_SCHEMA = vol.Schema({vol.Optional(ATTR_LANGUAGE): cv.string})
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -62,7 +70,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Register the process service."""
     hass.data[DATA_CONFIG] = config
 
-    async def handle_service(service: core.ServiceCall) -> None:
+    async def handle_process(service: core.ServiceCall) -> None:
         """Parse text into commands."""
         text = service.data[ATTR_TEXT]
         _LOGGER.debug("Processing: <%s>", text)
@@ -74,8 +82,28 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         except intent.IntentHandleError as err:
             _LOGGER.error("Error processing %s: %s", text, err)
 
+    async def handle_prepare(service: core.ServiceCall) -> None:
+        """Preload intents."""
+        language = service.data.get(ATTR_LANGUAGE, hass.config.language)
+        _LOGGER.debug("Preloading intents for language: %s", language)
+        agent = await _get_agent(hass)
+        await agent.async_preload(language)
+
+    async def handle_reload(service: core.ServiceCall) -> None:
+        """Reload intents."""
+        language = service.data.get(ATTR_LANGUAGE, hass.config.language)
+        _LOGGER.debug("Reloading intents for language: %s", language)
+        agent = await _get_agent(hass)
+        await agent.async_reload(language)
+
     hass.services.async_register(
-        DOMAIN, SERVICE_PROCESS, handle_service, schema=SERVICE_PROCESS_SCHEMA
+        DOMAIN, SERVICE_PROCESS, handle_process, schema=SERVICE_PROCESS_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, SERVICE_PREPARE, handle_prepare, schema=SERVICE_PREPARE_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, SERVICE_RELOAD, handle_reload, schema=SERVICE_RELOAD_SCHEMA
     )
     hass.http.register_view(ConversationProcessView())
     websocket_api.async_register_command(hass, websocket_process)

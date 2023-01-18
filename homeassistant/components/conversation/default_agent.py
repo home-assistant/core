@@ -121,6 +121,24 @@ class DefaultAgent(AbstractConversationAgent):
             response=intent_response, conversation_id=conversation_id
         )
 
+    async def async_preload(self, language: str):
+        """Preload intents for a language."""
+        lang_intents = await self.hass.async_add_executor_job(
+            self.get_or_load_intents,
+            language,
+        )
+
+        if lang_intents is None:
+            # No intents loaded
+            _LOGGER.warning("No intents were loaded for language: %s", language)
+        else:
+            self._lang_intents[language] = lang_intents
+
+    async def async_reload(self, language: str):
+        """Reload intents for a language."""
+        self._lang_intents.pop(language, None)
+        await self.async_preload(language)
+
     def get_or_load_intents(self, language: str) -> LanguageIntents | None:
         """Load all intents for language."""
         lang_intents = self._lang_intents.get(language)
