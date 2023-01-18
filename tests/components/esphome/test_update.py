@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant.components.esphome.dashboard import async_set_dashboard_info
+from homeassistant.components.esphome.dashboard import async_get_dashboard
 
 
 @pytest.fixture(autouse=True)
@@ -44,7 +44,7 @@ async def test_update_entity(
 ):
     """Test ESPHome update entity."""
     mock_dashboard["configured"] = devices_payload
-    await async_set_dashboard_info(hass, "mock-addon-slug", "mock-addon-host", 1234)
+    await async_get_dashboard(hass).async_refresh()
 
     mock_config_entry.add_to_hass(hass)
 
