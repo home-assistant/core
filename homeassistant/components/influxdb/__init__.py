@@ -135,8 +135,7 @@ def validate_version_specific_config(conf: dict) -> dict:
     if conf[CONF_API_VERSION] == API_VERSION_2:
         if CONF_TOKEN not in conf:
             raise vol.Invalid(
-                f"{CONF_TOKEN} and {CONF_BUCKET} are required when"
-                f" {CONF_API_VERSION} is {API_VERSION_2}"
+                f"{CONF_TOKEN} is required when {CONF_API_VERSION} is {API_VERSION_2}"
             )
 
         if CONF_USERNAME in conf:
@@ -148,8 +147,7 @@ def validate_version_specific_config(conf: dict) -> dict:
     else:
         if CONF_TOKEN in conf:
             raise vol.Invalid(
-                f"{CONF_TOKEN} and {CONF_BUCKET} are only allowed when"
-                f" {CONF_API_VERSION} is {API_VERSION_2}"
+                f"{CONF_TOKEN} is only allowed when {CONF_API_VERSION} is {API_VERSION_2}"
             )
 
     return conf
