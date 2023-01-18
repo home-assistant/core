@@ -14,7 +14,7 @@ from .const import DOMAIN
 
 
 class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Home Assistant Sky Connect."""
+    """Handle a config flow for Home Assistant SkyConnect."""
 
     VERSION = 1
 
