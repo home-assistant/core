@@ -1,5 +1,7 @@
 """Base classes for Axis entities."""
 
+from abc import abstractmethod
+
 from axis.models.event import Event, EventTopic
 
 from homeassistant.core import callback
@@ -29,7 +31,7 @@ TOPIC_TO_EVENT_TYPE = {
 }
 
 
-class AxisEntityBase(Entity):
+class AxisEntity(Entity):
     """Base common to all Axis entities."""
 
     _attr_has_entity_name = True
@@ -46,22 +48,20 @@ class AxisEntityBase(Entity):
         """Subscribe device events."""
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, self.device.signal_reachable, self.update_callback
+                self.hass,
+                self.device.signal_reachable,
+                self.async_signal_reachable_callback,
             )
         )
 
-    @property
-    def available(self) -> bool:
-        """Return True if device is available."""
-        return self.device.available
-
     @callback
-    def update_callback(self, no_delay=None) -> None:
-        """Update the entities state."""
+    def async_signal_reachable_callback(self) -> None:
+        """Call when device connection state change."""
+        self._attr_available = self.device.available
         self.async_write_ha_state()
 
 
-class AxisEventBase(AxisEntityBase):
+class AxisEventEntity(AxisEntity):
     """Base common to all Axis entities from event stream."""
 
     _attr_should_poll = False
@@ -69,19 +69,20 @@ class AxisEventBase(AxisEntityBase):
     def __init__(self, event: Event, device: AxisNetworkDevice) -> None:
         """Initialize the Axis event."""
         super().__init__(device)
-        self.event = event
 
-        self.event_type = TOPIC_TO_EVENT_TYPE[event.topic_base]
-        self._attr_name = f"{self.event_type} {event.id}"
+        self._event_id = event.id
+        self._event_topic = event.topic_base
+        self._event_type = TOPIC_TO_EVENT_TYPE[event.topic_base]
+
+        self._attr_name = f"{self._event_type} {event.id}"
         self._attr_unique_id = f"{device.unique_id}-{event.topic}-{event.id}"
 
         self._attr_device_class = event.group.value
 
     @callback
-    def async_event_callback(self, event) -> None:
+    @abstractmethod
+    def async_event_callback(self, event: Event) -> None:
         """Update the entities state."""
-        self.event = event
-        self.update_callback()
 
     async def async_added_to_hass(self) -> None:
         """Subscribe sensors events."""
@@ -89,7 +90,7 @@ class AxisEventBase(AxisEntityBase):
         self.async_on_remove(
             self.device.api.event.subscribe(
                 self.async_event_callback,
-                id_filter=self.event.id,
-                topic_filter=self.event.topic_base,
+                id_filter=self._event_id,
+                topic_filter=self._event_topic,
             )
         )
