@@ -7,7 +7,6 @@ from unittest.mock import MagicMock, Mock, call, patch
 import pytest
 
 import homeassistant.components.influxdb as influxdb
-from homeassistant.components.influxdb.const import DEFAULT_BUCKET
 from homeassistant.const import (
     EVENT_STATE_CHANGED,
     PERCENTAGE,
@@ -20,11 +19,13 @@ from homeassistant.setup import async_setup_component
 
 INFLUX_PATH = "homeassistant.components.influxdb"
 INFLUX_CLIENT_PATH = f"{INFLUX_PATH}.InfluxDBClient"
+
 BASE_V1_CONFIG = {}
 BASE_V2_CONFIG = {
     "api_version": influxdb.API_VERSION_2,
     "organization": "org",
     "token": "token",
+    "bucket": "Home Assistant",
 }
 
 
@@ -63,7 +64,7 @@ def get_mock_call_fixture(request):
     """Get version specific lambda to make write API call mock."""
 
     def v2_call(body, precision):
-        data = {"bucket": DEFAULT_BUCKET, "record": body}
+        data = {"bucket": "Home Assistant", "record": body}
 
         if precision is not None:
             data["write_precision"] = precision
