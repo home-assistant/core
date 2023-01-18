@@ -84,9 +84,9 @@ class MeteoAlertBinarySensor(BinarySensorEntity):
             expiration_date = dt_util.parse_datetime(alert["expires"])
 
             if (
-+                onset_date is not None
-+                and expiration_date is not None
-+                and onset_date <= dt_util.utcnow() <= expiration_date
-+            ):
+                onset_date is not None
+                and expiration_date is not None
+                and onset_date <= dt_util.utcnow() <= expiration_date
+            ):
                 self._attr_extra_state_attributes = alert
                 self._attr_is_on = True
