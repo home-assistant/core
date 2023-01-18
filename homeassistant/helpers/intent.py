@@ -360,9 +360,9 @@ class ServiceIntentHandler(IntentHandler):
                     type=IntentResponseTargetType.AREA, name=area.name, id=area.id
                 )
             )
-            response.async_set_speech(self.speech.format(area.name))
+            speech_name = area.name
         else:
-            response.async_set_speech(self.speech.format(states[0].name))
+            speech_name = states[0].name
 
         service_coros = []
         for state in states:
@@ -382,6 +382,7 @@ class ServiceIntentHandler(IntentHandler):
         response.async_set_results(
             success_results=success_results,
         )
+        response.async_set_speech(self.speech.format(speech_name))
 
         return response
 
