@@ -78,7 +78,11 @@ from .const import (  # noqa: F401
     CONF_INPUT_TYPE,
     CONF_LAZY_ERROR,
     CONF_MAX_TEMP,
+    CONF_MAX_VALUE,
+    CONF_MAX_VALUE_THRESHOLD,
     CONF_MIN_TEMP,
+    CONF_MIN_VALUE,
+    CONF_MIN_VALUE_THRESHOLD,
     CONF_MSG_WAIT,
     CONF_PARITY,
     CONF_PRECISION,
@@ -285,6 +289,10 @@ SENSOR_SCHEMA = vol.All(
             vol.Optional(CONF_STATE_CLASS): SENSOR_STATE_CLASSES_SCHEMA,
             vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
             vol.Optional(CONF_SLAVE_COUNT, default=0): cv.positive_int,
+            vol.Optional(CONF_MIN_VALUE): number_validator,
+            vol.Optional(CONF_MIN_VALUE_THRESHOLD): number_validator,
+            vol.Optional(CONF_MAX_VALUE): number_validator,
+            vol.Optional(CONF_MAX_VALUE_THRESHOLD): number_validator,
         }
     ),
 )
