@@ -139,14 +139,14 @@
             "remote_button_alt_short_press": "\"{subtype}\" trycktes (Alternativt l\u00e4ge)",
             "remote_button_alt_short_release": "\"{subtype}\" sl\u00e4pptes upp (Alternativt l\u00e4ge)",
             "remote_button_alt_triple_press": "\"{subtype}\" trippelklickades (Alternativt l\u00e4ge)",
-            "remote_button_double_press": "\"{subtype}\"-knappen dubbelklickades",
-            "remote_button_long_press": "\"{subtype}\"-knappen kontinuerligt nedtryckt",
-            "remote_button_long_release": "\"{subtype}\"-knappen sl\u00e4pptes efter ett l\u00e5ngttryck",
-            "remote_button_quadruple_press": "\"{subtype}\"-knappen klickades \nfyrfaldigt",
-            "remote_button_quintuple_press": "\"{subtype}\"-knappen klickades \nfemfaldigt",
-            "remote_button_short_press": "\"{subtype}\"-knappen trycktes in",
-            "remote_button_short_release": "\"{subtype}\"-knappen sl\u00e4ppt",
-            "remote_button_triple_press": "\"{subtype}\"-knappen trippelklickades"
+            "remote_button_double_press": "\"{subtype}\" dubbelklickades",
+            "remote_button_long_press": "\"{subtype}\" kontinuerligt nedtryckt",
+            "remote_button_long_release": "\"{subtype}\" sl\u00e4pptes efter l\u00e5ngtryckning",
+            "remote_button_quadruple_press": "\"{subtype}\" klickades fyrfaldigt",
+            "remote_button_quintuple_press": "\"{subtype}\" klickades femfaldigt",
+            "remote_button_short_press": "\"{subtype}\" trycktes in",
+            "remote_button_short_release": "\"{subtype}\" sl\u00e4pptes",
+            "remote_button_triple_press": "\"{subtype}\" trippelklickades"
         }
     },
     "options": {
