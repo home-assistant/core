@@ -1,11 +1,11 @@
 {
-  "codeowners": ["@home-assistant/core"],
-  "after_dependencies": ["hassio"],
   "domain": "otbr",
-  "iot_class": "local_polling",
+  "name": "Thread",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/otbr",
-  "integration_type": "system",
-  "name": "Thread",
-  "requirements": ["python-otbr-api==1.0.1"]
+  "requirements": ["python-otbr-api==1.0.1"],
+  "after_dependencies": ["hassio"],
+  "codeowners": ["@home-assistant/core"],
+  "iot_class": "local_polling",
+  "integration_type": "service"
 }

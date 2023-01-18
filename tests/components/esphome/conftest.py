@@ -98,3 +98,14 @@ def mock_client(mock_device_info):
         "homeassistant.components.esphome.config_flow.APIClient", mock_client
     ):
         yield mock_client
+
+
+@pytest.fixture
+def mock_dashboard():
+    """Mock dashboard."""
+    data = {"configured": [], "importable": []}
+    with patch(
+        "esphome_dashboard_api.ESPHomeDashboardAPI.get_devices",
+        return_value=data,
+    ):
+        yield data
