@@ -24,6 +24,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -102,7 +103,14 @@ class HoneywellUSThermostat(ClimateEntity):
         self._away = False
 
         self._attr_unique_id = device.deviceid
-        self._attr_name = device.name
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, device.deviceid)},
+            name=device.name,
+            manufacturer="Honeywell",
+        )
+        self._attr_has_entity_name = True
+
         self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
         if device.temperature_unit == "C":
             self._attr_temperature_unit = UnitOfTemperature.CELSIUS
