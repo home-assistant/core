@@ -17,7 +17,7 @@ from .helpers import get_device_id, get_matter
 ATTRIBUTES_TO_REDACT = {"chip.clusters.Objects.Basic.Attributes.Location"}
 
 
-def redact_matter_attribute(node_data: dict[str, Any]) -> dict[str, Any]:
+def redact_matter_attributes(node_data: dict[str, Any]) -> dict[str, Any]:
     """Redact Matter cluster attribute."""
     redacted = deepcopy(node_data)
     for attribute_to_redact in ATTRIBUTES_TO_REDACT:
@@ -42,7 +42,7 @@ async def async_get_config_entry_diagnostics(
     matter = get_matter(hass)
     server_diagnostics = await matter.matter_client.get_diagnostics()
     data = remove_serialization_type(dataclass_to_dict(server_diagnostics))
-    nodes = [redact_matter_attribute(node_data) for node_data in data["nodes"]]
+    nodes = [redact_matter_attributes(node_data) for node_data in data["nodes"]]
     data["nodes"] = nodes
 
     return {"server": data}
@@ -70,7 +70,7 @@ async def async_get_device_diagnostics(
         "server_info": remove_serialization_type(
             dataclass_to_dict(server_diagnostics.info)
         ),
-        "node": redact_matter_attribute(
+        "node": redact_matter_attributes(
             remove_serialization_type(dataclass_to_dict(node))
         ),
     }

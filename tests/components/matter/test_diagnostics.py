@@ -12,7 +12,7 @@ from matter_server.common.models.server_information import ServerDiagnostics
 import pytest
 
 from homeassistant.components.matter.const import DOMAIN
-from homeassistant.components.matter.diagnostics import redact_matter_attribute
+from homeassistant.components.matter.diagnostics import redact_matter_attributes
 from homeassistant.components.matter.helpers import get_device_id
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -48,7 +48,7 @@ async def test_matter_attribute_redact(device_diagnostics: dict[str, Any]) -> No
     """Test the matter attribute redact helper."""
     assert device_diagnostics["attributes"]["0/40/6"]["value"] == "XX"
 
-    redacted_device_diagnostics = redact_matter_attribute(device_diagnostics)
+    redacted_device_diagnostics = redact_matter_attributes(device_diagnostics)
 
     # Check that the correct attribute value is redacted.
     assert (
@@ -92,7 +92,7 @@ async def test_device_diagnostics(
     system_info_dict = config_entry_diagnostics["info"]
     device_diagnostics_redacted = {
         "server_info": system_info_dict,
-        "node": redact_matter_attribute(device_diagnostics),
+        "node": redact_matter_attributes(device_diagnostics),
     }
     server_diagnostics_response = {
         "info": system_info_dict,
