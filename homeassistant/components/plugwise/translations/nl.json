@@ -31,6 +31,9 @@
                 "state_attributes": {
                     "preset_mode": {
                         "state": {
+                            "asleep": "Nacht",
+                            "away": "Afwezig",
+                            "home": "Thuis",
                             "vacation": "Vakantie"
                         }
                     }

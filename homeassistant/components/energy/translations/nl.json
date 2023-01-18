@@ -14,7 +14,8 @@
             "title": "Entiteit heeft een niet-numerieke status"
         },
         "entity_unavailable": {
-            "description": "De status van deze geconfigureerde entiteiten zijn momenteel niet beschikbaar:"
+            "description": "De status van deze geconfigureerde entiteiten zijn momenteel niet beschikbaar:",
+            "title": "Entiteit niet beschikbaar"
         },
         "entity_unexpected_device_class": {
             "title": "Onverwachte apparaatklasse"
