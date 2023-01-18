@@ -92,6 +92,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     hass.http.register_view(ConversationProcessView())
     websocket_api.async_register_command(hass, websocket_process)
+    websocket_api.async_register_command(hass, websocket_prepare)
     websocket_api.async_register_command(hass, websocket_get_agent_info)
     websocket_api.async_register_command(hass, websocket_set_onboarding)
 
@@ -125,19 +126,19 @@ async def websocket_process(
 
 @websocket_api.websocket_command(
     {
-        "type": "conversation/reload",
+        "type": "conversation/prepare",
         vol.Optional("language"): str,
     }
 )
 @websocket_api.async_response
-async def websocket_reload(
+async def websocket_prepare(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
     """Reload intents."""
     agent = await _get_agent(hass)
-    await agent.async_reload(msg.get("language"))
+    await agent.async_prepare(msg.get("language"))
     connection.send_result(msg["id"])
 
 

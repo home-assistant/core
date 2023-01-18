@@ -329,21 +329,32 @@ async def test_ws_api(hass, hass_ws_client, payload):
     }
 
 
-async def test_ws_reload(hass, hass_ws_client):
-    """Test the Websocket preload conversation API."""
+# pylint: disable=protected-access
+async def test_ws_prepare(hass, hass_ws_client):
+    """Test the Websocket prepare conversation API."""
     assert await async_setup_component(hass, "conversation", {})
+    agent = await conversation._get_agent(hass)
+    assert isinstance(agent, conversation.DefaultAgent)
+
+    # No intents should be loaded yet
+    assert not agent._lang_intents.get(hass.config.language)
+
     client = await hass_ws_client(hass)
 
     await client.send_json(
         {
             "id": 5,
-            "type": "conversation/reload",
+            "type": "conversation/prepare",
         }
     )
 
     msg = await client.receive_json()
 
+    assert msg["success"]
     assert msg["id"] == 5
+
+    # Intents should now be load
+    assert agent._lang_intents.get(hass.config.language)
 
 
 async def test_custom_sentences(hass, hass_client, hass_admin_user):
@@ -384,3 +395,26 @@ async def test_custom_sentences(hass, hass_client, hass_admin_user):
             },
             "conversation_id": None,
         }
+
+
+# pylint: disable=protected-access
+async def test_prepare_reload(hass):
+    """Test calling the reload service."""
+    language = hass.config.language
+    assert await async_setup_component(hass, "conversation", {})
+
+    # Load intents
+    agent = await conversation._get_agent(hass)
+    assert isinstance(agent, conversation.DefaultAgent)
+    await agent.async_prepare(language)
+
+    # Confirm intents are loaded
+    assert agent._lang_intents.get(language)
+
+    await hass.services.async_call(
+        "conversation", "reload", {conversation.ATTR_LANGUAGE: language}
+    )
+    await hass.async_block_till_done()
+
+    # Confirm intent cache is cleared
+    assert not agent._lang_intents.get(language)
