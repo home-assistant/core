@@ -1486,7 +1486,7 @@
           "integration_type": "hub",
           "config_flow": false,
           "iot_class": "local_polling",
-          "name": "eufy"
+          "name": "EufyHome"
         },
         "eufylife_ble": {
           "integration_type": "device",
@@ -3963,6 +3963,12 @@
       "name": "Osramlightify",
       "integration_type": "hub",
       "config_flow": false,
+      "iot_class": "local_polling"
+    },
+    "otbr": {
+      "name": "Thread",
+      "integration_type": "service",
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "otp": {

@@ -8,9 +8,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .axis_base import AxisEventBase
 from .const import DOMAIN as AXIS_DOMAIN
 from .device import AxisNetworkDevice
+from .entity import AxisEventEntity
 
 
 async def async_setup_entry(
@@ -33,7 +33,7 @@ async def async_setup_entry(
     )
 
 
-class AxisSwitch(AxisEventBase, SwitchEntity):
+class AxisSwitch(AxisEventEntity, SwitchEntity):
     """Representation of a Axis switch."""
 
     def __init__(self, event: Event, device: AxisNetworkDevice) -> None:
@@ -42,16 +42,18 @@ class AxisSwitch(AxisEventBase, SwitchEntity):
 
         if event.id and device.api.vapix.ports[event.id].name:
             self._attr_name = device.api.vapix.ports[event.id].name
+        self._attr_is_on = event.is_tripped
 
-    @property
-    def is_on(self) -> bool:
-        """Return true if event is active."""
-        return self.event.is_tripped
+    @callback
+    def async_event_callback(self, event: Event) -> None:
+        """Update light state."""
+        self._attr_is_on = event.is_tripped
+        self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
-        await self.device.api.vapix.ports[self.event.id].close()
+        await self.device.api.vapix.ports[self._event_id].close()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
-        await self.device.api.vapix.ports[self.event.id].open()
+        await self.device.api.vapix.ports[self._event_id].open()

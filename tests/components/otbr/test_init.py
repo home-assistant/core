@@ -8,9 +8,9 @@ from homeassistant.components import otbr
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from tests.test_util.aiohttp import AiohttpClientMocker
+from . import BASE_URL
 
-BASE_URL = "http://core-silabs-multiprotocol:8081"
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_remove_entry(

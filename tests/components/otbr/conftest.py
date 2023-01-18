@@ -1,4 +1,5 @@
-"""Test fixtures for the Home Assistant Sky Connect integration."""
+"""Test fixtures for the Home Assistant SkyConnect integration."""
+from unittest.mock import patch
 
 import pytest
 
@@ -19,4 +20,5 @@ async def thread_config_entry_fixture(hass):
         title="Thread",
     )
     config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    with patch("python_otbr_api.OTBR.get_active_dataset_tlvs"):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
