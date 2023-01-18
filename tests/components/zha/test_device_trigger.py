@@ -327,7 +327,10 @@ async def test_exception_no_triggers(hass, mock_devices, calls, caplog):
         },
     )
     await hass.async_block_till_done()
-    assert "Invalid trigger configuration" in caplog.text
+    assert (
+        "Unnamed automation failed to setup triggers and has been disabled: "
+        "device does not have trigger ('junk', 'junk')" in caplog.text
+    )
 
 
 async def test_exception_bad_trigger(hass, mock_devices, calls, caplog):
