@@ -117,12 +117,18 @@ async def async_scan_tag(
     if DOMAIN not in hass.config.components:
         raise HomeAssistantError("tag component has not been set up.")
 
-    hass.bus.async_fire(
-        EVENT_TAG_SCANNED, {TAG_ID: tag_id, DEVICE_ID: device_id}, context=context
-    )
     helper = hass.data[DOMAIN][TAGS]
+    name = None
     if tag_id in helper.data:
+        name = helper.data[tag_id].get(CONF_NAME)
         await helper.async_update_item(tag_id, {LAST_SCANNED: dt_util.utcnow()})
     else:
         await helper.async_create_item({TAG_ID: tag_id, LAST_SCANNED: dt_util.utcnow()})
+
+    hass.bus.async_fire(
+        EVENT_TAG_SCANNED,
+        {TAG_ID: tag_id, DEVICE_ID: device_id, CONF_NAME: name},
+        context=context,
+    )
+
     _LOGGER.debug("Tag: %s scanned by device: %s", tag_id, device_id)

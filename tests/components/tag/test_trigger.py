@@ -21,7 +21,7 @@ def tag_setup(hass, hass_storage):
             hass_storage[DOMAIN] = {
                 "key": DOMAIN,
                 "version": 1,
-                "data": {"items": [{"id": "test tag"}]},
+                "data": {"items": [{"id": "abc123", "name": "tag name"}]},
             }
         else:
             hass_storage[DOMAIN] = items
@@ -52,7 +52,8 @@ async def test_triggers(hass, tag_setup, calls):
                         "service": "test.automation",
                         "data_template": {
                             "message": "service called",
-                            "id": "{{ trigger.id}}",
+                            "id": "{{ trigger.id }}",
+                            "name": "{{ trigger.event.data.name }}",
                         },
                     },
                 }
@@ -68,6 +69,7 @@ async def test_triggers(hass, tag_setup, calls):
     assert len(calls) == 1
     assert calls[0].data["message"] == "service called"
     assert calls[0].data["id"] == 0
+    assert calls[0].data["name"] == "tag name"
 
     await hass.services.async_call(
         automation.DOMAIN,
