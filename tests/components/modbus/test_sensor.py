@@ -7,6 +7,8 @@ from homeassistant.components.modbus.const import (
     CONF_DATA_TYPE,
     CONF_INPUT_TYPE,
     CONF_LAZY_ERROR,
+    CONF_MAX_VALUE,
+    CONF_MIN_VALUE,
     CONF_PRECISION,
     CONF_SCALE,
     CONF_SLAVE_COUNT,
@@ -15,6 +17,7 @@ from homeassistant.components.modbus.const import (
     CONF_SWAP_NONE,
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
+    CONF_ZERO_CLAMP_VALUE,
     MODBUS_DOMAIN,
     DataType,
 )
@@ -531,6 +534,42 @@ async def test_config_wrong_struct_sensor(hass, error_message, mock_modbus, capl
             [0x0102, 0x0304],
             False,
             str(int(0x04030201)),
+        ),
+        (
+            {
+                CONF_DATA_TYPE: DataType.INT32,
+                CONF_MAX_VALUE: int(0x02010400),
+            },
+            [0x0201, 0x0403],
+            False,
+            str(int(0x02010400)),
+        ),
+        (
+            {
+                CONF_DATA_TYPE: DataType.INT32,
+                CONF_MIN_VALUE: int(0x02010404),
+            },
+            [0x0201, 0x0403],
+            False,
+            str(int(0x02010404)),
+        ),
+        (
+            {
+                CONF_DATA_TYPE: DataType.INT32,
+                CONF_ZERO_CLAMP_VALUE: int(0x00000001),
+            },
+            [0x0000, 0x0002],
+            False,
+            str(int(0x00000002)),
+        ),
+        (
+            {
+                CONF_DATA_TYPE: DataType.INT32,
+                CONF_ZERO_CLAMP_VALUE: int(0x00000002),
+            },
+            [0x0000, 0x0002],
+            False,
+            str(int(0)),
         ),
         (
             {
