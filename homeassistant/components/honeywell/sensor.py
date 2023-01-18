@@ -86,6 +86,7 @@ class HoneywellSensor(SensorEntity):
     """Representation of a Honeywell US Outdoor Temperature Sensor."""
 
     entity_description: HoneywellSensorEntityDescription
+    _attr_has_entity_name = True
 
     def __init__(self, device, description):
         """Initialize the outdoor temperature sensor."""
@@ -99,7 +100,6 @@ class HoneywellSensor(SensorEntity):
             name=device.name,
             manufacturer="Honeywell",
         )
-        self._attr_has_entity_name = True
 
     @property
     def native_value(self) -> StateType:

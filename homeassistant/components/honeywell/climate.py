@@ -94,6 +94,8 @@ async def async_setup_entry(
 class HoneywellUSThermostat(ClimateEntity):
     """Representation of a Honeywell US Thermostat."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, data, device, cool_away_temp, heat_away_temp):
         """Initialize the thermostat."""
         self._data = data
@@ -109,7 +111,6 @@ class HoneywellUSThermostat(ClimateEntity):
             name=device.name,
             manufacturer="Honeywell",
         )
-        self._attr_has_entity_name = True
 
         self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
         if device.temperature_unit == "C":
