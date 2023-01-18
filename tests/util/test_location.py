@@ -76,11 +76,16 @@ def test_get_miles():
 async def test_detect_location_info_whoami(aioclient_mock, session):
     """Test detect location info using services.home-assistant.io/whoami."""
     aioclient_mock.get(location_util.WHOAMI_URL, text=load_fixture("whoami.json"))
+    mock_elevation_url: str = (
+        f"{location_util.ELEVATION_API_URL}?locations=12.34567,12.34567"
+    )
+    aioclient_mock.get(mock_elevation_url, text=load_fixture("elevation.json"))
 
     with patch("homeassistant.util.location.HA_VERSION", "1.0"):
         info = await location_util.async_detect_location_info(session, _test_real=True)
 
-    assert str(aioclient_mock.mock_calls[-1][1]) == location_util.WHOAMI_URL
+    assert str(aioclient_mock.mock_calls[0][1]) == location_util.WHOAMI_URL
+    assert str(aioclient_mock.mock_calls[-1][1]) == mock_elevation_url
 
     assert info is not None
     assert info.ip == "1.2.3.4"
@@ -92,6 +97,7 @@ async def test_detect_location_info_whoami(aioclient_mock, session):
     assert info.time_zone == "Earth/Gotham"
     assert info.latitude == 12.34567
     assert info.longitude == 12.34567
+    assert info.elevation == 331
     assert info.use_metric
 
 
@@ -99,14 +105,16 @@ async def test_dev_url(aioclient_mock, session):
     """Test usage of dev URL."""
 
     aioclient_mock.get(location_util.WHOAMI_URL_DEV, text=load_fixture("whoami.json"))
-    aioclient_mock.get(
-        f"{location_util.ELEVATION_API_URL}?locations=12.34567,123.4567",
-        text=load_fixture("elevation.json"),
+    mock_elevation_url: str = (
+        f"{location_util.ELEVATION_API_URL}?locations=12.34567,12.34567"
     )
+    aioclient_mock.get(mock_elevation_url, text=load_fixture("elevation.json"))
+
     with patch("homeassistant.util.location.HA_VERSION", "1.0.dev0"):
         info = await location_util.async_detect_location_info(session, _test_real=True)
 
-    assert str(aioclient_mock.mock_calls[-1][1]) == location_util.WHOAMI_URL_DEV
+    assert str(aioclient_mock.mock_calls[0][1]) == location_util.WHOAMI_URL_DEV
+    assert str(aioclient_mock.mock_calls[-1][1]) == mock_elevation_url
 
     assert info.currency == "XXX"
 
