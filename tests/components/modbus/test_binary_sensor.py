@@ -19,12 +19,14 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
+    CONF_UNIQUE_ID,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.core import State
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_ENTITY_NAME, ReadResult, do_next_cycle
@@ -341,31 +343,31 @@ async def test_config_slave_binary_sensor(hass, mock_modbus):
     "config_addon,register_words,expected, slaves",
     [
         (
-            {CONF_SLAVE_COUNT: 1},
+            {CONF_SLAVE_COUNT: 1, CONF_UNIQUE_ID: "ground_floor_sensor"},
             [False] * 8,
             STATE_OFF,
             [STATE_OFF],
         ),
         (
-            {CONF_SLAVE_COUNT: 1},
+            {CONF_SLAVE_COUNT: 1, CONF_UNIQUE_ID: "ground_floor_sensor"},
             [True] + [False] * 7,
             STATE_ON,
             [STATE_OFF],
         ),
         (
-            {CONF_SLAVE_COUNT: 1},
+            {CONF_SLAVE_COUNT: 1, CONF_UNIQUE_ID: "ground_floor_sensor"},
             [False, True] + [False] * 6,
             STATE_OFF,
             [STATE_ON],
         ),
         (
-            {CONF_SLAVE_COUNT: 7},
+            {CONF_SLAVE_COUNT: 7, CONF_UNIQUE_ID: "ground_floor_sensor"},
             [True, False] * 4,
             STATE_ON,
             [STATE_OFF, STATE_ON] * 3 + [STATE_OFF],
         ),
         (
-            {CONF_SLAVE_COUNT: 31},
+            {CONF_SLAVE_COUNT: 31, CONF_UNIQUE_ID: "ground_floor_sensor"},
             [True, False] * 16,
             STATE_ON,
             [STATE_OFF, STATE_ON] * 15 + [STATE_OFF],
@@ -375,10 +377,14 @@ async def test_config_slave_binary_sensor(hass, mock_modbus):
 async def test_slave_binary_sensor(hass, expected, slaves, mock_do_cycle):
     """Run test for given config."""
     assert hass.states.get(ENTITY_ID).state == expected
+    entity_registry = er.async_get(hass)
 
-    for i in range(len(slaves)):
+    for i, slave in enumerate(slaves):
         entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}_{i+1}".replace(" ", "_")
-        assert hass.states.get(entity_id).state == slaves[i]
+        assert hass.states.get(entity_id).state == slave
+        unique_id = f"ground_floor_sensor_{i+1}"
+        entry = entity_registry.async_get(entity_id)
+        assert entry.unique_id == unique_id
 
 
 async def test_no_discovery_info_binary_sensor(hass, caplog):

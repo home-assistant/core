@@ -33,10 +33,12 @@ from homeassistant.const import (
     CONF_SENSORS,
     CONF_SLAVE,
     CONF_STRUCTURE,
+    CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.core import State
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_ENTITY_NAME, ReadResult, do_next_cycle
@@ -573,6 +575,7 @@ async def test_all_sensor(hass, mock_do_cycle, expected):
         (
             {
                 CONF_SLAVE_COUNT: 0,
+                CONF_UNIQUE_ID: "ground_floor_sensor",
             },
             [0x0102, 0x0304],
             False,
@@ -581,6 +584,7 @@ async def test_all_sensor(hass, mock_do_cycle, expected):
         (
             {
                 CONF_SLAVE_COUNT: 1,
+                CONF_UNIQUE_ID: "ground_floor_sensor",
             },
             [0x0102, 0x0304, 0x0403, 0x0201],
             False,
@@ -589,6 +593,7 @@ async def test_all_sensor(hass, mock_do_cycle, expected):
         (
             {
                 CONF_SLAVE_COUNT: 3,
+                CONF_UNIQUE_ID: "ground_floor_sensor",
             },
             [
                 0x0102,
@@ -611,6 +616,7 @@ async def test_all_sensor(hass, mock_do_cycle, expected):
         (
             {
                 CONF_SLAVE_COUNT: 1,
+                CONF_UNIQUE_ID: "ground_floor_sensor",
             },
             [0x0102, 0x0304, 0x0403, 0x0201],
             True,
@@ -619,6 +625,7 @@ async def test_all_sensor(hass, mock_do_cycle, expected):
         (
             {
                 CONF_SLAVE_COUNT: 1,
+                CONF_UNIQUE_ID: "ground_floor_sensor",
             },
             [],
             False,
@@ -629,10 +636,14 @@ async def test_all_sensor(hass, mock_do_cycle, expected):
 async def test_slave_sensor(hass, mock_do_cycle, expected):
     """Run test for sensor."""
     assert hass.states.get(ENTITY_ID).state == expected[0]
+    entity_registry = er.async_get(hass)
 
     for i in range(1, len(expected)):
         entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}_{i}".replace(" ", "_")
         assert hass.states.get(entity_id).state == expected[i]
+        unique_id = f"ground_floor_sensor_{i}"
+        entry = entity_registry.async_get(entity_id)
+        assert entry.unique_id == unique_id
 
 
 @pytest.mark.parametrize(
