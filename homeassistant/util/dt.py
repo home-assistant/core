@@ -279,7 +279,6 @@ def get_age(date: dt.datetime, is_future: bool = False, depth: int = 1) -> str:
 
     If is_future is set, and the date is in the past, 0 seconds is returned
     """
-
     def formatn(number: int, unit: str) -> str:
         """Add "unit" if it's plural."""
         if number == 1:
