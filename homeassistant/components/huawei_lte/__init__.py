@@ -35,6 +35,7 @@ from homeassistant.const import (
     CONF_RECIPIENT,
     CONF_URL,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
@@ -59,7 +60,6 @@ from .const import (
     ATTR_CONFIG_ENTRY_ID,
     CONF_MANUFACTURER,
     CONF_UNAUTHENTICATED_MODE,
-    CONF_UNVERIFIED_HTTPS,
     CONNECTION_TIMEOUT,
     DEFAULT_DEVICE_NAME,
     DEFAULT_MANUFACTURER,
@@ -333,7 +333,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         kwargs: dict[str, Any] = {
             "timeout": CONNECTION_TIMEOUT,
         }
-        if entry.data.get(CONF_UNVERIFIED_HTTPS):
+        if not entry.data.get(CONF_VERIFY_SSL):
             kwargs["requests_session"] = non_verifying_requests_session(url)
         if entry.options.get(CONF_UNAUTHENTICATED_MODE):
             _LOGGER.debug("Connecting in unauthenticated mode, reduced feature set")

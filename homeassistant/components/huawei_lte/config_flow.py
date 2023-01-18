@@ -29,6 +29,7 @@ from homeassistant.const import (
     CONF_RECIPIENT,
     CONF_URL,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
 )
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
@@ -37,7 +38,6 @@ from .const import (
     CONF_MANUFACTURER,
     CONF_TRACK_WIRED_CLIENTS,
     CONF_UNAUTHENTICATED_MODE,
-    CONF_UNVERIFIED_HTTPS,
     CONNECTION_TIMEOUT,
     DEFAULT_DEVICE_NAME,
     DEFAULT_NOTIFY_SERVICE_NAME,
@@ -82,9 +82,9 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         ),
                     ): str,
                     vol.Optional(
-                        CONF_UNVERIFIED_HTTPS,
+                        CONF_VERIFY_SSL,
                         default=user_input.get(
-                            CONF_UNVERIFIED_HTTPS,
+                            CONF_VERIFY_SSL,
                             False,
                         ),
                     ): bool,
@@ -127,10 +127,10 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         password = user_input.get(CONF_PASSWORD) or ""
 
         def _get_connection() -> Connection:
-            if user_input.get(CONF_UNVERIFIED_HTTPS):
-                requests_session = non_verifying_requests_session(user_input[CONF_URL])
-            else:
+            if user_input.get(CONF_VERIFY_SSL):
                 requests_session = None
+            else:
+                requests_session = non_verifying_requests_session(user_input[CONF_URL])
 
             return Connection(
                 url=user_input[CONF_URL],
@@ -156,10 +156,10 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "response_error"
         except SSLError:
             _LOGGER.warning("SSL error", exc_info=True)
-            if user_input.get(CONF_UNVERIFIED_HTTPS):
-                errors[CONF_URL] = "ssl_error_try_plain"
-            else:
+            if user_input.get(CONF_VERIFY_SSL):
                 errors[CONF_URL] = "ssl_error_try_unverified"
+            else:
+                errors[CONF_URL] = "ssl_error_try_plain"
         except Timeout:
             _LOGGER.warning("Connection timeout", exc_info=True)
             errors[CONF_URL] = "connection_timeout"

@@ -7,7 +7,6 @@ ATTR_CONFIG_ENTRY_ID = "config_entry_id"
 CONF_MANUFACTURER = "manufacturer"
 CONF_TRACK_WIRED_CLIENTS = "track_wired_clients"
 CONF_UNAUTHENTICATED_MODE = "unauthenticated_mode"
-CONF_UNVERIFIED_HTTPS = "unverified_https"
 
 DEFAULT_DEVICE_NAME = "LTE"
 DEFAULT_MANUFACTURER = "Huawei Technologies Co., Ltd."
