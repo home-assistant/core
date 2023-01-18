@@ -1,7 +1,7 @@
 """Config flow for Roth Touchline floor heating controller."""
 from __future__ import annotations
 
-import logging
+import re
 from typing import Any
 
 from pytouchline import PyTouchline
@@ -12,9 +12,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import _LOGGER, DOMAIN
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -70,12 +68,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
 
         errors = {}
-        if not cv.url(user_input[CONF_HOST]):
+        host = user_input[CONF_HOST]
+        # Remove HTTPS and HTTP from URL
+        pattern = "https?://"
+        host = re.sub(pattern, "", host)
+        host = "http://" + host
+        if not cv.url(host):
             errors["base"] = "invalid_input"
         else:
-            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
+            self._async_abort_entries_match({CONF_HOST: host})
             result = await self.hass.async_add_executor_job(
-                _try_connect_and_fetch_basic_info, user_input[CONF_HOST]
+                _try_connect_and_fetch_basic_info, host
             )
 
             if result["type"] != RESULT_SUCCESS:
@@ -89,7 +92,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(result["data"])
         self._abort_if_unique_id_configured()
 
-        return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
+        return self.async_create_entry(title=host, data=user_input)
 
     async def async_step_import(self, conf: dict[str, Any]) -> FlowResult:
         """Import a configuration from yaml configuration."""

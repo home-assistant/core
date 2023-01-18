@@ -1,9 +1,6 @@
 """Platform for Roth Touchline floor heating controller."""
 from __future__ import annotations
 
-import logging
-import re
-
 from pytouchline import PyTouchline
 
 from homeassistant.config_entries import ConfigEntry
@@ -11,20 +8,16 @@ from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import _LOGGER, DOMAIN
 
 PLATFORMS = [Platform.CLIMATE]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Roth Touchline from a config entry."""
+
     host = entry.data[CONF_HOST]
-    # Remove HTTPS and HTTP from URL
-    pattern = "https?://"
-    host = re.sub(pattern, "", host)
-    host = "http://" + host
+
     py_touchline = PyTouchline()
     number_of_devices = int(
         await hass.async_add_executor_job(

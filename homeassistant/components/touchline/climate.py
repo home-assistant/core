@@ -1,7 +1,6 @@
 """Platform for Roth Touchline floor heating controller."""
 from __future__ import annotations
 
-import logging
 from typing import Any, NamedTuple
 
 from pytouchline import PyTouchline
@@ -20,9 +19,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import _LOGGER, DOMAIN
 
 
 class PresetMode(NamedTuple):
@@ -100,6 +97,7 @@ async def async_setup_entry(
         "Number of devices found: %s",
         number_of_devices,
     )
+
     devices = []
     for device_id in range(0, number_of_devices):
         devices.append(Touchline(PyTouchline(device_id)))
@@ -113,7 +111,6 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Touchline devices."""
-
     host = config[CONF_HOST]
     py_touchline = PyTouchline()
     number_of_devices = int(py_touchline.get_number_of_devices(host))
@@ -136,55 +133,28 @@ class Touchline(ClimateEntity):
     def __init__(self, touchline_thermostat):
         """Initialize the Touchline device."""
         self.unit = touchline_thermostat
-        self._name = None
+        self._attr_name = None
         self._device_id = None
         self._controller_id = None
-        self._current_temperature = None
-        self._target_temperature = None
+        self._attr_unique_id = None
+        self._attr_current_temperature = None
+        self._attr_target_temperature = None
         self._current_operation_mode = None
-        self._preset_mode = None
+        self._attr_preset_mode = None
+        self._attr_preset_modes = list(PRESET_MODES)
 
     def update(self) -> None:
         """Update thermostat attributes."""
         self.unit.update()
-        self._name = self.unit.get_name()
+        self._attr_name = self.unit.get_name()
         self._device_id = self.unit.get_device_id()
         self._controller_id = self.unit.get_controller_id()
-        self._current_temperature = self.unit.get_current_temperature()
-        self._target_temperature = self.unit.get_target_temperature()
-        self._preset_mode = TOUCHLINE_HA_PRESETS.get(
+        self._attr_unique_id = self._controller_id + self._device_id
+        self._attr_current_temperature = self.unit.get_current_temperature()
+        self._attr_target_temperature = self.unit.get_target_temperature()
+        self._attr_preset_mode = TOUCHLINE_HA_PRESETS.get(
             (self.unit.get_operation_mode(), self.unit.get_week_program())
         )
-
-    @property
-    def name(self) -> str | None:
-        """Return the name of the climate device."""
-        return self._name
-
-    @property
-    def unique_id(self) -> None:
-        """Return a unique ID."""
-        return self._controller_id + self._device_id
-
-    @property
-    def current_temperature(self) -> float | None:
-        """Return the current temperature."""
-        return self._current_temperature
-
-    @property
-    def target_temperature(self) -> float | None:
-        """Return the temperature we try to reach."""
-        return self._target_temperature
-
-    @property
-    def preset_mode(self) -> str | None:
-        """Return the current preset mode."""
-        return self._preset_mode
-
-    @property
-    def preset_modes(self) -> list[str] | None:
-        """Return available preset modes."""
-        return list(PRESET_MODES)
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
@@ -199,5 +169,5 @@ class Touchline(ClimateEntity):
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if kwargs.get(ATTR_TEMPERATURE) is not None:
-            self._target_temperature = kwargs.get(ATTR_TEMPERATURE)
-        self.unit.set_target_temperature(self._target_temperature)
+            self._attr_target_temperature = kwargs.get(ATTR_TEMPERATURE)
+        self.unit.set_target_temperature(self._attr_target_temperature)
