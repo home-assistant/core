@@ -400,11 +400,11 @@ class Filter:
 
     def __init__(
         self,
-        name,
-        window_size: int = 1,
-        precision: int | None = None,
-        entity: str | None = None,
-    ):
+        name: str,
+        window_size: int | timedelta,
+        precision: int,
+        entity: str,
+    ) -> None:
         """Initialize common attributes.
 
         :param window_size: size of the sliding window that holds previous values
@@ -470,17 +470,17 @@ class RangeFilter(Filter, SensorEntity):
 
     def __init__(
         self,
-        entity,
-        precision: int | None = DEFAULT_PRECISION,
-        lower_bound: float | None = None,
-        upper_bound: float | None = None,
-    ):
+        entity: str,
+        precision: int,
+        lower_bound: float,
+        upper_bound: float,
+    ) -> None:
         """Initialize Filter.
 
         :param upper_bound: band upper bound
         :param lower_bound: band lower bound
         """
-        super().__init__(FILTER_NAME_RANGE, precision=precision, entity=entity)
+        super().__init__(FILTER_NAME_RANGE, 1, precision, entity)
         self._lower_bound = lower_bound
         self._upper_bound = upper_bound
         self._stats_internal: Counter = Counter()
@@ -522,7 +522,9 @@ class OutlierFilter(Filter, SensorEntity):
     Determines if new state is in a band around the median.
     """
 
-    def __init__(self, window_size, precision, entity, radius: float):
+    def __init__(
+        self, window_size: int, precision: int, entity: str, radius: float
+    ) -> None:
         """Initialize Filter.
 
         :param radius: band radius
@@ -557,7 +559,9 @@ class OutlierFilter(Filter, SensorEntity):
 class LowPassFilter(Filter, SensorEntity):
     """BASIC Low Pass Filter."""
 
-    def __init__(self, window_size, precision, entity, time_constant: int):
+    def __init__(
+        self, window_size: int, precision: int, entity: str, time_constant: int
+    ) -> None:
         """Initialize Filter."""
         super().__init__(FILTER_NAME_LOWPASS, window_size, precision, entity)
         self._time_constant = time_constant
@@ -585,8 +589,12 @@ class TimeSMAFilter(Filter, SensorEntity):
     """
 
     def __init__(
-        self, window_size, precision, entity, type
-    ):  # pylint: disable=redefined-builtin
+        self,
+        window_size: timedelta,
+        precision: int,
+        entity: str,
+        type: str,  # pylint: disable=redefined-builtin
+    ) -> None:
         """Initialize Filter.
 
         :param type: type of algorithm used to connect discrete values
@@ -594,7 +602,7 @@ class TimeSMAFilter(Filter, SensorEntity):
         super().__init__(FILTER_NAME_TIME_SMA, window_size, precision, entity)
         self._time_window = window_size
         self.last_leak = None
-        self.queue = deque()
+        self.queue = deque[FilterState]()
 
     def _leak(self, left_boundary):
         """Remove timeouted elements."""
@@ -630,7 +638,7 @@ class ThrottleFilter(Filter, SensorEntity):
     One sample per window.
     """
 
-    def __init__(self, window_size, precision, entity):
+    def __init__(self, window_size: int, precision: int, entity: str) -> None:
         """Initialize Filter."""
         super().__init__(FILTER_NAME_THROTTLE, window_size, precision, entity)
         self._only_numbers = False
@@ -653,7 +661,7 @@ class TimeThrottleFilter(Filter, SensorEntity):
     One sample per time period.
     """
 
-    def __init__(self, window_size, precision, entity):
+    def __init__(self, window_size: timedelta, precision: int, entity: str) -> None:
         """Initialize Filter."""
         super().__init__(FILTER_NAME_TIME_THROTTLE, window_size, precision, entity)
         self._time_window = window_size
