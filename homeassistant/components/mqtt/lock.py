@@ -44,7 +44,6 @@ CONF_STATE_LOCKING = "state_locking"
 CONF_STATE_UNLOCKED = "state_unlocked"
 CONF_STATE_UNLOCKING = "state_unlocking"
 CONF_STATE_JAMMED = "state_jammed"
-CONF_STATE_UNJAMMED = "state_unjammed"
 
 DEFAULT_NAME = "MQTT Lock"
 DEFAULT_PAYLOAD_LOCK = "LOCK"
@@ -72,7 +71,6 @@ PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
         vol.Optional(CONF_STATE_JAMMED, default=DEFAULT_STATE_JAMMED): cv.string,
         vol.Optional(CONF_STATE_LOCKED, default=DEFAULT_STATE_LOCKED): cv.string,
         vol.Optional(CONF_STATE_LOCKING, default=DEFAULT_STATE_LOCKING): cv.string,
-        vol.Optional(CONF_STATE_UNJAMMED): cv.string,
         vol.Optional(CONF_STATE_UNLOCKED, default=DEFAULT_STATE_UNLOCKED): cv.string,
         vol.Optional(CONF_STATE_UNLOCKING, default=DEFAULT_STATE_UNLOCKING): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
@@ -87,12 +85,8 @@ PLATFORM_SCHEMA = vol.All(
 
 DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA)
 
-JAMMED_STATE_CONFIG_KEYS = [
-    CONF_STATE_JAMMED,
-    CONF_STATE_UNJAMMED,
-]
-
 STATE_CONFIG_KEYS = [
+    CONF_STATE_JAMMED,
     CONF_STATE_LOCKED,
     CONF_STATE_LOCKING,
     CONF_STATE_UNLOCKED,
@@ -130,7 +124,6 @@ class MqttLock(MqttEntity, LockEntity):
     _attributes_extra_blocked = MQTT_LOCK_ATTRIBUTES_BLOCKED
 
     _optimistic: bool
-    _valid_jammed_states: list[str]
     _valid_states: list[str]
     _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
 
@@ -163,9 +156,6 @@ class MqttLock(MqttEntity, LockEntity):
         if CONF_PAYLOAD_OPEN in config:
             self._attr_supported_features |= LockEntityFeature.OPEN
 
-        self._valid_jammed_states = [
-            config[state] for state in JAMMED_STATE_CONFIG_KEYS if state in config
-        ]
         self._valid_states = [config[state] for state in STATE_CONFIG_KEYS]
 
     def _prepare_subscribe_topics(self) -> None:
@@ -184,9 +174,6 @@ class MqttLock(MqttEntity, LockEntity):
                 self._attr_is_locked = payload == self._config[CONF_STATE_LOCKED]
                 self._attr_is_locking = payload == self._config[CONF_STATE_LOCKING]
                 self._attr_is_unlocking = payload == self._config[CONF_STATE_UNLOCKING]
-                if CONF_STATE_UNJAMMED not in self._config:
-                    self._attr_is_jammed = False
-            if payload in self._valid_jammed_states:
                 self._attr_is_jammed = payload == self._config[CONF_STATE_JAMMED]
 
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
