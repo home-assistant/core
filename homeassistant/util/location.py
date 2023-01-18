@@ -171,7 +171,7 @@ async def _get_elevation(session: aiohttp.ClientSession, lat: float, lon: float)
         data = await resp.json()
         altitude = data["results"][0]["elevation"]
         return int(altitude)
-    except (aiohttp.ClientError, ValueError):
+    except (aiohttp.ClientError, ValueError, KeyError):
         return 0
 
 

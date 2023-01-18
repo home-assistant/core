@@ -125,7 +125,22 @@ async def test_whoami_query_raises(raising_session):
     assert info is None
 
 
+async def test_location_query(aioclient_mock, session):
+    """Test a valid location inquiry."""
+
+
+async def test_location_query_bad_data(aioclient_mock, session):
+    """Test bed data return from location query."""
+    mock_elevation_url: str = (
+        f"{location_util.ELEVATION_API_URL}?locations=12.34567,12.34567"
+    )
+    aioclient_mock.get(mock_elevation_url, text=load_fixture("whoami.json"))
+    data = await location_util._get_elevation(session, 12.34567, 12.34567)
+    assert data == 0
+    assert str(aioclient_mock.mock_calls[-1][1]) == mock_elevation_url
+
+
 async def test_location_query_raises(raising_session):
     """Test a failure on the location query."""
-    info = await location_util._get_elevation(raising_session)
+    info = await location_util._get_elevation(raising_session, 12.34567, 12.34567)
     assert info == 0
