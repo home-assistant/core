@@ -258,7 +258,7 @@ aioqsw==0.3.1
 aiorecollect==1.0.8
 
 # homeassistant.components.ridwell
-aioridwell==2022.11.0
+aioridwell==2023.01.0
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.0.2
@@ -822,7 +822,7 @@ googlemaps==2.5.1
 goslide-api==0.5.1
 
 # homeassistant.components.govee_ble
-govee-ble==0.21.0
+govee-ble==0.21.1
 
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.6.2
