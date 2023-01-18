@@ -56,14 +56,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         await client.login()
         await client.discover()
 
-    except AIOSomecomfort.AuthError as ex:
-        raise ConfigEntryAuthFailed(
-            "Failed to initialize the Honeywell client: Check your password"
-        ) from ex
+    except AIOSomecomfort.device.AuthError as ex:
+        raise ConfigEntryAuthFailed("Incorrect Password") from ex
 
     except (
-        AIOSomecomfort.ConnectionError,
-        AIOSomecomfort.ConnectionTimeout,
+        AIOSomecomfort.device.ConnectionError,
+        AIOSomecomfort.device.ConnectionTimeout,
         asyncio.TimeoutError,
     ) as ex:
         raise ConfigEntryNotReady(

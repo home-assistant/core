@@ -39,7 +39,7 @@ async def test_show_authenticate_form(hass: HomeAssistant) -> None:
 
 async def test_connection_error(hass: HomeAssistant, client: MagicMock) -> None:
     """Test that an error message is shown on connection fail."""
-    client.login.side_effect = AIOSomecomfort.ConnectionError
+    client.login.side_effect = AIOSomecomfort.device.ConnectionError
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=FAKE_CONFIG
     )
@@ -48,7 +48,7 @@ async def test_connection_error(hass: HomeAssistant, client: MagicMock) -> None:
 
 async def test_auth_error(hass: HomeAssistant, client: MagicMock) -> None:
     """Test that an error message is shown on login fail."""
-    client.login.side_effect = AIOSomecomfort.AuthError
+    client.login.side_effect = AIOSomecomfort.device.AuthError
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=FAKE_CONFIG
     )
@@ -175,7 +175,7 @@ async def test_reauth_flow_auth_error(hass: HomeAssistant, client: MagicMock) ->
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
     client.login.return_value = False
-    client.login.side_effect = AIOSomecomfort.AuthError
+    client.login.side_effect = AIOSomecomfort.device.AuthError
     with patch(
         "homeassistant.components.honeywell.config_flow.AIOSomecomfort.AIOSomeComfort",
         return_value=client,
@@ -196,8 +196,8 @@ async def test_reauth_flow_auth_error(hass: HomeAssistant, client: MagicMock) ->
 @pytest.mark.parametrize(
     "error",
     [
-        AIOSomecomfort.ConnectionError,
-        AIOSomecomfort.ConnectionTimeout,
+        AIOSomecomfort.device.ConnectionError,
+        AIOSomecomfort.device.ConnectionTimeout,
         asyncio.TimeoutError,
     ],
 )

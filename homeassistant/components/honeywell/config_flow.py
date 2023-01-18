@@ -56,12 +56,12 @@ class HoneywellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     username=data[CONF_USERNAME], password=data[CONF_PASSWORD]
                 )
 
-            except AIOSomecomfort.AuthError:
+            except AIOSomecomfort.device.AuthError:
                 errors["base"] = "invalid_auth"
 
             except (
-                AIOSomecomfort.ConnectionError,
-                AIOSomecomfort.ConnectionTimeout,
+                AIOSomecomfort.device.ConnectionError,
+                AIOSomecomfort.device.ConnectionTimeout,
                 asyncio.TimeoutError,
             ):
                 errors["base"] = "cannot_connect"
@@ -91,11 +91,11 @@ class HoneywellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 valid = await self.is_valid(**user_input)
-            except AIOSomecomfort.AuthError:
+            except AIOSomecomfort.device.AuthError:
                 errors["base"] = "invalid_auth"
             except (
-                AIOSomecomfort.ConnectionError,
-                AIOSomecomfort.ConnectionTimeout,
+                AIOSomecomfort.device.ConnectionError,
+                AIOSomecomfort.device.ConnectionTimeout,
                 asyncio.TimeoutError,
             ):
                 errors["base"] = "cannot_connect"
