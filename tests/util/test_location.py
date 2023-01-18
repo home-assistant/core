@@ -123,3 +123,9 @@ async def test_whoami_query_raises(raising_session):
     """Test whoami query when the request to API fails."""
     info = await location_util._get_whoami(raising_session)
     assert info is None
+
+
+async def test_location_query_raises(raising_session):
+    """Test a failure on the location query."""
+    info = await location_util._get_elevation(raising_session)
+    assert info == 0
