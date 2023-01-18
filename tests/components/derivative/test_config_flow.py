@@ -88,7 +88,7 @@ async def test_options(hass: HomeAssistant, platform) -> None:
             "round": 1.0,
             "source": "sensor.input",
             "time_window": {"seconds": 0.0},
-            "unit_prefix": "k",
+            "unit_prefix": "kilo",
             "unit_time": "min",
         },
         title="My derivative",
@@ -103,7 +103,7 @@ async def test_options(hass: HomeAssistant, platform) -> None:
     schema = result["data_schema"].schema
     assert get_suggested(schema, "round") == 1.0
     assert get_suggested(schema, "time_window") == {"seconds": 0.0}
-    assert get_suggested(schema, "unit_prefix") == "k"
+    assert get_suggested(schema, "unit_prefix") == "kilo"
     assert get_suggested(schema, "unit_time") == "min"
 
     result = await hass.config_entries.options.async_configure(
@@ -147,3 +147,29 @@ async def test_options(hass: HomeAssistant, platform) -> None:
     await hass.async_block_till_done()
     state = hass.states.get(f"{platform}.my_derivative")
     assert state.attributes["unit_of_measurement"] == "cat/h"
+
+
+@pytest.mark.parametrize("platform", ("sensor",))
+async def test_migrating_legacy_options(hass: HomeAssistant, platform) -> None:
+    """Test reconfiguring."""
+    # Setup the config entry
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "name": "My derivative",
+            "round": 1.0,
+            "source": "sensor.input",
+            "time_window": {"seconds": 0.0},
+            "unit_prefix": "k",
+            "unit_time": "min",
+        },
+        title="My derivative",
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # assert the config entry was updated with the key for unit_prefix
+    entry = hass.config_entries.async_get_entry(config_entry.entry_id)
+    assert entry.options["unit_prefix"] == "kilo"

@@ -31,6 +31,7 @@ from .const import (
     CONF_UNIT,
     CONF_UNIT_PREFIX,
     CONF_UNIT_TIME,
+    UNIT_KEYS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -74,6 +75,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+KEYS_UNIT = {unit: key for key, unit in UNIT_KEYS.items()}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -86,10 +89,19 @@ async def async_setup_entry(
     source_entity_id = er.async_validate_entity_id(
         registry, config_entry.options[CONF_SOURCE]
     )
-
-    unit_prefix = config_entry.options[CONF_UNIT_PREFIX]
-    if unit_prefix == "none":
-        unit_prefix = None
+    unit_prefix: str | None = None
+    unit_prefix_key: str = config_entry.options[CONF_UNIT_PREFIX]
+    if unit_prefix_key != "none" and unit_prefix_key not in KEYS_UNIT:
+        # Legacy value stored as unit, not as key
+        # update config entry with key instead of unit
+        options = config_entry.options.copy()
+        unit_prefix_key = UNIT_KEYS[unit_prefix_key]
+        options[CONF_UNIT_PREFIX] = unit_prefix_key
+        hass.config_entries.async_update_entry(
+            config_entry,
+            options=options,
+        )
+    unit_prefix = KEYS_UNIT.get(unit_prefix_key)
 
     derivative_sensor = DerivativeSensor(
         name=config_entry.title,

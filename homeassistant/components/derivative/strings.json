@@ -39,5 +39,28 @@
         }
       }
     }
+  },
+  "selector": {
+    "unit_prefix": {
+      "options": {
+        "none": "none",
+        "nano": "n (nano)",
+        "micro": "µ (micro)",
+        "milli": "m (milli)",
+        "kilo": "k (kilo)",
+        "mega": "M (mega)",
+        "giga": "G (giga)",
+        "tera": "T (tera)",
+        "peta": "P (peta)"
+      }
+    },
+    "time_unit": {
+      "options": {
+        "s": "Seconds",
+        "min": "Minutes",
+        "h": "Hours",
+        "d": "Days"
+      }
+    }
   }
 }
