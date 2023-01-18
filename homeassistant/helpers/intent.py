@@ -351,8 +351,6 @@ class ServiceIntentHandler(IntentHandler):
     ) -> IntentResponse:
         """Complete action on matched entity states."""
         assert states
-
-        hass = intent_obj.hass
         success_results: list[IntentResponseTarget] = []
         response = intent_obj.create_response()
 
@@ -368,15 +366,7 @@ class ServiceIntentHandler(IntentHandler):
 
         service_coros = []
         for state in states:
-            service_coros.append(
-                hass.services.async_call(
-                    self.domain,
-                    self.service,
-                    {ATTR_ENTITY_ID: state.entity_id},
-                    context=intent_obj.context,
-                )
-            )
-
+            service_coros.append(self.async_call_service(intent_obj, state))
             success_results.append(
                 IntentResponseTarget(
                     type=IntentResponseTargetType.ENTITY,
@@ -394,6 +384,16 @@ class ServiceIntentHandler(IntentHandler):
         )
 
         return response
+
+    async def async_call_service(self, intent_obj: Intent, state: State) -> None:
+        """Call service on entity."""
+        hass = intent_obj.hass
+        await hass.services.async_call(
+            self.domain,
+            self.service,
+            {ATTR_ENTITY_ID: state.entity_id},
+            context=intent_obj.context,
+        )
 
 
 class IntentCategory(Enum):
