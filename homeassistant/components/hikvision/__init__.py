@@ -105,7 +105,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Melissa from a config entry."""
+    """Set up Hikvision from a config entry."""
     protocol = "https" if entry.data.get(CONF_SSL) else "http"
     host = entry.data.get(CONF_HOST)
     url = f"{protocol}://{host}"
