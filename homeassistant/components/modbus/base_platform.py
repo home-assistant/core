@@ -188,7 +188,7 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
             return self._min_value
         if self._max_value is not None and val > self._max_value:
             return self._max_value
-        if self._zero_clamp_value is not None and abs(val) < self._zero_clamp_value:
+        if self._zero_clamp_value is not None and abs(val) <= self._zero_clamp_value:
             return 0
         return val
 
