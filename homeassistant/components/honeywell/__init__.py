@@ -57,7 +57,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         await client.discover()
 
     except AIOSomecomfort.AuthError as ex:
-        # change to reauth flow in next PR that adds reauth flow.
         raise ConfigEntryNotReady(
             "Failed to initialize the Honeywell client: "
             "Check your configuration (username, password), "
