@@ -480,7 +480,7 @@ class RangeFilter(Filter, SensorEntity):
         :param upper_bound: band upper bound
         :param lower_bound: band lower bound
         """
-        super().__init__(FILTER_NAME_RANGE, 1, precision, entity)
+        super().__init__(FILTER_NAME_RANGE, DEFAULT_WINDOW_SIZE, precision, entity)
         self._lower_bound = lower_bound
         self._upper_bound = upper_bound
         self._stats_internal: Counter = Counter()
