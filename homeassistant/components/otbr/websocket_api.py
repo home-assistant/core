@@ -33,7 +33,7 @@ async def websocket_info(
 ) -> None:
     """Get OTBR info."""
     if DOMAIN not in hass.data:
-        connection.send_error(msg["id"], "error", "No OTBR API loaded")
+        connection.send_error(msg["id"], "not_loaded", "No OTBR API loaded")
         return
 
     data: OTBRData = hass.data[DOMAIN]

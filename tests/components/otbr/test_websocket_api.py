@@ -1,7 +1,11 @@
 """Test OTBR Websocket API."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.setup import async_setup_component
 
 from . import BASE_URL
 
@@ -14,13 +18,13 @@ async def websocket_client(hass, hass_ws_client):
     return await hass_ws_client(hass)
 
 
-async def test_get_active_dataset_tlvs(
+async def test_get_info(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     thread_config_entry,
     websocket_client,
 ):
-    """Test async_get_active_dataset_tlvs."""
+    """Test async_get_info."""
 
     mock_response = (
         "0E080000000000010000000300001035060004001FFFE00208F642646DA209B1C00708FDF57B5A"
@@ -44,3 +48,49 @@ async def test_get_active_dataset_tlvs(
         "url": BASE_URL,
         "active_dataset_tlvs": mock_response.lower(),
     }
+
+
+async def test_get_info_no_entry(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    websocket_client,
+):
+    """Test async_get_info."""
+    await async_setup_component(hass, "otbr", {})
+    await websocket_client.send_json(
+        {
+            "id": 5,
+            "type": "otbr/info",
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert not msg["success"]
+    assert msg["error"]["code"] == "not_loaded"
+
+
+async def test_get_info_fetch_fails(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    thread_config_entry,
+    websocket_client,
+):
+    """Test async_get_info."""
+    await async_setup_component(hass, "otbr", {})
+
+    with patch(
+        "homeassistant.components.otbr.OTBRData.get_active_dataset_tlvs",
+        side_effect=HomeAssistantError,
+    ):
+        await websocket_client.send_json(
+            {
+                "id": 5,
+                "type": "otbr/info",
+            }
+        )
+        msg = await websocket_client.receive_json()
+
+    assert msg["id"] == 5
+    assert not msg["success"]
+    assert msg["error"]["code"] == "get_dataset_failed"
