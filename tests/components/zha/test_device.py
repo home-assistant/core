@@ -183,7 +183,6 @@ async def test_check_available_unsuccessful(
 ):
     """Check device availability all tries fail."""
 
-    # pylint: disable-next=protected-access
     zha_device = await zha_device_restored(device_with_basic_channel)
     await async_enable_traffic(hass, [zha_device])
     basic_ch = device_with_basic_channel.endpoints[3].basic
@@ -226,7 +225,6 @@ async def test_check_available_no_basic_channel(
 ):
     """Check device availability for a device without basic cluster."""
 
-    # pylint: disable-next=protected-access
     zha_device = await zha_device_restored(device_without_basic_channel)
     await async_enable_traffic(hass, [zha_device])
 
