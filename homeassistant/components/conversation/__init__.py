@@ -84,17 +84,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def handle_prepare(service: core.ServiceCall) -> None:
         """Preload intents."""
-        language = service.data.get(ATTR_LANGUAGE, hass.config.language)
-        _LOGGER.debug("Preloading intents for language: %s", language)
         agent = await _get_agent(hass)
-        await agent.async_preload(language)
+        await agent.async_preload(language=service.data.get(ATTR_LANGUAGE))
 
     async def handle_reload(service: core.ServiceCall) -> None:
         """Reload intents."""
-        language = service.data.get(ATTR_LANGUAGE, hass.config.language)
-        _LOGGER.debug("Reloading intents for language: %s", language)
         agent = await _get_agent(hass)
-        await agent.async_reload(language)
+        await agent.async_reload(language=service.data.get(ATTR_LANGUAGE))
 
     hass.services.async_register(
         DOMAIN, SERVICE_PROCESS, handle_process, schema=SERVICE_PROCESS_SCHEMA
@@ -136,6 +132,42 @@ async def websocket_process(
         msg.get("language"),
     )
     connection.send_result(msg["id"], result.as_dict())
+
+
+@websocket_api.websocket_command(
+    {
+        "type": "conversation/preload",
+        vol.Optional("language"): str,
+    }
+)
+@websocket_api.async_response
+async def websocket_preload(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Preload intents."""
+    agent = await _get_agent(hass)
+    await agent.async_preload(msg.get("language"))
+    connection.send_result(msg["id"])
+
+
+@websocket_api.websocket_command(
+    {
+        "type": "conversation/reload",
+        vol.Optional("language"): str,
+    }
+)
+@websocket_api.async_response
+async def websocket_reload(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Preload intents."""
+    agent = await _get_agent(hass)
+    await agent.async_reload(msg.get("language"))
+    connection.send_result(msg["id"])
 
 
 @websocket_api.websocket_command({"type": "conversation/agent/info"})
