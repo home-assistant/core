@@ -496,7 +496,7 @@ async def test_reauth_fixed_via_dashboard(
         }
     )
 
-    await dashboard.async_set_dashboard_info(hass, "mock-slug", "mock-host", 6052)
+    await dashboard.async_get_dashboard(hass).async_refresh()
 
     with patch(
         "homeassistant.components.esphome.dashboard.ESPHomeDashboardAPI.get_encryption_key",
@@ -701,7 +701,7 @@ async def test_zeroconf_encryption_key_via_dashboard(
         }
     )
 
-    await dashboard.async_set_dashboard_info(hass, "mock-slug", "mock-host", 6052)
+    await dashboard.async_get_dashboard(hass).async_refresh()
 
     mock_client.device_info.side_effect = [
         RequiresEncryptionAPIError,
@@ -756,7 +756,7 @@ async def test_zeroconf_no_encryption_key_via_dashboard(
     assert flow["type"] == FlowResultType.FORM
     assert flow["step_id"] == "discovery_confirm"
 
-    await dashboard.async_set_dashboard_info(hass, "mock-slug", "mock-host", 6052)
+    await dashboard.async_get_dashboard(hass).async_refresh()
 
     mock_client.device_info.side_effect = RequiresEncryptionAPIError
 
