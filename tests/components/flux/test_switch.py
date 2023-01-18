@@ -107,6 +107,7 @@ async def test_valid_config_with_info(hass):
                 "start_time": "7:22",
                 "start_colortemp": "1000",
                 "sunset_colortemp": "2000",
+                "sunset_time": "19:51",
                 "stop_colortemp": "4000",
             }
         },
@@ -351,6 +352,69 @@ async def test_flux_after_sunrise_before_sunset(hass, enable_custom_integrations
     call = turn_on_calls[-1]
     assert call.data[light.ATTR_BRIGHTNESS] == 173
     assert call.data[light.ATTR_XY_COLOR] == [0.439, 0.37]
+
+
+# pylint: disable=invalid-name
+async def test_flux_after_sunrise_before_custom_sunset(
+    hass, enable_custom_integrations
+):
+    """Test the flux switch after sunrise and before a configured sunset."""
+    platform = getattr(hass.components, "test.light")
+    platform.init()
+    assert await async_setup_component(
+        hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
+    )
+    await hass.async_block_till_done()
+
+    ent1 = platform.ENTITIES[0]
+
+    # Verify initial state of light
+    state = hass.states.get(ent1.entity_id)
+    assert state.state == STATE_ON
+    assert state.attributes.get("xy_color") is None
+    assert state.attributes.get("brightness") is None
+
+    # Choose a test time after the ordinary sunset but before the custom sunset
+    test_time = dt_util.utcnow().replace(hour=18, minute=30, second=0)
+    sunset_time = test_time.replace(hour=17, minute=0, second=0)
+    sunrise_time = test_time.replace(hour=5, minute=0, second=0)
+
+    def event_date(hass, event, now=None):
+        if event == SUN_EVENT_SUNRISE:
+            return sunrise_time
+        return sunset_time
+
+    with freeze_time(test_time), patch(
+        "homeassistant.components.flux.switch.get_astral_event_date",
+        side_effect=event_date,
+    ):
+        assert await async_setup_component(
+            hass,
+            switch.DOMAIN,
+            {
+                switch.DOMAIN: {
+                    "platform": "flux",
+                    "name": "flux",
+                    "lights": [ent1.entity_id],
+                    "sunset_time": "21:00",
+                    "start_colortemp": 4000,
+                    "sunset_colortemp": 4000,
+                }
+            },
+        )
+        await hass.async_block_till_done()
+        turn_on_calls = async_mock_service(hass, light.DOMAIN, SERVICE_TURN_ON)
+        await hass.services.async_call(
+            switch.DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.flux"},
+            blocking=True,
+        )
+        async_fire_time_changed(hass, test_time)
+        await hass.async_block_till_done()
+    call = turn_on_calls[-1]
+    assert call.data[light.ATTR_BRIGHTNESS] == 182
+    assert call.data[light.ATTR_XY_COLOR] == [0.42, 0.365]
 
 
 # pylint: disable=invalid-name
