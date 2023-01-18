@@ -2283,7 +2283,7 @@ class MediaStateTrait(_Trait):
         STATE_OFF: "INACTIVE",
         STATE_IDLE: "STANDBY",
         STATE_PLAYING: "ACTIVE",
-        STATE_ON: "STANDBY",
+        STATE_ON: "ACTIVE",
         STATE_PAUSED: "STANDBY",
         STATE_STANDBY: "STANDBY",
         STATE_UNAVAILABLE: "INACTIVE",
@@ -2308,14 +2308,20 @@ class MediaStateTrait(_Trait):
 
     def sync_attributes(self):
         """Return attributes for a sync request."""
-        return {"supportActivityState": True, "supportPlaybackState": True}
+        assumed_state = self.state.attributes.get(ATTR_ASSUMED_STATE, False)
+        return {"supportActivityState": True, "supportPlaybackState": not assumed_state}
 
     def query_attributes(self):
         """Return the attributes of this trait for this entity."""
-        return {
+        assumed_state = self.state.attributes.get(ATTR_ASSUMED_STATE, False)
+        response = {
             "activityState": self.activity_lookup.get(self.state.state, "INACTIVE"),
-            "playbackState": self.playback_lookup.get(self.state.state, "STOPPED"),
         }
+        if not assumed_state:
+            response["playbackState"] = self.playback_lookup.get(
+                self.state.state, "STOPPED"
+            )
+        return response
 
 
 @register_trait

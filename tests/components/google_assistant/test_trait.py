@@ -3130,6 +3130,49 @@ async def test_media_state(hass, state):
     }
 
 
+@pytest.mark.parametrize(
+    "state",
+    (
+        STATE_OFF,
+        STATE_IDLE,
+        STATE_PLAYING,
+        STATE_ON,
+        STATE_PAUSED,
+        STATE_STANDBY,
+        STATE_UNAVAILABLE,
+        STATE_UNKNOWN,
+    ),
+)
+async def test_media_state_assumed(hass, state):
+    """Test the MediaStateTrait."""
+    assert helpers.get_google_type(media_player.DOMAIN, None) is not None
+
+    assert trait.TransportControlTrait.supported(
+        media_player.DOMAIN, media_player.SUPPORT_PLAY, None, None
+    )
+
+    trt = trait.MediaStateTrait(
+        hass,
+        State(
+            "media_player.bla",
+            state,
+            {
+                ATTR_SUPPORTED_FEATURES: media_player.SUPPORT_PLAY,
+                ATTR_ASSUMED_STATE: True,
+            },
+        ),
+        BASIC_CONFIG,
+    )
+
+    assert trt.sync_attributes() == {
+        "supportActivityState": True,
+        "supportPlaybackState": False,
+    }
+    assert trt.query_attributes() == {
+        "activityState": trt.activity_lookup.get(state),
+    }
+
+
 async def test_channel(hass):
     """Test Channel trait support."""
     assert helpers.get_google_type(media_player.DOMAIN, None) is not None
