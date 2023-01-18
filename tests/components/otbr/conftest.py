@@ -1,4 +1,4 @@
-"""Test fixtures for the Home Assistant Sky Connect integration."""
+"""Test fixtures for the Home Assistant SkyConnect integration."""
 
 import pytest
 

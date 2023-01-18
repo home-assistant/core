@@ -7,7 +7,7 @@
 AEMET-OpenData==0.2.1
 
 # homeassistant.components.aladdin_connect
-AIOAladdinConnect==0.1.52
+AIOAladdinConnect==0.1.53
 
 # homeassistant.components.adax
 Adax-local==0.1.5
@@ -1107,7 +1107,7 @@ pyblackbird==0.5
 pybotvac==0.0.23
 
 # homeassistant.components.braviatv
-pybravia==0.3.0
+pybravia==0.3.1
 
 # homeassistant.components.cloudflare
 pycfdns==2.0.1
@@ -1254,7 +1254,7 @@ pylitejet==0.4.6
 pylitterbot==2023.1.1
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.17.1
+pylutron-caseta==0.18.0
 
 # homeassistant.components.mailgun
 pymailgunner==1.4
