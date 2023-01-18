@@ -769,6 +769,12 @@
         }
       }
     },
+    "cisco_led_switcher": {
+      "name": "Cisco LED Switcher",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "citybikes": {
       "name": "CityBikes",
       "integration_type": "hub",

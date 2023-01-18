@@ -189,6 +189,8 @@ build.json @home-assistant/supervisor
 /tests/components/cert_expiry/ @Cereal2nd @jjlawren
 /homeassistant/components/circuit/ @braam
 /homeassistant/components/cisco_ios/ @fbradyirl
+/homeassistant/components/cisco_led_switcher/ @Marco-Kl
+/tests/components/cisco_led_switcher/ @Marco-Kl
 /homeassistant/components/cisco_mobility_express/ @fbradyirl
 /homeassistant/components/cisco_webex_teams/ @fbradyirl
 /homeassistant/components/climate/ @home-assistant/core
