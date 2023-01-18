@@ -20,11 +20,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.template import Template
 from homeassistant.helpers.template_entity import TemplateEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import async_get_config_and_coordinator, create_rest_data_from_config
 from .const import DEFAULT_BINARY_SENSOR_NAME
+from .data import RestData
 from .entity import RestEntity
 from .schema import BINARY_SENSOR_SCHEMA, RESOURCE_SCHEMA
 
@@ -79,19 +82,19 @@ class RestBinarySensor(RestEntity, TemplateEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        hass,
-        coordinator,
-        rest,
-        config,
-        unique_id,
-    ):
+        hass: HomeAssistant,
+        coordinator: DataUpdateCoordinator[None] | None,
+        rest: RestData,
+        config: ConfigType,
+        unique_id: str | None,
+    ) -> None:
         """Initialize a REST binary sensor."""
         RestEntity.__init__(
             self,
             coordinator,
             rest,
             config.get(CONF_RESOURCE_TEMPLATE),
-            config.get(CONF_FORCE_UPDATE),
+            config[CONF_FORCE_UPDATE],
         )
         TemplateEntity.__init__(
             self,
@@ -101,16 +104,17 @@ class RestBinarySensor(RestEntity, TemplateEntity, BinarySensorEntity):
             unique_id=unique_id,
         )
         self._previous_data = None
-        self._value_template = config.get(CONF_VALUE_TEMPLATE)
+        self._value_template: Template | None = config.get(CONF_VALUE_TEMPLATE)
         if (value_template := self._value_template) is not None:
             value_template.hass = hass
 
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
 
-    def _update_from_rest_data(self):
+    def _update_from_rest_data(self) -> None:
         """Update state from the rest data."""
         if self.rest.data is None:
             self._attr_is_on = False
+            return
 
         response = self.rest.data
 
