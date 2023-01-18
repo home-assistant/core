@@ -101,6 +101,7 @@
         },
         "trigger_subtype": {
             "both_buttons": "Ambd\u00f3s botons",
+            "button": "Bot\u00f3",
             "button_1": "Primer bot\u00f3",
             "button_2": "Segon bot\u00f3",
             "button_3": "Tercer bot\u00f3",

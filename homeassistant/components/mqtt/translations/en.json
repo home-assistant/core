@@ -139,11 +139,11 @@
     },
     "selector": {
         "set_ca_cert": {
-          "options": {
-            "off": "Off",
-            "auto": "Auto",
-            "custom": "Custom"
-          }
+            "options": {
+                "auto": "Auto",
+                "custom": "Custom",
+                "off": "Off"
+            }
         }
     }
 }
