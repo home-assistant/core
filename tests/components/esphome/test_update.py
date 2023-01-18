@@ -37,21 +37,20 @@ async def test_update_entity(
     hass,
     mock_config_entry,
     mock_device_info,
+    mock_dashboard,
     devices_payload,
     expected_state,
     expected_attributes,
 ):
     """Test ESPHome update entity."""
-    async_set_dashboard_info(hass, "mock-addon-slug", "mock-addon-host", 1234)
+    mock_dashboard["configured"] = devices_payload
+    await async_set_dashboard_info(hass, "mock-addon-slug", "mock-addon-host", 1234)
 
     mock_config_entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.esphome.update.DomainData.get_entry_data",
         return_value=Mock(available=True, device_info=mock_device_info),
-    ), patch(
-        "homeassistant.components.esphome.dashboard.ESPHomeDashboardAPI.get_devices",
-        return_value={"configured": devices_payload},
     ):
         assert await hass.config_entries.async_forward_entry_setup(
             mock_config_entry, "update"
