@@ -1,8 +1,6 @@
 """Websocket API for OTBR."""
 from typing import TYPE_CHECKING
 
-from python_otbr_api import OTBRError
-
 from homeassistant.components.websocket_api import (
     ActiveConnection,
     async_register_command,
@@ -10,6 +8,7 @@ from homeassistant.components.websocket_api import (
     websocket_command,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
 
@@ -40,8 +39,8 @@ async def websocket_info(
     data: OTBRData = hass.data[DOMAIN]
 
     try:
-        dataset = await data.api.get_active_dataset_tlvs()
-    except OTBRError as exc:
+        dataset = await data.get_active_dataset_tlvs()
+    except HomeAssistantError as exc:
         connection.send_error(msg["id"], "get_dataset_failed", str(exc))
         return
 

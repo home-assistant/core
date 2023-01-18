@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import dataclasses
+from functools import wraps
 
 import python_otbr_api
 
@@ -15,12 +16,30 @@ from . import websocket_api
 from .const import DOMAIN
 
 
+def _handle_otbr_error(func):
+    """Handle OTBR errors."""
+
+    @wraps(func)
+    async def _func(self, *args, **kwargs):
+        try:
+            return await func(self, *args, **kwargs)
+        except python_otbr_api.OTBRError as exc:
+            raise HomeAssistantError("Failed to call OTBR API") from exc
+
+    return _func
+
+
 @dataclasses.dataclass
 class OTBRData:
     """Container for OTBR data."""
 
     url: str
     api: python_otbr_api.OTBR
+
+    @_handle_otbr_error
+    async def get_active_dataset_tlvs(self) -> bytes | None:
+        """Get current active operational dataset in TLVS format, or None."""
+        return await self.api.get_active_dataset_tlvs()
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -56,9 +75,5 @@ async def async_get_active_dataset_tlvs(hass: HomeAssistant) -> bytes | None:
     if DOMAIN not in hass.data:
         raise HomeAssistantError("OTBR API not available")
 
-    api: python_otbr_api.OTBR = hass.data[DOMAIN].api
-
-    try:
-        return await api.get_active_dataset_tlvs()
-    except python_otbr_api.OTBRError as exc:
-        raise HomeAssistantError("Failed to call OTBR API") from exc
+    data: OTBRData = hass.data[DOMAIN]
+    return await data.get_active_dataset_tlvs()
