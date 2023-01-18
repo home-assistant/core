@@ -281,6 +281,8 @@ build.json @home-assistant/supervisor
 /tests/components/dsmr/ @Robbie1221 @frenck
 /homeassistant/components/dsmr_reader/ @depl0y @glodenox
 /tests/components/dsmr_reader/ @depl0y @glodenox
+/homeassistant/components/duckdns/ @bkbilly
+/tests/components/duckdns/ @bkbilly
 /homeassistant/components/dunehd/ @bieniu
 /tests/components/dunehd/ @bieniu
 /homeassistant/components/dwd_weather_warnings/ @runningman84 @stephan192 @Hummel95

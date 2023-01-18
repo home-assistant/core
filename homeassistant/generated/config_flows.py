@@ -100,6 +100,7 @@ FLOWS = {
         "doorbird",
         "dsmr",
         "dsmr_reader",
+        "duckdns",
         "dunehd",
         "dynalite",
         "eafm",

@@ -4,20 +4,20 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_DOMAIN
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_TXT = "txt"
-
-DOMAIN = "duckdns"
 
 INTERVAL = timedelta(minutes=5)
 
@@ -40,10 +40,11 @@ CONFIG_SCHEMA = vol.Schema(
 SERVICE_TXT_SCHEMA = vol.Schema({vol.Required(ATTR_TXT): vol.Any(None, cv.string)})
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Initialize the DuckDNS component."""
-    domain = config[DOMAIN][CONF_DOMAIN]
-    token = config[DOMAIN][CONF_ACCESS_TOKEN]
+    domain = entry.data.get(CONF_DOMAIN)
+    token = entry.data.get(CONF_ACCESS_TOKEN)
+
     session = async_get_clientsession(hass)
 
     async def update_domain_interval(_now):

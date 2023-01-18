@@ -7,15 +7,18 @@ import pytest
 from homeassistant.components import duckdns
 from homeassistant.components.duckdns import async_track_time_interval_backoff
 from homeassistant.loader import bind_hass
-from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 DOMAIN = "bla"
 TOKEN = "abcdefgh"
 _LOGGER = logging.getLogger(__name__)
 INTERVAL = duckdns.INTERVAL
+ENTRY = MockConfigEntry(
+    domain=DOMAIN,
+    data={"domain": DOMAIN, "access_token": TOKEN},
+)
 
 
 @bind_hass
@@ -36,11 +39,7 @@ def setup_duckdns(hass, aioclient_mock):
         duckdns.UPDATE_URL, params={"domains": DOMAIN, "token": TOKEN}, text="OK"
     )
 
-    hass.loop.run_until_complete(
-        async_setup_component(
-            hass, duckdns.DOMAIN, {"duckdns": {"domain": DOMAIN, "access_token": TOKEN}}
-        )
-    )
+    hass.loop.run_until_complete(duckdns.async_setup_entry(hass, ENTRY))
 
 
 async def test_setup(hass, aioclient_mock):
@@ -49,9 +48,7 @@ async def test_setup(hass, aioclient_mock):
         duckdns.UPDATE_URL, params={"domains": DOMAIN, "token": TOKEN}, text="OK"
     )
 
-    result = await async_setup_component(
-        hass, duckdns.DOMAIN, {"duckdns": {"domain": DOMAIN, "access_token": TOKEN}}
-    )
+    result = await duckdns.async_setup_entry(hass, ENTRY)
 
     await hass.async_block_till_done()
 
@@ -69,9 +66,7 @@ async def test_setup_backoff(hass, aioclient_mock):
         duckdns.UPDATE_URL, params={"domains": DOMAIN, "token": TOKEN}, text="KO"
     )
 
-    result = await async_setup_component(
-        hass, duckdns.DOMAIN, {"duckdns": {"domain": DOMAIN, "access_token": TOKEN}}
-    )
+    result = await duckdns.async_setup_entry(hass, ENTRY)
     assert result
     await hass.async_block_till_done()
     assert aioclient_mock.call_count == 1
