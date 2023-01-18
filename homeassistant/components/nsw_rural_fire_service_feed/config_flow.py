@@ -4,7 +4,12 @@ import logging
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
+from homeassistant.const import (
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_RADIUS,
+    CONF_SCAN_INTERVAL,
+)
 from homeassistant.helpers import config_validation as cv
 
 from .const import CONF_CATEGORIES, DEFAULT_RADIUS_IN_KM, DOMAIN, VALID_CATEGORIES
@@ -40,6 +45,7 @@ class NswRuralFireServiceFeedFlowHandler(config_entries.ConfigFlow, domain=DOMAI
 
     async def async_step_import(self, import_config):
         """Import a config entry from configuration.yaml."""
+        import_config.pop(CONF_SCAN_INTERVAL)
         return await self.async_step_user(import_config)
 
     async def async_step_user(self, user_input=None):
