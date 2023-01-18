@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from http import HTTPStatus
 import logging
+from typing import Any
 
 import requests
 from requests.auth import AuthBase, HTTPBasicAuth, HTTPDigestAuth
@@ -77,18 +78,18 @@ def get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> RestNotificationService:
     """Get the RESTful notification service."""
-    resource = config.get(CONF_RESOURCE)
-    method = config.get(CONF_METHOD)
-    headers = config.get(CONF_HEADERS)
-    params = config.get(CONF_PARAMS)
-    message_param_name = config.get(CONF_MESSAGE_PARAMETER_NAME)
-    title_param_name = config.get(CONF_TITLE_PARAMETER_NAME)
-    target_param_name = config.get(CONF_TARGET_PARAMETER_NAME)
-    data = config.get(CONF_DATA)
-    data_template = config.get(CONF_DATA_TEMPLATE)
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-    verify_ssl = config.get(CONF_VERIFY_SSL)
+    resource: str = config[CONF_RESOURCE]
+    method: str = config[CONF_METHOD]
+    headers: dict[str, str] | None = config.get(CONF_HEADERS)
+    params: dict[str, str] | None = config.get(CONF_PARAMS)
+    message_param_name: str = config[CONF_MESSAGE_PARAMETER_NAME]
+    title_param_name: str | None = config.get(CONF_TITLE_PARAMETER_NAME)
+    target_param_name: str | None = config.get(CONF_TARGET_PARAMETER_NAME)
+    data: dict[str, Any] | None = config.get(CONF_DATA)
+    data_template: dict[str, Any] | None = config.get(CONF_DATA_TEMPLATE)
+    username: str | None = config.get(CONF_USERNAME)
+    password: str | None = config.get(CONF_PASSWORD)
+    verify_ssl: bool = config[CONF_VERIFY_SSL]
 
     auth: AuthBase | None = None
     if username and password:
@@ -118,19 +119,19 @@ class RestNotificationService(BaseNotificationService):
 
     def __init__(
         self,
-        hass,
-        resource,
-        method,
-        headers,
-        params,
-        message_param_name,
-        title_param_name,
-        target_param_name,
-        data,
-        data_template,
-        auth,
-        verify_ssl,
-    ):
+        hass: HomeAssistant,
+        resource: str,
+        method: str,
+        headers: dict[str, str] | None,
+        params: dict[str, str] | None,
+        message_param_name: str,
+        title_param_name: str | None,
+        target_param_name: str | None,
+        data: dict[str, Any] | None,
+        data_template: dict[str, Any] | None,
+        auth: AuthBase | None,
+        verify_ssl: bool,
+    ) -> None:
         """Initialize the service."""
         self._resource = resource
         self._hass = hass
@@ -145,7 +146,7 @@ class RestNotificationService(BaseNotificationService):
         self._auth = auth
         self._verify_ssl = verify_ssl
 
-    def send_message(self, message="", **kwargs):
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
         data = {self._message_param_name: message}
 
@@ -160,7 +161,7 @@ class RestNotificationService(BaseNotificationService):
         if self._data_template or self._data:
             kwargs[ATTR_MESSAGE] = message
 
-            def _data_template_creator(value):
+            def _data_template_creator(value: Any) -> Any:
                 """Recursive template creator helper function."""
                 if isinstance(value, list):
                     return [_data_template_creator(item) for item in value]
