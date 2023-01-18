@@ -33,7 +33,7 @@ async def test_form(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Name of the device"
+    assert result2["title"] == "MClimate"
     assert result2["data"] == {
         "username": "test-username",
         "password": "test-password",
