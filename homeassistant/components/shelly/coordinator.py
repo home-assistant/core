@@ -475,6 +475,11 @@ class ShellyRpcCoordinator(DataUpdateCoordinator[None]):
 
     async def _async_disconnected(self) -> None:
         """Handle device disconnected."""
+        # Sleeping devices send data and disconnects
+        # There are no disconnect events for sleeping devices
+        if self.entry.data.get(CONF_SLEEP_PERIOD):
+            return
+
         async with self._connection_lock:
             if not self.connected:  # Already disconnected
                 return
