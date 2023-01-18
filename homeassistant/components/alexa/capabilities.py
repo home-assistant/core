@@ -135,16 +135,16 @@ class AlexaCapability:
     def configuration(self):
         """Return the configuration object.
 
-        Applicable to the ThermostatController, SecurityControlPanel, ModeController, RangeController,
-        and EventDetectionSensor.
+        Applicable to the ThermostatController, SecurityControlPanel, ModeController,
+        RangeController, and EventDetectionSensor.
         """
         return []
 
     def configurations(self):
         """Return the configurations object.
 
-        The plural configurations object is different that the singular configuration object.
-        Applicable to EqualizerController interface.
+        The plural configurations object is different that the singular configuration
+        object. Applicable to EqualizerController interface.
         """
         return []
 
@@ -196,7 +196,8 @@ class AlexaCapability:
         if configuration := self.configuration():
             result["configuration"] = configuration
 
-        # The plural configurations object is different than the singular configuration object above.
+        # The plural configurations object is different than the singular
+        # configuration object above.
         if configurations := self.configurations():
             result["configurations"] = configurations
 
@@ -757,7 +758,8 @@ class AlexaPlaybackController(AlexaCapability):
     def supported_operations(self):
         """Return the supportedOperations object.
 
-        Supported Operations: FastForward, Next, Pause, Play, Previous, Rewind, StartOver, Stop
+        Supported Operations: FastForward, Next, Pause, Play, Previous, Rewind,
+        StartOver, Stop
         """
         supported_features = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
@@ -1117,7 +1119,9 @@ class AlexaThermostatController(AlexaCapability):
     def configuration(self):
         """Return configuration object.
 
-        Translates climate HVAC_MODES and PRESETS to supported Alexa ThermostatMode Values.
+        Translates climate HVAC_MODES and PRESETS to supported Alexa
+        ThermostatMode Values.
+
         ThermostatMode Value must be AUTO, COOL, HEAT, ECO, OFF, or CUSTOM.
         """
         supported_modes = []
@@ -1133,7 +1137,8 @@ class AlexaThermostatController(AlexaCapability):
                 if thermostat_mode:
                     supported_modes.append(thermostat_mode)
 
-        # Return False for supportsScheduling until supported with event listener in handler.
+        # Return False for supportsScheduling until supported with event
+        # listener in handler.
         configuration = {"supportsScheduling": False}
 
         if supported_modes:
@@ -1270,12 +1275,15 @@ class AlexaSecurityPanelController(AlexaCapability):
 class AlexaModeController(AlexaCapability):
     """Implements Alexa.ModeController.
 
-    The instance property must be unique across ModeController, RangeController, ToggleController within the same device.
-    The instance property should be a concatenated string of device domain period and single word.
-    e.g. fan.speed & fan.direction.
+    The instance property must be unique across ModeController, RangeController,
+    ToggleController within the same device.
 
-    The instance property must not contain words from other instance property strings within the same device.
-    e.g. Instance property cover.position & cover.tilt_position will cause the Alexa.Discovery directive to fail.
+    The instance property should be a concatenated string of device domain period
+    and single word. e.g. fan.speed & fan.direction.
+
+    The instance property must not contain words from other instance property
+    strings within the same device. e.g. Instance property cover.position &
+    cover.tilt_position will cause the Alexa.Discovery directive to fail.
 
     An instance property string value may be reused for different devices.
 
@@ -1408,8 +1416,8 @@ class AlexaModeController(AlexaCapability):
             modes = self.entity.attributes.get(humidifier.ATTR_AVAILABLE_MODES, [])
             for mode in modes:
                 self._resource.add_mode(f"{humidifier.ATTR_MODE}.{mode}", [mode])
-            # Humidifiers or Fans with a single mode completely break Alexa discovery, add a
-            # fake preset (see issue #53832).
+            # Humidifiers or Fans with a single mode completely break Alexa discovery,
+            # add a fake preset (see issue #53832).
             if len(modes) == 1:
                 self._resource.add_mode(
                     f"{humidifier.ATTR_MODE}.{PRESET_MODE_NA}", [PRESET_MODE_NA]
@@ -1479,12 +1487,15 @@ class AlexaModeController(AlexaCapability):
 class AlexaRangeController(AlexaCapability):
     """Implements Alexa.RangeController.
 
-    The instance property must be unique across ModeController, RangeController, ToggleController within the same device.
-    The instance property should be a concatenated string of device domain period and single word.
-    e.g. fan.speed & fan.direction.
+    The instance property must be unique across ModeController, RangeController,
+    ToggleController within the same device.
 
-    The instance property must not contain words from other instance property strings within the same device.
-    e.g. Instance property cover.position & cover.tilt_position will cause the Alexa.Discovery directive to fail.
+    The instance property should be a concatenated string of device domain period
+    and single word. e.g. fan.speed & fan.direction.
+
+    The instance property must not contain words from other instance property
+    strings within the same device. e.g. Instance property cover.position &
+    cover.tilt_position will cause the Alexa.Discovery directive to fail.
 
     An instance property string value may be reused for different devices.
 
@@ -1538,7 +1549,8 @@ class AlexaRangeController(AlexaCapability):
             raise UnsupportedProperty(name)
 
         # Return None for unavailable and unknown states.
-        # Allows the Alexa.EndpointHealth Interface to handle the unavailable state in a stateReport.
+        # Allows the Alexa.EndpointHealth Interface to handle the unavailable
+        # state in a stateReport.
         if self.entity.state in (STATE_UNAVAILABLE, STATE_UNKNOWN, None):
             return None
 
@@ -1760,12 +1772,15 @@ class AlexaRangeController(AlexaCapability):
 class AlexaToggleController(AlexaCapability):
     """Implements Alexa.ToggleController.
 
-    The instance property must be unique across ModeController, RangeController, ToggleController within the same device.
-    The instance property should be a concatenated string of device domain period and single word.
-    e.g. fan.speed & fan.direction.
+    The instance property must be unique across ModeController, RangeController,
+    ToggleController within the same device.
 
-    The instance property must not contain words from other instance property strings within the same device.
-    e.g. Instance property cover.position & cover.tilt_position will cause the Alexa.Discovery directive to fail.
+    The instance property should be a concatenated string of device domain period
+    and single word. e.g. fan.speed & fan.direction.
+
+    The instance property must not contain words from other instance property
+    strings within the same device. e.g. Instance property cover.position
+    & cover.tilt_position will cause the Alexa.Discovery directive to fail.
 
     An instance property string value may be reused for different devices.
 
@@ -2021,7 +2036,8 @@ class AlexaEventDetectionSensor(AlexaCapability):
         state = self.entity.state
 
         # Return None for unavailable and unknown states.
-        # Allows the Alexa.EndpointHealth Interface to handle the unavailable state in a stateReport.
+        # Allows the Alexa.EndpointHealth Interface to handle the unavailable
+        # state in a stateReport.
         if state in (STATE_UNAVAILABLE, STATE_UNKNOWN, None):
             return None
 
@@ -2089,7 +2105,8 @@ class AlexaEqualizerController(AlexaCapability):
     def properties_supported(self):
         """Return what properties this entity supports.
 
-        Either bands, mode or both can be specified. Only mode is supported at this time.
+        Either bands, mode or both can be specified. Only mode is supported
+        at this time.
         """
         return [{"name": "mode"}]
 

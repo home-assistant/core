@@ -37,7 +37,7 @@
             "title": "Unexpected unit of measurement"
         },
         "entity_unexpected_unit_gas": {
-            "description": "The following entities do not have an expected unit of measurement (either of {energy_units} for an energy sensor or either of {gas_units} for a gas sensor:)",
+            "description": "The following entities do not have an expected unit of measurement (either of {energy_units} for an energy sensor or either of {gas_units} for a gas sensor):",
             "title": "Unexpected unit of measurement"
         },
         "entity_unexpected_unit_gas_price": {

@@ -12,8 +12,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import RidwellData
 from .const import DOMAIN
+from .coordinator import RidwellDataUpdateCoordinator
 from .entity import RidwellEntity
 
 SWITCH_TYPE_OPT_IN = "opt_in"
@@ -29,11 +29,11 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Ridwell sensors based on a config entry."""
-    data: RidwellData = hass.data[DOMAIN][entry.entry_id]
+    coordinator: RidwellDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        RidwellSwitch(data.coordinator, account, SWITCH_DESCRIPTION)
-        for account in data.accounts.values()
+        RidwellSwitch(coordinator, account, SWITCH_DESCRIPTION)
+        for account in coordinator.accounts.values()
     )
 
 
