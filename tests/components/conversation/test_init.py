@@ -411,10 +411,23 @@ async def test_prepare_reload(hass):
     # Confirm intents are loaded
     assert agent._lang_intents.get(language)
 
-    await hass.services.async_call(
-        "conversation", "reload", {conversation.ATTR_LANGUAGE: language}
-    )
+    # Clear cache
+    await hass.services.async_call("conversation", "reload", {})
     await hass.async_block_till_done()
 
     # Confirm intent cache is cleared
     assert not agent._lang_intents.get(language)
+
+
+# pylint: disable=protected-access
+async def test_prepare_fail(hass):
+    """Test calling prepare with a non-existent language."""
+    assert await async_setup_component(hass, "conversation", {})
+
+    # Load intents
+    agent = await conversation._get_agent(hass)
+    assert isinstance(agent, conversation.DefaultAgent)
+    await agent.async_prepare("not-a-language")
+
+    # Confirm no intents were loaded
+    assert not agent._lang_intents.get("not-a-language")
