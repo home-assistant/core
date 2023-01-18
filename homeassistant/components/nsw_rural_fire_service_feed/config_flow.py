@@ -45,7 +45,7 @@ class NswRuralFireServiceFeedFlowHandler(config_entries.ConfigFlow, domain=DOMAI
 
     async def async_step_import(self, import_config):
         """Import a config entry from configuration.yaml."""
-        import_config.pop(CONF_SCAN_INTERVAL)
+        import_config.pop(CONF_SCAN_INTERVAL, None)
         return await self.async_step_user(import_config)
 
     async def async_step_user(self, user_input=None):
