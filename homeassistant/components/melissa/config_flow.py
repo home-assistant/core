@@ -12,6 +12,7 @@ from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import DOMAIN
 
