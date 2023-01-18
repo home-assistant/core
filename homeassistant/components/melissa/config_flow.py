@@ -90,6 +90,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input):
         """Handle import."""
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            "deprecated_yaml",
+            breaks_in_ha_version="2023.4.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+        )
         return await self.async_step_user(user_input)
 
 
