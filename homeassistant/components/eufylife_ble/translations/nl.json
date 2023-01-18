@@ -6,16 +6,16 @@
             "no_devices_found": "Geen apparaten gevonden op het netwerk",
             "not_supported": "Apparaat wordt niet ondersteund."
         },
-        "error": {
-            "cannot_connect": "Kan geen verbinding maken",
-            "unknown": "Onverwachte fout"
-        },
         "flow_title": "{name}",
         "step": {
+            "bluetooth_confirm": {
+                "description": "Wilt u {name} instellen?"
+            },
             "user": {
                 "data": {
-                    "address": "Bluetooth-adres"
-                }
+                    "address": "Apparaat"
+                },
+                "description": "Kies een apparaat om in te stellen"
             }
         }
     }

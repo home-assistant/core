@@ -18,6 +18,7 @@
         "sensor": {
             "whirlpool_machine": {
                 "state": {
+                    "complete": "Voltooid",
                     "door_open": "Deur open",
                     "pause": "Gepauzeerd",
                     "setting": "Instelling",
