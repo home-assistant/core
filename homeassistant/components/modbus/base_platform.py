@@ -45,9 +45,7 @@ from .const import (
     CONF_INPUT_TYPE,
     CONF_LAZY_ERROR,
     CONF_MAX_VALUE,
-    CONF_MAX_VALUE_THRESHOLD,
     CONF_MIN_VALUE,
-    CONF_MIN_VALUE_THRESHOLD,
     CONF_PRECISION,
     CONF_SCALE,
     CONF_STATE_OFF,
@@ -58,6 +56,7 @@ from .const import (
     CONF_SWAP_WORD_BYTE,
     CONF_VERIFY,
     CONF_WRITE_TYPE,
+    CONF_ZERO_CLAMP_VALUE,
     SIGNAL_START_ENTITY,
     SIGNAL_STOP_ENTITY,
     DataType,
@@ -107,12 +106,9 @@ class BasePlatform(Entity):
             return val
 
         self._min_value = get_optional_numeric_config(CONF_MIN_VALUE, None)
-        self._min_value_threshold = get_optional_numeric_config(
-            CONF_MIN_VALUE_THRESHOLD, self._min_value
-        )
         self._max_value = get_optional_numeric_config(CONF_MAX_VALUE, None)
-        self._max_value_threshold = get_optional_numeric_config(
-            CONF_MAX_VALUE_THRESHOLD, self._max_value
+        self._zero_clamp_value = get_optional_numeric_config(
+            CONF_ZERO_CLAMP_VALUE, None
         )
 
     @abstractmethod
@@ -185,6 +181,17 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
             registers.reverse()
         return registers
 
+    def __process_raw_value(self, entry: float | int) -> float | int:
+        """Process value from sensor with scaling, offset, min/max etc."""
+        val: float | int = self._scale * entry + self._offset
+        if self._min_value is not None and val < self._min_value:
+            return self._min_value
+        if self._max_value is not None and val > self._max_value:
+            return self._max_value
+        if self._zero_clamp_value is not None and abs(val) < self._zero_clamp_value:
+            return 0
+        return val
+
     def unpack_structure_result(self, registers: list[int]) -> str | None:
         """Convert registers to proper result."""
 
@@ -204,20 +211,10 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         # If unpack() returns a tuple greater than 1, don't try to process the value.
         # Instead, return the values of unpack(...) separated by commas.
         if len(val) > 1:
-            # Apply scale and precision to floats and ints
+            # Apply scale, precision, limits to floats and ints
             v_result = []
             for entry in val:
-                v_temp = self._scale * entry + self._offset
-                if (
-                    self._min_value_threshold is not None
-                    and v_temp < self._min_value_threshold
-                ):
-                    v_temp = self._min_value
-                elif (
-                    self._max_value_threshold is not None
-                    and v_temp > self._max_value_threshold
-                ):
-                    v_temp = self._max_value
+                v_temp = self.__process_raw_value(entry)
 
                 # We could convert int to float, and the code would still work; however
                 # we lose some precision, and unit tests will fail. Therefore, we do
@@ -228,20 +225,8 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
                     v_result.append(f"{float(v_temp):.{self._precision}f}")
             return ",".join(map(str, v_result))
 
-        # Apply scale and precision to floats and ints
-        val_result: float | int = self._scale * val[0] + self._offset
-        if (
-            self._min_value_threshold is not None
-            and val_result < self._min_value_threshold
-            and self._min_value is not None
-        ):
-            val_result = self._min_value
-        elif (
-            self._max_value_threshold is not None
-            and val_result > self._max_value_threshold
-            and self._max_value is not None
-        ):
-            val_result = self._max_value
+        # Apply scale, precision, limits to floats and ints
+        val_result = self.__process_raw_value(val[0])
 
         # We could convert int to float, and the code would still work; however
         # we lose some precision, and unit tests will fail. Therefore, we do
