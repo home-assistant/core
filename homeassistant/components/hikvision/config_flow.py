@@ -20,6 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import DEFAULT_PORT, DOMAIN
 
@@ -103,6 +104,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input):
         """Handle import."""
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            "deprecated_yaml",
+            breaks_in_ha_version="2023.4.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+        )
         return await self.async_step_user(user_input)
 
 

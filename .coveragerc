@@ -496,6 +496,7 @@ omit =
     homeassistant/components/harmony/util.py
     homeassistant/components/haveibeenpwned/sensor.py
     homeassistant/components/heatmiser/climate.py
+    homeassistant/components/hikvision/__init__.py
     homeassistant/components/hikvision/binary_sensor.py
     homeassistant/components/hikvisioncam/switch.py
     homeassistant/components/hisense_aehw4a1/__init__.py

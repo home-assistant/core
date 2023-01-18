@@ -478,6 +478,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/here_travel_time/ @eifinger
 /tests/components/here_travel_time/ @eifinger
 /homeassistant/components/hikvision/ @mezz64 @bkbilly
+/tests/components/hikvision/ @mezz64 @bkbilly
 /homeassistant/components/hikvisioncam/ @fbradyirl
 /homeassistant/components/hisense_aehw4a1/ @bannhead
 /tests/components/hisense_aehw4a1/ @bannhead
