@@ -41,7 +41,8 @@ async def async_set_dashboard_info(
     dashboard = ESPHomeDashboard(hass, addon_slug, url, async_get_clientsession(hass))
     try:
         await dashboard.async_request_refresh()
-    except UpdateFailed:
+    except UpdateFailed as err:
+        logging.getLogger(__name__).error("Ignoring dashboard info: %s", err)
         return
 
     hass.data[KEY_DASHBOARD] = dashboard
