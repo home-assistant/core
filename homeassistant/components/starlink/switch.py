@@ -72,7 +72,7 @@ SWITCHES = [
         name="Stowed",
         device_class=SwitchDeviceClass.SWITCH,
         value_fn=lambda data: data.status["state"] == "STOWED",
-        turn_on_fn=lambda coordinator: coordinator.stow_starlink(True),
-        turn_off_fn=lambda coordinator: coordinator.stow_starlink(False),
+        turn_on_fn=lambda coordinator: coordinator.async_stow_starlink(True),
+        turn_off_fn=lambda coordinator: coordinator.async_stow_starlink(False),
     )
 ]
