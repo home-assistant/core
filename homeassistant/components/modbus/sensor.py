@@ -156,6 +156,5 @@ class SlaveSensor(
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         result = self.coordinator.data
-        if result:
-            self._attr_native_value = result[self._idx]
+        self._attr_native_value = result[self._idx] if result else None
         super()._handle_coordinator_update()
