@@ -118,7 +118,10 @@ def _color_mode_to_ha(mode: int) -> str:
 def _filter_color_modes(
     supported: list[int], features: LightColorCapability
 ) -> list[int]:
-    """Filter the given supported color modes, excluding all values that don't have the requested features."""
+    """Filter the given supported color modes.
+
+    Excluding all values that don't have the requested features.
+    """
     return [mode for mode in supported if mode & features]
 
 
@@ -226,7 +229,8 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
 
         if (white_ha := kwargs.get(ATTR_WHITE)) is not None:
             # ESPHome multiplies brightness and white together for final brightness
-            # HA only sends `white` in turn_on, and reads total brightness through brightness property
+            # HA only sends `white` in turn_on, and reads total brightness
+            # through brightness property.
             data["brightness"] = white_ha / 255
             data["white"] = 1.0
             color_modes = _filter_color_modes(
@@ -244,8 +248,10 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
                 # if possible, stay with the color mode that is already set
                 data["color_mode"] = self._state.color_mode
             else:
-                # otherwise try the color mode with the least complexity (fewest capabilities set)
-                # popcount with bin() function because it appears to be the best way: https://stackoverflow.com/a/9831671
+                # otherwise try the color mode with the least complexity
+                # (fewest capabilities set)
+                # popcount with bin() function because it appears
+                # to be the best way: https://stackoverflow.com/a/9831671
                 color_modes.sort(key=lambda mode: bin(mode).count("1"))
                 data["color_mode"] = color_modes[0]
 
