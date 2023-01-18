@@ -65,9 +65,8 @@ async def async_setup_platform(
         except pyeverlights.ConnectionError as err:
             raise PlatformNotReady from err
 
-        else:
-            lights.append(EverLightsLight(api, pyeverlights.ZONE_1, status, effects))
-            lights.append(EverLightsLight(api, pyeverlights.ZONE_2, status, effects))
+        lights.append(EverLightsLight(api, pyeverlights.ZONE_1, status, effects))
+        lights.append(EverLightsLight(api, pyeverlights.ZONE_2, status, effects))
 
     async_add_entities(lights)
 
