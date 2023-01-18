@@ -12,6 +12,9 @@ turn_on:
     transition:
       name: Transition
       description: Duration it takes to get to next state.
+      filter:
+        supported_features:
+          - 32 # LightEntityFeature.TRANSITION
       selector:
         number:
           min: 0
@@ -20,11 +23,25 @@ turn_on:
     rgb_color:
       name: Color
       description: The color for the light (based on RGB - red, green, blue).
+      filter:
+        supported_color_modes:
+          - hs
+          - xy
+          - rgb
+          - rgbw
+          - rgbww
       selector:
         color_rgb:
     rgbw_color:
       name: RGBW-color
       description: A list containing four integers between 0 and 255 representing the RGBW (red, green, blue, white) color for the light.
+      filter:
+        supported_color_modes:
+          - hs
+          - xy
+          - rgb
+          - rgbw
+          - rgbww
       advanced: true
       example: "[255, 100, 100, 50]"
       selector:
@@ -32,6 +49,13 @@ turn_on:
     rgbww_color:
       name: RGBWW-color
       description: A list containing five integers between 0 and 255 representing the RGBWW (red, green, blue, cold white, warm white) color for the light.
+      filter:
+        supported_color_modes:
+          - hs
+          - xy
+          - rgb
+          - rgbw
+          - rgbww
       advanced: true
       example: "[255, 100, 100, 50, 70]"
       selector:
@@ -39,6 +63,13 @@ turn_on:
     color_name:
       name: Color name
       description: A human readable color name.
+      filter:
+        supported_color_modes:
+          - hs
+          - xy
+          - rgb
+          - rgbw
+          - rgbww
       advanced: true
       selector:
         select:
@@ -195,6 +226,13 @@ turn_on:
     hs_color:
       name: Hue/Sat color
       description: Color for the light in hue/sat format. Hue is 0-360 and Sat is 0-100.
+      filter:
+        supported_color_modes:
+          - hs
+          - xy
+          - rgb
+          - rgbw
+          - rgbww
       advanced: true
       example: "[300, 70]"
       selector:
@@ -202,6 +240,13 @@ turn_on:
     xy_color:
       name: XY-color
       description: Color for the light in XY-format.
+      filter:
+        supported_color_modes:
+          - hs
+          - xy
+          - rgb
+          - rgbw
+          - rgbww
       advanced: true
       example: "[0.52, 0.43]"
       selector:
@@ -209,6 +254,14 @@ turn_on:
     color_temp:
       name: Color temperature
       description: Color temperature for the light in mireds.
+      filter:
+        supported_color_modes:
+          - ct
+          - hs
+          - xy
+          - rgb
+          - rgbw
+          - rgbww
       selector:
         color_temp:
           min_mireds: 153
@@ -216,6 +269,14 @@ turn_on:
     kelvin:
       name: Color temperature (Kelvin)
       description: Color temperature for the light in Kelvin.
+      filter:
+        supported_color_modes:
+          - ct
+          - hs
+          - xy
+          - rgb
+          - rgbw
+          - rgbww
       advanced: true
       selector:
         number:
@@ -228,6 +289,15 @@ turn_on:
       description: Number indicating brightness, where 0 turns the light
         off, 1 is the minimum brightness and 255 is the maximum brightness
         supported by the light.
+      filter:
+        supported_color_modes:
+          - brightness
+          - ct
+          - hs
+          - xy
+          - rgb
+          - rgbw
+          - rgbww
       advanced: true
       selector:
         number:
@@ -238,6 +308,15 @@ turn_on:
       description: Number indicating percentage of full brightness, where 0
         turns the light off, 1 is the minimum brightness and 100 is the maximum
         brightness supported by the light.
+      filter:
+        supported_color_modes:
+          - brightness
+          - ct
+          - hs
+          - xy
+          - rgb
+          - rgbw
+          - rgbww
       selector:
         number:
           min: 0
@@ -246,6 +325,15 @@ turn_on:
     brightness_step:
       name: Brightness step value
       description: Change brightness by an amount.
+      filter:
+        supported_color_modes:
+          - brightness
+          - ct
+          - hs
+          - xy
+          - rgb
+          - rgbw
+          - rgbww
       advanced: true
       selector:
         number:
@@ -254,6 +342,15 @@ turn_on:
     brightness_step_pct:
       name: Brightness step
       description: Change brightness by a percentage.
+      filter:
+        supported_color_modes:
+          - brightness
+          - ct
+          - hs
+          - xy
+          - rgb
+          - rgbw
+          - rgbww
       selector:
         number:
           min: -100
@@ -265,6 +362,9 @@ turn_on:
         Set the light to white mode and change its brightness, where 0 turns
         the light off, 1 is the minimum brightness and 255 is the maximum
         brightness supported by the light.
+      filter:
+        supported_color_modes:
+          - white
       advanced: true
       selector:
         number:
@@ -280,6 +380,9 @@ turn_on:
     flash:
       name: Flash
       description: If the light should flash.
+      filter:
+        supported_features:
+          - 8 # LightEntityFeature.FLASH
       advanced: true
       selector:
         select:
@@ -291,6 +394,9 @@ turn_on:
     effect:
       name: Effect
       description: Light effect.
+      filter:
+        supported_features:
+          - 4 # LightEntityFeature.EFFECT
       selector:
         text:
 
@@ -304,6 +410,9 @@ turn_off:
     transition:
       name: Transition
       description: Duration it takes to get to next state.
+      filter:
+        supported_color_modes:
+          - white
       selector:
         number:
           min: 0
@@ -312,6 +421,9 @@ turn_off:
     flash:
       name: Flash
       description: If the light should flash.
+      filter:
+        supported_features:
+          - 8 # LightEntityFeature.FLASH
       advanced: true
       selector:
         select:
@@ -333,6 +445,9 @@ toggle:
     transition:
       name: Transition
       description: Duration it takes to get to next state.
+      filter:
+        supported_features:
+          - 32 # LightEntityFeature.TRANSITION
       selector:
         number:
           min: 0
@@ -341,6 +456,13 @@ toggle:
     rgb_color:
       name: RGB-color
       description: Color for the light in RGB-format.
+      filter:
+        supported_color_modes:
+          - hs
+          - xy
+          - rgb
+          - rgbw
+          - rgbww
       advanced: true
       example: "[255, 100, 100]"
       selector:
@@ -348,6 +470,13 @@ toggle:
     color_name:
       name: Color name
       description: A human readable color name.
+      filter:
+        supported_color_modes:
+          - hs
+          - xy
+          - rgb
+          - rgbw
+          - rgbww
       advanced: true
       selector:
         select:
@@ -504,6 +633,13 @@ toggle:
     hs_color:
       name: Hue/Sat color
       description: Color for the light in hue/sat format. Hue is 0-360 and Sat is 0-100.
+      filter:
+        supported_color_modes:
+          - hs
+          - xy
+          - rgb
+          - rgbw
+          - rgbww
       advanced: true
       example: "[300, 70]"
       selector:
@@ -511,6 +647,13 @@ toggle:
     xy_color:
       name: XY-color
       description: Color for the light in XY-format.
+      filter:
+        supported_color_modes:
+          - hs
+          - xy
+          - rgb
+          - rgbw
+          - rgbww
       advanced: true
       example: "[0.52, 0.43]"
       selector:
@@ -518,12 +661,28 @@ toggle:
     color_temp:
       name: Color temperature (mireds)
       description: Color temperature for the light in mireds.
+      filter:
+        supported_color_modes:
+          - ct
+          - hs
+          - xy
+          - rgb
+          - rgbw
+          - rgbww
       advanced: true
       selector:
         color_temp:
     kelvin:
       name: Color temperature (Kelvin)
       description: Color temperature for the light in Kelvin.
+      filter:
+        supported_color_modes:
+          - ct
+          - hs
+          - xy
+          - rgb
+          - rgbw
+          - rgbww
       advanced: true
       selector:
         number:
@@ -536,6 +695,15 @@ toggle:
       description: Number indicating brightness, where 0 turns the light
         off, 1 is the minimum brightness and 255 is the maximum brightness
         supported by the light.
+      filter:
+        supported_color_modes:
+          - brightness
+          - ct
+          - hs
+          - xy
+          - rgb
+          - rgbw
+          - rgbww
       advanced: true
       selector:
         number:
@@ -546,6 +714,15 @@ toggle:
       description: Number indicating percentage of full brightness, where 0
         turns the light off, 1 is the minimum brightness and 100 is the maximum
         brightness supported by the light.
+      filter:
+        supported_color_modes:
+          - brightness
+          - ct
+          - hs
+          - xy
+          - rgb
+          - rgbw
+          - rgbww
       selector:
         number:
           min: 0
@@ -561,6 +738,9 @@ toggle:
     flash:
       name: Flash
       description: If the light should flash.
+      filter:
+        supported_features:
+          - 8 # LightEntityFeature.FLASH
       advanced: true
       selector:
         select:
@@ -572,5 +752,8 @@ toggle:
     effect:
       name: Effect
       description: Light effect.
+      filter:
+        supported_features:
+          - 4 # LightEntityFeature.EFFECT
       selector:
         text:

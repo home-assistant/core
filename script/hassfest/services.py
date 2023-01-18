@@ -33,6 +33,10 @@ FIELD_SCHEMA = vol.Schema(
         vol.Optional("required"): bool,
         vol.Optional("advanced"): bool,
         vol.Optional(CONF_SELECTOR): selector.validate_selector,
+        vol.Optional("filter"): {
+            vol.Optional("supported_features"): [int],
+            vol.Optional("supported_color_modes"): [str],
+        },
     }
 )
 
