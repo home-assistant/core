@@ -33,7 +33,7 @@ async def test_form(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "DuckDNS"
+    assert result2["title"] == "duckdns"
     assert result2["data"] == {
         "domain": "duckdns",
         "access_token": "mytoken",
