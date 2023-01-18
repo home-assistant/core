@@ -338,9 +338,9 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
 
     @property
     @esphome_state_property
-    def color_temp(self) -> float | None:  # type: ignore[override]
+    def color_temp(self) -> int:
         """Return the CT color value in mireds."""
-        return self._state.color_temperature
+        return round(self._state.color_temperature)
 
     @property
     @esphome_state_property
@@ -383,11 +383,11 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
         return self._static_info.effects
 
     @property
-    def min_mireds(self) -> float:  # type: ignore[override]
+    def min_mireds(self) -> int:
         """Return the coldest color_temp that this light supports."""
-        return self._static_info.min_mireds
+        return round(self._static_info.min_mireds)
 
     @property
-    def max_mireds(self) -> float:  # type: ignore[override]
+    def max_mireds(self) -> int:
         """Return the warmest color_temp that this light supports."""
-        return self._static_info.max_mireds
+        return round(self._static_info.max_mireds)
