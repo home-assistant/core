@@ -54,7 +54,6 @@ from .const import (
     LANGUAGE_FLUX,
     LANGUAGE_INFLUXQL,
     MIN_TIME_BETWEEN_UPDATES,
-    NO_BUCKET_ERROR,
     NO_DATABASE_ERROR,
     QUERY_MULTIPLE_RESULTS_MESSAGE,
     QUERY_NO_RESULTS_MESSAGE,
@@ -90,7 +89,8 @@ def validate_query_format_for_version(conf: dict) -> dict:
             _merge_connection_config_into_query(conf, query)
             query[CONF_LANGUAGE] = LANGUAGE_FLUX
 
-        del conf[CONF_BUCKET]
+        if CONF_BUCKET in conf:
+            del conf[CONF_BUCKET]
 
     else:
         if CONF_QUERIES not in conf:
@@ -170,10 +170,7 @@ def setup_platform(
     entities = []
     if CONF_QUERIES_FLUX in config:
         for query in config[CONF_QUERIES_FLUX]:
-            if query[CONF_BUCKET] in influx.data_repositories:
-                entities.append(InfluxSensor(hass, influx, query))
-            else:
-                _LOGGER.error(NO_BUCKET_ERROR, query[CONF_BUCKET])
+            entities.append(InfluxSensor(hass, influx, query))
     else:
         for query in config[CONF_QUERIES]:
             if query[CONF_DB_NAME] in influx.data_repositories:
@@ -271,18 +268,22 @@ class InfluxFluxSensorData:
         self.value = None
         self.full_query = None
 
-        self.query_prefix = (
-            f'from(bucket:"{bucket}") |> range(start: {range_start}, stop:'
-            f" {range_stop}) |>"
-        )
-        if imports is not None:
-            for i in imports:
-                self.query_prefix = f'import "{i}" {self.query_prefix}'
-
-        if group is None:
-            self.query_postfix = DEFAULT_FUNCTION_FLUX
+        if bucket is None:
+            self.query_prefix = ""
+            self.query_postfix = ""
         else:
-            self.query_postfix = f'|> {group}(column: "{INFLUX_CONF_VALUE_V2}")'
+            self.query_prefix = (
+                f'from(bucket:"{bucket}") |> range(start: {range_start}, stop:'
+                f" {range_stop}) |>"
+            )
+            if imports is not None:
+                for i in imports:
+                    self.query_prefix = f'import "{i}" {self.query_prefix}'
+
+            if group is None:
+                self.query_postfix = DEFAULT_FUNCTION_FLUX
+            else:
+                self.query_postfix = f'|> {group}(column: "{INFLUX_CONF_VALUE_V2}")'
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
