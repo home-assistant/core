@@ -469,7 +469,7 @@
       "attribute_id": 15,
       "attribute_type": "chip.clusters.Objects.Basic.Attributes.SerialNumber",
       "attribute_name": "SerialNumber",
-      "value": "TEST_SN"
+      "value": "12345678"
     },
     "0/40/16": {
       "node_id": 1,
