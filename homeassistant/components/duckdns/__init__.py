@@ -10,6 +10,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, ServiceCall, callba
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
 
@@ -44,6 +45,19 @@ async def async_setup(hass, config):
     """Import configuration from yaml."""
     hass.data[DOMAIN] = {}
     if DOMAIN not in config:
+        return True
+
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2023.4.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+    )
+
+    if hass.config_entries.async_entries(DOMAIN):
         return True
 
     conf = config.get(DOMAIN, {})
