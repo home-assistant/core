@@ -85,13 +85,6 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
     # DeHumidifier
     # https://developer.tuya.com/en/docs/iot/s?id=K9gf48r6jke8e
     "cs": (
-        # Anion not USED
-        # TuyaSensorEntityDescription(
-        #    key=DPCode.ANION,
-        #    name="Tank",
-        #    # device_class=SensorDeviceClass.WATER,
-        #    state_class=SensorStateClass.MEASUREMENT,
-        # ),
         TuyaSensorEntityDescription(
             key=DPCode.COUNTDOWN_LEFT,
             name="Countdown Left",
