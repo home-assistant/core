@@ -49,3 +49,9 @@ class AbstractConversationAgent(ABC):
         language: str | None = None,
     ) -> ConversationResult | None:
         """Process a sentence."""
+
+    async def async_reload(self, language: str | None = None):
+        """Clear cached intents for a language."""
+
+    async def async_prepare(self, language: str | None = None):
+        """Load intents for a language."""
