@@ -106,7 +106,7 @@ async def test_create_option_entry(
     }
 
 
-async def test_reauth_flow(hass: HomeAssistant, client: MagicMock) -> None:
+async def test_reauth_flow(hass: HomeAssistant) -> None:
     """Test a successful reauth flow."""
 
     mock_entry = MockConfigEntry(
@@ -115,7 +115,7 @@ async def test_reauth_flow(hass: HomeAssistant, client: MagicMock) -> None:
         unique_id="test-username",
     )
     mock_entry.add_to_hass(hass)
-    with patch("AIOSomecomfort.AIOSomeComfort", return_value=client,), patch(
+    with patch(
         "homeassistant.components.honeywell.async_setup_entry",
         return_value=True,
     ):
@@ -137,9 +137,6 @@ async def test_reauth_flow(hass: HomeAssistant, client: MagicMock) -> None:
     with patch(
         "homeassistant.components.honeywell.async_setup_entry",
         return_value=True,
-    ), patch(
-        "homeassistant.components.honeywell.config_flow.AIOSomecomfort.AIOSomeComfort",
-        return_value=client,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -164,7 +161,7 @@ async def test_reauth_flow_auth_error(hass: HomeAssistant, client: MagicMock) ->
         unique_id="test-username",
     )
     mock_entry.add_to_hass(hass)
-    with patch("AIOSomecomfort.AIOSomeComfort", return_value=client,), patch(
+    with patch(
         "homeassistant.components.honeywell.async_setup_entry",
         return_value=True,
     ):
@@ -184,9 +181,6 @@ async def test_reauth_flow_auth_error(hass: HomeAssistant, client: MagicMock) ->
     client.login.return_value = False
     client.login.side_effect = AIOSomecomfort.device.AuthError
     with patch(
-        "homeassistant.components.honeywell.config_flow.AIOSomecomfort.AIOSomeComfort",
-        return_value=client,
-    ), patch(
         "homeassistant.components.honeywell.async_setup_entry",
         return_value=True,
     ):
@@ -219,7 +213,7 @@ async def test_reauth_flow_connnection_error(
         unique_id="test-username",
     )
     mock_entry.add_to_hass(hass)
-    with patch("AIOSomecomfort.AIOSomeComfort", return_value=client,), patch(
+    with patch(
         "homeassistant.components.honeywell.async_setup_entry",
         return_value=True,
     ):
@@ -239,8 +233,8 @@ async def test_reauth_flow_connnection_error(
     client.login.side_effect = error
 
     with patch(
-        "homeassistant.components.honeywell.config_flow.AIOSomecomfort.AIOSomeComfort",
-        return_value=client,
+        "homeassistant.components.honeywell.async_setup_entry",
+        return_value=True,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
