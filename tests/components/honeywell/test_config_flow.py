@@ -53,7 +53,7 @@ async def test_connection_error(hass: HomeAssistant, client: MagicMock) -> None:
 async def test_auth_error(hass: HomeAssistant, client: MagicMock) -> None:
     """Test that an error message is shown on login fail."""
     client.login.side_effect = AIOSomecomfort.AuthError
-    with patch("AIOSomecomfort.AIOSomeComfort", return_value=client,), patch(
+    with patch(
         "homeassistant.components.honeywell.async_setup_entry",
         return_value=True,
     ):
