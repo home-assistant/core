@@ -18,6 +18,14 @@ on:
         description: "Skip pytest"
         default: false
         type: boolean
+      pylint-only:
+        description: "Only run pylint"
+        default: false
+        type: boolean
+      mypy-only:
+        description: "Only run mypy"
+        default: false
+        type: boolean
 
 env:
   CACHE_VERSION: 3
@@ -163,6 +171,9 @@ jobs:
   pre-commit:
     name: Prepare pre-commit base
     runs-on: ubuntu-20.04
+    if: |
+      github.event.inputs.pylint-only != 'true'
+      && github.event.inputs.mypy-only != 'true'
     needs:
       - info
     steps:
@@ -554,6 +565,9 @@ jobs:
   hassfest:
     name: Check hassfest
     runs-on: ubuntu-20.04
+    if: |
+      github.event.inputs.pylint-only != 'true'
+      && github.event.inputs.mypy-only != 'true'
     needs:
       - info
       - base
@@ -587,6 +601,9 @@ jobs:
   gen-requirements-all:
     name: Check all requirements
     runs-on: ubuntu-20.04
+    if: |
+      github.event.inputs.pylint-only != 'true'
+      && github.event.inputs.mypy-only != 'true'
     needs:
       - info
       - base
@@ -621,6 +638,9 @@ jobs:
     name: Check pylint
     runs-on: ubuntu-20.04
     timeout-minutes: 20
+    if: |
+      github.event.inputs.mypy-only != 'true'
+      || github.event.inputs.pylint-only == 'true'
     needs:
       - info
       - base
@@ -666,6 +686,9 @@ jobs:
   mypy:
     name: Check mypy
     runs-on: ubuntu-20.04
+    if: |
+      github.event.inputs.pylint-only != 'true'
+      || github.event.inputs.mypy-only == 'true'
     needs:
       - info
       - base
@@ -710,6 +733,9 @@ jobs:
 
   pip-check:
     runs-on: ubuntu-20.04
+    if: |
+      github.event.inputs.pylint-only != 'true'
+      && github.event.inputs.mypy-only != 'true'
     needs:
       - info
       - base
@@ -750,6 +776,8 @@ jobs:
     if: |
       (github.event_name != 'push' || github.event.repository.full_name == 'home-assistant/core')
       && github.event.inputs.lint-only != 'true'
+      && github.event.inputs.pylint-only != 'true'
+      && github.event.inputs.mypy-only != 'true'
       && (needs.info.outputs.test_full_suite == 'true' || needs.info.outputs.tests_glob)
     needs:
       - info
@@ -873,6 +901,8 @@ jobs:
     if: |
       (github.event_name != 'push' || github.event.repository.full_name == 'home-assistant/core')
       && github.event.inputs.lint-only != 'true'
+      && github.event.inputs.pylint-only != 'true'
+      && github.event.inputs.mypy-only != 'true'
       && needs.info.outputs.test_full_suite == 'true'
     needs:
       - info
