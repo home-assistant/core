@@ -3,8 +3,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import functools as ft
-import logging
-from pprint import pformat
 from typing import Any
 
 from tuya_iot import TuyaDevice, TuyaDeviceManager
@@ -29,8 +27,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import HomeAssistantTuyaData
 from .base import IntegerTypeData, TuyaEntity
 from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, DPType
-
-_LOGGER = logging.getLogger(__name__)
 
 TUYA_HVAC_TO_HA = {
     "auto": HVACMode.HEAT_COOL,
@@ -569,7 +565,6 @@ class TuyaInfraredClimateEntity(TuyaEntity, ClimateEntity):
 
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        _LOGGER.info("Call set_temperature")
         if self.is_ready():
             new_temp = kwargs["temperature"]
             self._send_command(
@@ -584,7 +579,6 @@ class TuyaInfraredClimateEntity(TuyaEntity, ClimateEntity):
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature currently set to be reached."""
-        _LOGGER.info("Call target_temperature")
         if self.is_ready():
             return float(self.device.status.get(DPCode.TEMP))
         return None
@@ -594,7 +588,6 @@ class TuyaInfraredClimateEntity(TuyaEntity, ClimateEntity):
         """Return hvac mode."""
         # If the switch off, hvac mode is off as well. Unless the switch
         # the switch is on or doesn't exists of course...
-        _LOGGER.info("Hvac_mode Current device.status = %s", str(self.device.status))
         if self.is_ready():
             power = self.device.status.get(DPCode.POWER, "0")
             if "0" == power:
@@ -635,7 +628,6 @@ class TuyaInfraredClimateEntity(TuyaEntity, ClimateEntity):
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        _LOGGER.info("Call set_hvac_mode hvac_mode = %s", pformat(hvac_mode))
         if self.is_ready():
             commands: list[dict[str, Any]] = []
             if hvac_mode == HVACMode.OFF:
@@ -673,7 +665,6 @@ class TuyaInfraredClimateEntity(TuyaEntity, ClimateEntity):
                 code = item_status["code"]
                 value = item_status["value"]
                 status.setdefault(code, value)
-        _LOGGER.info("Read Status = %s", pformat(status))
         return status
 
     @staticmethod
@@ -695,7 +686,6 @@ class TuyaInfraredClimateEntity(TuyaEntity, ClimateEntity):
 
     async def async_update(self) -> None:
         """Retrieve latest state."""
-        _LOGGER.info("Update state")
         status = await self.hass.async_add_executor_job(
             ft.partial(
                 TuyaInfraredClimateEntity.read_status,
