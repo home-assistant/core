@@ -31,8 +31,7 @@
     },
     "options": {
         "error": {
-            "cannot_retrieve": "Kan ikke hente listen over kilder. S\u00f8rg for at enheten er sl\u00e5tt p\u00e5",
-            "script_not_found": "Skriptet ikke funnet"
+            "cannot_retrieve": "Kan ikke hente listen over kilder. S\u00f8rg for at enheten er sl\u00e5tt p\u00e5"
         },
         "step": {
             "init": {

@@ -11,7 +11,6 @@
             "auth_failed": "Uwierzytelnianie nie powiod\u0142o si\u0119: {error_detail}",
             "encryption_key_invalid": "Identyfikator klucza lub klucz szyfruj\u0105cy jest nieprawid\u0142owy",
             "few": "Puste",
-            "key_id_invalid": "Identyfikator klucza lub klucz szyfruj\u0105cy jest nieprawid\u0142owy",
             "many": "Pustych",
             "one": "Pusty",
             "other": ""
@@ -33,13 +32,6 @@
                 "menu_options": {
                     "lock_auth": "Konto SwitchBot (zalecane)",
                     "lock_key": "Wprowad\u017a klucz szyfrowania zamka r\u0119cznie"
-                }
-            },
-            "lock_chose_method": {
-                "description": "Wybierz spos\u00f3b konfiguracji, szczeg\u00f3\u0142y znajdziesz w dokumentacji.",
-                "menu_options": {
-                    "lock_auth": "Login i has\u0142o do aplikacji SwitchBot",
-                    "lock_key": "Klucz szyfrowania zamka"
                 }
             },
             "lock_key": {

@@ -8,7 +8,7 @@
                     "hide_members": "Skry\u0165 \u010dlenov",
                     "name": "N\u00e1zov"
                 },
-                "description": "Ak je povolen\u00e9 \u201ev\u0161etky entity\u201c, stav skupiny je zapnut\u00fd, iba ak s\u00fa zapnut\u00e9 v\u0161etci \u010dlenovia. Ak je mo\u017enos\u0165 \u201ev\u0161etky entity\u201c vypnut\u00e1, stav skupiny je zapnut\u00fd, ak je zapnut\u00fd niektor\u00fd \u010dlen.",
+                "description": "Ak je povolen\u00e9 \"v\u0161etky entity\", stav skupiny je zapnut\u00fd, iba ak s\u00fa zapnut\u00e9 v\u0161etci \u010dlenovia. Ak je mo\u017enos\u0165 \"v\u0161etky entity\" vypnut\u00e1, stav skupiny je zapnut\u00fd, ak je zapnut\u00fd niektor\u00fd \u010dlen.",
                 "title": "Prida\u0165 skupinu"
             },
             "cover": {
@@ -82,7 +82,7 @@
                     "entities": "\u010clenovia",
                     "hide_members": "Skry\u0165 \u010dlenov"
                 },
-                "description": "Ak je povolen\u00e9 \u201ev\u0161etky entity\u201c, stav skupiny je zapnut\u00fd, iba ak s\u00fa zapnut\u00e9 v\u0161etci \u010dlenovia. Ak je mo\u017enos\u0165 \u201ev\u0161etky entity\u201c vypnut\u00e1, stav skupiny je zapnut\u00fd, ak je zapnut\u00fd niektor\u00fd \u010dlen."
+                "description": "Ak je povolen\u00e9 \"v\u0161etky entity\", stav skupiny je zapnut\u00fd, iba ak s\u00fa zapnut\u00e9 v\u0161etci \u010dlenovia. Ak je mo\u017enos\u0165 \"v\u0161etky entity\" vypnut\u00e1, stav skupiny je zapnut\u00fd, ak je zapnut\u00fd niektor\u00fd \u010dlen."
             },
             "cover": {
                 "data": {
@@ -102,7 +102,7 @@
                     "entities": "\u010clenovia",
                     "hide_members": "Skry\u0165 \u010dlenov"
                 },
-                "description": "Ak je povolen\u00e9 \u201ev\u0161etky entity\u201c, stav skupiny je zapnut\u00fd, iba ak s\u00fa zapnut\u00e9 v\u0161etci \u010dlenovia. Ak je mo\u017enos\u0165 \u201ev\u0161etky entity\u201c vypnut\u00e1, stav skupiny je zapnut\u00fd, ak je zapnut\u00fd niektor\u00fd \u010dlen."
+                "description": "Ak je povolen\u00e9 \"v\u0161etky entity\", stav skupiny je zapnut\u00fd, iba ak s\u00fa zapnut\u00e9 v\u0161etci \u010dlenovia. Ak je mo\u017enos\u0165 \"v\u0161etky entity\" vypnut\u00e1, stav skupiny je zapnut\u00fd, ak je zapnut\u00fd niektor\u00fd \u010dlen."
             },
             "lock": {
                 "data": {
@@ -122,7 +122,7 @@
                     "entities": "\u010clenovia",
                     "hide_members": "Skry\u0165 \u010dlenov"
                 },
-                "description": "Ak je povolen\u00e9 \u201ev\u0161etky entity\u201c, stav skupiny je zapnut\u00fd, iba ak s\u00fa zapnut\u00e9 v\u0161etci \u010dlenovia. Ak je mo\u017enos\u0165 \u201ev\u0161etky entity\u201c vypnut\u00e1, stav skupiny je zapnut\u00fd, ak je zapnut\u00fd niektor\u00fd \u010dlen."
+                "description": "Ak je povolen\u00e9 \"v\u0161etky entity\", stav skupiny je zapnut\u00fd, iba ak s\u00fa zapnut\u00e9 v\u0161etci \u010dlenovia. Ak je mo\u017enos\u0165 \"v\u0161etky entity\" vypnut\u00e1, stav skupiny je zapnut\u00fd, ak je zapnut\u00fd niektor\u00fd \u010dlen."
             }
         }
     },

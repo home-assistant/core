@@ -31,8 +31,7 @@
     },
     "options": {
         "error": {
-            "cannot_retrieve": "Nem siker\u00fclt lek\u00e9rni a forr\u00e1sok list\u00e1j\u00e1t. Gy\u0151z\u0151dj\u00f6n meg r\u00f3la, hogy a k\u00e9sz\u00fcl\u00e9k be van kapcsolva",
-            "script_not_found": "A szkript nem tal\u00e1lhat\u00f3"
+            "cannot_retrieve": "Nem siker\u00fclt lek\u00e9rni a forr\u00e1sok list\u00e1j\u00e1t. Gy\u0151z\u0151dj\u00f6n meg r\u00f3la, hogy a k\u00e9sz\u00fcl\u00e9k be van kapcsolva"
         },
         "step": {
             "init": {
