@@ -295,6 +295,17 @@ async def test_onoff_media_player(hass):
 
     assert trt_on.query_attributes() == {"on": True}
 
+    # Verify that we don't set commandOnlyOnOff for assumed state
+    trt_on = trait.OnOffTrait(
+        hass,
+        State("media_player.bla", STATE_ON, {ATTR_ASSUMED_STATE: True}),
+        BASIC_CONFIG,
+    )
+
+    assert trt_on.sync_attributes() == {}
+
+    assert trt_on.query_attributes() == {"on": True}
+
     trt_off = trait.OnOffTrait(hass, State("media_player.bla", STATE_OFF), BASIC_CONFIG)
 
     assert trt_off.query_attributes() == {"on": False}

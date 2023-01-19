@@ -344,7 +344,10 @@ class OnOffTrait(_Trait):
 
     def sync_attributes(self):
         """Return OnOff attributes for a sync request."""
-        if self.state.attributes.get(ATTR_ASSUMED_STATE, False):
+        if (
+            self.state.attributes.get(ATTR_ASSUMED_STATE, False)
+            and self.state.domain != media_player.DOMAIN
+        ):
             return {"commandOnlyOnOff": True}
         return {}
 
