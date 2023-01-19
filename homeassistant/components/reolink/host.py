@@ -9,7 +9,6 @@ from typing import Any
 import aiohttp
 from reolink_aio.api import Host
 from reolink_aio.exceptions import ReolinkError
-)
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
