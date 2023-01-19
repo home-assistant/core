@@ -533,8 +533,8 @@ class TuyaInfraredClimateEntity(TuyaEntity, ClimateEntity):
 
         super().__init__(device, device_manager)
 
-        # pylint: disable=consider-using-tuple
-        for device_id in [*device_manager.device_map]:
+        device_list = [*device_manager.device_manager.device_map]
+        for device_id in device_list:
             sensor_device = device_manager.device_map[device_id]
             if (
                 sensor_device.category == "wnykq"
