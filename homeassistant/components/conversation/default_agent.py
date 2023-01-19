@@ -49,13 +49,12 @@ class DefaultAgent(AbstractConversationAgent):
         if "intent" not in self.hass.config.components:
             await setup.async_setup_component(self.hass, "intent", {})
 
-        config = config.get(DOMAIN, {})
-        self.hass.data.setdefault(DOMAIN, {})
-
-        if config:
+        if config and config.get(DOMAIN):
             _LOGGER.warning(
                 "Custom intent sentences have been moved to config/custom_sentences"
             )
+
+        self.hass.data.setdefault(DOMAIN, {})
 
     async def async_process(
         self,
