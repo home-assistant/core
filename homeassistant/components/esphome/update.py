@@ -1,7 +1,8 @@
 """Update platform for ESPHome."""
 from __future__ import annotations
 
-from typing import cast
+import logging
+from typing import Any, cast
 
 from aioesphomeapi import DeviceInfo as ESPHomeDeviceInfo
 
@@ -64,7 +65,7 @@ class ESPHomeUpdateEntity(CoordinatorEntity[ESPHomeDashboard], UpdateEntity):
 
     _attr_has_entity_name = True
     _attr_device_class = UpdateDeviceClass.FIRMWARE
-    _attr_supported_features = UpdateEntityFeature.SPECIFIC_VERSION
+    _attr_supported_features = UpdateEntityFeature.INSTALL
     _attr_title = "ESPHome"
     _attr_name = "Firmware"
 
@@ -106,3 +107,21 @@ class ESPHomeUpdateEntity(CoordinatorEntity[ESPHomeDashboard], UpdateEntity):
     def release_url(self) -> str | None:
         """URL to the full release notes of the latest version available."""
         return "https://esphome.io/changelog/"
+
+    async def async_install(
+        self, version: str | None, backup: bool, **kwargs: Any
+    ) -> None:
+        """Install an update."""
+        device = self.coordinator.data.get(self._device_info.name)
+        assert device is not None
+        if not await self.coordinator.api.compile(device["configuration"]):
+            logging.getLogger(__name__).error(
+                "Error compiling %s. Try again in ESPHome dashboard for error",
+                device["configuration"],
+            )
+        if not await self.coordinator.api.upload(device["configuration"], "OTA"):
+            logging.getLogger(__name__).error(
+                "Error OTA updating %s. Try again in ESPHome dashboard for error",
+                device["configuration"],
+            )
+        await self.coordinator.async_request_refresh()
