@@ -126,7 +126,7 @@ class SetIntentHandler(intent.ServiceIntentHandler):
         await asyncio.gather(*service_coros)
 
         response.async_set_results(
-            success_results=success_results,
+            success_results=success_results, failed_results=failed_results
         )
 
         if not self.speech_parts:  # No attributes changed
