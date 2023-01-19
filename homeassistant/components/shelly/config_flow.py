@@ -403,7 +403,10 @@ class OptionsFlowHandler(OptionsFlow):
                             CONF_BLE_SCANNER_MODE, BLEScannerMode.DISABLED
                         ),
                     ): SelectSelector(
-                        SelectSelectorConfig(options=BLE_SCANNER_OPTIONS),
+                        SelectSelectorConfig(
+                            options=BLE_SCANNER_OPTIONS,
+                            translation_key=CONF_BLE_SCANNER_MODE,
+                        ),
                     ),
                 }
             ),
