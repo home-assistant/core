@@ -115,16 +115,20 @@ async def test_reauth_flow(hass: HomeAssistant, client: MagicMock) -> None:
         unique_id="test-username",
     )
     mock_entry.add_to_hass(hass)
+    with patch("AIOSomecomfort.AIOSomeComfort", return_value=client,), patch(
+        "homeassistant.components.honeywell.async_setup_entry",
+        return_value=True,
+    ):
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "unique_id": mock_entry.unique_id,
-            "entry_id": mock_entry.entry_id,
-        },
-        data={CONF_USERNAME: "test-username", CONF_PASSWORD: "new-password"},
-    )
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": SOURCE_REAUTH,
+                "unique_id": mock_entry.unique_id,
+                "entry_id": mock_entry.entry_id,
+            },
+            data={CONF_USERNAME: "test-username", CONF_PASSWORD: "new-password"},
+        )
 
     assert result["step_id"] == "reauth_confirm"
     assert result["type"] == FlowResultType.FORM
@@ -160,16 +164,19 @@ async def test_reauth_flow_auth_error(hass: HomeAssistant, client: MagicMock) ->
         unique_id="test-username",
     )
     mock_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "unique_id": mock_entry.unique_id,
-            "entry_id": mock_entry.entry_id,
-        },
-        data={CONF_USERNAME: "test-username", CONF_PASSWORD: "new-password"},
-    )
+    with patch("AIOSomecomfort.AIOSomeComfort", return_value=client,), patch(
+        "homeassistant.components.honeywell.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": SOURCE_REAUTH,
+                "unique_id": mock_entry.unique_id,
+                "entry_id": mock_entry.entry_id,
+            },
+            data={CONF_USERNAME: "test-username", CONF_PASSWORD: "new-password"},
+        )
 
     assert result["step_id"] == "reauth_confirm"
     assert result["type"] == FlowResultType.FORM
@@ -212,16 +219,19 @@ async def test_reauth_flow_connnection_error(
         unique_id="test-username",
     )
     mock_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "unique_id": mock_entry.unique_id,
-            "entry_id": mock_entry.entry_id,
-        },
-        data={CONF_USERNAME: "test-username", CONF_PASSWORD: "new-password"},
-    )
+    with patch("AIOSomecomfort.AIOSomeComfort", return_value=client,), patch(
+        "homeassistant.components.honeywell.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": SOURCE_REAUTH,
+                "unique_id": mock_entry.unique_id,
+                "entry_id": mock_entry.entry_id,
+            },
+            data={CONF_USERNAME: "test-username", CONF_PASSWORD: "new-password"},
+        )
 
     assert result["step_id"] == "reauth_confirm"
     assert result["type"] == FlowResultType.FORM
