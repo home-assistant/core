@@ -1,6 +1,7 @@
 """Update platform for ESPHome."""
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any, cast
 
@@ -22,6 +23,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .dashboard import ESPHomeDashboard, async_get_dashboard
 from .domain_data import DomainData
 from .entry_data import RuntimeEntryData
+
+KEY_UPDATE_LOCK = "esphome_update_lock"
 
 
 async def async_setup_entry(
@@ -112,16 +115,17 @@ class ESPHomeUpdateEntity(CoordinatorEntity[ESPHomeDashboard], UpdateEntity):
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update."""
-        device = self.coordinator.data.get(self._device_info.name)
-        assert device is not None
-        if not await self.coordinator.api.compile(device["configuration"]):
-            logging.getLogger(__name__).error(
-                "Error compiling %s. Try again in ESPHome dashboard for error",
-                device["configuration"],
-            )
-        if not await self.coordinator.api.upload(device["configuration"], "OTA"):
-            logging.getLogger(__name__).error(
-                "Error OTA updating %s. Try again in ESPHome dashboard for error",
-                device["configuration"],
-            )
-        await self.coordinator.async_request_refresh()
+        async with self.hass.data.setdefault(KEY_UPDATE_LOCK, asyncio.Lock()):
+            device = self.coordinator.data.get(self._device_info.name)
+            assert device is not None
+            if not await self.coordinator.api.compile(device["configuration"]):
+                logging.getLogger(__name__).error(
+                    "Error compiling %s. Try again in ESPHome dashboard for error",
+                    device["configuration"],
+                )
+            if not await self.coordinator.api.upload(device["configuration"], "OTA"):
+                logging.getLogger(__name__).error(
+                    "Error OTA updating %s. Try again in ESPHome dashboard for error",
+                    device["configuration"],
+                )
+            await self.coordinator.async_request_refresh()
