@@ -40,20 +40,6 @@ SERVICE_PROCESS_SCHEMA = vol.Schema(
 SERVICE_RELOAD_SCHEMA = vol.Schema({vol.Optional(ATTR_LANGUAGE): cv.string})
 
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Optional("intents"): vol.Schema(
-                    {cv.string: vol.All(cv.ensure_list, [cv.string])}
-                )
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
-
 @core.callback
 @bind_hass
 def async_set_agent(hass: core.HomeAssistant, agent: AbstractConversationAgent | None):
