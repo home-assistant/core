@@ -526,7 +526,7 @@ ephem==4.1.2
 epson-projector==0.5.0
 
 # homeassistant.components.esphome
-esphome-dashboard-api==1.1
+esphome-dashboard-api==1.2.1
 
 # homeassistant.components.eufylife_ble
 eufylife_ble_client==0.1.7
