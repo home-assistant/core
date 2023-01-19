@@ -24,7 +24,7 @@ from homeassistant.helpers.typing import ConfigType
 from .const import ATTR_CONFIG_ENTRY_ID, ATTR_DURATION, CONF_SERIAL_NUMBER, CONF_ZONES
 from .coordinator import RainbirdUpdateCoordinator
 
-PLATFORMS = [Platform.SWITCH, Platform.SENSOR, Platform.BINARY_SENSOR]
+PLATFORMS = [Platform.SWITCH, Platform.SENSOR, Platform.BINARY_SENSOR, Platform.NUMBER]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,7 +87,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_yaml",
     )
-
     return True
 
 
@@ -95,6 +94,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the config entry for Rain Bird."""
 
     hass.data.setdefault(DOMAIN, {})
+
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_raindelay",
+        breaks_in_ha_version="2023.4.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_raindelay",
+    )
 
     controller = AsyncRainbirdController(
         AsyncRainbirdClient(
