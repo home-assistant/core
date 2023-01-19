@@ -41,8 +41,14 @@ class HumidityHandler(intent.IntentHandler):
         """Handle the hass intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
-        state = intent.async_match_state(
-            hass, slots["name"]["value"], hass.states.async_all(DOMAIN)
+        state = next(
+            iter(
+                intent.async_match_states(
+                    hass,
+                    name=slots["name"]["value"],
+                    states=hass.states.async_all(DOMAIN),
+                )
+            )
         )
 
         service_data = {ATTR_ENTITY_ID: state.entity_id}
@@ -85,10 +91,14 @@ class SetModeHandler(intent.IntentHandler):
         """Handle the hass intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
-        state = intent.async_match_state(
-            hass,
-            slots["name"]["value"],
-            hass.states.async_all(DOMAIN),
+        state = next(
+            iter(
+                intent.async_match_states(
+                    hass,
+                    name=slots["name"]["value"],
+                    states=hass.states.async_all(DOMAIN),
+                )
+            )
         )
 
         service_data = {ATTR_ENTITY_ID: state.entity_id}
