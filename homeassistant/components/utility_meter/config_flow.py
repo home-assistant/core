@@ -35,15 +35,15 @@ from .const import (
 )
 
 METER_TYPES = [
-    selector.SelectOptionDict(value="none", label="No cycle"),
-    selector.SelectOptionDict(value=QUARTER_HOURLY, label="Every 15 minutes"),
-    selector.SelectOptionDict(value=HOURLY, label="Hourly"),
-    selector.SelectOptionDict(value=DAILY, label="Daily"),
-    selector.SelectOptionDict(value=WEEKLY, label="Weekly"),
-    selector.SelectOptionDict(value=MONTHLY, label="Monthly"),
-    selector.SelectOptionDict(value=BIMONTHLY, label="Every two months"),
-    selector.SelectOptionDict(value=QUARTERLY, label="Quarterly"),
-    selector.SelectOptionDict(value=YEARLY, label="Yearly"),
+    "none",
+    QUARTER_HOURLY,
+    HOURLY,
+    DAILY,
+    WEEKLY,
+    MONTHLY,
+    BIMONTHLY,
+    QUARTERLY,
+    YEARLY,
 ]
 
 
