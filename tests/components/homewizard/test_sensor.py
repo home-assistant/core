@@ -1347,7 +1347,7 @@ async def test_sensor_entity_active_power_average(
     assert ATTR_ICON not in state.attributes
 
 
-async def test_sensor_entity_montly_power_peak(
+async def test_sensor_entity_monthly_power_peak(
     hass, mock_config_entry_data, mock_config_entry
 ):
     """Test entity loads monthly power peak."""
@@ -1376,7 +1376,7 @@ async def test_sensor_entity_montly_power_peak(
     )
     assert entry
     assert state
-    assert entry.unique_id == "aabbccddeeff_montly_power_peak_w"
+    assert entry.unique_id == "aabbccddeeff_monthly_power_peak_w"
     assert not entry.disabled
     assert state.state == "1234.456"
     assert (
