@@ -23,6 +23,7 @@ from homeassistant.components import (
     light,
     lock,
     media_player,
+    number,
     scene,
     script,
     sensor,
@@ -853,6 +854,7 @@ class ImageProcessingCapabilities(AlexaEntity):
 
 
 @ENTITY_ADAPTERS.register(input_number.DOMAIN)
+@ENTITY_ADAPTERS.register(number.DOMAIN)
 class InputNumberCapabilities(AlexaEntity):
     """Class to represent input_number capabilities."""
 
