@@ -26,6 +26,7 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import HoneywellData
 from .const import (
     _LOGGER,
     CONF_COOL_AWAY_TEMPERATURE,
@@ -95,8 +96,8 @@ class HoneywellUSThermostat(ClimateEntity):
 
     def __init__(self, data, device, cool_away_temp, heat_away_temp):
         """Initialize the thermostat."""
-        self._data = data
-        self._device = device
+        self._data: HoneywellData = data
+        self._device: AIOSomecomfort.device.Device = device
         self._cool_away_temp = cool_away_temp
         self._heat_away_temp = heat_away_temp
         self._away = False
@@ -190,9 +191,9 @@ class HoneywellUSThermostat(ClimateEntity):
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        if self.hvac_mode == "cool":
+        if self.hvac_mode == HVACMode.COOL:
             return self._device.setpoint_cool
-        if self.hvac_mode == "heat":
+        if self.hvac_mode == HVACMode.HEAT:
             return self._device.setpoint_heat
         return None
 
