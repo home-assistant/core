@@ -12,8 +12,10 @@ import async_timeout
 from reolink_aio.exceptions import (
     ApiError,
     InvalidContentTypeError,
+    LoginError,
     NoDataError,
     ReolinkError,
+    UnexpectedDataError,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -58,7 +60,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         asyncio.TimeoutError,
         ApiError,
         InvalidContentTypeError,
+        LoginError,
         NoDataError,
+        UnexpectedDataError,
     ) as err:
         await host.stop()
         raise ConfigEntryNotReady(

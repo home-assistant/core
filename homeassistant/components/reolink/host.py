@@ -8,10 +8,7 @@ from typing import Any
 
 import aiohttp
 from reolink_aio.api import Host
-from reolink_aio.exceptions import (
-    ApiError,
-    CredentialsInvalidError,
-    InvalidContentTypeError,
+from reolink_aio.exceptions import ReolinkError
 )
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
@@ -96,11 +93,13 @@ class ReolinkHost:
             enable_rtsp = True
 
         if enable_onvif or enable_rtmp or enable_rtsp:
-            if not await self._api.set_net_port(
-                enable_onvif=enable_onvif,
-                enable_rtmp=enable_rtmp,
-                enable_rtsp=enable_rtsp,
-            ):
+            try:
+                await self._api.set_net_port(
+                    enable_onvif=enable_onvif,
+                    enable_rtmp=enable_rtmp,
+                    enable_rtsp=enable_rtsp,
+                )
+            except ReolinkError:
                 if enable_onvif:
                     _LOGGER.error(
                         "Failed to enable ONVIF on %s. Set it to ON to receive notifications",
@@ -145,22 +144,9 @@ class ReolinkHost:
                 self._api.host,
                 self._api.port,
             )
-        except ApiError as err:
+        except ReolinkError as err:
             _LOGGER.error(
-                "Reolink API error while logging out for host %s:%s: %s",
-                self._api.host,
-                self._api.port,
-                str(err),
-            )
-        except CredentialsInvalidError:
-            _LOGGER.error(
-                "Reolink credentials error while logging out for host %s:%s",
-                self._api.host,
-                self._api.port,
-            )
-        except InvalidContentTypeError as err:
-            _LOGGER.error(
-                "Reolink content type error while logging out for host %s:%s: %s",
+                "Reolink error while logging out for host %s:%s: %s",
                 self._api.host,
                 self._api.port,
                 str(err),
