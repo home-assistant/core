@@ -10,7 +10,6 @@
         "error": {
             "auth_failed": "Autenticazione non riuscita: {error_detail}",
             "encryption_key_invalid": "L'ID chiave o la chiave crittografica non sono validi",
-            "key_id_invalid": "L'ID chiave o la chiave crittografica non sono validi",
             "one": "Vuoto",
             "other": "Vuoti"
         },
@@ -31,13 +30,6 @@
                 "menu_options": {
                     "lock_auth": "Account SwitchBot (consigliato)",
                     "lock_key": "Inserire manualmente la chiave di crittografia della serratura"
-                }
-            },
-            "lock_chose_method": {
-                "description": "Scegli il metodo di configurazione, i dettagli possono essere trovati nella documentazione.",
-                "menu_options": {
-                    "lock_auth": "Accesso con password all'app Switchbot",
-                    "lock_key": "Chiave crittografica della serratura"
                 }
             },
             "lock_key": {

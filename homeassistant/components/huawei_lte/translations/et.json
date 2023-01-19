@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "not_huawei_lte": "Pole Huawei LTE seade",
             "reauth_successful": "Taastuvastamine \u00f5nnestus",
             "unsupported_device": "Seadet ei toetata"
         },

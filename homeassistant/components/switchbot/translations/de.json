@@ -9,8 +9,7 @@
         },
         "error": {
             "auth_failed": "Authentifizierung fehlgeschlagen: {error_detail}",
-            "encryption_key_invalid": "Schl\u00fcssel-ID oder Verschl\u00fcsselungsschl\u00fcssel ist ung\u00fcltig",
-            "key_id_invalid": "Schl\u00fcssel-ID oder Verschl\u00fcsselungsschl\u00fcssel ist ung\u00fcltig"
+            "encryption_key_invalid": "Schl\u00fcssel-ID oder Verschl\u00fcsselungsschl\u00fcssel ist ung\u00fcltig"
         },
         "flow_title": "{name} ({address})",
         "step": {
@@ -29,13 +28,6 @@
                 "menu_options": {
                     "lock_auth": "SwitchBot-Konto (empfohlen)",
                     "lock_key": "Verschl\u00fcsselungscode manuell eingeben"
-                }
-            },
-            "lock_chose_method": {
-                "description": "W\u00e4hle die Konfigurationsmethode, Einzelheiten findest du in der Dokumentation.",
-                "menu_options": {
-                    "lock_auth": "Login und Passwort der SwitchBot-App",
-                    "lock_key": "Verschl\u00fcsselungsschl\u00fcssel sperren"
                 }
             },
             "lock_key": {
