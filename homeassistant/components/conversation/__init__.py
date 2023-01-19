@@ -16,7 +16,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 from .agent import AbstractConversationAgent, ConversationResult
-from .default_agent import DefaultAgent, async_register
+from .default_agent import DefaultAgent
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,8 +52,6 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
-
-async_register = bind_hass(async_register)
 
 
 @core.callback

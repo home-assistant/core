@@ -20,28 +20,10 @@ from homeassistant.helpers import area_registry, entity_registry, intent
 
 from .agent import AbstractConversationAgent, ConversationResult
 from .const import DOMAIN
-from .util import create_matcher
 
 _LOGGER = logging.getLogger(__name__)
 
 REGEX_TYPE = type(re.compile(""))
-
-
-@core.callback
-def async_register(hass, intent_type, utterances):
-    """Register utterances and any custom intents for the default agent.
-
-    Registrations don't require conversations to be loaded. They will become
-    active once the conversation component is loaded.
-    """
-    intents = hass.data.setdefault(DOMAIN, {})
-    conf = intents.setdefault(intent_type, [])
-
-    for utterance in utterances:
-        if isinstance(utterance, REGEX_TYPE):
-            conf.append(utterance)
-        else:
-            conf.append(create_matcher(utterance))
 
 
 @dataclass
