@@ -2,6 +2,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import functools as ft
+import logging
+from pprint import pformat
 from typing import Any
 
 from tuya_iot import TuyaDevice, TuyaDeviceManager
@@ -27,6 +30,8 @@ from . import HomeAssistantTuyaData
 from .base import IntegerTypeData, TuyaEntity
 from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, DPType
 
+_LOGGER = logging.getLogger(__name__)
+
 TUYA_HVAC_TO_HA = {
     "auto": HVACMode.HEAT_COOL,
     "cold": HVACMode.COOL,
@@ -37,6 +42,8 @@ TUYA_HVAC_TO_HA = {
     "wet": HVACMode.DRY,
     "wind": HVACMode.FAN_ONLY,
 }
+
+CATEGORY_INFRARED_AC = "infrared_ac"
 
 
 @dataclass
@@ -84,6 +91,9 @@ CLIMATE_DESCRIPTIONS: dict[str, TuyaClimateEntityDescription] = {
         key="wkf",
         switch_only_hvac_mode=HVACMode.HEAT,
     ),
+    CATEGORY_INFRARED_AC: TuyaClimateEntityDescription(
+        key=CATEGORY_INFRARED_AC, switch_only_hvac_mode=HVACMode.HEAT_COOL
+    ),
 }
 
 
@@ -96,19 +106,29 @@ async def async_setup_entry(
     @callback
     def async_discover_device(device_ids: list[str]) -> None:
         """Discover and add a discovered Tuya climate."""
-        entities: list[TuyaClimateEntity] = []
+        entities: list[ClimateEntity] = []
         for device_id in device_ids:
             device = hass_data.device_manager.device_map[device_id]
             if device and device.category in CLIMATE_DESCRIPTIONS:
-                entities.append(
-                    TuyaClimateEntity(
+                entity: ClimateEntity
+                if device.category == CATEGORY_INFRARED_AC:
+                    entity = TuyaInfraredClimateEntity(
                         device,
                         hass_data.device_manager,
                         CLIMATE_DESCRIPTIONS[device.category],
                     )
-                )
+                else:
+                    entity = TuyaClimateEntity(
+                        device,
+                        hass_data.device_manager,
+                        CLIMATE_DESCRIPTIONS[device.category],
+                    )
+                entities.append(entity)
         async_add_entities(entities)
 
+    await TuyaInfraredClimateEntity.async_fixup_device_status(
+        hass, hass_data, [*hass_data.device_manager.device_map]
+    )
     async_discover_device([*hass_data.device_manager.device_map])
 
     entry.async_on_unload(
@@ -493,3 +513,194 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         # Fake turn off
         if HVACMode.OFF in self.hvac_modes:
             self.set_hvac_mode(HVACMode.OFF)
+
+
+class TuyaInfraredClimateEntity(TuyaEntity, ClimateEntity):
+    """Tuya Climate Device."""
+
+    entity_description: TuyaClimateEntityDescription
+    _attr_min_temp: int = 16
+    _attr_max_temp: int = 24
+    _attr_target_temperature_step: float = 1.0
+    _attr_temparature: int
+    _attr_current_temperature: int = 30
+    sensor_device: TuyaDevice = None
+
+    def __init__(
+        self,
+        device: TuyaDevice,
+        device_manager: TuyaDeviceManager,
+        description: TuyaClimateEntityDescription,
+    ) -> None:
+        """Determine which values to use."""
+        self.entity_description = description
+
+        super().__init__(device, device_manager)
+
+        # pylint: disable=consider-using-tuple
+        for device_id in [*device_manager.device_map]:
+            sensor_device = device_manager.device_map[device_id]
+            if (
+                sensor_device.category == "wnykq"
+                and sensor_device.local_key == device.local_key
+            ):
+                self.sensor_device = sensor_device
+
+        self._attr_should_poll = True
+
+        # Default to Celsius
+        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+
+        self._attr_hvac_modes = [
+            HVACMode.OFF,
+            HVACMode.COOL,
+            HVACMode.HEAT,
+            HVACMode.AUTO,
+        ]
+        self._attr_supported_features |= (
+            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+        )
+        self._attr_fan_modes = [
+            "auto",
+            "low",
+            "middle",
+            "high",
+        ]
+
+    def set_temperature(self, **kwargs: Any) -> None:
+        """Set new target temperature."""
+        _LOGGER.info("Call set_temperature")
+        if self.is_ready():
+            new_temp = kwargs["temperature"]
+            self._send_command(
+                [
+                    {
+                        "code": DPCode.TEMP,
+                        "value": round(new_temp),
+                    }
+                ]
+            )
+
+    @property
+    def target_temperature(self) -> float | None:
+        """Return the temperature currently set to be reached."""
+        _LOGGER.info("Call target_temperature")
+        if self.is_ready():
+            return float(self.device.status.get(DPCode.TEMP))
+        return None
+
+    @property
+    def hvac_mode(self) -> HVACMode:
+        """Return hvac mode."""
+        # If the switch off, hvac mode is off as well. Unless the switch
+        # the switch is on or doesn't exists of course...
+        _LOGGER.info("Hvac_mode Current device.status = %s", str(self.device.status))
+        if self.is_ready():
+            power = self.device.status.get(DPCode.POWER, "0")
+            if "0" == power:
+                return HVACMode.OFF
+
+            mode = self.device.status.get(DPCode.MODE, "1")
+            # pylint: disable=no-else-return
+            if "0" == mode:
+                return HVACMode.COOL
+            elif "1" == mode:
+                return HVACMode.HEAT
+            elif "2" == mode:
+                return HVACMode.AUTO
+        return HVACMode.OFF
+
+    def is_ready(self) -> bool:
+        """Return true if status initialized properly."""
+        status = self.device.status
+        return status is not None and len(status) > 0
+
+    @property
+    def current_humidity(self) -> int | None:
+        """Return the current humidity."""
+        if self.is_ready():
+            if self.sensor_device is None:
+                return None
+            return self.sensor_device.status.get(DPCode.VA_HUMIDITY)
+        return None
+
+    @property
+    def current_temperature(self) -> float | None:
+        """Return the current temperature."""
+        if self.is_ready():
+            if self.sensor_device is None:
+                return None
+            return self.sensor_device.status.get(DPCode.VA_TEMPERATURE) / 10
+        return None
+
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set new target hvac mode."""
+        _LOGGER.info("Call set_hvac_mode hvac_mode = %s", pformat(hvac_mode))
+        if self.is_ready():
+            commands: list[dict[str, Any]] = []
+            if hvac_mode == HVACMode.OFF:
+                commands.append({"code": DPCode.POWER_OFF, "value": DPCode.POWER_OFF})
+            elif hvac_mode == HVACMode.COOL:
+                commands.append({"code": DPCode.POWER_ON, "value": DPCode.POWER_ON})
+                commands.append({"code": DPCode.MODE, "value": "0"})
+            elif hvac_mode == HVACMode.HEAT:
+                commands = [{"code": DPCode.POWER_ON, "value": DPCode.POWER_ON}]
+                commands.append({"code": DPCode.MODE, "value": "1"})
+            elif hvac_mode == HVACMode.AUTO:
+                commands = [{"code": DPCode.POWER_ON, "value": DPCode.POWER_ON}]
+                commands.append({"code": DPCode.MODE, "value": "2"})
+            self._send_command(commands)
+
+    def turn_on(self) -> None:
+        """Turn the device on, retaining current HVAC (if supported)."""
+        if self.is_ready():
+            self._send_command([{"code": DPCode.POWER_ON, "value": DPCode.POWER_ON}])
+            return
+        return
+
+    def turn_off(self) -> None:
+        """Turn the device on, retaining current HVAC (if supported)."""
+        if self.is_ready():
+            self._send_command([{"code": DPCode.POWER_OFF, "value": DPCode.POWER_OFF}])
+
+    @staticmethod
+    def read_status(api, device_id) -> dict:
+        """Read device status using Tuya endpoint."""
+        response = api.get(f"/v1.0/devices/{device_id}/status")
+        status: dict[str, Any] = {}
+        for item_status in response["result"]:
+            if "code" in item_status and "value" in item_status:
+                code = item_status["code"]
+                value = item_status["value"]
+                status.setdefault(code, value)
+        _LOGGER.info("Read Status = %s", pformat(status))
+        return status
+
+    @staticmethod
+    async def async_fixup_device_status(
+        hass: HomeAssistant, hass_data: HomeAssistantTuyaData, device_ids: list[str]
+    ) -> None:
+        """Fixup Device Status for Tuya infrared ac climate."""
+        for device_id in device_ids:
+            device = hass_data.device_manager.device_map[device_id]
+            if device and device.category == CATEGORY_INFRARED_AC:
+                api = hass_data.device_manager.api
+                device.status = await hass.async_add_executor_job(
+                    ft.partial(
+                        TuyaInfraredClimateEntity.read_status,
+                        api,
+                        device_id,
+                    )
+                )
+
+    async def async_update(self) -> None:
+        """Retrieve latest state."""
+        _LOGGER.info("Update state")
+        status = await self.hass.async_add_executor_job(
+            ft.partial(
+                TuyaInfraredClimateEntity.read_status,
+                self.device_manager.api,
+                self.device.id,
+            )
+        )
+        self.device.status = status
