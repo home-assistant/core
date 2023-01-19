@@ -18,28 +18,6 @@ from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, DPType
 # default instructions set of each category end up being a select.
 # https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
 SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
-    # DeHumidifier
-    # https://developer.tuya.com/en/docs/iot/s?id=K9gf48r6jke8e
-    "cs": (
-        SelectEntityDescription(
-            key=DPCode.MODE,
-            name="Mode",
-            icon="mdi:cog",
-            entity_category=EntityCategory.CONFIG,
-        ),
-        SelectEntityDescription(
-            key=DPCode.WINDSPEED,
-            name="Speed",
-            icon="mdi:fan",
-            entity_category=EntityCategory.CONFIG,
-        ),
-        SelectEntityDescription(
-            key=DPCode.COUNTDOWN,
-            name="Countdown Timer (h)",
-            icon="mdi:av-timer",
-            entity_category=EntityCategory.CONFIG,
-        ),
-    ),
     # Multi-functional Sensor
     # https://developer.tuya.com/en/docs/iot/categorydgnbj?id=Kaiuz3yorvzg3
     "dgnbj": (
@@ -367,6 +345,24 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
     # Dehumidifier
     # https://developer.tuya.com/en/docs/iot/categorycs?id=Kaiuz1vcz4dha
     "cs": (
+        SelectEntityDescription(
+            key=DPCode.MODE,
+            name="Mode",
+            icon="mdi:cog",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SelectEntityDescription(
+            key=DPCode.WINDSPEED,
+            name="Speed",
+            icon="mdi:fan",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SelectEntityDescription(
+            key=DPCode.COUNTDOWN,
+            name="Countdown Timer (h)",
+            icon="mdi:av-timer",
+            entity_category=EntityCategory.CONFIG,
+        ),
         SelectEntityDescription(
             key=DPCode.COUNTDOWN_SET,
             name="Countdown",

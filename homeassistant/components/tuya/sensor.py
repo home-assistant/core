@@ -82,24 +82,6 @@ BATTERY_SENSORS: tuple[TuyaSensorEntityDescription, ...] = (
 # end up being a sensor.
 # https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
 SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
-    # DeHumidifier
-    # https://developer.tuya.com/en/docs/iot/s?id=K9gf48r6jke8e
-    "cs": (
-        TuyaSensorEntityDescription(
-            key=DPCode.COUNTDOWN_LEFT,
-            name="Countdown Left",
-            icon="mdi:av-timer",
-            device_class=SensorDeviceClass.HUMIDITY,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
-        TuyaSensorEntityDescription(
-            key=DPCode.ENVHUMID,
-            name="Room Humidity",
-            icon="mdi:water-percent",
-            device_class=SensorDeviceClass.HUMIDITY,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
-    ),
     # Multi-functional Sensor
     # https://developer.tuya.com/en/docs/iot/categorydgnbj?id=Kaiuz3yorvzg3
     "dgnbj": (
@@ -1020,6 +1002,20 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
     # Dehumidifier
     # https://developer.tuya.com/en/docs/iot/s?id=K9gf48r6jke8e
     "cs": (
+        TuyaSensorEntityDescription(
+            key=DPCode.COUNTDOWN_LEFT,
+            name="Countdown Left",
+            icon="mdi:av-timer",
+            device_class=SensorDeviceClass.HUMIDITY,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.ENVHUMID,
+            name="Humidity",
+            icon="mdi:water-percent",
+            device_class=SensorDeviceClass.HUMIDITY,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
         TuyaSensorEntityDescription(
             key=DPCode.TEMP_INDOOR,
             name="Temperature",
