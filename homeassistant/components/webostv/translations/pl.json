@@ -31,8 +31,7 @@
     },
     "options": {
         "error": {
-            "cannot_retrieve": "Nie mo\u017cna pobra\u0107 listy \u017ar\u00f3de\u0142. Upewnij si\u0119, \u017ce urz\u0105dzenie jest w\u0142\u0105czone",
-            "script_not_found": "Skrypt nie zosta\u0142 znaleziony"
+            "cannot_retrieve": "Nie mo\u017cna pobra\u0107 listy \u017ar\u00f3de\u0142. Upewnij si\u0119, \u017ce urz\u0105dzenie jest w\u0142\u0105czone"
         },
         "step": {
             "init": {

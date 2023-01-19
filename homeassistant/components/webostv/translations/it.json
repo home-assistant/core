@@ -31,8 +31,7 @@
     },
     "options": {
         "error": {
-            "cannot_retrieve": "Impossibile recuperare l'elenco delle sorgenti. Assicurati che il dispositivo sia acceso",
-            "script_not_found": "Script non trovato"
+            "cannot_retrieve": "Impossibile recuperare l'elenco delle sorgenti. Assicurati che il dispositivo sia acceso"
         },
         "step": {
             "init": {

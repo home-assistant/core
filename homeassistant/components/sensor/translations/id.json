@@ -48,7 +48,6 @@
             "carbon_monoxide": "Perubahan konsentrasi karbonmonoksida {entity_name}",
             "current": "Perubahan arus {entity_name}",
             "data_rate": "Perubahan laju data {entity_name}",
-            "data_size": "Perubahan ukuran data {entity_name}",
             "distance": "Perubahan jarak {entity_name}",
             "energy": "Perubahan energi {entity_name}",
             "frequency": "Perubahan frekuensi {entity_name}",

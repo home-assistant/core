@@ -31,8 +31,7 @@
     },
     "options": {
         "error": {
-            "cannot_retrieve": "Nie je mo\u017en\u00e9 na\u010d\u00edta\u0165 zoznam zdrojov. Skontrolujte, \u010di je zariadenie zapnut\u00e9",
-            "script_not_found": "Skript sa nena\u0161iel"
+            "cannot_retrieve": "Nie je mo\u017en\u00e9 na\u010d\u00edta\u0165 zoznam zdrojov. Skontrolujte, \u010di je zariadenie zapnut\u00e9"
         },
         "step": {
             "init": {

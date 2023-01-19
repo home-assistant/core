@@ -37,7 +37,7 @@
             "title": "Neo\u010dak\u00e1van\u00e1 meracia jednotka"
         },
         "entity_unexpected_unit_gas": {
-            "description": "Nasleduj\u00face entity nemaj\u00fa o\u010dak\u00e1van\u00fa jednotku merania (bu\u010f {energy_units} pre senzor energie alebo niektor\u00fa z {gas_units} pre senzor plynu:)",
+            "description": "Nasleduj\u00face entity nemaj\u00fa o\u010dak\u00e1van\u00fa jednotku merania (bu\u010f {energy_units} pre senzor energie alebo niektor\u00fa z {gas_units} pre senzor plynu):",
             "title": "Neo\u010dak\u00e1van\u00e1 meracia jednotka"
         },
         "entity_unexpected_unit_gas_price": {
