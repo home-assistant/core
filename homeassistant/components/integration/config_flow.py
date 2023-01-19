@@ -33,15 +33,15 @@ UNIT_PREFIXES = [
     selector.SelectOptionDict(value="T", label="T (tera)"),
 ]
 TIME_UNITS = [
-    selector.SelectOptionDict(value=UnitOfTime.SECONDS, label="s (seconds)"),
-    selector.SelectOptionDict(value=UnitOfTime.MINUTES, label="min (minutes)"),
-    selector.SelectOptionDict(value=UnitOfTime.HOURS, label="h (hours)"),
-    selector.SelectOptionDict(value=UnitOfTime.DAYS, label="d (days)"),
+    UnitOfTime.SECONDS,
+    UnitOfTime.MINUTES,
+    UnitOfTime.HOURS,
+    UnitOfTime.DAYS,
 ]
 INTEGRATION_METHODS = [
-    selector.SelectOptionDict(value=METHOD_TRAPEZOIDAL, label="Trapezoidal rule"),
-    selector.SelectOptionDict(value=METHOD_LEFT, label="Left Riemann sum"),
-    selector.SelectOptionDict(value=METHOD_RIGHT, label="Right Riemann sum"),
+    METHOD_TRAPEZOIDAL,
+    METHOD_LEFT,
+    METHOD_RIGHT,
 ]
 
 OPTIONS_SCHEMA = vol.Schema(
