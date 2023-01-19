@@ -84,7 +84,7 @@ class ComfoConnectFan(FanEntity):
         self._attr_unique_id = ccb.unique_id
         self._attr_preset_mode = None
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, ccb.unique_id)},
+            identifiers={(DOMAIN, ccb.unique_id)}, name=ccb.name
         )
 
     async def async_added_to_hass(self) -> None:
