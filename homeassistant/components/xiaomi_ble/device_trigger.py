@@ -88,7 +88,7 @@ async def async_attach_trigger(
 def _async_get_triggers_by_model(
     hass: HomeAssistant, device_id: str
 ) -> set[str] | None:
-    """Get a Xiaomi BLE motion device for the given device registry device id."""
+    """Get available triggers for a given model."""
     device_registry = dr.async_get(hass)
     device = device_registry.async_get(device_id)
     if device and device.model and (triggers := TRIGGERS_BY_MODEL.get(device.model)):
