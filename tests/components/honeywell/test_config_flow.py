@@ -24,7 +24,10 @@ FAKE_CONFIG = {
 
 async def test_show_authenticate_form(hass: HomeAssistant, client: MagicMock) -> None:
     """Test that the config form is shown."""
-    with patch("AIOSomecomfort.AIOSomeComfort", return_value=client):
+    with patch("AIOSomecomfort.AIOSomeComfort", return_value=client,), patch(
+        "homeassistant.components.honeywell.async_setup_entry",
+        return_value=True,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
@@ -37,7 +40,10 @@ async def test_show_authenticate_form(hass: HomeAssistant, client: MagicMock) ->
 async def test_connection_error(hass: HomeAssistant, client: MagicMock) -> None:
     """Test that an error message is shown on connection fail."""
     client.login.side_effect = AIOSomecomfort.ConnectionError
-    with patch("AIOSomecomfort.AIOSomeComfort", return_value=client):
+    with patch("AIOSomecomfort.AIOSomeComfort", return_value=client,), patch(
+        "homeassistant.components.honeywell.async_setup_entry",
+        return_value=True,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=FAKE_CONFIG
         )
@@ -47,7 +53,10 @@ async def test_connection_error(hass: HomeAssistant, client: MagicMock) -> None:
 async def test_auth_error(hass: HomeAssistant, client: MagicMock) -> None:
     """Test that an error message is shown on login fail."""
     client.login.side_effect = AIOSomecomfort.AuthError
-    with patch("AIOSomecomfort.AIOSomeComfort", return_value=client):
+    with patch("AIOSomecomfort.AIOSomeComfort", return_value=client,), patch(
+        "homeassistant.components.honeywell.async_setup_entry",
+        return_value=True,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=FAKE_CONFIG
         )
@@ -56,7 +65,10 @@ async def test_auth_error(hass: HomeAssistant, client: MagicMock) -> None:
 
 async def test_create_entry(hass: HomeAssistant, client: MagicMock) -> None:
     """Test that the config entry is created."""
-    with patch("AIOSomecomfort.AIOSomeComfort", return_value=client):
+    with patch("AIOSomecomfort.AIOSomeComfort", return_value=client,), patch(
+        "homeassistant.components.honeywell.async_setup_entry",
+        return_value=True,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=FAKE_CONFIG
         )
@@ -74,7 +86,10 @@ async def test_show_option_form(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    with patch("AIOSomecomfort.AIOSomeComfort", return_value=client):
+    with patch("AIOSomecomfort.AIOSomeComfort", return_value=client,), patch(
+        "homeassistant.components.honeywell.async_setup_entry",
+        return_value=True,
+    ):
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
     assert result["type"] == data_entry_flow.FlowResultType.FORM
@@ -91,7 +106,10 @@ async def test_create_option_entry(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    with patch("AIOSomecomfort.AIOSomeComfort", return_value=client):
+    with patch("AIOSomecomfort.AIOSomeComfort", return_value=client,), patch(
+        "homeassistant.components.honeywell.async_setup_entry",
+        return_value=True,
+    ):
         options_form = await hass.config_entries.options.async_init(
             config_entry.entry_id
         )
