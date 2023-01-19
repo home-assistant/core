@@ -9,8 +9,7 @@
         },
         "error": {
             "auth_failed": "Error de autenticaci\u00f3n: {error_detail}",
-            "encryption_key_invalid": "El ID de clave o la clave de cifrado no son v\u00e1lidos",
-            "key_id_invalid": "El ID de clave o la clave de cifrado no son v\u00e1lidos"
+            "encryption_key_invalid": "El ID de clave o la clave de cifrado no son v\u00e1lidos"
         },
         "flow_title": "{name} ({address})",
         "step": {
@@ -29,13 +28,6 @@
                 "menu_options": {
                     "lock_auth": "Cuenta SwitchBot (recomendado)",
                     "lock_key": "Introducir la clave de cifrado de la cerradura manualmente"
-                }
-            },
-            "lock_chose_method": {
-                "description": "Elige el m\u00e9todo de configuraci\u00f3n, los detalles se pueden encontrar en la documentaci\u00f3n.",
-                "menu_options": {
-                    "lock_auth": "Inicio de sesi\u00f3n y contrase\u00f1a de la aplicaci\u00f3n SwitchBot",
-                    "lock_key": "Clave de cifrado de la cerradura"
                 }
             },
             "lock_key": {

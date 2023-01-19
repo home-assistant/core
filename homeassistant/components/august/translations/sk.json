@@ -23,7 +23,7 @@
                     "password": "Heslo",
                     "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
                 },
-                "description": "Ak je sp\u00f4sob prihl\u00e1senia \u201ee-mail\u201c, pou\u017e\u00edvate\u013esk\u00e9 meno je e-mailov\u00e1 adresa. Ak je met\u00f3da prihl\u00e1senia \u201etelef\u00f3n\u201c, pou\u017e\u00edvate\u013esk\u00e9 meno je telef\u00f3nne \u010d\u00edslo vo form\u00e1te \u201e+NNNNNNNNNN\u201c.",
+                "description": "Ak je sp\u00f4sob prihl\u00e1senia 'e-mail', pou\u017e\u00edvate\u013esk\u00e9 meno je e-mailov\u00e1 adresa. Ak je met\u00f3da prihl\u00e1senia 'telef\u00f3n', pou\u017e\u00edvate\u013esk\u00e9 meno je telef\u00f3nne \u010d\u00edslo vo form\u00e1te '+NNNNNNNNNN'.",
                 "title": "Nastavenie \u00fa\u010dtu August"
             },
             "validation": {

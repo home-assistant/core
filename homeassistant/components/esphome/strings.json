@@ -4,7 +4,8 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "mdns_missing_mac": "Missing MAC address in MDNS properties."
+      "mdns_missing_mac": "Missing MAC address in MDNS properties.",
+      "service_received": "Service received"
     },
     "error": {
       "resolve_error": "Can't resolve address of the ESP. If this error persists, please set a static IP address",

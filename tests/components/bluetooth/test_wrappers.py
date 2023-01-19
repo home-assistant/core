@@ -73,7 +73,7 @@ class BaseFakeBleakClient:
         self._address = address_or_ble_device.address
 
     async def disconnect(self, *args, **kwargs):
-        """Disconnect.""" ""
+        """Disconnect."""
 
     async def get_services(self, *args, **kwargs):
         """Get services."""

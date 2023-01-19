@@ -88,8 +88,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 return await device.device.async_get_led_setting()
         except DeviceUnavailable as err:
             raise UpdateFailed(err) from err
-        except DevicePasswordProtected as err:
-            raise ConfigEntryAuthFailed(err) from err
 
     async def async_update_wifi_connected_station() -> list[ConnectedStationInfo]:
         """Fetch data from API endpoint."""

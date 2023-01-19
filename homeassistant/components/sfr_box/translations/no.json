@@ -4,8 +4,7 @@
             "already_configured": "Enheten er allerede konfigurert"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes",
-            "unknown": "Uventet feil"
+            "cannot_connect": "Tilkobling mislyktes"
         },
         "step": {
             "user": {
@@ -24,6 +23,14 @@
                     "loss_of_signal_quality": "Tap av signalkvalitet",
                     "no_defect": "Ingen feil",
                     "of_frame": "Av ramme",
+                    "unknown": "Ukjent"
+                }
+            },
+            "net_infra": {
+                "state": {
+                    "adsl": "ADSL",
+                    "ftth": "FTTH",
+                    "gprs": "GPRS",
                     "unknown": "Ukjent"
                 }
             },

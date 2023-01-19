@@ -4,8 +4,7 @@
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
             "no_ip_control": "IP-Steuerung ist auf deinen Fernseher deaktiviert oder der Fernseher wird nicht unterst\u00fctzt.",
             "not_bravia_device": "Das Ger\u00e4t ist kein Bravia-Fernseher.",
-            "reauth_successful": "Die erneute Authentifizierung war erfolgreich",
-            "reauth_unsuccessful": "Die erneute Authentifizierung war nicht erfolgreich. Bitte entferne die Integration und richte sie erneut ein."
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
@@ -16,7 +15,6 @@
         "step": {
             "authorize": {
                 "data": {
-                    "pin": "PIN-Code",
                     "use_psk": "PSK-Authentifizierung verwenden"
                 },
                 "description": "Vergewissere dich, dass \"Fernsteuerung\" auf deinem Fernsehger\u00e4t aktiviert ist, gehe zu: \nEinstellungen -> Netzwerk -> Einstellungen f\u00fcr Fernbedienungsger\u00e4te -> Fernsteuerung. \n\nEs gibt zwei Autorisierungsmethoden: PIN-Code oder PSK (Pre-Shared Key). \nDie Autorisierung \u00fcber PSK wird empfohlen, da sie stabiler ist.",
@@ -38,13 +36,6 @@
                 },
                 "description": "Um PSK auf deinem Fernseher einzurichten, gehe zu: Einstellungen -> Netzwerk -> Heimnetzwerk-Setup -> IP-Steuerung. Stelle \"Authentifizierung\" auf \"Normal und Pre-Shared Key\" oder \"Pre-Shared Key\" und definiere deine Pre-Shared-Key-Zeichenfolge (z. B. sony). \n\nGib dann hier deinen PSK ein.",
                 "title": "Sony Bravia TV autorisieren"
-            },
-            "reauth_confirm": {
-                "data": {
-                    "pin": "PIN-Code",
-                    "use_psk": "PSK-Authentifizierung verwenden"
-                },
-                "description": "Gib den auf dem Sony Bravia-Fernseher angezeigten PIN-Code ein. \n\nWenn der PIN-Code nicht angezeigt wird, musst du die Registrierung von Home Assistant auf deinem Fernseher aufheben, gehe zu: Einstellungen \u2192 Netzwerk \u2192 Remote-Ger\u00e4teeinstellungen \u2192 Remote-Ger\u00e4t abmelden. \n\nDu kannst PSK (Pre-Shared-Key) anstelle der PIN verwenden. PSK ist ein benutzerdefinierter geheimer Schl\u00fcssel, der f\u00fcr die Zugriffskontrolle verwendet wird. Diese Authentifizierungsmethode wird als stabiler empfohlen. Um PSK auf deinem Fernseher zu aktivieren, gehe zu: Einstellungen \u2192 Netzwerk \u2192 Heimnetzwerk-Setup \u2192 IP-Steuerung. Aktiviere dann das Kontrollk\u00e4stchen \u00abPSK-Authentifizierung verwenden\u00bb und gib deinen PSK anstelle der PIN ein."
             },
             "user": {
                 "data": {

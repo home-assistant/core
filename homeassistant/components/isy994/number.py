@@ -1,34 +1,77 @@
 """Support for ISY number entities."""
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import Any
 
-from pyisy import ISY
+from pyisy.constants import (
+    ATTR_ACTION,
+    CMD_BACKLIGHT,
+    DEV_BL_ADDR,
+    DEV_CMD_MEMORY_WRITE,
+    DEV_MEMORY,
+    ISY_VALUE_UNKNOWN,
+    PROP_ON_LEVEL,
+    TAG_ADDRESS,
+    UOM_PERCENTAGE,
+)
 from pyisy.helpers import EventListener, NodeProperty
+from pyisy.nodes import Node, NodeChangedEvent
 from pyisy.variables import Variable
 
-from homeassistant.components.number import NumberEntity, NumberEntityDescription
+from homeassistant.components.number import (
+    NumberEntity,
+    NumberEntityDescription,
+    NumberMode,
+    RestoreNumber,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import (
+    CONF_VARIABLES,
+    PERCENTAGE,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-
-from . import _async_isy_to_configuration_url
-from .const import (
-    DOMAIN as ISY994_DOMAIN,
-    ISY994_ISY,
-    ISY994_VARIABLES,
-    ISY_CONF_FIRMWARE,
-    ISY_CONF_MODEL,
-    ISY_CONF_NAME,
-    ISY_CONF_UUID,
-    MANUFACTURER,
+from homeassistant.util.percentage import (
+    percentage_to_ranged_value,
+    ranged_value_to_percentage,
 )
+
+from .const import (
+    CONF_VAR_SENSOR_STRING,
+    DEFAULT_VAR_SENSOR_STRING,
+    DOMAIN,
+    UOM_8_BIT_RANGE,
+)
+from .entity import ISYAuxControlEntity
 from .helpers import convert_isy_value_to_hass
 
 ISY_MAX_SIZE = (2**32) / 2
+ON_RANGE = (1, 255)  # Off is not included
+CONTROL_DESC = {
+    PROP_ON_LEVEL: NumberEntityDescription(
+        key=PROP_ON_LEVEL,
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.CONFIG,
+        native_min_value=1.0,
+        native_max_value=100.0,
+        native_step=1.0,
+    ),
+    CMD_BACKLIGHT: NumberEntityDescription(
+        key=CMD_BACKLIGHT,
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.CONFIG,
+        native_min_value=0.0,
+        native_max_value=100.0,
+        native_step=1.0,
+    ),
+}
+BACKLIGHT_MEMORY_FILTER = {"memory": DEV_BL_ADDR, "cmd1": DEV_CMD_MEMORY_WRITE}
 
 
 async def async_setup_entry(
@@ -37,59 +80,108 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up ISY/IoX number entities from config entry."""
-    hass_isy_data = hass.data[ISY994_DOMAIN][config_entry.entry_id]
-    isy: ISY = hass_isy_data[ISY994_ISY]
-    uuid = isy.configuration[ISY_CONF_UUID]
-    entities: list[ISYVariableNumberEntity] = []
+    isy_data = hass.data[DOMAIN][config_entry.entry_id]
+    device_info = isy_data.devices
+    entities: list[
+        ISYVariableNumberEntity | ISYAuxControlNumberEntity | ISYBacklightNumberEntity
+    ] = []
+    var_id = config_entry.options.get(CONF_VAR_SENSOR_STRING, DEFAULT_VAR_SENSOR_STRING)
 
-    for node, enable_by_default in hass_isy_data[ISY994_VARIABLES][Platform.NUMBER]:
-        step = 10 ** (-1 * node.prec)
-        min_max = ISY_MAX_SIZE / (10**node.prec)
+    for node in isy_data.variables[Platform.NUMBER]:
+        step = 10 ** (-1 * int(node.prec))
+        min_max = ISY_MAX_SIZE / (10 ** int(node.prec))
         description = NumberEntityDescription(
             key=node.address,
             name=node.name,
-            icon="mdi:counter",
-            entity_registry_enabled_default=enable_by_default,
+            entity_registry_enabled_default=var_id in node.name,
             native_unit_of_measurement=None,
             native_step=step,
             native_min_value=-min_max,
             native_max_value=min_max,
         )
-        description_init = NumberEntityDescription(
+        description_init = replace(
+            description,
             key=f"{node.address}_init",
             name=f"{node.name} Initial Value",
-            icon="mdi:counter",
-            entity_registry_enabled_default=False,
-            native_unit_of_measurement=None,
-            native_step=step,
-            native_min_value=-min_max,
-            native_max_value=min_max,
             entity_category=EntityCategory.CONFIG,
         )
 
         entities.append(
             ISYVariableNumberEntity(
                 node,
-                unique_id=f"{uuid}_{node.address}",
+                unique_id=isy_data.uid_base(node),
                 description=description,
+                device_info=device_info[CONF_VARIABLES],
             )
         )
         entities.append(
             ISYVariableNumberEntity(
                 node=node,
-                unique_id=f"{uuid}_{node.address}_init",
+                unique_id=f"{isy_data.uid_base(node)}_init",
                 description=description_init,
+                device_info=device_info[CONF_VARIABLES],
                 init_entity=True,
             )
         )
 
+    for node, control in isy_data.aux_properties[Platform.NUMBER]:
+        entity_init_info = {
+            "node": node,
+            "control": control,
+            "unique_id": f"{isy_data.uid_base(node)}_{control}",
+            "description": CONTROL_DESC[control],
+            "device_info": device_info.get(node.primary_node),
+        }
+        if control == CMD_BACKLIGHT:
+            entities.append(ISYBacklightNumberEntity(**entity_init_info))
+            continue
+        entities.append(ISYAuxControlNumberEntity(**entity_init_info))
     async_add_entities(entities)
+
+
+class ISYAuxControlNumberEntity(ISYAuxControlEntity, NumberEntity):
+    """Representation of a ISY/IoX Aux Control Number entity."""
+
+    _attr_mode = NumberMode.SLIDER
+
+    @property
+    def native_value(self) -> float | int | None:
+        """Return the state of the variable."""
+        node_prop: NodeProperty = self._node.aux_properties[self._control]
+        if node_prop.value == ISY_VALUE_UNKNOWN:
+            return None
+
+        if (
+            self.entity_description.native_unit_of_measurement == PERCENTAGE
+            and node_prop.uom == UOM_8_BIT_RANGE  # Insteon 0-255
+        ):
+            return ranged_value_to_percentage(ON_RANGE, node_prop.value)
+        return int(node_prop.value)
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Update the current value."""
+        node_prop: NodeProperty = self._node.aux_properties[self._control]
+
+        if self.entity_description.native_unit_of_measurement == PERCENTAGE:
+            value = (
+                percentage_to_ranged_value(ON_RANGE, round(value))
+                if node_prop.uom == UOM_8_BIT_RANGE
+                else value
+            )
+        if self._control == PROP_ON_LEVEL:
+            await self._node.set_on_level(value)
+            return
+
+        if not await self._node.send_cmd(self._control, val=value, uom=node_prop.uom):
+            raise HomeAssistantError(
+                f"Could not set {self.name} to {value} for {self._node.address}"
+            )
 
 
 class ISYVariableNumberEntity(NumberEntity):
     """Representation of an ISY variable as a number entity device."""
 
-    _attr_has_entity_name = True
+    _attr_has_entity_name = False
     _attr_should_poll = False
     _init_entity: bool
     _node: Variable
@@ -100,37 +192,19 @@ class ISYVariableNumberEntity(NumberEntity):
         node: Variable,
         unique_id: str,
         description: NumberEntityDescription,
+        device_info: DeviceInfo,
         init_entity: bool = False,
     ) -> None:
         """Initialize the ISY variable number."""
         self._node = node
-        self._name = description.name
         self.entity_description = description
         self._change_handler: EventListener | None = None
 
         # Two entities are created for each variable, one for current value and one for initial.
         # Initial value entities are disabled by default
         self._init_entity = init_entity
-
         self._attr_unique_id = unique_id
-
-        url = _async_isy_to_configuration_url(node.isy)
-        config = node.isy.configuration
-        self._attr_device_info = DeviceInfo(
-            identifiers={
-                (
-                    ISY994_DOMAIN,
-                    f"{config[ISY_CONF_UUID]}_variables",
-                )
-            },
-            manufacturer=MANUFACTURER,
-            name=f"{config[ISY_CONF_NAME]} Variables",
-            model=config[ISY_CONF_MODEL],
-            sw_version=config[ISY_CONF_FIRMWARE],
-            configuration_url=url,
-            via_device=(ISY994_DOMAIN, config[ISY_CONF_UUID]),
-            entry_type=DeviceEntryType.SERVICE,
-        )
+        self._attr_device_info = device_info
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to the node change events."""
@@ -159,4 +233,68 @@ class ISYVariableNumberEntity(NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
-        await self._node.set_value(value, init=self._init_entity)
+        if not await self._node.set_value(value, init=self._init_entity):
+            raise HomeAssistantError(
+                f"Could not set {self.name} to {value} for {self._node.address}"
+            )
+
+
+class ISYBacklightNumberEntity(ISYAuxControlEntity, RestoreNumber):
+    """Representation of a ISY/IoX Backlight Number entity."""
+
+    _assumed_state = True  # Backlight values aren't read from device
+
+    def __init__(
+        self,
+        node: Node,
+        control: str,
+        unique_id: str,
+        description: NumberEntityDescription,
+        device_info: DeviceInfo | None,
+    ) -> None:
+        """Initialize the ISY Backlight number entity."""
+        super().__init__(node, control, unique_id, description, device_info)
+        self._memory_change_handler: EventListener | None = None
+        self._attr_native_value = 0
+
+    async def async_added_to_hass(self) -> None:
+        """Load the last known state when added to hass."""
+        await super().async_added_to_hass()
+        if (last_state := await self.async_get_last_state()) and (
+            last_number_data := await self.async_get_last_number_data()
+        ):
+            if last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+                self._attr_native_value = last_number_data.native_value
+
+        # Listen to memory writing events to update state if changed in ISY
+        self._memory_change_handler = self._node.isy.nodes.status_events.subscribe(
+            self.async_on_memory_write,
+            event_filter={
+                TAG_ADDRESS: self._node.address,
+                ATTR_ACTION: DEV_MEMORY,
+            },
+            key=self.unique_id,
+        )
+
+    @callback
+    def async_on_memory_write(self, event: NodeChangedEvent, key: str) -> None:
+        """Handle a memory write event from the ISY Node."""
+        if not (BACKLIGHT_MEMORY_FILTER.items() <= event.event_info.items()):
+            return  # This was not a backlight event
+        value = ranged_value_to_percentage((0, 127), event.event_info["value"])
+        if value == self._attr_native_value:
+            return  # Change was from this entity, don't update twice
+        self._attr_native_value = value
+        self.async_write_ha_state()
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Update the current value."""
+
+        if not await self._node.send_cmd(
+            CMD_BACKLIGHT, val=int(value), uom=UOM_PERCENTAGE
+        ):
+            raise HomeAssistantError(
+                f"Could not set backlight to {value}% for {self._node.address}"
+            )
+        self._attr_native_value = value
+        self.async_write_ha_state()

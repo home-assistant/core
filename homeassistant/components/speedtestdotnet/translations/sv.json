@@ -13,8 +13,6 @@
         "step": {
             "init": {
                 "data": {
-                    "manual": "Inaktivera automatisk uppdatering",
-                    "scan_interval": "Uppdateringsfrekvens (minuter)",
                     "server_name": "V\u00e4lj testserver"
                 }
             }

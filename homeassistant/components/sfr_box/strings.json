@@ -26,6 +26,14 @@
           "unknown": "Unknown"
         }
       },
+      "net_infra": {
+        "state": {
+          "adsl": "ADSL",
+          "ftth": "FTTH",
+          "gprs": "GPRS",
+          "unknown": "Unknown"
+        }
+      },
       "training": {
         "state": {
           "idle": "Idle",

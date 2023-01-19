@@ -5,4 +5,4 @@ DEFAULT_HOST = "192.168.0.1"
 
 DOMAIN = "sfr_box"
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]

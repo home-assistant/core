@@ -3,7 +3,9 @@
         "abort": {
             "already_configured": "Perangkat sudah dikonfigurasi",
             "already_in_progress": "Alur konfigurasi sedang berlangsung",
-            "error_pairing": "Terhubung ke LG webOS TV tetapi tidak dipasangkan"
+            "error_pairing": "Terhubung ke LG webOS TV tetapi tidak dipasangkan",
+            "reauth_successful": "Autentikasi ulang berhasil",
+            "reauth_unsuccessful": "Autentikasi ulang tidak berhasil, matikan TV dan coba lagi."
         },
         "error": {
             "cannot_connect": "Gagal terhubung, nyalakan TV atau periksa alamat IP"
@@ -11,6 +13,10 @@
         "flow_title": "LG webOS Smart TV",
         "step": {
             "pairing": {
+                "description": "Klik kirim dan terima permintaan pemasangan di TV Anda. \n\n![Image](/static/images/config_webos.png)",
+                "title": "Pasangan webOS TV"
+            },
+            "reauth_confirm": {
                 "description": "Klik kirim dan terima permintaan pemasangan di TV Anda. \n\n![Image](/static/images/config_webos.png)",
                 "title": "Pasangan webOS TV"
             },
@@ -31,8 +37,7 @@
     },
     "options": {
         "error": {
-            "cannot_retrieve": "Tidak dapat mengambil daftar sumber. Pastikan perangkat dihidupkan",
-            "script_not_found": "Skrip tidak ditemukan"
+            "cannot_retrieve": "Tidak dapat mengambil daftar sumber. Pastikan perangkat dihidupkan"
         },
         "step": {
             "init": {
