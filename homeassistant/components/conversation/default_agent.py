@@ -44,15 +44,10 @@ class DefaultAgent(AbstractConversationAgent):
         self._lang_intents: dict[str, LanguageIntents] = {}
         self._lang_lock: dict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
 
-    async def async_initialize(self, config):
+    async def async_initialize(self):
         """Initialize the default agent."""
         if "intent" not in self.hass.config.components:
             await setup.async_setup_component(self.hass, "intent", {})
-
-        if config and config.get(DOMAIN):
-            _LOGGER.warning(
-                "Custom intent sentences have been moved to config/custom_sentences"
-            )
 
         self.hass.data.setdefault(DOMAIN, {})
 
