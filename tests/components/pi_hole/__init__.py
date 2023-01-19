@@ -131,3 +131,9 @@ def _patch_config_flow_hole(mocked_hole):
     return patch(
         "homeassistant.components.pi_hole.config_flow.Hole", return_value=mocked_hole
     )
+
+
+def _patch_setup_hole():
+    return patch(
+        "homeassistant.components.pi_hole.async_setup_entry", return_value=True
+    )
