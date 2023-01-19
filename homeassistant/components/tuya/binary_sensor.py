@@ -46,6 +46,17 @@ TAMPER_BINARY_SENSOR = TuyaBinarySensorEntityDescription(
 # end up being a binary sensor.
 # https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
 BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
+    # DeHumidifier
+    # https://developer.tuya.com/en/docs/iot/s?id=K9gf48r6jke8e
+    "cs": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.FAULT,
+            name="Water Tank",
+            icon="mdi:water",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            on_value=8,  # 8 means tank is full
+        ),
+    ),
     # Multi-functional Sensor
     # https://developer.tuya.com/en/docs/iot/categorydgnbj?id=Kaiuz3yorvzg3
     "dgnbj": (

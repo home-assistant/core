@@ -179,10 +179,12 @@ class DPCode(StrEnum):
     DOORCONTACT_STATE = "doorcontact_state"  # Status of door window sensor
     DOORCONTACT_STATE_2 = "doorcontact_state_2"
     DOORCONTACT_STATE_3 = "doorcontact_state_3"
+    DRY = "dry"
     DUSTER_CLOTH = "duster_cloth"
     ECO2 = "eco2"
     EDGE_BRUSH = "edge_brush"
     ELECTRICITY_LEFT = "electricity_left"
+    ENVHUMID = "envhumid"
     FAN_BEEP = "fan_beep"  # Sound
     FAN_COOL = "fan_cool"  # Cool wind
     FAN_DIRECTION = "fan_direction"  # Fan direction
@@ -253,6 +255,7 @@ class DPCode(StrEnum):
     PM25_VALUE = "pm25_value"
     POWDER_SET = "powder_set"  # Powder
     POWER = "power"
+    POWER2 = "Power"
     POWER_GO = "power_go"
     PRESENCE_STATE = "presence_state"
     PRESSURE_STATE = "pressure_state"

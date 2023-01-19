@@ -70,6 +70,17 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # DeHumidifier
+    # https://developer.tuya.com/en/docs/iot/s?id=K9gf48r6jke8e
+    "cs": (
+        NumberEntityDescription(
+            key=DPCode.HUMIDITY,
+            name="Set Humidity %",
+            device_class=NumberDeviceClass.HUMIDITY,
+            icon="mdi:water-percent",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # Smart Pet Feeder
     # https://developer.tuya.com/en/docs/iot/categorycwwsq?id=Kaiuz2b6vydld
     "cwwsq": (

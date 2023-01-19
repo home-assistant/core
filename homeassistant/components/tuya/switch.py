@@ -52,6 +52,28 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             icon="mdi:water",
         ),
     ),
+    # DeHumidifier
+    # https://developer.tuya.com/en/docs/iot/s?id=K9gf48r6jke8e
+    "cs": (
+        SwitchEntityDescription(
+            key=DPCode.DRY,
+            name="Dry",
+            icon="mdi:air-humidifier",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.LOCK,
+            name="Child Lock",
+            icon="mdi:account-lock",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.POWER2,
+            name="Power",
+            icon="mdi:power",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # Smart Pet Feeder
     # https://developer.tuya.com/en/docs/iot/categorycwwsq?id=Kaiuz2b6vydld
     "cwwsq": (
