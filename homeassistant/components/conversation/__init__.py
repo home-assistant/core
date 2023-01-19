@@ -33,11 +33,18 @@ SERVICE_PROCESS = "process"
 SERVICE_RELOAD = "reload"
 
 SERVICE_PROCESS_SCHEMA = vol.Schema(
-    {vol.Required(ATTR_TEXT): cv.string, vol.Optional(ATTR_LANGUAGE): cv.string}
+    {
+        vol.Required(ATTR_TEXT): cv.string,
+        vol.Optional(ATTR_LANGUAGE): cv.string,
+    }
 )
 
 
-SERVICE_RELOAD_SCHEMA = vol.Schema({vol.Optional(ATTR_LANGUAGE): cv.string})
+SERVICE_RELOAD_SCHEMA = vol.Schema(
+    {
+        vol.Optional(ATTR_LANGUAGE): cv.string,
+    }
+)
 
 
 CONFIG_SCHEMA = vol.Schema(
@@ -101,8 +108,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 @websocket_api.websocket_command(
     {
-        "type": "conversation/process",
-        "text": str,
+        vol.Required("type"): "conversation/process",
+        vol.Required("text"): str,
         vol.Optional("conversation_id"): vol.Any(str, None),
         vol.Optional("language"): str,
     }
@@ -114,7 +121,7 @@ async def websocket_process(
     msg: dict[str, Any],
 ) -> None:
     """Process text."""
-    result = await _async_converse(
+    result = await async_converse(
         hass,
         msg["text"],
         msg.get("conversation_id"),
@@ -142,7 +149,11 @@ async def websocket_prepare(
     connection.send_result(msg["id"])
 
 
-@websocket_api.websocket_command({"type": "conversation/agent/info"})
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "conversation/agent/info",
+    }
+)
 @websocket_api.async_response
 async def websocket_get_agent_info(
     hass: HomeAssistant,
@@ -161,7 +172,12 @@ async def websocket_get_agent_info(
     )
 
 
-@websocket_api.websocket_command({"type": "conversation/onboarding/set", "shown": bool})
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "conversation/onboarding/set",
+        vol.Required("shown"): bool,
+    }
+)
 @websocket_api.async_response
 async def websocket_set_onboarding(
     hass: HomeAssistant,
@@ -197,7 +213,7 @@ class ConversationProcessView(http.HomeAssistantView):
     async def post(self, request, data):
         """Send a request for processing."""
         hass = request.app["hass"]
-        result = await _async_converse(
+        result = await async_converse(
             hass,
             text=data["text"],
             conversation_id=data.get("conversation_id"),
@@ -216,7 +232,7 @@ async def _get_agent(hass: core.HomeAssistant) -> AbstractConversationAgent:
     return agent
 
 
-async def _async_converse(
+async def async_converse(
     hass: core.HomeAssistant,
     text: str,
     conversation_id: str | None,
