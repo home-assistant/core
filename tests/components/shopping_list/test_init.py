@@ -12,14 +12,14 @@ from homeassistant.components.shopping_list.const import (
     SERVICE_COMPLETE_ITEM,
     SERVICE_REMOVE_ITEM,
 )
-from homeassistant.components.websocket_api import (
+from homeassistant.components.websocket_api.const import (
     ERR_INVALID_FORMAT,
     ERR_NOT_FOUND,
     TYPE_RESULT,
 )
 from homeassistant.const import ATTR_NAME
-from homeassistant.helpers import intent
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import intent
 
 from tests.common import async_capture_events
 

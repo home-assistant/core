@@ -25,7 +25,6 @@ from .const import (  # noqa: F401
     ERR_UNAUTHORIZED,
     ERR_UNKNOWN_COMMAND,
     ERR_UNKNOWN_ERROR,
-    TYPE_RESULT,
     AsyncWebSocketCommandHandler,
     WebSocketCommandHandler,
 )
