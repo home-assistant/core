@@ -24,14 +24,14 @@ from .const import (
 
 UNIT_PREFIXES = [
     selector.SelectOptionDict(value="none", label="none"),
-    selector.SelectOptionDict(value="nano", label="n (nano)"),
-    selector.SelectOptionDict(value="micro", label="µ (micro)"),
-    selector.SelectOptionDict(value="milli", label="m (milli)"),
-    selector.SelectOptionDict(value="kilo", label="k (kilo)"),
-    selector.SelectOptionDict(value="mega", label="M (mega)"),
-    selector.SelectOptionDict(value="giga", label="G (giga)"),
-    selector.SelectOptionDict(value="tera", label="T (tera)"),
-    selector.SelectOptionDict(value="peta", label="P (peta)"),
+    selector.SelectOptionDict(value="n", label="n (nano)"),
+    selector.SelectOptionDict(value="µ", label="µ (micro)"),
+    selector.SelectOptionDict(value="m", label="m (milli)"),
+    selector.SelectOptionDict(value="k", label="k (kilo)"),
+    selector.SelectOptionDict(value="M", label="M (mega)"),
+    selector.SelectOptionDict(value="G", label="G (giga)"),
+    selector.SelectOptionDict(value="T", label="T (tera)"),
+    selector.SelectOptionDict(value="P", label="P (peta)"),
 ]
 TIME_UNITS = [
     selector.SelectOptionDict(value=UnitOfTime.SECONDS, label="Seconds"),
@@ -52,9 +52,7 @@ OPTIONS_SCHEMA = vol.Schema(
         ),
         vol.Required(CONF_TIME_WINDOW): selector.DurationSelector(),
         vol.Required(CONF_UNIT_PREFIX, default="none"): selector.SelectSelector(
-            selector.SelectSelectorConfig(
-                options=UNIT_PREFIXES, translation_key="unit_prefix"
-            ),
+            selector.SelectSelectorConfig(options=UNIT_PREFIXES),
         ),
         vol.Required(CONF_UNIT_TIME, default=UnitOfTime.HOURS): selector.SelectSelector(
             selector.SelectSelectorConfig(
