@@ -110,7 +110,9 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreEntity, SensorEntity):
         result = self.unpack_structure_result(raw_result.registers)
         if self._coordinator:
             if result:
-                result_array = list(map(int, result.split(",")))
+                result_array = list(
+                    map(float if self._precision else int, result.split(","))
+                )
                 self._attr_native_value = result_array[0]
                 self._coordinator.async_set_updated_data(result_array)
             else:
@@ -131,7 +133,7 @@ class SlaveSensor(
     RestoreEntity,
     SensorEntity,
 ):
-    """Modbus slave binary sensor."""
+    """Modbus slave register sensor."""
 
     def __init__(
         self,
@@ -139,7 +141,7 @@ class SlaveSensor(
         idx: int,
         entry: dict[str, Any],
     ) -> None:
-        """Initialize the Modbus binary sensor."""
+        """Initialize the Modbus register sensor."""
         idx += 1
         self._idx = idx
         self._attr_name = f"{entry[CONF_NAME]} {idx}"

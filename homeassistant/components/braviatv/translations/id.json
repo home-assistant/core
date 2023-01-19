@@ -4,8 +4,7 @@
             "already_configured": "Perangkat sudah dikonfigurasi",
             "no_ip_control": "Kontrol IP dinonaktifkan di TV Anda atau TV tidak didukung.",
             "not_bravia_device": "Perangkat ini bukan TV Bravia.",
-            "reauth_successful": "Autentikasi ulang berhasil",
-            "reauth_unsuccessful": "Autentikasi ulang tidak berhasil, hapus integrasi dan siapkan kembali."
+            "reauth_successful": "Autentikasi ulang berhasil"
         },
         "error": {
             "cannot_connect": "Gagal terhubung",
@@ -16,7 +15,6 @@
         "step": {
             "authorize": {
                 "data": {
-                    "pin": "Kode PIN",
                     "use_psk": "Gunakan autentikasi PSK"
                 },
                 "description": "Pastikan bahwa \u00abKontrol dari jarak jauh\u00bb diaktifkan di TV Anda, buka: \nPengaturan -> Jaringan -> Pengaturan perangkat jarak jauh -> Kontrol dari jarak jauh. \n\nAda dua metode otorisasi: Kode PIN atau PSK (Pre-Shared Key). \nOtorisasi melalui PSK direkomendasikan karena lebih stabil.",
@@ -38,13 +36,6 @@
                 },
                 "description": "Untuk mengatur PSK di TV Anda, buka: Pengaturan -> Jaringan -> Pengaturan Jaringan Rumah -> Kontrol IP. Atur \u00abAutentikasi\u00bb ke \u00abNormal dan Pre-Shared Key\u00bb atau \"Pre-Shared Key\" dan tentukan string Pre-Shared-Key Anda (misalnya, sony). \n\nKemudian masukkan PSK Anda di sini.",
                 "title": "Otorisasi TV Sony Bravia"
-            },
-            "reauth_confirm": {
-                "data": {
-                    "pin": "Kode PIN",
-                    "use_psk": "Gunakan autentikasi PSK"
-                },
-                "description": "Masukkan kode PIN yang ditampilkan di TV Sony Bravia.\n\nJika kode PIN tidak ditampilkan, Anda harus membatalkan pendaftaran Home Assistant di TV, buka: Pengaturan -> Jaringan -> Pengaturan perangkat jarak jauh -> Batalkan pendaftaran perangkat jarak jauh.\n\nAnda bisa menggunakan PSK (Pre-Shared-Key) alih-alih menggunakan PIN. PSK merupakan kunci rahasia yang ditentukan pengguna untuk mengakses kontrol. Metode autentikasi ini disarankan karena lebih stabil. Untuk mengaktifkan PSK di TV Anda, buka Pengaturan -> Jaringan -> Penyiapan Jaringan Rumah -> Kontrol IP, lalu centang \u00abGunakan autentikasi PSK\u00bb dan masukkan PSK Anda, bukan PIN."
             },
             "user": {
                 "data": {

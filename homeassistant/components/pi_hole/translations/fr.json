@@ -9,11 +9,6 @@
             "invalid_auth": "Authentification non valide"
         },
         "step": {
-            "api_key": {
-                "data": {
-                    "api_key": "Cl\u00e9 d'API"
-                }
-            },
             "reauth_confirm": {
                 "data": {
                     "api_key": "Cl\u00e9 d'API"
@@ -27,7 +22,6 @@
                     "name": "Nom",
                     "port": "Port",
                     "ssl": "Utilise un certificat SSL",
-                    "statistics_only": "Statistiques uniquement",
                     "verify_ssl": "V\u00e9rifier le certificat SSL"
                 }
             }
