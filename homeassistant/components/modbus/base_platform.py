@@ -95,21 +95,17 @@ class BasePlatform(Entity):
         self._lazy_error_count = entry[CONF_LAZY_ERROR]
         self._lazy_errors = self._lazy_error_count
 
-        def get_optional_numeric_config(
-            config_name: str, default_val: int | float | None
-        ) -> int | float | None:
-            if (val := entry.get(config_name, default_val)) is None:
+        def get_optional_numeric_config(config_name: str) -> int | float | None:
+            if (val := entry.get(config_name)) is None:
                 return None
             assert isinstance(
                 val, (float, int)
             ), f"Expected float or int but {config_name} was {type(val)}"
             return val
 
-        self._min_value = get_optional_numeric_config(CONF_MIN_VALUE, None)
-        self._max_value = get_optional_numeric_config(CONF_MAX_VALUE, None)
-        self._zero_clamp_value = get_optional_numeric_config(
-            CONF_ZERO_CLAMP_VALUE, None
-        )
+        self._min_value = get_optional_numeric_config(CONF_MIN_VALUE)
+        self._max_value = get_optional_numeric_config(CONF_MAX_VALUE)
+        self._zero_clamp_value = get_optional_numeric_config(CONF_ZERO_CLAMP_VALUE)
 
     @abstractmethod
     async def async_update(self, now: datetime | None = None) -> None:
