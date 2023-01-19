@@ -1,12 +1,14 @@
 """Constants for the Xiaomi Bluetooth integration."""
 from __future__ import annotations
 
-from typing import TypedDict
+from typing import Final, TypedDict
 
 DOMAIN = "xiaomi_ble"
 
 
-XIAOMI_BLE_EVENT = "xiaomi_ble_event"
+EVENT_PROPERTIES: Final = "event_properties"
+EVENT_TYPE: Final = "event_type"
+XIAOMI_BLE_EVENT: Final = "xiaomi_ble_event"
 
 
 class XiaomiBleEvent(TypedDict):
