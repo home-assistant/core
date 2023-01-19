@@ -974,3 +974,42 @@ async def test_reregister_sensor(hass, create_registrations, webhook_client):
     assert reg_resp.status == HTTPStatus.CREATED
     entry = ent_reg.async_get("sensor.test_1_battery_state")
     assert entry.disabled_by is None
+
+
+async def test_webhook_handle_conversation_process(
+    hass, create_registrations, webhook_client, mock_agent
+):
+    """Test that we can converse."""
+    webhook_client.server.app.router._frozen = False
+
+    resp = await webhook_client.post(
+        "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),
+        json={
+            "type": "conversation_process",
+            "data": {
+                "text": "Turn the kitchen light off",
+            },
+        },
+    )
+
+    assert resp.status == HTTPStatus.OK
+    json = await resp.json()
+    assert json == {
+        "response": {
+            "response_type": "action_done",
+            "card": {},
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "Test response",
+                }
+            },
+            "language": hass.config.language,
+            "data": {
+                "targets": [],
+                "success": [],
+                "failed": [],
+            },
+        },
+        "conversation_id": None,
+    }
