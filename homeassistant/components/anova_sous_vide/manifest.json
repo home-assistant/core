@@ -1,0 +1,11 @@
+{
+  "domain": "anova_sous_vide",
+  "name": "Anova Sous Vide",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/anova_sous_vide",
+  "requirements": ["anova-wifi==0.2.3"],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": ["@conway220"],
+  "iot_class": "cloud_polling"
+}
