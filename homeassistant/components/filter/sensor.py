@@ -503,7 +503,7 @@ class RangeFilter(Filter, SensorEntity):
     def _filter_state(self, new_state: FilterState) -> FilterState:
         """Implement the range filter."""
 
-        # self._only_numbers = True
+        # We can cast safely here thanks to self._only_numbers = True
         new_state_value = cast(float, new_state.state)
 
         if self._upper_bound is not None and new_state_value > self._upper_bound:
@@ -555,7 +555,7 @@ class OutlierFilter(Filter, SensorEntity):
     def _filter_state(self, new_state: FilterState) -> FilterState:
         """Implement the outlier filter."""
 
-        # self._only_numbers = True
+        # We can cast safely here thanks to self._only_numbers = True
         previous_state_values = [cast(float, s.state) for s in self.states]
         new_state_value = cast(float, new_state.state)
 
@@ -596,7 +596,7 @@ class LowPassFilter(Filter, SensorEntity):
 
         new_weight = 1.0 / self._time_constant
         prev_weight = 1.0 - new_weight
-        # self._only_numbers = True
+        # We can cast safely here thanks to self._only_numbers = True
         prev_state_value = cast(float, self.states[-1].state)
         new_state_value = cast(float, new_state.state)
         new_state.state = prev_weight * prev_state_value + new_weight * new_state_value
@@ -645,7 +645,7 @@ class TimeSMAFilter(Filter, SensorEntity):
         start = new_state.timestamp - self._time_window
         prev_state = self.last_leak if self.last_leak is not None else self.queue[0]
         for state in self.queue:
-            # self._only_numbers = True
+            # We can cast safely here thanks to self._only_numbers = True
             prev_state_value = cast(float, prev_state.state)
             moving_sum += (state.timestamp - start).total_seconds() * prev_state_value
             start = state.timestamp
