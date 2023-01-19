@@ -51,6 +51,8 @@ async def async_setup_entry(
 class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
     """Represents a ScreenLogic climate entity."""
 
+    _attr_has_entity_name = True
+
     _attr_hvac_modes = SUPPORTED_MODES
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
@@ -71,8 +73,7 @@ class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
     @property
     def name(self) -> str:
         """Name of the heater."""
-        ent_name = self.body["heat_status"]["name"]
-        return f"{self.gateway_name} {ent_name}"
+        return self.body["heat_status"]["name"]
 
     @property
     def min_temp(self) -> float:
@@ -142,7 +143,8 @@ class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
             await self._async_refresh()
         else:
             raise HomeAssistantError(
-                f"Failed to set_temperature {temperature} on body {self.body['body_type']['value']}"
+                f"Failed to set_temperature {temperature} on body"
+                f" {self.body['body_type']['value']}"
             )
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -156,7 +158,8 @@ class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
             await self._async_refresh()
         else:
             raise HomeAssistantError(
-                f"Failed to set_hvac_mode {mode} on body {self.body['body_type']['value']}"
+                f"Failed to set_hvac_mode {mode} on body"
+                f" {self.body['body_type']['value']}"
             )
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
@@ -170,7 +173,8 @@ class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
             await self._async_refresh()
         else:
             raise HomeAssistantError(
-                f"Failed to set_preset_mode {mode} on body {self.body['body_type']['value']}"
+                f"Failed to set_preset_mode {mode} on body"
+                f" {self.body['body_type']['value']}"
             )
 
     async def async_added_to_hass(self) -> None:

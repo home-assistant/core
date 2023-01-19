@@ -80,12 +80,6 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return SQLOptionsFlowHandler(config_entry)
 
-    async def async_step_import(self, config: dict[str, Any] | None) -> FlowResult:
-        """Import a configuration from config.yaml."""
-
-        self._async_abort_entries_match(config)
-        return await self.async_step_user(user_input=config)
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:

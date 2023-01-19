@@ -11,7 +11,7 @@
             "missing_configuration": "Komponen tidak dikonfigurasi. Ikuti petunjuk dalam dokumentasi.",
             "oauth_error": "Menerima respons token yang tidak valid.",
             "reauth_successful": "Autentikasi ulang berhasil",
-            "timeout_connect": "Tenggang waktu membuat koneksi habis",
+            "timeout_connect": "Tenggang waktu pembuatan koneksi habis",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
         "create_entry": {
@@ -27,6 +27,17 @@
             "reauth_confirm": {
                 "description": "Integrasi SDK Google Asisten perlu mengautentikasi ulang akun Anda",
                 "title": "Autentikasi Ulang Integrasi"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "enable_conversation_agent": "Aktifkan agen percakapan",
+                    "language_code": "Kode bahasa"
+                },
+                "description": "Tetapkan bahasa untuk interaksi dengan Asisten Google dan apakah Anda ingin mengaktifkan agen percakapan."
             }
         }
     }

@@ -72,7 +72,7 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
                         ): str,
                         vol.Optional(
                             CONF_ADMIN_PASSWORD,
-                            default=user_input.get(CONF_ADMIN_PASSWORD),
+                            default=user_input.get(CONF_ADMIN_PASSWORD, ""),
                         ): str,
                         vol.Optional(
                             CONF_SURVEILLANCE_USERNAME,
@@ -80,7 +80,7 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
                         ): str,
                         vol.Optional(
                             CONF_SURVEILLANCE_PASSWORD,
-                            default=user_input.get(CONF_SURVEILLANCE_PASSWORD),
+                            default=user_input.get(CONF_SURVEILLANCE_PASSWORD, ""),
                         ): str,
                     }
                 ),

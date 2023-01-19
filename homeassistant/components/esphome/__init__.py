@@ -12,7 +12,6 @@ from aioesphomeapi import (
     APIConnectionError,
     APIIntEnum,
     APIVersion,
-    BadNameAPIError,
     DeviceInfo as EsphomeDeviceInfo,
     EntityCategory as EsphomeEntityCategory,
     EntityInfo,
@@ -27,7 +26,6 @@ from aioesphomeapi import (
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
-from homeassistant import const
 from homeassistant.components import tag, zeroconf
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -37,6 +35,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
+    __version__ as ha_version,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall, State, callback
 from homeassistant.exceptions import TemplateError
@@ -57,17 +56,24 @@ from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.template import Template
 
 from .bluetooth import async_connect_scanner
-from .domain_data import DOMAIN, DomainData
+from .const import DOMAIN
+from .dashboard import async_get_dashboard
+from .domain_data import DomainData
 
 # Import config flow so that it's added to the registry
 from .entry_data import RuntimeEntryData
 
+CONF_DEVICE_NAME = "device_name"
 CONF_NOISE_PSK = "noise_psk"
 _LOGGER = logging.getLogger(__name__)
 _R = TypeVar("_R")
 
-STABLE_BLE_VERSION_STR = "2022.11.0"
+STABLE_BLE_VERSION_STR = "2022.12.0"
 STABLE_BLE_VERSION = AwesomeVersion(STABLE_BLE_VERSION_STR)
+PROJECT_URLS = {
+    "esphome.bluetooth-proxy": "https://esphome.github.io/bluetooth-proxies/",
+}
+DEFAULT_URL = f"https://esphome.io/changelog/{STABLE_BLE_VERSION_STR}.html"
 
 
 @callback
@@ -75,13 +81,13 @@ def _async_check_firmware_version(
     hass: HomeAssistant, device_info: EsphomeDeviceInfo
 ) -> None:
     """Create or delete an the ble_firmware_outdated issue."""
-    # ESPHome device_info.name is the unique_id
-    issue = f"ble_firmware_outdated-{device_info.name}"
+    # ESPHome device_info.mac_address is the unique_id
+    issue = f"ble_firmware_outdated-{device_info.mac_address}"
     if (
         not device_info.bluetooth_proxy_version
         # If the device has a project name its up to that project
         # to tell them about the firmware version update so we don't notify here
-        or device_info.project_name
+        or (device_info.project_name and device_info.project_name not in PROJECT_URLS)
         or AwesomeVersion(device_info.esphome_version) >= STABLE_BLE_VERSION
     ):
         async_delete_issue(hass, DOMAIN, issue)
@@ -92,9 +98,12 @@ def _async_check_firmware_version(
         issue,
         is_fixable=False,
         severity=IssueSeverity.WARNING,
-        learn_more_url=f"https://esphome.io/changelog/{STABLE_BLE_VERSION_STR}.html",
+        learn_more_url=PROJECT_URLS.get(device_info.project_name, DEFAULT_URL),
         translation_key="ble_firmware_outdated",
-        translation_placeholders={"name": device_info.name},
+        translation_placeholders={
+            "name": device_info.name,
+            "version": STABLE_BLE_VERSION_STR,
+        },
     )
 
 
@@ -114,7 +123,7 @@ async def async_setup_entry(  # noqa: C901
         host,
         port,
         password,
-        client_info=f"Home Assistant {const.__version__}",
+        client_info=f"Home Assistant {ha_version}",
         zeroconf_instance=zeroconf_instance,
         noise_psk=noise_psk,
     )
@@ -133,7 +142,8 @@ async def async_setup_entry(  # noqa: C901
 
     # Use async_listen instead of async_listen_once so that we don't deregister
     # the callback twice when shutting down Home Assistant.
-    # "Unable to remove unknown listener <function EventBus.async_listen_once.<locals>.onetime_listener>"
+    # "Unable to remove unknown listener
+    # <function EventBus.async_listen_once.<locals>.onetime_listener>"
     entry_data.cleanup_callbacks.append(
         hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, on_stop)
     )
@@ -261,12 +271,18 @@ async def async_setup_entry(  # noqa: C901
                     entry, unique_id=format_mac(device_info.mac_address)
                 )
 
+            # Make sure we have the correct device name stored
+            # so we can map the device to ESPHome Dashboard config
+            if entry.data.get(CONF_DEVICE_NAME) != device_info.name:
+                hass.config_entries.async_update_entry(
+                    entry, data={**entry.data, CONF_DEVICE_NAME: device_info.name}
+                )
+
             entry_data.device_info = device_info
             assert cli.api_version is not None
             entry_data.api_version = cli.api_version
             entry_data.available = True
             if entry_data.device_info.name:
-                cli.expected_name = entry_data.device_info.name
                 reconnect_logic.name = entry_data.device_info.name
 
             if device_info.bluetooth_proxy_version:
@@ -308,12 +324,6 @@ async def async_setup_entry(  # noqa: C901
         """Start reauth flow if appropriate connect error type."""
         if isinstance(err, (RequiresEncryptionAPIError, InvalidEncryptionKeyAPIError)):
             entry.async_start_reauth(hass)
-        if isinstance(err, BadNameAPIError):
-            _LOGGER.warning(
-                "Name of device %s changed to %s, potentially due to IP reassignment",
-                cli.expected_name,
-                err.received_name,
-            )
 
     reconnect_logic = ReconnectLogic(
         client=cli,
@@ -329,11 +339,10 @@ async def async_setup_entry(  # noqa: C901
     await _setup_services(hass, entry_data, services)
 
     if entry_data.device_info is not None and entry_data.device_info.name:
-        cli.expected_name = entry_data.device_info.name
         reconnect_logic.name = entry_data.device_info.name
         if entry.unique_id is None:
             hass.config_entries.async_update_entry(
-                entry, unique_id=entry_data.device_info.name
+                entry, unique_id=format_mac(entry_data.device_info.mac_address)
             )
 
     await reconnect_logic.start()
@@ -354,6 +363,8 @@ def _async_setup_device_registry(
     configuration_url = None
     if device_info.webserver_port > 0:
         configuration_url = f"http://{entry.data['host']}:{device_info.webserver_port}"
+    elif dashboard := async_get_dashboard(hass):
+        configuration_url = f"homeassistant://hassio/ingress/{dashboard.addon_slug}"
 
     manufacturer = "espressif"
     if device_info.manufacturer:
@@ -371,7 +382,7 @@ def _async_setup_device_registry(
         config_entry_id=entry.entry_id,
         configuration_url=configuration_url,
         connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)},
-        name=device_info.name,
+        name=device_info.friendly_name or device_info.name,
         manufacturer=manufacturer,
         model=model,
         sw_version=sw_version,
@@ -473,7 +484,10 @@ async def _register_service(
     )
 
     service_desc = {
-        "description": f"Calls the service {service.name} of the node {entry_data.device_info.name}",
+        "description": (
+            f"Calls the service {service.name} of the node"
+            f" {entry_data.device_info.name}"
+        ),
         "fields": fields,
     }
 
@@ -639,7 +653,9 @@ class EsphomeEnumMapper(Generic[_EnumT, _ValT]):
     def __init__(self, mapping: dict[_EnumT, _ValT]) -> None:
         """Construct a EsphomeEnumMapper."""
         # Add none mapping
-        augmented_mapping: dict[_EnumT | None, _ValT | None] = mapping  # type: ignore[assignment]
+        augmented_mapping: dict[
+            _EnumT | None, _ValT | None
+        ] = mapping  # type: ignore[assignment]
         augmented_mapping[None] = None
 
         self._mapping = augmented_mapping
@@ -693,16 +709,15 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         self._component_key = component_key
         self._key = key
         self._state_type = state_type
+        if entry_data.device_info is not None and entry_data.device_info.friendly_name:
+            self._attr_has_entity_name = True
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                (
-                    f"esphome_{self._entry_id}_remove_"
-                    f"{self._component_key}_{self._key}"
-                ),
+                f"esphome_{self._entry_id}_remove_{self._component_key}_{self._key}",
                 functools.partial(self.async_remove, force_remove=True),
             )
         )
@@ -812,7 +827,10 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
 
     @property
     def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
+        """Return if the entity should be enabled when first added.
+
+        This only applies when fist added to the entity registry.
+        """
         return not self._static_info.disabled_by_default
 
     @property

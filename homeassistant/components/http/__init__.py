@@ -74,6 +74,7 @@ DEFAULT_CORS: Final[list[str]] = ["https://cast.home-assistant.io"]
 NO_LOGIN_ATTEMPT_THRESHOLD: Final = -1
 
 MAX_CLIENT_SIZE: Final = 1024**2 * 16
+MAX_LINE_SIZE: Final = 24570
 
 STORAGE_KEY: Final = DOMAIN
 STORAGE_VERSION: Final = 1
@@ -234,7 +235,14 @@ class HomeAssistantHTTP:
         ssl_profile: str,
     ) -> None:
         """Initialize the HTTP Home Assistant server."""
-        self.app = web.Application(middlewares=[], client_max_size=MAX_CLIENT_SIZE)
+        self.app = web.Application(
+            middlewares=[],
+            client_max_size=MAX_CLIENT_SIZE,
+            handler_args={
+                "max_line_size": MAX_LINE_SIZE,
+                "max_field_size": MAX_LINE_SIZE,
+            },
+        )
         self.hass = hass
         self.ssl_certificate = ssl_certificate
         self.ssl_peer_certificate = ssl_peer_certificate
@@ -361,7 +369,8 @@ class HomeAssistantHTTP:
         except OSError as error:
             if not self.hass.config.safe_mode:
                 raise HomeAssistantError(
-                    f"Could not use SSL certificate from {self.ssl_certificate}: {error}"
+                    f"Could not use SSL certificate from {self.ssl_certificate}:"
+                    f" {error}"
                 ) from error
             _LOGGER.error(
                 "Could not read SSL certificate from %s: %s",
@@ -378,14 +387,17 @@ class HomeAssistantHTTP:
                 context = None
             else:
                 _LOGGER.critical(
-                    "Home Assistant is running in safe mode with an emergency self signed ssl certificate because the configured SSL certificate was not usable"
+                    "Home Assistant is running in safe mode with an emergency self"
+                    " signed ssl certificate because the configured SSL certificate was"
+                    " not usable"
                 )
                 return context
 
         if self.ssl_peer_certificate:
             if context is None:
                 raise HomeAssistantError(
-                    "Failed to create ssl context, no fallback available because a peer certificate is required."
+                    "Failed to create ssl context, no fallback available because a peer"
+                    " certificate is required."
                 )
 
             context.verify_mode = ssl.CERT_REQUIRED

@@ -283,7 +283,10 @@ class OpeningDevice(OpeningDeviceBase, HomeAccessory):
             # since CHAR_CURRENT_POSITION/CHAR_TARGET_POSITION are required
             # by homekit, but really don't exist.
             _LOGGER.debug(
-                "%s does not support setting position, current position will be locked to closed",
+                (
+                    "%s does not support setting position, current position will be"
+                    " locked to closed"
+                ),
                 self.entity_id,
             )
             target_args["properties"] = {PROP_MIN_VALUE: 0, PROP_MAX_VALUE: 0}

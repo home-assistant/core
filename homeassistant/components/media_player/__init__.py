@@ -393,12 +393,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         elif value[ATTR_MEDIA_ENQUEUE] is True:
             value[ATTR_MEDIA_ENQUEUE] = MediaPlayerEnqueue.ADD
             _LOGGER.warning(
-                "Playing media with enqueue set to True is deprecated. Use 'add' instead"
+                "Playing media with enqueue set to True is deprecated. Use 'add'"
+                " instead"
             )
         elif value[ATTR_MEDIA_ENQUEUE] is False:
             value[ATTR_MEDIA_ENQUEUE] = MediaPlayerEnqueue.PLAY
             _LOGGER.warning(
-                "Playing media with enqueue set to False is deprecated. Use 'play' instead"
+                "Playing media with enqueue set to False is deprecated. Use 'play'"
+                " instead"
             )
 
         return value
@@ -1199,7 +1201,8 @@ async def websocket_browse_media(
     """
     Browse media available to the media_player entity.
 
-    To use, media_player integrations can implement MediaPlayerEntity.async_browse_media()
+    To use, media_player integrations can implement
+    MediaPlayerEntity.async_browse_media()
     """
     component: EntityComponent[MediaPlayerEntity] = hass.data[DOMAIN]
     player = component.get_entity(msg["entity_id"])

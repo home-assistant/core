@@ -33,7 +33,7 @@ def run(args):
     # Disable logging
     logging.getLogger("homeassistant.core").setLevel(logging.CRITICAL)
 
-    parser = argparse.ArgumentParser(description=("Run a Home Assistant benchmark."))
+    parser = argparse.ArgumentParser(description="Run a Home Assistant benchmark.")
     parser.add_argument("name", choices=BENCHMARKS)
     parser.add_argument("--script", choices=["benchmark"])
 
@@ -191,7 +191,10 @@ async def state_changed_event_helper(hass):
 
 @benchmark
 async def state_changed_event_filter_helper(hass):
-    """Run a million events through state changed event helper with 1000 entities that all get filtered."""
+    """Run a million events through state changed event helper.
+
+    With 1000 entities that all get filtered.
+    """
     count = 0
     entity_id = "light.kitchen"
     events_to_fire = 10**6

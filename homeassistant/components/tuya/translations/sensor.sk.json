@@ -14,7 +14,8 @@
             "reserve_1": "Rezerva 1",
             "reserve_2": "Rezerva 2",
             "reserve_3": "Rezerva 3",
-            "standby": "Pohotovostn\u00fd re\u017eim"
+            "standby": "Pohotovostn\u00fd re\u017eim",
+            "warm": "Udr\u017eiavanie tepla"
         }
     }
 }

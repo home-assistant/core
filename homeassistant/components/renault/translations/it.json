@@ -33,9 +33,20 @@
         }
     },
     "entity": {
+        "select": {
+            "charge_mode": {
+                "state": {
+                    "always": "Immediata",
+                    "always_charging": "Immediata",
+                    "schedule_mode": "Pianificatore"
+                }
+            }
+        },
         "sensor": {
             "charge_state": {
                 "state": {
+                    "charge_ended": "Carica terminata",
+                    "charge_error": "Non \u00e8 in carica o non \u00e8 collegata",
                     "charge_in_progress": "Ricaricando",
                     "energy_flap_opened": "Sportello energetico aperto",
                     "not_in_charge": "Non in carica",

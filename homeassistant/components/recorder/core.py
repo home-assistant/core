@@ -186,7 +186,7 @@ class Recorder(threading.Thread):
         self.run_history = RunHistory()
 
         self.entity_filter = entity_filter
-        self.exclude_t = exclude_t
+        self.exclude_t = set(exclude_t)
 
         self.schema_version = 0
         self._commits_without_expire = 0
@@ -319,10 +319,12 @@ class Recorder(threading.Thread):
         if size <= MAX_QUEUE_BACKLOG:
             return
         _LOGGER.error(
-            "The recorder backlog queue reached the maximum size of %s events; "
-            "usually, the system is CPU bound, I/O bound, or the database "
-            "is corrupt due to a disk problem; The recorder will stop "
-            "recording events to avoid running out of memory",
+            (
+                "The recorder backlog queue reached the maximum size of %s events; "
+                "usually, the system is CPU bound, I/O bound, or the database "
+                "is corrupt due to a disk problem; The recorder will stop "
+                "recording events to avoid running out of memory"
+            ),
             MAX_QUEUE_BACKLOG,
         )
         self._async_stop_queue_watcher_and_event_listener()
@@ -375,7 +377,8 @@ class Recorder(threading.Thread):
         # Unknown what it is.
         return True
 
-    def _empty_queue(self, event: Event) -> None:
+    @callback
+    def _async_empty_queue(self, event: Event) -> None:
         """Empty the queue if its still present at final write."""
 
         # If the queue is full of events to be processed because
@@ -409,7 +412,7 @@ class Recorder(threading.Thread):
     def async_register(self) -> None:
         """Post connection initialize."""
         bus = self.hass.bus
-        bus.async_listen_once(EVENT_HOMEASSISTANT_FINAL_WRITE, self._empty_queue)
+        bus.async_listen_once(EVENT_HOMEASSISTANT_FINAL_WRITE, self._async_empty_queue)
         bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_shutdown)
         async_at_started(self.hass, self._async_hass_started)
 
@@ -635,8 +638,10 @@ class Recorder(threading.Thread):
             else:
                 persistent_notification.create(
                     self.hass,
-                    "The database migration failed, check [the logs](/config/logs)."
-                    "Database Migration Failed",
+                    (
+                        "The database migration failed, check [the logs](/config/logs)."
+                        "Database Migration Failed"
+                    ),
                     "recorder_database_migration",
                 )
                 self.hass.add_job(self.async_set_db_ready)
@@ -722,7 +727,12 @@ class Recorder(threading.Thread):
         """Migrate schema to the latest version."""
         persistent_notification.create(
             self.hass,
-            "System performance will temporarily degrade during the database upgrade. Do not power down or restart the system until the upgrade completes. Integrations that read the database, such as logbook and history, may return inconsistent results until the upgrade completes.",
+            (
+                "System performance will temporarily degrade during the database"
+                " upgrade. Do not power down or restart the system until the upgrade"
+                " completes. Integrations that read the database, such as logbook and"
+                " history, may return inconsistent results until the upgrade completes."
+            ),
             "Database upgrade in progress",
             "recorder_database_migration",
         )
@@ -1011,6 +1021,10 @@ class Recorder(threading.Thread):
         """Open the event session."""
         self.event_session = self.get_session()
         self.event_session.expire_on_commit = False
+
+    def _post_schema_migration(self, old_version: int, new_version: int) -> None:
+        """Run post schema migration tasks."""
+        migration.post_schema_migration(self.event_session, old_version, new_version)
 
     def _send_keep_alive(self) -> None:
         """Send a keep alive to keep the db connection open."""

@@ -64,7 +64,9 @@ class AzureEventHubClientSAS(AzureEventHubClient):
     def client(self) -> EventHubProducerClient:
         """Get a Event Producer Client."""
         return EventHubProducerClient(
-            fully_qualified_namespace=f"{self.event_hub_namespace}.servicebus.windows.net",
+            fully_qualified_namespace=(
+                f"{self.event_hub_namespace}.servicebus.windows.net"
+            ),
             eventhub_name=self.event_hub_instance_name,
             credential=EventHubSharedKeyCredential(  # type: ignore[arg-type]
                 policy=self.event_hub_sas_policy, key=self.event_hub_sas_key

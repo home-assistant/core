@@ -46,7 +46,6 @@ async def test_user_walkthrough(hass: HomeAssistant, toloclient: Mock):
 
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == SOURCE_USER
-    assert "flow_id" in result
 
     toloclient().get_status_info.side_effect = lambda *args, **kwargs: None
 
@@ -58,7 +57,6 @@ async def test_user_walkthrough(hass: HomeAssistant, toloclient: Mock):
     assert result2["type"] == FlowResultType.FORM
     assert result2["step_id"] == SOURCE_USER
     assert result2["errors"] == {"base": "cannot_connect"}
-    assert "flow_id" in result2
 
     toloclient().get_status_info.side_effect = lambda *args, **kwargs: object()
 

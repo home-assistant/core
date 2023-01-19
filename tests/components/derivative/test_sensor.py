@@ -4,7 +4,7 @@ from math import sin
 import random
 from unittest.mock import patch
 
-from homeassistant.const import POWER_WATT, TIME_HOURS, TIME_MINUTES, TIME_SECONDS
+from homeassistant.const import UnitOfPower, UnitOfTime
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -85,7 +85,7 @@ async def test_dataSet1(hass):
     """Test derivative sensor state."""
     await setup_tests(
         hass,
-        {"unit_time": TIME_SECONDS},
+        {"unit_time": UnitOfTime.SECONDS},
         times=[20, 30, 40, 50],
         values=[10, 30, 5, 0],
         expected_state=-0.5,
@@ -96,7 +96,7 @@ async def test_dataSet2(hass):
     """Test derivative sensor state."""
     await setup_tests(
         hass,
-        {"unit_time": TIME_SECONDS},
+        {"unit_time": UnitOfTime.SECONDS},
         times=[20, 30],
         values=[5, 0],
         expected_state=-0.5,
@@ -107,20 +107,20 @@ async def test_dataSet3(hass):
     """Test derivative sensor state."""
     state = await setup_tests(
         hass,
-        {"unit_time": TIME_SECONDS},
+        {"unit_time": UnitOfTime.SECONDS},
         times=[20, 30],
         values=[5, 10],
         expected_state=0.5,
     )
 
-    assert state.attributes.get("unit_of_measurement") == f"/{TIME_SECONDS}"
+    assert state.attributes.get("unit_of_measurement") == f"/{UnitOfTime.SECONDS}"
 
 
 async def test_dataSet4(hass):
     """Test derivative sensor state."""
     await setup_tests(
         hass,
-        {"unit_time": TIME_SECONDS},
+        {"unit_time": UnitOfTime.SECONDS},
         times=[20, 30],
         values=[5, 5],
         expected_state=0,
@@ -131,7 +131,7 @@ async def test_dataSet5(hass):
     """Test derivative sensor state."""
     await setup_tests(
         hass,
-        {"unit_time": TIME_SECONDS},
+        {"unit_time": UnitOfTime.SECONDS},
         times=[20, 30],
         values=[10, -10],
         expected_state=-2,
@@ -162,7 +162,7 @@ async def test_data_moving_average_for_discrete_sensor(hass):
         hass,
         {
             "time_window": {"seconds": time_window},
-            "unit_time": TIME_MINUTES,
+            "unit_time": UnitOfTime.MINUTES,
             "round": 1,
         },
     )  # two minute window
@@ -205,7 +205,7 @@ async def test_data_moving_average_for_irregular_times(hass):
         hass,
         {
             "time_window": {"seconds": time_window},
-            "unit_time": TIME_MINUTES,
+            "unit_time": UnitOfTime.MINUTES,
             "round": 3,
         },
     )
@@ -245,7 +245,7 @@ async def test_double_signal_after_delay(hass):
         hass,
         {
             "time_window": {"seconds": time_window},
-            "unit_time": TIME_MINUTES,
+            "unit_time": UnitOfTime.MINUTES,
             "round": 3,
         },
     )
@@ -285,13 +285,19 @@ async def test_prefix(hass):
     with patch("homeassistant.util.dt.utcnow") as now:
         now.return_value = base
         hass.states.async_set(
-            entity_id, 1000, {"unit_of_measurement": POWER_WATT}, force_update=True
+            entity_id,
+            1000,
+            {"unit_of_measurement": UnitOfPower.WATT},
+            force_update=True,
         )
         await hass.async_block_till_done()
 
         now.return_value += timedelta(seconds=3600)
         hass.states.async_set(
-            entity_id, 1000, {"unit_of_measurement": POWER_WATT}, force_update=True
+            entity_id,
+            1000,
+            {"unit_of_measurement": UnitOfPower.WATT},
+            force_update=True,
         )
         await hass.async_block_till_done()
 
@@ -300,7 +306,7 @@ async def test_prefix(hass):
 
     # Testing a power sensor at 1000 Watts for 1hour = 0kW/h
     assert round(float(state.state), config["sensor"]["round"]) == 0.0
-    assert state.attributes.get("unit_of_measurement") == f"kW/{TIME_HOURS}"
+    assert state.attributes.get("unit_of_measurement") == f"kW/{UnitOfTime.HOURS}"
 
 
 async def test_suffix(hass):
@@ -312,7 +318,7 @@ async def test_suffix(hass):
             "source": "sensor.bytes_per_second",
             "round": 2,
             "unit_prefix": "k",
-            "unit_time": TIME_SECONDS,
+            "unit_time": UnitOfTime.SECONDS,
         }
     }
 

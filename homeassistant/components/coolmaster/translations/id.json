@@ -13,7 +13,8 @@
                     "heat": "Mendukung mode panas",
                     "heat_cool": "Mendukung mode panas/dingin otomatis",
                     "host": "Host",
-                    "off": "Bisa dimatikan"
+                    "off": "Bisa dimatikan",
+                    "swing_support": "Kontrol mode ayunan"
                 },
                 "title": "Siapkan detail koneksi CoolMasterNet Anda."
             }

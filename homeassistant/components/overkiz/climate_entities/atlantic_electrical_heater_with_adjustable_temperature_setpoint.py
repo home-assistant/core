@@ -14,7 +14,7 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 
 from ..coordinator import OverkizDataUpdateCoordinator
 from ..entity import OverkizEntity
@@ -24,6 +24,7 @@ PRESET_COMFORT1 = "comfort-1"
 PRESET_COMFORT2 = "comfort-2"
 PRESET_FROST_PROTECTION = "frost_protection"
 PRESET_PROG = "prog"
+PRESET_EXTERNAL = "external"
 
 
 # Map Overkiz presets to Home Assistant presets
@@ -36,6 +37,7 @@ OVERKIZ_TO_PRESET_MODE: dict[str, str] = {
     OverkizCommandParam.COMFORT_2: PRESET_COMFORT2,
     OverkizCommandParam.AUTO: PRESET_AUTO,
     OverkizCommandParam.BOOST: PRESET_BOOST,
+    OverkizCommandParam.EXTERNAL: PRESET_EXTERNAL,
     OverkizCommandParam.INTERNAL: PRESET_PROG,
 }
 
@@ -48,6 +50,7 @@ OVERKIZ_TO_HVAC_MODE: dict[str, str] = {
     OverkizCommandParam.AUTO: HVACMode.AUTO,
     OverkizCommandParam.BASIC: HVACMode.HEAT,
     OverkizCommandParam.STANDBY: HVACMode.OFF,
+    OverkizCommandParam.EXTERNAL: HVACMode.AUTO,
     OverkizCommandParam.INTERNAL: HVACMode.AUTO,
 }
 
@@ -63,7 +66,7 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
 
     _attr_hvac_modes = [*HVAC_MODE_TO_OVERKIZ]
     _attr_preset_modes = [*PRESET_MODE_TO_OVERKIZ]
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
         ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
     )
@@ -96,15 +99,26 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
     @property
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
+
+        states = self.device.states
+
         if (
-            state := self.device.states[OverkizState.IO_TARGET_HEATING_LEVEL]
+            operating_mode := states[OverkizState.CORE_OPERATING_MODE]
+        ) and operating_mode.value_as_str == OverkizCommandParam.EXTERNAL:
+            return PRESET_EXTERNAL
+
+        if (
+            state := states[OverkizState.IO_TARGET_HEATING_LEVEL]
         ) and state.value_as_str:
             return OVERKIZ_TO_PRESET_MODE[state.value_as_str]
         return None
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        if preset_mode in [PRESET_AUTO, PRESET_PROG]:
+
+        if preset_mode == PRESET_EXTERNAL:
+            command = OverkizCommand.SET_SCHEDULING_TYPE
+        elif preset_mode in [PRESET_AUTO, PRESET_PROG]:
             command = OverkizCommand.SET_OPERATING_MODE
         else:
             command = OverkizCommand.SET_HEATING_LEVEL

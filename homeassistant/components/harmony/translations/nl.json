@@ -22,6 +22,15 @@
             }
         }
     },
+    "entity": {
+        "select": {
+            "activities": {
+                "state": {
+                    "power_off": "Uitschakelen"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {

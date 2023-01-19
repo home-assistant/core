@@ -1,7 +1,7 @@
 """Tests for honeywell config flow."""
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
-import somecomfort
+import AIOSomecomfort
 
 from homeassistant import data_entry_flow
 from homeassistant.components.honeywell.const import (
@@ -33,28 +33,32 @@ async def test_show_authenticate_form(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
 
-async def test_connection_error(hass: HomeAssistant) -> None:
+async def test_connection_error(hass: HomeAssistant, client: MagicMock) -> None:
+    """Test that an error message is shown on connection fail."""
+    client.login.side_effect = AIOSomecomfort.ConnectionError
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=FAKE_CONFIG
+    )
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_auth_error(hass: HomeAssistant, client: MagicMock) -> None:
     """Test that an error message is shown on login fail."""
-    with patch(
-        "somecomfort.SomeComfort",
-        side_effect=somecomfort.AuthError,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=FAKE_CONFIG
-        )
-        assert result["errors"] == {"base": "invalid_auth"}
+    client.login.side_effect = AIOSomecomfort.AuthError
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=FAKE_CONFIG
+    )
+    assert result["errors"] == {"base": "invalid_auth"}
 
 
 async def test_create_entry(hass: HomeAssistant) -> None:
     """Test that the config entry is created."""
-    with patch(
-        "somecomfort.SomeComfort",
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=FAKE_CONFIG
-        )
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-        assert result["data"] == FAKE_CONFIG
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=FAKE_CONFIG
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["data"] == FAKE_CONFIG
 
 
 @patch("homeassistant.components.honeywell.UPDATE_LOOP_SLEEP_TIME", 0)

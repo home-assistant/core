@@ -52,6 +52,8 @@ class FritzEntityBaseMock(Mock):
     manufacturer = CONF_FAKE_MANUFACTURER
     name = CONF_FAKE_NAME
     productname = CONF_FAKE_PRODUCTNAME
+    rel_humidity = None
+    battery_level = None
 
 
 class FritzDeviceBinarySensorMock(FritzEntityBaseMock):

@@ -71,11 +71,11 @@ class HueBaseEntity(Entity):
             # creating a pretty name for device-less entities (e.g. groups/scenes)
             # should be handled in the platform instead
             return self.resource.type.value
-        # if resource is a light, use the name from metadata
-        if self.resource.type == ResourceTypes.LIGHT:
-            return self.resource.name
-        # for sensors etc, use devicename + pretty name of type
         dev_name = self.device.metadata.name
+        # if resource is a light, use the device name itself
+        if self.resource.type == ResourceTypes.LIGHT:
+            return dev_name
+        # for sensors etc, use devicename + pretty name of type
         type_title = RESOURCE_TYPE_NAMES.get(
             self.resource.type, self.resource.type.value.replace("_", " ").title()
         )
@@ -196,11 +196,13 @@ class HueBaseEntity(Entity):
                 # the device state changed from on->off or off->on
                 # while it was reported as not connected!
                 self.logger.warning(
-                    "Device %s changed state while reported as disconnected. "
-                    "This might be an indicator that routing is not working for this device "
-                    "or the device is having connectivity issues. "
-                    "You can disable availability reporting for this device in the Hue options. "
-                    "Device details: %s - %s (%s) fw: %s",
+                    (
+                        "Device %s changed state while reported as disconnected. This"
+                        " might be an indicator that routing is not working for this"
+                        " device or the device is having connectivity issues. You can"
+                        " disable availability reporting for this device in the Hue"
+                        " options. Device details: %s - %s (%s) fw: %s"
+                    ),
                     self.name,
                     self.device.product_data.manufacturer_name,
                     self.device.product_data.product_name,

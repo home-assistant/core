@@ -273,7 +273,10 @@ class AlmondAgent(conversation.AbstractConversationAgent):
         if self.entry.data.get("is_hassio"):
             host = "/core_almond"
         return {
-            "text": "Would you like to opt-in to share your anonymized commands with Stanford to improve Almond's responses?",
+            "text": (
+                "Would you like to opt-in to share your anonymized commands with"
+                " Stanford to improve Almond's responses?"
+            ),
             "url": f"{host}/conversation",
         }
 

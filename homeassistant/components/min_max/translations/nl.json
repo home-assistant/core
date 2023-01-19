@@ -6,7 +6,7 @@
                     "entity_ids": "Invoerentiteiten",
                     "name": "Naam",
                     "round_digits": "Precisie",
-                    "type": "statistisch kenmerk"
+                    "type": "Statistisch kenmerk"
                 },
                 "data_description": {
                     "round_digits": "Regelt het aantal decimale cijfers in de uitvoer wanneer de statistische eigenschap gemiddelde of mediaan is."
@@ -22,7 +22,7 @@
                 "data": {
                     "entity_ids": "Invoerentiteiten",
                     "round_digits": "Precisie",
-                    "type": "statistisch kenmerk"
+                    "type": "Statistisch kenmerk"
                 },
                 "data_description": {
                     "round_digits": "Regelt het aantal decimale cijfers in de uitvoer wanneer de statistische eigenschap gemiddelde of mediaan is."

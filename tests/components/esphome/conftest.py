@@ -3,15 +3,22 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, Mock, patch
 
-from aioesphomeapi import APIClient
+from aioesphomeapi import APIClient, DeviceInfo
 import pytest
 from zeroconf import Zeroconf
 
-from homeassistant.components.esphome import CONF_NOISE_PSK, DOMAIN
+from homeassistant.components.esphome import CONF_NOISE_PSK, DOMAIN, dashboard
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 
+from . import DASHBOARD_HOST, DASHBOARD_PORT, DASHBOARD_SLUG
+
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture(autouse=True)
+def mock_bluetooth(enable_bluetooth):
+    """Auto mock bluetooth."""
 
 
 @pytest.fixture(autouse=True)
@@ -36,6 +43,18 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
+def mock_device_info() -> DeviceInfo:
+    """Return the default mocked device info."""
+    return DeviceInfo(
+        uses_password=False,
+        name="test",
+        bluetooth_proxy_version=0,
+        mac_address="11:22:33:44:55:aa",
+        esphome_version="1.0.0",
+    )
+
+
+@pytest.fixture
 async def init_integration(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> MockConfigEntry:
@@ -49,7 +68,7 @@ async def init_integration(
 
 
 @pytest.fixture
-def mock_client():
+def mock_client(mock_device_info):
     """Mock APIClient."""
     mock_client = Mock(spec=APIClient)
 
@@ -73,6 +92,7 @@ def mock_client():
         return mock_client
 
     mock_client.side_effect = mock_constructor
+    mock_client.device_info = AsyncMock(return_value=mock_device_info)
     mock_client.connect = AsyncMock()
     mock_client.disconnect = AsyncMock()
 
@@ -80,3 +100,17 @@ def mock_client():
         "homeassistant.components.esphome.config_flow.APIClient", mock_client
     ):
         yield mock_client
+
+
+@pytest.fixture
+async def mock_dashboard(hass):
+    """Mock dashboard."""
+    data = {"configured": [], "importable": []}
+    with patch(
+        "esphome_dashboard_api.ESPHomeDashboardAPI.get_devices",
+        return_value=data,
+    ):
+        await dashboard.async_set_dashboard_info(
+            hass, DASHBOARD_SLUG, DASHBOARD_HOST, DASHBOARD_PORT
+        )
+        yield data

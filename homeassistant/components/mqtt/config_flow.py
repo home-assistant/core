@@ -137,6 +137,7 @@ BROKER_VERIFICATION_SELECTOR = SelectSelector(
     SelectSelectorConfig(
         options=CA_VERIFICATION_MODES,
         mode=SelectSelectorMode.DROPDOWN,
+        translation_key=SET_CA_CERT,
     )
 )
 
@@ -589,7 +590,8 @@ async def async_get_broker_settings(
         current_user = current_config.get(CONF_USERNAME)
         current_pass = current_config.get(CONF_PASSWORD)
 
-    # Treat the previous post as an update of the current settings (if there was a basic broker setup step)
+    # Treat the previous post as an update of the current settings
+    # (if there was a basic broker setup step)
     current_config.update(user_input_basic)
 
     # Get default settings for advanced broker options

@@ -53,6 +53,8 @@ BLE_SCANNER_OPTIONS = [
     selector.SelectOptionDict(value=BLEScannerMode.PASSIVE, label="Passive"),
 ]
 
+INTERNAL_WIFI_AP_IP = "192.168.33.1"
+
 
 async def validate_input(
     hass: HomeAssistant,
@@ -215,9 +217,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Abort and reconnect soon if the device with the mac address is already configured."""
         if (
             current_entry := await self.async_set_unique_id(mac)
-        ) and current_entry.data[CONF_HOST] == host:
+        ) and current_entry.data.get(CONF_HOST) == host:
             await async_reconnect_soon(self.hass, current_entry)
-        self._abort_if_unique_id_configured({CONF_HOST: host})
+        if host == INTERNAL_WIFI_AP_IP:
+            # If the device is broadcasting the internal wifi ap ip
+            # we can't connect to it, so we should not update the
+            # entry with the new host as it will be unreachable
+            #
+            # This is a workaround for a bug in the firmware 0.12 (and older?)
+            # which should be removed once the firmware is fixed
+            # and the old version is no longer in use
+            self._abort_if_unique_id_configured()
+        else:
+            self._abort_if_unique_id_configured({CONF_HOST: host})
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
@@ -317,12 +329,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await validate_input(self.hass, host, info, user_input)
             except (DeviceConnectionError, InvalidAuthError, FirmwareUnsupported):
                 return self.async_abort(reason="reauth_unsuccessful")
-            else:
-                self.hass.config_entries.async_update_entry(
-                    self.entry, data={**self.entry.data, **user_input}
-                )
-                await self.hass.config_entries.async_reload(self.entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
+
+            self.hass.config_entries.async_update_entry(
+                self.entry, data={**self.entry.data, **user_input}
+            )
+            await self.hass.config_entries.async_reload(self.entry.entry_id)
+            return self.async_abort(reason="reauth_successful")
 
         if self.entry.data.get("gen", 1) == 1:
             schema = {

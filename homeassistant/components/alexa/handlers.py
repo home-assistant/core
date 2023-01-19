@@ -475,7 +475,10 @@ async def async_api_unlock(
 ) -> AlexaResponse:
     """Process an unlock request."""
     if config.locale not in {"de-DE", "en-US", "ja-JP"}:
-        msg = f"The unlock directive is not supported for the following locales: {config.locale}"
+        msg = (
+            "The unlock directive is not supported for the following locales:"
+            f" {config.locale}"
+        )
         raise AlexaInvalidDirectiveError(msg)
 
     entity = directive.entity
@@ -610,9 +613,10 @@ async def async_api_adjust_volume_step(
     """Process an adjust volume step request."""
     # media_player volume up/down service does not support specifying steps
     # each component handles it differently e.g. via config.
-    # This workaround will simply call the volume up/Volume down the amount of steps asked for
-    # When no steps are called in the request, Alexa sends a default of 10 steps which for most
-    # purposes is too high. The default  is set 1 in this case.
+    # This workaround will simply call the volume up/Volume down the amount of
+    # steps asked for. When no steps are called in the request, Alexa sends
+    # a default of 10 steps which for most purposes is too high. The default
+    # is set 1 in this case.
     entity = directive.entity
     volume_int = int(directive.payload["volumeSteps"])
     is_default = bool(directive.payload["volumeStepsDefault"])
@@ -1017,8 +1021,9 @@ async def async_api_disarm(
     data = {ATTR_ENTITY_ID: entity.entity_id}
     response = directive.response()
 
-    # Per Alexa Documentation: If you receive a Disarm directive, and the system is already disarmed,
-    # respond with a success response, not an error response.
+    # Per Alexa Documentation: If you receive a Disarm directive, and the
+    # system is already disarmed, respond with a success response,
+    # not an error response.
     if entity.state == STATE_ALARM_DISARMED:
         return response
 
@@ -1133,7 +1138,8 @@ async def async_api_adjust_mode(
     Only supportedModes with ordered=True support the adjustMode directive.
     """
 
-    # Currently no supportedModes are configured with ordered=True to support this request.
+    # Currently no supportedModes are configured with ordered=True
+    # to support this request.
     raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
 
 
@@ -1480,7 +1486,9 @@ async def async_api_changechannel(
     data = {
         ATTR_ENTITY_ID: entity.entity_id,
         media_player.const.ATTR_MEDIA_CONTENT_ID: channel,
-        media_player.const.ATTR_MEDIA_CONTENT_TYPE: media_player.const.MEDIA_TYPE_CHANNEL,
+        media_player.const.ATTR_MEDIA_CONTENT_TYPE: (
+            media_player.const.MEDIA_TYPE_CHANNEL
+        ),
     }
 
     await hass.services.async_call(

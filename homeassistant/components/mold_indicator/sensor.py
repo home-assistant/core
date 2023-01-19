@@ -14,8 +14,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     PERCENTAGE,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
@@ -219,16 +218,18 @@ class MoldIndicator(SensorEntity):
             return None
 
         # convert to celsius if necessary
-        if unit == TEMP_FAHRENHEIT:
-            return TemperatureConverter.convert(temp, TEMP_FAHRENHEIT, TEMP_CELSIUS)
-        if unit == TEMP_CELSIUS:
+        if unit == UnitOfTemperature.FAHRENHEIT:
+            return TemperatureConverter.convert(
+                temp, UnitOfTemperature.FAHRENHEIT, UnitOfTemperature.CELSIUS
+            )
+        if unit == UnitOfTemperature.CELSIUS:
             return temp
         _LOGGER.error(
             "Temp sensor %s has unsupported unit: %s (allowed: %s, %s)",
             state.entity_id,
             unit,
-            TEMP_CELSIUS,
-            TEMP_FAHRENHEIT,
+            UnitOfTemperature.CELSIUS,
+            UnitOfTemperature.FAHRENHEIT,
         )
 
         return None
@@ -309,7 +310,7 @@ class MoldIndicator(SensorEntity):
                 * (alpha + math.log(self._indoor_hum / 100.0))
                 / (beta - math.log(self._indoor_hum / 100.0))
             )
-        _LOGGER.debug("Dewpoint: %f %s", self._dewpoint, TEMP_CELSIUS)
+        _LOGGER.debug("Dewpoint: %f %s", self._dewpoint, UnitOfTemperature.CELSIUS)
 
     def _calc_moldindicator(self):
         """Calculate the humidity at the (cold) calibration point."""
@@ -332,7 +333,9 @@ class MoldIndicator(SensorEntity):
         )
 
         _LOGGER.debug(
-            "Estimated Critical Temperature: %f %s", self._crit_temp, TEMP_CELSIUS
+            "Estimated Critical Temperature: %f %s",
+            self._crit_temp,
+            UnitOfTemperature.CELSIUS,
         )
 
         # Then calculate the humidity at this point
@@ -387,13 +390,17 @@ class MoldIndicator(SensorEntity):
             }
 
         dewpoint = (
-            TemperatureConverter.convert(self._dewpoint, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+            TemperatureConverter.convert(
+                self._dewpoint, UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT
+            )
             if self._dewpoint is not None
             else None
         )
 
         crit_temp = (
-            TemperatureConverter.convert(self._crit_temp, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+            TemperatureConverter.convert(
+                self._crit_temp, UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT
+            )
             if self._crit_temp is not None
             else None
         )

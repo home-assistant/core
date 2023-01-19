@@ -15,12 +15,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_CUBIC_METER,
     PERCENTAGE,
-    TIME_HOURS,
     UV_INDEX,
     UnitOfLength,
     UnitOfPrecipitationDepth,
     UnitOfSpeed,
     UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -95,7 +95,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         key="HoursOfSun",
         icon="mdi:weather-partly-cloudy",
         name="Hours of sun",
-        native_unit_of_measurement=TIME_HOURS,
+        native_unit_of_measurement=UnitOfTime.HOURS,
         value_fn=lambda data, _: cast(float, data),
     ),
     AccuWeatherSensorDescription(

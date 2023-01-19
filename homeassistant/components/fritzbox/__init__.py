@@ -14,7 +14,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -62,7 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     def _update_unique_id(entry: RegistryEntry) -> dict[str, str] | None:
         """Update unique ID of entity entry."""
         if (
-            entry.unit_of_measurement == TEMP_CELSIUS
+            entry.unit_of_measurement == UnitOfTemperature.CELSIUS
             and "_temperature" not in entry.unique_id
         ):
             new_unique_id = f"{entry.unique_id}_temperature"

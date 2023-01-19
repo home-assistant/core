@@ -40,15 +40,18 @@ CONF_PAYLOAD_UNLOCK = "payload_unlock"
 CONF_PAYLOAD_OPEN = "payload_open"
 
 CONF_STATE_LOCKED = "state_locked"
+CONF_STATE_LOCKING = "state_locking"
 CONF_STATE_UNLOCKED = "state_unlocked"
+CONF_STATE_UNLOCKING = "state_unlocking"
 
 DEFAULT_NAME = "MQTT Lock"
-DEFAULT_OPTIMISTIC = False
 DEFAULT_PAYLOAD_LOCK = "LOCK"
 DEFAULT_PAYLOAD_UNLOCK = "UNLOCK"
 DEFAULT_PAYLOAD_OPEN = "OPEN"
 DEFAULT_STATE_LOCKED = "LOCKED"
+DEFAULT_STATE_LOCKING = "LOCKING"
 DEFAULT_STATE_UNLOCKED = "UNLOCKED"
+DEFAULT_STATE_UNLOCKING = "UNLOCKING"
 
 MQTT_LOCK_ATTRIBUTES_BLOCKED = frozenset(
     {
@@ -60,12 +63,13 @@ MQTT_LOCK_ATTRIBUTES_BLOCKED = frozenset(
 PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         vol.Optional(CONF_PAYLOAD_LOCK, default=DEFAULT_PAYLOAD_LOCK): cv.string,
         vol.Optional(CONF_PAYLOAD_UNLOCK, default=DEFAULT_PAYLOAD_UNLOCK): cv.string,
         vol.Optional(CONF_PAYLOAD_OPEN): cv.string,
         vol.Optional(CONF_STATE_LOCKED, default=DEFAULT_STATE_LOCKED): cv.string,
+        vol.Optional(CONF_STATE_LOCKING, default=DEFAULT_STATE_LOCKING): cv.string,
         vol.Optional(CONF_STATE_UNLOCKED, default=DEFAULT_STATE_UNLOCKED): cv.string,
+        vol.Optional(CONF_STATE_UNLOCKING, default=DEFAULT_STATE_UNLOCKING): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
@@ -78,13 +82,20 @@ PLATFORM_SCHEMA = vol.All(
 
 DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA)
 
+STATE_CONFIG_KEYS = [
+    CONF_STATE_LOCKED,
+    CONF_STATE_LOCKING,
+    CONF_STATE_UNLOCKED,
+    CONF_STATE_UNLOCKING,
+]
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT lock through configuration.yaml and dynamically through MQTT discovery."""
+    """Set up MQTT lock through YAML and through MQTT discovery."""
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -109,6 +120,7 @@ class MqttLock(MqttEntity, LockEntity):
     _attributes_extra_blocked = MQTT_LOCK_ATTRIBUTES_BLOCKED
 
     _optimistic: bool
+    _valid_states: list[str]
     _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
 
     def __init__(
@@ -140,6 +152,8 @@ class MqttLock(MqttEntity, LockEntity):
         if CONF_PAYLOAD_OPEN in config:
             self._attr_supported_features |= LockEntityFeature.OPEN
 
+        self._valid_states = [config[state] for state in STATE_CONFIG_KEYS]
+
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
 
@@ -148,10 +162,10 @@ class MqttLock(MqttEntity, LockEntity):
         def message_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages."""
             payload = self._value_template(msg.payload)
-            if payload == self._config[CONF_STATE_LOCKED]:
-                self._attr_is_locked = True
-            elif payload == self._config[CONF_STATE_UNLOCKED]:
-                self._attr_is_locked = False
+            if payload in self._valid_states:
+                self._attr_is_locked = payload == self._config[CONF_STATE_LOCKED]
+                self._attr_is_locking = payload == self._config[CONF_STATE_LOCKING]
+                self._attr_is_unlocking = payload == self._config[CONF_STATE_UNLOCKING]
 
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 

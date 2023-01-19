@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Tom"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "V\u00e4rd"
+                }
+            }
+        }
+    }
+}

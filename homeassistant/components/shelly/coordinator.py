@@ -73,7 +73,7 @@ def get_entry_data(hass: HomeAssistant) -> dict[str, ShellyEntryData]:
     return cast(dict[str, ShellyEntryData], hass.data[DOMAIN][DATA_CONFIG_ENTRY])
 
 
-class ShellyBlockCoordinator(DataUpdateCoordinator):
+class ShellyBlockCoordinator(DataUpdateCoordinator[None]):
     """Coordinator for a Shelly block based device."""
 
     def __init__(
@@ -267,7 +267,7 @@ class ShellyBlockCoordinator(DataUpdateCoordinator):
         self.shutdown()
 
 
-class ShellyRestCoordinator(DataUpdateCoordinator):
+class ShellyRestCoordinator(DataUpdateCoordinator[None]):
     """Coordinator for a Shelly REST device."""
 
     def __init__(
@@ -318,7 +318,7 @@ class ShellyRestCoordinator(DataUpdateCoordinator):
         return cast(str, self.device.settings["device"]["mac"])
 
 
-class ShellyRpcCoordinator(DataUpdateCoordinator):
+class ShellyRpcCoordinator(DataUpdateCoordinator[None]):
     """Coordinator for a Shelly RPC based device."""
 
     def __init__(
@@ -475,6 +475,11 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
 
     async def _async_disconnected(self) -> None:
         """Handle device disconnected."""
+        # Sleeping devices send data and disconnects
+        # There are no disconnect events for sleeping devices
+        if self.entry.data.get(CONF_SLEEP_PERIOD):
+            return
+
         async with self._connection_lock:
             if not self.connected:  # Already disconnected
                 return
@@ -509,7 +514,8 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
         This will be executed on connect or when the config entry
         is updated.
         """
-        await self._async_connect_ble_scanner()
+        if not self.entry.data.get(CONF_SLEEP_PERIOD):
+            await self._async_connect_ble_scanner()
 
     async def _async_connect_ble_scanner(self) -> None:
         """Connect BLE scanner."""
@@ -543,7 +549,7 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
         elif update_type is UpdateType.DISCONNECTED:
             self.hass.async_create_task(self._async_disconnected())
         elif update_type is UpdateType.STATUS:
-            self.async_set_updated_data(self.device)
+            self.async_set_updated_data(None)
         elif update_type is UpdateType.EVENT and (event := self.device.event):
             self._async_device_event_handler(event)
 
@@ -579,7 +585,7 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
         await self.shutdown()
 
 
-class ShellyRpcPollingCoordinator(DataUpdateCoordinator):
+class ShellyRpcPollingCoordinator(DataUpdateCoordinator[None]):
     """Polling coordinator for a Shelly RPC based device."""
 
     def __init__(

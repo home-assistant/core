@@ -29,5 +29,16 @@
                 "title": "Autentica nuovamente l'integrazione"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "enable_conversation_agent": "Abilita l'agente di conversazione",
+                    "language_code": "Codice lingua"
+                },
+                "description": "Imposta la lingua per le interazioni con Google Assistant e se desideri abilitare l'agente di conversazione."
+            }
+        }
     }
 }

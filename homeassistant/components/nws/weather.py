@@ -1,4 +1,9 @@
 """Support for NWS weather service."""
+from __future__ import annotations
+
+from types import MappingProxyType
+from typing import TYPE_CHECKING, Any
+
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_SUNNY,
@@ -8,6 +13,7 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
+    Forecast,
     WeatherEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -24,6 +30,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 from homeassistant.util.unit_conversion import SpeedConverter, TemperatureConverter
+from homeassistant.util.unit_system import UnitSystem
 
 from . import base_unique_id, device_info
 from .const import (
@@ -45,14 +52,16 @@ from .const import (
 PARALLEL_UPDATES = 0
 
 
-def convert_condition(time, weather):
+def convert_condition(
+    time: str, weather: tuple[tuple[str, int | None], ...]
+) -> tuple[str, int | None]:
     """
     Convert NWS codes to HA condition.
 
     Choose first condition in CONDITION_CLASSES that exists in weather code.
     If no match is found, return first condition from NWS
     """
-    conditions = [w[0] for w in weather]
+    conditions: list[str] = [w[0] for w in weather]
     prec_probs = [w[1] or 0 for w in weather]
 
     # Choose condition with highest priority.
@@ -88,12 +97,27 @@ async def async_setup_entry(
     )
 
 
+if TYPE_CHECKING:
+
+    class NWSForecast(Forecast):
+        """Forecast with extra fields needed for NWS."""
+
+        detailed_description: str | None
+        daytime: bool | None
+
+
 class NWSWeather(WeatherEntity):
     """Representation of a weather condition."""
 
     _attr_should_poll = False
 
-    def __init__(self, entry_data, hass_data, mode, units):
+    def __init__(
+        self,
+        entry_data: MappingProxyType[str, Any],
+        hass_data: dict[str, Any],
+        mode: str,
+        units: UnitSystem,
+    ) -> None:
         """Initialise the platform with a data instance and station name."""
         self.nws = hass_data[NWS_DATA]
         self.latitude = entry_data[CONF_LATITUDE]
@@ -132,67 +156,67 @@ class NWSWeather(WeatherEntity):
         self.async_write_ha_state()
 
     @property
-    def attribution(self):
+    def attribution(self) -> str:
         """Return the attribution."""
         return ATTRIBUTION
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the station."""
         return f"{self.station} {self.mode.title()}"
 
     @property
-    def native_temperature(self):
+    def native_temperature(self) -> float | None:
         """Return the current temperature."""
         if self.observation:
             return self.observation.get("temperature")
         return None
 
     @property
-    def native_temperature_unit(self):
+    def native_temperature_unit(self) -> str:
         """Return the current temperature unit."""
         return UnitOfTemperature.CELSIUS
 
     @property
-    def native_pressure(self):
+    def native_pressure(self) -> int | None:
         """Return the current pressure."""
         if self.observation:
             return self.observation.get("seaLevelPressure")
         return None
 
     @property
-    def native_pressure_unit(self):
+    def native_pressure_unit(self) -> str:
         """Return the current pressure unit."""
         return UnitOfPressure.PA
 
     @property
-    def humidity(self):
+    def humidity(self) -> float | None:
         """Return the name of the sensor."""
         if self.observation:
             return self.observation.get("relativeHumidity")
         return None
 
     @property
-    def native_wind_speed(self):
+    def native_wind_speed(self) -> float | None:
         """Return the current windspeed."""
         if self.observation:
             return self.observation.get("windSpeed")
         return None
 
     @property
-    def native_wind_speed_unit(self):
+    def native_wind_speed_unit(self) -> str:
         """Return the current windspeed."""
         return UnitOfSpeed.KILOMETERS_PER_HOUR
 
     @property
-    def wind_bearing(self):
+    def wind_bearing(self) -> int | None:
         """Return the current wind bearing (degrees)."""
         if self.observation:
             return self.observation.get("windDirection")
         return None
 
     @property
-    def condition(self):
+    def condition(self) -> str | None:
         """Return current condition."""
         weather = None
         if self.observation:
@@ -205,23 +229,23 @@ class NWSWeather(WeatherEntity):
         return None
 
     @property
-    def native_visibility(self):
+    def native_visibility(self) -> int | None:
         """Return visibility."""
         if self.observation:
             return self.observation.get("visibility")
         return None
 
     @property
-    def native_visibility_unit(self):
+    def native_visibility_unit(self) -> str:
         """Return visibility unit."""
         return UnitOfLength.METERS
 
     @property
-    def forecast(self):
+    def forecast(self) -> list[Forecast] | None:
         """Return forecast."""
         if self._forecast is None:
             return None
-        forecast = []
+        forecast: list[NWSForecast] = []
         for forecast_entry in self._forecast:
             data = {
                 ATTR_FORECAST_DETAILED_DESCRIPTION: forecast_entry.get(
@@ -262,7 +286,7 @@ class NWSWeather(WeatherEntity):
         return forecast
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return a unique_id for this entity."""
         return f"{base_unique_id(self.latitude, self.longitude)}_{self.mode}"
 
