@@ -20,28 +20,10 @@ from homeassistant.helpers import area_registry, entity_registry, intent
 
 from .agent import AbstractConversationAgent, ConversationResult
 from .const import DOMAIN
-from .util import create_matcher
 
 _LOGGER = logging.getLogger(__name__)
 
 REGEX_TYPE = type(re.compile(""))
-
-
-@core.callback
-def async_register(hass, intent_type, utterances):
-    """Register utterances and any custom intents for the default agent.
-
-    Registrations don't require conversations to be loaded. They will become
-    active once the conversation component is loaded.
-    """
-    intents = hass.data.setdefault(DOMAIN, {})
-    conf = intents.setdefault(intent_type, [])
-
-    for utterance in utterances:
-        if isinstance(utterance, REGEX_TYPE):
-            conf.append(utterance)
-        else:
-            conf.append(create_matcher(utterance))
 
 
 @dataclass
@@ -62,15 +44,10 @@ class DefaultAgent(AbstractConversationAgent):
         self._lang_intents: dict[str, LanguageIntents] = {}
         self._lang_lock: dict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
 
-    async def async_initialize(self, config):
+    async def async_initialize(self):
         """Initialize the default agent."""
         if "intent" not in self.hass.config.components:
             await setup.async_setup_component(self.hass, "intent", {})
-
-        if config and config.get(DOMAIN):
-            _LOGGER.warning(
-                "Custom intent sentences have been moved to config/custom_sentences"
-            )
 
         self.hass.data.setdefault(DOMAIN, {})
 

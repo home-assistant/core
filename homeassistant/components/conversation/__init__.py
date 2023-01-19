@@ -16,7 +16,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 from .agent import AbstractConversationAgent, ConversationResult
-from .default_agent import DefaultAgent, async_register
+from .default_agent import DefaultAgent
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +27,6 @@ DOMAIN = "conversation"
 
 REGEX_TYPE = type(re.compile(""))
 DATA_AGENT = "conversation_agent"
-DATA_CONFIG = "conversation_config"
 
 SERVICE_PROCESS = "process"
 SERVICE_RELOAD = "reload"
@@ -47,22 +46,6 @@ SERVICE_RELOAD_SCHEMA = vol.Schema(
 )
 
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Optional("intents"): vol.Schema(
-                    {cv.string: vol.All(cv.ensure_list, [cv.string])}
-                )
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
-async_register = bind_hass(async_register)
-
-
 @core.callback
 @bind_hass
 def async_set_agent(hass: core.HomeAssistant, agent: AbstractConversationAgent | None):
@@ -72,7 +55,6 @@ def async_set_agent(hass: core.HomeAssistant, agent: AbstractConversationAgent |
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Register the process service."""
-    hass.data[DATA_CONFIG] = config
 
     async def handle_process(service: core.ServiceCall) -> None:
         """Parse text into commands."""
@@ -228,7 +210,7 @@ async def _get_agent(hass: core.HomeAssistant) -> AbstractConversationAgent:
     """Get the active conversation agent."""
     if (agent := hass.data.get(DATA_AGENT)) is None:
         agent = hass.data[DATA_AGENT] = DefaultAgent(hass)
-        await agent.async_initialize(hass.data.get(DATA_CONFIG))
+        await agent.async_initialize()
     return agent
 
 
