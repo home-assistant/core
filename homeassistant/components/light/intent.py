@@ -8,8 +8,8 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON
-from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers import area_registry, intent
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import area_registry, config_validation as cv, intent
 import homeassistant.util.color as color_util
 
 from . import (
@@ -31,55 +31,78 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
     intent.async_register(hass, SetIntentHandler())
 
 
-class SetIntentHandler(intent.ServiceIntentHandler):
+class SetIntentHandler(intent.IntentHandler):
     """Handle set color intents."""
 
     intent_type = INTENT_SET
     slot_schema = {
-        **intent.ServiceIntentHandler.slot_schema,
+        vol.Any("name", "area"): cv.string,
+        vol.Optional("domain"): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional("device_class"): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional("color"): color_util.color_name_to_rgb,
         vol.Optional("brightness"): vol.All(vol.Coerce(int), vol.Range(0, 100)),
     }
 
-    def __init__(self) -> None:
-        """Initialize SetIntentHandler."""
-        super().__init__(INTENT_SET, DOMAIN, SERVICE_TURN_ON, "Turned on {}")
-        self.service_data: dict[str, Any] = {}
-        self.speech_parts: list[str] = []
-        _LOGGER.info(self.slot_schema)
-
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the hass intent."""
-        self.service_data = {}
-        self.speech_parts = []
-
+        hass = intent_obj.hass
+        service_data: dict[str, Any] = {}
+        speech_parts: list[str] = []
         slots = self.async_validate_slots(intent_obj.slots)
 
+        name: str | None = slots.get("name", {}).get("value")
+        if name == "all":
+            # Don't match on name if targeting all entities
+            name = None
+
+        # Look up area first to fail early
+        area_name = slots.get("area", {}).get("value")
+        area: area_registry.AreaEntry | None = None
+        if area_name is not None:
+            areas = area_registry.async_get(hass)
+            area = areas.async_get_area(area_name) or areas.async_get_area_by_name(
+                area_name
+            )
+            if area is None:
+                raise intent.IntentHandleError(f"No area named {area_name}")
+
+        # Optional domain/device class filters.
+        # Convert to sets for speed.
+        domains: set[str] | None = None
+        device_classes: set[str] | None = None
+
+        if "domain" in slots:
+            domains = set(slots["domain"]["value"])
+
+        if "device_class" in slots:
+            device_classes = set(slots["device_class"]["value"])
+
+        states = list(
+            intent.async_match_states(
+                hass,
+                name=name,
+                area=area,
+                domains=domains,
+                device_classes=device_classes,
+            )
+        )
+
+        if not states:
+            raise intent.IntentHandleError("No entities matched")
+
         if "color" in slots:
-            self.service_data[ATTR_RGB_COLOR] = slots["color"]["value"]
+            service_data[ATTR_RGB_COLOR] = slots["color"]["value"]
             # Use original passed in value of the color because we don't have
             # human readable names for that internally.
-            self.speech_parts.append(f"the color {intent_obj.slots['color']['value']}")
+            speech_parts.append(f"the color {intent_obj.slots['color']['value']}")
 
         if "brightness" in slots:
-            self.service_data[ATTR_BRIGHTNESS_PCT] = slots["brightness"]["value"]
-            self.speech_parts.append(f"{slots['brightness']['value']}% brightness")
+            service_data[ATTR_BRIGHTNESS_PCT] = slots["brightness"]["value"]
+            speech_parts.append(f"{slots['brightness']['value']}% brightness")
 
-        response = await super().async_handle(intent_obj)
-        return response
-
-    async def async_handle_states(
-        self,
-        intent_obj: intent.Intent,
-        states: list[State],
-        area: area_registry.AreaEntry | None = None,
-    ) -> intent.IntentResponse:
-        """Complete action on matched entity states."""
-        assert states
-        hass = intent_obj.hass
         response = intent_obj.create_response()
-        needs_brightness = ATTR_BRIGHTNESS_PCT in self.service_data
-        needs_color = ATTR_RGB_COLOR in self.service_data
+        needs_brightness = ATTR_BRIGHTNESS_PCT in service_data
+        needs_color = ATTR_RGB_COLOR in service_data
 
         success_results: list[intent.IntentResponseTarget] = []
         failed_results: list[intent.IntentResponseTarget] = []
@@ -114,9 +137,9 @@ class SetIntentHandler(intent.ServiceIntentHandler):
 
             service_coros.append(
                 hass.services.async_call(
-                    self.domain,
-                    self.service,
-                    {**self.service_data, ATTR_ENTITY_ID: state.entity_id},
+                    DOMAIN,
+                    SERVICE_TURN_ON,
+                    {**service_data, ATTR_ENTITY_ID: state.entity_id},
                     context=intent_obj.context,
                 )
             )
@@ -129,14 +152,14 @@ class SetIntentHandler(intent.ServiceIntentHandler):
             success_results=success_results, failed_results=failed_results
         )
 
-        if not self.speech_parts:  # No attributes changed
+        if not speech_parts:  # No attributes changed
             speech = f"Turned on {speech_name}"
         else:
             parts = [f"Changed {speech_name} to"]
-            for index, part in enumerate(self.speech_parts):
+            for index, part in enumerate(speech_parts):
                 if index == 0:
                     parts.append(f" {part}")
-                elif index != len(self.speech_parts) - 1:
+                elif index != len(speech_parts) - 1:
                     parts.append(f", {part}")
                 else:
                     parts.append(f" and {part}")
