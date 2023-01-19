@@ -22,12 +22,13 @@ FAKE_CONFIG = {
 }
 
 
-async def test_show_authenticate_form(hass: HomeAssistant) -> None:
+async def test_show_authenticate_form(hass: HomeAssistant, client: MagicMock) -> None:
     """Test that the config form is shown."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-    )
+    with patch("AIOSomecomfort.AIOSomeComfort", return_value=client):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+        )
 
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -36,34 +37,35 @@ async def test_show_authenticate_form(hass: HomeAssistant) -> None:
 async def test_connection_error(hass: HomeAssistant, client: MagicMock) -> None:
     """Test that an error message is shown on connection fail."""
     client.login.side_effect = AIOSomecomfort.ConnectionError
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=FAKE_CONFIG
-    )
+    with patch("AIOSomecomfort.AIOSomeComfort", return_value=client):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=FAKE_CONFIG
+        )
     assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_auth_error(hass: HomeAssistant, client: MagicMock) -> None:
     """Test that an error message is shown on login fail."""
     client.login.side_effect = AIOSomecomfort.AuthError
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=FAKE_CONFIG
-    )
+    with patch("AIOSomecomfort.AIOSomeComfort", return_value=client):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=FAKE_CONFIG
+        )
     assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_create_entry(hass: HomeAssistant) -> None:
+async def test_create_entry(hass: HomeAssistant, client: MagicMock) -> None:
     """Test that the config entry is created."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=FAKE_CONFIG
-    )
+    with patch("AIOSomecomfort.AIOSomeComfort", return_value=client):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=FAKE_CONFIG
+        )
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"] == FAKE_CONFIG
 
 
-@patch("homeassistant.components.honeywell.UPDATE_LOOP_SLEEP_TIME", 0)
 async def test_show_option_form(
-    hass: HomeAssistant, config_entry: MockConfigEntry, location
+    hass: HomeAssistant, config_entry: MockConfigEntry, client: MagicMock
 ) -> None:
     """Test that the option form is shown."""
     config_entry.add_to_hass(hass)
@@ -72,15 +74,15 @@ async def test_show_option_form(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    with patch("AIOSomecomfort.AIOSomeComfort", return_value=client):
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "init"
 
 
-@patch("homeassistant.components.honeywell.UPDATE_LOOP_SLEEP_TIME", 0)
 async def test_create_option_entry(
-    hass: HomeAssistant, config_entry: MockConfigEntry, location
+    hass: HomeAssistant, config_entry: MockConfigEntry, client: MagicMock
 ) -> None:
     """Test that the config entry is created."""
     config_entry.add_to_hass(hass)
@@ -89,11 +91,14 @@ async def test_create_option_entry(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    options_form = await hass.config_entries.options.async_init(config_entry.entry_id)
-    result = await hass.config_entries.options.async_configure(
-        options_form["flow_id"],
-        user_input={CONF_COOL_AWAY_TEMPERATURE: 1, CONF_HEAT_AWAY_TEMPERATURE: 2},
-    )
+    with patch("AIOSomecomfort.AIOSomeComfort", return_value=client):
+        options_form = await hass.config_entries.options.async_init(
+            config_entry.entry_id
+        )
+        result = await hass.config_entries.options.async_configure(
+            options_form["flow_id"],
+            user_input={CONF_COOL_AWAY_TEMPERATURE: 1, CONF_HEAT_AWAY_TEMPERATURE: 2},
+        )
 
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert config_entry.options == {

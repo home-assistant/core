@@ -70,7 +70,7 @@ HW_FAN_MODE_TO_HA = {
     "follow schedule": FAN_AUTO,
 }
 
-SCAN_INTERVAL = datetime.timedelta(seconds=10)
+SCAN_INTERVAL = datetime.timedelta(seconds=30)
 
 
 async def async_setup_entry(
@@ -190,9 +190,9 @@ class HoneywellUSThermostat(ClimateEntity):
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        if self.hvac_mode == HVACMode.COOL:
+        if self.hvac_mode == "cool":
             return self._device.setpoint_cool
-        if self.hvac_mode == HVACMode.HEAT:
+        if self.hvac_mode == "heat":
             return self._device.setpoint_heat
         return None
 
@@ -246,15 +246,15 @@ class HoneywellUSThermostat(ClimateEntity):
                 # Get next period time
                 hour, minute = divmod(next_period * 15, 60)
                 # Set hold time
-                if mode == HVACMode.COOL:
+                if mode == "cool":
                     await self._device.set_hold_cool(datetime.time(hour, minute))
-                elif mode == HVACMode.HEAT:
+                elif mode == "heat":
                     await self._device.set_hold_heat(datetime.time(hour, minute))
 
             # Set temperature
-            if mode == HVACMode.COOL:
+            if mode == "cool":
                 await self._device.set_setpoint_cool(temperature)
-            elif mode == HVACMode.HEAT:
+            elif mode == "heat":
                 await self._device.set_setpoint_heat(temperature)
 
         except AIOSomecomfort.SomeComfortError:
@@ -301,10 +301,10 @@ class HoneywellUSThermostat(ClimateEntity):
             # Set permanent hold
             # and Set temperature
             away_temp = getattr(self, f"_{mode}_away_temp")
-            if mode == HVACMode.COOL:
+            if mode == "cool":
                 self._device.set_hold_cool(True)
                 self._device.set_setpoint_cool(away_temp)
-            elif mode == HVACMode.HEAT:
+            elif mode == "heat":
                 self._device.set_hold_heat(True)
                 self._device.set_setpoint_heat(away_temp)
 
@@ -325,9 +325,9 @@ class HoneywellUSThermostat(ClimateEntity):
         if mode in HW_MODE_TO_HVAC_MODE:
             try:
                 # Set permanent hold
-                if mode == HVACMode.COOL:
+                if mode == "cool":
                     await self._device.set_hold_cool(True)
-                elif mode == HVACMode.HEAT:
+                elif mode == "heat":
                     await self._device.set_hold_heat(True)
 
             except AIOSomecomfort.SomeComfortError:

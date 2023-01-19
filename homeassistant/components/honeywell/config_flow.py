@@ -29,10 +29,11 @@ class HoneywellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None) -> FlowResult:
         """Create config entry. Show the setup form to the user."""
         errors = {}
-        valid = False
         if user_input is not None:
+            valid = False
             try:
-                valid = await self.is_valid(**user_input)
+                await self.is_valid(**user_input)
+                valid = True
             except AIOSomecomfort.AuthError:
                 errors["base"] = "invalid_auth"
             except (
