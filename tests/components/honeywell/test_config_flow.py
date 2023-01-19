@@ -22,7 +22,7 @@ FAKE_CONFIG = {
 }
 
 
-async def test_show_authenticate_form(hass: HomeAssistant, client: MagicMock) -> None:
+async def test_show_authenticate_form(hass: HomeAssistant) -> None:
     """Test that the config form is shown."""
     with patch(
         "homeassistant.components.honeywell.async_setup_entry",
@@ -97,7 +97,7 @@ async def test_show_option_form(
 
 
 async def test_create_option_entry(
-    hass: HomeAssistant, config_entry: MockConfigEntry, client: MagicMock
+    hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Test that the config entry is created."""
     config_entry.add_to_hass(hass)
