@@ -1,6 +1,8 @@
 """Standard conversation implementation for Home Assistant."""
 from __future__ import annotations
 
+import asyncio
+from collections import defaultdict
 from dataclasses import dataclass
 import logging
 from pathlib import Path
@@ -58,6 +60,7 @@ class DefaultAgent(AbstractConversationAgent):
         """Initialize the default agent."""
         self.hass = hass
         self._lang_intents: dict[str, LanguageIntents] = {}
+        self._lang_lock: dict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
 
     async def async_initialize(self, config):
         """Initialize the default agent."""
@@ -88,10 +91,7 @@ class DefaultAgent(AbstractConversationAgent):
             lang_intents.loaded_components - self.hass.config.components
         ):
             # Load intents in executor
-            lang_intents = await self.hass.async_add_executor_job(
-                self.get_or_load_intents,
-                language,
-            )
+            lang_intents = await self.async_get_or_load_intents(language)
 
         if lang_intents is None:
             # No intents loaded
@@ -121,8 +121,35 @@ class DefaultAgent(AbstractConversationAgent):
             response=intent_response, conversation_id=conversation_id
         )
 
-    def get_or_load_intents(self, language: str) -> LanguageIntents | None:
-        """Load all intents for language."""
+    async def async_reload(self, language: str | None = None):
+        """Clear cached intents for a language."""
+        if language is None:
+            language = self.hass.config.language
+
+        self._lang_intents.pop(language, None)
+        _LOGGER.debug("Cleared intents for language: %s", language)
+
+    async def async_prepare(self, language: str | None = None):
+        """Load intents for a language."""
+        if language is None:
+            language = self.hass.config.language
+
+        lang_intents = await self.async_get_or_load_intents(language)
+
+        if lang_intents is None:
+            # No intents loaded
+            _LOGGER.warning("No intents were loaded for language: %s", language)
+
+    async def async_get_or_load_intents(self, language: str) -> LanguageIntents | None:
+        """Load all intents of a language with lock."""
+        async with self._lang_lock[language]:
+            return await self.hass.async_add_executor_job(
+                self._get_or_load_intents,
+                language,
+            )
+
+    def _get_or_load_intents(self, language: str) -> LanguageIntents | None:
+        """Load all intents for language (run inside executor)."""
         lang_intents = self._lang_intents.get(language)
 
         if lang_intents is None:
