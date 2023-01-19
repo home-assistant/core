@@ -32,5 +32,14 @@
         }
       }
     }
+  },
+  "selector": {
+    "method": {
+      "options": {
+        "trapezoidal": "Trapezoidal rule",
+        "left": "Left Riemann sum",
+        "right": "Right Riemann sum"
+      }
+    }
   }
 }

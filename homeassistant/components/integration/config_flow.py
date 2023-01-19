@@ -61,7 +61,9 @@ CONFIG_SCHEMA = vol.Schema(
             selector.EntitySelectorConfig(domain=SENSOR_DOMAIN)
         ),
         vol.Required(CONF_METHOD, default=METHOD_TRAPEZOIDAL): selector.SelectSelector(
-            selector.SelectSelectorConfig(options=INTEGRATION_METHODS),
+            selector.SelectSelectorConfig(
+                options=INTEGRATION_METHODS, translation_key=CONF_METHOD
+            ),
         ),
         vol.Required(CONF_ROUND_DIGITS, default=2): selector.NumberSelector(
             selector.NumberSelectorConfig(
