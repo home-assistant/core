@@ -63,7 +63,6 @@ from .const import (  # noqa: F401
     CONF_CLIMATES,
     CONF_CLOSE_COMM_ON_ERROR,
     CONF_DATA_TYPE,
-    CONF_DEADZONE_THRESHOLD,
     CONF_FANS,
     CONF_HUB,
     CONF_HVAC_MODE_AUTO,
@@ -107,6 +106,7 @@ from .const import (  # noqa: F401
     CONF_TARGET_TEMP,
     CONF_VERIFY,
     CONF_WRITE_TYPE,
+    CONF_ZERO_SUPPRESS,
     DEFAULT_HUB,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_TEMP_UNIT,
@@ -290,7 +290,7 @@ SENSOR_SCHEMA = vol.All(
             vol.Optional(CONF_SLAVE_COUNT, default=0): cv.positive_int,
             vol.Optional(CONF_MIN_VALUE): number_validator,
             vol.Optional(CONF_MAX_VALUE): number_validator,
-            vol.Optional(CONF_DEADZONE_THRESHOLD): number_validator,
+            vol.Optional(CONF_ZERO_SUPPRESS): number_validator,
         }
     ),
 )

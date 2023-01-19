@@ -42,7 +42,6 @@ from .const import (
     CALL_TYPE_X_COILS,
     CALL_TYPE_X_REGISTER_HOLDINGS,
     CONF_DATA_TYPE,
-    CONF_DEADZONE_THRESHOLD,
     CONF_INPUT_TYPE,
     CONF_LAZY_ERROR,
     CONF_MAX_VALUE,
@@ -57,6 +56,7 @@ from .const import (
     CONF_SWAP_WORD_BYTE,
     CONF_VERIFY,
     CONF_WRITE_TYPE,
+    CONF_ZERO_SUPPRESS,
     SIGNAL_START_ENTITY,
     SIGNAL_STOP_ENTITY,
     DataType,
@@ -105,7 +105,7 @@ class BasePlatform(Entity):
 
         self._min_value = get_optional_numeric_config(CONF_MIN_VALUE)
         self._max_value = get_optional_numeric_config(CONF_MAX_VALUE)
-        self._dead_zone_threshold = get_optional_numeric_config(CONF_DEADZONE_THRESHOLD)
+        self._zero_suppress = get_optional_numeric_config(CONF_ZERO_SUPPRESS)
 
     @abstractmethod
     async def async_update(self, now: datetime | None = None) -> None:
@@ -184,10 +184,7 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
             return self._min_value
         if self._max_value is not None and val > self._max_value:
             return self._max_value
-        if (
-            self._dead_zone_threshold is not None
-            and abs(val) <= self._dead_zone_threshold
-        ):
+        if self._zero_suppress is not None and abs(val) <= self._zero_suppress:
             return 0
         return val
 

@@ -5,7 +5,6 @@ from homeassistant.components.modbus.const import (
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
     CONF_DATA_TYPE,
-    CONF_DEADZONE_THRESHOLD,
     CONF_INPUT_TYPE,
     CONF_LAZY_ERROR,
     CONF_MAX_VALUE,
@@ -18,6 +17,7 @@ from homeassistant.components.modbus.const import (
     CONF_SWAP_NONE,
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
+    CONF_ZERO_SUPPRESS,
     MODBUS_DOMAIN,
     DataType,
 )
@@ -556,7 +556,7 @@ async def test_config_wrong_struct_sensor(hass, error_message, mock_modbus, capl
         (
             {
                 CONF_DATA_TYPE: DataType.INT32,
-                CONF_DEADZONE_THRESHOLD: int(0x00000001),
+                CONF_ZERO_SUPPRESS: int(0x00000001),
             },
             [0x0000, 0x0002],
             False,
@@ -565,7 +565,7 @@ async def test_config_wrong_struct_sensor(hass, error_message, mock_modbus, capl
         (
             {
                 CONF_DATA_TYPE: DataType.INT32,
-                CONF_DEADZONE_THRESHOLD: int(0x00000002),
+                CONF_ZERO_SUPPRESS: int(0x00000002),
             },
             [0x0000, 0x0002],
             False,
