@@ -52,14 +52,14 @@
     },
     "issues": {
         "deprecate_smart_sensor": {
-            "description": "Unifikovan\u00fd sn\u00edma\u010d \u201eZisten\u00fd objekt\u201c pre inteligentn\u00e9 detekcie je teraz zastaran\u00fd. Bol nahraden\u00fd samostatn\u00fdmi bin\u00e1rnymi sn\u00edma\u010dmi inteligentnej detekcie pre ka\u017ed\u00fd typ inteligentnej detekcie. \n\nNi\u017e\u0161ie s\u00fa uveden\u00e9 zisten\u00e9 automatiz\u00e1cie alebo skripty, ktor\u00e9 pou\u017e\u00edvaj\u00fa jednu alebo viacero zastaran\u00fdch ent\u00edt:\n{items}\nVy\u0161\u0161ie uveden\u00fd zoznam m\u00f4\u017ee by\u0165 ne\u00fapln\u00fd a nezah\u0155\u0148a pou\u017eitie \u0161abl\u00f3n v informa\u010dn\u00fdch paneloch. Pod\u013ea toho aktualizujte v\u0161etky \u0161abl\u00f3ny, automatiz\u00e1cie alebo skripty.",
+            "description": "Unifikovan\u00fd sn\u00edma\u010d \"Zisten\u00fd objekt\" pre inteligentn\u00e9 detekcie je teraz zastaran\u00fd. Bol nahraden\u00fd samostatn\u00fdmi bin\u00e1rnymi sn\u00edma\u010dmi inteligentnej detekcie pre ka\u017ed\u00fd typ inteligentnej detekcie. \n\nNi\u017e\u0161ie s\u00fa uveden\u00e9 zisten\u00e9 automatiz\u00e1cie alebo skripty, ktor\u00e9 pou\u017e\u00edvaj\u00fa jednu alebo viacero zastaran\u00fdch ent\u00edt:\n{items}\nVy\u0161\u0161ie uveden\u00fd zoznam m\u00f4\u017ee by\u0165 ne\u00fapln\u00fd a nezah\u0155\u0148a pou\u017eitie \u0161abl\u00f3n v informa\u010dn\u00fdch paneloch. Pod\u013ea toho aktualizujte v\u0161etky \u0161abl\u00f3ny, automatiz\u00e1cie alebo skripty.",
             "title": "Inteligentn\u00fd detek\u010dn\u00fd senzor zastaran\u00fd"
         },
         "deprecated_service_set_doorbell_message": {
             "fix_flow": {
                 "step": {
                     "confirm": {
-                        "description": "Slu\u017eba \u201eunifiprotect.set_doorbell_message\u201c je zastaran\u00e1 v prospech novej entity Doorbell Text pridanej do ka\u017ed\u00e9ho zariadenia Doorbell. Bude odstr\u00e1nen\u00e1 vo verzii 2023.3.0. Aktualizujte, aby ste mohli pou\u017e\u00edva\u0165 slu\u017ebu [`text.set_value`]({link}).",
+                        "description": "Slu\u017eba `unifiprotect.set_doorbell_message` je zastaran\u00e1 v prospech novej entity Doorbell Text pridanej do ka\u017ed\u00e9ho zariadenia Doorbell. Bude odstr\u00e1nen\u00e1 vo verzii 2023.3.0. Aktualizujte, aby ste mohli pou\u017e\u00edva\u0165 slu\u017ebu [`text.set_value`]({link}).",
                         "title": "set_doorbell_message je zastaran\u00fd"
                     }
                 }

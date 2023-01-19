@@ -112,6 +112,7 @@ homeassistant.components.fastdotcom.*
 homeassistant.components.feedreader.*
 homeassistant.components.file_upload.*
 homeassistant.components.filesize.*
+homeassistant.components.filter.*
 homeassistant.components.fitbit.*
 homeassistant.components.flux_led.*
 homeassistant.components.forecast_solar.*

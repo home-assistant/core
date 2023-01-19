@@ -5,6 +5,9 @@
                 "state_attributes": {
                     "swing_mode": {
                         "state": {
+                            "1": "1",
+                            "2": "2",
+                            "3": "3",
                             "auto": "\u0410\u0432\u0442\u043e"
                         }
                     }

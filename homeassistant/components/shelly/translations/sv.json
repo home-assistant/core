@@ -47,7 +47,7 @@
         },
         "trigger_type": {
             "btn_down": "\"{subtype}\" knappen nedtryckt",
-            "btn_up": "\"{subtype}\" knappen uppsl\u00e4ppt",
+            "btn_up": "\"{subtype}\" knappen sl\u00e4ppt",
             "double": "\"{subtyp}\" dubbelklickad",
             "double_push": "{subtype} dubbeltryck",
             "long": "{subtype} l\u00e5ngklickad",
@@ -55,7 +55,7 @@
             "long_single": "{subtype} l\u00e5ngklickad och sedan enkelklickad",
             "single": "{subtype} enkelklickad",
             "single_long": "{subtype} enkelklickad och sedan l\u00e5ngklickad",
-            "single_push": "{subtyp} enkeltryck",
+            "single_push": "{subtype} enkeltryck",
             "triple": "{subtype} trippelklickad"
         }
     }

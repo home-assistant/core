@@ -4,7 +4,8 @@
             "already_configured": "El dispositiu ja est\u00e0 configurat",
             "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
             "mdns_missing_mac": "Falta l'adre\u00e7a MAC a les propietats MDNS.",
-            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament",
+            "service_received": "Servei rebut"
         },
         "error": {
             "connection_error": "No s'ha pogut connectar amb ESP. Verifica que l'arxiu YAML cont\u00e9 la l\u00ednia 'api:'.",

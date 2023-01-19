@@ -73,7 +73,21 @@
         "select": {
             "ecobee_mode": {
                 "state": {
-                    "home": "Thuis"
+                    "home": "Thuis",
+                    "sleep": "Slaap"
+                }
+            }
+        },
+        "sensor": {
+            "thread_node_capabilities": {
+                "state": {
+                    "none": "Geen"
+                }
+            },
+            "thread_status": {
+                "state": {
+                    "detached": "Losgekoppeld",
+                    "disabled": "Uitgeschakeld"
                 }
             }
         }

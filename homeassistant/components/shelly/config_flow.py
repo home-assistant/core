@@ -217,7 +217,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Abort and reconnect soon if the device with the mac address is already configured."""
         if (
             current_entry := await self.async_set_unique_id(mac)
-        ) and current_entry.data[CONF_HOST] == host:
+        ) and current_entry.data.get(CONF_HOST) == host:
             await async_reconnect_soon(self.hass, current_entry)
         if host == INTERNAL_WIFI_AP_IP:
             # If the device is broadcasting the internal wifi ap ip
@@ -329,12 +329,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await validate_input(self.hass, host, info, user_input)
             except (DeviceConnectionError, InvalidAuthError, FirmwareUnsupported):
                 return self.async_abort(reason="reauth_unsuccessful")
-            else:
-                self.hass.config_entries.async_update_entry(
-                    self.entry, data={**self.entry.data, **user_input}
-                )
-                await self.hass.config_entries.async_reload(self.entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
+
+            self.hass.config_entries.async_update_entry(
+                self.entry, data={**self.entry.data, **user_input}
+            )
+            await self.hass.config_entries.async_reload(self.entry.entry_id)
+            return self.async_abort(reason="reauth_successful")
 
         if self.entry.data.get("gen", 1) == 1:
             schema = {

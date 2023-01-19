@@ -31,8 +31,7 @@
     },
     "options": {
         "error": {
-            "cannot_retrieve": "Impossible de r\u00e9cup\u00e9rer la liste des sources. Assurez-vous que l'appareil est allum\u00e9",
-            "script_not_found": "Script introuvable"
+            "cannot_retrieve": "Impossible de r\u00e9cup\u00e9rer la liste des sources. Assurez-vous que l'appareil est allum\u00e9"
         },
         "step": {
             "init": {
