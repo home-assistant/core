@@ -24,7 +24,7 @@ FAKE_CONFIG = {
 
 async def test_show_authenticate_form(hass: HomeAssistant, client: MagicMock) -> None:
     """Test that the config form is shown."""
-    with patch("AIOSomecomfort.AIOSomeComfort", return_value=client,), patch(
+    with patch(
         "homeassistant.components.honeywell.async_setup_entry",
         return_value=True,
     ):
@@ -40,7 +40,7 @@ async def test_show_authenticate_form(hass: HomeAssistant, client: MagicMock) ->
 async def test_connection_error(hass: HomeAssistant, client: MagicMock) -> None:
     """Test that an error message is shown on connection fail."""
     client.login.side_effect = AIOSomecomfort.ConnectionError
-    with patch("AIOSomecomfort.AIOSomeComfort", return_value=client,), patch(
+    with patch(
         "homeassistant.components.honeywell.async_setup_entry",
         return_value=True,
     ):
@@ -63,9 +63,9 @@ async def test_auth_error(hass: HomeAssistant, client: MagicMock) -> None:
     assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_create_entry(hass: HomeAssistant, client: MagicMock) -> None:
+async def test_create_entry(hass: HomeAssistant) -> None:
     """Test that the config entry is created."""
-    with patch("AIOSomecomfort.AIOSomeComfort", return_value=client,), patch(
+    with patch(
         "homeassistant.components.honeywell.async_setup_entry",
         return_value=True,
     ):
@@ -77,7 +77,7 @@ async def test_create_entry(hass: HomeAssistant, client: MagicMock) -> None:
 
 
 async def test_show_option_form(
-    hass: HomeAssistant, config_entry: MockConfigEntry, client: MagicMock
+    hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Test that the option form is shown."""
     config_entry.add_to_hass(hass)
@@ -86,7 +86,7 @@ async def test_show_option_form(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    with patch("AIOSomecomfort.AIOSomeComfort", return_value=client,), patch(
+    with patch(
         "homeassistant.components.honeywell.async_setup_entry",
         return_value=True,
     ):
@@ -106,7 +106,7 @@ async def test_create_option_entry(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    with patch("AIOSomecomfort.AIOSomeComfort", return_value=client,), patch(
+    with patch(
         "homeassistant.components.honeywell.async_setup_entry",
         return_value=True,
     ):
