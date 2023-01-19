@@ -78,7 +78,9 @@ CONFIG_SCHEMA = vol.Schema(
         ),
         vol.Required(CONF_UNIT_TIME, default=UnitOfTime.HOURS): selector.SelectSelector(
             selector.SelectSelectorConfig(
-                options=TIME_UNITS, mode=selector.SelectSelectorMode.DROPDOWN
+                options=TIME_UNITS,
+                mode=selector.SelectSelectorMode.DROPDOWN,
+                translation_key=CONF_UNIT_TIME,
             ),
         ),
     }

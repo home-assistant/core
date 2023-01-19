@@ -40,6 +40,14 @@
                 "left": "Left Riemann sum",
                 "right": "Right Riemann sum"
             }
+        },
+        "unit_time": {
+            "options": {
+                "s": "Seconds",
+                "min": "Minutes",
+                "h": "Hours",
+                "d": "Days"
+            }
         }
     }
 }
