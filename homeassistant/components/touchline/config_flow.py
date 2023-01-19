@@ -69,16 +69,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
         host = user_input[CONF_HOST]
-        # Remove HTTPS and HTTP from URL
+        # Remove HTTPS and HTTP schema from URL.
         pattern = "https?://"
         host = re.sub(pattern, "", host)
         host = "http://" + host
+        user_input[CONF_HOST] = host
         if not cv.url(host):
             errors["base"] = "invalid_input"
         else:
-            self._async_abort_entries_match({CONF_HOST: host})
+            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
             result = await self.hass.async_add_executor_job(
-                _try_connect_and_fetch_basic_info, host
+                _try_connect_and_fetch_basic_info, user_input[CONF_HOST]
             )
 
             if result["type"] != RESULT_SUCCESS:
@@ -91,7 +92,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id(result["data"])
         self._abort_if_unique_id_configured()
-
+        _LOGGER.debug(
+            "Host: %s",
+            user_input[CONF_HOST],
+        )
         return self.async_create_entry(title=host, data=user_input)
 
     async def async_step_import(self, conf: dict[str, Any]) -> FlowResult:
