@@ -594,12 +594,11 @@ class TuyaInfraredClimateEntity(TuyaEntity, ClimateEntity):
                 return HVACMode.OFF
 
             mode = self.device.status.get(DPCode.MODE, "1")
-            # pylint: disable=no-else-return
             if "0" == mode:
                 return HVACMode.COOL
-            elif "1" == mode:
+            if "1" == mode:
                 return HVACMode.HEAT
-            elif "2" == mode:
+            if "2" == mode:
                 return HVACMode.AUTO
         return HVACMode.OFF
 
