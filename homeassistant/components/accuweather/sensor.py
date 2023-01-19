@@ -452,7 +452,7 @@ def _get_sensor_data(
         return sensors[ATTR_FORECAST][forecast_day][kind]
 
     if kind == "Precipitation":
-        return sensors["PrecipitationSummary"][kind]
+        return sensors["PrecipitationSummary"]["PastHour"]
 
     return sensors[kind]
 
