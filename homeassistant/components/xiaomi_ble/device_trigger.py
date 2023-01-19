@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_TYPE,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
@@ -34,30 +35,27 @@ TRIGGER_SCHEMA = vol.Any(
     MUE4094RT_MOTION_TRIGGER_SCHEMA,
 )
 
+TRIGGERS_BY_MODEL = {"MUE4094RT": MOTION_TRIGGER_TYPES}
+
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, Any]]:
     """List a list of triggers for Xiaomi BLE devices."""
-    triggers = []
 
     # Check if device is a MUE4094RT motion sensor device.  Return empty if not.
-    xiaomi_motion_device = await _async_get_xiaomi_motion_device(hass, device_id)
-
-    if not xiaomi_motion_device:
+    if not (triggers := _async_get_triggers_by_model(hass, device_id)):
         return []
 
-    for trigger in MOTION_TRIGGER_TYPES:
-        triggers.append(
-            {
-                CONF_PLATFORM: "device",
-                CONF_DOMAIN: DOMAIN,
-                CONF_DEVICE_ID: device_id,
-                CONF_TYPE: trigger,
-            }
-        )
-
-    return triggers
+    return [
+        {
+            CONF_PLATFORM: "device",
+            CONF_DOMAIN: DOMAIN,
+            CONF_DEVICE_ID: device_id,
+            CONF_TYPE: trigger,
+        }
+        for trigger in triggers
+    ]
 
 
 async def async_attach_trigger(
@@ -87,14 +85,12 @@ async def async_attach_trigger(
     )
 
 
-def _async_get_xiaomi_motion_device(hass: HomeAssistant, device_id: str):
+def _async_get_triggers_by_model(
+    hass: HomeAssistant, device_id: str
+) -> set[str] | None:
     """Get a Xiaomi BLE motion device for the given device registry device id."""
-    if DOMAIN not in hass.data:
-        return None
-
-    # This part needs to be changed. Only select MUE4094RT motion sensors
-    for entry_id in hass.data[DOMAIN]:
-        data = hass.data[DOMAIN][entry_id]
-        if data:
-            return data
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get(device_id)
+    if device and device.model and (triggers := TRIGGERS_BY_MODEL.get(device.model)):
+        return triggers
     return None
