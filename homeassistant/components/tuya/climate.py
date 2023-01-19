@@ -533,7 +533,7 @@ class TuyaInfraredClimateEntity(TuyaEntity, ClimateEntity):
 
         super().__init__(device, device_manager)
 
-        device_list = [*device_manager.device_manager.device_map]
+        device_list = [*device_manager.device_map]
         for device_id in device_list:
             sensor_device = device_manager.device_map[device_id]
             if (
@@ -623,6 +623,13 @@ class TuyaInfraredClimateEntity(TuyaEntity, ClimateEntity):
             if self.sensor_device is None:
                 return None
             return self.sensor_device.status.get(DPCode.VA_TEMPERATURE) / 10
+        return None
+
+    @property
+    def fan_mode(self) -> str | None:
+        """Return fan mode."""
+        if self.is_ready():
+            return self.device.status.get(DPCode.WIND)
         return None
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
