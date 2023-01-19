@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import CONF_PROTOCOL, CONF_USE_HTTPS, DEFAULT_TIMEOUT
-from .exceptions import UserNotAdmin
+from .exceptions import ReolinkSetupException, UserNotAdmin
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,14 +55,14 @@ class ReolinkHost:
         """Return the API object."""
         return self._api
 
-    async def async_init(self) -> bool:
+    async def async_init(self) -> None:
         """Connect to Reolink host."""
         self._api.expire_session()
 
         await self._api.get_host_data()
 
         if self._api.mac_address is None:
-            return False
+            raise ReolinkSetupException("Could not get mac address")
 
         if not self._api.is_admin:
             await self.stop()
@@ -117,8 +117,6 @@ class ReolinkHost:
                     )
 
         self._unique_id = format_mac(self._api.mac_address)
-
-        return True
 
     async def update_states(self) -> None:
         """Call the API of the camera device to update the internal states."""

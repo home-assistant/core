@@ -25,7 +25,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
-from .exceptions import UserNotAdmin
+from .exceptions import ReolinkException, UserNotAdmin
 from .host import ReolinkHost
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,12 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     host = ReolinkHost(hass, config_entry.data, config_entry.options)
 
     try:
-        if not await host.async_init():
-            await host.stop()
-            raise ConfigEntryNotReady(
-                f"Error while trying to setup {host.api.host}:{host.api.port}: "
-                "failed to obtain data from device."
-            )
+        await host.async_init()
     except UserNotAdmin as err:
         raise ConfigEntryAuthFailed(err) from UserNotAdmin
     except (
@@ -62,6 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         InvalidContentTypeError,
         LoginError,
         NoDataError,
+        ReolinkException,
         UnexpectedDataError,
     ) as err:
         await host.stop()
