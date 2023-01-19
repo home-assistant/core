@@ -205,9 +205,10 @@ async def test_google_config_local_fulfillment(hass, aioclient_mock, hass_storag
     assert config.get_local_agent_user_id("INCORRECT") is None
 
 
-async def test_secure_device_pin_config(hass):
+async def test_secure_device_pin_and_local_fulfilment_port_config(hass):
     """Test the setting of the secure device pin configuration."""
     secure_pin = "TEST"
+    local_fulfilment_port = 5678
     secure_config = GOOGLE_ASSISTANT_SCHEMA(
         {
             "project_id": "1234",
@@ -216,11 +217,13 @@ async def test_secure_device_pin_config(hass):
                 "client_email": "dummy@dummy.iam.gserviceaccount.com",
             },
             "secure_devices_pin": secure_pin,
+            "local_fulfilment_port": local_fulfilment_port,
         }
     )
     config = GoogleConfig(hass, secure_config)
 
     assert config.secure_devices_pin == secure_pin
+    assert config.local_fulfilment_port == local_fulfilment_port
 
 
 async def test_should_expose(hass):

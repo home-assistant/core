@@ -61,6 +61,18 @@ async def test_google_entity_sync_serialize_with_local_sdk(hass):
         "uuid": "abcdef",
     }
 
+    local_fulfilment_port = 5678
+    port_config = MockConfig(
+        hass=hass,
+        local_fulfilment_port=local_fulfilment_port,
+    )
+    port_config.async_enable_local_sdk()
+    port_entity = helpers.GoogleEntity(
+        hass, port_config, hass.states.get("light.ceiling_lights")
+    )
+    port_serialized = port_entity.sync_serialize(None, None)
+    assert port_serialized["customData"]["httpPort"] == local_fulfilment_port
+
     for device_type in NOT_EXPOSE_LOCAL:
         with patch(
             "homeassistant.components.google_assistant.helpers.get_google_type",
