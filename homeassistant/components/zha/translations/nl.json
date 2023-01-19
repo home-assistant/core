@@ -101,6 +101,7 @@
         },
         "trigger_subtype": {
             "both_buttons": "Beide knoppen",
+            "button": "Drukknop",
             "button_1": "Eerste knop",
             "button_2": "Tweede knop",
             "button_3": "Derde knop",

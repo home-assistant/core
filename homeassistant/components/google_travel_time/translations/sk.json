@@ -33,7 +33,7 @@
                     "transit_routing_preference": "Predvo\u013eba smerovania verejnej dopravy",
                     "units": "Jednotky"
                 },
-                "description": "Volite\u013ene m\u00f4\u017eete zada\u0165 \u010das odchodu alebo \u010das pr\u00edchodu. Ak zad\u00e1vate \u010das odchodu, m\u00f4\u017eete zada\u0165 \u201eteraz\u201c, \u010dasov\u00fa pe\u010diatku syst\u00e9mu Unix alebo 24-hodinov\u00fd \u010dasov\u00fd re\u0165azec, napr\u00edklad \u201e08:00:00\u201c. Ak zad\u00e1vate \u010das pr\u00edchodu, m\u00f4\u017eete pou\u017ei\u0165 \u010dasov\u00fa pe\u010diatku Unixu alebo 24-hodinov\u00fd \u010dasov\u00fd re\u0165azec, napr\u00edklad `08:00:00`"
+                "description": "Volite\u013ene m\u00f4\u017eete zada\u0165 \u010das odchodu alebo \u010das pr\u00edchodu. Ak zad\u00e1vate \u010das odchodu, m\u00f4\u017eete zada\u0165 'teraz', \u010dasov\u00fa pe\u010diatku syst\u00e9mu Unix alebo 24-hodinov\u00fd \u010dasov\u00fd re\u0165azec, napr\u00edklad '08:00:00'. Ak zad\u00e1vate \u010das pr\u00edchodu, m\u00f4\u017eete pou\u017ei\u0165 \u010dasov\u00fa pe\u010diatku Unixu alebo 24-hodinov\u00fd \u010dasov\u00fd re\u0165azec, napr\u00edklad `08:00:00`"
             }
         }
     },
