@@ -6,7 +6,12 @@ import logging
 from typing import Any, Optional
 
 from homeassistant.components.sensor import CONF_STATE_CLASS, SensorEntity
-from homeassistant.const import CONF_NAME, CONF_SENSORS, CONF_UNIT_OF_MEASUREMENT
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_SENSORS,
+    CONF_UNIQUE_ID,
+    CONF_UNIT_OF_MEASUREMENT,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -145,6 +150,9 @@ class SlaveSensor(
         idx += 1
         self._idx = idx
         self._attr_name = f"{entry[CONF_NAME]} {idx}"
+        self._attr_unique_id = entry.get(CONF_UNIQUE_ID)
+        if self._attr_unique_id:
+            self._attr_unique_id = f"{self._attr_unique_id}_{idx}"
         self._attr_available = False
         super().__init__(coordinator)
 
