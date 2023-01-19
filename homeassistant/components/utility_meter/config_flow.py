@@ -74,7 +74,9 @@ CONFIG_SCHEMA = vol.Schema(
             selector.EntitySelectorConfig(domain=SENSOR_DOMAIN),
         ),
         vol.Required(CONF_METER_TYPE): selector.SelectSelector(
-            selector.SelectSelectorConfig(options=METER_TYPES),
+            selector.SelectSelectorConfig(
+                options=METER_TYPES, translation_key=CONF_METER_TYPE
+            ),
         ),
         vol.Required(CONF_METER_OFFSET, default=0): selector.NumberSelector(
             selector.NumberSelectorConfig(
