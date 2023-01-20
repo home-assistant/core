@@ -44,13 +44,21 @@ def async_remove_shelly_entity(
 
 
 def get_block_device_name(device: BlockDevice) -> str:
-    """Naming for device."""
+    """Get Block device name."""
     return cast(str, device.settings["name"] or device.settings["device"]["hostname"])
 
 
 def get_rpc_device_name(device: RpcDevice) -> str:
-    """Naming for device."""
+    """Get RPC device name."""
     return cast(str, device.config["sys"]["device"].get("name") or device.hostname)
+
+
+def get_device_name(device: BlockDevice | RpcDevice) -> str:
+    """Get device name."""
+    if isinstance(device, BlockDevice):
+        return get_block_device_name(device)
+
+    return get_rpc_device_name(device)
 
 
 def get_number_of_channels(device: BlockDevice, block: Block) -> int:
