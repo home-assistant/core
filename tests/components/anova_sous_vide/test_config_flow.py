@@ -34,28 +34,3 @@ async def test_flow_user_already_configured(hass: HomeAssistant) -> None:
     )
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
-
-async def test_flow_import(hass: HomeAssistant) -> None:
-    """Test an import flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data=CONF_INPUT,
-    )
-
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["data"] == CONF_INPUT
-
-
-async def test_flow_import_already_configured(hass: HomeAssistant) -> None:
-    """Test an import flow already configured."""
-    create_entry(hass)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data=CONF_INPUT,
-    )
-
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
-    assert result["reason"] == "already_configured"

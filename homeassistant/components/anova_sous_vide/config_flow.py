@@ -16,6 +16,8 @@ _LOGGER = logging.getLogger(__name__)
 class AnovaConfligFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Sets up a config flow for Anova."""
 
+    VERSION = 1
+
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> FlowResult:
@@ -34,10 +36,3 @@ class AnovaConfligFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=vol.Schema({vol.Required("device_id"): str})
         )
-
-    async def async_step_import(self, import_config: dict[str, str]) -> FlowResult:
-        """Import a config entry from configuration.yaml."""
-        entries = self._async_current_entries()
-        if any(x.data["device_id"] == import_config["device_id"] for x in entries):
-            return self.async_abort(reason="already_configured")
-        return await self.async_step_user(import_config)
