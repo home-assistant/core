@@ -63,7 +63,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
         ),
         SwitchEntityDescription(
             key=DPCode.LOCK,
-            name="Child Lock",
+            name="Child lock",
             icon="mdi:account-lock",
             entity_category=EntityCategory.CONFIG,
         ),
