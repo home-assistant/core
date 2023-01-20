@@ -81,7 +81,8 @@ class ReolinkHost:
         if not self._api.is_admin:
             await self.stop()
             raise UserNotAdmin(
-                f"User '{self._api.username}' has authorization level '{self._api.user_level}', only admin users can change camera settings"
+                f"User '{self._api.username}' has authorization level "
+                f"'{self._api.user_level}', only admin users can change camera settings"
             )
 
         enable_onvif = None
@@ -115,7 +116,8 @@ class ReolinkHost:
             except ReolinkError:
                 if enable_onvif:
                     _LOGGER.error(
-                        "Failed to enable ONVIF on %s. Set it to ON to receive notifications",
+                        "Failed to enable ONVIF on %s. "
+                        "Set it to ON to receive notifications",
                         self._api.nvr_name,
                     )
 
@@ -195,11 +197,12 @@ class ReolinkHost:
             )
 
     async def renew(self) -> None:
-        """Renew the subscription of the motion events (lease time is set to 15 minutes)."""
+        """Renew the subscription of motion events (lease time is 15 minutes)."""
 
         if not self._api.subscribed:
             _LOGGER.debug(
-                "Host %s: requested to renew a non-existing Reolink subscription, trying to subscribe from scratch",
+                "Host %s: requested to renew a non-existing Reolink subscription, "
+                "trying to subscribe from scratch",
                 self._api.host,
             )
             await self.subscribe()
@@ -216,7 +219,8 @@ class ReolinkHost:
                 )
                 return
             _LOGGER.debug(
-                "Host %s: error renewing Reolink subscription, trying to subscribe again",
+                "Host %s: error renewing Reolink subscription, "
+                "trying to subscribe again",
                 self._api.host,
             )
 
@@ -240,7 +244,8 @@ class ReolinkHost:
             )
         except ValueError:
             _LOGGER.debug(
-                "Error registering webhook %s. Trying to unregister it first and re-register again",
+                "Error registering webhook %s. "
+                "Trying to unregister it first and re-register again",
                 event_id,
             )
             webhook.async_unregister(self._hass, event_id)
@@ -249,9 +254,10 @@ class ReolinkHost:
                     self._hass, DOMAIN, event_id, event_id, self.handle_webhook
                 )
             except ValueError as err:
-                mess = f"Error registering a webhook {event_id} for {self.api.nvr_name}"
                 self.webhook_id = None
-                raise ReolinkWebhookException(mess) from err
+                raise ReolinkWebhookException(
+                    f"Error registering a webhook {event_id} for {self.api.nvr_name}"
+                ) from err
 
         try:
             base_url = get_url(self._hass, prefer_external=False)
@@ -259,10 +265,12 @@ class ReolinkHost:
             try:
                 base_url = get_url(self._hass, prefer_external=True)
             except NoURLAvailableError as err:
-                webhook.async_unregister(self._hass, self.webhook_id)
-                mess = f"Error registering URL for webhook {event_id}: HomeAssistant URL is not available"
+                webhook.async_unregister(self._hass, event_id)
                 self.webhook_id = None
-                raise ReolinkWebhookException(mess) from err
+                raise ReolinkWebhookException(
+                    f"Error registering URL for webhook {event_id}: "
+                    "HomeAssistant URL is not available"
+                ) from err
 
         webhook_path = webhook.async_generate_path(event_id)
         self._webhook_url = f"{base_url}{webhook_path}"
