@@ -14,12 +14,13 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 
-from .const import CONF_PROTOCOL, CONF_USE_HTTPS, DEFAULT_PROTOCOL, DOMAIN
+from .const import CONF_PROTOCOL, CONF_USE_HTTPS, DOMAIN
 from .exceptions import ReolinkException, UserNotAdmin
 from .host import ReolinkHost
 
 _LOGGER = logging.getLogger(__name__)
 
+DEFAULT_PROTOCOL = "rtsp"
 DEFAULT_OPTIONS = {CONF_PROTOCOL: DEFAULT_PROTOCOL}
 
 
