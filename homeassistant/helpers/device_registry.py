@@ -450,7 +450,7 @@ class DeviceRegistry:
     ) -> DeviceEntry | None:
         """Update device attributes."""
         # Circular dep
-        # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel
         from . import area_registry as ar
 
         old = self.devices[device_id]
