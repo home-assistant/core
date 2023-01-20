@@ -47,32 +47,3 @@ class ReolinkCoordinatorEntity(CoordinatorEntity):
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._host.api.session_active and super().available
-
-
-class ReolinkNVRCoordinatorEntity(CoordinatorEntity):
-    """Parent class for Reolink NVR entities."""
-
-    def __init__(self, reolink_data: ReolinkData) -> None:
-        """Initialize ReolinkNVRCoordinatorEntity for a NVR entity."""
-        coordinator = reolink_data.device_coordinator
-        super().__init__(coordinator)
-
-        self._host = reolink_data.host
-
-        http_s = "https" if self._host.api.use_https else "http"
-        conf_url = f"{http_s}://{self._host.api.host}:{self._host.api.port}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._host.unique_id)},
-            connections={(CONNECTION_NETWORK_MAC, self._host.api.mac_address)},
-            name=self._host.api.nvr_name,
-            model=self._host.api.model,
-            manufacturer=self._host.api.manufacturer,
-            hw_version=self._host.api.hardware_version,
-            sw_version=self._host.api.sw_version,
-            configuration_url=conf_url,
-        )
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._host.api.session_active and super().available
