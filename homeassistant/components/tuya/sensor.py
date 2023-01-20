@@ -1004,7 +1004,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
     "cs": (
         TuyaSensorEntityDescription(
             key=DPCode.COUNTDOWN_LEFT,
-            name="Countdown Left",
+            name="Countdown left",
             icon="mdi:av-timer",
             device_class=SensorDeviceClass.HUMIDITY,
             state_class=SensorStateClass.MEASUREMENT,
