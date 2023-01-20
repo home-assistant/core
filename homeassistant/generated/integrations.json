@@ -3966,7 +3966,7 @@
       "iot_class": "local_polling"
     },
     "otbr": {
-      "name": "Thread",
+      "name": "Open Thread Border Router",
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -5239,6 +5239,12 @@
     },
     "stookalert": {
       "name": "RIVM Stookalert",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
+    "stookwijzer": {
+      "name": "Stookwijzer",
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"

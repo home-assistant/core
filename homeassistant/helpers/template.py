@@ -1085,7 +1085,7 @@ def integration_entities(hass: HomeAssistant, entry_name: str) -> Iterable[str]:
         return [entry.entity_id for entry in entries]
 
     # fallback to just returning all entities for a domain
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from .entity import entity_sources
 
     return [

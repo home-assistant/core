@@ -120,7 +120,7 @@ class ShellyCoordinatorBase(DataUpdateCoordinator[None], Generic[_DeviceT]):
     def async_setup(self) -> None:
         """Set up the coordinator."""
         dev_reg = device_registry.async_get(self.hass)
-        entry = dev_reg.async_get_or_create(
+        device_entry = dev_reg.async_get_or_create(
             config_entry_id=self.entry.entry_id,
             name=self.name,
             connections={(device_registry.CONNECTION_NETWORK_MAC, self.mac)},
@@ -130,7 +130,7 @@ class ShellyCoordinatorBase(DataUpdateCoordinator[None], Generic[_DeviceT]):
             hw_version=f"gen{self.device.gen} ({self.model})",
             configuration_url=f"http://{self.entry.data[CONF_HOST]}",
         )
-        self.device_id = entry.id
+        self.device_id = device_entry.id
 
     async def _async_reload_entry(self) -> None:
         """Reload entry."""

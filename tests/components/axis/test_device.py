@@ -323,7 +323,10 @@ async def test_device_support_mqtt(hass, mqtt_mock, config_entry):
     mqtt_mock.async_subscribe.assert_called_with(f"{MAC}/#", mock.ANY, 0, "utf-8")
 
     topic = f"{MAC}/event/tns:onvif/Device/tns:axis/Sensor/PIR/$source/sensor/0"
-    message = b'{"timestamp": 1590258472044, "topic": "onvif:Device/axis:Sensor/PIR", "message": {"source": {"sensor": "0"}, "key": {}, "data": {"state": "1"}}}'
+    message = (
+        b'{"timestamp": 1590258472044, "topic": "onvif:Device/axis:Sensor/PIR",'
+        b' "message": {"source": {"sensor": "0"}, "key": {}, "data": {"state": "1"}}}'
+    )
 
     assert len(hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)) == 0
     async_fire_mqtt_message(hass, topic, message)
