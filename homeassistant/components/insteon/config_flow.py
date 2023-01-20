@@ -214,7 +214,7 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(config_entries.DEFAULT_DISCOVERY_UNIQUE_ID)
         return await self.async_step_confirm_usb()
 
-    async def async_step_confirm_usb(self, user_input=None):
+    async def async_step_confirm_usb(self, user_input=None) -> FlowResult:
         """Confirm a USB discovery."""
         if user_input is not None:
             return await self.async_step_plm({CONF_DEVICE: self._device_path})
