@@ -1,5 +1,5 @@
 """The tests for the logbook component."""
-# pylint: disable=protected-access,invalid-name
+# pylint: disable=invalid-name
 import asyncio
 import collections
 from datetime import datetime, timedelta
