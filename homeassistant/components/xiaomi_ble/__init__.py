@@ -20,6 +20,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry, async_get
+from homeassistant.components.bluetooth import DOMAIN as BLUETOOTH_DOMAIN
 
 from .const import DOMAIN, XIAOMI_BLE_EVENT, XiaomiBleEvent
 
