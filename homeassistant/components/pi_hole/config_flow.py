@@ -55,7 +55,6 @@ class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_LOCATION: user_input[CONF_LOCATION],
                 CONF_SSL: user_input[CONF_SSL],
                 CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
-                CONF_API_KEY: user_input[CONF_API_KEY],
             }
 
             self._async_abort_entries_match(
@@ -70,6 +69,9 @@ class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     title=user_input[CONF_NAME], data=self._config
                 )
 
+            if CONF_API_KEY in errors:
+                return await self.async_step_api_key()
+
         user_input = user_input or {}
         return self.async_show_form(
             step_id="user",
@@ -79,7 +81,6 @@ class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(
                         CONF_PORT, default=user_input.get(CONF_PORT, 80)
                     ): vol.Coerce(int),
-                    vol.Required(CONF_API_KEY): str,
                     vol.Required(
                         CONF_NAME, default=user_input.get(CONF_NAME, DEFAULT_NAME)
                     ): str,
@@ -97,6 +98,25 @@ class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     ): bool,
                 }
             ),
+            errors=errors,
+        )
+
+    async def async_step_api_key(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle step to setup API key."""
+        errors = {}
+        if user_input is not None:
+            self._config[CONF_API_KEY] = user_input[CONF_API_KEY]
+            if not (errors := await self._async_try_connect()):
+                return self.async_create_entry(
+                    title=self._config[CONF_NAME],
+                    data=self._config,
+                )
+
+        return self.async_show_form(
+            step_id="api_key",
+            data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
             errors=errors,
         )
 
@@ -141,7 +161,7 @@ class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             session,
             location=self._config[CONF_LOCATION],
             tls=self._config[CONF_SSL],
-            api_token=self._config[CONF_API_KEY],
+            api_token=self._config.get(CONF_API_KEY),
         )
         try:
             await pi_hole.get_data()

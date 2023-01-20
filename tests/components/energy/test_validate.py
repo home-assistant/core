@@ -851,7 +851,9 @@ async def test_validation_gas(
                     "type": "entity_unexpected_unit_gas_price",
                     "affected_entities": {("sensor.gas_price_2", "EUR/invalid")},
                     "translation_placeholders": {
-                        "price_units": "EUR/GJ, EUR/kWh, EUR/MWh, EUR/Wh, EUR/CCF, EUR/ft³, EUR/m³"
+                        "price_units": (
+                            "EUR/GJ, EUR/kWh, EUR/MWh, EUR/Wh, EUR/CCF, EUR/ft³, EUR/m³"
+                        )
                     },
                 },
             ],

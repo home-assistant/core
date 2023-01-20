@@ -98,10 +98,8 @@ async def test_switch_loads_entities(hass, mock_config_entry_data, mock_config_e
         state_switch_lock.attributes.get(ATTR_FRIENDLY_NAME)
         == "Product Name (aabbccddeeff) Switch lock"
     )
-    assert (
-        state_switch_lock.attributes.get(ATTR_DEVICE_CLASS) == SwitchDeviceClass.SWITCH
-    )
-    assert ATTR_ICON not in state_switch_lock.attributes
+    assert state_switch_lock.attributes.get(ATTR_ICON) == "mdi:lock-open"
+    assert ATTR_DEVICE_CLASS not in state_switch_lock.attributes
 
 
 async def test_switch_power_on_off(hass, mock_config_entry_data, mock_config_entry):

@@ -29,19 +29,6 @@
             }
         }
     },
-    "issues": {
-        "deprecated_key": {
-            "fix_flow": {
-                "step": {
-                    "confirm": {
-                        "description": "Actualiza cualquier automatizaci\u00f3n o script que use este servicio y sustituye la clave nombre por la clave entry_id.",
-                        "title": "Se va a eliminar la clave nombre en los servicios de Transmission"
-                    }
-                }
-            },
-            "title": "Se va a eliminar la clave nombre en los servicios de Transmission"
-        }
-    },
     "options": {
         "step": {
             "init": {

@@ -29,19 +29,6 @@
             }
         }
     },
-    "issues": {
-        "deprecated_key": {
-            "fix_flow": {
-                "step": {
-                    "confirm": {
-                        "description": "Oppdater eventuelle automatiseringer eller skript som bruker denne tjenesten og erstatt navnen\u00f8kkelen med entry_id-n\u00f8kkelen.",
-                        "title": "Navnen\u00f8kkelen i overf\u00f8ringstjenester fjernes"
-                    }
-                }
-            },
-            "title": "Navnen\u00f8kkelen i overf\u00f8ringstjenester fjernes"
-        }
-    },
     "options": {
         "step": {
             "init": {

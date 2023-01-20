@@ -34,6 +34,5 @@ async def test_setting_up_demo(mock_history, hass):
         json.dumps(hass.states.async_all(), cls=JSONEncoder)
     except Exception:  # pylint: disable=broad-except
         pytest.fail(
-            "Unable to convert all demo entities to JSON. "
-            "Wrong data in state machine!"
+            "Unable to convert all demo entities to JSON. Wrong data in state machine!"
         )

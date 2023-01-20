@@ -13,8 +13,6 @@
         "step": {
             "init": {
                 "data": {
-                    "manual": "Automatikus friss\u00edt\u00e9s letilt\u00e1sa",
-                    "scan_interval": "Friss\u00edt\u00e9si gyakoris\u00e1g (perc)",
                     "server_name": "V\u00e1lassza ki a teszt szervert"
                 }
             }

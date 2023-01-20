@@ -197,7 +197,7 @@ class AbstractConfig(ABC):
     def async_enable_report_state(self):
         """Enable proactive mode."""
         # Circular dep
-        # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel
         from .report_state import async_enable_report_state
 
         if self._unsub_report_state is None:
@@ -338,7 +338,7 @@ class AbstractConfig(ABC):
     async def _handle_local_webhook(self, hass, webhook_id, request):
         """Handle an incoming local SDK message."""
         # Circular dep
-        # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel
         from . import smart_home
 
         self._local_last_active = utcnow()

@@ -689,6 +689,7 @@ omit =
     homeassistant/components/ld2410_ble/__init__.py
     homeassistant/components/ld2410_ble/binary_sensor.py
     homeassistant/components/ld2410_ble/coordinator.py
+    homeassistant/components/ld2410_ble/sensor.py
     homeassistant/components/led_ble/__init__.py
     homeassistant/components/led_ble/light.py
     homeassistant/components/lg_netcast/media_player.py
@@ -1077,6 +1078,7 @@ omit =
     homeassistant/components/rest/switch.py
     homeassistant/components/rfxtrx/diagnostics.py
     homeassistant/components/ridwell/__init__.py
+    homeassistant/components/ridwell/coordinator.py
     homeassistant/components/ridwell/entity.py
     homeassistant/components/ridwell/sensor.py
     homeassistant/components/ridwell/switch.py
@@ -1251,6 +1253,9 @@ omit =
     homeassistant/components/stookalert/__init__.py
     homeassistant/components/stookalert/binary_sensor.py
     homeassistant/components/stookalert/diagnostics.py
+    homeassistant/components/stookwijzer/__init__.py
+    homeassistant/components/stookwijzer/diagnostics.py
+    homeassistant/components/stookwijzer/sensor.py
     homeassistant/components/stream/*
     homeassistant/components/streamlabswater/*
     homeassistant/components/suez_water/*
