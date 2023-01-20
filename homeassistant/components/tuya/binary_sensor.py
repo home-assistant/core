@@ -51,7 +51,7 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
     "cs": (
         TuyaBinarySensorEntityDescription(
             key=DPCode.FAULT,
-            name="Water Tank",
+            name="Water tank",
             icon="mdi:water",
             device_class=BinarySensorDeviceClass.PROBLEM,
             on_value=8,  # 8 means tank is full
