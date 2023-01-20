@@ -98,8 +98,8 @@ class HoneywellUSThermostat(ClimateEntity):
         self,
         data: HoneywellData,
         device: AIOSomecomfort.device.Device,
-        cool_away_temp: str | None,
-        heat_away_temp: str | None,
+        cool_away_temp: int | None,
+        heat_away_temp: int | None,
     ) -> None:
         """Initialize the thermostat."""
         self._data = data
