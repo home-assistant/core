@@ -130,6 +130,8 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
             data={CONF_USERNAME: "test-username", CONF_PASSWORD: "new-password"},
         )
 
+    await hass.async_block_till_done()
+
     assert result["step_id"] == "reauth_confirm"
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
@@ -171,6 +173,7 @@ async def test_reauth_flow_auth_error(hass: HomeAssistant, client: MagicMock) ->
         },
         data={CONF_USERNAME: "test-username", CONF_PASSWORD: "new-password"},
     )
+    await hass.async_block_till_done()
 
     assert result["step_id"] == "reauth_confirm"
     assert result["type"] == FlowResultType.FORM
@@ -219,6 +222,7 @@ async def test_reauth_flow_connnection_error(
         },
         data={CONF_USERNAME: "test-username", CONF_PASSWORD: "new-password"},
     )
+    await hass.async_block_till_done()
 
     assert result["step_id"] == "reauth_confirm"
     assert result["type"] == FlowResultType.FORM
