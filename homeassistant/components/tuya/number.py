@@ -75,7 +75,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "cs": (
         NumberEntityDescription(
             key=DPCode.HUMIDITY,
-            name="Set Humidity %",
+            name="Set humidity %",
             device_class=NumberDeviceClass.HUMIDITY,
             icon="mdi:water-percent",
             entity_category=EntityCategory.CONFIG,
