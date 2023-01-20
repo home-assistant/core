@@ -10,10 +10,10 @@ from .const import DOMAIN
 
 
 class ReolinkCoordinatorEntity(CoordinatorEntity):
-    """Parent class for Reolink camera entities."""
+    """Parent class for Reolink hardware camera entities."""
 
     def __init__(self, reolink_data: ReolinkData, channel: int) -> None:
-        """Initialize ReolinkCoordinatorEntity for a camera entity."""
+        """Initialize ReolinkCoordinatorEntity for a hardware camera."""
         coordinator = reolink_data.device_coordinator
         super().__init__(coordinator)
 
