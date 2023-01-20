@@ -40,13 +40,6 @@ from homeassistant.util.unit_conversion import (
     VolumeConverter,
 )
 
-_ALL_CONVERTERS: list[type[BaseUnitConverter]] = [
-    obj
-    for _, obj in inspect.getmembers(unit_conversion)
-    if inspect.isclass(obj)
-    and issubclass(obj, BaseUnitConverter)
-    and obj != BaseUnitConverter
-]
 _INVALID_SYMBOL = "bob"
 
 
@@ -693,7 +686,19 @@ def test_volume_convert(
     assert VolumeConverter.convert(value, from_unit, to_unit) == pytest.approx(expected)
 
 
-@pytest.mark.parametrize("converter", _ALL_CONVERTERS)
+@pytest.mark.parametrize(
+    "converter",
+    [
+        # Generate list of all converters available in
+        # `homeassistant.util.unit_conversion` to ensure
+        # that we don't miss on in the tests.
+        obj
+        for _, obj in inspect.getmembers(unit_conversion)
+        if inspect.isclass(obj)
+        and issubclass(obj, BaseUnitConverter)
+        and obj != BaseUnitConverter
+    ],
+)
 def test_all_converters(converter: type[BaseUnitConverter]) -> None:
     """Ensure all unit converters are tested."""
     # The converter should exist in _PARAMS_SAME_UNIT
