@@ -108,6 +108,7 @@ async def test_report_state(hass, caplog):
         )
         await hass.async_block_till_done()
 
+    assert "Not reporting state for light.kitchen: mock-error" in caplog.text
     assert len(mock_report.mock_calls) == 0
 
     unsub()

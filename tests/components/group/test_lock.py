@@ -20,6 +20,7 @@ from homeassistant.const import (
     STATE_UNLOCKED,
     STATE_UNLOCKING,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -167,20 +168,19 @@ async def test_state_reporting(hass):
     assert hass.states.get("lock.lock_group").state == STATE_UNAVAILABLE
 
 
-@patch.object(demo_lock, "LOCK_UNLOCK_DELAY", 0)
-async def test_service_calls(hass, enable_custom_integrations):
+async def test_service_calls(hass: HomeAssistant) -> None:
     """Test service calls."""
     await async_setup_component(
         hass,
         LOCK_DOMAIN,
         {
             LOCK_DOMAIN: [
-                {"platform": "demo"},
+                {"platform": "kitchen_sink"},
                 {
                     "platform": DOMAIN,
                     "entities": [
-                        "lock.openable_lock",
-                        "lock.another_openable_lock",
+                        "lock.openable_kitchen_sink_lock",
+                        "lock.another_kitchen_sink_openable_lock",
                     ],
                 },
             ]
@@ -190,8 +190,11 @@ async def test_service_calls(hass, enable_custom_integrations):
 
     group_state = hass.states.get("lock.lock_group")
     assert group_state.state == STATE_UNLOCKED
-    assert hass.states.get("lock.openable_lock").state == STATE_LOCKED
-    assert hass.states.get("lock.another_openable_lock").state == STATE_UNLOCKED
+    assert hass.states.get("lock.openable_kitchen_sink_lock").state == STATE_LOCKED
+    assert (
+        hass.states.get("lock.another_kitchen_sink_openable_lock").state
+        == STATE_UNLOCKED
+    )
 
     await hass.services.async_call(
         LOCK_DOMAIN,
@@ -199,8 +202,11 @@ async def test_service_calls(hass, enable_custom_integrations):
         {ATTR_ENTITY_ID: "lock.lock_group"},
         blocking=True,
     )
-    assert hass.states.get("lock.openable_lock").state == STATE_UNLOCKED
-    assert hass.states.get("lock.another_openable_lock").state == STATE_UNLOCKED
+    assert hass.states.get("lock.openable_kitchen_sink_lock").state == STATE_UNLOCKED
+    assert (
+        hass.states.get("lock.another_kitchen_sink_openable_lock").state
+        == STATE_UNLOCKED
+    )
 
     await hass.services.async_call(
         LOCK_DOMAIN,
@@ -208,8 +214,10 @@ async def test_service_calls(hass, enable_custom_integrations):
         {ATTR_ENTITY_ID: "lock.lock_group"},
         blocking=True,
     )
-    assert hass.states.get("lock.openable_lock").state == STATE_LOCKED
-    assert hass.states.get("lock.another_openable_lock").state == STATE_LOCKED
+    assert hass.states.get("lock.openable_kitchen_sink_lock").state == STATE_LOCKED
+    assert (
+        hass.states.get("lock.another_kitchen_sink_openable_lock").state == STATE_LOCKED
+    )
 
     await hass.services.async_call(
         LOCK_DOMAIN,
@@ -217,8 +225,11 @@ async def test_service_calls(hass, enable_custom_integrations):
         {ATTR_ENTITY_ID: "lock.lock_group"},
         blocking=True,
     )
-    assert hass.states.get("lock.openable_lock").state == STATE_UNLOCKED
-    assert hass.states.get("lock.another_openable_lock").state == STATE_UNLOCKED
+    assert hass.states.get("lock.openable_kitchen_sink_lock").state == STATE_UNLOCKED
+    assert (
+        hass.states.get("lock.another_kitchen_sink_openable_lock").state
+        == STATE_UNLOCKED
+    )
 
 
 async def test_reload(hass):
