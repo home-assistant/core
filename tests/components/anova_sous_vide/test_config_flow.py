@@ -1,4 +1,4 @@
-"""Test Slack config flow."""
+"""Test Anova config flow."""
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.anova_sous_vide.const import DOMAIN

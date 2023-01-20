@@ -24,7 +24,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady("Can not connect to the sous vide") from ex
     hass.data[DOMAIN][entry.entry_id] = AnovaPrecisionCooker()
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
-
     return True
 
 
