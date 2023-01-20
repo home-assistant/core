@@ -15,24 +15,15 @@ from .mocks import _mock_powerwall_with_fixtures
 
 from tests.common import MockConfigEntry
 
-ENTITY_ID = "switch.powerwall_off_grid"
+ENTITY_ID = "switch.take_powerwall_off_grid"
 
 
 async def test_entity_registry(hass):
-    """Test powerwall device in device registry."""
-    entity_registry = ent_reg.async_get(hass)
-
-    assert ENTITY_ID in entity_registry.entities
-
-
-async def test_offgridswitch(hass):
-    """Test creation of off-grid switch."""
-
+    """Test powerwall off-grid switch device."""
     mock_powerwall = await _mock_powerwall_with_fixtures(hass)
 
     config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_IP_ADDRESS: "1.2.3.4"})
     config_entry.add_to_hass(hass)
-
     with patch(
         "homeassistant.components.powerwall.config_flow.Powerwall",
         return_value=mock_powerwall,
@@ -42,6 +33,10 @@ async def test_offgridswitch(hass):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
+    entity_registry = ent_reg.async_get(hass)
+
+    assert ENTITY_ID in entity_registry.entities
+
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
@@ -49,7 +44,7 @@ async def test_offgridswitch(hass):
         blocking=True,
     )
 
-    state = hass.states.get("switch.off_grid")
+    state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_OFF
 
     await hass.services.async_call(
@@ -59,7 +54,7 @@ async def test_offgridswitch(hass):
         blocking=True,
     )
 
-    state = hass.states.get("switch.off_grid")
+    state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_ON
 
 

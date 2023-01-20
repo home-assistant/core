@@ -34,7 +34,7 @@ class PowerwallOffGridEnabledEntity(SwitchEntity):
     """Representation of a Switch entity for Powerwall Off-grid operation."""
 
     _attr_name = "Take Powerwall Off-Grid"
-    _attr_unique_id = "powerwall_off_grid"
+    _attr_unique_id = "take_powerwall_off_grid"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_device_class = SwitchDeviceClass.SWITCH
 
