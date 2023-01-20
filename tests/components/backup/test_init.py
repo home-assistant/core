@@ -16,9 +16,9 @@ async def test_setup_with_hassio(
     """Test the setup of the integration with hassio enabled."""
     assert not await setup_backup_integration(hass=hass, with_hassio=True)
     assert (
-        "The backup integration is not supported on this installation method, please remove it from your configuration"
-        in caplog.text
-    )
+        "The backup integration is not supported on this installation method, please"
+        " remove it from your configuration"
+    ) in caplog.text
 
 
 async def test_create_service(

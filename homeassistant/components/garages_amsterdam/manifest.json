@@ -3,7 +3,7 @@
   "name": "Garages Amsterdam",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/garages_amsterdam",
-  "requirements": ["odp-amsterdam==5.0.0"],
+  "requirements": ["odp-amsterdam==5.0.1"],
   "codeowners": ["@klaasnicolaas"],
   "iot_class": "cloud_polling"
 }

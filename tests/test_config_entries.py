@@ -897,9 +897,10 @@ async def test_setup_raise_not_ready(hass, caplog):
 
     assert len(mock_call.mock_calls) == 1
     assert (
-        "Config entry 'test_title' for test integration not ready yet: The internet connection is offline"
-        in caplog.text
-    )
+        "Config entry 'test_title' for test integration not ready yet:"
+        " The internet connection is offline"
+    ) in caplog.text
+
     p_hass, p_wait_time, p_setup = mock_call.mock_calls[0][1]
 
     assert p_hass is hass
@@ -932,8 +933,8 @@ async def test_setup_raise_not_ready_from_exception(hass, caplog):
 
     assert len(mock_call.mock_calls) == 1
     assert (
-        "Config entry 'test_title' for test integration not ready yet: The device dropped the connection"
-        in caplog.text
+        "Config entry 'test_title' for test integration not ready yet: The device"
+        " dropped the connection" in caplog.text
     )
 
 
@@ -2950,8 +2951,8 @@ async def test_setup_not_raise_entry_error_from_future_coordinator_update(hass, 
     await entry.async_setup(hass)
     await hass.async_block_till_done()
     assert (
-        "Config entry setup failed while fetching any data: Incompatible firmware version"
-        in caplog.text
+        "Config entry setup failed while fetching any data: Incompatible firmware"
+        " version" in caplog.text
     )
 
     assert entry.state is config_entries.ConfigEntryState.LOADED

@@ -8,6 +8,7 @@ from homeassistant.components.lock import (
     SERVICE_LOCK,
     SERVICE_OPEN,
     SERVICE_UNLOCK,
+    STATE_JAMMED,
     STATE_LOCKED,
     STATE_LOCKING,
     STATE_UNLOCKED,
@@ -21,6 +22,7 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     Platform,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .test_common import (
@@ -466,6 +468,112 @@ async def test_sending_mqtt_commands_support_open_and_explicit_optimistic(
     state = hass.states.get("lock.test")
     assert state.state is STATE_UNLOCKED
     assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+
+async def test_sending_mqtt_commands_pessimistic(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config
+) -> None:
+    """Test function of the lock with state topics."""
+    assert await async_setup_component(
+        hass,
+        mqtt.DOMAIN,
+        {
+            mqtt.DOMAIN: {
+                lock.DOMAIN: {
+                    "name": "test",
+                    "command_topic": "command-topic",
+                    "state_topic": "state-topic",
+                    "payload_lock": "LOCK",
+                    "payload_unlock": "UNLOCK",
+                    "payload_open": "OPEN",
+                    "state_locked": "LOCKED",
+                    "state_locking": "LOCKING",
+                    "state_unlocked": "UNLOCKED",
+                    "state_unlocking": "UNLOCKING",
+                    "state_jammed": "JAMMED",
+                }
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+
+    state = hass.states.get("lock.test")
+    assert state.state is STATE_UNLOCKED
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == LockEntityFeature.OPEN
+
+    # send lock command to lock
+    await hass.services.async_call(
+        lock.DOMAIN, SERVICE_LOCK, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
+    )
+
+    mqtt_mock.async_publish.assert_called_once_with("command-topic", "LOCK", 0, False)
+    mqtt_mock.async_publish.reset_mock()
+
+    # receive state from lock
+    async_fire_mqtt_message(hass, "state-topic", "LOCKED")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("lock.test")
+    assert state.state is STATE_LOCKED
+
+    await hass.services.async_call(
+        lock.DOMAIN, SERVICE_UNLOCK, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
+    )
+
+    mqtt_mock.async_publish.assert_called_once_with("command-topic", "UNLOCK", 0, False)
+    mqtt_mock.async_publish.reset_mock()
+
+    # receive state from lock
+    async_fire_mqtt_message(hass, "state-topic", "UNLOCKED")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("lock.test")
+    assert state.state is STATE_UNLOCKED
+
+    await hass.services.async_call(
+        lock.DOMAIN, SERVICE_OPEN, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
+    )
+
+    mqtt_mock.async_publish.assert_called_once_with("command-topic", "OPEN", 0, False)
+    mqtt_mock.async_publish.reset_mock()
+
+    # receive state from lock
+    async_fire_mqtt_message(hass, "state-topic", "UNLOCKED")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("lock.test")
+    assert state.state is STATE_UNLOCKED
+
+    # send lock command to lock
+    await hass.services.async_call(
+        lock.DOMAIN, SERVICE_LOCK, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
+    )
+
+    # Go to locking state
+    mqtt_mock.async_publish.assert_called_once_with("command-topic", "LOCK", 0, False)
+    mqtt_mock.async_publish.reset_mock()
+
+    # receive locking state from lock
+    async_fire_mqtt_message(hass, "state-topic", "LOCKING")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("lock.test")
+    assert state.state is STATE_LOCKING
+
+    # receive jammed state from lock
+    async_fire_mqtt_message(hass, "state-topic", "JAMMED")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("lock.test")
+    assert state.state is STATE_JAMMED
+
+    # receive solved state from lock
+    async_fire_mqtt_message(hass, "state-topic", "LOCKED")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("lock.test")
+    assert state.state is STATE_LOCKED
 
 
 async def test_availability_when_connection_lost(

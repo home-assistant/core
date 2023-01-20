@@ -27,6 +27,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import HoneywellData
 from .const import (
     _LOGGER,
     CONF_COOL_AWAY_TEMPERATURE,
@@ -71,7 +72,7 @@ HW_FAN_MODE_TO_HA = {
     "follow schedule": FAN_AUTO,
 }
 
-SCAN_INTERVAL = datetime.timedelta(seconds=10)
+SCAN_INTERVAL = datetime.timedelta(seconds=30)
 
 
 async def async_setup_entry(
@@ -96,7 +97,13 @@ class HoneywellUSThermostat(ClimateEntity):
 
     _attr_has_entity_name = True
 
-    def __init__(self, data, device, cool_away_temp, heat_away_temp):
+    def __init__(
+        self,
+        data: HoneywellData,
+        device: AIOSomecomfort.device.Device,
+        cool_away_temp: int | None,
+        heat_away_temp: int | None,
+    ) -> None:
         """Initialize the thermostat."""
         self._data = data
         self._device = device
@@ -119,8 +126,13 @@ class HoneywellUSThermostat(ClimateEntity):
         self._attr_is_aux_heat = device.system_mode == "emheat"
 
         # not all honeywell HVACs support all modes
-        mappings = [v for k, v in HVAC_MODE_TO_HW_MODE.items() if device.raw_ui_data[k]]
-        self._hvac_mode_map = {k: v for d in mappings for k, v in d.items()}
+
+        self._hvac_mode_map = {
+            key2: value2
+            for key1, value1 in HVAC_MODE_TO_HW_MODE.items()
+            if device.raw_ui_data[key1]
+            for key2, value2 in value1.items()
+        }
         self._attr_hvac_modes = list(self._hvac_mode_map)
 
         self._attr_supported_features = (
@@ -139,8 +151,12 @@ class HoneywellUSThermostat(ClimateEntity):
             return
 
         # not all honeywell fans support all modes
-        mappings = [v for k, v in FAN_MODE_TO_HW.items() if device.raw_fan_data[k]]
-        self._fan_mode_map = {k: v for d in mappings for k, v in d.items()}
+        self._fan_mode_map = {
+            key2: value2
+            for key1, value1 in FAN_MODE_TO_HW.items()
+            if device.raw_fan_data[key1]
+            for key2, value2 in value1.items()
+        }
 
         self._attr_fan_modes = list(self._fan_mode_map)
 
@@ -255,15 +271,15 @@ class HoneywellUSThermostat(ClimateEntity):
                 # Get next period time
                 hour, minute = divmod(next_period * 15, 60)
                 # Set hold time
-                if mode == HVACMode.COOL:
+                if mode == "cool":
                     await self._device.set_hold_cool(datetime.time(hour, minute))
-                elif mode == HVACMode.HEAT:
+                elif mode == "heat":
                     await self._device.set_hold_heat(datetime.time(hour, minute))
 
             # Set temperature
-            if mode == HVACMode.COOL:
+            if mode == "cool":
                 await self._device.set_setpoint_cool(temperature)
-            elif mode == HVACMode.HEAT:
+            elif mode == "heat":
                 await self._device.set_setpoint_heat(temperature)
 
         except AIOSomecomfort.SomeComfortError:
@@ -310,10 +326,10 @@ class HoneywellUSThermostat(ClimateEntity):
             # Set permanent hold
             # and Set temperature
             away_temp = getattr(self, f"_{mode}_away_temp")
-            if mode == HVACMode.COOL:
+            if mode == "cool":
                 self._device.set_hold_cool(True)
                 self._device.set_setpoint_cool(away_temp)
-            elif mode == HVACMode.HEAT:
+            elif mode == "heat":
                 self._device.set_hold_heat(True)
                 self._device.set_setpoint_heat(away_temp)
 
@@ -334,9 +350,9 @@ class HoneywellUSThermostat(ClimateEntity):
         if mode in HW_MODE_TO_HVAC_MODE:
             try:
                 # Set permanent hold
-                if mode == HVACMode.COOL:
+                if mode == "cool":
                     await self._device.set_hold_cool(True)
-                elif mode == HVACMode.HEAT:
+                elif mode == "heat":
                     await self._device.set_hold_heat(True)
 
             except AIOSomecomfort.SomeComfortError:

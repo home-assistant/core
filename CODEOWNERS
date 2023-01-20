@@ -1139,6 +1139,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/stiebel_eltron/ @fucm
 /homeassistant/components/stookalert/ @fwestenberg @frenck
 /tests/components/stookalert/ @fwestenberg @frenck
+/homeassistant/components/stookwijzer/ @fwestenberg
+/tests/components/stookwijzer/ @fwestenberg
 /homeassistant/components/stream/ @hunterjm @uvjustin @allenporter
 /tests/components/stream/ @hunterjm @uvjustin @allenporter
 /homeassistant/components/stt/ @pvizeli

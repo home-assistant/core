@@ -27,7 +27,7 @@
                 "title": "Potvr\u010fte pridanie slu\u017eby Hyperion Ambilight"
             },
             "create_token": {
-                "description": "Ak chcete po\u017eiada\u0165 o nov\u00fd overovac\u00ed token, ni\u017e\u0161ie vyberte mo\u017enos\u0165 **Odosla\u0165**. Budete presmerovan\u00ed do pou\u017e\u00edvate\u013esk\u00e9ho rozhrania Hyperion, aby ste schv\u00e1lili po\u017eiadavku. Overte, \u017ee zobrazen\u00e9 ID je \u201e{auth_id}\u201c",
+                "description": "Ak chcete po\u017eiada\u0165 o nov\u00fd overovac\u00ed token, ni\u017e\u0161ie vyberte mo\u017enos\u0165 **Odosla\u0165**. Budete presmerovan\u00ed do pou\u017e\u00edvate\u013esk\u00e9ho rozhrania Hyperion, aby ste schv\u00e1lili po\u017eiadavku. Overte, \u017ee zobrazen\u00e9 ID je \"{auth_id}\"",
                 "title": "Automaticky vytvori\u0165 nov\u00fd autentifika\u010dn\u00fd token"
             },
             "create_token_external": {

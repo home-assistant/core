@@ -335,7 +335,7 @@ class HomeAssistant:
 
         await self.async_start()
         if attach_signals:
-            # pylint: disable=import-outside-toplevel
+            # pylint: disable-next=import-outside-toplevel
             from .helpers.signal import async_register_signal_handling
 
             async_register_signal_handling(self)

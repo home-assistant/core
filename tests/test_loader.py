@@ -138,16 +138,16 @@ async def test_custom_integration_version_not_valid(
         await loader.async_get_integration(hass, "test_no_version")
 
     assert (
-        "The custom integration 'test_no_version' does not have a version key in the manifest file and was blocked from loading."
-        in caplog.text
-    )
+        "The custom integration 'test_no_version' does not have a version key in the"
+        " manifest file and was blocked from loading."
+    ) in caplog.text
 
     with pytest.raises(loader.IntegrationNotFound):
         await loader.async_get_integration(hass, "test2")
     assert (
-        "The custom integration 'test_bad_version' does not have a valid version key (bad) in the manifest file and was blocked from loading."
-        in caplog.text
-    )
+        "The custom integration 'test_bad_version' does not have a valid version key"
+        " (bad) in the manifest file and was blocked from loading."
+    ) in caplog.text
 
 
 async def test_get_integration(hass):

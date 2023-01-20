@@ -31,8 +31,7 @@
     },
     "options": {
         "error": {
-            "cannot_retrieve": "\u7121\u6cd5\u63a5\u6536\u4f86\u6e90\u5217\u8868\uff0c\u8acb\u78ba\u5b9a\u88dd\u7f6e\u70ba\u958b\u555f\u72c0\u614b",
-            "script_not_found": "\u627e\u4e0d\u5230\u8173\u672c"
+            "cannot_retrieve": "\u7121\u6cd5\u63a5\u6536\u4f86\u6e90\u5217\u8868\uff0c\u8acb\u78ba\u5b9a\u88dd\u7f6e\u70ba\u958b\u555f\u72c0\u614b"
         },
         "step": {
             "init": {

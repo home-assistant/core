@@ -222,25 +222,8 @@ async def test_http_api_wrong_data(hass, init_components, hass_client):
     assert resp.status == HTTPStatus.BAD_REQUEST
 
 
-async def test_custom_agent(hass, hass_client, hass_admin_user):
+async def test_custom_agent(hass, hass_client, hass_admin_user, mock_agent):
     """Test a custom conversation agent."""
-
-    calls = []
-
-    class MyAgent(conversation.AbstractConversationAgent):
-        """Test Agent."""
-
-        async def async_process(self, text, context, conversation_id, language):
-            """Process some text."""
-            calls.append((text, context, conversation_id, language))
-            response = intent.IntentResponse(language=language)
-            response.async_set_speech("Test response")
-            return conversation.ConversationResult(
-                response=response, conversation_id=conversation_id
-            )
-
-    conversation.async_set_agent(hass, MyAgent())
-
     assert await async_setup_component(hass, "conversation", {})
 
     client = await hass_client()
@@ -270,11 +253,11 @@ async def test_custom_agent(hass, hass_client, hass_admin_user):
         "conversation_id": "test-conv-id",
     }
 
-    assert len(calls) == 1
-    assert calls[0][0] == "Test Text"
-    assert calls[0][1].user_id == hass_admin_user.id
-    assert calls[0][2] == "test-conv-id"
-    assert calls[0][3] == "test-language"
+    assert len(mock_agent.calls) == 1
+    assert mock_agent.calls[0][0] == "Test Text"
+    assert mock_agent.calls[0][1].user_id == hass_admin_user.id
+    assert mock_agent.calls[0][2] == "test-conv-id"
+    assert mock_agent.calls[0][3] == "test-language"
 
 
 @pytest.mark.parametrize(
@@ -329,6 +312,34 @@ async def test_ws_api(hass, hass_ws_client, payload):
     }
 
 
+# pylint: disable=protected-access
+async def test_ws_prepare(hass, hass_ws_client):
+    """Test the Websocket prepare conversation API."""
+    assert await async_setup_component(hass, "conversation", {})
+    agent = await conversation._get_agent(hass)
+    assert isinstance(agent, conversation.DefaultAgent)
+
+    # No intents should be loaded yet
+    assert not agent._lang_intents.get(hass.config.language)
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "conversation/prepare",
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["id"] == 5
+
+    # Intents should now be load
+    assert agent._lang_intents.get(hass.config.language)
+
+
 async def test_custom_sentences(hass, hass_client, hass_admin_user):
     """Test custom sentences with a custom intent."""
     assert await async_setup_component(hass, "homeassistant", {})
@@ -367,3 +378,39 @@ async def test_custom_sentences(hass, hass_client, hass_admin_user):
             },
             "conversation_id": None,
         }
+
+
+# pylint: disable=protected-access
+async def test_prepare_reload(hass):
+    """Test calling the reload service."""
+    language = hass.config.language
+    assert await async_setup_component(hass, "conversation", {})
+
+    # Load intents
+    agent = await conversation._get_agent(hass)
+    assert isinstance(agent, conversation.DefaultAgent)
+    await agent.async_prepare(language)
+
+    # Confirm intents are loaded
+    assert agent._lang_intents.get(language)
+
+    # Clear cache
+    await hass.services.async_call("conversation", "reload", {})
+    await hass.async_block_till_done()
+
+    # Confirm intent cache is cleared
+    assert not agent._lang_intents.get(language)
+
+
+# pylint: disable=protected-access
+async def test_prepare_fail(hass):
+    """Test calling prepare with a non-existent language."""
+    assert await async_setup_component(hass, "conversation", {})
+
+    # Load intents
+    agent = await conversation._get_agent(hass)
+    assert isinstance(agent, conversation.DefaultAgent)
+    await agent.async_prepare("not-a-language")
+
+    # Confirm no intents were loaded
+    assert not agent._lang_intents.get("not-a-language")

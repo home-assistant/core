@@ -58,13 +58,9 @@
             },
             "zone_sleep": {
                 "state": {
-                    "120 min": "120 Menit",
                     "120_min": "120 Menit",
-                    "30 min": "30 Menit",
                     "30_min": "30 Menit",
-                    "60 min": "60 Menit",
                     "60_min": "60 Menit",
-                    "90 min": "90 Menit",
                     "90_min": "90 Menit",
                     "off": "Mati"
                 }
