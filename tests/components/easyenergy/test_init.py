@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 
 from easyenergy import EasyEnergyConnectionError
 
-from homeassistant.components.energyzero.const import DOMAIN
+from homeassistant.components.easyenergy.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 

@@ -30,7 +30,7 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.freeze_time("2023-01-20 15:00:00")
+@pytest.mark.freeze_time("2023-01-19 15:00:00")
 async def test_energy_usage_today(
     hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
@@ -47,7 +47,7 @@ async def test_energy_usage_today(
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_today_energy_usage_current_hour_price"
-    assert state.state == "0.242"
+    assert state.state == "0.22541"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Energy market price - Usage Current hour"
@@ -68,7 +68,7 @@ async def test_energy_usage_today(
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_today_energy_usage_average_price"
-    assert state.state == "0.21515"
+    assert state.state == "0.17665"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Energy market price - Usage Average - today"
@@ -86,7 +86,7 @@ async def test_energy_usage_today(
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_today_energy_usage_max_price"
-    assert state.state == "0.28442"
+    assert state.state == "0.24677"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Energy market price - Usage Highest price - today"
@@ -106,7 +106,7 @@ async def test_energy_usage_today(
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_today_energy_usage_highest_price_time"
-    assert state.state == "2023-01-20T07:00:00+00:00"
+    assert state.state == "2023-01-19T16:00:00+00:00"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Energy market price - Usage Time of highest price - today"
@@ -125,7 +125,7 @@ async def test_energy_usage_today(
     assert not device_entry.sw_version
 
 
-@pytest.mark.freeze_time("2023-01-20 15:00:00")
+@pytest.mark.freeze_time("2023-01-19 15:00:00")
 async def test_energy_return_today(
     hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
@@ -142,7 +142,7 @@ async def test_energy_return_today(
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_today_energy_return_current_hour_price"
-    assert state.state == "0.2"
+    assert state.state == "0.18629"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Energy market price - Return Current hour"
@@ -163,7 +163,7 @@ async def test_energy_return_today(
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_today_energy_return_average_price"
-    assert state.state == "0.17781"
+    assert state.state == "0.14599"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Energy market price - Return Average - today"
@@ -181,7 +181,7 @@ async def test_energy_return_today(
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_today_energy_return_max_price"
-    assert state.state == "0.23506"
+    assert state.state == "0.20394"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Energy market price - Return Highest price - today"
@@ -201,7 +201,7 @@ async def test_energy_return_today(
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_today_energy_return_highest_price_time"
-    assert state.state == "2023-01-20T07:00:00+00:00"
+    assert state.state == "2023-01-19T16:00:00+00:00"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Energy market price - Return Time of highest price - today"
@@ -220,7 +220,7 @@ async def test_energy_return_today(
     assert not device_entry.sw_version
 
 
-@pytest.mark.freeze_time("2023-01-20 04:00:00")
+@pytest.mark.freeze_time("2023-01-19 10:00:00")
 async def test_gas_today(
     hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
@@ -256,7 +256,7 @@ async def test_gas_today(
     assert not device_entry.sw_version
 
 
-@pytest.mark.freeze_time("2023-01-20 15:00:00")
+@pytest.mark.freeze_time("2023-01-19 15:00:00")
 async def test_no_gas_today(
     hass: HomeAssistant, mock_easyenergy: MagicMock, init_integration: MockConfigEntry
 ) -> None:
