@@ -24,7 +24,7 @@ class MockConfig(helpers.AbstractConfig):
         enabled=True,
         entity_config=None,
         hass=None,
-        local_fulfilment_port=None,
+        local_fulfillment_port=None,
         secure_devices_pin=None,
         should_2fa=None,
         should_expose=None,
@@ -34,7 +34,7 @@ class MockConfig(helpers.AbstractConfig):
         super().__init__(hass)
         self._enabled = enabled
         self._entity_config = entity_config or {}
-        self._local_fulfilment_port = local_fulfilment_port
+        self._local_fulfillment_port = local_fulfillment_port
         self._secure_devices_pin = secure_devices_pin
         self._should_2fa = should_2fa
         self._should_expose = should_expose
@@ -47,9 +47,9 @@ class MockConfig(helpers.AbstractConfig):
         return self._enabled
 
     @property
-    def local_fulfilment_port(self):
+    def local_fulfillment_port(self):
         """Return manually-configured local SDK port."""
-        return self._local_fulfilment_port
+        return self._local_fulfillment_port
 
     @property
     def secure_devices_pin(self):

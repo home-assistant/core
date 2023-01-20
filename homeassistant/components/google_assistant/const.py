@@ -38,7 +38,7 @@ CONF_PROJECT_ID = "project_id"
 CONF_REPORT_STATE = "report_state"
 CONF_ROOM_HINT = "room"
 CONF_SECURE_DEVICES_PIN = "secure_devices_pin"
-CONF_LOCAL_FULFILMENT_PORT = "local_fulfilment_port"
+CONF_LOCAL_FULFILLMENT_PORT = "local_fulfillment_port"
 CONF_SERVICE_ACCOUNT = "service_account"
 
 DATA_CONFIG = "config"

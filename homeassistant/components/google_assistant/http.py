@@ -27,7 +27,7 @@ from .const import (
     CONF_EXPOSE,
     CONF_EXPOSE_BY_DEFAULT,
     CONF_EXPOSED_DOMAINS,
-    CONF_LOCAL_FULFILMENT_PORT,
+    CONF_LOCAL_FULFILLMENT_PORT,
     CONF_PRIVATE_KEY,
     CONF_REPORT_STATE,
     CONF_SECURE_DEVICES_PIN,
@@ -108,9 +108,9 @@ class GoogleConfig(AbstractConfig):
         return self._config.get(CONF_SECURE_DEVICES_PIN)
 
     @property
-    def local_fulfilment_port(self):
+    def local_fulfillment_port(self):
         """Return manually-configured local SDK port."""
-        return self._config.get(CONF_LOCAL_FULFILMENT_PORT)
+        return self._config.get(CONF_LOCAL_FULFILLMENT_PORT)
 
     @property
     def should_report_state(self):

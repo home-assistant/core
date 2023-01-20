@@ -127,7 +127,7 @@ class AbstractConfig(ABC):
         return None
 
     @property
-    def local_fulfilment_port(self):
+    def local_fulfillment_port(self):
         """Return manually-configured local SDK port."""
         return None
 
@@ -632,7 +632,7 @@ class GoogleEntity:
             device["otherDeviceIds"] = [{"deviceId": self.entity_id}]
             device["customData"] = {
                 "webhookId": self.config.get_local_webhook_id(agent_user_id),
-                "httpPort": self.config.local_fulfilment_port
+                "httpPort": self.config.local_fulfillment_port
                 or URL(get_url(self.hass, allow_external=False)).port,
                 "uuid": instance_uuid,
             }
