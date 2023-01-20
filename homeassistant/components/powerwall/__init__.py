@@ -156,6 +156,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         base_info=base_info,
         http_session=http_session,
         coordinator=None,
+        api_instance=power_wall,
     )
 
     manager = PowerwallDataManager(hass, power_wall, ip_address, password, runtime_data)
