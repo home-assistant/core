@@ -1464,7 +1464,7 @@ pyRFXtrx==0.30.0
 pySwitchmate==0.5.1
 
 # homeassistant.components.tibber
-pyTibber==0.26.9
+pyTibber==0.26.11
 
 # homeassistant.components.dlink
 pyW215==0.7.0
@@ -1699,7 +1699,7 @@ pyirishrail==0.0.2
 pyiss==1.0.1
 
 # homeassistant.components.isy994
-pyisy==3.1.8
+pyisy==3.1.9
 
 # homeassistant.components.itach
 pyitachip2ir==0.0.7
