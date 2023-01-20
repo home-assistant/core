@@ -97,6 +97,7 @@ async def async_setup_entry(
     """Set up Anova Sous Vide device."""
     anova_wifi = hass.data[DOMAIN][entry.entry_id]
     coordinator = AnovaCoordinator(hass, anova_wifi)
+    await coordinator.async_config_entry_first_refresh()
     sensors = [
         AnovaEntity(coordinator, description[1], description[0])
         for description in SENSOR_DESCRIPTIONS.items()
@@ -134,9 +135,7 @@ class AnovaCoordinator(DataUpdateCoordinator):
             async with async_timeout.timeout(10):
                 return await self.anova_api.update(self._device_id)
         except AnovaOffline as err:
-            raise UpdateFailed(
-                "Anova appears to be offline or your device key is incorrect"
-            ) from err
+            raise UpdateFailed(err) from err
 
 
 class AnovaEntity(CoordinatorEntity, SensorEntity):
