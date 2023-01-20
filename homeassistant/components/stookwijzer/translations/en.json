@@ -1,14 +1,11 @@
 {
     "config": {
-        "abort": {
-            "already_configured": "Service is already configured"
-        },
         "step": {
             "user": {
                 "data": {
-                    "latitude": "Latitude",
-                    "longitude": "Longitude"
-                }
+                    "location": "Location"
+                },
+                "description": "Select the location you want to recieve the Stookwijzer information for."
             }
         }
     },

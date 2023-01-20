@@ -24,23 +24,22 @@ class StookwijzerFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
 
         if user_input is not None:
-            lat: float = user_input[CONF_LOCATION][CONF_LATITUDE]
-            lon: float = user_input[CONF_LOCATION][CONF_LONGITUDE]
-
-            await self.async_set_unique_id(f"{lat}-{lon}")
-            self._abort_if_unique_id_configured()
             return self.async_create_entry(
-                title=f"{lat}-{lon}",
+                title="Stookwijzer",
                 data=user_input,
             )
 
-        home_location = {
-            CONF_LATITUDE: self.hass.config.latitude,
-            CONF_LONGITUDE: self.hass.config.longitude,
-        }
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
-                {vol.Required(CONF_LOCATION, default=home_location): LocationSelector()}
+                {
+                    vol.Required(
+                        CONF_LOCATION,
+                        default={
+                            CONF_LATITUDE: self.hass.config.latitude,
+                            CONF_LONGITUDE: self.hass.config.longitude,
+                        },
+                    ): LocationSelector()
+                }
             ),
         )

@@ -7,8 +7,6 @@ from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
-
 
 async def test_full_user_flow(hass: HomeAssistant) -> None:
     """Test the full user configuration flow."""
@@ -42,36 +40,3 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_already_configured(hass: HomeAssistant) -> None:
-    """Test we abort if the Stookwijzer location is already configured."""
-    MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_LOCATION: {
-                CONF_LATITUDE: 2.0,
-                CONF_LONGITUDE: 2.1,
-            }
-        },
-        unique_id="2.0-2.1",
-    ).add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    assert "flow_id" in result
-
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_LOCATION: {
-                CONF_LATITUDE: 2.0,
-                CONF_LONGITUDE: 2.1,
-            }
-        },
-    )
-
-    assert result2.get("type") == FlowResultType.ABORT
-    assert result2.get("reason") == "already_configured"
