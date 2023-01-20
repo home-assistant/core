@@ -41,8 +41,7 @@
   },
   "device_automation": {
     "trigger_type": {
-      "motion_detected": "Motion detected",
-      "motion_clear": "Motion clear"
+      "motion_detected": "Motion detected"
     }
   }
 }
