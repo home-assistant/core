@@ -297,7 +297,7 @@ async def test_device_offline_fires(
 
 
 async def test_exception_no_triggers(hass, mock_devices, calls, caplog):
-    """Test for exception on event triggers firing."""
+    """Test for exception when validating device triggers."""
 
     _, zha_device = mock_devices
 
@@ -327,11 +327,14 @@ async def test_exception_no_triggers(hass, mock_devices, calls, caplog):
         },
     )
     await hass.async_block_till_done()
-    assert "Invalid trigger configuration" in caplog.text
+    assert (
+        "Unnamed automation failed to setup triggers and has been disabled: "
+        "device does not have trigger ('junk', 'junk')" in caplog.text
+    )
 
 
 async def test_exception_bad_trigger(hass, mock_devices, calls, caplog):
-    """Test for exception on event triggers firing."""
+    """Test for exception when validating device triggers."""
 
     zigpy_device, zha_device = mock_devices
 
@@ -369,43 +372,7 @@ async def test_exception_bad_trigger(hass, mock_devices, calls, caplog):
         },
     )
     await hass.async_block_till_done()
-    assert "Invalid trigger configuration" in caplog.text
-
-
-@pytest.mark.skip(reason="Temporarily disabled until automation validation is improved")
-async def test_exception_no_device(hass, mock_devices, calls, caplog):
-    """Test for exception on event triggers firing."""
-
-    zigpy_device, zha_device = mock_devices
-
-    zigpy_device.device_automation_triggers = {
-        (SHAKEN, SHAKEN): {COMMAND: COMMAND_SHAKE},
-        (DOUBLE_PRESS, DOUBLE_PRESS): {COMMAND: COMMAND_DOUBLE},
-        (SHORT_PRESS, SHORT_PRESS): {COMMAND: COMMAND_SINGLE},
-        (LONG_PRESS, LONG_PRESS): {COMMAND: COMMAND_HOLD},
-        (LONG_RELEASE, LONG_RELEASE): {COMMAND: COMMAND_HOLD},
-    }
-
-    await async_setup_component(
-        hass,
-        automation.DOMAIN,
-        {
-            automation.DOMAIN: [
-                {
-                    "trigger": {
-                        "device_id": "no_such_device_id",
-                        "domain": "zha",
-                        "platform": "device",
-                        "type": "junk",
-                        "subtype": "junk",
-                    },
-                    "action": {
-                        "service": "test.automation",
-                        "data": {"message": "service called"},
-                    },
-                }
-            ]
-        },
+    assert (
+        "Unnamed automation failed to setup triggers and has been disabled: "
+        "device does not have trigger ('junk', 'junk')" in caplog.text
     )
-    await hass.async_block_till_done()
-    assert "Invalid trigger configuration" in caplog.text
