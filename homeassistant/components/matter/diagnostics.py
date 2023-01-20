@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .const import DOMAIN
+from .const import DOMAIN, ID_TYPE_DEVICE_ID
 from .helpers import get_device_id, get_matter
 
 ATTRIBUTES_TO_REDACT = {"chip.clusters.Objects.Basic.Attributes.Location"}
@@ -53,9 +53,13 @@ async def async_get_device_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a device."""
     matter = get_matter(hass)
-    device_id = next(
-        identifier[1] for identifier in device.identifiers if identifier[0] == DOMAIN
+    device_id_type_prefix = f"{ID_TYPE_DEVICE_ID}_"
+    device_id_full = next(
+        identifier[1]
+        for identifier in device.identifiers
+        if identifier[0] == DOMAIN and identifier[1].startswith(device_id_type_prefix)
     )
+    device_id = device_id_full.lstrip(device_id_type_prefix)
 
     server_diagnostics = await matter.matter_client.get_diagnostics()
 

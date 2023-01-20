@@ -13,7 +13,6 @@ import pytest
 
 from homeassistant.components.matter.const import DOMAIN
 from homeassistant.components.matter.diagnostics import redact_matter_attributes
-from homeassistant.components.matter.helpers import get_device_id
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -86,9 +85,7 @@ async def test_device_diagnostics(
     device_diagnostics: dict[str, Any],
 ) -> None:
     """Test the device diagnostics."""
-    node = await setup_integration_with_node_fixture(
-        hass, "device_diagnostics", matter_client
-    )
+    await setup_integration_with_node_fixture(hass, "device_diagnostics", matter_client)
     system_info_dict = config_entry_diagnostics["info"]
     device_diagnostics_redacted = {
         "server_info": system_info_dict,
@@ -105,9 +102,7 @@ async def test_device_diagnostics(
     matter_client.get_diagnostics.return_value = server_diagnostics
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     dev_reg = dr.async_get(hass)
-    node_device = node.node_devices[0]
-    device_id = get_device_id(server_diagnostics.info, node_device)
-    device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    device = dr.async_entries_for_config_entry(dev_reg, config_entry.entry_id)[0]
     assert device
 
     diagnostics = await get_diagnostics_for_device(
