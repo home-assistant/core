@@ -347,7 +347,7 @@ class HoneywellUSThermostat(ClimateEntity):
         if mode in HW_MODE_TO_HVAC_MODE:
             try:
                 # Set permanent hold
-                if mode == COOLING_MODES:
+                if mode in COOLING_MODES:
                     await self._device.set_hold_cool(True)
                 elif mode in HEATING_MODES:
                     await self._device.set_hold_heat(True)
