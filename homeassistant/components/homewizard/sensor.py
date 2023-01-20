@@ -329,11 +329,11 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         value_fn=lambda data: data.active_power_average_w,
     ),
     HomeWizardSensorEntityDescription(
-        key="montly_power_peak_w",
+        key="monthly_power_peak_w",
         name="Peak demand current month",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
-        value_fn=lambda data: data.montly_power_peak_w,
+        value_fn=lambda data: data.monthly_power_peak_w,
     ),
     HomeWizardSensorEntityDescription(
         key="total_gas_m3",
