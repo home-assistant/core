@@ -359,7 +359,7 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
         ),
         SelectEntityDescription(
             key=DPCode.COUNTDOWN,
-            name="Countdown Timer (h)",
+            name="Countdown timer (h)",
             icon="mdi:av-timer",
             entity_category=EntityCategory.CONFIG,
         ),
