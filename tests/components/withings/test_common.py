@@ -165,7 +165,6 @@ async def test_data_manager_webhook_subscription(
 
     data_manager._notify_subscribe_delay = datetime.timedelta(seconds=0)
     data_manager._notify_unsubscribe_delay = datetime.timedelta(seconds=0)
-    # pylint: enable=protected-access
 
     api.notify_list.return_value = NotifyListResponse(
         profiles=(

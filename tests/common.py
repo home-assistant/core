@@ -166,7 +166,6 @@ def get_test_home_assistant():
     return hass
 
 
-# pylint: disable=protected-access
 async def async_test_home_assistant(event_loop, load_registries=True):
     """Return a Home Assistant object pointing at test config dir."""
     hass = HomeAssistant()
