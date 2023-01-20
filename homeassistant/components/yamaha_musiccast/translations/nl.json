@@ -45,6 +45,7 @@
                 "state": {
                     "120_min": "120 minuten",
                     "30_min": "30 minuten",
+                    "60_min": "60 minuten",
                     "90_min": "90 minuten",
                     "off": "Uit"
                 }
