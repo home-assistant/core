@@ -54,6 +54,9 @@ class InelsCover(InelsBaseEntity, CoverEntity):
     def is_closed(self) -> bool | None:
         """Cover is closed."""
         dev = self._device
+        print(
+            f"is_closed: dev.state {dev.state}, ha_val {dev.values.ha_value}, inels_value {dev.values.inels_status_value}"
+        )
         state = dev.state if dev.state in SHUTTER_STATE_LIST else dev.values.ha_value
 
         return state is STATE_CLOSED

@@ -547,6 +547,7 @@ build.json @home-assistant/supervisor
 /tests/components/imap/ @engrbm87
 /homeassistant/components/incomfort/ @zxdavb
 /homeassistant/components/inels/ @Nejezchleb @jhoralek @zed4805
+/tests/components/inels/ @Nejezchleb @jhoralek @zed4805
 /homeassistant/components/influxdb/ @mdegat01
 /tests/components/influxdb/ @mdegat01
 /homeassistant/components/inkbird/ @bdraco

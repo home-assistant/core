@@ -573,17 +573,8 @@ omit =
     homeassistant/components/incomfort/*
     homeassistant/components/inels/__init__.py
     homeassistant/components/inels/base_class.py
-    homeassistant/components/inels/binary_sensor.py
-    homeassistant/components/inels/button.py
-    homeassistant/components/inels/climate.py
     homeassistant/components/inels/const.py
     homeassistant/components/inels/coordinator.py
-    homeassistant/components/inels/cover.py
-    homeassistant/components/inels/light.py
-    homeassistant/components/inels/select.py
-    homeassistant/components/inels/sensor.py
-    homeassistant/components/inels/switch.py
-    homeassistant/components/inels/water_heater.py
     homeassistant/components/insteon/binary_sensor.py
     homeassistant/components/insteon/climate.py
     homeassistant/components/insteon/const.py
