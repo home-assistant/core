@@ -5243,6 +5243,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "stookwijzer": {
+      "name": "Stookwijzer",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "streamlabswater": {
       "name": "StreamLabs",
       "integration_type": "hub",
