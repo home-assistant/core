@@ -40,6 +40,9 @@ ATTR_PERMANENT_HOLD = "permanent_hold"
 
 PRESET_HOLD = "Hold"
 
+HEATING_MODES = {"heat", "emheat", "auto"}
+COOLING_MODES = {"cool", "auto"}
+
 HVAC_MODE_TO_HW_MODE = {
     "SwitchOffAllowed": {HVACMode.OFF: "off"},
     "SwitchAutoAllowed": {HVACMode.HEAT_COOL: "auto"},
@@ -262,15 +265,15 @@ class HoneywellUSThermostat(ClimateEntity):
                 # Get next period time
                 hour, minute = divmod(next_period * 15, 60)
                 # Set hold time
-                if mode == "cool":
+                if mode in COOLING_MODES:
                     await self._device.set_hold_cool(datetime.time(hour, minute))
-                elif mode == "heat":
+                elif mode in HEATING_MODES:
                     await self._device.set_hold_heat(datetime.time(hour, minute))
 
             # Set temperature
-            if mode == "cool":
+            if mode in COOLING_MODES:
                 await self._device.set_setpoint_cool(temperature)
-            elif mode == "heat":
+            elif mode in HEATING_MODES:
                 await self._device.set_setpoint_heat(temperature)
 
         except AIOSomecomfort.SomeComfortError:
@@ -316,17 +319,20 @@ class HoneywellUSThermostat(ClimateEntity):
 
             # Set permanent hold
             # and Set temperature
-            away_temp = getattr(self, f"_{mode}_away_temp")
-            if mode == "cool":
+            if mode in COOLING_MODES:
                 self._device.set_hold_cool(True)
-                self._device.set_setpoint_cool(away_temp)
-            elif mode == "heat":
+                self._device.set_setpoint_cool(self._cool_away_temp)
+            elif mode in HEATING_MODES:
                 self._device.set_hold_heat(True)
-                self._device.set_setpoint_heat(away_temp)
+                self._device.set_setpoint_heat(self._heat_away_temp)
 
         except AIOSomecomfort.SomeComfortError:
+
             _LOGGER.error(
-                "Temperature %.1f out of range", getattr(self, f"_{mode}_away_temp")
+                "Mode %s Heat Temperature %.1f or Cool Temperature %.1f out of range",
+                mode,
+                self._heat_away_temp,
+                self._cool_away_temp,
             )
 
     async def _turn_hold_mode_on(self) -> None:
@@ -341,9 +347,9 @@ class HoneywellUSThermostat(ClimateEntity):
         if mode in HW_MODE_TO_HVAC_MODE:
             try:
                 # Set permanent hold
-                if mode == "cool":
+                if mode == COOLING_MODES:
                     await self._device.set_hold_cool(True)
-                elif mode == "heat":
+                elif mode in HEATING_MODES:
                     await self._device.set_hold_heat(True)
 
             except AIOSomecomfort.SomeComfortError:
@@ -373,7 +379,7 @@ class HoneywellUSThermostat(ClimateEntity):
 
     async def async_turn_aux_heat_on(self) -> None:
         """Turn auxiliary heater on."""
-        await self._device.system_mode("emheat")
+        await self._device.set_system_mode("emheat")
 
     async def async_turn_aux_heat_off(self) -> None:
         """Turn auxiliary heater off."""
