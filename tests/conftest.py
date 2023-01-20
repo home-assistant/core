@@ -71,9 +71,6 @@ from tests.common import (  # noqa: E402, isort:skip
     mock_storage as mock_storage,
 )
 from tests.test_util.aiohttp import mock_aiohttp_client  # noqa: E402, isort:skip
-from tests.components.recorder.common import (  # noqa: E402, isort:skip
-    async_recorder_block_till_done,
-)
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -1057,6 +1054,8 @@ async def async_setup_recorder_instance(
     # Local import to avoid processing recorder and SQLite modules when running a
     # testcase which does not use the recorder.
     from homeassistant.components import recorder
+
+    from tests.components.recorder.common import async_recorder_block_till_done
 
     nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
     stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None
