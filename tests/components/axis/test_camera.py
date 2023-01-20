@@ -74,4 +74,5 @@ async def test_camera_disabled(hass, prepare_config_entry):
     """Test that Axis camera platform is loaded properly but does not create camera entity."""
     with patch("axis.vapix.vapix.Params.image_format", new=None):
         await prepare_config_entry()
-        assert len(hass.states.async_entity_ids(CAMERA_DOMAIN)) == 0
+
+    assert len(hass.states.async_entity_ids(CAMERA_DOMAIN)) == 0
