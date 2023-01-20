@@ -3,7 +3,7 @@
 from unittest.mock import patch
 
 from homeassistant.components.powerwall.const import DOMAIN
-from homeassistant.const import CONF_IP_ADDRESS, STATE_ON
+from homeassistant.const import CONF_IP_ADDRESS, STATE_OFF, STATE_ON
 
 from .mocks import _mock_powerwall_with_fixtures
 
@@ -68,6 +68,17 @@ async def test_sensors(hass):
     expected_attributes = {
         "friendly_name": "Powerwall Charging",
         "device_class": "battery_charging",
+    }
+    # Only test for a subset of attributes in case
+    # HA changes the implementation and a new one appears
+    assert all(item in state.attributes.items() for item in expected_attributes.items())
+
+    state = hass.states.get("binary_sensor.off_grid_status")
+
+    assert state.state == STATE_OFF
+    expected_attributes = {
+        "friendly_name": "Off-grid Status",
+        "device_class": "power",
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
