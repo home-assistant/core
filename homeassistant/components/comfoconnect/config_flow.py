@@ -33,7 +33,7 @@ class ComfoConnectFlowHandler(ConfigFlow, domain=DOMAIN):
         import_config = import_config.get(DOMAIN, import_config)
 
         for entry in self._async_current_entries():
-            if entry.data[CONF_HOST] == import_config[CONF_HOST]:
+            if entry.data[CONF_HOST] == import_config.get(CONF_HOST):
                 _LOGGER.warning(
                     "YAML config for ComfoConnect bridge on %s has been imported. Please remove it from your configuration.YAML",
                     import_config[CONF_HOST],
