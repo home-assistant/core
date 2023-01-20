@@ -125,7 +125,7 @@ class Filters:
 
     def _generate_filter_for_columns(
         self, columns: Iterable[Column], encoder: Callable[[Any], Any]
-    ) -> ClauseList:
+    ) -> ClauseList | None:
         """Generate a filter from pre-comuted sets and pattern lists.
 
         This must match exactly how homeassistant.helpers.entityfilter works.
@@ -191,7 +191,7 @@ class Filters:
         # - Otherwise: exclude
         return i_entities
 
-    def states_entity_filter(self) -> ClauseList:
+    def states_entity_filter(self) -> ClauseList | None:
         """Generate the entity filter query."""
 
         def _encoder(data: Any) -> Any:
@@ -202,8 +202,7 @@ class Filters:
 
     def events_entity_filter(self) -> ClauseList:
         """Generate the entity filter query."""
-        _encoder = json.dumps
-        return or_(
+        filters = [
             # sqlalchemy's SQLite json implementation always
             # wraps everything with JSON_QUOTE so it resolves to 'null'
             # when its empty
@@ -212,13 +211,15 @@ class Filters:
             # NULL when its empty
             #
             ((ENTITY_ID_IN_EVENT == JSON_NULL) | ENTITY_ID_IN_EVENT.is_(None))
-            & (
-                (OLD_ENTITY_ID_IN_EVENT == JSON_NULL) | OLD_ENTITY_ID_IN_EVENT.is_(None)
-            ),
-            self._generate_filter_for_columns(
-                (ENTITY_ID_IN_EVENT, OLD_ENTITY_ID_IN_EVENT), _encoder
-            ).self_group(),
-        )
+            & ((OLD_ENTITY_ID_IN_EVENT == JSON_NULL) | OLD_ENTITY_ID_IN_EVENT.is_(None))
+        ]
+        if (
+            column_filter := self._generate_filter_for_columns(
+                (ENTITY_ID_IN_EVENT, OLD_ENTITY_ID_IN_EVENT), json.dumps
+            )
+        ) is not None:
+            filters.append(column_filter.self_group())
+        return or_(*filters)
 
 
 def _globs_to_like(
