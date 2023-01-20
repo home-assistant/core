@@ -1200,6 +1200,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/thermopro/ @bdraco
 /tests/components/thermopro/ @bdraco
 /homeassistant/components/thethingsnetwork/ @fabaff
+/homeassistant/components/thread/ @home-assistant/core
+/tests/components/thread/ @home-assistant/core
 /homeassistant/components/threshold/ @fabaff
 /tests/components/threshold/ @fabaff
 /homeassistant/components/tibber/ @danielhiversen
