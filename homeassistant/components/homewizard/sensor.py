@@ -64,6 +64,13 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         value_fn=lambda data: data.meter_model,
     ),
     HomeWizardSensorEntityDescription(
+        key="unique_meter_id",
+        name="Smart meter identifier",
+        icon="mdi:alphabetical-variant",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.unique_meter_id,
+    ),
+    HomeWizardSensorEntityDescription(
         key="wifi_ssid",
         name="Wi-Fi SSID",
         icon="mdi:wifi",
@@ -342,6 +349,13 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         device_class=SensorDeviceClass.GAS,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda data: data.total_gas_m3,
+    ),
+    HomeWizardSensorEntityDescription(
+        key="gas_unique_id",
+        name="Gas meter identifier",
+        icon="mdi:alphabetical-variant",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.gas_unique_id,
     ),
     HomeWizardSensorEntityDescription(
         key="active_liter_lpm",
