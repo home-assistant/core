@@ -249,26 +249,9 @@ class ReolinkHost:
         self.webhook_id = f"{DOMAIN}_{self.unique_id.replace(':', '')}"
         event_id = self.webhook_id
 
-        try:
-            webhook.async_register(
-                self._hass, DOMAIN, event_id, event_id, self.handle_webhook
-            )
-        except ValueError:
-            _LOGGER.debug(
-                "Error registering webhook %s. "
-                "Trying to unregister it first and re-register again",
-                event_id,
-            )
-            webhook.async_unregister(self._hass, event_id)
-            try:
-                webhook.async_register(
-                    self._hass, DOMAIN, event_id, event_id, self.handle_webhook
-                )
-            except ValueError as err:
-                self.webhook_id = None
-                raise ReolinkWebhookException(
-                    f"Error registering a webhook {event_id} for {self.api.nvr_name}"
-                ) from err
+        webhook.async_register(
+            self._hass, DOMAIN, event_id, event_id, self.handle_webhook
+        )
 
         try:
             base_url = get_url(self._hass, prefer_external=False)
