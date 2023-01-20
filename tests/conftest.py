@@ -99,7 +99,7 @@ def pytest_configure(config):
     config.addinivalue_line(
         "markers", "no_fail_on_log_exception: mark test to not fail on logged exception"
     )
-    if config.getoption("verbose"):
+    if config.getoption("verbose") > 0:
         logging.basicConfig(level=logging.DEBUG)
     else:
         logging.basicConfig(level=logging.INFO)
