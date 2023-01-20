@@ -2,5 +2,13 @@
 from homeassistant.exceptions import HomeAssistantError
 
 
-class UserNotAdmin(HomeAssistantError):
+class ReolinkException(HomeAssistantError):
+    """BaseException for the Reolink integration."""
+
+
+class ReolinkSetupException(ReolinkException):
+    """Raised when setting up the Reolink host failed."""
+
+
+class UserNotAdmin(ReolinkException):
     """Raised when user is not admin."""
