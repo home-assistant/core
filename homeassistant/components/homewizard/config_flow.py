@@ -196,7 +196,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
             raise AbortFlow("unknown_error") from ex
 
         finally:
-            await energy_api.close()  # type: ignore[no-untyped-call]
+            await energy_api.close()
 
 
 class RecoverableError(HomeAssistantError):
