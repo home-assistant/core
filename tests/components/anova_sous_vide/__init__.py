@@ -1,6 +1,8 @@
 """Tests for the Anova Sous Vide integration."""
 from __future__ import annotations
 
+from anova_wifi import AnovaPrecisionCookerBinarySensor, AnovaPrecisionCookerSensor
+
 from homeassistant.components.anova_sous_vide.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -10,6 +12,27 @@ from tests.common import MockConfigEntry
 DEVICE_ID = "abc123def"
 
 CONF_INPUT = {"device_id": DEVICE_ID}
+
+ONLINE_UPDATE = {
+    "sensors": {
+        AnovaPrecisionCookerSensor.COOK_TIME: 0,
+        AnovaPrecisionCookerSensor.MODE: "Low water",
+        AnovaPrecisionCookerSensor.STATE: "No state",
+        AnovaPrecisionCookerSensor.TARGET_TEMPERATURE: 23.33,
+        AnovaPrecisionCookerSensor.COOK_TIME_REMAINING: 0,
+        AnovaPrecisionCookerSensor.FIRMWARE_VERSION: "2.2.0",
+        AnovaPrecisionCookerSensor.HEATER_TEMPERATURE: 20.87,
+        AnovaPrecisionCookerSensor.TRIAC_TEMPERATURE: 21.79,
+        AnovaPrecisionCookerSensor.WATER_TEMPERATURE: 21.33,
+    },
+    "binary_sensors": {
+        AnovaPrecisionCookerBinarySensor.COOKING: False,
+        AnovaPrecisionCookerBinarySensor.DEVICE_SAFE: True,
+        AnovaPrecisionCookerBinarySensor.WATER_LEAK: False,
+        AnovaPrecisionCookerBinarySensor.WATER_LEVEL_CRITICAL: True,
+        AnovaPrecisionCookerBinarySensor.WATER_TEMP_TOO_HIGH: False,
+    },
+}
 
 
 def create_entry(hass: HomeAssistant) -> ConfigEntry:

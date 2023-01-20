@@ -116,7 +116,6 @@ class AnovaCoordinator(DataUpdateCoordinator):
             logger=_LOGGER,
             update_interval=timedelta(seconds=30),
         )
-
         if self.config_entry is not None:
             self._device_id = self.config_entry.data["device_id"]
             self.device_info = DeviceInfo(
@@ -148,13 +147,13 @@ class AnovaEntity(CoordinatorEntity, SensorEntity):
         sensor_update_key: str,
     ) -> None:
         """Set up an Anova Sensor Entity."""
-        super().__init__(
-            coordinator,
-        )
+        super().__init__(coordinator)
         self.entity_description = description
         self._sensor_update_key = sensor_update_key
         self._sensor_data = None
-        self._attr_unique_id = f"Anova-{description.key}".lower()
+        self._attr_unique_id = (
+            f"Anova_{coordinator._device_id}_{description.key}".lower()
+        )
         self._attr_device_info = coordinator.device_info
 
     @property
