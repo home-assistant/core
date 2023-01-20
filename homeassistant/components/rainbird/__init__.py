@@ -16,6 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -118,25 +119,32 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def set_rain_delay(call: ServiceCall) -> None:
         """Service call to delay automatic irrigigation."""
 
-        async_create_issue(
-            hass,
-            DOMAIN,
-            "deprecated_raindelay",
-            breaks_in_ha_version="2023.4.0",
-            is_fixable=False,
-            is_persistent=True,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_raindelay",
-            translation_placeholders={
-                "alternative_target": "number.rain_delay",
-            },
-        )
-
         entry_id = call.data[ATTR_CONFIG_ENTRY_ID]
         duration = call.data[ATTR_DURATION]
         if entry_id not in hass.data[DOMAIN]:
             raise HomeAssistantError(f"Config entry id does not exist: {entry_id}")
         coordinator = hass.data[DOMAIN][entry_id]
+
+        entity_registry = er.async_get(hass)
+        entity_ids = [
+            entry.entity_id
+            for entry in er.async_entries_for_config_entry(entity_registry, entry_id)
+            if entry.unique_id == f"{coordinator.serial_number}-rain-delay"
+        ]
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_raindelay",
+            breaks_in_ha_version="2023.4.0",
+            is_fixable=True,
+            is_persistent=True,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_raindelay",
+            translation_placeholders={
+                "alternate_target": next(iter(entity_ids), "unknown"),
+            },
+        )
+
         await coordinator.controller.set_rain_delay(duration)
 
     hass.services.async_register(

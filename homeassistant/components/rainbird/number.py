@@ -40,7 +40,7 @@ class RainDelayNumber(CoordinatorEntity[RainbirdUpdateCoordinator], NumberEntity
     _attr_native_unit_of_measurement = UnitOfTime.DAYS
     _attr_icon = "mdi:water-off"
     _attr_name = "Rain delay"
-    _attr_use_entity_name = True
+    _attr_has_entity_name = True
 
     def __init__(
         self,

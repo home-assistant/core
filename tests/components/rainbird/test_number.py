@@ -41,11 +41,11 @@ async def test_number_values(
 
     assert await setup_integration()
 
-    raindelay = hass.states.get("number.rain_delay")
+    raindelay = hass.states.get("number.rain_bird_controller_rain_delay")
     assert raindelay is not None
     assert raindelay.state == expected_state
     assert raindelay.attributes == {
-        "friendly_name": "Rain delay",
+        "friendly_name": "Rain Bird Controller Rain delay",
         "icon": "mdi:water-off",
         "min": 0,
         "max": 14,
@@ -77,7 +77,10 @@ async def test_set_value(
     await hass.services.async_call(
         number.DOMAIN,
         number.SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: "number.rain_delay", number.ATTR_VALUE: 3},
+        {
+            ATTR_ENTITY_ID: "number.rain_bird_controller_rain_delay",
+            number.ATTR_VALUE: 3,
+        },
         blocking=True,
     )
 
