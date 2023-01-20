@@ -388,11 +388,8 @@ class HoneywellUSThermostat(ClimateEntity):
             self._attr_available = await self._data.retry_login()
         try:
             await self._device.refresh()
-            self._attr_available = True
         except (
-            AIOSomecomfort.device.APIRateLimited,
-            AIOSomecomfort.device.ConnectionError,
-            AIOSomecomfort.device.ConnectionTimeout,
+            AIOSomecomfort.device.SomeComfortError,
             OSError,
         ):
             self._attr_available = await self._data.retry_login()
