@@ -4,8 +4,7 @@
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
         },
         "error": {
-            "cannot_connect": "Impossibile connettersi",
-            "unknown": "Errore imprevisto"
+            "cannot_connect": "Impossibile connettersi"
         },
         "step": {
             "user": {
@@ -24,6 +23,14 @@
                     "loss_of_signal_quality": "Perdita di qualit\u00e0 del segnale",
                     "no_defect": "Nessun difetto",
                     "of_frame": "Di Telaio",
+                    "unknown": "Sconosciuto"
+                }
+            },
+            "net_infra": {
+                "state": {
+                    "adsl": "ADSL",
+                    "ftth": "FTTH",
+                    "gprs": "GPRS",
                     "unknown": "Sconosciuto"
                 }
             },

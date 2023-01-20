@@ -9,7 +9,7 @@
         "flow_title": "{name}",
         "step": {
             "confirm": {
-                "description": "Kuruluma ba\u015flamak ister misiniz?"
+                "description": "Kurulumu ba\u015flatmak istiyor musunuz?"
             },
             "user": {
                 "data": {

@@ -4,8 +4,7 @@
             "already_configured": "Apparaat is al geconfigureerd"
         },
         "error": {
-            "cannot_connect": "Kan geen verbinding maken",
-            "unknown": "Onverwachte fout"
+            "cannot_connect": "Kan geen verbinding maken"
         },
         "step": {
             "user": {
@@ -17,6 +16,19 @@
     },
     "entity": {
         "sensor": {
+            "line_status": {
+                "state": {
+                    "unknown": "Onbekend"
+                }
+            },
+            "net_infra": {
+                "state": {
+                    "adsl": "ADSL",
+                    "ftth": "FTTH",
+                    "gprs": "GPRS",
+                    "unknown": "Onbekend"
+                }
+            },
             "training": {
                 "state": {
                     "idle": "Inactief",

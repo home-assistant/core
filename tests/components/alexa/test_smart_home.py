@@ -26,7 +26,7 @@ from homeassistant.components.media_player import (
 )
 import homeassistant.components.vacuum as vacuum
 from homeassistant.config import async_process_ha_core_config
-from homeassistant.const import STATE_UNKNOWN, TEMP_FAHRENHEIT
+from homeassistant.const import STATE_UNKNOWN, UnitOfTemperature
 from homeassistant.core import Context
 from homeassistant.helpers import entityfilter
 from homeassistant.setup import async_setup_component
@@ -410,7 +410,8 @@ async def test_fan(hass):
     assert appliance["endpointId"] == "fan#test_1"
     assert appliance["displayCategories"][0] == "FAN"
     assert appliance["friendlyName"] == "Test fan 1"
-    # Alexa.RangeController is added to make a fan controllable when no other controllers are available
+    # Alexa.RangeController is added to make a fan controllable when
+    # no other controllers are available.
     capabilities = assert_endpoint_capabilities(
         appliance,
         "Alexa.RangeController",
@@ -466,7 +467,8 @@ async def test_fan2(hass):
     assert appliance["endpointId"] == "fan#test_2"
     assert appliance["displayCategories"][0] == "FAN"
     assert appliance["friendlyName"] == "Test fan 2"
-    # Alexa.RangeController is added to make a fan controllable when no other controllers are available
+    # Alexa.RangeController is added to make a fan controllable
+    # when no other controllers are available
     capabilities = assert_endpoint_capabilities(
         appliance,
         "Alexa.RangeController",
@@ -597,7 +599,8 @@ async def test_variable_fan_no_current_speed(hass, caplog):
     assert appliance["endpointId"] == "fan#test_3"
     assert appliance["displayCategories"][0] == "FAN"
     assert appliance["friendlyName"] == "Test fan 3"
-    # Alexa.RangeController is added to make a van controllable when no other controllers are available
+    # Alexa.RangeController is added to make a van controllable
+    # when no other controllers are available
     capabilities = assert_endpoint_capabilities(
         appliance,
         "Alexa.RangeController",
@@ -625,9 +628,9 @@ async def test_variable_fan_no_current_speed(hass, caplog):
             "fan.percentage",
         )
     assert (
-        "Request Alexa.RangeController/AdjustRangeValue error INVALID_VALUE: Unable to determine fan.test_3 current fan speed"
-        in caplog.text
-    )
+        "Request Alexa.RangeController/AdjustRangeValue error "
+        "INVALID_VALUE: Unable to determine fan.test_3 current fan speed"
+    ) in caplog.text
     caplog.clear()
 
 
@@ -1987,7 +1990,10 @@ async def test_temp_sensor(hass):
     device = (
         "sensor.test_temp",
         "42",
-        {"friendly_name": "Test Temp Sensor", "unit_of_measurement": TEMP_FAHRENHEIT},
+        {
+            "friendly_name": "Test Temp Sensor",
+            "unit_of_measurement": UnitOfTemperature.FAHRENHEIT,
+        },
     )
     appliance = await discovery_test(device, hass)
 

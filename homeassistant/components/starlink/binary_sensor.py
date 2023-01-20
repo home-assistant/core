@@ -16,7 +16,7 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import StarlinkData, StarlinkUpdateCoordinator
+from .coordinator import StarlinkData
 from .entity import StarlinkEntity
 
 
@@ -51,16 +51,6 @@ class StarlinkBinarySensorEntity(StarlinkEntity, BinarySensorEntity):
 
     entity_description: StarlinkBinarySensorEntityDescription
 
-    def __init__(
-        self,
-        coordinator: StarlinkUpdateCoordinator,
-        description: StarlinkBinarySensorEntityDescription,
-    ) -> None:
-        """Initialize the binary sensor."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        self._attr_unique_id = f"{self.coordinator.data.status['id']}_{description.key}"
-
     @property
     def is_on(self) -> bool | None:
         """Calculate the binary sensor value from the entity description."""
@@ -68,6 +58,12 @@ class StarlinkBinarySensorEntity(StarlinkEntity, BinarySensorEntity):
 
 
 BINARY_SENSORS = [
+    StarlinkBinarySensorEntityDescription(
+        key="update",
+        name="Update available",
+        device_class=BinarySensorDeviceClass.UPDATE,
+        value_fn=lambda data: data.alert["alert_install_pending"],
+    ),
     StarlinkBinarySensorEntityDescription(
         key="roaming",
         name="Roaming mode",

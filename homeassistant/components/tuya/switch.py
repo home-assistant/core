@@ -310,6 +310,12 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
         SwitchEntityDescription(
             key=DPCode.SWITCH,
             name="Switch",
+            icon="mdi:power",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.START,
+            name="Start",
             icon="mdi:pot-steam",
             entity_category=EntityCategory.CONFIG,
         ),
@@ -565,6 +571,15 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             name="Open Window Detection",
             icon="mdi:window-open",
             entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    # SIREN: Siren (switch) with Temperature and humidity sensor
+    # https://developer.tuya.com/en/docs/iot/f?id=Kavck4sr3o5ek
+    "wsdcg": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH,
+            name="Switch",
+            device_class=SwitchDeviceClass.OUTLET,
         ),
     ),
     # Ceiling Light

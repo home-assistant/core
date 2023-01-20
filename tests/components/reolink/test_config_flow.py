@@ -32,7 +32,7 @@ def get_mock_info(error=None, user_level="admin"):
         host_mock.get_host_data = AsyncMock(return_value=None)
     else:
         host_mock.get_host_data = AsyncMock(side_effect=error)
-    host_mock.unsubscribe_all = AsyncMock(return_value=True)
+    host_mock.unsubscribe = AsyncMock(return_value=True)
     host_mock.logout = AsyncMock(return_value=True)
     host_mock.mac_address = TEST_MAC
     host_mock.onvif_enabled = True

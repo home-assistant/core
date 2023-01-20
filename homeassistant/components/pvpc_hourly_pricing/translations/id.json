@@ -19,8 +19,7 @@
             "init": {
                 "data": {
                     "power": "Daya terkontrak (kW)",
-                    "power_p3": "Daya terkontrak untuk periode lembah P3 (kW)",
-                    "tariff": "Tarif yang berlaku menurut zona geografis"
+                    "power_p3": "Daya terkontrak untuk periode lembah P3 (kW)"
                 }
             }
         }

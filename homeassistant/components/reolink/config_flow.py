@@ -8,7 +8,7 @@ from typing import Any
 from reolink_aio.exceptions import ApiError, CredentialsInvalidError, ReolinkError
 import voluptuous as vol
 
-from homeassistant import config_entries, exceptions
+from homeassistant import config_entries
 from homeassistant.components import dhcp
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import callback
@@ -17,7 +17,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import CONF_PROTOCOL, CONF_USE_HTTPS, DEFAULT_PROTOCOL, DOMAIN
-from .exceptions import UserNotAdmin
+from .exceptions import ReolinkException, UserNotAdmin
 from .host import ReolinkHost
 
 _LOGGER = logging.getLogger(__name__)
@@ -116,25 +116,25 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             host = ReolinkHost(self.hass, user_input, DEFAULT_OPTIONS)
             try:
-                await async_obtain_host_settings(host)
+                await host.async_init()
             except UserNotAdmin:
                 errors[CONF_USERNAME] = "not_admin"
                 placeholders["username"] = host.api.username
                 placeholders["userlevel"] = host.api.user_level
-            except CannotConnect:
-                errors[CONF_HOST] = "cannot_connect"
             except CredentialsInvalidError:
                 errors[CONF_HOST] = "invalid_auth"
             except ApiError as err:
                 placeholders["error"] = str(err)
                 errors[CONF_HOST] = "api_error"
-            except ReolinkError as err:
+            except (ReolinkError, ReolinkException) as err:
                 placeholders["error"] = str(err)
                 errors[CONF_HOST] = "cannot_connect"
             except Exception as err:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 placeholders["error"] = str(err)
                 errors[CONF_HOST] = "unknown"
+            finally:
+                await host.stop()
 
             if not errors:
                 user_input[CONF_PORT] = host.api.port
@@ -185,16 +185,3 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders=placeholders,
         )
-
-
-async def async_obtain_host_settings(host: ReolinkHost) -> None:
-    """Initialize the Reolink host and get the host information."""
-    try:
-        if not await host.async_init():
-            raise CannotConnect
-    finally:
-        await host.stop()
-
-
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""

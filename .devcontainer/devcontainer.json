@@ -45,5 +45,13 @@
       "!include_dir_merge_list scalar",
       "!include_dir_merge_named scalar"
     ]
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/sshd:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/github-cli:1": {
+      "version": "latest"
+    }
   }
 }

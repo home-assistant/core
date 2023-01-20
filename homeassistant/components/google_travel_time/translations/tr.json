@@ -28,6 +28,7 @@
                     "mode": "Seyahat Modu",
                     "time": "Zaman",
                     "time_type": "Zaman T\u00fcr\u00fc",
+                    "traffic_mode": "Trafik Modu",
                     "transit_mode": "Transit Modu",
                     "transit_routing_preference": "Toplu Ta\u015f\u0131ma Tercihi",
                     "units": "Birimler"

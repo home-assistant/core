@@ -98,6 +98,10 @@ DHCP: list[dict[str, str | bool]] = [
         "macaddress": "C8F742*",
     },
     {
+        "domain": "dlink",
+        "hostname": "dsp-w215",
+    },
+    {
         "domain": "elkm1",
         "registered_devices": True,
     },

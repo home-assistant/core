@@ -136,5 +136,14 @@
                 "title": "MQTT-alternativer"
             }
         }
+    },
+    "selector": {
+        "set_ca_cert": {
+            "options": {
+                "auto": "Auto",
+                "custom": "Tilpasset",
+                "off": "Av"
+            }
+        }
     }
 }

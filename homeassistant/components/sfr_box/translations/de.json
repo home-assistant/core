@@ -4,8 +4,7 @@
             "already_configured": "Ger\u00e4t ist bereits konfiguriert"
         },
         "error": {
-            "cannot_connect": "Verbindung fehlgeschlagen",
-            "unknown": "Unerwarteter Fehler"
+            "cannot_connect": "Verbindung fehlgeschlagen"
         },
         "step": {
             "user": {
@@ -24,6 +23,14 @@
                     "loss_of_signal_quality": "Signalverlust-Qualit\u00e4t",
                     "no_defect": "Kein Defekt",
                     "of_frame": "des Frames",
+                    "unknown": "Unbekannt"
+                }
+            },
+            "net_infra": {
+                "state": {
+                    "adsl": "ADSL",
+                    "ftth": "FTTH",
+                    "gprs": "GPRS",
                     "unknown": "Unbekannt"
                 }
             },

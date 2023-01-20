@@ -26,7 +26,6 @@ from aioesphomeapi import (
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
-from homeassistant import const
 from homeassistant.components import tag, zeroconf
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -36,6 +35,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
+    __version__ as ha_version,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall, State, callback
 from homeassistant.exceptions import TemplateError
@@ -56,8 +56,9 @@ from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.template import Template
 
 from .bluetooth import async_connect_scanner
+from .const import DOMAIN
 from .dashboard import async_get_dashboard
-from .domain_data import DOMAIN, DomainData
+from .domain_data import DomainData
 
 # Import config flow so that it's added to the registry
 from .entry_data import RuntimeEntryData
@@ -122,7 +123,7 @@ async def async_setup_entry(  # noqa: C901
         host,
         port,
         password,
-        client_info=f"Home Assistant {const.__version__}",
+        client_info=f"Home Assistant {ha_version}",
         zeroconf_instance=zeroconf_instance,
         noise_psk=noise_psk,
     )
@@ -141,7 +142,8 @@ async def async_setup_entry(  # noqa: C901
 
     # Use async_listen instead of async_listen_once so that we don't deregister
     # the callback twice when shutting down Home Assistant.
-    # "Unable to remove unknown listener <function EventBus.async_listen_once.<locals>.onetime_listener>"
+    # "Unable to remove unknown listener
+    # <function EventBus.async_listen_once.<locals>.onetime_listener>"
     entry_data.cleanup_callbacks.append(
         hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, on_stop)
     )
@@ -380,7 +382,7 @@ def _async_setup_device_registry(
         config_entry_id=entry.entry_id,
         configuration_url=configuration_url,
         connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)},
-        name=device_info.name,
+        name=device_info.friendly_name or device_info.name,
         manufacturer=manufacturer,
         model=model,
         sw_version=sw_version,
@@ -651,7 +653,9 @@ class EsphomeEnumMapper(Generic[_EnumT, _ValT]):
     def __init__(self, mapping: dict[_EnumT, _ValT]) -> None:
         """Construct a EsphomeEnumMapper."""
         # Add none mapping
-        augmented_mapping: dict[_EnumT | None, _ValT | None] = mapping  # type: ignore[assignment]
+        augmented_mapping: dict[
+            _EnumT | None, _ValT | None
+        ] = mapping  # type: ignore[assignment]
         augmented_mapping[None] = None
 
         self._mapping = augmented_mapping
@@ -705,6 +709,8 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         self._component_key = component_key
         self._key = key
         self._state_type = state_type
+        if entry_data.device_info is not None and entry_data.device_info.friendly_name:
+            self._attr_has_entity_name = True
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -821,7 +827,10 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
 
     @property
     def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
+        """Return if the entity should be enabled when first added.
+
+        This only applies when fist added to the entity registry.
+        """
         return not self._static_info.disabled_by_default
 
     @property
