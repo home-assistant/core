@@ -58,7 +58,7 @@ class ReolinkHost:
 
         self.webhook_id: str | None = None
         self._webhook_url: str | None = None
-        self.lost_subscription: bool = False
+        self._lost_subscription: bool = False
 
     @property
     def unique_id(self) -> str:
@@ -199,7 +199,21 @@ class ReolinkHost:
 
     async def renew(self) -> None:
         """Renew the subscription of motion events (lease time is 15 minutes)."""
+        try:
+            await self._renew()
+        except ReolinkWebhookException as err:
+            if not host._lost_subscription:
+                host._lost_subscription = True
+                _LOGGER.error(
+                    "Reolink %s event subscription lost: %s",
+                    host.api.nvr_name,
+                    str(err),
+                )
+        else:
+            host._lost_subscription = False
 
+    async def _renew(self) -> None:
+        """Execute the renew of the subscription."""
         if not self._api.subscribed:
             _LOGGER.debug(
                 "Host %s: requested to renew a non-existing Reolink subscription, "

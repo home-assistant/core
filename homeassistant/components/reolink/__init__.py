@@ -80,17 +80,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                 ) from err
 
         async with async_timeout.timeout(host.api.timeout):
-            try:
-                await host.renew()
-                host.lost_subscription = False
-            except ReolinkWebhookException as err:
-                if not host.lost_subscription:
-                    host.lost_subscription = True
-                    _LOGGER.error(
-                        "Reolink %s event subscription lost: %s",
-                        host.api.nvr_name,
-                        str(err),
-                    )
+            await host.renew()
 
     coordinator_device_config_update = DataUpdateCoordinator(
         hass,
