@@ -1064,6 +1064,7 @@ omit =
     homeassistant/components/remember_the_milk/__init__.py
     homeassistant/components/remote_rpi_gpio/*
     homeassistant/components/reolink/__init__.py
+    homeassistant/components/reolink/binary_sensor.py
     homeassistant/components/reolink/camera.py
     homeassistant/components/reolink/const.py
     homeassistant/components/reolink/entity.py
