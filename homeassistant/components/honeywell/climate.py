@@ -94,10 +94,16 @@ async def async_setup_entry(
 class HoneywellUSThermostat(ClimateEntity):
     """Representation of a Honeywell US Thermostat."""
 
-    def __init__(self, data, device, cool_away_temp, heat_away_temp):
+    def __init__(
+        self,
+        data: HoneywellData,
+        device: AIOSomecomfort.device.Device,
+        cool_away_temp,
+        heat_away_temp,
+    ):
         """Initialize the thermostat."""
-        self._data: HoneywellData = data
-        self._device: AIOSomecomfort.device.Device = device
+        self._data = data
+        self._device = device
         self._cool_away_temp = cool_away_temp
         self._heat_away_temp = heat_away_temp
         self._away = False
@@ -111,8 +117,10 @@ class HoneywellUSThermostat(ClimateEntity):
         self._attr_is_aux_heat = device.system_mode == "emheat"
 
         # not all honeywell HVACs support all modes
-        mappings = [v for k, v in HVAC_MODE_TO_HW_MODE.items() if device.raw_ui_data[k]]
-        self._hvac_mode_map = {k: v for d in mappings for k, v in d.items()}
+        mappings_hvac = [
+            v for k, v in HVAC_MODE_TO_HW_MODE.items() if device.raw_ui_data[k]
+        ]
+        self._hvac_mode_map = {k: v for d in mappings_hvac for k, v in d.items()}
         self._attr_hvac_modes = list(self._hvac_mode_map)
 
         self._attr_supported_features = (
@@ -131,8 +139,8 @@ class HoneywellUSThermostat(ClimateEntity):
             return
 
         # not all honeywell fans support all modes
-        mappings = [v for k, v in FAN_MODE_TO_HW.items() if device.raw_fan_data[k]]
-        self._fan_mode_map = {k: v for d in mappings for k, v in d.items()}
+        mappings_fan = [v for k, v in FAN_MODE_TO_HW.items() if device.raw_fan_data[k]]
+        self._fan_mode_map = {k: v for d in mappings_fan for k, v in d.items()}
 
         self._attr_fan_modes = list(self._fan_mode_map)
 

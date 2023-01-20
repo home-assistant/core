@@ -24,14 +24,10 @@ FAKE_CONFIG = {
 
 async def test_show_authenticate_form(hass: HomeAssistant) -> None:
     """Test that the config form is shown."""
-    with patch(
-        "homeassistant.components.honeywell.async_setup_entry",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
 
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -66,6 +62,8 @@ async def test_create_entry(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=FAKE_CONFIG
         )
+        await hass.async_block_till_done()
+
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"] == FAKE_CONFIG
 
@@ -111,6 +109,7 @@ async def test_create_option_entry(
             options_form["flow_id"],
             user_input={CONF_COOL_AWAY_TEMPERATURE: 1, CONF_HEAT_AWAY_TEMPERATURE: 2},
         )
+        await hass.async_block_till_done()
 
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
