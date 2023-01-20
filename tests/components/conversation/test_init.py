@@ -380,6 +380,55 @@ async def test_custom_sentences(hass, hass_client, hass_admin_user):
         }
 
 
+async def test_custom_sentences_config(hass, hass_client, hass_admin_user):
+    """Test custom sentences with a custom intent in config."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(
+        hass,
+        "conversation",
+        {"conversation": {"intents": {"StealthMode": ["engage stealth mode"]}}},
+    )
+    assert await async_setup_component(hass, "intent", {})
+    assert await async_setup_component(
+        hass,
+        "intent_script",
+        {
+            "intent_script": {
+                "StealthMode": {"speech": {"text": "Stealth mode engaged"}}
+            }
+        },
+    )
+
+    # Invoke intent via HTTP API
+    client = await hass_client()
+    resp = await client.post(
+        "/api/conversation/process",
+        json={"text": "engage stealth mode"},
+    )
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    assert data == {
+        "response": {
+            "card": {},
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "Stealth mode engaged",
+                }
+            },
+            "language": hass.config.language,
+            "response_type": "action_done",
+            "data": {
+                "targets": [],
+                "success": [],
+                "failed": [],
+            },
+        },
+        "conversation_id": None,
+    }
+
+
 # pylint: disable=protected-access
 async def test_prepare_reload(hass):
     """Test calling the reload service."""

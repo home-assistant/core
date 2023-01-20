@@ -44,10 +44,17 @@ class DefaultAgent(AbstractConversationAgent):
         self._lang_intents: dict[str, LanguageIntents] = {}
         self._lang_lock: dict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
 
-    async def async_initialize(self):
+        # intent -> [sentences]
+        self._config_intents: dict[str, Any] = {}
+
+    async def async_initialize(self, config):
         """Initialize the default agent."""
         if "intent" not in self.hass.config.components:
             await setup.async_setup_component(self.hass, "intent", {})
+
+        # Intents from config may only contains sentences for HA config's language
+        config = config.get(DOMAIN, {})
+        self._config_intents = config.get("intents", {})
 
         self.hass.data.setdefault(DOMAIN, {})
 
@@ -178,6 +185,22 @@ class DefaultAgent(AbstractConversationAgent):
                         language,
                         custom_sentences_path,
                     )
+
+            # Load sentences from HA config for default language only
+            if self._config_intents and (language == self.hass.config.language):
+                merge_dict(
+                    intents_dict,
+                    {
+                        "intents": {
+                            intent_name: {"data": [{"sentences": sentences}]}
+                            for intent_name, sentences in self._config_intents.items()
+                        }
+                    },
+                )
+                intents_changed = True
+                _LOGGER.debug(
+                    "Loaded intents from configuration.yaml",
+                )
 
         if not intents_dict:
             return None
