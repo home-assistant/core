@@ -38,6 +38,7 @@ class StookwijzerSensor(SensorEntity):
     def __init__(self, client: Stookwijzer, entry: ConfigEntry) -> None:
         """Initialize a Stookwijzer device."""
         self._client = client
+        self._attr_options = [cls.value for cls in StookwijzerState]
         self._attr_unique_id = entry.entry_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{entry.entry_id}")},
