@@ -87,6 +87,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_yaml",
     )
+
     return True
 
 
@@ -94,16 +95,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the config entry for Rain Bird."""
 
     hass.data.setdefault(DOMAIN, {})
-
-    async_create_issue(
-        hass,
-        DOMAIN,
-        "deprecated_raindelay",
-        breaks_in_ha_version="2023.4.0",
-        is_fixable=False,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_raindelay",
-    )
 
     controller = AsyncRainbirdController(
         AsyncRainbirdClient(
@@ -126,6 +117,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def set_rain_delay(call: ServiceCall) -> None:
         """Service call to delay automatic irrigigation."""
+
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_raindelay",
+            breaks_in_ha_version="2023.4.0",
+            is_fixable=False,
+            is_persistent=True,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_raindelay",
+            translation_placeholders={
+                "alternative_target": "number.rain_delay",
+            },
+        )
+
         entry_id = call.data[ATTR_CONFIG_ENTRY_ID]
         duration = call.data[ATTR_DURATION]
         if entry_id not in hass.data[DOMAIN]:

@@ -17,7 +17,7 @@
     },
     "issues": {
         "deprecated_raindelay": {
-            "description": "The Rain Bird service `rainbird.set_rain_delay` is being removed and replaced by a Number entity for managing the rain delay. Any existing automations or scripts will need to be updated to use `number.set_value` instead.",
+            "description": "The Rain Bird service `rainbird.set_rain_delay` is being removed and replaced by a Number entity for managing the rain delay. Any existing automations or scripts will need to be updated to use `number.set_value` with a target of `{alternative_target}` instead.",
             "title": "The Rain Bird Rain Delay Service is being removed"
         },
         "deprecated_yaml": {
