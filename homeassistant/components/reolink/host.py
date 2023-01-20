@@ -21,11 +21,12 @@ from homeassistant.helpers.network import NoURLAvailableError, get_url
 from .const import (
     CONF_PROTOCOL,
     CONF_USE_HTTPS,
-    DEFAULT_TIMEOUT,
     DOMAIN,
-    SUBSCRIPTION_RENEW_THRESHOLD,
 )
 from .exceptions import ReolinkSetupException, ReolinkWebhookException, UserNotAdmin
+
+DEFAULT_TIMEOUT = 60
+SUBSCRIPTION_RENEW_THRESHOLD = 300
 
 _LOGGER = logging.getLogger(__name__)
 
