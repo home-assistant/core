@@ -64,15 +64,6 @@ async def test_lock_default(hass: HomeAssistant) -> None:
     assert lock.state is None
 
 
-async def test_lock_open_without_support(hass: HomeAssistant) -> None:
-    """Test lock entity without open feature."""
-    lock = MockLockEntity()
-    lock.hass = hass
-
-    await _async_open(lock, ServiceCall(DOMAIN, SERVICE_OPEN, {}))
-    assert lock.calls_open.call_count == 0
-
-
 async def test_lock_states(hass: HomeAssistant) -> None:
     """Test lock entity states."""
     # pylint: disable=protected-access

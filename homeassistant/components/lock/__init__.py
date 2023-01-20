@@ -79,7 +79,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_LOCK, LOCK_SERVICE_SCHEMA, _async_lock
     )
     component.async_register_entity_service(
-        SERVICE_OPEN, LOCK_SERVICE_SCHEMA, _async_open
+        SERVICE_OPEN, LOCK_SERVICE_SCHEMA, _async_open, [LockEntityFeature.OPEN]
     )
 
     return True
@@ -107,10 +107,6 @@ async def _async_unlock(entity: LockEntity, service_call: ServiceCall) -> None:
 
 async def _async_open(entity: LockEntity, service_call: ServiceCall) -> None:
     """Open the door latch."""
-    if not (entity.supported_features & LockEntityFeature.OPEN):
-        _LOGGER.warning("Lock %s doesn't support feature `open`", entity.name)
-        return
-
     code: str = service_call.data.get(ATTR_CODE, "")
     if entity.code_format_cmp and not entity.code_format_cmp.match(code):
         raise ValueError(
