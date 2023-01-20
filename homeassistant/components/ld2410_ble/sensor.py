@@ -101,7 +101,7 @@ async def async_setup_entry(
     )
 
 
-class LD2410BLESensor(CoordinatorEntity, SensorEntity):
+class LD2410BLESensor(CoordinatorEntity[LD2410BLECoordinator], SensorEntity):
     """Moving/static target distance sensor for LD2410BLE."""
 
     def __init__(
