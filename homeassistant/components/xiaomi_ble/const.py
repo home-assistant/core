@@ -6,6 +6,7 @@ from typing import Final, TypedDict
 DOMAIN = "xiaomi_ble"
 
 
+CONF_EVENT_PROPERTIES: Final = "event_properties"
 EVENT_PROPERTIES: Final = "event_properties"
 EVENT_TYPE: Final = "event_type"
 XIAOMI_BLE_EVENT: Final = "xiaomi_ble_event"

@@ -20,9 +20,13 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, EVENT_PROPERTIES, EVENT_TYPE, XIAOMI_BLE_EVENT
-
-CONF_EVENT_PROPERTIES = "event_properties"
+from .const import (
+    CONF_EVENT_PROPERTIES,
+    DOMAIN,
+    EVENT_PROPERTIES,
+    EVENT_TYPE,
+    XIAOMI_BLE_EVENT,
+)
 
 MOTION_DEVICE_TRIGGERS = [
     {CONF_TYPE: "motion_detected", CONF_EVENT_PROPERTIES: None},
@@ -71,7 +75,7 @@ async def async_get_triggers(
 ) -> list[dict[str, Any]]:
     """List a list of triggers for Xiaomi BLE devices."""
 
-    # Check if device is a MUE4094RT motion sensor device.  Return empty if not.
+    # Check if device is a model supporting device triggers.
     if not (model_data := _async_trigger_model_data(hass, device_id)):
         return []
 
