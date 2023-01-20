@@ -184,7 +184,7 @@ class ReolinkHost:
             return
 
         if await self._api.subscribe(self._webhook_url):
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Host %s: subscribed successfully to webhook %s",
                 self._api.host,
                 self._webhook_url,
@@ -231,25 +231,25 @@ class ReolinkHost:
 
     async def register_webhook(self) -> None:
         """Register the webhook for motion events."""
-        self.webhook_id = f"reolink_{self.unique_id.replace(':', '')}"
+        self.webhook_id = f"{DOMAIN}_{self.unique_id.replace(':', '')}"
         event_id = self.webhook_id
 
         try:
             webhook.async_register(
-                self._hass, DOMAIN, event_id, self.webhook_id, self.handle_webhook
+                self._hass, DOMAIN, event_id, event_id, self.handle_webhook
             )
         except ValueError:
             _LOGGER.debug(
                 "Error registering webhook %s. Trying to unregister it first and re-register again",
-                self.webhook_id,
+                event_id,
             )
-            webhook.async_unregister(self._hass, self.webhook_id)
+            webhook.async_unregister(self._hass, event_id)
             try:
                 webhook.async_register(
-                    self._hass, DOMAIN, event_id, self.webhook_id, self.handle_webhook
+                    self._hass, DOMAIN, event_id, event_id, self.handle_webhook
                 )
             except ValueError as err:
-                mess = f"Error registering a webhook {self.webhook_id} for {self.api.nvr_name}"
+                mess = f"Error registering a webhook {event_id} for {self.api.nvr_name}"
                 self.webhook_id = None
                 raise ReolinkWebhookException(mess) from err
 
@@ -260,19 +260,19 @@ class ReolinkHost:
                 base_url = get_url(self._hass, prefer_external=True)
             except NoURLAvailableError as err:
                 webhook.async_unregister(self._hass, self.webhook_id)
-                mess = f"Error registering URL for webhook {self.webhook_id}: HomeAssistant URL is not available"
+                mess = f"Error registering URL for webhook {event_id}: HomeAssistant URL is not available"
                 self.webhook_id = None
                 raise ReolinkWebhookException(mess) from err
 
-        webhook_path = webhook.async_generate_path(self.webhook_id)
+        webhook_path = webhook.async_generate_path(event_id)
         self._webhook_url = f"{base_url}{webhook_path}"
 
-        _LOGGER.info("Registered webhook: %s", self.webhook_id)
+        _LOGGER.debug("Registered webhook: %s", event_id)
 
     async def unregister_webhook(self):
         """Unregister the webhook for motion events."""
         if self.webhook_id:
-            _LOGGER.info("Unregistering webhook %s", self.webhook_id)
+            _LOGGER.debug("Unregistering webhook %s", self.webhook_id)
             webhook.async_unregister(self._hass, self.webhook_id)
         self.webhook_id = None
 
