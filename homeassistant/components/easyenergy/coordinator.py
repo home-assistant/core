@@ -1,24 +1,31 @@
 """The Coordinator for easyEnergy."""
 from __future__ import annotations
 
+from datetime import timedelta
 from typing import NamedTuple
 
-from easyenergy import EasyEnergy, Electricity, Gas
+from easyenergy import (
+    EasyEnergy,
+    EasyEnergyConnectionError,
+    EasyEnergyNoDataError,
+    Electricity,
+    Gas,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt
 
-from .const import DOMAIN, LOGGER, SCAN_INTERVAL
+from .const import DOMAIN, LOGGER, SCAN_INTERVAL, THRESHOLD_HOUR
 
 
 class EasyEnergyData(NamedTuple):
     """Class for defining data in dict."""
 
-    energy_useage_today: Electricity
-    energy_return_today: Electricity
-    gas_useage_today: Gas | None
+    energy_today: Electricity
+    energy_tomorrow: Electricity | None
+    gas_today: Gas | None
 
 
 class EasyEnergyDataUpdateCoordinator(DataUpdateCoordinator[EasyEnergyData]):
@@ -42,3 +49,34 @@ class EasyEnergyDataUpdateCoordinator(DataUpdateCoordinator[EasyEnergyData]):
         today = dt.now().date()
         gas_today = None
         energy_tomorrow = None
+
+        try:
+            energy_today = await self.easyenergy.energy_prices(
+                start_date=today, end_date=today
+            )
+            try:
+                gas_today = await self.easyenergy.gas_prices(
+                    start_date=today, end_date=today
+                )
+            except EasyEnergyNoDataError:
+                LOGGER.debug("No data for gas prices for easyEnergy integration")
+            # Energy for tomorrow only after 14:00 UTC
+            if dt.utcnow().hour >= THRESHOLD_HOUR:
+                tomorrow = today + timedelta(days=1)
+                try:
+                    energy_tomorrow = await self.easyenergy.energy_prices(
+                        start_date=tomorrow, end_date=tomorrow
+                    )
+                except EasyEnergyNoDataError:
+                    LOGGER.debug(
+                        "No electricity data for tomorrow for easyEnergy integration"
+                    )
+
+        except EasyEnergyConnectionError as err:
+            raise UpdateFailed("Error communicating with easyEnergy API") from err
+
+        return EasyEnergyData(
+            energy_today=energy_today,
+            energy_tomorrow=energy_tomorrow,
+            gas_today=gas_today,
+        )
