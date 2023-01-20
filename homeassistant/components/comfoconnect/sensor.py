@@ -331,7 +331,7 @@ async def async_setup_platform(
     )
 
     # Remove the artificial entry since it's no longer needed.
-    hass.data[DOMAIN].pop(SOURCE_IMPORT)
+    hass.data[DOMAIN].pop(SOURCE_IMPORT, None)
     return
 
 
