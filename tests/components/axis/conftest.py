@@ -178,6 +178,18 @@ def default_vapix_requests_fixture(mock_vapix_requests):
     mock_vapix_requests(DEFAULT_HOST)
 
 
+@pytest.fixture(name="prepare_config_entry")
+async def prep_config_entry_fixture(hass, config_entry, setup_default_vapix_requests):
+    """Fixture factory to set up Axis network device."""
+
+    async def __mock_setup_config_entry():
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        return config_entry
+
+    yield __mock_setup_config_entry
+
+
 @pytest.fixture(name="setup_config_entry")
 async def setup_config_entry_fixture(hass, config_entry, setup_default_vapix_requests):
     """Define a fixture to set up Axis network device."""

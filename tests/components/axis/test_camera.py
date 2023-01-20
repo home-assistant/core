@@ -70,7 +70,8 @@ async def test_camera_with_stream_profile(hass, setup_config_entry):
     )
 
 
-@patch("axis.vapix.vapix.Params.image_format", return_value=None)
-async def test_camera_disabled(hass, setup_config_entry):
+async def test_camera_disabled(hass, prepare_config_entry):
     """Test that Axis camera platform is loaded properly but does not create camera entity."""
-    assert len(hass.states.async_entity_ids(CAMERA_DOMAIN)) == 0
+    with patch("axis.vapix.vapix.Params.image_format", new=None):
+        await prepare_config_entry()
+        assert len(hass.states.async_entity_ids(CAMERA_DOMAIN)) == 0
