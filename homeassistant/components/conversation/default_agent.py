@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
+from collections.abc import Iterable
 from dataclasses import dataclass
 import logging
 from pathlib import Path
@@ -33,6 +34,21 @@ class LanguageIntents:
     intents: Intents
     intents_dict: dict[str, Any]
     loaded_components: set[str]
+
+
+def _get_language_variations(language: str) -> Iterable[str]:
+    """Generate language codes with and without region."""
+    yield language
+
+    parts = re.split(r"([-_])", language)
+    if len(parts) == 3:
+        lang, sep, region = parts
+        if sep == "_":
+            # en_US -> en-US
+            yield f"{lang}-{region}"
+
+        # en-US -> en
+        yield lang
 
 
 class DefaultAgent(AbstractConversationAgent):
@@ -151,17 +167,20 @@ class DefaultAgent(AbstractConversationAgent):
             # Don't check component again
             loaded_components.add(component)
 
-            # Check for intents for this component with the target language
-            component_intents = get_intents(component, language)
-            if component_intents:
-                # Merge sentences into existing dictionary
-                merge_dict(intents_dict, component_intents)
+            # Check for intents for this component with the target language.
+            # Try en-US, en, etc.
+            for language_variation in _get_language_variations(language):
+                component_intents = get_intents(component, language_variation)
+                if component_intents:
+                    # Merge sentences into existing dictionary
+                    merge_dict(intents_dict, component_intents)
 
-                # Will need to recreate graph
-                intents_changed = True
-                _LOGGER.debug(
-                    "Loaded intents component=%s, language=%s", component, language
-                )
+                    # Will need to recreate graph
+                    intents_changed = True
+                    _LOGGER.debug(
+                        "Loaded intents component=%s, language=%s", component, language
+                    )
+                    break
 
         # Check for custom sentences in <config>/custom_sentences/<language>/
         if lang_intents is None:
