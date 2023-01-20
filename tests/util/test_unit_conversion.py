@@ -1,9 +1,15 @@
 """Test Home Assistant eneergy utility functions."""
+from __future__ import annotations
+
+import inspect
+
 import pytest
 
 from homeassistant.const import (
+    PERCENTAGE,
     UnitOfDataRate,
     UnitOfElectricCurrent,
+    UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfInformation,
     UnitOfLength,
@@ -16,11 +22,13 @@ from homeassistant.const import (
     UnitOfVolumetricFlux,
 )
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util import unit_conversion
 from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
     DataRateConverter,
     DistanceConverter,
     ElectricCurrentConverter,
+    ElectricPotentialConverter,
     EnergyConverter,
     InformationConverter,
     MassConverter,
@@ -28,122 +36,139 @@ from homeassistant.util.unit_conversion import (
     PressureConverter,
     SpeedConverter,
     TemperatureConverter,
+    UnitlessRatioConverter,
     VolumeConverter,
 )
 
-INVALID_SYMBOL = "bob"
+_ALL_CONVERTERS: list[type[BaseUnitConverter]] = [
+    obj
+    for _, obj in inspect.getmembers(unit_conversion)
+    if inspect.isclass(obj)
+    and issubclass(obj, BaseUnitConverter)
+    and obj != BaseUnitConverter
+]
+_INVALID_SYMBOL = "bob"
 
 
-@pytest.mark.parametrize(
-    "converter,valid_unit",
-    [
-        (DataRateConverter, UnitOfDataRate.GIBIBYTES_PER_SECOND),
-        (DistanceConverter, UnitOfLength.KILOMETERS),
-        (DistanceConverter, UnitOfLength.METERS),
-        (DistanceConverter, UnitOfLength.CENTIMETERS),
-        (DistanceConverter, UnitOfLength.MILLIMETERS),
-        (DistanceConverter, UnitOfLength.MILES),
-        (DistanceConverter, UnitOfLength.YARDS),
-        (DistanceConverter, UnitOfLength.FEET),
-        (DistanceConverter, UnitOfLength.INCHES),
-        (ElectricCurrentConverter, UnitOfElectricCurrent.AMPERE),
-        (ElectricCurrentConverter, UnitOfElectricCurrent.MILLIAMPERE),
-        (EnergyConverter, UnitOfEnergy.WATT_HOUR),
-        (EnergyConverter, UnitOfEnergy.KILO_WATT_HOUR),
-        (EnergyConverter, UnitOfEnergy.MEGA_WATT_HOUR),
-        (EnergyConverter, UnitOfEnergy.GIGA_JOULE),
-        (InformationConverter, UnitOfInformation.GIGABYTES),
-        (MassConverter, UnitOfMass.GRAMS),
-        (MassConverter, UnitOfMass.KILOGRAMS),
-        (MassConverter, UnitOfMass.MICROGRAMS),
-        (MassConverter, UnitOfMass.MILLIGRAMS),
-        (MassConverter, UnitOfMass.OUNCES),
-        (MassConverter, UnitOfMass.POUNDS),
-        (PowerConverter, UnitOfPower.WATT),
-        (PowerConverter, UnitOfPower.KILO_WATT),
-        (PressureConverter, UnitOfPressure.PA),
-        (PressureConverter, UnitOfPressure.HPA),
-        (PressureConverter, UnitOfPressure.MBAR),
-        (PressureConverter, UnitOfPressure.INHG),
-        (PressureConverter, UnitOfPressure.KPA),
-        (PressureConverter, UnitOfPressure.CBAR),
-        (PressureConverter, UnitOfPressure.MMHG),
-        (PressureConverter, UnitOfPressure.PSI),
-        (SpeedConverter, UnitOfVolumetricFlux.INCHES_PER_DAY),
-        (SpeedConverter, UnitOfVolumetricFlux.INCHES_PER_HOUR),
-        (SpeedConverter, UnitOfVolumetricFlux.MILLIMETERS_PER_DAY),
-        (SpeedConverter, UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR),
-        (SpeedConverter, UnitOfSpeed.FEET_PER_SECOND),
-        (SpeedConverter, UnitOfSpeed.KILOMETERS_PER_HOUR),
-        (SpeedConverter, UnitOfSpeed.KNOTS),
-        (SpeedConverter, UnitOfSpeed.METERS_PER_SECOND),
-        (SpeedConverter, UnitOfSpeed.MILES_PER_HOUR),
-        (TemperatureConverter, UnitOfTemperature.CELSIUS),
-        (TemperatureConverter, UnitOfTemperature.FAHRENHEIT),
-        (TemperatureConverter, UnitOfTemperature.KELVIN),
-        (VolumeConverter, UnitOfVolume.LITERS),
-        (VolumeConverter, UnitOfVolume.MILLILITERS),
-        (VolumeConverter, UnitOfVolume.GALLONS),
-        (VolumeConverter, UnitOfVolume.FLUID_OUNCES),
-    ],
-)
+_PARAMS_SAME_UNIT: list[tuple[type[BaseUnitConverter], str]] = [
+    (DataRateConverter, UnitOfDataRate.GIBIBYTES_PER_SECOND),
+    (DistanceConverter, UnitOfLength.KILOMETERS),
+    (DistanceConverter, UnitOfLength.METERS),
+    (DistanceConverter, UnitOfLength.CENTIMETERS),
+    (DistanceConverter, UnitOfLength.MILLIMETERS),
+    (DistanceConverter, UnitOfLength.MILES),
+    (DistanceConverter, UnitOfLength.YARDS),
+    (DistanceConverter, UnitOfLength.FEET),
+    (DistanceConverter, UnitOfLength.INCHES),
+    (ElectricCurrentConverter, UnitOfElectricCurrent.AMPERE),
+    (ElectricPotentialConverter, UnitOfElectricPotential.MILLIVOLT),
+    (EnergyConverter, UnitOfEnergy.KILO_WATT_HOUR),
+    (EnergyConverter, UnitOfEnergy.MEGA_WATT_HOUR),
+    (EnergyConverter, UnitOfEnergy.GIGA_JOULE),
+    (InformationConverter, UnitOfInformation.GIGABYTES),
+    (MassConverter, UnitOfMass.GRAMS),
+    (MassConverter, UnitOfMass.KILOGRAMS),
+    (MassConverter, UnitOfMass.MICROGRAMS),
+    (MassConverter, UnitOfMass.MILLIGRAMS),
+    (MassConverter, UnitOfMass.OUNCES),
+    (MassConverter, UnitOfMass.POUNDS),
+    (PowerConverter, UnitOfPower.WATT),
+    (PowerConverter, UnitOfPower.KILO_WATT),
+    (PressureConverter, UnitOfPressure.PA),
+    (PressureConverter, UnitOfPressure.HPA),
+    (PressureConverter, UnitOfPressure.MBAR),
+    (PressureConverter, UnitOfPressure.INHG),
+    (PressureConverter, UnitOfPressure.KPA),
+    (PressureConverter, UnitOfPressure.CBAR),
+    (PressureConverter, UnitOfPressure.MMHG),
+    (PressureConverter, UnitOfPressure.PSI),
+    (SpeedConverter, UnitOfVolumetricFlux.INCHES_PER_DAY),
+    (SpeedConverter, UnitOfVolumetricFlux.INCHES_PER_HOUR),
+    (SpeedConverter, UnitOfVolumetricFlux.MILLIMETERS_PER_DAY),
+    (SpeedConverter, UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR),
+    (SpeedConverter, UnitOfSpeed.FEET_PER_SECOND),
+    (SpeedConverter, UnitOfSpeed.KILOMETERS_PER_HOUR),
+    (SpeedConverter, UnitOfSpeed.KNOTS),
+    (SpeedConverter, UnitOfSpeed.METERS_PER_SECOND),
+    (SpeedConverter, UnitOfSpeed.MILES_PER_HOUR),
+    (TemperatureConverter, UnitOfTemperature.CELSIUS),
+    (TemperatureConverter, UnitOfTemperature.FAHRENHEIT),
+    (TemperatureConverter, UnitOfTemperature.KELVIN),
+    (UnitlessRatioConverter, PERCENTAGE),
+    (VolumeConverter, UnitOfVolume.LITERS),
+    (VolumeConverter, UnitOfVolume.MILLILITERS),
+    (VolumeConverter, UnitOfVolume.GALLONS),
+    (VolumeConverter, UnitOfVolume.FLUID_OUNCES),
+]
+
+
+@pytest.mark.parametrize("converter,valid_unit", _PARAMS_SAME_UNIT)
 def test_convert_same_unit(converter: type[BaseUnitConverter], valid_unit: str) -> None:
     """Test conversion from any valid unit to same unit."""
     assert converter.convert(2, valid_unit, valid_unit) == 2
 
 
-@pytest.mark.parametrize(
-    "converter,valid_unit",
-    [
-        (DataRateConverter, UnitOfDataRate.GIBIBYTES_PER_SECOND),
-        (DistanceConverter, UnitOfLength.KILOMETERS),
-        (ElectricCurrentConverter, UnitOfElectricCurrent.AMPERE),
-        (EnergyConverter, UnitOfEnergy.KILO_WATT_HOUR),
-        (InformationConverter, UnitOfInformation.GIBIBYTES),
-        (MassConverter, UnitOfMass.GRAMS),
-        (PowerConverter, UnitOfPower.WATT),
-        (PressureConverter, UnitOfPressure.PA),
-        (SpeedConverter, UnitOfSpeed.KILOMETERS_PER_HOUR),
-        (TemperatureConverter, UnitOfTemperature.CELSIUS),
-        (TemperatureConverter, UnitOfTemperature.FAHRENHEIT),
-        (TemperatureConverter, UnitOfTemperature.KELVIN),
-        (VolumeConverter, UnitOfVolume.LITERS),
-    ],
-)
+_PARAMS_INVALID_UNIT: list[tuple[type[BaseUnitConverter], str]] = [
+    (DataRateConverter, UnitOfDataRate.GIBIBYTES_PER_SECOND),
+    (DistanceConverter, UnitOfLength.KILOMETERS),
+    (ElectricCurrentConverter, UnitOfElectricCurrent.AMPERE),
+    (ElectricPotentialConverter, UnitOfElectricPotential.MILLIVOLT),
+    (EnergyConverter, UnitOfEnergy.KILO_WATT_HOUR),
+    (InformationConverter, UnitOfInformation.GIBIBYTES),
+    (MassConverter, UnitOfMass.GRAMS),
+    (PowerConverter, UnitOfPower.WATT),
+    (PressureConverter, UnitOfPressure.PA),
+    (SpeedConverter, UnitOfSpeed.KILOMETERS_PER_HOUR),
+    (TemperatureConverter, UnitOfTemperature.CELSIUS),
+    (TemperatureConverter, UnitOfTemperature.FAHRENHEIT),
+    (TemperatureConverter, UnitOfTemperature.KELVIN),
+    (UnitlessRatioConverter, PERCENTAGE),
+    (VolumeConverter, UnitOfVolume.LITERS),
+]
+
+
+@pytest.mark.parametrize("converter,valid_unit", _PARAMS_INVALID_UNIT)
 def test_convert_invalid_unit(
     converter: type[BaseUnitConverter], valid_unit: str
 ) -> None:
     """Test exception is thrown for invalid units."""
     with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
-        converter.convert(5, INVALID_SYMBOL, valid_unit)
+        converter.convert(5, _INVALID_SYMBOL, valid_unit)
 
     with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
-        converter.convert(5, valid_unit, INVALID_SYMBOL)
+        converter.convert(5, valid_unit, _INVALID_SYMBOL)
 
 
-@pytest.mark.parametrize(
-    "converter,from_unit,to_unit",
-    [
-        (
-            DataRateConverter,
-            UnitOfDataRate.BYTES_PER_SECOND,
-            UnitOfDataRate.BITS_PER_SECOND,
-        ),
-        (DistanceConverter, UnitOfLength.KILOMETERS, UnitOfLength.METERS),
-        (EnergyConverter, UnitOfEnergy.WATT_HOUR, UnitOfEnergy.KILO_WATT_HOUR),
-        (
-            InformationConverter,
-            UnitOfInformation.GIBIBYTES,
-            UnitOfInformation.GIGABYTES,
-        ),
-        (MassConverter, UnitOfMass.GRAMS, UnitOfMass.KILOGRAMS),
-        (PowerConverter, UnitOfPower.WATT, UnitOfPower.KILO_WATT),
-        (PressureConverter, UnitOfPressure.HPA, UnitOfPressure.INHG),
-        (SpeedConverter, UnitOfSpeed.KILOMETERS_PER_HOUR, UnitOfSpeed.MILES_PER_HOUR),
-        (TemperatureConverter, UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT),
-        (VolumeConverter, UnitOfVolume.GALLONS, UnitOfVolume.LITERS),
-    ],
-)
+_PARAMS_NONNUMERIC: list[tuple[type[BaseUnitConverter], str, str | None]] = [
+    (
+        DataRateConverter,
+        UnitOfDataRate.BYTES_PER_SECOND,
+        UnitOfDataRate.BITS_PER_SECOND,
+    ),
+    (DistanceConverter, UnitOfLength.KILOMETERS, UnitOfLength.METERS),
+    (EnergyConverter, UnitOfEnergy.WATT_HOUR, UnitOfEnergy.KILO_WATT_HOUR),
+    (
+        ElectricCurrentConverter,
+        UnitOfElectricCurrent.AMPERE,
+        UnitOfElectricCurrent.MILLIAMPERE,
+    ),
+    (
+        ElectricPotentialConverter,
+        UnitOfElectricPotential.VOLT,
+        UnitOfElectricPotential.MILLIVOLT,
+    ),
+    (InformationConverter, UnitOfInformation.GIBIBYTES, UnitOfInformation.GIGABYTES),
+    (MassConverter, UnitOfMass.GRAMS, UnitOfMass.KILOGRAMS),
+    (PowerConverter, UnitOfPower.WATT, UnitOfPower.KILO_WATT),
+    (PressureConverter, UnitOfPressure.HPA, UnitOfPressure.INHG),
+    (SpeedConverter, UnitOfSpeed.KILOMETERS_PER_HOUR, UnitOfSpeed.MILES_PER_HOUR),
+    (TemperatureConverter, UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT),
+    (UnitlessRatioConverter, PERCENTAGE, None),
+    (VolumeConverter, UnitOfVolume.GALLONS, UnitOfVolume.LITERS),
+]
+
+
+@pytest.mark.parametrize("converter,from_unit,to_unit", _PARAMS_NONNUMERIC)
 def test_convert_nonnumeric_value(
     converter: type[BaseUnitConverter], from_unit: str, to_unit: str
 ) -> None:
@@ -152,51 +177,59 @@ def test_convert_nonnumeric_value(
         converter.convert("a", from_unit, to_unit)
 
 
-@pytest.mark.parametrize(
-    "converter,from_unit,to_unit,expected",
-    [
-        (
-            DataRateConverter,
-            UnitOfDataRate.BITS_PER_SECOND,
-            UnitOfDataRate.BYTES_PER_SECOND,
-            8,
-        ),
-        (DistanceConverter, UnitOfLength.KILOMETERS, UnitOfLength.METERS, 1 / 1000),
-        (
-            ElectricCurrentConverter,
-            UnitOfElectricCurrent.AMPERE,
-            UnitOfElectricCurrent.MILLIAMPERE,
-            1 / 1000,
-        ),
-        (EnergyConverter, UnitOfEnergy.WATT_HOUR, UnitOfEnergy.KILO_WATT_HOUR, 1000),
-        (InformationConverter, UnitOfInformation.BITS, UnitOfInformation.BYTES, 8),
-        (PowerConverter, UnitOfPower.WATT, UnitOfPower.KILO_WATT, 1000),
-        (
-            PressureConverter,
-            UnitOfPressure.HPA,
-            UnitOfPressure.INHG,
-            pytest.approx(33.86389),
-        ),
-        (
-            SpeedConverter,
-            UnitOfSpeed.KILOMETERS_PER_HOUR,
-            UnitOfSpeed.MILES_PER_HOUR,
-            pytest.approx(1.609343),
-        ),
-        (
-            TemperatureConverter,
-            UnitOfTemperature.CELSIUS,
-            UnitOfTemperature.FAHRENHEIT,
-            1 / 1.8,
-        ),
-        (
-            VolumeConverter,
-            UnitOfVolume.GALLONS,
-            UnitOfVolume.LITERS,
-            pytest.approx(0.264172),
-        ),
-    ],
-)
+_PARAMS_UNIT_RATIO: list[tuple[type[BaseUnitConverter], str, str, float]] = [
+    (
+        DataRateConverter,
+        UnitOfDataRate.BITS_PER_SECOND,
+        UnitOfDataRate.BYTES_PER_SECOND,
+        8,
+    ),
+    (DistanceConverter, UnitOfLength.KILOMETERS, UnitOfLength.METERS, 1 / 1000),
+    (
+        ElectricCurrentConverter,
+        UnitOfElectricCurrent.AMPERE,
+        UnitOfElectricCurrent.MILLIAMPERE,
+        1 / 1000,
+    ),
+    (
+        ElectricPotentialConverter,
+        UnitOfElectricPotential.MILLIVOLT,
+        UnitOfElectricPotential.VOLT,
+        1000,
+    ),
+    (EnergyConverter, UnitOfEnergy.WATT_HOUR, UnitOfEnergy.KILO_WATT_HOUR, 1000),
+    (InformationConverter, UnitOfInformation.BITS, UnitOfInformation.BYTES, 8),
+    (MassConverter, UnitOfMass.KILOGRAMS, UnitOfMass.STONES, pytest.approx(6.35029)),
+    (PowerConverter, UnitOfPower.WATT, UnitOfPower.KILO_WATT, 1000),
+    (
+        PressureConverter,
+        UnitOfPressure.HPA,
+        UnitOfPressure.INHG,
+        pytest.approx(33.86389),
+    ),
+    (
+        SpeedConverter,
+        UnitOfSpeed.KILOMETERS_PER_HOUR,
+        UnitOfSpeed.MILES_PER_HOUR,
+        pytest.approx(1.609343),
+    ),
+    (
+        TemperatureConverter,
+        UnitOfTemperature.CELSIUS,
+        UnitOfTemperature.FAHRENHEIT,
+        1 / 1.8,
+    ),
+    (UnitlessRatioConverter, PERCENTAGE, None, 100),
+    (
+        VolumeConverter,
+        UnitOfVolume.GALLONS,
+        UnitOfVolume.LITERS,
+        pytest.approx(0.264172),
+    ),
+]
+
+
+@pytest.mark.parametrize("converter,from_unit,to_unit,expected", _PARAMS_UNIT_RATIO)
 def test_get_unit_ratio(
     converter: type[BaseUnitConverter], from_unit: str, to_unit: str, expected: float
 ) -> None:
@@ -658,3 +691,28 @@ def test_volume_convert(
 ) -> None:
     """Test conversion to other units."""
     assert VolumeConverter.convert(value, from_unit, to_unit) == pytest.approx(expected)
+
+
+@pytest.mark.parametrize("converter", _ALL_CONVERTERS)
+def test_all_converters(converter: type[BaseUnitConverter]) -> None:
+    """Ensure all unit converters are tested."""
+    # The converter should exist in _PARAMS_SAME_UNIT
+    item = next((pair for pair in _PARAMS_SAME_UNIT if pair[0] == converter), None)
+    assert item, "converter is not present in _PARAMS_SAME_UNIT"
+    assert item[1] in item[0].VALID_UNITS
+    # The converter should exist in _PARAMS_INVALID_UNIT
+    item = next((pair for pair in _PARAMS_INVALID_UNIT if pair[0] == converter), None)
+    assert item, "converter is not present in _PARAMS_OTHER_UNIT"
+    assert item[1] in item[0].VALID_UNITS
+    # The converter should exist in _PARAMS_NONNUMERIC
+    item = next((pair for pair in _PARAMS_NONNUMERIC if pair[0] == converter), None)
+    assert item, "converter is not present in _PARAMS_NONNUMERIC"
+    assert item[1] in item[0].VALID_UNITS
+    assert item[2] in item[0].VALID_UNITS
+    assert item[1] != item[2]
+    # The converter should exist in _PARAMS_UNIT_RATIO
+    item = next((pair for pair in _PARAMS_UNIT_RATIO if pair[0] == converter), None)
+    assert item, "converter is not present in _PARAMS_UNIT_RATIO"
+    assert item[1] in item[0].VALID_UNITS
+    assert item[2] in item[0].VALID_UNITS
+    assert item[1] != item[2]
