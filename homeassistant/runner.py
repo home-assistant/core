@@ -112,7 +112,7 @@ async def setup_and_run_hass(runtime_config: RuntimeConfig) -> int:
         return 1
 
     # threading._shutdown can deadlock forever
-    # pylint: disable=protected-access
+    # pylint: disable-next=protected-access
     threading._shutdown = deadlock_safe_shutdown  # type: ignore[attr-defined]
 
     return await hass.async_run()

@@ -627,7 +627,7 @@ class ConfigEntry:
                 )
                 return False
             if result:
-                # pylint: disable=protected-access
+                # pylint: disable-next=protected-access
                 hass.config_entries._async_schedule_save()
             # https://github.com/python/mypy/issues/11839
             return result  # type: ignore[no-any-return]

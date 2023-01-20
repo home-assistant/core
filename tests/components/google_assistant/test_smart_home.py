@@ -897,7 +897,6 @@ async def test_raising_error_trait(hass):
 async def test_serialize_input_boolean(hass):
     """Test serializing an input boolean entity."""
     state = State("input_boolean.bla", "on")
-    # pylint: disable=protected-access
     entity = sh.GoogleEntity(hass, BASIC_CONFIG, state)
     result = entity.sync_serialize(None, "mock-uuid")
     assert result == {

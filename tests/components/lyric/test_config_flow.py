@@ -120,7 +120,7 @@ async def test_reauthentication_flow(
 
     result = await hass.config_entries.flow.async_configure(flows[0]["flow_id"], {})
 
-    # pylint: disable=protected-access
+    # pylint: disable-next=protected-access
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
