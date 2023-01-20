@@ -82,7 +82,7 @@ def retry(
                     "Decora connect error for device %s. Reconnecting",
                     device.name,
                 )
-                # pylint: disable=protected-access
+                # pylint: disable-next=protected-access
                 device._switch.connect()
 
     return wrapper_retry

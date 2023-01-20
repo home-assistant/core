@@ -1,6 +1,6 @@
 {
   "domain": "otbr",
-  "name": "Thread",
+  "name": "Open Thread Border Router",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/otbr",
   "requirements": ["python-otbr-api==1.0.1"],

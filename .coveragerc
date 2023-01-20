@@ -1064,6 +1064,7 @@ omit =
     homeassistant/components/remember_the_milk/__init__.py
     homeassistant/components/remote_rpi_gpio/*
     homeassistant/components/reolink/__init__.py
+    homeassistant/components/reolink/binary_sensor.py
     homeassistant/components/reolink/camera.py
     homeassistant/components/reolink/const.py
     homeassistant/components/reolink/entity.py
@@ -1249,6 +1250,9 @@ omit =
     homeassistant/components/stookalert/__init__.py
     homeassistant/components/stookalert/binary_sensor.py
     homeassistant/components/stookalert/diagnostics.py
+    homeassistant/components/stookwijzer/__init__.py
+    homeassistant/components/stookwijzer/diagnostics.py
+    homeassistant/components/stookwijzer/sensor.py
     homeassistant/components/stream/*
     homeassistant/components/streamlabswater/*
     homeassistant/components/suez_water/*
