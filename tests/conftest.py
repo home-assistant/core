@@ -201,6 +201,13 @@ location.async_detect_location_info = check_real(location.async_detect_location_
 util.get_local_ip = lambda: "127.0.0.1"
 
 
+@pytest.fixture(name="caplog")
+def caplog_fixture(caplog):
+    """Test that capture logs are likely needing debug level."""
+    caplog.set_level(logging.DEBUG)
+    yield caplog
+
+
 @pytest.fixture(autouse=True, scope="module")
 def garbage_collection():
     """Run garbage collection at known locations.
