@@ -1,4 +1,4 @@
-"""Test Home Assistant eneergy utility functions."""
+"""Test Home Assistant unit conversion utility functions."""
 from __future__ import annotations
 
 import inspect
