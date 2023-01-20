@@ -1,0 +1,84 @@
+update_entity:
+  name: Update entity config
+  description: Update entity config
+  fields:
+    entity_id:
+      name: Entity
+      description: Entity to update
+      required: true
+      example: sensor.bedroom_temperature
+      selector:
+        entity:
+    aliases:
+      name: Aliases
+      description: Alias or list of aliases to set
+      example: ["Living Room", "Family Room"]
+      selector:
+        object:
+    area_id:
+      name: Area
+      description: Area to set
+      example: bedroom
+      selector:
+        area:
+    device_class:
+      name: Device Class
+      description: Device class to set
+      example: temperature
+      selector:
+        text:
+    disabled:
+      name: Disabled
+      description: Whether to set entity as disabled
+      example: true
+      selector:
+        boolean:
+    hidden:
+      name: Hidden
+      description: Whether to set entity as hidden
+      example: true
+      selector:
+        boolean:
+    icon:
+      name: Icon
+      description: Icon to set
+      example: mdi:home
+      selector:
+        icon:
+    name:
+      name: Name
+      description: Name to set
+      example: Bedroom Temperature
+      selector:
+        text:
+    new_entity_id:
+      name: New Entity ID
+      description: New entity ID to set (Only possible if entity has unique ID)
+      example: sensor.new_entity_id
+      selector:
+        text:
+    options_domain:
+      name: Options Domain
+      description: Domain of "Options" argument
+      example: sensor
+      selector:
+        text:
+    options:
+      name: Options
+      description: Entity options of "Options Domain" argument to set
+      example: '{unit_of_measurement: "°F"}'
+      selector:
+        object:
+
+remove_entity:
+  name: Remove entity config
+  description: Remove entity config
+  fields:
+    entity_id:
+      name: Entity ID
+      description: Entity ID or list of entity IDs to remove
+      required: true
+      example: ["sensor.bathroom_temperature", "sensor.bedroom_temperature"]
+      selector:
+        entity:
+          multiple: true

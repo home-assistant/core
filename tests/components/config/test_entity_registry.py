@@ -1,9 +1,15 @@
 """Test entity_registry API."""
 import pytest
 from pytest_unordered import unordered
+from voluptuous.error import MultipleInvalid
 
 from homeassistant.components.config import entity_registry
-from homeassistant.const import ATTR_ICON
+from homeassistant.components.config.entity_registry import (
+    DOMAIN,
+    SERVICE_REMOVE_ENTITY,
+    SERVICE_UPDATE_ENTITY,
+)
+from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ICON
 from homeassistant.helpers.device_registry import DeviceEntryDisabler
 from homeassistant.helpers.entity_registry import (
     RegistryEntry,
@@ -487,6 +493,117 @@ async def test_update_entity(hass, client):
     }
 
 
+async def test_update_entity_service(hass, client):
+    """Test updating entity."""
+    registry = mock_registry(
+        hass,
+        {
+            "test_domain.world": RegistryEntry(
+                entity_id="test_domain.world",
+                unique_id="1234",
+                # Using component.async_add_entities is equal to platform "domain"
+                platform="test_platform",
+                name="before update",
+                icon="icon:before update",
+            )
+        },
+    )
+    platform = MockEntityPlatform(hass)
+    entity = MockEntity(unique_id="1234")
+    await platform.async_add_entities([entity])
+
+    state = hass.states.get("test_domain.world")
+    assert state is not None
+    assert state.name == "before update"
+    assert state.attributes[ATTR_ICON] == "icon:before update"
+
+    # UPDATE AREA, DEVICE_CLASS, HIDDEN, ICON AND NAME
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {
+            "entity_id": "test_domain.world",
+            "aliases": ["alias_1", "alias_2"],
+            "area_id": "mock-area-id",
+            "device_class": "custom_device_class",
+            "hidden": True,  # We exchange strings over the WS API, not enums
+            "icon": "icon:after update",
+            "name": "after update",
+        },
+        blocking=True,
+    )
+
+    state = hass.states.get("test_domain.world")
+    assert state.attributes[ATTR_DEVICE_CLASS] == "custom_device_class"
+    assert state.attributes[ATTR_ICON] == "icon:after update"
+    assert state.name == "after update"
+    entry = registry.entities["test_domain.world"]
+    assert entry.aliases == {"alias_1", "alias_2"}
+    assert entry.area_id == "mock-area-id"
+    assert entry.hidden_by is RegistryEntryHider.USER
+
+    # UPDATE HIDDEN TO ILLEGAL VALUE
+    try:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_UPDATE_ENTITY,
+            {
+                "entity_id": "test_domain.world",
+                "hidden": "ivy",
+            },
+            blocking=True,
+        )
+        assert False, "Should have thrown error"
+    except MultipleInvalid:
+        pass
+    assert registry.entities["test_domain.world"].hidden_by is RegistryEntryHider.USER
+
+    # UPDATE DISABLED to true
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {
+            "entity_id": "test_domain.world",
+            "disabled": True,
+        },
+        blocking=True,
+    )
+
+    assert hass.states.get("test_domain.world") is None
+    assert (
+        registry.entities["test_domain.world"].disabled_by is RegistryEntryDisabler.USER
+    )
+
+    # UPDATE DISABLED TO False
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {
+            "entity_id": "test_domain.world",
+            "disabled": False,
+        },
+        blocking=True,
+    )
+
+    assert registry.entities["test_domain.world"].disabled_by is None
+
+    # UPDATE ENTITY OPTION
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {
+            "entity_id": "test_domain.world",
+            "options_domain": "sensor",
+            "options": {"unit_of_measurement": "beard_second"},
+        },
+        blocking=True,
+    )
+
+    assert registry.entities["test_domain.world"].options == {
+        "sensor": {"unit_of_measurement": "beard_second"}
+    }
+
+
 async def test_update_entity_require_restart(hass, client):
     """Test updating entity."""
     entity_id = "test_domain.test_platform_1234"
@@ -833,6 +950,40 @@ async def test_remove_entity(hass, client):
     msg = await client.receive_json()
 
     assert msg["success"]
+    assert len(registry.entities) == 0
+
+
+async def test_remove_entity_service(hass, client):
+    """Test removing entity."""
+    registry = mock_registry(
+        hass,
+        {
+            "test_domain.world": RegistryEntry(
+                entity_id="test_domain.world",
+                unique_id="1234",
+                # Using component.async_add_entities is equal to platform "domain"
+                platform="test_platform",
+                name="before update",
+            ),
+            "test_domain.world2": RegistryEntry(
+                entity_id="test_domain.world2",
+                unique_id="12345",
+                # Using component.async_add_entities is equal to platform "domain"
+                platform="test_platform",
+                name="before update",
+            ),
+        },
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_REMOVE_ENTITY,
+        {
+            "entity_id": ["test_domain.world", "test_domain.world2"],
+        },
+        blocking=True,
+    )
+
     assert len(registry.entities) == 0
 
 
