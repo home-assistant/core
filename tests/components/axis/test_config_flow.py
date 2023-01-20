@@ -259,7 +259,10 @@ async def test_reauth_flow_update_configuration(hass, config_entry):
                     "st": "urn:axis-com:service:BasicService:1",
                     "usn": f"uuid:Upnp-BasicDevice-1_0-{MAC}::urn:axis-com:service:BasicService:1",
                     "ext": "",
-                    "server": "Linux/4.14.173-axis8, UPnP/1.0, Portable SDK for UPnP devices/1.8.7",
+                    "server": (
+                        "Linux/4.14.173-axis8, UPnP/1.0, Portable SDK for UPnP"
+                        " devices/1.8.7"
+                    ),
                     "deviceType": "urn:schemas-upnp-org:device:Basic:1",
                     "friendlyName": f"AXIS M1065-LW - {MAC}",
                     "manufacturer": "AXIS",

@@ -151,7 +151,7 @@ async def setup_test_config_entry(
     config_entry = config_entry or add_test_config_entry(hass, options=options)
 
     hyperion_client = hyperion_client or create_mock_client()
-    # pylint: disable=attribute-defined-outside-init
+    # pylint: disable-next=attribute-defined-outside-init
     hyperion_client.instances = [TEST_INSTANCE_1]
 
     with patch(

@@ -62,6 +62,7 @@
             "led_brightness": {
                 "state": {
                     "bright": "Helder",
+                    "dim": "Dimmen",
                     "off": "Uit"
                 }
             },

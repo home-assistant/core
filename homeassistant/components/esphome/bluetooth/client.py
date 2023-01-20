@@ -583,11 +583,12 @@ class ESPHomeClient(BaseBleakClient):
                 print(f"{sender}: {data}")
             client.start_notify(char_uuid, callback)
         Args:
-            char_specifier (BleakGATTCharacteristic, int, str or UUID):
+            characteristic (BleakGATTCharacteristic):
                 The characteristic to activate notifications/indications on a
                 characteristic, specified by either integer handle, UUID or
                 directly by the BleakGATTCharacteristic object representing it.
             callback (function): The function to be called on notification.
+            kwargs: Unused.
         """
         ble_handle = characteristic.handle
         if ble_handle in self._notify_cancels:
