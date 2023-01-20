@@ -16,7 +16,4 @@ class ThreadConfigFlow(ConfigFlow, domain=DOMAIN):
         self, import_data: dict[str, str] | None = None
     ) -> FlowResult:
         """Set up by import from async_setup."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         return self.async_create_entry(title="Thread", data={})

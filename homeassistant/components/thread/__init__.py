@@ -10,9 +10,12 @@ from .const import DOMAIN
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set  up the Thread integration."""
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_IMPORT})
-    )
+    if not hass.config_entries.async_entries(DOMAIN):
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}
+            )
+        )
     return True
 
 

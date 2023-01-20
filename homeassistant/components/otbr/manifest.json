@@ -2,6 +2,7 @@
   "domain": "otbr",
   "name": "Thread",
   "config_flow": true,
+  "dependencies": ["thread"],
   "documentation": "https://www.home-assistant.io/integrations/otbr",
   "requirements": ["python-otbr-api==1.0.1"],
   "after_dependencies": ["hassio"],
