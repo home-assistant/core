@@ -18,11 +18,7 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 
-from .const import (
-    CONF_PROTOCOL,
-    CONF_USE_HTTPS,
-    DOMAIN,
-)
+from .const import CONF_PROTOCOL, CONF_USE_HTTPS, DOMAIN
 from .exceptions import ReolinkSetupException, ReolinkWebhookException, UserNotAdmin
 
 DEFAULT_TIMEOUT = 60
@@ -202,15 +198,15 @@ class ReolinkHost:
         try:
             await self._renew()
         except ReolinkWebhookException as err:
-            if not host._lost_subscription:
-                host._lost_subscription = True
+            if not self._lost_subscription:
+                self._lost_subscription = True
                 _LOGGER.error(
                     "Reolink %s event subscription lost: %s",
-                    host.api.nvr_name,
+                    self._api.nvr_name,
                     str(err),
                 )
         else:
-            host._lost_subscription = False
+            self._lost_subscription = False
 
     async def _renew(self) -> None:
         """Execute the renew of the subscription."""
