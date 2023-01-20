@@ -892,7 +892,7 @@ oauth2client==4.1.3
 objgraph==3.5.0
 
 # homeassistant.components.garages_amsterdam
-odp-amsterdam==5.0.0
+odp-amsterdam==5.0.1
 
 # homeassistant.components.omnilogic
 omnilogic==0.4.5
