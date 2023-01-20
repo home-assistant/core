@@ -1,7 +1,5 @@
 """The tests for the Google Assistant component."""
 from http import HTTPStatus
-
-# pylint: disable=protected-access
 import json
 
 from aiohttp.hdrs import AUTHORIZATION

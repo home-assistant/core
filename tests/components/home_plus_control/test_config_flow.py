@@ -36,7 +36,7 @@ async def test_full_flow(
         "home_plus_control", context={"source": config_entries.SOURCE_USER}
     )
 
-    state = config_entry_oauth2_flow._encode_jwt(  # pylint: disable=protected-access
+    state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
             "flow_id": result["flow_id"],
@@ -154,7 +154,7 @@ async def test_abort_if_invalid_token(
         "home_plus_control", context={"source": config_entries.SOURCE_USER}
     )
 
-    state = config_entry_oauth2_flow._encode_jwt(  # pylint: disable=protected-access
+    state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
             "flow_id": result["flow_id"],

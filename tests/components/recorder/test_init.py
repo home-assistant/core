@@ -1,7 +1,6 @@
 """The tests for the Recorder component."""
 from __future__ import annotations
 
-# pylint: disable=protected-access
 import asyncio
 from datetime import datetime, timedelta
 import sqlite3

@@ -1,5 +1,5 @@
 """The tests for the Recorder component."""
-# pylint: disable=protected-access
+
 import datetime
 import importlib
 import sqlite3

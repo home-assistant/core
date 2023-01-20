@@ -1,5 +1,5 @@
 """Test config utils."""
-# pylint: disable=protected-access
+
 from collections import OrderedDict
 import contextlib
 import copy

@@ -13,7 +13,7 @@ def init_config_flow(hass, side_effect=None):
     """Init a configuration flow."""
     config_flow.register_flow_implementation(hass, DOMAIN, "id", "secret")
     flow = config_flow.PointFlowHandler()
-    flow._get_authorization_url = AsyncMock(  # pylint: disable=protected-access
+    flow._get_authorization_url = AsyncMock(
         return_value="https://example.com", side_effect=side_effect
     )
     flow.hass = hass

@@ -62,9 +62,7 @@ async def async_manipulate_test_data(
     fire_target = hmip_device if fire_device is None else fire_device
 
     if isinstance(fire_target, AsyncHome):
-        fire_target.fire_update_event(
-            fire_target._rawJSONData  # pylint: disable=protected-access
-        )
+        fire_target.fire_update_event(fire_target._rawJSONData)
     else:
         fire_target.fire_update_event()
 
@@ -206,9 +204,7 @@ class HomeTemplate(Home):
 def _get_mock(instance):
     """Create a mock and copy instance attributes over mock."""
     if isinstance(instance, Mock):
-        instance.__dict__.update(
-            instance._mock_wraps.__dict__  # pylint: disable=protected-access
-        )
+        instance.__dict__.update(instance._mock_wraps.__dict__)
         return instance
 
     mock = Mock(spec=instance, wraps=instance)

@@ -1,5 +1,5 @@
 """Test helpers for UniFi Protect."""
-# pylint: disable=protected-access
+
 from __future__ import annotations
 
 from collections.abc import Sequence

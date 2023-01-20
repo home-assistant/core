@@ -38,9 +38,7 @@ def init_config_flow(hass):
         sensors=None,
     )
     flow = config_flow.LogiCircleFlowHandler()
-    flow._get_authorization_url = Mock(  # pylint: disable=protected-access
-        return_value="http://example.com"
-    )
+    flow._get_authorization_url = Mock(return_value="http://example.com")
     flow.hass = hass
     return flow
 
@@ -195,7 +193,7 @@ async def test_gen_auth_url(
     flow.flow_impl = "test-auth-url"
     await async_setup_component(hass, "http", {})
 
-    result = flow._get_authorization_url()  # pylint: disable=protected-access
+    result = flow._get_authorization_url()
     assert result == "http://authorize.url"
 
 
