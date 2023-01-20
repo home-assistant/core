@@ -294,6 +294,7 @@ class ReolinkHost:
 
         if not request.body_exists:
             _LOGGER.debug("Webhook '%s' triggered without payload", webhook_id)
+            return
 
         data = await request.text()
         if not data:
