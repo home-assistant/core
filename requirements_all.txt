@@ -628,7 +628,7 @@ dynalite_devices==0.1.47
 eagle100==0.1.1
 
 # homeassistant.components.easyenergy
-easyenergy==0.1.1
+easyenergy==0.1.2
 
 # homeassistant.components.ebusd
 ebusdpy==0.0.17
