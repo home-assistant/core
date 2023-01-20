@@ -37,7 +37,7 @@
             "title": "Tundmatu m\u00f5\u00f5t\u00fchik"
         },
         "entity_unexpected_unit_gas": {
-            "description": "J\u00e4rgmistel \u00fcksustel pole eeldatavat m\u00f5\u00f5t\u00fchikut (energiaanduri puhul {energy_units {energy_units} v\u00f5i gaasianduri puhul {gas_units} ):",
+            "description": "J\u00e4rgmistel \u00fcksustel pole eeldatavat m\u00f5\u00f5t\u00fchikut (energiaanduri puhul {energy_units} v\u00f5i gaasianduri puhul {gas_units} ):",
             "title": "Tundmatu m\u00f5\u00f5t\u00fchik"
         },
         "entity_unexpected_unit_gas_price": {

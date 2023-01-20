@@ -38,13 +38,13 @@
             "turn_on": "Starta"
         },
         "trigger_type": {
-            "button_double_press": "\"{subtyp}\" dubbelklickad",
-            "button_long_press": "\" {subtype} \" kontinuerligt nedtryckt",
-            "button_long_release": "\" {subtype} \" sl\u00e4pptes efter l\u00e5ng tryckning",
-            "button_quadruple_press": "\"{subtyp}\" fyrdubbelt klickad",
-            "button_quintuple_press": "\"{subtype}\" kvintubbel klickade",
-            "button_short_press": "\"{subtyp}\" tryckt",
-            "button_short_release": "\"{subtyp}\" sl\u00e4pptes",
+            "button_double_press": "\"{subtype}\" dubbelklickad",
+            "button_long_press": "\"{subtype}\" kontinuerligt nedtryckt",
+            "button_long_release": "\"{subtype}\" sl\u00e4pptes efter l\u00e5ng tryckning",
+            "button_quadruple_press": "\"{subtype}\" fyrdubbelt klickad",
+            "button_quintuple_press": "\"{subtype}\" kvintubbelt klickad",
+            "button_short_press": "\"{subtype}\" tryckt",
+            "button_short_release": "\"{subtype}\" sl\u00e4pptes",
             "button_triple_press": "\" {subtype}\" trippelklickad"
         }
     },

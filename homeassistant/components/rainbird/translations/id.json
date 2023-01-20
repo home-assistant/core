@@ -2,7 +2,7 @@
     "config": {
         "error": {
             "cannot_connect": "Gagal terhubung",
-            "timeout_connect": "Tenggang waktu membuat koneksi habis"
+            "timeout_connect": "Tenggang waktu pembuatan koneksi habis"
         },
         "step": {
             "user": {

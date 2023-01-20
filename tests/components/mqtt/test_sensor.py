@@ -292,7 +292,6 @@ async def test_setting_sensor_value_via_mqtt_json_message(
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
-                    "unit_of_measurement": "fav unit",
                     "value_template": "{{ value_json.val }}",
                 }
             }
@@ -325,7 +324,6 @@ async def test_setting_sensor_value_via_mqtt_json_message_and_default_current_st
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
-                    "unit_of_measurement": "fav unit",
                     "value_template": "{{ value_json.val | is_defined }}-{{ value_json.par }}",
                 }
             }

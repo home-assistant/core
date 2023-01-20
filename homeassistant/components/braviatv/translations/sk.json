@@ -4,8 +4,7 @@
             "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
             "no_ip_control": "Ovl\u00e1danie IP je na va\u0161om telev\u00edzore vypnut\u00e9 alebo telev\u00edzor nie je podporovan\u00fd.",
             "not_bravia_device": "Zariadenie nie je telev\u00edzor Bravia.",
-            "reauth_successful": "Op\u00e4tovn\u00e9 overenie bolo \u00faspe\u0161n\u00e9",
-            "reauth_unsuccessful": "Op\u00e4tovn\u00e1 autentifik\u00e1cia bola ne\u00faspe\u0161n\u00e1, odstr\u00e1\u0148te integr\u00e1ciu a znova ju nastavte."
+            "reauth_successful": "Op\u00e4tovn\u00e9 overenie bolo \u00faspe\u0161n\u00e9"
         },
         "error": {
             "cannot_connect": "Nepodarilo sa pripoji\u0165",
@@ -16,10 +15,9 @@
         "step": {
             "authorize": {
                 "data": {
-                    "pin": "PIN k\u00f3d",
                     "use_psk": "Pou\u017eite autentifik\u00e1ciu PSK"
                 },
-                "description": "Uistite sa, \u017ee je na va\u0161om telev\u00edzore aktivovan\u00e9 \u201eOvl\u00e1danie na dia\u013eku\u201c, prejdite na:\n Nastavenia - > Sie\u0165 - > Nastavenia vzdialen\u00e9ho zariadenia - > Ovl\u00e1da\u0165 na dia\u013eku. \n\n Existuj\u00fa dva sp\u00f4soby autoriz\u00e1cie: PIN k\u00f3d alebo PSK (Pre-Shared Key).\n Ako stabilnej\u0161ia sa odpor\u00fa\u010da autoriz\u00e1cia cez PSK.",
+                "description": "Uistite sa, \u017ee je na va\u0161om telev\u00edzore aktivovan\u00e9 \u00abOvl\u00e1danie na dia\u013eku\u00bb, prejdite na:\n Nastavenia - > Sie\u0165 - > Nastavenia vzdialen\u00e9ho zariadenia - > Ovl\u00e1da\u0165 na dia\u013eku. \n\n Existuj\u00fa dva sp\u00f4soby autoriz\u00e1cie: PIN k\u00f3d alebo PSK (Pre-Shared Key).\n Ako stabilnej\u0161ia sa odpor\u00fa\u010da autoriz\u00e1cia cez PSK.",
                 "title": "Autorizujte telev\u00edzor Sony Bravia"
             },
             "confirm": {
@@ -38,13 +36,6 @@
                 },
                 "description": "Ak chcete nastavi\u0165 PSK na svojom telev\u00edzore, prejdite na: Nastavenia - > Sie\u0165 - > Nastavenie dom\u00e1cej siete - > Ovl\u00e1danie IP. Nastavte \u00abAuthentication\u00bb na \u00abNormal and Pre-Shared Key\u00bb alebo \u00abPre-Shared Key\u00bb a definujte svoj re\u0165azec pre-Shared-Key (napr. Sony). \n\n Tu zadajte svoje PSK.",
                 "title": "Autorizujte telev\u00edzor Sony Bravia"
-            },
-            "reauth_confirm": {
-                "data": {
-                    "pin": "PIN k\u00f3d",
-                    "use_psk": "Pou\u017eite autentifik\u00e1ciu PSK"
-                },
-                "description": "Zadajte PIN k\u00f3d zobrazen\u00fd na telev\u00edzii Sony Bravia.\n\nPokia\u013e sa PIN k\u00f3d nezobraz\u00ed, je potrebn\u00e9 zru\u0161i\u0165 registr\u00e1ciu Home Assistant na telev\u00edzii, prejdite na: Nastavenia -> Sie\u0165 -> Nastavenie vzdialen\u00e9ho zariadenia -> Zru\u0161i\u0165 registr\u00e1ciu vzdialen\u00e9ho zariadenia."
             },
             "user": {
                 "data": {

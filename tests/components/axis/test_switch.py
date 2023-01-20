@@ -137,6 +137,19 @@ async def test_switches_with_port_management(hass, config_entry, mock_rtsp_event
     assert relay_0.state == STATE_OFF
     assert relay_0.name == f"{NAME} Doorbell"
 
+    # State update
+
+    mock_rtsp_event(
+        topic="tns1:Device/Trigger/Relay",
+        data_type="LogicalState",
+        data_value="active",
+        source_name="RelayToken",
+        source_idx="0",
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(f"{SWITCH_DOMAIN}.{NAME}_relay_1").state == STATE_ON
+
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,

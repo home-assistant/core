@@ -136,5 +136,14 @@
                 "title": "\u0395\u03c0\u03b9\u03bb\u03bf\u03b3\u03ad\u03c2 MQTT"
             }
         }
+    },
+    "selector": {
+        "set_ca_cert": {
+            "options": {
+                "auto": "\u0391\u03c5\u03c4\u03cc\u03bc\u03b1\u03c4\u03bf",
+                "custom": "\u03a0\u03c1\u03bf\u03c3\u03b1\u03c1\u03bc\u03bf\u03c3\u03bc\u03ad\u03bd\u03bf",
+                "off": "\u0391\u03bd\u03b5\u03bd\u03b5\u03c1\u03b3\u03cc"
+            }
+        }
     }
 }
