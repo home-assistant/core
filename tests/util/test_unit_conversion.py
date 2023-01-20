@@ -38,7 +38,7 @@ from homeassistant.util.unit_conversion import (
     VolumeConverter,
 )
 
-_INVALID_SYMBOL = "bob"
+INVALID_SYMBOL = "bob"
 
 
 # Dict containing all converters that need to be tested.
@@ -110,10 +110,10 @@ def test_convert_invalid_unit(
 ) -> None:
     """Test exception is thrown for invalid units."""
     with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
-        converter.convert(5, _INVALID_SYMBOL, valid_unit)
+        converter.convert(5, INVALID_SYMBOL, valid_unit)
 
     with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
-        converter.convert(5, valid_unit, _INVALID_SYMBOL)
+        converter.convert(5, valid_unit, INVALID_SYMBOL)
 
 
 @pytest.mark.parametrize(
