@@ -1,11 +1,24 @@
 """Test Xiaomi BLE events."""
 
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.xiaomi_ble.const import DOMAIN
+from homeassistant.core import callback
+from homeassistant.helpers.device_registry import async_get as async_get_dev_reg
 
 from . import make_advertisement
 
-from tests.common import MockConfigEntry, async_capture_events
+from tests.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_get_device_automations,
+)
 from tests.components.bluetooth import inject_bluetooth_service_info_bleak
+
+
+@callback
+def get_device_id(mac: str) -> tuple[str, str]:
+    """Get device registry identifier for xiaomi_ble."""
+    return (DOMAIN, f"{mac}")
 
 
 async def test_event_motion_detected(hass):
@@ -36,3 +49,30 @@ async def test_event_motion_detected(hass):
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+
+async def test_get_triggers(hass):
+    """Test that we get the expected triggers from a Xiaomi BLE motion sensor."""
+    mac = "DE:70:E8:B2:39:0C"
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=mac,
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+
+    dev_reg = async_get_dev_reg(hass)
+    device = dev_reg.async_get_device({get_device_id("DE:70:E8:B2:39:0C")})
+    assert device
+    expected_trigger = {
+        "platform": "device",
+        "domain": DOMAIN,
+        "device_id": device.id,
+        "type": "motion_detected",
+        "event_properties": None,
+    }
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device.id
+    )
+    assert expected_trigger in triggers
