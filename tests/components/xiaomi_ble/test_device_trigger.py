@@ -83,6 +83,7 @@ async def test_get_triggers(hass):
         "device_id": device.id,
         "type": "motion_detected",
         "event_properties": None,
+        "metadata": {},
     }
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device.id
