@@ -9,6 +9,11 @@
             "invalid_auth": "Autentikasi tidak valid"
         },
         "step": {
+            "api_key": {
+                "data": {
+                    "api_key": "Kunci API"
+                }
+            },
             "reauth_confirm": {
                 "data": {
                     "api_key": "Kunci API"

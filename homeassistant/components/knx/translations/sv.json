@@ -55,5 +55,10 @@
                 "description": "V\u00e4lj en gateway fr\u00e5n listan."
             }
         }
+    },
+    "options": {
+        "error": {
+            "invalid_ip_address": "Ogiltig IPv4-adress."
+        }
     }
 }

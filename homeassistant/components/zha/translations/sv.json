@@ -87,6 +87,7 @@
             "default_light_transition": "Standard ljus\u00f6verg\u00e5ngstid (sekunder)",
             "enable_identify_on_join": "Aktivera identifieringseffekt n\u00e4r enheter ansluter till n\u00e4tverket",
             "enhanced_light_transition": "Aktivera f\u00f6rb\u00e4ttrad ljusf\u00e4rg/temperatur\u00f6verg\u00e5ng fr\u00e5n ett avst\u00e4ngt l\u00e4ge",
+            "group_members_assume_state": "Gruppmedlemmar antar gruppens tillst\u00e5nd",
             "light_transitioning_flag": "Aktivera f\u00f6rb\u00e4ttrad ljusstyrka vid ljus\u00f6verg\u00e5ng",
             "title": "Globala alternativ"
         }
@@ -100,6 +101,7 @@
         },
         "trigger_subtype": {
             "both_buttons": "B\u00e5da knapparna",
+            "button": "Knapp",
             "button_1": "F\u00f6rsta knappen",
             "button_2": "Andra knappen",
             "button_3": "Tredje knappen",

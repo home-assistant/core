@@ -9,6 +9,11 @@
             "invalid_auth": "Tuvastamine nurjus"
         },
         "step": {
+            "api_key": {
+                "data": {
+                    "api_key": "API v\u00f5ti"
+                }
+            },
             "reauth_confirm": {
                 "data": {
                     "api_key": "API v\u00f5ti"

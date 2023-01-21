@@ -9,6 +9,11 @@
             "invalid_auth": "Neplatn\u00e9 overenie"
         },
         "step": {
+            "api_key": {
+                "data": {
+                    "api_key": "API k\u013e\u00fa\u010d"
+                }
+            },
             "reauth_confirm": {
                 "data": {
                     "api_key": "API k\u013e\u00fa\u010d"
