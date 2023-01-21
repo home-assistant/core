@@ -4,7 +4,7 @@
   "integration_type": "hub",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/unifiprotect",
-  "requirements": ["pyunifiprotect==4.6.1", "unifi-discovery==1.1.7"],
+  "requirements": ["pyunifiprotect==4.6.2", "unifi-discovery==1.1.7"],
   "dependencies": ["http", "repairs"],
   "codeowners": ["@briis", "@AngellusMortis", "@bdraco"],
   "quality_scale": "platinum",

@@ -30,7 +30,7 @@ from .host import ReolinkHost
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.CAMERA]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.CAMERA]
 DEVICE_UPDATE_INTERVAL = 60
 
 
@@ -49,7 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     try:
         await host.async_init()
     except UserNotAdmin as err:
-        raise ConfigEntryAuthFailed(err) from UserNotAdmin
+        raise ConfigEntryAuthFailed(err) from err
     except (
         ClientConnectorError,
         asyncio.TimeoutError,
@@ -62,7 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     ) as err:
         await host.stop()
         raise ConfigEntryNotReady(
-            f'Error while trying to setup {host.api.host}:{host.api.port}: "{str(err)}".'
+            f"Error while trying to setup {host.api.host}:{host.api.port}: {str(err)}"
         ) from err
 
     config_entry.async_on_unload(
@@ -78,6 +78,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                 raise UpdateFailed(
                     f"Error updating Reolink {host.api.nvr_name}"
                 ) from err
+
+        async with async_timeout.timeout(host.api.timeout):
+            await host.renew()
 
     coordinator_device_config_update = DataUpdateCoordinator(
         hass,

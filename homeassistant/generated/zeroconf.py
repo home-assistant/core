@@ -282,6 +282,12 @@ ZEROCONF = {
             "domain": "shelly",
             "name": "shelly*",
         },
+        {
+            "domain": "synology_dsm",
+            "properties": {
+                "vendor": "synology*",
+            },
+        },
     ],
     "_hue._tcp.local.": [
         {
