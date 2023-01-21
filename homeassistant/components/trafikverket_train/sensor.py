@@ -23,6 +23,9 @@ from .const import ATTRIBUTION, DOMAIN
 from .coordinator import TrainData, TVDataUpdateCoordinator
 
 
+ATTR_PRODUCT_FILTER = "product_filter"
+
+
 @dataclass
 class TrafikverketRequiredKeysMixin:
     """Mixin for required keys."""
