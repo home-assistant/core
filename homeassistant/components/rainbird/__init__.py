@@ -126,11 +126,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         coordinator = hass.data[DOMAIN][entry_id]
 
         entity_registry = er.async_get(hass)
-        entity_ids = [
+        entity_ids = (
             entry.entity_id
             for entry in er.async_entries_for_config_entry(entity_registry, entry_id)
             if entry.unique_id == f"{coordinator.serial_number}-rain-delay"
-        ]
+        )
         async_create_issue(
             hass,
             DOMAIN,
@@ -141,7 +141,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_raindelay",
             translation_placeholders={
-                "alternate_target": next(iter(entity_ids), "unknown"),
+                "alternate_target": next(entity_ids, "unknown"),
             },
         )
 
