@@ -56,15 +56,15 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         await client.login()
         await client.discover()
 
-    except AIOSomecomfort.device.AuthError as ex:
+    except AIOSomecomfort.AuthError as ex:
         raise ConfigEntryNotReady(
             "Failed to initialize the Honeywell client: "
             "Check your configuration (username, password), "
         ) from ex
 
     except (
-        AIOSomecomfort.device.ConnectionError,
-        AIOSomecomfort.device.ConnectionTimeout,
+        AIOSomecomfort.ConnectionError,
+        AIOSomecomfort.ConnectionTimeout,
         asyncio.TimeoutError,
     ) as ex:
         raise ConfigEntryNotReady(
@@ -131,12 +131,13 @@ class HoneywellData:
         self._password = password
         self.devices = devices
 
-    @property
-    def client(self) -> AIOSomecomfort.AIOSomeComfort:
-        """Return Honeywell Client."""
-        return self._client
+    async def retry_login(self) -> bool:
+        """Fire of a login retry."""
 
-    @property
-    def config_entry(self) -> ConfigEntry:
-        """Return Honeywell config entry."""
-        return self._config
+        try:
+            await self._client.login()
+        except AIOSomecomfort.SomeComfortError:
+            await asyncio.sleep(UPDATE_LOOP_SLEEP_TIME)
+            return False
+
+        return True
