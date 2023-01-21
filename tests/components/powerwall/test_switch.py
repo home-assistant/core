@@ -27,9 +27,6 @@ async def test_entity_registry(hass):
     config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_IP_ADDRESS: "1.2.3.4"})
     config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.powerwall.config_flow.Powerwall",
-        return_value=mock_powerwall,
-    ), patch(
         "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -48,9 +45,6 @@ async def test_initial_gridstatus(hass):
     config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_IP_ADDRESS: "1.2.3.4"})
     config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.powerwall.config_flow.Powerwall",
-        return_value=mock_powerwall,
-    ), patch(
         "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -69,9 +63,6 @@ async def test_gridstatus_off(hass):
     config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_IP_ADDRESS: "1.2.3.4"})
     config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.powerwall.config_flow.Powerwall",
-        return_value=mock_powerwall,
-    ), patch(
         "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -97,9 +88,6 @@ async def test_gridstatus_on(hass):
     config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_IP_ADDRESS: "1.2.3.4"})
     config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.powerwall.config_flow.Powerwall",
-        return_value=mock_powerwall,
-    ), patch(
         "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -125,9 +113,6 @@ async def test_turn_on_without_entity_id(hass):
     config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_IP_ADDRESS: "1.2.3.4"})
     config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.powerwall.config_flow.Powerwall",
-        return_value=mock_powerwall,
-    ), patch(
         "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -150,9 +135,6 @@ async def test_turn_off_without_entity_id(hass):
     config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_IP_ADDRESS: "1.2.3.4"})
     config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.powerwall.config_flow.Powerwall",
-        return_value=mock_powerwall,
-    ), patch(
         "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
