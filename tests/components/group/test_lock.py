@@ -1,5 +1,8 @@
 """The tests for the Group Lock platform."""
+
 from unittest.mock import patch
+
+import pytest
 
 from homeassistant import config as hass_config
 from homeassistant.components.demo import lock as demo_lock
@@ -21,6 +24,7 @@ from homeassistant.const import (
     STATE_UNLOCKING,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -168,8 +172,8 @@ async def test_state_reporting(hass):
     assert hass.states.get("lock.lock_group").state == STATE_UNAVAILABLE
 
 
-async def test_service_calls(hass: HomeAssistant) -> None:
-    """Test service calls."""
+async def test_service_calls_openable(hass: HomeAssistant) -> None:
+    """Test service calls with open support."""
     await async_setup_component(
         hass,
         LOCK_DOMAIN,
@@ -230,6 +234,58 @@ async def test_service_calls(hass: HomeAssistant) -> None:
         hass.states.get("lock.another_kitchen_sink_openable_lock").state
         == STATE_UNLOCKED
     )
+
+
+async def test_service_calls_basic(hass: HomeAssistant) -> None:
+    """Test service calls without open support."""
+    await async_setup_component(
+        hass,
+        LOCK_DOMAIN,
+        {
+            LOCK_DOMAIN: [
+                {"platform": "kitchen_sink"},
+                {
+                    "platform": DOMAIN,
+                    "entities": [
+                        "lock.basic_kitchen_sink_lock",
+                        "lock.another_kitchen_sink_lock",
+                    ],
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    group_state = hass.states.get("lock.lock_group")
+    assert group_state.state == STATE_UNLOCKED
+    assert hass.states.get("lock.basic_kitchen_sink_lock").state == STATE_LOCKED
+    assert hass.states.get("lock.another_kitchen_sink_lock").state == STATE_UNLOCKED
+
+    await hass.services.async_call(
+        LOCK_DOMAIN,
+        SERVICE_LOCK,
+        {ATTR_ENTITY_ID: "lock.lock_group"},
+        blocking=True,
+    )
+    assert hass.states.get("lock.basic_kitchen_sink_lock").state == STATE_LOCKED
+    assert hass.states.get("lock.another_kitchen_sink_lock").state == STATE_LOCKED
+
+    await hass.services.async_call(
+        LOCK_DOMAIN,
+        SERVICE_UNLOCK,
+        {ATTR_ENTITY_ID: "lock.lock_group"},
+        blocking=True,
+    )
+    assert hass.states.get("lock.basic_kitchen_sink_lock").state == STATE_UNLOCKED
+    assert hass.states.get("lock.another_kitchen_sink_lock").state == STATE_UNLOCKED
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            LOCK_DOMAIN,
+            SERVICE_OPEN,
+            {ATTR_ENTITY_ID: "lock.lock_group"},
+            blocking=True,
+        )
 
 
 async def test_reload(hass):
