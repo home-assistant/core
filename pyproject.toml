@@ -221,7 +221,7 @@ runtime-typing = false
 max-line-length-suggestions = 72
 
 [tool.pylint-per-file-ignores]
-"/tests/"="protected-access"
+"/tests/"="protected-access,redefined-outer-name"
 
 [tool.pytest.ini_options]
 testpaths = [
