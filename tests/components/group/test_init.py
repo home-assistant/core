@@ -574,7 +574,7 @@ async def test_service_group_services_add_remove_entities(hass: HomeAssistant) -
     await hass.async_block_till_done()
 
     group_state = hass.states.get("group.new_group")
-    assert group_state
+    assert group_state.state == "not_home"
     assert group_state.attributes["friendly_name"] == "New Group"
     assert list(group_state.attributes["entity_id"]) == ["person.one", "person.two"]
 
@@ -583,33 +583,26 @@ async def test_service_group_services_add_remove_entities(hass: HomeAssistant) -
         group.SERVICE_SET,
         {
             "object_id": "new_group",
-            "name": "New Group",
             "add_entities": "person.three",
         },
     )
     await hass.async_block_till_done()
     group_state = hass.states.get("group.new_group")
-    assert list(group_state.attributes["entity_id"]) == [
-        "person.one",
-        "person.two",
-        "person.three",
-    ]
+    assert group_state.state == "home"
+    assert "person.three" in list(group_state.attributes["entity_id"])
 
     await hass.services.async_call(
         group.DOMAIN,
         group.SERVICE_SET,
         {
             "object_id": "new_group",
-            "name": "New Group",
-            "remove_entities": "person.three",
+            "remove_entities": "person.one",
         },
     )
     await hass.async_block_till_done()
     group_state = hass.states.get("group.new_group")
-    assert list(group_state.attributes["entity_id"]) == [
-        "person.one",
-        "person.two",
-    ]
+    assert group_state.state == "home"
+    assert "person.one" not in list(group_state.attributes["entity_id"])
 
 
 # pylint: disable=invalid-name
