@@ -178,9 +178,10 @@ class Events(Base):  # type: ignore[misc,valid-type]
     @property
     def time_fired_isotime(self) -> str:
         """Return time_fired as an isotime string."""
-        date_time = dt_util.utc_from_timestamp(self.time_fired_ts) or process_timestamp(
-            self.time_fired
-        )
+        if self.time_fired_ts is not None:
+            date_time = dt_util.utc_from_timestamp(self.time_fired_ts)
+        else:
+            date_time = process_timestamp(self.time_fired)
         return date_time.isoformat(sep=" ", timespec="seconds")
 
     @staticmethod
@@ -314,9 +315,10 @@ class States(Base):  # type: ignore[misc,valid-type]
     @property
     def last_updated_isotime(self) -> str:
         """Return last_updated as an isotime string."""
-        date_time = dt_util.utc_from_timestamp(
-            self.last_updated_ts
-        ) or process_timestamp(self.last_updated)
+        if self.last_updated_ts is not None:
+            date_time = dt_util.utc_from_timestamp(self.last_updated_ts)
+        else:
+            date_time = process_timestamp(self.last_updated)
         return date_time.isoformat(sep=" ", timespec="seconds")
 
     @staticmethod
