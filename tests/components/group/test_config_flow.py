@@ -191,8 +191,8 @@ def get_suggested(schema, key):
         (
             "sensor",
             "10",
-            {"ignore_non_numeric": False, "type": "sum", "round_digits": 2.0},
-            {"ignore_non_numeric": False, "type": "sum", "round_digits": 2.0},
+            {"ignore_non_numeric": False, "type": "sum"},
+            {"ignore_non_numeric": False, "type": "sum"},
         ),
         ("switch", "on", {"all": False}, {}),
     ),
