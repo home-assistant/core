@@ -32,7 +32,7 @@ from homeassistant.helpers.selector import (
 )
 import homeassistant.util.dt as dt_util
 
-from .const import CONF_FROM, CONF_TIME, CONF_TO, DOMAIN
+from .const import CONF_FROM, CONF_TIME, CONF_TO, DOMAIN, CONF_FILTER_PRODUCT
 from .util import create_unique_id, next_departuredate
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,11 +51,17 @@ DATA_SCHEMA = vol.Schema(
                 translation_key=CONF_WEEKDAY,
             )
         ),
+        vol.Optional(CONF_FILTER_PRODUCT): TextSelector(),
     }
 )
 DATA_SCHEMA_REAUTH = vol.Schema(
     {
         vol.Required(CONF_API_KEY): cv.string,
+    }
+)
+OPTION_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_FILTER_PRODUCT): TextSelector(),
     }
 )
 
@@ -170,6 +176,7 @@ class TVTrainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             train_to: str = user_input[CONF_TO]
             train_time: str | None = user_input.get(CONF_TIME)
             train_days: list = user_input[CONF_WEEKDAY]
+            filter_product: str | None = user_input.get(CONF_FILTER_PRODUCT)
 
             name = f"{train_from} to {train_to}"
             if train_time:
@@ -199,12 +206,47 @@ class TVTrainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_TIME: train_time,
                         CONF_WEEKDAY: train_days,
                     },
+                    options={CONF_FILTER_PRODUCT: filter_product},
                 )
 
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
                 DATA_SCHEMA, user_input or {}
+            ),
+            errors=errors,
+        )
+
+
+class TVTrainOptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle Trafikverket Train options."""
+
+    def __init__(self, entry: config_entries.ConfigEntry) -> None:
+        """Initialize Trafikverket Train options flow."""
+        self.entry = entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage Trafikverket Train options."""
+        errors: dict[str, Any] = {}
+
+        if user_input:
+            return self.async_create_entry(data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_FILTER_PRODUCT,
+                        description={
+                            "suggested_value": self.entry.options.get(
+                                CONF_FILTER_PRODUCT
+                            )
+                        },
+                    ): TextSelector(),
+                }
             ),
             errors=errors,
         )
