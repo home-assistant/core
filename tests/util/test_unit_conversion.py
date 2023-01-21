@@ -183,7 +183,9 @@ def test_get_unit_ratio(
     converter: type[BaseUnitConverter], from_unit: str, to_unit: str, expected: float
 ) -> None:
     """Test unit ratio."""
-    assert converter.get_unit_ratio(from_unit, to_unit) == pytest.approx(expected)
+    ratio = converter.get_unit_ratio(from_unit, to_unit)
+    assert ratio == pytest.approx(expected)
+    assert converter.get_unit_ratio(to_unit, from_unit) == pytest.approx(1 / ratio)
 
 
 @pytest.mark.parametrize(
