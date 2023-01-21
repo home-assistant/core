@@ -203,7 +203,7 @@ util.get_local_ip = lambda: "127.0.0.1"
 
 @pytest.fixture(name="caplog")
 def caplog_fixture(caplog):
-    """Test that capture logs are likely needing debug level."""
+    """Set log level to debug for tests using the caplog fixture."""
     caplog.set_level(logging.DEBUG)
     yield caplog
 
