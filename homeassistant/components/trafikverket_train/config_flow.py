@@ -19,7 +19,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_WEEKDAY, WEEKDAYS
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -122,6 +122,14 @@ class TVTrainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     entry: config_entries.ConfigEntry | None
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> TVTrainOptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return TVTrainOptionsFlowHandler(config_entry)
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle re-authentication with Trafikverket."""
@@ -232,6 +240,9 @@ class TVTrainOptionsFlowHandler(config_entries.OptionsFlow):
         errors: dict[str, Any] = {}
 
         if user_input:
+            product_filter: str | None = user_input.get(CONF_FILTER_PRODUCT)
+            if isinstance(product_filter, str) and product_filter.isspace():
+                user_input[CONF_FILTER_PRODUCT] = None
             return self.async_create_entry(data=user_input)
 
         return self.async_show_form(

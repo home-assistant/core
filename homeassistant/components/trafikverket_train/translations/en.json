@@ -28,7 +28,7 @@
                     "weekday": "Days"
                 },
                 "data_description": {
-                    "filter_product": "To filter by product description add the exact phrase here to match"
+                    "filter_product": "To filter by product description add the exact phrase here to match, to remove leave a single space"
                 }
             }
         }
@@ -40,7 +40,7 @@
                     "filter_product": "Filter by product description"
                 },
                 "data_description": {
-                    "filter_product": "To filter by product description add the exact phrase here to match"
+                    "filter_product": "To filter by product description add the exact phrase here to match, to remove leave a single space"
                 }
             }
         }
