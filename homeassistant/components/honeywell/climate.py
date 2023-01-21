@@ -199,7 +199,7 @@ class HoneywellUSThermostat(ClimateEntity):
         """Return the current running hvac operation if supported."""
         if self.hvac_mode == HVACMode.OFF:
             return None
-        return HW_MODE_TO_HA_HVAC_ACTION.get(self._device.equipment_output_status, None)
+        return HW_MODE_TO_HA_HVAC_ACTION.get(self._device.equipment_output_status)
 
     @property
     def current_temperature(self) -> float | None:
@@ -242,7 +242,7 @@ class HoneywellUSThermostat(ClimateEntity):
     @property
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
-        return HW_FAN_MODE_TO_HA.get(self._device.fan_mode, None)
+        return HW_FAN_MODE_TO_HA.get(self._device.fan_mode)
 
     def _is_permanent_hold(self) -> bool:
         heat_status = self._device.raw_ui_data.get("StatusHeat", 0)
@@ -329,7 +329,7 @@ class HoneywellUSThermostat(ClimateEntity):
         except AIOSomecomfort.SomeComfortError:
 
             _LOGGER.error(
-                "Mode %s Heat Temperature %.1f or Cool Temperature %.1f out of range",
+                "Temperature out of range. Mode: %s, Heat Temperature:  %.1f, Cool Temperature: %.1f",
                 mode,
                 self._heat_away_temp,
                 self._cool_away_temp,
