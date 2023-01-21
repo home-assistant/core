@@ -2,8 +2,7 @@
 
 from typing import Any
 
-from tesla_powerwall import GridStatus  # IslandMode,
-from tesla_powerwall import Powerwall
+from tesla_powerwall import GridStatus, IslandMode, Powerwall
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -51,15 +50,14 @@ class PowerwallOffGridEnabledEntity(SwitchEntity):
     def is_on(self) -> bool:
         """Return true if the powerwall is off-grid."""
         return self.coordinator.data.grid_status in [
-            GridStatus.ISLANEDED,
-            # GridStatus.TRANSITION_TO_ISLAND,
-            # GridStatus.ISLANDED,
+            GridStatus.TRANSITION_TO_ISLAND,
+            GridStatus.ISLANDED,
         ]
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn off-grid mode on."""
-        # await self.power_wall.set_island_mode(IslandMode.OFFGRID)
+        self.power_wall.set_island_mode(IslandMode.OFFGRID)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off-grid mode off (return to on-grid usage)."""
-        # await self.power_wall.set_island_mode(IslandMode.ONGRID)
+        self.power_wall.set_island_mode(IslandMode.ONGRID)
