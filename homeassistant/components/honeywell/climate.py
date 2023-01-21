@@ -384,12 +384,16 @@ class HoneywellUSThermostat(ClimateEntity):
 
     async def async_update(self) -> None:
         """Get the latest state from the service."""
-        if not self._attr_available:
-            self._attr_available = await self._data.retry_login()
         try:
             await self._device.refresh()
         except (
             AIOSomecomfort.device.SomeComfortError,
             OSError,
         ):
-            self._attr_available = await self._data.retry_login()
+            try:
+                await self._data.client.login()
+
+            except AIOSomecomfort.device.SomeComfortError:
+                await self.hass.config_entries.async_reload(
+                    self._data.config_entry.entry_id
+                )

@@ -131,13 +131,12 @@ class HoneywellData:
         self._password = password
         self.devices = devices
 
-    async def retry_login(self) -> bool:
-        """Fire of a login retry."""
+    @property
+    def client(self) -> AIOSomecomfort.AIOSomeComfort:
+        """Return Honeywell Client."""
+        return self._client
 
-        try:
-            await self._client.login()
-        except AIOSomecomfort.SomeComfortError:
-            await asyncio.sleep(UPDATE_LOOP_SLEEP_TIME)
-            return False
-
-        return True
+    @property
+    def config_entry(self) -> ConfigEntry:
+        """Return Honeywell config entry."""
+        return self._config
