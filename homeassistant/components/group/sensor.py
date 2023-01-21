@@ -314,7 +314,8 @@ class SensorGroup(GroupEntity, SensorEntity):
                     if entity_id not in self._state_incorrect:
                         self._state_incorrect.add(entity_id)
                         _LOGGER.warning(
-                            "Unable to use state. Only numerical states are supported, entity %s with value %s excluded from calculation",
+                            "Unable to use state. Only numerical states are supported,"
+                            " entity %s with value %s excluded from calculation",
                             entity_id,
                             state.state,
                         )
