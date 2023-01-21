@@ -392,9 +392,9 @@ class HoneywellUSThermostat(ClimateEntity):
         ):
             try:
                 await self._data.client.login()
-                self._attr_available = False
 
             except AIOSomecomfort.device.SomeComfortError:
+                self._attr_available = False
                 self.hass.async_create_task(
                     self.hass.config_entries.async_reload(self._data.entry_id)
                 )
