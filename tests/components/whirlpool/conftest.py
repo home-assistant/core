@@ -124,7 +124,7 @@ def get_sensor_mock(said):
     mock_sensor = mock.Mock(said=said)
     mock_sensor.connect = AsyncMock()
     mock_sensor.disconnect = AsyncMock()
-    mock_sensor.register_attr_callback = AsyncMock()
+    mock_sensor.register_attr_callback = MagicMock()
     mock_sensor.get_online.return_value = True
     mock_sensor.get_machine_state.return_value = (
         whirlpool.washerdryer.MachineState.Standby
