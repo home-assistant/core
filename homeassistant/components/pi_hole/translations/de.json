@@ -9,6 +9,11 @@
             "invalid_auth": "Ung\u00fcltige Authentifizierung"
         },
         "step": {
+            "api_key": {
+                "data": {
+                    "api_key": "API-Schl\u00fcssel"
+                }
+            },
             "reauth_confirm": {
                 "data": {
                     "api_key": "API-Schl\u00fcssel"

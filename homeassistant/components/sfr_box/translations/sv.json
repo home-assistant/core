@@ -10,5 +10,17 @@
                 }
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "net_infra": {
+                "state": {
+                    "adsl": "ADSL",
+                    "ftth": "FTTH",
+                    "gprs": "GPRS",
+                    "unknown": "Ok\u00e4nd"
+                }
+            }
+        }
     }
 }
