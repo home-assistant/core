@@ -1,0 +1,48 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "incorrect_api_key": "Invalid API key for selected account",
+            "invalid_auth": "Invalid authentication",
+            "invalid_station": "Could not find a station with the specified name",
+            "invalid_time": "Invalid time provided",
+            "more_stations": "Found multiple stations with the specified name"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API Key"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "API Key",
+                    "filter_product": "Filter by product description",
+                    "from": "From station",
+                    "time": "Time (optional)",
+                    "to": "To station",
+                    "weekday": "Days"
+                },
+                "data_description": {
+                    "filter_product": "To filter by product description add the exact phrase here to match"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "filter_product": "Filter by product description"
+                },
+                "data_description": {
+                    "filter_product": "To filter by product description add the exact phrase here to match"
+                }
+            }
+        }
+    }
+}

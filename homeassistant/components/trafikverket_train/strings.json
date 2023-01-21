@@ -20,15 +20,29 @@
           "to": "To station",
           "from": "From station",
           "time": "Time (optional)",
-          "weekday": "Days"
+          "weekday": "Days",
+          "filter_product": "Filter by product description"
         },
         "data_description": {
-          "time": "Set time to search specifically at this time of day, must be exact time as scheduled train departure"
+          "time": "Set time to search specifically at this time of day, must be exact time as scheduled train departure",
+          "filter_product": "To filter by product description add the phrase here to match"
         }
       },
       "reauth_confirm": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "filter_product": "[%key:component::trafikverket_train::config::step::user::data::filter_product%]"
+        },
+        "data_description": {
+          "filter_product": "[%key:component::trafikverket_train::config::step::user::data_description::filter_product%]"
         }
       }
     }
