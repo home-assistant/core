@@ -48,7 +48,7 @@ SERVICE_RELOAD_SCHEMA = vol.Schema(
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
+        vol.Optional(DOMAIN): vol.Schema(
             {
                 vol.Optional("intents"): vol.Schema(
                     {cv.string: vol.All(cv.ensure_list, [cv.string])}
@@ -69,7 +69,8 @@ def async_set_agent(hass: core.HomeAssistant, agent: AbstractConversationAgent |
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Register the process service."""
-    hass.data[DATA_CONFIG] = config
+    if config_intents := config.get(DOMAIN, {}).get("intents"):
+        hass.data[DATA_CONFIG] = config_intents
 
     async def handle_process(service: core.ServiceCall) -> None:
         """Parse text into commands."""

@@ -63,16 +63,14 @@ class DefaultAgent(AbstractConversationAgent):
         # intent -> [sentences]
         self._config_intents: dict[str, Any] = {}
 
-    async def async_initialize(self, config):
+    async def async_initialize(self, config_intents):
         """Initialize the default agent."""
         if "intent" not in self.hass.config.components:
             await setup.async_setup_component(self.hass, "intent", {})
 
         # Intents from config may only contains sentences for HA config's language
-        config = config.get(DOMAIN, {})
-        self._config_intents = config.get("intents", {})
-
-        self.hass.data.setdefault(DOMAIN, {})
+        if config_intents:
+            self._config_intents = config_intents
 
     async def async_process(
         self,
