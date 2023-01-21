@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
-            "api_not_enabled": "API etkin de\u011fil. Ayarlar alt\u0131nda HomeWizard Energy Uygulamas\u0131nda API'yi etkinle\u015ftirin",
             "device_not_supported": "Bu cihaz desteklenmiyor",
             "invalid_discovery_parameters": "Desteklenmeyen API s\u00fcr\u00fcm\u00fc alg\u0131land\u0131",
             "reauth_successful": "API'yi etkinle\u015ftirme ba\u015far\u0131l\u0131 oldu",
@@ -14,7 +13,7 @@
         },
         "step": {
             "discovery_confirm": {
-                "description": "{ip_address} konumuna {product_type} ({serial}) kurmak istiyor musunuz?",
+                "description": "{product_type} ( {serial} ) {ip_address} adresinde kurmak istiyor musunuz?",
                 "title": "Onayla"
             },
             "reauth_confirm": {

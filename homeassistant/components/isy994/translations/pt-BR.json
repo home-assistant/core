@@ -39,6 +39,10 @@
                     "confirm": {
                         "description": "Atualize todas as automa\u00e7\u00f5es ou scripts que usam esse servi\u00e7o para usar o servi\u00e7o `{alternate_service}` com um ID de entidade de destino de `{alternate_target}`.",
                         "title": "O servi\u00e7o {deprecated_service} ser\u00e1 removido"
+                    },
+                    "deprecated_yaml": {
+                        "description": "Configurando Dispositivos Universais ISY/IoX usando YAML est\u00e1 sendo removido. \n\n Sua configura\u00e7\u00e3o YAML existente foi importada para a IU automaticamente. \n\n Remova a configura\u00e7\u00e3o YAML `isy994` do arquivo configuration.yaml e reinicie o Home Assistant para corrigir esse problema.",
+                        "title": "A configura\u00e7\u00e3o YAML de ISY/IoX est\u00e1 sendo removida"
                     }
                 }
             },

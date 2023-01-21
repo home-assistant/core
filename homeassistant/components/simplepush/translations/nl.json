@@ -9,6 +9,7 @@
         "step": {
             "user": {
                 "data": {
+                    "device_key": "De apparaatsleutel van uw apparaat",
                     "name": "Naam"
                 }
             }

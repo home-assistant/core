@@ -73,14 +73,17 @@ CONFIG_DATA = {
 CONFIG_FLOW_USER = {
     CONF_HOST: HOST,
     CONF_PORT: PORT,
-    CONF_API_KEY: API_KEY,
     CONF_LOCATION: LOCATION,
     CONF_NAME: NAME,
     CONF_SSL: SSL,
     CONF_VERIFY_SSL: VERIFY_SSL,
 }
 
-CONFIG_ENTRY = {
+CONFIG_FLOW_API_KEY = {
+    CONF_API_KEY: API_KEY,
+}
+
+CONFIG_ENTRY_WITH_API_KEY = {
     CONF_HOST: f"{HOST}:{PORT}",
     CONF_LOCATION: LOCATION,
     CONF_NAME: NAME,
@@ -89,6 +92,13 @@ CONFIG_ENTRY = {
     CONF_VERIFY_SSL: VERIFY_SSL,
 }
 
+CONFIG_ENTRY_WITHOUT_API_KEY = {
+    CONF_HOST: f"{HOST}:{PORT}",
+    CONF_LOCATION: LOCATION,
+    CONF_NAME: NAME,
+    CONF_SSL: SSL,
+    CONF_VERIFY_SSL: VERIFY_SSL,
+}
 SWITCH_ENTITY_ID = "switch.pi_hole"
 
 
@@ -120,4 +130,10 @@ def _patch_init_hole(mocked_hole):
 def _patch_config_flow_hole(mocked_hole):
     return patch(
         "homeassistant.components.pi_hole.config_flow.Hole", return_value=mocked_hole
+    )
+
+
+def _patch_setup_hole():
+    return patch(
+        "homeassistant.components.pi_hole.async_setup_entry", return_value=True
     )

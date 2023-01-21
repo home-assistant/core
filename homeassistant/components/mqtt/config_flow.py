@@ -137,6 +137,7 @@ BROKER_VERIFICATION_SELECTOR = SelectSelector(
     SelectSelectorConfig(
         options=CA_VERIFICATION_MODES,
         mode=SelectSelectorMode.DROPDOWN,
+        translation_key=SET_CA_CERT,
     )
 )
 

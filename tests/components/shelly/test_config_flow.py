@@ -706,6 +706,30 @@ async def test_zeroconf_already_configured(hass):
     assert entry.data["host"] == "1.1.1.1"
 
 
+async def test_zeroconf_ignored(hass):
+    """Test zeroconf when the device was previously ignored."""
+
+    entry = MockConfigEntry(
+        domain="shelly",
+        unique_id="test-mac",
+        data={},
+        source=config_entries.SOURCE_IGNORE,
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "aioshelly.common.get_info",
+        return_value={"mac": "test-mac", "type": "SHSW-1", "auth": False},
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=DISCOVERY_INFO,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["reason"] == "already_configured"
+
+
 async def test_zeroconf_with_wifi_ap_ip(hass):
     """Test we ignore the Wi-FI AP IP."""
 
@@ -1163,3 +1187,39 @@ async def test_zeroconf_already_configured_triggers_refresh(
     mock_rpc_device.mock_disconnected()
     await hass.async_block_till_done()
     assert len(mock_rpc_device.initialize.mock_calls) == 2
+
+
+async def test_zeroconf_sleeping_device_not_triggers_refresh(
+    hass, mock_rpc_device, monkeypatch, caplog
+):
+    """Test zeroconf discovery does not triggers refresh for sleeping device."""
+    entry = MockConfigEntry(
+        domain="shelly",
+        unique_id="AABBCCDDEEFF",
+        data={"host": "1.1.1.1", "gen": 2, "sleep_period": 1000, "model": "SHSW-1"},
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_rpc_device.mock_update()
+
+    assert "online, resuming setup" in caplog.text
+
+    with patch(
+        "aioshelly.common.get_info",
+        return_value={"mac": "AABBCCDDEEFF", "type": "SHSW-1", "auth": False},
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=DISCOVERY_INFO,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["reason"] == "already_configured"
+
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
+    mock_rpc_device.mock_disconnected()
+    await hass.async_block_till_done()
+    assert len(mock_rpc_device.initialize.mock_calls) == 0
+    assert "device did not update" not in caplog.text

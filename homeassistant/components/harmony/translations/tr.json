@@ -10,15 +10,15 @@
         "flow_title": "{name}",
         "step": {
             "link": {
-                "description": "{name} ( {host} ) kurulumu yapmak istiyor musunuz?",
-                "title": "Logitech Harmony Hub'\u0131 Kur"
+                "description": "{name} ( {host} ) kurmak istiyor musunuz?",
+                "title": "Logitech Harmony Hub'\u0131 kurun"
             },
             "user": {
                 "data": {
                     "host": "Sunucu",
                     "name": "Hub Ad\u0131"
                 },
-                "title": "Logitech Harmony Hub'\u0131 Kur"
+                "title": "Logitech Harmony Hub'\u0131 kurun"
             }
         }
     },

@@ -243,8 +243,7 @@ class OptionsFlowHandler(BaseMultiPanFlow, config_entries.OptionsFlow):
             },
         )
 
-        # pylint: disable=unreachable
-
+        # pylint: disable-next=unreachable
         return await self.async_step_on_supervisor()  # type: ignore[unreachable]
 
     async def async_step_on_supervisor(

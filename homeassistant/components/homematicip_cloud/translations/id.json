@@ -9,7 +9,7 @@
             "invalid_sgtin_or_pin": "SGTIN atau Kode PIN tidak valid, coba lagi.",
             "press_the_button": "Tekan tombol biru.",
             "register_failed": "Gagal mendaftar, coba lagi.",
-            "timeout_button": "Tenggang waktu penekanan tombol biru berakhir, coba lagi."
+            "timeout_button": "Tenggang waktu penekanan tombol biru habis, coba lagi."
         },
         "step": {
             "init": {

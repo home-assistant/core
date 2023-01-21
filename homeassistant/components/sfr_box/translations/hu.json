@@ -4,8 +4,7 @@
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
         },
         "error": {
-            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
-            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
         },
         "step": {
             "user": {
@@ -24,6 +23,14 @@
                     "loss_of_signal_quality": "Jelmin\u0151s\u00e9g-vesztes\u00e9g",
                     "no_defect": "Nincs hiba",
                     "of_frame": "Of keret",
+                    "unknown": "Ismeretlen"
+                }
+            },
+            "net_infra": {
+                "state": {
+                    "adsl": "ADSL",
+                    "ftth": "FTTH",
+                    "gprs": "GPRS",
                     "unknown": "Ismeretlen"
                 }
             },

@@ -33,14 +33,12 @@ async def async_setup_entry(
 
     system: LiteJet = hass.data[DOMAIN]
 
-    def get_entities(system: LiteJet) -> list[LiteJetLight]:
-        entities = []
-        for index in system.loads():
-            name = system.get_load_name(index)
-            entities.append(LiteJetLight(config_entry, system, index, name))
-        return entities
+    entities = []
+    for index in system.loads():
+        name = await system.get_load_name(index)
+        entities.append(LiteJetLight(config_entry, system, index, name))
 
-    async_add_entities(await hass.async_add_executor_job(get_entities, system), True)
+    async_add_entities(entities, True)
 
 
 class LiteJetLight(LightEntity):
@@ -73,19 +71,19 @@ class LiteJetLight(LightEntity):
         """Entity being removed from hass."""
         self._lj.unsubscribe(self._on_load_changed)
 
-    def _on_load_changed(self) -> None:
+    def _on_load_changed(self, level) -> None:
         """Handle state changes."""
         _LOGGER.debug("Updating due to notification for %s", self.name)
         self.schedule_update_ha_state(True)
 
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
 
         # If neither attribute is specified then the simple activate load
         # LiteJet API will use the per-light default brightness and
         # transition values programmed in the LiteJet system.
         if ATTR_BRIGHTNESS not in kwargs and ATTR_TRANSITION not in kwargs:
-            self._lj.activate_load(self._index)
+            await self._lj.activate_load(self._index)
             return
 
         # If either attribute is specified then Home Assistant must
@@ -94,20 +92,22 @@ class LiteJetLight(LightEntity):
         transition = kwargs.get(ATTR_TRANSITION, default_transition)
         brightness = int(kwargs.get(ATTR_BRIGHTNESS, 255) / 255 * 99)
 
-        self._lj.activate_load_at(self._index, brightness, int(transition))
+        await self._lj.activate_load_at(self._index, brightness, int(transition))
 
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         if ATTR_TRANSITION in kwargs:
-            self._lj.activate_load_at(self._index, 0, kwargs[ATTR_TRANSITION])
+            await self._lj.activate_load_at(self._index, 0, kwargs[ATTR_TRANSITION])
             return
 
         # If transition attribute is not specified then the simple
         # deactivate load LiteJet API will use the per-light default
         # transition value programmed in the LiteJet system.
-        self._lj.deactivate_load(self._index)
+        await self._lj.deactivate_load(self._index)
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Retrieve the light's brightness from the LiteJet system."""
-        self._attr_brightness = int(self._lj.get_load_level(self._index) / 99 * 255)
+        self._attr_brightness = int(
+            await self._lj.get_load_level(self._index) / 99 * 255
+        )
         self._attr_is_on = self.brightness != 0

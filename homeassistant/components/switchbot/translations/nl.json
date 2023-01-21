@@ -8,7 +8,8 @@
             "unknown": "Onverwachte fout"
         },
         "error": {
-            "auth_failed": "Authenticatie mislukt"
+            "auth_failed": "Authenticatie mislukt",
+            "encryption_key_invalid": "Sleutel ID of encryptiesleutel is ongeldig"
         },
         "flow_title": "{name}",
         "step": {
@@ -19,23 +20,30 @@
                 "data": {
                     "password": "Wachtwoord",
                     "username": "Gebruikersnaam"
-                }
+                },
+                "description": "Geef alsjeblieft je SwitchBot App gebruikersnaam en wachtwoord. De data wordt niet opgeslagen en alleen gebruiktom de encryptiesleutels van je sloten op te vragen. Gebruikersnamen en wachtwoorden zijn hoofdlettergevoelig."
             },
             "lock_choose_method": {
+                "description": "Een SwitchBot slot kan op twee manieren worden ingesteld in Home Assistant.\n\nJe kunt sleutel id and encryptiesleutel key zelf invoeren, of deze door Home Assistant laten importeren via je SwitchBot account.",
                 "menu_options": {
-                    "lock_auth": "SwitchBot-account (aanbevolen)"
+                    "lock_auth": "SwitchBot-account (aanbevolen)",
+                    "lock_key": "Voer de encryptiesleutelvoor het slot handmatig in"
                 }
             },
-            "lock_chose_method": {
-                "description": "Kies configuratiemethode, informatie kan gevonden worden in de documentatie.",
-                "menu_options": {
-                    "lock_auth": "SwitchBot app gebruikersnaam en wachtwoord",
-                    "lock_key": "Slot encryptiesleutel"
+            "lock_key": {
+                "data": {
+                    "encryption_key": "Encryptiesleutel",
+                    "key_id": "Sleutel ID"
                 }
             },
             "password": {
                 "data": {
                     "password": "Wachtwoord"
+                }
+            },
+            "user": {
+                "data": {
+                    "address": "Apparaatadres"
                 }
             }
         }

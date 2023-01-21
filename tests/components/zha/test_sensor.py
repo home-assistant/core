@@ -18,21 +18,19 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM,
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
-    ELECTRIC_CURRENT_AMPERE,
-    ELECTRIC_POTENTIAL_VOLT,
-    ENERGY_KILO_WATT_HOUR,
     LIGHT_LUX,
     PERCENTAGE,
-    POWER_VOLT_AMPERE,
-    POWER_WATT,
-    PRESSURE_HPA,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-    VOLUME_CUBIC_FEET,
-    VOLUME_CUBIC_METERS,
     Platform,
+    UnitOfApparentPower,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfPressure,
+    UnitOfTemperature,
+    UnitOfVolume,
 )
 from homeassistant.helpers import restore_state
 from homeassistant.helpers.entity_component import async_update_entity
@@ -114,16 +112,16 @@ async def async_test_humidity(hass, cluster, entity_id):
 async def async_test_temperature(hass, cluster, entity_id):
     """Test temperature sensor."""
     await send_attributes_report(hass, cluster, {1: 1, 0: 2900, 2: 100})
-    assert_state(hass, entity_id, "29.0", TEMP_CELSIUS)
+    assert_state(hass, entity_id, "29.0", UnitOfTemperature.CELSIUS)
 
 
 async def async_test_pressure(hass, cluster, entity_id):
     """Test pressure sensor."""
     await send_attributes_report(hass, cluster, {1: 1, 0: 1000, 2: 10000})
-    assert_state(hass, entity_id, "1000", PRESSURE_HPA)
+    assert_state(hass, entity_id, "1000", UnitOfPressure.HPA)
 
     await send_attributes_report(hass, cluster, {0: 1000, 20: -1, 16: 10000})
-    assert_state(hass, entity_id, "1000", PRESSURE_HPA)
+    assert_state(hass, entity_id, "1000", UnitOfPressure.HPA)
 
 
 async def async_test_illuminance(hass, cluster, entity_id):
@@ -159,7 +157,7 @@ async def async_test_smart_energy_summation(hass, cluster, entity_id):
     await send_attributes_report(
         hass, cluster, {1025: 1, "current_summ_delivered": 12321, 1026: 100}
     )
-    assert_state(hass, entity_id, "12.32", VOLUME_CUBIC_METERS)
+    assert_state(hass, entity_id, "12.32", UnitOfVolume.CUBIC_METERS)
     assert hass.states.get(entity_id).attributes["status"] == "NO_ALARMS"
     assert hass.states.get(entity_id).attributes["device_type"] == "Electric Metering"
     assert (
@@ -173,17 +171,17 @@ async def async_test_electrical_measurement(hass, cluster, entity_id):
     # update divisor cached value
     await send_attributes_report(hass, cluster, {"ac_power_divisor": 1})
     await send_attributes_report(hass, cluster, {0: 1, 1291: 100, 10: 1000})
-    assert_state(hass, entity_id, "100", POWER_WATT)
+    assert_state(hass, entity_id, "100", UnitOfPower.WATT)
 
     await send_attributes_report(hass, cluster, {0: 1, 1291: 99, 10: 1000})
-    assert_state(hass, entity_id, "99", POWER_WATT)
+    assert_state(hass, entity_id, "99", UnitOfPower.WATT)
 
     await send_attributes_report(hass, cluster, {"ac_power_divisor": 10})
     await send_attributes_report(hass, cluster, {0: 1, 1291: 1000, 10: 5000})
-    assert_state(hass, entity_id, "100", POWER_WATT)
+    assert_state(hass, entity_id, "100", UnitOfPower.WATT)
 
     await send_attributes_report(hass, cluster, {0: 1, 1291: 99, 10: 5000})
-    assert_state(hass, entity_id, "9.9", POWER_WATT)
+    assert_state(hass, entity_id, "9.9", UnitOfPower.WATT)
 
     assert "active_power_max" not in hass.states.get(entity_id).attributes
     await send_attributes_report(hass, cluster, {0: 1, 0x050D: 88, 10: 5000})
@@ -195,31 +193,31 @@ async def async_test_em_apparent_power(hass, cluster, entity_id):
     # update divisor cached value
     await send_attributes_report(hass, cluster, {"ac_power_divisor": 1})
     await send_attributes_report(hass, cluster, {0: 1, 0x050F: 100, 10: 1000})
-    assert_state(hass, entity_id, "100", POWER_VOLT_AMPERE)
+    assert_state(hass, entity_id, "100", UnitOfApparentPower.VOLT_AMPERE)
 
     await send_attributes_report(hass, cluster, {0: 1, 0x050F: 99, 10: 1000})
-    assert_state(hass, entity_id, "99", POWER_VOLT_AMPERE)
+    assert_state(hass, entity_id, "99", UnitOfApparentPower.VOLT_AMPERE)
 
     await send_attributes_report(hass, cluster, {"ac_power_divisor": 10})
     await send_attributes_report(hass, cluster, {0: 1, 0x050F: 1000, 10: 5000})
-    assert_state(hass, entity_id, "100", POWER_VOLT_AMPERE)
+    assert_state(hass, entity_id, "100", UnitOfApparentPower.VOLT_AMPERE)
 
     await send_attributes_report(hass, cluster, {0: 1, 0x050F: 99, 10: 5000})
-    assert_state(hass, entity_id, "9.9", POWER_VOLT_AMPERE)
+    assert_state(hass, entity_id, "9.9", UnitOfApparentPower.VOLT_AMPERE)
 
 
 async def async_test_em_rms_current(hass, cluster, entity_id):
     """Test electrical measurement RMS Current sensor."""
 
     await send_attributes_report(hass, cluster, {0: 1, 0x0508: 1234, 10: 1000})
-    assert_state(hass, entity_id, "1.2", ELECTRIC_CURRENT_AMPERE)
+    assert_state(hass, entity_id, "1.2", UnitOfElectricCurrent.AMPERE)
 
     await send_attributes_report(hass, cluster, {"ac_current_divisor": 10})
     await send_attributes_report(hass, cluster, {0: 1, 0x0508: 236, 10: 1000})
-    assert_state(hass, entity_id, "23.6", ELECTRIC_CURRENT_AMPERE)
+    assert_state(hass, entity_id, "23.6", UnitOfElectricCurrent.AMPERE)
 
     await send_attributes_report(hass, cluster, {0: 1, 0x0508: 1236, 10: 1000})
-    assert_state(hass, entity_id, "124", ELECTRIC_CURRENT_AMPERE)
+    assert_state(hass, entity_id, "124", UnitOfElectricCurrent.AMPERE)
 
     assert "rms_current_max" not in hass.states.get(entity_id).attributes
     await send_attributes_report(hass, cluster, {0: 1, 0x050A: 88, 10: 5000})
@@ -230,14 +228,14 @@ async def async_test_em_rms_voltage(hass, cluster, entity_id):
     """Test electrical measurement RMS Voltage sensor."""
 
     await send_attributes_report(hass, cluster, {0: 1, 0x0505: 1234, 10: 1000})
-    assert_state(hass, entity_id, "123", ELECTRIC_POTENTIAL_VOLT)
+    assert_state(hass, entity_id, "123", UnitOfElectricPotential.VOLT)
 
     await send_attributes_report(hass, cluster, {0: 1, 0x0505: 234, 10: 1000})
-    assert_state(hass, entity_id, "23.4", ELECTRIC_POTENTIAL_VOLT)
+    assert_state(hass, entity_id, "23.4", UnitOfElectricPotential.VOLT)
 
     await send_attributes_report(hass, cluster, {"ac_voltage_divisor": 100})
     await send_attributes_report(hass, cluster, {0: 1, 0x0505: 2236, 10: 1000})
-    assert_state(hass, entity_id, "22.4", ELECTRIC_POTENTIAL_VOLT)
+    assert_state(hass, entity_id, "22.4", UnitOfElectricPotential.VOLT)
 
     assert "rms_voltage_max" not in hass.states.get(entity_id).attributes
     await send_attributes_report(hass, cluster, {0: 1, 0x0507: 888, 10: 5000})
@@ -269,7 +267,7 @@ async def async_test_powerconfiguration2(hass, cluster, entity_id):
 async def async_test_device_temperature(hass, cluster, entity_id):
     """Test temperature sensor."""
     await send_attributes_report(hass, cluster, {0: 2900})
-    assert_state(hass, entity_id, "29.0", TEMP_CELSIUS)
+    assert_state(hass, entity_id, "29.0", UnitOfTemperature.CELSIUS)
 
 
 @pytest.mark.parametrize(
@@ -311,7 +309,7 @@ async def async_test_device_temperature(hass, cluster, entity_id):
             smartenergy.Metering.cluster_id,
             "instantaneous_demand",
             async_test_metering,
-            1,
+            9,
             {
                 "demand_formatting": 0xF9,
                 "divisor": 1,
@@ -325,7 +323,7 @@ async def async_test_device_temperature(hass, cluster, entity_id):
             smartenergy.Metering.cluster_id,
             "summation_delivered",
             async_test_smart_energy_summation,
-            1,
+            9,
             {
                 "demand_formatting": 0xF9,
                 "divisor": 1000,
@@ -517,10 +515,10 @@ def core_rs(hass_storage):
 @pytest.mark.parametrize(
     "uom, raw_temp, expected, restore",
     [
-        (TEMP_CELSIUS, 2900, 29, False),
-        (TEMP_CELSIUS, 2900, 29, True),
-        (TEMP_FAHRENHEIT, 2900, 84, False),
-        (TEMP_FAHRENHEIT, 2900, 84, True),
+        (UnitOfTemperature.CELSIUS, 2900, 29, False),
+        (UnitOfTemperature.CELSIUS, 2900, 29, True),
+        (UnitOfTemperature.FAHRENHEIT, 2900, 84, False),
+        (UnitOfTemperature.FAHRENHEIT, 2900, 84, True),
     ],
 )
 async def test_temp_uom(
@@ -540,7 +538,9 @@ async def test_temp_uom(
         core_rs(entity_id, uom, state=(expected - 2))
 
     hass = await hass_ms(
-        CONF_UNIT_SYSTEM_METRIC if uom == TEMP_CELSIUS else CONF_UNIT_SYSTEM_IMPERIAL
+        CONF_UNIT_SYSTEM_METRIC
+        if uom == UnitOfTemperature.CELSIUS
+        else CONF_UNIT_SYSTEM_IMPERIAL
     )
 
     zigpy_device = zigpy_device_mock(
@@ -753,25 +753,25 @@ async def test_unsupported_attributes_sensor(
             1,
             12320,
             "1.23",
-            VOLUME_CUBIC_METERS,
+            UnitOfVolume.CUBIC_METERS,
         ),
         (
             1,
             1232000,
             "123.20",
-            VOLUME_CUBIC_METERS,
+            UnitOfVolume.CUBIC_METERS,
         ),
         (
             3,
             2340,
             "0.23",
-            f"100 {VOLUME_CUBIC_FEET}",
+            f"100 {UnitOfVolume.CUBIC_FEET}",
         ),
         (
             3,
             2360,
             "0.24",
-            f"100 {VOLUME_CUBIC_FEET}",
+            f"100 {UnitOfVolume.CUBIC_FEET}",
         ),
         (
             8,
@@ -783,43 +783,43 @@ async def test_unsupported_attributes_sensor(
             0,
             9366,
             "0.937",
-            ENERGY_KILO_WATT_HOUR,
+            UnitOfEnergy.KILO_WATT_HOUR,
         ),
         (
             0,
             999,
             "0.1",
-            ENERGY_KILO_WATT_HOUR,
+            UnitOfEnergy.KILO_WATT_HOUR,
         ),
         (
             0,
             10091,
             "1.009",
-            ENERGY_KILO_WATT_HOUR,
+            UnitOfEnergy.KILO_WATT_HOUR,
         ),
         (
             0,
             10099,
             "1.01",
-            ENERGY_KILO_WATT_HOUR,
+            UnitOfEnergy.KILO_WATT_HOUR,
         ),
         (
             0,
             100999,
             "10.1",
-            ENERGY_KILO_WATT_HOUR,
+            UnitOfEnergy.KILO_WATT_HOUR,
         ),
         (
             0,
             100023,
             "10.002",
-            ENERGY_KILO_WATT_HOUR,
+            UnitOfEnergy.KILO_WATT_HOUR,
         ),
         (
             0,
             102456,
             "10.246",
-            ENERGY_KILO_WATT_HOUR,
+            UnitOfEnergy.KILO_WATT_HOUR,
         ),
     ),
 )

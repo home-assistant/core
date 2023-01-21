@@ -19,8 +19,7 @@
             "init": {
                 "data": {
                     "power": "Szerz\u0151d\u00e9s szerinti teljes\u00edtm\u00e9ny (kW)",
-                    "power_p3": "Szerz\u0151d\u00f6tt teljes\u00edtm\u00e9ny P3 v\u00f6lgyid\u0151szakra (kW)",
-                    "tariff": "Alkalmazand\u00f3 tarifa f\u00f6ldrajzi z\u00f3n\u00e1k szerint"
+                    "power_p3": "Szerz\u0151d\u00f6tt teljes\u00edtm\u00e9ny P3 v\u00f6lgyid\u0151szakra (kW)"
                 }
             }
         }

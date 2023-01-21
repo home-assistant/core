@@ -7,6 +7,7 @@ from reolink_aio.exceptions import ApiError, CredentialsInvalidError, ReolinkErr
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.reolink import const
+from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.helpers.device_registry import format_mac
 
@@ -31,7 +32,7 @@ def get_mock_info(error=None, user_level="admin"):
         host_mock.get_host_data = AsyncMock(return_value=None)
     else:
         host_mock.get_host_data = AsyncMock(side_effect=error)
-    host_mock.unsubscribe_all = AsyncMock(return_value=True)
+    host_mock.unsubscribe = AsyncMock(return_value=True)
     host_mock.logout = AsyncMock(return_value=True)
     host_mock.mac_address = TEST_MAC
     host_mock.onvif_enabled = True
@@ -85,7 +86,7 @@ async def test_config_flow_manual_success(hass):
         const.CONF_USE_HTTPS: TEST_USE_HTTPS,
     }
     assert result["options"] == {
-        const.CONF_PROTOCOL: const.DEFAULT_PROTOCOL,
+        const.CONF_PROTOCOL: DEFAULT_PROTOCOL,
     }
 
 
@@ -195,7 +196,7 @@ async def test_config_flow_errors(hass):
         const.CONF_USE_HTTPS: TEST_USE_HTTPS,
     }
     assert result["options"] == {
-        const.CONF_PROTOCOL: const.DEFAULT_PROTOCOL,
+        const.CONF_PROTOCOL: DEFAULT_PROTOCOL,
     }
 
 
@@ -250,7 +251,7 @@ async def test_change_connection_settings(hass):
             const.CONF_USE_HTTPS: TEST_USE_HTTPS,
         },
         options={
-            const.CONF_PROTOCOL: const.DEFAULT_PROTOCOL,
+            const.CONF_PROTOCOL: DEFAULT_PROTOCOL,
         },
         title=TEST_NVR_NAME,
     )
@@ -293,7 +294,7 @@ async def test_reauth(hass):
             const.CONF_USE_HTTPS: TEST_USE_HTTPS,
         },
         options={
-            const.CONF_PROTOCOL: const.DEFAULT_PROTOCOL,
+            const.CONF_PROTOCOL: DEFAULT_PROTOCOL,
         },
         title=TEST_NVR_NAME,
     )

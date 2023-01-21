@@ -10,14 +10,13 @@
         "error": {
             "auth_failed": "Kimlik do\u011frulama ba\u015far\u0131s\u0131z oldu: {error_detail}",
             "encryption_key_invalid": "Anahtar Kimli\u011fi veya \u015eifreleme anahtar\u0131 ge\u00e7ersiz",
-            "key_id_invalid": "Anahtar Kimli\u011fi veya \u015eifreleme anahtar\u0131 ge\u00e7ersiz",
             "one": "Bo\u015f",
             "other": "Bo\u015f"
         },
         "flow_title": "{name} ({address})",
         "step": {
             "confirm": {
-                "description": "{name} kurulumunu yapmak istiyor musunuz?"
+                "description": "{name} 'i kurmak istiyor musunuz?"
             },
             "lock_auth": {
                 "data": {
@@ -31,13 +30,6 @@
                 "menu_options": {
                     "lock_auth": "SwitchBot hesab\u0131 (\u00f6nerilir)",
                     "lock_key": "Kilit \u015fifreleme anahtar\u0131n\u0131 manuel olarak girin"
-                }
-            },
-            "lock_chose_method": {
-                "description": "Yap\u0131land\u0131rma y\u00f6ntemini se\u00e7in, ayr\u0131nt\u0131lar belgelerde bulunabilir.",
-                "menu_options": {
-                    "lock_auth": "SwitchBot uygulamas\u0131 kullan\u0131c\u0131 ad\u0131 ve \u015fifresi",
-                    "lock_key": "\u015eifreleme anahtar\u0131n\u0131 kilitle"
                 }
             },
             "lock_key": {

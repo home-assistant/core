@@ -335,7 +335,7 @@ class HomeAssistant:
 
         await self.async_start()
         if attach_signals:
-            # pylint: disable=import-outside-toplevel
+            # pylint: disable-next=import-outside-toplevel
             from .helpers.signal import async_register_signal_handling
 
             async_register_signal_handling(self)
@@ -2041,8 +2041,8 @@ class Config:
         if not (data := await self._store.async_load()):
             return
 
-        # In 2021.9 we fixed validation to disallow a path (because that's never correct)
-        # but this data still lives in storage, so we print a warning.
+        # In 2021.9 we fixed validation to disallow a path (because that's never
+        # correct) but this data still lives in storage, so we print a warning.
         if data.get("external_url") and urlparse(data["external_url"]).path not in (
             "",
             "/",
@@ -2125,7 +2125,8 @@ class Config:
                 if data["unit_system_v2"] == _CONF_UNIT_SYSTEM_IMPERIAL:
                     data["unit_system_v2"] = _CONF_UNIT_SYSTEM_US_CUSTOMARY
             if old_major_version == 1 and old_minor_version < 3:
-                # In 1.3, we add the key "language", initialize it from the owner account
+                # In 1.3, we add the key "language", initialize it from the
+                # owner account.
                 data["language"] = "en"
                 try:
                     owner = await self.hass.auth.async_get_owner()

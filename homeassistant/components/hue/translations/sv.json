@@ -54,16 +54,16 @@
             "turn_on": "Starta"
         },
         "trigger_type": {
-            "double_short_release": "B\u00e5da \"{subtyp}\" sl\u00e4pptes",
-            "initial_press": "Knappen \" {subtype} \" trycktes f\u00f6rst",
-            "long_release": "Knappen \" {subtype} \" sl\u00e4pps efter l\u00e5ng tryckning",
+            "double_short_release": "B\u00e5da \"{subtype}\" sl\u00e4pptes",
+            "initial_press": "\"{subtype}\" trycktes ned",
+            "long_release": "\"{subtype}\" sl\u00e4pps efter l\u00e5ng tryckning",
             "remote_button_long_release": "\"{subtype}\" knappen sl\u00e4pptes efter ett l\u00e5ngt tryck",
             "remote_button_short_press": "\"{subtype}\" knappen nedtryckt",
             "remote_button_short_release": "\"{subtype}\"-knappen sl\u00e4ppt",
             "remote_double_button_long_press": "B\u00e5da \"{subtype}\" sl\u00e4pptes efter en l\u00e5ngtryckning",
             "remote_double_button_short_press": "B\u00e5da \"{subtyp}\" sl\u00e4pptes",
-            "repeat": "Knappen \" {subtype} \" h\u00f6lls nedtryckt",
-            "short_release": "Knappen \" {subtype} \" sl\u00e4pps efter kort tryckning",
+            "repeat": "\"{subtype}\" h\u00e5lls nedtryckt",
+            "short_release": "\"{subtype}\" sl\u00e4pps efter kort tryckning",
             "start": "\" {subtype} \" trycktes f\u00f6rst"
         }
     },

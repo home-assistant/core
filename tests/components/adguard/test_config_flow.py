@@ -44,9 +44,11 @@ async def test_connection_error(
 ) -> None:
     """Test we show user form on AdGuard Home connection error."""
     aioclient_mock.get(
-        f"{'https' if FIXTURE_USER_INPUT[CONF_SSL] else 'http'}"
-        f"://{FIXTURE_USER_INPUT[CONF_HOST]}"
-        f":{FIXTURE_USER_INPUT[CONF_PORT]}/control/status",
+        (
+            f"{'https' if FIXTURE_USER_INPUT[CONF_SSL] else 'http'}"
+            f"://{FIXTURE_USER_INPUT[CONF_HOST]}"
+            f":{FIXTURE_USER_INPUT[CONF_PORT]}/control/status"
+        ),
         exc=aiohttp.ClientError,
     )
 
@@ -65,9 +67,11 @@ async def test_full_flow_implementation(
 ) -> None:
     """Test registering an integration and finishing flow works."""
     aioclient_mock.get(
-        f"{'https' if FIXTURE_USER_INPUT[CONF_SSL] else 'http'}"
-        f"://{FIXTURE_USER_INPUT[CONF_HOST]}"
-        f":{FIXTURE_USER_INPUT[CONF_PORT]}/control/status",
+        (
+            f"{'https' if FIXTURE_USER_INPUT[CONF_SSL] else 'http'}"
+            f"://{FIXTURE_USER_INPUT[CONF_HOST]}"
+            f":{FIXTURE_USER_INPUT[CONF_PORT]}/control/status"
+        ),
         json={"version": "v0.99.0"},
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )

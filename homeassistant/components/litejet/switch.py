@@ -2,6 +2,8 @@
 import logging
 from typing import Any
 
+from pylitejet import LiteJet
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -21,16 +23,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up entry."""
 
-    system = hass.data[DOMAIN]
+    system: LiteJet = hass.data[DOMAIN]
 
-    def get_entities(system):
-        entities = []
-        for i in system.button_switches():
-            name = system.get_switch_name(i)
-            entities.append(LiteJetSwitch(config_entry.entry_id, system, i, name))
-        return entities
+    entities = []
+    for i in system.button_switches():
+        name = await system.get_switch_name(i)
+        entities.append(LiteJetSwitch(config_entry.entry_id, system, i, name))
 
-    async_add_entities(await hass.async_add_executor_job(get_entities, system), True)
+    async_add_entities(entities, True)
 
 
 class LiteJetSwitch(SwitchEntity):
@@ -86,13 +86,13 @@ class LiteJetSwitch(SwitchEntity):
         """Return the device-specific state attributes."""
         return {ATTR_NUMBER: self._index}
 
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Press the switch."""
-        self._lj.press_switch(self._index)
+        await self._lj.press_switch(self._index)
 
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Release the switch."""
-        self._lj.release_switch(self._index)
+        await self._lj.release_switch(self._index)
 
     @property
     def entity_registry_enabled_default(self) -> bool:

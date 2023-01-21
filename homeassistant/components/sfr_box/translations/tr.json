@@ -4,8 +4,7 @@
             "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
         },
         "error": {
-            "cannot_connect": "Ba\u011flanma hatas\u0131",
-            "unknown": "Beklenmeyen hata"
+            "cannot_connect": "Ba\u011flanma hatas\u0131"
         },
         "step": {
             "user": {
@@ -24,6 +23,14 @@
                     "loss_of_signal_quality": "Sinyal Kalitesi Kayb\u0131",
                     "no_defect": "Hasar Yok",
                     "of_frame": "\u00c7er\u00e7evenin",
+                    "unknown": "Bilinmeyen"
+                }
+            },
+            "net_infra": {
+                "state": {
+                    "adsl": "ADSL",
+                    "ftth": "FTTH",
+                    "gprs": "GPRS",
                     "unknown": "Bilinmeyen"
                 }
             },

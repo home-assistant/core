@@ -4,8 +4,7 @@
             "already_configured": "Perangkat sudah dikonfigurasi"
         },
         "error": {
-            "cannot_connect": "Gagal terhubung",
-            "unknown": "Kesalahan yang tidak diharapkan"
+            "cannot_connect": "Gagal terhubung"
         },
         "step": {
             "user": {
@@ -24,6 +23,14 @@
                     "loss_of_signal_quality": "Kehilangan Kualitas Sinyal",
                     "no_defect": "Tidak Ada Cacat",
                     "of_frame": "Dari Bingkai",
+                    "unknown": "Tidak Dikenal"
+                }
+            },
+            "net_infra": {
+                "state": {
+                    "adsl": "ADSL",
+                    "ftth": "FTTH",
+                    "gprs": "GPRS",
                     "unknown": "Tidak Dikenal"
                 }
             },

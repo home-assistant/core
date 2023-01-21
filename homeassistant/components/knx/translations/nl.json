@@ -6,12 +6,13 @@
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
-            "file_not_found": "Het opgegeven `.knxkeys`-bestand is niet gevonden in het pad config/.storage/knx/",
             "invalid_individual_address": "Waarde komt niet overeen met patroon voor KNX individueel adres.\n\"area.line.device",
-            "invalid_ip_address": "Ongeldig IPv4-adres.",
-            "invalid_signature": "Het wachtwoord om het `.knxkeys`-bestand te decoderen is verkeerd."
+            "invalid_ip_address": "Ongeldig IPv4-adres."
         },
         "step": {
+            "connection_type": {
+                "title": "KNX-verbinding"
+            },
             "manual_tunnel": {
                 "data": {
                     "host": "Host",
@@ -69,16 +70,15 @@
     "options": {
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
-            "file_not_found": "Het opgegeven `.knxkeys`-bestand is niet gevonden in het pad config/.storage/knx/",
             "invalid_individual_address": "Waarde komt niet overeen met patroon voor KNX individueel adres.\n\"area.line.device",
-            "invalid_ip_address": "Ongeldig IPv4-adres.",
-            "invalid_signature": "Het wachtwoord om het `.knxkeys`-bestand te decoderen is verkeerd."
+            "invalid_ip_address": "Ongeldig IPv4-adres."
         },
         "step": {
             "connection_type": {
                 "data": {
                     "connection_type": "KNX-verbindingstype"
-                }
+                },
+                "title": "KNX-verbinding"
             },
             "manual_tunnel": {
                 "data": {

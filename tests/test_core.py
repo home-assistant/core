@@ -722,8 +722,7 @@ def test_state_repr():
                 datetime(1984, 12, 8, 12, 0, 0),
             )
         )
-        == "<state happy.happy=on; brightness=144 @ "
-        "1984-12-08T12:00:00+00:00>"
+        == "<state happy.happy=on; brightness=144 @ 1984-12-08T12:00:00+00:00>"
     )
 
 
