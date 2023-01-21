@@ -1,5 +1,6 @@
 """Support for Honeywell (US) Total Connect Comfort climate systems."""
 import asyncio
+from dataclasses import dataclass
 
 import AIOSomecomfort
 
@@ -86,7 +87,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         _LOGGER.debug("No devices found")
         return False
 
-    data = HoneywellData(hass, config_entry, client, username, password, devices)
+    data = HoneywellData(config_entry.entry_id, client, devices)
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = data
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
@@ -111,32 +112,10 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     return unload_ok
 
 
+@dataclass
 class HoneywellData:
-    """Get the latest data and update."""
+    """Shared data for Honeywell."""
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config_entry: ConfigEntry,
-        client: AIOSomecomfort.AIOSomeComfort,
-        username: str,
-        password: str,
-        devices: dict[str, AIOSomecomfort.device.Device],
-    ) -> None:
-        """Initialize the data object."""
-        self._hass = hass
-        self._config = config_entry
-        self._client = client
-        self._username = username
-        self._password = password
-        self.devices = devices
-
-    @property
-    def client(self) -> AIOSomecomfort.AIOSomeComfort:
-        """Return Honeywell Client."""
-        return self._client
-
-    @property
-    def config_entry(self) -> ConfigEntry:
-        """Return Honeywell config entry."""
-        return self._config
+    entry_id: str
+    client: AIOSomecomfort.AIOSomeComfort
+    devices: dict[str, AIOSomecomfort.device.Device]

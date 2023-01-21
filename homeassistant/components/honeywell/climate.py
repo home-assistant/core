@@ -81,7 +81,7 @@ async def async_setup_entry(
     cool_away_temp = entry.options.get(CONF_COOL_AWAY_TEMPERATURE)
     heat_away_temp = entry.options.get(CONF_HEAT_AWAY_TEMPERATURE)
 
-    data = hass.data[DOMAIN][entry.entry_id]
+    data: HoneywellData = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
         [
@@ -392,8 +392,9 @@ class HoneywellUSThermostat(ClimateEntity):
         ):
             try:
                 await self._data.client.login()
+                self._attr_available = False
 
             except AIOSomecomfort.device.SomeComfortError:
-                await self.hass.config_entries.async_reload(
-                    self._data.config_entry.entry_id
+                self.hass.async_create_task(
+                    self.hass.config_entries.async_reload(self._data.entry_id)
                 )
