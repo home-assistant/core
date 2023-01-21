@@ -129,7 +129,7 @@ class AirConEntity(ClimateEntity):
 
     async def async_added_to_hass(self) -> None:
         """Connect aircon to the cloud."""
-        await self._aircon.register_attr_callback(self.async_write_ha_state)
+        self._aircon.register_attr_callback(self.async_write_ha_state)
         await self._aircon.connect()
 
     async def async_will_remove_from_hass(self) -> None:
