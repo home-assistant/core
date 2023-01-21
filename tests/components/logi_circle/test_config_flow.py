@@ -57,9 +57,7 @@ def mock_logi_circle():
         yield LogiCircle
 
 
-async def test_step_import(
-    hass, mock_logi_circle  # pylint: disable=redefined-outer-name
-):
+async def test_step_import(hass, mock_logi_circle):
     """Test that we trigger import when configuring with client."""
     flow = init_config_flow(hass)
 
@@ -68,9 +66,7 @@ async def test_step_import(
     assert result["step_id"] == "auth"
 
 
-async def test_full_flow_implementation(
-    hass, mock_logi_circle  # pylint: disable=redefined-outer-name
-):
+async def test_full_flow_implementation(hass, mock_logi_circle):
     """Test registering an implementation and finishing flow works."""
     config_flow.register_flow_implementation(
         hass,
@@ -151,9 +147,7 @@ async def test_abort_if_already_setup(hass):
         (AuthorizationFailed, "invalid_auth"),
     ],
 )
-async def test_abort_if_authorize_fails(
-    hass, mock_logi_circle, side_effect, error
-):  # pylint: disable=redefined-outer-name
+async def test_abort_if_authorize_fails(hass, mock_logi_circle, side_effect, error):
     """Test we abort if authorizing fails."""
     flow = init_config_flow(hass)
     mock_logi_circle.authorize.side_effect = side_effect
@@ -175,9 +169,7 @@ async def test_not_pick_implementation_if_only_one(hass):
     assert result["step_id"] == "auth"
 
 
-async def test_gen_auth_url(
-    hass, mock_logi_circle
-):  # pylint: disable=redefined-outer-name
+async def test_gen_auth_url(hass, mock_logi_circle):
     """Test generating authorize URL from Logi Circle API."""
     config_flow.register_flow_implementation(
         hass,
@@ -205,9 +197,7 @@ async def test_callback_view_rejects_missing_code(hass):
     assert resp.status == HTTPStatus.BAD_REQUEST
 
 
-async def test_callback_view_accepts_code(
-    hass, mock_logi_circle
-):  # pylint: disable=redefined-outer-name
+async def test_callback_view_accepts_code(hass, mock_logi_circle):
     """Test the auth callback view handles requests with auth code."""
     init_config_flow(hass)
     view = LogiCircleAuthCallbackView()

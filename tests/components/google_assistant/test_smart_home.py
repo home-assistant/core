@@ -228,7 +228,6 @@ async def test_sync_message(hass, registries):
     assert events[0].data == {"request_id": REQ_ID, "source": "cloud"}
 
 
-# pylint: disable=redefined-outer-name
 @pytest.mark.parametrize("area_on_device", [True, False])
 async def test_sync_in_area(area_on_device, hass, registries):
     """Test a sync message where room hint comes from area."""

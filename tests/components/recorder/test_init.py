@@ -504,7 +504,7 @@ def test_setup_without_migration(hass_recorder):
     assert recorder.get_instance(hass).schema_version == SCHEMA_VERSION
 
 
-# pylint: disable=redefined-outer-name,invalid-name
+# pylint: disable=invalid-name
 def test_saving_state_include_domains(hass_recorder):
     """Test saving and restoring a state."""
     hass = hass_recorder({"include": {"domains": "test2"}})

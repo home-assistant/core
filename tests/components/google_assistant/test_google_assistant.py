@@ -125,9 +125,6 @@ def hass_fixture(event_loop, hass):
     return hass
 
 
-# pylint: disable=redefined-outer-name
-
-
 async def test_sync_request(hass_fixture, assistant_client, auth_header):
     """Test a sync request."""
 
