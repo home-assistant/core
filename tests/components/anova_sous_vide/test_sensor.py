@@ -1,7 +1,18 @@
 """Test the Anova sensors."""
 
+import logging
+from unittest.mock import patch
 
-from . import async_init_integration
+from anova_wifi import AnovaOffline, AnovaPrecisionCooker
+import pytest
+
+from homeassistant import config_entries
+from homeassistant.components.anova_sous_vide.sensor import AnovaCoordinator
+from homeassistant.helpers.update_coordinator import UpdateFailed
+
+from . import async_init_integration, create_entry
+
+LOGGER = logging.getLogger(__name__)
 
 
 async def test_sensors(hass):
@@ -17,3 +28,24 @@ async def test_sensors(hass):
     assert hass.states.get("sensor.target_temperature").state == "23.33"
     assert hass.states.get("sensor.water_temperature").state == "21.33"
     assert hass.states.get("sensor.triac_temperature").state == "21.79"
+
+
+async def test_no_config_entry_coordinator(hass):
+    """Test setting up coordinator without config entry, I don't think this is possible, but I got a lint error with accessing a None when I did self.config_entry."""
+    with patch(
+        "homeassistant.components.anova_sous_vide.sensor._LOGGER.error"
+    ) as logger_error:
+        AnovaCoordinator(hass, None)
+        assert logger_error.called
+
+
+async def test_update_failed(hass):
+    """Test updating data after the coordinator has been set up, but anova is offline."""
+    with pytest.raises(UpdateFailed):
+        entry = create_entry(hass)
+        config_entries.current_entry.set(entry)
+        ac = AnovaCoordinator(hass, AnovaPrecisionCooker())
+        with patch(
+            "anova_wifi.AnovaPrecisionCooker.update", side_effect=AnovaOffline()
+        ):
+            await ac._async_update_data()
