@@ -209,7 +209,7 @@ class WasherDryerClass(SensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Connect washer/dryer to the cloud."""
-        self._wd.register_attr_callback(self.async_write_ha_state)
+        await self._wd.register_attr_callback(self.async_write_ha_state)
 
     async def async_will_remove_from_hass(self) -> None:
         """Close Whrilpool Appliance sockets before removing."""
@@ -261,7 +261,7 @@ class WasherDryerTimeClass(RestoreSensor):
         if restored_data := await self.async_get_last_sensor_data():
             self._attr_native_value = restored_data.native_value
         await super().async_added_to_hass()
-        self._wd.register_attr_callback(self.update_from_latest_data)
+        await self._wd.register_attr_callback(self.update_from_latest_data)
 
     async def async_will_remove_from_hass(self) -> None:
         """Close Whrilpool Appliance sockets before removing."""
