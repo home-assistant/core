@@ -1,7 +1,7 @@
 """Sensor for checking the battery level of Roomba."""
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, EntityCategory
+from homeassistant.const import PERCENTAGE, UnitOfTime, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -76,7 +76,7 @@ class CleaningTime(IRobotEntity, SensorEntity):
     @property
     def native_unit_of_measurement(self):
         """Return the unit_of_measurement of the device."""
-        return "hours"
+        return UnitOfTime.HOURS
 
     @property
     def icon(self):
