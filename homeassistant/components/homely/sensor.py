@@ -95,21 +95,21 @@ HAN_SENSOR_ENTITY_DESCRIPTIONS: tuple[HomelySensorEntityDescription, ...] = (
         name="Summation delivered",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        value_fn=lambda device: device.metering.summation_delivered,
+        value_fn=lambda device: device.metering.summation_delivered / 1000,
     ),
     HomelySensorEntityDescription(
         key="SummationReceived",
         name="Summation received",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        value_fn=lambda device: device.metering.summation_received,
+        value_fn=lambda device: device.metering.summation_received / 1000,
     ),
     HomelySensorEntityDescription(
         key="Demand",
         name="Demand",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
-        value_fn=lambda device: device.metering.summation_delivered,
+        value_fn=lambda device: device.metering.demand / 1000,
     ),
 )
 
