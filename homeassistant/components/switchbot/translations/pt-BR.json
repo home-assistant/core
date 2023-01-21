@@ -10,7 +10,6 @@
         "error": {
             "auth_failed": "Falha na autentica\u00e7\u00e3o: {error_detail}",
             "encryption_key_invalid": "A chave ID ou Chave de Criptografia \u00e9 inv\u00e1lida",
-            "key_id_invalid": "A chave ID ou Chave de Criptografia \u00e9 inv\u00e1lida",
             "one": "",
             "other": ""
         },
@@ -31,13 +30,6 @@
                 "menu_options": {
                     "lock_auth": "Conta SwitchBot (recomendado)",
                     "lock_key": "Insira a chave de criptografia de bloqueio manualmente"
-                }
-            },
-            "lock_chose_method": {
-                "description": "Escolha o m\u00e9todo de configura\u00e7\u00e3o, os detalhes podem ser encontrados na documenta\u00e7\u00e3o.",
-                "menu_options": {
-                    "lock_auth": "Login e senha do aplicativo SwitchBot",
-                    "lock_key": "Bloquear chave de criptografia"
                 }
             },
             "lock_key": {

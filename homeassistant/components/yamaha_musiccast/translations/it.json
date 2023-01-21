@@ -58,13 +58,9 @@
             },
             "zone_sleep": {
                 "state": {
-                    "120 min": "120 minuti",
                     "120_min": "120 minuti",
-                    "30 min": "30 minuti",
                     "30_min": "30 minuti",
-                    "60 min": "60 minuti",
                     "60_min": "60 minuti",
-                    "90 min": "90 minuti",
                     "90_min": "90 minuti",
                     "off": "Spento"
                 }

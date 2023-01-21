@@ -9,11 +9,6 @@
             "invalid_auth": "Ongeldige authenticatie"
         },
         "step": {
-            "api_key": {
-                "data": {
-                    "api_key": "API-sleutel"
-                }
-            },
             "reauth_confirm": {
                 "data": {
                     "api_key": "API-sleutel"
@@ -29,7 +24,6 @@
                     "name": "Naam",
                     "port": "Poort",
                     "ssl": "Maakt gebruik van een SSL-certificaat",
-                    "statistics_only": "Alleen statistieken",
                     "verify_ssl": "SSL-certificaat verifi\u00ebren"
                 }
             }

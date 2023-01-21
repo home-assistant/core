@@ -17,6 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util.dt import now
 
 from .const import DOMAIN
 from .coordinator import StarlinkData
@@ -108,7 +109,6 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         icon="mdi:clock",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: datetime.now().astimezone()
-        - timedelta(seconds=data.status["uptime"]),
+        value_fn=lambda data: now() - timedelta(seconds=data.status["uptime"]),
     ),
 )

@@ -198,6 +198,7 @@ ABBREVIATIONS = {
     "stat_cla": "state_class",
     "stat_clsd": "state_closed",
     "stat_closing": "state_closing",
+    "stat_jam": "state_jammed",
     "stat_off": "state_off",
     "stat_on": "state_on",
     "stat_open": "state_open",

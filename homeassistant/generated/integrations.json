@@ -1487,9 +1487,20 @@
     },
     "eufy": {
       "name": "eufy",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
+      "integrations": {
+        "eufy": {
+          "integration_type": "hub",
+          "config_flow": false,
+          "iot_class": "local_polling",
+          "name": "EufyHome"
+        },
+        "eufylife_ble": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "EufyLife"
+        }
+      }
     },
     "everlights": {
       "name": "EverLights",
@@ -3835,12 +3846,6 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
-    "openalpr_local": {
-      "name": "OpenALPR Local",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_push"
-    },
     "opencv": {
       "name": "OpenCV",
       "integration_type": "hub",
@@ -3964,6 +3969,12 @@
       "name": "Osramlightify",
       "integration_type": "hub",
       "config_flow": false,
+      "iot_class": "local_polling"
+    },
+    "otbr": {
+      "name": "Open Thread Border Router",
+      "integration_type": "service",
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "otp": {
@@ -5234,6 +5245,12 @@
     },
     "stookalert": {
       "name": "RIVM Stookalert",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
+    "stookwijzer": {
+      "name": "Stookwijzer",
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"

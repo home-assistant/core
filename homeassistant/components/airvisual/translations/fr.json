@@ -30,14 +30,6 @@
                 "description": "Utilisez l'API cloud AirVisual pour surveiller une ville / un \u00e9tat / un pays.",
                 "title": "Configurer un lieu g\u00e9ographique"
             },
-            "node_pro": {
-                "data": {
-                    "ip_address": "H\u00f4te",
-                    "password": "Mot de passe"
-                },
-                "description": "Surveillez une unit\u00e9 personnelle AirVisual. Le mot de passe peut \u00eatre r\u00e9cup\u00e9r\u00e9 dans l'interface utilisateur de l'unit\u00e9.",
-                "title": "Configurer un noeud AirVisual Pro"
-            },
             "reauth_confirm": {
                 "data": {
                     "api_key": "Cl\u00e9 d'API"

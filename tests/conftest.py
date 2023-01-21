@@ -44,7 +44,11 @@ from homeassistant.components.websocket_api.auth import (
 from homeassistant.components.websocket_api.http import URL
 from homeassistant.const import HASSIO_USER_NAME
 from homeassistant.core import CoreState, HomeAssistant
-from homeassistant.helpers import config_entry_oauth2_flow, recorder as recorder_helper
+from homeassistant.helpers import (
+    config_entry_oauth2_flow,
+    event,
+    recorder as recorder_helper,
+)
 from homeassistant.helpers.json import json_loads
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
@@ -67,9 +71,6 @@ from tests.common import (  # noqa: E402, isort:skip
     mock_storage as mock_storage,
 )
 from tests.test_util.aiohttp import mock_aiohttp_client  # noqa: E402, isort:skip
-from tests.components.recorder.common import (  # noqa: E402, isort:skip
-    async_recorder_block_till_done,
-)
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -85,6 +86,7 @@ def _utcnow():
 
 
 dt_util.utcnow = _utcnow
+event.time_tracker_utcnow = _utcnow
 
 
 def pytest_addoption(parser):
@@ -475,8 +477,10 @@ def mock_device_tracker_conf():
         devices.append(entity)
 
     with patch(
-        "homeassistant.components.device_tracker.legacy"
-        ".DeviceTracker.async_update_config",
+        (
+            "homeassistant.components.device_tracker.legacy"
+            ".DeviceTracker.async_update_config"
+        ),
         side_effect=mock_update_config,
     ), patch(
         "homeassistant.components.device_tracker.legacy.async_load_config",
@@ -1050,6 +1054,8 @@ async def async_setup_recorder_instance(
     # Local import to avoid processing recorder and SQLite modules when running a
     # testcase which does not use the recorder.
     from homeassistant.components import recorder
+
+    from tests.components.recorder.common import async_recorder_block_till_done
 
     nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
     stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None
