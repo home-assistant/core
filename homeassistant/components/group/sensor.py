@@ -43,7 +43,6 @@ from . import GroupEntity
 from .const import CONF_IGNORE_NON_NUMERIC
 
 DEFAULT_NAME = "Sensor Group"
-CONF_ROUND_DIGITS = "round_digits"
 
 ATTR_MIN_VALUE = "min_value"
 ATTR_MIN_ENTITY_ID = "min_entity_id"
@@ -78,7 +77,6 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_IGNORE_NON_NUMERIC, default=True): cv.boolean,
-        vol.Optional(CONF_ROUND_DIGITS, default=2): vol.Coerce(int),
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): str,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
@@ -103,7 +101,6 @@ async def async_setup_platform(
                 config[CONF_ENTITIES],
                 config[CONF_IGNORE_NON_NUMERIC],
                 config[CONF_TYPE],
-                config[CONF_ROUND_DIGITS],
                 config.get(CONF_UNIT_OF_MEASUREMENT),
                 config.get(CONF_STATE_CLASS),
                 config.get(CONF_DEVICE_CLASS),
@@ -130,7 +127,6 @@ async def async_setup_entry(
                 entities,
                 config_entry.options.get(CONF_IGNORE_NON_NUMERIC, True),
                 config_entry.options[CONF_TYPE],
-                int(config_entry.options.get(CONF_ROUND_DIGITS, 2)),
                 None,
                 None,
                 None,
@@ -140,7 +136,7 @@ async def async_setup_entry(
 
 
 def calc_min(
-    sensor_values: list[tuple[str, float, State]], round_digits: int
+    sensor_values: list[tuple[str, float, State]]
 ) -> tuple[dict[str, str | None], float]:
     """Calculate min value."""
     val: float | None = None
@@ -156,7 +152,7 @@ def calc_min(
 
 
 def calc_max(
-    sensor_values: list[tuple[str, float, State]], round_digits: int
+    sensor_values: list[tuple[str, float, State]]
 ) -> tuple[dict[str, str | None], float]:
     """Calculate max value."""
     val: float | None = None
@@ -172,27 +168,27 @@ def calc_max(
 
 
 def calc_mean(
-    sensor_values: list[tuple[str, float, State]], round_digits: int
+    sensor_values: list[tuple[str, float, State]]
 ) -> tuple[dict[str, str | None], float]:
     """Calculate mean value."""
     result = (sensor_value for _, sensor_value, _ in sensor_values)
 
-    value: float = round(statistics.mean(result), round_digits)
+    value: float = statistics.mean(result)
     return {}, value
 
 
 def calc_median(
-    sensor_values: list[tuple[str, float, State]], round_digits: int
+    sensor_values: list[tuple[str, float, State]]
 ) -> tuple[dict[str, str | None], float]:
     """Calculate median value."""
     result = (sensor_value for _, sensor_value, _ in sensor_values)
 
-    value: float = round(statistics.median(result), round_digits)
+    value: float = statistics.median(result)
     return {}, value
 
 
 def calc_last(
-    sensor_values: list[tuple[str, float, State]], round_digits: int
+    sensor_values: list[tuple[str, float, State]]
 ) -> tuple[dict[str, str | None], float]:
     """Calculate last value."""
     last_updated: datetime | None = None
@@ -208,33 +204,30 @@ def calc_last(
 
 
 def calc_range(
-    sensor_values: list[tuple[str, float, State]], round_digits: int
+    sensor_values: list[tuple[str, float, State]]
 ) -> tuple[dict[str, str | None], float]:
     """Calculate range value."""
     max_result = max((sensor_value for _, sensor_value, _ in sensor_values))
     min_result = min((sensor_value for _, sensor_value, _ in sensor_values))
 
-    value: float = round(max_result - min_result, round_digits)
+    value: float = max_result - min_result
     return {}, value
 
 
 def calc_sum(
-    sensor_values: list[tuple[str, float, State]], round_digits: int
+    sensor_values: list[tuple[str, float, State]]
 ) -> tuple[dict[str, str | None], float]:
     """Calculate a sum of values."""
     result = 0.0
     for _, sensor_value, _ in sensor_values:
         result += sensor_value
 
-    value: float = round(result, round_digits)
-    return {}, value
+    return {}, result
 
 
 CALC_TYPES: dict[
     str,
-    Callable[
-        [list[tuple[str, float, State]], int], tuple[dict[str, str | None], float]
-    ],
+    Callable[[list[tuple[str, float, State]]], tuple[dict[str, str | None], float]],
 ] = {
     "min": calc_min,
     "max": calc_max,
@@ -260,7 +253,6 @@ class SensorGroup(GroupEntity, SensorEntity):
         entity_ids: list[str],
         mode: bool,
         sensor_type: str,
-        round_digits: int,
         unit_of_measurement: str | None,
         state_class: SensorStateClass | None,
         device_class: SensorDeviceClass | None,
@@ -268,7 +260,6 @@ class SensorGroup(GroupEntity, SensorEntity):
         """Initialize a sensor group."""
         self._entity_ids = entity_ids
         self._sensor_type = sensor_type
-        self._round_digits = round_digits
         self._attr_state_class = state_class
         self.calc_state_class: SensorStateClass | None = None
         self._attr_device_class = device_class
@@ -282,7 +273,7 @@ class SensorGroup(GroupEntity, SensorEntity):
         self._attr_unique_id = unique_id
         self.mode = all if mode is False else any
         self._state_calc: Callable[
-            [list[tuple[str, float, State]], int],
+            [list[tuple[str, float, State]]],
             tuple[dict[str, str | None], float | None],
         ] = CALC_TYPES[self._sensor_type]
         self._state_incorrect: set[str] = set()
@@ -345,7 +336,7 @@ class SensorGroup(GroupEntity, SensorEntity):
         # Calculate values
         self._calculate_entity_properties()
         self._extra_state_attribute, self._attr_native_value = self._state_calc(
-            sensor_values, self._round_digits
+            sensor_values
         )
 
     @property

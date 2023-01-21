@@ -22,7 +22,6 @@ from homeassistant.helpers.schema_config_entry_flow import (
 from . import DOMAIN
 from .binary_sensor import CONF_ALL
 from .const import CONF_HIDE_MEMBERS, CONF_IGNORE_NON_NUMERIC
-from .sensor import CONF_ROUND_DIGITS
 
 _STATISTIC_MEASURES = [
     selector.SelectOptionDict(value="min", label="Minimum"),
@@ -87,11 +86,6 @@ SENSOR_OPTIONS = {
     vol.Optional(CONF_IGNORE_NON_NUMERIC, default=True): selector.BooleanSelector(),
     vol.Required(CONF_TYPE): selector.SelectSelector(
         selector.SelectSelectorConfig(options=_STATISTIC_MEASURES),
-    ),
-    vol.Optional(CONF_ROUND_DIGITS, default=2): selector.NumberSelector(
-        selector.NumberSelectorConfig(
-            min=0, max=6, mode=selector.NumberSelectorMode.BOX
-        ),
     ),
 }
 

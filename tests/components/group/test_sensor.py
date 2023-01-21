@@ -39,39 +39,30 @@ from tests.common import get_fixture_path
 VALUES = [17, 20, 15.3]
 VALUES_ERROR = [17, "string", 15.3]
 COUNT = len(VALUES)
-MIN_VALUE = round(min(VALUES), 2)
-MAX_VALUE = round(max(VALUES), 2)
-MEAN = round(sum(VALUES) / COUNT, 2)
-MEAN_1_DIGIT = round(sum(VALUES) / COUNT, 1)
-MEAN_4_DIGITS = round(sum(VALUES) / COUNT, 4)
-MEDIAN = round(statistics.median(VALUES), 2)
+MIN_VALUE = min(VALUES)
+MAX_VALUE = max(VALUES)
+MEAN = statistics.mean(VALUES)
+MEDIAN = statistics.median(VALUES)
 RANGE = max(VALUES) - min(VALUES)
-RANGE_1_DIGIT = round(max(VALUES) - min(VALUES), 1)
-RANGE_4_DIGITS = round(max(VALUES) - min(VALUES), 4)
-SUM_VALUE = round(sum(VALUES), 2)
+SUM_VALUE = sum(VALUES)
 
 
 @pytest.mark.parametrize(
-    "sensor_type, result, precision, attributes",
+    "sensor_type, result, attributes",
     [
-        ("min", MIN_VALUE, 2, {ATTR_MIN_ENTITY_ID: "sensor.test_3"}),
-        ("max", MAX_VALUE, 2, {ATTR_MAX_ENTITY_ID: "sensor.test_2"}),
-        ("mean", MEAN, 2, {}),
-        ("mean", MEAN_1_DIGIT, 1, {}),
-        ("mean", MEAN_4_DIGITS, 4, {}),
-        ("median", MEDIAN, 2, {}),
-        ("last", VALUES[2], 2, {ATTR_LAST_ENTITY_ID: "sensor.test_3"}),
-        ("range", RANGE, 2, {}),
-        ("range", RANGE_1_DIGIT, 1, {}),
-        ("range", RANGE_4_DIGITS, 4, {}),
-        ("sum", SUM_VALUE, 2, {}),
+        ("min", MIN_VALUE, {ATTR_MIN_ENTITY_ID: "sensor.test_3"}),
+        ("max", MAX_VALUE, {ATTR_MAX_ENTITY_ID: "sensor.test_2"}),
+        ("mean", MEAN, {}),
+        ("median", MEDIAN, {}),
+        ("last", VALUES[2], {ATTR_LAST_ENTITY_ID: "sensor.test_3"}),
+        ("range", RANGE, {}),
+        ("sum", SUM_VALUE, {}),
     ],
 )
 async def test_sensors(
     hass: HomeAssistant,
     sensor_type: str,
     result: str,
-    precision: int,
     attributes: dict[str, Any],
 ) -> None:
     """Test the sensors."""
@@ -80,7 +71,6 @@ async def test_sensors(
             "platform": GROUP_DOMAIN,
             "name": DEFAULT_NAME,
             "type": sensor_type,
-            "round_digits": precision,
             "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
             "unique_id": "very_unique_id",
         }
@@ -105,7 +95,7 @@ async def test_sensors(
 
     state = hass.states.get(f"sensor.sensor_group_{sensor_type}")
 
-    assert state.state == str(round(float(result), precision))
+    assert float(state.state) == pytest.approx(float(result))
     assert state.attributes.get(ATTR_ENTITY_ID) == entity_ids
     for key, value in attributes.items():
         assert state.attributes.get(key) == value
@@ -125,7 +115,6 @@ async def test_sensors_attributes_defined(hass: HomeAssistant) -> None:
             "platform": GROUP_DOMAIN,
             "name": DEFAULT_NAME,
             "type": "sum",
-            "round_digits": 2,
             "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
             "unique_id": "very_unique_id",
             "device_class": SensorDeviceClass.WATER,
@@ -153,7 +142,7 @@ async def test_sensors_attributes_defined(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.sensor_group_sum")
 
-    assert state.state == str(round(float(SUM_VALUE), 2))
+    assert state.state == str(float(SUM_VALUE))
     assert state.attributes.get(ATTR_ENTITY_ID) == entity_ids
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.WATER
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL_INCREASING
