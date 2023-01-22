@@ -6,6 +6,6 @@
   "requirements": ["anova-wifi==0.2.5"],
   "homekit": {},
   "dependencies": [],
-  "codeowners": ["@conway220"],
+  "codeowners": ["@Lash-L"],
   "iot_class": "cloud_polling"
 }
