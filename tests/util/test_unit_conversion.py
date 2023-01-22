@@ -6,8 +6,10 @@ import inspect
 import pytest
 
 from homeassistant.const import (
+    PERCENTAGE,
     UnitOfDataRate,
     UnitOfElectricCurrent,
+    UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfInformation,
     UnitOfLength,
@@ -63,6 +65,43 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
     )
 }
 
+# Dict containing all converters with a corresponding unit ratio.
+_GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, float]] = {
+    DataRateConverter: (
+        UnitOfDataRate.BITS_PER_SECOND,
+        UnitOfDataRate.BYTES_PER_SECOND,
+        8,
+    ),
+    DistanceConverter: (UnitOfLength.KILOMETERS, UnitOfLength.METERS, 0.001),
+    ElectricCurrentConverter: (
+        UnitOfElectricCurrent.AMPERE,
+        UnitOfElectricCurrent.MILLIAMPERE,
+        0.001,
+    ),
+    ElectricPotentialConverter: (
+        UnitOfElectricPotential.MILLIVOLT,
+        UnitOfElectricPotential.VOLT,
+        1000,
+    ),
+    EnergyConverter: (UnitOfEnergy.WATT_HOUR, UnitOfEnergy.KILO_WATT_HOUR, 1000),
+    InformationConverter: (UnitOfInformation.BITS, UnitOfInformation.BYTES, 8),
+    MassConverter: (UnitOfMass.STONES, UnitOfMass.KILOGRAMS, 0.157473),
+    PowerConverter: (UnitOfPower.WATT, UnitOfPower.KILO_WATT, 1000),
+    PressureConverter: (UnitOfPressure.HPA, UnitOfPressure.INHG, 33.86389),
+    SpeedConverter: (
+        UnitOfSpeed.KILOMETERS_PER_HOUR,
+        UnitOfSpeed.MILES_PER_HOUR,
+        1.609343,
+    ),
+    TemperatureConverter: (
+        UnitOfTemperature.CELSIUS,
+        UnitOfTemperature.FAHRENHEIT,
+        0.555556,
+    ),
+    UnitlessRatioConverter: (PERCENTAGE, None, 100),
+    VolumeConverter: (UnitOfVolume.GALLONS, UnitOfVolume.LITERS, 0.264172),
+}
+
 
 @pytest.mark.parametrize(
     "converter",
@@ -80,6 +119,7 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
 def test_all_converters(converter: type[BaseUnitConverter]) -> None:
     """Ensure all unit converters are tested."""
     assert converter in _ALL_CONVERTERS, "converter is not present in _ALL_CONVERTERS"
+    assert converter in _GET_UNIT_RATIO, "converter is not present in _GET_UNIT_RATIO"
 
 
 @pytest.mark.parametrize(
@@ -135,53 +175,17 @@ def test_convert_nonnumeric_value(
 @pytest.mark.parametrize(
     "converter,from_unit,to_unit,expected",
     [
-        (
-            DataRateConverter,
-            UnitOfDataRate.BITS_PER_SECOND,
-            UnitOfDataRate.BYTES_PER_SECOND,
-            8,
-        ),
-        (DistanceConverter, UnitOfLength.KILOMETERS, UnitOfLength.METERS, 1 / 1000),
-        (
-            ElectricCurrentConverter,
-            UnitOfElectricCurrent.AMPERE,
-            UnitOfElectricCurrent.MILLIAMPERE,
-            1 / 1000,
-        ),
-        (EnergyConverter, UnitOfEnergy.WATT_HOUR, UnitOfEnergy.KILO_WATT_HOUR, 1000),
-        (InformationConverter, UnitOfInformation.BITS, UnitOfInformation.BYTES, 8),
-        (PowerConverter, UnitOfPower.WATT, UnitOfPower.KILO_WATT, 1000),
-        (
-            PressureConverter,
-            UnitOfPressure.HPA,
-            UnitOfPressure.INHG,
-            pytest.approx(33.86389),
-        ),
-        (
-            SpeedConverter,
-            UnitOfSpeed.KILOMETERS_PER_HOUR,
-            UnitOfSpeed.MILES_PER_HOUR,
-            pytest.approx(1.609343),
-        ),
-        (
-            TemperatureConverter,
-            UnitOfTemperature.CELSIUS,
-            UnitOfTemperature.FAHRENHEIT,
-            1 / 1.8,
-        ),
-        (
-            VolumeConverter,
-            UnitOfVolume.GALLONS,
-            UnitOfVolume.LITERS,
-            pytest.approx(0.264172),
-        ),
+        (converter, item[0], item[1], item[2])
+        for converter, item in _GET_UNIT_RATIO.items()
     ],
 )
 def test_get_unit_ratio(
     converter: type[BaseUnitConverter], from_unit: str, to_unit: str, expected: float
 ) -> None:
     """Test unit ratio."""
-    assert converter.get_unit_ratio(from_unit, to_unit) == expected
+    ratio = converter.get_unit_ratio(from_unit, to_unit)
+    assert ratio == pytest.approx(expected)
+    assert converter.get_unit_ratio(to_unit, from_unit) == pytest.approx(1 / ratio)
 
 
 @pytest.mark.parametrize(
