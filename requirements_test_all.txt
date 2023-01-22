@@ -1879,7 +1879,7 @@ yalexs-ble==1.12.7
 yalexs==1.2.6
 
 # homeassistant.components.august
-yalexs_ble==1.12.5
+yalexs_ble==1.12.7
 
 # homeassistant.components.yeelight
 yeelight==0.7.10
