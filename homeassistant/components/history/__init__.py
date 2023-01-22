@@ -35,7 +35,6 @@ import homeassistant.util.dt as dt_util
 
 from . import websocket_api
 from .const import (
-    CONF_ORDER,
     DOMAIN,
     HISTORY_ENTITIES_FILTER,
     HISTORY_FILTERS,
@@ -44,6 +43,8 @@ from .const import (
 from .helpers import entities_may_have_state_changes_after
 
 _LOGGER = logging.getLogger(__name__)
+
+CONF_ORDER = "use_include_order"
 
 CONFIG_SCHEMA = vol.Schema(
     {
