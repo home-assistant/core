@@ -349,21 +349,6 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         device_class=SensorDeviceClass.POWER,
         value_fn=lambda data: data.monthly_power_peak_w,
     ),
-    # HomeWizardSensorEntityDescription(
-    #     key="total_gas_m3",
-    #     name="Total gas",
-    #     native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
-    #     device_class=SensorDeviceClass.GAS,
-    #     state_class=SensorStateClass.TOTAL_INCREASING,
-    #     value_fn=lambda data: data.total_gas_m3,
-    # ),
-    HomeWizardSensorEntityDescription(
-        key="gas_unique_id",
-        name="Gas meter identifier",
-        icon="mdi:alphabetical-variant",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: data.gas_unique_id,
-    ),
     HomeWizardSensorEntityDescription(
         key="active_liter_lpm",
         name="Active water usage",
