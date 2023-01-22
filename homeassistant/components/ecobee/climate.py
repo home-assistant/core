@@ -419,7 +419,9 @@ class Thermostat(ClimateEntity):
     def has_humidifier_control(self):
         """Return true if humidifier connected to thermostat and set to manual/on mode."""
         return (
-            self.thermostat["settings"].get("humidifierMode") == HUMIDIFIER_MANUAL_MODE
+            bool(self.thermostat["settings"].get("hasHumidifier"))
+            and self.thermostat["settings"].get("humidifierMode")
+            == HUMIDIFIER_MANUAL_MODE
         )
 
     @property

@@ -91,6 +91,7 @@ async def test_aux_heat_not_supported_by_default(hass):
         state.attributes.get(ATTR_SUPPORTED_FEATURES)
         == ClimateEntityFeature.PRESET_MODE
         | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.TARGET_HUMIDITY
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         | ClimateEntityFeature.TARGET_TEMPERATURE
     )
