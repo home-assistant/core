@@ -19,6 +19,7 @@ from homeassistant.const import (
     ATTR_IDENTIFIERS,
     ATTR_NAME,
     PERCENTAGE,
+    Platform,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -27,6 +28,7 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -347,14 +349,14 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         device_class=SensorDeviceClass.POWER,
         value_fn=lambda data: data.monthly_power_peak_w,
     ),
-    HomeWizardSensorEntityDescription(
-        key="total_gas_m3",
-        name="Total gas",
-        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
-        device_class=SensorDeviceClass.GAS,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda data: data.total_gas_m3,
-    ),
+    # HomeWizardSensorEntityDescription(
+    #     key="total_gas_m3",
+    #     name="Total gas",
+    #     native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+    #     device_class=SensorDeviceClass.GAS,
+    #     state_class=SensorStateClass.TOTAL_INCREASING,
+    #     value_fn=lambda data: data.total_gas_m3,
+    # ),
     HomeWizardSensorEntityDescription(
         key="gas_unique_id",
         name="Gas meter identifier",
@@ -396,6 +398,20 @@ async def async_setup_entry(
         if description.value_fn(coordinator.data.data) is not None
     )
 
+    # Migrate original gas meter sensor to ExternalDevice
+    ent_reg = entity_registry.async_get(hass)
+
+    if (
+        entity_id := ent_reg.async_get_entity_id(
+            Platform.SENSOR, DOMAIN, f"{entry.unique_id}_total_gas_m3"
+        )
+    ) and coordinator.data.data.gas_unique_id is not None:
+
+        ent_reg.async_update_entity(
+            entity_id,
+            new_unique_id=f"{DOMAIN}_{coordinator.data.data.gas_unique_id}",
+        )
+
     if coordinator.data.data.external_devices is not None:
         for (unique_id, device) in coordinator.data.data.external_devices.items():
 
@@ -428,7 +444,7 @@ class HomeWizardExternalSensorEntity(HomeWizardEntity, SensorEntity):
     ) -> None:
         """Initialize Externally connected HomeWizard Sensors."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"DOMAIN_{device_unique_id}"
+        self._attr_unique_id = f"{DOMAIN}_{device_unique_id}"
         self._device_id = device_unique_id
         self.entity_description = description
         self._attr_native_unit_of_measurement = self._get_native_unit_of_measurement()
