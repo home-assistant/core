@@ -169,9 +169,7 @@ async def test_dynamic_attributes(
 
 
 async def test_service_calls(
-    hass: HomeAssistant,
-    device: MagicMock,
-    config_entry: MagicMock,
+    hass: HomeAssistant, device: MagicMock, config_entry: MagicMock, client: MagicMock
 ):
     """Test controlling the entity through service calls."""
     await init_integration(hass, config_entry)
@@ -507,6 +505,7 @@ async def test_service_calls(
     device.set_hold_cool.assert_not_called()
 
     device.refresh.side_effect = AIOSomecomfort.device.APIRateLimited
+    client.login.side_effect = AIOSomecomfort.device.SomeComfortError
     async_fire_time_changed(
         hass,
         utcnow() + SCAN_INTERVAL,
