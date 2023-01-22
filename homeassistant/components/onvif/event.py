@@ -24,6 +24,7 @@ SUBSCRIPTION_ERRORS = (
     Fault,
     asyncio.TimeoutError,
     TransportError,
+    TypeError
 )
 
 
