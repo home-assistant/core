@@ -8,8 +8,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.setup import async_setup_component
 
-from .conftest import NAME
-from .test_device import setup_axis_integration
+from .const import NAME
 
 
 async def test_platform_manually_configured(hass):
@@ -26,17 +25,13 @@ async def test_platform_manually_configured(hass):
     assert AXIS_DOMAIN not in hass.data
 
 
-async def test_no_binary_sensors(hass, config_entry):
+async def test_no_binary_sensors(hass, setup_config_entry):
     """Test that no sensors in Axis results in no sensor entities."""
-    await setup_axis_integration(hass, config_entry)
-
     assert not hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)
 
 
-async def test_binary_sensors(hass, config_entry, mock_rtsp_event):
+async def test_binary_sensors(hass, setup_config_entry, mock_rtsp_event):
     """Test that sensors are loaded properly."""
-    await setup_axis_integration(hass, config_entry)
-
     mock_rtsp_event(
         topic="tns1:Device/tnsaxis:Sensor/PIR",
         data_type="state",

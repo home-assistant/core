@@ -1,7 +1,9 @@
 """Axis light platform tests."""
 
-from copy import deepcopy
 from unittest.mock import patch
+
+import pytest
+import respx
 
 from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN
 from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
@@ -14,18 +16,45 @@ from homeassistant.const import (
 )
 from homeassistant.setup import async_setup_component
 
-from .conftest import NAME
-from .test_device import (
-    API_DISCOVERY_RESPONSE,
-    LIGHT_CONTROL_RESPONSE,
-    setup_axis_integration,
-)
+from .const import DEFAULT_HOST, NAME
 
 API_DISCOVERY_LIGHT_CONTROL = {
     "id": "light-control",
     "version": "1.1",
     "name": "Light Control",
 }
+
+
+@pytest.fixture()
+def light_control_items():
+    """Available lights."""
+    return [
+        {
+            "lightID": "led0",
+            "lightType": "IR",
+            "enabled": True,
+            "synchronizeDayNightMode": True,
+            "lightState": False,
+            "automaticIntensityMode": False,
+            "automaticAngleOfIlluminationMode": False,
+            "nrOfLEDs": 1,
+            "error": False,
+            "errorInfo": "",
+        }
+    ]
+
+
+@pytest.fixture(autouse=True)
+def light_control_fixture(light_control_items):
+    """Light control mock response."""
+    data = {
+        "apiVersion": "1.1",
+        "method": "getLightInformation",
+        "data": {"items": light_control_items},
+    }
+    respx.post(f"http://{DEFAULT_HOST}:80/axis-cgi/lightcontrol.cgi").respond(
+        json=data,
+    )
 
 
 async def test_platform_manually_configured(hass):
@@ -37,28 +66,17 @@ async def test_platform_manually_configured(hass):
     assert AXIS_DOMAIN not in hass.data
 
 
-async def test_no_lights(hass, config_entry):
+async def test_no_lights(hass, setup_config_entry):
     """Test that no light events in Axis results in no light entities."""
-    await setup_axis_integration(hass, config_entry)
-
     assert not hass.states.async_entity_ids(LIGHT_DOMAIN)
 
 
+@pytest.mark.parametrize("api_discovery_items", [API_DISCOVERY_LIGHT_CONTROL])
+@pytest.mark.parametrize("light_control_items", [[]])
 async def test_no_light_entity_without_light_control_representation(
-    hass, config_entry, mock_rtsp_event
+    hass, setup_config_entry, mock_rtsp_event
 ):
     """Verify no lights entities get created without light control representation."""
-    api_discovery = deepcopy(API_DISCOVERY_RESPONSE)
-    api_discovery["data"]["apiList"].append(API_DISCOVERY_LIGHT_CONTROL)
-
-    light_control = deepcopy(LIGHT_CONTROL_RESPONSE)
-    light_control["data"]["items"] = []
-
-    with patch.dict(API_DISCOVERY_RESPONSE, api_discovery), patch.dict(
-        LIGHT_CONTROL_RESPONSE, light_control
-    ):
-        await setup_axis_integration(hass, config_entry)
-
     mock_rtsp_event(
         topic="tns1:Device/tnsaxis:Light/Status",
         data_type="state",
@@ -71,14 +89,9 @@ async def test_no_light_entity_without_light_control_representation(
     assert not hass.states.async_entity_ids(LIGHT_DOMAIN)
 
 
-async def test_lights(hass, config_entry, mock_rtsp_event):
+@pytest.mark.parametrize("api_discovery_items", [API_DISCOVERY_LIGHT_CONTROL])
+async def test_lights(hass, setup_config_entry, mock_rtsp_event):
     """Test that lights are loaded properly."""
-    api_discovery = deepcopy(API_DISCOVERY_RESPONSE)
-    api_discovery["data"]["apiList"].append(API_DISCOVERY_LIGHT_CONTROL)
-
-    with patch.dict(API_DISCOVERY_RESPONSE, api_discovery):
-        await setup_axis_integration(hass, config_entry)
-
     # Add light
     with patch(
         "axis.vapix.interfaces.light_control.LightControl.get_current_intensity",
