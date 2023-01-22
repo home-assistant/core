@@ -1776,6 +1776,11 @@ def regex_match(value, find="", ignorecase=False):
     return bool(_regex_cache(find, flags).match(value))
 
 
+def contains(seq, value):
+    """Opposite of the ``in`` test, allowing use as a test in filters like ``selectattr``."""
+    return value in seq
+
+
 @lru_cache(maxsize=128)
 def _regex_cache(find: str, flags: int) -> re.Pattern:
     """Cache compiled regex."""
@@ -2077,6 +2082,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["iif"] = iif
         self.filters["bool"] = forgiving_boolean
         self.filters["version"] = version
+        self.filters["contains"] = contains
         self.globals["log"] = logarithm
         self.globals["sin"] = sine
         self.globals["cos"] = cosine
@@ -2113,6 +2119,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.tests["is_number"] = is_number
         self.tests["match"] = regex_match
         self.tests["search"] = regex_search
+        self.tests["contains"] = contains
 
         if hass is None:
             return
