@@ -892,7 +892,7 @@ oauth2client==4.1.3
 objgraph==3.5.0
 
 # homeassistant.components.garages_amsterdam
-odp-amsterdam==5.0.0
+odp-amsterdam==5.0.1
 
 # homeassistant.components.omnilogic
 omnilogic==0.4.5
@@ -1039,7 +1039,7 @@ pyMetno==0.9.0
 pyRFXtrx==0.30.0
 
 # homeassistant.components.tibber
-pyTibber==0.26.9
+pyTibber==0.26.11
 
 # homeassistant.components.nextbus
 py_nextbusnext==0.1.5

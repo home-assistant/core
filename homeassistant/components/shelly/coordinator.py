@@ -660,7 +660,8 @@ async def async_reconnect_soon(
 ) -> None:
     """Try to reconnect soon."""
     if (
-        not hass.is_stopping
+        not entry.data.get(CONF_SLEEP_PERIOD)
+        and not hass.is_stopping
         and entry.state == config_entries.ConfigEntryState.LOADED
         and (entry_data := get_entry_data(hass).get(entry.entry_id))
         and (coordinator := entry_data.rpc)
