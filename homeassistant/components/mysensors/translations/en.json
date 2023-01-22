@@ -85,6 +85,17 @@
         }
     },
     "issues": {
+        "deprecated_entity": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Update any automations or scripts that use this entity in service calls using the `{deprecated_service}` service to instead use the `{alternate_service}` service with a target entity ID of `{alternate_target}`.",
+                        "title": "The {deprecated_entity} entity will be removed"
+                    }
+                }
+            },
+            "title": "The {deprecated_entity} entity will be removed"
+        },
         "deprecated_service": {
             "fix_flow": {
                 "step": {
