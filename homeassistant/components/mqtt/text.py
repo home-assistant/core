@@ -43,7 +43,7 @@ from .models import (
     ReceiveMessage,
     ReceivePayloadType,
 )
-from .util import get_mqtt_data
+from .util import get_mqtt_data, valid_printable_string
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,7 +77,7 @@ def valid_text_size_configuration(config: ConfigType) -> ConfigType:
 _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
     {
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): valid_printable_string,
         vol.Optional(CONF_MAX, default=MAX_LENGTH_STATE_STATE): cv.positive_int,
         vol.Optional(CONF_MIN, default=0): cv.positive_int,
         vol.Optional(CONF_MODE, default=text.TextMode.TEXT): vol.In(

@@ -41,6 +41,14 @@ def mqtt_config_entry_enabled(hass: HomeAssistant) -> bool | None:
     return not bool(hass.config_entries.async_entries(DOMAIN)[0].disabled_by)
 
 
+def valid_printable_string(name: Any) -> str:
+    """Validate the supplied string is a valid printble string."""
+    validated_string = cv.string(name)
+    if not validated_string.isprintable():
+        raise vol.Invalid("The string contains non printable characters.")
+    return validated_string
+
+
 def valid_topic(topic: Any) -> str:
     """Validate that this is a valid topic name/filter."""
     validated_topic = cv.string(topic)
@@ -121,7 +129,7 @@ def valid_qos_schema(qos: Any) -> int:
 _MQTT_WILL_BIRTH_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_TOPIC): valid_publish_topic,
-        vol.Required(ATTR_PAYLOAD): cv.string,
+        vol.Required(ATTR_PAYLOAD): valid_printable_string,
         vol.Optional(ATTR_QOS, default=DEFAULT_QOS): valid_qos_schema,
         vol.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
     },

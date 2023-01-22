@@ -62,7 +62,7 @@ from .models import (
     ReceiveMessage,
     ReceivePayloadType,
 )
-from .util import get_mqtt_data
+from .util import get_mqtt_data, valid_printable_string
 
 DEFAULT_NAME = "MQTT Siren"
 DEFAULT_PAYLOAD_ON = "ON"
@@ -84,11 +84,15 @@ PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
         vol.Optional(CONF_AVAILABLE_TONES): cv.ensure_list,
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_COMMAND_OFF_TEMPLATE): cv.template,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
-        vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
-        vol.Optional(CONF_STATE_OFF): cv.string,
-        vol.Optional(CONF_STATE_ON): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): valid_printable_string,
+        vol.Optional(
+            CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF
+        ): valid_printable_string,
+        vol.Optional(
+            CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON
+        ): valid_printable_string,
+        vol.Optional(CONF_STATE_OFF): valid_printable_string,
+        vol.Optional(CONF_STATE_ON): valid_printable_string,
         vol.Optional(CONF_STATE_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_SUPPORT_DURATION, default=True): cv.boolean,
         vol.Optional(CONF_SUPPORT_VOLUME_SET, default=True): cv.boolean,

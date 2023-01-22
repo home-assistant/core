@@ -41,7 +41,7 @@ from .models import (
     ReceiveMessage,
     ReceivePayloadType,
 )
-from .util import get_mqtt_data
+from .util import get_mqtt_data, valid_printable_string
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,7 +59,7 @@ MQTT_SELECT_ATTRIBUTES_BLOCKED = frozenset(
 PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
     {
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): valid_printable_string,
         vol.Required(CONF_OPTIONS): cv.ensure_list,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     },

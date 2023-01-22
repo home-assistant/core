@@ -46,7 +46,7 @@ from .mixins import (
     warn_for_legacy_schema,
 )
 from .models import MqttValueTemplate, ReceiveMessage
-from .util import get_mqtt_data
+from .util import get_mqtt_data, valid_printable_string
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,10 +62,14 @@ PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
         vol.Optional(CONF_DEVICE_CLASS): vol.Any(DEVICE_CLASSES_SCHEMA, None),
         vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
         vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): valid_printable_string,
         vol.Optional(CONF_OFF_DELAY): cv.positive_int,
-        vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
-        vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
+        vol.Optional(
+            CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF
+        ): valid_printable_string,
+        vol.Optional(
+            CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON
+        ): valid_printable_string,
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 

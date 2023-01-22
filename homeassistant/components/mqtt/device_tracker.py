@@ -23,7 +23,6 @@ from homeassistant.const import (
     STATE_NOT_HOME,
 )
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -38,7 +37,7 @@ from .mixins import (
     warn_for_legacy_schema,
 )
 from .models import MqttValueTemplate, ReceiveMessage, ReceivePayloadType
-from .util import get_mqtt_data
+from .util import get_mqtt_data, valid_printable_string
 
 CONF_PAYLOAD_HOME = "payload_home"
 CONF_PAYLOAD_NOT_HOME = "payload_not_home"
@@ -49,10 +48,14 @@ DEFAULT_SOURCE_TYPE = SourceType.GPS
 
 PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
     {
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_PAYLOAD_HOME, default=STATE_HOME): cv.string,
-        vol.Optional(CONF_PAYLOAD_NOT_HOME, default=STATE_NOT_HOME): cv.string,
-        vol.Optional(CONF_PAYLOAD_RESET, default=DEFAULT_PAYLOAD_RESET): cv.string,
+        vol.Optional(CONF_NAME): valid_printable_string,
+        vol.Optional(CONF_PAYLOAD_HOME, default=STATE_HOME): valid_printable_string,
+        vol.Optional(
+            CONF_PAYLOAD_NOT_HOME, default=STATE_NOT_HOME
+        ): valid_printable_string,
+        vol.Optional(
+            CONF_PAYLOAD_RESET, default=DEFAULT_PAYLOAD_RESET
+        ): valid_printable_string,
         vol.Optional(CONF_SOURCE_TYPE, default=DEFAULT_SOURCE_TYPE): vol.In(
             SOURCE_TYPES
         ),

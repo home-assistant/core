@@ -44,7 +44,7 @@ from .mixins import (
     warn_for_legacy_schema,
 )
 from .models import MqttValueTemplate, ReceiveMessage
-from .util import get_mqtt_data
+from .util import get_mqtt_data, valid_printable_string
 
 DEFAULT_NAME = "MQTT Switch"
 DEFAULT_PAYLOAD_ON = "ON"
@@ -54,11 +54,15 @@ CONF_STATE_OFF = "state_off"
 
 PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
-        vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
-        vol.Optional(CONF_STATE_OFF): cv.string,
-        vol.Optional(CONF_STATE_ON): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): valid_printable_string,
+        vol.Optional(
+            CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF
+        ): valid_printable_string,
+        vol.Optional(
+            CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON
+        ): valid_printable_string,
+        vol.Optional(CONF_STATE_OFF): valid_printable_string,
+        vol.Optional(CONF_STATE_ON): valid_printable_string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_DEVICE_CLASS): vol.Any(DEVICE_CLASSES_SCHEMA, None),
     }

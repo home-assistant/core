@@ -46,7 +46,7 @@ from .models import (
     ReceiveMessage,
     ReceivePayloadType,
 )
-from .util import get_mqtt_data
+from .util import get_mqtt_data, valid_printable_string
 
 CONF_CODE_FORMAT = "code_format"
 
@@ -81,15 +81,29 @@ PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
     {
         vol.Optional(CONF_CODE_FORMAT): cv.is_regex,
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PAYLOAD_LOCK, default=DEFAULT_PAYLOAD_LOCK): cv.string,
-        vol.Optional(CONF_PAYLOAD_UNLOCK, default=DEFAULT_PAYLOAD_UNLOCK): cv.string,
-        vol.Optional(CONF_PAYLOAD_OPEN): cv.string,
-        vol.Optional(CONF_STATE_JAMMED, default=DEFAULT_STATE_JAMMED): cv.string,
-        vol.Optional(CONF_STATE_LOCKED, default=DEFAULT_STATE_LOCKED): cv.string,
-        vol.Optional(CONF_STATE_LOCKING, default=DEFAULT_STATE_LOCKING): cv.string,
-        vol.Optional(CONF_STATE_UNLOCKED, default=DEFAULT_STATE_UNLOCKED): cv.string,
-        vol.Optional(CONF_STATE_UNLOCKING, default=DEFAULT_STATE_UNLOCKING): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): valid_printable_string,
+        vol.Optional(
+            CONF_PAYLOAD_LOCK, default=DEFAULT_PAYLOAD_LOCK
+        ): valid_printable_string,
+        vol.Optional(
+            CONF_PAYLOAD_UNLOCK, default=DEFAULT_PAYLOAD_UNLOCK
+        ): valid_printable_string,
+        vol.Optional(CONF_PAYLOAD_OPEN): valid_printable_string,
+        vol.Optional(
+            CONF_STATE_JAMMED, default=DEFAULT_STATE_JAMMED
+        ): valid_printable_string,
+        vol.Optional(
+            CONF_STATE_LOCKED, default=DEFAULT_STATE_LOCKED
+        ): valid_printable_string,
+        vol.Optional(
+            CONF_STATE_LOCKING, default=DEFAULT_STATE_LOCKING
+        ): valid_printable_string,
+        vol.Optional(
+            CONF_STATE_UNLOCKED, default=DEFAULT_STATE_UNLOCKED
+        ): valid_printable_string,
+        vol.Optional(
+            CONF_STATE_UNLOCKING, default=DEFAULT_STATE_UNLOCKING
+        ): valid_printable_string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)

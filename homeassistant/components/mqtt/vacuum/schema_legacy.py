@@ -33,7 +33,7 @@ from ..models import (
     ReceiveMessage,
     ReceivePayloadType,
 )
-from ..util import get_mqtt_data, valid_publish_topic
+from ..util import get_mqtt_data, valid_printable_string, valid_publish_topic
 from .const import MQTT_VACUUM_ATTRIBUTES_BLOCKED
 from .schema import MQTT_VACUUM_SCHEMA, services_to_strings, strings_to_services
 
@@ -123,30 +123,32 @@ PLATFORM_SCHEMA_LEGACY_MODERN = (
             vol.Inclusive(CONF_ERROR_TEMPLATE, "error"): cv.template,
             vol.Inclusive(CONF_ERROR_TOPIC, "error"): valid_publish_topic,
             vol.Optional(CONF_FAN_SPEED_LIST, default=[]): vol.All(
-                cv.ensure_list, [cv.string]
+                cv.ensure_list, [valid_printable_string]
             ),
             vol.Inclusive(CONF_FAN_SPEED_TEMPLATE, "fan_speed"): cv.template,
             vol.Inclusive(CONF_FAN_SPEED_TOPIC, "fan_speed"): valid_publish_topic,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): valid_printable_string,
             vol.Optional(
                 CONF_PAYLOAD_CLEAN_SPOT, default=DEFAULT_PAYLOAD_CLEAN_SPOT
-            ): cv.string,
+            ): valid_printable_string,
             vol.Optional(
                 CONF_PAYLOAD_LOCATE, default=DEFAULT_PAYLOAD_LOCATE
-            ): cv.string,
+            ): valid_printable_string,
             vol.Optional(
                 CONF_PAYLOAD_RETURN_TO_BASE, default=DEFAULT_PAYLOAD_RETURN_TO_BASE
-            ): cv.string,
+            ): valid_printable_string,
             vol.Optional(
                 CONF_PAYLOAD_START_PAUSE, default=DEFAULT_PAYLOAD_START_PAUSE
-            ): cv.string,
-            vol.Optional(CONF_PAYLOAD_STOP, default=DEFAULT_PAYLOAD_STOP): cv.string,
+            ): valid_printable_string,
+            vol.Optional(
+                CONF_PAYLOAD_STOP, default=DEFAULT_PAYLOAD_STOP
+            ): valid_printable_string,
             vol.Optional(
                 CONF_PAYLOAD_TURN_OFF, default=DEFAULT_PAYLOAD_TURN_OFF
-            ): cv.string,
+            ): valid_printable_string,
             vol.Optional(
                 CONF_PAYLOAD_TURN_ON, default=DEFAULT_PAYLOAD_TURN_ON
-            ): cv.string,
+            ): valid_printable_string,
             vol.Optional(CONF_SEND_COMMAND_TOPIC): valid_publish_topic,
             vol.Optional(CONF_SET_FAN_SPEED_TOPIC): valid_publish_topic,
             vol.Optional(

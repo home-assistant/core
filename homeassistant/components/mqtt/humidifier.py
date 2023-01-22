@@ -58,7 +58,12 @@ from .models import (
     ReceiveMessage,
     ReceivePayloadType,
 )
-from .util import get_mqtt_data, valid_publish_topic, valid_subscribe_topic
+from .util import (
+    get_mqtt_data,
+    valid_printable_string,
+    valid_publish_topic,
+    valid_subscribe_topic,
+)
 
 CONF_AVAILABLE_MODES_LIST = "modes"
 CONF_DEVICE_CLASS = "device_class"
@@ -130,9 +135,13 @@ _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
         vol.Optional(CONF_MODE_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_MODE_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_MODE_STATE_TEMPLATE): cv.template,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
-        vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): valid_printable_string,
+        vol.Optional(
+            CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF
+        ): valid_printable_string,
+        vol.Optional(
+            CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON
+        ): valid_printable_string,
         vol.Optional(CONF_STATE_VALUE_TEMPLATE): cv.template,
         vol.Required(CONF_TARGET_HUMIDITY_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_TARGET_HUMIDITY_COMMAND_TEMPLATE): cv.template,
@@ -146,8 +155,10 @@ _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
         vol.Optional(CONF_TARGET_HUMIDITY_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(
             CONF_PAYLOAD_RESET_HUMIDITY, default=DEFAULT_PAYLOAD_RESET
-        ): cv.string,
-        vol.Optional(CONF_PAYLOAD_RESET_MODE, default=DEFAULT_PAYLOAD_RESET): cv.string,
+        ): valid_printable_string,
+        vol.Optional(
+            CONF_PAYLOAD_RESET_MODE, default=DEFAULT_PAYLOAD_RESET
+        ): valid_printable_string,
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 

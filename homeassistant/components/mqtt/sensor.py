@@ -53,7 +53,7 @@ from .models import (
     ReceiveMessage,
     ReceivePayloadType,
 )
-from .util import get_mqtt_data, valid_subscribe_topic
+from .util import get_mqtt_data, valid_printable_string, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -103,9 +103,9 @@ _PLATFORM_SCHEMA_BASE = MQTT_RO_SCHEMA.extend(
         vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
         vol.Optional(CONF_LAST_RESET_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_LAST_RESET_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): valid_printable_string,
         vol.Optional(CONF_STATE_CLASS): vol.Any(STATE_CLASSES_SCHEMA, None),
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): valid_printable_string,
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 

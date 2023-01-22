@@ -12,7 +12,6 @@ from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -27,7 +26,7 @@ from .mixins import (
     warn_for_legacy_schema,
 )
 from .models import ReceiveMessage
-from .util import valid_subscribe_topic
+from .util import valid_printable_string, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +45,7 @@ MQTT_CAMERA_ATTRIBUTES_BLOCKED = frozenset(
 
 PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): valid_printable_string,
         vol.Required(CONF_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_IMAGE_ENCODING): "b64",
     }

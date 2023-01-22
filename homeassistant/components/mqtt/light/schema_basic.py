@@ -67,7 +67,12 @@ from ..models import (
     ReceivePayloadType,
     TemplateVarsType,
 )
-from ..util import get_mqtt_data, valid_publish_topic, valid_subscribe_topic
+from ..util import (
+    get_mqtt_data,
+    valid_printable_string,
+    valid_publish_topic,
+    valid_subscribe_topic,
+)
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
@@ -186,7 +191,9 @@ _PLATFORM_SCHEMA_BASE = (
             vol.Optional(CONF_COLOR_TEMP_VALUE_TEMPLATE): cv.template,
             vol.Optional(CONF_EFFECT_COMMAND_TEMPLATE): cv.template,
             vol.Optional(CONF_EFFECT_COMMAND_TOPIC): valid_publish_topic,
-            vol.Optional(CONF_EFFECT_LIST): vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional(CONF_EFFECT_LIST): vol.All(
+                cv.ensure_list, [valid_printable_string]
+            ),
             vol.Optional(CONF_EFFECT_STATE_TOPIC): valid_subscribe_topic,
             vol.Optional(CONF_EFFECT_VALUE_TEMPLATE): cv.template,
             vol.Optional(CONF_HS_COMMAND_TEMPLATE): cv.template,
@@ -195,12 +202,16 @@ _PLATFORM_SCHEMA_BASE = (
             vol.Optional(CONF_HS_VALUE_TEMPLATE): cv.template,
             vol.Optional(CONF_MAX_MIREDS): cv.positive_int,
             vol.Optional(CONF_MIN_MIREDS): cv.positive_int,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): valid_printable_string,
             vol.Optional(CONF_ON_COMMAND_TYPE, default=DEFAULT_ON_COMMAND_TYPE): vol.In(
                 VALUES_ON_COMMAND_TYPE
             ),
-            vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
-            vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
+            vol.Optional(
+                CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF
+            ): valid_printable_string,
+            vol.Optional(
+                CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON
+            ): valid_printable_string,
             vol.Optional(CONF_RGB_COMMAND_TEMPLATE): cv.template,
             vol.Optional(CONF_RGB_COMMAND_TOPIC): valid_publish_topic,
             vol.Optional(CONF_RGB_STATE_TOPIC): valid_subscribe_topic,

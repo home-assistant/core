@@ -52,7 +52,12 @@ from .mixins import (
     warn_for_legacy_schema,
 )
 from .models import MqttCommandTemplate, MqttValueTemplate, ReceiveMessage
-from .util import get_mqtt_data, valid_publish_topic, valid_subscribe_topic
+from .util import (
+    get_mqtt_data,
+    valid_printable_string,
+    valid_publish_topic,
+    valid_subscribe_topic,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -163,27 +168,29 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
         vol.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_DEVICE_CLASS): vol.Any(DEVICE_CLASSES_SCHEMA, None),
         vol.Optional(CONF_GET_POSITION_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): valid_printable_string,
         vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         vol.Optional(CONF_PAYLOAD_CLOSE, default=DEFAULT_PAYLOAD_CLOSE): vol.Any(
-            cv.string, None
+            valid_printable_string, None
         ),
         vol.Optional(CONF_PAYLOAD_OPEN, default=DEFAULT_PAYLOAD_OPEN): vol.Any(
-            cv.string, None
+            valid_printable_string, None
         ),
         vol.Optional(CONF_PAYLOAD_STOP, default=DEFAULT_PAYLOAD_STOP): vol.Any(
-            cv.string, None
+            valid_printable_string, None
         ),
         vol.Optional(CONF_POSITION_CLOSED, default=DEFAULT_POSITION_CLOSED): int,
         vol.Optional(CONF_POSITION_OPEN, default=DEFAULT_POSITION_OPEN): int,
         vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
         vol.Optional(CONF_SET_POSITION_TEMPLATE): cv.template,
         vol.Optional(CONF_SET_POSITION_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_STATE_CLOSED, default=STATE_CLOSED): cv.string,
-        vol.Optional(CONF_STATE_CLOSING, default=STATE_CLOSING): cv.string,
-        vol.Optional(CONF_STATE_OPEN, default=STATE_OPEN): cv.string,
-        vol.Optional(CONF_STATE_OPENING, default=STATE_OPENING): cv.string,
-        vol.Optional(CONF_STATE_STOPPED, default=DEFAULT_STATE_STOPPED): cv.string,
+        vol.Optional(CONF_STATE_CLOSED, default=STATE_CLOSED): valid_printable_string,
+        vol.Optional(CONF_STATE_CLOSING, default=STATE_CLOSING): valid_printable_string,
+        vol.Optional(CONF_STATE_OPEN, default=STATE_OPEN): valid_printable_string,
+        vol.Optional(CONF_STATE_OPENING, default=STATE_OPENING): valid_printable_string,
+        vol.Optional(
+            CONF_STATE_STOPPED, default=DEFAULT_STATE_STOPPED
+        ): valid_printable_string,
         vol.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(
             CONF_TILT_CLOSED_POSITION, default=DEFAULT_TILT_CLOSED_POSITION
