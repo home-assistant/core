@@ -21,3 +21,11 @@ async def init_integration_with_entry(
     await hass.async_block_till_done()
 
     return entry
+
+
+def reset_mock(device) -> None:
+    """Reset the mocks for test."""
+    device.set_setpoint_cool.reset_mock()
+    device.set_setpoint_heat.reset_mock()
+    device.set_hold_heat.reset_mock()
+    device.set_hold_cool.reset_mock()

@@ -40,14 +40,6 @@ def config_entry(config_data, config_options):
     )
 
 
-def ui_side_effect_function(*args, **kwargs):
-    """Return correct value for attribute."""
-    if args[0] == "HeatUpperSetptLimit":
-        return 35
-    if args[0] == "CoolUpperSetptLimit":
-        return 20
-
-
 @pytest.fixture
 def device():
     """Mock a somecomfort.Device."""
