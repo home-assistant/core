@@ -20,12 +20,7 @@ from .models import Event
 from .parsers import PARSERS
 
 UNHANDLED_TOPICS = set()
-SUBSCRIPTION_ERRORS = (
-    Fault,
-    asyncio.TimeoutError,
-    TransportError,
-    TypeError
-)
+SUBSCRIPTION_ERRORS = (Fault, asyncio.TimeoutError, TransportError, TypeError)
 
 
 class EventManager:
