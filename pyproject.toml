@@ -117,6 +117,7 @@ load-plugins = [
     "hass_enforce_type_hints",
     "hass_imports",
     "hass_logger",
+    "pylint_per_file_ignores",
 ]
 persistent = false
 extension-pkg-allow-list = [
@@ -218,6 +219,9 @@ runtime-typing = false
 
 [tool.pylint.CODE_STYLE]
 max-line-length-suggestions = 72
+
+[tool.pylint-per-file-ignores]
+"/tests/"="protected-access,redefined-outer-name"
 
 [tool.pytest.ini_options]
 testpaths = [

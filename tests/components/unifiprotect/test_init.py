@@ -1,5 +1,5 @@
 """Test the UniFi Protect setup flow."""
-# pylint: disable=protected-access
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
