@@ -336,12 +336,8 @@ class HoneywellUSThermostat(ClimateEntity):
         it doesn't get overwritten when away mode is switched on.
         """
         self._away = True
-        try:
-            # Get current mode
-            mode = self._device.system_mode
-        except AIOSomecomfort.SomeComfortError:
-            _LOGGER.error("Can not get system mode")
-            return
+        # Get current mode
+        mode = self._device.system_mode
         try:
             # Set permanent hold
             # and Set temperature
@@ -362,25 +358,18 @@ class HoneywellUSThermostat(ClimateEntity):
 
     async def _turn_hold_mode_on(self) -> None:
         """Turn permanent hold on."""
-        try:
-            # Get current mode
-            mode = self._device.system_mode
-        except AIOSomecomfort.SomeComfortError:
-            _LOGGER.error("Can not get system mode")
-            return
+        # Get current mode
+        mode = self._device.system_mode
         # Check that we got a valid mode back
-        if mode in HW_MODE_TO_HVAC_MODE:
-            try:
-                # Set permanent hold
-                if mode in COOLING_MODES:
-                    await self._device.set_hold_cool(True)
-                if mode in HEATING_MODES:
-                    await self._device.set_hold_heat(True)
+        try:
+            # Set permanent hold
+            if mode in COOLING_MODES:
+                await self._device.set_hold_cool(True)
+            elif mode in HEATING_MODES:
+                await self._device.set_hold_heat(True)
 
-            except AIOSomecomfort.SomeComfortError:
-                _LOGGER.error("Couldn't set permanent hold")
-        else:
-            _LOGGER.error("Invalid system mode returned: %s", mode)
+        except AIOSomecomfort.SomeComfortError:
+            _LOGGER.error("Couldn't set permanent hold")
 
     async def _turn_away_mode_off(self) -> None:
         """Turn away/hold off."""
