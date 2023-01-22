@@ -56,12 +56,12 @@ class HoneywellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     username=data[CONF_USERNAME], password=data[CONF_PASSWORD]
                 )
 
-            except AIOSomecomfort.device.AuthError:
+            except AIOSomecomfort.AuthError:
                 errors["base"] = "invalid_auth"
 
             except (
-                AIOSomecomfort.device.ConnectionError,
-                AIOSomecomfort.device.ConnectionTimeout,
+                AIOSomecomfort.ConnectionError,
+                AIOSomecomfort.ConnectionTimeout,
                 asyncio.TimeoutError,
             ):
                 errors["base"] = "cannot_connect"
@@ -93,8 +93,8 @@ class HoneywellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except AIOSomecomfort.AuthError:
                 errors["base"] = "invalid_auth"
             except (
-                AIOSomecomfort.device.ConnectionError,
-                AIOSomecomfort.device.ConnectionTimeout,
+                AIOSomecomfort.ConnectionError,
+                AIOSomecomfort.ConnectionTimeout,
                 asyncio.TimeoutError,
             ):
                 errors["base"] = "cannot_connect"
