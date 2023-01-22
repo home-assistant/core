@@ -4,6 +4,7 @@ from random import getrandbits
 from unittest.mock import patch
 
 import pytest
+import voluptuous as vol
 
 from homeassistant.components import mqtt
 
@@ -47,3 +48,13 @@ async def test_reading_non_exitisting_certificate_file():
     assert (
         mqtt.util.migrate_certificate_file_to_content("/home/file_not_exists") is None
     )
+
+
+async def test_printable_name():
+    """Test reading a non existing certificate file."""
+    assert mqtt.util.valid_printable_string("äll")
+    assert mqtt.util.valid_printable_string("äll!@#$%^&*")
+    with pytest.raises(vol.Invalid):
+        assert mqtt.util.valid_printable_string("Invalid device name\u0000")
+    with pytest.raises(vol.Invalid):
+        assert mqtt.util.valid_printable_string("Invalid device name\n")
