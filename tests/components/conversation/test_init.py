@@ -380,6 +380,55 @@ async def test_custom_sentences(hass, hass_client, hass_admin_user):
         }
 
 
+async def test_custom_sentences_config(hass, hass_client, hass_admin_user):
+    """Test custom sentences with a custom intent in config."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(
+        hass,
+        "conversation",
+        {"conversation": {"intents": {"StealthMode": ["engage stealth mode"]}}},
+    )
+    assert await async_setup_component(hass, "intent", {})
+    assert await async_setup_component(
+        hass,
+        "intent_script",
+        {
+            "intent_script": {
+                "StealthMode": {"speech": {"text": "Stealth mode engaged"}}
+            }
+        },
+    )
+
+    # Invoke intent via HTTP API
+    client = await hass_client()
+    resp = await client.post(
+        "/api/conversation/process",
+        json={"text": "engage stealth mode"},
+    )
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    assert data == {
+        "response": {
+            "card": {},
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "Stealth mode engaged",
+                }
+            },
+            "language": hass.config.language,
+            "response_type": "action_done",
+            "data": {
+                "targets": [],
+                "success": [],
+                "failed": [],
+            },
+        },
+        "conversation_id": None,
+    }
+
+
 # pylint: disable=protected-access
 async def test_prepare_reload(hass):
     """Test calling the reload service."""
@@ -414,3 +463,27 @@ async def test_prepare_fail(hass):
 
     # Confirm no intents were loaded
     assert not agent._lang_intents.get("not-a-language")
+
+
+async def test_language_region(hass, init_components):
+    """Test calling the turn on intent."""
+    hass.states.async_set("light.kitchen", "off")
+    calls = async_mock_service(hass, HASS_DOMAIN, "turn_on")
+
+    # Add fake region
+    language = f"{hass.config.language}-YZ"
+    await hass.services.async_call(
+        "conversation",
+        "process",
+        {
+            conversation.ATTR_TEXT: "turn on the kitchen",
+            conversation.ATTR_LANGUAGE: language,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    call = calls[0]
+    assert call.domain == HASS_DOMAIN
+    assert call.service == "turn_on"
+    assert call.data == {"entity_id": "light.kitchen"}

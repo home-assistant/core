@@ -9,6 +9,11 @@
             "invalid_auth": "Invalid authentication"
         },
         "step": {
+            "api_key": {
+                "data": {
+                    "api_key": "API Key"
+                }
+            },
             "reauth_confirm": {
                 "data": {
                     "api_key": "API Key"
@@ -18,6 +23,7 @@
             },
             "user": {
                 "data": {
+                    "api_key": "API Key",
                     "host": "Host",
                     "location": "Location",
                     "name": "Name",

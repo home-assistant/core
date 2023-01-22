@@ -728,7 +728,7 @@ fjaraskupan==2.2.0
 flipr-api==1.4.4
 
 # homeassistant.components.flux_led
-flux_led==0.28.34
+flux_led==0.28.35
 
 # homeassistant.components.homekit
 # homeassistant.components.recorder
@@ -2134,13 +2134,13 @@ pytradfri[async]==9.0.1
 # homeassistant.components.trafikverket_ferry
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
-pytrafikverket==0.2.2
+pytrafikverket==0.2.3
 
 # homeassistant.components.usb
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.6.1
+pyunifiprotect==4.6.2
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0

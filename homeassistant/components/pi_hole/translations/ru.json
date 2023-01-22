@@ -9,6 +9,11 @@
             "invalid_auth": "\u041e\u0448\u0438\u0431\u043a\u0430 \u0430\u0443\u0442\u0435\u043d\u0442\u0438\u0444\u0438\u043a\u0430\u0446\u0438\u0438."
         },
         "step": {
+            "api_key": {
+                "data": {
+                    "api_key": "\u041a\u043b\u044e\u0447 API"
+                }
+            },
             "reauth_confirm": {
                 "data": {
                     "api_key": "\u041a\u043b\u044e\u0447 API"
