@@ -37,7 +37,7 @@
             "title": "Unit\u00e0 di misura inaspettata"
         },
         "entity_unexpected_unit_gas": {
-            "description": "Le seguenti entit\u00e0 non hanno un'unit\u00e0 di misura prevista (o di {energy_units} per un sensore di energia o di {gas_units} per un sensore di gas):",
+            "description": "Le seguenti entit\u00e0 non hanno un'unit\u00e0 di misura prevista (di {energy_units} per un sensore di energia o di {gas_units} per un sensore di gas):",
             "title": "Unit\u00e0 di misura inaspettata"
         },
         "entity_unexpected_unit_gas_price": {
