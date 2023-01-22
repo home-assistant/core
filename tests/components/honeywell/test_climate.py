@@ -1,58 +1,72 @@
 """Test the Whirlpool Sixth Sense climate domain."""
 from unittest.mock import MagicMock
 
+import AIOSomecomfort
+
 from homeassistant.components.climate import (
+    ATTR_AUX_HEAT,
     ATTR_CURRENT_TEMPERATURE,
+    ATTR_FAN_MODE,
+    ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
     ATTR_MAX_TEMP,
     ATTR_MIN_TEMP,
+    ATTR_PRESET_MODE,
     ATTR_PRESET_MODES,
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
+    DOMAIN as CLIMATE_DOMAIN,
+    FAN_AUTO,
+    FAN_DIFFUSE,
+    FAN_ON,
     PRESET_AWAY,
     PRESET_NONE,
+    SERVICE_SET_AUX_HEAT,
+    SERVICE_SET_FAN_MODE,
+    SERVICE_SET_HVAC_MODE,
+    SERVICE_SET_PRESET_MODE,
+    SERVICE_SET_TEMPERATURE,
     ClimateEntityFeature,
     HVACMode,
 )
+from homeassistant.components.honeywell.climate import SCAN_INTERVAL
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_SUPPORTED_FEATURES,
+    ATTR_TEMPERATURE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.dt import utcnow
 
 from . import init_integration
+
+from tests.common import async_fire_time_changed
 
 FAN_ACTION = "fan_action"
 PRESET_HOLD = "Hold"
 
-# async def update_ac_state(
-#     hass: HomeAssistant,
-#     entity_id: str,
-#     mock_aircon_api_instance: MagicMock,
-# ):
-#     """Simulate an update trigger from the API."""
-#     for call in mock_aircon_api_instance.register_attr_callback.call_args_list:
-#         update_ha_state_cb = call[0][0]
-#         update_ha_state_cb()
-#         await hass.async_block_till_done()
-#     return hass.states.get(entity_id)
 
-
-async def test_no_thermostats(hass: HomeAssistant, device: MagicMock):
+async def test_no_thermostats(
+    hass: HomeAssistant, device: MagicMock, config_entry: MagicMock
+):
     """Test the setup of the climate entities when there are no appliances available."""
     device._data = {}
-    await init_integration(hass)
+    await init_integration(hass, config_entry)
     assert len(hass.states.async_all()) == 0
 
 
 async def test_static_attributes(
-    hass: HomeAssistant,
-    client: MagicMock,
+    hass: HomeAssistant, device: MagicMock, config_entry: MagicMock
 ):
     """Test static climate attributes."""
-    await init_integration(hass)
+    await init_integration(hass, config_entry)
 
-    entity_id = "climate.device1"
+    entity_id = f"climate.{device.name}"
     entry = er.async_get(hass).async_get(entity_id)
     assert entry
 
@@ -69,9 +83,11 @@ async def test_static_attributes(
         == ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.PRESET_MODE
         | ClimateEntityFeature.AUX_HEAT
+        | ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+        | ClimateEntityFeature.TARGET_HUMIDITY
     )
-    # <ClimateEntityFeature.AUX_HEAT|PRESET_MODE|TARGET_TEMPERATURE_RANGE|TARGET_TEMPERATURE: 83>
+
     assert attributes[ATTR_HVAC_MODES] == [
         HVACMode.OFF,
         HVACMode.HEAT_COOL,
@@ -86,266 +102,413 @@ async def test_static_attributes(
     assert attributes[ATTR_MIN_TEMP] == -13.9
     assert attributes[ATTR_MAX_TEMP] == 1.7
     assert attributes[ATTR_CURRENT_TEMPERATURE] == -6.7
-    assert attributes[FAN_ACTION] == "running"
+    assert attributes[FAN_ACTION] == "idle"
     assert attributes["permanent_hold"] is False
     assert attributes["aux_heat"] == "off"
 
 
-# async def test_dynamic_attributes(
-#     hass: HomeAssistant,
-#     client: MagicMock,
-#     device: MagicMock,
-#     another_device: MagicMock,
-# ):
-#     """Test dynamic attributes."""
-#     await init_integration(hass)
+async def test_dynamic_attributes(
+    hass: HomeAssistant, device: MagicMock, config_entry: MagicMock
+):
+    """Test dynamic attributes."""
 
-#     @dataclass
-#     class ClimateTestInstance:
-#         """Helper class for multiple climate and mock instances."""
+    await init_integration(hass, config_entry)
 
-#         entity_id: str
-#         mock_instance: MagicMock
-#         mock_instance_idx: int
+    entity_id = f"climate.{device.name}"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == HVACMode.OFF
+    attributes = state.attributes
+    assert attributes["current_temperature"] == -6.7
+    assert attributes["current_humidity"] == 50
 
-#     for clim_test_instance in (
-#         ClimateTestInstance("climate.said1", mock_aircon1_api, 0),
-#         ClimateTestInstance("climate.said2", mock_aircon2_api, 1),
-#     ):
-#         entity_id = clim_test_instance.entity_id
-#         mock_instance = clim_test_instance.mock_instance
-#         state = hass.states.get(entity_id)
-#         assert state is not None
-#         assert state.state == HVACMode.COOL
+    device.system_mode = "cool"
+    device.current_temperature = 21
+    device.current_humidity = 55
 
-#         mock_instance.get_power_on.return_value = False
-#         state = await update_ac_state(hass, entity_id, mock_instance)
-#         assert state.state == HVACMode.OFF
+    async_fire_time_changed(
+        hass,
+        utcnow() + SCAN_INTERVAL,
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == HVACMode.COOL
+    attributes = state.attributes
+    assert attributes["current_temperature"] == -6.1
+    assert attributes["current_humidity"] == 55
 
-#         mock_instance.get_online.return_value = False
-#         state = await update_ac_state(hass, entity_id, mock_instance)
-#         assert state.state == STATE_UNAVAILABLE
+    device.system_mode = "heat"
+    device.current_temperature = 61
+    device.current_humidity = 50
 
-#         mock_instance.get_power_on.return_value = True
-#         mock_instance.get_online.return_value = True
-#         state = await update_ac_state(hass, entity_id, mock_instance)
-#         assert state.state == HVACMode.COOL
+    async_fire_time_changed(
+        hass,
+        utcnow() + SCAN_INTERVAL,
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == HVACMode.HEAT
+    attributes = state.attributes
+    assert attributes["current_temperature"] == 16.1
+    assert attributes["current_humidity"] == 50
 
-#         mock_instance.get_mode.return_value = whirlpool.aircon.Mode.Heat
-#         state = await update_ac_state(hass, entity_id, mock_instance)
-#         assert state.state == HVACMode.HEAT
+    device.system_mode = "auto"
+    device.current_temperature = 61
+    device.current_humidity = 50
 
-#         mock_instance.get_mode.return_value = whirlpool.aircon.Mode.Fan
-#         state = await update_ac_state(hass, entity_id, mock_instance)
-#         assert state.state == HVACMode.FAN_ONLY
-
-#         mock_instance.get_fanspeed.return_value = whirlpool.aircon.FanSpeed.Auto
-#         state = await update_ac_state(hass, entity_id, mock_instance)
-#         assert state.attributes[ATTR_FAN_MODE] == HVACMode.AUTO
-
-#         mock_instance.get_fanspeed.return_value = whirlpool.aircon.FanSpeed.Low
-#         state = await update_ac_state(hass, entity_id, mock_instance)
-#         assert state.attributes[ATTR_FAN_MODE] == FAN_LOW
-
-#         mock_instance.get_fanspeed.return_value = whirlpool.aircon.FanSpeed.Medium
-#         state = await update_ac_state(hass, entity_id, mock_instance)
-#         assert state.attributes[ATTR_FAN_MODE] == FAN_MEDIUM
-
-#         mock_instance.get_fanspeed.return_value = whirlpool.aircon.FanSpeed.High
-#         state = await update_ac_state(hass, entity_id, mock_instance)
-#         assert state.attributes[ATTR_FAN_MODE] == FAN_HIGH
-
-#         mock_instance.get_fanspeed.return_value = whirlpool.aircon.FanSpeed.Off
-#         state = await update_ac_state(hass, entity_id, mock_instance)
-#         assert state.attributes[ATTR_FAN_MODE] == FAN_OFF
-
-#         mock_instance.get_current_temp.return_value = 15
-#         mock_instance.get_temp.return_value = 20
-#         mock_instance.get_current_humidity.return_value = 80
-#         mock_instance.get_h_louver_swing.return_value = True
-#         attributes = (await update_ac_state(hass, entity_id, mock_instance)).attributes
-#         assert attributes[ATTR_CURRENT_TEMPERATURE] == 15
-#         assert attributes[ATTR_TEMPERATURE] == 20
-#         assert attributes[ATTR_CURRENT_HUMIDITY] == 80
-#         assert attributes[ATTR_SWING_MODE] == SWING_HORIZONTAL
-
-#         mock_instance.get_current_temp.return_value = 16
-#         mock_instance.get_temp.return_value = 21
-#         mock_instance.get_current_humidity.return_value = 70
-#         mock_instance.get_h_louver_swing.return_value = False
-#         attributes = (await update_ac_state(hass, entity_id, mock_instance)).attributes
-#         assert attributes[ATTR_CURRENT_TEMPERATURE] == 16
-#         assert attributes[ATTR_TEMPERATURE] == 21
-#         assert attributes[ATTR_CURRENT_HUMIDITY] == 70
-#         assert attributes[ATTR_SWING_MODE] == SWING_OFF
+    async_fire_time_changed(
+        hass,
+        utcnow() + SCAN_INTERVAL,
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == HVACMode.HEAT_COOL
 
 
-# async def test_service_calls(
-#     hass: HomeAssistant,
-#     mock_aircon_api_instances: MagicMock,
-#     mock_aircon1_api: MagicMock,
-#     mock_aircon2_api: MagicMock,
-# ):
-#     """Test controlling the entity through service calls."""
-#     await init_integration(hass)
+async def test_service_calls(
+    hass: HomeAssistant,
+    device: MagicMock,
+    config_entry: MagicMock,
+):
+    """Test controlling the entity through service calls."""
+    await init_integration(hass, config_entry)
+    entity_id = f"climate.{device.name}"
 
-#     @dataclass
-#     class ClimateInstancesData:
-#         """Helper class for multiple climate and mock instances."""
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    device.set_system_mode.assert_called_once_with("off")
 
-#         entity_id: str
-#         mock_instance: MagicMock
+    device.set_system_mode.reset_mock()
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    device.set_system_mode.assert_called_once_with("auto")
 
-#     for clim_test_instance in (
-#         ClimateInstancesData("climate.said1", mock_aircon1_api),
-#         ClimateInstancesData("climate.said2", mock_aircon2_api),
-#     ):
-#         mock_instance = clim_test_instance.mock_instance
-#         entity_id = clim_test_instance.entity_id
+    device.set_system_mode.reset_mock()
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.COOL},
+        blocking=True,
+    )
+    device.set_system_mode.assert_called_once_with("cool")
 
-#         await hass.services.async_call(
-#             CLIMATE_DOMAIN,
-#             SERVICE_TURN_OFF,
-#             {ATTR_ENTITY_ID: entity_id},
-#             blocking=True,
-#         )
-#         mock_instance.set_power_on.assert_called_once_with(False)
+    device.set_system_mode.reset_mock()
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.HEAT},
+        blocking=True,
+    )
+    device.set_system_mode.assert_called_once_with("heat")
 
-#         mock_instance.set_power_on.reset_mock()
-#         await hass.services.async_call(
-#             CLIMATE_DOMAIN,
-#             SERVICE_TURN_ON,
-#             {ATTR_ENTITY_ID: entity_id},
-#             blocking=True,
-#         )
-#         mock_instance.set_power_on.assert_called_once_with(True)
+    device.set_system_mode.reset_mock()
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.HEAT_COOL},
+        blocking=True,
+    )
+    device.set_system_mode.assert_called_once_with("auto")
 
-#         mock_instance.set_power_on.reset_mock()
-#         mock_instance.get_power_on.return_value = False
-#         await hass.services.async_call(
-#             CLIMATE_DOMAIN,
-#             SERVICE_SET_HVAC_MODE,
-#             {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.COOL},
-#             blocking=True,
-#         )
-#         mock_instance.set_power_on.assert_called_once_with(True)
+    device.set_setpoint_cool.reset_mock()
+    device.set_setpoint_heat.reset_mock()
 
-#         mock_instance.set_temp.reset_mock()
-#         await hass.services.async_call(
-#             CLIMATE_DOMAIN,
-#             SERVICE_SET_TEMPERATURE,
-#             {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 15},
-#             blocking=True,
-#         )
-#         mock_instance.set_temp.assert_called_once_with(15)
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_TARGET_TEMP_LOW: 25.0,
+            ATTR_TARGET_TEMP_HIGH: 35.0,
+        },
+        blocking=True,
+    )
+    device.set_setpoint_cool.assert_called_once_with(95)
+    device.set_setpoint_heat.assert_called_once_with(77)
 
-#         mock_instance.set_mode.reset_mock()
-#         await hass.services.async_call(
-#             CLIMATE_DOMAIN,
-#             SERVICE_SET_HVAC_MODE,
-#             {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.COOL},
-#             blocking=True,
-#         )
-#         mock_instance.set_mode.assert_called_once_with(whirlpool.aircon.Mode.Cool)
+    device.set_setpoint_heat.reset_mock()
+    device.set_setpoint_heat.side_effect = AIOSomecomfort.SomeComfortError
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_TARGET_TEMP_LOW: 25.0,
+            ATTR_TARGET_TEMP_HIGH: 35.0,
+        },
+        blocking=True,
+    )
+    device.set_setpoint_heat.assert_called_once_with(77)
 
-#         mock_instance.set_mode.reset_mock()
-#         await hass.services.async_call(
-#             CLIMATE_DOMAIN,
-#             SERVICE_SET_HVAC_MODE,
-#             {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.HEAT},
-#             blocking=True,
-#         )
-#         mock_instance.set_mode.assert_called_once_with(whirlpool.aircon.Mode.Heat)
+    device.set_system_mode.reset_mock()
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_AUX_HEAT,
+        {ATTR_ENTITY_ID: entity_id, ATTR_AUX_HEAT: True},
+        blocking=True,
+    )
+    device.set_system_mode.assert_called_once_with("emheat")
 
-#         mock_instance.set_mode.reset_mock()
-#         # HVACMode.DRY is not supported
-#         with pytest.raises(ValueError):
-#             await hass.services.async_call(
-#                 CLIMATE_DOMAIN,
-#                 SERVICE_SET_HVAC_MODE,
-#                 {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.DRY},
-#                 blocking=True,
-#             )
-#         mock_instance.set_mode.assert_not_called()
+    device.set_system_mode.reset_mock()
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_AUX_HEAT,
+        {ATTR_ENTITY_ID: entity_id, ATTR_AUX_HEAT: False},
+        blocking=True,
+    )
+    device.set_system_mode.assert_called_once_with("heat")
 
-#         mock_instance.set_mode.reset_mock()
-#         await hass.services.async_call(
-#             CLIMATE_DOMAIN,
-#             SERVICE_SET_HVAC_MODE,
-#             {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.FAN_ONLY},
-#             blocking=True,
-#         )
-#         mock_instance.set_mode.assert_called_once_with(whirlpool.aircon.Mode.Fan)
+    device.set_setpoint_cool.reset_mock()
+    device.set_setpoint_heat.reset_mock()
 
-#         mock_instance.set_fanspeed.reset_mock()
-#         await hass.services.async_call(
-#             CLIMATE_DOMAIN,
-#             SERVICE_SET_FAN_MODE,
-#             {ATTR_ENTITY_ID: entity_id, ATTR_FAN_MODE: FAN_AUTO},
-#             blocking=True,
-#         )
-#         mock_instance.set_fanspeed.assert_called_once_with(
-#             whirlpool.aircon.FanSpeed.Auto
-#         )
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 15},
+        blocking=True,
+    )
+    device.set_setpoint_heat.assert_not_called()
+    device.set_setpoint_cool.assert_not_called()
 
-#         mock_instance.set_fanspeed.reset_mock()
-#         await hass.services.async_call(
-#             CLIMATE_DOMAIN,
-#             SERVICE_SET_FAN_MODE,
-#             {ATTR_ENTITY_ID: entity_id, ATTR_FAN_MODE: FAN_LOW},
-#             blocking=True,
-#         )
-#         mock_instance.set_fanspeed.assert_called_once_with(
-#             whirlpool.aircon.FanSpeed.Low
-#         )
+    device.system_mode = "heat"
+    async_fire_time_changed(
+        hass,
+        utcnow() + SCAN_INTERVAL,
+    )
+    await hass.async_block_till_done()
 
-#         mock_instance.set_fanspeed.reset_mock()
-#         await hass.services.async_call(
-#             CLIMATE_DOMAIN,
-#             SERVICE_SET_FAN_MODE,
-#             {ATTR_ENTITY_ID: entity_id, ATTR_FAN_MODE: FAN_MEDIUM},
-#             blocking=True,
-#         )
-#         mock_instance.set_fanspeed.assert_called_once_with(
-#             whirlpool.aircon.FanSpeed.Medium
-#         )
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 15},
+        blocking=True,
+    )
+    device.set_setpoint_heat.assert_called_once_with(59.0)
+    device.set_setpoint_cool.assert_not_called()
 
-#         mock_instance.set_fanspeed.reset_mock()
-#         # FAN_MIDDLE is not supported
-#         with pytest.raises(ValueError):
-#             await hass.services.async_call(
-#                 CLIMATE_DOMAIN,
-#                 SERVICE_SET_FAN_MODE,
-#                 {ATTR_ENTITY_ID: entity_id, ATTR_FAN_MODE: FAN_MIDDLE},
-#                 blocking=True,
-#             )
-#         mock_instance.set_fanspeed.assert_not_called()
+    device.set_setpoint_heat.reset_mock()
+    device.set_setpoint_cool.reset_mock()
 
-#         mock_instance.set_fanspeed.reset_mock()
-#         await hass.services.async_call(
-#             CLIMATE_DOMAIN,
-#             SERVICE_SET_FAN_MODE,
-#             {ATTR_ENTITY_ID: entity_id, ATTR_FAN_MODE: FAN_HIGH},
-#             blocking=True,
-#         )
-#         mock_instance.set_fanspeed.assert_called_once_with(
-#             whirlpool.aircon.FanSpeed.High
-#         )
+    device.set_setpoint_heat.side_effect = AIOSomecomfort.SomeComfortError
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 15},
+        blocking=True,
+    )
+    device.set_setpoint_heat.assert_called_once()
+    device.set_setpoint_cool.assert_not_called()
+    device.system_mode = "cool"
+    async_fire_time_changed(
+        hass,
+        utcnow() + SCAN_INTERVAL,
+    )
+    await hass.async_block_till_done()
 
-#         mock_instance.set_h_louver_swing.reset_mock()
-#         await hass.services.async_call(
-#             CLIMATE_DOMAIN,
-#             SERVICE_SET_SWING_MODE,
-#             {ATTR_ENTITY_ID: entity_id, ATTR_SWING_MODE: SWING_HORIZONTAL},
-#             blocking=True,
-#         )
-#         mock_instance.set_h_louver_swing.assert_called_with(True)
+    device.set_setpoint_cool.reset_mock()
+    device.set_setpoint_heat.reset_mock()
 
-#         mock_instance.set_h_louver_swing.reset_mock()
-#         await hass.services.async_call(
-#             CLIMATE_DOMAIN,
-#             SERVICE_SET_SWING_MODE,
-#             {ATTR_ENTITY_ID: entity_id, ATTR_SWING_MODE: SWING_OFF},
-#             blocking=True,
-#         )
-#         mock_instance.set_h_louver_swing.assert_called_with(False)
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 15},
+        blocking=True,
+    )
+    device.set_setpoint_cool.assert_called_once_with(59.0)
+    device.set_setpoint_heat.assert_not_called()
+
+    device.set_fan_mode.reset_mock()
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_FAN_MODE: FAN_AUTO},
+        blocking=True,
+    )
+
+    device.set_fan_mode.assert_called_once_with("auto")
+
+    device.set_fan_mode.reset_mock()
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_FAN_MODE: FAN_ON},
+        blocking=True,
+    )
+
+    device.set_fan_mode.assert_called_once_with("on")
+
+    device.set_fan_mode.reset_mock()
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_FAN_MODE: FAN_DIFFUSE},
+        blocking=True,
+    )
+
+    device.set_fan_mode.assert_called_once_with("circulate")
+
+    device.set_hold_heat.reset_mock()
+    device.set_hold_cool.reset_mock()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_HOLD},
+        blocking=True,
+    )
+
+    device.set_hold_cool.assert_called_once_with(True)
+    device.set_hold_heat.assert_not_called()
+
+    device.set_hold_heat.reset_mock()
+    device.set_hold_cool.reset_mock()
+
+    device.raw_ui_data["StatusHeat"] = 2
+    device.raw_ui_data["StatusCool"] = 2
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_HOLD},
+        blocking=True,
+    )
+
+    device.set_hold_cool.assert_called_once_with(True)
+    device.set_hold_heat.assert_not_called()
+
+    device.set_hold_heat.reset_mock()
+    device.set_hold_cool.reset_mock()
+    device.set_setpoint_heat.side_effect = AIOSomecomfort.SomeComfortError
+
+    device.raw_ui_data["StatusHeat"] = 2
+    device.raw_ui_data["StatusCool"] = 2
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_HOLD},
+        blocking=True,
+    )
+    device.set_hold_cool.assert_called_once_with(True)
+    device.set_hold_heat.assert_not_called()
+
+    device.set_hold_heat.reset_mock()
+    device.set_hold_cool.reset_mock()
+
+    device.set_setpoint_cool.reset_mock()
+    device.set_setpoint_heat.reset_mock()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_AWAY},
+        blocking=True,
+    )
+
+    device.set_hold_cool.assert_called_once_with(True)
+    device.set_setpoint_cool.assert_called_once_with(12)
+    device.set_hold_heat.assert_not_called()
+    device.set_setpoint_heat.assert_not_called()
+
+    device.set_hold_heat.reset_mock()
+    device.set_hold_cool.reset_mock()
+
+    device.set_setpoint_cool.reset_mock()
+    device.set_setpoint_heat.reset_mock()
+
+    device.system_mode = "heat"
+    async_fire_time_changed(
+        hass,
+        utcnow() + SCAN_INTERVAL,
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_AWAY},
+        blocking=True,
+    )
+
+    device.set_hold_heat.assert_called_once_with(True)
+    device.set_setpoint_heat.assert_called_once_with(22)
+    device.set_hold_cool.assert_not_called()
+    device.set_setpoint_cool.assert_not_called()
+
+    device.set_hold_heat.reset_mock()
+    device.set_hold_cool.reset_mock()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_NONE},
+        blocking=True,
+    )
+
+    device.set_hold_heat.assert_called_once_with(False)
+    device.set_hold_cool.assert_called_once_with(False)
+
+    device.set_hold_heat.reset_mock()
+    device.set_hold_cool.reset_mock()
+    device.set_hold_cool.side_effect = AIOSomecomfort.SomeComfortError
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_NONE},
+        blocking=True,
+    )
+
+    device.set_hold_heat.assert_not_called()
+    device.set_hold_cool.assert_called_once_with(False)
+
+    device.set_hold_heat.reset_mock()
+    device.set_hold_cool.reset_mock()
+
+    device.raw_ui_data["StatusHeat"] = 2
+    device.raw_ui_data["StatusCool"] = 2
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_HOLD},
+        blocking=True,
+    )
+
+    device.set_hold_heat.assert_called_once_with(True)
+    device.set_hold_cool.assert_not_called()
+
+    device.set_hold_heat.reset_mock()
+    device.set_hold_cool.reset_mock()
+    device.set_hold_heat.side_effect = AIOSomecomfort.SomeComfortError
+
+    device.raw_ui_data["StatusHeat"] = 2
+    device.raw_ui_data["StatusCool"] = 2
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_HOLD},
+        blocking=True,
+    )
+
+    device.set_hold_heat.assert_called_once_with(True)
+    device.set_hold_cool.assert_not_called()
+
+    device.refresh.side_effect = AIOSomecomfort.device.APIRateLimited
+    async_fire_time_changed(
+        hass,
+        utcnow() + SCAN_INTERVAL,
+    )
+    await hass.async_block_till_done()

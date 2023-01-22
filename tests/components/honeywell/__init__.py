@@ -1,22 +1,15 @@
 """Tests for honeywell component."""
-from homeassistant.components.honeywell.const import DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 
-async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
+async def init_integration(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> MockConfigEntry:
     """Set up the Honeywell integration in Home Assistant."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_USERNAME: "nobody",
-            CONF_PASSWORD: "qwerty",
-        },
-    )
 
-    return await init_integration_with_entry(hass, entry)
+    return await init_integration_with_entry(hass, config_entry)
 
 
 async def init_integration_with_entry(
