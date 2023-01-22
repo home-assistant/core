@@ -14,6 +14,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import DOMAIN, POWERWALL_API, POWERWALL_COORDINATOR
 from .models import PowerwallRuntimeData
 
+ICON = "mdi:home-battery-outline"
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -36,6 +38,7 @@ class PowerwallOffGridEnabledEntity(SwitchEntity):
     _attr_unique_id = "take_powerwall_off_grid"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_device_class = SwitchDeviceClass.SWITCH
+    _attr_icon = ICON
 
     def __init__(
         self,
