@@ -85,6 +85,7 @@ async def test_login_error(
     """Test login errors from API."""
     client.login.side_effect = AIOSomecomfort.AuthError
     await init_integration(hass, config_entry)
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_connection_error(
@@ -93,6 +94,7 @@ async def test_connection_error(
     """Test Connection errors from API."""
     client.login.side_effect = AIOSomecomfort.ConnectionError
     await init_integration(hass, config_entry)
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_no_devices(
@@ -101,3 +103,4 @@ async def test_no_devices(
     """Test no devices from API."""
     client.locations_by_id = {}
     await init_integration(hass, config_entry)
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR

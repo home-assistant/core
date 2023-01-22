@@ -949,7 +949,7 @@ async def test_async_update_errors(
     client.login.assert_called()
 
 
-async def test_aux_heat_off_no_heat_service_call(
+async def test_aux_heat_off_service_call(
     hass: HomeAssistant, device: MagicMock, config_entry: MagicMock
 ):
     """Test aux heat off turns of system when no heat configured."""
