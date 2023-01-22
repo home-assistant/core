@@ -351,7 +351,7 @@ RPC_SENSORS: Final = {
         sub_key="a_aprt_power",
         name="Phase A Apparent Power",
         native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
-        device_class=SensorDeviceClass.POWER,
+        device_class=SensorDeviceClass.APPARENT_POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "b_aprt_power": RpcSensorDescription(
@@ -359,7 +359,7 @@ RPC_SENSORS: Final = {
         sub_key="b_aprt_power",
         name="Phase B Apparent Power",
         native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
-        device_class=SensorDeviceClass.POWER,
+        device_class=SensorDeviceClass.APPARENT_POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "c_aprt_power": RpcSensorDescription(
@@ -367,7 +367,7 @@ RPC_SENSORS: Final = {
         sub_key="c_aprt_power",
         name="Phase C Apparent Power",
         native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
-        device_class=SensorDeviceClass.POWER,
+        device_class=SensorDeviceClass.APPARENT_POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "a_pf": RpcSensorDescription(
