@@ -425,6 +425,38 @@ async def async_setup_entry(
                     state_class=SensorStateClass.TOTAL_INCREASING,
                 )
 
+            if device.meter_type == ExternalDevice.DeviceType.HEAT_METER:
+                description = SensorEntityDescription(
+                    key="Gas meter",
+                    name="Total energy consumed",
+                    device_class=SensorDeviceClass.ENERGY,
+                    state_class=SensorStateClass.TOTAL_INCREASING,
+                )
+
+            if device.meter_type == ExternalDevice.DeviceType.WARM_WATER_METER:
+                description = SensorEntityDescription(
+                    key="Warm water meter",
+                    name="Total water",
+                    device_class=SensorDeviceClass.WATER,
+                    state_class=SensorStateClass.TOTAL_INCREASING,
+                )
+
+            if device.meter_type == ExternalDevice.DeviceType.WATER_METER:
+                description = SensorEntityDescription(
+                    key="Water meter",
+                    name="Total water",
+                    device_class=SensorDeviceClass.WATER,
+                    state_class=SensorStateClass.TOTAL_INCREASING,
+                )
+
+            if device.meter_type == ExternalDevice.DeviceType.INLET_HEAT_METER:
+                description = SensorEntityDescription(
+                    key="Inlet Heat meter",
+                    name="Total energy",
+                    device_class=SensorDeviceClass.ENERGY,
+                    state_class=SensorStateClass.TOTAL_INCREASING,
+                )
+
             if description:
                 entities.append(
                     HomeWizardExternalSensorEntity(coordinator, description, unique_id)
