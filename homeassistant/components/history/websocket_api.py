@@ -61,6 +61,13 @@ class HistoryLiveStream:
     wait_sync_task: asyncio.Task | None = None
 
 
+@callback
+def async_setup(hass: HomeAssistant) -> None:
+    """Set up the history websocket API."""
+    websocket_api.async_register_command(hass, ws_get_history_during_period)
+    websocket_api.async_register_command(hass, ws_stream)
+
+
 def _ws_get_significant_states(
     hass: HomeAssistant,
     msg_id: int,

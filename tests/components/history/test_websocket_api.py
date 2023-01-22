@@ -1,4 +1,4 @@
-"""The tests the History component."""
+"""The tests the History component websocket_api."""
 # pylint: disable=protected-access,invalid-name
 from datetime import timedelta
 from unittest.mock import patch
@@ -8,6 +8,7 @@ from freezegun import freeze_time
 import pytest
 
 from homeassistant.components import history
+from homeassistant.components.history import websocket_api
 from homeassistant.const import (
     CONF_DOMAINS,
     CONF_ENTITIES,
@@ -1545,7 +1546,7 @@ async def test_overflow_queue(recorder_mock, hass, hass_ws_client):
     """Test overflowing the history stream queue."""
     now = dt_util.utcnow()
     wanted_entities = ["sensor.two", "sensor.four", "sensor.one"]
-    with patch.object(history, "MAX_PENDING_HISTORY_STATES", 5):
+    with patch.object(websocket_api, "MAX_PENDING_HISTORY_STATES", 5):
         await async_setup_component(
             hass,
             "history",

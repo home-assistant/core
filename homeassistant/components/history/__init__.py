@@ -10,7 +10,7 @@ from typing import cast
 from aiohttp import web
 import voluptuous as vol
 
-from homeassistant.components import frontend, websocket_api
+from homeassistant.components import frontend
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.recorder import (
     DOMAIN as RECORDER_DOMAIN,
@@ -33,6 +33,7 @@ from homeassistant.helpers.entityfilter import (
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
+from . import websocket_api
 from .const import (
     CONF_ORDER,
     DOMAIN,
@@ -41,7 +42,6 @@ from .const import (
     HISTORY_USE_INCLUDE_ORDER,
 )
 from .helpers import entities_may_have_state_changes_after
-from .websocket_api import ws_get_history_during_period, ws_stream
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,9 +79,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.http.register_view(HistoryPeriodView(filters, use_include_order))
     frontend.async_register_built_in_panel(hass, "history", "history", "hass:chart-box")
-    websocket_api.async_register_command(hass, ws_get_history_during_period)
-    websocket_api.async_register_command(hass, ws_stream)
-
+    websocket_api.async_setup(hass)
     return True
 
 
