@@ -376,7 +376,7 @@ async def test_dhcp_flow(hass):
         const.CONF_USE_HTTPS: TEST_USE_HTTPS,
     }
     assert result["options"] == {
-        const.CONF_PROTOCOL: const.DEFAULT_PROTOCOL,
+        const.CONF_PROTOCOL: DEFAULT_PROTOCOL,
     }
 
 
@@ -393,7 +393,7 @@ async def test_dhcp_abort_flow(hass):
             const.CONF_USE_HTTPS: TEST_USE_HTTPS,
         },
         options={
-            const.CONF_PROTOCOL: const.DEFAULT_PROTOCOL,
+            const.CONF_PROTOCOL: DEFAULT_PROTOCOL,
         },
         title=TEST_NVR_NAME,
     )
