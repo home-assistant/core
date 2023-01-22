@@ -18,6 +18,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_IDENTIFIERS,
     ATTR_NAME,
+    ATTR_VIA_DEVICE,
     PERCENTAGE,
     Platform,
     UnitOfElectricCurrent,
@@ -375,14 +376,6 @@ async def async_setup_entry(
     """Initialize sensors."""
     coordinator: HWEnergyDeviceUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    entities: list = []
-
-    async_add_entities(
-        HomeWizardSensorEntity(coordinator, entry, description)
-        for description in SENSORS
-        if description.value_fn(coordinator.data.data) is not None
-    )
-
     # Migrate original gas meter sensor to ExternalDevice
     ent_reg = entity_registry.async_get(hass)
 
@@ -397,6 +390,14 @@ async def async_setup_entry(
             new_unique_id=f"{DOMAIN}_{coordinator.data.data.gas_unique_id}",
         )
 
+    # Initialize default sensors
+    entities: list = [
+        HomeWizardSensorEntity(coordinator, entry, description)
+        for description in SENSORS
+        if description.value_fn(coordinator.data.data) is not None
+    ]
+
+    # Initialize external devices
     if coordinator.data.data.external_devices is not None:
         for (unique_id, device) in coordinator.data.data.external_devices.items():
 
@@ -471,6 +472,12 @@ class HomeWizardExternalSensorEntity(HomeWizardEntity, SensorEntity):
             self._attr_device_info[
                 ATTR_NAME
             ] = f"{self.entity_description.key} ({self._device_id})"
+
+            if self.coordinator.data.device.serial is not None:
+                self._attr_device_info[ATTR_VIA_DEVICE] = (
+                    DOMAIN,
+                    self.coordinator.data.device.serial,
+                )
 
     @property
     def native_value(self) -> float | int | str | None:
