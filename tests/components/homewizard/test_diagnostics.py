@@ -70,7 +70,7 @@ async def test_diagnostics(
                 "gas_unique_id": REDACTED,
                 "active_liter_lpm": 12.345,
                 "total_liter_m3": 1234.567,
-                "external_devices": [],
+                "external_devices": None,
             },
             "state": {"power_on": True, "switch_lock": False, "brightness": 255},
             "system": {"cloud_enabled": True},

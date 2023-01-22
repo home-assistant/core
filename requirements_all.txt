@@ -279,7 +279,7 @@ aioskybell==22.7.0
 aioslimproto==2.1.1
 
 # homeassistant.components.honeywell
-aiosomecomfort==0.0.2
+aiosomecomfort==0.0.3
 
 # homeassistant.components.steamist
 aiosteamist==0.3.2
@@ -1436,7 +1436,7 @@ py-schluter==0.1.7
 py-sucks==0.9.8
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==2.0.1
+py-synologydsm-api==2.0.2
 
 # homeassistant.components.zabbix
 py-zabbix==1.1.7
@@ -2009,7 +2009,7 @@ pythinkingcleaner==0.0.3
 python-blockchain-api==0.0.2
 
 # homeassistant.components.bsblan
-python-bsblan==0.5.8
+python-bsblan==0.5.9
 
 # homeassistant.components.clementine
 python-clementine-remote==1.0.1
@@ -2045,7 +2045,7 @@ python-gc100==1.0.3a0
 python-gitlab==1.6.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==1.6.1
+python-homewizard-energy==1.7.0
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.3
@@ -2134,7 +2134,7 @@ pytradfri[async]==9.0.1
 # homeassistant.components.trafikverket_ferry
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
-pytrafikverket==0.2.2
+pytrafikverket==0.2.3
 
 # homeassistant.components.usb
 pyudev==0.23.2
@@ -2651,7 +2651,7 @@ xs1-api-client==3.0.0
 yalesmartalarmclient==0.3.9
 
 # homeassistant.components.yalexs_ble
-yalexs-ble==1.12.5
+yalexs-ble==1.12.7
 
 # homeassistant.components.august
 yalexs==1.2.6

@@ -1,5 +1,5 @@
 """Test event helpers."""
-# pylint: disable=protected-access
+
 import asyncio
 from datetime import date, datetime, timedelta
 from unittest.mock import patch

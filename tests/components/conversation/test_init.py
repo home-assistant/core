@@ -312,7 +312,6 @@ async def test_ws_api(hass, hass_ws_client, payload):
     }
 
 
-# pylint: disable=protected-access
 async def test_ws_prepare(hass, hass_ws_client):
     """Test the Websocket prepare conversation API."""
     assert await async_setup_component(hass, "conversation", {})
@@ -429,7 +428,6 @@ async def test_custom_sentences_config(hass, hass_client, hass_admin_user):
     }
 
 
-# pylint: disable=protected-access
 async def test_prepare_reload(hass):
     """Test calling the reload service."""
     language = hass.config.language
@@ -451,7 +449,6 @@ async def test_prepare_reload(hass):
     assert not agent._lang_intents.get(language)
 
 
-# pylint: disable=protected-access
 async def test_prepare_fail(hass):
     """Test calling prepare with a non-existent language."""
     assert await async_setup_component(hass, "conversation", {})

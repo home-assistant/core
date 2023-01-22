@@ -17,8 +17,6 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
-# pylint: disable=redefined-outer-name
-
 DEVICE_DATA = {"name": "Private Calendar", "device_id": "Private Calendar"}
 
 EVENTS = [

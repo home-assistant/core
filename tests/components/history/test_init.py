@@ -1,5 +1,5 @@
 """The tests the History component."""
-# pylint: disable=protected-access,invalid-name
+# pylint: disable=invalid-name
 from datetime import timedelta
 from http import HTTPStatus
 import json
