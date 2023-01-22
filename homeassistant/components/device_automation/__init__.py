@@ -30,6 +30,12 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import IntegrationNotFound
 from homeassistant.requirements import async_get_integration_with_requirements
 
+from .const import (  # noqa: F401
+    CONF_IS_OFF,
+    CONF_IS_ON,
+    CONF_TURNED_OFF,
+    CONF_TURNED_ON,
+)
 from .exceptions import DeviceNotFound, InvalidDeviceAutomationConfig
 
 if TYPE_CHECKING:
@@ -114,7 +120,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 @overload
-async def async_get_device_automation_platform(  # noqa: D103
+async def async_get_device_automation_platform(
     hass: HomeAssistant,
     domain: str,
     automation_type: Literal[DeviceAutomationType.TRIGGER],
@@ -123,7 +129,7 @@ async def async_get_device_automation_platform(  # noqa: D103
 
 
 @overload
-async def async_get_device_automation_platform(  # noqa: D103
+async def async_get_device_automation_platform(
     hass: HomeAssistant,
     domain: str,
     automation_type: Literal[DeviceAutomationType.CONDITION],
@@ -132,7 +138,7 @@ async def async_get_device_automation_platform(  # noqa: D103
 
 
 @overload
-async def async_get_device_automation_platform(  # noqa: D103
+async def async_get_device_automation_platform(
     hass: HomeAssistant,
     domain: str,
     automation_type: Literal[DeviceAutomationType.ACTION],
@@ -141,15 +147,15 @@ async def async_get_device_automation_platform(  # noqa: D103
 
 
 @overload
-async def async_get_device_automation_platform(  # noqa: D103
+async def async_get_device_automation_platform(
     hass: HomeAssistant, domain: str, automation_type: DeviceAutomationType
-) -> "DeviceAutomationPlatformType":
+) -> DeviceAutomationPlatformType:
     ...
 
 
 async def async_get_device_automation_platform(
     hass: HomeAssistant, domain: str, automation_type: DeviceAutomationType
-) -> "DeviceAutomationPlatformType":
+) -> DeviceAutomationPlatformType:
     """Load device automation platform for integration.
 
     Throws InvalidDeviceAutomationConfig if the integration is not found or does not support device automation.

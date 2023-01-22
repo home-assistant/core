@@ -25,5 +25,106 @@
             "off": "Aus"
         }
     },
+    "state_attributes": {
+        "_": {
+            "aux_heat": {
+                "name": "Hilfsw\u00e4rme"
+            },
+            "current_humidity": {
+                "name": "Aktuelle Luftfeuchtigkeit"
+            },
+            "current_temperature": {
+                "name": "Aktuelle Temperatur"
+            },
+            "fan_mode": {
+                "name": "L\u00fcftermodus",
+                "state": {
+                    "auto": "Automatisch",
+                    "diffuse": "Diffus",
+                    "focus": "Fokus",
+                    "high": "Hoch",
+                    "low": "Niedrig",
+                    "medium": "Mittel",
+                    "middle": "Mittel",
+                    "off": "Aus",
+                    "on": "An",
+                    "top": "Top"
+                }
+            },
+            "fan_modes": {
+                "name": "L\u00fcftermodi"
+            },
+            "humidity": {
+                "name": "Ziel-Luftfeuchtigkeit"
+            },
+            "hvac_action": {
+                "name": "Aktuelle Aktion",
+                "state": {
+                    "cooling": "K\u00fchlung",
+                    "drying": "Trocknen",
+                    "fan": "L\u00fcfter",
+                    "heating": "Heizbetrieb",
+                    "idle": "Leerlauf",
+                    "off": "Aus"
+                }
+            },
+            "hvac_modes": {
+                "name": "HLK-Modi"
+            },
+            "max_humidity": {
+                "name": "Maximale Zielfeuchtigkeit"
+            },
+            "max_temp": {
+                "name": "Maximale Zieltemperatur"
+            },
+            "min_humidity": {
+                "name": "Minimale Zielfeuchtigkeit"
+            },
+            "min_temp": {
+                "name": "Minimale Zieltemperatur"
+            },
+            "preset_mode": {
+                "name": "Voreinstellung",
+                "state": {
+                    "activity": "Aktivit\u00e4t",
+                    "away": "Abwesend",
+                    "boost": "Boost",
+                    "comfort": "Komfort",
+                    "eco": "Eco",
+                    "home": "Zu Hause",
+                    "none": "Keine",
+                    "sleep": "Schlafen"
+                }
+            },
+            "preset_modes": {
+                "name": "Voreinstellungen"
+            },
+            "swing_mode": {
+                "name": "Schwenk-Modus",
+                "state": {
+                    "both": "Beide",
+                    "horizontal": "Horizontal",
+                    "off": "Aus",
+                    "on": "An",
+                    "vertical": "Vertikal"
+                }
+            },
+            "swing_modes": {
+                "name": "Schwenk-Modi"
+            },
+            "target_temp_high": {
+                "name": "Obere Zieltemperatur"
+            },
+            "target_temp_low": {
+                "name": "Untere Zieltemperatur"
+            },
+            "target_temp_step": {
+                "name": "Zieltemperaturschritt"
+            },
+            "temperature": {
+                "name": "Zieltemperatur"
+            }
+        }
+    },
     "title": "Klima"
 }

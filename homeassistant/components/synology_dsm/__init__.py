@@ -84,12 +84,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # For SSDP compat
     if not entry.data.get(CONF_MAC):
-        network = await hass.async_add_executor_job(getattr, api.dsm, "network")
         hass.config_entries.async_update_entry(
-            entry, data={**entry.data, CONF_MAC: network.macs}
+            entry, data={**entry.data, CONF_MAC: api.dsm.network.macs}
         )
 
-    # These all create executor jobs so we do not gather here
     coordinator_central = SynologyDSMCentralUpdateCoordinator(hass, entry, api)
     await coordinator_central.async_config_entry_first_refresh()
 
@@ -98,7 +96,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # The central coordinator needs to be refreshed first since
     # the next two rely on data from it
     coordinator_cameras: SynologyDSMCameraUpdateCoordinator | None = None
-    if SynoSurveillanceStation.CAMERA_API_KEY in available_apis:
+    if api.surveillance_station is not None:
         coordinator_cameras = SynologyDSMCameraUpdateCoordinator(hass, entry, api)
         await coordinator_cameras.async_config_entry_first_refresh()
 

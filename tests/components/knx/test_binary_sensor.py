@@ -1,6 +1,5 @@
 """Test KNX binary sensor."""
 from datetime import timedelta
-from unittest.mock import patch
 
 from homeassistant.components.knx.const import CONF_STATE_ADDRESS, CONF_SYNC_STATE
 from homeassistant.components.knx.schema import BinarySensorSchema
@@ -12,7 +11,11 @@ from homeassistant.util import dt
 
 from .conftest import KNXTestKit
 
-from tests.common import async_capture_events, async_fire_time_changed
+from tests.common import (
+    async_capture_events,
+    async_fire_time_changed,
+    mock_restore_cache,
+)
 
 
 async def test_binary_sensor_entity_category(hass: HomeAssistant, knx: KNXTestKit):
@@ -245,22 +248,19 @@ async def test_binary_sensor_restore_and_respond(hass, knx):
     """Test restoring KNX binary sensor state and respond to read."""
     _ADDRESS = "2/2/2"
     fake_state = State("binary_sensor.test", STATE_ON)
+    mock_restore_cache(hass, (fake_state,))
 
-    with patch(
-        "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
-        return_value=fake_state,
-    ):
-        await knx.setup_integration(
-            {
-                BinarySensorSchema.PLATFORM: [
-                    {
-                        CONF_NAME: "test",
-                        CONF_STATE_ADDRESS: _ADDRESS,
-                        CONF_SYNC_STATE: False,
-                    },
-                ]
-            }
-        )
+    await knx.setup_integration(
+        {
+            BinarySensorSchema.PLATFORM: [
+                {
+                    CONF_NAME: "test",
+                    CONF_STATE_ADDRESS: _ADDRESS,
+                    CONF_SYNC_STATE: False,
+                },
+            ]
+        }
+    )
 
     # restored state - doesn't send telegram
     state = hass.states.get("binary_sensor.test")
@@ -277,23 +277,20 @@ async def test_binary_sensor_restore_invert(hass, knx):
     """Test restoring KNX binary sensor state with invert."""
     _ADDRESS = "2/2/2"
     fake_state = State("binary_sensor.test", STATE_ON)
+    mock_restore_cache(hass, (fake_state,))
 
-    with patch(
-        "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
-        return_value=fake_state,
-    ):
-        await knx.setup_integration(
-            {
-                BinarySensorSchema.PLATFORM: [
-                    {
-                        CONF_NAME: "test",
-                        CONF_STATE_ADDRESS: _ADDRESS,
-                        BinarySensorSchema.CONF_INVERT: True,
-                        CONF_SYNC_STATE: False,
-                    },
-                ]
-            }
-        )
+    await knx.setup_integration(
+        {
+            BinarySensorSchema.PLATFORM: [
+                {
+                    CONF_NAME: "test",
+                    CONF_STATE_ADDRESS: _ADDRESS,
+                    BinarySensorSchema.CONF_INVERT: True,
+                    CONF_SYNC_STATE: False,
+                },
+            ]
+        }
+    )
 
     # restored state - doesn't send telegram
     state = hass.states.get("binary_sensor.test")

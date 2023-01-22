@@ -8,7 +8,7 @@ import logging
 import operator
 from types import MappingProxyType
 from unittest import mock
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from async_timeout import timeout
 import pytest
@@ -1734,6 +1734,7 @@ async def test_condition_created_once(async_from_config, hass):
     )
 
     async_from_config.reset_mock()
+    async_from_config.return_value = MagicMock()
 
     hass.states.async_set("test.entity", "hello")
     await script_obj.async_run(context=Context())
@@ -4632,14 +4633,12 @@ async def test_breakpoints_2(hass):
 async def test_platform_async_validate_action_config(hass):
     """Test platform.async_validate_action_config will be called if it exists."""
     config = {CONF_DEVICE_ID: "test", CONF_DOMAIN: "test"}
-    platform = AsyncMock()
     with patch(
-        "homeassistant.components.device_automation.action.async_get_device_automation_platform",
-        return_value=platform,
-    ):
-        platform.async_validate_action_config.return_value = config
+        "homeassistant.components.device_automation.action.async_validate_action_config",
+        return_value=AsyncMock(),
+    ) as device_automation_validate_action_mock:
         await script.async_validate_action_config(hass, config)
-        platform.async_validate_action_config.assert_awaited()
+        device_automation_validate_action_mock.assert_awaited()
 
 
 async def test_stop_action(hass, caplog):

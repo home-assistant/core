@@ -99,7 +99,7 @@ class ExchangeRateSensor(SensorEntity):
         """Return the icon to use in the frontend, if any."""
         return ICON
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data and updates the states."""
         self.data.update()
         self._state = round(self.data.rate["rates"][self._target], 3)

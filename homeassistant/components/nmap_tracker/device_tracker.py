@@ -4,8 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from homeassistant.components.device_tracker import SourceType
-from homeassistant.components.device_tracker.config_entry import ScannerEntity
+from homeassistant.components.device_tracker import ScannerEntity, SourceType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -45,6 +44,8 @@ async def async_setup_entry(
 
 class NmapTrackerEntity(ScannerEntity):
     """An Nmap Tracker entity."""
+
+    _attr_should_poll = False
 
     def __init__(
         self, nmap_tracker: NmapDeviceScanner, mac_address: str, active: bool
@@ -96,11 +97,6 @@ class NmapTrackerEntity(ScannerEntity):
     def source_type(self) -> SourceType:
         """Return tracker source type."""
         return SourceType.ROUTER
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
 
     @property
     def icon(self) -> str:

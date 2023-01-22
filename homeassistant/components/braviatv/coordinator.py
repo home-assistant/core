@@ -5,20 +5,35 @@ from collections.abc import Awaitable, Callable, Coroutine, Iterable
 from datetime import timedelta
 from functools import wraps
 import logging
+from types import MappingProxyType
 from typing import Any, Final, TypeVar
 
-from pybravia import BraviaTV, BraviaTVError
+from pybravia import (
+    BraviaAuthError,
+    BraviaClient,
+    BraviaConnectionError,
+    BraviaConnectionTimeout,
+    BraviaError,
+    BraviaNotFound,
+    BraviaTurnedOff,
+)
 from typing_extensions import Concatenate, ParamSpec
 
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_APP,
-    MEDIA_TYPE_CHANNEL,
-)
+from homeassistant.components.media_player import MediaType
+from homeassistant.const import CONF_PIN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CLIENTID_PREFIX, DOMAIN, NICKNAME
+from .const import (
+    CONF_CLIENT_ID,
+    CONF_NICKNAME,
+    CONF_USE_PSK,
+    DOMAIN,
+    LEGACY_CLIENT_ID,
+    NICKNAME_PREFIX,
+)
 
 _BraviaTVCoordinatorT = TypeVar("_BraviaTVCoordinatorT", bound="BraviaTVCoordinator")
 _P = ParamSpec("_P")
@@ -30,7 +45,7 @@ SCAN_INTERVAL: Final = timedelta(seconds=10)
 def catch_braviatv_errors(
     func: Callable[Concatenate[_BraviaTVCoordinatorT, _P], Awaitable[None]]
 ) -> Callable[Concatenate[_BraviaTVCoordinatorT, _P], Coroutine[Any, Any, None]]:
-    """Catch BraviaTV errors."""
+    """Catch BraviaClient errors."""
 
     @wraps(func)
     async def wrapper(
@@ -38,10 +53,10 @@ def catch_braviatv_errors(
         *args: _P.args,
         **kwargs: _P.kwargs,
     ) -> None:
-        """Catch BraviaTV errors and log message."""
+        """Catch BraviaClient errors and log message."""
         try:
             await func(self, *args, **kwargs)
-        except BraviaTVError as err:
+        except BraviaError as err:
             _LOGGER.error("Command error: %s", err)
         await self.async_request_refresh()
 
@@ -54,21 +69,24 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
     def __init__(
         self,
         hass: HomeAssistant,
-        client: BraviaTV,
-        pin: str,
+        client: BraviaClient,
+        config: MappingProxyType[str, Any],
         ignored_sources: list[str],
     ) -> None:
         """Initialize Bravia TV Client."""
 
         self.client = client
-        self.pin = pin
+        self.pin = config[CONF_PIN]
+        self.use_psk = config.get(CONF_USE_PSK, False)
+        self.client_id = config.get(CONF_CLIENT_ID, LEGACY_CLIENT_ID)
+        self.nickname = config.get(CONF_NICKNAME, NICKNAME_PREFIX)
         self.ignored_sources = ignored_sources
         self.source: str | None = None
         self.source_list: list[str] = []
         self.source_map: dict[str, dict] = {}
         self.media_title: str | None = None
         self.media_content_id: str | None = None
-        self.media_content_type: str | None = None
+        self.media_content_type: MediaType | None = None
         self.media_uri: str | None = None
         self.media_duration: int | None = None
         self.volume_level: float | None = None
@@ -77,8 +95,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         self.is_on = False
         self.is_channel = False
         self.connected = False
-        # Assume that the TV is in Play mode
-        self.playing = True
+        self.skipped_updates = 0
 
         super().__init__(
             hass,
@@ -106,13 +123,22 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         """Connect and fetch data."""
         try:
             if not self.connected:
-                await self.client.connect(
-                    pin=self.pin, clientid=CLIENTID_PREFIX, nickname=NICKNAME
-                )
-                self.connected = True
+                try:
+                    if self.use_psk:
+                        await self.client.connect(psk=self.pin)
+                    else:
+                        await self.client.connect(
+                            pin=self.pin,
+                            clientid=self.client_id,
+                            nickname=self.nickname,
+                        )
+                    self.connected = True
+                except BraviaAuthError as err:
+                    raise ConfigEntryAuthFailed from err
 
             power_status = await self.client.get_power_status()
             self.is_on = power_status == "active"
+            self.skipped_updates = 0
 
             if self.is_on is False:
                 return
@@ -121,7 +147,18 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                 await self.async_update_sources()
             await self.async_update_volume()
             await self.async_update_playing()
-        except BraviaTVError as err:
+        except BraviaNotFound as err:
+            if self.skipped_updates < 10:
+                self.connected = False
+                self.skipped_updates += 1
+                _LOGGER.debug("Update skipped, Bravia API service is reloading")
+                return
+            raise UpdateFailed("Error communicating with device") from err
+        except (BraviaConnectionError, BraviaConnectionTimeout, BraviaTurnedOff):
+            self.is_on = False
+            self.connected = False
+            _LOGGER.debug("Update skipped, Bravia TV is off")
+        except BraviaError as err:
             self.is_on = False
             self.connected = False
             raise UpdateFailed("Error communicating with device") from err
@@ -163,7 +200,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             self.is_channel = self.media_uri[:2] == "tv"
             if self.is_channel:
                 self.media_content_id = playing_info.get("dispNum")
-                self.media_content_type = MEDIA_TYPE_CHANNEL
+                self.media_content_type = MediaType.CHANNEL
             else:
                 self.media_content_id = self.media_uri
                 self.media_content_type = None
@@ -174,7 +211,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             self.media_content_type = None
         if not playing_info:
             self.media_title = "Smart TV"
-            self.media_content_type = MEDIA_TYPE_APP
+            self.media_content_type = MediaType.APP
 
     @catch_braviatv_errors
     async def async_turn_on(self) -> None:
@@ -210,13 +247,11 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
     async def async_media_play(self) -> None:
         """Send play command to device."""
         await self.client.play()
-        self.playing = True
 
     @catch_braviatv_errors
     async def async_media_pause(self) -> None:
         """Send pause command to device."""
         await self.client.pause()
-        self.playing = False
 
     @catch_braviatv_errors
     async def async_media_stop(self) -> None:
@@ -255,4 +290,24 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         """Send command to device."""
         for _ in range(repeats):
             for cmd in command:
-                await self.client.send_command(cmd)
+                response = await self.client.send_command(cmd)
+                if not response:
+                    commands = await self.client.get_command_list()
+                    commands_keys = ", ".join(commands.keys())
+                    # Logging an error instead of raising a ValueError
+                    # https://github.com/home-assistant/core/pull/77329#discussion_r955768245
+                    _LOGGER.error(
+                        "Unsupported command: %s, list of available commands: %s",
+                        cmd,
+                        commands_keys,
+                    )
+
+    @catch_braviatv_errors
+    async def async_reboot_device(self) -> None:
+        """Send command to reboot the device."""
+        await self.client.reboot()
+
+    @catch_braviatv_errors
+    async def async_terminate_apps(self) -> None:
+        """Send command to terminate all applications."""
+        await self.client.terminate_apps()

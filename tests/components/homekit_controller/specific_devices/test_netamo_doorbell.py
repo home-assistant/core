@@ -4,7 +4,7 @@ Regression tests for Netamo Doorbell.
 https://github.com/home-assistant/core/issues/44596
 """
 
-from tests.components.homekit_controller.common import (
+from ..common import (
     HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     DeviceTriggerInfo,
@@ -35,7 +35,7 @@ async def test_netamo_doorbell_setup(hass):
                 EntityTestInfo(
                     entity_id="camera.netatmo_doorbell_g738658",
                     friendly_name="Netatmo-Doorbell-g738658",
-                    unique_id="homekit-g738658-aid:1",
+                    unique_id="00:00:00:00:00:00_1",
                     state="idle",
                 ),
             ],

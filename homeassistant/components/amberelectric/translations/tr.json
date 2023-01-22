@@ -1,5 +1,10 @@
 {
     "config": {
+        "error": {
+            "invalid_api_token": "Ge\u00e7ersiz API anahtar\u0131",
+            "no_site": "Site sa\u011flanmad\u0131",
+            "unknown_error": "Beklenmeyen hata"
+        },
         "step": {
             "site": {
                 "data": {

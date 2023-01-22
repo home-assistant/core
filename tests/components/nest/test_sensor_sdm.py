@@ -10,15 +10,18 @@ from typing import Any
 from google_nest_sdm.event import EventMessage
 import pytest
 
-from homeassistant.components.sensor import ATTR_STATE_CLASS, STATE_CLASS_MEASUREMENT
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    SensorDeviceClass,
+    SensorStateClass,
+)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
-    TEMP_CELSIUS,
+    STATE_UNAVAILABLE,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -57,17 +60,22 @@ async def test_thermostat_device(
     temperature = hass.states.get("sensor.my_sensor_temperature")
     assert temperature is not None
     assert temperature.state == "25.1"
-    assert temperature.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
-    assert temperature.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TEMPERATURE
-    assert temperature.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert (
+        temperature.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfTemperature.CELSIUS
+    )
+    assert (
+        temperature.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TEMPERATURE
+    )
+    assert temperature.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert temperature.attributes.get(ATTR_FRIENDLY_NAME) == "My Sensor Temperature"
 
     humidity = hass.states.get("sensor.my_sensor_humidity")
     assert humidity is not None
     assert humidity.state == "35"
     assert humidity.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
-    assert humidity.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_HUMIDITY
-    assert humidity.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert humidity.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.HUMIDITY
+    assert humidity.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert humidity.attributes.get(ATTR_FRIENDLY_NAME) == "My Sensor Humidity"
 
     registry = er.async_get(hass)
@@ -84,6 +92,58 @@ async def test_thermostat_device(
     assert device.name == "My Sensor"
     assert device.model == "Thermostat"
     assert device.identifiers == {("nest", DEVICE_ID)}
+
+
+async def test_thermostat_device_available(
+    hass: HomeAssistant, create_device: CreateDevice, setup_platform: PlatformSetup
+):
+    """Test a thermostat with temperature and humidity sensors that is Online."""
+    create_device.create(
+        {
+            "sdm.devices.traits.Temperature": {
+                "ambientTemperatureCelsius": 25.1,
+            },
+            "sdm.devices.traits.Humidity": {
+                "ambientHumidityPercent": 35.0,
+            },
+            "sdm.devices.traits.Connectivity": {"status": "ONLINE"},
+        }
+    )
+    await setup_platform()
+
+    temperature = hass.states.get("sensor.my_sensor_temperature")
+    assert temperature is not None
+    assert temperature.state == "25.1"
+
+    humidity = hass.states.get("sensor.my_sensor_humidity")
+    assert humidity is not None
+    assert humidity.state == "35"
+
+
+async def test_thermostat_device_unavailable(
+    hass: HomeAssistant, create_device: CreateDevice, setup_platform: PlatformSetup
+):
+    """Test a thermostat with temperature and humidity sensors that is Offline."""
+    create_device.create(
+        {
+            "sdm.devices.traits.Temperature": {
+                "ambientTemperatureCelsius": 25.1,
+            },
+            "sdm.devices.traits.Humidity": {
+                "ambientHumidityPercent": 35.0,
+            },
+            "sdm.devices.traits.Connectivity": {"status": "OFFLINE"},
+        }
+    )
+    await setup_platform()
+
+    temperature = hass.states.get("sensor.my_sensor_temperature")
+    assert temperature is not None
+    assert temperature.state == STATE_UNAVAILABLE
+
+    humidity = hass.states.get("sensor.my_sensor_humidity")
+    assert humidity is not None
+    assert humidity.state == STATE_UNAVAILABLE
 
 
 async def test_no_devices(hass: HomeAssistant, setup_platform: PlatformSetup):

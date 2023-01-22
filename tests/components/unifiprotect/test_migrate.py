@@ -56,7 +56,7 @@ async def test_migrate_reboot_button(
     for entity in er.async_entries_for_config_entry(registry, ufp.entry.entry_id):
         if entity.domain == Platform.BUTTON.value:
             buttons.append(entity)
-    assert len(buttons) == 2
+    assert len(buttons) == 4
 
     assert registry.async_get(f"{Platform.BUTTON}.test_light_1_reboot_device") is None
     assert registry.async_get(f"{Platform.BUTTON}.test_light_1_reboot_device_2") is None
@@ -135,7 +135,7 @@ async def test_migrate_reboot_button_no_device(
     for entity in er.async_entries_for_config_entry(registry, ufp.entry.entry_id):
         if entity.domain == Platform.BUTTON.value:
             buttons.append(entity)
-    assert len(buttons) == 2
+    assert len(buttons) == 3
 
     entity = registry.async_get(f"{Platform.BUTTON}.unifiprotect_{light2_id.lower()}")
     assert entity is not None

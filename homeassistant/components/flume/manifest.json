@@ -3,7 +3,7 @@
   "name": "Flume",
   "documentation": "https://www.home-assistant.io/integrations/flume/",
   "requirements": ["pyflume==0.6.5"],
-  "codeowners": ["@ChrisMandich", "@bdraco"],
+  "codeowners": ["@ChrisMandich", "@bdraco", "@jeeftor"],
   "config_flow": true,
   "dhcp": [
     {

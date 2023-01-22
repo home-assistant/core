@@ -108,8 +108,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             favorites = await controller.get_favorites()
         else:
             _LOGGER.warning(
-                "%s is not logged in to a HEOS account and will be unable to retrieve "
-                "HEOS favorites: Use the 'heos.sign_in' service to sign-in to a HEOS account",
+                (
+                    "%s is not logged in to a HEOS account and will be unable to"
+                    " retrieve HEOS favorites: Use the 'heos.sign_in' service to"
+                    " sign-in to a HEOS account"
+                ),
                 host,
             )
         inputs = await controller.get_input_sources()
@@ -289,7 +292,8 @@ class GroupManager:
         leader_id = entity_id_to_player_id_map.get(leader_entity_id)
         if not leader_id:
             raise HomeAssistantError(
-                f"The group leader {leader_entity_id} could not be resolved to a HEOS player."
+                f"The group leader {leader_entity_id} could not be resolved to a HEOS"
+                " player."
             )
         member_ids = [
             entity_id_to_player_id_map[member]

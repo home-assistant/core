@@ -1,4 +1,14 @@
 {
+  "issues": {
+    "deprecated_yaml": {
+      "title": "Your manually configured MQTT {platform}(s) needs attention",
+      "description": "Manually configured MQTT {platform}(s) found under platform key `{platform}`.\n\nPlease move the configuration to the `mqtt` integration key and restart Home Assistant to fix this issue. See the [documentation]({more_info_url}), for more information."
+    },
+    "deprecated_yaml_broker_settings": {
+      "title": "Deprecated MQTT settings found in `configuration.yaml`",
+      "description": "The following settings found in `configuration.yaml` were migrated to MQTT config entry and will now override the settings in `configuration.yaml`:\n`{deprecated_settings}`\n\nPlease remove these settings from `configuration.yaml` and restart Home Assistant to fix this issue. See the [documentation]({more_info_url}), for more information."
+    }
+  },
   "config": {
     "step": {
       "broker": {
@@ -8,7 +18,19 @@
           "port": "[%key:common::config_flow::data::port%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "discovery": "Enable discovery"
+          "advanced_options": "Advanced options",
+          "certificate": "Upload custom CA certificate file",
+          "client_id": "Client ID (leave empty to randomly generated one)",
+          "client_cert": "Upload client certificate file",
+          "client_key": "Upload private key file",
+          "keepalive": "The time between sending keep alive messages",
+          "tls_insecure": "Ignore broker certificate validation",
+          "protocol": "MQTT protocol",
+          "set_ca_cert": "Broker certificate validation",
+          "set_client_cert": "Use a client certificate",
+          "transport": "MQTT transport",
+          "ws_headers": "WebSocket headers in JSON format",
+          "ws_path": "WebSocket path"
         }
       },
       "hassio_confirm": {
@@ -24,7 +46,16 @@
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "bad_birth": "Invalid birth topic",
+      "bad_will": "Invalid will topic",
+      "bad_discovery_prefix": "Invalid discovery prefix",
+      "bad_certificate": "The CA certificate is invalid",
+      "bad_client_cert": "Invalid client certificate, ensure a PEM coded file is supplied",
+      "bad_client_key": "Invalid private key, ensure a PEM coded file is supplied without password",
+      "bad_client_cert_key": "Client certificate and private key are not a valid pair",
+      "bad_ws_headers": "Supply valid HTTP headers as a JSON object",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_inclusion": "The client certificate and private key must be configurered together"
     }
   },
   "device_automation": {
@@ -53,19 +84,33 @@
     "step": {
       "broker": {
         "title": "Broker options",
-        "description": "Please enter the connection information of your MQTT broker.",
+        "description": "[%key:component::mqtt::config::step::broker::description%]",
         "data": {
-          "broker": "Broker",
+          "broker": "[%key:component::mqtt::config::step::broker::data::broker%]",
           "port": "[%key:common::config_flow::data::port%]",
           "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "advanced_options": "[%key:component::mqtt::config::step::broker::data::advanced_options%]",
+          "certificate": "[%key:component::mqtt::config::step::broker::data::certificate%]",
+          "client_id": "[%key:component::mqtt::config::step::broker::data::client_id%]",
+          "client_cert": "[%key:component::mqtt::config::step::broker::data::client_cert%]",
+          "client_key": "[%key:component::mqtt::config::step::broker::data::client_key%]",
+          "keepalive": "[%key:component::mqtt::config::step::broker::data::keepalive%]",
+          "tls_insecure": "[%key:component::mqtt::config::step::broker::data::tls_insecure%]",
+          "protocol": "[%key:component::mqtt::config::step::broker::data::protocol%]",
+          "set_ca_cert": "[%key:component::mqtt::config::step::broker::data::set_ca_cert%]",
+          "set_client_cert": "[%key:component::mqtt::config::step::broker::data::set_client_cert%]",
+          "transport": "[%key:component::mqtt::config::step::broker::data::transport%]",
+          "ws_headers": "[%key:component::mqtt::config::step::broker::data::ws_headers%]",
+          "ws_path": "[%key:component::mqtt::config::step::broker::data::ws_path%]"
         }
       },
       "options": {
         "title": "MQTT options",
-        "description": "Discovery - If discovery is enabled (recommended), Home Assistant will automatically discover devices and entities which publish their configuration on the MQTT broker. If discovery is disabled, all configuration must be done manually.\nBirth message - The birth message will be sent each time Home Assistant (re)connects to the MQTT broker.\nWill message - The will message will be sent each time Home Assistant loses its connection to the broker, both in case of a clean (e.g. Home Assistant shutting down) and in case of an unclean (e.g. Home Assistant crashing or losing its network connection) disconnect.",
+        "description": "Discovery - If discovery is enabled (recommended), Home Assistant will automatically discover devices and entities which publish their configuration on the MQTT broker. If discovery is disabled, all configuration must be done manually.\nDiscovery prefix - The prefix a configuration topic for automatic discovery must start with.\nBirth message - The birth message will be sent each time Home Assistant (re)connects to the MQTT broker.\nWill message - The will message will be sent each time Home Assistant loses its connection to the broker, both in case of a clean (e.g. Home Assistant shutting down) and in case of an unclean (e.g. Home Assistant crashing or losing its network connection) disconnect.",
         "data": {
-          "discovery": "Enable discovery",
+          "discovery": "[%key:component::mqtt::config::step::hassio_confirm::data::discovery%]",
+          "discovery_prefix": "Discovery prefix",
           "birth_enable": "Enable birth message",
           "birth_topic": "Birth message topic",
           "birth_payload": "Birth message payload",
@@ -80,9 +125,25 @@
       }
     },
     "error": {
+      "bad_birth": "[%key:component::mqtt::config::error::bad_birth%]",
+      "bad_will": "[%key:component::mqtt::config::error::bad_will%]",
+      "bad_discovery_prefix": "[%key:component::mqtt::config::error::bad_discovery_prefix%]",
+      "bad_certificate": "[%key:component::mqtt::config::error::bad_certificate%]",
+      "bad_client_cert": "[%key:component::mqtt::config::error::bad_client_cert%]",
+      "bad_client_key": "[%key:component::mqtt::config::error::bad_client_key%]",
+      "bad_client_cert_key": "[%key:component::mqtt::config::error::bad_client_cert_key%]",
+      "bad_ws_headers": "[%key:component::mqtt::config::error::bad_ws_headers%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "bad_birth": "Invalid birth topic.",
-      "bad_will": "Invalid will topic."
+      "invalid_inclusion": "[%key:component::mqtt::config::error::invalid_inclusion%]"
+    }
+  },
+  "selector": {
+    "set_ca_cert": {
+      "options": {
+        "off": "Off",
+        "auto": "Auto",
+        "custom": "Custom"
+      }
     }
   }
 }

@@ -7,8 +7,8 @@ import pytest
 
 from homeassistant.components.alexa import messages, smart_home
 import homeassistant.components.camera as camera
-from homeassistant.components.cover import DEVICE_CLASS_GATE
-from homeassistant.components.media_player.const import (
+from homeassistant.components.cover import CoverDeviceClass
+from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -26,11 +26,11 @@ from homeassistant.components.media_player.const import (
 )
 import homeassistant.components.vacuum as vacuum
 from homeassistant.config import async_process_ha_core_config
-from homeassistant.const import STATE_UNKNOWN, TEMP_FAHRENHEIT
+from homeassistant.const import STATE_UNKNOWN, UnitOfTemperature
 from homeassistant.core import Context
 from homeassistant.helpers import entityfilter
 from homeassistant.setup import async_setup_component
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .test_common import (
     MockConfig,
@@ -410,7 +410,8 @@ async def test_fan(hass):
     assert appliance["endpointId"] == "fan#test_1"
     assert appliance["displayCategories"][0] == "FAN"
     assert appliance["friendlyName"] == "Test fan 1"
-    # Alexa.RangeController is added to make a fan controllable when no other controllers are available
+    # Alexa.RangeController is added to make a fan controllable when
+    # no other controllers are available.
     capabilities = assert_endpoint_capabilities(
         appliance,
         "Alexa.RangeController",
@@ -466,7 +467,8 @@ async def test_fan2(hass):
     assert appliance["endpointId"] == "fan#test_2"
     assert appliance["displayCategories"][0] == "FAN"
     assert appliance["friendlyName"] == "Test fan 2"
-    # Alexa.RangeController is added to make a fan controllable when no other controllers are available
+    # Alexa.RangeController is added to make a fan controllable
+    # when no other controllers are available
     capabilities = assert_endpoint_capabilities(
         appliance,
         "Alexa.RangeController",
@@ -597,7 +599,8 @@ async def test_variable_fan_no_current_speed(hass, caplog):
     assert appliance["endpointId"] == "fan#test_3"
     assert appliance["displayCategories"][0] == "FAN"
     assert appliance["friendlyName"] == "Test fan 3"
-    # Alexa.RangeController is added to make a van controllable when no other controllers are available
+    # Alexa.RangeController is added to make a van controllable
+    # when no other controllers are available
     capabilities = assert_endpoint_capabilities(
         appliance,
         "Alexa.RangeController",
@@ -625,9 +628,9 @@ async def test_variable_fan_no_current_speed(hass, caplog):
             "fan.percentage",
         )
     assert (
-        "Request Alexa.RangeController/AdjustRangeValue error INVALID_VALUE: Unable to determine fan.test_3 current fan speed"
-        in caplog.text
-    )
+        "Request Alexa.RangeController/AdjustRangeValue error "
+        "INVALID_VALUE: Unable to determine fan.test_3 current fan speed"
+    ) in caplog.text
     caplog.clear()
 
 
@@ -948,6 +951,145 @@ async def test_single_preset_mode_fan(hass, caplog):
         )
     assert "Entity 'fan.test_8' does not support Preset '-'" in caplog.text
     caplog.clear()
+
+
+@freeze_time("2022-04-19 07:53:05")
+async def test_humidifier(hass, caplog):
+    """Test humidifier controller."""
+    device = (
+        "humidifier.test_1",
+        "on",
+        {
+            "friendly_name": "Humidifier test 1",
+            "humidity": 66,
+            "supported_features": 1,
+            "mode": "Auto",
+            "available_modes": ["Auto", "Low", "Medium", "High"],
+            "min_humidity": 20,
+            "max_humidity": 90,
+        },
+    )
+    await discovery_test(device, hass)
+
+    await assert_power_controller_works(
+        "humidifier#test_1",
+        "humidifier.turn_on",
+        "humidifier.turn_off",
+        hass,
+        "2022-04-19T07:53:05Z",
+    )
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.ModeController",
+        "SetMode",
+        "humidifier#test_1",
+        "humidifier.set_mode",
+        hass,
+        payload={"mode": "mode.Auto"},
+        instance="humidifier.mode",
+    )
+    assert call.data["mode"] == "Auto"
+
+    with pytest.raises(AssertionError):
+        await assert_request_calls_service(
+            "Alexa.ModeController",
+            "SetMode",
+            "humidifier#test_1",
+            "humidifier.set_mode",
+            hass,
+            payload={"mode": "mode.-"},
+            instance="humidifier.mode",
+        )
+    assert "Entity 'humidifier.test_1' does not support Mode '-'" in caplog.text
+    caplog.clear()
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.RangeController",
+        "SetRangeValue",
+        "humidifier#test_1",
+        "humidifier.set_humidity",
+        hass,
+        payload={"rangeValue": "67"},
+        instance="humidifier.humidity",
+    )
+    assert call.data["humidity"] == 67
+    call, _ = await assert_request_calls_service(
+        "Alexa.RangeController",
+        "SetRangeValue",
+        "humidifier#test_1",
+        "humidifier.set_humidity",
+        hass,
+        payload={"rangeValue": "33"},
+        instance="humidifier.humidity",
+    )
+    assert call.data["humidity"] == 33
+
+
+async def test_humidifier_without_modes(hass):
+    """Test humidifier discovery without modes."""
+
+    device = (
+        "humidifier.test_2",
+        "on",
+        {
+            "friendly_name": "Humidifier test 2",
+            "humidity": 33,
+            "supported_features": 0,
+            "min_humidity": 20,
+            "max_humidity": 90,
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "humidifier#test_2"
+    assert appliance["displayCategories"][0] == "OTHER"
+    assert appliance["friendlyName"] == "Humidifier test 2"
+    capabilities = assert_endpoint_capabilities(
+        appliance,
+        "Alexa.RangeController",
+        "Alexa.PowerController",
+        "Alexa.EndpointHealth",
+        "Alexa",
+    )
+
+    power_capability = get_capability(capabilities, "Alexa.PowerController")
+    assert "capabilityResources" not in power_capability
+    assert "configuration" not in power_capability
+
+
+async def test_humidifier_with_modes(hass):
+    """Test humidifier discovery with modes."""
+
+    device = (
+        "humidifier.test_1",
+        "on",
+        {
+            "friendly_name": "Humidifier test 1",
+            "humidity": 66,
+            "supported_features": 1,
+            "mode": "Auto",
+            "available_modes": ["Auto", "Low", "Medium", "High"],
+            "min_humidity": 20,
+            "max_humidity": 90,
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "humidifier#test_1"
+    assert appliance["displayCategories"][0] == "OTHER"
+    assert appliance["friendlyName"] == "Humidifier test 1"
+    capabilities = assert_endpoint_capabilities(
+        appliance,
+        "Alexa.ModeController",
+        "Alexa.RangeController",
+        "Alexa.PowerController",
+        "Alexa.EndpointHealth",
+        "Alexa",
+    )
+
+    power_capability = get_capability(capabilities, "Alexa.PowerController")
+    assert "capabilityResources" not in power_capability
+    assert "configuration" not in power_capability
 
 
 async def test_lock(hass):
@@ -1848,7 +1990,10 @@ async def test_temp_sensor(hass):
     device = (
         "sensor.test_temp",
         "42",
-        {"friendly_name": "Test Temp Sensor", "unit_of_measurement": TEMP_FAHRENHEIT},
+        {
+            "friendly_name": "Test Temp Sensor",
+            "unit_of_measurement": UnitOfTemperature.FAHRENHEIT,
+        },
     )
     appliance = await discovery_test(device, hass)
 
@@ -2020,7 +2165,7 @@ async def test_unknown_sensor(hass):
 
 async def test_thermostat(hass):
     """Test thermostat discovery."""
-    hass.config.units = IMPERIAL_SYSTEM
+    hass.config.units = US_CUSTOMARY_SYSTEM
     device = (
         "climate.test_thermostat",
         "cool",
@@ -2765,7 +2910,7 @@ async def test_cover_gate(hass):
         {
             "friendly_name": "Test cover gate",
             "supported_features": 3,
-            "device_class": DEVICE_CLASS_GATE,
+            "device_class": CoverDeviceClass.GATE,
         },
     )
     appliance = await discovery_test(device, hass)

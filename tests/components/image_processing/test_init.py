@@ -9,12 +9,13 @@ from homeassistant.const import ATTR_ENTITY_PICTURE
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
+from . import common
+
 from tests.common import assert_setup_component, async_capture_events
-from tests.components.image_processing import common
 
 
 @pytest.fixture
-def aiohttp_unused_port(loop, aiohttp_unused_port, socket_enabled):
+def aiohttp_unused_port(event_loop, aiohttp_unused_port, socket_enabled):
     """Return aiohttp_unused_port and allow opening sockets."""
     return aiohttp_unused_port
 
@@ -37,16 +38,6 @@ async def setup_image_processing(hass, aiohttp_unused_port):
 
     await async_setup_component(hass, ip.DOMAIN, config)
     await hass.async_block_till_done()
-
-
-async def setup_image_processing_alpr(hass):
-    """Set up things to be run when tests are started."""
-    config = {ip.DOMAIN: {"platform": "demo"}, "camera": {"platform": "demo"}}
-
-    await async_setup_component(hass, ip.DOMAIN, config)
-    await hass.async_block_till_done()
-
-    return async_capture_events(hass, "image_processing.found_plate")
 
 
 async def setup_image_processing_face(hass):
@@ -116,77 +107,6 @@ async def test_get_image_without_exists_camera(
 
     assert mock_image.called
     assert state.state == "0"
-
-
-async def test_alpr_event_single_call(hass, aioclient_mock):
-    """Set up and scan a picture and test plates from event."""
-    alpr_events = await setup_image_processing_alpr(hass)
-    aioclient_mock.get(get_url(hass), content=b"image")
-
-    common.async_scan(hass, entity_id="image_processing.demo_alpr")
-    await hass.async_block_till_done()
-
-    state = hass.states.get("image_processing.demo_alpr")
-
-    assert len(alpr_events) == 4
-    assert state.state == "AC3829"
-
-    event_data = [
-        event.data for event in alpr_events if event.data.get("plate") == "AC3829"
-    ]
-    assert len(event_data) == 1
-    assert event_data[0]["plate"] == "AC3829"
-    assert event_data[0]["confidence"] == 98.3
-    assert event_data[0]["entity_id"] == "image_processing.demo_alpr"
-
-
-async def test_alpr_event_double_call(hass, aioclient_mock):
-    """Set up and scan a picture and test plates from event."""
-    alpr_events = await setup_image_processing_alpr(hass)
-    aioclient_mock.get(get_url(hass), content=b"image")
-
-    common.async_scan(hass, entity_id="image_processing.demo_alpr")
-    common.async_scan(hass, entity_id="image_processing.demo_alpr")
-    await hass.async_block_till_done()
-
-    state = hass.states.get("image_processing.demo_alpr")
-
-    assert len(alpr_events) == 4
-    assert state.state == "AC3829"
-
-    event_data = [
-        event.data for event in alpr_events if event.data.get("plate") == "AC3829"
-    ]
-    assert len(event_data) == 1
-    assert event_data[0]["plate"] == "AC3829"
-    assert event_data[0]["confidence"] == 98.3
-    assert event_data[0]["entity_id"] == "image_processing.demo_alpr"
-
-
-@patch(
-    "homeassistant.components.demo.image_processing.DemoImageProcessingAlpr.confidence",
-    new_callable=PropertyMock(return_value=95),
-)
-async def test_alpr_event_single_call_confidence(confidence_mock, hass, aioclient_mock):
-    """Set up and scan a picture and test plates from event."""
-    alpr_events = await setup_image_processing_alpr(hass)
-    aioclient_mock.get(get_url(hass), content=b"image")
-
-    common.async_scan(hass, entity_id="image_processing.demo_alpr")
-    await hass.async_block_till_done()
-
-    state = hass.states.get("image_processing.demo_alpr")
-
-    assert len(alpr_events) == 2
-    assert state.state == "AC3829"
-
-    event_data = [
-        event.data for event in alpr_events if event.data.get("plate") == "AC3829"
-    ]
-    assert len(event_data) == 1
-    assert event_data[0]["plate"] == "AC3829"
-    assert event_data[0]["confidence"] == 98.3
-    assert event_data[0]["entity_id"] == "image_processing.demo_alpr"
 
 
 async def test_face_event_call(hass, aioclient_mock):

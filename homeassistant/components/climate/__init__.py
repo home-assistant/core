@@ -18,7 +18,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
@@ -31,7 +31,7 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.temperature import convert as convert_temperature
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (  # noqa: F401
     ATTR_AUX_HEAT,
@@ -55,11 +55,29 @@ from .const import (  # noqa: F401
     ATTR_TARGET_TEMP_LOW,
     ATTR_TARGET_TEMP_STEP,
     DOMAIN,
+    FAN_AUTO,
+    FAN_DIFFUSE,
+    FAN_FOCUS,
+    FAN_HIGH,
+    FAN_LOW,
+    FAN_MEDIUM,
+    FAN_MIDDLE,
+    FAN_OFF,
+    FAN_ON,
+    FAN_TOP,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
     HVAC_MODES,
+    PRESET_ACTIVITY,
+    PRESET_AWAY,
+    PRESET_BOOST,
+    PRESET_COMFORT,
+    PRESET_ECO,
+    PRESET_HOME,
+    PRESET_NONE,
+    PRESET_SLEEP,
     SERVICE_SET_AUX_HEAT,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HUMIDITY,
@@ -74,6 +92,11 @@ from .const import (  # noqa: F401
     SUPPORT_TARGET_HUMIDITY,
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
+    SWING_BOTH,
+    SWING_HORIZONTAL,
+    SWING_OFF,
+    SWING_ON,
+    SWING_VERTICAL,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -106,10 +129,12 @@ SET_TEMPERATURE_SCHEMA = vol.All(
     ),
 )
 
+# mypy: disallow-any-generics
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up climate entities."""
-    component = hass.data[DOMAIN] = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent[ClimateEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     await component.async_setup(config)
@@ -166,13 +191,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[ClimateEntity] = hass.data[DOMAIN]
     return await component.async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[ClimateEntity] = hass.data[DOMAIN]
     return await component.async_unload_entry(entry)
 
 
@@ -200,7 +225,7 @@ class ClimateEntity(Entity):
     _attr_precision: float
     _attr_preset_mode: str | None
     _attr_preset_modes: list[str] | None
-    _attr_supported_features: int
+    _attr_supported_features: ClimateEntityFeature = ClimateEntityFeature(0)
     _attr_swing_mode: str | None
     _attr_swing_modes: list[str] | None
     _attr_target_humidity: int | None = None
@@ -225,7 +250,7 @@ class ClimateEntity(Entity):
         """Return the precision of the system."""
         if hasattr(self, "_attr_precision"):
             return self._attr_precision
-        if self.hass.config.units.temperature_unit == TEMP_CELSIUS:
+        if self.hass.config.units.temperature_unit == UnitOfTemperature.CELSIUS:
             return PRECISION_TENTHS
         return PRECISION_WHOLE
 
@@ -506,7 +531,7 @@ class ClimateEntity(Entity):
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
         if hasattr(self, "turn_on"):
-            await self.hass.async_add_executor_job(self.turn_on)  # type: ignore[attr-defined]
+            await self.hass.async_add_executor_job(self.turn_on)
             return
 
         # Fake turn on
@@ -519,7 +544,7 @@ class ClimateEntity(Entity):
     async def async_turn_off(self) -> None:
         """Turn the entity off."""
         if hasattr(self, "turn_off"):
-            await self.hass.async_add_executor_job(self.turn_off)  # type: ignore[attr-defined]
+            await self.hass.async_add_executor_job(self.turn_off)
             return
 
         # Fake turn off
@@ -527,7 +552,7 @@ class ClimateEntity(Entity):
             await self.async_set_hvac_mode(HVACMode.OFF)
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         return self._attr_supported_features
 
@@ -535,8 +560,8 @@ class ClimateEntity(Entity):
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         if not hasattr(self, "_attr_min_temp"):
-            return convert_temperature(
-                DEFAULT_MIN_TEMP, TEMP_CELSIUS, self.temperature_unit
+            return TemperatureConverter.convert(
+                DEFAULT_MIN_TEMP, UnitOfTemperature.CELSIUS, self.temperature_unit
             )
         return self._attr_min_temp
 
@@ -544,8 +569,8 @@ class ClimateEntity(Entity):
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         if not hasattr(self, "_attr_max_temp"):
-            return convert_temperature(
-                DEFAULT_MAX_TEMP, TEMP_CELSIUS, self.temperature_unit
+            return TemperatureConverter.convert(
+                DEFAULT_MAX_TEMP, UnitOfTemperature.CELSIUS, self.temperature_unit
             )
         return self._attr_max_temp
 
@@ -579,7 +604,7 @@ async def async_service_temperature_set(
 
     for value, temp in service_call.data.items():
         if value in CONVERTIBLE_ATTRIBUTE:
-            kwargs[value] = convert_temperature(
+            kwargs[value] = TemperatureConverter.convert(
                 temp, hass.config.units.temperature_unit, entity.temperature_unit
             )
         else:

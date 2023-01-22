@@ -3,8 +3,8 @@ import pytest
 
 from homeassistant.core import HomeAssistant
 from homeassistant.util.unit_system import (
-    IMPERIAL_SYSTEM as IMPERIAL,
     METRIC_SYSTEM as METRIC,
+    US_CUSTOMARY_SYSTEM as IMPERIAL,
     UnitSystem,
 )
 
@@ -17,7 +17,7 @@ from . import setup_mocked_integration
         ("sensor.i3_rex_remaining_range_total", METRIC, "279", "km"),
         ("sensor.i3_rex_remaining_range_total", IMPERIAL, "173.36", "mi"),
         ("sensor.i3_rex_mileage", METRIC, "137009", "km"),
-        ("sensor.i3_rex_mileage", IMPERIAL, "85133.42", "mi"),
+        ("sensor.i3_rex_mileage", IMPERIAL, "85133.45", "mi"),
         ("sensor.i3_rex_remaining_battery_percent", METRIC, "82", "%"),
         ("sensor.i3_rex_remaining_battery_percent", IMPERIAL, "82", "%"),
         ("sensor.i3_rex_remaining_range_electric", METRIC, "174", "km"),

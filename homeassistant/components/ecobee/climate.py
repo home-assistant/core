@@ -6,14 +6,14 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     FAN_AUTO,
     FAN_ON,
     PRESET_AWAY,
     PRESET_NONE,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -26,14 +26,14 @@ from homeassistant.const import (
     PRECISION_TENTHS,
     STATE_OFF,
     STATE_ON,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.temperature import convert
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import _LOGGER, DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 from .util import ecobee_date, ecobee_time
@@ -181,11 +181,13 @@ async def async_setup_entry(
         thermostat = data.ecobee.get_thermostat(index)
         if not thermostat["modelNumber"] in ECOBEE_MODEL_TO_NAME:
             _LOGGER.error(
-                "Model number for ecobee thermostat %s not recognized. "
-                "Please visit this link to open a new issue: "
-                "https://github.com/home-assistant/core/issues "
-                "and include the following information: "
-                "Unrecognized model number: %s",
+                (
+                    "Model number for ecobee thermostat %s not recognized. "
+                    "Please visit this link to open a new issue: "
+                    "https://github.com/home-assistant/core/issues "
+                    "and include the following information: "
+                    "Unrecognized model number: %s"
+                ),
                 thermostat["name"],
                 thermostat["modelNumber"],
             )
@@ -303,6 +305,9 @@ async def async_setup_entry(
 class Thermostat(ClimateEntity):
     """A thermostat class for Ecobee."""
 
+    _attr_precision = PRECISION_TENTHS
+    _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+
     def __init__(self, data, thermostat_index, thermostat):
         """Initialize the thermostat."""
         self.data = data
@@ -348,7 +353,7 @@ class Thermostat(ClimateEntity):
         return self.thermostat["runtime"]["connected"]
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         if self.has_humidifier_control:
             return SUPPORT_FLAGS | ClimateEntityFeature.TARGET_HUMIDITY
@@ -380,16 +385,6 @@ class Thermostat(ClimateEntity):
             model=model,
             name=self.name,
         )
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_FAHRENHEIT
-
-    @property
-    def precision(self) -> float:
-        """Return the precision of the system."""
-        return PRECISION_TENTHS
 
     @property
     def current_temperature(self) -> float:
@@ -770,15 +765,15 @@ class Thermostat(ClimateEntity):
     def create_vacation(self, service_data):
         """Create a vacation with user-specified parameters."""
         vacation_name = service_data[ATTR_VACATION_NAME]
-        cool_temp = convert(
+        cool_temp = TemperatureConverter.convert(
             service_data[ATTR_COOL_TEMP],
             self.hass.config.units.temperature_unit,
-            TEMP_FAHRENHEIT,
+            UnitOfTemperature.FAHRENHEIT,
         )
-        heat_temp = convert(
+        heat_temp = TemperatureConverter.convert(
             service_data[ATTR_HEAT_TEMP],
             self.hass.config.units.temperature_unit,
-            TEMP_FAHRENHEIT,
+            UnitOfTemperature.FAHRENHEIT,
         )
         start_date = service_data.get(ATTR_START_DATE)
         start_time = service_data.get(ATTR_START_TIME)
@@ -801,8 +796,10 @@ class Thermostat(ClimateEntity):
         }
 
         _LOGGER.debug(
-            "Creating a vacation on thermostat %s with name %s, cool temp %s, heat temp %s, "
-            "and the following other parameters: %s",
+            (
+                "Creating a vacation on thermostat %s with name %s, cool temp %s, heat"
+                " temp %s, and the following other parameters: %s"
+            ),
             self.name,
             vacation_name,
             cool_temp,

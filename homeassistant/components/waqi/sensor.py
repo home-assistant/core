@@ -24,7 +24,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -53,7 +52,6 @@ KEY_TO_ATTR = {
 ATTRIBUTION = "Data provided by the World Air Quality Index project"
 
 ATTR_ICON = "mdi:cloud"
-ATTR_UNIT = "AQI"
 
 CONF_LOCATIONS = "locations"
 CONF_STATIONS = "stations"
@@ -62,7 +60,7 @@ SCAN_INTERVAL = timedelta(minutes=5)
 
 TIMEOUT = 10
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_STATIONS): cv.ensure_list,
         vol.Required(CONF_TOKEN): cv.string,
@@ -110,7 +108,6 @@ class WaqiSensor(SensorEntity):
     """Implementation of a WAQI sensor."""
 
     _attr_icon = ATTR_ICON
-    _attr_native_unit_of_measurement = ATTR_UNIT
     _attr_device_class = SensorDeviceClass.AQI
     _attr_state_class = SensorStateClass.MEASUREMENT
 
@@ -183,7 +180,7 @@ class WaqiSensor(SensorEntity):
             except (IndexError, KeyError):
                 return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data and updates the states."""
         if self.uid:
             result = await self._client.get_station_by_number(self.uid)

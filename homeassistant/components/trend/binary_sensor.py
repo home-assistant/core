@@ -30,25 +30,25 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.reload import setup_reload_service
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import utcnow
 
-from . import DOMAIN, PLATFORMS
+from . import PLATFORMS
+from .const import (
+    ATTR_GRADIENT,
+    ATTR_INVERT,
+    ATTR_MIN_GRADIENT,
+    ATTR_SAMPLE_COUNT,
+    ATTR_SAMPLE_DURATION,
+    CONF_INVERT,
+    CONF_MAX_SAMPLES,
+    CONF_MIN_GRADIENT,
+    CONF_SAMPLE_DURATION,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_ATTRIBUTE = "attribute"
-ATTR_GRADIENT = "gradient"
-ATTR_MIN_GRADIENT = "min_gradient"
-ATTR_INVERT = "invert"
-ATTR_SAMPLE_DURATION = "sample_duration"
-ATTR_SAMPLE_COUNT = "sample_count"
-
-CONF_INVERT = "invert"
-CONF_MAX_SAMPLES = "max_samples"
-CONF_MIN_GRADIENT = "min_gradient"
-CONF_SAMPLE_DURATION = "sample_duration"
 
 SENSOR_SCHEMA = vol.Schema(
     {
@@ -68,14 +68,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the trend sensors."""
-    setup_reload_service(hass, DOMAIN, PLATFORMS)
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
     sensors = []
 
@@ -106,11 +106,14 @@ def setup_platform(
     if not sensors:
         _LOGGER.error("No sensors added")
         return
-    add_entities(sensors)
+
+    async_add_entities(sensors)
 
 
 class SensorTrend(BinarySensorEntity):
     """Representation of a trend Sensor."""
+
+    _attr_should_poll = False
 
     def __init__(
         self,
@@ -167,12 +170,7 @@ class SensorTrend(BinarySensorEntity):
             ATTR_SAMPLE_DURATION: self._sample_duration,
         }
 
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Complete device setup after being added to hass."""
 
         @callback
@@ -198,7 +196,7 @@ class SensorTrend(BinarySensorEntity):
             )
         )
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data and update the states."""
         # Remove outdated samples
         if self._sample_duration > 0:

@@ -114,7 +114,6 @@ def reload_core_config(hass):
 class TestComponentsCore(unittest.TestCase):
     """Test homeassistant.components module."""
 
-    # pylint: disable=invalid-name
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
@@ -179,6 +178,7 @@ class TestComponentsCore(unittest.TestCase):
             config.YAML_CONFIG_FILE: yaml.dump(
                 {
                     ha.DOMAIN: {
+                        "country": "SE",  # To avoid creating issue country_not_configured
                         "latitude": 10,
                         "longitude": 20,
                         "customize": {"test.Entity": {"hello": "world"}},

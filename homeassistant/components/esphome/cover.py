@@ -1,6 +1,7 @@
 """Support for ESPHome covers."""
 from __future__ import annotations
 
+from contextlib import suppress
 from typing import Any
 
 from aioesphomeapi import CoverInfo, CoverOperation, CoverState
@@ -8,7 +9,7 @@ from aioesphomeapi import CoverInfo, CoverOperation, CoverState
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    DEVICE_CLASSES,
+    CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
 )
@@ -34,15 +35,11 @@ async def async_setup_entry(
     )
 
 
-# https://github.com/PyCQA/pylint/issues/3150 for all @esphome_state_property
-# pylint: disable=invalid-overridden-method
-
-
 class EsphomeCover(EsphomeEntity[CoverInfo, CoverState], CoverEntity):
     """A cover implementation for ESPHome."""
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> CoverEntityFeature:
         """Flag supported features."""
         flags = (
             CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
@@ -58,33 +55,37 @@ class EsphomeCover(EsphomeEntity[CoverInfo, CoverState], CoverEntity):
         return flags
 
     @property
-    def device_class(self) -> str | None:
+    def device_class(self) -> CoverDeviceClass | None:
         """Return the class of this device, from component DEVICE_CLASSES."""
-        if self._static_info.device_class not in DEVICE_CLASSES:
-            return None
-        return self._static_info.device_class
+        with suppress(ValueError):
+            return CoverDeviceClass(self._static_info.device_class)
+        return None
 
     @property
     def assumed_state(self) -> bool:
         """Return true if we do optimistic updates."""
         return self._static_info.assumed_state
 
+    @property
     @esphome_state_property
     def is_closed(self) -> bool | None:
         """Return if the cover is closed or not."""
         # Check closed state with api version due to a protocol change
         return self._state.is_closed(self._api_version)
 
+    @property
     @esphome_state_property
     def is_opening(self) -> bool:
         """Return if the cover is opening or not."""
         return self._state.current_operation == CoverOperation.IS_OPENING
 
+    @property
     @esphome_state_property
     def is_closing(self) -> bool:
         """Return if the cover is closing or not."""
         return self._state.current_operation == CoverOperation.IS_CLOSING
 
+    @property
     @esphome_state_property
     def current_cover_position(self) -> int | None:
         """Return current position of cover. 0 is closed, 100 is open."""
@@ -92,6 +93,7 @@ class EsphomeCover(EsphomeEntity[CoverInfo, CoverState], CoverEntity):
             return None
         return round(self._state.position * 100.0)
 
+    @property
     @esphome_state_property
     def current_cover_tilt_position(self) -> int | None:
         """Return current position of cover tilt. 0 is closed, 100 is open."""

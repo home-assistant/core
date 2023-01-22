@@ -35,6 +35,9 @@ from .helpers import (
 )
 
 EFFECT_NONE = "None"
+FALLBACK_MIN_MIREDS = 153  # 6500 K
+FALLBACK_MAX_MIREDS = 500  # 2000 K
+FALLBACK_MIREDS = 173  # halfway
 
 
 async def async_setup_entry(
@@ -141,21 +144,24 @@ class HueLight(HueBaseEntity, LightEntity):
         """Return the color temperature."""
         if color_temp := self.resource.color_temperature:
             return color_temp.mirek
-        return 0
+        # return a fallback value to prevent issues with mired->kelvin conversions
+        return FALLBACK_MIREDS
 
     @property
     def min_mireds(self) -> int:
         """Return the coldest color_temp that this light supports."""
         if color_temp := self.resource.color_temperature:
             return color_temp.mirek_schema.mirek_minimum
-        return 0
+        # return a fallback value to prevent issues with mired->kelvin conversions
+        return FALLBACK_MIN_MIREDS
 
     @property
     def max_mireds(self) -> int:
         """Return the warmest color_temp that this light supports."""
         if color_temp := self.resource.color_temperature:
             return color_temp.mirek_schema.mirek_maximum
-        return 0
+        # return a fallback value to prevent issues with mired->kelvin conversions
+        return FALLBACK_MAX_MIREDS
 
     @property
     def supported_color_modes(self) -> set | None:

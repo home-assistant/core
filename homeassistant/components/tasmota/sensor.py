@@ -19,25 +19,22 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
-    ELECTRIC_CURRENT_AMPERE,
-    ELECTRIC_POTENTIAL_VOLT,
-    ENERGY_KILO_WATT_HOUR,
-    FREQUENCY_HERTZ,
-    LENGTH_CENTIMETERS,
     LIGHT_LUX,
-    MASS_KILOGRAMS,
     PERCENTAGE,
-    POWER_VOLT_AMPERE,
-    POWER_WATT,
-    PRESSURE_HPA,
+    POWER_VOLT_AMPERE_REACTIVE,
     SIGNAL_STRENGTH_DECIBELS,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    SPEED_KILOMETERS_PER_HOUR,
-    SPEED_METERS_PER_SECOND,
-    SPEED_MILES_PER_HOUR,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-    TEMP_KELVIN,
+    UnitOfApparentPower,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfFrequency,
+    UnitOfLength,
+    UnitOfMass,
+    UnitOfPower,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -52,7 +49,8 @@ DEVICE_CLASS = "device_class"
 STATE_CLASS = "state_class"
 ICON = "icon"
 
-# A Tasmota sensor type may be mapped to either a device class or an icon, not both
+# A Tasmota sensor type may be mapped to either a device class or an icon,
+# both can only be set if the default device class icon is not appropriate
 SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
     hc.SENSOR_ACTIVE_ENERGYEXPORT: {
         DEVICE_CLASS: SensorDeviceClass.ENERGY,
@@ -71,7 +69,7 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
     hc.SENSOR_APPARENT_POWERUSAGE: {
-        ICON: "mdi:flash",
+        DEVICE_CLASS: SensorDeviceClass.APPARENT_POWER,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
     hc.SENSOR_BATTERY: {
@@ -91,6 +89,7 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
     hc.SENSOR_COLOR_RED: {ICON: "mdi:palette"},
     hc.SENSOR_CURRENT: {
         ICON: "mdi:alpha-a-circle-outline",
+        DEVICE_CLASS: SensorDeviceClass.CURRENT,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
     hc.SENSOR_CURRENTNEUTRAL: {
@@ -105,6 +104,7 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
     },
     hc.SENSOR_DISTANCE: {
         ICON: "mdi:leak",
+        DEVICE_CLASS: SensorDeviceClass.DISTANCE,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
     hc.SENSOR_ECO2: {ICON: "mdi:molecule-co2"},
@@ -122,7 +122,10 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
     },
     hc.SENSOR_STATUS_IP: {ICON: "mdi:ip-network"},
     hc.SENSOR_STATUS_LINK_COUNT: {ICON: "mdi:counter"},
-    hc.SENSOR_MOISTURE: {ICON: "mdi:cup-water"},
+    hc.SENSOR_MOISTURE: {
+        DEVICE_CLASS: SensorDeviceClass.MOISTURE,
+        ICON: "mdi:cup-water",
+    },
     hc.SENSOR_STATUS_MQTT_COUNT: {ICON: "mdi:counter"},
     hc.SENSOR_PB0_3: {ICON: "mdi:flask"},
     hc.SENSOR_PB0_5: {ICON: "mdi:flask"},
@@ -144,6 +147,7 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
     },
     hc.SENSOR_POWERFACTOR: {
         ICON: "mdi:alpha-f-circle-outline",
+        DEVICE_CLASS: SensorDeviceClass.POWER_FACTOR,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
     hc.SENSOR_POWERUSAGE: {
@@ -158,11 +162,11 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
         DEVICE_CLASS: SensorDeviceClass.PRESSURE,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
-    hc.SENSOR_PROXIMITY: {ICON: "mdi:ruler"},
+    hc.SENSOR_PROXIMITY: {DEVICE_CLASS: SensorDeviceClass.DISTANCE, ICON: "mdi:ruler"},
     hc.SENSOR_REACTIVE_ENERGYEXPORT: {STATE_CLASS: SensorStateClass.TOTAL},
     hc.SENSOR_REACTIVE_ENERGYIMPORT: {STATE_CLASS: SensorStateClass.TOTAL},
     hc.SENSOR_REACTIVE_POWERUSAGE: {
-        ICON: "mdi:flash",
+        DEVICE_CLASS: SensorDeviceClass.REACTIVE_POWER,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
     hc.SENSOR_STATUS_LAST_RESTART_TIME: {DEVICE_CLASS: SensorDeviceClass.TIMESTAMP},
@@ -180,7 +184,10 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
         DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
-    hc.SENSOR_TODAY: {DEVICE_CLASS: SensorDeviceClass.ENERGY},
+    hc.SENSOR_TODAY: {
+        DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
+    },
     hc.SENSOR_TOTAL: {
         DEVICE_CLASS: SensorDeviceClass.ENERGY,
         STATE_CLASS: SensorStateClass.TOTAL,
@@ -191,7 +198,11 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
         ICON: "mdi:alpha-v-circle-outline",
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
-    hc.SENSOR_WEIGHT: {ICON: "mdi:scale", STATE_CLASS: SensorStateClass.MEASUREMENT},
+    hc.SENSOR_WEIGHT: {
+        ICON: "mdi:scale",
+        DEVICE_CLASS: SensorDeviceClass.WEIGHT,
+        STATE_CLASS: SensorStateClass.MEASUREMENT,
+    },
     hc.SENSOR_YESTERDAY: {DEVICE_CLASS: SensorDeviceClass.ENERGY},
 }
 
@@ -199,25 +210,27 @@ SENSOR_UNIT_MAP = {
     hc.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     hc.CONCENTRATION_PARTS_PER_BILLION: CONCENTRATION_PARTS_PER_BILLION,
     hc.CONCENTRATION_PARTS_PER_MILLION: CONCENTRATION_PARTS_PER_MILLION,
-    hc.ELECTRICAL_CURRENT_AMPERE: ELECTRIC_CURRENT_AMPERE,
-    hc.ELECTRICAL_VOLT_AMPERE: POWER_VOLT_AMPERE,
-    hc.ENERGY_KILO_WATT_HOUR: ENERGY_KILO_WATT_HOUR,
-    hc.FREQUENCY_HERTZ: FREQUENCY_HERTZ,
-    hc.LENGTH_CENTIMETERS: LENGTH_CENTIMETERS,
+    hc.ELECTRICAL_CURRENT_AMPERE: UnitOfElectricCurrent.AMPERE,
+    hc.ELECTRICAL_VOLT_AMPERE: UnitOfApparentPower.VOLT_AMPERE,
+    hc.ENERGY_KILO_WATT_HOUR: UnitOfEnergy.KILO_WATT_HOUR,
+    hc.FREQUENCY_HERTZ: UnitOfFrequency.HERTZ,
+    hc.LENGTH_CENTIMETERS: UnitOfLength.CENTIMETERS,
     hc.LIGHT_LUX: LIGHT_LUX,
-    hc.MASS_KILOGRAMS: MASS_KILOGRAMS,
+    hc.MASS_KILOGRAMS: UnitOfMass.KILOGRAMS,
     hc.PERCENTAGE: PERCENTAGE,
-    hc.POWER_WATT: POWER_WATT,
-    hc.PRESSURE_HPA: PRESSURE_HPA,
+    hc.POWER_FACTOR: None,
+    hc.POWER_WATT: UnitOfPower.WATT,
+    hc.PRESSURE_HPA: UnitOfPressure.HPA,
+    hc.REACTIVE_POWER: POWER_VOLT_AMPERE_REACTIVE,
     hc.SIGNAL_STRENGTH_DECIBELS: SIGNAL_STRENGTH_DECIBELS,
     hc.SIGNAL_STRENGTH_DECIBELS_MILLIWATT: SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    hc.SPEED_KILOMETERS_PER_HOUR: SPEED_KILOMETERS_PER_HOUR,
-    hc.SPEED_METERS_PER_SECOND: SPEED_METERS_PER_SECOND,
-    hc.SPEED_MILES_PER_HOUR: SPEED_MILES_PER_HOUR,
-    hc.TEMP_CELSIUS: TEMP_CELSIUS,
-    hc.TEMP_FAHRENHEIT: TEMP_FAHRENHEIT,
-    hc.TEMP_KELVIN: TEMP_KELVIN,
-    hc.VOLT: ELECTRIC_POTENTIAL_VOLT,
+    hc.SPEED_KILOMETERS_PER_HOUR: UnitOfSpeed.KILOMETERS_PER_HOUR,
+    hc.SPEED_METERS_PER_SECOND: UnitOfSpeed.METERS_PER_SECOND,
+    hc.SPEED_MILES_PER_HOUR: UnitOfSpeed.MILES_PER_HOUR,
+    hc.TEMP_CELSIUS: UnitOfTemperature.CELSIUS,
+    hc.TEMP_FAHRENHEIT: UnitOfTemperature.FAHRENHEIT,
+    hc.TEMP_KELVIN: UnitOfTemperature.KELVIN,
+    hc.VOLT: UnitOfElectricPotential.VOLT,
 }
 
 
@@ -253,6 +266,7 @@ async def async_setup_entry(
 class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, SensorEntity):
     """Representation of a Tasmota sensor."""
 
+    _attr_force_update = True
     _tasmota_entity: tasmota_sensor.TasmotaSensor
 
     def __init__(self, **kwds: Any) -> None:
@@ -279,7 +293,7 @@ class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, SensorEntity):
         self.async_write_ha_state()
 
     @property
-    def device_class(self) -> str | None:
+    def device_class(self) -> SensorDeviceClass | None:
         """Return the device class of the sensor."""
         class_or_icon = SENSOR_DEVICE_CLASS_ICON_MAP.get(
             self._tasmota_entity.quantity, {}
@@ -328,11 +342,6 @@ class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, SensorEntity):
         if self._state_timestamp and self.device_class == SensorDeviceClass.TIMESTAMP:
             return self._state_timestamp
         return self._state
-
-    @property
-    def force_update(self) -> bool:
-        """Force update."""
-        return True
 
     @property
     def native_unit_of_measurement(self) -> str | None:

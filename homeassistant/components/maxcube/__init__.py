@@ -69,7 +69,10 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
             _LOGGER.error("Unable to connect to Max!Cube gateway: %s", str(ex))
             persistent_notification.create(
                 hass,
-                f"Error: {ex}<br />You will need to restart Home Assistant after fixing.",
+                (
+                    f"Error: {ex}<br />You will need to restart Home Assistant after"
+                    " fixing."
+                ),
                 title=NOTIFICATION_TITLE,
                 notification_id=NOTIFICATION_ID,
             )

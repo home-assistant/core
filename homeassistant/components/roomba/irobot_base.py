@@ -17,6 +17,7 @@ from homeassistant.const import STATE_IDLE, STATE_PAUSED
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo, Entity
 import homeassistant.util.dt as dt_util
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from . import roomba_reported_state
 from .const import DOMAIN
@@ -60,6 +61,8 @@ STATE_MAP = {
 class IRobotEntity(Entity):
     """Base class for iRobot Entities."""
 
+    _attr_should_poll = False
+
     def __init__(self, roomba, blid):
         """Initialize the iRobot handler."""
         self.vacuum = roomba
@@ -68,11 +71,6 @@ class IRobotEntity(Entity):
         self._name = self.vacuum_state.get("name")
         self._version = self.vacuum_state.get("softwareVer")
         self._sku = self.vacuum_state.get("sku")
-
-    @property
-    def should_poll(self):
-        """Disable polling."""
-        return False
 
     @property
     def robot_unique_id(self):
@@ -224,7 +222,7 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
 
         if cleaned_area := mission_state.get("sqft", 0):  # Imperial
             # Convert to m2 if the unit_system is set to metric
-            if self.hass.config.units.is_metric:
+            if self.hass.config.units is METRIC_SYSTEM:
                 cleaned_area = round(cleaned_area * 0.0929)
 
         return (cleaning_time, cleaned_area)

@@ -1,0 +1,25 @@
+{
+    "config": {
+        "error": {
+            "invalid_api_token": "Neplatn\u00fd API k\u013e\u00fa\u010d",
+            "no_site": "Nebola poskytnut\u00e1 \u017eiadna str\u00e1nka",
+            "unknown_error": "Neo\u010dak\u00e1van\u00e1 chyba"
+        },
+        "step": {
+            "site": {
+                "data": {
+                    "site_name": "N\u00e1zov lokality",
+                    "site_nmi": "Miesto NMI"
+                },
+                "description": "Vyberte NMI lokality, ktor\u00fa chcete prida\u0165"
+            },
+            "user": {
+                "data": {
+                    "api_token": "API token",
+                    "site_id": "ID lokality"
+                },
+                "description": "Prejdite na {api_url} a vygenerujte k\u013e\u00fa\u010d API"
+            }
+        }
+    }
+}

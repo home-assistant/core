@@ -14,7 +14,7 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.setup import async_setup_component
@@ -43,7 +43,7 @@ async def test_default_setup(hass, aioclient_mock):
 
     metrics = {
         "co2": ["1232.0", CONCENTRATION_PARTS_PER_MILLION],
-        "temperature": ["21.1", TEMP_CELSIUS],
+        "temperature": ["21.1", UnitOfTemperature.CELSIUS],
         "humidity": ["49.5", PERCENTAGE],
         "pm2_5": ["144.8", CONCENTRATION_MICROGRAMS_PER_CUBIC_METER],
         "voc": ["340.7", CONCENTRATION_PARTS_PER_BILLION],
@@ -64,9 +64,7 @@ async def test_setup_timeout_error(hass, aioclient_mock):
         re.compile("api.foobot.io/v2/owner/.*"), exc=asyncio.TimeoutError()
     )
     with pytest.raises(PlatformNotReady):
-        await foobot.async_setup_platform(
-            hass, {"sensor": VALID_CONFIG}, fake_async_add_entities
-        )
+        await foobot.async_setup_platform(hass, VALID_CONFIG, fake_async_add_entities)
 
 
 async def test_setup_permanent_error(hass, aioclient_mock):
@@ -77,7 +75,7 @@ async def test_setup_permanent_error(hass, aioclient_mock):
     for error in errors:
         aioclient_mock.get(re.compile("api.foobot.io/v2/owner/.*"), status=error)
         result = await foobot.async_setup_platform(
-            hass, {"sensor": VALID_CONFIG}, fake_async_add_entities
+            hass, VALID_CONFIG, fake_async_add_entities
         )
         assert result is None
 
@@ -91,5 +89,5 @@ async def test_setup_temporary_error(hass, aioclient_mock):
         aioclient_mock.get(re.compile("api.foobot.io/v2/owner/.*"), status=error)
         with pytest.raises(PlatformNotReady):
             await foobot.async_setup_platform(
-                hass, {"sensor": VALID_CONFIG}, fake_async_add_entities
+                hass, VALID_CONFIG, fake_async_add_entities
             )

@@ -72,7 +72,7 @@ def get_mock_call_fixture(request):
 
     if request.param == influxdb.API_VERSION_2:
         return lambda body, precision=None: v2_call(body, precision)
-    # pylint: disable=unnecessary-lambda
+    # pylint: disable-next=unnecessary-lambda
     return lambda body, precision=None: call(body, time_precision=precision)
 
 
@@ -557,7 +557,7 @@ async def test_event_listener_states(
     """Test the event listener against ignored states."""
     handler_method = await _setup(hass, mock_client, config_ext, get_write_api)
 
-    for state_state in (1, "unknown", "", "unavailable"):
+    for state_state in (1, "unknown", "", "unavailable", None):
         state = MagicMock(
             state=state_state,
             domain="fake",

@@ -4,7 +4,6 @@ from unittest.mock import patch
 import pytest
 from zwave_js_server.event import Event
 
-from homeassistant.components.diagnostics.const import REDACTED
 from homeassistant.components.zwave_js.diagnostics import (
     ZwaveValueMatcher,
     async_get_device_diagnostics,
@@ -26,7 +25,11 @@ from tests.components.diagnostics import (
 
 
 async def test_config_entry_diagnostics(
-    hass, hass_client, integration, config_entry_diagnostics
+    hass,
+    hass_client,
+    integration,
+    config_entry_diagnostics,
+    config_entry_diagnostics_redacted,
 ):
     """Test the config entry level diagnostics data dump."""
     with patch(
@@ -36,16 +39,7 @@ async def test_config_entry_diagnostics(
         diagnostics = await get_diagnostics_for_config_entry(
             hass, hass_client, integration
         )
-        assert len(diagnostics) == 3
-        assert diagnostics[0]["homeId"] == REDACTED
-        nodes = diagnostics[2]["result"]["state"]["nodes"]
-        for node in nodes:
-            assert "location" not in node or node["location"] == REDACTED
-            for value in node["values"]:
-                if value["commandClass"] == 99 and value["property"] == "userCode":
-                    assert value["value"] == REDACTED
-                else:
-                    assert value.get("value") != REDACTED
+        assert diagnostics == config_entry_diagnostics_redacted
 
 
 async def test_device_diagnostics(
@@ -152,6 +146,7 @@ async def test_device_diagnostics_missing_primary_value(
         x for x in diagnostics_data["entities"] if x["entity_id"] == entity_id
     )
 
+    assert air_entity["value_id"] == value.value_id
     assert air_entity["primary_value"] == {
         "command_class": value.command_class,
         "command_class_name": value.command_class_name,
@@ -189,4 +184,5 @@ async def test_device_diagnostics_missing_primary_value(
         x for x in diagnostics_data["entities"] if x["entity_id"] == entity_id
     )
 
+    assert air_entity["value_id"] == value.value_id
     assert air_entity["primary_value"] is None

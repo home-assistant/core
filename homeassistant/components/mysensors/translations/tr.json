@@ -34,7 +34,6 @@
             "invalid_serial": "Ge\u00e7ersiz seri ba\u011flant\u0131 noktas\u0131",
             "invalid_subscribe_topic": "Ge\u00e7ersiz abone konusu",
             "invalid_version": "Ge\u00e7ersiz MySensors s\u00fcr\u00fcm\u00fc",
-            "mqtt_required": "MQTT entegrasyonu kurulmam\u0131\u015f",
             "not_a_number": "L\u00fctfen bir numara giriniz",
             "port_out_of_range": "Port numaras\u0131 en az 1, en fazla 65535 olmal\u0131d\u0131r",
             "same_topic": "Abone olma ve yay\u0131nlama konular\u0131 ayn\u0131d\u0131r",
@@ -83,6 +82,19 @@
                 },
                 "description": "A\u011f ge\u00e7idine ba\u011flant\u0131 y\u00f6ntemini se\u00e7in"
             }
+        }
+    },
+    "issues": {
+        "deprecated_service": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Bu hizmeti kullanan t\u00fcm otomasyonlar\u0131 veya komut dosyalar\u0131n\u0131, bunun yerine \" {alternate_service} \" hizmetini \" {alternate_target} alternate_target}\" hedef varl\u0131k kimli\u011fiyle kullanacak \u015fekilde g\u00fcncelleyin.",
+                        "title": "{deprecated_service} hizmeti kald\u0131r\u0131lacak"
+                    }
+                }
+            },
+            "title": "{deprecated_service} hizmeti kald\u0131r\u0131lacak"
         }
     }
 }

@@ -19,12 +19,9 @@ from homeassistant.components.withings.common import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2Implementation
 
+from .common import ComponentFactory, get_data_manager_by_user_id, new_profile_config
+
 from tests.common import MockConfigEntry
-from tests.components.withings.common import (
-    ComponentFactory,
-    get_data_manager_by_user_id,
-    new_profile_config,
-)
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -169,6 +166,7 @@ async def test_data_manager_webhook_subscription(
     # pylint: disable=protected-access
     data_manager._notify_subscribe_delay = datetime.timedelta(seconds=0)
     data_manager._notify_unsubscribe_delay = datetime.timedelta(seconds=0)
+    # pylint: enable=protected-access
 
     api.notify_list.return_value = NotifyListResponse(
         profiles=(

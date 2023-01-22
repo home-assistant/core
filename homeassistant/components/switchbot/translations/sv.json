@@ -9,14 +9,24 @@
         },
         "flow_title": "{name} ({address})",
         "step": {
-            "user": {
+            "confirm": {
+                "description": "Vill du konfigurera {name}?"
+            },
+            "lock_choose_method": {
+                "menu_options": {
+                    "lock_key": "Ange krypteringsnyckel manuellt"
+                }
+            },
+            "password": {
                 "data": {
-                    "address": "Enhetsadress",
-                    "mac": "Enhetens MAC-adress",
-                    "name": "Namn",
                     "password": "L\u00f6senord"
                 },
-                "title": "Konfigurera Switchbot-enhet"
+                "description": "{name} -enheten kr\u00e4ver ett l\u00f6senord"
+            },
+            "user": {
+                "data": {
+                    "address": "Enhetsadress"
+                }
             }
         }
     },
@@ -24,10 +34,7 @@
         "step": {
             "init": {
                 "data": {
-                    "retry_count": "Antal ompr\u00f6vningar",
-                    "retry_timeout": "Timeout mellan \u00e5terf\u00f6rs\u00f6k",
-                    "scan_timeout": "Hur l\u00e4nge ska man s\u00f6ka efter annonsdata",
-                    "update_time": "Tid mellan uppdateringar (sekunder)"
+                    "retry_count": "Antal ompr\u00f6vningar"
                 }
             }
         }

@@ -12,7 +12,6 @@ from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
 import async_timeout
 
-from homeassistant.components.repairs import IssueSeverity, async_create_issue
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -24,6 +23,7 @@ from homeassistant.helpers import (
     device_registry as dr,
 )
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -105,7 +105,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except (LyricException, ClientResponseError) as exception:
             raise UpdateFailed(exception) from exception
 
-    coordinator = DataUpdateCoordinator(
+    coordinator = DataUpdateCoordinator[Lyric](
         hass,
         _LOGGER,
         # Name of the data. For logging purposes.
@@ -133,12 +133,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class LyricEntity(CoordinatorEntity):
+class LyricEntity(CoordinatorEntity[DataUpdateCoordinator[Lyric]]):
     """Defines a base Honeywell Lyric entity."""
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[Lyric],
         location: LyricLocation,
         device: LyricDevice,
         key: str,

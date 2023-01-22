@@ -10,7 +10,8 @@
             "already_in_progress": "Seadistamine on juba k\u00e4imas",
             "cannot_connect": "\u00dchendamine nurjus",
             "discovery_requires_supervisor": "Avastamine n\u00f5uab supervisorit.",
-            "not_zwave_device": "Avastatud seade ei ole Z-Wave seade."
+            "not_zwave_device": "Avastatud seade ei ole Z-Wave seade.",
+            "not_zwave_js_addon": "Avastatud lisandmoodul ei ole ametlik Z-Wave JS-i lisandmoodul."
         },
         "error": {
             "addon_start_failed": "Z-Wave JS lisandmooduli k\u00e4ivitamine nurjus. Kontrolli seadistusi.",
@@ -89,6 +90,12 @@
             "state.node_status": "S\u00f5lme olek muutus",
             "zwave_js.value_updated.config_parameter": "Seadeparameetri {subtype} v\u00e4\u00e4rtuse muutmine",
             "zwave_js.value_updated.value": "Z-Wave JS v\u00e4\u00e4rtuse muutus"
+        }
+    },
+    "issues": {
+        "invalid_server_version": {
+            "description": "Z-Wave JS Serveri versioon, mida praegu kasutad, on selle Home Assistanti versiooni jaoks liiga vana. Selle probleemi lahendamiseks v\u00e4rskenda Z-Wave JS Server uusimale versioonile.",
+            "title": "Vajalik on Z-Wave JS Serveri uuem versioon"
         }
     },
     "options": {

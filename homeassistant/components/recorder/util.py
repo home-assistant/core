@@ -1,14 +1,14 @@
 """SQLAlchemy util functions."""
 from __future__ import annotations
 
-from collections.abc import Callable, Generator, Iterable
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from datetime import date, datetime, timedelta
 import functools
 import logging
 import os
 import time
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, NoReturn, TypeVar
 
 from awesomeversion import (
     AwesomeVersion,
@@ -24,8 +24,10 @@ from sqlalchemy.orm.query import Query
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 from typing_extensions import Concatenate, ParamSpec
+import voluptuous as vol
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 import homeassistant.util.dt as dt_util
 
 from .const import DATA_INSTANCE, SQLITE_URL_PREFIX, SupportedDialect
@@ -35,7 +37,7 @@ from .db_schema import (
     TABLES_TO_CHECK,
     RecorderRuns,
 )
-from .models import UnsupportedDialect, process_timestamp
+from .models import StatisticPeriod, UnsupportedDialect, process_timestamp
 
 if TYPE_CHECKING:
     from . import Recorder
@@ -50,10 +52,18 @@ QUERY_RETRY_WAIT = 0.1
 SQLITE3_POSTFIXES = ["", "-wal", "-shm"]
 DEFAULT_YIELD_STATES_ROWS = 32768
 
-MIN_VERSION_MARIA_DB = AwesomeVersion("10.3.0", AwesomeVersionStrategy.SIMPLEVER)
-MIN_VERSION_MYSQL = AwesomeVersion("8.0.0", AwesomeVersionStrategy.SIMPLEVER)
-MIN_VERSION_PGSQL = AwesomeVersion("12.0", AwesomeVersionStrategy.SIMPLEVER)
-MIN_VERSION_SQLITE = AwesomeVersion("3.31.0", AwesomeVersionStrategy.SIMPLEVER)
+MIN_VERSION_MARIA_DB = AwesomeVersion(
+    "10.3.0", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
+)
+MIN_VERSION_MYSQL = AwesomeVersion(
+    "8.0.0", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
+)
+MIN_VERSION_PGSQL = AwesomeVersion(
+    "12.0", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
+)
+MIN_VERSION_SQLITE = AwesomeVersion(
+    "3.31.0", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
+)
 
 # This is the maximum time after the recorder ends the session
 # before we no longer consider startup to be a "restart" and we
@@ -172,7 +182,7 @@ def execute_stmt_lambda_element(
     start_time: datetime | None = None,
     end_time: datetime | None = None,
     yield_per: int | None = DEFAULT_YIELD_STATES_ROWS,
-) -> Iterable[Row]:
+) -> list[Row]:
     """Execute a StatementLambdaElement.
 
     If the time window passed is greater than one day
@@ -186,9 +196,11 @@ def execute_stmt_lambda_element(
     """
     executed = session.execute(stmt)
     use_all = not start_time or ((end_time or dt_util.utcnow()) - start_time).days <= 1
-    for tryno in range(0, RETRIES):
+    for tryno in range(RETRIES):
         try:
-            return executed.all() if use_all else executed.yield_per(yield_per)  # type: ignore[no-any-return]
+            if use_all:
+                return executed.all()  # type: ignore[no-any-return]
+            return executed.yield_per(yield_per)  # type: ignore[no-any-return]
         except SQLAlchemyError as err:
             _LOGGER.error("Error executing query: %s", err)
             if tryno == RETRIES - 1:
@@ -215,7 +227,7 @@ def validate_or_move_away_sqlite_database(dburl: str) -> bool:
 
 def dburl_to_path(dburl: str) -> str:
     """Convert the db url into a filesystem path."""
-    return dburl[len(SQLITE_URL_PREFIX) :]
+    return dburl.removeprefix(SQLITE_URL_PREFIX)
 
 
 def last_run_was_recently_clean(cursor: CursorFetchStrategy) -> bool:
@@ -285,7 +297,10 @@ def run_checks_on_open_db(dbpath: str, cursor: CursorFetchStrategy) -> None:
 
     if not last_run_was_clean:
         _LOGGER.warning(
-            "The system could not validate that the sqlite3 database at %s was shutdown cleanly",
+            (
+                "The system could not validate that the sqlite3 database at %s was"
+                " shutdown cleanly"
+            ),
             dbpath,
         )
 
@@ -297,7 +312,10 @@ def move_away_broken_database(dbfile: str) -> None:
     corrupt_postfix = f".corrupt.{isotime}"
 
     _LOGGER.error(
-        "The system will rename the corrupt database file %s to %s in order to allow startup to proceed",
+        (
+            "The system will rename the corrupt database file %s to %s in order to"
+            " allow startup to proceed"
+        ),
         dbfile,
         f"{dbfile}{corrupt_postfix}",
     )
@@ -325,12 +343,14 @@ def query_on_connection(dbapi_connection: Any, statement: str) -> Any:
     return result
 
 
-def _fail_unsupported_dialect(dialect_name: str) -> None:
+def _fail_unsupported_dialect(dialect_name: str) -> NoReturn:
     """Warn about unsupported database version."""
     _LOGGER.error(
-        "Database %s is not supported; Home Assistant supports %s. "
-        "Starting with Home Assistant 2022.6 this prevents the recorder from "
-        "starting. Please migrate your database to a supported software",
+        (
+            "Database %s is not supported; Home Assistant supports %s. "
+            "Starting with Home Assistant 2022.6 this prevents the recorder from "
+            "starting. Please migrate your database to a supported software"
+        ),
         dialect_name,
         "MariaDB ≥ 10.3, MySQL ≥ 8.0, PostgreSQL ≥ 12, SQLite ≥ 3.31.0",
     )
@@ -339,12 +359,14 @@ def _fail_unsupported_dialect(dialect_name: str) -> None:
 
 def _fail_unsupported_version(
     server_version: str, dialect_name: str, minimum_version: str
-) -> None:
+) -> NoReturn:
     """Warn about unsupported database version."""
     _LOGGER.error(
-        "Version %s of %s is not supported; minimum supported version is %s. "
-        "Starting with Home Assistant 2022.6 this prevents the recorder from "
-        "starting. Please upgrade your database software",
+        (
+            "Version %s of %s is not supported; minimum supported version is %s. "
+            "Starting with Home Assistant 2022.6 this prevents the recorder from "
+            "starting. Please upgrade your database software"
+        ),
         server_version,
         dialect_name,
         minimum_version,
@@ -380,12 +402,9 @@ def _datetime_or_none(value: str) -> datetime | None:
 def build_mysqldb_conv() -> dict:
     """Build a MySQLDB conv dict that uses cisco8601 to parse datetimes."""
     # Late imports since we only call this if they are using mysqldb
-    from MySQLdb.constants import (  # pylint: disable=import-outside-toplevel,import-error
-        FIELD_TYPE,
-    )
-    from MySQLdb.converters import (  # pylint: disable=import-outside-toplevel,import-error
-        conversions,
-    )
+    # pylint: disable=import-outside-toplevel,import-error
+    from MySQLdb.constants import FIELD_TYPE
+    from MySQLdb.converters import conversions
 
     return {**conversions, FIELD_TYPE.DATETIME: _datetime_or_none}
 
@@ -424,7 +443,8 @@ def setup_connection_for_dialect(
         # or NORMAL if they do not.
         #
         # https://sqlite.org/pragma.html#pragma_synchronous
-        # The synchronous=NORMAL setting is a good choice for most applications running in WAL mode.
+        # The synchronous=NORMAL setting is a good choice for most applications
+        # running in WAL mode.
         #
         synchronous = "NORMAL" if instance.commit_interval else "FULL"
         execute_on_connection(dbapi_connection, f"PRAGMA synchronous={synchronous}")
@@ -501,6 +521,7 @@ def retryable_database_job(
                 assert instance.engine is not None
                 if (
                     instance.engine.dialect.name == SupportedDialect.MYSQL
+                    and err.orig
                     and err.orig.args[0] in RETRYABLE_MYSQL_ERRORS
                 ):
                     _LOGGER.info(
@@ -595,3 +616,83 @@ def get_instance(hass: HomeAssistant) -> Recorder:
     """Get the recorder instance."""
     instance: Recorder = hass.data[DATA_INSTANCE]
     return instance
+
+
+PERIOD_SCHEMA = vol.Schema(
+    {
+        vol.Exclusive("calendar", "period"): vol.Schema(
+            {
+                vol.Required("period"): vol.Any("hour", "day", "week", "month", "year"),
+                vol.Optional("offset"): int,
+            }
+        ),
+        vol.Exclusive("fixed_period", "period"): vol.Schema(
+            {
+                vol.Optional("start_time"): vol.All(cv.datetime, dt_util.as_utc),
+                vol.Optional("end_time"): vol.All(cv.datetime, dt_util.as_utc),
+            }
+        ),
+        vol.Exclusive("rolling_window", "period"): vol.Schema(
+            {
+                vol.Required("duration"): cv.time_period_dict,
+                vol.Optional("offset"): cv.time_period_dict,
+            }
+        ),
+    }
+)
+
+
+def resolve_period(
+    period_def: StatisticPeriod,
+) -> tuple[datetime | None, datetime | None]:
+    """Return start and end datetimes for a statistic period definition."""
+    start_time = None
+    end_time = None
+
+    if "calendar" in period_def:
+        calendar_period = period_def["calendar"]["period"]
+        start_of_day = dt_util.start_of_local_day()
+        cal_offset = period_def["calendar"].get("offset", 0)
+        if calendar_period == "hour":
+            start_time = dt_util.now().replace(minute=0, second=0, microsecond=0)
+            start_time += timedelta(hours=cal_offset)
+            end_time = start_time + timedelta(hours=1)
+        elif calendar_period == "day":
+            start_time = start_of_day
+            start_time += timedelta(days=cal_offset)
+            end_time = start_time + timedelta(days=1)
+        elif calendar_period == "week":
+            start_time = start_of_day - timedelta(days=start_of_day.weekday())
+            start_time += timedelta(days=cal_offset * 7)
+            end_time = start_time + timedelta(weeks=1)
+        elif calendar_period == "month":
+            start_time = start_of_day.replace(day=28)
+            # This works for up to 48 months of offset
+            start_time = (start_time + timedelta(days=cal_offset * 31)).replace(day=1)
+            end_time = (start_time + timedelta(days=31)).replace(day=1)
+        else:  # calendar_period = "year"
+            start_time = start_of_day.replace(month=12, day=31)
+            # This works for 100+ years of offset
+            start_time = (start_time + timedelta(days=cal_offset * 366)).replace(
+                month=1, day=1
+            )
+            end_time = (start_time + timedelta(days=365)).replace(day=1)
+
+        start_time = dt_util.as_utc(start_time)
+        end_time = dt_util.as_utc(end_time)
+
+    elif "fixed_period" in period_def:
+        start_time = period_def["fixed_period"].get("start_time")
+        end_time = period_def["fixed_period"].get("end_time")
+
+    elif "rolling_window" in period_def:
+        duration = period_def["rolling_window"]["duration"]
+        now = dt_util.utcnow()
+        start_time = now - duration
+        end_time = start_time + duration
+
+        if offset := period_def["rolling_window"].get("offset"):
+            start_time += offset
+            end_time += offset
+
+    return (start_time, end_time)

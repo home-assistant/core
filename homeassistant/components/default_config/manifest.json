@@ -7,12 +7,14 @@
     "automation",
     "bluetooth",
     "cloud",
+    "conversation",
     "counter",
     "dhcp",
     "energy",
     "frontend",
-    "homeassistant_alerts",
+    "hardware",
     "history",
+    "homeassistant_alerts",
     "input_boolean",
     "input_button",
     "input_datetime",
@@ -20,6 +22,7 @@
     "input_select",
     "input_text",
     "logbook",
+    "logger",
     "map",
     "media_source",
     "mobile_app",
@@ -40,5 +43,6 @@
     "zone"
   ],
   "codeowners": ["@home-assistant/core"],
-  "quality_scale": "internal"
+  "quality_scale": "internal",
+  "integration_type": "system"
 }

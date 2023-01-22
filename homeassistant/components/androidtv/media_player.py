@@ -21,8 +21,10 @@ import voluptuous as vol
 
 from homeassistant.components import persistent_notification
 from homeassistant.components.media_player import (
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -33,11 +35,6 @@ from homeassistant.const import (
     ATTR_SW_VERSION,
     CONF_HOST,
     CONF_NAME,
-    STATE_IDLE,
-    STATE_OFF,
-    STATE_PAUSED,
-    STATE_PLAYING,
-    STATE_STANDBY,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
@@ -85,11 +82,11 @@ PREFIX_FIRETV = "Fire TV"
 
 # Translate from `AndroidTV` / `FireTV` reported state to HA state.
 ANDROIDTV_STATES = {
-    "off": STATE_OFF,
-    "idle": STATE_IDLE,
-    "standby": STATE_STANDBY,
-    "playing": STATE_PLAYING,
-    "paused": STATE_PAUSED,
+    "off": MediaPlayerState.OFF,
+    "idle": MediaPlayerState.IDLE,
+    "standby": MediaPlayerState.STANDBY,
+    "playing": MediaPlayerState.PLAYING,
+    "paused": MediaPlayerState.PAUSED,
 }
 
 
@@ -173,7 +170,6 @@ def adb_decorator(
             self: _ADBDeviceT, *args: _P.args, **kwargs: _P.kwargs
         ) -> _R | None:
             """Call an ADB-related method and catch exceptions."""
-            # pylint: disable=protected-access
             if not self.available and not override_available:
                 return None
 
@@ -182,22 +178,27 @@ def adb_decorator(
             except LockNotAcquiredException:
                 # If the ADB lock could not be acquired, skip this command
                 _LOGGER.info(
-                    "ADB command not executed because the connection is currently in use"
+                    "ADB command not executed because the connection is currently"
+                    " in use"
                 )
                 return None
             except self.exceptions as err:
                 _LOGGER.error(
-                    "Failed to execute an ADB command. ADB connection re-"
-                    "establishing attempt in the next update. Error: %s",
+                    (
+                        "Failed to execute an ADB command. ADB connection re-"
+                        "establishing attempt in the next update. Error: %s"
+                    ),
                     err,
                 )
                 await self.aftv.adb_close()
+                # pylint: disable-next=protected-access
                 self._attr_available = False
                 return None
             except Exception:
                 # An unforeseen exception occurred. Close the ADB connection so that
                 # it doesn't happen over and over again, then raise the exception.
                 await self.aftv.adb_close()
+                # pylint: disable-next=protected-access
                 self._attr_available = False
                 raise
 
@@ -208,6 +209,8 @@ def adb_decorator(
 
 class ADBDevice(MediaPlayerEntity):
     """Representation of an Android TV or Fire TV device."""
+
+    _attr_device_class = MediaPlayerDeviceClass.TV
 
     def __init__(
         self,
@@ -323,7 +326,11 @@ class ADBDevice(MediaPlayerEntity):
 
     async def async_get_media_image(self) -> tuple[bytes | None, str | None]:
         """Fetch current playing image."""
-        if not self._screencap or self.state in (STATE_OFF, None) or not self.available:
+        if (
+            not self._screencap
+            or self.state in {MediaPlayerState.OFF, None}
+            or not self.available
+        ):
             return None, None
 
         media_data = await self._adb_screencap()
@@ -424,7 +431,10 @@ class ADBDevice(MediaPlayerEntity):
             self._attr_extra_state_attributes[ATTR_ADB_RESPONSE] = output
             self.async_write_ha_state()
 
-            msg = f"Output from service '{SERVICE_LEARN_SENDEVENT}' from {self.entity_id}: '{output}'"
+            msg = (
+                f"Output from service '{SERVICE_LEARN_SENDEVENT}' from"
+                f" {self.entity_id}: '{output}'"
+            )
             persistent_notification.async_create(
                 self.hass,
                 msg,

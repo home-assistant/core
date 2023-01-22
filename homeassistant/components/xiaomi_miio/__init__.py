@@ -4,6 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import Any
 
 import async_timeout
 from miio import (
@@ -153,9 +154,11 @@ def get_platforms(config_entry):
             if model.startswith(air_monitor_model):
                 return AIR_MONITOR_PLATFORMS
     _LOGGER.error(
-        "Unsupported device found! Please create an issue at "
-        "https://github.com/syssi/xiaomi_airpurifier/issues "
-        "and provide the following data: %s",
+        (
+            "Unsupported device found! Please create an issue at "
+            "https://github.com/syssi/xiaomi_airpurifier/issues "
+            "and provide the following data: %s"
+        ),
         model,
     )
     return []
@@ -287,7 +290,7 @@ async def async_create_miio_device_and_coordinator(
     device: MiioDevice | None = None
     migrate = False
     update_method = _async_update_data_default
-    coordinator_class: type[DataUpdateCoordinator] = DataUpdateCoordinator
+    coordinator_class: type[DataUpdateCoordinator[Any]] = DataUpdateCoordinator
 
     if (
         model not in MODELS_HUMIDIFIER
@@ -336,9 +339,11 @@ async def async_create_miio_device_and_coordinator(
         device = Fan(host, token, model=model)
     else:
         _LOGGER.error(
-            "Unsupported device found! Please create an issue at "
-            "https://github.com/syssi/xiaomi_airpurifier/issues "
-            "and provide the following data: %s",
+            (
+                "Unsupported device found! Please create an issue at "
+                "https://github.com/syssi/xiaomi_airpurifier/issues "
+                "and provide the following data: %s"
+            ),
             model,
         )
         return
@@ -382,12 +387,6 @@ async def async_setup_gateway_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
     gateway_id = entry.unique_id
 
     assert gateway_id
-
-    # For backwards compat
-    if gateway_id.endswith("-gateway"):
-        hass.config_entries.async_update_entry(entry, unique_id=entry.data["mac"])
-
-    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     # Connect to gateway
     gateway = ConnectXiaomiGateway(hass, entry)
@@ -444,6 +443,8 @@ async def async_setup_gateway_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
 
     await hass.config_entries.async_forward_entry_setups(entry, GATEWAY_PLATFORMS)
 
+    entry.async_on_unload(entry.add_update_listener(update_listener))
+
 
 async def async_setup_device_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Xiaomi Miio device component from a config entry."""
@@ -453,9 +454,9 @@ async def async_setup_device_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
     if not platforms:
         return False
 
-    entry.async_on_unload(entry.add_update_listener(update_listener))
-
     await hass.config_entries.async_forward_entry_setups(entry, platforms)
+
+    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     return True
 

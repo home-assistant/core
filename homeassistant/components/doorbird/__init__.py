@@ -175,10 +175,12 @@ async def _async_register_events(
     except requests.exceptions.HTTPError:
         persistent_notification.async_create(
             hass,
-            "Doorbird configuration failed.  Please verify that API "
-            "Operator permission is enabled for the Doorbird user. "
-            "A restart will be required once permissions have been "
-            "verified.",
+            (
+                "Doorbird configuration failed.  Please verify that API "
+                "Operator permission is enabled for the Doorbird user. "
+                "A restart will be required once permissions have been "
+                "verified."
+            ),
             title="Doorbird Configuration Failure",
             notification_id="doorbird_schedule_error",
         )

@@ -1,0 +1,11 @@
+{
+  "domain": "xiaomi",
+  "name": "Xiaomi",
+  "integrations": [
+    "xiaomi_aqara",
+    "xiaomi_ble",
+    "xiaomi_miio",
+    "xiaomi_tv",
+    "xiaomi"
+  ]
+}

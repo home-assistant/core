@@ -184,7 +184,7 @@ async def test_microphone_binary_sensor(
     assert mic_binary_sensor_state.state == STATE_ON
 
 
-async def test_favorites_sensor(hass, async_autosetup_sonos, soco):
+async def test_favorites_sensor(hass, async_autosetup_sonos, soco, fire_zgs_event):
     """Test Sonos favorites sensor."""
     entity_registry = ent_reg.async_get(hass)
     favorites = entity_registry.entities["sensor.sonos_favorites"]
@@ -207,6 +207,9 @@ async def test_favorites_sensor(hass, async_autosetup_sonos, soco):
         dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
     )
     await hass.async_block_till_done()
+
+    # Trigger subscription callback for speaker discovery
+    await fire_zgs_event()
 
     favorites_updated_event = SonosMockEvent(
         soco, service, {"favorites_update_id": "2", "container_update_i_ds": "FV:2,2"}

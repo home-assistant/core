@@ -6,5 +6,6 @@
   "dependencies": ["api", "websocket_api"],
   "after_dependencies": ["energy"],
   "quality_scale": "internal",
-  "iot_class": "cloud_push"
+  "iot_class": "cloud_push",
+  "integration_type": "system"
 }

@@ -1,5 +1,10 @@
 {
     "config": {
+        "error": {
+            "invalid_api_token": "Ung\u00fcltiger API-Schl\u00fcssel",
+            "no_site": "Kein Standort vorhanden",
+            "unknown_error": "Unerwarteter Fehler"
+        },
         "step": {
             "site": {
                 "data": {

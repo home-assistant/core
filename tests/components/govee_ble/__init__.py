@@ -14,7 +14,7 @@ NOT_GOVEE_SERVICE_INFO = BluetoothServiceInfo(
 )
 
 GVH5075_SERVICE_INFO = BluetoothServiceInfo(
-    name="GVH5075_2762",
+    name="GVH5075 2762",
     address="61DE521B-F0BF-9F44-64D4-75BBE1738105",
     rssi=-63,
     manufacturer_data={
@@ -26,7 +26,7 @@ GVH5075_SERVICE_INFO = BluetoothServiceInfo(
 )
 
 GVH5177_SERVICE_INFO = BluetoothServiceInfo(
-    name="GVH5177_2EC8",
+    name="GVH5177 2EC8",
     address="4125DDBA-2774-4851-9889-6AADDD4CAC3D",
     rssi=-56,
     manufacturer_data={
@@ -34,5 +34,18 @@ GVH5177_SERVICE_INFO = BluetoothServiceInfo(
     },
     service_uuids=["0000ec88-0000-1000-8000-00805f9b34fb"],
     service_data={},
+    source="local",
+)
+
+GVH5178_SERVICE_INFO_ERROR = BluetoothServiceInfo(
+    name="B51782BC8",
+    address="A4:C1:38:75:2B:C8",
+    rssi=-66,
+    manufacturer_data={
+        1: b"\x01\x01\x01\x00\x03\xe7\xe4\x00\x01",
+        76: b"\x02\x15INTELLI_ROCKS_HWPu\xf2\xff\xc2",
+    },
+    service_data={},
+    service_uuids=["0000ec88-0000-1000-8000-00805f9b34fb"],
     source="local",
 )

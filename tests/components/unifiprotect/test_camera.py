@@ -8,7 +8,7 @@ from pyunifiprotect.data import Camera as ProtectCamera, CameraChannel, StateTyp
 from pyunifiprotect.exceptions import NvrError
 
 from homeassistant.components.camera import (
-    SUPPORT_STREAM,
+    CameraEntityFeature,
     async_get_image,
     async_get_stream_source,
 )
@@ -112,7 +112,7 @@ def validate_common_camera_state(
     hass: HomeAssistant,
     channel: CameraChannel,
     entity_id: str,
-    features: int = SUPPORT_STREAM,
+    features: int = CameraEntityFeature.STREAM,
 ):
     """Validate state that is common to all camera entity, regradless of type."""
     entity_state = hass.states.get(entity_id)
@@ -131,7 +131,7 @@ async def validate_rtsps_camera_state(
     camera_obj: ProtectCamera,
     channel_id: int,
     entity_id: str,
-    features: int = SUPPORT_STREAM,
+    features: int = CameraEntityFeature.STREAM,
 ):
     """Validate a camera's state."""
     channel = camera_obj.channels[channel_id]
@@ -145,7 +145,7 @@ async def validate_rtsp_camera_state(
     camera_obj: ProtectCamera,
     channel_id: int,
     entity_id: str,
-    features: int = SUPPORT_STREAM,
+    features: int = CameraEntityFeature.STREAM,
 ):
     """Validate a camera's state."""
     channel = camera_obj.channels[channel_id]
@@ -159,7 +159,7 @@ async def validate_no_stream_camera_state(
     camera_obj: ProtectCamera,
     channel_id: int,
     entity_id: str,
-    features: int = SUPPORT_STREAM,
+    features: int = CameraEntityFeature.STREAM,
 ):
     """Validate a camera's state."""
     channel = camera_obj.channels[channel_id]
@@ -279,7 +279,7 @@ async def test_adopt(hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCa
     await init_entry(hass, ufp, [camera1])
     assert_entity_counts(hass, Platform.CAMERA, 0, 0)
 
-    await remove_entities(hass, [camera1])
+    await remove_entities(hass, ufp, [camera1])
     assert_entity_counts(hass, Platform.CAMERA, 0, 0)
     camera1.channels = []
     await adopt_devices(hass, ufp, [camera1])
@@ -296,7 +296,7 @@ async def test_adopt(hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCa
     await hass.async_block_till_done()
     assert_entity_counts(hass, Platform.CAMERA, 2, 1)
 
-    await remove_entities(hass, [camera1])
+    await remove_entities(hass, ufp, [camera1])
     assert_entity_counts(hass, Platform.CAMERA, 0, 0)
     await adopt_devices(hass, ufp, [camera1])
     assert_entity_counts(hass, Platform.CAMERA, 2, 1)
@@ -492,7 +492,7 @@ async def test_camera_enable_motion(
     assert_entity_counts(hass, Platform.CAMERA, 2, 1)
     entity_id = "camera.test_camera_high"
 
-    camera.__fields__["set_motion_detection"] = Mock()
+    camera.__fields__["set_motion_detection"] = Mock(final=False)
     camera.set_motion_detection = AsyncMock()
 
     await hass.services.async_call(
@@ -514,7 +514,7 @@ async def test_camera_disable_motion(
     assert_entity_counts(hass, Platform.CAMERA, 2, 1)
     entity_id = "camera.test_camera_high"
 
-    camera.__fields__["set_motion_detection"] = Mock()
+    camera.__fields__["set_motion_detection"] = Mock(final=False)
     camera.set_motion_detection = AsyncMock()
 
     await hass.services.async_call(

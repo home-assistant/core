@@ -5,16 +5,17 @@ from typing import Any, cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     PRESET_BOOST,
     PRESET_NONE,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.components.overkiz.coordinator import OverkizDataUpdateCoordinator
-from homeassistant.components.overkiz.entity import OverkizEntity
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+
+from ..coordinator import OverkizDataUpdateCoordinator
+from ..entity import OverkizEntity
 
 PRESET_DRYING = "drying"
 
@@ -41,7 +42,7 @@ class AtlanticElectricalTowelDryer(OverkizEntity, ClimateEntity):
 
     _attr_hvac_modes = [*HVAC_MODE_TO_OVERKIZ]
     _attr_preset_modes = [*PRESET_MODE_TO_OVERKIZ]
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(
         self, device_url: str, coordinator: OverkizDataUpdateCoordinator
@@ -56,7 +57,7 @@ class AtlanticElectricalTowelDryer(OverkizEntity, ClimateEntity):
 
         # Not all AtlanticElectricalTowelDryer models support presets, thus we need to check if the command is available
         if self.executor.has_command(OverkizCommand.SET_TOWEL_DRYER_TEMPORARY_STATE):
-            self._attr_supported_features += ClimateEntityFeature.PRESET_MODE
+            self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
 
     @property
     def hvac_mode(self) -> str:

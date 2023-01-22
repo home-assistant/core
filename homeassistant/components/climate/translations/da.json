@@ -17,12 +17,12 @@
     "state": {
         "_": {
             "auto": "Auto",
-            "cool": "K\u00f8l",
-            "dry": "T\u00f8r",
+            "cool": "Afk\u00f8ling",
+            "dry": "Affugtning",
             "fan_only": "Kun bl\u00e6ser",
-            "heat": "Varme",
+            "heat": "Opvarmning",
             "heat_cool": "Opvarm/k\u00f8l",
-            "off": "Fra"
+            "off": "Slukket"
         }
     },
     "title": "Klima"

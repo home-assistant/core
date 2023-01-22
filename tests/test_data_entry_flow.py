@@ -1,6 +1,6 @@
 """Test the flow classes."""
-import asyncio
-from unittest.mock import patch
+import logging
+from unittest.mock import Mock, patch
 
 import pytest
 import voluptuous as vol
@@ -149,6 +149,45 @@ async def test_abort_removes_instance(manager):
     assert len(manager.mock_created_entries) == 0
 
 
+async def test_abort_calls_async_remove(manager):
+    """Test abort calling the async_remove FlowHandler method."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            return self.async_abort(reason="reason")
+
+        async_remove = Mock()
+
+    await manager.async_init("test")
+
+    TestFlow.async_remove.assert_called_once()
+
+    assert len(manager.async_progress()) == 0
+    assert len(manager.mock_created_entries) == 0
+
+
+async def test_abort_calls_async_remove_with_exception(manager, caplog):
+    """Test abort calling the async_remove FlowHandler method, with an exception."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            return self.async_abort(reason="reason")
+
+        async_remove = Mock(side_effect=[RuntimeError("error")])
+
+    with caplog.at_level(logging.ERROR):
+        await manager.async_init("test")
+
+    assert "Error removing test flow: error" in caplog.text
+
+    TestFlow.async_remove.assert_called_once()
+
+    assert len(manager.async_progress()) == 0
+    assert len(manager.mock_created_entries) == 0
+
+
 async def test_create_saves_data(manager):
     """Test creating a config entry."""
 
@@ -287,7 +326,7 @@ async def test_external_step(hass, manager):
         "refresh": True,
     }
 
-    # Frontend refreshses the flow
+    # Frontend refreshes the flow
     result = await manager.async_configure(result["flow_id"])
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "Hello"
@@ -377,22 +416,6 @@ async def test_abort_flow_exception(manager):
     assert form["type"] == data_entry_flow.FlowResultType.ABORT
     assert form["reason"] == "mock-reason"
     assert form["description_placeholders"] == {"placeholder": "yo"}
-
-
-async def test_initializing_flows_canceled_on_shutdown(hass, manager):
-    """Test that initializing flows are canceled on shutdown."""
-
-    @manager.mock_reg_handler("test")
-    class TestFlow(data_entry_flow.FlowHandler):
-        async def async_step_init(self, user_input=None):
-            await asyncio.sleep(1)
-
-    task = asyncio.create_task(manager.async_init("test"))
-    await hass.async_block_till_done()
-    await manager.async_shutdown()
-
-    with pytest.raises(asyncio.exceptions.CancelledError):
-        await task
 
 
 async def test_init_unknown_flow(manager):

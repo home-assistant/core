@@ -1,0 +1,44 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado"
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar: comprueba el n\u00famero de serie",
+            "invalid_ip": "Direcci\u00f3n IP no v\u00e1lida",
+            "invalid_serial": "N\u00famero de serie no v\u00e1lido",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "manual": {
+                "data": {
+                    "ip_address": "Direcci\u00f3n IP",
+                    "serial": "N\u00famero de serie (12 d\u00edgitos)"
+                },
+                "description": "Configura un Nob\u00f8 Ecohub no descubierto en tu red local. Si tu hub est\u00e1 en otra red, a\u00fan puedes conectarte introduciendo el n\u00famero de serie completo (12 d\u00edgitos) y su direcci\u00f3n IP."
+            },
+            "selected": {
+                "data": {
+                    "serial_suffix": "Sufijo del n\u00famero de serie (3 d\u00edgitos)"
+                },
+                "description": "Configurando {hub}.\n\nPara conectarte al hub, debes introducir los 3 \u00faltimos d\u00edgitos del n\u00famero de serie del mismo."
+            },
+            "user": {
+                "data": {
+                    "device": "Hubs descubiertos"
+                },
+                "description": "Selecciona un Nob\u00f8 Ecohub para configurar."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "override_type": "Tipo de anulaci\u00f3n"
+                },
+                "description": "Selecciona el tipo de anulaci\u00f3n \"Ahora\" para finalizar la anulaci\u00f3n en el cambio de perfil de la pr\u00f3xima semana."
+            }
+        }
+    }
+}

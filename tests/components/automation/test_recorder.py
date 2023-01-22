@@ -27,7 +27,7 @@ def calls(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-async def test_exclude_attributes(hass, recorder_mock, calls):
+async def test_exclude_attributes(recorder_mock, hass, calls):
     """Test automation registered attributes to be excluded."""
     assert await async_setup_component(
         hass,

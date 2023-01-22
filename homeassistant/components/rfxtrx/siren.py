@@ -6,8 +6,7 @@ from typing import Any
 
 import RFXtrx as rfxtrxmod
 
-from homeassistant.components.siren import SirenEntity, SirenEntityFeature
-from homeassistant.components.siren.const import ATTR_TONE
+from homeassistant.components.siren import ATTR_TONE, SirenEntity, SirenEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
@@ -59,8 +58,8 @@ async def async_setup_entry(
         event: rfxtrxmod.RFXtrxEvent,
         auto: rfxtrxmod.RFXtrxEvent | None,
         device_id: DeviceTuple,
-        entity_info: dict,
-    ):
+        entity_info: dict[str, Any],
+    ) -> list[Entity]:
         """Construct a entity from an event."""
         device = event.device
 
@@ -86,6 +85,7 @@ async def async_setup_entry(
                         auto,
                     )
                 ]
+        return []
 
     await async_setup_platform_entry(
         hass, config_entry, async_add_entities, supported, _constructor

@@ -241,6 +241,7 @@ def test_area_selector_schema(schema, valid_selections, invalid_selections):
         ),
         ({"min": 10, "max": 1000, "mode": "slider", "step": 0.5}, (), ()),
         ({"mode": "box"}, (10,), ()),
+        ({"mode": "box", "step": "any"}, (), ()),
     ),
 )
 def test_number_selector_schema(schema, valid_selections, invalid_selections):
@@ -253,6 +254,12 @@ def test_number_selector_schema(schema, valid_selections, invalid_selections):
     (
         {},  # Must have mandatory fields
         {"mode": "slider"},  # Must have min+max in slider mode
+        {
+            "mode": "slider",
+            "min": 0,
+            "max": 1,
+            "step": "any",  # Can't combine slider with step any
+        },
     ),
 )
 def test_number_selector_schema_error(schema):
@@ -287,6 +294,26 @@ def test_boolean_selector_schema(schema, valid_selections, invalid_selections):
 
 @pytest.mark.parametrize(
     "schema,valid_selections,invalid_selections",
+    (
+        (
+            {},
+            ("6b68b250388cbe0d620c92dd3acc93ec", "76f2e8f9a6491a1b580b3a8967c27ddd"),
+            (None, True, 1),
+        ),
+        (
+            {"integration": "adguard"},
+            ("6b68b250388cbe0d620c92dd3acc93ec", "76f2e8f9a6491a1b580b3a8967c27ddd"),
+            (None, True, 1),
+        ),
+    ),
+)
+def test_config_entry_selector_schema(schema, valid_selections, invalid_selections):
+    """Test boolean selector."""
+    _test_selector("config_entry", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    "schema,valid_selections,invalid_selections",
     (({}, ("00:00:00",), ("blah", None)),),
 )
 def test_time_selector_schema(schema, valid_selections, invalid_selections):
@@ -301,11 +328,6 @@ def test_time_selector_schema(schema, valid_selections, invalid_selections):
             {"entity_id": "sensor.abc"},
             ("on", "armed"),
             (None, True, 1),
-        ),
-        (
-            {"entity_id": "sensor.abc", "attribute": "device_class"},
-            ("temperature", "humidity"),
-            (None,),
         ),
     ),
 )
@@ -398,6 +420,25 @@ def test_text_selector_schema(schema, valid_selections, invalid_selections):
             ("cat", 0, None, ["red"]),
         ),
         (
+            {
+                "options": ["red", "green", "blue"],
+                "translation_key": "color",
+            },
+            ("red", "green", "blue"),
+            ("cat", 0, None, ["red"]),
+        ),
+        (
+            {
+                "options": [
+                    {"value": "red", "label": "Ruby Red"},
+                    {"value": "green", "label": "Emerald Green"},
+                ],
+                "translation_key": "color",
+            },
+            ("red", "green"),
+            ("cat", 0, None, ["red"]),
+        ),
+        (
             {"options": ["red", "green", "blue"], "multiple": True},
             (["red"], ["green", "blue"], []),
             ("cat", 0, None, "red"),
@@ -456,6 +497,11 @@ def test_select_selector_schema_error(schema):
         (
             {"entity_id": "sensor.abc"},
             ("friendly_name", "device_class"),
+            (None,),
+        ),
+        (
+            {"entity_id": "sensor.abc", "hide_attributes": ["friendly_name"]},
+            ("device_class", "state_class"),
             (None,),
         ),
     ),

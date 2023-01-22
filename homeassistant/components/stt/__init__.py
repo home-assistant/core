@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import asyncio
+from dataclasses import asdict, dataclass
 import logging
 from typing import Any
 
@@ -13,7 +14,6 @@ from aiohttp.web_exceptions import (
     HTTPNotFound,
     HTTPUnsupportedMediaType,
 )
-import attr
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
@@ -31,14 +31,21 @@ from .const import (
     SpeechResultState,
 )
 
-# mypy: allow-untyped-defs, no-check-untyped-defs
-
 _LOGGER = logging.getLogger(__name__)
+
+
+@callback
+def async_get_provider(hass: HomeAssistant, domain: str | None = None) -> Provider:
+    """Return provider."""
+    if domain is None:
+        domain = next(iter(hass.data[DOMAIN]))
+
+    return hass.data[DOMAIN][domain]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up STT."""
-    providers = {}
+    providers = hass.data[DOMAIN] = {}
 
     async def async_setup_platform(p_type, p_config=None, discovery_info=None):
         """Set up a TTS platform."""
@@ -82,24 +89,30 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-@attr.s
+@dataclass
 class SpeechMetadata:
     """Metadata of audio stream."""
 
-    language: str = attr.ib()
-    format: AudioFormats = attr.ib()
-    codec: AudioCodecs = attr.ib()
-    bit_rate: AudioBitRates = attr.ib(converter=int)
-    sample_rate: AudioSampleRates = attr.ib(converter=int)
-    channel: AudioChannels = attr.ib(converter=int)
+    language: str
+    format: AudioFormats
+    codec: AudioCodecs
+    bit_rate: AudioBitRates
+    sample_rate: AudioSampleRates
+    channel: AudioChannels
+
+    def __post_init__(self) -> None:
+        """Finish initializing the metadata."""
+        self.bit_rate = AudioBitRates(int(self.bit_rate))
+        self.sample_rate = AudioSampleRates(int(self.sample_rate))
+        self.channel = AudioChannels(int(self.channel))
 
 
-@attr.s
+@dataclass
 class SpeechResult:
     """Result of audio Speech."""
 
-    text: str | None = attr.ib()
-    result: SpeechResultState = attr.ib()
+    text: str | None
+    result: SpeechResultState
 
 
 class Provider(ABC):
@@ -173,30 +186,6 @@ class SpeechToTextView(HomeAssistantView):
         """Initialize a tts view."""
         self.providers = providers
 
-    @staticmethod
-    def _metadata_from_header(request: web.Request) -> SpeechMetadata | None:
-        """Extract metadata from header.
-
-        X-Speech-Content: format=wav; codec=pcm; sample_rate=16000; bit_rate=16; channel=1; language=de_de
-        """
-        try:
-            data = request.headers[istr("X-Speech-Content")].split(";")
-        except KeyError:
-            _LOGGER.warning("Missing X-Speech-Content")
-            return None
-
-        # Convert Header data
-        args: dict[str, Any] = {}
-        for value in data:
-            value = value.strip()
-            args[value.partition("=")[0]] = value.partition("=")[2]
-
-        try:
-            return SpeechMetadata(**args)
-        except TypeError as err:
-            _LOGGER.warning("Wrong format of X-Speech-Content: %s", err)
-            return None
-
     async def post(self, request: web.Request, provider: str) -> web.Response:
         """Convert Speech (audio) to text."""
         if provider not in self.providers:
@@ -204,9 +193,10 @@ class SpeechToTextView(HomeAssistantView):
         stt_provider: Provider = self.providers[provider]
 
         # Get metadata
-        metadata = self._metadata_from_header(request)
-        if not metadata:
-            raise HTTPBadRequest()
+        try:
+            metadata = metadata_from_header(request)
+        except ValueError as err:
+            raise HTTPBadRequest(text=str(err)) from err
 
         # Check format
         if not stt_provider.check_metadata(metadata):
@@ -218,7 +208,7 @@ class SpeechToTextView(HomeAssistantView):
         )
 
         # Return result
-        return self.json(attr.asdict(result))
+        return self.json(asdict(result))
 
     async def get(self, request: web.Request, provider: str) -> web.Response:
         """Return provider specific audio information."""
@@ -236,3 +226,48 @@ class SpeechToTextView(HomeAssistantView):
                 "channels": stt_provider.supported_channels,
             }
         )
+
+
+def metadata_from_header(request: web.Request) -> SpeechMetadata:
+    """Extract STT metadata from header.
+
+    X-Speech-Content:
+        format=wav; codec=pcm; sample_rate=16000; bit_rate=16; channel=1; language=de_de
+    """
+    try:
+        data = request.headers[istr("X-Speech-Content")].split(";")
+    except KeyError as err:
+        raise ValueError("Missing X-Speech-Content header") from err
+
+    fields = (
+        "language",
+        "format",
+        "codec",
+        "bit_rate",
+        "sample_rate",
+        "channel",
+    )
+
+    # Convert Header data
+    args: dict[str, Any] = {}
+    for entry in data:
+        key, _, value = entry.strip().partition("=")
+        if key not in fields:
+            raise ValueError(f"Invalid field {key}")
+        args[key] = value
+
+    for field in fields:
+        if field not in args:
+            raise ValueError(f"Missing {field} in X-Speech-Content header")
+
+    try:
+        return SpeechMetadata(
+            language=args["language"],
+            format=args["format"],
+            codec=args["codec"],
+            bit_rate=args["bit_rate"],
+            sample_rate=args["sample_rate"],
+            channel=args["channel"],
+        )
+    except TypeError as err:
+        raise ValueError(f"Wrong format of X-Speech-Content: {err}") from err

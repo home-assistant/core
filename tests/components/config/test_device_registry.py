@@ -52,40 +52,43 @@ async def test_list_devices(hass, client, registry):
 
     assert msg["result"] == [
         {
+            "area_id": None,
             "config_entries": ["1234"],
+            "configuration_url": None,
             "connections": [["ethernet", "12:34:56:78:90:AB:CD:EF"]],
+            "disabled_by": None,
+            "entry_type": None,
+            "hw_version": None,
             "identifiers": [["bridgeid", "0123"]],
             "manufacturer": "manufacturer",
             "model": "model",
+            "name_by_user": None,
             "name": None,
             "sw_version": None,
-            "hw_version": None,
-            "entry_type": None,
             "via_device_id": None,
-            "area_id": None,
-            "name_by_user": None,
-            "disabled_by": None,
-            "configuration_url": None,
         },
         {
+            "area_id": None,
             "config_entries": ["1234"],
+            "configuration_url": None,
             "connections": [],
+            "disabled_by": None,
+            "entry_type": helpers_dr.DeviceEntryType.SERVICE,
+            "hw_version": None,
             "identifiers": [["bridgeid", "1234"]],
             "manufacturer": "manufacturer",
             "model": "model",
+            "name_by_user": None,
             "name": None,
             "sw_version": None,
-            "hw_version": None,
-            "entry_type": helpers_dr.DeviceEntryType.SERVICE,
             "via_device_id": dev1,
-            "area_id": None,
-            "name_by_user": None,
-            "disabled_by": None,
-            "configuration_url": None,
         },
     ]
 
-    registry.async_remove_device(device2.id)
+    class Unserializable:
+        """Good luck serializing me."""
+
+    registry.async_update_device(device2.id, name=Unserializable())
     await hass.async_block_till_done()
 
     await client.send_json({"id": 6, "type": "config/device_registry/list"})
@@ -104,12 +107,15 @@ async def test_list_devices(hass, client, registry):
             "identifiers": [["bridgeid", "0123"]],
             "manufacturer": "manufacturer",
             "model": "model",
-            "name": None,
             "name_by_user": None,
+            "name": None,
             "sw_version": None,
             "via_device_id": None,
         }
     ]
+
+    # Remove the bad device to avoid errors when test is being torn down
+    registry.async_remove_device(device2.id)
 
 
 @pytest.mark.parametrize(

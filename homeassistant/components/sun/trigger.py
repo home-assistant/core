@@ -15,8 +15,6 @@ from homeassistant.helpers.event import async_track_sunrise, async_track_sunset
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-# mypy: allow-untyped-defs, no-check-untyped-defs
-
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): "sun",
@@ -42,7 +40,7 @@ async def async_attach_trigger(
     job = HassJob(action)
 
     @callback
-    def call_action():
+    def call_action() -> None:
         """Call action with right context."""
         hass.async_run_hass_job(
             job,

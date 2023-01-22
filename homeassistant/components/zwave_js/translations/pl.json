@@ -10,7 +10,8 @@
             "already_in_progress": "Konfiguracja jest ju\u017c w toku",
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "discovery_requires_supervisor": "Wykrywanie wymaga Supervisora.",
-            "not_zwave_device": "Wykryte urz\u0105dzenie nie jest urz\u0105dzeniem Z-Wave."
+            "not_zwave_device": "Wykryte urz\u0105dzenie nie jest urz\u0105dzeniem Z-Wave.",
+            "not_zwave_js_addon": "Wykryty dodatek nie jest oficjalnym dodatkiem Z-Wave JS."
         },
         "error": {
             "addon_start_failed": "Nie uda\u0142o si\u0119 uruchomi\u0107 dodatku Z-Wave JS. Sprawd\u017a konfiguracj\u0119",
@@ -89,6 +90,12 @@
             "state.node_status": "zmieni si\u0119 stan w\u0119z\u0142a",
             "zwave_js.value_updated.config_parameter": "zmieni si\u0119 warto\u015b\u0107 parametru konfiguracji {subtype}",
             "zwave_js.value_updated.value": "zmieni si\u0119 warto\u015b\u0107 na Z-Wave JS"
+        }
+    },
+    "issues": {
+        "invalid_server_version": {
+            "description": "Aktualnie uruchomiona wersja serwera Z-Wave JS jest za stara dla tej wersji Home Assistanta. Zaktualizuj serwer Z-Wave JS do najnowszej wersji, aby rozwi\u0105za\u0107 ten problem.",
+            "title": "Wymagana nowsza wersja serwera Z-Wave JS"
         }
     },
     "options": {

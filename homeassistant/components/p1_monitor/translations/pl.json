@@ -6,8 +6,10 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Nazwa hosta lub adres IP",
-                    "name": "Nazwa"
+                    "host": "Nazwa hosta lub adres IP"
+                },
+                "data_description": {
+                    "host": "Adres IP lub nazwa hosta instalacji monitora P1."
                 },
                 "description": "Skonfiguruj P1 Monitor, aby zintegrowa\u0107 go z Home Assistantem."
             }

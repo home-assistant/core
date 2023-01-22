@@ -24,10 +24,15 @@ from homeassistant.core import callback
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 
-from .const import ATTR_EVENT_SCORE, DEFAULT_ATTRIBUTION, DEFAULT_BRAND, DOMAIN
+from .const import (
+    ATTR_EVENT_ID,
+    ATTR_EVENT_SCORE,
+    DEFAULT_ATTRIBUTION,
+    DEFAULT_BRAND,
+    DOMAIN,
+)
 from .data import ProtectData
-from .models import PermRequired, ProtectRequiredKeysMixin
-from .utils import get_nested_attr
+from .models import PermRequired, ProtectEventMixin, ProtectRequiredKeysMixin
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,32 +43,52 @@ def _async_device_entities(
     klass: type[ProtectDeviceEntity],
     model_type: ModelType,
     descs: Sequence[ProtectRequiredKeysMixin],
+    unadopted_descs: Sequence[ProtectRequiredKeysMixin],
     ufp_device: ProtectAdoptableDeviceModel | None = None,
 ) -> list[ProtectDeviceEntity]:
-    if len(descs) == 0:
+    if not descs and not unadopted_descs:
         return []
 
     entities: list[ProtectDeviceEntity] = []
     devices = (
-        [ufp_device] if ufp_device is not None else data.get_by_types({model_type})
+        [ufp_device]
+        if ufp_device is not None
+        else data.get_by_types({model_type}, ignore_unadopted=False)
     )
     for device in devices:
+        assert isinstance(device, (Camera, Light, Sensor, Viewer, Doorlock, Chime))
         if not device.is_adopted_by_us:
+            for description in unadopted_descs:
+                entities.append(
+                    klass(
+                        data,
+                        device=device,
+                        description=description,
+                    )
+                )
+                _LOGGER.debug(
+                    "Adding %s entity %s for %s",
+                    klass.__name__,
+                    description.name,
+                    device.display_name,
+                )
             continue
 
-        assert isinstance(device, (Camera, Light, Sensor, Viewer, Doorlock, Chime))
+        can_write = device.can_write(data.api.bootstrap.auth_user)
         for description in descs:
             if description.ufp_perm is not None:
-                can_write = device.can_write(data.api.bootstrap.auth_user)
                 if description.ufp_perm == PermRequired.WRITE and not can_write:
                     continue
                 if description.ufp_perm == PermRequired.NO_WRITE and can_write:
                     continue
-
-            if description.ufp_required_field:
-                required_field = get_nested_attr(device, description.ufp_required_field)
-                if not required_field:
+                if (
+                    description.ufp_perm == PermRequired.DELETE
+                    and not device.can_delete(data.api.bootstrap.auth_user)
+                ):
                     continue
+
+            if not description.has_required(device):
+                continue
 
             entities.append(
                 klass(
@@ -93,10 +118,12 @@ def async_all_device_entities(
     lock_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
     chime_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
     all_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
+    unadopted_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
     ufp_device: ProtectAdoptableDeviceModel | None = None,
 ) -> list[ProtectDeviceEntity]:
     """Generate a list of all the device entities."""
     all_descs = list(all_descs or [])
+    unadopted_descs = list(unadopted_descs or [])
     camera_descs = list(camera_descs or []) + all_descs
     light_descs = list(light_descs or []) + all_descs
     sense_descs = list(sense_descs or []) + all_descs
@@ -106,12 +133,24 @@ def async_all_device_entities(
 
     if ufp_device is None:
         return (
-            _async_device_entities(data, klass, ModelType.CAMERA, camera_descs)
-            + _async_device_entities(data, klass, ModelType.LIGHT, light_descs)
-            + _async_device_entities(data, klass, ModelType.SENSOR, sense_descs)
-            + _async_device_entities(data, klass, ModelType.VIEWPORT, viewer_descs)
-            + _async_device_entities(data, klass, ModelType.DOORLOCK, lock_descs)
-            + _async_device_entities(data, klass, ModelType.CHIME, chime_descs)
+            _async_device_entities(
+                data, klass, ModelType.CAMERA, camera_descs, unadopted_descs
+            )
+            + _async_device_entities(
+                data, klass, ModelType.LIGHT, light_descs, unadopted_descs
+            )
+            + _async_device_entities(
+                data, klass, ModelType.SENSOR, sense_descs, unadopted_descs
+            )
+            + _async_device_entities(
+                data, klass, ModelType.VIEWPORT, viewer_descs, unadopted_descs
+            )
+            + _async_device_entities(
+                data, klass, ModelType.DOORLOCK, lock_descs, unadopted_descs
+            )
+            + _async_device_entities(
+                data, klass, ModelType.CHIME, chime_descs, unadopted_descs
+            )
         )
 
     descs = []
@@ -128,9 +167,11 @@ def async_all_device_entities(
     elif ufp_device.model == ModelType.CHIME:
         descs = chime_descs
 
-    if len(descs) == 0 or ufp_device.model is None:
+    if not descs and not unadopted_descs or ufp_device.model is None:
         return []
-    return _async_device_entities(data, klass, ufp_device.model, descs, ufp_device)
+    return _async_device_entities(
+        data, klass, ufp_device.model, descs, unadopted_descs, ufp_device
+    )
 
 
 class ProtectDeviceEntity(Entity):
@@ -190,8 +231,9 @@ class ProtectDeviceEntity(Entity):
             assert isinstance(device, ProtectAdoptableDeviceModel)
             self.device = device
 
-        is_connected = (
-            self.data.last_update_success and self.device.state == StateType.CONNECTED
+        is_connected = self.data.last_update_success and (
+            self.device.state == StateType.CONNECTED
+            or (not self.device.is_adopted_by_us and self.device.can_adopt)
         )
         if (
             hasattr(self, "entity_description")
@@ -255,42 +297,38 @@ class ProtectNVREntity(ProtectDeviceEntity):
         self._attr_available = self.data.last_update_success
 
 
-class EventThumbnailMixin(ProtectDeviceEntity):
+class EventEntityMixin(ProtectDeviceEntity):
     """Adds motion event attributes to sensor."""
 
-    def __init__(self, *args: Any, **kwarg: Any) -> None:
+    entity_description: ProtectEventMixin
+
+    def __init__(
+        self,
+        *args: Any,
+        **kwarg: Any,
+    ) -> None:
         """Init an sensor that has event thumbnails."""
         super().__init__(*args, **kwarg)
         self._event: Event | None = None
 
     @callback
-    def _async_get_event(self) -> Event | None:
-        """Get event from Protect device.
-
-        To be overridden by child classes.
-        """
-        raise NotImplementedError()
-
-    @callback
-    def _async_thumbnail_extra_attrs(self) -> dict[str, Any]:
-        # Camera motion sensors with object detection
-        attrs: dict[str, Any] = {
-            ATTR_EVENT_SCORE: 0,
-        }
+    def _async_event_extra_attrs(self) -> dict[str, Any]:
+        attrs: dict[str, Any] = {}
 
         if self._event is None:
             return attrs
 
+        attrs[ATTR_EVENT_ID] = self._event.id
         attrs[ATTR_EVENT_SCORE] = self._event.score
         return attrs
 
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         super()._async_update_device_from_protect(device)
-        self._event = self._async_get_event()
+        self._event = self.entity_description.get_event_obj(device)
 
         attrs = self.extra_state_attributes or {}
         self._attr_extra_state_attributes = {
             **attrs,
-            **self._async_thumbnail_extra_attrs(),
+            **self._async_event_extra_attrs(),
         }

@@ -12,10 +12,11 @@
                     "password": "Contrase\u00f1a"
                 },
                 "description": "La autenticaci\u00f3n fall\u00f3 para OVO Energy. Por favor, introduce tus credenciales actuales.",
-                "title": "Reautenticaci\u00f3n"
+                "title": "Volver a autenticar"
             },
             "user": {
                 "data": {
+                    "account": "ID de la cuenta OVO (solo a\u00f1adir si tienes varias cuentas)",
                     "password": "Contrase\u00f1a",
                     "username": "Nombre de usuario"
                 },

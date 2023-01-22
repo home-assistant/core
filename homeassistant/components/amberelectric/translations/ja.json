@@ -1,5 +1,10 @@
 {
     "config": {
+        "error": {
+            "invalid_api_token": "\u7121\u52b9\u306aAPI\u30ad\u30fc",
+            "no_site": "\u30b5\u30a4\u30c8\u306e\u63d0\u4f9b\u306a\u3057",
+            "unknown_error": "\u4e88\u671f\u3057\u306a\u3044\u30a8\u30e9\u30fc"
+        },
         "step": {
             "site": {
                 "data": {

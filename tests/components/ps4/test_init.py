@@ -3,10 +3,10 @@ from unittest.mock import MagicMock, patch
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import ps4
-from homeassistant.components.media_player.const import (
+from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_TITLE,
-    MEDIA_TYPE_GAME,
+    MediaType,
 )
 from homeassistant.components.ps4.const import (
     ATTR_MEDIA_IMAGE_URL,
@@ -86,20 +86,20 @@ MOCK_UNIQUE_ID = "someuniqueid"
 MOCK_ID = "CUSA00123"
 MOCK_URL = "http://someurl.jpeg"
 MOCK_TITLE = "Some Title"
-MOCK_TYPE = MEDIA_TYPE_GAME
+MOCK_TYPE = MediaType.GAME
 
 MOCK_GAMES_DATA_OLD_STR_FORMAT = {"mock_id": "mock_title", "mock_id2": "mock_title2"}
 
 MOCK_GAMES_DATA = {
     ATTR_LOCKED: False,
-    ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_GAME,
+    ATTR_MEDIA_CONTENT_TYPE: MediaType.GAME,
     ATTR_MEDIA_IMAGE_URL: MOCK_URL,
     ATTR_MEDIA_TITLE: MOCK_TITLE,
 }
 
 MOCK_GAMES_DATA_LOCKED = {
     ATTR_LOCKED: True,
-    ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_GAME,
+    ATTR_MEDIA_CONTENT_TYPE: MediaType.GAME,
     ATTR_MEDIA_IMAGE_URL: MOCK_URL,
     ATTR_MEDIA_TITLE: MOCK_TITLE,
 }
@@ -215,7 +215,7 @@ def test_games_reformat_to_dict(hass):
         assert mock_data
         assert mock_data[ATTR_MEDIA_IMAGE_URL] is None
         assert mock_data[ATTR_LOCKED] is False
-        assert mock_data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_GAME
+        assert mock_data[ATTR_MEDIA_CONTENT_TYPE] == MediaType.GAME
 
 
 def test_load_games(hass):
@@ -234,7 +234,7 @@ def test_load_games(hass):
     assert mock_data[ATTR_MEDIA_TITLE] == MOCK_TITLE
     assert mock_data[ATTR_MEDIA_IMAGE_URL] == MOCK_URL
     assert mock_data[ATTR_LOCKED] is False
-    assert mock_data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_GAME
+    assert mock_data[ATTR_MEDIA_CONTENT_TYPE] == MediaType.GAME
 
 
 def test_loading_games_returns_dict(hass):

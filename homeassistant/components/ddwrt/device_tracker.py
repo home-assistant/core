@@ -46,7 +46,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None:
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> DdWrtDeviceScanner | None:
     """Validate the configuration and return a DD-WRT scanner."""
     try:
         return DdWrtDeviceScanner(config[DOMAIN])

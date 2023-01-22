@@ -94,7 +94,8 @@ class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             }
         except (HomeAssistantError, KeyError):
             _LOGGER.debug(
-                "No valid ecobee.conf configuration found for import, delegating to user step"
+                "No valid ecobee.conf configuration found for import, delegating to"
+                " user step"
             )
             return await self.async_step_user(
                 user_input={
@@ -106,7 +107,8 @@ class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if await self.hass.async_add_executor_job(ecobee.refresh_tokens):
             # Credentials found and validated; create the entry.
             _LOGGER.debug(
-                "Valid ecobee configuration found for import, creating configuration entry"
+                "Valid ecobee configuration found for import, creating configuration"
+                " entry"
             )
             return self.async_create_entry(
                 title=DOMAIN,

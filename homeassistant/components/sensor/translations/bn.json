@@ -1,0 +1,10 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_moisture": "\u09ac\u09b0\u09cd\u09a4\u09ae\u09be\u09a8 {entity_name} \u0986\u09b0\u09cd\u09a6\u09cd\u09b0\u09a4\u09be"
+        },
+        "trigger_type": {
+            "moisture": "{entity_name} \u0986\u09b0\u09cd\u09a6\u09cd\u09b0\u09a4\u09be \u09aa\u09b0\u09bf\u09ac\u09b0\u09cd\u09a4\u09a8"
+        }
+    }
+}

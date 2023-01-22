@@ -51,10 +51,7 @@ AUTHORITIES = [
     "Westminster",
 ]
 
-URL = (
-    "http://api.erg.kcl.ac.uk/AirQuality/Hourly/"
-    "MonitoringIndex/GroupName=London/Json"
-)
+URL = "http://api.erg.kcl.ac.uk/AirQuality/Hourly/MonitoringIndex/GroupName=London/Json"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -141,7 +138,7 @@ class AirSensor(SensorEntity):
         attrs["data"] = self._site_data
         return attrs
 
-    def update(self):
+    def update(self) -> None:
         """Update the sensor."""
         sites_status = []
         self._api_data.update()

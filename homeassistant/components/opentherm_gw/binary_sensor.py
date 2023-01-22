@@ -70,10 +70,12 @@ async def async_setup_entry(
 
     if deprecated_sensors:
         _LOGGER.warning(
-            "The following binary_sensor entities are deprecated and may "
-            "no longer behave as expected. They will be removed in a "
-            "future version. You can force removal of these entities by "
-            "disabling them and restarting Home Assistant.\n%s",
+            (
+                "The following binary_sensor entities are deprecated and may "
+                "no longer behave as expected. They will be removed in a "
+                "future version. You can force removal of these entities by "
+                "disabling them and restarting Home Assistant.\n%s"
+            ),
             pformat([s.entity_id for s in deprecated_sensors]),
         )
 
@@ -82,6 +84,8 @@ async def async_setup_entry(
 
 class OpenThermBinarySensor(BinarySensorEntity):
     """Represent an OpenTherm Gateway binary sensor."""
+
+    _attr_should_poll = False
 
     def __init__(self, gw_dev, var, source, device_class, friendly_name_format):
         """Initialize the binary sensor."""
@@ -100,14 +104,14 @@ class OpenThermBinarySensor(BinarySensorEntity):
         self._friendly_name = friendly_name_format.format(gw_dev.name)
         self._unsub_updates = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Subscribe to updates from the component."""
         _LOGGER.debug("Added OpenTherm Gateway binary sensor %s", self._friendly_name)
         self._unsub_updates = async_dispatcher_connect(
             self.hass, self._gateway.update_signal, self.receive_report
         )
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from updates from the component."""
         _LOGGER.debug(
             "Removing OpenTherm Gateway binary sensor %s", self._friendly_name
@@ -161,11 +165,6 @@ class OpenThermBinarySensor(BinarySensorEntity):
     def device_class(self):
         """Return the class of this device."""
         return self._device_class
-
-    @property
-    def should_poll(self):
-        """Return False because entity pushes its state."""
-        return False
 
 
 class DeprecatedOpenThermBinarySensor(OpenThermBinarySensor):

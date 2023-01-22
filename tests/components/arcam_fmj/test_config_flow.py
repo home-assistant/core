@@ -1,5 +1,6 @@
 """Tests for the Arcam FMJ config flow module."""
 
+from dataclasses import replace
 from unittest.mock import AsyncMock, patch
 
 from arcam.fmj.client import ConnectionFailed
@@ -103,6 +104,21 @@ async def test_ssdp_unable_to_connect(hass, dummy_client):
     assert result["step_id"] == "confirm"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
+async def test_ssdp_invalid_id(hass, dummy_client):
+    """Test a ssdp with invalid  UDN."""
+    discover = replace(
+        MOCK_DISCOVER, upnp=MOCK_DISCOVER.upnp | {ssdp.ATTR_UPNP_UDN: "invalid"}
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_SSDP},
+        data=discover,
+    )
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 

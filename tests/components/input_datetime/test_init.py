@@ -583,17 +583,23 @@ async def test_update(hass, hass_ws_client, storage_setup):
 
     client = await hass_ws_client(hass)
 
+    updated_settings = {
+        CONF_NAME: "even newer name",
+        CONF_HAS_DATE: False,
+        CONF_HAS_TIME: True,
+        CONF_INITIAL: INITIAL_DATETIME,
+    }
     await client.send_json(
         {
             "id": 6,
             "type": f"{DOMAIN}/update",
             f"{DOMAIN}_id": f"{input_id}",
-            ATTR_NAME: "even newer name",
-            CONF_HAS_DATE: False,
+            **updated_settings,
         }
     )
     resp = await client.receive_json()
     assert resp["success"]
+    assert resp["result"] == {"id": "from_storage"} | updated_settings
 
     state = hass.states.get(input_entity_id)
     assert state.state == INITIAL_TIME

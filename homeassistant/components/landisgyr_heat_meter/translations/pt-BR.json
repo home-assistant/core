@@ -3,10 +3,6 @@
         "abort": {
             "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado"
         },
-        "error": {
-            "cannot_connect": "Falha ao conectar",
-            "unknown": "Erro inesperado"
-        },
         "step": {
             "setup_serial_manual_path": {
                 "data": {

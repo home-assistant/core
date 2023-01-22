@@ -11,7 +11,7 @@
             "validate_verification_code": "Nie uda\u0142o si\u0119 zweryfikowa\u0107 kodu weryfikacyjnego, spr\u00f3buj ponownie"
         },
         "step": {
-            "reauth": {
+            "reauth_confirm": {
                 "data": {
                     "password": "Has\u0142o"
                 },

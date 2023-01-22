@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Device is already configured",
-            "home_control": "The devolo Home Control Central Unit does not work with this integration."
+            "home_control": "The devolo Home Control Central Unit does not work with this integration.",
+            "reauth_successful": "Re-authentication was successful"
         },
         "error": {
             "cannot_connect": "Failed to connect",
@@ -10,11 +11,16 @@
         },
         "flow_title": "{product} ({name})",
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                }
+            },
             "user": {
                 "data": {
                     "ip_address": "IP Address"
                 },
-                "description": "Do you want to start set up?"
+                "description": "Do you want to start setup?"
             },
             "zeroconf_confirm": {
                 "description": "Do you want to add the devolo home network device with the hostname `{host_name}` to Home Assistant?",

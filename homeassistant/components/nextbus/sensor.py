@@ -122,7 +122,7 @@ class NextBusDepartureSensor(SensorEntity):
     both the route and the stop.
 
     This is possibly a little convoluted to provide as it requires making a
-    request to the service to get these values. Perhaps it can be simplifed in
+    request to the service to get these values. Perhaps it can be simplified in
     the future using fuzzy logic and matching.
     """
 
@@ -169,7 +169,7 @@ class NextBusDepartureSensor(SensorEntity):
         """Return additional state attributes."""
         return self._attributes
 
-    def update(self):
+    def update(self) -> None:
         """Update sensor with new departures times."""
         # Note: using Multi because there is a bug with the single stop impl
         results = self._client.get_predictions_for_multi_stops(

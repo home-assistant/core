@@ -34,7 +34,6 @@
             "invalid_serial": "\u5e8f\u5217\u57e0\u7121\u6548",
             "invalid_subscribe_topic": "\u8a02\u95b1\u4e3b\u984c\u7121\u6548",
             "invalid_version": "MySensors \u7248\u672c\u7121\u6548",
-            "mqtt_required": "MQTT \u6574\u5408\u5c1a\u672a\u8a2d\u5b9a",
             "not_a_number": "\u8acb\u8f38\u5165\u6578\u5b57",
             "port_out_of_range": "\u8acb\u8f38\u5165\u4ecb\u65bc 1 \u81f3 65535 \u4e4b\u9593\u7684\u865f\u78bc",
             "same_topic": "\u8a02\u95b1\u8207\u767c\u4f48\u4e3b\u984c\u76f8\u540c",
@@ -83,6 +82,19 @@
                 },
                 "description": "\u9078\u64c7\u9598\u9053\u5668\u9023\u7dda\u65b9\u5f0f"
             }
+        }
+    },
+    "issues": {
+        "deprecated_service": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "\u4f7f\u7528\u6b64\u670d\u52d9\u4ee5\u66f4\u65b0\u4efb\u4f55\u81ea\u52d5\u5316\u6216\u8173\u672c\u3001\u4ee5\u53d6\u4ee3\u4f7f\u7528\u76ee\u6a19\u5be6\u9ad4 ID \u70ba `{alternate_target}` \u4e4b `{alternate_service}` \u670d\u52d9\u3002",
+                        "title": "{deprecated_service} \u670d\u52d9\u5c07\u79fb\u9664"
+                    }
+                }
+            },
+            "title": "{deprecated_service} \u670d\u52d9\u5c07\u79fb\u9664"
         }
     }
 }

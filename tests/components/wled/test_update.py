@@ -5,17 +5,15 @@ import pytest
 from wled import WLEDError
 
 from homeassistant.components.update import (
-    DOMAIN as UPDATE_DOMAIN,
-    SERVICE_INSTALL,
-    UpdateDeviceClass,
-    UpdateEntityFeature,
-)
-from homeassistant.components.update.const import (
     ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
     ATTR_RELEASE_SUMMARY,
     ATTR_RELEASE_URL,
     ATTR_TITLE,
+    DOMAIN as UPDATE_DOMAIN,
+    SERVICE_INSTALL,
+    UpdateDeviceClass,
+    UpdateEntityFeature,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,

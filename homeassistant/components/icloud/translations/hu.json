@@ -11,7 +11,7 @@
             "validate_verification_code": "Nem siker\u00fclt hiteles\u00edteni az ellen\u0151rz\u0151 k\u00f3dot, k\u00e9rem, pr\u00f3b\u00e1lja meg \u00fajra"
         },
         "step": {
-            "reauth": {
+            "reauth_confirm": {
                 "data": {
                     "password": "Jelsz\u00f3"
                 },

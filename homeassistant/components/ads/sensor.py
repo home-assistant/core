@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.components import ads
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
@@ -19,6 +18,7 @@ from . import (
     STATE_KEY_STATE,
     AdsEntity,
 )
+from .. import ads
 
 DEFAULT_NAME = "ADS sensor"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(

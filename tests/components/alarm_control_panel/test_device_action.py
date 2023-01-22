@@ -226,6 +226,8 @@ async def test_get_action_capabilities(
     """Test we get the expected capabilities from a sensor trigger."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -239,8 +241,6 @@ async def test_get_action_capabilities(
         platform.ENTITIES["no_arm_code"].unique_id,
         device_id=device_entry.id,
     )
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
-    await hass.async_block_till_done()
 
     expected_capabilities = {
         "arm_away": {"extra_fields": []},
@@ -270,6 +270,8 @@ async def test_get_action_capabilities_arm_code(
     """Test we get the expected capabilities from a sensor trigger."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -283,8 +285,6 @@ async def test_get_action_capabilities_arm_code(
         platform.ENTITIES["arm_code"].unique_id,
         device_id=device_entry.id,
     )
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
-    await hass.async_block_till_done()
 
     expected_capabilities = {
         "arm_away": {

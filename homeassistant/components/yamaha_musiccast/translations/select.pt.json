@@ -17,6 +17,12 @@
         "yamaha_musiccast__zone_link_audio_quality": {
             "compressed": "Comprimido",
             "uncompressed": "Incomprimido"
+        },
+        "yamaha_musiccast__zone_link_control": {
+            "stability": "Estabilidade"
+        },
+        "yamaha_musiccast__zone_surr_decoder_type": {
+            "dolby_pl": "Dolby ProLogic"
         }
     }
 }

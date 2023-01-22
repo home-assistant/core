@@ -1,6 +1,7 @@
 """Proxy to handle account communication with Renault servers."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
@@ -17,6 +18,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 T = TypeVar("T", bound=Optional[KamereonVehicleDataAttributes])
+
+# We have potentially 7 coordinators per vehicle
+_PARALLEL_SEMAPHORE = asyncio.Semaphore(1)
 
 
 class RenaultDataUpdateCoordinator(DataUpdateCoordinator[T]):
@@ -47,7 +51,8 @@ class RenaultDataUpdateCoordinator(DataUpdateCoordinator[T]):
         if self.update_method is None:
             raise NotImplementedError("Update method not implemented")
         try:
-            return await self.update_method()
+            async with _PARALLEL_SEMAPHORE:
+                return await self.update_method()
         except AccessDeniedException as err:
             # Disable because the account is not allowed to access this Renault endpoint.
             self.update_interval = None

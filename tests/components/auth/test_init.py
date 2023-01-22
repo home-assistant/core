@@ -64,7 +64,6 @@ async def test_login_new_user_and_trying_refresh_token(hass, aiohttp_client):
         f"/auth/login_flow/{step['flow_id']}",
         json={
             "client_id": CLIENT_ID,
-            "redirect_uri": CLIENT_REDIRECT_URI,
             "username": "test-user",
             "password": "test-pass",
         },
@@ -133,7 +132,6 @@ async def test_auth_code_checks_local_only_user(hass, aiohttp_client):
         f"/auth/login_flow/{step['flow_id']}",
         json={
             "client_id": CLIENT_ID,
-            "redirect_uri": CLIENT_REDIRECT_URI,
             "username": "test-user",
             "password": "test-pass",
         },

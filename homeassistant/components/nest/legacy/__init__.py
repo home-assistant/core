@@ -192,8 +192,10 @@ async def async_setup_legacy_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
                     eta_window = service.data.get(ATTR_ETA_WINDOW, timedelta(minutes=1))
                     eta_end = eta_begin + eta_window
                     _LOGGER.info(
-                        "Setting ETA for trip: %s, "
-                        "ETA window starts at: %s and ends at: %s",
+                        (
+                            "Setting ETA for trip: %s, "
+                            "ETA window starts at: %s and ends at: %s"
+                        ),
                         trip_id,
                         eta_begin,
                         eta_end,
@@ -221,8 +223,7 @@ async def async_setup_legacy_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
                     structure.cancel_eta(trip_id)
                 else:
                     _LOGGER.info(
-                        "No thermostats found in structure: %s, "
-                        "unable to cancel ETA",
+                        "No thermostats found in structure: %s, unable to cancel ETA",
                         structure.name,
                     )
 
@@ -333,9 +334,11 @@ class NestLegacyDevice:
                         device.name_long
                     except KeyError:
                         _LOGGER.warning(
-                            "Cannot retrieve device name for [%s]"
-                            ", please check your Nest developer "
-                            "account permission settings",
+                            (
+                                "Cannot retrieve device name for [%s]"
+                                ", please check your Nest developer "
+                                "account permission settings"
+                            ),
                             device.serial,
                         )
                         continue
@@ -347,6 +350,8 @@ class NestLegacyDevice:
 
 class NestSensorDevice(Entity):
     """Representation of a Nest sensor."""
+
+    _attr_should_poll = False
 
     def __init__(self, structure, device, variable):
         """Initialize the sensor."""
@@ -369,11 +374,6 @@ class NestSensorDevice(Entity):
     def name(self):
         """Return the name of the nest, if any."""
         return self._name
-
-    @property
-    def should_poll(self):
-        """Do not need poll thanks using Nest streaming API."""
-        return False
 
     @property
     def unique_id(self):

@@ -6,7 +6,7 @@ from pyplaato.plaato import PlaatoKeg
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -15,7 +15,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import ATTR_TEMP, SENSOR_UPDATE
-from ...core import callback
 from .const import (
     CONF_USE_WEBHOOK,
     COORDINATOR,

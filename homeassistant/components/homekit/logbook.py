@@ -2,7 +2,7 @@
 from collections.abc import Callable
 from typing import Any
 
-from homeassistant.components.logbook.const import (
+from homeassistant.components.logbook import (
     LOGBOOK_ENTRY_ENTITY_ID,
     LOGBOOK_ENTRY_MESSAGE,
     LOGBOOK_ENTRY_NAME,
@@ -28,7 +28,10 @@ def async_describe_events(
         value = data.get(ATTR_VALUE)
 
         value_msg = f" to {value}" if value else ""
-        message = f"send command {data[ATTR_SERVICE]}{value_msg} for {data[ATTR_DISPLAY_NAME]}"
+        message = (
+            f"send command {data[ATTR_SERVICE]}{value_msg} for"
+            f" {data[ATTR_DISPLAY_NAME]}"
+        )
 
         return {
             LOGBOOK_ENTRY_NAME: "HomeKit",

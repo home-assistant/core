@@ -7,7 +7,7 @@ import logging
 from pysmarty import Smarty
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -78,7 +78,7 @@ class SupplyAirTemperatureSensor(SmartySensor):
         super().__init__(
             name=f"{name} Supply Air Temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
-            unit_of_measurement=TEMP_CELSIUS,
+            unit_of_measurement=UnitOfTemperature.CELSIUS,
             smarty=smarty,
         )
 
@@ -96,7 +96,7 @@ class ExtractAirTemperatureSensor(SmartySensor):
         super().__init__(
             name=f"{name} Extract Air Temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
-            unit_of_measurement=TEMP_CELSIUS,
+            unit_of_measurement=UnitOfTemperature.CELSIUS,
             smarty=smarty,
         )
 
@@ -114,7 +114,7 @@ class OutdoorAirTemperatureSensor(SmartySensor):
         super().__init__(
             name=f"{name} Outdoor Air Temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
-            unit_of_measurement=TEMP_CELSIUS,
+            unit_of_measurement=UnitOfTemperature.CELSIUS,
             smarty=smarty,
         )
 

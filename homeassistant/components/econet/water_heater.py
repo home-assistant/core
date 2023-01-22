@@ -62,7 +62,7 @@ class EcoNetWaterHeater(EcoNetEntity, WaterHeaterEntity):
         """Initialize."""
         super().__init__(water_heater)
         self._running = water_heater.running
-        self._poll = True
+        self._attr_should_poll = True  # Override False default from EcoNetEntity
         self.water_heater = water_heater
         self.econet_state_to_ha = {}
         self.ha_state_to_econet = {}
@@ -72,7 +72,7 @@ class EcoNetWaterHeater(EcoNetEntity, WaterHeaterEntity):
         """Update was pushed from the ecoent API."""
         if self._running != self.water_heater.running:
             # Water heater running state has changed so check usage on next update
-            self._poll = True
+            self._attr_should_poll = True
             self._running = self.water_heater.running
         self.async_write_ha_state()
 
@@ -106,7 +106,7 @@ class EcoNetWaterHeater(EcoNetEntity, WaterHeaterEntity):
         return op_list
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> WaterHeaterEntityFeature:
         """Return the list of supported features."""
         if self.water_heater.modes:
             if self.water_heater.supports_away:
@@ -149,20 +149,12 @@ class EcoNetWaterHeater(EcoNetEntity, WaterHeaterEntity):
         """Return the maximum temperature."""
         return self.water_heater.set_point_limits[1]
 
-    @property
-    def should_poll(self) -> bool:
-        """Return True if entity has to be polled for state.
-
-        False if entity pushes its state to HA.
-        """
-        return self._poll
-
     async def async_update(self) -> None:
         """Get the latest energy usage."""
         await self.water_heater.get_energy_usage()
         await self.water_heater.get_water_usage()
         self.async_write_ha_state()
-        self._poll = False
+        self._attr_should_poll = False
 
     def turn_away_mode_on(self) -> None:
         """Turn away mode on."""

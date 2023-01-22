@@ -24,10 +24,6 @@
                 "description": "Bu veriler i\u00e7in benzersiz bir profil ad\u0131 sa\u011flay\u0131n. Genellikle bu, \u00f6nceki ad\u0131mda se\u00e7ti\u011finiz profilin ad\u0131d\u0131r.",
                 "title": "Kullan\u0131c\u0131 profili."
             },
-            "reauth": {
-                "description": "Withings verilerini almaya devam etmek i\u00e7in \" {profile}",
-                "title": "Entegrasyonu Yeniden Do\u011frula"
-            },
             "reauth_confirm": {
                 "description": "Withings verilerini almaya devam etmek i\u00e7in \" {profile} \" profilinin yeniden do\u011frulanmas\u0131 gerekiyor.",
                 "title": "Entegrasyonu Yeniden Do\u011frula"

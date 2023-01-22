@@ -88,6 +88,8 @@ class VeluxModule:
 class VeluxEntity(Entity):
     """Abstraction for al Velux entities."""
 
+    _attr_should_poll = False
+
     def __init__(self, node):
         """Initialize the Velux device."""
         self.node = node
@@ -117,8 +119,3 @@ class VeluxEntity(Entity):
         if not self.node.name:
             return "#" + str(self.node.node_id)
         return self.node.name
-
-    @property
-    def should_poll(self):
-        """No polling needed within Velux."""
-        return False

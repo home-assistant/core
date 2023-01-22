@@ -1,5 +1,10 @@
 {
     "config": {
+        "error": {
+            "invalid_api_token": "Ongeldige API-sleutel",
+            "no_site": "Geen site opgegeven",
+            "unknown_error": "Onverwachte fout"
+        },
         "step": {
             "site": {
                 "data": {

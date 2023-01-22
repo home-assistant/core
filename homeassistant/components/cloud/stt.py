@@ -5,13 +5,15 @@ from aiohttp import StreamReader
 from hass_nabucasa import Cloud
 from hass_nabucasa.voice import VoiceError
 
-from homeassistant.components.stt import Provider, SpeechMetadata, SpeechResult
-from homeassistant.components.stt.const import (
+from homeassistant.components.stt import (
     AudioBitRates,
     AudioChannels,
     AudioCodecs,
     AudioFormats,
     AudioSampleRates,
+    Provider,
+    SpeechMetadata,
+    SpeechResult,
     SpeechResultState,
 )
 
@@ -89,7 +91,10 @@ class CloudProvider(Provider):
         self, metadata: SpeechMetadata, stream: StreamReader
     ) -> SpeechResult:
         """Process an audio stream to STT service."""
-        content = f"audio/{metadata.format!s}; codecs=audio/{metadata.codec!s}; samplerate=16000"
+        content = (
+            f"audio/{metadata.format!s}; codecs=audio/{metadata.codec!s};"
+            " samplerate=16000"
+        )
 
         # Process STT
         try:

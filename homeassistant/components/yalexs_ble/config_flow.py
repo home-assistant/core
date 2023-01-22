@@ -1,7 +1,6 @@
 """Config flow for Yale Access Bluetooth integration."""
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any
 
@@ -27,7 +26,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import CONF_KEY, CONF_LOCAL_NAME, CONF_SLOT, DOMAIN
-from .util import async_get_service_info, human_readable_name
+from .util import async_find_existing_service_info, human_readable_name
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -98,7 +97,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         new_data = {CONF_KEY: lock_cfg.key, CONF_SLOT: lock_cfg.slot}
         self._abort_if_unique_id_configured(updates=new_data)
         for entry in self._async_current_entries():
-            if entry.data.get(CONF_LOCAL_NAME) == lock_cfg.local_name:
+            if (
+                local_name_is_unique(lock_cfg.local_name)
+                and entry.data.get(CONF_LOCAL_NAME) == lock_cfg.local_name
+            ):
                 if hass.config_entries.async_update_entry(
                     entry, data={**entry.data, **new_data}
                 ):
@@ -107,11 +109,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     )
                 raise AbortFlow(reason="already_configured")
 
-        try:
-            self._discovery_info = await async_get_service_info(
-                hass, local_name, address
-            )
-        except asyncio.TimeoutError:
+        self._discovery_info = async_find_existing_service_info(
+            hass, local_name, address
+        )
+        if not self._discovery_info:
             return self.async_abort(reason="no_devices_found")
 
         # Integration discovery should abort other flows unless they
@@ -232,7 +233,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(CONF_ADDRESS): vol.In(
                     {
-                        service_info.address: f"{service_info.name} ({service_info.address})"
+                        service_info.address: (
+                            f"{service_info.name} ({service_info.address})"
+                        )
                         for service_info in self._discovered_devices.values()
                     }
                 ),

@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.climate.const import DOMAIN
+from homeassistant.components.climate import DOMAIN
 from homeassistant.components.gree.const import COORDINATORS, DOMAIN as GREE
 import homeassistant.util.dt as dt_util
 

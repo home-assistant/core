@@ -1,9 +1,10 @@
 """Websocket API for automation."""
 import json
+from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components import trace, websocket_api
+from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import (
@@ -24,7 +25,7 @@ from homeassistant.helpers.script import (
     debug_stop,
 )
 
-# mypy: allow-untyped-calls, allow-untyped-defs
+from .. import trace
 
 TRACE_DOMAINS = ("automation", "script")
 
@@ -54,7 +55,11 @@ def async_setup(hass: HomeAssistant) -> None:
     }
 )
 @websocket_api.async_response
-async def websocket_trace_get(hass, connection, msg):
+async def websocket_trace_get(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Get a script or automation trace."""
     key = f"{msg['domain']}.{msg['item_id']}"
     run_id = msg["run_id"]
@@ -83,7 +88,11 @@ async def websocket_trace_get(hass, connection, msg):
     }
 )
 @websocket_api.async_response
-async def websocket_trace_list(hass, connection, msg):
+async def websocket_trace_list(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Summarize script and automation traces."""
     wanted_domain = msg["domain"]
     key = f"{msg['domain']}.{msg['item_id']}" if "item_id" in msg else None
@@ -102,7 +111,11 @@ async def websocket_trace_list(hass, connection, msg):
     }
 )
 @websocket_api.async_response
-async def websocket_trace_contexts(hass, connection, msg):
+async def websocket_trace_contexts(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Retrieve contexts we have traces for."""
     key = f"{msg['domain']}.{msg['item_id']}" if "item_id" in msg else None
 
@@ -122,7 +135,11 @@ async def websocket_trace_contexts(hass, connection, msg):
         vol.Optional("run_id"): str,
     }
 )
-def websocket_breakpoint_set(hass, connection, msg):
+def websocket_breakpoint_set(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Set breakpoint."""
     key = f"{msg['domain']}.{msg['item_id']}"
     node = msg["node"]
@@ -149,7 +166,11 @@ def websocket_breakpoint_set(hass, connection, msg):
         vol.Optional("run_id"): str,
     }
 )
-def websocket_breakpoint_clear(hass, connection, msg):
+def websocket_breakpoint_clear(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Clear breakpoint."""
     key = f"{msg['domain']}.{msg['item_id']}"
     node = msg["node"]
@@ -163,7 +184,11 @@ def websocket_breakpoint_clear(hass, connection, msg):
 @callback
 @websocket_api.require_admin
 @websocket_api.websocket_command({vol.Required("type"): "trace/debug/breakpoint/list"})
-def websocket_breakpoint_list(hass, connection, msg):
+def websocket_breakpoint_list(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """List breakpoints."""
     breakpoints = breakpoint_list(hass)
     for _breakpoint in breakpoints:
@@ -178,7 +203,11 @@ def websocket_breakpoint_list(hass, connection, msg):
 @websocket_api.websocket_command(
     {vol.Required("type"): "trace/debug/breakpoint/subscribe"}
 )
-def websocket_subscribe_breakpoint_events(hass, connection, msg):
+def websocket_subscribe_breakpoint_events(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Subscribe to breakpoint events."""
 
     @callback
@@ -227,7 +256,11 @@ def websocket_subscribe_breakpoint_events(hass, connection, msg):
         vol.Required("run_id"): str,
     }
 )
-def websocket_debug_continue(hass, connection, msg):
+def websocket_debug_continue(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Resume execution of halted script or automation."""
     key = f"{msg['domain']}.{msg['item_id']}"
     run_id = msg["run_id"]
@@ -247,7 +280,11 @@ def websocket_debug_continue(hass, connection, msg):
         vol.Required("run_id"): str,
     }
 )
-def websocket_debug_step(hass, connection, msg):
+def websocket_debug_step(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Single step a halted script or automation."""
     key = f"{msg['domain']}.{msg['item_id']}"
     run_id = msg["run_id"]
@@ -267,7 +304,11 @@ def websocket_debug_step(hass, connection, msg):
         vol.Required("run_id"): str,
     }
 )
-def websocket_debug_stop(hass, connection, msg):
+def websocket_debug_stop(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Stop a halted script or automation."""
     key = f"{msg['domain']}.{msg['item_id']}"
     run_id = msg["run_id"]

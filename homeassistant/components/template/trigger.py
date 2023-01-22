@@ -16,8 +16,6 @@ from homeassistant.helpers.template import Template, result_as_boolean
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-# mypy: allow-untyped-defs, no-check-untyped-defs
-
 _LOGGER = logging.getLogger(__name__)
 
 TRIGGER_SCHEMA = IF_ACTION_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
@@ -75,7 +73,7 @@ async def async_attach_trigger(
             return
 
         if delay_cancel:
-            # pylint: disable=not-callable
+            # pylint: disable-next=not-callable
             delay_cancel()
             delay_cancel = None
 
@@ -151,7 +149,7 @@ async def async_attach_trigger(
         """Remove state listeners async."""
         unsub()
         if delay_cancel:
-            # pylint: disable=not-callable
+            # pylint: disable-next=not-callable
             delay_cancel()
 
     return async_remove

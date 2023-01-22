@@ -10,11 +10,9 @@ from homeassistant.components.analytics.const import (
     ANALYTICS_ENDPOINT_URL_DEV,
     ATTR_BASE,
     ATTR_DIAGNOSTICS,
-    ATTR_PREFERENCES,
     ATTR_STATISTICS,
     ATTR_USAGE,
 )
-from homeassistant.components.api import ATTR_UUID
 from homeassistant.const import ATTR_DOMAIN
 from homeassistant.loader import IntegrationNotFound
 from homeassistant.setup import async_setup_component
@@ -58,7 +56,7 @@ async def test_load_with_supervisor_diagnostics(hass):
 async def test_load_with_supervisor_without_diagnostics(hass):
     """Test loading with a supervisor that has not diagnostics enabled."""
     analytics = Analytics(hass)
-    analytics._data[ATTR_PREFERENCES][ATTR_DIAGNOSTICS] = True
+    analytics._data.preferences[ATTR_DIAGNOSTICS] = True
 
     assert analytics.preferences[ATTR_DIAGNOSTICS]
 
@@ -235,9 +233,9 @@ async def test_send_usage_with_supervisor(hass, caplog, aioclient_mock):
     ):
         await analytics.send_analytics()
     assert (
-        "'addons': [{'slug': 'test_addon', 'protected': True, 'version': '1', 'auto_update': False}]"
-        in caplog.text
-    )
+        "'addons': [{'slug': 'test_addon', 'protected': True, 'version': '1',"
+        " 'auto_update': False}]"
+    ) in caplog.text
     assert "'addon_count':" not in caplog.text
 
 
@@ -253,9 +251,9 @@ async def test_send_statistics(hass, caplog, aioclient_mock):
     with patch("homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION):
         await analytics.send_analytics()
     assert (
-        "'state_count': 0, 'automation_count': 0, 'integration_count': 1, 'user_count': 0"
-        in caplog.text
-    )
+        "'state_count': 0, 'automation_count': 0, 'integration_count': 1,"
+        " 'user_count': 0"
+    ) in caplog.text
     assert "'integrations':" not in caplog.text
 
 
@@ -349,7 +347,7 @@ async def test_reusing_uuid(hass, aioclient_mock):
     """Test reusing the stored UUID."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
-    analytics._data[ATTR_UUID] = "NOT_MOCK_UUID"
+    analytics._data.uuid = "NOT_MOCK_UUID"
 
     await analytics.save_preferences({ATTR_BASE: True})
 
@@ -408,9 +406,9 @@ async def test_dev_url_error(hass, aioclient_mock, caplog):
     payload = aioclient_mock.mock_calls[0]
     assert str(payload[1]) == ANALYTICS_ENDPOINT_URL_DEV
     assert (
-        f"Sending analytics failed with statuscode 400 from {ANALYTICS_ENDPOINT_URL_DEV}"
-        in caplog.text
-    )
+        "Sending analytics failed with statuscode 400 from"
+        f" {ANALYTICS_ENDPOINT_URL_DEV}"
+    ) in caplog.text
 
 
 async def test_nightly_endpoint(hass, aioclient_mock):
@@ -451,7 +449,7 @@ async def test_send_with_no_energy(hass, aioclient_mock):
     assert "energy" not in postdata
 
 
-async def test_send_with_no_energy_config(hass, aioclient_mock, recorder_mock):
+async def test_send_with_no_energy_config(recorder_mock, hass, aioclient_mock):
     """Test send base preferences are defined."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
@@ -473,7 +471,7 @@ async def test_send_with_no_energy_config(hass, aioclient_mock, recorder_mock):
     assert not postdata["energy"]["configured"]
 
 
-async def test_send_with_energy_config(hass, aioclient_mock, recorder_mock):
+async def test_send_with_energy_config(recorder_mock, hass, aioclient_mock):
     """Test send base preferences are defined."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)

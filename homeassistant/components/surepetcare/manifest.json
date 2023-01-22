@@ -3,7 +3,7 @@
   "name": "Sure Petcare",
   "documentation": "https://www.home-assistant.io/integrations/surepetcare",
   "codeowners": ["@benleb", "@danielhiversen"],
-  "requirements": ["surepy==0.7.2"],
+  "requirements": ["surepy==0.8.0"],
   "iot_class": "cloud_polling",
   "config_flow": true,
   "loggers": ["rich", "surepy"]

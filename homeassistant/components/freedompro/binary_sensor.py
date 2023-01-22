@@ -1,4 +1,6 @@
 """Support for Freedompro binary_sensor."""
+from typing import Any
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -9,6 +11,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import FreedomproDataUpdateCoordinator
 from .const import DOMAIN
 
 DEVICE_CLASS_MAP = {
@@ -32,7 +35,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Freedompro binary_sensor."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: FreedomproDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         Device(device, coordinator)
         for device in coordinator.data
@@ -40,10 +43,12 @@ async def async_setup_entry(
     )
 
 
-class Device(CoordinatorEntity, BinarySensorEntity):
+class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], BinarySensorEntity):
     """Representation of an Freedompro binary_sensor."""
 
-    def __init__(self, device, coordinator):
+    def __init__(
+        self, device: dict[str, Any], coordinator: FreedomproDataUpdateCoordinator
+    ) -> None:
         """Initialize the Freedompro binary_sensor."""
         super().__init__(coordinator)
         self._attr_name = device["name"]
@@ -51,7 +56,7 @@ class Device(CoordinatorEntity, BinarySensorEntity):
         self._type = device["type"]
         self._attr_device_info = DeviceInfo(
             identifiers={
-                (DOMAIN, self.unique_id),
+                (DOMAIN, device["uid"]),
             },
             manufacturer="Freedompro",
             model=device["type"],

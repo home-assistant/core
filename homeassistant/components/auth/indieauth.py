@@ -38,9 +38,16 @@ async def verify_redirect_uri(
 
     # Whitelist the iOS and Android callbacks so that people can link apps
     # without being connected to the internet.
-    if redirect_uri == "homeassistant://auth-callback" and client_id in (
-        "https://home-assistant.io/android",
-        "https://home-assistant.io/iOS",
+    if (
+        client_id == "https://home-assistant.io/iOS"
+        and redirect_uri == "homeassistant://auth-callback"
+    ):
+        return True
+
+    if client_id == "https://home-assistant.io/android" and redirect_uri in (
+        "homeassistant://auth-callback",
+        "https://wear.googleapis.com/3p_auth/io.homeassistant.companion.android",
+        "https://wear.googleapis-cn.com/3p_auth/io.homeassistant.companion.android",
     ):
         return True
 

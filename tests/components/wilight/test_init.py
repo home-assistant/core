@@ -9,7 +9,7 @@ import requests
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from tests.components.wilight import (
+from . import (
     HOST,
     UPNP_MAC_ADDRESS,
     UPNP_MODEL_NAME_P_B,

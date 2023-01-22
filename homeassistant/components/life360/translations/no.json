@@ -3,17 +3,12 @@
         "abort": {
             "already_configured": "Kontoen er allerede konfigurert",
             "invalid_auth": "Ugyldig godkjenning",
-            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket",
-            "unknown": "Uventet feil"
-        },
-        "create_entry": {
-            "default": "For \u00e5 angi avanserte alternativer, se [Life360 dokumentasjon]({docs_url})."
+            "reauth_successful": "Re-autentisering var vellykket"
         },
         "error": {
             "already_configured": "Kontoen er allerede konfigurert",
             "cannot_connect": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning",
-            "invalid_username": "Ugyldig brukernavn",
             "unknown": "Uventet feil"
         },
         "step": {
@@ -28,7 +23,6 @@
                     "password": "Passord",
                     "username": "Brukernavn"
                 },
-                "description": "For \u00e5 angi avanserte alternativer, se [Life360 dokumentasjon]({docs_url}). \nDet kan hende du vil gj\u00f8re det f\u00f8r du legger til kontoer.",
                 "title": "Konfigurer Life360-konto"
             }
         }

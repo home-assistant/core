@@ -34,6 +34,8 @@ from .common import async_wait_recording_done, create_engine_test
 
 from tests.common import async_fire_time_changed
 
+ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
+
 
 def _get_native_states(hass, entity_id):
     with session_scope(hass=hass) as session:
@@ -132,14 +134,16 @@ async def test_database_migration_encounters_corruption(hass):
     sqlite3_exception.__cause__ = sqlite3.DatabaseError()
 
     with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
-        "homeassistant.components.recorder.migration.schema_is_current",
-        side_effect=[False, True],
+        "homeassistant.components.recorder.migration._schema_is_current",
+        side_effect=[False],
     ), patch(
         "homeassistant.components.recorder.migration.migrate_schema",
         side_effect=sqlite3_exception,
     ), patch(
         "homeassistant.components.recorder.core.move_away_broken_database"
-    ) as move_away:
+    ) as move_away, patch(
+        "homeassistant.components.recorder.Recorder._schedule_compile_missing_statistics",
+    ):
         recorder_helper.async_initialize_recorder(hass)
         await async_setup_component(
             hass, "recorder", {"recorder": {"db_url": "sqlite://"}}
@@ -157,8 +161,8 @@ async def test_database_migration_encounters_corruption_not_sqlite(hass):
     assert recorder.util.async_migration_in_progress(hass) is False
 
     with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
-        "homeassistant.components.recorder.migration.schema_is_current",
-        side_effect=[False, True],
+        "homeassistant.components.recorder.migration._schema_is_current",
+        side_effect=[False],
     ), patch(
         "homeassistant.components.recorder.migration.migrate_schema",
         side_effect=DatabaseError("statement", {}, []),
@@ -336,6 +340,8 @@ async def test_schema_migrate(hass, start_version, live):
     ), patch(
         "homeassistant.components.recorder.migration._apply_update",
         wraps=_instrument_apply_update,
+    ), patch(
+        "homeassistant.components.recorder.Recorder._schedule_compile_missing_statistics",
     ):
         recorder_helper.async_initialize_recorder(hass)
         hass.async_create_task(

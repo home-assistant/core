@@ -75,7 +75,7 @@ class FileSensor(SensorEntity):
         self._attr_native_unit_of_measurement = unit_of_measurement
         self._val_tpl = value_template
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest entry from a file and updates the state."""
         try:
             with FileReadBackwards(self._file_path, encoding="utf-8") as file_data:

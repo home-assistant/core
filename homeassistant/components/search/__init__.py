@@ -3,10 +3,11 @@ from __future__ import annotations
 
 from collections import defaultdict, deque
 import logging
+from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components import automation, group, script, websocket_api
+from homeassistant.components import automation, group, person, script, websocket_api
 from homeassistant.components.homeassistant import scene
 from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.helpers import device_registry, entity_registry
@@ -30,10 +31,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             (
                 "area",
                 "automation",
+                "blueprint",
                 "config_entry",
                 "device",
                 "entity",
                 "group",
+                "person",
                 "scene",
                 "script",
             )
@@ -42,7 +45,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     }
 )
 @callback
-def websocket_search_related(hass, connection, msg):
+def websocket_search_related(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Handle search."""
     searcher = Searcher(
         hass,
@@ -65,9 +72,16 @@ class Searcher:
     """
 
     # These types won't be further explored. Config entries + Output types.
-    DONT_RESOLVE = {"scene", "automation", "script", "group", "config_entry", "area"}
+    DONT_RESOLVE = {
+        "area",
+        "automation",
+        "config_entry",
+        "group",
+        "scene",
+        "script",
+    }
     # These types exist as an entity and so need cleanup in results
-    EXIST_AS_ENTITY = {"script", "scene", "automation", "group"}
+    EXIST_AS_ENTITY = {"automation", "group", "person", "scene", "script"}
 
     def __init__(
         self,
@@ -129,6 +143,7 @@ class Searcher:
         """Resolve an area."""
         for device in device_registry.async_entries_for_area(self._device_reg, area_id):
             self._add_or_resolve("device", device.id)
+
         for entity_entry in entity_registry.async_entries_for_area(
             self._entity_reg, area_id
         ):
@@ -139,6 +154,39 @@ class Searcher:
 
         for entity_id in automation.automations_with_area(self.hass, area_id):
             self._add_or_resolve("entity", entity_id)
+
+    @callback
+    def _resolve_automation(self, automation_entity_id) -> None:
+        """Resolve an automation.
+
+        Will only be called if automation is an entry point.
+        """
+        for entity in automation.entities_in_automation(
+            self.hass, automation_entity_id
+        ):
+            self._add_or_resolve("entity", entity)
+
+        for device in automation.devices_in_automation(self.hass, automation_entity_id):
+            self._add_or_resolve("device", device)
+
+        for area in automation.areas_in_automation(self.hass, automation_entity_id):
+            self._add_or_resolve("area", area)
+
+    @callback
+    def _resolve_config_entry(self, config_entry_id) -> None:
+        """Resolve a config entry.
+
+        Will only be called if config entry is an entry point.
+        """
+        for device_entry in device_registry.async_entries_for_config_entry(
+            self._device_reg, config_entry_id
+        ):
+            self._add_or_resolve("device", device_entry.id)
+
+        for entity_entry in entity_registry.async_entries_for_config_entry(
+            self._entity_reg, config_entry_id
+        ):
+            self._add_or_resolve("entity", entity_entry.entity_id)
 
     @callback
     def _resolve_device(self, device_id) -> None:
@@ -183,6 +231,9 @@ class Searcher:
         for entity in script.scripts_with_entity(self.hass, entity_id):
             self._add_or_resolve("entity", entity)
 
+        for entity in person.persons_with_entity(self.hass, entity_id):
+            self._add_or_resolve("entity", entity)
+
         # Find devices
         entity_entry = self._entity_reg.async_get(entity_id)
         if entity_entry is not None:
@@ -202,21 +253,31 @@ class Searcher:
             self._add_or_resolve(domain, entity_id)
 
     @callback
-    def _resolve_automation(self, automation_entity_id) -> None:
-        """Resolve an automation.
+    def _resolve_group(self, group_entity_id) -> None:
+        """Resolve a group.
 
-        Will only be called if automation is an entry point.
+        Will only be called if group is an entry point.
         """
-        for entity in automation.entities_in_automation(
-            self.hass, automation_entity_id
-        ):
+        for entity_id in group.get_entity_ids(self.hass, group_entity_id):
+            self._add_or_resolve("entity", entity_id)
+
+    @callback
+    def _resolve_person(self, person_entity_id) -> None:
+        """Resolve a person.
+
+        Will only be called if person is an entry point.
+        """
+        for entity in person.entities_in_person(self.hass, person_entity_id):
             self._add_or_resolve("entity", entity)
 
-        for device in automation.devices_in_automation(self.hass, automation_entity_id):
-            self._add_or_resolve("device", device)
+    @callback
+    def _resolve_scene(self, scene_entity_id) -> None:
+        """Resolve a scene.
 
-        for area in automation.areas_in_automation(self.hass, automation_entity_id):
-            self._add_or_resolve("area", area)
+        Will only be called if scene is an entry point.
+        """
+        for entity in scene.entities_in_scene(self.hass, scene_entity_id):
+            self._add_or_resolve("entity", entity)
 
     @callback
     def _resolve_script(self, script_entity_id) -> None:
@@ -232,37 +293,3 @@ class Searcher:
 
         for area in script.areas_in_script(self.hass, script_entity_id):
             self._add_or_resolve("area", area)
-
-    @callback
-    def _resolve_group(self, group_entity_id) -> None:
-        """Resolve a group.
-
-        Will only be called if group is an entry point.
-        """
-        for entity_id in group.get_entity_ids(self.hass, group_entity_id):
-            self._add_or_resolve("entity", entity_id)
-
-    @callback
-    def _resolve_scene(self, scene_entity_id) -> None:
-        """Resolve a scene.
-
-        Will only be called if scene is an entry point.
-        """
-        for entity in scene.entities_in_scene(self.hass, scene_entity_id):
-            self._add_or_resolve("entity", entity)
-
-    @callback
-    def _resolve_config_entry(self, config_entry_id) -> None:
-        """Resolve a config entry.
-
-        Will only be called if config entry is an entry point.
-        """
-        for device_entry in device_registry.async_entries_for_config_entry(
-            self._device_reg, config_entry_id
-        ):
-            self._add_or_resolve("device", device_entry.id)
-
-        for entity_entry in entity_registry.async_entries_for_config_entry(
-            self._entity_reg, config_entry_id
-        ):
-            self._add_or_resolve("entity", entity_entry.entity_id)

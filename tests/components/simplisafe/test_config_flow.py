@@ -5,7 +5,6 @@ from unittest.mock import patch
 import pytest
 from simplipy.errors import InvalidCredentialsError, SimplipyError
 
-from homeassistant import data_entry_flow
 from homeassistant.components.simplisafe import DOMAIN
 from homeassistant.components.simplisafe.config_flow import CONF_AUTH_CODE
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
@@ -29,7 +28,7 @@ async def test_duplicate_error(config_entry, hass, setup_simplisafe):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_AUTH_CODE: VALID_AUTH_CODE}
         )
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
 
@@ -83,7 +82,7 @@ async def test_options_flow(config_entry, hass):
             result["flow_id"], user_input={CONF_CODE: "4321"}
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == FlowResultType.CREATE_ENTRY
         assert config_entry.options == {CONF_CODE: "4321"}
 
 
@@ -102,7 +101,7 @@ async def test_step_reauth(config_entry, hass, setup_simplisafe):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_AUTH_CODE: VALID_AUTH_CODE}
         )
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == "reauth_successful"
 
     assert len(hass.config_entries.async_entries()) == 1
@@ -126,7 +125,7 @@ async def test_step_reauth_wrong_account(config_entry, hass, setup_simplisafe):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_AUTH_CODE: VALID_AUTH_CODE}
         )
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == "wrong_account"
 
 
@@ -158,7 +157,7 @@ async def test_step_user(auth_code, caplog, hass, log_statement, setup_simplisaf
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_AUTH_CODE: auth_code}
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == FlowResultType.CREATE_ENTRY
 
     if log_statement:
         assert any(m for m in caplog.messages if log_statement in m)

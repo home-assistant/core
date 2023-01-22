@@ -5,17 +5,20 @@ from typing import cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     PRESET_COMFORT,
     PRESET_ECO,
     PRESET_NONE,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.components.overkiz.entity import OverkizEntity
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import UnitOfTemperature
 
+from ..entity import OverkizEntity
+
+PRESET_COMFORT1 = "comfort-1"
+PRESET_COMFORT2 = "comfort-2"
 PRESET_FROST_PROTECTION = "frost_protection"
 
 OVERKIZ_TO_HVAC_MODES: dict[str, HVACMode] = {
@@ -30,6 +33,8 @@ OVERKIZ_TO_PRESET_MODES: dict[str, str] = {
     OverkizCommandParam.FROSTPROTECTION: PRESET_FROST_PROTECTION,
     OverkizCommandParam.ECO: PRESET_ECO,
     OverkizCommandParam.COMFORT: PRESET_COMFORT,
+    OverkizCommandParam.COMFORT_1: PRESET_COMFORT1,
+    OverkizCommandParam.COMFORT_2: PRESET_COMFORT2,
 }
 
 PRESET_MODES_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_PRESET_MODES.items()}
@@ -41,7 +46,7 @@ class AtlanticElectricalHeater(OverkizEntity, ClimateEntity):
     _attr_hvac_modes = [*HVAC_MODES_TO_OVERKIZ]
     _attr_preset_modes = [*PRESET_MODES_TO_OVERKIZ]
     _attr_supported_features = ClimateEntityFeature.PRESET_MODE
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     @property
     def hvac_mode(self) -> HVACMode:

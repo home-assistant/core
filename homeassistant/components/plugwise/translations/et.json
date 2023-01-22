@@ -7,14 +7,14 @@
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
             "invalid_auth": "Tuvastamine nurjus",
-            "invalid_setup": "Lisa oma Anna asemel oma Adam, lisateabe saamiseks vaata Home Assistant Plugwise'i sidumise dokumentatsiooni",
-            "unknown": "Tundmatu viga"
+            "invalid_setup": "Lisa oma Anna asemel oma Adam, lisateabe saamiseks vaata dokumentatsiooni",
+            "response_error": "Vigased XML-andmed v\u00f5i saadud veam\u00e4rguanne",
+            "unknown": "Tundmatu viga",
+            "unsupported": "Toetamata p\u00fcsivaraga seade"
         },
-        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
-                    "flow_type": "\u00dchenduse t\u00fc\u00fcp",
                     "host": "IP aadress",
                     "password": "Smile ID",
                     "port": "Port",
@@ -22,26 +22,42 @@
                 },
                 "description": "Sisesta andmed",
                 "title": "Loo \u00fchendus Smile-ga"
-            },
-            "user_gateway": {
-                "data": {
-                    "host": "IP aadress",
-                    "password": "Smile ID",
-                    "port": "Port",
-                    "username": "Smile kasutajanimi"
-                },
-                "description": "Palun sisesta:",
-                "title": "Loo \u00fchendus Smile-ga"
             }
         }
     },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "scan_interval": "P\u00e4ringute intervall (sekundites)"
-                },
-                "description": "Kohanda Plugwise s\u00e4tteid"
+    "entity": {
+        "climate": {
+            "plugwise": {
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "asleep": "\u00d6\u00f6",
+                            "away": "Eemal",
+                            "home": "Kodus",
+                            "no_frost": "K\u00fclmumiskaitse",
+                            "vacation": "Puhkus"
+                        }
+                    }
+                }
+            }
+        },
+        "select": {
+            "dhw_mode": {
+                "state": {
+                    "auto": "Automaatne",
+                    "boost": "Turbo",
+                    "comfort": "Mugav",
+                    "off": "V\u00e4ljas"
+                }
+            },
+            "regulation_mode": {
+                "state": {
+                    "bleeding_cold": "Jahutuseat soenemine",
+                    "bleeding_hot": "K\u00fcttest jahtumine",
+                    "cooling": "Jahutus",
+                    "heating": "K\u00fcte",
+                    "off": "V\u00e4ljas"
+                }
             }
         }
     }

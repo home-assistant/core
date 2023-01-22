@@ -6,8 +6,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Host",
-                    "name": "Name"
+                    "host": "Host"
                 },
                 "data_description": {
                     "host": "The IP address or hostname of your P1 Monitor installation."

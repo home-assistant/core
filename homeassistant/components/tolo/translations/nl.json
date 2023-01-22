@@ -18,5 +18,15 @@
                 "description": "Voer de hostnaam of het IP-adres van uw TOLO Sauna-apparaat in."
             }
         }
+    },
+    "entity": {
+        "select": {
+            "lamp_mode": {
+                "state": {
+                    "automatic": "Automatisch",
+                    "manual": "Handmatig"
+                }
+            }
+        }
     }
 }

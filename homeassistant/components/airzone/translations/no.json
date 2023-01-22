@@ -8,12 +8,19 @@
             "invalid_system_id": "Ugyldig Airzone System ID"
         },
         "step": {
+            "discovered_connection": {
+                "data": {
+                    "host": "Vert",
+                    "id": "System-ID",
+                    "port": "Port"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Vert",
+                    "id": "System-ID",
                     "port": "Port"
-                },
-                "description": "Sett opp Airzone-integrasjon."
+                }
             }
         }
     }

@@ -5,7 +5,8 @@
             "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
             "incomplete_info": "Informaci\u00f3 incompleta per configurar el dispositiu, no s'ha proporcionat cap amfitri\u00f3 o token.",
             "not_xiaomi_miio": "Xiaomi Miio encara no \u00e9s compatible amb el dispositiu.",
-            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament",
+            "unknown": "Error inesperat"
         },
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",
@@ -47,6 +48,31 @@
                     "select_device": "Dispositiu Miio"
                 },
                 "description": "Selecciona el dispositiu Xiaomi Miio a configurar."
+            }
+        }
+    },
+    "entity": {
+        "select": {
+            "display_orientation": {
+                "state": {
+                    "forward": "Endavant",
+                    "left": "Esquerra",
+                    "right": "Dreta"
+                }
+            },
+            "led_brightness": {
+                "state": {
+                    "bright": "Llumin\u00f3s",
+                    "dim": "Atenuat",
+                    "off": "OFF"
+                }
+            },
+            "ptc_level": {
+                "state": {
+                    "high": "Alt",
+                    "low": "Baix",
+                    "medium": "Mitj\u00e0"
+                }
             }
         }
     },

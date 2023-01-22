@@ -127,7 +127,7 @@ class RedditSensor(SensorEntity):
         """Return the icon to use in the frontend."""
         return "mdi:reddit"
 
-    def update(self):
+    def update(self) -> None:
         """Update data from Reddit API."""
         self._subreddit_data = []
 

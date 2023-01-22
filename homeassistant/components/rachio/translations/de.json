@@ -13,7 +13,7 @@
                 "data": {
                     "api_key": "API-Schl\u00fcssel"
                 },
-                "description": "Du ben\u00f6tigst den API-Schl\u00fcssel von https://app.rach.io/. Gehe in die Einstellungen und klicke auf \"API-SCHL\u00dcSSEL ANFORDERN\".",
+                "description": "Du ben\u00f6tigst den API-Schl\u00fcssel von https://app.rach.io/. Gehe in die Einstellungen und dr\u00fccke auf \"API-SCHL\u00dcSSEL ANFORDERN\".",
                 "title": "Stelle eine Verbindung zu deinem Rachio-Ger\u00e4t her"
             }
         }

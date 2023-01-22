@@ -5,8 +5,14 @@
         },
         "step": {
             "user": {
-                "description": "Do you want to start set up?"
+                "description": "Do you want to start setup?"
             }
+        }
+    },
+    "issues": {
+        "removed_yaml": {
+            "description": "Configuring Uptime using YAML has been removed.\n\nYour existing YAML configuration is not used by Home Assistant.\n\nRemove the YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue.",
+            "title": "The Uptime YAML configuration has been removed"
         }
     },
     "title": "Uptime"

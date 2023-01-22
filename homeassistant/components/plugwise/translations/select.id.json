@@ -1,0 +1,17 @@
+{
+    "state": {
+        "plugwise__dhw_mode": {
+            "auto": "Otomatis",
+            "boost": "Kencang",
+            "comfort": "Nyaman",
+            "off": "Mati"
+        },
+        "plugwise__regulation_mode": {
+            "bleeding_cold": "Dingin sekali",
+            "bleeding_hot": "Panas sekali",
+            "cooling": "Mendinginkan",
+            "heating": "Memanaskan",
+            "off": "Mati"
+        }
+    }
+}

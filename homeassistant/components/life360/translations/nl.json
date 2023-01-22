@@ -3,17 +3,12 @@
         "abort": {
             "already_configured": "Account is al geconfigureerd",
             "invalid_auth": "Ongeldige authenticatie",
-            "reauth_successful": "Herauthenticatie geslaagd",
-            "unknown": "Onverwachte fout"
-        },
-        "create_entry": {
-            "default": "Om geavanceerde opties in te stellen, zie [Life360 documentatie]({docs_url})."
+            "reauth_successful": "Herauthenticatie geslaagd"
         },
         "error": {
             "already_configured": "Account is al geconfigureerd",
             "cannot_connect": "Kan geen verbinding maken",
             "invalid_auth": "Ongeldige authenticatie",
-            "invalid_username": "Ongeldige gebruikersnaam",
             "unknown": "Onverwachte fout"
         },
         "step": {
@@ -28,7 +23,6 @@
                     "password": "Wachtwoord",
                     "username": "Gebruikersnaam"
                 },
-                "description": "Om geavanceerde opties in te stellen, zie [Life360 documentatie]({docs_url}).\nMisschien wilt u dat doen voordat u accounts toevoegt.",
                 "title": "Life360-accountgegevens"
             }
         }
@@ -36,6 +30,13 @@
     "options": {
         "step": {
             "init": {
+                "data": {
+                    "driving": "Toon rijden als staat",
+                    "driving_speed": "Rijsnelheid",
+                    "limit_gps_acc": "Beperk de GPS-nauwkeurigheid",
+                    "max_gps_accuracy": "Maximale GPS-nauwkeurigheid (meters)",
+                    "set_drive_speed": "Rijsnelheidsdrempel instellen"
+                },
                 "title": "Accountinstellingen"
             }
         }

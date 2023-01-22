@@ -12,6 +12,7 @@ from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -21,8 +22,6 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_INCLUDE,
     CONF_NAME,
-    STATE_OFF,
-    STATE_ON,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
@@ -33,8 +32,8 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
+from . import VizioAppsDataUpdateCoordinator
 from .const import (
     CONF_ADDITIONAL_CONFIGS,
     CONF_APPS,
@@ -137,7 +136,7 @@ class VizioDevice(MediaPlayerEntity):
         device: VizioAsync,
         name: str,
         device_class: MediaPlayerDeviceClass,
-        apps_coordinator: DataUpdateCoordinator,
+        apps_coordinator: VizioAppsDataUpdateCoordinator,
     ) -> None:
         """Initialize Vizio device."""
         self._config_entry = config_entry
@@ -207,7 +206,7 @@ class VizioDevice(MediaPlayerEntity):
             )
 
         if not is_on:
-            self._attr_state = STATE_OFF
+            self._attr_state = MediaPlayerState.OFF
             self._attr_volume_level = None
             self._attr_is_volume_muted = None
             self._current_input = None
@@ -216,7 +215,7 @@ class VizioDevice(MediaPlayerEntity):
             self._attr_sound_mode = None
             return
 
-        self._attr_state = STATE_ON
+        self._attr_state = MediaPlayerState.ON
 
         if audio_settings := await self._device.get_all_settings(
             VIZIO_AUDIO_SETTINGS, log_api_exception=False
@@ -265,7 +264,9 @@ class VizioDevice(MediaPlayerEntity):
 
         # Create list of available known apps from known app list after
         # filtering by CONF_INCLUDE/CONF_EXCLUDE
-        self._available_apps = self._apps_list([app["name"] for app in self._all_apps])
+        self._available_apps = self._apps_list(
+            [app["name"] for app in self._all_apps or ()]
+        )
 
         self._current_app_config = await self._device.get_current_app_config(
             log_api_exception=False
@@ -273,7 +274,7 @@ class VizioDevice(MediaPlayerEntity):
 
         self._attr_app_name = find_app_name(
             self._current_app_config,
-            [APP_HOME, *self._all_apps, *self._additional_app_configs],
+            [APP_HOME, *(self._all_apps or ()), *self._additional_app_configs],
         )
 
         if self._attr_app_name == NO_APP_RUNNING:

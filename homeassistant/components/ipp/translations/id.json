@@ -31,5 +31,16 @@
                 "title": "Printer yang ditemukan"
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "printer": {
+                "state": {
+                    "idle": "Siaga",
+                    "printing": "Mencetak",
+                    "stopped": "Terhenti"
+                }
+            }
+        }
     }
 }

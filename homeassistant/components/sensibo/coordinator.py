@@ -12,15 +12,16 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER, TIMEOUT
 
+REQUEST_REFRESH_DELAY = 0.35
 
-class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
+
+class SensiboDataUpdateCoordinator(DataUpdateCoordinator[SensiboData]):
     """A Sensibo Data Update Coordinator."""
-
-    data: SensiboData
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the Sensibo coordinator."""
@@ -34,6 +35,11 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator):
             LOGGER,
             name=DOMAIN,
             update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
+            # We don't want an immediate refresh since the device
+            # takes a moment to reflect the state change
+            request_refresh_debouncer=Debouncer(
+                hass, LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
+            ),
         )
 
     async def _async_update_data(self) -> SensiboData:

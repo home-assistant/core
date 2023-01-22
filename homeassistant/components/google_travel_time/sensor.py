@@ -10,12 +10,10 @@ from googlemaps.distance_matrix import distance_matrix
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     CONF_API_KEY,
-    CONF_MODE,
     CONF_NAME,
     EVENT_HOMEASSISTANT_STARTED,
-    TIME_MINUTES,
+    UnitOfTime,
 )
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
@@ -29,10 +27,7 @@ from .const import (
     CONF_ARRIVAL_TIME,
     CONF_DEPARTURE_TIME,
     CONF_DESTINATION,
-    CONF_OPTIONS,
     CONF_ORIGIN,
-    CONF_TRAVEL_MODE,
-    CONF_UNITS,
     DEFAULT_NAME,
     DOMAIN,
 )
@@ -58,30 +53,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Google travel time sensor entry."""
-    if not config_entry.options:
-        new_data = config_entry.data.copy()
-        options = new_data.pop(CONF_OPTIONS, {})
-
-        if CONF_UNITS not in options:
-            options[CONF_UNITS] = hass.config.units.name
-
-        if CONF_TRAVEL_MODE in new_data:
-            wstr = (
-                "Google Travel Time: travel_mode is deprecated, please "
-                "add mode to the options dictionary instead!"
-            )
-            _LOGGER.warning(wstr)
-            travel_mode = new_data.pop(CONF_TRAVEL_MODE)
-            if CONF_MODE not in options:
-                options[CONF_MODE] = travel_mode
-
-        if CONF_MODE not in options:
-            options[CONF_MODE] = "driving"
-
-        hass.config_entries.async_update_entry(
-            config_entry, data=new_data, options=options
-        )
-
     api_key = config_entry.data[CONF_API_KEY]
     origin = config_entry.data[CONF_ORIGIN]
     destination = config_entry.data[CONF_DESTINATION]
@@ -99,11 +70,13 @@ async def async_setup_entry(
 class GoogleTravelTimeSensor(SensorEntity):
     """Representation of a Google travel time sensor."""
 
+    _attr_attribution = ATTRIBUTION
+
     def __init__(self, config_entry, name, api_key, origin, destination, client):
         """Initialize the sensor."""
         self._name = name
         self._config_entry = config_entry
-        self._unit_of_measurement = TIME_MINUTES
+        self._unit_of_measurement = UnitOfTime.MINUTES
         self._matrix = None
         self._api_key = api_key
         self._unique_id = config_entry.entry_id
@@ -173,7 +146,6 @@ class GoogleTravelTimeSensor(SensorEntity):
             res["distance"] = _data["distance"]["text"]
         res["origin"] = self._resolved_origin
         res["destination"] = self._resolved_destination
-        res[ATTR_ATTRIBUTION] = ATTRIBUTION
         return res
 
     @property
@@ -186,7 +158,7 @@ class GoogleTravelTimeSensor(SensorEntity):
         await self.hass.async_add_executor_job(self.update)
         self.async_write_ha_state()
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from Google."""
         options_copy = self._config_entry.options.copy()
         dtime = options_copy.get(CONF_DEPARTURE_TIME)

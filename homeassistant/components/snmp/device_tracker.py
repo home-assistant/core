@@ -39,7 +39,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None:
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> SnmpScanner | None:
     """Validate the configuration and return an SNMP scanner."""
     scanner = SnmpScanner(config[DOMAIN])
 

@@ -8,7 +8,7 @@ import logging
 from typing import Any, TypeVar
 
 from denonavr import DenonAVR
-from denonavr.const import POWER_ON
+from denonavr.const import POWER_ON, STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING
 from denonavr.exceptions import (
     AvrCommandError,
     AvrForbiddenError,
@@ -22,19 +22,11 @@ import voluptuous as vol
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
-)
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_CHANNEL,
-    MEDIA_TYPE_MUSIC,
+    MediaPlayerState,
+    MediaType,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_COMMAND,
-    CONF_HOST,
-    CONF_MODEL,
-    STATE_PAUSED,
-    STATE_PLAYING,
-)
+from homeassistant.const import ATTR_COMMAND, CONF_HOST, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import DeviceInfo
@@ -84,6 +76,14 @@ SERVICE_UPDATE_AUDYSSEY = "update_audyssey"
 _DenonDeviceT = TypeVar("_DenonDeviceT", bound="DenonDevice")
 _R = TypeVar("_R")
 _P = ParamSpec("_P")
+
+
+DENON_STATE_MAPPING = {
+    STATE_ON: MediaPlayerState.ON,
+    STATE_OFF: MediaPlayerState.OFF,
+    STATE_PLAYING: MediaPlayerState.PLAYING,
+    STATE_PAUSED: MediaPlayerState.PAUSED,
+}
 
 
 async def async_setup_entry(
@@ -157,32 +157,38 @@ def async_log_errors(
             return await func(self, *args, **kwargs)
         except AvrTimoutError:
             available = False
-            if self._available is True:
+            if self.available:
                 _LOGGER.warning(
-                    "Timeout connecting to Denon AVR receiver at host %s. "
-                    "Device is unavailable",
+                    (
+                        "Timeout connecting to Denon AVR receiver at host %s. "
+                        "Device is unavailable"
+                    ),
                     self._receiver.host,
                 )
-                self._available = False
+                self._attr_available = False
         except AvrNetworkError:
             available = False
-            if self._available is True:
+            if self.available:
                 _LOGGER.warning(
-                    "Network error connecting to Denon AVR receiver at host %s. "
-                    "Device is unavailable",
+                    (
+                        "Network error connecting to Denon AVR receiver at host %s. "
+                        "Device is unavailable"
+                    ),
                     self._receiver.host,
                 )
-                self._available = False
+                self._attr_available = False
         except AvrForbiddenError:
             available = False
-            if self._available is True:
+            if self.available:
                 _LOGGER.warning(
-                    "Denon AVR receiver at host %s responded with HTTP 403 error. "
-                    "Device is unavailable. Please consider power cycling your "
-                    "receiver",
+                    (
+                        "Denon AVR receiver at host %s responded with HTTP 403 error. "
+                        "Device is unavailable. Please consider power cycling your "
+                        "receiver"
+                    ),
                     self._receiver.host,
                 )
-                self._available = False
+                self._attr_available = False
         except AvrCommandError as err:
             available = False
             _LOGGER.error(
@@ -199,12 +205,12 @@ def async_log_errors(
                 exc_info=True,
             )
         finally:
-            if available is True and self._available is False:
+            if available and not self.available:
                 _LOGGER.info(
                     "Denon AVR receiver at host %s is available again",
                     self._receiver.host,
                 )
-                self._available = True
+                self._attr_available = True
         return None
 
     return wrapper
@@ -242,7 +248,6 @@ class DenonDevice(MediaPlayerEntity):
             self._receiver.support_sound_mode
             and MediaPlayerEntityFeature.SELECT_SOUND_MODE
         )
-        self._available = True
 
     @async_log_errors
     async def async_update(self) -> None:
@@ -252,14 +257,9 @@ class DenonDevice(MediaPlayerEntity):
             await self._receiver.async_update_audyssey()
 
     @property
-    def available(self):
-        """Return True if entity is available."""
-        return self._available
-
-    @property
-    def state(self):
+    def state(self) -> MediaPlayerState | None:
         """Return the state of the device."""
-        return self._receiver.state
+        return DENON_STATE_MAPPING.get(self._receiver.state)
 
     @property
     def source_list(self):
@@ -291,7 +291,7 @@ class DenonDevice(MediaPlayerEntity):
         return self._receiver.sound_mode
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         if self._receiver.input_func in self._receiver.netaudio_func_list:
             return self._supported_features_base | SUPPORT_MEDIA_MODES
@@ -303,11 +303,11 @@ class DenonDevice(MediaPlayerEntity):
         return None
 
     @property
-    def media_content_type(self):
+    def media_content_type(self) -> MediaType:
         """Content type of current playing media."""
-        if self._receiver.state in (STATE_PLAYING, STATE_PAUSED):
-            return MEDIA_TYPE_MUSIC
-        return MEDIA_TYPE_CHANNEL
+        if self._receiver.state in {MediaPlayerState.PLAYING, MediaPlayerState.PAUSED}:
+            return MediaType.MUSIC
+        return MediaType.CHANNEL
 
     @property
     def media_duration(self):

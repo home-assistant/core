@@ -1,6 +1,9 @@
 """Remote control support for Panasonic Viera TV."""
 from __future__ import annotations
 
+from collections.abc import Iterable
+from typing import Any
+
 from homeassistant.components.remote import RemoteEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, STATE_ON
@@ -71,7 +74,7 @@ class PanasonicVieraRemoteEntity(RemoteEntity):
         return self._name
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if the device is available."""
         return self._remote.available
 
@@ -80,15 +83,15 @@ class PanasonicVieraRemoteEntity(RemoteEntity):
         """Return true if device is on."""
         return self._remote.state == STATE_ON
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self._remote.async_turn_on(context=self._context)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self._remote.async_turn_off()
 
-    async def async_send_command(self, command, **kwargs):
+    async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to one device."""
         for cmd in command:
             await self._remote.async_send_key(cmd)

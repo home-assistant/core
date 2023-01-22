@@ -7,33 +7,36 @@
         "flow_title": "{name}",
         "step": {
             "bluetooth_confirm": {
-                "description": "Do you want to setup {name}?"
-            },
-            "enable_bluetooth": {
-                "description": "Do you want to setup Bluetooth?"
+                "description": "Do you want to set up {name}?"
             },
             "multiple_adapters": {
                 "data": {
                     "adapter": "Adapter"
                 },
-                "description": "Select a Bluetooth adapter to setup"
+                "description": "Select a Bluetooth adapter to set up"
             },
             "single_adapter": {
-                "description": "Do you want to setup the Bluetooth adapter {name}?"
+                "description": "Do you want to set up the Bluetooth adapter {name}?"
             },
             "user": {
                 "data": {
                     "address": "Device"
                 },
-                "description": "Choose a device to setup"
+                "description": "Choose a device to set up"
             }
+        }
+    },
+    "issues": {
+        "haos_outdated": {
+            "description": "To improve Bluetooth reliability and performance, we highly recommend you update to version 9.0 or later of the Home Assistant Operating System.",
+            "title": "Update to Home Assistant Operating System 9.0 or later"
         }
     },
     "options": {
         "step": {
             "init": {
                 "data": {
-                    "adapter": "The Bluetooth Adapter to use for scanning"
+                    "passive": "Passive scanning"
                 }
             }
         }

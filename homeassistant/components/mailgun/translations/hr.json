@@ -1,0 +1,10 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Jeste li sigurni da \u017eelite postaviti Mailgun?",
+                "title": "Postavite Mailgun Webhook"
+            }
+        }
+    }
+}

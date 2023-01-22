@@ -4,6 +4,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+import switchbot
+
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_POSITION,
@@ -22,7 +24,7 @@ from .entity import SwitchbotEntity
 
 # Initialize the logger
 _LOGGER = logging.getLogger(__name__)
-PARALLEL_UPDATES = 1
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -36,6 +38,7 @@ async def async_setup_entry(
 class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
     """Representation of a Switchbot."""
 
+    _device: switchbot.SwitchbotCurtain
     _attr_device_class = CoverDeviceClass.CURTAIN
     _attr_supported_features = (
         CoverEntityFeature.OPEN
@@ -95,7 +98,7 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_current_cover_position = self.data["data"]["position"]
-        self._attr_is_closed = self.data["data"]["position"] <= 20
-        self._attr_is_opening = self.data["data"]["inMotion"]
+        self._attr_current_cover_position = self.parsed_data["position"]
+        self._attr_is_closed = self.parsed_data["position"] <= 20
+        self._attr_is_opening = self.parsed_data["inMotion"]
         self.async_write_ha_state()

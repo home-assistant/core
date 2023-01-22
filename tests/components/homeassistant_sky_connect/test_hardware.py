@@ -1,8 +1,9 @@
-"""Test the Home Assistant Sky Connect hardware platform."""
+"""Test the Home Assistant SkyConnect hardware platform."""
 from unittest.mock import patch
 
 from homeassistant.components.homeassistant_sky_connect.const import DOMAIN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import EVENT_HOMEASSISTANT_STARTED, HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -25,14 +26,19 @@ CONFIG_ENTRY_DATA_2 = {
 }
 
 
-async def test_hardware_info(hass: HomeAssistant, hass_ws_client) -> None:
+async def test_hardware_info(
+    hass: HomeAssistant, hass_ws_client, addon_store_info
+) -> None:
     """Test we can get the board info."""
+    assert await async_setup_component(hass, "usb", {})
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+
     # Setup the config entry
     config_entry = MockConfigEntry(
         data=CONFIG_ENTRY_DATA,
         domain=DOMAIN,
         options={},
-        title="Home Assistant Sky Connect",
+        title="Home Assistant SkyConnect",
         unique_id="unique_1",
     )
     config_entry.add_to_hass(hass)
@@ -40,7 +46,7 @@ async def test_hardware_info(hass: HomeAssistant, hass_ws_client) -> None:
         data=CONFIG_ENTRY_DATA_2,
         domain=DOMAIN,
         options={},
-        title="Home Assistant Sky Connect",
+        title="Home Assistant SkyConnect",
         unique_id="unique_2",
     )
     config_entry_2.add_to_hass(hass)
@@ -62,24 +68,29 @@ async def test_hardware_info(hass: HomeAssistant, hass_ws_client) -> None:
         "hardware": [
             {
                 "board": None,
-                "dongles": [
-                    {
-                        "vid": "bla_vid",
-                        "pid": "bla_pid",
-                        "serial_number": "bla_serial_number",
-                        "manufacturer": "bla_manufacturer",
-                        "description": "bla_description",
-                    },
-                    {
-                        "vid": "bla_vid_2",
-                        "pid": "bla_pid_2",
-                        "serial_number": "bla_serial_number_2",
-                        "manufacturer": "bla_manufacturer_2",
-                        "description": "bla_description_2",
-                    },
-                ],
-                "name": "Home Assistant Sky Connect",
+                "config_entries": [config_entry.entry_id],
+                "dongle": {
+                    "vid": "bla_vid",
+                    "pid": "bla_pid",
+                    "serial_number": "bla_serial_number",
+                    "manufacturer": "bla_manufacturer",
+                    "description": "bla_description",
+                },
+                "name": "Home Assistant SkyConnect",
                 "url": None,
-            }
+            },
+            {
+                "board": None,
+                "config_entries": [config_entry_2.entry_id],
+                "dongle": {
+                    "vid": "bla_vid_2",
+                    "pid": "bla_pid_2",
+                    "serial_number": "bla_serial_number_2",
+                    "manufacturer": "bla_manufacturer_2",
+                    "description": "bla_description_2",
+                },
+                "name": "Home Assistant SkyConnect",
+                "url": None,
+            },
         ]
     }

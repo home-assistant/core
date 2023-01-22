@@ -3,19 +3,15 @@
         "abort": {
             "already_configured": "Enheten er allerede konfigurert",
             "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
-            "no_devices_found": "Ingen enheter funnet p\u00e5 nettverket",
-            "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
+            "no_devices_found": "Ingen enheter funnet p\u00e5 nettverket"
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes"
         },
-        "flow_title": "{label} ( {host} ) {serial}",
+        "flow_title": "{label} ( {group} )",
         "step": {
-            "confirm": {
-                "description": "\u00d8nsker du \u00e5 sette opp LIFX?"
-            },
             "discovery_confirm": {
-                "description": "Vil du sette opp {label} ( {host} ) {serial} ?"
+                "description": "Vil du sette opp {label} ( {group} )?"
             },
             "pick_device": {
                 "data": {

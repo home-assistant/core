@@ -15,13 +15,16 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
-    ENERGY_KILO_WATT_HOUR,
-    POWER_WATT,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
+from homeassistant.util.unit_system import (
+    METRIC_SYSTEM,
+    US_CUSTOMARY_SYSTEM,
+    UnitSystem,
+)
 
 from tests.common import MockConfigEntry
 
@@ -44,9 +47,6 @@ async def test_gps_sensor(
     message_string = f"1;1;1;0;49;{new_coords},{altitude}\n"
 
     receive_message(message_string)
-    # the integration adds multiple jobs to do the update currently
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -68,7 +68,7 @@ async def test_power_sensor(
     assert state
     assert state.state == "1200"
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.POWER
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == POWER_WATT
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfPower.WATT
     assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.MEASUREMENT
 
 
@@ -85,7 +85,7 @@ async def test_energy_sensor(
     assert state
     assert state.state == "18000"
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENERGY
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == ENERGY_KILO_WATT_HOUR
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfEnergy.KILO_WATT_HOUR
     assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.TOTAL_INCREASING
 
 
@@ -101,7 +101,7 @@ async def test_sound_sensor(
 
     assert state
     assert state.state == "10"
-    assert state.attributes[ATTR_ICON] == "mdi:volume-high"
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.SOUND_PRESSURE
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "dB"
 
 
@@ -117,13 +117,17 @@ async def test_distance_sensor(
 
     assert state
     assert state.state == "15"
-    assert state.attributes[ATTR_ICON] == "mdi:ruler"
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.DISTANCE
+    assert ATTR_ICON not in state.attributes
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "cm"
 
 
 @pytest.mark.parametrize(
     "unit_system, unit",
-    [(METRIC_SYSTEM, TEMP_CELSIUS), (IMPERIAL_SYSTEM, TEMP_FAHRENHEIT)],
+    [
+        (METRIC_SYSTEM, UnitOfTemperature.CELSIUS),
+        (US_CUSTOMARY_SYSTEM, UnitOfTemperature.FAHRENHEIT),
+    ],
 )
 async def test_temperature_sensor(
     hass: HomeAssistant,
@@ -139,9 +143,6 @@ async def test_temperature_sensor(
     message_string = f"1;1;1;0;0;{temperature}\n"
 
     receive_message(message_string)
-    # the integration adds multiple jobs to do the update currently
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)

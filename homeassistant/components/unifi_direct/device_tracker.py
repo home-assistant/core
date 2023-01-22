@@ -34,7 +34,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None:
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> UnifiDeviceScanner | None:
     """Validate the configuration and return a Unifi direct scanner."""
     scanner = UnifiDeviceScanner(config[DOMAIN])
     if not scanner.connected:

@@ -7,9 +7,8 @@ from homeassistant.components.agent_dvr.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from . import CONF_DATA, create_entry
+from . import CONF_DATA, create_entry, init_integration
 
-from tests.components.agent_dvr import init_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 

@@ -14,10 +14,10 @@
                 "data": {
                     "code": "Auth-Code (xxx-xxx)"
                 },
-                "description": "Bitte gib deinen pers\u00f6nlichen Auth-Code ein, der in der laundrify-App angezeigt wird."
+                "description": "Bitte gib deinen pers\u00f6nlichen Auth-Code ein, der in der laundrify App angezeigt wird."
             },
             "reauth_confirm": {
-                "description": "Die laundrify-Integration muss sich neu authentifizieren.",
+                "description": "Die laundrify Integration muss sich neu authentifizieren.",
                 "title": "Integration erneut authentifizieren"
             }
         }

@@ -1,6 +1,8 @@
 """Platform for water_heater integration."""
 from __future__ import annotations
 
+from typing import Any
+
 from pymelcloud import DEVICE_TYPE_ATW, AtwDevice
 from pymelcloud.atw_device import (
     PROPERTY_OPERATION_MODE,
@@ -15,7 +17,7 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -51,7 +53,7 @@ class AtwWaterHeater(WaterHeaterEntity):
         self._device = device
         self._name = device.name
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update state from MELCloud."""
         await self._api.async_update()
 
@@ -87,7 +89,7 @@ class AtwWaterHeater(WaterHeaterEntity):
     @property
     def temperature_unit(self) -> str:
         """Return the unit of measurement used by the platform."""
-        return TEMP_CELSIUS
+        return UnitOfTemperature.CELSIUS
 
     @property
     def current_operation(self) -> str | None:
@@ -109,7 +111,7 @@ class AtwWaterHeater(WaterHeaterEntity):
         """Return the temperature we try to reach."""
         return self._device.target_tank_temperature
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         await self._device.set(
             {
@@ -119,7 +121,7 @@ class AtwWaterHeater(WaterHeaterEntity):
             }
         )
 
-    async def async_set_operation_mode(self, operation_mode):
+    async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new target operation mode."""
         await self._device.set({PROPERTY_OPERATION_MODE: operation_mode})
 

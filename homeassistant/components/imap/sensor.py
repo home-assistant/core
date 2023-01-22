@@ -1,37 +1,29 @@
 """IMAP sensor support."""
 from __future__ import annotations
 
-import asyncio
-import logging
-
-from aioimaplib import IMAP4_SSL, AioImapException
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-    EVENT_HOMEASSISTANT_STOP,
-)
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-_LOGGER = logging.getLogger(__name__)
-
-CONF_SERVER = "server"
-CONF_FOLDER = "folder"
-CONF_SEARCH = "search"
-CONF_CHARSET = "charset"
-
-DEFAULT_PORT = 993
-
-ICON = "mdi:email-outline"
+from . import ImapDataUpdateCoordinator
+from .const import (
+    CONF_CHARSET,
+    CONF_FOLDER,
+    CONF_SEARCH,
+    CONF_SERVER,
+    DEFAULT_PORT,
+    DOMAIN,
+)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -54,139 +46,60 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the IMAP platform."""
-    sensor = ImapSensor(
-        config.get(CONF_NAME),
-        config.get(CONF_USERNAME),
-        config.get(CONF_PASSWORD),
-        config.get(CONF_SERVER),
-        config.get(CONF_PORT),
-        config.get(CONF_CHARSET),
-        config.get(CONF_FOLDER),
-        config.get(CONF_SEARCH),
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2023.4.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
     )
-    if not await sensor.connection():
-        raise PlatformNotReady
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
+        )
+    )
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, sensor.shutdown)
-    async_add_entities([sensor], True)
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the Imap sensor."""
+
+    coordinator: ImapDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+
+    async_add_entities([ImapSensor(coordinator)])
 
 
-class ImapSensor(SensorEntity):
+class ImapSensor(CoordinatorEntity[ImapDataUpdateCoordinator], SensorEntity):
     """Representation of an IMAP sensor."""
 
-    def __init__(self, name, user, password, server, port, charset, folder, search):
+    _attr_icon = "mdi:email-outline"
+    _attr_has_entity_name = True
+
+    def __init__(self, coordinator: ImapDataUpdateCoordinator) -> None:
         """Initialize the sensor."""
-        self._name = name or user
-        self._user = user
-        self._password = password
-        self._server = server
-        self._port = port
-        self._charset = charset
-        self._folder = folder
-        self._email_count = None
-        self._search = search
-        self._connection = None
-        self._does_push = None
-        self._idle_loop_task = None
-
-    async def async_added_to_hass(self):
-        """Handle when an entity is about to be added to Home Assistant."""
-        if not self.should_poll:
-            self._idle_loop_task = self.hass.loop.create_task(self.idle_loop())
+        super().__init__(coordinator)
+        # To be removed when YAML import is removed
+        if CONF_NAME in coordinator.config_entry.data:
+            self._attr_name = coordinator.config_entry.data[CONF_NAME]
+            self._attr_has_entity_name = False
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
+            name=f"IMAP ({coordinator.config_entry.data[CONF_USERNAME]})",
+            entry_type=DeviceEntryType.SERVICE,
+        )
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return ICON
-
-    @property
-    def native_value(self):
+    def native_value(self) -> int:
         """Return the number of emails found."""
-        return self._email_count
+        return self.coordinator.data
 
-    @property
-    def available(self):
-        """Return the availability of the device."""
-        return self._connection is not None
-
-    @property
-    def should_poll(self):
-        """Return if polling is needed."""
-        return not self._does_push
-
-    async def connection(self):
-        """Return a connection to the server, establishing it if necessary."""
-        if self._connection is None:
-            try:
-                self._connection = IMAP4_SSL(self._server, self._port)
-                await self._connection.wait_hello_from_server()
-                await self._connection.login(self._user, self._password)
-                await self._connection.select(self._folder)
-                self._does_push = self._connection.has_capability("IDLE")
-            except (AioImapException, asyncio.TimeoutError):
-                self._connection = None
-
-        return self._connection
-
-    async def idle_loop(self):
-        """Wait for data pushed from server."""
-        while True:
-            try:
-                if await self.connection():
-                    await self.refresh_email_count()
-                    self.async_write_ha_state()
-
-                    idle = await self._connection.idle_start()
-                    await self._connection.wait_server_push()
-                    self._connection.idle_done()
-                    async with async_timeout.timeout(10):
-                        await idle
-                else:
-                    self.async_write_ha_state()
-            except (AioImapException, asyncio.TimeoutError):
-                self.disconnected()
-
-    async def async_update(self):
-        """Periodic polling of state."""
-        try:
-            if await self.connection():
-                await self.refresh_email_count()
-        except (AioImapException, asyncio.TimeoutError):
-            self.disconnected()
-
-    async def refresh_email_count(self):
-        """Check the number of found emails."""
-        if self._connection:
-            await self._connection.noop()
-            result, lines = await self._connection.search(
-                self._search, charset=self._charset
-            )
-
-            if result == "OK":
-                self._email_count = len(lines[0].split())
-            else:
-                _LOGGER.error(
-                    "Can't parse IMAP server response to search '%s':  %s / %s",
-                    self._search,
-                    result,
-                    lines[0],
-                )
-
-    def disconnected(self):
-        """Forget the connection after it was lost."""
-        _LOGGER.warning("Lost %s (will attempt to reconnect)", self._server)
-        self._connection = None
-
-    async def shutdown(self, *_):
-        """Close resources."""
-        if self._connection:
-            if self._connection.has_pending_idle():
-                self._connection.idle_done()
-            await self._connection.logout()
-        if self._idle_loop_task:
-            self._idle_loop_task.cancel()
+    async def async_update(self) -> None:
+        """Check for idle state before updating."""
+        if not await self.coordinator.imap_client.stop_wait_server_push():
+            await super().async_update()

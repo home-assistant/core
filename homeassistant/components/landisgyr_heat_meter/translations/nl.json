@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd"
+        },
+        "step": {
+            "setup_serial_manual_path": {
+                "data": {
+                    "device": "USB-apparaatpad"
+                }
+            },
+            "user": {
+                "data": {
+                    "device": "Selecteer apparaat"
+                }
+            }
+        }
+    }
+}

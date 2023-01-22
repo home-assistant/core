@@ -17,8 +17,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
-    STATE_UNKNOWN,
-    TIME_DAYS,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -75,7 +74,7 @@ SENSOR_TYPES: tuple[GoogleWifiSensorEntityDescription, ...] = (
         key=ATTR_UPTIME,
         primary_key="system",
         sensor_key="uptime",
-        native_unit_of_measurement=TIME_DAYS,
+        native_unit_of_measurement=UnitOfTime.DAYS,
         icon="mdi:timelapse",
     ),
     GoogleWifiSensorEntityDescription(
@@ -136,18 +135,23 @@ class GoogleWifiSensor(SensorEntity):
 
     entity_description: GoogleWifiSensorEntityDescription
 
-    def __init__(self, api, name, description: GoogleWifiSensorEntityDescription):
+    def __init__(
+        self,
+        api: GoogleWifiAPI,
+        name: str,
+        description: GoogleWifiSensorEntityDescription,
+    ) -> None:
         """Initialize a Google Wifi sensor."""
         self.entity_description = description
         self._api = api
         self._attr_name = f"{name}_{description.key}"
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return availability of Google Wifi API."""
         return self._api.available
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from the Google Wifi API."""
         self._api.update()
         if self.available:
@@ -167,12 +171,12 @@ class GoogleWifiAPI:
         self.raw_data = None
         self.conditions = conditions
         self.data = {
-            ATTR_CURRENT_VERSION: STATE_UNKNOWN,
-            ATTR_NEW_VERSION: STATE_UNKNOWN,
-            ATTR_UPTIME: STATE_UNKNOWN,
-            ATTR_LAST_RESTART: STATE_UNKNOWN,
-            ATTR_LOCAL_IP: STATE_UNKNOWN,
-            ATTR_STATUS: STATE_UNKNOWN,
+            ATTR_CURRENT_VERSION: None,
+            ATTR_NEW_VERSION: None,
+            ATTR_UPTIME: None,
+            ATTR_LAST_RESTART: None,
+            ATTR_LOCAL_IP: None,
+            ATTR_STATUS: None,
         }
         self.available = True
         self.update()
@@ -218,14 +222,16 @@ class GoogleWifiAPI:
                     elif (
                         attr_key == ATTR_LOCAL_IP and not self.raw_data["wan"]["online"]
                     ):
-                        sensor_value = STATE_UNKNOWN
+                        sensor_value = None
 
                     self.data[attr_key] = sensor_value
             except KeyError:
                 _LOGGER.error(
-                    "Router does not support %s field. "
-                    "Please remove %s from monitored_conditions",
+                    (
+                        "Router does not support %s field. "
+                        "Please remove %s from monitored_conditions"
+                    ),
                     description.sensor_key,
                     attr_key,
                 )
-                self.data[attr_key] = STATE_UNKNOWN
+                self.data[attr_key] = None

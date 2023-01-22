@@ -2,15 +2,15 @@
     "config": {
         "abort": {
             "already_configured": "Enheten er allerede konfigurert",
-            "not_forked_daapd": "Enheten er ikke en forked-daapd-server."
+            "not_forked_daapd": "Enheten er ikke en Owntone-server."
         },
         "error": {
-            "forbidden": "Kan ikke koble til, vennligst sjekk dine forked-daapd nettverkstillatelser",
+            "forbidden": "Kan ikke koble til. Sjekk dine Owntone-nettverkstillatelser.",
             "unknown_error": "Uventet feil",
-            "websocket_not_enabled": "websocket for forked-daapd server ikke aktivert.",
+            "websocket_not_enabled": "Owntone server websocket ikke aktivert.",
             "wrong_host_or_port": "Kan ikke koble til. Vennligst sjekk vert og port.",
             "wrong_password": "Feil passord.",
-            "wrong_server_type": "Forked-daapd integrasjon krever en gaffel-daapd server med versjon \"= 27.0."
+            "wrong_server_type": "Owntone-integrasjonen krever en Owntone-server med versjon > = 27.0."
         },
         "flow_title": "{name} ( {host} )",
         "step": {
@@ -21,7 +21,7 @@
                     "password": "API-passord (la st\u00e5 tomt hvis ingen passord)",
                     "port": ""
                 },
-                "title": "Konfigurere forked-daapd-enhet"
+                "title": "Sett opp Owntone-enhet"
             }
         }
     },
@@ -34,8 +34,8 @@
                     "tts_pause_time": "Sekunder for \u00e5 sette pause f\u00f8r og etter TTS",
                     "tts_volume": "TTS-volum (flyter i omr\u00e5det [0,1])"
                 },
-                "description": "Angi ulike alternativer for forked-daapd integrasjon.",
-                "title": "Konfigurer alternativer for forked-daapd"
+                "description": "Angi ulike alternativer for Owntone-integrasjonen.",
+                "title": "Konfigurer Owntone-alternativer"
             }
         }
     }

@@ -17,6 +17,39 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "health_concern": {
+                "state": {
+                    "good": "Gut",
+                    "hazardous": "Gef\u00e4hrlich",
+                    "moderate": "M\u00e4\u00dfig",
+                    "unhealthy": "Ungesund",
+                    "unhealthy_for_sensitive_groups": "Ungesund f\u00fcr sensible Gruppen",
+                    "very_unhealthy": "Sehr ungesund"
+                }
+            },
+            "pollen_index": {
+                "state": {
+                    "high": "Hoch",
+                    "low": "Niedrig",
+                    "medium": "Mittel",
+                    "none": "Keine",
+                    "very_high": "Sehr hoch",
+                    "very_low": "Sehr niedrig"
+                }
+            },
+            "precipitation_type": {
+                "state": {
+                    "freezing_rain": "Gefrierender Regen",
+                    "ice_pellets": "Graupel",
+                    "none": "Keine",
+                    "rain": "Regen",
+                    "snow": "Schnee"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {

@@ -119,7 +119,7 @@ class RachioControllerOnlineBinarySensor(RachioControllerBinarySensor):
 
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
         self._state = self._controller.init_data[KEY_STATUS] == STATUS_ONLINE
 
@@ -165,7 +165,7 @@ class RachioRainSensor(RachioControllerBinarySensor):
 
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
         self._state = self._controller.init_data[KEY_RAIN_SENSOR_TRIPPED]
 

@@ -9,7 +9,7 @@ from tmb import IBus
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, TIME_MINUTES
+from homeassistant.const import CONF_NAME, UnitOfTime
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -17,8 +17,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTRIBUTION = "Data provided by Transport Metropolitans de Barcelona"
 
 ICON = "mdi:bus-clock"
 
@@ -75,13 +73,15 @@ def setup_platform(
 class TMBSensor(SensorEntity):
     """Implementation of a TMB line/stop Sensor."""
 
+    _attr_attribution = "Data provided by Transport Metropolitans de Barcelona"
+
     def __init__(self, ibus_client, stop, line, name):
         """Initialize the sensor."""
         self._ibus_client = ibus_client
         self._stop = stop
         self._line = line.upper()
         self._name = name
-        self._unit = TIME_MINUTES
+        self._unit = UnitOfTime.MINUTES
         self._state = None
 
     @property
@@ -113,17 +113,17 @@ class TMBSensor(SensorEntity):
     def extra_state_attributes(self):
         """Return the state attributes of the last update."""
         return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_BUS_STOP: self._stop,
             ATTR_LINE: self._line,
         }
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
+    def update(self) -> None:
         """Get the next bus information."""
         try:
             self._state = self._ibus_client.get_stop_forecast(self._stop, self._line)
         except HTTPError:
             _LOGGER.error(
-                "Unable to fetch data from TMB API. Please check your API keys are valid"
+                "Unable to fetch data from TMB API. Please check your API keys are"
+                " valid"
             )

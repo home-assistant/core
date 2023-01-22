@@ -1,0 +1,49 @@
+{
+    "config": {
+        "error": {
+            "address": "Ge\u00e7ersiz uzak adres belirtildi. Adres bir IP adresi veya \u00e7\u00f6z\u00fclebilir bir ana bilgisayar ad\u0131 olmal\u0131d\u0131r.",
+            "address_in_use": "Se\u00e7ilen dinleme ba\u011flant\u0131 noktas\u0131 bu sistemde zaten kullan\u0131l\u0131yor.",
+            "model": "Se\u00e7ilen model MODBUS40'\u0131 desteklemiyor gibi g\u00f6r\u00fcn\u00fcyor",
+            "read": "Pompadan gelen okuma iste\u011finde hata. \"Uzaktan okuma ba\u011flant\u0131 noktas\u0131\" veya \"Uzak adres\"inizi do\u011frulay\u0131n.",
+            "unknown": "Beklenmeyen hata",
+            "url": "Belirtilen URL d\u00fczg\u00fcn bi\u00e7imlendirilmemi\u015f veya desteklenmiyor",
+            "write": "Pompaya yazma iste\u011finde hata. \"Uzak yazma ba\u011flant\u0131 noktas\u0131\" veya \"Uzak adres\"inizi do\u011frulay\u0131n."
+        },
+        "step": {
+            "modbus": {
+                "data": {
+                    "modbus_unit": "Modbus \u00dcnite Tan\u0131mlay\u0131c\u0131s\u0131",
+                    "modbus_url": "Modbus URL'si",
+                    "model": "Is\u0131 Pompas\u0131 Modeli"
+                },
+                "data_description": {
+                    "modbus_unit": "Is\u0131 Pompan\u0131z i\u00e7in \u00fcnite tan\u0131mlamas\u0131. Genellikle 0'da b\u0131rak\u0131labilir.",
+                    "modbus_url": "Is\u0131 Pompan\u0131z veya MODBUS40 \u00fcnitenize ba\u011flant\u0131y\u0131 a\u00e7\u0131klayan Modbus URL'si. \u015eu formda olmal\u0131d\u0131r:\n - Modbus TCP ba\u011flant\u0131s\u0131 i\u00e7in `tcp://[HOST]:[PORT]`\n - Yerel bir Modbus RTU ba\u011flant\u0131s\u0131 i\u00e7in `serial://[LOCAL DEVICE]`\n - Uzak telnet tabanl\u0131 Modbus RTU ba\u011flant\u0131s\u0131 i\u00e7in `rfc2217://[HOST]:[PORT]`."
+                }
+            },
+            "nibegw": {
+                "data": {
+                    "ip_address": "Uzak adres",
+                    "listening_port": "Yerel dinleme ba\u011flant\u0131 noktas\u0131",
+                    "model": "Is\u0131 Pompas\u0131 Modeli",
+                    "remote_read_port": "Uzaktan okuma ba\u011flant\u0131 noktas\u0131",
+                    "remote_write_port": "Uzaktan yazma ba\u011flant\u0131 noktas\u0131"
+                },
+                "data_description": {
+                    "ip_address": "NibeGW biriminin adresi. Cihaz statik bir adresle yap\u0131land\u0131r\u0131lm\u0131\u015f olmal\u0131d\u0131r.",
+                    "listening_port": "NibeGW biriminin veri g\u00f6ndermek \u00fczere yap\u0131land\u0131r\u0131ld\u0131\u011f\u0131 bu sistemdeki yerel ba\u011flant\u0131 noktas\u0131.",
+                    "remote_read_port": "NibeGW biriminin okuma isteklerini dinledi\u011fi ba\u011flant\u0131 noktas\u0131.",
+                    "remote_write_port": "NibeGW biriminin yazma isteklerini dinledi\u011fi ba\u011flant\u0131 noktas\u0131."
+                },
+                "description": "Entegrasyonu yap\u0131land\u0131rmaya \u00e7al\u0131\u015fmadan \u00f6nce \u015funlar\u0131 do\u011frulay\u0131n:\n - NibeGW \u00fcnitesi bir \u0131s\u0131 pompas\u0131na ba\u011fl\u0131d\u0131r.\n - Is\u0131 pompas\u0131 konfig\u00fcrasyonunda MODBUS40 aksesuar\u0131 etkinle\u015ftirildi.\n - Pompa, eksik MODBUS40 aksesuar\u0131 ile ilgili alarm durumuna ge\u00e7medi."
+            },
+            "user": {
+                "description": "Pompan\u0131za ba\u011flant\u0131 y\u00f6ntemini se\u00e7in. Genel olarak, F serisi pompalar bir NibeGW \u00f6zel aksesuar\u0131 gerektirirken, S serisi pompalarda yerle\u015fik Modbus deste\u011fi bulunur.",
+                "menu_options": {
+                    "modbus": "Modbus",
+                    "nibegw": "NibeGW"
+                }
+            }
+        }
+    }
+}

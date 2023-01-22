@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured_account": "La cuenta ya est\u00e1 configurada",
-            "ezviz_cloud_account_missing": "Falta la cuenta de Ezviz Cloud. Por favor, vuelve a configurar la cuenta de Ezviz Cloud",
+            "ezviz_cloud_account_missing": "Falta la cuenta de EZVIZ Cloud. Por favor, vuelve a configurar la cuenta de EZVIZ Cloud",
             "unknown": "Error inesperado"
         },
         "error": {
@@ -17,8 +17,8 @@
                     "password": "Contrase\u00f1a",
                     "username": "Nombre de usuario"
                 },
-                "description": "Introduce las credenciales RTSP para la c\u00e1mara Ezviz {serial} con IP {ip_address}",
-                "title": "Descubierta c\u00e1mara Ezviz"
+                "description": "Introduce las credenciales RTSP para la c\u00e1mara EZVIZ {serial} con IP {ip_address}",
+                "title": "Descubierta c\u00e1mara EZVIZ"
             },
             "user": {
                 "data": {
@@ -26,7 +26,7 @@
                     "url": "URL",
                     "username": "Nombre de usuario"
                 },
-                "title": "Conectar con Ezviz Cloud"
+                "title": "Conectar con EZVIZ Cloud"
             },
             "user_custom_url": {
                 "data": {
@@ -35,7 +35,7 @@
                     "username": "Nombre de usuario"
                 },
                 "description": "Especificar manualmente la URL de tu regi\u00f3n",
-                "title": "Conectar a la URL personalizada de Ezviz"
+                "title": "Conectar a la URL personalizada de EZVIZ"
             }
         }
     },

@@ -6,22 +6,28 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_FAN_MODE,
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
     ATTR_SWING_MODE,
+    PLATFORM_SCHEMA,
     PRESET_AWAY,
     PRESET_BOOST,
     PRESET_ECO,
     PRESET_NONE,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, CONF_HOST, CONF_NAME, TEMP_CELSIUS
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    CONF_HOST,
+    CONF_NAME,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -115,6 +121,10 @@ def format_target_temperature(target_temperature):
 class DaikinClimate(ClimateEntity):
     """Representation of a Daikin HVAC."""
 
+    _attr_name = None
+    _attr_has_entity_name = True
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+
     def __init__(self, api: DaikinApi) -> None:
         """Initialize the climate device."""
 
@@ -171,19 +181,9 @@ class DaikinClimate(ClimateEntity):
             await self._api.device.set(values)
 
     @property
-    def name(self):
-        """Return the name of the thermostat, if any."""
-        return self._api.name
-
-    @property
     def unique_id(self):
         """Return a unique ID."""
         return self._api.device.mac
-
-    @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement which this thermostat uses."""
-        return TEMP_CELSIUS
 
     @property
     def current_temperature(self):

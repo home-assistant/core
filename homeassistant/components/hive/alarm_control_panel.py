@@ -27,6 +27,7 @@ HIVETOHA = {
     "home": STATE_ALARM_DISARMED,
     "asleep": STATE_ALARM_ARMED_NIGHT,
     "away": STATE_ALARM_ARMED_AWAY,
+    "sos": STATE_ALARM_TRIGGERED,
 }
 
 
@@ -49,6 +50,7 @@ class HiveAlarmControlPanelEntity(HiveEntity, AlarmControlPanelEntity):
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_NIGHT
         | AlarmControlPanelEntityFeature.ARM_AWAY
+        | AlarmControlPanelEntityFeature.TRIGGER
     )
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
@@ -62,6 +64,10 @@ class HiveAlarmControlPanelEntity(HiveEntity, AlarmControlPanelEntity):
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         await self.hive.alarm.setMode(self.device, "away")
+
+    async def async_alarm_trigger(self, code: str | None = None) -> None:
+        """Send alarm trigger command."""
+        await self.hive.alarm.setMode(self.device, "sos")
 
     async def async_update(self) -> None:
         """Update all Node data from Hive."""

@@ -18,3 +18,6 @@ DEFAULT_RADIUS = 50.0
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=5)
 
 PLATFORMS = [Platform.SENSOR]
+
+IMPERIAL_UNITS = "imperial"
+METRIC_UNITS = "metric"

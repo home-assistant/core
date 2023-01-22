@@ -15,7 +15,7 @@ from homeassistant.components.notify import (
 from homeassistant.const import CONF_FILENAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 CONF_TIMESTAMP = "timestamp"
@@ -29,7 +29,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 def get_service(
-    hass: HomeAssistant, config: ConfigType, discovery_info=None
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> FileNotificationService:
     """Get the file notification service."""
     filename: str = config[CONF_FILENAME]
@@ -55,7 +57,10 @@ class FileNotificationService(BaseNotificationService):
         filepath: str = os.path.join(self.hass.config.config_dir, self.filename)
         with open(filepath, "a", encoding="utf8") as file:
             if os.stat(filepath).st_size == 0:
-                title = f"{kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)} notifications (Log started: {dt_util.utcnow().isoformat()})\n{'-' * 80}\n"
+                title = (
+                    f"{kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)} notifications (Log"
+                    f" started: {dt_util.utcnow().isoformat()})\n{'-' * 80}\n"
+                )
                 file.write(title)
 
             if self.add_timestamp:
