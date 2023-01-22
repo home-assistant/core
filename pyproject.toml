@@ -30,7 +30,7 @@ dependencies    = [
     "attrs==22.2.0",
     "atomicwrites-homeassistant==1.4.1",
     "awesomeversion==22.9.0",
-    "bcrypt==3.1.7",
+    "bcrypt==4.0.1",
     "certifi>=2021.5.30",
     "ciso8601==2.3.0",
     # When bumping httpx, please check the version pins of
@@ -45,7 +45,7 @@ dependencies    = [
     "cryptography==39.0.0",
     # pyOpenSSL 23.0.0 is required to work with cryptography 39+
     "pyOpenSSL==23.0.0",
-    "orjson==3.8.4",
+    "orjson==3.8.5",
     "pip>=21.0,<22.4",
     "python-slugify==4.0.1",
     "pyyaml==6.0",
@@ -117,6 +117,7 @@ load-plugins = [
     "hass_enforce_type_hints",
     "hass_imports",
     "hass_logger",
+    "pylint_per_file_ignores",
 ]
 persistent = false
 extension-pkg-allow-list = [
@@ -218,6 +219,9 @@ runtime-typing = false
 
 [tool.pylint.CODE_STYLE]
 max-line-length-suggestions = 72
+
+[tool.pylint-per-file-ignores]
+"/tests/"="protected-access,redefined-outer-name"
 
 [tool.pytest.ini_options]
 testpaths = [

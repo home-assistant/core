@@ -1,7 +1,7 @@
 """The tests the History component."""
 from __future__ import annotations
 
-# pylint: disable=protected-access,invalid-name
+# pylint: disable=invalid-name
 from copy import copy
 from datetime import datetime, timedelta
 import json
@@ -434,7 +434,8 @@ def test_get_significant_states_minimal_response(hass_recorder):
     assert states == hist
 
 
-def test_get_significant_states_with_initial(hass_recorder):
+@pytest.mark.parametrize("time_zone", ["Europe/Berlin", "US/Hawaii", "UTC"])
+def test_get_significant_states_with_initial(time_zone, hass_recorder):
     """Test that only significant states are returned.
 
     We should get back every thermostat change that
@@ -442,6 +443,7 @@ def test_get_significant_states_with_initial(hass_recorder):
     media player (attribute changes are not significant and not returned).
     """
     hass = hass_recorder()
+    hass.config.set_time_zone(time_zone)
     zero, four, states = record_states(hass)
     one = zero + timedelta(seconds=1)
     one_and_half = zero + timedelta(seconds=1.5)

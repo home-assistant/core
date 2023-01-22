@@ -29,16 +29,9 @@
                     "name": "Nama",
                     "port": "Port",
                     "ssl": "Menggunakan sertifikat SSL",
-                    "statistics_only": "Hanya Statistik",
                     "verify_ssl": "Verifikasi sertifikat SSL"
                 }
             }
-        }
-    },
-    "issues": {
-        "deprecated_yaml": {
-            "description": "Proses konfigurasi Integrasi PI-Hole lewat YAML dalam proses penghapusan.\n\nKonfigurasi YAML yang ada telah diimpor ke antarmuka secara otomatis.\n\nHapus konfigurasi YAML Integrasi PI-Hole dari file configuration.yaml dan mulai ulang Home Assistant untuk memperbaiki masalah ini.",
-            "title": "Konfigurasi YAML Integrasi PI-Hole dalam proses penghapusan"
         }
     }
 }

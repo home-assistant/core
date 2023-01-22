@@ -275,5 +275,5 @@ class HarmonyData(HarmonySubscriberMixin):
         except aioexc.TimeOut:
             _LOGGER.error("%s: Syncing hub with Harmony cloud timed-out", self.name)
             return False
-        else:
-            return True
+
+        return True

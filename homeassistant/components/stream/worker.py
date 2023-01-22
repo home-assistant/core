@@ -192,7 +192,7 @@ class StreamMuxer:
                         # of the range, hoping that the parts stay pretty well bounded, and we adjust the part
                         # durations a bit in the hls metadata so that everything "looks" ok.
                         "frag_duration": str(
-                            self._stream_settings.part_target_duration * 9e5
+                            int(self._stream_settings.part_target_duration * 9e5)
                         ),
                     }
                     if self._stream_settings.ll_hls

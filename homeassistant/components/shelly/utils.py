@@ -13,7 +13,13 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry, entity_registry, singleton
+from homeassistant.helpers import singleton
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    async_get as dr_async_get,
+    format_mac,
+)
+from homeassistant.helpers.entity_registry import async_get as er_async_get
 from homeassistant.helpers.typing import EventType
 from homeassistant.util.dt import utcnow
 
@@ -36,7 +42,7 @@ def async_remove_shelly_entity(
     hass: HomeAssistant, domain: str, unique_id: str
 ) -> None:
     """Remove a Shelly entity."""
-    entity_reg = entity_registry.async_get(hass)
+    entity_reg = er_async_get(hass)
     entity_id = entity_reg.async_get_entity_id(domain, DOMAIN, unique_id)
     if entity_id:
         LOGGER.debug("Removing entity: %s", entity_id)
@@ -44,13 +50,21 @@ def async_remove_shelly_entity(
 
 
 def get_block_device_name(device: BlockDevice) -> str:
-    """Naming for device."""
+    """Get Block device name."""
     return cast(str, device.settings["name"] or device.settings["device"]["hostname"])
 
 
 def get_rpc_device_name(device: RpcDevice) -> str:
-    """Naming for device."""
+    """Get RPC device name."""
     return cast(str, device.config["sys"]["device"].get("name") or device.hostname)
+
+
+def get_device_name(device: BlockDevice | RpcDevice) -> str:
+    """Get device name."""
+    if isinstance(device, BlockDevice):
+        return get_block_device_name(device)
+
+    return get_rpc_device_name(device)
 
 
 def get_number_of_channels(device: BlockDevice, block: Block) -> int:
@@ -385,19 +399,12 @@ def device_update_info(
 
     assert entry.unique_id
 
-    dev_registry = device_registry.async_get(hass)
-    if device := dev_registry.async_get_device(
+    dev_reg = dr_async_get(hass)
+    if device := dev_reg.async_get_device(
         identifiers={(DOMAIN, entry.entry_id)},
-        connections={
-            (
-                device_registry.CONNECTION_NETWORK_MAC,
-                device_registry.format_mac(entry.unique_id),
-            )
-        },
+        connections={(CONNECTION_NETWORK_MAC, format_mac(entry.unique_id))},
     ):
-        dev_registry.async_update_device(
-            device.id, sw_version=shellydevice.firmware_version
-        )
+        dev_reg.async_update_device(device.id, sw_version=shellydevice.firmware_version)
 
 
 def brightness_to_percentage(brightness: int) -> int:

@@ -6,11 +6,9 @@
         },
         "error": {
             "cannot_connect": "No se pudo conectar",
-            "file_not_found": "El archivo `.knxkeys` especificado no se encontr\u00f3 en la ruta config/.storage/knx/",
             "invalid_backbone_key": "Clave de red troncal no v\u00e1lida. Se esperan 32 n\u00fameros hexadecimales.",
             "invalid_individual_address": "El valor no coincide con el patr\u00f3n de la direcci\u00f3n KNX individual. 'area.line.device'",
             "invalid_ip_address": "Direcci\u00f3n IPv4 no v\u00e1lida.",
-            "invalid_signature": "La contrase\u00f1a para descifrar el archivo `.knxkeys` es incorrecta.",
             "keyfile_invalid_signature": "La contrase\u00f1a para descifrar el archivo `.knxkeys` es incorrecta.",
             "keyfile_no_backbone_key": "El archivo `.knxkeys` no contiene una clave principal para el enrutamiento seguro.",
             "keyfile_no_tunnel_for_host": "El archivo `.knxkeys` no contiene credenciales para el host `{host}`.",
@@ -125,11 +123,9 @@
     "options": {
         "error": {
             "cannot_connect": "No se pudo conectar",
-            "file_not_found": "El archivo `.knxkeys` especificado no se encontr\u00f3 en la ruta config/.storage/knx/",
             "invalid_backbone_key": "Clave de red troncal no v\u00e1lida. Se esperan 32 n\u00fameros hexadecimales.",
             "invalid_individual_address": "El valor no coincide con el patr\u00f3n de la direcci\u00f3n KNX individual. 'area.line.device'",
             "invalid_ip_address": "Direcci\u00f3n IPv4 no v\u00e1lida.",
-            "invalid_signature": "La contrase\u00f1a para descifrar el archivo `.knxkeys` es incorrecta.",
             "keyfile_invalid_signature": "La contrase\u00f1a para descifrar el archivo `.knxkeys` es incorrecta.",
             "keyfile_no_backbone_key": "El archivo `.knxkeys` no contiene una clave principal para el enrutamiento seguro.",
             "keyfile_no_tunnel_for_host": "El archivo `.knxkeys` no contiene credenciales para el host `{host}`.",

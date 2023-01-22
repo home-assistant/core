@@ -8,6 +8,13 @@
             "unknown": "Kesalahan yang tidak diharapkan"
         },
         "step": {
+            "confirm_discovery": {
+                "data": {
+                    "password": "Kata sandi (default: kode PIN di belakang)",
+                    "use_legacy_protocol": "Gunakan protokol lawas",
+                    "username": "Nama Pengguna"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Host",

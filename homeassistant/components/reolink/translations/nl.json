@@ -19,6 +19,7 @@
                     "host": "Host",
                     "password": "Wachtwoord",
                     "port": "Poort",
+                    "use_https": "HTTPS inschakelen",
                     "username": "Gebruikersnaam"
                 },
                 "description": "{error}"

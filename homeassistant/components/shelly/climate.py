@@ -19,9 +19,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry, entity_registry
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_registry import (
+    RegistryEntry,
+    async_entries_for_config_entry,
+    async_get as er_async_get,
+)
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.unit_conversion import TemperatureConverter
@@ -81,10 +86,8 @@ def async_restore_climate_entities(
 ) -> None:
     """Restore sleeping climate devices."""
 
-    ent_reg = entity_registry.async_get(hass)
-    entries = entity_registry.async_entries_for_config_entry(
-        ent_reg, config_entry.entry_id
-    )
+    ent_reg = er_async_get(hass)
+    entries = async_entries_for_config_entry(ent_reg, config_entry.entry_id)
 
     for entry in entries:
 
@@ -117,7 +120,7 @@ class BlockSleepingClimate(
         coordinator: ShellyBlockCoordinator,
         sensor_block: Block | None,
         device_block: Block | None,
-        entry: entity_registry.RegistryEntry | None = None,
+        entry: RegistryEntry | None = None,
     ) -> None:
         """Initialize climate."""
         super().__init__(coordinator)
@@ -242,11 +245,7 @@ class BlockSleepingClimate(
     @property
     def device_info(self) -> DeviceInfo:
         """Device info."""
-        return {
-            "connections": {
-                (device_registry.CONNECTION_NETWORK_MAC, self.coordinator.mac)
-            }
-        }
+        return {"connections": {(CONNECTION_NETWORK_MAC, self.coordinator.mac)}}
 
     def _check_is_off(self) -> bool:
         """Return if valve is off or on."""

@@ -1,8 +1,0 @@
-{
-    "issues": {
-        "pending_removal": {
-            "description": "OpenALPRi kohalik integratsioon on Home Assistantist eemaldamisel ja see ei ole enam saadaval alates Home Assistant 2022.10.\n\nProbleemi lahendamiseks eemaldage YAML-konfiguratsioon failist configuration.yaml ja k\u00e4ivitage Home Assistant uuesti.",
-            "title": "OpenALPR Locali integratsioon eemaldatakse"
-        }
-    }
-}

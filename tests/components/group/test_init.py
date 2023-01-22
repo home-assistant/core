@@ -1,5 +1,5 @@
 """The tests for the Group components."""
-# pylint: disable=protected-access
+
 from __future__ import annotations
 
 from collections import OrderedDict

@@ -269,21 +269,22 @@ def _select_event_data_ids_to_purge(
 def _select_unused_attributes_ids(
     session: Session, attributes_ids: set[int], using_sqlite: bool
 ) -> set[int]:
-    """Return a set of attributes ids that are not used by any states in the database."""
+    """Return a set of attributes ids that are not used by any states in the db."""
     if not attributes_ids:
         return set()
 
     if using_sqlite:
         #
-        # SQLite has a superior query optimizer for the distinct query below as it uses the
-        # covering index without having to examine the rows directly for both of the queries
-        # below.
+        # SQLite has a superior query optimizer for the distinct query below as it uses
+        # the covering index without having to examine the rows directly for both of the
+        # queries below.
         #
         # We use the distinct query for SQLite since the query in the other branch can
         # generate more than 500 unions which SQLite does not support.
         #
         # How MariaDB's query optimizer handles this query:
-        # > explain select distinct attributes_id from states where attributes_id in (136723);
+        # > explain select distinct attributes_id from states where attributes_id in
+        #   (136723);
         # ...Using index
         #
         seen_ids = {
@@ -294,15 +295,16 @@ def _select_unused_attributes_ids(
         }
     else:
         #
-        # This branch is for DBMS that cannot optimize the distinct query well and has to examine
-        # all the rows that match.
+        # This branch is for DBMS that cannot optimize the distinct query well and has
+        # to examine all the rows that match.
         #
-        # This branch uses a union of simple queries, as each query is optimized away as the answer
-        # to the query can be found in the index.
+        # This branch uses a union of simple queries, as each query is optimized away
+        # as the answer to the query can be found in the index.
         #
-        # The below query works for SQLite as long as there are no more than 500 attributes_id
-        # to be selected. We currently do not have MySQL or PostgreSQL servers running in the
-        # test suite; we test this path using SQLite when there are less than 500 attributes_id.
+        # The below query works for SQLite as long as there are no more than 500
+        # attributes_id to be selected. We currently do not have MySQL or PostgreSQL
+        # servers running in the test suite; we test this path using SQLite when there
+        # are less than 500 attributes_id.
         #
         # How MariaDB's query optimizer handles this query:
         # > explain select min(attributes_id) from states where attributes_id = 136723;
@@ -349,7 +351,7 @@ def _purge_unused_attributes_ids(
 def _select_unused_event_data_ids(
     session: Session, data_ids: set[int], using_sqlite: bool
 ) -> set[int]:
-    """Return a set of event data ids that are not used by any events in the database."""
+    """Return a set of event data ids that are not used by any events in the db."""
     if not data_ids:
         return set()
 
@@ -391,7 +393,10 @@ def _purge_unused_data_ids(
 def _select_statistics_runs_to_purge(
     session: Session, purge_before: datetime
 ) -> list[int]:
-    """Return a list of statistic runs to purge, but take care to keep the newest run."""
+    """Return a list of statistic runs to purge.
+
+    Takes care to keep the newest run.
+    """
     statistic_runs = session.execute(find_statistics_runs_to_purge(purge_before)).all()
     statistic_runs_list = [run.run_id for run in statistic_runs]
     # Exclude the newest statistics run
@@ -418,7 +423,7 @@ def _select_short_term_statistics_to_purge(
 def _select_legacy_event_state_and_attributes_and_data_ids_to_purge(
     session: Session, purge_before: datetime
 ) -> tuple[set[int], set[int], set[int], set[int]]:
-    """Return a list of event, state, and attribute ids to purge that are linked by the event_id.
+    """Return a list of event, state, and attribute ids to purge linked by the event_id.
 
     We do not link these anymore since state_change events
     do not exist in the events table anymore, however we
@@ -676,7 +681,8 @@ def purge_entity_data(instance: Recorder, entity_filter: Callable[[str], bool]) 
         ]
         _LOGGER.debug("Purging entity data for %s", selected_entity_ids)
         if len(selected_entity_ids) > 0:
-            # Purge a max of MAX_ROWS_TO_PURGE, based on the oldest states or events record
+            # Purge a max of MAX_ROWS_TO_PURGE, based on the oldest states
+            # or events record.
             _purge_filtered_states(instance, session, selected_entity_ids, using_sqlite)
             _LOGGER.debug("Purging entity data hasn't fully completed yet")
             return False

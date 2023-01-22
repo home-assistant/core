@@ -1,9 +1,15 @@
-"""Test Home Assistant eneergy utility functions."""
+"""Test Home Assistant unit conversion utility functions."""
+from __future__ import annotations
+
+import inspect
+
 import pytest
 
 from homeassistant.const import (
+    PERCENTAGE,
     UnitOfDataRate,
     UnitOfElectricCurrent,
+    UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfInformation,
     UnitOfLength,
@@ -16,11 +22,13 @@ from homeassistant.const import (
     UnitOfVolumetricFlux,
 )
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util import unit_conversion
 from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
     DataRateConverter,
     DistanceConverter,
     ElectricCurrentConverter,
+    ElectricPotentialConverter,
     EnergyConverter,
     InformationConverter,
     MassConverter,
@@ -28,63 +36,99 @@ from homeassistant.util.unit_conversion import (
     PressureConverter,
     SpeedConverter,
     TemperatureConverter,
+    UnitlessRatioConverter,
     VolumeConverter,
 )
 
 INVALID_SYMBOL = "bob"
 
 
+# Dict containing all converters that need to be tested.
+# The VALID_UNITS are sorted to ensure that pytest runs are consistent
+# and avoid `different tests were collected between gw0 and gw1`
+_ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
+    converter: sorted(converter.VALID_UNITS, key=lambda x: (x is None, x))
+    for converter in (
+        DataRateConverter,
+        DistanceConverter,
+        ElectricCurrentConverter,
+        ElectricPotentialConverter,
+        EnergyConverter,
+        InformationConverter,
+        MassConverter,
+        PowerConverter,
+        PressureConverter,
+        SpeedConverter,
+        TemperatureConverter,
+        UnitlessRatioConverter,
+        VolumeConverter,
+    )
+}
+
+# Dict containing all converters with a corresponding unit ratio.
+_GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, float]] = {
+    DataRateConverter: (
+        UnitOfDataRate.BITS_PER_SECOND,
+        UnitOfDataRate.BYTES_PER_SECOND,
+        8,
+    ),
+    DistanceConverter: (UnitOfLength.KILOMETERS, UnitOfLength.METERS, 0.001),
+    ElectricCurrentConverter: (
+        UnitOfElectricCurrent.AMPERE,
+        UnitOfElectricCurrent.MILLIAMPERE,
+        0.001,
+    ),
+    ElectricPotentialConverter: (
+        UnitOfElectricPotential.MILLIVOLT,
+        UnitOfElectricPotential.VOLT,
+        1000,
+    ),
+    EnergyConverter: (UnitOfEnergy.WATT_HOUR, UnitOfEnergy.KILO_WATT_HOUR, 1000),
+    InformationConverter: (UnitOfInformation.BITS, UnitOfInformation.BYTES, 8),
+    MassConverter: (UnitOfMass.STONES, UnitOfMass.KILOGRAMS, 0.157473),
+    PowerConverter: (UnitOfPower.WATT, UnitOfPower.KILO_WATT, 1000),
+    PressureConverter: (UnitOfPressure.HPA, UnitOfPressure.INHG, 33.86389),
+    SpeedConverter: (
+        UnitOfSpeed.KILOMETERS_PER_HOUR,
+        UnitOfSpeed.MILES_PER_HOUR,
+        1.609343,
+    ),
+    TemperatureConverter: (
+        UnitOfTemperature.CELSIUS,
+        UnitOfTemperature.FAHRENHEIT,
+        0.555556,
+    ),
+    UnitlessRatioConverter: (PERCENTAGE, None, 100),
+    VolumeConverter: (UnitOfVolume.GALLONS, UnitOfVolume.LITERS, 0.264172),
+}
+
+
+@pytest.mark.parametrize(
+    "converter",
+    [
+        # Generate list of all converters available in
+        # `homeassistant.util.unit_conversion` to ensure
+        # that we don't miss any in the tests.
+        obj
+        for _, obj in inspect.getmembers(unit_conversion)
+        if inspect.isclass(obj)
+        and issubclass(obj, BaseUnitConverter)
+        and obj != BaseUnitConverter
+    ],
+)
+def test_all_converters(converter: type[BaseUnitConverter]) -> None:
+    """Ensure all unit converters are tested."""
+    assert converter in _ALL_CONVERTERS, "converter is not present in _ALL_CONVERTERS"
+    assert converter in _GET_UNIT_RATIO, "converter is not present in _GET_UNIT_RATIO"
+
+
 @pytest.mark.parametrize(
     "converter,valid_unit",
     [
-        (DataRateConverter, UnitOfDataRate.GIBIBYTES_PER_SECOND),
-        (DistanceConverter, UnitOfLength.KILOMETERS),
-        (DistanceConverter, UnitOfLength.METERS),
-        (DistanceConverter, UnitOfLength.CENTIMETERS),
-        (DistanceConverter, UnitOfLength.MILLIMETERS),
-        (DistanceConverter, UnitOfLength.MILES),
-        (DistanceConverter, UnitOfLength.YARDS),
-        (DistanceConverter, UnitOfLength.FEET),
-        (DistanceConverter, UnitOfLength.INCHES),
-        (ElectricCurrentConverter, UnitOfElectricCurrent.AMPERE),
-        (ElectricCurrentConverter, UnitOfElectricCurrent.MILLIAMPERE),
-        (EnergyConverter, UnitOfEnergy.WATT_HOUR),
-        (EnergyConverter, UnitOfEnergy.KILO_WATT_HOUR),
-        (EnergyConverter, UnitOfEnergy.MEGA_WATT_HOUR),
-        (EnergyConverter, UnitOfEnergy.GIGA_JOULE),
-        (InformationConverter, UnitOfInformation.GIGABYTES),
-        (MassConverter, UnitOfMass.GRAMS),
-        (MassConverter, UnitOfMass.KILOGRAMS),
-        (MassConverter, UnitOfMass.MICROGRAMS),
-        (MassConverter, UnitOfMass.MILLIGRAMS),
-        (MassConverter, UnitOfMass.OUNCES),
-        (MassConverter, UnitOfMass.POUNDS),
-        (PowerConverter, UnitOfPower.WATT),
-        (PowerConverter, UnitOfPower.KILO_WATT),
-        (PressureConverter, UnitOfPressure.PA),
-        (PressureConverter, UnitOfPressure.HPA),
-        (PressureConverter, UnitOfPressure.MBAR),
-        (PressureConverter, UnitOfPressure.INHG),
-        (PressureConverter, UnitOfPressure.KPA),
-        (PressureConverter, UnitOfPressure.CBAR),
-        (PressureConverter, UnitOfPressure.MMHG),
-        (PressureConverter, UnitOfPressure.PSI),
-        (SpeedConverter, UnitOfVolumetricFlux.INCHES_PER_DAY),
-        (SpeedConverter, UnitOfVolumetricFlux.INCHES_PER_HOUR),
-        (SpeedConverter, UnitOfVolumetricFlux.MILLIMETERS_PER_DAY),
-        (SpeedConverter, UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR),
-        (SpeedConverter, UnitOfSpeed.FEET_PER_SECOND),
-        (SpeedConverter, UnitOfSpeed.KILOMETERS_PER_HOUR),
-        (SpeedConverter, UnitOfSpeed.KNOTS),
-        (SpeedConverter, UnitOfSpeed.METERS_PER_SECOND),
-        (SpeedConverter, UnitOfSpeed.MILES_PER_HOUR),
-        (TemperatureConverter, UnitOfTemperature.CELSIUS),
-        (TemperatureConverter, UnitOfTemperature.FAHRENHEIT),
-        (TemperatureConverter, UnitOfTemperature.KELVIN),
-        (VolumeConverter, UnitOfVolume.LITERS),
-        (VolumeConverter, UnitOfVolume.MILLILITERS),
-        (VolumeConverter, UnitOfVolume.GALLONS),
-        (VolumeConverter, UnitOfVolume.FLUID_OUNCES),
+        # Ensure all units are tested
+        (converter, valid_unit)
+        for converter, valid_units in _ALL_CONVERTERS.items()
+        for valid_unit in valid_units
     ],
 )
 def test_convert_same_unit(converter: type[BaseUnitConverter], valid_unit: str) -> None:
@@ -95,19 +139,10 @@ def test_convert_same_unit(converter: type[BaseUnitConverter], valid_unit: str) 
 @pytest.mark.parametrize(
     "converter,valid_unit",
     [
-        (DataRateConverter, UnitOfDataRate.GIBIBYTES_PER_SECOND),
-        (DistanceConverter, UnitOfLength.KILOMETERS),
-        (ElectricCurrentConverter, UnitOfElectricCurrent.AMPERE),
-        (EnergyConverter, UnitOfEnergy.KILO_WATT_HOUR),
-        (InformationConverter, UnitOfInformation.GIBIBYTES),
-        (MassConverter, UnitOfMass.GRAMS),
-        (PowerConverter, UnitOfPower.WATT),
-        (PressureConverter, UnitOfPressure.PA),
-        (SpeedConverter, UnitOfSpeed.KILOMETERS_PER_HOUR),
-        (TemperatureConverter, UnitOfTemperature.CELSIUS),
-        (TemperatureConverter, UnitOfTemperature.FAHRENHEIT),
-        (TemperatureConverter, UnitOfTemperature.KELVIN),
-        (VolumeConverter, UnitOfVolume.LITERS),
+        # Ensure all units are tested
+        (converter, valid_unit)
+        for converter, valid_units in _ALL_CONVERTERS.items()
+        for valid_unit in valid_units
     ],
 )
 def test_convert_invalid_unit(
@@ -124,24 +159,9 @@ def test_convert_invalid_unit(
 @pytest.mark.parametrize(
     "converter,from_unit,to_unit",
     [
-        (
-            DataRateConverter,
-            UnitOfDataRate.BYTES_PER_SECOND,
-            UnitOfDataRate.BITS_PER_SECOND,
-        ),
-        (DistanceConverter, UnitOfLength.KILOMETERS, UnitOfLength.METERS),
-        (EnergyConverter, UnitOfEnergy.WATT_HOUR, UnitOfEnergy.KILO_WATT_HOUR),
-        (
-            InformationConverter,
-            UnitOfInformation.GIBIBYTES,
-            UnitOfInformation.GIGABYTES,
-        ),
-        (MassConverter, UnitOfMass.GRAMS, UnitOfMass.KILOGRAMS),
-        (PowerConverter, UnitOfPower.WATT, UnitOfPower.KILO_WATT),
-        (PressureConverter, UnitOfPressure.HPA, UnitOfPressure.INHG),
-        (SpeedConverter, UnitOfSpeed.KILOMETERS_PER_HOUR, UnitOfSpeed.MILES_PER_HOUR),
-        (TemperatureConverter, UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT),
-        (VolumeConverter, UnitOfVolume.GALLONS, UnitOfVolume.LITERS),
+        # Pick any two units
+        (converter, valid_units[0], valid_units[1])
+        for converter, valid_units in _ALL_CONVERTERS.items()
     ],
 )
 def test_convert_nonnumeric_value(
@@ -155,53 +175,17 @@ def test_convert_nonnumeric_value(
 @pytest.mark.parametrize(
     "converter,from_unit,to_unit,expected",
     [
-        (
-            DataRateConverter,
-            UnitOfDataRate.BITS_PER_SECOND,
-            UnitOfDataRate.BYTES_PER_SECOND,
-            8,
-        ),
-        (DistanceConverter, UnitOfLength.KILOMETERS, UnitOfLength.METERS, 1 / 1000),
-        (
-            ElectricCurrentConverter,
-            UnitOfElectricCurrent.AMPERE,
-            UnitOfElectricCurrent.MILLIAMPERE,
-            1 / 1000,
-        ),
-        (EnergyConverter, UnitOfEnergy.WATT_HOUR, UnitOfEnergy.KILO_WATT_HOUR, 1000),
-        (InformationConverter, UnitOfInformation.BITS, UnitOfInformation.BYTES, 8),
-        (PowerConverter, UnitOfPower.WATT, UnitOfPower.KILO_WATT, 1000),
-        (
-            PressureConverter,
-            UnitOfPressure.HPA,
-            UnitOfPressure.INHG,
-            pytest.approx(33.86389),
-        ),
-        (
-            SpeedConverter,
-            UnitOfSpeed.KILOMETERS_PER_HOUR,
-            UnitOfSpeed.MILES_PER_HOUR,
-            pytest.approx(1.609343),
-        ),
-        (
-            TemperatureConverter,
-            UnitOfTemperature.CELSIUS,
-            UnitOfTemperature.FAHRENHEIT,
-            1 / 1.8,
-        ),
-        (
-            VolumeConverter,
-            UnitOfVolume.GALLONS,
-            UnitOfVolume.LITERS,
-            pytest.approx(0.264172),
-        ),
+        (converter, item[0], item[1], item[2])
+        for converter, item in _GET_UNIT_RATIO.items()
     ],
 )
 def test_get_unit_ratio(
     converter: type[BaseUnitConverter], from_unit: str, to_unit: str, expected: float
 ) -> None:
     """Test unit ratio."""
-    assert converter.get_unit_ratio(from_unit, to_unit) == expected
+    ratio = converter.get_unit_ratio(from_unit, to_unit)
+    assert ratio == pytest.approx(expected)
+    assert converter.get_unit_ratio(to_unit, from_unit) == pytest.approx(1 / ratio)
 
 
 @pytest.mark.parametrize(

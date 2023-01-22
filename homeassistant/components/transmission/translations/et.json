@@ -29,19 +29,6 @@
             }
         }
     },
-    "issues": {
-        "deprecated_key": {
-            "fix_flow": {
-                "step": {
-                    "confirm": {
-                        "description": "V\u00e4rskenda k\u00f5iki seda teenust kasutavaid automatiseerimisi v\u00f5i skripte ja asenda nimev\u00f5ti v\u00f5tmega entry_id-ga.",
-                        "title": "Transmission teenuste nimev\u00f5ti eemaldatakse"
-                    }
-                }
-            },
-            "title": "Transmission teenuste nimev\u00f5ti eemaldatakse"
-        }
-    },
     "options": {
         "step": {
             "init": {

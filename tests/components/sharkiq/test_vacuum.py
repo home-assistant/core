@@ -83,7 +83,7 @@ class MockAyla(AylaApi):
         """Get the list of devices."""
         shark = MockShark(self, SHARK_DEVICE_DICT)
         shark.properties_full = deepcopy(SHARK_PROPERTIES_DICT)
-        shark._update_metadata(SHARK_METADATA_DICT)  # pylint: disable=protected-access
+        shark._update_metadata(SHARK_METADATA_DICT)
         return [shark]
 
     async def async_request(self, http_method: str, url: str, **kwargs):

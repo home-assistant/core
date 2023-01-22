@@ -141,7 +141,7 @@ async def process_wrong_login(request: Request) -> None:
 
     # Supervisor IP should never be banned
     if "hassio" in hass.config.components:
-        # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel
         from homeassistant.components import hassio
 
         if hassio.get_supervisor_ip() == str(remote_addr):
