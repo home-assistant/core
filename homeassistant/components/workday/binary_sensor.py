@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import date, timedelta
 import logging
-from typing import Any
+from typing import Any, cast
 
 import holidays
 from holidays import DateLike, HolidayBase
@@ -58,6 +58,35 @@ def valid_country(value: Any) -> str:
     return value
 
 
+class DateOrDateRange:
+    """
+    A schema for a date or date range.
+
+    YAML will try to parse the provided value into a date. After, this schema
+    is applied to ensure the value is either a single date or a range.
+    """
+
+    def __call__(self, raw: Any) -> date | tuple[date, date]:
+        """Validate the input as a date or date range."""
+        if isinstance(raw, date):
+            return raw
+
+        if (
+            not isinstance(raw, list)
+            or len(raw) != 2
+            or not isinstance(raw[0], date)
+            or not isinstance(raw[1], date)
+        ):
+            raise vol.Invalid(
+                "must be a single date or a list of 2 dates in YYYY-MM-DD format"
+            )
+
+        if raw[1] <= raw[0]:
+            raise vol.Invalid(f"{raw[1]} must be after {raw[0]}")
+
+        return raw[0], raw[1]
+
+
 PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_COUNTRY): valid_country,
@@ -71,7 +100,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
             cv.ensure_list, [vol.In(ALLOWED_DAYS)]
         ),
         vol.Optional(CONF_ADD_HOLIDAYS, default=[]): vol.All(
-            cv.ensure_list, [cv.string]
+            cv.ensure_list, [DateOrDateRange()]
         ),
         vol.Optional(CONF_REMOVE_HOLIDAYS, default=[]): vol.All(
             cv.ensure_list, [cv.string]
@@ -87,7 +116,7 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Workday sensor."""
-    add_holidays: list[DateLike] = config[CONF_ADD_HOLIDAYS]
+    add_holidays: list[date | tuple[date, date]] = config[CONF_ADD_HOLIDAYS]
     remove_holidays: list[str] = config[CONF_REMOVE_HOLIDAYS]
     country: str = config[CONF_COUNTRY]
     days_offset: int = config[CONF_OFFSET]
@@ -109,9 +138,12 @@ def setup_platform(
             _LOGGER.error("There is no subdivision %s in country %s", province, country)
             return
 
+    # workaround for how DateLike is typed
+    flat = cast(list[DateLike], flatten_dates(add_holidays))
+
     # Add custom holidays
     try:
-        obj_holidays.append(add_holidays)
+        obj_holidays.append(flat)
     except TypeError:
         _LOGGER.debug("No custom holidays or invalid holidays")
 
@@ -160,6 +192,32 @@ def day_to_string(day: int) -> str | None:
 def get_date(input_date: date) -> date:
     """Return date. Needed for testing."""
     return input_date
+
+
+DAY = timedelta(days=1)
+
+
+def flatten_dates(all_dates: list[date | tuple[date, date]]) -> list[date]:
+    """Flatten a list of single dates and date ranges into a list of dates."""
+    dates = []
+    for element in all_dates:
+        if isinstance(element, date):
+            dates.append(element)
+            continue
+
+        curr, end = element
+        while curr <= end:
+            dates.append(curr)
+            curr += DAY
+
+    return dates
+
+
+def must_parse_date(dt_str: str) -> date:
+    """Parse a date known to be in %Y-%m-%d format."""
+    parsed = dt.parse_date(dt_str)
+    assert parsed is not None
+    return parsed
 
 
 class IsWorkdaySensor(BinarySensorEntity):

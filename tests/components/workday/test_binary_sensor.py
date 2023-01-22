@@ -13,6 +13,66 @@ from tests.common import assert_setup_component, get_test_home_assistant
 FUNCTION_PATH = "homeassistant.components.workday.binary_sensor.get_date"
 
 
+class TestDateOrDateRange:
+    """Tests for schema."""
+
+    def test_date_valid(self):
+        """Test valid single date."""
+        raw = date(2023, 1, 1)
+        assert binary_sensor.DateOrDateRange()(raw) == raw
+
+    def test_date_range_valid(
+        self,
+    ):
+        """Test valid range."""
+        raw = [date(2023, 1, 1), date(2023, 1, 5)]
+        assert binary_sensor.DateOrDateRange()(raw) == tuple(raw)
+
+    @pytest.mark.parametrize(
+        "raw",
+        (
+            pytest.param("Thanksgiving", id="string - not a range"),
+            pytest.param("2023-01-01", id="date - not a range"),
+            pytest.param((), id="tuple - not a range"),
+            pytest.param({}, id="map - not a range"),
+            pytest.param([], id="list - too short"),
+            pytest.param(
+                [
+                    date(2023, 1, 1),
+                    date(2023, 1, 2),
+                    date(2023, 1, 3),
+                ],
+                id="list - too long",
+            ),
+            pytest.param(
+                [
+                    date(2023, 1, 1),
+                    "2023-01-03",
+                ],
+                id="list - wrong types",
+            ),
+            pytest.param(
+                [
+                    date(2023, 1, 1),
+                    date(2023, 1, 1),
+                ],
+                id="range - start equal to end",
+            ),
+            pytest.param(
+                [
+                    date(2023, 1, 2),
+                    date(2023, 1, 1),
+                ],
+                id="range - start before end",
+            ),
+        ),
+    )
+    def testdate_range_invalid(self, raw):
+        """Test invalid ranges."""
+        with pytest.raises(vol.Invalid):
+            binary_sensor.DateOrDateRange()(raw)
+
+
 class TestWorkdaySetup:
     """Test class for workday sensor."""
 
@@ -71,7 +131,21 @@ class TestWorkdaySetup:
                 "province": "BW",
                 "workdays": ["mon", "wed", "fri"],
                 "excludes": ["sat", "sun", "holiday"],
-                "add_holidays": ["2020-02-24"],
+                "add_holidays": [
+                    date(2020, 2, 24),
+                    [date(2020, 2, 27), date(2020, 3, 2)],
+                ],
+            }
+        }
+
+        self.config_invalid_add_holidays = {
+            "binary_sensor": {
+                "platform": "workday",
+                "country": "DE",
+                "province": "BW",
+                "workdays": ["mon", "wed", "fri"],
+                "excludes": ["sat", "sun", "holiday"],
+                "add_holidays": ["Thanksgiving"],
             }
         }
 
@@ -231,6 +305,16 @@ class TestWorkdaySetup:
         entity = self.hass.states.get("binary_sensor.workday_sensor")
         assert entity is None
 
+    def test_setup_component_invalid_add_holidays(self):
+        """Set up workday component."""
+        with assert_setup_component(0):
+            setup_component(
+                self.hass, "binary_sensor", self.config_invalid_add_holidays
+            )
+
+        entity = self.hass.states.get("binary_sensor.workday_sensor")
+        assert entity is None
+
     # Freeze time to a public holiday in province BW - Jan 6th, 2017
     @patch(FUNCTION_PATH, return_value=date(2017, 1, 6))
     def test_public_holiday_includeholiday(self, mock_date):
@@ -307,6 +391,18 @@ class TestWorkdaySetup:
     # Freeze time to test mon, but added as holiday - Feb 24th, 2020
     @patch(FUNCTION_PATH, return_value=date(2020, 2, 24))
     def test_config_example2_add_holiday(self, mock_date):
+        """Test if public holidays are reported correctly."""
+        with assert_setup_component(1, "binary_sensor"):
+            setup_component(self.hass, "binary_sensor", self.config_example2)
+
+        self.hass.start()
+
+        entity = self.hass.states.get("binary_sensor.workday_sensor")
+        assert entity.state == "off"
+
+    # Freeze time to test holiday in a range
+    @patch(FUNCTION_PATH, return_value=date(2020, 2, 28))
+    def test_config_example2_add_holiday_range(self, mock_date):
         """Test if public holidays are reported correctly."""
         with assert_setup_component(1, "binary_sensor"):
             setup_component(self.hass, "binary_sensor", self.config_example2)
