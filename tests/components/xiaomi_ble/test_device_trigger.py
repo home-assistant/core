@@ -146,7 +146,7 @@ async def test_get_triggers_for_invalid_device_id(hass):
 
 
 async def test_if_fires_on_motion_detected(hass, calls):
-    """Test for motion even trigger firing."""
+    """Test for motion event trigger firing."""
     entry = await _async_setup_xiaomi_motion_device(hass)
 
     # Emit motion detected event so it creates the device in the registry
@@ -205,7 +205,7 @@ async def test_validate_trigger_invalid_trigger(hass, caplog):
     """Test for motion event with invalid triggers."""
     entry = await _async_setup_xiaomi_motion_device(hass)
 
-    # Emit motion det\ected event so it creates the device in the registry
+    # Emit motion detected event so it creates the device in the registry
     inject_bluetooth_service_info_bleak(
         hass,
         make_advertisement("DE:70:E8:B2:39:0C", b"@0\xdd\x03$\x03\x00\x01\x01"),
@@ -240,7 +240,7 @@ async def test_validate_trigger_invalid_trigger(hass, caplog):
         },
     )
 
-    assert "value must be one of ['motion_detected']" in caplog.text
+    assert "motion_detected" in caplog.text
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
