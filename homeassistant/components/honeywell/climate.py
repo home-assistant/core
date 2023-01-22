@@ -320,11 +320,11 @@ class HoneywellUSThermostat(ClimateEntity):
             # Set permanent hold
             # and Set temperature
             if mode in COOLING_MODES:
-                self._device.set_hold_cool(True)
-                self._device.set_setpoint_cool(self._cool_away_temp)
+                await self._device.set_hold_cool(True)
+                await self._device.set_setpoint_cool(self._cool_away_temp)
             elif mode in HEATING_MODES:
-                self._device.set_hold_heat(True)
-                self._device.set_setpoint_heat(self._heat_away_temp)
+                await self._device.set_hold_heat(True)
+                await self._device.set_setpoint_heat(self._heat_away_temp)
 
         except AIOSomecomfort.SomeComfortError:
 
