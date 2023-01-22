@@ -15,6 +15,7 @@ mock-open==1.4.0
 mypy==0.991
 pre-commit==2.21.0
 pylint==2.15.10
+pylint-per-file-ignores==1.1.0
 pipdeptree==2.3.1
 pytest-asyncio==0.20.2
 pytest-aiohttp==1.0.4
