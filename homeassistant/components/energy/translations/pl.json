@@ -37,7 +37,7 @@
             "title": "Niew\u0142a\u015bciwa jednostka miary"
         },
         "entity_unexpected_unit_gas": {
-            "description": "Nast\u0119puj\u0105ce encje nie maj\u0105 wymaganej jednostki miary ({energy_units} dla sensora energii lub {gas_units} dla sensora gazu:)",
+            "description": "Nast\u0119puj\u0105ce encje nie maj\u0105 wymaganej jednostki miary ({energy_units} dla sensora energii lub {gas_units} dla sensora gazu):",
             "title": "Niew\u0142a\u015bciwa jednostka miary"
         },
         "entity_unexpected_unit_gas_price": {
