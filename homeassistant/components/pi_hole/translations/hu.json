@@ -9,6 +9,11 @@
             "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s"
         },
         "step": {
+            "api_key": {
+                "data": {
+                    "api_key": "API kulcs"
+                }
+            },
             "reauth_confirm": {
                 "data": {
                     "api_key": "API kulcs"
