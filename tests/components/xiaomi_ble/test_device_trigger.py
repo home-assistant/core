@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_TYPE,
 )
 from homeassistant.core import callback
+from homeassistant.helpers import device_registry
 from homeassistant.helpers.device_registry import async_get as async_get_dev_reg
 from homeassistant.setup import async_setup_component
 
@@ -45,16 +46,22 @@ def calls(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-async def test_event_motion_detected(hass):
-    """Make sure that a motion detected event is fired."""
-    entry = MockConfigEntry(
+async def _async_setup_xiaomi_motion_device(hass):
+    config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="DE:70:E8:B2:39:0C",
     )
-    entry.add_to_hass(hass)
+    config_entry.add_to_hass(hass)
 
-    assert await hass.config_entries.async_setup(entry.entry_id)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
+    return config_entry
+
+
+async def test_event_motion_detected(hass):
+    """Make sure that a motion detected event is fired."""
+    entry = await _async_setup_xiaomi_motion_device(hass)
     events = async_capture_events(hass, "xiaomi_ble_event")
 
     # Emit motion detected event
@@ -76,15 +83,7 @@ async def test_event_motion_detected(hass):
 
 async def test_get_triggers(hass):
     """Test that we get the expected triggers from a Xiaomi BLE motion sensor."""
-    mac = "DE:70:E8:B2:39:0C"
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=mac,
-    )
-    entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-
+    entry = await _async_setup_xiaomi_motion_device(hass)
     events = async_capture_events(hass, "xiaomi_ble_event")
 
     # Emit motion detected event so it creates the device in the registry
@@ -113,29 +112,54 @@ async def test_get_triggers(hass):
     )
     assert expected_trigger in triggers
 
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
 
-async def test_if_fires_on_motion_detected(hass, calls):
-    """Test for motion event trigger firing."""
-    mac = "DE:70:E8:B2:39:0C"
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=mac,
-    )
-    entry.add_to_hass(hass)
 
-    assert await hass.config_entries.async_setup(entry.entry_id)
+async def test_get_triggers_for_invalid_device_id(hass):
+    """Test that we don't get triggers when using an invalid device_id."""
+    entry = await _async_setup_xiaomi_motion_device(hass)
 
     # Emit motion detected event so it creates the device in the registry
     inject_bluetooth_service_info_bleak(
         hass,
-        make_advertisement(mac, b"@0\xdd\x03$\x03\x00\x01\x01"),
+        make_advertisement("DE:70:E8:B2:39:0C", b"@0\xdd\x03$\x03\x00\x01\x01"),
     )
 
     # wait for the event
     await hass.async_block_till_done()
 
     dev_reg = async_get_dev_reg(hass)
-    device = dev_reg.async_get_device({get_device_id(mac)})
+
+    invalid_device = dev_reg.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    assert invalid_device
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, invalid_device.id
+    )
+    assert triggers == []
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_if_fires_on_motion_detected(hass, calls):
+    """Test for motion even trigger firing."""
+    entry = await _async_setup_xiaomi_motion_device(hass)
+
+    # Emit motion detected event so it creates the device in the registry
+    inject_bluetooth_service_info_bleak(
+        hass,
+        make_advertisement("DE:70:E8:B2:39:0C", b"@0\xdd\x03$\x03\x00\x01\x01"),
+    )
+
+    # wait for the event
+    await hass.async_block_till_done()
+
+    dev_reg = async_get_dev_reg(hass)
+    device = dev_reg.async_get_device({get_device_id("DE:70:E8:B2:39:0C")})
     device_id = device.id
 
     assert await async_setup_component(
@@ -172,3 +196,51 @@ async def test_if_fires_on_motion_detected(hass, calls):
 
     assert len(calls) == 1
     assert calls[0].data["some"] == "test_trigger_motion_detected"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_validate_trigger_invalid_trigger(hass, caplog):
+    """Test for motion event with invalid triggers."""
+    entry = await _async_setup_xiaomi_motion_device(hass)
+
+    # Emit motion det\ected event so it creates the device in the registry
+    inject_bluetooth_service_info_bleak(
+        hass,
+        make_advertisement("DE:70:E8:B2:39:0C", b"@0\xdd\x03$\x03\x00\x01\x01"),
+    )
+
+    # wait for the event
+    await hass.async_block_till_done()
+
+    dev_reg = async_get_dev_reg(hass)
+    device = dev_reg.async_get_device({get_device_id("DE:70:E8:B2:39:0C")})
+    device_id = device.id
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        CONF_PLATFORM: "device",
+                        CONF_DOMAIN: DOMAIN,
+                        CONF_DEVICE_ID: device_id,
+                        CONF_TYPE: "invalid",
+                        CONF_EVENT_PROPERTIES: None,
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": "test_trigger_motion_detected"},
+                    },
+                },
+            ]
+        },
+    )
+
+    assert "value must be one of ['motion_detected']" in caplog.text
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
