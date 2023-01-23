@@ -7,10 +7,10 @@ from homeassistant.components.number import NumberEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
+from .const import DOMAIN
+from .entity import EcobeeBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,7 +51,7 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class EcobeeVentilatorMinTime(NumberEntity):
+class EcobeeVentilatorMinTime(EcobeeBaseEntity, NumberEntity):
     """A number class, representing min time  for an ecobee thermostat with ventilator attached."""
 
     _attr_native_min_value = 0
@@ -62,18 +62,14 @@ class EcobeeVentilatorMinTime(NumberEntity):
 
     def __init__(self, data, thermostat_index, mode, ecobee_setting_key, set_func):
         """Initialize ecobee ventilator platform."""
+        super().__init__(data.ecobee.get_thermostat(thermostat_index))
+
         self.data = data
         self.thermostat_index = thermostat_index
         self.thermostat = self.data.ecobee.get_thermostat(self.thermostat_index)
         self.ecobee_setting_key = ecobee_setting_key
         self.set_func = set_func
         self._attr_name = f"Ventilator min time {mode}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.thermostat["identifier"])},
-            manufacturer=MANUFACTURER,
-            model=ECOBEE_MODEL_TO_NAME.get(self.thermostat["modelNumber"]),
-            name=self.thermostat["name"],
-        )
         self._attr_unique_id = f'{self.thermostat["identifier"]}_ventilator_{mode}'
         self._attr_native_value = self.thermostat["settings"][ecobee_setting_key]
 
@@ -82,11 +78,6 @@ class EcobeeVentilatorMinTime(NumberEntity):
         await self.data.update()
         self.thermostat = self.data.ecobee.get_thermostat(self.thermostat_index)
         self._attr_native_value = self.thermostat["settings"][self.ecobee_setting_key]
-
-    @property
-    def available(self):
-        """Return if device is available."""
-        return self.thermostat["runtime"]["connected"]
 
     def set_native_value(self, value: float) -> None:
         """Set new ventilator Min On Time value."""
