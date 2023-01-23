@@ -1,4 +1,11 @@
 repos:
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: v0.0.230
+    hooks:
+      - id: ruff
+        args:
+          - --fix
+        exclude: docs/source/conf.py
   - repo: https://github.com/asottile/pyupgrade
     rev: v3.3.1
     hooks:
@@ -57,13 +64,6 @@ repos:
     rev: 5.11.4
     hooks:
       - id: isort
-  - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.0.230
-    hooks:
-      - id: ruff
-        args:
-          - --fix
-        exclude: docs/source/conf.py
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
     hooks:
