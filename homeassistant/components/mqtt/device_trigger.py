@@ -42,7 +42,7 @@ from .mixins import (
     send_discovery_done,
     update_device,
 )
-from .util import get_mqtt_data, valid_printable_string
+from .util import get_mqtt_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,8 +62,8 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): DEVICE,
         vol.Required(CONF_DOMAIN): DOMAIN,
-        vol.Required(CONF_DEVICE_ID): valid_printable_string,
-        vol.Required(CONF_DISCOVERY_ID): valid_printable_string,
+        vol.Required(CONF_DEVICE_ID): cv.printable_string,
+        vol.Required(CONF_DISCOVERY_ID): cv.printable_string,
         vol.Required(CONF_TYPE): cv.string,
         vol.Required(CONF_SUBTYPE): cv.string,
     }
@@ -73,7 +73,7 @@ TRIGGER_DISCOVERY_SCHEMA = MQTT_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_AUTOMATION_TYPE): str,
         vol.Required(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-        vol.Optional(CONF_PAYLOAD, default=None): vol.Any(None, valid_printable_string),
+        vol.Optional(CONF_PAYLOAD, default=None): vol.Any(None, cv.printable_string),
         vol.Required(CONF_SUBTYPE): cv.string,
         vol.Required(CONF_TOPIC): cv.string,
         vol.Required(CONF_TYPE): cv.string,

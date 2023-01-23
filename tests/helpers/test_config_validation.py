@@ -517,6 +517,19 @@ def test_string(hass):
         assert schema(result) == text
 
 
+async def test_printable_string():
+    """Test printable string validation."""
+
+    schema = vol.Schema(cv.printable_string)
+
+    assert schema("äll") == "äll"
+    assert schema("ä2ll!@#$%^&*") == "ä2ll!@#$%^&*"
+    with pytest.raises(vol.Invalid):
+        assert schema("Invalid device name\u0000")
+    with pytest.raises(vol.Invalid):
+        assert schema("Invalid device name\n")
+
+
 def test_string_with_no_html():
     """Test string with no html validation."""
     schema = vol.Schema(cv.string_with_no_html)

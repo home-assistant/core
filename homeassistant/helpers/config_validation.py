@@ -569,6 +569,14 @@ def string(value: Any) -> str:
     return str(value)
 
 
+def printable_string(value: Any) -> str:
+    """Validate the supplied value is a valid printable string."""
+    validated_string = string(value)
+    if not validated_string.isprintable():
+        raise vol.Invalid("The string contains non printable characters.")
+    return validated_string
+
+
 def string_with_no_html(value: Any) -> str:
     """Validate that the value is a string without HTML."""
     value = string(value)

@@ -36,12 +36,7 @@ from .const import (
 from .debug_info import log_messages
 from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 from .models import MqttValueTemplate, ReceiveMessage
-from .util import (
-    get_mqtt_data,
-    valid_printable_string,
-    valid_publish_topic,
-    valid_subscribe_topic,
-)
+from .util import get_mqtt_data, valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,15 +55,15 @@ PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
     {
         vol.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_DEVICE_CLASS): vol.Any(DEVICE_CLASSES_SCHEMA, None),
-        vol.Optional(CONF_ENTITY_PICTURE): valid_printable_string,
+        vol.Optional(CONF_ENTITY_PICTURE): cv.printable_string,
         vol.Optional(CONF_LATEST_VERSION_TEMPLATE): cv.template,
         vol.Optional(CONF_LATEST_VERSION_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): valid_printable_string,
-        vol.Optional(CONF_PAYLOAD_INSTALL): valid_printable_string,
-        vol.Optional(CONF_RELEASE_SUMMARY): valid_printable_string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.printable_string,
+        vol.Optional(CONF_PAYLOAD_INSTALL): cv.printable_string,
+        vol.Optional(CONF_RELEASE_SUMMARY): cv.printable_string,
         vol.Optional(CONF_RELEASE_URL): cv.url,
         vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
-        vol.Optional(CONF_TITLE): valid_printable_string,
+        vol.Optional(CONF_TITLE): cv.printable_string,
     },
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 

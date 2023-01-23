@@ -48,12 +48,7 @@ from .mixins import (
     warn_for_legacy_schema,
 )
 from .models import MqttCommandTemplate, MqttValueTemplate, ReceiveMessage
-from .util import (
-    get_mqtt_data,
-    valid_printable_string,
-    valid_publish_topic,
-    valid_subscribe_topic,
-)
+from .util import get_mqtt_data, valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -91,7 +86,7 @@ REMOTE_CODE_TEXT = "REMOTE_CODE_TEXT"
 
 PLATFORM_SCHEMA_MODERN = MQTT_BASE_SCHEMA.extend(
     {
-        vol.Optional(CONF_CODE): valid_printable_string,
+        vol.Optional(CONF_CODE): cv.printable_string,
         vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
         vol.Optional(CONF_CODE_DISARM_REQUIRED, default=True): cv.boolean,
         vol.Optional(CONF_CODE_TRIGGER_REQUIRED, default=True): cv.boolean,
@@ -99,28 +94,26 @@ PLATFORM_SCHEMA_MODERN = MQTT_BASE_SCHEMA.extend(
             CONF_COMMAND_TEMPLATE, default=DEFAULT_COMMAND_TEMPLATE
         ): cv.template,
         vol.Required(CONF_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): valid_printable_string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.printable_string,
         vol.Optional(
             CONF_PAYLOAD_ARM_AWAY, default=DEFAULT_ARM_AWAY
-        ): valid_printable_string,
+        ): cv.printable_string,
         vol.Optional(
             CONF_PAYLOAD_ARM_HOME, default=DEFAULT_ARM_HOME
-        ): valid_printable_string,
+        ): cv.printable_string,
         vol.Optional(
             CONF_PAYLOAD_ARM_NIGHT, default=DEFAULT_ARM_NIGHT
-        ): valid_printable_string,
+        ): cv.printable_string,
         vol.Optional(
             CONF_PAYLOAD_ARM_VACATION, default=DEFAULT_ARM_VACATION
-        ): valid_printable_string,
+        ): cv.printable_string,
         vol.Optional(
             CONF_PAYLOAD_ARM_CUSTOM_BYPASS, default=DEFAULT_ARM_CUSTOM_BYPASS
-        ): valid_printable_string,
-        vol.Optional(
-            CONF_PAYLOAD_DISARM, default=DEFAULT_DISARM
-        ): valid_printable_string,
+        ): cv.printable_string,
+        vol.Optional(CONF_PAYLOAD_DISARM, default=DEFAULT_DISARM): cv.printable_string,
         vol.Optional(
             CONF_PAYLOAD_TRIGGER, default=DEFAULT_TRIGGER
-        ): valid_printable_string,
+        ): cv.printable_string,
         vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
         vol.Required(CONF_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,

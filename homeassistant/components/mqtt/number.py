@@ -55,7 +55,7 @@ from .models import (
     ReceiveMessage,
     ReceivePayloadType,
 )
-from .util import get_mqtt_data, valid_printable_string
+from .util import get_mqtt_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -90,14 +90,14 @@ _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
         vol.Optional(CONF_MAX, default=DEFAULT_MAX_VALUE): vol.Coerce(float),
         vol.Optional(CONF_MIN, default=DEFAULT_MIN_VALUE): vol.Coerce(float),
         vol.Optional(CONF_MODE, default=NumberMode.AUTO): vol.Coerce(NumberMode),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): valid_printable_string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.printable_string,
         vol.Optional(
             CONF_PAYLOAD_RESET, default=DEFAULT_PAYLOAD_RESET
-        ): valid_printable_string,
+        ): cv.printable_string,
         vol.Optional(CONF_STEP, default=DEFAULT_STEP): vol.All(
             vol.Coerce(float), vol.Range(min=1e-3)
         ),
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): valid_printable_string,
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.printable_string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     },
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)

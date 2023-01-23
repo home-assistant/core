@@ -26,7 +26,7 @@ from .mixins import (
     async_setup_entry_helper,
     warn_for_legacy_schema,
 )
-from .util import valid_printable_string, valid_publish_topic
+from .util import valid_publish_topic
 
 DEFAULT_NAME = "MQTT Scene"
 DEFAULT_RETAIN = False
@@ -35,11 +35,11 @@ PLATFORM_SCHEMA_MODERN = MQTT_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_ICON): cv.icon,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): valid_printable_string,
-        vol.Optional(CONF_PAYLOAD_ON): valid_printable_string,
-        vol.Optional(CONF_UNIQUE_ID): valid_printable_string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.printable_string,
+        vol.Optional(CONF_PAYLOAD_ON): cv.printable_string,
+        vol.Optional(CONF_UNIQUE_ID): cv.printable_string,
         vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
-        vol.Optional(CONF_OBJECT_ID): valid_printable_string,
+        vol.Optional(CONF_OBJECT_ID): cv.printable_string,
         # CONF_ENABLED_BY_DEFAULT is not added by default because
         # we are not using the common schema here
         vol.Optional(CONF_ENABLED_BY_DEFAULT, default=True): cv.boolean,

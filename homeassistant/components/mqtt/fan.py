@@ -62,12 +62,7 @@ from .models import (
     ReceiveMessage,
     ReceivePayloadType,
 )
-from .util import (
-    get_mqtt_data,
-    valid_printable_string,
-    valid_publish_topic,
-    valid_subscribe_topic,
-)
+from .util import get_mqtt_data, valid_publish_topic, valid_subscribe_topic
 
 CONF_PERCENTAGE_STATE_TOPIC = "percentage_state_topic"
 CONF_PERCENTAGE_COMMAND_TOPIC = "percentage_command_topic"
@@ -131,7 +126,7 @@ def valid_preset_mode_configuration(config: ConfigType) -> ConfigType:
 
 _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): valid_printable_string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.printable_string,
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_OSCILLATION_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_OSCILLATION_COMMAND_TEMPLATE): cv.template,
@@ -160,22 +155,20 @@ _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
         ): cv.positive_int,
         vol.Optional(
             CONF_PAYLOAD_RESET_PERCENTAGE, default=DEFAULT_PAYLOAD_RESET
-        ): valid_printable_string,
+        ): cv.printable_string,
         vol.Optional(
             CONF_PAYLOAD_RESET_PRESET_MODE, default=DEFAULT_PAYLOAD_RESET
-        ): valid_printable_string,
+        ): cv.printable_string,
         vol.Optional(
             CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF
-        ): valid_printable_string,
-        vol.Optional(
-            CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON
-        ): valid_printable_string,
+        ): cv.printable_string,
+        vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.printable_string,
         vol.Optional(
             CONF_PAYLOAD_OSCILLATION_OFF, default=OSCILLATE_OFF_PAYLOAD
-        ): valid_printable_string,
+        ): cv.printable_string,
         vol.Optional(
             CONF_PAYLOAD_OSCILLATION_ON, default=OSCILLATE_ON_PAYLOAD
-        ): valid_printable_string,
+        ): cv.printable_string,
         vol.Optional(CONF_STATE_VALUE_TEMPLATE): cv.template,
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)

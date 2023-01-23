@@ -54,7 +54,7 @@ from ..models import (
     ReceiveMessage,
     ReceivePayloadType,
 )
-from ..util import get_mqtt_data, valid_printable_string
+from ..util import get_mqtt_data
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
 from .schema_basic import MQTT_LIGHT_ATTRIBUTES_BLOCKED
 
@@ -97,13 +97,13 @@ _PLATFORM_SCHEMA_BASE = (
             vol.Required(CONF_COMMAND_OFF_TEMPLATE): cv.template,
             vol.Required(CONF_COMMAND_ON_TEMPLATE): cv.template,
             vol.Optional(CONF_EFFECT_LIST): vol.All(
-                cv.ensure_list, [valid_printable_string]
+                cv.ensure_list, [cv.printable_string]
             ),
             vol.Optional(CONF_EFFECT_TEMPLATE): cv.template,
             vol.Optional(CONF_GREEN_TEMPLATE): cv.template,
             vol.Optional(CONF_MAX_MIREDS): cv.positive_int,
             vol.Optional(CONF_MIN_MIREDS): cv.positive_int,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): valid_printable_string,
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.printable_string,
             vol.Optional(CONF_RED_TEMPLATE): cv.template,
             vol.Optional(CONF_STATE_TEMPLATE): cv.template,
         }

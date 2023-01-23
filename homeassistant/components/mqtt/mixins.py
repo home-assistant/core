@@ -92,12 +92,7 @@ from .subscription import (
     async_subscribe_topics,
     async_unsubscribe_topics,
 )
-from .util import (
-    get_mqtt_data,
-    mqtt_config_entry_enabled,
-    valid_printable_string,
-    valid_subscribe_topic,
-)
+from .util import get_mqtt_data, mqtt_config_entry_enabled, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -153,10 +148,10 @@ MQTT_AVAILABILITY_SINGLE_SCHEMA = vol.Schema(
         vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
         vol.Optional(
             CONF_PAYLOAD_AVAILABLE, default=DEFAULT_PAYLOAD_AVAILABLE
-        ): valid_printable_string,
+        ): cv.printable_string,
         vol.Optional(
             CONF_PAYLOAD_NOT_AVAILABLE, default=DEFAULT_PAYLOAD_NOT_AVAILABLE
-        ): valid_printable_string,
+        ): cv.printable_string,
     }
 )
 
@@ -172,11 +167,11 @@ MQTT_AVAILABILITY_LIST_SCHEMA = vol.Schema(
                     vol.Required(CONF_TOPIC): valid_subscribe_topic,
                     vol.Optional(
                         CONF_PAYLOAD_AVAILABLE, default=DEFAULT_PAYLOAD_AVAILABLE
-                    ): valid_printable_string,
+                    ): cv.printable_string,
                     vol.Optional(
                         CONF_PAYLOAD_NOT_AVAILABLE,
                         default=DEFAULT_PAYLOAD_NOT_AVAILABLE,
-                    ): valid_printable_string,
+                    ): cv.printable_string,
                     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
                 }
             ],
@@ -204,18 +199,18 @@ MQTT_ENTITY_DEVICE_INFO_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Optional(CONF_IDENTIFIERS, default=list): vol.All(
-                cv.ensure_list, [valid_printable_string]
+                cv.ensure_list, [cv.printable_string]
             ),
             vol.Optional(CONF_CONNECTIONS, default=list): vol.All(
-                cv.ensure_list, [vol.All(vol.Length(2), [valid_printable_string])]
+                cv.ensure_list, [vol.All(vol.Length(2), [cv.printable_string])]
             ),
-            vol.Optional(CONF_MANUFACTURER): valid_printable_string,
-            vol.Optional(CONF_MODEL): valid_printable_string,
-            vol.Optional(CONF_NAME): valid_printable_string,
-            vol.Optional(CONF_HW_VERSION): valid_printable_string,
-            vol.Optional(CONF_SW_VERSION): valid_printable_string,
-            vol.Optional(CONF_VIA_DEVICE): valid_printable_string,
-            vol.Optional(CONF_SUGGESTED_AREA): valid_printable_string,
+            vol.Optional(CONF_MANUFACTURER): cv.printable_string,
+            vol.Optional(CONF_MODEL): cv.printable_string,
+            vol.Optional(CONF_NAME): cv.printable_string,
+            vol.Optional(CONF_HW_VERSION): cv.printable_string,
+            vol.Optional(CONF_SW_VERSION): cv.printable_string,
+            vol.Optional(CONF_VIA_DEVICE): cv.printable_string,
+            vol.Optional(CONF_SUGGESTED_AREA): cv.printable_string,
             vol.Optional(CONF_CONFIGURATION_URL): cv.url,
         }
     ),
@@ -230,8 +225,8 @@ MQTT_ENTITY_COMMON_SCHEMA = MQTT_AVAILABILITY_SCHEMA.extend(
         vol.Optional(CONF_ICON): cv.icon,
         vol.Optional(CONF_JSON_ATTRS_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_JSON_ATTRS_TEMPLATE): cv.template,
-        vol.Optional(CONF_OBJECT_ID): valid_printable_string,
-        vol.Optional(CONF_UNIQUE_ID): valid_printable_string,
+        vol.Optional(CONF_OBJECT_ID): cv.printable_string,
+        vol.Optional(CONF_UNIQUE_ID): cv.printable_string,
     }
 )
 

@@ -71,12 +71,7 @@ from .models import (
     ReceiveMessage,
     ReceivePayloadType,
 )
-from .util import (
-    get_mqtt_data,
-    valid_printable_string,
-    valid_publish_topic,
-    valid_subscribe_topic,
-)
+from .util import get_mqtt_data, valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -317,8 +312,8 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
         vol.Optional(CONF_MODE_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-        vol.Optional(CONF_PAYLOAD_ON, default="ON"): valid_printable_string,
-        vol.Optional(CONF_PAYLOAD_OFF, default="OFF"): valid_printable_string,
+        vol.Optional(CONF_PAYLOAD_ON, default="ON"): cv.printable_string,
+        vol.Optional(CONF_PAYLOAD_OFF, default="OFF"): cv.printable_string,
         vol.Optional(CONF_POWER_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_POWER_STATE_TEMPLATE): cv.template,
         vol.Optional(CONF_POWER_STATE_TOPIC): valid_subscribe_topic,
