@@ -5,7 +5,6 @@ repos:
       - id: ruff
         args:
           - --fix
-        exclude: docs/source/conf.py
   - repo: https://github.com/asottile/pyupgrade
     rev: v3.3.1
     hooks:

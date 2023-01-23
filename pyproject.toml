@@ -240,16 +240,7 @@ asyncio_mode = "auto"
 
 [tool.ruff]
 target-version = "py310"
-exclude = [
-    ".venv",
-    ".git",
-    "docs",
-    "venv",
-    "bin",
-    "lib",
-    "deps",
-    "build",
-]
+exclude = []
 
 ignore = [
     "D202",  # No blank lines allowed after function docstring
