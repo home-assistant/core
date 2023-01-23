@@ -7,6 +7,8 @@
         "error": {
             "cannot_connect": "Nepodarilo sa pripoji\u0165",
             "invalid_auth": "Neplatn\u00e9 overenie",
+            "pairing_failed": "P\u00e1rovanie zlyhalo; skontrolujte, \u010di je ovl\u00e1da\u010d Bosch Smart Home Controller v re\u017eime p\u00e1rovania (LED blik\u00e1) a \u010di je va\u0161e heslo spr\u00e1vne.",
+            "session_error": "Chyba rel\u00e1cie: API vr\u00e1tilo v\u00fdsledok Non-OK.",
             "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
         },
         "flow_title": "Bosch SHC: {name}",

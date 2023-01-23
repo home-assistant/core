@@ -180,6 +180,11 @@ async def test_rpc_sensor(hass, mock_rpc_device, monkeypatch) -> None:
 
     assert hass.states.get(entity_id).state == "88.2"
 
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "apower", None)
+    mock_rpc_device.mock_update()
+
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+
 
 async def test_rpc_sensor_error(hass, mock_rpc_device, monkeypatch):
     """Test RPC sensor unavailable on sensor error."""

@@ -277,8 +277,10 @@ CORE_CONFIG_SCHEMA = vol.All(
                         {
                             CONF_TYPE: vol.NotIn(
                                 ["insecure_example"],
-                                "The insecure_example auth provider"
-                                " is for testing only.",
+                                (
+                                    "The insecure_example auth provider"
+                                    " is for testing only."
+                                ),
                             )
                         }
                     )
@@ -862,8 +864,8 @@ async def async_process_component_config(  # noqa: C901
         config_validator, "async_validate_config"
     ):
         try:
-            return await config_validator.async_validate_config(  # type: ignore[no-any-return]
-                hass, config
+            return (  # type: ignore[no-any-return]
+                await config_validator.async_validate_config(hass, config)
             )
         except (vol.Invalid, HomeAssistantError) as ex:
             async_log_exception(ex, domain, config, hass, integration.documentation)
@@ -900,7 +902,10 @@ async def async_process_component_config(  # noqa: C901
             continue
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
-                "Unknown error validating %s platform config with %s component platform schema",
+                (
+                    "Unknown error validating %s platform config with %s component"
+                    " platform schema"
+                ),
                 p_name,
                 domain,
             )
@@ -940,7 +945,10 @@ async def async_process_component_config(  # noqa: C901
                 continue
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception(
-                    "Unknown error validating config for %s platform for %s component with PLATFORM_SCHEMA",
+                    (
+                        "Unknown error validating config for %s platform for %s"
+                        " component with PLATFORM_SCHEMA"
+                    ),
                     p_name,
                     domain,
                 )
@@ -968,7 +976,7 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> str | None:
 
     This method is a coroutine.
     """
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from .helpers import check_config
 
     res = await check_config.async_check_ha_config_file(hass)
@@ -986,7 +994,7 @@ def async_notify_setup_error(
 
     This method must be run in the event loop.
     """
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from .components import persistent_notification
 
     if (errors := hass.data.get(DATA_PERSISTENT_ERRORS)) is None:

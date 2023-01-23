@@ -19,6 +19,7 @@
             },
             "user": {
                 "data": {
+                    "import_plugins": "Importova\u0165 entity z doplnkov Fibaro?",
                     "password": "Heslo",
                     "url": "URL vo form\u00e1te http://HOST/api/",
                     "username": "U\u017e\u00edvate\u013esk\u00e9 meno"

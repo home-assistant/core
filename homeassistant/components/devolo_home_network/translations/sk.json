@@ -23,6 +23,7 @@
                 "description": "Chcete za\u010da\u0165 nastavova\u0165?"
             },
             "zeroconf_confirm": {
+                "description": "Chcete prida\u0165 dom\u00e1ce sie\u0165ov\u00e9 zariadenie devolo s n\u00e1zvom hostite\u013ea `{host_name}` do Home Assistant?",
                 "title": "Objaven\u00e9 zariadenie dom\u00e1cej siete devolo"
             }
         }

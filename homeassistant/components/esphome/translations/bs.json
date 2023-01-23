@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "mdns_missing_mac": "Chyb\u011bj\u00edc\u00ed MAC adresa ve vlastnostech MDNS."
+        }
+    }
+}

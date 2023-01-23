@@ -198,7 +198,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.host = discovery_info.host
 
         local_name = discovery_info.hostname[:-1]
-        node_name = local_name[: -len(".local")]
+        node_name = local_name.removesuffix(".local")
 
         await self.async_set_unique_id(self.info["unique_id"])
         self._abort_if_unique_id_configured({CONF_HOST: self.host})

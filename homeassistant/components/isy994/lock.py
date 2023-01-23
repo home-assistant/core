@@ -1,18 +1,19 @@
-"""Support for ISY994 locks."""
+"""Support for ISY locks."""
 from __future__ import annotations
 
 from typing import Any
 
 from pyisy.constants import ISY_VALUE_UNKNOWN
 
-from homeassistant.components.lock import DOMAIN as LOCK, LockEntity
+from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import _LOGGER, DOMAIN as ISY994_DOMAIN, ISY994_NODES, ISY994_PROGRAMS
+from .const import _LOGGER, DOMAIN
 from .entity import ISYNodeEntity, ISYProgramEntity
-from .helpers import migrate_old_unique_ids
 
 VALUE_TO_STATE = {0: False, 100: True}
 
@@ -20,21 +21,21 @@ VALUE_TO_STATE = {0: False, 100: True}
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the ISY994 lock platform."""
-    hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
+    """Set up the ISY lock platform."""
+    isy_data = hass.data[DOMAIN][entry.entry_id]
+    devices: dict[str, DeviceInfo] = isy_data.devices
     entities: list[ISYLockEntity | ISYLockProgramEntity] = []
-    for node in hass_isy_data[ISY994_NODES][LOCK]:
-        entities.append(ISYLockEntity(node))
+    for node in isy_data.nodes[Platform.LOCK]:
+        entities.append(ISYLockEntity(node, devices.get(node.primary_node)))
 
-    for name, status, actions in hass_isy_data[ISY994_PROGRAMS][LOCK]:
+    for name, status, actions in isy_data.programs[Platform.LOCK]:
         entities.append(ISYLockProgramEntity(name, status, actions))
 
-    await migrate_old_unique_ids(hass, LOCK, entities)
     async_add_entities(entities)
 
 
 class ISYLockEntity(ISYNodeEntity, LockEntity):
-    """Representation of an ISY994 lock device."""
+    """Representation of an ISY lock device."""
 
     @property
     def is_locked(self) -> bool | None:
@@ -44,12 +45,12 @@ class ISYLockEntity(ISYNodeEntity, LockEntity):
         return VALUE_TO_STATE.get(self._node.status)
 
     async def async_lock(self, **kwargs: Any) -> None:
-        """Send the lock command to the ISY994 device."""
+        """Send the lock command to the ISY device."""
         if not await self._node.secure_lock():
             _LOGGER.error("Unable to lock device")
 
     async def async_unlock(self, **kwargs: Any) -> None:
-        """Send the unlock command to the ISY994 device."""
+        """Send the unlock command to the ISY device."""
         if not await self._node.secure_unlock():
             _LOGGER.error("Unable to lock device")
 

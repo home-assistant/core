@@ -22,6 +22,17 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "pressure_tendency": {
+                "state": {
+                    "falling": "Caindo",
+                    "rising": "Ascendente",
+                    "steady": "Est\u00e1vel"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {

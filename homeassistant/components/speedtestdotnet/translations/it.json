@@ -5,7 +5,7 @@
         },
         "step": {
             "user": {
-                "description": "Vuoi iniziare la configurazione?"
+                "description": "Vuoi avviare la configurazione?"
             }
         }
     },
@@ -13,8 +13,6 @@
         "step": {
             "init": {
                 "data": {
-                    "manual": "Disabilita l'aggiornamento automatico",
-                    "scan_interval": "Frequenza di aggiornamento (minuti)",
                     "server_name": "Seleziona il server di prova"
                 }
             }

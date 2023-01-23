@@ -5,6 +5,7 @@
             "addon_install_failed": "Falha ao instalar o add-on Silicon Labs Multiprotocol.",
             "addon_set_config_failed": "Falha ao definir a configura\u00e7\u00e3o multiprotocolo da Silicon Labs.",
             "addon_start_failed": "Falha ao iniciar o add-on Silicon Labs Multiprotocol.",
+            "disabled_due_to_bug": "As op\u00e7\u00f5es de hardware est\u00e3o temporariamente desativadas enquanto corrigimos um bug. [Saiba mais]({url})",
             "not_hassio": "As op\u00e7\u00f5es de hardware s\u00f3 podem ser configuradas em instala\u00e7\u00f5es HassOS.",
             "zha_migration_failed": "A migra\u00e7\u00e3o ZHA n\u00e3o foi bem-sucedida."
         },
@@ -21,10 +22,10 @@
             },
             "addon_not_installed": {
                 "data": {
-                    "enable_multi_pan": "Habilitar suporte multiprotocolo"
+                    "enable_multi_pan": "Ativar suporte multiprotocolo"
                 },
-                "description": "Quando o suporte multiprotocolo est\u00e1 ativado, o r\u00e1dio IEEE 802.15.4 do Home Assistant Yellow pode ser usado para Zigbee e Thread (usado por Matter) ao mesmo tempo. Se o r\u00e1dio j\u00e1 estiver sendo usado pela integra\u00e7\u00e3o ZHA Zigbee, o ZHA ser\u00e1 reconfigurado para usar o firmware multiprotocolo. \n\n Nota: Este \u00e9 um recurso experimental.",
-                "title": "Habilitar o suporte multiprotocolo no r\u00e1dio IEEE 802.15.4"
+                "description": "Quando o suporte multiprotocolo est\u00e1 ativado, o r\u00e1dio IEEE 802.15.4 do {hardware_name} pode ser usado para Zigbee e Thread (usado por Matter) ao mesmo tempo. Se o r\u00e1dio j\u00e1 estiver sendo usado pela integra\u00e7\u00e3o ZHA Zigbee, o ZHA ser\u00e1 reconfigurado para usar o firmware multiprotocolo. \n\n Nota: Esse \u00e9 um recurso experimental.",
+                "title": "Habilite o suporte multiprotocolo no r\u00e1dio IEEE 802.15.4"
             },
             "install_addon": {
                 "title": "A instala\u00e7\u00e3o do add-on Silicon Labs Multiprotocol foi iniciada"

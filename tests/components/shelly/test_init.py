@@ -1,15 +1,19 @@
 """Test cases for the Shelly component."""
 from __future__ import annotations
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
 import pytest
 
-from homeassistant.components.shelly.const import DOMAIN
+from homeassistant.components.shelly.const import (
+    CONF_BLE_SCANNER_MODE,
+    DOMAIN,
+    BLEScannerMode,
+)
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
-from homeassistant.helpers import device_registry
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.setup import async_setup_component
 
 from . import MOCK_MAC, init_integration
@@ -39,12 +43,7 @@ async def test_shared_device_mac(
     config_entry.add_to_hass(hass)
     device_reg.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={
-            (
-                device_registry.CONNECTION_NETWORK_MAC,
-                device_registry.format_mac(MOCK_MAC),
-            )
-        },
+        connections={(CONNECTION_NETWORK_MAC, format_mac(MOCK_MAC))},
     )
     await init_integration(hass, gen, sleep_period=1000)
     assert "will resume when device is online" in caplog.text
@@ -113,12 +112,7 @@ async def test_sleeping_block_device_online(
     config_entry.add_to_hass(hass)
     device_reg.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={
-            (
-                device_registry.CONNECTION_NETWORK_MAC,
-                device_registry.format_mac(MOCK_MAC),
-            )
-        },
+        connections={(CONNECTION_NETWORK_MAC, format_mac(MOCK_MAC))},
     )
 
     entry = await init_integration(hass, 1, sleep_period=entry_sleep)
@@ -183,3 +177,68 @@ async def test_entry_unload_device_not_ready(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_entry_unload_not_connected(hass, mock_rpc_device, monkeypatch):
+    """Test entry unload when not connected."""
+    with patch(
+        "homeassistant.components.shelly.coordinator.async_stop_scanner"
+    ) as mock_stop_scanner:
+
+        entry = await init_integration(
+            hass, 2, options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE}
+        )
+        entity_id = "switch.test_switch_0"
+
+        assert entry.state is ConfigEntryState.LOADED
+        assert hass.states.get(entity_id).state is STATE_ON
+        assert not mock_stop_scanner.call_count
+
+        monkeypatch.setattr(mock_rpc_device, "connected", False)
+
+        await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert not mock_stop_scanner.call_count
+    assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_entry_unload_not_connected_but_we_think_we_are(
+    hass, mock_rpc_device, monkeypatch
+):
+    """Test entry unload when not connected but we think we are still connected."""
+    with patch(
+        "homeassistant.components.shelly.coordinator.async_stop_scanner",
+        side_effect=DeviceConnectionError,
+    ) as mock_stop_scanner:
+
+        entry = await init_integration(
+            hass, 2, options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE}
+        )
+        entity_id = "switch.test_switch_0"
+
+        assert entry.state is ConfigEntryState.LOADED
+        assert hass.states.get(entity_id).state is STATE_ON
+        assert not mock_stop_scanner.call_count
+
+        monkeypatch.setattr(mock_rpc_device, "connected", False)
+
+        await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert not mock_stop_scanner.call_count
+    assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_no_attempt_to_stop_scanner_with_sleepy_devices(hass, mock_rpc_device):
+    """Test we do not try to stop the scanner if its disabled with a sleepy device."""
+    with patch(
+        "homeassistant.components.shelly.coordinator.async_stop_scanner",
+    ) as mock_stop_scanner:
+        entry = await init_integration(hass, 2, sleep_period=7200)
+        assert entry.state is ConfigEntryState.LOADED
+        assert not mock_stop_scanner.call_count
+
+        mock_rpc_device.mock_update()
+        await hass.async_block_till_done()
+        assert not mock_stop_scanner.call_count

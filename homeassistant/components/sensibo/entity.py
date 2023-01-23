@@ -2,11 +2,10 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, Concatenate, ParamSpec, TypeVar
 
 import async_timeout
 from pysensibo.model import MotionSensor, SensiboDevice
-from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC

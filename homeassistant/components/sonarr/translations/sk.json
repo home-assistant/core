@@ -12,6 +12,7 @@
         "flow_title": "{name}",
         "step": {
             "reauth_confirm": {
+                "description": "Integr\u00e1ciu Sonarru je potrebn\u00e9 manu\u00e1lne op\u00e4tovne overi\u0165 pomocou rozhrania Sonarr API hos\u0165ovan\u00e9ho na: {host}",
                 "title": "Znova overi\u0165 integr\u00e1ciu"
             },
             "user": {
@@ -27,6 +28,7 @@
         "step": {
             "init": {
                 "data": {
+                    "upcoming_days": "Po\u010det nadch\u00e1dzaj\u00facich dn\u00ed na zobrazenie",
                     "wanted_max_items": "Maxim\u00e1lny po\u010det po\u017eadovan\u00fdch polo\u017eiek na zobrazenie"
                 }
             }

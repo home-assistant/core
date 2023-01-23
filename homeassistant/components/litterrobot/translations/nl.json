@@ -23,5 +23,19 @@
                 }
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "status_code": {
+                "state": {
+                    "cd": "Kat gedetecteerd",
+                    "off": "Uit",
+                    "offline": "Offline",
+                    "p": "Gepauzeerd",
+                    "pwru": "Opstarten",
+                    "rdy": "Klaar"
+                }
+            }
+        }
     }
 }

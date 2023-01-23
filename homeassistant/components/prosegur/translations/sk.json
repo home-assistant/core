@@ -12,6 +12,7 @@
         "step": {
             "reauth_confirm": {
                 "data": {
+                    "description": "Znova sa overte pomocou \u00fa\u010dtu Prosegur.",
                     "password": "Heslo",
                     "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
                 }

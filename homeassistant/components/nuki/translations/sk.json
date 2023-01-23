@@ -13,6 +13,7 @@
                 "data": {
                     "token": "Pr\u00edstupov\u00fd token"
                 },
+                "description": "Integr\u00e1cia Nuki sa mus\u00ed znova overi\u0165 pomocou v\u00e1\u0161ho bridga.",
                 "title": "Znova overi\u0165 integr\u00e1ciu"
             },
             "user": {

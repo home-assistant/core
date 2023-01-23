@@ -16,7 +16,8 @@
             "user": {
                 "data": {
                     "host": "Hostite\u013e"
-                }
+                },
+                "description": "Ak nech\u00e1te hostite\u013ea pr\u00e1zdneho, na vyh\u013ead\u00e1vanie zariaden\u00ed sa pou\u017eije zis\u0165ovanie."
             }
         }
     },
@@ -24,6 +25,9 @@
         "step": {
             "init": {
                 "data": {
+                    "custom_effect_colors": "Vlastn\u00fd efekt: Zoznam 1 a\u017e 16 farieb [R,G,B]. Pr\u00edklad: [255,0,255],[60,128,0]",
+                    "custom_effect_speed_pct": "Vlastn\u00fd efekt: R\u00fdchlos\u0165 v percent\u00e1ch pre efekt, ktor\u00fd prep\u00edna farby.",
+                    "custom_effect_transition": "Vlastn\u00fd efekt: Typ prechodu medzi farbami.",
                     "mode": "Zvolen\u00fd re\u017eim jasu."
                 }
             }

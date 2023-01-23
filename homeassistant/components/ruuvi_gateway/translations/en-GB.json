@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "token": "Bearer token (configured during gateway setup)"
+                }
+            }
+        }
+    }
+}

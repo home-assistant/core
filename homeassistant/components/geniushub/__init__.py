@@ -17,8 +17,8 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_TOKEN,
     CONF_USERNAME,
-    TEMP_CELSIUS,
     Platform,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -356,7 +356,7 @@ class GeniusHeatingZone(GeniusZone):
     @property
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
-        return TEMP_CELSIUS
+        return UnitOfTemperature.CELSIUS
 
     async def async_set_temperature(self, **kwargs) -> None:
         """Set a new target temperature for this zone."""

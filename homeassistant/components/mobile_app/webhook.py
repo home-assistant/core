@@ -15,7 +15,13 @@ from nacl.exceptions import CryptoError
 from nacl.secret import SecretBox
 import voluptuous as vol
 
-from homeassistant.components import camera, cloud, notify as hass_notify, tag
+from homeassistant.components import (
+    camera,
+    cloud,
+    conversation,
+    notify as hass_notify,
+    tag,
+)
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES as BINARY_SENSOR_CLASSES,
 )
@@ -268,8 +274,10 @@ async def webhook_call_service(
         )
     except (vol.Invalid, ServiceNotFound, Exception) as ex:
         _LOGGER.error(
-            "Error when calling service during mobile_app "
-            "webhook (device name: %s): %s",
+            (
+                "Error when calling service during mobile_app "
+                "webhook (device name: %s): %s"
+            ),
             config_entry.data[ATTR_DEVICE_NAME],
             ex,
         )
@@ -297,6 +305,28 @@ async def webhook_fire_event(
         context=registration_context(config_entry.data),
     )
     return empty_okay_response()
+
+
+@WEBHOOK_COMMANDS.register("conversation_process")
+@validate_schema(
+    {
+        vol.Required("text"): cv.string,
+        vol.Optional("language"): cv.string,
+        vol.Optional("conversation_id"): cv.string,
+    }
+)
+async def webhook_conversation_process(
+    hass: HomeAssistant, config_entry: ConfigEntry, data: dict[str, Any]
+) -> Response:
+    """Handle a conversation process webhook."""
+    result = await conversation.async_converse(
+        hass,
+        text=data["text"],
+        language=data.get("language"),
+        conversation_id=data.get("conversation_id"),
+        context=registration_context(config_entry.data),
+    )
+    return webhook_response(result.as_dict(), registration=config_entry.data)
 
 
 @WEBHOOK_COMMANDS.register("stream_camera")
@@ -693,8 +723,9 @@ async def webhook_get_config(
     if CONF_CLOUDHOOK_URL in config_entry.data:
         resp[CONF_CLOUDHOOK_URL] = config_entry.data[CONF_CLOUDHOOK_URL]
 
-    with suppress(hass.components.cloud.CloudNotAvailable):
-        resp[CONF_REMOTE_UI_URL] = cloud.async_remote_ui_url(hass)
+    if cloud.async_active_subscription(hass):
+        with suppress(hass.components.cloud.CloudNotAvailable):
+            resp[CONF_REMOTE_UI_URL] = cloud.async_remote_ui_url(hass)
 
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
 

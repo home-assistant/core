@@ -18,5 +18,15 @@
                 "description": "Masukkan nama host atau alamat IP perangkat TOLO Sauna."
             }
         }
+    },
+    "entity": {
+        "select": {
+            "lamp_mode": {
+                "state": {
+                    "automatic": "Otomatis",
+                    "manual": "Manual"
+                }
+            }
+        }
     }
 }

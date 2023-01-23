@@ -11,6 +11,7 @@
         "step": {
             "user": {
                 "data": {
+                    "brand": "Zna\u010dka",
                     "password": "Heslo",
                     "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
                 }

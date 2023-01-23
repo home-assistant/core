@@ -16,7 +16,7 @@
                 "description": "Vali seadistamiseks Bluetooth-adapter"
             },
             "single_adapter": {
-                "description": "Kas seadistada Bluetooth-adapterit {nimi}?"
+                "description": "Kas seadistada Bluetooth-adapterit {name}?"
             },
             "user": {
                 "data": {

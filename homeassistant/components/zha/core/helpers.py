@@ -213,7 +213,7 @@ def async_is_bindable_target(source_zha_device, target_zha_device):
 def async_get_zha_config_value(
     config_entry: ConfigEntry, section: str, config_key: str, default: _T
 ) -> _T:
-    """Get the value for the specified configuration from the zha config entry."""
+    """Get the value for the specified configuration from the ZHA config entry."""
     return (
         config_entry.options.get(CUSTOM_CONFIGURATION, {})
         .get(section, {})
@@ -349,10 +349,7 @@ def retryable_req(
                     if delay:
                         delay = uniform(delay * 0.75, delay * 1.25)
                         channel.debug(
-                            (
-                                "%s: retryable request #%d failed: %s. "
-                                "Retrying in %ss"
-                            ),
+                            "%s: retryable request #%d failed: %s. Retrying in %ss",
                             func.__name__,
                             try_count,
                             ex,

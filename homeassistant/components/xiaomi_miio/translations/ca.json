@@ -51,6 +51,31 @@
             }
         }
     },
+    "entity": {
+        "select": {
+            "display_orientation": {
+                "state": {
+                    "forward": "Endavant",
+                    "left": "Esquerra",
+                    "right": "Dreta"
+                }
+            },
+            "led_brightness": {
+                "state": {
+                    "bright": "Llumin\u00f3s",
+                    "dim": "Atenuat",
+                    "off": "OFF"
+                }
+            },
+            "ptc_level": {
+                "state": {
+                    "high": "Alt",
+                    "low": "Baix",
+                    "medium": "Mitj\u00e0"
+                }
+            }
+        }
+    },
     "options": {
         "error": {
             "cloud_credentials_incomplete": "Credencials del n\u00favol incompletes, introdueix el nom d'usuari, la contrasenya i el pa\u00eds"

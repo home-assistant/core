@@ -28,5 +28,18 @@
                 "description": "Du musst den Haupt-API-Schl\u00fcssel von UptimeRobot bereitstellen"
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "monitor_status": {
+                "state": {
+                    "down": "Offline",
+                    "not_checked_yet": "Noch nicht gepr\u00fcft",
+                    "pause": "Pause",
+                    "seems_down": "Scheint offline zu sein",
+                    "up": "Online"
+                }
+            }
+        }
     }
 }

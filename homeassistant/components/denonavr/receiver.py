@@ -51,7 +51,10 @@ class ConnectDenonAVR:
             or self._receiver.receiver_type is None
         ):
             _LOGGER.error(
-                "Missing receiver information: manufacturer '%s', name '%s', model '%s', type '%s'",
+                (
+                    "Missing receiver information: manufacturer '%s', name '%s', model"
+                    " '%s', type '%s'"
+                ),
                 self._receiver.manufacturer,
                 self._receiver.name,
                 self._receiver.model_name,

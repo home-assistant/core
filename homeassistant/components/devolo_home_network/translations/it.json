@@ -20,7 +20,7 @@
                 "data": {
                     "ip_address": "Indirizzo IP"
                 },
-                "description": "Vuoi iniziare la configurazione?"
+                "description": "Vuoi avviare la configurazione?"
             },
             "zeroconf_confirm": {
                 "description": "Vuoi aggiungere il dispositivo di rete domestica devolo con il nome host `{host_name}` a Home Assistant?",

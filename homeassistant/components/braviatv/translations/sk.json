@@ -15,32 +15,46 @@
         "step": {
             "authorize": {
                 "data": {
-                    "pin": "PIN k\u00f3d"
+                    "use_psk": "Pou\u017eite autentifik\u00e1ciu PSK"
                 },
+                "description": "Uistite sa, \u017ee je na va\u0161om telev\u00edzore aktivovan\u00e9 \u00abOvl\u00e1danie na dia\u013eku\u00bb, prejdite na:\n Nastavenia - > Sie\u0165 - > Nastavenia vzdialen\u00e9ho zariadenia - > Ovl\u00e1da\u0165 na dia\u013eku. \n\n Existuj\u00fa dva sp\u00f4soby autoriz\u00e1cie: PIN k\u00f3d alebo PSK (Pre-Shared Key).\n Ako stabilnej\u0161ia sa odpor\u00fa\u010da autoriz\u00e1cia cez PSK.",
                 "title": "Autorizujte telev\u00edzor Sony Bravia"
             },
             "confirm": {
                 "description": "Chcete za\u010da\u0165 nastavova\u0165?"
             },
-            "reauth_confirm": {
+            "pin": {
                 "data": {
-                    "pin": "PIN k\u00f3d",
-                    "use_psk": "Pou\u017eite autentifik\u00e1ciu PSK"
-                }
+                    "pin": "PIN k\u00f3d"
+                },
+                "description": "Zadajte k\u00f3d PIN zobrazen\u00fd na telev\u00edzore Sony Bravia. \n\n Ak sa k\u00f3d PIN nezobrazuje, mus\u00edte zru\u0161i\u0165 registr\u00e1ciu aplik\u00e1cie Home Assistant na telev\u00edzore, prejdite na: Nastavenia - > Sie\u0165 - > Nastavenia vzdialen\u00e9ho zariadenia - > Zru\u0161te registr\u00e1ciu vzdialen\u00e9ho zariadenia.",
+                "title": "Autorizujte telev\u00edzor Sony Bravia"
+            },
+            "psk": {
+                "data": {
+                    "pin": "PSK"
+                },
+                "description": "Ak chcete nastavi\u0165 PSK na svojom telev\u00edzore, prejdite na: Nastavenia - > Sie\u0165 - > Nastavenie dom\u00e1cej siete - > Ovl\u00e1danie IP. Nastavte \u00abAuthentication\u00bb na \u00abNormal and Pre-Shared Key\u00bb alebo \u00abPre-Shared Key\u00bb a definujte svoj re\u0165azec pre-Shared-Key (napr. Sony). \n\n Tu zadajte svoje PSK.",
+                "title": "Autorizujte telev\u00edzor Sony Bravia"
             },
             "user": {
                 "data": {
                     "host": "Hostite\u013e"
-                }
+                },
+                "description": "Pred pokusom o nastavenie sa uistite, \u017ee je v\u00e1\u0161 telev\u00edzor zapnut\u00fd."
             }
         }
     },
     "options": {
+        "abort": {
+            "failed_update": "Pri aktualiz\u00e1cii zoznamu zdrojov sa vyskytla chyba. \n\n Pred pokusom o nastavenie sa uistite, \u017ee je v\u00e1\u0161 telev\u00edzor zapnut\u00fd."
+        },
         "step": {
             "user": {
                 "data": {
                     "ignored_sources": "Zoznam ignorovan\u00fdch zdrojov"
-                }
+                },
+                "title": "Mo\u017enosti pre telev\u00edzor Sony Bravia"
             }
         }
     }

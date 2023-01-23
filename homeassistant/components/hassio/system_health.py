@@ -22,8 +22,8 @@ def async_register(
 
 async def system_health_info(hass: HomeAssistant):
     """Get info for the info page."""
-    info = get_info(hass)
-    host_info = get_host_info(hass)
+    info = get_info(hass) or {}
+    host_info = get_host_info(hass) or {}
     supervisor_info = get_supervisor_info(hass)
 
     healthy: bool | dict[str, str]
@@ -57,7 +57,7 @@ async def system_health_info(hass: HomeAssistant):
     }
 
     if info.get("hassos") is not None:
-        os_info = get_os_info(hass)
+        os_info = get_os_info(hass) or {}
         information["board"] = os_info.get("board")
 
     information["supervisor_api"] = system_health.async_check_can_reach_url(

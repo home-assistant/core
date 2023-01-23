@@ -10,7 +10,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ELECTRIC_POTENTIAL_VOLT, TEMP_FAHRENHEIT, TIME_MINUTES
+from homeassistant.const import UnitOfElectricPotential, UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
@@ -48,13 +48,13 @@ PAIRED_SENSOR_DESCRIPTIONS = (
         name="Battery",
         device_class=SensorDeviceClass.VOLTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
     ),
     SensorEntityDescription(
         key=SENSOR_KIND_TEMPERATURE,
         name="Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_FAHRENHEIT,
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )
@@ -63,7 +63,7 @@ VALVE_CONTROLLER_DESCRIPTIONS = (
         key=SENSOR_KIND_TEMPERATURE,
         name="Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_FAHRENHEIT,
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         state_class=SensorStateClass.MEASUREMENT,
         api_category=API_SYSTEM_ONBOARD_SENSOR_STATUS,
     ),
@@ -72,7 +72,7 @@ VALVE_CONTROLLER_DESCRIPTIONS = (
         name="Uptime",
         icon="mdi:timer",
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         api_category=API_SYSTEM_DIAGNOSTICS,
     ),
 )

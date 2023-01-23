@@ -8,7 +8,7 @@
             "bad_birth": "Argomento di nascita non valido",
             "bad_certificate": "Il certificato CA non \u00e8 valido",
             "bad_client_cert": "Certificato client non valido, assicurarsi che venga fornito un file codificato PEM",
-            "bad_client_cert_key": "Il certificato del client e il certificato privato non sono una coppia valida",
+            "bad_client_cert_key": "Il certificato client e la chiave privata non sono una coppia valida",
             "bad_client_key": "Chiave privata non valida, assicurarsi che venga fornito un file codificato PEM senza password",
             "bad_discovery_prefix": "Prefisso di rilevamento non valido",
             "bad_will": "Argomento testamento non valido",
@@ -85,7 +85,7 @@
             "bad_birth": "Argomento di nascita non valido",
             "bad_certificate": "Il certificato CA non \u00e8 valido",
             "bad_client_cert": "Certificato client non valido, assicurarsi che venga fornito un file codificato PEM",
-            "bad_client_cert_key": "Il certificato del client e il certificato privato non sono una coppia valida",
+            "bad_client_cert_key": "Il certificato client e la chiave privata non sono una coppia valida",
             "bad_client_key": "Chiave privata non valida, assicurarsi che venga fornito un file codificato PEM senza password",
             "bad_discovery_prefix": "Prefisso di rilevamento non valido",
             "bad_will": "Argomento testamento non valido",
@@ -134,6 +134,15 @@
                 },
                 "description": "Rilevamento - Se il rilevamento \u00e8 abilitato (consigliato), Home Assistant rilever\u00e0 automaticamente i dispositivi e le entit\u00e0 che pubblicano la loro configurazione sul broker MQTT. Se il rilevamento \u00e8 disabilitato, tutta la configurazione deve essere fatta manualmente.\nPrefisso di rilevamento - Il prefisso con cui deve iniziare un argomento di configurazione per il rilevamento automatico.\nMessaggio di nascita - Il messaggio di nascita viene inviato ogni volta che Home Assistant si (ri)connette al broker MQTT.\nMessaggio di testamento - Il messaggio di testamento verr\u00e0 inviato ogni volta che Home Assistant perde la connessione al broker, sia in caso di disconnessione pulita (ad esempio, Home Assistant si spegne) sia in caso di disconnessione non pulita (ad esempio, Home Assistant si blocca o perde la connessione di rete).",
                 "title": "Opzioni MQTT"
+            }
+        }
+    },
+    "selector": {
+        "set_ca_cert": {
+            "options": {
+                "auto": "Automatico",
+                "custom": "Personalizzato",
+                "off": "Spento"
             }
         }
     }

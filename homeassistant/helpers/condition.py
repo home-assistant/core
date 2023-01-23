@@ -80,7 +80,7 @@ INPUT_ENTITY_ID = re.compile(
     r"^input_(?:select|text|number|boolean|datetime)\.(?!.+__)(?!_)[\da-z_]+(?<!_)$"
 )
 
-ConditionCheckerType = Callable[[HomeAssistant, TemplateVarsType], bool]
+ConditionCheckerType = Callable[[HomeAssistant, TemplateVarsType], bool | None]
 
 
 def condition_trace_append(variables: TemplateVarsType, path: str) -> TraceElement:
@@ -139,7 +139,7 @@ def trace_condition_function(condition: ConditionCheckerType) -> ConditionChecke
     """Wrap a condition function to enable basic tracing."""
 
     @ft.wraps(condition)
-    def wrapper(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
+    def wrapper(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool | None:
         """Trace condition."""
         with trace_condition(variables):
             result = condition(hass, variables)
@@ -173,9 +173,9 @@ async def async_from_config(
         @trace_condition_function
         def disabled_condition(
             hass: HomeAssistant, variables: TemplateVarsType = None
-        ) -> bool:
-            """Condition not enabled, will always pass."""
-            return True
+        ) -> bool | None:
+            """Condition not enabled, will act as if it didn't exist."""
+            return None
 
         return disabled_condition
 
@@ -204,7 +204,7 @@ async def async_and_from_config(
         for index, check in enumerate(checks):
             try:
                 with trace_path(["conditions", str(index)]):
-                    if not check(hass, variables):
+                    if check(hass, variables) is False:
                         return False
             except ConditionError as ex:
                 errors.append(
@@ -235,7 +235,7 @@ async def async_or_from_config(
         for index, check in enumerate(checks):
             try:
                 with trace_path(["conditions", str(index)]):
-                    if check(hass, variables):
+                    if check(hass, variables) is True:
                         return True
             except ConditionError as ex:
                 errors.append(
@@ -385,7 +385,10 @@ def async_numeric_state(  # noqa: C901
             except (ValueError, TypeError) as ex:
                 raise ConditionErrorMessage(
                     "numeric_state",
-                    f"the 'below' entity {below} state '{below_entity.state}' cannot be processed as a number",
+                    (
+                        f"the 'below' entity {below} state '{below_entity.state}'"
+                        " cannot be processed as a number"
+                    ),
                 ) from ex
         elif fvalue >= below:
             condition_trace_set_result(False, state=fvalue, wanted_state_below=below)
@@ -413,7 +416,10 @@ def async_numeric_state(  # noqa: C901
             except (ValueError, TypeError) as ex:
                 raise ConditionErrorMessage(
                     "numeric_state",
-                    f"the 'above' entity {above} state '{above_entity.state}' cannot be processed as a number",
+                    (
+                        f"the 'above' entity {above} state '{above_entity.state}'"
+                        " cannot be processed as a number"
+                    ),
                 ) from ex
         elif fvalue <= above:
             condition_trace_set_result(False, state=fvalue, wanted_state_above=above)
@@ -605,8 +611,8 @@ def sun(
     # Special case: before sunrise OR after sunset
     # This will handle the very rare case in the polar region when the sun rises/sets
     # but does not set/rise.
-    # However this entire condition does not handle those full days of darkness or light,
-    # the following should be used instead:
+    # However this entire condition does not handle those full days of darkness
+    # or light, the following should be used instead:
     #
     #    condition:
     #      condition: state
@@ -889,7 +895,10 @@ def zone_from_config(config: ConfigType) -> ConditionCheckerType:
                     errors.append(
                         ConditionErrorMessage(
                             "zone",
-                            f"error matching {entity_id} with {zone_entity_id}: {ex.message}",
+                            (
+                                f"error matching {entity_id} with {zone_entity_id}:"
+                                f" {ex.message}"
+                            ),
                         )
                     )
 

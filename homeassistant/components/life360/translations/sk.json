@@ -31,9 +31,11 @@
         "step": {
             "init": {
                 "data": {
+                    "driving": "Zobrazi\u0165 jazdu ako stav",
                     "driving_speed": "R\u00fdchlos\u0165 jazdy",
                     "limit_gps_acc": "Obmedzenie presnosti GPS",
-                    "max_gps_accuracy": "Maxim\u00e1lna presnos\u0165 GPS (v metroch)"
+                    "max_gps_accuracy": "Maxim\u00e1lna presnos\u0165 GPS (v metroch)",
+                    "set_drive_speed": "Nastavenie prahovej r\u00fdchlosti jazdy"
                 },
                 "title": "Mo\u017enosti \u00fa\u010dtu"
             }

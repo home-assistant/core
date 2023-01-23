@@ -36,8 +36,7 @@ from . import MetDataUpdateCoordinator
 from .const import ATTR_MAP, CONDITIONS_MAP, CONF_TRACK_HOME, DOMAIN, FORECAST_MAP
 
 ATTRIBUTION = (
-    "Weather forecast from met.no, delivered by the Norwegian "
-    "Meteorological Institute."
+    "Weather forecast from met.no, delivered by the Norwegian Meteorological Institute."
 )
 DEFAULT_NAME = "Met.no"
 

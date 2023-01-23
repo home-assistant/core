@@ -241,7 +241,7 @@ HARDWARE_INTEGRATIONS = {
 
 @callback
 @bind_hass
-def get_info(hass):
+def get_info(hass: HomeAssistant) -> dict[str, Any] | None:
     """Return generic information from Supervisor.
 
     Async friendly.
@@ -251,7 +251,7 @@ def get_info(hass):
 
 @callback
 @bind_hass
-def get_host_info(hass):
+def get_host_info(hass: HomeAssistant) -> dict[str, Any] | None:
     """Return generic host information.
 
     Async friendly.
@@ -261,7 +261,7 @@ def get_host_info(hass):
 
 @callback
 @bind_hass
-def get_store(hass):
+def get_store(hass: HomeAssistant) -> dict[str, Any] | None:
     """Return store information.
 
     Async friendly.
@@ -311,7 +311,7 @@ def get_addons_changelogs(hass):
 
 @callback
 @bind_hass
-def get_os_info(hass):
+def get_os_info(hass: HomeAssistant) -> dict[str, Any] | None:
     """Return OS information.
 
     Async friendly.
@@ -321,7 +321,7 @@ def get_os_info(hass):
 
 @callback
 @bind_hass
-def get_core_info(hass):
+def get_core_info(hass: HomeAssistant) -> dict[str, Any] | None:
     """Return Home Assistant Core information from Supervisor.
 
     Async friendly.
@@ -723,7 +723,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         addons_info = get_addons_info(self.hass)
         addons_stats = get_addons_stats(self.hass)
         addons_changelogs = get_addons_changelogs(self.hass)
-        store_data = get_store(self.hass)
+        store_data = get_store(self.hass) or {}
 
         repositories = {
             repo[ATTR_SLUG]: repo[ATTR_NAME]

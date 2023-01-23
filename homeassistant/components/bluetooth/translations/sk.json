@@ -28,7 +28,17 @@
     },
     "issues": {
         "haos_outdated": {
+            "description": "Ak chcete zlep\u0161i\u0165 spo\u013eahlivos\u0165 a v\u00fdkon Bluetooth, d\u00f4razne v\u00e1m odpor\u00fa\u010dame aktualizova\u0165 opera\u010dn\u00fd syst\u00e9m Home Assistant na verziu 9.0 alebo nov\u0161iu.",
             "title": "Aktualizujte na opera\u010dn\u00fd syst\u00e9m Home Assistant 9.0 alebo nov\u0161\u00ed"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "passive": "Pas\u00edvne skenovanie"
+                }
+            }
         }
     }
 }

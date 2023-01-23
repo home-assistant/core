@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Union, cast
+from typing import TYPE_CHECKING, Any, cast
 from urllib.parse import quote, unquote
 
 from homeassistant.components.media_player import BrowseMedia, MediaClass, MediaType
@@ -160,7 +160,7 @@ async def get_owntone_content(
         return create_browse_media_response(
             master,
             media_content,
-            cast(list[dict[str, Union[int, str]]], result),
+            cast(list[dict[str, int | str]], result),
             children,
         )
     if media_content.id_or_path == "":  # top level search
@@ -188,7 +188,7 @@ async def get_owntone_content(
         return create_browse_media_response(
             master,
             media_content,
-            cast(list[dict[str, Union[int, str]]], result),
+            cast(list[dict[str, int | str]], result),
         )
     # Not a directory or top level of library
     # We should have content type and id
@@ -214,7 +214,7 @@ async def get_owntone_content(
         )
 
     return create_browse_media_response(
-        master, media_content, cast(list[dict[str, Union[int, str]]], result)
+        master, media_content, cast(list[dict[str, int | str]], result)
     )
 
 

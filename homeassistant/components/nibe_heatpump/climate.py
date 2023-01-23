@@ -23,7 +23,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -124,6 +124,7 @@ class NibeClimateEntity(CoordinatorEntity[Coordinator], ClimateEntity):
         if self._coil_current:
             self._attr_temperature_unit = self._coil_current.unit
 
+    @callback
     def _handle_coordinator_update(self) -> None:
         if not self.coordinator.data:
             return
@@ -210,7 +211,9 @@ class NibeClimateEntity(CoordinatorEntity[Coordinator], ClimateEntity):
                 )
             else:
                 raise ValueError(
-                    f"Don't known which temperature to control for hvac mode: {self._attr_hvac_mode}"
+                    "'set_temperature' requires 'hvac_mode' when passing"
+                    " 'temperature' and 'hvac_mode' is not already set to"
+                    " 'heat' or 'cool'"
                 )
 
         if (temperature := kwargs.get(ATTR_TARGET_TEMP_LOW)) is not None:

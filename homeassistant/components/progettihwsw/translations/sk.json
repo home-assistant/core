@@ -26,13 +26,15 @@
                     "relay_7": "Rel\u00e9 7",
                     "relay_8": "Rel\u00e9 8",
                     "relay_9": "Rel\u00e9 9"
-                }
+                },
+                "title": "Nastavenie rel\u00e9"
             },
             "user": {
                 "data": {
                     "host": "Hostite\u013e",
                     "port": "Port"
-                }
+                },
+                "title": "Nastavenie panela"
             }
         }
     }

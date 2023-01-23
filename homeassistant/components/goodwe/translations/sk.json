@@ -12,7 +12,8 @@
                 "data": {
                     "host": "IP adresa"
                 },
-                "description": "Pripoji\u0165 k meni\u010du"
+                "description": "Pripoji\u0165 k meni\u010du",
+                "title": "Meni\u010d GoodWe"
             }
         }
     }

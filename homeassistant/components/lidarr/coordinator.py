@@ -1,9 +1,9 @@
 """Data update coordinator for the Lidarr integration."""
 from __future__ import annotations
 
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from datetime import timedelta
-from typing import Generic, TypeVar, Union, cast
+from typing import Generic, TypeVar, cast
 
 from aiopyarr import LidarrAlbum, LidarrQueue, LidarrRootFolder, exceptions
 from aiopyarr.lidarr_client import LidarrClient
@@ -16,10 +16,10 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DEFAULT_MAX_RECORDS, DOMAIN, LOGGER
 
-T = TypeVar("T", bound=Union[list[LidarrRootFolder], LidarrQueue, str, LidarrAlbum])
+T = TypeVar("T", bound=list[LidarrRootFolder] | LidarrQueue | str | LidarrAlbum)
 
 
-class LidarrDataUpdateCoordinator(DataUpdateCoordinator[T], Generic[T]):
+class LidarrDataUpdateCoordinator(DataUpdateCoordinator[T], Generic[T], ABC):
     """Data update coordinator for the Lidarr integration."""
 
     config_entry: ConfigEntry

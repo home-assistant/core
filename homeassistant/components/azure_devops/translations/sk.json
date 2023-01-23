@@ -23,7 +23,9 @@
                     "organization": "Organiz\u00e1cia",
                     "personal_access_token": "Osobn\u00fd pr\u00edstupov\u00fd token (PAT)",
                     "project": "Projekt"
-                }
+                },
+                "description": "Nastavte in\u0161tanciu Azure DevOps na pr\u00edstup k v\u00e1\u0161mu projektu. Osobn\u00fd pr\u00edstupov\u00fd token sa vy\u017eaduje iba pre s\u00fakromn\u00fd projekt.",
+                "title": "Pridajte projekt Azure DevOps"
             }
         }
     }

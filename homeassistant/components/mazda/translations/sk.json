@@ -16,7 +16,8 @@
                     "email": "Email",
                     "password": "Heslo",
                     "region": "Oblas\u0165"
-                }
+                },
+                "description": "Zadajte e-mailov\u00fa adresu a heslo, ktor\u00e9 pou\u017e\u00edvate na prihl\u00e1senie do mobilnej aplik\u00e1cie MyMazda."
             }
         }
     }

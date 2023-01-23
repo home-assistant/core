@@ -3672,26 +3672,18 @@ async def test_cache_garbage_collection() -> None:
         (template_string),
     )
     tpl.ensure_valid()
-    assert template._NO_HASS_ENV.template_cache.get(
-        template_string
-    )  # pylint: disable=protected-access
+    assert template._NO_HASS_ENV.template_cache.get(template_string)
 
     tpl2 = template.Template(
         (template_string),
     )
     tpl2.ensure_valid()
-    assert template._NO_HASS_ENV.template_cache.get(
-        template_string
-    )  # pylint: disable=protected-access
+    assert template._NO_HASS_ENV.template_cache.get(template_string)
 
     del tpl
-    assert template._NO_HASS_ENV.template_cache.get(
-        template_string
-    )  # pylint: disable=protected-access
+    assert template._NO_HASS_ENV.template_cache.get(template_string)
     del tpl2
-    assert not template._NO_HASS_ENV.template_cache.get(
-        template_string
-    )  # pylint: disable=protected-access
+    assert not template._NO_HASS_ENV.template_cache.get(template_string)
 
 
 def test_is_template_string() -> None:

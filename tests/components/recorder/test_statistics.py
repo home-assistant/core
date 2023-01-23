@@ -1,5 +1,5 @@
 """The tests for sensor recorder platform."""
-# pylint: disable=protected-access,invalid-name
+# pylint: disable=invalid-name
 from datetime import datetime, timedelta
 import importlib
 import sys
@@ -30,7 +30,7 @@ from homeassistant.components.recorder.statistics import (
     list_statistic_ids,
 )
 from homeassistant.components.recorder.util import session_scope
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import recorder as recorder_helper
@@ -1601,7 +1601,19 @@ async def test_validate_db_schema_fix_float_issue(
 
 
 @pytest.mark.parametrize("enable_statistics_table_validation", [True])
-@pytest.mark.parametrize("db_engine", ("mysql", "postgresql"))
+@pytest.mark.parametrize(
+    "db_engine, modification",
+    (
+        ("mysql", ["last_reset DATETIME(6)", "start DATETIME(6)"]),
+        (
+            "postgresql",
+            [
+                "last_reset TIMESTAMP(6) WITH TIME ZONE",
+                "start TIMESTAMP(6) WITH TIME ZONE",
+            ],
+        ),
+    ),
+)
 @pytest.mark.parametrize(
     "table, replace_index", (("statistics", 0), ("statistics_short_term", 1))
 )
@@ -1617,6 +1629,7 @@ async def test_validate_db_schema_fix_statistics_datetime_issue(
     hass,
     caplog,
     db_engine,
+    modification,
     table,
     replace_index,
     column,
@@ -1664,7 +1677,6 @@ async def test_validate_db_schema_fix_statistics_datetime_issue(
         f"Database is about to correct DB schema errors: {table}.µs precision"
         in caplog.text
     )
-    modification = ["last_reset DATETIME(6)", "start DATETIME(6)"]
     modify_columns_mock.assert_called_once_with(ANY, ANY, table, modification)
 
 
@@ -1681,7 +1693,7 @@ def record_states(hass):
     sns1_attr = {
         "device_class": "temperature",
         "state_class": "measurement",
-        "unit_of_measurement": TEMP_CELSIUS,
+        "unit_of_measurement": UnitOfTemperature.CELSIUS,
     }
     sns2_attr = {
         "device_class": "humidity",

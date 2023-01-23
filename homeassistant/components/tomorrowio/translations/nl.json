@@ -17,6 +17,32 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "health_concern": {
+                "state": {
+                    "good": "Goed",
+                    "hazardous": "Gevaarlijk",
+                    "unhealthy": "Ongezond"
+                }
+            },
+            "pollen_index": {
+                "state": {
+                    "high": "Hoog",
+                    "low": "Laag",
+                    "medium": "Medium",
+                    "none": "Geen"
+                }
+            },
+            "precipitation_type": {
+                "state": {
+                    "none": "Geen",
+                    "rain": "Regen",
+                    "snow": "Sneeuw"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {

@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Setup Dexcom integration",
+        "title": "Set up Dexcom integration",
         "description": "Enter Dexcom Share credentials",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",

@@ -1,0 +1,1384 @@
+{
+  "version": 1,
+  "minor_version": 1,
+  "key": "bluetooth.remote_scanners",
+  "data": {
+    "atom-bluetooth-proxy-ceaac4": {
+      "connectable": true,
+      "expire_seconds": 195,
+      "discovered_device_advertisement_datas": {
+        "51:8E:5B:A8:44:8D": {
+          "device": {
+            "address": "51:8E:5B:A8:44:8D",
+            "name": "98E7829A01E23895E9",
+            "rssi": -80,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 1
+            }
+          },
+          "advertisement_data": {
+            "local_name": "98E7829A01E23895E9",
+            "manufacturer_data": {
+              "1447": "051001000000000000022200ca"
+            },
+            "service_data": {},
+            "service_uuids": [
+              "0000fe07-0000-1000-8000-00805f9b34fb"
+            ],
+            "rssi": -80,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "16:9A:28:FC:D5:A8": {
+          "device": {
+            "address": "16:9A:28:FC:D5:A8",
+            "name": "",
+            "rssi": -77,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 1
+            }
+          },
+          "advertisement_data": {
+            "local_name": null,
+            "manufacturer_data": {
+              "76": "0906036dc0a86b7e130c0a59cff1970c9f010401030c"
+            },
+            "service_data": {},
+            "service_uuids": [],
+            "rssi": -77,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "08:3A:F2:1E:32:69": {
+          "device": {
+            "address": "08:3A:F2:1E:32:69",
+            "name": "LOOKin_98F3320D",
+            "rssi": -91,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 0
+            }
+          },
+          "advertisement_data": {
+            "local_name": "LOOKin_98F3320D",
+            "manufacturer_data": {},
+            "service_data": {},
+            "service_uuids": [
+              "00001812-0000-1000-8000-00805f9b34fb"
+            ],
+            "rssi": -91,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "34:AB:95:85:6E:F1": {
+          "device": {
+            "address": "34:AB:95:85:6E:F1",
+            "name": "LOOKin_98F330B5",
+            "rssi": -96,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 0
+            }
+          },
+          "advertisement_data": {
+            "local_name": "LOOKin_98F330B5",
+            "manufacturer_data": {},
+            "service_data": {},
+            "service_uuids": [
+              "00001812-0000-1000-8000-00805f9b34fb"
+            ],
+            "rssi": -96,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "D8:2E:AD:CD:0D:85": {
+          "device": {
+            "address": "D8:2E:AD:CD:0D:85",
+            "name": "",
+            "rssi": -81,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 1
+            }
+          },
+          "advertisement_data": {
+            "local_name": null,
+            "manufacturer_data": {
+              "89": "d82eadcd0d85"
+            },
+            "service_data": {
+              "00000d00-0000-1000-8000-00805f9b34fb": "481061"
+            },
+            "service_uuids": [
+              "cba20d00-224d-11e6-9fb8-0002a5d5c51b"
+            ],
+            "rssi": -81,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "D4:B2:A1:7C:42:17": {
+          "device": {
+            "address": "D4:B2:A1:7C:42:17",
+            "name": "RZSS",
+            "rssi": -70,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 1
+            }
+          },
+          "advertisement_data": {
+            "local_name": "RZSS",
+            "manufacturer_data": {
+              "1033": "0c246232"
+            },
+            "service_data": {},
+            "service_uuids": [],
+            "rssi": -70,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "D8:EF:2F:41:B1:34": {
+          "device": {
+            "address": "D8:EF:2F:41:B1:34",
+            "name": "RZSS",
+            "rssi": -64,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 1
+            }
+          },
+          "advertisement_data": {
+            "local_name": "RZSS",
+            "manufacturer_data": {
+              "1033": "0c246064"
+            },
+            "service_data": {},
+            "service_uuids": [],
+            "rssi": -64,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "60:55:F9:29:FA:2A": {
+          "device": {
+            "address": "60:55:F9:29:FA:2A",
+            "name": "",
+            "rssi": -62,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 0
+            }
+          },
+          "advertisement_data": {
+            "local_name": null,
+            "manufacturer_data": {
+              "2409": "6055f929fa2a010000000000"
+            },
+            "service_data": {
+              "0000fd3d-0000-1000-8000-00805f9b34fb": "6a0064"
+            },
+            "service_uuids": [],
+            "rssi": -62,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "F3:33:CE:84:58:4A": {
+          "device": {
+            "address": "F3:33:CE:84:58:4A",
+            "name": "98E7822ED4F830AEE9",
+            "rssi": -78,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 1
+            }
+          },
+          "advertisement_data": {
+            "local_name": "98E7822ED4F830AEE9",
+            "manufacturer_data": {
+              "1447": "051001000000000000022200ca"
+            },
+            "service_data": {},
+            "service_uuids": [
+              "0000fe07-0000-1000-8000-00805f9b34fb"
+            ],
+            "rssi": -78,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "CB:39:CD:C4:3D:46": {
+          "device": {
+            "address": "CB:39:CD:C4:3D:46",
+            "name": "",
+            "rssi": -84,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 1
+            }
+          },
+          "advertisement_data": {
+            "local_name": null,
+            "manufacturer_data": {
+              "2409": "cb39cdc43d46c02e5c55ffff84"
+            },
+            "service_data": {
+              "0000fd3d-0000-1000-8000-00805f9b34fb": "64005a445c55ffff84"
+            },
+            "service_uuids": [],
+            "rssi": -84,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "E2:4B:AB:57:4F:CC": {
+          "device": {
+            "address": "E2:4B:AB:57:4F:CC",
+            "name": "",
+            "rssi": -73,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 1
+            }
+          },
+          "advertisement_data": {
+            "local_name": null,
+            "manufacturer_data": {
+              "89": "e24bab574fcc"
+            },
+            "service_data": {
+              "00000d00-0000-1000-8000-00805f9b34fb": "4810d7"
+            },
+            "service_uuids": [
+              "cba20d00-224d-11e6-9fb8-0002a5d5c51b"
+            ],
+            "rssi": -73,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "7F:B3:F7:28:DD:5B": {
+          "device": {
+            "address": "7F:B3:F7:28:DD:5B",
+            "name": "",
+            "rssi": -80,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 1
+            }
+          },
+          "advertisement_data": {
+            "local_name": null,
+            "manufacturer_data": {
+              "76": "1005229829e5ab"
+            },
+            "service_data": {},
+            "service_uuids": [],
+            "rssi": -80,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "B4:E8:42:51:76:67": {
+          "device": {
+            "address": "B4:E8:42:51:76:67",
+            "name": "LEDnetWF010097517666",
+            "rssi": -86,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 0
+            }
+          },
+          "advertisement_data": {
+            "local_name": "LEDnetWF010097517666",
+            "manufacturer_data": {
+              "23041": "5205b4e84251766600971603000000000000000000000000000000"
+            },
+            "service_data": {},
+            "service_uuids": [],
+            "rssi": -86,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "EA:CF:16:0C:16:11": {
+          "device": {
+            "address": "EA:CF:16:0C:16:11",
+            "name": "",
+            "rssi": -79,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 1
+            }
+          },
+          "advertisement_data": {
+            "local_name": null,
+            "manufacturer_data": {
+              "76": "12020003"
+            },
+            "service_data": {},
+            "service_uuids": [],
+            "rssi": -79,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "08:3A:F2:1E:28:F1": {
+          "device": {
+            "address": "08:3A:F2:1E:28:F1",
+            "name": "LOOKin_98F33208",
+            "rssi": -86,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 0
+            }
+          },
+          "advertisement_data": {
+            "local_name": "LOOKin_98F33208",
+            "manufacturer_data": {},
+            "service_data": {},
+            "service_uuids": [
+              "00001812-0000-1000-8000-00805f9b34fb"
+            ],
+            "rssi": -86,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "08:3A:F2:1E:2B:2D": {
+          "device": {
+            "address": "08:3A:F2:1E:2B:2D",
+            "name": "LOOKin_98F330F3",
+            "rssi": -80,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 0
+            }
+          },
+          "advertisement_data": {
+            "local_name": "LOOKin_98F330F3",
+            "manufacturer_data": {},
+            "service_data": {},
+            "service_uuids": [
+              "00001812-0000-1000-8000-00805f9b34fb"
+            ],
+            "rssi": -80,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "3D:AF:40:AD:B3:8B": {
+          "device": {
+            "address": "3D:AF:40:AD:B3:8B",
+            "name": "",
+            "rssi": -88,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 1
+            }
+          },
+          "advertisement_data": {
+            "local_name": null,
+            "manufacturer_data": {
+              "76": "0906036fc0a86b3e130c0a98ce54cc75e4010401030c"
+            },
+            "service_data": {},
+            "service_uuids": [],
+            "rssi": -88,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "61:25:DF:19:90:98": {
+          "device": {
+            "address": "61:25:DF:19:90:98",
+            "name": "",
+            "rssi": -74,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 1
+            }
+          },
+          "advertisement_data": {
+            "local_name": null,
+            "manufacturer_data": {
+              "76": "1007321fcbeaadd248"
+            },
+            "service_data": {},
+            "service_uuids": [],
+            "rssi": -74,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "34:AB:95:85:6E:F9": {
+          "device": {
+            "address": "34:AB:95:85:6E:F9",
+            "name": "LOOKin_98F330B4",
+            "rssi": -91,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 0
+            }
+          },
+          "advertisement_data": {
+            "local_name": "LOOKin_98F330B4",
+            "manufacturer_data": {},
+            "service_data": {},
+            "service_uuids": [
+              "00001812-0000-1000-8000-00805f9b34fb"
+            ],
+            "rssi": -91,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "54:E6:1B:F0:20:97": {
+          "device": {
+            "address": "54:E6:1B:F0:20:97",
+            "name": "",
+            "rssi": -54,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 0
+            }
+          },
+          "advertisement_data": {
+            "local_name": null,
+            "manufacturer_data": {
+              "76": "0f08c00ad7f8b400440c10020100"
+            },
+            "service_data": {},
+            "service_uuids": [],
+            "rssi": -54,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "41:CC:AF:67:18:EE": {
+          "device": {
+            "address": "41:CC:AF:67:18:EE",
+            "name": "",
+            "rssi": -80,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 1
+            }
+          },
+          "advertisement_data": {
+            "local_name": null,
+            "manufacturer_data": {
+              "76": "0c0e089c6a11d70cc17e3e52928b96b71006411d75808748"
+            },
+            "service_data": {},
+            "service_uuids": [],
+            "rssi": -80,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "8C:EA:48:4D:93:3B": {
+          "device": {
+            "address": "8C:EA:48:4D:93:3B",
+            "name": "",
+            "rssi": -98,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 0
+            }
+          },
+          "advertisement_data": {
+            "local_name": null,
+            "manufacturer_data": {
+              "117": "42040180668cea484d933b8eea484d933a01000000000000"
+            },
+            "service_data": {},
+            "service_uuids": [],
+            "rssi": -98,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "C5:2D:5E:AB:52:76": {
+          "device": {
+            "address": "C5:2D:5E:AB:52:76",
+            "name": "",
+            "rssi": -66,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 1
+            }
+          },
+          "advertisement_data": {
+            "local_name": null,
+            "manufacturer_data": {
+              "89": "c52d5eab5276"
+            },
+            "service_data": {
+              "00000d00-0000-1000-8000-00805f9b34fb": "481063"
+            },
+            "service_uuids": [
+              "cba20d00-224d-11e6-9fb8-0002a5d5c51b"
+            ],
+            "rssi": -66,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "C0:49:EF:8C:1F:86": {
+          "device": {
+            "address": "C0:49:EF:8C:1F:86",
+            "name": "ShellyPlugUS-C049EF8C1F84",
+            "rssi": -36,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 0
+            }
+          },
+          "advertisement_data": {
+            "local_name": "ShellyPlugUS-C049EF8C1F84",
+            "manufacturer_data": {},
+            "service_data": {},
+            "service_uuids": [],
+            "rssi": -36,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "F8:04:2E:E1:71:9D": {
+          "device": {
+            "address": "F8:04:2E:E1:71:9D",
+            "name": "",
+            "rssi": -90,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 0
+            }
+          },
+          "advertisement_data": {
+            "local_name": null,
+            "manufacturer_data": {
+              "117": "42040180a0f8042ee1719dfa042ee1719c01000000000000"
+            },
+            "service_data": {},
+            "service_uuids": [],
+            "rssi": -90,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "C6:D5:B5:C1:2A:22": {
+          "device": {
+            "address": "C6:D5:B5:C1:2A:22",
+            "name": "",
+            "rssi": -73,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 1
+            }
+          },
+          "advertisement_data": {
+            "local_name": null,
+            "manufacturer_data": {
+              "89": "c6d5b5c12a22"
+            },
+            "service_data": {
+              "00000d00-0000-1000-8000-00805f9b34fb": "4810e1"
+            },
+            "service_uuids": [
+              "cba20d00-224d-11e6-9fb8-0002a5d5c51b"
+            ],
+            "rssi": -73,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "31:FA:70:5F:9C:AC": {
+          "device": {
+            "address": "31:FA:70:5F:9C:AC",
+            "name": "",
+            "rssi": -78,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 1
+            }
+          },
+          "advertisement_data": {
+            "local_name": null,
+            "manufacturer_data": {
+              "76": "0906038ec0a86a5e"
+            },
+            "service_data": {},
+            "service_uuids": [],
+            "rssi": -78,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "D5:C1:1D:1A:23:57": {
+          "device": {
+            "address": "D5:C1:1D:1A:23:57",
+            "name": "RZSS",
+            "rssi": -70,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 1
+            }
+          },
+          "advertisement_data": {
+            "local_name": "RZSS",
+            "manufacturer_data": {
+              "1033": "0c246200"
+            },
+            "service_data": {},
+            "service_uuids": [],
+            "rssi": -70,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "2C:BF:C0:1C:D7:4B": {
+          "device": {
+            "address": "2C:BF:C0:1C:D7:4B",
+            "name": "",
+            "rssi": -89,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 1
+            }
+          },
+          "advertisement_data": {
+            "local_name": null,
+            "manufacturer_data": {
+              "76": "0906035cc0a86a9d"
+            },
+            "service_data": {},
+            "service_uuids": [],
+            "rssi": -89,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "B4:E8:42:DB:12:85": {
+          "device": {
+            "address": "B4:E8:42:DB:12:85",
+            "name": "LEDnetWF010097DB1284",
+            "rssi": -66,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 0
+            }
+          },
+          "advertisement_data": {
+            "local_name": "LEDnetWF010097DB1284",
+            "manufacturer_data": {
+              "23041": "5205b4e842db128400971603000000000000000000000000000000"
+            },
+            "service_data": {},
+            "service_uuids": [],
+            "rssi": -66,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "6E:48:DA:52:2F:13": {
+          "device": {
+            "address": "6E:48:DA:52:2F:13",
+            "name": "",
+            "rssi": -92,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 1
+            }
+          },
+          "advertisement_data": {
+            "local_name": null,
+            "manufacturer_data": {
+              "76": "10051a1c2e6061"
+            },
+            "service_data": {},
+            "service_uuids": [],
+            "rssi": -92,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "34:AB:95:85:66:6D": {
+          "device": {
+            "address": "34:AB:95:85:66:6D",
+            "name": "LOOKin_98F33163",
+            "rssi": -91,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 0
+            }
+          },
+          "advertisement_data": {
+            "local_name": "LOOKin_98F33163",
+            "manufacturer_data": {},
+            "service_data": {},
+            "service_uuids": [
+              "00001812-0000-1000-8000-00805f9b34fb"
+            ],
+            "rssi": -91,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "F8:04:2E:E1:9F:19": {
+          "device": {
+            "address": "F8:04:2E:E1:9F:19",
+            "name": "",
+            "rssi": -92,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 0
+            }
+          },
+          "advertisement_data": {
+            "local_name": null,
+            "manufacturer_data": {
+              "117": "42040180a0f8042ee19f19fa042ee19f1801000000000000"
+            },
+            "service_data": {},
+            "service_uuids": [],
+            "rssi": -92,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "68:3C:69:9E:A1:18": {
+          "device": {
+            "address": "68:3C:69:9E:A1:18",
+            "name": "",
+            "rssi": -78,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 1
+            }
+          },
+          "advertisement_data": {
+            "local_name": null,
+            "manufacturer_data": {
+              "76": "0c0e089c6a11d70cc17e3e52928b96b71006411d75808748"
+            },
+            "service_data": {},
+            "service_uuids": [],
+            "rssi": -78,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "07:68:27:D9:15:40": {
+          "device": {
+            "address": "07:68:27:D9:15:40",
+            "name": "",
+            "rssi": -74,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 1
+            }
+          },
+          "advertisement_data": {
+            "local_name": null,
+            "manufacturer_data": {},
+            "service_data": {
+              "0000fd6f-0000-1000-8000-00805f9b34fb": "1b8fb635708f1ef520edb36597fb0586b58f7214"
+            },
+            "service_uuids": [
+              "0000fd6f-0000-1000-8000-00805f9b34fb"
+            ],
+            "rssi": -74,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "F5:C7:51:3D:B7:33": {
+          "device": {
+            "address": "F5:C7:51:3D:B7:33",
+            "name": "RZSS",
+            "rssi": -81,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 1
+            }
+          },
+          "advertisement_data": {
+            "local_name": "RZSS",
+            "manufacturer_data": {
+              "1033": "0c246164"
+            },
+            "service_data": {},
+            "service_uuids": [],
+            "rssi": -81,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "E0:1F:A6:3A:C5:66": {
+          "device": {
+            "address": "E0:1F:A6:3A:C5:66",
+            "name": "RZSS",
+            "rssi": -90,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 1
+            }
+          },
+          "advertisement_data": {
+            "local_name": "RZSS",
+            "manufacturer_data": {
+              "1033": "0c246200"
+            },
+            "service_data": {},
+            "service_uuids": [],
+            "rssi": -90,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "78:9C:85:08:E6:2A": {
+          "device": {
+            "address": "78:9C:85:08:E6:2A",
+            "name": "M1029QJ",
+            "rssi": -73,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 0
+            }
+          },
+          "advertisement_data": {
+            "local_name": "M1029QJ",
+            "manufacturer_data": {
+              "76": "06310080e7146a373406009c2104023cb9eb0e"
+            },
+            "service_data": {},
+            "service_uuids": [],
+            "rssi": -73,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "4F:EB:42:E2:57:4A": {
+          "device": {
+            "address": "4F:EB:42:E2:57:4A",
+            "name": "a25bd0d9",
+            "rssi": -86,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 1
+            }
+          },
+          "advertisement_data": {
+            "local_name": "a25bd0d9",
+            "manufacturer_data": {
+              "1015": "1a00000000004d617569204f776c"
+            },
+            "service_data": {},
+            "service_uuids": [
+              "39d6b333-adad-45c8-b6ee-eac6c4cd0000"
+            ],
+            "rssi": -86,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "A8:51:AB:8A:5A:84": {
+          "device": {
+            "address": "A8:51:AB:8A:5A:84",
+            "name": "",
+            "rssi": -94,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 0
+            }
+          },
+          "advertisement_data": {
+            "local_name": null,
+            "manufacturer_data": {
+              "76": "1005021484867e"
+            },
+            "service_data": {},
+            "service_uuids": [],
+            "rssi": -94,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "5E:5C:AC:CF:CD:2D": {
+          "device": {
+            "address": "5E:5C:AC:CF:CD:2D",
+            "name": "",
+            "rssi": -82,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 1
+            }
+          },
+          "advertisement_data": {
+            "local_name": null,
+            "manufacturer_data": {
+              "76": "0f059000da640210022d04"
+            },
+            "service_data": {},
+            "service_uuids": [],
+            "rssi": -82,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "0A:73:BD:22:FE:E2": {
+          "device": {
+            "address": "0A:73:BD:22:FE:E2",
+            "name": "",
+            "rssi": -92,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 1
+            }
+          },
+          "advertisement_data": {
+            "local_name": null,
+            "manufacturer_data": {
+              "76": "09060318c0a86bef"
+            },
+            "service_data": {},
+            "service_uuids": [],
+            "rssi": -92,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "B4:E8:42:9E:A4:F5": {
+          "device": {
+            "address": "B4:E8:42:9E:A4:F5",
+            "name": "LEDnetWF0100979EA4F4",
+            "rssi": -82,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 0
+            }
+          },
+          "advertisement_data": {
+            "local_name": "LEDnetWF0100979EA4F4",
+            "manufacturer_data": {
+              "23041": "5202b4e8429ea4f400970c03010203040506070809a1a2a3a4a5a6"
+            },
+            "service_data": {},
+            "service_uuids": [],
+            "rssi": -82,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "B4:E8:42:53:56:F9": {
+          "device": {
+            "address": "B4:E8:42:53:56:F9",
+            "name": "LEDnetWF0100975356F8",
+            "rssi": -98,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 0
+            }
+          },
+          "advertisement_data": {
+            "local_name": "LEDnetWF0100975356F8",
+            "manufacturer_data": {
+              "23041": "5205b4e8425356f800971603000000000000000000000000000000"
+            },
+            "service_data": {},
+            "service_uuids": [],
+            "rssi": -98,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "D4:2C:41:97:56:6E": {
+          "device": {
+            "address": "D4:2C:41:97:56:6E",
+            "name": "RZSS",
+            "rssi": -82,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 1
+            }
+          },
+          "advertisement_data": {
+            "local_name": "RZSS",
+            "manufacturer_data": {
+              "1033": "0c245f32"
+            },
+            "service_data": {},
+            "service_uuids": [],
+            "rssi": -82,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "64:04:FF:2C:E3:55": {
+          "device": {
+            "address": "64:04:FF:2C:E3:55",
+            "name": "",
+            "rssi": -88,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 1
+            }
+          },
+          "advertisement_data": {
+            "local_name": null,
+            "manufacturer_data": {
+              "76": "0f0590007f5fd910022504"
+            },
+            "service_data": {},
+            "service_uuids": [],
+            "rssi": -88,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "A4:C1:38:BD:91:BB": {
+          "device": {
+            "address": "A4:C1:38:BD:91:BB",
+            "name": "LYWSD03MMC",
+            "rssi": -78,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 0
+            }
+          },
+          "advertisement_data": {
+            "local_name": "LYWSD03MMC",
+            "manufacturer_data": {},
+            "service_data": {
+              "0000fe95-0000-1000-8000-00805f9b34fb": "30585b055bbb91bd38c1a408"
+            },
+            "service_uuids": [],
+            "rssi": -78,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "B4:E8:42:DA:BA:23": {
+          "device": {
+            "address": "B4:E8:42:DA:BA:23",
+            "name": "LEDnetWF010097DABA22",
+            "rssi": -92,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 0
+            }
+          },
+          "advertisement_data": {
+            "local_name": "LEDnetWF010097DABA22",
+            "manufacturer_data": {
+              "23041": "5205b4e842daba2200971603000000000000000000000000000000"
+            },
+            "service_data": {},
+            "service_uuids": [],
+            "rssi": -92,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "E3:A5:63:3E:5E:23": {
+          "device": {
+            "address": "E3:A5:63:3E:5E:23",
+            "name": "",
+            "rssi": -70,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 1
+            }
+          },
+          "advertisement_data": {
+            "local_name": null,
+            "manufacturer_data": {
+              "76": "12020003"
+            },
+            "service_data": {},
+            "service_uuids": [],
+            "rssi": -70,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "68:E3:C2:4D:85:EE": {
+          "device": {
+            "address": "68:E3:C2:4D:85:EE",
+            "name": "",
+            "rssi": -97,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 1
+            }
+          },
+          "advertisement_data": {
+            "local_name": null,
+            "manufacturer_data": {
+              "76": "10051a1c53afb1"
+            },
+            "service_data": {},
+            "service_uuids": [],
+            "rssi": -97,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "B4:E8:42:52:4B:AD": {
+          "device": {
+            "address": "B4:E8:42:52:4B:AD",
+            "name": "LEDnetWF010097524BAC",
+            "rssi": -84,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 0
+            }
+          },
+          "advertisement_data": {
+            "local_name": "LEDnetWF010097524BAC",
+            "manufacturer_data": {
+              "23041": "5205b4e842524bac00971603000000000000000000000000000000"
+            },
+            "service_data": {},
+            "service_uuids": [],
+            "rssi": -84,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "58:2D:34:60:D5:CD": {
+          "device": {
+            "address": "58:2D:34:60:D5:CD",
+            "name": "Qingping Motion & Light",
+            "rssi": -83,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 0
+            }
+          },
+          "advertisement_data": {
+            "local_name": "Qingping Motion & Light",
+            "manufacturer_data": {},
+            "service_data": {
+              "0000fe95-0000-1000-8000-00805f9b34fb": "3058830a02cdd560342d5808",
+              "0000fdcd-0000-1000-8000-00805f9b34fb": "4812cdd560342d580804010f00000f0166"
+            },
+            "service_uuids": [],
+            "rssi": -83,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "72:90:B0:53:F1:15": {
+          "device": {
+            "address": "72:90:B0:53:F1:15",
+            "name": "",
+            "rssi": -94,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 1
+            }
+          },
+          "advertisement_data": {
+            "local_name": null,
+            "manufacturer_data": {
+              "76": "0f059000dc161910022d04"
+            },
+            "service_data": {},
+            "service_uuids": [],
+            "rssi": -94,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "D5:1C:FB:39:78:56": {
+          "device": {
+            "address": "D5:1C:FB:39:78:56",
+            "name": "",
+            "rssi": -93,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 1
+            }
+          },
+          "advertisement_data": {
+            "local_name": null,
+            "manufacturer_data": {
+              "89": "d51cfb397856"
+            },
+            "service_data": {
+              "00000d00-0000-1000-8000-00805f9b34fb": "4890d7"
+            },
+            "service_uuids": [
+              "cba20d00-224d-11e6-9fb8-0002a5d5c51b"
+            ],
+            "rssi": -93,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "08:3A:F2:1E:2B:05": {
+          "device": {
+            "address": "08:3A:F2:1E:2B:05",
+            "name": "LOOKin_98F330C2",
+            "rssi": -98,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 0
+            }
+          },
+          "advertisement_data": {
+            "local_name": "LOOKin_98F330C2",
+            "manufacturer_data": {},
+            "service_data": {},
+            "service_uuids": [
+              "00001812-0000-1000-8000-00805f9b34fb"
+            ],
+            "rssi": -98,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "FA:8F:F4:A8:9E:BC": {
+          "device": {
+            "address": "FA:8F:F4:A8:9E:BC",
+            "name": "",
+            "rssi": -92,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 1
+            }
+          },
+          "advertisement_data": {
+            "local_name": null,
+            "manufacturer_data": {
+              "76": "12025400"
+            },
+            "service_data": {},
+            "service_uuids": [],
+            "rssi": -92,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "EB:0B:36:35:6F:A4": {
+          "device": {
+            "address": "EB:0B:36:35:6F:A4",
+            "name": "",
+            "rssi": -90,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 1
+            }
+          },
+          "advertisement_data": {
+            "local_name": null,
+            "manufacturer_data": {
+              "76": "12199021f9370af25a5ec7825f703a4ac47a7b76c08b5695e101ba"
+            },
+            "service_data": {},
+            "service_uuids": [],
+            "rssi": -90,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        },
+        "AC:67:B2:6A:18:2A": {
+          "device": {
+            "address": "AC:67:B2:6A:18:2A",
+            "name": "",
+            "rssi": -68,
+            "details": {
+              "source": "atom-bluetooth-proxy-ceaac4",
+              "address_type": 0
+            }
+          },
+          "advertisement_data": {
+            "local_name": null,
+            "manufacturer_data": {
+              "741": "ac67b26a182a"
+            },
+            "service_data": {
+              "00000d00-0000-1000-8000-00805f9b34fb": "65000000613d7300"
+            },
+            "service_uuids": [
+              "cba20d00-224d-11e6-9fb8-0002a5d5c51b"
+            ],
+            "rssi": -68,
+            "tx_power": -127,
+            "platform_data": []
+          }
+        }
+      },
+      "discovered_device_timestamps": {
+        "51:8E:5B:A8:44:8D": 1670722715.9919367,
+        "16:9A:28:FC:D5:A8": 1670722719.3087196,
+        "08:3A:F2:1E:32:69": 1670722719.1660142,
+        "34:AB:95:85:6E:F1": 1670722720.2908847,
+        "D8:2E:AD:CD:0D:85": 1670722720.2915154,
+        "D4:B2:A1:7C:42:17": 1670722719.0863516,
+        "D8:EF:2F:41:B1:34": 1670722718.7625487,
+        "60:55:F9:29:FA:2A": 1670722720.291449,
+        "F3:33:CE:84:58:4A": 1670722720.291406,
+        "CB:39:CD:C4:3D:46": 1670722715.599468,
+        "E2:4B:AB:57:4F:CC": 1670722720.291419,
+        "7F:B3:F7:28:DD:5B": 1670722718.9691222,
+        "B4:E8:42:51:76:67": 1670722710.6735754,
+        "EA:CF:16:0C:16:11": 1670722715.9919817,
+        "08:3A:F2:1E:28:F1": 1670722720.291503,
+        "08:3A:F2:1E:2B:2D": 1670722720.2914848,
+        "3D:AF:40:AD:B3:8B": 1670722718.85895,
+        "61:25:DF:19:90:98": 1670722717.941397,
+        "34:AB:95:85:6E:F9": 1670722718.7632113,
+        "54:E6:1B:F0:20:97": 1670722717.1185102,
+        "41:CC:AF:67:18:EE": 1670722720.2912233,
+        "8C:EA:48:4D:93:3B": 1670722720.2910836,
+        "C5:2D:5E:AB:52:76": 1670722718.558827,
+        "C0:49:EF:8C:1F:86": 1670722717.9688299,
+        "F8:04:2E:E1:71:9D": 1670722717.526199,
+        "C6:D5:B5:C1:2A:22": 1670722717.0176404,
+        "31:FA:70:5F:9C:AC": 1670722720.2911327,
+        "D5:C1:1D:1A:23:57": 1670722717.639859,
+        "2C:BF:C0:1C:D7:4B": 1670722720.2914364,
+        "B4:E8:42:DB:12:85": 1670722719.0764725,
+        "6E:48:DA:52:2F:13": 1670722720.2913177,
+        "34:AB:95:85:66:6D": 1670722720.2912607,
+        "F8:04:2E:E1:9F:19": 1670722720.2911522,
+        "68:3C:69:9E:A1:18": 1670722719.1658278,
+        "07:68:27:D9:15:40": 1670722720.2912369,
+        "F5:C7:51:3D:B7:33": 1670722720.2911801,
+        "E0:1F:A6:3A:C5:66": 1670722713.7567363,
+        "78:9C:85:08:E6:2A": 1670722712.5362735,
+        "4F:EB:42:E2:57:4A": 1670722716.5097647,
+        "A8:51:AB:8A:5A:84": 1670722711.9280567,
+        "5E:5C:AC:CF:CD:2D": 1670722716.2974086,
+        "0A:73:BD:22:FE:E2": 1670722720.2914622,
+        "B4:E8:42:9E:A4:F5": 1670722718.5590498,
+        "B4:E8:42:53:56:F9": 1670722712.4074357,
+        "D4:2C:41:97:56:6E": 1670722718.3550117,
+        "64:04:FF:2C:E3:55": 1670722718.1470506,
+        "A4:C1:38:BD:91:BB": 1670722712.7268498,
+        "B4:E8:42:DA:BA:23": 1670722720.2910104,
+        "E3:A5:63:3E:5E:23": 1670722713.8445594,
+        "68:E3:C2:4D:85:EE": 1670722713.8488224,
+        "B4:E8:42:52:4B:AD": 1670722714.0646405,
+        "58:2D:34:60:D5:CD": 1670722715.377663,
+        "72:90:B0:53:F1:15": 1670722718.1468875,
+        "D5:1C:FB:39:78:56": 1670722715.2835894,
+        "08:3A:F2:1E:2B:05": 1670722719.0629613,
+        "FA:8F:F4:A8:9E:BC": 1670722717.22681,
+        "EB:0B:36:35:6F:A4": 1670722717.6297317,
+        "AC:67:B2:6A:18:2A": 1670722719.086469
+      }
+    }
+  }
+}

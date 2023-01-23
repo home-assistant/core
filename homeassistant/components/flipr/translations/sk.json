@@ -6,6 +6,7 @@
         "error": {
             "cannot_connect": "Nepodarilo sa pripoji\u0165",
             "invalid_auth": "Neplatn\u00e9 overenie",
+            "no_flipr_id_found": "K v\u00e1\u0161mu \u00fa\u010dtu moment\u00e1lne nie je priraden\u00e9 \u017eiadne ID flipr. Najprv by ste si mali overi\u0165, \u010di funguje s mobilnou aplik\u00e1ciou Flipr.",
             "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
         },
         "step": {
@@ -13,7 +14,8 @@
                 "data": {
                     "flipr_id": "ID Flipr"
                 },
-                "description": "V zozname vyberte svoje Flipr ID"
+                "description": "V zozname vyberte svoje Flipr ID",
+                "title": "Vyberte si svoj Flipr"
             },
             "user": {
                 "data": {

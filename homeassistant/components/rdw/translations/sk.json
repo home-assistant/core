@@ -1,7 +1,15 @@
 {
     "config": {
         "error": {
-            "cannot_connect": "Nepodarilo sa pripoji\u0165"
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "unknown_license_plate": "Nezn\u00e1ma \u0160PZ"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "license_plate": "\u0160pz"
+                }
+            }
         }
     }
 }

@@ -20,7 +20,10 @@
         "step": {
             "init": {
                 "data": {
-                    "set_precision": "Nastavi\u0165 presnos\u0165"
+                    "floor_temperature": "Teplota podlahy",
+                    "read_precision": "Po\u017eiadavka na presnos\u0165",
+                    "set_precision": "Nastavi\u0165 presnos\u0165",
+                    "temporary_override_mode": "Re\u017eim do\u010dasn\u00e9ho prekro\u010denia nastavenej hodnoty"
                 }
             }
         }

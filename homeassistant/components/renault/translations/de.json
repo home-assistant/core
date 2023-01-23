@@ -31,5 +31,38 @@
                 "title": "Renault-Anmeldeinformationen festlegen"
             }
         }
+    },
+    "entity": {
+        "select": {
+            "charge_mode": {
+                "state": {
+                    "always": "Sofort",
+                    "always_charging": "Sofort",
+                    "schedule_mode": "Planer"
+                }
+            }
+        },
+        "sensor": {
+            "charge_state": {
+                "state": {
+                    "charge_ended": "Ladung beendet",
+                    "charge_error": "Nicht aufgeladen oder eingesteckt",
+                    "charge_in_progress": "L\u00e4dt",
+                    "energy_flap_opened": "Energieklappe ge\u00f6ffnet",
+                    "not_in_charge": "L\u00e4dt nicht",
+                    "unavailable": "Nicht verf\u00fcgbar",
+                    "waiting_for_a_planned_charge": "Warten auf geplante Ladung",
+                    "waiting_for_current_charge": "Warten auf aktuelle Ladung"
+                }
+            },
+            "plug_state": {
+                "state": {
+                    "plug_error": "Steckerfehler",
+                    "plug_unknown": "Stecker unbekannt",
+                    "plugged": "Eingesteckt",
+                    "unplugged": "Ausgesteckt"
+                }
+            }
+        }
     }
 }

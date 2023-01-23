@@ -14,7 +14,8 @@
                 "data": {
                     "address": "Adresa meni\u010da",
                     "port": "Port adapt\u00e9ra RS485 alebo USB-RS485"
-                }
+                },
+                "description": "Meni\u010d mus\u00ed by\u0165 pripojen\u00fd cez adapt\u00e9r RS485, vyberte pros\u00edm s\u00e9riov\u00fd port a adresu meni\u010da pod\u013ea konfigur\u00e1cie na LCD paneli"
             }
         }
     }

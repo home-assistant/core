@@ -121,7 +121,6 @@ async def test_form(
     assert result.get("type") == FlowResultType.FORM
     assert result.get("errors") == {}
     assert result.get("step_id") == "user"
-    assert "flow_id" in result
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -169,7 +168,6 @@ async def test_zeroconf_flow(
     assert result.get("type") == FlowResultType.FORM
     assert result.get("errors") == {}
     assert result.get("step_id") == "user"
-    assert "flow_id" in result
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -205,7 +203,6 @@ async def test_zeroconf_flow_stretch(
     assert result.get("type") == FlowResultType.FORM
     assert result.get("errors") == {}
     assert result.get("step_id") == "user"
-    assert "flow_id" in result
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -297,7 +294,6 @@ async def test_flow_errors(
     assert result.get("type") == FlowResultType.FORM
     assert result.get("errors") == {}
     assert result.get("step_id") == "user"
-    assert "flow_id" in result
 
     mock_smile_config_flow.connect.side_effect = side_effect
     result2 = await hass.config_entries.flow.async_configure(

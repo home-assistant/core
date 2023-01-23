@@ -14,5 +14,18 @@
                 }
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "printer_state": {
+                "state": {
+                    "cancelling": "Loobumine",
+                    "idle": "Ootel",
+                    "paused": "Peatatud",
+                    "pausing": "Pausi tegemine",
+                    "printing": "Tr\u00fckkimine"
+                }
+            }
+        }
     }
 }
