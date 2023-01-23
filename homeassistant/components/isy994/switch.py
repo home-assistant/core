@@ -84,12 +84,12 @@ class ISYSwitchEntity(ISYNodeEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Send the turn off command to the ISY switch."""
         if not await self._node.turn_off():
-            HomeAssistantError(f"Unable to turn off switch {self._node.address}")
+            raise HomeAssistantError(f"Unable to turn off switch {self._node.address}")
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Send the turn on command to the ISY switch."""
         if not await self._node.turn_on():
-            HomeAssistantError(f"Unable to turn on switch {self._node.address}")
+            raise HomeAssistantError(f"Unable to turn on switch {self._node.address}")
 
     @property
     def icon(self) -> str | None:
@@ -110,14 +110,14 @@ class ISYSwitchProgramEntity(ISYProgramEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Send the turn on command to the ISY switch program."""
         if not await self._actions.run_then():
-            HomeAssistantError(
+            raise HomeAssistantError(
                 f"Unable to run 'then' clause on program switch {self._actions.address}"
             )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Send the turn off command to the ISY switch program."""
         if not await self._actions.run_else():
-            HomeAssistantError(
+            raise HomeAssistantError(
                 f"Unable to run 'else' clause on program switch {self._actions.address}"
             )
 

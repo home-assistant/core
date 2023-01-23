@@ -1,6 +1,9 @@
 """Standard conversation implementation for Home Assistant."""
 from __future__ import annotations
 
+import asyncio
+from collections import defaultdict
+from collections.abc import Iterable
 from dataclasses import dataclass
 import logging
 from pathlib import Path
@@ -18,28 +21,10 @@ from homeassistant.helpers import area_registry, entity_registry, intent
 
 from .agent import AbstractConversationAgent, ConversationResult
 from .const import DOMAIN
-from .util import create_matcher
 
 _LOGGER = logging.getLogger(__name__)
 
 REGEX_TYPE = type(re.compile(""))
-
-
-@core.callback
-def async_register(hass, intent_type, utterances):
-    """Register utterances and any custom intents for the default agent.
-
-    Registrations don't require conversations to be loaded. They will become
-    active once the conversation component is loaded.
-    """
-    intents = hass.data.setdefault(DOMAIN, {})
-    conf = intents.setdefault(intent_type, [])
-
-    for utterance in utterances:
-        if isinstance(utterance, REGEX_TYPE):
-            conf.append(utterance)
-        else:
-            conf.append(create_matcher(utterance))
 
 
 @dataclass
@@ -51,6 +36,21 @@ class LanguageIntents:
     loaded_components: set[str]
 
 
+def _get_language_variations(language: str) -> Iterable[str]:
+    """Generate language codes with and without region."""
+    yield language
+
+    parts = re.split(r"([-_])", language)
+    if len(parts) == 3:
+        lang, sep, region = parts
+        if sep == "_":
+            # en_US -> en-US
+            yield f"{lang}-{region}"
+
+        # en-US -> en
+        yield lang
+
+
 class DefaultAgent(AbstractConversationAgent):
     """Default agent for conversation agent."""
 
@@ -58,19 +58,19 @@ class DefaultAgent(AbstractConversationAgent):
         """Initialize the default agent."""
         self.hass = hass
         self._lang_intents: dict[str, LanguageIntents] = {}
+        self._lang_lock: dict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
 
-    async def async_initialize(self, config):
+        # intent -> [sentences]
+        self._config_intents: dict[str, Any] = {}
+
+    async def async_initialize(self, config_intents):
         """Initialize the default agent."""
         if "intent" not in self.hass.config.components:
             await setup.async_setup_component(self.hass, "intent", {})
 
-        config = config.get(DOMAIN, {})
-        self.hass.data.setdefault(DOMAIN, {})
-
-        if config:
-            _LOGGER.warning(
-                "Custom intent sentences have been moved to config/custom_sentences"
-            )
+        # Intents from config may only contains sentences for HA config's language
+        if config_intents:
+            self._config_intents = config_intents
 
     async def async_process(
         self,
@@ -88,10 +88,7 @@ class DefaultAgent(AbstractConversationAgent):
             lang_intents.loaded_components - self.hass.config.components
         ):
             # Load intents in executor
-            lang_intents = await self.hass.async_add_executor_job(
-                self.get_or_load_intents,
-                language,
-            )
+            lang_intents = await self.async_get_or_load_intents(language)
 
         if lang_intents is None:
             # No intents loaded
@@ -121,8 +118,35 @@ class DefaultAgent(AbstractConversationAgent):
             response=intent_response, conversation_id=conversation_id
         )
 
-    def get_or_load_intents(self, language: str) -> LanguageIntents | None:
-        """Load all intents for language."""
+    async def async_reload(self, language: str | None = None):
+        """Clear cached intents for a language."""
+        if language is None:
+            language = self.hass.config.language
+
+        self._lang_intents.pop(language, None)
+        _LOGGER.debug("Cleared intents for language: %s", language)
+
+    async def async_prepare(self, language: str | None = None):
+        """Load intents for a language."""
+        if language is None:
+            language = self.hass.config.language
+
+        lang_intents = await self.async_get_or_load_intents(language)
+
+        if lang_intents is None:
+            # No intents loaded
+            _LOGGER.warning("No intents were loaded for language: %s", language)
+
+    async def async_get_or_load_intents(self, language: str) -> LanguageIntents | None:
+        """Load all intents of a language with lock."""
+        async with self._lang_lock[language]:
+            return await self.hass.async_add_executor_job(
+                self._get_or_load_intents,
+                language,
+            )
+
+    def _get_or_load_intents(self, language: str) -> LanguageIntents | None:
+        """Load all intents for language (run inside executor)."""
         lang_intents = self._lang_intents.get(language)
 
         if lang_intents is None:
@@ -141,17 +165,20 @@ class DefaultAgent(AbstractConversationAgent):
             # Don't check component again
             loaded_components.add(component)
 
-            # Check for intents for this component with the target language
-            component_intents = get_intents(component, language)
-            if component_intents:
-                # Merge sentences into existing dictionary
-                merge_dict(intents_dict, component_intents)
+            # Check for intents for this component with the target language.
+            # Try en-US, en, etc.
+            for language_variation in _get_language_variations(language):
+                component_intents = get_intents(component, language_variation)
+                if component_intents:
+                    # Merge sentences into existing dictionary
+                    merge_dict(intents_dict, component_intents)
 
-                # Will need to recreate graph
-                intents_changed = True
-                _LOGGER.debug(
-                    "Loaded intents component=%s, language=%s", component, language
-                )
+                    # Will need to recreate graph
+                    intents_changed = True
+                    _LOGGER.debug(
+                        "Loaded intents component=%s, language=%s", component, language
+                    )
+                    break
 
         # Check for custom sentences in <config>/custom_sentences/<language>/
         if lang_intents is None:
@@ -175,6 +202,22 @@ class DefaultAgent(AbstractConversationAgent):
                         language,
                         custom_sentences_path,
                     )
+
+            # Load sentences from HA config for default language only
+            if self._config_intents and (language == self.hass.config.language):
+                merge_dict(
+                    intents_dict,
+                    {
+                        "intents": {
+                            intent_name: {"data": [{"sentences": sentences}]}
+                            for intent_name, sentences in self._config_intents.items()
+                        }
+                    },
+                )
+                intents_changed = True
+                _LOGGER.debug(
+                    "Loaded intents from configuration.yaml",
+                )
 
         if not intents_dict:
             return None

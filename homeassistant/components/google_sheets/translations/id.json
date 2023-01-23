@@ -13,7 +13,7 @@
             "oauth_error": "Menerima respons token yang tidak valid.",
             "open_spreadsheet_failure": "Kesalahan saat membuka spreadsheet, lihat log kesalahan untuk detailnya",
             "reauth_successful": "Autentikasi ulang berhasil",
-            "timeout_connect": "Tenggang waktu membuat koneksi habis",
+            "timeout_connect": "Tenggang waktu pembuatan koneksi habis",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
         "create_entry": {

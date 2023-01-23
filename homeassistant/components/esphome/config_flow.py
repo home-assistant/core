@@ -26,7 +26,8 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.device_registry import format_mac
 
-from . import CONF_DEVICE_NAME, CONF_NOISE_PSK, DOMAIN
+from . import CONF_DEVICE_NAME, CONF_NOISE_PSK
+from .const import DOMAIN
 from .dashboard import async_get_dashboard, async_set_dashboard_info
 
 ERROR_REQUIRES_ENCRYPTION_KEY = "requires_encryption_key"
@@ -204,7 +205,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_hassio(self, discovery_info: HassioServiceInfo) -> FlowResult:
         """Handle Supervisor service discovery."""
-        async_set_dashboard_info(
+        await async_set_dashboard_info(
             self.hass,
             discovery_info.slug,
             discovery_info.config["host"],

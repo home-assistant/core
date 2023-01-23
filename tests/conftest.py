@@ -71,9 +71,6 @@ from tests.common import (  # noqa: E402, isort:skip
     mock_storage as mock_storage,
 )
 from tests.test_util.aiohttp import mock_aiohttp_client  # noqa: E402, isort:skip
-from tests.components.recorder.common import (  # noqa: E402, isort:skip
-    async_recorder_block_till_done,
-)
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -102,7 +99,7 @@ def pytest_configure(config):
     config.addinivalue_line(
         "markers", "no_fail_on_log_exception: mark test to not fail on logged exception"
     )
-    if config.getoption("verbose"):
+    if config.getoption("verbose") > 0:
         logging.basicConfig(level=logging.DEBUG)
     else:
         logging.basicConfig(level=logging.INFO)
@@ -204,6 +201,13 @@ location.async_detect_location_info = check_real(location.async_detect_location_
 util.get_local_ip = lambda: "127.0.0.1"
 
 
+@pytest.fixture(name="caplog")
+def caplog_fixture(caplog):
+    """Set log level to debug for tests using the caplog fixture."""
+    caplog.set_level(logging.DEBUG)
+    yield caplog
+
+
 @pytest.fixture(autouse=True, scope="module")
 def garbage_collection():
     """Run garbage collection at known locations.
@@ -241,7 +245,7 @@ def verify_cleanup(event_loop: asyncio.AbstractEventLoop):
     if tasks:
         event_loop.run_until_complete(asyncio.wait(tasks))
 
-    for handle in event_loop._scheduled:  # pylint: disable=protected-access
+    for handle in event_loop._scheduled:
         if not handle.cancelled():
             _LOGGER.warning("Lingering timer after test %r", handle)
             handle.cancel()
@@ -480,8 +484,10 @@ def mock_device_tracker_conf():
         devices.append(entity)
 
     with patch(
-        "homeassistant.components.device_tracker.legacy"
-        ".DeviceTracker.async_update_config",
+        (
+            "homeassistant.components.device_tracker.legacy"
+            ".DeviceTracker.async_update_config"
+        ),
         side_effect=mock_update_config,
     ), patch(
         "homeassistant.components.device_tracker.legacy.async_load_config",
@@ -1055,6 +1061,8 @@ async def async_setup_recorder_instance(
     # Local import to avoid processing recorder and SQLite modules when running a
     # testcase which does not use the recorder.
     from homeassistant.components import recorder
+
+    from tests.components.recorder.common import async_recorder_block_till_done
 
     nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
     stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None

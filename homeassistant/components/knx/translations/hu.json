@@ -6,11 +6,9 @@
         },
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
-            "file_not_found": "A megadott '.knxkeys' f\u00e1jl nem tal\u00e1lhat\u00f3 a config/.storage/knx/ el\u00e9r\u00e9si \u00fatvonalon.",
             "invalid_backbone_key": "\u00c9rv\u00e9nytelen gerinckulcs. 32 hexadecim\u00e1lis sz\u00e1m az elv\u00e1rt.",
             "invalid_individual_address": "Az \u00e9rt\u00e9k nem felel meg a KNX egyedi c\u00edm mint\u00e1j\u00e1nak.\n'area.line.device'",
             "invalid_ip_address": "\u00c9rv\u00e9nytelen IPv4-c\u00edm.",
-            "invalid_signature": "A '.knxkeys' f\u00e1jl visszafejt\u00e9s\u00e9hez haszn\u00e1lt jelsz\u00f3 helytelen.",
             "keyfile_invalid_signature": "A '.knxkeys' f\u00e1jl visszafejt\u00e9s\u00e9hez haszn\u00e1lt jelsz\u00f3 helytelen.",
             "keyfile_no_backbone_key": "A \"knxkeys\" f\u00e1jl nem tartalmaz gerinckulcsot a biztons\u00e1gos \u00fatv\u00e1laszt\u00e1shoz.",
             "keyfile_no_tunnel_for_host": "A `.knxkeys` f\u00e1jl nem tartalmazza a `{host}` hiteles\u00edt\u0151 adatait.",
@@ -125,11 +123,9 @@
     "options": {
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
-            "file_not_found": "A megadott '.knxkeys' f\u00e1jl nem tal\u00e1lhat\u00f3 a config/.storage/knx/ el\u00e9r\u00e9si \u00fatvonalon.",
             "invalid_backbone_key": "\u00c9rv\u00e9nytelen gerinckulcs. 32 hexadecim\u00e1lis sz\u00e1m az elv\u00e1rt.",
             "invalid_individual_address": "Az \u00e9rt\u00e9k nem felel meg a KNX egyedi c\u00edm mint\u00e1j\u00e1nak.\n'area.line.device'",
             "invalid_ip_address": "\u00c9rv\u00e9nytelen IPv4-c\u00edm.",
-            "invalid_signature": "A '.knxkeys' f\u00e1jl visszafejt\u00e9s\u00e9hez haszn\u00e1lt jelsz\u00f3 helytelen.",
             "keyfile_invalid_signature": "A '.knxkeys' f\u00e1jl visszafejt\u00e9s\u00e9hez haszn\u00e1lt jelsz\u00f3 helytelen.",
             "keyfile_no_backbone_key": "A \"knxkeys\" f\u00e1jl nem tartalmaz gerinckulcsot a biztons\u00e1gos \u00fatv\u00e1laszt\u00e1shoz.",
             "keyfile_no_tunnel_for_host": "A `.knxkeys` f\u00e1jl nem tartalmazza a `{host}` hiteles\u00edt\u0151 adatait.",

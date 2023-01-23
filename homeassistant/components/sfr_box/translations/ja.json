@@ -6,6 +6,13 @@
                     "unknown": "\u4e0d\u660e"
                 }
             },
+            "net_infra": {
+                "state": {
+                    "adsl": "ADSL",
+                    "ftth": "FTTH",
+                    "gprs": "GPRS"
+                }
+            },
             "training": {
                 "state": {
                     "g_993_started": "G.993\u958b\u59cb",

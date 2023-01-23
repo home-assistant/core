@@ -18,11 +18,10 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Topic :: Home Automation",
 ]
-requires-python = ">=3.9.0"
+requires-python = ">=3.10.0"
 dependencies    = [
     "aiohttp==3.8.1",
     "astral==2.2",
@@ -30,7 +29,7 @@ dependencies    = [
     "attrs==22.2.0",
     "atomicwrites-homeassistant==1.4.1",
     "awesomeversion==22.9.0",
-    "bcrypt==3.1.7",
+    "bcrypt==4.0.1",
     "certifi>=2021.5.30",
     "ciso8601==2.3.0",
     # When bumping httpx, please check the version pins of
@@ -93,7 +92,7 @@ forced_separate = [
 combine_as_imports = true
 
 [tool.pylint.MAIN]
-py-version = "3.9"
+py-version = "3.10"
 ignore = [
     "tests",
 ]
@@ -117,6 +116,7 @@ load-plugins = [
     "hass_enforce_type_hints",
     "hass_imports",
     "hass_logger",
+    "pylint_per_file_ignores",
 ]
 persistent = false
 extension-pkg-allow-list = [
@@ -164,6 +164,9 @@ good-names = [
 # Enable once current issues are fixed:
 # consider-using-namedtuple-or-dataclass (Pylint CodeStyle extension)
 # consider-using-assignment-expr (Pylint CodeStyle extension)
+# ---
+# Temporary for the Python 3.10 update
+# consider-alternative-union-syntax
 disable = [
     "format",
     "abstract-method",
@@ -188,6 +191,7 @@ disable = [
     "consider-using-f-string",
     "consider-using-namedtuple-or-dataclass",
     "consider-using-assignment-expr",
+    "consider-alternative-union-syntax",
 ]
 enable = [
     #"useless-suppression",  # temporarily every now and then to clean them up
@@ -218,6 +222,9 @@ runtime-typing = false
 
 [tool.pylint.CODE_STYLE]
 max-line-length-suggestions = 72
+
+[tool.pylint-per-file-ignores]
+"/tests/"="protected-access,redefined-outer-name"
 
 [tool.pytest.ini_options]
 testpaths = [

@@ -1,4 +1,4 @@
-"""The Home Assistant Sky Connect integration."""
+"""The Home Assistant SkyConnect integration."""
 from __future__ import annotations
 
 import logging
@@ -72,7 +72,7 @@ async def _multi_pan_addon_info(
 
 
 async def _async_usb_scan_done(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Finish Home Assistant Sky Connect config entry setup."""
+    """Finish Home Assistant SkyConnect config entry setup."""
     matcher = usb.USBCallbackMatcher(
         domain=DOMAIN,
         vid=entry.data["vid"].upper(),
@@ -99,7 +99,7 @@ async def _async_usb_scan_done(hass: HomeAssistant, entry: ConfigEntry) -> None:
         return
 
     hw_discovery_data = {
-        "name": "Sky Connect Multi-PAN",
+        "name": "SkyConnect Multi-PAN",
         "port": {
             "path": get_zigbee_socket(hass, addon_info),
         },
@@ -113,7 +113,7 @@ async def _async_usb_scan_done(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up a Home Assistant Sky Connect config entry."""
+    """Set up a Home Assistant SkyConnect config entry."""
 
     await _wait_multi_pan_addon(hass, entry)
 

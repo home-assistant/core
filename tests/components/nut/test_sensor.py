@@ -189,6 +189,30 @@ async def test_dl650elcd(hass):
     )
 
 
+async def test_eaton5p1550(hass):
+    """Test creation of EATON5P1550 sensors."""
+
+    config_entry = await async_init_integration(hass, "EATON5P1550")
+    registry = er.async_get(hass)
+    entry = registry.async_get("sensor.ups1_battery_charge")
+    assert entry
+    assert entry.unique_id == f"{config_entry.entry_id}_battery.charge"
+
+    state = hass.states.get("sensor.ups1_battery_charge")
+    assert state.state == "100"
+
+    expected_attributes = {
+        "device_class": "battery",
+        "friendly_name": "Ups1 Battery Charge",
+        "unit_of_measurement": PERCENTAGE,
+    }
+    # Only test for a subset of attributes in case
+    # HA changes the implementation and a new one appears
+    assert all(
+        state.attributes[key] == attr for key, attr in expected_attributes.items()
+    )
+
+
 async def test_blazer_usb(hass):
     """Test creation of blazer_usb sensors."""
 

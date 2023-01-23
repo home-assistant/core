@@ -7,8 +7,6 @@ from . import setup_integration
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-# pylint: disable=redefined-outer-name
-
 
 async def test_config_entry_not_ready(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker

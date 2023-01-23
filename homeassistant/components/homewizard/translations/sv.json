@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_configured": "Enheten \u00e4r redan konfigurerad",
-            "api_not_enabled": "API:et \u00e4r inte aktiverat. Aktivera API i HomeWizard Energy App under inst\u00e4llningar",
             "device_not_supported": "Den h\u00e4r enheten st\u00f6ds inte",
             "invalid_discovery_parameters": "Uppt\u00e4ckte en API-version som inte st\u00f6ds",
             "unknown_error": "Ov\u00e4ntat fel"

@@ -6,11 +6,9 @@
         },
         "error": {
             "cannot_connect": "Falha ao conectar",
-            "file_not_found": "O arquivo `.knxkeys` especificado n\u00e3o foi encontrado no caminho config/.storage/knx/",
             "invalid_backbone_key": "Chave de backbone inv\u00e1lida. 32 n\u00fameros hexadecimais esperados.",
             "invalid_individual_address": "O valor n\u00e3o corresponde ao padr\u00e3o do endere\u00e7o individual KNX.\n '\u00e1rea.linha.dispositivo'",
             "invalid_ip_address": "Endere\u00e7o IPv4 inv\u00e1lido.",
-            "invalid_signature": "A senha para descriptografar o arquivo `.knxkeys` est\u00e1 errada.",
             "keyfile_invalid_signature": "A senha para descriptografar o arquivo `.knxkeys` est\u00e1 errada.",
             "keyfile_no_backbone_key": "O arquivo `.knxkeys` n\u00e3o cont\u00e9m uma chave de backbone para roteamento seguro.",
             "keyfile_no_tunnel_for_host": "O arquivo `.knxkeys` n\u00e3o cont\u00e9m credenciais para o host ` {host} `.",
@@ -125,11 +123,9 @@
     "options": {
         "error": {
             "cannot_connect": "Falha ao conectar",
-            "file_not_found": "O arquivo `.knxkeys` especificado n\u00e3o foi encontrado no caminho config/.storage/knx/",
             "invalid_backbone_key": "Chave de backbone inv\u00e1lida. 32 n\u00fameros hexadecimais esperados.",
             "invalid_individual_address": "O valor n\u00e3o corresponde ao padr\u00e3o do endere\u00e7o individual KNX.\n '\u00e1rea.linha.dispositivo'",
             "invalid_ip_address": "Endere\u00e7o IPv4 inv\u00e1lido.",
-            "invalid_signature": "A senha para descriptografar o arquivo `.knxkeys` est\u00e1 errada.",
             "keyfile_invalid_signature": "A senha para descriptografar o arquivo `.knxkeys` est\u00e1 errada.",
             "keyfile_no_backbone_key": "O arquivo `.knxkeys` n\u00e3o cont\u00e9m uma chave de backbone para roteamento seguro.",
             "keyfile_no_tunnel_for_host": "O arquivo `.knxkeys` n\u00e3o cont\u00e9m credenciais para o host ` {host} `.",
