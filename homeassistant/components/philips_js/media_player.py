@@ -377,10 +377,7 @@ class PhilipsTVMediaPlayer(
         if not self._tv.on:
             raise BrowseError("Can't browse when tv is turned off")
 
-        if media_content_id is None:
-            raise BrowseError("Missing media content id")
-
-        if media_content_id in (None, ""):
+        if media_content_id is None or media_content_id == "":
             return await self.async_browse_media_root()
         path = media_content_id.partition("/")
         if path[0] == "channels":
