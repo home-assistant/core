@@ -1,11 +1,12 @@
 """Support for LiteJet switch."""
 from typing import Any
 
-from pylitejet import LiteJet
+from pylitejet import LiteJet, LiteJetError
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -79,11 +80,17 @@ class LiteJetSwitch(SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Press the switch."""
-        await self._lj.press_switch(self._index)
+        try:
+            await self._lj.press_switch(self._index)
+        except LiteJetError as exc:
+            raise HomeAssistantError() from exc
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Release the switch."""
-        await self._lj.release_switch(self._index)
+        try:
+            await self._lj.release_switch(self._index)
+        except LiteJetError as exc:
+            raise HomeAssistantError() from exc
 
     @property
     def entity_registry_enabled_default(self) -> bool:

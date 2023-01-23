@@ -2,11 +2,12 @@
 import logging
 from typing import Any
 
-from pylitejet import LiteJet
+from pylitejet import LiteJet, LiteJetError
 
 from homeassistant.components.scene import Scene
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -62,7 +63,10 @@ class LiteJetScene(Scene):
 
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
-        await self._lj.activate_scene(self._index)
+        try:
+            await self._lj.activate_scene(self._index)
+        except LiteJetError as exc:
+            raise HomeAssistantError() from exc
 
     @property
     def entity_registry_enabled_default(self) -> bool:

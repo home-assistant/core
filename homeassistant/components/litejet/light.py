@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pylitejet import LiteJet
+from pylitejet import LiteJet, LiteJetError
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -14,6 +14,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONF_DEFAULT_TRANSITION, DOMAIN
@@ -85,7 +86,10 @@ class LiteJetLight(LightEntity):
         # LiteJet API will use the per-light default brightness and
         # transition values programmed in the LiteJet system.
         if ATTR_BRIGHTNESS not in kwargs and ATTR_TRANSITION not in kwargs:
-            await self._lj.activate_load(self._index)
+            try:
+                await self._lj.activate_load(self._index)
+            except LiteJetError as exc:
+                raise HomeAssistantError() from exc
             return
 
         # If either attribute is specified then Home Assistant must
@@ -94,18 +98,27 @@ class LiteJetLight(LightEntity):
         transition = kwargs.get(ATTR_TRANSITION, default_transition)
         brightness = int(kwargs.get(ATTR_BRIGHTNESS, 255) / 255 * 99)
 
-        await self._lj.activate_load_at(self._index, brightness, int(transition))
+        try:
+            await self._lj.activate_load_at(self._index, brightness, int(transition))
+        except LiteJetError as exc:
+            raise HomeAssistantError() from exc
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         if ATTR_TRANSITION in kwargs:
-            await self._lj.activate_load_at(self._index, 0, kwargs[ATTR_TRANSITION])
+            try:
+                await self._lj.activate_load_at(self._index, 0, kwargs[ATTR_TRANSITION])
+            except LiteJetError as exc:
+                raise HomeAssistantError() from exc
             return
 
         # If transition attribute is not specified then the simple
         # deactivate load LiteJet API will use the per-light default
         # transition value programmed in the LiteJet system.
-        await self._lj.deactivate_load(self._index)
+        try:
+            await self._lj.deactivate_load(self._index)
+        except LiteJetError as exc:
+            raise HomeAssistantError() from exc
 
     async def async_update(self) -> None:
         """Retrieve the light's brightness from the LiteJet system."""
