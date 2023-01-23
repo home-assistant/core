@@ -20,7 +20,16 @@ import statistics
 from struct import error as StructError, pack, unpack_from
 import sys
 from types import CodeType
-from typing import Any, Literal, NoReturn, TypeVar, cast, overload
+from typing import (
+    Any,
+    Concatenate,
+    Literal,
+    NoReturn,
+    ParamSpec,
+    TypeVar,
+    cast,
+    overload,
+)
 from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
@@ -30,7 +39,6 @@ import jinja2
 from jinja2 import pass_context, pass_environment, pass_eval_context
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
-from typing_extensions import Concatenate, ParamSpec
 import voluptuous as vol
 
 from homeassistant.const import (
