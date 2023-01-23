@@ -5,7 +5,6 @@ import asyncio
 import configparser
 from dataclasses import dataclass
 import logging
-from typing import Optional
 from urllib.parse import urlparse
 
 import aiohttp
@@ -33,7 +32,7 @@ class ChromecastInfo:
     """
 
     cast_info: CastInfo = attr.ib()
-    is_dynamic_group = attr.ib(type=Optional[bool], default=None)
+    is_dynamic_group = attr.ib(type=bool | None, default=None)
 
     @property
     def friendly_name(self) -> str:
