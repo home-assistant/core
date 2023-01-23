@@ -14,8 +14,6 @@ from .const import DOMAIN
 from .entity import PowerWallEntity
 from .models import PowerwallRuntimeData
 
-ICON = "mdi:home-battery-outline"
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -30,11 +28,10 @@ async def async_setup_entry(
 class PowerwallOffGridEnabledEntity(PowerWallEntity, SwitchEntity):
     """Representation of a Switch entity for Powerwall Off-grid operation."""
 
-    _attr_name = "Take Powerwall Off-Grid"
-    _attr_unique_id = "take_powerwall_off_grid"
+    _attr_name = "Powerwall Off-Grid"
+    _attr_unique_id = "powerwall_off_grid"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_device_class = SwitchDeviceClass.SWITCH
-    _attr_icon = ICON
 
     @property
     def is_on(self) -> bool:
@@ -55,8 +52,9 @@ class PowerwallOffGridEnabledEntity(PowerWallEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off-grid mode off (return to on-grid usage)."""
-        self._attr_is_on = False
         await self.hass.async_add_executor_job(
             self.power_wall.set_island_mode, IslandMode.ONGRID
         )
+        self._attr_is_on = False
+        self.async_write_ha_state()
         await self.coordinator.async_request_refresh()
