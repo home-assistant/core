@@ -1,7 +1,7 @@
 """Typing Helpers for Home Assistant."""
 from collections.abc import Mapping
 from enum import Enum
-from typing import Any, Optional, Union
+from typing import Any, Union
 
 import homeassistant.core
 
@@ -12,7 +12,7 @@ DiscoveryInfoType = dict[str, Any]
 EventType = homeassistant.core.Event
 ServiceDataType = dict[str, Any]
 StateType = Union[None, str, int, float]
-TemplateVarsType = Optional[Mapping[str, Any]]
+TemplateVarsType = Mapping[str, Any] | None
 
 # Custom type for recorder Queries
 QueryType = Any
