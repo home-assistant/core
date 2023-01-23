@@ -4,11 +4,10 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable, Coroutine
 from datetime import datetime
 from functools import wraps
-from typing import Any, TypeVar
+from typing import Any, Concatenate, ParamSpec, TypeVar
 
 from aiovlc.client import Client
 from aiovlc.exceptions import AuthError, CommandError, ConnectError
-from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (

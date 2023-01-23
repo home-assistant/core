@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfLength
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -74,12 +74,60 @@ STATIC_TARGET_ENERGY_DESCRIPTION = SensorEntityDescription(
     state_class=SensorStateClass.MEASUREMENT,
 )
 
+MAX_MOTION_GATES_DESCRIPTION = SensorEntityDescription(
+    key="max_motion_gates",
+    entity_category=EntityCategory.DIAGNOSTIC,
+    entity_registry_enabled_default=False,
+    has_entity_name=True,
+    name="Max Motion Gates",
+    native_unit_of_measurement="Gates",
+)
+
+MAX_STATIC_GATES_DESCRIPTION = SensorEntityDescription(
+    key="max_static_gates",
+    entity_category=EntityCategory.DIAGNOSTIC,
+    entity_registry_enabled_default=False,
+    has_entity_name=True,
+    name="Max Static Gates",
+    native_unit_of_measurement="Gates",
+)
+
+MOTION_ENERGY_GATES = [
+    SensorEntityDescription(
+        key=f"motion_energy_gate_{i}",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        has_entity_name=True,
+        name=f"Motion Energy Gate {i}",
+        native_unit_of_measurement="Target Energy",
+    )
+    for i in range(0, 9)
+]
+
+STATIC_ENERGY_GATES = [
+    SensorEntityDescription(
+        key=f"static_energy_gate_{i}",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        has_entity_name=True,
+        name=f"Static Energy Gate {i}",
+        native_unit_of_measurement="Target Energy",
+    )
+    for i in range(0, 9)
+]
+
 SENSOR_DESCRIPTIONS = (
-    MOVING_TARGET_DISTANCE_DESCRIPTION,
-    STATIC_TARGET_DISTANCE_DESCRIPTION,
-    MOVING_TARGET_ENERGY_DESCRIPTION,
-    STATIC_TARGET_ENERGY_DESCRIPTION,
-    DETECTION_DISTANCE_DESCRIPTION,
+    [
+        MOVING_TARGET_DISTANCE_DESCRIPTION,
+        STATIC_TARGET_DISTANCE_DESCRIPTION,
+        MOVING_TARGET_ENERGY_DESCRIPTION,
+        STATIC_TARGET_ENERGY_DESCRIPTION,
+        DETECTION_DISTANCE_DESCRIPTION,
+        MAX_MOTION_GATES_DESCRIPTION,
+        MAX_STATIC_GATES_DESCRIPTION,
+    ]
+    + MOTION_ENERGY_GATES
+    + STATIC_ENERGY_GATES
 )
 
 
@@ -102,7 +150,7 @@ async def async_setup_entry(
 
 
 class LD2410BLESensor(CoordinatorEntity[LD2410BLECoordinator], SensorEntity):
-    """Moving/static target distance sensor for LD2410BLE."""
+    """Generic sensor for LD2410BLE."""
 
     def __init__(
         self,
