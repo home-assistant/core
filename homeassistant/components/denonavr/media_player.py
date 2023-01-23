@@ -265,6 +265,13 @@ class DenonDevice(MediaPlayerEntity):
     @async_log_errors
     async def async_update(self) -> None:
         """Get the latest status information from device."""
+        if (
+            self._receiver.telnet_connected is True
+            and self._receiver.telnet_healthy is True
+        ):
+            await self._receiver.input.async_update_media_state()
+            return
+
         await self._receiver.async_update()
         if self._update_audyssey:
             await self._receiver.async_update_audyssey()
