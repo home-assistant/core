@@ -1,6 +1,8 @@
 """Queries for logbook."""
 from __future__ import annotations
 
+from typing import Final
+
 import sqlalchemy
 from sqlalchemy import select
 from sqlalchemy.orm import Query
@@ -33,7 +35,7 @@ ALWAYS_CONTINUOUS_ENTITY_ID_LIKE = like_domain_matchers(ALWAYS_CONTINUOUS_DOMAIN
 UNIT_OF_MEASUREMENT_JSON = '"unit_of_measurement":'
 UNIT_OF_MEASUREMENT_JSON_LIKE = f"%{UNIT_OF_MEASUREMENT_JSON}%"
 
-PSUEDO_EVENT_STATE_CHANGED = None
+PSUEDO_EVENT_STATE_CHANGED: Final = None
 # Since we don't store event_types and None
 # and we don't store state_changed in events
 # we use a NULL for state_changed events
