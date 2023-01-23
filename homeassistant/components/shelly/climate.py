@@ -318,16 +318,16 @@ class BlockSleepingClimate(
         LOGGER.info("Restoring entity %s", self.name)
 
         last_state = await self.async_get_last_state()
-        last_extra_data = await self.async_get_last_extra_data()
-        if last_extra_data is not None:
-            self._last_target_temp = last_extra_data.as_dict()["last_target_temp"]
-
         if last_state is not None:
             self.last_state = last_state
             self.last_state_attributes = self.last_state.attributes
             self._preset_modes = cast(
                 list, self.last_state.attributes.get("preset_modes")
             )
+
+        last_extra_data = await self.async_get_last_extra_data()
+        if last_extra_data is not None:
+            self._last_target_temp = last_extra_data.as_dict()["last_target_temp"]
 
         await super().async_added_to_hass()
 
