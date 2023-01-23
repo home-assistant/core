@@ -1,8 +1,10 @@
 """The Open Thread Border Router integration."""
 from __future__ import annotations
 
+from collections.abc import Callable, Coroutine
 import dataclasses
 from functools import wraps
+from typing import Any, Concatenate, ParamSpec, TypeVar
 
 import python_otbr_api
 
@@ -15,12 +17,17 @@ from homeassistant.helpers.typing import ConfigType
 from . import websocket_api
 from .const import DOMAIN
 
+_R = TypeVar("_R")
+_P = ParamSpec("_P")
 
-def _handle_otbr_error(func):
+
+def _handle_otbr_error(
+    func: Callable[Concatenate[OTBRData, _P], Coroutine[Any, Any, _R]]
+) -> Callable[Concatenate[OTBRData, _P], Coroutine[Any, Any, _R]]:
     """Handle OTBR errors."""
 
     @wraps(func)
-    async def _func(self, *args, **kwargs):
+    async def _func(self: OTBRData, *args: _P.args, **kwargs: _P.kwargs) -> _R:
         try:
             return await func(self, *args, **kwargs)
         except python_otbr_api.OTBRError as exc:
