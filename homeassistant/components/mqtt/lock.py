@@ -11,7 +11,12 @@ import voluptuous as vol
 from homeassistant.components import lock
 from homeassistant.components.lock import LockEntity, LockEntityFeature
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE
+from homeassistant.const import (
+    ATTR_CODE,
+    CONF_NAME,
+    CONF_OPTIMISTIC,
+    CONF_VALUE_TEMPLATE,
+)
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -236,7 +241,10 @@ class MqttLock(MqttEntity, LockEntity):
 
         This method is a coroutine.
         """
-        payload = self._command_template(self._config[CONF_PAYLOAD_LOCK], kwargs)
+        tpl_vars: TemplateVarsType = {
+            ATTR_CODE: kwargs.get(ATTR_CODE) if kwargs else None
+        }
+        payload = self._command_template(self._config[CONF_PAYLOAD_LOCK], tpl_vars)
         await self.async_publish(
             self._config[CONF_COMMAND_TOPIC],
             payload,
@@ -254,7 +262,10 @@ class MqttLock(MqttEntity, LockEntity):
 
         This method is a coroutine.
         """
-        payload = self._command_template(self._config[CONF_PAYLOAD_UNLOCK], kwargs)
+        tpl_vars: TemplateVarsType = {
+            ATTR_CODE: kwargs.get(ATTR_CODE) if kwargs else None
+        }
+        payload = self._command_template(self._config[CONF_PAYLOAD_UNLOCK], tpl_vars)
         await self.async_publish(
             self._config[CONF_COMMAND_TOPIC],
             payload,
@@ -272,7 +283,10 @@ class MqttLock(MqttEntity, LockEntity):
 
         This method is a coroutine.
         """
-        payload = self._command_template(self._config[CONF_PAYLOAD_OPEN], kwargs)
+        tpl_vars: TemplateVarsType = {
+            ATTR_CODE: kwargs.get(ATTR_CODE) if kwargs else None
+        }
+        payload = self._command_template(self._config[CONF_PAYLOAD_OPEN], tpl_vars)
         await self.async_publish(
             self._config[CONF_COMMAND_TOPIC],
             payload,
