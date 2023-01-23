@@ -10,6 +10,7 @@ DONT_IGNORE = (
     "device_action.py",
     "device_condition.py",
     "device_trigger.py",
+    "diagnostics.py",
     "group.py",
     "intent.py",
     "logbook.py",
