@@ -30,7 +30,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from types import MappingProxyType
-from typing import Any, Union
+from typing import Any
 
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State, callback
@@ -43,9 +43,9 @@ CheckTypeFunc = Callable[
     [
         HomeAssistant,
         str,
-        Union[dict, MappingProxyType],
+        dict | MappingProxyType,
         str,
-        Union[dict, MappingProxyType],
+        dict | MappingProxyType,
     ],
     bool | None,
 ]
@@ -54,10 +54,10 @@ ExtraCheckTypeFunc = Callable[
     [
         HomeAssistant,
         str,
-        Union[dict, MappingProxyType],
+        dict | MappingProxyType,
         Any,
         str,
-        Union[dict, MappingProxyType],
+        dict | MappingProxyType,
         Any,
     ],
     bool | None,
