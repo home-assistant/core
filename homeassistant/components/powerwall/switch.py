@@ -46,10 +46,11 @@ class PowerwallOffGridEnabledEntity(PowerWallEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn off-grid mode on."""
-        self._attr_is_on = True
         await self.hass.async_add_executor_job(
             self.power_wall.set_island_mode, IslandMode.OFFGRID
         )
+        self._attr_is_on = True
+        self.async_write_ha_state()
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
