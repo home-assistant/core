@@ -567,7 +567,12 @@ class SensorEntity(Entity):
 
         # If the sensor has neither a device class, a state class nor
         # a unit_of measurement then there are no further checks or conversions
-        if not device_class and not state_class and not unit_of_measurement:
+        if (
+            not device_class
+            and not state_class
+            and not unit_of_measurement
+            and (prec := self.precision) is None
+        ):
             return value
 
         numerical_value: int | float | Decimal | None = None
@@ -579,20 +584,12 @@ class SensorEntity(Entity):
                 else:
                     numerical_value = float(value)  # type:ignore[arg-type]
             except (TypeError, ValueError):
+                # Raise if precision is not None, for other cases log a warning
+                if prec is not None:
+                    raise
                 numerical_conversion_failed = True
         else:
             numerical_value = value
-
-        if (
-            (prec := self.precision) is not None
-            and numerical_value is not None
-            and (self._sensor_option_precision or not isinstance(value, int))
-            and (
-                native_unit_of_measurement == unit_of_measurement
-                or device_class not in UNIT_CONVERTERS
-            )
-        ):
-            value = f"{numerical_value:.{prec}f}"
 
         if not self._invalid_numeric_value_reported and numerical_conversion_failed:
             # This should raise in Home Assistant Core 2023.4
@@ -612,6 +609,17 @@ class SensorEntity(Entity):
                 report_issue,
             )
             return value
+
+        if (
+            prec is not None
+            and numerical_value is not None
+            and (self._sensor_option_precision or not isinstance(value, int))
+            and (
+                native_unit_of_measurement == unit_of_measurement
+                or device_class not in UNIT_CONVERTERS
+            )
+        ):
+            value = f"{numerical_value:.{prec}f}"
 
         if (
             native_unit_of_measurement != unit_of_measurement

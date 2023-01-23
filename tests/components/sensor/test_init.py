@@ -1430,7 +1430,7 @@ async def test_device_classes_with_invalid_unit_of_measurement(
         (date(2012, 11, 10), "2012-11-10"),
     ],
 )
-async def test_non_numeric_validation(
+async def test_non_numeric_validation_warn(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     enable_custom_integrations: None,
@@ -1462,6 +1462,51 @@ async def test_non_numeric_validation(
         "thus indicating it has a numeric value; "
         f"however, it has the non-numeric value: {native_value}"
     ) in caplog.text
+
+
+@pytest.mark.parametrize(
+    "device_class,state_class,unit,precision", ((None, None, None, 1),)
+)
+@pytest.mark.parametrize(
+    "native_value,expected",
+    [
+        ("abc", "abc"),
+        ("13.7.1", "13.7.1"),
+        (datetime(2012, 11, 10, 7, 35, 1), "2012-11-10 07:35:01"),
+        (date(2012, 11, 10), "2012-11-10"),
+    ],
+)
+async def test_non_numeric_validation_raise(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+    native_value: Any,
+    expected: str,
+    device_class: SensorDeviceClass | None,
+    state_class: SensorStateClass | None,
+    unit: str | None,
+    precision,
+) -> None:
+    """Test error on expected numeric entities."""
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test",
+        device_class=device_class,
+        native_precision=precision,
+        native_unit_of_measurement=unit,
+        native_value=native_value,
+        state_class=state_class,
+    )
+    entity0 = platform.ENTITIES["0"]
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity0.entity_id)
+    assert state is None
+
+    assert ("Error adding entities for domain sensor with platform test") in caplog.text
 
 
 @pytest.mark.parametrize(
