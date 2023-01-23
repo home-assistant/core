@@ -23,7 +23,7 @@
                 "title": "Select the receiver that you wish to connect"
             },
             "user": {
-                "description": "By default this integration use a Telnet connection to your receiver to receive realtime updates. Note that only one telnet connection to your receiver can be established. This may interfere with your current setup. You can turn this option off after setting up the integration by clicking the Configure button.",
+                "description": "By default, this integration uses a Telnet connection to your receiver to receive real-time updates. Only one Telnet connection to your receiver can be established at a time. The Telnet connection can be disabled after setting up the integration.",
                 "data": {
                     "host": "IP Address"
                 },
