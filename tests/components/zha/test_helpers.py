@@ -32,6 +32,7 @@ def light_platform_only():
             Platform.LIGHT,
             Platform.NUMBER,
             Platform.SELECT,
+            Platform.SWITCH,
         ),
     ):
         yield

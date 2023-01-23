@@ -99,6 +99,7 @@ def light_platform_only():
             Platform.SENSOR,
             Platform.NUMBER,
             Platform.SELECT,
+            Platform.SWITCH,
         ),
     ):
         yield

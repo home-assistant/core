@@ -38,6 +38,7 @@ def number_platform_only():
             Platform.NUMBER,
             Platform.SELECT,
             Platform.SENSOR,
+            Platform.SWITCH,
         ),
     ):
         yield
