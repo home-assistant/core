@@ -2,11 +2,12 @@
 
 from typing import Any
 
-from tesla_powerwall import GridStatus, IslandMode
+from tesla_powerwall import GridStatus, IslandMode, PowerwallError
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -50,18 +51,24 @@ class PowerwallOffGridEnabledEntity(PowerWallEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn off-grid mode on."""
-        await self.hass.async_add_executor_job(
-            self.power_wall.set_island_mode, IslandMode.OFFGRID
-        )
-        self._attr_is_on = True
-        self.async_write_ha_state()
-        await self.coordinator.async_request_refresh()
+        await self._async_set_island_mode(IslandMode.OFFGRID)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off-grid mode off (return to on-grid usage)."""
-        await self.hass.async_add_executor_job(
-            self.power_wall.set_island_mode, IslandMode.ONGRID
-        )
-        self._attr_is_on = False
+        await self._async_set_island_mode(IslandMode.ONGRID)
+
+    async def _async_set_island_mode(self, island_mode: IslandMode) -> None:
+        """Toggles off-grid mode using the island_mode argument."""
+        try:
+            await self.hass.async_add_executor_job(
+                self.power_wall.set_island_mode, island_mode
+            )
+        except PowerwallError as ex:
+            raise HomeAssistantError(
+                f"Setting off-grid operation to {island_mode} failed: {ex}"
+            ) from ex
+
+        self._attr_is_on = island_mode == IslandMode.OFFGRID
         self.async_write_ha_state()
+
         await self.coordinator.async_request_refresh()
