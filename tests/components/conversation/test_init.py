@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.components import conversation
 from homeassistant.core import DOMAIN as HASS_DOMAIN
-from homeassistant.helpers import intent
+from homeassistant.helpers import entity_registry, intent
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
@@ -37,10 +37,15 @@ async def test_http_processing_intent(
     hass, init_components, hass_client, hass_admin_user
 ):
     """Test processing intent via HTTP API."""
-    hass.states.async_set("light.kitchen", "on")
+    # Add an alias
+    entities = entity_registry.async_get(hass)
+    entities.async_get_or_create("light", "demo", "1234", suggested_object_id="kitchen")
+    entities.async_update_entity("light.kitchen", aliases={"my cool light"})
+    hass.states.async_set("light.kitchen", "off")
+
     client = await hass_client()
     resp = await client.post(
-        "/api/conversation/process", json={"text": "turn on kitchen"}
+        "/api/conversation/process", json={"text": "turn on my cool light"}
     )
 
     assert resp.status == HTTPStatus.OK
@@ -53,7 +58,7 @@ async def test_http_processing_intent(
             "speech": {
                 "plain": {
                     "extra_data": None,
-                    "speech": "Turned on kitchen",
+                    "speech": "Turned on my cool light",
                 }
             },
             "language": hass.config.language,
@@ -174,6 +179,43 @@ async def test_http_api_no_match(hass, init_components, hass_client):
 
 async def test_http_api_handle_failure(hass, init_components, hass_client):
     """Test the HTTP conversation API with an error during handling."""
+    client = await hass_client()
+
+    hass.states.async_set("light.kitchen", "off")
+
+    # Raise an error during intent handling
+    def async_handle_error(*args, **kwargs):
+        raise intent.IntentHandleError()
+
+    with patch("homeassistant.helpers.intent.async_handle", new=async_handle_error):
+        resp = await client.post(
+            "/api/conversation/process", json={"text": "turn on the kitchen"}
+        )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    assert data == {
+        "response": {
+            "response_type": "error",
+            "card": {},
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "An unexpected error occurred while handling the intent",
+                }
+            },
+            "language": hass.config.language,
+            "data": {
+                "code": "failed_to_handle",
+            },
+        },
+        "conversation_id": None,
+    }
+
+
+async def test_http_api_unexpected_failure(hass, init_components, hass_client):
+    """Test the HTTP conversation API with an unexpected error during handling."""
     client = await hass_client()
 
     hass.states.async_set("light.kitchen", "off")
