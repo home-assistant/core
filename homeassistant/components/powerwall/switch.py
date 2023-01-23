@@ -2,16 +2,16 @@
 
 from typing import Any
 
-from tesla_powerwall import GridStatus, IslandMode, Powerwall
+from tesla_powerwall import GridStatus, IslandMode
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, POWERWALL_API, POWERWALL_COORDINATOR
+from .const import DOMAIN
+from .entity import PowerWallEntity
 from .models import PowerwallRuntimeData
 
 ICON = "mdi:home-battery-outline"
@@ -24,14 +24,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up Powerwall switch platform from Powerwall resources."""
     powerwall_data: PowerwallRuntimeData = hass.data[DOMAIN][config_entry.entry_id]
-    power_wall = powerwall_data[POWERWALL_API]
-    coordinator = powerwall_data[POWERWALL_COORDINATOR]
-    assert coordinator is not None
-
-    async_add_entities([PowerwallOffGridEnabledEntity(power_wall, coordinator)])
+    async_add_entities([PowerwallOffGridEnabledEntity(powerwall_data)])
 
 
-class PowerwallOffGridEnabledEntity(SwitchEntity):
+class PowerwallOffGridEnabledEntity(PowerWallEntity, SwitchEntity):
     """Representation of a Switch entity for Powerwall Off-grid operation."""
 
     _attr_name = "Take Powerwall Off-Grid"
@@ -39,15 +35,6 @@ class PowerwallOffGridEnabledEntity(SwitchEntity):
     _attr_entity_category = EntityCategory.CONFIG
     _attr_device_class = SwitchDeviceClass.SWITCH
     _attr_icon = ICON
-
-    def __init__(
-        self,
-        power_wall: Powerwall,
-        coordinator: DataUpdateCoordinator,
-    ) -> None:
-        """Initialise the entity."""
-        self.power_wall = power_wall
-        self.coordinator = coordinator
 
     @property
     def is_on(self) -> bool:
