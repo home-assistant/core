@@ -43,6 +43,7 @@ SENSOR_TYPE_HUMIDITY = "humidity"
 SENSOR_TYPE_POWER = "powersensor"
 SENSOR_TYPE_TEMPERATURE = "temperature"
 SENSOR_TYPE_WINDOWHANDLE = "windowhandle"
+SENSOR_TYPE_WALLSWITCH = "wallswitch"
 
 
 @dataclass
@@ -94,6 +95,13 @@ SENSOR_DESC_WINDOWHANDLE = EnOceanSensorEntityDescription(
     name="WindowHandle",
     icon="mdi:window-open-variant",
     unique_id=lambda dev_id: f"{combine_hex(dev_id)}-{SENSOR_TYPE_WINDOWHANDLE}",
+)
+
+SENSOR_DESC_WALLSWITCH = EnOceanSensorEntityDescription(
+    key=SENSOR_TYPE_WALLSWITCH,
+    name="WallSwitch",
+    icon="mdi:widgets-outline",
+    unique_id=lambda dev_id: f"{combine_hex(dev_id)}-{SENSOR_TYPE_WALLSWITCH}",
 )
 
 
@@ -148,6 +156,9 @@ def setup_platform(
     elif sensor_type == SENSOR_TYPE_WINDOWHANDLE:
         entities = [EnOceanWindowHandle(dev_id, dev_name, SENSOR_DESC_WINDOWHANDLE)]
 
+    elif sensor_type == SENSOR_TYPE_WALLSWITCH:
+        entities = [EnOceanWallSwitch(dev_id, dev_name, SENSOR_DESC_WALLSWITCH)]
+
     add_entities(entities)
 
 
@@ -177,7 +188,6 @@ class EnOceanSensor(EnOceanEntity, RestoreEntity, SensorEntity):
 
 class EnOceanPowerSensor(EnOceanSensor):
     """Representation of an EnOcean power sensor.
-
     EEPs (EnOcean Equipment Profiles):
     - A5-12-01 (Automated Meter Reading, Electricity)
     """
@@ -197,7 +207,6 @@ class EnOceanPowerSensor(EnOceanSensor):
 
 class EnOceanTemperatureSensor(EnOceanSensor):
     """Representation of an EnOcean temperature sensor device.
-
     EEPs (EnOcean Equipment Profiles):
     - A5-02-01 to A5-02-1B All 8 Bit Temperature Sensors of A5-02
     - A5-10-01 to A5-10-14 (Room Operating Panels)
@@ -206,7 +215,6 @@ class EnOceanTemperatureSensor(EnOceanSensor):
     - A5-10-10 (Temp. and Humidity Sensor and Set Point)
     - A5-10-12 (Temp. and Humidity Sensor, Set Point and Occupancy Control)
     - 10 Bit Temp. Sensors are not supported (A5-02-20, A5-02-30)
-
     For the following EEPs the scales must be set to "0 to 250":
     - A5-04-01
     - A5-04-02
@@ -246,7 +254,6 @@ class EnOceanTemperatureSensor(EnOceanSensor):
 
 class EnOceanHumiditySensor(EnOceanSensor):
     """Representation of an EnOcean humidity sensor device.
-
     EEPs (EnOcean Equipment Profiles):
     - A5-04-01 (Temp. and Humidity Sensor, Range 0°C to +40°C and 0% to 100%)
     - A5-04-02 (Temp. and Humidity Sensor, Range -20°C to +60°C and 0% to 100%)
@@ -264,7 +271,6 @@ class EnOceanHumiditySensor(EnOceanSensor):
 
 class EnOceanWindowHandle(EnOceanSensor):
     """Representation of an EnOcean window handle device.
-
     EEPs (EnOcean Equipment Profiles):
     - F6-10-00 (Mechanical handle / Hoppe AG)
     """
@@ -279,5 +285,45 @@ class EnOceanWindowHandle(EnOceanSensor):
             self._attr_native_value = STATE_OPEN
         if action == 0x05:
             self._attr_native_value = "tilt"
+
+        self.schedule_update_ha_state()
+
+
+class EnOceanWallSwitch(EnOceanSensor):
+    """Representation of an EnOcean wall switch.
+    EEPs (EnOcean Equipment Profiles):
+    - F6-02-00 
+    """
+
+    def value_changed(self, packet):
+        """Update the internal state of the sensor."""
+        action = packet.data[1]
+
+        if action == 0xF0:
+            self._attr_native_value = STATE_CLOSED
+        if action in (0xE0, 0xC0):
+            self._attr_native_value = STATE_OPEN
+        if action == 0xD0:
+            self._attr_native_value = "tilt"
+        if action == 0x00:
+            self._attr_native_value = "release"
+        if action == 0x30:
+            self._attr_native_value = "BP1"
+        if action == 0x10:
+            self._attr_native_value = "BP2"
+        if action == 0x70:
+            self._attr_native_value = "BP3"
+        if action == 0x50:
+            self._attr_native_value = "BP4"
+        if action == 0x37:
+            self._attr_native_value = "BP1+3"
+        if action == 0x15:
+            self._attr_native_value = "BP2+4"
+        if action == 0x17:
+            self._attr_native_value = "BP2+3"
+        if action == 0x35:
+            self._attr_native_value = "BP1+4"
+        if action == 0x07:
+            self._attr_native_value = "shock"
 
         self.schedule_update_ha_state()
