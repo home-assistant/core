@@ -8,7 +8,7 @@ from dataclasses import dataclass
 import logging
 from pathlib import Path
 import re
-from typing import Any
+from typing import IO, Any
 
 from hassil.intents import Intents, ResponseType, SlotList, TextSlotList
 from hassil.recognize import recognize
@@ -18,6 +18,7 @@ import yaml
 
 from homeassistant import core, setup
 from homeassistant.helpers import area_registry, entity_registry, intent, template
+from homeassistant.helpers.json import json_loads
 
 from .agent import AbstractConversationAgent, ConversationResult
 from .const import DOMAIN
@@ -26,6 +27,11 @@ _LOGGER = logging.getLogger(__name__)
 _DEFAULT_ERROR_TEXT = "Sorry, I couldn't understand that"
 
 REGEX_TYPE = type(re.compile(""))
+
+
+def json_load(fp: IO[str]) -> dict[str, Any]:
+    """Wrap json_loads for get_intents."""
+    return json_loads(fp.read())
 
 
 @dataclass
@@ -224,7 +230,9 @@ class DefaultAgent(AbstractConversationAgent):
             # Check for intents for this component with the target language.
             # Try en-US, en, etc.
             for language_variation in _get_language_variations(language):
-                component_intents = get_intents(component, language_variation)
+                component_intents = get_intents(
+                    component, language_variation, json_load=json_load
+                )
                 if component_intents:
                     # Merge sentences into existing dictionary
                     merge_dict(intents_dict, component_intents)
