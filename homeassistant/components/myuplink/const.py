@@ -1,0 +1,18 @@
+"""Constants for the myUplink integration."""
+
+DOMAIN = "myuplink"
+
+API_ENDPOINT = "https://api.myuplink.com"
+OAUTH2_AUTHORIZE = "https://api.myuplink.com/oauth/authorize"
+OAUTH2_TOKEN = "https://api.myuplink.com/oauth/token"
+OAUTH2_SCOPES = ["READSYSTEM", "offline_access"]
+
+MU_DATATIME = "DATATIME"
+MU_DATAGROUP_SYSTEMS = "SYSTEMS"
+MU_DATAGROUP_DEVICES = "DEVICES"
+MU_DATAGROUP_POINTS = "POINTS"
+
+MU_DEVICE_PRODUCTNAME = "PRODUCTNAME"
+MU_DEVICE_FIRMWARE_CURRENT = "FIRMWARE_CURRENT"
+MU_DEVICE_FIRMWARE_DESIRED = "FIRMWARE_DESIRED"
+MU_DEVICE_CONNECTIONSTATE = "CONNECTIONSTATE"

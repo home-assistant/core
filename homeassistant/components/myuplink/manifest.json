@@ -1,0 +1,13 @@
+{
+  "domain": "myuplink",
+  "name": "myUplink",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/myuplink",
+  "requirements": ["myuplink==0.0.6"],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": ["application_credentials"],
+  "codeowners": ["@pajzo"],
+  "iot_class": "cloud_polling"
+}

@@ -316,6 +316,7 @@ FLOWS = {
         "mutesync",
         "mysensors",
         "mystrom",
+        "myuplink",
         "nam",
         "nanoleaf",
         "neato",
