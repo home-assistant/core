@@ -67,7 +67,7 @@ class MikrotikData:
         self.model: str = ""
         self.firmware: str = ""
         self.serial_number: str = ""
-        self.is_routerboard: bool | None = None
+        self.is_routerboard: bool = True
 
     @staticmethod
     def load_mac(devices: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
@@ -89,18 +89,9 @@ class MikrotikData:
         """Return force_dhcp option setting."""
         return self.config_entry.options.get(CONF_FORCE_DHCP, False)
 
-    def detect_routerboard_router(self) -> bool:
-        """Detect whether or not it's a routerboard router."""
-        return (
-            len(self.command(MIKROTIK_SERVICES[INFO], log_protocol_errors=False)) != 0
-        )
-
     def get_info(self, param: str) -> str:
         """Return device model name."""
         cmd = IDENTITY if param == NAME else INFO
-
-        if self.is_routerboard is None:
-            self.is_routerboard = self.detect_routerboard_router()
 
         if cmd == INFO and not self.is_routerboard:
             return ""
@@ -222,7 +213,6 @@ class MikrotikData:
         self,
         cmd: str,
         params: dict[str, Any] | None = None,
-        log_protocol_errors: bool = True,
     ) -> list[dict[str, Any]]:
         """Retrieve data from Mikrotik API."""
         _LOGGER.debug("Running command %s", cmd)
@@ -241,7 +231,9 @@ class MikrotikData:
             # we still have to raise CannotConnect to fail the update.
             raise CannotConnect from api_error
         except librouteros.exceptions.ProtocolError as api_error:
-            if log_protocol_errors:
+            if cmd == MIKROTIK_SERVICES[INFO] and "no such command" in str(api_error):
+                self.is_routerboard = False
+            else:
                 _LOGGER.warning(
                     "Mikrotik %s failed to retrieve data. cmd=[%s] Error: %s",
                     self._host,
