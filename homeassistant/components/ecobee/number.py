@@ -66,7 +66,7 @@ class EcobeeVentilatorMinTime(EcobeeBaseEntity, NumberEntity):
 
         self.data = data
         self.thermostat_index = thermostat_index
-        self.thermostat = self.data.ecobee.get_thermostat(self.thermostat_index)
+        self.thermostat = data.ecobee.get_thermostat(self.thermostat_index)
         self.ecobee_setting_key = ecobee_setting_key
         self.set_func = set_func
         self._attr_name = f"Ventilator min time {mode}"
