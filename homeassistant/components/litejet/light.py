@@ -1,7 +1,6 @@
 """Support for LiteJet lights."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from pylitejet import LiteJet
@@ -18,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONF_DEFAULT_TRANSITION, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_NUMBER = "number"
 
@@ -66,14 +63,19 @@ class LiteJetLight(LightEntity):
         """Run when this Entity has been added to HA."""
         self._lj.on_load_activated(self._index, self._on_load_changed)
         self._lj.on_load_deactivated(self._index, self._on_load_changed)
+        self._lj.on_connected_changed(self._on_connected_changed)
 
     async def async_will_remove_from_hass(self) -> None:
         """Entity being removed from hass."""
         self._lj.unsubscribe(self._on_load_changed)
+        self._lj.unsubscribe(self._on_connected_changed)
 
     def _on_load_changed(self, level) -> None:
         """Handle state changes."""
-        _LOGGER.debug("Updating due to notification for %s", self.name)
+        self.schedule_update_ha_state(True)
+
+    def _on_connected_changed(self, connected) -> None:
+        """Handle connected changes."""
         self.schedule_update_ha_state(True)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -107,6 +109,11 @@ class LiteJetLight(LightEntity):
 
     async def async_update(self) -> None:
         """Retrieve the light's brightness from the LiteJet system."""
+        self._attr_available = self._lj.connected
+
+        if not self.available:
+            return
+
         self._attr_brightness = int(
             await self._lj.get_load_level(self._index) / 99 * 255
         )
