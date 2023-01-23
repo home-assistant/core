@@ -50,7 +50,6 @@ ALLOWED_IGNORE_VIOLATIONS = {
     ("sonos", "diagnostics.py"),
     ("stookalert", "diagnostics.py"),
     ("stookwijzer", "diagnostics.py"),
-    ("stream", "diagnostics.py"),
     ("synology_dsm", "diagnostics.py"),
     ("system_bridge", "media_source.py"),
     ("tractive", "diagnostics.py"),
