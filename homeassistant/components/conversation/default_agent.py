@@ -17,7 +17,7 @@ from home_assistant_intents import get_intents
 import yaml
 
 from homeassistant import core, setup
-from homeassistant.helpers import area_registry, entity_registry, intent
+from homeassistant.helpers import area_registry, entity_registry, intent, template
 
 from .agent import AbstractConversationAgent, ConversationResult
 from .const import DOMAIN
@@ -33,6 +33,7 @@ class LanguageIntents:
 
     intents: Intents
     intents_dict: dict[str, Any]
+    intent_responses: dict[str, Any]
     loaded_components: set[str]
 
 
@@ -113,6 +114,28 @@ class DefaultAgent(AbstractConversationAgent):
             context,
             language,
         )
+
+        if (
+            (not intent_response.speech)
+            and (intent_response.intent is not None)
+            and (response_key := result.response)
+        ):
+            # Use response template, if available
+            response_str = lang_intents.intent_responses.get(
+                result.intent.name, {}
+            ).get(response_key)
+            if response_str:
+                response_template = template.Template(response_str, self.hass)
+                intent_response.async_set_speech(
+                    response_template.async_render(
+                        {
+                            "slots": {
+                                entity_name: entity_value.text or entity_value.value
+                                for entity_name, entity_value in result.entities.items()
+                            }
+                        }
+                    )
+                )
 
         return ConversationResult(
             response=intent_response, conversation_id=conversation_id
@@ -230,11 +253,15 @@ class DefaultAgent(AbstractConversationAgent):
         # components with sentences are often being loaded.
         intents = Intents.from_dict(intents_dict)
 
+        intent_responses = intents_dict.get("responses", {}).get("intents", {})
         if lang_intents is None:
-            lang_intents = LanguageIntents(intents, intents_dict, loaded_components)
+            lang_intents = LanguageIntents(
+                intents, intents_dict, intent_responses, loaded_components
+            )
             self._lang_intents[language] = lang_intents
         else:
             lang_intents.intents = intents
+            lang_intents.intent_responses = intent_responses
 
         return lang_intents
 
@@ -256,6 +283,9 @@ class DefaultAgent(AbstractConversationAgent):
         registry = entity_registry.async_get(self.hass)
         names = []
         for state in states:
+            domain = state.entity_id.split(".", maxsplit=1)[0]
+            context = {"domain": domain}
+
             entry = registry.async_get(state.entity_id)
             if entry is not None:
                 if entry.entity_category:
@@ -264,9 +294,9 @@ class DefaultAgent(AbstractConversationAgent):
 
                 if entry.aliases:
                     for alias in entry.aliases:
-                        names.append((alias, state.entity_id))
+                        names.append((alias, state.entity_id, context))
 
             # Default name
-            names.append((state.name, state.entity_id))
+            names.append((state.name, state.entity_id, context))
 
         return TextSlotList.from_tuples(names)
