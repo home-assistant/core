@@ -34,8 +34,8 @@ ALLOWED_IGNORE_VIOLATIONS = {
     ("radio_browser", "media_source.py"),
     ("system_bridge", "media_source.py"),
     ("tuya", "scene.py"),
-    ("velux", "scene.py"),
     ("upb", "scene.py"),
+    ("velux", "scene.py"),
     ("xbox", "media_source.py"),
 }
 
