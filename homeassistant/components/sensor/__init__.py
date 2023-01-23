@@ -565,6 +565,11 @@ class SensorEntity(Entity):
                 )
             return value
 
+        # If the sensor has neither a device class, a state class nor
+        # a unit_of measurement then there are no further checks or conversions
+        if not device_class and not state_class and not unit_of_measurement:
+            return value
+
         numerical_value: int | float | Decimal | None = None
         numerical_conversion_failed = None
         if not isinstance(value, (int, float, Decimal)):
@@ -588,11 +593,6 @@ class SensorEntity(Entity):
             )
         ):
             value = f"{numerical_value:.{prec}f}"
-
-        # If the sensor has neither a device class, a state class nor
-        # a unit_of measurement then there are no further checks or conversions
-        if not device_class and not state_class and not unit_of_measurement:
-            return value
 
         if not self._invalid_numeric_value_reported and numerical_conversion_failed:
             # This should raise in Home Assistant Core 2023.4
