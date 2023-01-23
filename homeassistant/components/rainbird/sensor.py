@@ -32,7 +32,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             RainBirdSensor(
-                hass.data[DOMAIN][config_entry.entry_id],
+                hass.data[DOMAIN][config_entry.entry_id].coordinator,
                 RAIN_DELAY_ENTITY_DESCRIPTION,
             )
         ]

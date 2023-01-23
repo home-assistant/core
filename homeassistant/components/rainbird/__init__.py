@@ -11,9 +11,15 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_SERIAL_NUMBER
-from .coordinator import RainbirdUpdateCoordinator
+from .coordinator import RainbirdData, RainbirdUpdateCoordinator
 
-PLATFORMS = [Platform.SWITCH, Platform.SENSOR, Platform.BINARY_SENSOR, Platform.NUMBER]
+PLATFORMS = [
+    Platform.SWITCH,
+    Platform.SENSOR,
+    Platform.BINARY_SENSOR,
+    Platform.NUMBER,
+    Platform.CALENDAR,
+]
 
 
 DOMAIN = "rainbird"
@@ -21,8 +27,6 @@ DOMAIN = "rainbird"
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the config entry for Rain Bird."""
-
-    hass.data.setdefault(DOMAIN, {})
 
     controller = AsyncRainbirdController(
         AsyncRainbirdClient(

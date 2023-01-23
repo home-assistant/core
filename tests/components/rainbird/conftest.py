@@ -176,6 +176,38 @@ def mock_rain_delay_response() -> str:
     return RAIN_DELAY_OFF
 
 
+@pytest.fixture(name="schedule_responses")
+def mock_schedule_responses() -> list[str]:
+    """Mock response to return the irrigation schedule."""
+    # Example schedule from TM2
+    return [
+        # Model and version
+        "820005090C",
+        # Current running program
+        "A0000000000400",
+        # Per-program information
+        "A00010060602006400",  # CYCLIC every 6 days
+        "A00011110602006400",
+        "A00012000300006400",
+        # Start times per program
+        "A0006000F0FFFFFFFFFFFF",  # 4am
+        "A00061FFFFFFFFFFFFFFFF",
+        "A00062FFFFFFFFFFFFFFFF",
+        # Run times for each zone
+        "A00080001900000000001400000000",  # zone1=25, zone2=20
+        "A00081000700000000001400000000",  # zone3=7, zone4=20
+        "A00082000A00000000000000000000",  # zone5=10
+        "A00083000000000000000000000000",
+        "A00084000000000000000000000000",
+        "A00085000000000000000000000000",
+        "A00086000000000000000000000000",
+        "A00087000000000000000000000000",
+        "A00088000000000000000000000000",
+        "A00089000000000000000000000000",
+        "A0008A000000000000000000000000",
+    ]
+
+
 @pytest.fixture(name="api_responses")
 def mock_api_responses(
     stations_response: str,

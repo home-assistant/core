@@ -5,23 +5,31 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 import datetime
+from functools import cached_property
 import logging
 from typing import TypeVar
+
+import async_timeout
 
 from pyrainbird.async_client import (
     AsyncRainbirdController,
     RainbirdApiException,
     RainbirdDeviceBusyException,
 )
-from pyrainbird.data import ModelAndVersion
+from pyrainbird.data import ModelAndVersion, Schedule
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, MANUFACTURER, TIMEOUT_SECONDS
+from .const import CONF_SERIAL_NUMBER, DOMAIN, MANUFACTURER, TIMEOUT_SECONDS
 
 UPDATE_INTERVAL = datetime.timedelta(minutes=1)
+# The calendar data requires RPCs for each program/zone, and the data rarely
+# changes, so we refresh it less often. However, the calendar entity state refreshes more
+# frequently to check for the start of an event.
+CALENDAR_UPDATE_INTERVAL = datetime.timedelta(minutes=15)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,7 +57,7 @@ class RainbirdUpdateCoordinator(DataUpdateCoordinator[RainbirdDeviceState]):
         serial_number: str,
         model_info: ModelAndVersion,
     ) -> None:
-        """Initialize ZoneStateUpdateCoordinator."""
+        """Initialize RainbirdUpdateCoordinator."""
         super().__init__(
             hass,
             _LOGGER,
@@ -108,4 +116,63 @@ class RainbirdUpdateCoordinator(DataUpdateCoordinator[RainbirdDeviceState]):
             active_zones=states.active_set,
             rain=rain,
             rain_delay=rain_delay,
+        )
+
+
+class RainbirdScheduleUpdateCoordinator(DataUpdateCoordinator[Schedule]):
+    """Coordinator for rainbird irrigation schedule calls."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        name: str,
+        controller: AsyncRainbirdController,
+    ) -> None:
+        """Initialize ZoneStateUpdateCoordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=name,
+            update_method=self._async_update_data,
+            update_interval=CALENDAR_UPDATE_INTERVAL,
+        )
+        self._controller = controller
+
+    async def _async_update_data(self) -> Schedule:
+        """Fetch data from Rain Bird device."""
+        try:
+            async with async_timeout.timeout(TIMEOUT_SECONDS):
+                return await self._controller.get_schedule()
+        except RainbirdApiException as err:
+            raise UpdateFailed(f"Error communicating with Device: {err}") from err
+
+
+@dataclass
+class RainbirdData:
+    """Holder for shared integration data.
+
+    The coordinators are lazy since they may only be used by some platforms when needed.
+    """
+
+    hass: HomeAssistant
+    entry: ConfigEntry
+    controller: AsyncRainbirdController
+
+    @cached_property
+    def coordinator(self) -> RainbirdUpdateCoordinator:
+        """Return RainbirdUpdateCoordinator."""
+        return RainbirdUpdateCoordinator(
+            self.hass,
+            name=self.entry.title,
+            controller=self.controller,
+            serial_number=self.entry.data[CONF_SERIAL_NUMBER],
+        )
+
+    @cached_property
+    def schedule_coordinator(self) -> RainbirdScheduleUpdateCoordinator:
+        """Return RainbirdScheduleUpdateCoordinator."""
+        return RainbirdScheduleUpdateCoordinator(
+            self.hass,
+            name=f"{self.entry.title} Schedule",
+            controller=self.controller,
         )
