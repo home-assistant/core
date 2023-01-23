@@ -1,0 +1,27 @@
+{
+    "state": {
+        "climacell__health_concern": {
+            "good": "Bra",
+            "hazardous": "Farligt",
+            "moderate": "M\u00e5ttligt",
+            "unhealthy": "Oh\u00e4lsosamt",
+            "unhealthy_for_sensitive_groups": "Oh\u00e4lsosamt f\u00f6r k\u00e4nsliga grupper",
+            "very_unhealthy": "Mycket oh\u00e4lsosamt"
+        },
+        "climacell__pollen_index": {
+            "high": "H\u00f6gt",
+            "low": "L\u00e5gt",
+            "medium": "Medium",
+            "none": "Inget",
+            "very_high": "V\u00e4ldigt h\u00f6gt",
+            "very_low": "V\u00e4ldigt l\u00e5gt"
+        },
+        "climacell__precipitation_type": {
+            "freezing_rain": "Underkylt regn",
+            "ice_pellets": "Hagel",
+            "none": "Ingen",
+            "rain": "Regn",
+            "snow": "Sn\u00f6"
+        }
+    }
+}
