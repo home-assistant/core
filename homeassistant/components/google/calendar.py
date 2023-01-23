@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Iterable
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Union, cast
+from typing import Any, cast
 
 from gcal_sync.api import (
     GoogleCalendarService,
@@ -392,9 +392,7 @@ class CalendarQueryUpdateCoordinator(DataUpdateCoordinator[list[Event]]):
 
 
 class GoogleCalendarEntity(
-    CoordinatorEntity[
-        Union[CalendarSyncUpdateCoordinator, CalendarQueryUpdateCoordinator]
-    ],
+    CoordinatorEntity[CalendarSyncUpdateCoordinator | CalendarQueryUpdateCoordinator],
     CalendarEntity,
 ):
     """A calendar event entity."""

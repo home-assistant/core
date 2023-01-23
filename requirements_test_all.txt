@@ -408,7 +408,7 @@ bthome-ble==2.5.0
 buienradar==1.0.5
 
 # homeassistant.components.caldav
-caldav==0.9.1
+caldav==1.0.1
 
 # homeassistant.components.co2signal
 co2signal==0.4.2
@@ -1730,7 +1730,7 @@ tellduslive==0.10.11
 temescal==0.5
 
 # homeassistant.components.powerwall
-tesla-powerwall==0.3.18
+tesla-powerwall==0.3.19
 
 # homeassistant.components.tesla_wall_connector
 tesla-wall-connector==1.0.2

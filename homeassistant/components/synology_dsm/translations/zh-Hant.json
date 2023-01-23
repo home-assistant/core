@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "no_mac_address": "Zeroconf \u7d00\u9304\u4e2d\u7f3a\u5c11 Mac \u4f4d\u5740",
             "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f",
             "reconfigure_successful": "\u91cd\u65b0\u8a2d\u5b9a\u6210\u529f"
         },

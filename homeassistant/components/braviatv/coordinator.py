@@ -6,7 +6,7 @@ from datetime import timedelta
 from functools import wraps
 import logging
 from types import MappingProxyType
-from typing import Any, Final, TypeVar
+from typing import Any, Concatenate, Final, ParamSpec, TypeVar
 
 from pybravia import (
     BraviaAuthError,
@@ -17,7 +17,6 @@ from pybravia import (
     BraviaNotFound,
     BraviaTurnedOff,
 )
-from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.components.media_player import MediaType
 from homeassistant.const import CONF_PIN
