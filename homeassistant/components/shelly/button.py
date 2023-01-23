@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, Final, Generic, TypeVar, Union
+from typing import Any, Final, Generic, TypeVar
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -23,7 +23,7 @@ from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator, get_entry
 from .utils import get_block_device_name, get_device_entry_gen, get_rpc_device_name
 
 _ShellyCoordinatorT = TypeVar(
-    "_ShellyCoordinatorT", bound=Union[ShellyBlockCoordinator, ShellyRpcCoordinator]
+    "_ShellyCoordinatorT", bound=ShellyBlockCoordinator | ShellyRpcCoordinator
 )
 
 
@@ -44,7 +44,7 @@ class ShellyButtonDescription(
 
 
 BUTTONS: Final[list[ShellyButtonDescription[Any]]] = [
-    ShellyButtonDescription[Union[ShellyBlockCoordinator, ShellyRpcCoordinator]](
+    ShellyButtonDescription[ShellyBlockCoordinator | ShellyRpcCoordinator](
         key="reboot",
         name="Reboot",
         device_class=ButtonDeviceClass.RESTART,
@@ -102,7 +102,7 @@ async def async_setup_entry(
 
 
 class ShellyButton(
-    CoordinatorEntity[Union[ShellyRpcCoordinator, ShellyBlockCoordinator]], ButtonEntity
+    CoordinatorEntity[ShellyRpcCoordinator | ShellyBlockCoordinator], ButtonEntity
 ):
     """Defines a Shelly base button."""
 
