@@ -37,6 +37,7 @@ HEADER: Final = """
 
 GENERAL_SETTINGS: Final[dict[str, str]] = {
     "python_version": ".".join(str(x) for x in REQUIRED_PYTHON_VER[:2]),
+    "plugins": ", ".join(["sqlalchemy.ext.mypy.plugin"]),
     "show_error_codes": "true",
     "follow_imports": "silent",
     # Enable some checks globally.
