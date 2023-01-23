@@ -63,7 +63,7 @@ class LiteJetSwitch(SwitchEntity):
         self._attr_is_on = False
         self.schedule_update_ha_state()
 
-    def _on_connected_changed(self, connected):
+    def _on_connected_changed(self, connected: bool, reason: str) -> None:
         self._attr_available = connected
         self.schedule_update_ha_state()
 

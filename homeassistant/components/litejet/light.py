@@ -74,7 +74,7 @@ class LiteJetLight(LightEntity):
         """Handle state changes."""
         self.schedule_update_ha_state(True)
 
-    def _on_connected_changed(self, connected) -> None:
+    def _on_connected_changed(self, connected: bool, reason: str) -> None:
         """Handle connected changes."""
         self.schedule_update_ha_state(True)
 

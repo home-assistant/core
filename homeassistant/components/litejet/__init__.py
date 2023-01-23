@@ -57,6 +57,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Error connecting to the LiteJet MCP at %s", port, exc_info=ex)
         raise ConfigEntryNotReady from ex
 
+    def handle_connected_changed(self, connected: bool, reason: str) -> None:
+        if connected:
+            _LOGGER.info("Connected")
+        else:
+            _LOGGER.warning("Disconnected %s", reason)
+
+    system.on_connected_changed(handle_connected_changed)
+
     async def handle_stop(event) -> None:
         await system.close()
 
