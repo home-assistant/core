@@ -24,9 +24,7 @@ class JvcProjectorConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize the config flow."""
-        self._reauth_entry: ConfigEntry | None = None
+    _reauth_entry: ConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -37,9 +35,7 @@ class JvcProjectorConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             host = user_input[CONF_HOST]
             port = user_input[CONF_PORT]
-            password = None
-            if CONF_PASSWORD in user_input:
-                password = user_input[CONF_PASSWORD]
+            password = user_input.get(CONF_PASSWORD)
 
             try:
                 if not is_host_valid(host):
@@ -54,7 +50,9 @@ class JvcProjectorConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             else:
                 await self.async_set_unique_id(format_mac(mac))
-                self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+                self._abort_if_unique_id_configured(
+                    updates={CONF_HOST: host, CONF_PORT: port, CONF_PASSWORD: password}
+                )
 
                 return self.async_create_entry(
                     title=f"{NAME}",
