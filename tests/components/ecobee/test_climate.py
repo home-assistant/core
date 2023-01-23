@@ -13,7 +13,7 @@ from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_OFF
 from tests.components.ecobee import GENERIC_THERMOSTAT_INFO_WITH_HEATPUMP
 from tests.components.ecobee.common import setup_platform
 
-DEVICE_ID = "climate.ecobee"
+ENTITY_ID = "climate.ecobee"
 
 
 @pytest.fixture
@@ -86,7 +86,7 @@ async def test_name(thermostat):
 async def test_aux_heat_not_supported_by_default(hass):
     """Default setup should not support Aux heat."""
     await setup_platform(hass, CLIMATE_DOMAIN)
-    state = hass.states.get(DEVICE_ID)
+    state = hass.states.get(ENTITY_ID)
     assert (
         state.attributes.get(ATTR_SUPPORTED_FEATURES)
         == ClimateEntityFeature.PRESET_MODE
@@ -103,7 +103,7 @@ async def test_aux_heat_supported_with_heat_pump(hass):
     mock_get_thermostat.return_value = GENERIC_THERMOSTAT_INFO_WITH_HEATPUMP
     with mock.patch("pyecobee.Ecobee.get_thermostat", mock_get_thermostat):
         await setup_platform(hass, CLIMATE_DOMAIN)
-    state = hass.states.get(DEVICE_ID)
+    state = hass.states.get(ENTITY_ID)
     assert (
         state.attributes.get(ATTR_SUPPORTED_FEATURES)
         == ClimateEntityFeature.PRESET_MODE
@@ -248,7 +248,7 @@ async def test_is_aux_heat_on(hass):
     mock_get_thermostat.return_value["settings"]["hvacMode"] = "auxHeatOnly"
     with mock.patch("pyecobee.Ecobee.get_thermostat", mock_get_thermostat):
         await setup_platform(hass, CLIMATE_DOMAIN)
-    state = hass.states.get(DEVICE_ID)
+    state = hass.states.get(ENTITY_ID)
     assert state.attributes[ATTR_AUX_HEAT] == "on"
 
 
@@ -258,7 +258,7 @@ async def test_is_aux_heat_off(hass):
     mock_get_thermostat.return_value = GENERIC_THERMOSTAT_INFO_WITH_HEATPUMP
     with mock.patch("pyecobee.Ecobee.get_thermostat", mock_get_thermostat):
         await setup_platform(hass, CLIMATE_DOMAIN)
-    state = hass.states.get(DEVICE_ID)
+    state = hass.states.get(ENTITY_ID)
     assert state.attributes[ATTR_AUX_HEAT] == "off"
 
 
@@ -393,14 +393,12 @@ async def test_set_fan_mode_auto(thermostat, data):
 
 async def test_turn_aux_heat_on(thermostat, data):
     """Test when aux heat is set on.  This must change the HVAC mode."""
-    data.reset_mock()
     thermostat.turn_aux_heat_on()
     data.ecobee.set_hvac_mode.assert_has_calls([mock.call(1, "auxHeatOnly")])
 
 
 async def test_turn_aux_heat_off(thermostat, data):
     """Test when aux heat is tuned off.  Must change HVAC mode back to last used."""
-    data.reset_mock()
     thermostat._last_active_hvac_mode = "heat"
     thermostat.turn_aux_heat_off()
     data.ecobee.set_hvac_mode.assert_has_calls([mock.call(1, "heat")])

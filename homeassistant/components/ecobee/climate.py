@@ -320,12 +320,9 @@ class Thermostat(ClimateEntity):
         self._last_active_hvac_mode = HVACMode.HEAT_COOL
 
         self._operation_list = []
-        if (
-            self.thermostat["settings"]["heatStages"]
-            or self.thermostat["settings"]["hasHeatPump"]
-        ):
+        if self.settings["heatStages"] or self.settings["hasHeatPump"]:
             self._operation_list.append(HVACMode.HEAT)
-        if self.thermostat["settings"]["coolStages"]:
+        if self.settings["coolStages"]:
             self._operation_list.append(HVACMode.COOL)
         if len(self._operation_list) == 2:
             self._operation_list.insert(0, HVACMode.HEAT_COOL)
@@ -504,7 +501,7 @@ class Thermostat(ClimateEntity):
     @property
     def hvac_mode(self):
         """Return current operation."""
-        return ECOBEE_HVAC_TO_HASS[self.thermostat["settings"]["hvacMode"]]
+        return ECOBEE_HVAC_TO_HASS[self.settings["hvacMode"]]
 
     @property
     def hvac_modes(self):
@@ -556,13 +553,13 @@ class Thermostat(ClimateEntity):
                 self.thermostat["program"]["currentClimateRef"]
             ],
             "equipment_running": status,
-            "fan_min_on_time": self.thermostat["settings"]["fanMinOnTime"],
+            "fan_min_on_time": self.settings["fanMinOnTime"],
         }
 
     @property
     def is_aux_heat(self):
         """Return true if aux heater."""
-        return self.thermostat["settings"]["hvacMode"] == ECOBEE_AUX_HEAT_ONLY
+        return self.settings["hvacMode"] == ECOBEE_AUX_HEAT_ONLY
 
     def turn_aux_heat_on(self):
         """Turn auxiliary heater on."""
@@ -697,7 +694,7 @@ class Thermostat(ClimateEntity):
             heat_temp = temp
             cool_temp = temp
         else:
-            delta = self.thermostat["settings"]["heatCoolMinDelta"] / 10.0
+            delta = self.settings["heatCoolMinDelta"] / 10.0
             heat_temp = temp - delta
             cool_temp = temp + delta
         self.set_auto_temp_hold(heat_temp, cool_temp)
@@ -756,7 +753,7 @@ class Thermostat(ClimateEntity):
         #   "useEndTime2hour", "useEndTime4hour"
         #   "nextPeriod", "askMe"
         #   "indefinite"
-        device_preference = self.thermostat["settings"]["holdAction"]
+        device_preference = self.settings["holdAction"]
         # Currently supported pyecobee holdTypes:
         #   dateTime, nextTransition, indefinite, holdHours
         hold_pref_map = {
@@ -772,7 +769,7 @@ class Thermostat(ClimateEntity):
         #   "useEndTime2hour", "useEndTime4hour"
         #   "nextPeriod", "askMe"
         #   "indefinite"
-        device_preference = self.thermostat["settings"]["holdAction"]
+        device_preference = self.settings["holdAction"]
         hold_hours_map = {
             "useEndTime2hour": 2,
             "useEndTime4hour": 4,
