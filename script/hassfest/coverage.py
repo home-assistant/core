@@ -108,6 +108,15 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
 
             integration = integrations[integration_path.name]
 
+            if (
+                path.parts[-1] == "*"
+                and Path(f"tests/components/{integration.domain}/__init__.py").exists()
+            ):
+                integration.add_error(
+                    "coverage",
+                    "has tests and should not use wildcard in .coveragerc file",
+                )
+
             for check in DONT_IGNORE:
                 if path.parts[-1] not in {"*", check}:
                     continue
