@@ -299,6 +299,7 @@ _CONVERTED_VALUE: dict[
         (30, UnitOfPressure.MMHG, 39.9967, UnitOfPressure.MBAR),
         (30, UnitOfPressure.MMHG, 3.99967, UnitOfPressure.CBAR),
         (30, UnitOfPressure.MMHG, 1.181102, UnitOfPressure.INHG),
+        (5, UnitOfPressure.BAR, 72.51887, UnitOfPressure.PSI),
     ],
     SpeedConverter: [
         # 5 km/h / 1.609 km/mi = 3.10686 mi/h
@@ -424,8 +425,20 @@ _CONVERTED_VALUE: dict[
 def test_all_converters(converter: type[BaseUnitConverter]) -> None:
     """Ensure all unit converters are tested."""
     assert converter in _ALL_CONVERTERS, "converter is not present in _ALL_CONVERTERS"
+
     assert converter in _GET_UNIT_RATIO, "converter is not present in _GET_UNIT_RATIO"
+    unit_ratio_item = _GET_UNIT_RATIO[converter]
+    assert unit_ratio_item[0] != unit_ratio_item[1], "ratio units should be different"
+
     assert converter in _CONVERTED_VALUE, "converter is not present in _CONVERTED_VALUE"
+    converted_value_items = _CONVERTED_VALUE[converter]
+    for valid_unit in converter.VALID_UNITS:
+        assert any(
+            item
+            for item in converted_value_items
+            # item[1] is from_unit, item[3] is to_unit
+            if valid_unit in {item[1], item[3]}
+        ), f"Unit `{valid_unit}` is not tested in _CONVERTED_VALUE"
 
 
 @pytest.mark.parametrize(
