@@ -92,7 +92,7 @@ forced_separate = [
 combine_as_imports = true
 
 [tool.pylint.MAIN]
-py-version = "3.9"
+py-version = "3.10"
 ignore = [
     "tests",
 ]
@@ -164,6 +164,9 @@ good-names = [
 # Enable once current issues are fixed:
 # consider-using-namedtuple-or-dataclass (Pylint CodeStyle extension)
 # consider-using-assignment-expr (Pylint CodeStyle extension)
+# ---
+# Temporary for the Python 3.10 update
+# consider-alternative-union-syntax
 disable = [
     "format",
     "abstract-method",
@@ -188,6 +191,7 @@ disable = [
     "consider-using-f-string",
     "consider-using-namedtuple-or-dataclass",
     "consider-using-assignment-expr",
+    "consider-alternative-union-syntax",
 ]
 enable = [
     #"useless-suppression",  # temporarily every now and then to clean them up
