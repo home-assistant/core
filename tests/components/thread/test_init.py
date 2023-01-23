@@ -8,7 +8,7 @@ from homeassistant.setup import async_setup_component
 async def test_create_entry(hass: HomeAssistant):
     """Test an entry is created by async_setup."""
     assert len(hass.config_entries.async_entries(thread.DOMAIN)) == 0
-    hass.async_create_task(async_setup_component(hass, thread.DOMAIN, {}))
+    assert await async_setup_component(hass, thread.DOMAIN, {})
     await hass.async_block_till_done()
 
     assert len(hass.config_entries.async_entries(thread.DOMAIN)) == 1
