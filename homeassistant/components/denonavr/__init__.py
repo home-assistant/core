@@ -5,8 +5,8 @@ from denonavr import DenonAVR
 from denonavr.exceptions import AvrNetworkError, AvrTimoutError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.httpx_client import get_async_client
@@ -63,6 +63,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    async def disconnect(event: Event) -> None:
+        """Disconnect from Telnet."""
+        if (
+            entry.options.get(CONF_USE_TELNET, DEFAULT_USE_TELNET)
+            and receiver is not None
+        ):
+            await receiver.async_telnet_disconnect()
+
+    if entry.options.get(CONF_USE_TELNET, DEFAULT_USE_TELNET):
+        entry.async_on_unload(
+            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, disconnect)
+        )
 
     return True
 
