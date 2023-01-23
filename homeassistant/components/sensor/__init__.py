@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation as DecimalInvalidOperation
 import logging
-from math import floor, log10
+from math import ceil, floor, log10
 from typing import Any, Final, cast, final
 
 from homeassistant.config_entries import ConfigEntry
@@ -369,11 +369,11 @@ class SensorEntity(Entity):
             return self._sensor_option_precision
 
         # Second priority, native precision
+        if self.native_precision is None:
+            return None
         device_class = self.device_class
         native_unit_of_measurement = self.native_unit_of_measurement
         unit_of_measurement = self.unit_of_measurement
-        if self.native_precision is None:
-            return None
         precision = self.native_precision
 
         if (
@@ -389,6 +389,7 @@ class SensorEntity(Entity):
                     native_unit_of_measurement, unit_of_measurement
                 )
             )
+            ratio_log = floor(ratio_log) if ratio_log > 0 else ceil(ratio_log)
             precision = max(0, precision + floor(ratio_log))
 
         return precision

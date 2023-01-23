@@ -514,17 +514,133 @@ async def test_custom_unit(
 
 
 @pytest.mark.parametrize(
-    "device_class,native_unit,custom_precision,native_value,custom_state",
+    "device_class,native_unit,custom_unit,native_value,native_precision,default_state,custom_state",
     [
         (
-            SensorDeviceClass.ATMOSPHERIC_PRESSURE,  # Defaults to 0 decimals
+            SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+            UnitOfPressure.HPA,
+            UnitOfPressure.INHG,
+            1000.0,
+            2,
+            "1000.00",  # Native precision is 2
+            "29.530",  # One digit of precision added when converting
+        ),
+        (
+            SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+            UnitOfPressure.INHG,
+            UnitOfPressure.HPA,
+            29.9211,
+            3,
+            "29.921",  # Native precision is 3
+            "1013.24",  # One digit of precision removed when converting
+        ),
+    ],
+)
+async def test_native_precision_scaling(
+    hass,
+    enable_custom_integrations,
+    device_class,
+    native_unit,
+    custom_unit,
+    native_value,
+    native_precision,
+    default_state,
+    custom_state,
+):
+    """Test native precision is influenced by unit conversion."""
+    entity_registry = er.async_get(hass)
+
+    entry = entity_registry.async_get_or_create("sensor", "test", "very_unique")
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test",
+        native_value=str(native_value),
+        native_precision=native_precision,
+        native_unit_of_measurement=native_unit,
+        device_class=device_class,
+        unique_id="very_unique",
+    )
+
+    entity0 = platform.ENTITIES["0"]
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity0.entity_id)
+    assert state.state == default_state
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == native_unit
+
+    entity_registry.async_update_entity_options(
+        entry.entity_id, "sensor", {"unit_of_measurement": custom_unit}
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity0.entity_id)
+    assert state.state == custom_state
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == custom_unit
+
+
+@pytest.mark.parametrize(
+    "device_class,native_unit,custom_precision,native_value,default_state,custom_state",
+    [
+        (
+            SensorDeviceClass.ATMOSPHERIC_PRESSURE,
             UnitOfPressure.HPA,
             4,
             1000.0,
+            "1000.000",
             "1000.0000",
         ),
+    ],
+)
+async def test_custom_precision_native_precision(
+    hass,
+    enable_custom_integrations,
+    device_class,
+    native_unit,
+    custom_precision,
+    native_value,
+    default_state,
+    custom_state,
+):
+    """Test custom precision."""
+    entity_registry = er.async_get(hass)
+
+    entry = entity_registry.async_get_or_create("sensor", "test", "very_unique")
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test",
+        native_value=str(native_value),
+        native_precision=3,
+        native_unit_of_measurement=native_unit,
+        device_class=device_class,
+        unique_id="very_unique",
+    )
+
+    entity0 = platform.ENTITIES["0"]
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity0.entity_id)
+    assert state.state == default_state
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == native_unit
+
+    entity_registry.async_update_entity_options(
+        entry.entity_id, "sensor", {"precision": custom_precision}
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity0.entity_id)
+    assert state.state == custom_state
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == native_unit
+
+
+@pytest.mark.parametrize(
+    "device_class,native_unit,custom_precision,native_value,custom_state",
+    [
         (
-            SensorDeviceClass.PRESSURE,  # Defaults to 2 decimals
+            SensorDeviceClass.ATMOSPHERIC_PRESSURE,
             UnitOfPressure.HPA,
             4,
             1000.0,
@@ -532,7 +648,7 @@ async def test_custom_unit(
         ),
     ],
 )
-async def test_custom_precision(
+async def test_custom_precision_no_native_precision(
     hass,
     enable_custom_integrations,
     device_class,
