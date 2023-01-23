@@ -32,6 +32,7 @@ from typing import (
     Generic,
     NamedTuple,
     Optional,
+    ParamSpec,
     TypeVar,
     Union,
     cast,
@@ -39,7 +40,6 @@ from typing import (
 )
 from urllib.parse import urlparse
 
-from typing_extensions import ParamSpec
 import voluptuous as vol
 import yarl
 
