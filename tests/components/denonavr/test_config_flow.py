@@ -435,7 +435,12 @@ async def test_options_flow(hass):
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={CONF_SHOW_ALL_SOURCES: True, CONF_ZONE2: True, CONF_ZONE3: True},
+        user_input={
+            CONF_SHOW_ALL_SOURCES: True,
+            CONF_ZONE2: True,
+            CONF_ZONE3: True,
+            CONF_USE_TELNET: False,
+        },
     )
 
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
