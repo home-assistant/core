@@ -94,7 +94,7 @@ def handle_subscribe_events(
 ) -> None:
     """Handle subscribe events command."""
     # Circular dep
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from .permissions import SUBSCRIBE_ALLOWLIST
 
     event_type = msg["event_type"]
@@ -561,7 +561,7 @@ async def handle_subscribe_trigger(
 ) -> None:
     """Handle subscribe trigger command."""
     # Circular dep
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from homeassistant.helpers import trigger
 
     trigger_config = await trigger.async_validate_trigger_config(hass, msg["trigger"])
@@ -612,7 +612,7 @@ async def handle_test_condition(
 ) -> None:
     """Handle test condition command."""
     # Circular dep
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from homeassistant.helpers import condition
 
     # Do static + dynamic validation of the condition
@@ -638,7 +638,7 @@ async def handle_execute_script(
 ) -> None:
     """Handle execute script command."""
     # Circular dep
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from homeassistant.helpers.script import Script
 
     context = connection.context(msg)
@@ -680,7 +680,7 @@ async def handle_validate_config(
 ) -> None:
     """Handle validate config command."""
     # Circular dep
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from homeassistant.helpers import condition, script, trigger
 
     result = {}

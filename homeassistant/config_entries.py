@@ -11,7 +11,7 @@ import functools
 import logging
 from random import randint
 from types import MappingProxyType, MethodType
-from typing import TYPE_CHECKING, Any, Optional, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 import weakref
 
 from . import data_entry_flow, loader
@@ -627,7 +627,7 @@ class ConfigEntry:
                 )
                 return False
             if result:
-                # pylint: disable=protected-access
+                # pylint: disable-next=protected-access
                 hass.config_entries._async_schedule_save()
             # https://github.com/python/mypy/issues/11839
             return result  # type: ignore[no-any-return]
@@ -1437,7 +1437,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         if not self.context:
             return None
 
-        return cast(Optional[str], self.context.get("unique_id"))
+        return cast(str | None, self.context.get("unique_id"))
 
     @staticmethod
     @callback

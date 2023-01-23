@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, TypeVar, Union
+from typing import Any, TypeVar
 
 from meteofrance_api.helpers import (
     get_warning_text_status_from_indice_color,
@@ -49,7 +49,7 @@ from .const import (
     MODEL,
 )
 
-_DataT = TypeVar("_DataT", bound=Union[Rain, Forecast, CurrentPhenomenons])
+_DataT = TypeVar("_DataT", bound=Rain | Forecast | CurrentPhenomenons)
 
 
 @dataclass

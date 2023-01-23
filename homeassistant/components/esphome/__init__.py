@@ -56,8 +56,9 @@ from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.template import Template
 
 from .bluetooth import async_connect_scanner
+from .const import DOMAIN
 from .dashboard import async_get_dashboard
-from .domain_data import DOMAIN, DomainData
+from .domain_data import DomainData
 
 # Import config flow so that it's added to the registry
 from .entry_data import RuntimeEntryData
@@ -67,7 +68,7 @@ CONF_NOISE_PSK = "noise_psk"
 _LOGGER = logging.getLogger(__name__)
 _R = TypeVar("_R")
 
-STABLE_BLE_VERSION_STR = "2022.12.0"
+STABLE_BLE_VERSION_STR = "2022.12.4"
 STABLE_BLE_VERSION = AwesomeVersion(STABLE_BLE_VERSION_STR)
 PROJECT_URLS = {
     "esphome.bluetooth-proxy": "https://esphome.github.io/bluetooth-proxies/",

@@ -5,11 +5,11 @@
             "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt."
         },
         "error": {
-            "api_error": "API hiba t\u00f6rt\u00e9nt: {error}",
+            "api_error": "API hiba t\u00f6rt\u00e9nt",
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
             "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
             "not_admin": "A felhaszn\u00e1l\u00f3nak adminisztr\u00e1tornak kell lennie, \"{username}\" felhaszn\u00e1l\u00f3 jogosults\u00e1gi szintje pedig \"{userlevel}\".",
-            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt: {error}"
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
         "step": {
             "reauth_confirm": {

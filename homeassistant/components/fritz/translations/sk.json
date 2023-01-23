@@ -47,7 +47,7 @@
         "step": {
             "init": {
                 "data": {
-                    "consider_home": "Sekundy na \u010dakanie, zariadenia \u201edoma\u201c",
+                    "consider_home": "Sekundy na \u010dakanie, zariadenia 'doma'",
                     "old_discovery": "Povoli\u0165 star\u00fa met\u00f3du zis\u0165ovania"
                 }
             }

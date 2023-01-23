@@ -11,7 +11,7 @@ import logging
 import re
 import time
 import traceback
-from typing import TYPE_CHECKING, Any, NamedTuple, Union
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 from zigpy.application import ControllerApplication
 from zigpy.config import CONF_DEVICE
@@ -91,7 +91,7 @@ if TYPE_CHECKING:
     from ..entity import ZhaEntity
     from .channels.base import ZigbeeChannel
 
-    _LogFilterType = Union[Filter, Callable[[LogRecord], int]]
+    _LogFilterType = Filter | Callable[[LogRecord], int]
 
 _LOGGER = logging.getLogger(__name__)
 

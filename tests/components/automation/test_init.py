@@ -121,8 +121,9 @@ async def test_service_specify_data(hass, calls):
                 "action": {
                     "service": "test.automation",
                     "data_template": {
-                        "some": "{{ trigger.platform }} - "
-                        "{{ trigger.event.event_type }}"
+                        "some": (
+                            "{{ trigger.platform }} - {{ trigger.event.event_type }}"
+                        )
                     },
                 },
             }
@@ -1401,9 +1402,9 @@ async def test_automation_bad_config_validation(
 
     # Check we get the expected error message
     assert (
-        f"Automation with alias 'bad_automation' {problem} and has been disabled: {details}"
-        in caplog.text
-    )
+        f"Automation with alias 'bad_automation' {problem} and has been disabled:"
+        f" {details}"
+    ) in caplog.text
 
     # Make sure one bad automation does not prevent other automations from setting up
     assert hass.states.async_entity_ids("automation") == ["automation.good_automation"]
@@ -1969,7 +1970,10 @@ async def test_blueprint_automation(hass, calls):
                 "a_number": 5,
             },
             "Blueprint 'Call service based on event' generated invalid automation",
-            "value should be a string for dictionary value @ data['action'][0]['service']",
+            (
+                "value should be a string for dictionary value @"
+                " data['action'][0]['service']"
+            ),
         ),
     ),
 )
@@ -2016,10 +2020,10 @@ async def test_blueprint_automation_fails_substitution(hass, caplog):
             },
         )
     assert (
-        "Blueprint 'Call service based on event' failed to generate automation with inputs "
-        "{'trigger_event': 'test_event', 'service_to_call': 'test.automation', 'a_number': 5}:"
-        " No substitution found for input blah" in caplog.text
-    )
+        "Blueprint 'Call service based on event' failed to generate automation with"
+        " inputs {'trigger_event': 'test_event', 'service_to_call': 'test.automation',"
+        " 'a_number': 5}: No substitution found for input blah"
+    ) in caplog.text
 
 
 async def test_trigger_service(hass, calls):
@@ -2204,7 +2208,10 @@ async def test_recursive_automation_starting_script(
                         "sequence": [
                             {"event": "trigger_automation"},
                             {
-                                "wait_template": f"{{{{ float(states('sensor.test'), 0) >= {automation_runs} }}}}"
+                                "wait_template": (
+                                    "{{ float(states('sensor.test'), 0) >="
+                                    f" {automation_runs} }}}}"
+                                )
                             },
                             {"service": "script.script1"},
                             {"service": "test.script_done"},

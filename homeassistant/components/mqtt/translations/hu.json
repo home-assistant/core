@@ -136,5 +136,14 @@
                 "title": "MQTT opci\u00f3k"
             }
         }
+    },
+    "selector": {
+        "set_ca_cert": {
+            "options": {
+                "auto": "Automatikus",
+                "custom": "Egy\u00e9ni",
+                "off": "Ki"
+            }
+        }
     }
 }
