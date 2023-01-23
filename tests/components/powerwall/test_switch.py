@@ -18,7 +18,7 @@ from .mocks import _mock_powerwall_with_fixtures
 
 from tests.common import MockConfigEntry
 
-ENTITY_ID = "switch.powerwall_off_grid"
+ENTITY_ID = "switch.off_grid_operation"
 
 
 @pytest.fixture(name="mock_powerwall")

@@ -33,10 +33,14 @@ async def async_setup_entry(
 class PowerwallOffGridEnabledEntity(PowerWallEntity, SwitchEntity):
     """Representation of a Switch entity for Powerwall Off-grid operation."""
 
-    _attr_name = "Powerwall Off-Grid"
-    _attr_unique_id = "powerwall_off_grid"
+    _attr_name = "Off-Grid Operation"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_device_class = SwitchDeviceClass.SWITCH
+
+    def __init__(self, powerwall_data: PowerwallRuntimeData) -> None:
+        """Initialize powerwall entity and unique id."""
+        super().__init__(powerwall_data)
+        self._attr_unique_id = f"{self.base_unique_id}_off_grid_operation"
 
     @property
     def is_on(self) -> bool:
