@@ -4,14 +4,14 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class EcobeeBaseEntity:
+class EcobeeBaseEntity(Entity):
     """Base methods for Ecobee entities."""
 
     def __init__(self, thermostat: dict[str, Any]) -> None:
@@ -19,10 +19,10 @@ class EcobeeBaseEntity:
 
         self.thermostat = thermostat
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.thermostat["identifier"])},
+            identifiers={(DOMAIN, thermostat["identifier"])},
             manufacturer=MANUFACTURER,
-            model=ECOBEE_MODEL_TO_NAME.get(self.thermostat["modelNumber"]),
-            name=self.thermostat["name"],
+            model=ECOBEE_MODEL_TO_NAME.get(thermostat["modelNumber"]),
+            name=thermostat["name"],
         )
 
     @property

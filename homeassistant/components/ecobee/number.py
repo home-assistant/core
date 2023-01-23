@@ -24,8 +24,7 @@ async def async_setup_entry(
     data = hass.data[DOMAIN]
     entities = []
     _LOGGER.debug("Adding min time ventilators numbers (if present)")
-    for index in range(len(data.ecobee.thermostats)):
-        thermostat = data.ecobee.get_thermostat(index)
+    for index, thermostat in enumerate(data.ecobee.thermostats):
         if thermostat["settings"]["ventilatorType"] != "none":
             _LOGGER.debug("Adding %s's ventilator min times number", thermostat["name"])
             entities.append(
