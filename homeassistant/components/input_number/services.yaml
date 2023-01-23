@@ -30,6 +30,42 @@ set_value:
           step: 0.001
           mode: box
 
+set_min:
+  name: Set min
+  description: Set the minimal value of the entity.
+  target:
+    entity:
+      domain: input_number
+  fields:
+    value:
+      name: Value
+      description: The minimum value the entity can be set to.
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 9223372036854775807
+          step: 0.001
+          mode: box
+
+set_max:
+  name: Set max
+  description: Set the maximal value of the entity.
+  target:
+    entity:
+      domain: input_number
+  fields:
+    value:
+      name: Value
+      description: The maximum value the entity can be set to.
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 9223372036854775807
+          step: 0.001
+          mode: box
+
 reload:
   name: Reload
   description: Reload the input_number configuration.

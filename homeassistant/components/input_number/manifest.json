@@ -4,5 +4,6 @@
   "name": "Input Number",
   "documentation": "https://www.home-assistant.io/integrations/input_number",
   "codeowners": ["@home-assistant/core"],
-  "quality_scale": "internal"
+  "quality_scale": "internal",
+  "version":"0.1"
 }

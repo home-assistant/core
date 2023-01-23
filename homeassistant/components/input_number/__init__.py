@@ -49,6 +49,8 @@ ATTR_STEP = "step"
 SERVICE_SET_VALUE = "set_value"
 SERVICE_INCREMENT = "increment"
 SERVICE_DECREMENT = "decrement"
+SERVICE_SET_MIN = "set_min"
+SERVICE_SET_MAX = "set_max"
 
 
 def _cv_input_number(cfg):
@@ -163,6 +165,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         "async_set_value",
     )
 
+    component.async_register_entity_service(
+        SERVICE_SET_MIN, 
+        {vol.Required(ATTR_VALUE): vol.Coerce(float)},
+        'async_set_min'
+    )
+
+    component.async_register_entity_service(
+        SERVICE_SET_MAX, 
+        {vol.Required(ATTR_VALUE): vol.Coerce(float)},
+        'async_set_max'
+    )
+
     component.async_register_entity_service(SERVICE_INCREMENT, {}, "async_increment")
 
     component.async_register_entity_service(SERVICE_DECREMENT, {}, "async_decrement")
@@ -216,6 +230,8 @@ class InputNumber(collection.CollectionEntity, RestoreEntity):
         """Initialize an input number."""
         self._config = config
         self._current_value: float | None = config.get(CONF_INITIAL)
+        self._minimum: float | None = config.get(CONF_MIN)
+        self._maximum: float | None = config.get(CONF_MAX)
 
     @classmethod
     def from_storage(cls, config: ConfigType) -> InputNumber:
@@ -232,15 +248,15 @@ class InputNumber(collection.CollectionEntity, RestoreEntity):
         input_num.editable = False
         return input_num
 
-    @property
-    def _minimum(self) -> float:
-        """Return minimum allowed value."""
-        return self._config[CONF_MIN]
+#    @property
+#    def _minimum(self) -> float:
+#        """Return minimum allowed value."""
+#        return self._minimum
 
-    @property
-    def _maximum(self) -> float:
-        """Return maximum allowed value."""
-        return self._config[CONF_MAX]
+#    @property
+#    def _maximum(self) -> float:
+#        """Return maximum allowed value."""
+#        return self._maximum
 
     @property
     def name(self):
@@ -312,6 +328,32 @@ class InputNumber(collection.CollectionEntity, RestoreEntity):
 
         self._current_value = num_value
         self.async_write_ha_state()
+
+    async def async_set_min(self, value):
+        """Set new min value."""
+        minimum = float(value)
+        if minimum >= self._maximum:
+            _LOGGER.warning("Invalid minimum: %s (must be lower than maximum %s)",
+                            minimum, self._maximum)
+            return
+        # Adjust value to minimim if it is less than the new minimum
+        if minimum > self._current_value:
+            self._current_value = minimum
+        self._minimum = minimum
+        self.async_write_ha_state()
+
+    async def async_set_max(self, value):
+        """Set new max value."""
+        maximum = float(value)
+        if self._minimum >= maximum:
+            _LOGGER.warning("Invalid maximum: %s (must be higher than minimum %s)",
+                            maximum, self._minimum)
+            return
+        if maximum < self._current_value:
+            self._current_value = maximum
+        self._maximum = maximum
+        self.async_write_ha_state()
+
 
     async def async_increment(self):
         """Increment value."""
