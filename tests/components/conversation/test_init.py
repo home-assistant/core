@@ -53,7 +53,7 @@ async def test_http_processing_intent(
             "speech": {
                 "plain": {
                     "extra_data": None,
-                    "speech": "Turned kitchen on",
+                    "speech": "Turned on kitchen",
                 }
             },
             "language": hass.config.language,
@@ -120,7 +120,7 @@ async def test_http_api(hass, init_components, hass_client):
     assert data == {
         "response": {
             "card": {},
-            "speech": {"plain": {"extra_data": None, "speech": "Turned kitchen on"}},
+            "speech": {"plain": {"extra_data": None, "speech": "Turned on kitchen"}},
             "language": hass.config.language,
             "response_type": "action_done",
             "data": {
@@ -161,7 +161,7 @@ async def test_http_api_no_match(hass, init_components, hass_client):
             "card": {},
             "speech": {
                 "plain": {
-                    "speech": "Sorry, I didn't understand that",
+                    "speech": "Sorry, I couldn't understand that",
                     "extra_data": None,
                 },
             },
@@ -180,9 +180,7 @@ async def test_http_api_handle_failure(hass, init_components, hass_client):
 
     # Raise an "unexpected" error during intent handling
     def async_handle_error(*args, **kwargs):
-        raise intent.IntentUnexpectedError(
-            "Unexpected error turning on the kitchen light"
-        )
+        raise intent.IntentUnexpectedError()
 
     with patch("homeassistant.helpers.intent.async_handle", new=async_handle_error):
         resp = await client.post(
@@ -199,12 +197,12 @@ async def test_http_api_handle_failure(hass, init_components, hass_client):
             "speech": {
                 "plain": {
                     "extra_data": None,
-                    "speech": "Unexpected error turning on the kitchen light",
+                    "speech": "An unexpected error occurred while handling the intent",
                 }
             },
             "language": hass.config.language,
             "data": {
-                "code": "failed_to_handle",
+                "code": "unknown",
             },
         },
         "conversation_id": None,
@@ -302,7 +300,7 @@ async def test_ws_api(hass, hass_ws_client, payload):
             "speech": {
                 "plain": {
                     "extra_data": None,
-                    "speech": "Sorry, I didn't understand that",
+                    "speech": "Sorry, I couldn't understand that",
                 }
             },
             "language": payload.get("language", hass.config.language),

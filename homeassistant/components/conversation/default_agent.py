@@ -10,7 +10,7 @@ from pathlib import Path
 import re
 from typing import Any
 
-from hassil.intents import Intents, SlotList, TextSlotList
+from hassil.intents import Intents, ResponseType, SlotList, TextSlotList
 from hassil.recognize import recognize
 from hassil.util import merge_dict
 from home_assistant_intents import get_intents
@@ -23,6 +23,7 @@ from .agent import AbstractConversationAgent, ConversationResult
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+_DEFAULT_ERROR_TEXT = "Sorry, I couldn't understand that"
 
 REGEX_TYPE = type(re.compile(""))
 
@@ -34,6 +35,7 @@ class LanguageIntents:
     intents: Intents
     intents_dict: dict[str, Any]
     intent_responses: dict[str, Any]
+    error_responses: dict[str, Any]
     loaded_components: set[str]
 
 
@@ -79,7 +81,7 @@ class DefaultAgent(AbstractConversationAgent):
         context: core.Context,
         conversation_id: str | None = None,
         language: str | None = None,
-    ) -> ConversationResult | None:
+    ) -> ConversationResult:
         """Process a sentence."""
         language = language or self.hass.config.language
         lang_intents = self._lang_intents.get(language)
@@ -94,7 +96,12 @@ class DefaultAgent(AbstractConversationAgent):
         if lang_intents is None:
             # No intents loaded
             _LOGGER.warning("No intents were loaded for language: %s", language)
-            return None
+            return _make_error_result(
+                language,
+                intent.IntentResponseErrorCode.NO_INTENT_MATCH,
+                _DEFAULT_ERROR_TEXT,
+                conversation_id,
+            )
 
         slot_lists: dict[str, SlotList] = {
             "area": self._make_areas_list(),
@@ -103,17 +110,43 @@ class DefaultAgent(AbstractConversationAgent):
 
         result = recognize(text, lang_intents.intents, slot_lists=slot_lists)
         if result is None:
-            return None
+            _LOGGER.debug("No intent was matched for '%s'", text)
+            return _make_error_result(
+                language,
+                intent.IntentResponseErrorCode.NO_INTENT_MATCH,
+                self._get_error_text(ResponseType.NO_INTENT, lang_intents),
+                conversation_id,
+            )
 
-        intent_response = await intent.async_handle(
-            self.hass,
-            DOMAIN,
-            result.intent.name,
-            {entity.name: {"value": entity.value} for entity in result.entities_list},
-            text,
-            context,
-            language,
-        )
+        try:
+            intent_response = await intent.async_handle(
+                self.hass,
+                DOMAIN,
+                result.intent.name,
+                {
+                    entity.name: {"value": entity.value}
+                    for entity in result.entities_list
+                },
+                text,
+                context,
+                language,
+            )
+        except intent.IntentHandleError:
+            _LOGGER.exception("Intent handling error")
+            return _make_error_result(
+                language,
+                intent.IntentResponseErrorCode.FAILED_TO_HANDLE,
+                self._get_error_text(ResponseType.HANDLE_ERROR, lang_intents),
+                conversation_id,
+            )
+        except intent.IntentUnexpectedError:
+            _LOGGER.exception("Unexpected intent error")
+            return _make_error_result(
+                language,
+                intent.IntentResponseErrorCode.UNKNOWN,
+                self._get_error_text(ResponseType.HANDLE_ERROR, lang_intents),
+                conversation_id,
+            )
 
         if (
             (not intent_response.speech)
@@ -253,15 +286,24 @@ class DefaultAgent(AbstractConversationAgent):
         # components with sentences are often being loaded.
         intents = Intents.from_dict(intents_dict)
 
-        intent_responses = intents_dict.get("responses", {}).get("intents", {})
+        # Load responses
+        responses_dict = intents_dict.get("responses", {})
+        intent_responses = responses_dict.get("intents", {})
+        error_responses = responses_dict.get("errors", {})
+
         if lang_intents is None:
             lang_intents = LanguageIntents(
-                intents, intents_dict, intent_responses, loaded_components
+                intents,
+                intents_dict,
+                intent_responses,
+                error_responses,
+                loaded_components,
             )
             self._lang_intents[language] = lang_intents
         else:
             lang_intents.intents = intents
             lang_intents.intent_responses = intent_responses
+            lang_intents.error_responses = error_responses
 
         return lang_intents
 
@@ -300,3 +342,24 @@ class DefaultAgent(AbstractConversationAgent):
             names.append((state.name, state.entity_id, context))
 
         return TextSlotList.from_tuples(names)
+
+    def _get_error_text(
+        self, response_type: ResponseType, lang_intents: LanguageIntents
+    ) -> str:
+        """Get response error text by type."""
+        response_key = response_type.value
+        response_str = lang_intents.error_responses.get(response_key)
+        return response_str or _DEFAULT_ERROR_TEXT
+
+
+def _make_error_result(
+    language: str,
+    error_code: intent.IntentResponseErrorCode,
+    response_text: str,
+    conversation_id: str | None = None,
+) -> ConversationResult:
+    """Create conversation result with error code and text."""
+    response = intent.IntentResponse(language=language)
+    response.async_set_error(error_code, response_text)
+
+    return ConversationResult(response, conversation_id)
