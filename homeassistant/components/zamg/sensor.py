@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Union
+from typing import TypeAlias
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -38,7 +38,7 @@ from .const import (
 )
 from .coordinator import ZamgDataUpdateCoordinator
 
-_DType = Union[type[int], type[float], type[str]]
+_DType: TypeAlias = "type[int] | type[float] | type[str]"
 
 
 @dataclass

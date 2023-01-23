@@ -10,7 +10,7 @@ import functools as ft
 import logging
 from random import randint
 import time
-from typing import Any, Concatenate, ParamSpec, Union, cast
+from typing import Any, Concatenate, ParamSpec, cast
 
 import attr
 
@@ -1128,7 +1128,7 @@ class TrackTemplateResultInfo:
 
 TrackTemplateResultListener = Callable[
     [
-        Union[Event, None],
+        Event | None,
         list[TrackTemplateResult],
     ],
     None,
