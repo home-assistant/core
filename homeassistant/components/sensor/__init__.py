@@ -64,7 +64,6 @@ from .const import (  # noqa: F401
     ATTR_OPTIONS,
     ATTR_STATE_CLASS,
     CONF_STATE_CLASS,
-    DEVICE_CLASS_PRECISION,
     DEVICE_CLASS_STATE_CLASSES,
     DEVICE_CLASS_UNITS,
     DEVICE_CLASSES,
@@ -345,14 +344,14 @@ class SensorEntity(Entity):
     def native_precision(self) -> int | None:
         """Return the number of digits after the decimal point for the sensor's state.
 
-        If native_precision is None, a default rounding will be made according
-        to the sensor's unit.
+        If native_precision is None, no rounding is done unless the sensor is subject
+        to unit conversion.
 
         The display precision is influenced by unit conversion, a sensor which has
         native_unit_of_measurement 'Wh' and is converted to 'kWh' will have its
         native_precision increased by 3.
         """
-        if hasattr(self, "_attr_precision"):
+        if hasattr(self, "_attr_native_precision"):
             return self._attr_native_precision
         if hasattr(self, "entity_description"):
             return self.entity_description.native_precision
@@ -369,16 +368,13 @@ class SensorEntity(Entity):
         if self._sensor_option_precision is not None:
             return self._sensor_option_precision
 
-        # Second priority, native precision with fallback to no decimals
+        # Second priority, native precision
         device_class = self.device_class
         native_unit_of_measurement = self.native_unit_of_measurement
         unit_of_measurement = self.unit_of_measurement
         if self.native_precision is None:
-            precision = DEVICE_CLASS_PRECISION.get(
-                (device_class, native_unit_of_measurement), 2
-            )
-        else:
-            precision = self.native_precision
+            return None
+        precision = self.native_precision
 
         if (
             native_unit_of_measurement != unit_of_measurement
@@ -386,7 +382,7 @@ class SensorEntity(Entity):
         ):
             converter = UNIT_CONVERTERS[device_class]
 
-            # Scale the precision when converting to a larger unit
+            # Scale the precision when converting to a larger or smaller unit
             # For example 1.1 Wh should be rendered as 0.0011 kWh, not 0.0 kWh
             ratio_log = log10(
                 converter.get_unit_ratio(
@@ -459,7 +455,7 @@ class SensorEntity(Entity):
 
     @final
     @property
-    def state(self) -> Any:
+    def state(self) -> Any:  # noqa: C901
         """Return the state of the sensor and perform unit conversions, if needed."""
         native_unit_of_measurement = self.native_unit_of_measurement
         unit_of_measurement = self.unit_of_measurement
@@ -572,7 +568,7 @@ class SensorEntity(Entity):
         numerical_conversion_failed = None
         if not isinstance(value, (int, float, Decimal)):
             try:
-                if isinstance(value, str) and "." in value:
+                if isinstance(value, str) and "." not in value:
                     numerical_value = int(value)
                 else:
                     numerical_value = float(value)  # type:ignore[arg-type]
@@ -582,14 +578,15 @@ class SensorEntity(Entity):
             numerical_value = value
 
         if (
-            numerical_value is not None
+            (prec := self.precision) is not None
+            and numerical_value is not None
             and (self._sensor_option_precision or not isinstance(value, int))
             and (
                 native_unit_of_measurement == unit_of_measurement
                 or device_class not in UNIT_CONVERTERS
             )
         ):
-            value = f"{numerical_value:.{self.precision}f}"
+            value = f"{numerical_value:.{prec}f}"
 
         # If the sensor has neither a device class, a state class nor
         # a unit_of measurement then there are no further checks or conversions
@@ -620,13 +617,32 @@ class SensorEntity(Entity):
             and device_class in UNIT_CONVERTERS
             and numerical_value is not None
         ):
+            prec = self.precision
             converter = UNIT_CONVERTERS[device_class]
+
+            if prec is None:
+                # Assume the precision by finding the decimal point, if any
+                value_s = str(value)
+                prec = len(value_s) - value_s.index(".") - 1 if "." in value_s else 0
+
+                # Scale the precision when converting to a larger unit
+                # For example 1.1 Wh should be rendered as 0.0011 kWh, not 0.0 kWh
+                ratio_log = max(
+                    0,
+                    log10(
+                        converter.get_unit_ratio(
+                            native_unit_of_measurement, unit_of_measurement
+                        )
+                    ),
+                )
+                prec = prec + floor(ratio_log)
+
             converted_numerical_value = converter.convert(
                 float(numerical_value),
                 native_unit_of_measurement,
                 unit_of_measurement,
             )
-            value = f"{converted_numerical_value:.{self.precision}f}"
+            value = f"{converted_numerical_value:.{prec}f}"
 
         # Validate unit of measurement used for sensors with a device class
         if (

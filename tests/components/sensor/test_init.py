@@ -41,7 +41,7 @@ from tests.common import mock_restore_cache_with_extra_data
             UnitOfTemperature.FAHRENHEIT,
             UnitOfTemperature.FAHRENHEIT,
             100,
-            "100.0",
+            "100",
         ),
         (
             US_CUSTOMARY_SYSTEM,
@@ -55,14 +55,14 @@ from tests.common import mock_restore_cache_with_extra_data
             UnitOfTemperature.FAHRENHEIT,
             UnitOfTemperature.CELSIUS,
             100,
-            "37.8",
+            "38",
         ),
         (
             METRIC_SYSTEM,
             UnitOfTemperature.CELSIUS,
             UnitOfTemperature.CELSIUS,
             38,
-            "38.0",
+            "38",
         ),
     ],
 )
@@ -115,7 +115,7 @@ async def test_temperature_conversion_wrong_device_class(
 
     # Check temperature is not converted
     state = hass.states.get(entity0.entity_id)
-    assert state.state == "0.00"
+    assert state.state == "0.0"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.FAHRENHEIT
 
 
@@ -421,32 +421,32 @@ async def test_restore_sensor_restore_state(
             UnitOfPressure.HPA,
             UnitOfPressure.INHG,
             UnitOfPressure.INHG,
-            1000.0,  # Will be treated as precision 2
-            "29.530",  # Precision 2 + 1 = 3
+            1000.0,
+            "29.53",
         ),
         (
             SensorDeviceClass.PRESSURE,
             UnitOfPressure.KPA,
             UnitOfPressure.HPA,
             UnitOfPressure.HPA,
-            1.234,  # Will be treated as precision 2
-            "12.3",  # Precision 2 - 1 = 1
+            1.234,
+            "12.340",
         ),
         (
             SensorDeviceClass.ATMOSPHERIC_PRESSURE,
             UnitOfPressure.HPA,
             UnitOfPressure.MMHG,
             UnitOfPressure.MMHG,
-            1000,  # Will be treated as precision 0
-            "750",  # Precision 0 + 0 = 0
+            1000,
+            "750",
         ),
         (
             SensorDeviceClass.PRESSURE,
             UnitOfPressure.HPA,
             UnitOfPressure.MMHG,
             UnitOfPressure.MMHG,
-            1000,  # Will be treated as precision 2
-            "750.06",  # Precision 2 + 0 = 2
+            1000,
+            "750",
         ),
         # Not a supported pressure unit
         (
@@ -454,24 +454,24 @@ async def test_restore_sensor_restore_state(
             UnitOfPressure.HPA,
             "peer_pressure",
             UnitOfPressure.HPA,
-            1000,  # Will be treated as precision 2
-            "1000.00",
+            1000,
+            "1000",
         ),
         (
             SensorDeviceClass.TEMPERATURE,
             UnitOfTemperature.CELSIUS,
             UnitOfTemperature.FAHRENHEIT,
             UnitOfTemperature.FAHRENHEIT,
-            37.5,  # Will be treated as precision 1
-            "100",  # Precision 1 - 1 = 0
+            37.5,
+            "99.5",
         ),
         (
             SensorDeviceClass.TEMPERATURE,
             UnitOfTemperature.FAHRENHEIT,
             UnitOfTemperature.CELSIUS,
             UnitOfTemperature.CELSIUS,
-            100,  # Will be treated as precision 1
-            "37.8",
+            100,
+            "38",
         ),
     ],
 )
@@ -578,8 +578,8 @@ async def test_custom_precision(
             UnitOfLength.MILES,
             UnitOfLength.MILES,
             1000,
-            "1000.00",
-            "621.37",
+            "1000",
+            "621",
             SensorDeviceClass.DISTANCE,
         ),
         (
@@ -596,8 +596,8 @@ async def test_custom_precision(
             "peer_distance",
             UnitOfLength.KILOMETERS,
             1000,
-            "1000.00",
-            "1000.00",
+            "1000",
+            "1000",
             SensorDeviceClass.DISTANCE,
         ),
         # Energy
@@ -606,8 +606,8 @@ async def test_custom_precision(
             UnitOfEnergy.MEGA_WATT_HOUR,
             UnitOfEnergy.MEGA_WATT_HOUR,
             1000,
-            "1000.00",
-            "1.00000",
+            "1000",
+            "1.000",
             SensorDeviceClass.ENERGY,
         ),
         (
@@ -615,8 +615,8 @@ async def test_custom_precision(
             UnitOfEnergy.MEGA_WATT_HOUR,
             UnitOfEnergy.MEGA_WATT_HOUR,
             1000,
-            "1000.00",
-            "277.78",
+            "1000",
+            "278",
             SensorDeviceClass.ENERGY,
         ),
         (
@@ -624,8 +624,8 @@ async def test_custom_precision(
             "BTU",
             UnitOfEnergy.KILO_WATT_HOUR,
             1000,
-            "1000.00",
-            "1000.00",
+            "1000",
+            "1000",
             SensorDeviceClass.ENERGY,
         ),
         # Power factor
@@ -634,8 +634,8 @@ async def test_custom_precision(
             PERCENTAGE,
             PERCENTAGE,
             1.0,
-            "1.00",
-            "100",
+            "1.0",
+            "100.0",
             SensorDeviceClass.POWER_FACTOR,
         ),
         (
@@ -643,8 +643,8 @@ async def test_custom_precision(
             None,
             None,
             100,
-            "100.00",
-            "1.0000",
+            "100",
+            "1.00",
             SensorDeviceClass.POWER_FACTOR,
         ),
         (
@@ -652,8 +652,8 @@ async def test_custom_precision(
             None,
             "Cos φ",
             1.0,
-            "1.00",
-            "1.00",
+            "1.0",
+            "1.0",
             SensorDeviceClass.POWER_FACTOR,
         ),
         # Pressure
@@ -663,8 +663,8 @@ async def test_custom_precision(
             UnitOfPressure.INHG,
             UnitOfPressure.INHG,
             1000.0,
-            "1000.00",
-            "29.530",
+            "1000.0",
+            "29.53",
             SensorDeviceClass.PRESSURE,
         ),
         (
@@ -672,8 +672,8 @@ async def test_custom_precision(
             UnitOfPressure.HPA,
             UnitOfPressure.HPA,
             1.234,
-            "1.23",
-            "12.3",
+            "1.234",
+            "12.340",
             SensorDeviceClass.PRESSURE,
         ),
         (
@@ -681,8 +681,8 @@ async def test_custom_precision(
             UnitOfPressure.MMHG,
             UnitOfPressure.MMHG,
             1000,
-            "1000.00",
-            "750.06",
+            "1000",
+            "750",
             SensorDeviceClass.PRESSURE,
         ),
         # Not a supported pressure unit
@@ -691,8 +691,8 @@ async def test_custom_precision(
             "peer_pressure",
             UnitOfPressure.HPA,
             1000,
-            "1000.00",
-            "1000.00",
+            "1000",
+            "1000",
             SensorDeviceClass.PRESSURE,
         ),
         # Speed
@@ -701,8 +701,8 @@ async def test_custom_precision(
             UnitOfSpeed.MILES_PER_HOUR,
             UnitOfSpeed.MILES_PER_HOUR,
             100,
-            "100.00",
-            "62.14",
+            "100",
+            "62",
             SensorDeviceClass.SPEED,
         ),
         (
@@ -710,8 +710,8 @@ async def test_custom_precision(
             UnitOfVolumetricFlux.INCHES_PER_HOUR,
             UnitOfVolumetricFlux.INCHES_PER_HOUR,
             78,
-            "78.00",
-            "0.1280",
+            "78",
+            "0.13",
             SensorDeviceClass.SPEED,
         ),
         (
@@ -719,8 +719,8 @@ async def test_custom_precision(
             "peer_distance",
             UnitOfSpeed.KILOMETERS_PER_HOUR,
             100,
-            "100.00",
-            "100.00",
+            "100",
+            "100",
             SensorDeviceClass.SPEED,
         ),
         # Volume
@@ -729,7 +729,7 @@ async def test_custom_precision(
             UnitOfVolume.CUBIC_FEET,
             UnitOfVolume.CUBIC_FEET,
             100,
-            "100.00",
+            "100",
             "3531",
             SensorDeviceClass.VOLUME,
         ),
@@ -738,8 +738,8 @@ async def test_custom_precision(
             UnitOfVolume.FLUID_OUNCES,
             UnitOfVolume.FLUID_OUNCES,
             2.3,
-            "2.30",
-            "78",
+            "2.3",
+            "77.8",
             SensorDeviceClass.VOLUME,
         ),
         (
@@ -747,8 +747,8 @@ async def test_custom_precision(
             "peer_distance",
             UnitOfVolume.CUBIC_METERS,
             100,
-            "100.00",
-            "100.00",
+            "100",
+            "100",
             SensorDeviceClass.VOLUME,
         ),
         # Weight
@@ -757,8 +757,8 @@ async def test_custom_precision(
             UnitOfMass.OUNCES,
             UnitOfMass.OUNCES,
             100,
-            "100.00",
-            "3.527",
+            "100",
+            "3.5",
             SensorDeviceClass.WEIGHT,
         ),
         (
@@ -766,7 +766,7 @@ async def test_custom_precision(
             UnitOfMass.GRAMS,
             UnitOfMass.GRAMS,
             78,
-            "78.00",
+            "78",
             "2211",
             SensorDeviceClass.WEIGHT,
         ),
@@ -775,8 +775,8 @@ async def test_custom_precision(
             "peer_distance",
             UnitOfMass.GRAMS,
             100,
-            "100.00",
-            "100.00",
+            "100",
+            "100",
             SensorDeviceClass.WEIGHT,
         ),
     ],
@@ -849,8 +849,8 @@ async def test_custom_unit_change(
             UnitOfLength.METERS,
             UnitOfLength.YARDS,
             1000,
-            "1000.00",
-            "621.37",
+            "1000",
+            "621",
             "1000000",
             "1093613",
             SensorDeviceClass.DISTANCE,
@@ -1059,7 +1059,7 @@ async def test_unit_conversion_priority_suggested_unit_change(
             UnitOfLength.KILOMETERS,
             UnitOfLength.MILES,
             1000,
-            621.37,
+            621.0,
             SensorDeviceClass.DISTANCE,
         ),
         (
@@ -1360,8 +1360,8 @@ async def test_non_numeric_validation(
     "native_value,expected",
     [
         (13, "13"),
-        (17.50, "17.50"),
-        (Decimal(18.50), "18.50"),
+        (17.50, "17.5"),
+        (Decimal(18.50), "18.5"),
         ("19.70", "19.70"),
         (None, STATE_UNKNOWN),
     ],
