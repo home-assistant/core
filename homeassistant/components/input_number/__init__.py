@@ -340,6 +340,7 @@ class InputNumber(collection.CollectionEntity, RestoreEntity):
         if minimum > self._current_value:
             self._current_value = minimum
         self._minimum = minimum
+        self._config[CONF_MIN] = minimum
         self.async_write_ha_state()
 
     async def async_set_max(self, value):
@@ -352,6 +353,7 @@ class InputNumber(collection.CollectionEntity, RestoreEntity):
         if maximum < self._current_value:
             self._current_value = maximum
         self._maximum = maximum
+        self._config[CONF_MAX] = maximum
         self.async_write_ha_state()
 
 
