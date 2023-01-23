@@ -103,7 +103,7 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
 }
 
 # Dict containing a conversion test for every know unit.
-_GET_CONVERTED_VALUE: dict[
+_CONVERTED_VALUE: dict[
     type[BaseUnitConverter], list[tuple[float, str | None, float, str | None]]
 ] = {
     DataRateConverter: [
@@ -194,6 +194,10 @@ _GET_CONVERTED_VALUE: dict[
     ElectricCurrentConverter: [
         (5, UnitOfElectricCurrent.AMPERE, 5000, UnitOfElectricCurrent.MILLIAMPERE),
         (5, UnitOfElectricCurrent.MILLIAMPERE, 0.005, UnitOfElectricCurrent.AMPERE),
+    ],
+    ElectricPotentialConverter: [
+        (5, UnitOfElectricPotential.VOLT, 5000, UnitOfElectricPotential.MILLIVOLT),
+        (5, UnitOfElectricPotential.MILLIVOLT, 0.005, UnitOfElectricPotential.VOLT),
     ],
     EnergyConverter: [
         (10, UnitOfEnergy.WATT_HOUR, 0.01, UnitOfEnergy.KILO_WATT_HOUR),
@@ -356,6 +360,10 @@ _GET_CONVERTED_VALUE: dict[
         (100, UnitOfTemperature.KELVIN, -173.15, UnitOfTemperature.CELSIUS),
         (100, UnitOfTemperature.KELVIN, -279.6699, UnitOfTemperature.FAHRENHEIT),
     ],
+    UnitlessRatioConverter: [
+        (5, None, 500, PERCENTAGE),
+        (5, PERCENTAGE, 0.05, None),
+    ],
     VolumeConverter: [
         (5, UnitOfVolume.LITERS, 1.32086, UnitOfVolume.GALLONS),
         (5, UnitOfVolume.GALLONS, 18.92706, UnitOfVolume.LITERS),
@@ -417,6 +425,7 @@ def test_all_converters(converter: type[BaseUnitConverter]) -> None:
     """Ensure all unit converters are tested."""
     assert converter in _ALL_CONVERTERS, "converter is not present in _ALL_CONVERTERS"
     assert converter in _GET_UNIT_RATIO, "converter is not present in _GET_UNIT_RATIO"
+    assert converter in _CONVERTED_VALUE, "converter is not present in _CONVERTED_VALUE"
 
 
 @pytest.mark.parametrize(
@@ -489,9 +498,9 @@ def test_get_unit_ratio(
 @pytest.mark.parametrize(
     "converter,value,from_unit,expected,to_unit",
     [
-        # Process all items in _GET_CONVERTED_VALUE
+        # Process all items in _CONVERTED_VALUE
         (converter, list_item[0], list_item[1], list_item[2], list_item[3])
-        for converter, item in _GET_CONVERTED_VALUE.items()
+        for converter, item in _CONVERTED_VALUE.items()
         for list_item in item
     ],
 )
