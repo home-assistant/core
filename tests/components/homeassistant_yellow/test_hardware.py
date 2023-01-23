@@ -27,6 +27,8 @@ async def test_hardware_info(
     with patch(
         "homeassistant.components.homeassistant_yellow.get_os_info",
         return_value={"board": "yellow"},
+    ), patch(
+        "homeassistant.components.homeassistant_yellow.async_get_yellow_settings",
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -78,6 +80,8 @@ async def test_hardware_info_fail(
     with patch(
         "homeassistant.components.homeassistant_yellow.get_os_info",
         return_value={"board": "yellow"},
+    ), patch(
+        "homeassistant.components.homeassistant_yellow.async_get_yellow_settings",
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

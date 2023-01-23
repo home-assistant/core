@@ -34,6 +34,8 @@ async def test_setup_entry(
         return_value={"board": "yellow"},
     ) as mock_get_os_info, patch(
         "homeassistant.components.onboarding.async_is_onboarded", return_value=onboarded
+    ), patch(
+        "homeassistant.components.homeassistant_yellow.async_get_yellow_settings",
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -75,6 +77,8 @@ async def test_setup_zha(hass: HomeAssistant, addon_store_info) -> None:
         return_value={"board": "yellow"},
     ) as mock_get_os_info, patch(
         "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+    ), patch(
+        "homeassistant.components.homeassistant_yellow.async_get_yellow_settings",
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -125,6 +129,8 @@ async def test_setup_zha_multipan(
         return_value={"board": "yellow"},
     ) as mock_get_os_info, patch(
         "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+    ), patch(
+        "homeassistant.components.homeassistant_yellow.async_get_yellow_settings",
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -175,6 +181,8 @@ async def test_setup_zha_multipan_other_device(
         return_value={"board": "yellow"},
     ) as mock_get_os_info, patch(
         "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+    ), patch(
+        "homeassistant.components.homeassistant_yellow.async_get_yellow_settings",
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -292,6 +300,8 @@ async def test_setup_entry_addon_not_running(
         return_value={"board": "yellow"},
     ), patch(
         "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+    ), patch(
+        "homeassistant.components.homeassistant_yellow.async_get_yellow_settings",
     ):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
