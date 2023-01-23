@@ -29,6 +29,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects import mysql, oracle, postgresql, sqlite
 from sqlalchemy.engine.interfaces import Dialect
 from sqlalchemy.orm import DeclarativeBase, Mapped, aliased, mapped_column, relationship
+from sqlalchemy.orm.query import RowReturningQuery
 from sqlalchemy.orm.session import Session
 
 from homeassistant.const import (
@@ -158,18 +159,22 @@ class Events(Base):
     )
     __tablename__ = TABLE_EVENTS
     event_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
-    event_type: Mapped[str | None] = mapped_column(String(MAX_LENGTH_EVENT_EVENT_TYPE))
+    event_type: Mapped[str] = mapped_column(
+        String(MAX_LENGTH_EVENT_EVENT_TYPE), nullable=False
+    )
     event_data: Mapped[str | None] = mapped_column(
         Text().with_variant(mysql.LONGTEXT, "mysql")
     )
     origin: Mapped[str | None] = mapped_column(
         String(MAX_LENGTH_EVENT_ORIGIN)
     )  # no longer used for new rows
-    origin_idx: Mapped[int | None] = mapped_column(SmallInteger)
+    origin_idx: Mapped[int] = mapped_column(SmallInteger, nullable=False)
     time_fired: Mapped[datetime | None] = mapped_column(
         DATETIME_TYPE
     )  # no longer used for new rows
-    time_fired_ts: Mapped[float | None] = mapped_column(TIMESTAMP_TYPE, index=True)
+    time_fired_ts: Mapped[float | None] = mapped_column(
+        TIMESTAMP_TYPE, index=True, nullable=False
+    )
     context_id: Mapped[str | None] = mapped_column(
         String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True
     )
@@ -233,7 +238,7 @@ class Events(Base):
                 EventOrigin(self.origin)
                 if self.origin
                 else EVENT_ORIGIN_ORDER[self.origin_idx],
-                dt_util.utc_from_timestamp(self.time_fired_ts),
+                dt_util.utc_from_timestamp(self.time_fired_ts or 0),
                 context=context,
             )
         except JSON_DECODE_EXCEPTIONS:
@@ -289,8 +294,11 @@ class EventData(Base):
 
     def to_native(self) -> dict[str, Any]:
         """Convert to an HA state object."""
+        shared_data = self.shared_data
+        if shared_data is None:
+            return {}
         try:
-            return cast(dict[str, Any], json_loads(self.shared_data))
+            return cast(dict[str, Any], json_loads(shared_data))
         except JSON_DECODE_EXCEPTIONS:
             _LOGGER.exception("Error converting row to event data: %s", self)
             return {}
@@ -307,7 +315,9 @@ class States(Base):
     )
     __tablename__ = TABLE_STATES
     state_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
-    entity_id: Mapped[str | None] = mapped_column(String(MAX_LENGTH_STATE_ENTITY_ID))
+    entity_id: Mapped[str] = mapped_column(
+        String(MAX_LENGTH_STATE_ENTITY_ID), nullable=False
+    )
     state: Mapped[str | None] = mapped_column(String(MAX_LENGTH_STATE_STATE))
     attributes: Mapped[str | None] = mapped_column(
         Text().with_variant(mysql.LONGTEXT, "mysql")
@@ -420,7 +430,7 @@ class States(Base):
             last_changed = dt_util.utc_from_timestamp(self.last_changed_ts or 0)
         return State(
             self.entity_id,
-            self.state,
+            self.state,  # type: ignore[arg-type]
             # Join the state_attributes table on attributes_id to get the attributes
             # for newer states
             attrs,
@@ -492,8 +502,11 @@ class StateAttributes(Base):
 
     def to_native(self) -> dict[str, Any]:
         """Convert to an HA state object."""
+        shared_attrs = self.shared_attrs
+        if shared_attrs is None:
+            return {}
         try:
-            return cast(dict[str, Any], json_loads(self.shared_attrs))
+            return cast(dict[str, Any], json_loads(shared_attrs))
         except JSON_DECODE_EXCEPTIONS:
             # When json_loads fails
             _LOGGER.exception("Error converting row to state attributes: %s", self)
@@ -616,9 +629,9 @@ class RecorderRuns(Base):
 
         assert session is not None, "RecorderRuns need to be persisted"
 
-        query = session.query(distinct(States.entity_id)).filter(
-            States.last_updated >= self.start
-        )
+        query: RowReturningQuery[tuple[str]] = session.query(distinct(States.entity_id))
+
+        query = query.filter(States.last_updated >= self.start)
 
         if point_in_time is not None:
             query = query.filter(States.last_updated < point_in_time)
