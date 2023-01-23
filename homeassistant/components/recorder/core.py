@@ -739,6 +739,7 @@ class Recorder(threading.Thread):
         self.hass.add_job(self._async_migration_started)
 
         try:
+            assert self.engine is not None
             migration.migrate_schema(
                 self, self.hass, self.engine, self.get_session, schema_status
             )
@@ -803,7 +804,8 @@ class Recorder(threading.Thread):
         #
         assert self.event_session is not None
         with self.event_session.no_autoflush:
-            if attributes_id := self.event_session.execute(
+            # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+            if attributes_id := self.event_session.execute(  # type: ignore[call-overload]
                 find_shared_attributes_id(attr_hash, shared_attrs)
             ).first():
                 return cast(int, attributes_id[0])
@@ -821,7 +823,8 @@ class Recorder(threading.Thread):
         #
         assert self.event_session is not None
         with self.event_session.no_autoflush:
-            if data_id := self.event_session.execute(
+            # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+            if data_id := self.event_session.execute(  # type: ignore[call-overload]
                 find_shared_data_id(data_hash, shared_data)
             ).first():
                 return cast(int, data_id[0])
@@ -1026,6 +1029,7 @@ class Recorder(threading.Thread):
 
     def _post_schema_migration(self, old_version: int, new_version: int) -> None:
         """Run post schema migration tasks."""
+        assert self.event_session is not None
         migration.post_schema_migration(
             self.engine, self.event_session, old_version, new_version
         )
@@ -1034,7 +1038,7 @@ class Recorder(threading.Thread):
         """Send a keep alive to keep the db connection open."""
         assert self.event_session is not None
         _LOGGER.debug("Sending keepalive")
-        self.event_session.connection().scalar(select([1]))
+        self.event_session.connection().scalar(select(1))
 
     @callback
     def event_listener(self, event: Event) -> None:

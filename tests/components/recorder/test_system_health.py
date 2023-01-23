@@ -44,7 +44,7 @@ async def test_recorder_system_health_alternate_dbms(recorder_mock, hass, dialec
         "homeassistant.components.recorder.core.Recorder.dialect_name", dialect_name
     ), patch(
         "sqlalchemy.orm.session.Session.execute",
-        return_value=Mock(first=Mock(return_value=("1048576",))),
+        return_value=Mock(scalar=Mock(return_value=("1048576"))),
     ):
         info = await get_system_health_info(hass, "recorder")
     instance = get_instance(hass)
@@ -76,7 +76,7 @@ async def test_recorder_system_health_db_url_missing_host(
         "postgresql://homeassistant:blabla@/home_assistant?host=/config/socket",
     ), patch(
         "sqlalchemy.orm.session.Session.execute",
-        return_value=Mock(first=Mock(return_value=("1048576",))),
+        return_value=Mock(scalar=Mock(return_value=("1048576"))),
     ):
         info = await get_system_health_info(hass, "recorder")
     assert info == {

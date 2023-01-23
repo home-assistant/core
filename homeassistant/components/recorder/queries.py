@@ -25,7 +25,8 @@ def find_shared_attributes_id(
 ) -> StatementLambdaElement:
     """Find an attributes_id by hash and shared_attrs."""
     return lambda_stmt(
-        lambda: select(StateAttributes.attributes_id)
+        # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+        lambda: select(StateAttributes.attributes_id)  # type: ignore[arg-type]
         .filter(StateAttributes.hash == data_hash)
         .filter(StateAttributes.shared_attrs == shared_attrs)
     )
@@ -34,7 +35,8 @@ def find_shared_attributes_id(
 def find_shared_data_id(attr_hash: int, shared_data: str) -> StatementLambdaElement:
     """Find a data_id by hash and shared_data."""
     return lambda_stmt(
-        lambda: select(EventData.data_id)
+        # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+        lambda: select(EventData.data_id)  # type: ignore[arg-type]
         .filter(EventData.hash == attr_hash)
         .filter(EventData.shared_data == shared_data)
     )
@@ -50,8 +52,10 @@ def attributes_ids_exist_in_states_sqlite(
 ) -> StatementLambdaElement:
     """Find attributes ids that exist in the states table."""
     return lambda_stmt(
-        lambda: select(distinct(States.attributes_id)).filter(
-            States.attributes_id.in_(attributes_ids)
+        # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+        lambda: select(distinct(States.attributes_id)).filter(  # type: ignore[arg-type]
+            # https://github.com/sqlalchemy/sqlalchemy/issues/9122
+            States.attributes_id.in_(attributes_ids)  # type: ignore[arg-type]
         )
     )
 
@@ -163,7 +167,8 @@ def attributes_ids_exist_in_states(
     https://docs.sqlalchemy.org/en/14/core/connections.html#quick-guidelines-for-lambdas
     """
     return lambda_stmt(
-        lambda: union_all(
+        # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+        lambda: union_all(  # type: ignore[arg-type]
             _state_attrs_exist(attr1),
             _state_attrs_exist(attr2),
             _state_attrs_exist(attr3),
@@ -273,7 +278,8 @@ def data_ids_exist_in_events_sqlite(
 ) -> StatementLambdaElement:
     """Find data ids that exist in the events table."""
     return lambda_stmt(
-        lambda: select(distinct(Events.data_id)).filter(Events.data_id.in_(data_ids))
+        # https://github.com/sqlalchemy/sqlalchemy/issues/9122
+        lambda: select(distinct(Events.data_id)).filter(Events.data_id.in_(data_ids))  # type: ignore[arg-type]
     )
 
 
@@ -389,7 +395,8 @@ def data_ids_exist_in_events(
     https://docs.sqlalchemy.org/en/14/core/connections.html#quick-guidelines-for-lambdas
     """
     return lambda_stmt(
-        lambda: union_all(
+        # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+        lambda: union_all(  # type: ignore[arg-type]
             _event_data_id_exist(id1),
             _event_data_id_exist(id2),
             _event_data_id_exist(id3),
@@ -497,8 +504,10 @@ def data_ids_exist_in_events(
 def disconnect_states_rows(state_ids: Iterable[int]) -> StatementLambdaElement:
     """Disconnect states rows."""
     return lambda_stmt(
-        lambda: update(States)
-        .where(States.old_state_id.in_(state_ids))
+        # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+        lambda: update(States)  # type: ignore[arg-type]
+        # https://github.com/sqlalchemy/sqlalchemy/issues/9122
+        .where(States.old_state_id.in_(state_ids))  # type: ignore[arg-type]
         .values(old_state_id=None)
         .execution_options(synchronize_session=False)
     )
@@ -507,8 +516,12 @@ def disconnect_states_rows(state_ids: Iterable[int]) -> StatementLambdaElement:
 def delete_states_rows(state_ids: Iterable[int]) -> StatementLambdaElement:
     """Delete states rows."""
     return lambda_stmt(
-        lambda: delete(States)
-        .where(States.state_id.in_(state_ids))
+        # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+        lambda: delete(States)  # type: ignore[arg-type]
+        .where(
+            # https://github.com/sqlalchemy/sqlalchemy/issues/9122
+            States.state_id.in_(state_ids)  # type: ignore[arg-type]
+        )
         .execution_options(synchronize_session=False)
     )
 
@@ -516,8 +529,12 @@ def delete_states_rows(state_ids: Iterable[int]) -> StatementLambdaElement:
 def delete_event_data_rows(data_ids: Iterable[int]) -> StatementLambdaElement:
     """Delete event_data rows."""
     return lambda_stmt(
-        lambda: delete(EventData)
-        .where(EventData.data_id.in_(data_ids))
+        # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+        lambda: delete(EventData)  # type: ignore[arg-type]
+        .where(
+            # https://github.com/sqlalchemy/sqlalchemy/issues/9122
+            EventData.data_id.in_(data_ids)  # type: ignore[arg-type]
+        )
         .execution_options(synchronize_session=False)
     )
 
@@ -527,8 +544,12 @@ def delete_states_attributes_rows(
 ) -> StatementLambdaElement:
     """Delete states_attributes rows."""
     return lambda_stmt(
-        lambda: delete(StateAttributes)
-        .where(StateAttributes.attributes_id.in_(attributes_ids))
+        # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+        lambda: delete(StateAttributes)  # type: ignore[arg-type]
+        .where(
+            # https://github.com/sqlalchemy/sqlalchemy/issues/9122
+            StateAttributes.attributes_id.in_(attributes_ids)  # type: ignore[arg-type]
+        )
         .execution_options(synchronize_session=False)
     )
 
@@ -538,8 +559,12 @@ def delete_statistics_runs_rows(
 ) -> StatementLambdaElement:
     """Delete statistics_runs rows."""
     return lambda_stmt(
-        lambda: delete(StatisticsRuns)
-        .where(StatisticsRuns.run_id.in_(statistics_runs))
+        # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+        lambda: delete(StatisticsRuns)  # type: ignore[arg-type]
+        .where(
+            # https://github.com/sqlalchemy/sqlalchemy/issues/9122
+            StatisticsRuns.run_id.in_(statistics_runs)  # type: ignore[arg-type]
+        )
         .execution_options(synchronize_session=False)
     )
 
@@ -549,8 +574,12 @@ def delete_statistics_short_term_rows(
 ) -> StatementLambdaElement:
     """Delete statistics_short_term rows."""
     return lambda_stmt(
-        lambda: delete(StatisticsShortTerm)
-        .where(StatisticsShortTerm.id.in_(short_term_statistics))
+        # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+        lambda: delete(StatisticsShortTerm)  # type: ignore[arg-type]
+        .where(
+            # https://github.com/sqlalchemy/sqlalchemy/issues/9122
+            StatisticsShortTerm.id.in_(short_term_statistics)  # type: ignore[arg-type]
+        )
         .execution_options(synchronize_session=False)
     )
 
@@ -560,8 +589,12 @@ def delete_event_rows(
 ) -> StatementLambdaElement:
     """Delete statistics_short_term rows."""
     return lambda_stmt(
-        lambda: delete(Events)
-        .where(Events.event_id.in_(event_ids))
+        # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+        lambda: delete(Events)  # type: ignore[arg-type]
+        .where(
+            # https://github.com/sqlalchemy/sqlalchemy/issues/9122
+            Events.event_id.in_(event_ids)  # type: ignore[arg-type]
+        )
         .execution_options(synchronize_session=False)
     )
 
@@ -571,7 +604,8 @@ def delete_recorder_runs_rows(
 ) -> StatementLambdaElement:
     """Delete recorder_runs rows."""
     return lambda_stmt(
-        lambda: delete(RecorderRuns)
+        # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+        lambda: delete(RecorderRuns)  # type: ignore[arg-type]
         .filter(RecorderRuns.start < purge_before)
         .filter(RecorderRuns.run_id != current_run_id)
         .execution_options(synchronize_session=False)
@@ -581,7 +615,8 @@ def delete_recorder_runs_rows(
 def find_events_to_purge(purge_before: float) -> StatementLambdaElement:
     """Find events to purge."""
     return lambda_stmt(
-        lambda: select(Events.event_id, Events.data_id)
+        # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+        lambda: select(Events.event_id, Events.data_id)  # type: ignore[arg-type]
         .filter(Events.time_fired_ts < purge_before)
         .limit(MAX_ROWS_TO_PURGE)
     )
@@ -590,7 +625,8 @@ def find_events_to_purge(purge_before: float) -> StatementLambdaElement:
 def find_states_to_purge(purge_before: float) -> StatementLambdaElement:
     """Find states to purge."""
     return lambda_stmt(
-        lambda: select(States.state_id, States.attributes_id)
+        # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+        lambda: select(States.state_id, States.attributes_id)  # type: ignore[arg-type]
         .filter(States.last_updated_ts < purge_before)
         .limit(MAX_ROWS_TO_PURGE)
     )
@@ -601,7 +637,8 @@ def find_short_term_statistics_to_purge(
 ) -> StatementLambdaElement:
     """Find short term statistics to purge."""
     return lambda_stmt(
-        lambda: select(StatisticsShortTerm.id)
+        # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+        lambda: select(StatisticsShortTerm.id)  # type: ignore[arg-type]
         .filter(StatisticsShortTerm.start < purge_before)
         .limit(MAX_ROWS_TO_PURGE)
     )
@@ -612,7 +649,8 @@ def find_statistics_runs_to_purge(
 ) -> StatementLambdaElement:
     """Find statistics_runs to purge."""
     return lambda_stmt(
-        lambda: select(StatisticsRuns.run_id)
+        # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+        lambda: select(StatisticsRuns.run_id)  # type: ignore[arg-type]
         .filter(StatisticsRuns.start < purge_before)
         .limit(MAX_ROWS_TO_PURGE)
     )
@@ -620,7 +658,8 @@ def find_statistics_runs_to_purge(
 
 def find_latest_statistics_runs_run_id() -> StatementLambdaElement:
     """Find the latest statistics_runs run_id."""
-    return lambda_stmt(lambda: select(func.max(StatisticsRuns.run_id)))
+    # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+    return lambda_stmt(lambda: select(func.max(StatisticsRuns.run_id)))  # type: ignore[arg-type]
 
 
 def find_legacy_event_state_and_attributes_and_data_ids_to_purge(
@@ -628,7 +667,8 @@ def find_legacy_event_state_and_attributes_and_data_ids_to_purge(
 ) -> StatementLambdaElement:
     """Find the latest row in the legacy format to purge."""
     return lambda_stmt(
-        lambda: select(
+        # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+        lambda: select(  # type: ignore[arg-type]
             Events.event_id, Events.data_id, States.state_id, States.attributes_id
         )
         .outerjoin(States, Events.event_id == States.event_id)
@@ -639,4 +679,5 @@ def find_legacy_event_state_and_attributes_and_data_ids_to_purge(
 
 def find_legacy_row() -> StatementLambdaElement:
     """Check if there are still states in the table with an event_id."""
-    return lambda_stmt(lambda: select(func.max(States.event_id)))
+    # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+    return lambda_stmt(lambda: select(func.max(States.event_id)))  # type: ignore[arg-type]

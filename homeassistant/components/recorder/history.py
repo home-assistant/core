@@ -59,87 +59,87 @@ NEED_ATTRIBUTE_DOMAINS = {
 }
 
 
-_BASE_STATES = [
+_BASE_STATES = (
     States.entity_id,
     States.state,
     States.last_changed_ts,
     States.last_updated_ts,
-]
-_BASE_STATES_NO_LAST_CHANGED = [
+)
+_BASE_STATES_NO_LAST_CHANGED = (
     States.entity_id,
     States.state,
     literal(value=None).label("last_changed_ts"),
     States.last_updated_ts,
-]
-_QUERY_STATE_NO_ATTR = [
+)
+_QUERY_STATE_NO_ATTR = (
     *_BASE_STATES,
     literal(value=None, type_=Text).label("attributes"),
     literal(value=None, type_=Text).label("shared_attrs"),
-]
-_QUERY_STATE_NO_ATTR_NO_LAST_CHANGED = [
+)
+_QUERY_STATE_NO_ATTR_NO_LAST_CHANGED = (
     *_BASE_STATES_NO_LAST_CHANGED,
     literal(value=None, type_=Text).label("attributes"),
     literal(value=None, type_=Text).label("shared_attrs"),
-]
-_BASE_STATES_PRE_SCHEMA_31 = [
+)
+_BASE_STATES_PRE_SCHEMA_31 = (
     States.entity_id,
     States.state,
     States.last_changed,
     States.last_updated,
-]
-_BASE_STATES_NO_LAST_CHANGED_PRE_SCHEMA_31 = [
+)
+_BASE_STATES_NO_LAST_CHANGED_PRE_SCHEMA_31 = (
     States.entity_id,
     States.state,
     literal(value=None, type_=Text).label("last_changed"),
     States.last_updated,
-]
-_QUERY_STATE_NO_ATTR_PRE_SCHEMA_31 = [
+)
+_QUERY_STATE_NO_ATTR_PRE_SCHEMA_31 = (
     *_BASE_STATES_PRE_SCHEMA_31,
     literal(value=None, type_=Text).label("attributes"),
     literal(value=None, type_=Text).label("shared_attrs"),
-]
-_QUERY_STATE_NO_ATTR_NO_LAST_CHANGED_PRE_SCHEMA_31 = [
+)
+_QUERY_STATE_NO_ATTR_NO_LAST_CHANGED_PRE_SCHEMA_31 = (
     *_BASE_STATES_NO_LAST_CHANGED_PRE_SCHEMA_31,
     literal(value=None, type_=Text).label("attributes"),
     literal(value=None, type_=Text).label("shared_attrs"),
-]
+)
 # Remove QUERY_STATES_PRE_SCHEMA_25
 # and the migration_in_progress check
 # once schema 26 is created
-_QUERY_STATES_PRE_SCHEMA_25 = [
+_QUERY_STATES_PRE_SCHEMA_25 = (
     *_BASE_STATES_PRE_SCHEMA_31,
     States.attributes,
     literal(value=None, type_=Text).label("shared_attrs"),
-]
-_QUERY_STATES_PRE_SCHEMA_25_NO_LAST_CHANGED = [
+)
+_QUERY_STATES_PRE_SCHEMA_25_NO_LAST_CHANGED = (
     *_BASE_STATES_NO_LAST_CHANGED_PRE_SCHEMA_31,
     States.attributes,
     literal(value=None, type_=Text).label("shared_attrs"),
-]
-_QUERY_STATES_PRE_SCHEMA_31 = [
+)
+_QUERY_STATES_PRE_SCHEMA_31 = (
     *_BASE_STATES_PRE_SCHEMA_31,
     # Remove States.attributes once all attributes are in StateAttributes.shared_attrs
     States.attributes,
     StateAttributes.shared_attrs,
-]
-_QUERY_STATES_NO_LAST_CHANGED_PRE_SCHEMA_31 = [
+)
+_QUERY_STATES_NO_LAST_CHANGED_PRE_SCHEMA_31 = (
     *_BASE_STATES_NO_LAST_CHANGED_PRE_SCHEMA_31,
     # Remove States.attributes once all attributes are in StateAttributes.shared_attrs
     States.attributes,
     StateAttributes.shared_attrs,
-]
-_QUERY_STATES = [
+)
+_QUERY_STATES = (
     *_BASE_STATES,
     # Remove States.attributes once all attributes are in StateAttributes.shared_attrs
     States.attributes,
     StateAttributes.shared_attrs,
-]
-_QUERY_STATES_NO_LAST_CHANGED = [
+)
+_QUERY_STATES_NO_LAST_CHANGED = (
     *_BASE_STATES_NO_LAST_CHANGED,
     # Remove States.attributes once all attributes are in StateAttributes.shared_attrs
     States.attributes,
     StateAttributes.shared_attrs,
-]
+)
 
 
 def _schema_version(hass: HomeAssistant) -> int:
@@ -161,21 +161,25 @@ def lambda_stmt_and_join_attributes(
         if schema_version >= 31:
             if include_last_changed:
                 return (
-                    lambda_stmt(lambda: select(*_QUERY_STATE_NO_ATTR)),
+                    # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+                    lambda_stmt(lambda: select(*_QUERY_STATE_NO_ATTR)),  # type: ignore[arg-type]
                     False,
                 )
             return (
-                lambda_stmt(lambda: select(*_QUERY_STATE_NO_ATTR_NO_LAST_CHANGED)),
+                # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+                lambda_stmt(lambda: select(*_QUERY_STATE_NO_ATTR_NO_LAST_CHANGED)),  # type: ignore[arg-type]
                 False,
             )
         if include_last_changed:
             return (
-                lambda_stmt(lambda: select(*_QUERY_STATE_NO_ATTR_PRE_SCHEMA_31)),
+                # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+                lambda_stmt(lambda: select(*_QUERY_STATE_NO_ATTR_PRE_SCHEMA_31)),  # type: ignore[arg-type]
                 False,
             )
         return (
             lambda_stmt(
-                lambda: select(*_QUERY_STATE_NO_ATTR_NO_LAST_CHANGED_PRE_SCHEMA_31)
+                # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+                lambda: select(*_QUERY_STATE_NO_ATTR_NO_LAST_CHANGED_PRE_SCHEMA_31)  # type: ignore[arg-type]
             ),
             False,
         )
@@ -185,25 +189,31 @@ def lambda_stmt_and_join_attributes(
     if schema_version < 25:
         if include_last_changed:
             return (
-                lambda_stmt(lambda: select(*_QUERY_STATES_PRE_SCHEMA_25)),
+                # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+                lambda_stmt(lambda: select(*_QUERY_STATES_PRE_SCHEMA_25)),  # type: ignore[arg-type]
                 False,
             )
         return (
-            lambda_stmt(lambda: select(*_QUERY_STATES_PRE_SCHEMA_25_NO_LAST_CHANGED)),
+            # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+            lambda_stmt(lambda: select(*_QUERY_STATES_PRE_SCHEMA_25_NO_LAST_CHANGED)),  # type: ignore[arg-type]
             False,
         )
 
     if schema_version >= 31:
         if include_last_changed:
-            return lambda_stmt(lambda: select(*_QUERY_STATES)), True
-        return lambda_stmt(lambda: select(*_QUERY_STATES_NO_LAST_CHANGED)), True
+            # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+            return lambda_stmt(lambda: select(*_QUERY_STATES)), True  # type: ignore[arg-type]
+        # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+        return lambda_stmt(lambda: select(*_QUERY_STATES_NO_LAST_CHANGED)), True  # type: ignore[arg-type]
     # Finally if no migration is in progress and no_attributes
     # was not requested, we query both attributes columns and
     # join state_attributes
     if include_last_changed:
-        return lambda_stmt(lambda: select(*_QUERY_STATES_PRE_SCHEMA_31)), True
+        # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+        return lambda_stmt(lambda: select(*_QUERY_STATES_PRE_SCHEMA_31)), True  # type: ignore[arg-type]
     return (
-        lambda_stmt(lambda: select(*_QUERY_STATES_NO_LAST_CHANGED_PRE_SCHEMA_31)),
+        # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+        lambda_stmt(lambda: select(*_QUERY_STATES_NO_LAST_CHANGED_PRE_SCHEMA_31)),  # type: ignore[arg-type]
         True,
     )
 
@@ -305,12 +315,14 @@ def _significant_states_stmt(
             )
 
     if entity_ids:
+        # https://github.com/python/mypy/issues/2608
         stmt += lambda q: q.filter(States.entity_id.in_(entity_ids))
     else:
         stmt += _ignore_domains_filter
         if filters and filters.has_config:
             entity_filter = filters.states_entity_filter()
-            stmt = stmt.add_criteria(
+            # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+            stmt = stmt.add_criteria(  # type: ignore[no-untyped-call]
                 lambda q: q.filter(entity_filter), track_on=[filters]
             )
 
@@ -716,7 +728,8 @@ def _get_states_for_all_stmt(
     stmt += _ignore_domains_filter
     if filters and filters.has_config:
         entity_filter = filters.states_entity_filter()
-        stmt = stmt.add_criteria(lambda q: q.filter(entity_filter), track_on=[filters])
+        # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+        stmt = stmt.add_criteria(lambda q: q.filter(entity_filter), track_on=[filters])  # type: ignore[no-untyped-call]
     if join_attributes:
         stmt += lambda q: q.outerjoin(
             StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
@@ -873,7 +886,7 @@ def _sorted_states_to_dict(
         _LOGGER.debug("getting %d first datapoints took %fs", len(result), elapsed)
 
     if entity_ids and len(entity_ids) == 1:
-        states_iter: Iterable[tuple[str | Column, Iterator[States]]] = (
+        states_iter: Iterable[tuple[str | Column, Iterator[Row]]] = (
             (entity_ids[0], iter(states)),
         )
     else:

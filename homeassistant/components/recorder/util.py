@@ -1,7 +1,7 @@
 """SQLAlchemy util functions."""
 from __future__ import annotations
 
-from collections.abc import Callable, Generator
+from collections.abc import Callable, Generator, Sequence
 from contextlib import contextmanager
 from datetime import date, datetime, timedelta
 import functools
@@ -17,8 +17,7 @@ from awesomeversion import (
 )
 import ciso8601
 from sqlalchemy import text
-from sqlalchemy.engine.cursor import CursorFetchStrategy
-from sqlalchemy.engine.row import Row
+from sqlalchemy.engine import Result, Row
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm.query import Query
 from sqlalchemy.orm.session import Session
@@ -39,6 +38,8 @@ from .db_schema import (
 from .models import StatisticPeriod, UnsupportedDialect, process_timestamp
 
 if TYPE_CHECKING:
+    from sqlite3.dbapi2 import Cursor as SQLiteCursor
+
     from . import Recorder
 
 _RecorderT = TypeVar("_RecorderT", bound="Recorder")
@@ -142,7 +143,8 @@ def execute(
                     row
                     for row in (
                         row.to_native(validate_entity_id=validate_entity_ids)
-                        for row in qry
+                        # https://github.com/sqlalchemy/sqlalchemy/issues/9125
+                        for row in qry  # type: ignore[attr-defined]
                     )
                     if row is not None
                 ]
@@ -181,8 +183,8 @@ def execute_stmt_lambda_element(
     stmt: StatementLambdaElement,
     start_time: datetime | None = None,
     end_time: datetime | None = None,
-    yield_per: int | None = DEFAULT_YIELD_STATES_ROWS,
-) -> list[Row]:
+    yield_per: int = DEFAULT_YIELD_STATES_ROWS,
+) -> Sequence[Row] | Result:
     """Execute a StatementLambdaElement.
 
     If the time window passed is greater than one day
@@ -194,12 +196,15 @@ def execute_stmt_lambda_element(
     specific entities) since they are usually faster
     with .all().
     """
-    executed = session.execute(stmt)
+    # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+    executed = session.execute(stmt)  # type: ignore[call-overload]
     use_all = not start_time or ((end_time or dt_util.utcnow()) - start_time).days <= 1
     for tryno in range(RETRIES):
         try:
             if use_all:
+                # https://github.com/sqlalchemy/sqlalchemy/issues/9120
                 return executed.all()  # type: ignore[no-any-return]
+            # https://github.com/sqlalchemy/sqlalchemy/issues/9120
             return executed.yield_per(yield_per)  # type: ignore[no-any-return]
         except SQLAlchemyError as err:
             _LOGGER.error("Error executing query: %s", err)
@@ -231,7 +236,7 @@ def dburl_to_path(dburl: str) -> str:
     return dburl.removeprefix(SQLITE_URL_PREFIX)
 
 
-def last_run_was_recently_clean(cursor: CursorFetchStrategy) -> bool:
+def last_run_was_recently_clean(cursor: SQLiteCursor) -> bool:
     """Verify the last recorder run was recently clean."""
 
     cursor.execute("SELECT end FROM recorder_runs ORDER BY start DESC LIMIT 1;")
@@ -252,7 +257,7 @@ def last_run_was_recently_clean(cursor: CursorFetchStrategy) -> bool:
     return True
 
 
-def basic_sanity_check(cursor: CursorFetchStrategy) -> bool:
+def basic_sanity_check(cursor: SQLiteCursor) -> bool:
     """Check tables to make sure select does not fail."""
 
     for table in TABLES_TO_CHECK:
@@ -279,7 +284,7 @@ def validate_sqlite_database(dbpath: str) -> bool:
     return True
 
 
-def run_checks_on_open_db(dbpath: str, cursor: CursorFetchStrategy) -> None:
+def run_checks_on_open_db(dbpath: str, cursor: SQLiteCursor) -> None:
     """Run checks that will generate a sqlite3 exception if there is corruption."""
     sanity_check_passed = basic_sanity_check(cursor)
     last_run_was_clean = last_run_was_recently_clean(cursor)
@@ -491,7 +496,8 @@ def setup_connection_for_dialect(
 
 def end_incomplete_runs(session: Session, start_time: datetime) -> None:
     """End any incomplete recorder runs."""
-    for run in session.query(RecorderRuns).filter_by(end=None):
+    # https://github.com/sqlalchemy/sqlalchemy/issues/9125
+    for run in session.query(RecorderRuns).filter_by(end=None):  # type: ignore[attr-defined]
         run.closed_incorrect = True
         run.end = start_time
         _LOGGER.warning(

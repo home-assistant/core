@@ -8,6 +8,7 @@ from itertools import islice, zip_longest
 import logging
 from typing import TYPE_CHECKING, Any
 
+from sqlalchemy.engine.row import Row
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.expression import distinct
 
@@ -136,7 +137,8 @@ def purge_old_data(
 
 def _purging_legacy_format(session: Session) -> bool:
     """Check if there are any legacy event_id linked states rows remaining."""
-    return bool(session.execute(find_legacy_row()).scalar())
+    # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+    return bool(session.execute(find_legacy_row()).scalar())  # type: ignore[call-overload]
 
 
 def _purge_legacy_format(
@@ -234,7 +236,8 @@ def _select_state_attributes_ids_to_purge(
     """Return sets of state and attribute ids to purge."""
     state_ids = set()
     attributes_ids = set()
-    for state in session.execute(
+    # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+    for state in session.execute(  # type: ignore[call-overload]
         find_states_to_purge(dt_util.utc_to_timestamp(purge_before))
     ).all():
         state_ids.add(state.state_id)
@@ -254,7 +257,8 @@ def _select_event_data_ids_to_purge(
     """Return sets of event and data ids to purge."""
     event_ids = set()
     data_ids = set()
-    for event in session.execute(
+    # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+    for event in session.execute(  # type: ignore[call-overload]
         find_events_to_purge(dt_util.utc_to_timestamp(purge_before))
     ).all():
         event_ids.add(event.event_id)
@@ -289,7 +293,8 @@ def _select_unused_attributes_ids(
         #
         seen_ids = {
             state[0]
-            for state in session.execute(
+            # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+            for state in session.execute(  # type: ignore[call-overload]
                 attributes_ids_exist_in_states_sqlite(attributes_ids)
             ).all()
         }
@@ -323,7 +328,8 @@ def _select_unused_attributes_ids(
         for attr_ids in zip_longest(*groups, fillvalue=None):
             seen_ids |= {
                 attrs_id[0]
-                for attrs_id in session.execute(
+                # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+                for attrs_id in session.execute(  # type: ignore[call-overload]
                     attributes_ids_exist_in_states(*attr_ids)  # type: ignore[arg-type]
                 ).all()
                 if attrs_id[0] is not None
@@ -360,7 +366,8 @@ def _select_unused_event_data_ids(
     if using_sqlite:
         seen_ids = {
             state[0]
-            for state in session.execute(
+            # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+            for state in session.execute(  # type: ignore[call-overload]
                 data_ids_exist_in_events_sqlite(data_ids)
             ).all()
         }
@@ -370,7 +377,8 @@ def _select_unused_event_data_ids(
         for data_ids_group in zip_longest(*groups, fillvalue=None):
             seen_ids |= {
                 data_id[0]
-                for data_id in session.execute(
+                # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+                for data_id in session.execute(  # type: ignore[call-overload]
                     data_ids_exist_in_events(*data_ids_group)  # type: ignore[arg-type]
                 ).all()
                 if data_id[0] is not None
@@ -397,11 +405,13 @@ def _select_statistics_runs_to_purge(
 
     Takes care to keep the newest run.
     """
-    statistic_runs = session.execute(find_statistics_runs_to_purge(purge_before)).all()
+    # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+    statistic_runs = session.execute(find_statistics_runs_to_purge(purge_before)).all()  # type: ignore[call-overload]
     statistic_runs_list = [run.run_id for run in statistic_runs]
     # Exclude the newest statistics run
     if (
-        last_run := session.execute(find_latest_statistics_runs_run_id()).scalar()
+        # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+        last_run := session.execute(find_latest_statistics_runs_run_id()).scalar()  # type: ignore[call-overload]
     ) and last_run in statistic_runs_list:
         statistic_runs_list.remove(last_run)
 
@@ -413,7 +423,8 @@ def _select_short_term_statistics_to_purge(
     session: Session, purge_before: datetime
 ) -> list[int]:
     """Return a list of short term statistics to purge."""
-    statistics = session.execute(
+    # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+    statistics = session.execute(  # type: ignore[call-overload]
         find_short_term_statistics_to_purge(purge_before)
     ).all()
     _LOGGER.debug("Selected %s short term statistics to remove", len(statistics))
@@ -429,7 +440,8 @@ def _select_legacy_event_state_and_attributes_and_data_ids_to_purge(
     do not exist in the events table anymore, however we
     still need to be able to purge them.
     """
-    events = session.execute(
+    # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+    events = session.execute(  # type: ignore[call-overload]
         find_legacy_event_state_and_attributes_and_data_ids_to_purge(
             dt_util.utc_to_timestamp(purge_before)
         )
@@ -457,10 +469,12 @@ def _purge_state_ids(instance: Recorder, session: Session, state_ids: set[int]) 
     # the delete does not fail due to a foreign key constraint
     # since some databases (MSSQL) cannot do the ON DELETE SET NULL
     # for us.
-    disconnected_rows = session.execute(disconnect_states_rows(state_ids))
+    # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+    disconnected_rows = session.execute(disconnect_states_rows(state_ids))  # type: ignore[call-overload]
     _LOGGER.debug("Updated %s states to remove old_state_id", disconnected_rows)
 
-    deleted_rows = session.execute(delete_states_rows(state_ids))
+    # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+    deleted_rows = session.execute(delete_states_rows(state_ids))  # type: ignore[call-overload]
     _LOGGER.debug("Deleted %s states", deleted_rows)
 
     # Evict eny entries in the old_states cache referring to a purged state
@@ -526,7 +540,8 @@ def _purge_batch_attributes_ids(
 ) -> None:
     """Delete old attributes ids in batches of MAX_ROWS_TO_PURGE."""
     for attributes_ids_chunk in chunked(attributes_ids, MAX_ROWS_TO_PURGE):
-        deleted_rows = session.execute(
+        # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+        deleted_rows = session.execute(  # type: ignore[call-overload]
             delete_states_attributes_rows(attributes_ids_chunk)
         )
         _LOGGER.debug("Deleted %s attribute states", deleted_rows)
@@ -540,7 +555,8 @@ def _purge_batch_data_ids(
 ) -> None:
     """Delete old event data ids in batches of MAX_ROWS_TO_PURGE."""
     for data_ids_chunk in chunked(data_ids, MAX_ROWS_TO_PURGE):
-        deleted_rows = session.execute(delete_event_data_rows(data_ids_chunk))
+        # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+        deleted_rows = session.execute(delete_event_data_rows(data_ids_chunk))  # type: ignore[call-overload]
         _LOGGER.debug("Deleted %s data events", deleted_rows)
 
     # Evict any entries in the event_data_ids cache referring to a purged state
@@ -549,7 +565,8 @@ def _purge_batch_data_ids(
 
 def _purge_statistics_runs(session: Session, statistics_runs: list[int]) -> None:
     """Delete by run_id."""
-    deleted_rows = session.execute(delete_statistics_runs_rows(statistics_runs))
+    # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+    deleted_rows = session.execute(delete_statistics_runs_rows(statistics_runs))  # type: ignore[call-overload]
     _LOGGER.debug("Deleted %s statistic runs", deleted_rows)
 
 
@@ -557,7 +574,8 @@ def _purge_short_term_statistics(
     session: Session, short_term_statistics: list[int]
 ) -> None:
     """Delete by id."""
-    deleted_rows = session.execute(
+    # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+    deleted_rows = session.execute(  # type: ignore[call-overload]
         delete_statistics_short_term_rows(short_term_statistics)
     )
     _LOGGER.debug("Deleted %s short term statistics", deleted_rows)
@@ -565,7 +583,8 @@ def _purge_short_term_statistics(
 
 def _purge_event_ids(session: Session, event_ids: Iterable[int]) -> None:
     """Delete by event id."""
-    deleted_rows = session.execute(delete_event_rows(event_ids))
+    # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+    deleted_rows = session.execute(delete_event_rows(event_ids))  # type: ignore[call-overload]
     _LOGGER.debug("Deleted %s events", deleted_rows)
 
 
@@ -574,7 +593,8 @@ def _purge_old_recorder_runs(
 ) -> None:
     """Purge all old recorder runs."""
     # Recorder runs is small, no need to batch run it
-    deleted_rows = session.execute(
+    # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+    deleted_rows = session.execute(  # type: ignore[call-overload]
         delete_recorder_runs_rows(purge_before, instance.run_history.current.run_id)
     )
     _LOGGER.debug("Deleted %s recorder_runs", deleted_rows)
@@ -615,9 +635,9 @@ def _purge_filtered_states(
     using_sqlite: bool,
 ) -> None:
     """Remove filtered states and linked events."""
-    state_ids: list[int]
-    attributes_ids: list[int]
-    event_ids: list[int]
+    state_ids: tuple[int, ...]
+    attributes_ids: tuple[int, ...]
+    event_ids: tuple[int, ...]
     state_ids, attributes_ids, event_ids = zip(
         *(
             session.query(States.state_id, States.attributes_id, States.event_id)
@@ -626,12 +646,12 @@ def _purge_filtered_states(
             .all()
         )
     )
-    event_ids = [id_ for id_ in event_ids if id_ is not None]
+    filtered_event_ids = [id_ for id_ in event_ids if id_ is not None]
     _LOGGER.debug(
         "Selected %s state_ids to remove that should be filtered", len(state_ids)
     )
     _purge_state_ids(instance, session, set(state_ids))
-    _purge_event_ids(session, event_ids)
+    _purge_event_ids(session, filtered_event_ids)
     unused_attribute_ids_set = _select_unused_attributes_ids(
         session, {id_ for id_ in attributes_ids if id_ is not None}, using_sqlite
     )
@@ -654,7 +674,7 @@ def _purge_filtered_events(
     _LOGGER.debug(
         "Selected %s event_ids to remove that should be filtered", len(event_ids)
     )
-    states: list[States] = (
+    states: list[Row[tuple[int]]] = (
         session.query(States.state_id).filter(States.event_id.in_(event_ids)).all()
     )
     state_ids: set[int] = {state.state_id for state in states}
