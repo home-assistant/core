@@ -29,7 +29,6 @@ async def async_setup_entry(
                 PowerWallRunningSensor,
                 PowerWallGridServicesActiveSensor,
                 PowerWallGridStatusSensor,
-                PowerWallOffGridStatusSensor,
                 PowerWallConnectedSensor,
                 PowerWallChargingStatusSensor,
             )
@@ -105,26 +104,6 @@ class PowerWallGridStatusSensor(PowerWallEntity, BinarySensorEntity):
         return self.data.grid_status in [
             GridStatus.TRANSITION_TO_GRID,
             GridStatus.CONNECTED,
-        ]
-
-
-class PowerWallOffGridStatusSensor(PowerWallEntity, BinarySensorEntity):
-    """Representation of an Powerwall off-grid status sensor."""
-
-    _attr_name = "Off-grid Status"
-    _attr_device_class = BinarySensorDeviceClass.POWER
-
-    @property
-    def unique_id(self) -> str:
-        """Device Uniqueid."""
-        return f"{self.base_unique_id}_off_grid_status"
-
-    @property
-    def is_on(self) -> bool:
-        """Grid is offline."""
-        return self.data.grid_status in [
-            GridStatus.TRANSITION_TO_ISLAND,
-            GridStatus.ISLANDED,
         ]
 
 
