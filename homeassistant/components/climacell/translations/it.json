@@ -1,0 +1,13 @@
+{
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timestep": "Minuti tra le previsioni di NowCast"
+                },
+                "description": "Se scegli di abilitare l'entit\u00e0 di previsione `nowcast`, puoi configurare il numero di minuti tra ogni previsione. Il numero di previsioni fornite dipende dal numero di minuti scelti tra le previsioni.",
+                "title": "Aggiorna le opzioni di ClimaCell"
+            }
+        }
+    }
+}

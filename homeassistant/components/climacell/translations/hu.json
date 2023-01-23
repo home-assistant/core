@@ -1,0 +1,13 @@
+{
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timestep": "Min. A NowCast el\u0151rejelz\u00e9sek k\u00f6z\u00f6tt"
+                },
+                "description": "Ha a `nowcast` el\u0151rejelz\u00e9si entit\u00e1s enged\u00e9lyez\u00e9s\u00e9t v\u00e1lasztja, be\u00e1ll\u00edthatja az egyes el\u0151rejelz\u00e9sek k\u00f6z\u00f6tti percek sz\u00e1m\u00e1t. A megadott el\u0151rejelz\u00e9sek sz\u00e1ma az el\u0151rejelz\u00e9sek k\u00f6z\u00f6tt kiv\u00e1lasztott percek sz\u00e1m\u00e1t\u00f3l f\u00fcgg.",
+                "title": "ClimaCell be\u00e1ll\u00edt\u00e1sok friss\u00edt\u00e9se"
+            }
+        }
+    }
+}
