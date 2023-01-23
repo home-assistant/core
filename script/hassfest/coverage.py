@@ -23,10 +23,20 @@ ALLOWED_IGNORE_VIOLATIONS = {
     ("doorbird", "logbook.py"),
     ("elkm1", "scene.py"),
     ("fibaro", "scene.py"),
+    ("hunterdouglas_powerview", "scene.py"),
+    ("jellyfin", "media_source.py"),
     ("lcn", "scene.py"),
+    ("lifx_cloud", "scene.py"),
     ("lutron", "scene.py"),
+    ("lutron_caseta", "scene.py"),
+    ("nanoleaf", "device_trigger.py"),
+    ("overkiz", "scene.py"),
+    ("radio_browser", "media_source.py"),
+    ("system_bridge", "media_source.py"),
     ("tuya", "scene.py"),
     ("velux", "scene.py"),
+    ("upb", "scene.py"),
+    ("xbox", "media_source.py"),
 }
 
 
@@ -34,7 +44,7 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Validate coverage."""
     coverage_path = config.root / ".coveragerc"
 
-    not_found = []
+    not_found: list[str] = []
     checking = False
 
     with coverage_path.open("rt") as fp:
@@ -64,11 +74,7 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
                 not_found.append(line)
                 continue
 
-            if (
-                not line.startswith("homeassistant/components/")
-                or len(path.parts) != 4
-                or path.parts[-1] != "*"
-            ):
+            if not line.startswith("homeassistant/components/") or len(path.parts) != 4:
                 continue
 
             integration_path = path.parent
@@ -76,6 +82,9 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
             integration = integrations[integration_path.name]
 
             for check in DONT_IGNORE:
+                if path.parts[-1] not in {"*", check}:
+                    continue
+
                 if (integration_path.name, check) in ALLOWED_IGNORE_VIOLATIONS:
                     continue
 
@@ -85,14 +94,7 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
                         f"{check} must not be ignored by the .coveragerc file",
                     )
 
-    if not not_found:
-        return
-
-    errors = []
-
     if not_found:
-        errors.append(
+        raise RuntimeError(
             f".coveragerc references files that don't exist: {', '.join(not_found)}."
         )
-
-    raise RuntimeError(" ".join(errors))
