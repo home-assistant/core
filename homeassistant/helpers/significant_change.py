@@ -14,7 +14,7 @@ async def async_check_significant_change(
     new_state: str,
     new_attrs: dict,
     **kwargs,
-) -> Optional[bool]
+) -> bool | None
 ```
 
 Return boolean to indicate if significantly changed. If don't know, return None.
@@ -30,7 +30,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from types import MappingProxyType
-from typing import Any, Optional, Union
+from typing import Any, Union
 
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State, callback
@@ -47,7 +47,7 @@ CheckTypeFunc = Callable[
         str,
         Union[dict, MappingProxyType],
     ],
-    Optional[bool],
+    bool | None,
 ]
 
 ExtraCheckTypeFunc = Callable[
@@ -60,7 +60,7 @@ ExtraCheckTypeFunc = Callable[
         Union[dict, MappingProxyType],
         Any,
     ],
-    Optional[bool],
+    bool | None,
 ]
 
 

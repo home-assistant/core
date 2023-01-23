@@ -31,7 +31,6 @@ from typing import (
     Any,
     Generic,
     NamedTuple,
-    Optional,
     TypeVar,
     Union,
     cast,
@@ -2011,13 +2010,13 @@ class Config:
         if time_zone is not None:
             self.set_time_zone(time_zone)
         if external_url is not _UNDEF:
-            self.external_url = cast(Optional[str], external_url)
+            self.external_url = cast(str | None, external_url)
         if internal_url is not _UNDEF:
-            self.internal_url = cast(Optional[str], internal_url)
+            self.internal_url = cast(str | None, internal_url)
         if currency is not None:
             self.currency = currency
         if country is not _UNDEF:
-            self.country = cast(Optional[str], country)
+            self.country = cast(str | None, country)
         if language is not None:
             self.language = language
 
