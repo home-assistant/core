@@ -77,8 +77,8 @@ class SFRBoxFlowHandler(ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                if (username := user_input.get(CONF_USERNAME)) and (
-                    password := user_input.get(CONF_PASSWORD)
+                if (username := user_input[CONF_USERNAME]) and (
+                    password := user_input[CONF_PASSWORD]
                 ):
                     await self._box.authenticate(username=username, password=password)
             except SFRBoxAuthenticationError:
