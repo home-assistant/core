@@ -17,7 +17,8 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     aiohttp_client,
     config_validation as cv,
@@ -27,6 +28,14 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle, slugify
+
+from .const import (
+    ADD_TRACKING_SERVICE_SCHEMA,
+    CONF_FRIENDLY_NAME,
+    CONF_TRACKING_NUMBER,
+    DOMAIN,
+    SERVICE_ADD_TRACKING,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -83,6 +92,35 @@ async def async_setup_platform(
 
     client = SeventeenTrackClient(session=session)
 
+    async def async_add_package(call: ServiceCall):
+        try:
+            tracking_number = call.data[CONF_TRACKING_NUMBER]
+            friendly_name = ""
+            try:
+                friendly_name = call.data[CONF_FRIENDLY_NAME]
+            except KeyError:
+                _LOGGER.debug('No friendly name set. Setting friendly name to: ""')
+            session = aiohttp_client.async_get_clientsession(hass)
+
+            client = SeventeenTrackClient(session=session)
+
+            await client.profile.add_package(
+                tracking_number,
+                friendly_name,
+            )
+            _LOGGER.debug("Added tracking for package: %s", tracking_number)
+            return True
+
+        except SeventeenTrackError as err:
+            _LOGGER.error(
+                "There was an error while adding the package: %s\nError Message: %s",
+                tracking_number,
+                err,
+            )
+            raise HomeAssistantError(
+                f"Failed to add package: {tracking_number}"
+            ) from err
+
     try:
         login_result = await client.profile.login(
             config[CONF_USERNAME], config[CONF_PASSWORD]
@@ -91,6 +129,14 @@ async def async_setup_platform(
         if not login_result:
             _LOGGER.error("Invalid username and password provided")
             return
+
+        hass.services.async_register(
+            DOMAIN,
+            SERVICE_ADD_TRACKING,
+            async_add_package,
+            schema=ADD_TRACKING_SERVICE_SCHEMA,
+        )
+
     except SeventeenTrackError as err:
         _LOGGER.error("There was an error while logging in: %s", err)
         return

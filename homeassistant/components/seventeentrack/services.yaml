@@ -1,0 +1,17 @@
+add_tracking:
+  name: Add tracking
+  description: Add new tracking number to 17Track.
+  fields:
+    tracking_number:
+      name: Tracking number
+      description: Tracking number for the new tracking
+      required: true
+      example: "123456789"
+      selector:
+        text:
+    friendly_name:
+      name: Friendly Name
+      description: A custom name for the new tracking
+      example: "Laptop"
+      selector:
+        text:
