@@ -5,7 +5,7 @@ from unittest import mock
 
 import pytest
 
-from homeassistant.components.climate.const import ClimateEntityFeature
+from homeassistant.components.climate.const import ATTR_AUX_HEAT, ClimateEntityFeature
 from homeassistant.components.ecobee import DOMAIN as CLIMATE_DOMAIN, climate as ecobee
 import homeassistant.const as const
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_OFF
@@ -249,7 +249,7 @@ async def test_is_aux_heat_on(hass):
     with mock.patch("pyecobee.Ecobee.get_thermostat", mock_get_thermostat):
         await setup_platform(hass, CLIMATE_DOMAIN)
     state = hass.states.get(DEVICE_ID)
-    assert state.attributes.get("aux_heat") == "on"
+    assert state.attributes[ATTR_AUX_HEAT] == "on"
 
 
 async def test_is_aux_heat_off(hass):
@@ -259,7 +259,7 @@ async def test_is_aux_heat_off(hass):
     with mock.patch("pyecobee.Ecobee.get_thermostat", mock_get_thermostat):
         await setup_platform(hass, CLIMATE_DOMAIN)
     state = hass.states.get(DEVICE_ID)
-    assert state.attributes.get("aux_heat") == "off"
+    assert state.attributes[ATTR_AUX_HEAT] == "off"
 
 
 async def test_set_temperature(ecobee_fixture, thermostat, data):

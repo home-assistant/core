@@ -416,18 +416,22 @@ class Thermostat(ClimateEntity):
         return PRECISION_HALVES
 
     @property
-    def has_humidifier_control(self):
+    def settings(self) -> dict[str, Any]:
+        """Return the settings of the thermostat."""
+        return self.thermostat["settings"]
+
+    @property
+    def has_humidifier_control(self) -> bool:
         """Return true if humidifier connected to thermostat and set to manual/on mode."""
         return (
-            bool(self.thermostat["settings"].get("hasHumidifier"))
-            and self.thermostat["settings"].get("humidifierMode")
-            == HUMIDIFIER_MANUAL_MODE
+            bool(self.settings.get("hasHumidifier"))
+            and self.settings.get("humidifierMode") == HUMIDIFIER_MANUAL_MODE
         )
 
     @property
-    def has_aux_heat(self):
+    def has_aux_heat(self) -> bool:
         """Return true if the ecobee has a heat pump."""
-        return bool(self.thermostat["settings"].get(HAS_HEAT_PUMP))
+        return bool(self.settings.get(HAS_HEAT_PUMP))
 
     @property
     def target_humidity(self) -> int | None:
@@ -568,7 +572,7 @@ class Thermostat(ClimateEntity):
 
     def turn_aux_heat_off(self) -> None:
         """Turn auxiliary heater off."""
-        _LOGGER.debug("Setting HVAC mode to heat to disable aux heat")
+        _LOGGER.debug("Setting HVAC mode to last mode to disable aux heat")
         self.set_hvac_mode(self._last_active_hvac_mode)
         self.update_without_throttle = True
 
