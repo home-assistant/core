@@ -431,6 +431,7 @@ FLOWS = {
         "tesla_wall_connector",
         "thermobeacon",
         "thermopro",
+        "thread",
         "tibber",
         "tile",
         "tilt_ble",
