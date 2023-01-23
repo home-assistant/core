@@ -1,4 +1,6 @@
 """Fixtures for tests."""
+from unittest.mock import MagicMock, patch
+
 import pytest
 
 from tests.common import load_fixture
@@ -15,3 +17,13 @@ def requests_mock_fixture(requests_mock):
         "https://api.ecobee.com/token",
         text=load_fixture("ecobee/ecobee-token.json"),
     )
+
+
+@pytest.fixture()
+def mock_ecobee():
+    """Mock an Ecobee object."""
+    ecobee = MagicMock()
+    # TODO: build out the mock_ecobee so the integration
+    # can actually be setup and tested
+    with patch("homeassistant.components.ecobee.Ecobee", return_value=ecobee):
+        yield ecobee
