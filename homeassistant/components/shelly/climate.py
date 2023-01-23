@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import asdict, dataclass
 from typing import Any, cast
 
 from aioshelly.block_device import Block
@@ -27,7 +28,7 @@ from homeassistant.helpers.entity_registry import (
     async_entries_for_config_entry,
     async_get as er_async_get,
 )
-from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.unit_conversion import TemperatureConverter
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
@@ -100,6 +101,17 @@ def async_restore_climate_entities(
         break
 
 
+@dataclass
+class ShellyClimateExtraStoredData(ExtraStoredData):
+    """Object to hold extra stored data."""
+
+    last_target_temp: float | None = None
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the text data."""
+        return asdict(self)
+
+
 class BlockSleepingClimate(
     CoordinatorEntity[ShellyBlockCoordinator], RestoreEntity, ClimateEntity
 ):
@@ -131,14 +143,7 @@ class BlockSleepingClimate(
         self.last_state: State | None = None
         self.last_state_attributes: Mapping[str, Any]
         self._preset_modes: list[str] = []
-        if coordinator.hass.config.units is US_CUSTOMARY_SYSTEM:
-            self._last_target_temp = TemperatureConverter.convert(
-                SHTRV_01_TEMPERATURE_SETTINGS["default"],
-                UnitOfTemperature.CELSIUS,
-                UnitOfTemperature.FAHRENHEIT,
-            )
-        else:
-            self._last_target_temp = SHTRV_01_TEMPERATURE_SETTINGS["default"]
+        self._last_target_temp = SHTRV_01_TEMPERATURE_SETTINGS["default"]
 
         if self.block is not None and self.device_block is not None:
             self._unique_id = f"{self.coordinator.mac}-{self.block.description}"
@@ -153,6 +158,11 @@ class BlockSleepingClimate(
             self._unique_id = entry.unique_id
 
         self._channel = cast(int, self._unique_id.split("_")[1])
+
+    @property
+    def extra_restore_state_data(self) -> ShellyClimateExtraStoredData:
+        """Return text specific state data to be restored."""
+        return ShellyClimateExtraStoredData(self._last_target_temp)
 
     @property
     def unique_id(self) -> str:
@@ -308,6 +318,9 @@ class BlockSleepingClimate(
         LOGGER.info("Restoring entity %s", self.name)
 
         last_state = await self.async_get_last_state()
+        last_extra_data = await self.async_get_last_extra_data()
+        if last_extra_data is not None:
+            self._last_target_temp = last_extra_data.as_dict()["last_target_temp"]
 
         if last_state is not None:
             self.last_state = last_state
