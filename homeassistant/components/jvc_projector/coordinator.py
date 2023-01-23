@@ -25,7 +25,7 @@ INTERVAL_SLOW = timedelta(seconds=60)
 INTERVAL_FAST = timedelta(seconds=6)
 
 
-class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator):
+class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
     """Data update coordinator for the JVC Projector integration."""
 
     def __init__(self, hass: HomeAssistant, device: JvcProjector) -> None:

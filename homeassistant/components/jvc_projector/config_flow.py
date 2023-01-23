@@ -55,7 +55,7 @@ class JvcProjectorConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
                 return self.async_create_entry(
-                    title=f"{NAME}",
+                    title=NAME,
                     data={
                         CONF_HOST: host,
                         CONF_PORT: port,
@@ -111,7 +111,7 @@ class JvcProjectorConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema({vol.Required(CONF_PASSWORD): str}),
+            data_schema=vol.Schema({vol.Optional(CONF_PASSWORD): str}),
             errors=errors,
         )
 
