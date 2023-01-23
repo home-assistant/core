@@ -112,6 +112,8 @@ SERVICE_SET_FAN_MIN_ON_TIME = "set_fan_min_on_time"
 SERVICE_SET_DST_MODE = "set_dst_mode"
 SERVICE_SET_MIC_MODE = "set_mic_mode"
 SERVICE_SET_OCCUPANCY_MODES = "set_occupancy_modes"
+SERVICE_TURN_AUX_HEAT_ON = "turn_aux_heat_on"
+SERVICE_TURN_AUX_HEAT_OFF = "turn_aux_heat_off"
 
 DTGROUP_INCLUSIVE_MSG = (
     f"{ATTR_START_DATE}, {ATTR_START_TIME}, {ATTR_END_DATE}, "
@@ -301,6 +303,12 @@ async def async_setup_entry(
             vol.Optional(ATTR_FOLLOW_ME): cv.boolean,
         },
         "set_occupancy_modes",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_TURN_AUX_HEAT_ON,
+        {},
+        "turn_aux_heat_on",
     )
 
 
@@ -557,11 +565,11 @@ class Thermostat(ClimateEntity):
         }
 
     @property
-    def is_aux_heat(self):
+    def is_aux_heat(self) -> bool:
         """Return true if aux heater."""
         return self.settings["hvacMode"] == ECOBEE_AUX_HEAT_ONLY
 
-    def turn_aux_heat_on(self):
+    def turn_aux_heat_on(self) -> None:
         """Turn auxiliary heater on."""
         _LOGGER.debug("Setting HVAC mode to auxHeatOnly to turn on aux heat")
         self.data.ecobee.set_hvac_mode(self.thermostat_index, ECOBEE_AUX_HEAT_ONLY)
