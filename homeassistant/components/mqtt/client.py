@@ -85,7 +85,7 @@ _LOGGER = logging.getLogger(__name__)
 DISCOVERY_COOLDOWN = 2
 TIMEOUT_ACK = 10
 
-SubscribePayloadType = Union[str, bytes]  # Only bytes if encoding is None
+SubscribePayloadType = str | bytes  # Only bytes if encoding is None
 
 
 def publish(
