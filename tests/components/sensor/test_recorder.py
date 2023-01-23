@@ -1,5 +1,5 @@
 """The tests for sensor recorder platform."""
-# pylint: disable=protected-access,invalid-name
+# pylint: disable=invalid-name
 from datetime import datetime, timedelta
 import math
 from statistics import mean

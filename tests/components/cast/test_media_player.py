@@ -1,5 +1,5 @@
 """The tests for the Cast Media player platform."""
-# pylint: disable=protected-access
+
 from __future__ import annotations
 
 import asyncio

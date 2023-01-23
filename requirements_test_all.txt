@@ -257,7 +257,7 @@ aioskybell==22.7.0
 aioslimproto==2.1.1
 
 # homeassistant.components.honeywell
-aiosomecomfort==0.0.2
+aiosomecomfort==0.0.3
 
 # homeassistant.components.steamist
 aiosteamist==0.3.2
@@ -272,7 +272,7 @@ aiosyncthing==0.5.1
 aiotractive==0.5.5
 
 # homeassistant.components.unifi
-aiounifi==43
+aiounifi==44
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -408,7 +408,7 @@ bthome-ble==2.5.0
 buienradar==1.0.5
 
 # homeassistant.components.caldav
-caldav==0.9.1
+caldav==1.0.1
 
 # homeassistant.components.co2signal
 co2signal==0.4.2
@@ -1045,7 +1045,7 @@ py-melissa-climate==2.1.4
 py-nightscout==1.2.2
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==2.0.1
+py-synologydsm-api==2.0.2
 
 # homeassistant.components.seventeentrack
 py17track==2021.12.2
@@ -1438,7 +1438,7 @@ pytankerkoenig==0.0.6
 pytautulli==21.11.0
 
 # homeassistant.components.bsblan
-python-bsblan==0.5.8
+python-bsblan==0.5.9
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.2.14
@@ -1450,7 +1450,7 @@ python-forecastio==1.4.0
 python-fullykiosk==0.0.12
 
 # homeassistant.components.homewizard
-python-homewizard-energy==1.6.1
+python-homewizard-energy==1.7.0
 
 # homeassistant.components.izone
 python-izone==1.2.9
@@ -1873,13 +1873,13 @@ xmltodict==0.13.0
 yalesmartalarmclient==0.3.9
 
 # homeassistant.components.yalexs_ble
-yalexs-ble==1.12.5
+yalexs-ble==1.12.7
 
 # homeassistant.components.august
 yalexs==1.2.6
 
 # homeassistant.components.august
-yalexs_ble==1.12.5
+yalexs_ble==1.12.7
 
 # homeassistant.components.yeelight
 yeelight==0.7.10

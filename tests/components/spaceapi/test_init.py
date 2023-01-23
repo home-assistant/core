@@ -1,7 +1,5 @@
 """The tests for the Home Assistant SpaceAPI component."""
 from http import HTTPStatus
-
-# pylint: disable=protected-access
 from unittest.mock import patch
 
 import pytest

@@ -76,7 +76,6 @@ from .const import (
     DEFAULT_WS_PATH,
     DOMAIN,
     SUPPORTED_PROTOCOLS,
-    SUPPORTED_TRANSPORTS,
     TRANSPORT_TCP,
     TRANSPORT_WEBSOCKETS,
 )
@@ -119,6 +118,10 @@ PROTOCOL_SELECTOR = SelectSelector(
         mode=SelectSelectorMode.DROPDOWN,
     )
 )
+SUPPORTED_TRANSPORTS = [
+    SelectOptionDict(value=TRANSPORT_TCP, label="TCP"),
+    SelectOptionDict(value=TRANSPORT_WEBSOCKETS, label="WebSocket"),
+]
 TRANSPORT_SELECTOR = SelectSelector(
     SelectSelectorConfig(
         options=SUPPORTED_TRANSPORTS,

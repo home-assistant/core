@@ -1,5 +1,5 @@
 """The tests for the Script component."""
-# pylint: disable=protected-access
+
 import asyncio
 from contextlib import contextmanager
 from datetime import timedelta

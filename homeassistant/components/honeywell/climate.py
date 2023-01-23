@@ -320,11 +320,11 @@ class HoneywellUSThermostat(ClimateEntity):
             # Set permanent hold
             # and Set temperature
             if mode in COOLING_MODES:
-                self._device.set_hold_cool(True)
-                self._device.set_setpoint_cool(self._cool_away_temp)
+                await self._device.set_hold_cool(True)
+                await self._device.set_setpoint_cool(self._cool_away_temp)
             elif mode in HEATING_MODES:
-                self._device.set_hold_heat(True)
-                self._device.set_setpoint_heat(self._heat_away_temp)
+                await self._device.set_hold_heat(True)
+                await self._device.set_setpoint_heat(self._heat_away_temp)
 
         except AIOSomecomfort.SomeComfortError:
 
@@ -393,13 +393,13 @@ class HoneywellUSThermostat(ClimateEntity):
         try:
             await self._device.refresh()
         except (
-            AIOSomecomfort.device.SomeComfortError,
+            AIOSomecomfort.SomeComfortError,
             OSError,
         ):
             try:
                 await self._data.client.login()
 
-            except AIOSomecomfort.device.SomeComfortError:
+            except AIOSomecomfort.SomeComfortError:
                 self._attr_available = False
                 await self.hass.async_create_task(
                     self.hass.config_entries.async_reload(self._data.entry_id)

@@ -18,11 +18,10 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Topic :: Home Automation",
 ]
-requires-python = ">=3.9.0"
+requires-python = ">=3.10.0"
 dependencies    = [
     "aiohttp==3.8.1",
     "astral==2.2",
@@ -117,6 +116,7 @@ load-plugins = [
     "hass_enforce_type_hints",
     "hass_imports",
     "hass_logger",
+    "pylint_per_file_ignores",
 ]
 persistent = false
 extension-pkg-allow-list = [
@@ -218,6 +218,9 @@ runtime-typing = false
 
 [tool.pylint.CODE_STYLE]
 max-line-length-suggestions = 72
+
+[tool.pylint-per-file-ignores]
+"/tests/"="protected-access,redefined-outer-name"
 
 [tool.pytest.ini_options]
 testpaths = [
