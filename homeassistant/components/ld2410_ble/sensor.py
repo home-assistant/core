@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfLength
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -77,6 +77,7 @@ STATIC_TARGET_ENERGY_DESCRIPTION = SensorEntityDescription(
 MAX_MOTION_GATES_DESCRIPTION = SensorEntityDescription(
     key="max_motion_gates",
     device_class=None,
+    entity_category=EntityCategory.DIAGNOSTIC,
     entity_registry_enabled_default=False,
     entity_registry_visible_default=True,
     has_entity_name=True,
@@ -87,6 +88,7 @@ MAX_MOTION_GATES_DESCRIPTION = SensorEntityDescription(
 MAX_STATIC_GATES_DESCRIPTION = SensorEntityDescription(
     key="max_static_gates",
     device_class=None,
+    entity_category=EntityCategory.DIAGNOSTIC,
     entity_registry_enabled_default=False,
     entity_registry_visible_default=True,
     has_entity_name=True,
@@ -98,6 +100,7 @@ MOTION_ENERGY_GATES = [
     SensorEntityDescription(
         key=f"motion_energy_gate_{i}",
         device_class=None,
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         entity_registry_visible_default=True,
         has_entity_name=True,
@@ -111,6 +114,7 @@ STATIC_ENERGY_GATES = [
     SensorEntityDescription(
         key=f"static_energy_gate_{i}",
         device_class=None,
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         entity_registry_visible_default=True,
         has_entity_name=True,
