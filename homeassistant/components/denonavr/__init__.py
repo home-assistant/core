@@ -63,18 +63,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    use_telnet = entry.options.get(CONF_USE_TELNET, DEFAULT_USE_TELNET)
 
-    async def disconnect(event: Event) -> None:
+    async def _async_disconnect(event: Event) -> None:
         """Disconnect from Telnet."""
-        if (
-            entry.options.get(CONF_USE_TELNET, DEFAULT_USE_TELNET)
-            and receiver is not None
-        ):
+        if use_telnet and receiver is not None:
             await receiver.async_telnet_disconnect()
 
-    if entry.options.get(CONF_USE_TELNET, DEFAULT_USE_TELNET):
+    if use_telnet:
         entry.async_on_unload(
-            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, disconnect)
+            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_disconnect)
         )
 
     return True
