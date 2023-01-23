@@ -49,7 +49,7 @@ async def test_set_min_time_home(hass: HomeAssistant, monkeypatch: MonkeyPatch):
     """Test the number can set min time home."""
     target_value = 40
     with patch(
-        "pyecobee.Ecobee.set_ventilator_min_on_time_home"
+        "homeassistant.components.ecobee.Ecobee.set_ventilator_min_on_time_home"
     ) as mock_set_min_home_time:
         await setup_platform(hass, DOMAIN)
 
@@ -85,7 +85,7 @@ async def test_set_min_time_away(hass: HomeAssistant, monkeypatch: MonkeyPatch) 
     """Test the number can set min time away."""
     target_value = 0
     with patch(
-        "pyecobee.Ecobee.set_ventilator_min_on_time_away"
+        "homeassistant.components.ecobee.Ecobee.set_ventilator_min_on_time_away"
     ) as mock_set_min_away_time:
         await setup_platform(hass, DOMAIN)
 
