@@ -14,6 +14,11 @@ from .const import DOMAIN
 from .entity import PowerWallEntity
 from .models import PowerwallRuntimeData
 
+OFF_GRID_STATUSES = {
+    GridStatus.TRANSITION_TO_ISLAND,
+    GridStatus.ISLANDED,
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -36,10 +41,7 @@ class PowerwallOffGridEnabledEntity(PowerWallEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return true if the powerwall is off-grid."""
-        return self.coordinator.data.grid_status in [
-            GridStatus.TRANSITION_TO_ISLAND,
-            GridStatus.ISLANDED,
-        ]
+        return self.coordinator.data.grid_status in OFF_GRID_STATUSES
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn off-grid mode on."""
