@@ -351,6 +351,8 @@ omit =
     homeassistant/components/esphome/switch.py
     homeassistant/components/etherscan/sensor.py
     homeassistant/components/eufy/*
+    homeassistant/components/eufylife_ble/__init__.py
+    homeassistant/components/eufylife_ble/sensor.py
     homeassistant/components/everlights/light.py
     homeassistant/components/evohome/*
     homeassistant/components/ezviz/__init__.py
@@ -683,6 +685,7 @@ omit =
     homeassistant/components/ld2410_ble/__init__.py
     homeassistant/components/ld2410_ble/binary_sensor.py
     homeassistant/components/ld2410_ble/coordinator.py
+    homeassistant/components/ld2410_ble/sensor.py
     homeassistant/components/led_ble/__init__.py
     homeassistant/components/led_ble/light.py
     homeassistant/components/lg_netcast/media_player.py
@@ -1061,6 +1064,7 @@ omit =
     homeassistant/components/remember_the_milk/__init__.py
     homeassistant/components/remote_rpi_gpio/*
     homeassistant/components/reolink/__init__.py
+    homeassistant/components/reolink/binary_sensor.py
     homeassistant/components/reolink/camera.py
     homeassistant/components/reolink/const.py
     homeassistant/components/reolink/entity.py
@@ -1071,6 +1075,7 @@ omit =
     homeassistant/components/rest/switch.py
     homeassistant/components/rfxtrx/diagnostics.py
     homeassistant/components/ridwell/__init__.py
+    homeassistant/components/ridwell/coordinator.py
     homeassistant/components/ridwell/entity.py
     homeassistant/components/ridwell/sensor.py
     homeassistant/components/ridwell/switch.py
@@ -1245,6 +1250,9 @@ omit =
     homeassistant/components/stookalert/__init__.py
     homeassistant/components/stookalert/binary_sensor.py
     homeassistant/components/stookalert/diagnostics.py
+    homeassistant/components/stookwijzer/__init__.py
+    homeassistant/components/stookwijzer/diagnostics.py
+    homeassistant/components/stookwijzer/sensor.py
     homeassistant/components/stream/*
     homeassistant/components/streamlabswater/*
     homeassistant/components/suez_water/*

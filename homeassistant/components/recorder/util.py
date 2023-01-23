@@ -404,8 +404,6 @@ def build_mysqldb_conv() -> dict:
     # Late imports since we only call this if they are using mysqldb
     # pylint: disable=import-outside-toplevel,import-error
     from MySQLdb.constants import FIELD_TYPE
-
-    # pylint: disable=import-outside-toplevel,import-error
     from MySQLdb.converters import conversions
 
     return {**conversions, FIELD_TYPE.DATETIME: _datetime_or_none}

@@ -1,5 +1,5 @@
 """The tests for the Sun helpers."""
-# pylint: disable=protected-access
+
 from datetime import datetime, timedelta
 from unittest.mock import patch
 

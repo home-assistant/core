@@ -13,8 +13,6 @@
         "step": {
             "init": {
                 "data": {
-                    "manual": "Automatische updaten uitschakelen",
-                    "scan_interval": "Update frequentie (minuten)",
                     "server_name": "Selecteer testserver"
                 }
             }

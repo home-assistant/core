@@ -4,8 +4,7 @@
             "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado"
         },
         "error": {
-            "cannot_connect": "Falhou ao conectar",
-            "unknown": "Erro inesperado"
+            "cannot_connect": "Falhou ao conectar"
         },
         "step": {
             "user": {

@@ -135,12 +135,10 @@ async def test_create_and_setup(hass, mock_panel):
     await device.update_switch("1", 0)
 
     # confirm the correct api is used
-    # pylint: disable=no-member
     assert mock_panel.put_device.call_count == 1
     assert mock_panel.put_zone.call_count == 0
 
     # confirm the settings are sent to the panel
-    # pylint: disable=no-member
     assert mock_panel.put_settings.call_args_list[0][1] == {
         "sensors": [{"pin": "1"}, {"pin": "2"}, {"pin": "5"}],
         "actuators": [{"trigger": 0, "pin": "8"}, {"trigger": 1, "pin": "9"}],
@@ -288,12 +286,10 @@ async def test_create_and_setup_pro(hass, mock_panel):
     await device.update_switch("2", 1)
 
     # confirm the correct api is used
-    # pylint: disable=no-member
     assert mock_panel.put_device.call_count == 0
     assert mock_panel.put_zone.call_count == 1
 
     # confirm the settings are sent to the panel
-    # pylint: disable=no-member
     assert mock_panel.put_settings.call_args_list[0][1] == {
         "sensors": [{"zone": "2"}, {"zone": "6"}, {"zone": "10"}, {"zone": "11"}],
         "actuators": [
@@ -483,12 +479,10 @@ async def test_default_options(hass, mock_panel):
     await device.update_switch("1", 0)
 
     # confirm the correct api is used
-    # pylint: disable=no-member
     assert mock_panel.put_device.call_count == 1
     assert mock_panel.put_zone.call_count == 0
 
     # confirm the settings are sent to the panel
-    # pylint: disable=no-member
     assert mock_panel.put_settings.call_args_list[0][1] == {
         "sensors": [{"pin": "1"}, {"pin": "2"}, {"pin": "5"}],
         "actuators": [{"trigger": 0, "pin": "8"}, {"trigger": 1, "pin": "9"}],

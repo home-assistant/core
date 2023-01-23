@@ -62,9 +62,7 @@ async def test_on_off_commands(
     for service, new_state, new_value in services:
         count += 1
         await hass.services.async_call(PLATFORM_DOMAIN, service, data, blocking=True)
-        robot._update_data(  # pylint:disable=protected-access
-            {updated_field: new_value}, partial=True
-        )
+        robot._update_data({updated_field: new_value}, partial=True)
 
         assert getattr(robot, robot_command).call_count == count
         assert (state := hass.states.get(entity_id))

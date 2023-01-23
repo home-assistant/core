@@ -219,8 +219,7 @@ class Configurator:
         if not self._validate_request_id(request_id):
             return
 
-        # pylint: disable=unused-variable
-        entity_id, fields, callback = self._requests[request_id]
+        _, _, callback = self._requests[request_id]
 
         # field validation goes here?
         if callback:

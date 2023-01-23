@@ -229,7 +229,7 @@ async def async_get_config_flows(
     type_filter: Literal["device", "helper", "hub", "service"] | None = None,
 ) -> set[str]:
     """Return cached list of config flows."""
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from .generated.config_flows import FLOWS
 
     integrations = await async_get_custom_components(hass)

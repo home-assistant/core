@@ -8,7 +8,7 @@
             "service_received": "Slu\u017eba prijat\u00e1"
         },
         "error": {
-            "connection_error": "Ned\u00e1 sa pripoji\u0165 k ESP. Uistite sa, \u017ee v\u00e1\u0161 s\u00fabor YAML obsahuje riadok \u201eapi:\u201c.",
+            "connection_error": "Ned\u00e1 sa pripoji\u0165 k ESP. Uistite sa, \u017ee v\u00e1\u0161 s\u00fabor YAML obsahuje riadok 'api:'.",
             "invalid_auth": "Neplatn\u00e9 overenie",
             "invalid_psk": "Transportn\u00fd \u0161ifrovac\u00ed k\u013e\u00fa\u010d je neplatn\u00fd. Pros\u00edm, uistite sa, \u017ee sa zhoduje s t\u00fdm, \u010do m\u00e1te vo svojej konfigur\u00e1cii",
             "resolve_error": "Nie je mo\u017en\u00e9 zisti\u0165 adresu ESP. Ak t\u00e1to chyba pretrv\u00e1va, nastavte statick\u00fa IP adresu: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"

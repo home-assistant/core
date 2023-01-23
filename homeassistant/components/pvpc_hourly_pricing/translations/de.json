@@ -19,8 +19,7 @@
             "init": {
                 "data": {
                     "power": "Vertraglich vereinbarte Leistung (kW)",
-                    "power_p3": "Vertraglich vereinbarte Leistung f\u00fcr Talperiode P3 (kW)",
-                    "tariff": "Geltender Tarif nach geografischer Zone"
+                    "power_p3": "Vertraglich vereinbarte Leistung f\u00fcr Talperiode P3 (kW)"
                 }
             }
         }

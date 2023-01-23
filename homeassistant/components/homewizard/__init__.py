@@ -15,7 +15,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await coordinator.async_config_entry_first_refresh()
 
     except ConfigEntryNotReady:
-        await coordinator.api.close()  # type: ignore[no-untyped-call]
+        await coordinator.api.close()
 
         if coordinator.api_disabled:
             entry.async_start_reauth(hass)

@@ -17,7 +17,7 @@
                     "password": "Heslo",
                     "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
                 },
-                "description": "V pr\u00edpade nov\u0161\u00edch modelov zadajte pou\u017e\u00edvate\u013esk\u00e9 meno \u201eenvoy\u201c bez hesla. Pri star\u0161\u00edch modeloch zadajte pou\u017e\u00edvate\u013esk\u00e9 meno `installer` bez hesla. Pre v\u0161etky ostatn\u00e9 modely zadajte platn\u00e9 pou\u017e\u00edvate\u013esk\u00e9 meno a heslo."
+                "description": "V pr\u00edpade nov\u0161\u00edch modelov zadajte pou\u017e\u00edvate\u013esk\u00e9 meno 'envoy' bez hesla. Pri star\u0161\u00edch modeloch zadajte pou\u017e\u00edvate\u013esk\u00e9 meno `installer` bez hesla. Pre v\u0161etky ostatn\u00e9 modely zadajte platn\u00e9 pou\u017e\u00edvate\u013esk\u00e9 meno a heslo."
             }
         }
     }
