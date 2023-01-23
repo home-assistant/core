@@ -2,10 +2,10 @@
 # pylint: disable=invalid-name
 import asyncio
 import collections
+from collections.abc import Callable
 from datetime import datetime, timedelta
 from http import HTTPStatus
 import json
-from typing import Callable
 from unittest.mock import Mock, patch
 
 import pytest
