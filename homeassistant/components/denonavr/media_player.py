@@ -249,9 +249,29 @@ class DenonDevice(MediaPlayerEntity):
             and MediaPlayerEntityFeature.SELECT_SOUND_MODE
         )
 
+        self._receiver.register_callback("ALL", self._telnet_callback)
+
+    async def _telnet_callback(self, zone, event, parameter):
+        """Process a telnet command callback."""
+        if zone != self._receiver.zone:
+            return
+
+        self.async_schedule_update_ha_state(False)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Clean up the entity."""
+        self._receiver.unregister_callback("ALL", self._telnet_callback)
+
     @async_log_errors
     async def async_update(self) -> None:
         """Get the latest status information from device."""
+        if (
+            self._receiver.telnet_connected is True
+            and self._receiver.telnet_healthy is True
+        ):
+            await self._receiver.input.async_update_media_state()
+            return
+
         await self._receiver.async_update()
         if self._update_audyssey:
             await self._receiver.async_update_audyssey()

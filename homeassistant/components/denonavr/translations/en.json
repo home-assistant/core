@@ -23,6 +23,7 @@
                 "title": "Select the receiver that you wish to connect"
             },
             "user": {
+                "description": "By default this integration use a Telnet connection to your receiver to receive realtime updates. Note that only one telnet connection to your receiver can be established. This may interfere with your current setup. You can turn this option off after setting up the integration by clicking the Configure button.",
                 "data": {
                     "host": "IP Address"
                 },
@@ -39,7 +40,8 @@
                     "show_all_sources": "Show all sources",
                     "update_audyssey": "Update Audyssey settings",
                     "zone2": "Set up Zone 2",
-                    "zone3": "Set up Zone 3"
+                    "zone3": "Set up Zone 3",
+                    "use_telnet": "Use Telnet connection"
                 },
                 "description": "Specify optional settings"
             }

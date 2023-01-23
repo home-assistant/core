@@ -11,6 +11,7 @@ from homeassistant.components.denonavr.config_flow import (
     CONF_SHOW_ALL_SOURCES,
     CONF_TYPE,
     CONF_UPDATE_AUDYSSEY,
+    CONF_USE_TELNET,
     CONF_ZONE2,
     CONF_ZONE3,
     DOMAIN,
@@ -96,6 +97,7 @@ async def test_config_flow_manual_host_success(hass):
         CONF_MANUFACTURER: TEST_MANUFACTURER,
         CONF_SERIAL_NUMBER: TEST_SERIALNUMBER,
     }
+    assert result["options"] == {CONF_USE_TELNET: True}
 
 
 async def test_config_flow_manual_discover_1_success(hass):
@@ -130,6 +132,7 @@ async def test_config_flow_manual_discover_1_success(hass):
         CONF_MANUFACTURER: TEST_MANUFACTURER,
         CONF_SERIAL_NUMBER: TEST_SERIALNUMBER,
     }
+    assert result["options"] == {CONF_USE_TELNET: True}
 
 
 async def test_config_flow_manual_discover_2_success(hass):
@@ -173,6 +176,7 @@ async def test_config_flow_manual_discover_2_success(hass):
         CONF_MANUFACTURER: TEST_MANUFACTURER,
         CONF_SERIAL_NUMBER: TEST_SERIALNUMBER,
     }
+    assert result["options"] == {CONF_USE_TELNET: True}
 
 
 async def test_config_flow_manual_discover_error(hass):
@@ -328,6 +332,7 @@ async def test_config_flow_ssdp(hass):
         CONF_MANUFACTURER: TEST_MANUFACTURER,
         CONF_SERIAL_NUMBER: TEST_SERIALNUMBER,
     }
+    assert result["options"] == {CONF_USE_TELNET: True}
 
 
 async def test_config_flow_ssdp_not_denon(hass):
@@ -439,6 +444,7 @@ async def test_options_flow(hass):
         CONF_ZONE2: True,
         CONF_ZONE3: True,
         CONF_UPDATE_AUDYSSEY: False,
+        CONF_USE_TELNET: False,
     }
 
 
