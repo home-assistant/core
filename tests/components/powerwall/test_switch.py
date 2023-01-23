@@ -26,7 +26,6 @@ async def mock_powerwall_fixture(hass):
     """Set up base powerwall fixture."""
 
     mock_powerwall = await _mock_powerwall_with_fixtures(hass)
-    # mock_powerwall.get_grid_status = Mock(return_value=expected_grid_status)
 
     config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_IP_ADDRESS: "1.2.3.4"})
     config_entry.add_to_hass(hass)
