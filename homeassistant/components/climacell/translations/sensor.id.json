@@ -1,0 +1,27 @@
+{
+    "state": {
+        "climacell__health_concern": {
+            "good": "Bagus",
+            "hazardous": "Berbahaya",
+            "moderate": "Sedang",
+            "unhealthy": "Tidak Sehat",
+            "unhealthy_for_sensitive_groups": "Tidak Sehat untuk Kelompok Sensitif",
+            "very_unhealthy": "Sangat Tidak Sehat"
+        },
+        "climacell__pollen_index": {
+            "high": "Tinggi",
+            "low": "Rendah",
+            "medium": "Sedang",
+            "none": "Tidak Ada",
+            "very_high": "Sangat Tinggi",
+            "very_low": "Sangat Rendah"
+        },
+        "climacell__precipitation_type": {
+            "freezing_rain": "Hujan Beku",
+            "ice_pellets": "Hujan Es",
+            "none": "Tidak Ada",
+            "rain": "Hujan",
+            "snow": "Salju"
+        }
+    }
+}
