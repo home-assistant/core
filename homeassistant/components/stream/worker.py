@@ -417,7 +417,7 @@ class PeekIterator(Iterator):
 class TimestampValidator:
     """Validate ordering of timestamps for packets in a stream."""
 
-    def __init__(self, inv_video_time_base: int) -> None:
+    def __init__(self, inv_video_time_base: int, inv_audio_time_base: int) -> None:
         """Initialize the TimestampValidator."""
         # Decompression timestamp of last packet in each stream
         self._last_dts: dict[av.stream.Stream, int | float] = defaultdict(
@@ -425,7 +425,13 @@ class TimestampValidator:
         )
         # Number of consecutive missing decompression timestamps
         self._missing_dts = 0
-        self._max_dts_gap = MAX_TIMESTAMP_GAP * inv_video_time_base
+        # For the bounds, just use the larger of the two values. If the error is not flagged
+        # by one stream, it should just get flagged by the other stream. Either value should
+        # result in a value which is much less than a 32 bit INT_MAX, which helps avoid the
+        # assertion error from FFmpeg.
+        self._max_dts_gap = MAX_TIMESTAMP_GAP * max(
+            inv_video_time_base, inv_audio_time_base
+        )
 
     def is_valid(self, packet: av.Packet) -> bool:
         """Validate the packet timestamp based on ordering within the stream."""
@@ -528,7 +534,10 @@ def stream_worker(
     if audio_stream:
         stream_state.diagnostics.set_value("audio_codec", audio_stream.name)
 
-    dts_validator = TimestampValidator(int(1 / video_stream.time_base))
+    dts_validator = TimestampValidator(
+        int(1 / video_stream.time_base),
+        1 / audio_stream.time_base if audio_stream else 1,
+    )
     container_packets = PeekIterator(
         filter(dts_validator.is_valid, container.demux((video_stream, audio_stream)))
     )
