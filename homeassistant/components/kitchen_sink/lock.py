@@ -22,24 +22,24 @@ async def async_setup_platform(
         [
             DemoLock(
                 "kitchen_sink_lock_001",
-                "Openable kitchen sink lock",
+                "Openable lock",
                 STATE_LOCKED,
                 LockEntityFeature.OPEN,
             ),
             DemoLock(
                 "kitchen_sink_lock_002",
-                "Another kitchen sink openable lock",
+                "Another openable lock",
                 STATE_UNLOCKED,
                 LockEntityFeature.OPEN,
             ),
             DemoLock(
                 "kitchen_sink_lock_003",
-                "Basic kitchen sink lock",
+                "Basic lock",
                 STATE_LOCKED,
             ),
             DemoLock(
                 "kitchen_sink_lock_004",
-                "Another kitchen sink lock",
+                "Another basic lock",
                 STATE_UNLOCKED,
             ),
         ]
