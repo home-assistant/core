@@ -369,13 +369,12 @@ class SensorEntity(Entity):
             return self._sensor_option_precision
 
         # Second priority, native precision
-        if self.native_precision is None:
+        if (precision := self.native_precision) is None:
             return None
 
         device_class = self.device_class
         native_unit_of_measurement = self.native_unit_of_measurement
         unit_of_measurement = self.unit_of_measurement
-        precision = self.native_precision
 
         if (
             native_unit_of_measurement != unit_of_measurement
