@@ -168,7 +168,7 @@ class Events(Base):
     origin: Mapped[str | None] = mapped_column(
         String(MAX_LENGTH_EVENT_ORIGIN)
     )  # no longer used for new rows
-    origin_idx: Mapped[int] = mapped_column(SmallInteger)
+    origin_idx: Mapped[int | None] = mapped_column(SmallInteger)
     time_fired: Mapped[datetime | None] = mapped_column(
         DATETIME_TYPE
     )  # no longer used for new rows
@@ -235,7 +235,7 @@ class Events(Base):
                 json_loads(self.event_data) if self.event_data else {},
                 EventOrigin(self.origin)
                 if self.origin
-                else EVENT_ORIGIN_ORDER[self.origin_idx],
+                else EVENT_ORIGIN_ORDER[self.origin_idx or 0],
                 dt_util.utc_from_timestamp(self.time_fired_ts or 0),
                 context=context,
             )
