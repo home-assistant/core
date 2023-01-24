@@ -11,7 +11,6 @@ from . import (
     bluetooth,
     codeowners,
     config_flow,
-    coverage,
     dependencies,
     dhcp,
     json,
@@ -46,7 +45,7 @@ INTEGRATION_PLUGINS = [
     config_flow,
 ]
 HASS_PLUGINS = [
-    coverage,
+    # coverage,
     mypy_config,
     metadata,
 ]
