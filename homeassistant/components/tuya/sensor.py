@@ -60,6 +60,7 @@ BATTERY_SENSORS: tuple[TuyaSensorEntityDescription, ...] = (
         name="Battery state",
         icon="mdi:battery",
         entity_category=EntityCategory.DIAGNOSTIC,
+        translation_key="battery_state",
     ),
     TuyaSensorEntityDescription(
         key=DPCode.BATTERY_VALUE,
@@ -434,21 +435,25 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             key=DPCode.ALARM_LOCK,
             name="Last Alert",
             icon="mdi:information-outline",
+            translation_key="lock_alarm",
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CLOSED_OPENED,
             name="Door",
             icon="mdi:lock",
+            translation_key="lock_status",
         ),
         TuyaSensorEntityDescription(
             key=DPCode.ANTILOCK_STATUS,
             name="Double Locking Status",
             icon="mdi:lock-check",
+            translation_key="lock_antilock",
         ),
         TuyaSensorEntityDescription(
             key=DPCode.INSURANCE_STATUS,
             name="Latching Status",
             icon="mdi:lock-check",
+            translation_key="lock_insurance",
         ),
         TuyaSensorEntityDescription(
             key=DPCode.UNLOCK_FINGERPRINT,
