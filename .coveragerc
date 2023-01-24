@@ -725,7 +725,6 @@ omit =
     homeassistant/components/mill/climate.py
     homeassistant/components/mill/sensor.py
     homeassistant/components/minecraft_server/__init__.py
-    homeassistant/components/minio/__init__.py
     homeassistant/components/minio/minio_helper.py
     homeassistant/components/mitemp_bt/sensor.py
     homeassistant/components/mjpeg/camera.py
@@ -875,7 +874,6 @@ omit =
     homeassistant/components/openuv/coordinator.py
     homeassistant/components/openuv/sensor.py
     homeassistant/components/openweathermap/sensor.py
-    homeassistant/components/openweathermap/weather.py
     homeassistant/components/openweathermap/weather_update_coordinator.py
     homeassistant/components/opnsense/__init__.py
     homeassistant/components/opnsense/device_tracker.py
@@ -1086,7 +1084,6 @@ omit =
     homeassistant/components/simplisafe/button.py
     homeassistant/components/simplisafe/lock.py
     homeassistant/components/simplisafe/sensor.py
-    homeassistant/components/simulated/sensor.py
     homeassistant/components/sinch/*
     homeassistant/components/sisyphus/*
     homeassistant/components/sky_hub/*
@@ -1530,7 +1527,6 @@ omit =
     homeassistant/components/zabbix/*
     homeassistant/components/zamg/coordinator.py
     homeassistant/components/zengge/light.py
-    homeassistant/components/zeroconf/__init__.py
     homeassistant/components/zeroconf/models.py
     homeassistant/components/zeroconf/usage.py
     homeassistant/components/zestimate/sensor.py
@@ -1543,7 +1539,6 @@ omit =
     homeassistant/components/zha/core/device.py
     homeassistant/components/zha/core/gateway.py
     homeassistant/components/zha/core/helpers.py
-    homeassistant/components/zha/entity.py
     homeassistant/components/zha/light.py
     homeassistant/components/zhong_hong/climate.py
     homeassistant/components/ziggo_mediabox_xl/media_player.py
