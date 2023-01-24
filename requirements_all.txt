@@ -754,7 +754,7 @@ fritzconnection==1.10.3
 gTTS==2.2.4
 
 # homeassistant.components.google_assistant_sdk
-gassist-text==0.0.7
+gassist-text==0.0.8
 
 # homeassistant.components.google
 gcal-sync==4.1.2
