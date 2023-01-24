@@ -1,10 +1,7 @@
 """Support for Mopeka binary sensors."""
 from __future__ import annotations
 
-from mopeka_iot_ble import (
-    BinarySensorDeviceClass as MopekaBinarySensorDeviceClass,
-    SensorUpdate,
-)
+from mopeka_iot_ble import SensorUpdate
 
 from homeassistant import config_entries
 from homeassistant.components.binary_sensor import (
@@ -26,8 +23,8 @@ from .const import DOMAIN
 from .device import device_key_to_bluetooth_entity_key
 
 BINARY_SENSOR_DESCRIPTIONS = {
-    MopekaBinarySensorDeviceClass.OCCUPANCY: BinarySensorEntityDescription(
-        key=MopekaBinarySensorDeviceClass.OCCUPANCY,
+    "button_pressed": BinarySensorEntityDescription(
+        key="button_pressed",
         device_class=BinarySensorDeviceClass.OCCUPANCY,
     ),
 }
@@ -44,7 +41,7 @@ def sensor_update_to_bluetooth_data_update(
         },
         entity_descriptions={
             device_key_to_bluetooth_entity_key(device_key): BINARY_SENSOR_DESCRIPTIONS[
-                description.device_class
+                device_key.key
             ]
             for device_key, description in sensor_update.binary_entity_descriptions.items()
             if description.device_class
