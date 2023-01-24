@@ -244,16 +244,6 @@ class InputNumber(collection.CollectionEntity, RestoreEntity):
         input_num.editable = False
         return input_num
 
-    #    @property
-    #    def _minimum(self) -> float:
-    #        """Return minimum allowed value."""
-    #        return self._minimum
-
-    #    @property
-    #    def _maximum(self) -> float:
-    #        """Return maximum allowed value."""
-    #        return self._maximum
-
     @property
     def name(self):
         """Return the name of the input slider."""
@@ -371,10 +361,13 @@ class InputNumber(collection.CollectionEntity, RestoreEntity):
         self._config = config
 
         # just in case min/max values changed
-        if self._current_value is None:
+        if (
+            self._current_value is None
+            or self._maximum is None
+            or self._minimum is None
+        ):
             return
-
-        # self._current_value = min(self._current_value, self._maximum)
-        # self._current_value = max(self._current_value, self._minimum)
+        self._current_value = min(self._current_value, self._maximum)
+        self._current_value = max(self._current_value, self._minimum)
 
         self.async_write_ha_state()
