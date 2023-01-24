@@ -18,7 +18,10 @@
           "password": "[%key:common::config_flow::data::password%]",
           "host": "[%key:common::config_flow::data::host%]",
           "name": "Device Name",
-          "username": "[%key:common::config_flow::data::username%]"
+          "username": "[%key:common::config_flow::data::username%]",
+          "port": "Doorbird API Port",
+          "ssl": "Connect to Doorbird through SSL Proxy",
+          "mjpeg_video": "Use MJPEG instead of RTSP for video stream."
         }
       }
     },

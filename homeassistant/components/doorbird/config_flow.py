@@ -11,12 +11,19 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.components import zeroconf
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_USERNAME,
+)
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.util.network import is_ipv4_address, is_link_local
 
-from .const import CONF_EVENTS, DOMAIN, DOORBIRD_OUI
+from .const import CONF_EVENTS, CONF_MJPEG_VIDEO, DOMAIN, DOORBIRD_OUI
 from .util import get_mac_address_from_doorstation_info
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,6 +35,9 @@ def _schema_with_defaults(host=None, name=None):
             vol.Required(CONF_HOST, default=host): str,
             vol.Required(CONF_USERNAME): str,
             vol.Required(CONF_PASSWORD): str,
+            vol.Optional(CONF_PORT, default=80): vol.Coerce(int),
+            vol.Optional(CONF_SSL, default=False): bool,
+            vol.Optional(CONF_MJPEG_VIDEO, default=False): bool,
             vol.Optional(CONF_NAME, default=name): str,
         }
     )
@@ -40,7 +50,13 @@ def _check_device(device):
 
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect."""
-    device = DoorBird(data[CONF_HOST], data[CONF_USERNAME], data[CONF_PASSWORD])
+    device = DoorBird(
+        data[CONF_HOST],
+        data[CONF_USERNAME],
+        data[CONF_PASSWORD],
+        secure=data[CONF_SSL],
+        port=data[CONF_PORT],
+    )
     try:
         status, info = await hass.async_add_executor_job(_check_device, device)
     except requests.exceptions.HTTPError as err:
@@ -172,6 +188,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         options_schema = vol.Schema(
             {vol.Optional(CONF_EVENTS, default=", ".join(current_events)): str}
         )
+
         return self.async_show_form(step_id="init", data_schema=options_schema)
 
 

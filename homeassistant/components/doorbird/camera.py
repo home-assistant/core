@@ -6,16 +6,21 @@ import datetime
 import logging
 
 import aiohttp
+from aiohttp import web
 import async_timeout
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import (
+    async_aiohttp_proxy_web,
+    async_get_clientsession,
+)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
 from .const import (
+    CONF_MJPEG_VIDEO,
     DOMAIN,
     DOOR_STATION,
     DOOR_STATION_EVENT_ENTITY_IDS,
@@ -37,6 +42,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the DoorBird camera platform."""
     config_entry_id = config_entry.entry_id
+    mjpeg_video = config_entry.data[CONF_MJPEG_VIDEO]
     config_data = hass.data[DOMAIN][config_entry_id]
     doorstation = config_data[DOOR_STATION]
     doorstation_info = config_data[DOOR_STATION_INFO]
@@ -52,7 +58,8 @@ async def async_setup_entry(
                 f"{doorstation.name} Live",
                 doorstation.doorstation_events,
                 _LIVE_INTERVAL,
-                device.rtsp_live_video_url,
+                device.live_video_url if mjpeg_video else device.rtsp_live_video_url,
+                mjpeg_video,
             ),
             DoorBirdCamera(
                 doorstation,
@@ -89,11 +96,18 @@ class DoorBirdCamera(DoorBirdEntity, Camera):
         doorstation_events,
         interval,
         stream_url=None,
+        mjpeg_video=False,
     ) -> None:
         """Initialize the camera on a DoorBird device."""
         super().__init__(doorstation, doorstation_info)
         self._url = url
-        self._stream_url = stream_url
+
+        if mjpeg_video:
+            self._mjpeg_url = stream_url
+            self._stream_url = None
+        else:
+            self._stream_url = stream_url
+
         self._attr_name = name
         self._last_image: bytes | None = None
         if self._stream_url:
@@ -106,6 +120,17 @@ class DoorBirdCamera(DoorBirdEntity, Camera):
     async def stream_source(self):
         """Return the stream source."""
         return self._stream_url
+
+    async def handle_async_mjpeg_stream(
+        self, request: web.Request
+    ) -> web.StreamResponse | None:
+        """Generate an HTTP MJPEG stream from the camera."""
+
+        # connect to stream
+        websession = async_get_clientsession(self.hass, verify_ssl=True)
+        stream_coro = websession.get(self._mjpeg_url)
+
+        return await async_aiohttp_proxy_web(self.hass, request, stream_coro)
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None

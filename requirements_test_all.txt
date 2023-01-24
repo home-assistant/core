@@ -478,7 +478,7 @@ directv==0.4.0
 discovery30303==0.2.1
 
 # homeassistant.components.doorbird
-doorbirdpy==2.1.0
+doorbirdpy==2.2.1
 
 # homeassistant.components.dsmr
 dsmr_parser==0.33

@@ -8,6 +8,8 @@ DOOR_STATION_INFO = "door_station_info"
 DOOR_STATION_EVENT_ENTITY_IDS = "door_station_event_entity_ids"
 
 CONF_EVENTS = "events"
+CONF_MJPEG_VIDEO = "mjpeg_video"
+
 MANUFACTURER = "Bird Home Automation Group"
 DOORBIRD_OUI = "1CCAE3"
 

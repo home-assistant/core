@@ -71,6 +71,9 @@ async def test_user_form(hass):
         "name": "mydoorbird",
         "password": "password",
         "username": "friend",
+        "mjpeg_video": False,
+        "port": 80,
+        "ssl": False,
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -213,6 +216,9 @@ async def test_form_zeroconf_correct_oui(hass):
         "name": "mydoorbird",
         "password": "password",
         "username": "friend",
+        "mjpeg_video": False,
+        "port": 80,
+        "ssl": False,
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1

@@ -2,7 +2,7 @@
   "domain": "doorbird",
   "name": "DoorBird",
   "documentation": "https://www.home-assistant.io/integrations/doorbird",
-  "requirements": ["doorbirdpy==2.1.0"],
+  "requirements": ["doorbirdpy==2.2.1"],
   "dependencies": ["http"],
   "zeroconf": [
     {

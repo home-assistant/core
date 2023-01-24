@@ -18,6 +18,8 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SSL,
     CONF_TOKEN,
     CONF_USERNAME,
 )
@@ -30,6 +32,7 @@ from homeassistant.util import dt as dt_util, slugify
 
 from .const import (
     CONF_EVENTS,
+    CONF_MJPEG_VIDEO,
     DOMAIN,
     DOOR_STATION,
     DOOR_STATION_EVENT_ENTITY_IDS,
@@ -52,7 +55,10 @@ DEVICE_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_PORT, default=80): cv.port,
+        vol.Optional(CONF_SSL, default=False): cv.boolean,
         vol.Required(CONF_TOKEN): cv.string,
+        vol.Optional(CONF_MJPEG_VIDEO, default=False): cv.boolean,
         vol.Optional(CONF_EVENTS, default=[]): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_CUSTOM_URL): cv.string,
         vol.Optional(CONF_NAME): cv.string,
@@ -104,8 +110,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device_ip = doorstation_config[CONF_HOST]
     username = doorstation_config[CONF_USERNAME]
     password = doorstation_config[CONF_PASSWORD]
+    secure = doorstation_config[CONF_SSL]
+    port = doorstation_config[CONF_PORT]
 
-    device = DoorBird(device_ip, username, password)
+    device = DoorBird(device_ip, username, password, secure=secure, port=port)
     try:
         status, info = await hass.async_add_executor_job(_init_doorbird_device, device)
     except requests.exceptions.HTTPError as err:
@@ -134,6 +142,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     events = doorstation_options.get(CONF_EVENTS, [])
     doorstation = ConfiguredDoorBird(device, name, custom_url, token)
     doorstation.update_events(events)
+
     # Subscribe to doorbell or motion events
     if not await _async_register_events(hass, doorstation):
         raise ConfigEntryNotReady
