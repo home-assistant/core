@@ -3,9 +3,14 @@
 
 from homeassistant.components.mopeka.const import DOMAIN
 from homeassistant.components.sensor import ATTR_STATE_CLASS
-from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
+from homeassistant.const import (
+    ATTR_FRIENDLY_NAME,
+    ATTR_UNIT_OF_MEASUREMENT,
+    UnitOfLength,
+    UnitOfTemperature,
+)
 
-from . import LIGHT_AND_SIGNAL_SERVICE_INFO
+from . import PRO_SERVICE_INFO
 
 from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info
@@ -23,16 +28,23 @@ async def test_sensors(hass):
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all("sensor")) == 0
-    inject_bluetooth_service_info(hass, LIGHT_AND_SIGNAL_SERVICE_INFO)
+    inject_bluetooth_service_info(hass, PRO_SERVICE_INFO)
     await hass.async_block_till_done()
-    assert len(hass.states.async_all("sensor")) == 1
+    assert len(hass.states.async_all("sensor")) == 3
 
-    lux_sensor = hass.states.get("sensor.motion_light_eeff_illuminance")
-    lux_sensor_attrs = lux_sensor.attributes
-    assert lux_sensor.state == "13"
-    assert lux_sensor_attrs[ATTR_FRIENDLY_NAME] == "Motion & Light EEFF Illuminance"
-    assert lux_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "lx"
-    assert lux_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
+    temp_sensor = hass.states.get("sensor.pro_eeff_temperature")
+    temp_sensor_attrs = temp_sensor.attributes
+    assert temp_sensor.state == "30"
+    assert temp_sensor_attrs[ATTR_FRIENDLY_NAME] == "Pro+ EEFF Temperature"
+    assert temp_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
+    assert temp_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
+
+    tank_sensor = hass.states.get("sensor.pro_eeff_tank_level")
+    tank_sensor_attrs = tank_sensor.attributes
+    assert tank_sensor.state == "0"
+    assert tank_sensor_attrs[ATTR_FRIENDLY_NAME] == "Pro+ EEFF Tank Level"
+    assert tank_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == UnitOfLength.MILLIMETERS
+    assert tank_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
