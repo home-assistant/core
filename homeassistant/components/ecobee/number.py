@@ -64,10 +64,11 @@ async def async_setup_entry(
     entities = []
     _LOGGER.debug("Adding min time ventilators numbers (if present)")
     for index, thermostat in enumerate(data.ecobee.thermostats):
-        if thermostat["settings"]["ventilatorType"] != "none":
-            _LOGGER.debug("Adding %s's ventilator min times number", thermostat["name"])
-            for numbers in VENTILATOR_NUMBERS:
-                entities.append(EcobeeVentilatorMinTime(data, index, numbers))
+        if thermostat["settings"]["ventilatorType"] == "none":
+            continue
+        _LOGGER.debug("Adding %s's ventilator min times number", thermostat["name"])
+        for numbers in VENTILATOR_NUMBERS:
+            entities.append(EcobeeVentilatorMinTime(data, index, numbers))
 
     async_add_entities(entities, True)
 
