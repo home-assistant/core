@@ -528,6 +528,9 @@ demetriek==0.4.0
 # homeassistant.components.denonavr
 denonavr==0.11.3
 
+# homeassistant.components.devialet
+devialet==1.3.2
+
 # homeassistant.components.devolo_home_control
 devolo-home-control-api==0.18.2
 

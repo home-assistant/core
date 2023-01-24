@@ -89,6 +89,7 @@ FLOWS = {
         "deconz",
         "deluge",
         "denonavr",
+        "devialet",
         "devolo_home_control",
         "devolo_home_network",
         "dexcom",

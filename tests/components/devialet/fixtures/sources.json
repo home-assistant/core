@@ -1,0 +1,41 @@
+{
+  "sources": [
+    {
+      "deviceId": "1abcdef2-3456-67g8-9h0i-1jk23456lm78",
+      "sourceId": "7b0d8ed0-5650-45cd-841b-647b78730bfb",
+      "type": "spotifyconnect"
+    },
+    {
+      "deviceId": "9abc87d6-ef54-321d-0g9h-ijk876l54m32",
+      "sourceId": "12708064-01fa-4e25-a0f1-f94b3de49baa",
+      "streamLockAvailable": false,
+      "type": "optical"
+    },
+    {
+      "deviceId": "1abcdef2-3456-67g8-9h0i-1jk23456lm78",
+      "sourceId": "82834351-8255-4e2e-9ce2-b7d4da0aa3b0",
+      "streamLockAvailable": false,
+      "type": "optical"
+    },
+    {
+      "deviceId": "1abcdef2-3456-67g8-9h0i-1jk23456lm78",
+      "sourceId": "07b1bf6d-9216-4a7b-8d53-5590cee21d90",
+      "type": "upnp"
+    },
+    {
+      "deviceId": "1abcdef2-3456-67g8-9h0i-1jk23456lm78",
+      "sourceId": "1015e17d-d515-419d-a47b-4a7252bff838",
+      "type": "airplay2"
+    },
+    {
+      "deviceId": "1abcdef2-3456-67g8-9h0i-1jk23456lm78",
+      "sourceId": "88186c24-f896-4ef0-a731-a6c8f8f01908",
+      "type": "bluetooth"
+    },
+    {
+      "deviceId": "1abcdef2-3456-67g8-9h0i-1jk23456lm78",
+      "sourceId": "acfd9fe6-7e29-4c2b-b2bd-5083486a5291",
+      "type": "raat"
+    }
+  ]
+}

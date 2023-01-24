@@ -1025,6 +1025,12 @@
         }
       }
     },
+    "devialet": {
+      "name": "Devialet",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "device_sun_light_trigger": {
       "name": "Presence-based Lights",
       "integration_type": "hub",

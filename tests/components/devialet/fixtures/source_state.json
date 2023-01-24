@@ -1,0 +1,20 @@
+{
+  "availableOptions": ["play", "pause", "previous", "next", "seek"],
+  "metadata": {
+    "album": "1 (Remastered)",
+    "artist": "The Beatles",
+    "coverArtDataPresent": false,
+    "coverArtUrl": "https://i.scdn.co/image/ab67616d0000b273582d56ce20fe0146ffa0e5cf",
+    "duration": 425653,
+    "mediaType": "unknown",
+    "title": "Hey Jude - Remastered 2015"
+  },
+  "muteState": "unmuted",
+  "peerDeviceName": "",
+  "playingState": "playing",
+  "source": {
+    "deviceId": "1abcdef2-3456-67g8-9h0i-1jk23456lm78",
+    "sourceId": "7b0d8ed0-5650-45cd-841b-647b78730bfb",
+    "type": "spotifyconnect"
+  }
+}
