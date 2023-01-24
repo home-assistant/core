@@ -83,7 +83,7 @@ SENSOR_CONFIG_EXTENDS = {
     ),
 }
 SENSOR_OPTIONS = {
-    vol.Optional(CONF_IGNORE_NON_NUMERIC, default=True): selector.BooleanSelector(),
+    vol.Optional(CONF_IGNORE_NON_NUMERIC, default=False): selector.BooleanSelector(),
     vol.Required(CONF_TYPE): selector.SelectSelector(
         selector.SelectSelectorConfig(options=_STATISTIC_MEASURES),
     ),

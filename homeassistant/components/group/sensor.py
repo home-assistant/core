@@ -76,7 +76,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
         vol.Required(CONF_TYPE): vol.All(cv.string, vol.In(SENSOR_TYPES.values())),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Optional(CONF_IGNORE_NON_NUMERIC, default=True): cv.boolean,
+        vol.Optional(CONF_IGNORE_NON_NUMERIC, default=False): cv.boolean,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): str,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
