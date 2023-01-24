@@ -1,4 +1,5 @@
 """Test the SFR Box config flow."""
+from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, patch
 
@@ -8,6 +9,7 @@ from sfrbox_api.models import SystemInfo
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.sfr_box.const import DOMAIN
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
@@ -15,7 +17,7 @@ from tests.common import load_fixture
 
 
 @pytest.fixture(autouse=True, name="mock_setup_entry")
-def override_async_setup_entry() -> AsyncMock:
+def override_async_setup_entry() -> Generator[AsyncMock, None, None]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.sfr_box.async_setup_entry", return_value=True
@@ -201,3 +203,50 @@ async def test_config_flow_duplicate_mac(
     await hass.async_block_till_done()
 
     assert len(mock_setup_entry.mock_calls) == 0
+
+
+async def test_reauth(hass: HomeAssistant, config_entry_with_auth: ConfigEntry) -> None:
+    """Test the start of the config flow."""
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": config_entry_with_auth.entry_id,
+            "unique_id": config_entry_with_auth.unique_id,
+        },
+        data=config_entry_with_auth.data,
+    )
+
+    assert result.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result.get("errors") == {}
+
+    # Failed credentials
+    with patch(
+        "homeassistant.components.sfr_box.config_flow.SFRBox.authenticate",
+        side_effect=SFRBoxAuthenticationError,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_USERNAME: "admin",
+                CONF_PASSWORD: "invalid",
+            },
+        )
+
+    assert result.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result.get("errors") == {"base": "invalid_auth"}
+
+    # Valid credentials
+    with patch("homeassistant.components.sfr_box.config_flow.SFRBox.authenticate"):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_USERNAME: "admin",
+                CONF_PASSWORD: "new_password",
+            },
+        )
+
+    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
+    assert result.get("reason") == "reauth_successful"

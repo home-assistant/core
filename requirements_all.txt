@@ -569,7 +569,7 @@ datapoint==0.9.8
 dbus-fast==1.84.0
 
 # homeassistant.components.debugpy
-debugpy==1.6.5
+debugpy==1.6.6
 
 # homeassistant.components.decora
 # decora==0.6
@@ -2378,7 +2378,7 @@ speedtest-cli==2.1.3
 spiderpy==1.6.1
 
 # homeassistant.components.spotify
-spotipy==2.22.0
+spotipy==2.22.1
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
