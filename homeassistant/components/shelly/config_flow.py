@@ -21,10 +21,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.selector import (
-    SelectSelector,
-    SelectSelectorConfig,
-)
+from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
 from .const import (
     BLE_MIN_VERSION,
