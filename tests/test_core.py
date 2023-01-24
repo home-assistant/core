@@ -1,7 +1,6 @@
 """Test to verify that Home Assistant core works."""
 from __future__ import annotations
 
-# pylint: disable=protected-access
 import array
 import asyncio
 from datetime import datetime, timedelta
@@ -722,8 +721,7 @@ def test_state_repr():
                 datetime(1984, 12, 8, 12, 0, 0),
             )
         )
-        == "<state happy.happy=on; brightness=144 @ "
-        "1984-12-08T12:00:00+00:00>"
+        == "<state happy.happy=on; brightness=144 @ 1984-12-08T12:00:00+00:00>"
     )
 
 

@@ -15,10 +15,9 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
-    ENERGY_KILO_WATT_HOUR,
-    POWER_WATT,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.util.unit_system import (
@@ -56,6 +55,28 @@ async def test_gps_sensor(
     assert state.state == f"{new_coords},{altitude}"
 
 
+async def test_ir_transceiver(
+    hass: HomeAssistant,
+    ir_transceiver: Sensor,
+    receive_message: Callable[[str], None],
+) -> None:
+    """Test an ir transceiver."""
+    entity_id = "sensor.ir_transceiver_1_1"
+
+    state = hass.states.get(entity_id)
+
+    assert state
+    assert state.state == "test_code"
+
+    receive_message("1;1;1;0;50;new_code\n")
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+
+    assert state
+    assert state.state == "new_code"
+
+
 async def test_power_sensor(
     hass: HomeAssistant,
     power_sensor: Sensor,
@@ -69,7 +90,7 @@ async def test_power_sensor(
     assert state
     assert state.state == "1200"
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.POWER
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == POWER_WATT
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfPower.WATT
     assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.MEASUREMENT
 
 
@@ -86,7 +107,7 @@ async def test_energy_sensor(
     assert state
     assert state.state == "18000"
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENERGY
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == ENERGY_KILO_WATT_HOUR
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfEnergy.KILO_WATT_HOUR
     assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.TOTAL_INCREASING
 
 
@@ -125,7 +146,10 @@ async def test_distance_sensor(
 
 @pytest.mark.parametrize(
     "unit_system, unit",
-    [(METRIC_SYSTEM, TEMP_CELSIUS), (US_CUSTOMARY_SYSTEM, TEMP_FAHRENHEIT)],
+    [
+        (METRIC_SYSTEM, UnitOfTemperature.CELSIUS),
+        (US_CUSTOMARY_SYSTEM, UnitOfTemperature.FAHRENHEIT),
+    ],
 )
 async def test_temperature_sensor(
     hass: HomeAssistant,

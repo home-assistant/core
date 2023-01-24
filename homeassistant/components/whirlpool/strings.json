@@ -8,6 +8,9 @@
         }
       }
     },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
@@ -51,9 +54,9 @@
         "state": {
           "unknown": "Unknown",
           "empty": "Empty",
-          "25%": "25%",
-          "50%": "50%",
-          "100%": "100%",
+          "25": "25%",
+          "50": "50%",
+          "100": "100%",
           "active": "[%key:common::state::active%]"
         }
       }

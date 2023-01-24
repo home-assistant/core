@@ -18,6 +18,16 @@
         "sensor": {
             "whirlpool_machine": {
                 "state": {
+                    "complete": "Voltooid",
+                    "customer_focus_mode": "Klant focus mode",
+                    "cycle_filling": "Vullen",
+                    "cycle_rinsing": "Spoelen",
+                    "cycle_sensing": "Detectiefase",
+                    "cycle_soaking": "Weken",
+                    "cycle_spinning": "Centrifugeren",
+                    "cycle_washing": "Was cyclus",
+                    "delay_countdown": "Wacht op vertraagde inschakeling",
+                    "delay_paused": "Vertraagde inschakeling gepauzeerd",
                     "door_open": "Deur open",
                     "pause": "Gepauzeerd",
                     "setting": "Instelling",
@@ -26,9 +36,9 @@
             },
             "whirlpool_tank": {
                 "state": {
-                    "100%": "100%",
-                    "25%": "25%",
-                    "50%": "50%",
+                    "100": "Vol",
+                    "25": "Bijna leeg",
+                    "50": "Half vol",
                     "active": "Actief",
                     "empty": "Leeg",
                     "unknown": "Onbekend"

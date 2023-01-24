@@ -3,7 +3,7 @@
   "name": "Universal Devices ISY/IoX",
   "integration_type": "hub",
   "documentation": "https://www.home-assistant.io/integrations/isy994",
-  "requirements": ["pyisy==3.1.4"],
+  "requirements": ["pyisy==3.1.9"],
   "codeowners": ["@bdraco", "@shbatm"],
   "config_flow": true,
   "ssdp": [

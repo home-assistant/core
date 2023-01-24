@@ -85,6 +85,17 @@
         }
     },
     "issues": {
+        "deprecated_entity": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Aktualisiere alle Automatisierungen oder Skripte, die diese Entit\u00e4t in Dienstaufrufen mit dem Dienst `{deprecated_service}` verwenden, um stattdessen den Dienst `{alternate_service}` mit einer Zielentit\u00e4ts-ID von `{alternate_target}` zu verwenden.",
+                        "title": "Die Entit\u00e4t {deprecated_entity} wird entfernt"
+                    }
+                }
+            },
+            "title": "Die Entit\u00e4t {deprecated_entity} wird entfernt"
+        },
         "deprecated_service": {
             "fix_flow": {
                 "step": {

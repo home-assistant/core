@@ -1,0 +1,12 @@
+{
+  "domain": "otbr",
+  "name": "Open Thread Border Router",
+  "config_flow": true,
+  "dependencies": ["thread"],
+  "documentation": "https://www.home-assistant.io/integrations/otbr",
+  "requirements": ["python-otbr-api==1.0.2"],
+  "after_dependencies": ["hassio"],
+  "codeowners": ["@home-assistant/core"],
+  "iot_class": "local_polling",
+  "integration_type": "service"
+}

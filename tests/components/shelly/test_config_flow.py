@@ -66,7 +66,7 @@ async def test_form(hass, gen):
     assert result["errors"] == {}
 
     with patch(
-        "aioshelly.common.get_info",
+        "homeassistant.components.shelly.config_flow.get_info",
         return_value={"mac": "test-mac", "type": "SHSW-1", "auth": False, "gen": gen},
     ), patch(
         "aioshelly.block_device.BlockDevice.create",
@@ -123,7 +123,7 @@ async def test_title_without_name(hass):
     settings["device"] = settings["device"].copy()
     settings["device"]["hostname"] = "shelly1pm-12345"
     with patch(
-        "aioshelly.common.get_info",
+        "homeassistant.components.shelly.config_flow.get_info",
         return_value={"mac": "test-mac", "type": "SHSW-1", "auth": False},
     ), patch(
         "aioshelly.block_device.BlockDevice.create",
@@ -174,7 +174,7 @@ async def test_form_auth(hass, test_data):
     assert result["errors"] == {}
 
     with patch(
-        "aioshelly.common.get_info",
+        "homeassistant.components.shelly.config_flow.get_info",
         return_value={"mac": "test-mac", "type": "SHSW-1", "auth": True, "gen": gen},
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -237,7 +237,7 @@ async def test_form_errors_get_info(hass, error):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("aioshelly.common.get_info", side_effect=exc):
+    with patch("homeassistant.components.shelly.config_flow.get_info", side_effect=exc):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"host": "1.1.1.1"},
@@ -253,7 +253,7 @@ async def test_form_missing_model_key(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     with patch(
-        "aioshelly.common.get_info",
+        "homeassistant.components.shelly.config_flow.get_info",
         return_value={"mac": "test-mac", "auth": False, "gen": "2"},
     ), patch(
         "aioshelly.rpc_device.RpcDevice.create",
@@ -283,7 +283,7 @@ async def test_form_missing_model_key_auth_enabled(hass):
     assert result["errors"] == {}
 
     with patch(
-        "aioshelly.common.get_info",
+        "homeassistant.components.shelly.config_flow.get_info",
         return_value={"mac": "test-mac", "auth": True, "gen": 2},
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -316,7 +316,7 @@ async def test_form_missing_model_key_zeroconf(hass, caplog):
     """Test we handle missing Shelly model key via zeroconf."""
 
     with patch(
-        "aioshelly.common.get_info",
+        "homeassistant.components.shelly.config_flow.get_info",
         return_value={"mac": "test-mac", "auth": False, "gen": 2},
     ), patch(
         "aioshelly.rpc_device.RpcDevice.create",
@@ -355,7 +355,8 @@ async def test_form_errors_test_connection(hass, error):
     )
 
     with patch(
-        "aioshelly.common.get_info", return_value={"mac": "test-mac", "auth": False}
+        "homeassistant.components.shelly.config_flow.get_info",
+        return_value={"mac": "test-mac", "auth": False},
     ), patch(
         "aioshelly.block_device.BlockDevice.create", new=AsyncMock(side_effect=exc)
     ):
@@ -381,7 +382,7 @@ async def test_form_already_configured(hass):
     )
 
     with patch(
-        "aioshelly.common.get_info",
+        "homeassistant.components.shelly.config_flow.get_info",
         return_value={"mac": "test-mac", "type": "SHSW-1", "auth": False},
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -416,7 +417,7 @@ async def test_user_setup_ignored_device(hass):
     settings["fw"] = "20201124-092534/v1.9.0@57ac4ad8"
 
     with patch(
-        "aioshelly.common.get_info",
+        "homeassistant.components.shelly.config_flow.get_info",
         return_value={"mac": "test-mac", "type": "SHSW-1", "auth": False},
     ), patch(
         "aioshelly.block_device.BlockDevice.create",
@@ -452,7 +453,10 @@ async def test_form_firmware_unsupported(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("aioshelly.common.get_info", side_effect=FirmwareUnsupported):
+    with patch(
+        "homeassistant.components.shelly.config_flow.get_info",
+        side_effect=FirmwareUnsupported,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"host": "1.1.1.1"},
@@ -478,7 +482,7 @@ async def test_form_auth_errors_test_connection_gen1(hass, error):
     )
 
     with patch(
-        "aioshelly.common.get_info",
+        "homeassistant.components.shelly.config_flow.get_info",
         return_value={"mac": "test-mac", "auth": True},
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -514,7 +518,7 @@ async def test_form_auth_errors_test_connection_gen2(hass, error):
     )
 
     with patch(
-        "aioshelly.common.get_info",
+        "homeassistant.components.shelly.config_flow.get_info",
         return_value={"mac": "test-mac", "auth": True, "gen": 2},
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -543,7 +547,9 @@ async def test_form_auth_errors_test_connection_gen2(hass, error):
 async def test_zeroconf(hass, gen, get_info):
     """Test we get the form."""
 
-    with patch("aioshelly.common.get_info", return_value=get_info), patch(
+    with patch(
+        "homeassistant.components.shelly.config_flow.get_info", return_value=get_info
+    ), patch(
         "aioshelly.block_device.BlockDevice.create",
         new=AsyncMock(return_value=Mock(model="SHSW-1", settings=MOCK_SETTINGS)),
     ), patch(
@@ -598,7 +604,7 @@ async def test_zeroconf_sleeping_device(hass):
     """Test sleeping device configuration via zeroconf."""
 
     with patch(
-        "aioshelly.common.get_info",
+        "homeassistant.components.shelly.config_flow.get_info",
         return_value={
             "mac": "test-mac",
             "type": "SHSW-1",
@@ -662,7 +668,7 @@ async def test_zeroconf_sleeping_device(hass):
 async def test_zeroconf_sleeping_device_error(hass):
     """Test sleeping device configuration via zeroconf with error."""
     with patch(
-        "aioshelly.common.get_info",
+        "homeassistant.components.shelly.config_flow.get_info",
         return_value={
             "mac": "test-mac",
             "type": "SHSW-1",
@@ -691,7 +697,7 @@ async def test_zeroconf_already_configured(hass):
     entry.add_to_hass(hass)
 
     with patch(
-        "aioshelly.common.get_info",
+        "homeassistant.components.shelly.config_flow.get_info",
         return_value={"mac": "test-mac", "type": "SHSW-1", "auth": False},
     ):
         result = await hass.config_entries.flow.async_init(
@@ -706,6 +712,30 @@ async def test_zeroconf_already_configured(hass):
     assert entry.data["host"] == "1.1.1.1"
 
 
+async def test_zeroconf_ignored(hass):
+    """Test zeroconf when the device was previously ignored."""
+
+    entry = MockConfigEntry(
+        domain="shelly",
+        unique_id="test-mac",
+        data={},
+        source=config_entries.SOURCE_IGNORE,
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.shelly.config_flow.get_info",
+        return_value={"mac": "test-mac", "type": "SHSW-1", "auth": False},
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=DISCOVERY_INFO,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["reason"] == "already_configured"
+
+
 async def test_zeroconf_with_wifi_ap_ip(hass):
     """Test we ignore the Wi-FI AP IP."""
 
@@ -715,7 +745,7 @@ async def test_zeroconf_with_wifi_ap_ip(hass):
     entry.add_to_hass(hass)
 
     with patch(
-        "aioshelly.common.get_info",
+        "homeassistant.components.shelly.config_flow.get_info",
         return_value={"mac": "test-mac", "type": "SHSW-1", "auth": False},
     ):
         result = await hass.config_entries.flow.async_init(
@@ -732,7 +762,10 @@ async def test_zeroconf_with_wifi_ap_ip(hass):
 
 async def test_zeroconf_firmware_unsupported(hass):
     """Test we abort if device firmware is unsupported."""
-    with patch("aioshelly.common.get_info", side_effect=FirmwareUnsupported):
+    with patch(
+        "homeassistant.components.shelly.config_flow.get_info",
+        side_effect=FirmwareUnsupported,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             data=DISCOVERY_INFO,
@@ -745,7 +778,10 @@ async def test_zeroconf_firmware_unsupported(hass):
 
 async def test_zeroconf_cannot_connect(hass):
     """Test we get the form."""
-    with patch("aioshelly.common.get_info", side_effect=DeviceConnectionError):
+    with patch(
+        "homeassistant.components.shelly.config_flow.get_info",
+        side_effect=DeviceConnectionError,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             data=DISCOVERY_INFO,
@@ -759,7 +795,7 @@ async def test_zeroconf_require_auth(hass):
     """Test zeroconf if auth is required."""
 
     with patch(
-        "aioshelly.common.get_info",
+        "homeassistant.components.shelly.config_flow.get_info",
         return_value={"mac": "test-mac", "type": "SHSW-1", "auth": True},
     ):
         result = await hass.config_entries.flow.async_init(
@@ -820,7 +856,7 @@ async def test_reauth_successful(hass, test_data):
     entry.add_to_hass(hass)
 
     with patch(
-        "aioshelly.common.get_info",
+        "homeassistant.components.shelly.config_flow.get_info",
         return_value={"mac": "test-mac", "type": "SHSW-1", "auth": True, "gen": gen},
     ), patch(
         "aioshelly.block_device.BlockDevice.create",
@@ -874,7 +910,7 @@ async def test_reauth_unsuccessful(hass, test_data):
     entry.add_to_hass(hass)
 
     with patch(
-        "aioshelly.common.get_info",
+        "homeassistant.components.shelly.config_flow.get_info",
         return_value={"mac": "test-mac", "type": "SHSW-1", "auth": True, "gen": gen},
     ), patch(
         "aioshelly.block_device.BlockDevice.create",
@@ -913,7 +949,7 @@ async def test_reauth_get_info_error(hass, error):
     entry.add_to_hass(hass)
 
     with patch(
-        "aioshelly.common.get_info",
+        "homeassistant.components.shelly.config_flow.get_info",
         side_effect=error,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -1116,7 +1152,7 @@ async def test_zeroconf_already_configured_triggers_refresh_mac_in_name(
     assert len(mock_rpc_device.initialize.mock_calls) == 1
 
     with patch(
-        "aioshelly.common.get_info",
+        "homeassistant.components.shelly.config_flow.get_info",
         return_value={"mac": "", "type": "SHSW-1", "auth": False},
     ):
         result = await hass.config_entries.flow.async_init(
@@ -1148,7 +1184,7 @@ async def test_zeroconf_already_configured_triggers_refresh(
     assert len(mock_rpc_device.initialize.mock_calls) == 1
 
     with patch(
-        "aioshelly.common.get_info",
+        "homeassistant.components.shelly.config_flow.get_info",
         return_value={"mac": "AABBCCDDEEFF", "type": "SHSW-1", "auth": False},
     ):
         result = await hass.config_entries.flow.async_init(
@@ -1163,3 +1199,39 @@ async def test_zeroconf_already_configured_triggers_refresh(
     mock_rpc_device.mock_disconnected()
     await hass.async_block_till_done()
     assert len(mock_rpc_device.initialize.mock_calls) == 2
+
+
+async def test_zeroconf_sleeping_device_not_triggers_refresh(
+    hass, mock_rpc_device, monkeypatch, caplog
+):
+    """Test zeroconf discovery does not triggers refresh for sleeping device."""
+    entry = MockConfigEntry(
+        domain="shelly",
+        unique_id="AABBCCDDEEFF",
+        data={"host": "1.1.1.1", "gen": 2, "sleep_period": 1000, "model": "SHSW-1"},
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_rpc_device.mock_update()
+
+    assert "online, resuming setup" in caplog.text
+
+    with patch(
+        "homeassistant.components.shelly.config_flow.get_info",
+        return_value={"mac": "AABBCCDDEEFF", "type": "SHSW-1", "auth": False},
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=DISCOVERY_INFO,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["reason"] == "already_configured"
+
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
+    mock_rpc_device.mock_disconnected()
+    await hass.async_block_till_done()
+    assert len(mock_rpc_device.initialize.mock_calls) == 0
+    assert "device did not update" not in caplog.text

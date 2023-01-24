@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "not_huawei_lte": "Nem Huawei LTE eszk\u00f6z",
-            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt."
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt.",
+            "unsupported_device": "Nem t\u00e1mogatott eszk\u00f6z"
         },
         "error": {
             "connection_timeout": "Kapcsolat id\u0151t\u00fall\u00e9p\u00e9s",

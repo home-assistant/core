@@ -1,7 +1,7 @@
 """Support for the sensors in a GreenEye Monitor."""
 from __future__ import annotations
 
-from typing import Any, Union
+from typing import Any
 
 import greeneye
 
@@ -116,12 +116,12 @@ async def async_setup_platform(
         on_new_monitor(monitor)
 
 
-UnderlyingSensorType = Union[
-    greeneye.monitor.Channel,
-    greeneye.monitor.PulseCounter,
-    greeneye.monitor.TemperatureSensor,
-    greeneye.monitor.VoltageSensor,
-]
+UnderlyingSensorType = (
+    greeneye.monitor.Channel
+    | greeneye.monitor.PulseCounter
+    | greeneye.monitor.TemperatureSensor
+    | greeneye.monitor.VoltageSensor
+)
 
 
 class GEMSensor(SensorEntity):

@@ -25,6 +25,14 @@
             }
         }
     },
+    "issues": {
+        "deprecated_service_multiple_alternate_targets": {
+            "title": "De {deprecated_service} service wordt verwijderd"
+        },
+        "deprecated_service_single_alternate_target": {
+            "title": "De {deprecated_service} service wordt verwijderd"
+        }
+    },
     "options": {
         "step": {
             "init": {

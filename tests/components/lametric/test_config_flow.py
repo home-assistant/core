@@ -66,7 +66,6 @@ async def test_full_cloud_import_flow_multiple_devices(
         flow_id, user_input={"next_step_id": "pick_implementation"}
     )
 
-    # pylint: disable=protected-access
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -147,7 +146,6 @@ async def test_full_cloud_import_flow_single_device(
         flow_id, user_input={"next_step_id": "pick_implementation"}
     )
 
-    # pylint: disable=protected-access
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -267,7 +265,6 @@ async def test_full_ssdp_with_cloud_import(
         flow_id, user_input={"next_step_id": "pick_implementation"}
     )
 
-    # pylint: disable=protected-access
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -411,7 +408,6 @@ async def test_cloud_import_updates_existing_entry(
         flow_id, user_input={"next_step_id": "pick_implementation"}
     )
 
-    # pylint: disable=protected-access
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -518,7 +514,6 @@ async def test_cloud_abort_no_devices(
         flow_id, user_input={"next_step_id": "pick_implementation"}
     )
 
-    # pylint: disable=protected-access
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -637,7 +632,6 @@ async def test_cloud_errors(
         flow_id, user_input={"next_step_id": "pick_implementation"}
     )
 
-    # pylint: disable=protected-access
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -769,7 +763,6 @@ async def test_reauth_cloud_import(
         flow_id, user_input={"next_step_id": "pick_implementation"}
     )
 
-    # pylint: disable=protected-access
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -835,7 +828,6 @@ async def test_reauth_cloud_abort_device_not_found(
         flow_id, user_input={"next_step_id": "pick_implementation"}
     )
 
-    # pylint: disable=protected-access
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {

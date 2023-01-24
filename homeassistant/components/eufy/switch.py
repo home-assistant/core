@@ -1,4 +1,4 @@
-"""Support for Eufy switches."""
+"""Support for EufyHome switches."""
 from __future__ import annotations
 
 from typing import Any
@@ -17,14 +17,14 @@ def setup_platform(
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up Eufy switches."""
+    """Set up EufyHome switches."""
     if discovery_info is None:
         return
-    add_entities([EufySwitch(discovery_info)], True)
+    add_entities([EufyHomeSwitch(discovery_info)], True)
 
 
-class EufySwitch(SwitchEntity):
-    """Representation of a Eufy switch."""
+class EufyHomeSwitch(SwitchEntity):
+    """Representation of a EufyHome switch."""
 
     def __init__(self, device):
         """Initialize the light."""

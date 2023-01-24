@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Dienst is al geconfigureerd"
+            "already_configured": "Dienst is al geconfigureerd",
+            "anna_with_adam": "Zowel Anna als Adam gedetecteerd. Voeg je Adam toe in plaats van je Anna"
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
@@ -30,6 +31,9 @@
                 "state_attributes": {
                     "preset_mode": {
                         "state": {
+                            "asleep": "Nacht",
+                            "away": "Afwezig",
+                            "home": "Thuis",
                             "vacation": "Vakantie"
                         }
                     }

@@ -154,7 +154,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
     """Representation of a sensor that can be updated using MQTT."""
 
     _entity_id_format = ENTITY_ID_FORMAT
-    _attr_last_reset = None
+    _attr_last_reset: datetime | None = None
     _attributes_extra_blocked = MQTT_SENSOR_ATTRIBUTES_BLOCKED
     _expire_after: int | None
     _expired: bool | None

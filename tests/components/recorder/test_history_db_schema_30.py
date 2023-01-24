@@ -1,7 +1,7 @@
 """The tests the History component."""
 from __future__ import annotations
 
-# pylint: disable=protected-access,invalid-name
+# pylint: disable=invalid-name
 from copy import copy
 from datetime import datetime, timedelta
 import importlib

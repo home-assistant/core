@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "La ubicaci\u00f3 ja est\u00e0 configurada"
+            "already_configured": "La ubicaci\u00f3 ja est\u00e0 configurada",
+            "wrong_location": "No hi ha estacions de mesura Airly en aquesta zona."
         },
         "error": {
             "invalid_api_key": "Clau API inv\u00e0lida",

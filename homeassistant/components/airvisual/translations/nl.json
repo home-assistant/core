@@ -30,14 +30,6 @@
                 "description": "Gebruik de AirVisual-cloud-API om een stad/staat/land te bewaken.",
                 "title": "Configureer een geografie"
             },
-            "node_pro": {
-                "data": {
-                    "ip_address": "Host",
-                    "password": "Wachtwoord"
-                },
-                "description": "Monitor een persoonlijke AirVisual-eenheid. Het wachtwoord kan worden opgehaald uit de gebruikersinterface van het apparaat.",
-                "title": "Configureer een AirVisual Node / Pro"
-            },
             "reauth_confirm": {
                 "data": {
                     "api_key": "API-sleutel"

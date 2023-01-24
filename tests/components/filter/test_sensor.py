@@ -14,6 +14,7 @@ from homeassistant.components.filter.sensor import (
     TimeSMAFilter,
     TimeThrottleFilter,
 )
+from homeassistant.components.recorder import Recorder
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     SensorDeviceClass,
@@ -27,7 +28,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfTemperature,
 )
-import homeassistant.core as ha
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -35,19 +36,19 @@ import homeassistant.util.dt as dt_util
 from tests.common import assert_setup_component, get_fixture_path
 
 
-@pytest.fixture
-def values():
+@pytest.fixture(name="values")
+def values_fixture() -> list[State]:
     """Fixture for a list of test States."""
     values = []
     raw_values = [20, 19, 18, 21, 22, 0]
     timestamp = dt_util.utcnow()
     for val in raw_values:
-        values.append(ha.State("sensor.test_monitored", val, last_updated=timestamp))
+        values.append(State("sensor.test_monitored", str(val), last_updated=timestamp))
         timestamp += timedelta(minutes=1)
     return values
 
 
-async def test_setup_fail(hass):
+async def test_setup_fail(hass: HomeAssistant) -> None:
     """Test if filter doesn't exist."""
     config = {
         "sensor": {
@@ -61,7 +62,9 @@ async def test_setup_fail(hass):
         await hass.async_block_till_done()
 
 
-async def test_chain(recorder_mock, hass, values):
+async def test_chain(
+    recorder_mock: Recorder, hass: HomeAssistant, values: list[State]
+) -> None:
     """Test if filter chaining works."""
     config = {
         "sensor": {
@@ -89,7 +92,12 @@ async def test_chain(recorder_mock, hass, values):
 
 
 @pytest.mark.parametrize("missing", (True, False))
-async def test_chain_history(recorder_mock, hass, values, missing):
+async def test_chain_history(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    values: list[State],
+    missing: bool,
+) -> None:
     """Test if filter chaining works, when a source is and isn't recorded."""
     config = {
         "sensor": {
@@ -114,10 +122,10 @@ async def test_chain_history(recorder_mock, hass, values, missing):
     else:
         fake_states = {
             "sensor.test_monitored": [
-                ha.State("sensor.test_monitored", 18.0, last_changed=t_0),
-                ha.State("sensor.test_monitored", "unknown", last_changed=t_1),
-                ha.State("sensor.test_monitored", 19.0, last_changed=t_2),
-                ha.State("sensor.test_monitored", 18.2, last_changed=t_3),
+                State("sensor.test_monitored", "18.0", last_changed=t_0),
+                State("sensor.test_monitored", "unknown", last_changed=t_1),
+                State("sensor.test_monitored", "19.0", last_changed=t_2),
+                State("sensor.test_monitored", "18.2", last_changed=t_3),
             ]
         }
 
@@ -143,7 +151,7 @@ async def test_chain_history(recorder_mock, hass, values, missing):
             assert state.state == "17.05"
 
 
-async def test_source_state_none(recorder_mock, hass, values):
+async def test_source_state_none(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test is source sensor state is null and sets state to STATE_UNKNOWN."""
 
     config = {
@@ -203,7 +211,7 @@ async def test_source_state_none(recorder_mock, hass, values):
     assert state.state == STATE_UNKNOWN
 
 
-async def test_history_time(recorder_mock, hass):
+async def test_history_time(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test loading from history based on a time window."""
     config = {
         "sensor": {
@@ -220,9 +228,9 @@ async def test_history_time(recorder_mock, hass):
 
     fake_states = {
         "sensor.test_monitored": [
-            ha.State("sensor.test_monitored", 18.0, last_changed=t_0),
-            ha.State("sensor.test_monitored", 19.0, last_changed=t_1),
-            ha.State("sensor.test_monitored", 18.2, last_changed=t_2),
+            State("sensor.test_monitored", "18.0", last_changed=t_0),
+            State("sensor.test_monitored", "19.0", last_changed=t_1),
+            State("sensor.test_monitored", "18.2", last_changed=t_2),
         ]
     }
     with patch(
@@ -241,7 +249,7 @@ async def test_history_time(recorder_mock, hass):
         assert state.state == "18.0"
 
 
-async def test_setup(recorder_mock, hass):
+async def test_setup(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test if filter attributes are inherited."""
     config = {
         "sensor": {
@@ -283,7 +291,7 @@ async def test_setup(recorder_mock, hass):
         assert entity_id == "sensor.test"
 
 
-async def test_invalid_state(recorder_mock, hass):
+async def test_invalid_state(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test if filter attributes are inherited."""
     config = {
         "sensor": {
@@ -313,7 +321,7 @@ async def test_invalid_state(recorder_mock, hass):
         assert state.state == STATE_UNAVAILABLE
 
 
-async def test_timestamp_state(recorder_mock, hass):
+async def test_timestamp_state(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test if filter state is a datetime."""
     config = {
         "sensor": {
@@ -342,7 +350,7 @@ async def test_timestamp_state(recorder_mock, hass):
         assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP
 
 
-async def test_outlier(values):
+async def test_outlier(values: list[State]) -> None:
     """Test if outlier filter works."""
     filt = OutlierFilter(window_size=3, precision=2, entity=None, radius=4.0)
     for state in values:
@@ -350,7 +358,7 @@ async def test_outlier(values):
     assert filtered.state == 21
 
 
-def test_outlier_step(values):
+def test_outlier_step(values: list[State]) -> None:
     """
     Test step-change handling in outlier.
 
@@ -365,19 +373,19 @@ def test_outlier_step(values):
     assert filtered.state == 22
 
 
-def test_initial_outlier(values):
+def test_initial_outlier(values: list[State]) -> None:
     """Test issue #13363."""
     filt = OutlierFilter(window_size=3, precision=2, entity=None, radius=4.0)
-    out = ha.State("sensor.test_monitored", 4000)
+    out = State("sensor.test_monitored", "4000")
     for state in [out] + values:
         filtered = filt.filter_state(state)
     assert filtered.state == 21
 
 
-def test_unknown_state_outlier(values):
+def test_unknown_state_outlier(values: list[State]) -> None:
     """Test issue #32395."""
     filt = OutlierFilter(window_size=3, precision=2, entity=None, radius=4.0)
-    out = ha.State("sensor.test_monitored", "unknown")
+    out = State("sensor.test_monitored", "unknown")
     for state in [out] + values + [out]:
         try:
             filtered = filt.filter_state(state)
@@ -386,7 +394,7 @@ def test_unknown_state_outlier(values):
     assert filtered.state == 21
 
 
-def test_precision_zero(values):
+def test_precision_zero(values: list[State]) -> None:
     """Test if precision of zero returns an integer."""
     filt = LowPassFilter(window_size=10, precision=0, entity=None, time_constant=10)
     for state in values:
@@ -394,10 +402,10 @@ def test_precision_zero(values):
     assert isinstance(filtered.state, int)
 
 
-def test_lowpass(values):
+def test_lowpass(values: list[State]) -> None:
     """Test if lowpass filter works."""
     filt = LowPassFilter(window_size=10, precision=2, entity=None, time_constant=10)
-    out = ha.State("sensor.test_monitored", "unknown")
+    out = State("sensor.test_monitored", "unknown")
     for state in [out] + values + [out]:
         try:
             filtered = filt.filter_state(state)
@@ -406,7 +414,7 @@ def test_lowpass(values):
     assert filtered.state == 18.05
 
 
-def test_range(values):
+def test_range(values: list[State]) -> None:
     """Test if range filter works."""
     lower = 10
     upper = 20
@@ -422,7 +430,7 @@ def test_range(values):
             assert unf == filtered.state
 
 
-def test_range_zero(values):
+def test_range_zero(values: list[State]) -> None:
     """Test if range filter works with zeroes as bounds."""
     lower = 0
     upper = 0
@@ -438,7 +446,7 @@ def test_range_zero(values):
             assert unf == filtered.state
 
 
-def test_throttle(values):
+def test_throttle(values: list[State]) -> None:
     """Test if lowpass filter works."""
     filt = ThrottleFilter(window_size=3, precision=2, entity=None)
     filtered = []
@@ -449,7 +457,7 @@ def test_throttle(values):
     assert [20, 21] == [f.state for f in filtered]
 
 
-def test_time_throttle(values):
+def test_time_throttle(values: list[State]) -> None:
     """Test if lowpass filter works."""
     filt = TimeThrottleFilter(
         window_size=timedelta(minutes=2), precision=2, entity=None
@@ -462,7 +470,7 @@ def test_time_throttle(values):
     assert [20, 18, 22] == [f.state for f in filtered]
 
 
-def test_time_sma(values):
+def test_time_sma(values: list[State]) -> None:
     """Test if time_sma filter works."""
     filt = TimeSMAFilter(
         window_size=timedelta(minutes=2), precision=2, entity=None, type="last"
@@ -472,7 +480,7 @@ def test_time_sma(values):
     assert filtered.state == 21.5
 
 
-async def test_reload(recorder_mock, hass):
+async def test_reload(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Verify we can reload filter sensors."""
     hass.states.async_set("sensor.test_monitored", 12345)
     await async_setup_component(

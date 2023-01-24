@@ -1,5 +1,5 @@
 """Test the entity helper."""
-# pylint: disable=protected-access
+
 import asyncio
 import dataclasses
 from datetime import timedelta

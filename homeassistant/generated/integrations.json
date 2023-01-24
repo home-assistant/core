@@ -191,6 +191,12 @@
           "iot_class": "cloud_push",
           "name": "Amazon Web Services (AWS)"
         },
+        "fire_tv": {
+          "integration_type": "virtual",
+          "config_flow": false,
+          "supported_by": "androidtv",
+          "name": "Amazon Fire TV"
+        },
         "route53": {
           "integration_type": "hub",
           "config_flow": false,
@@ -1475,9 +1481,20 @@
     },
     "eufy": {
       "name": "eufy",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
+      "integrations": {
+        "eufy": {
+          "integration_type": "hub",
+          "config_flow": false,
+          "iot_class": "local_polling",
+          "name": "EufyHome"
+        },
+        "eufylife_ble": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "EufyLife"
+        }
+      }
     },
     "everlights": {
       "name": "EverLights",
@@ -3823,12 +3840,6 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
-    "openalpr_local": {
-      "name": "OpenALPR Local",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_push"
-    },
     "opencv": {
       "name": "OpenCV",
       "integration_type": "hub",
@@ -3952,6 +3963,12 @@
       "name": "Osramlightify",
       "integration_type": "hub",
       "config_flow": false,
+      "iot_class": "local_polling"
+    },
+    "otbr": {
+      "name": "Open Thread Border Router",
+      "integration_type": "service",
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "otp": {
@@ -5226,6 +5243,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "stookwijzer": {
+      "name": "Stookwijzer",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "streamlabswater": {
       "name": "StreamLabs",
       "integration_type": "hub",
@@ -5546,6 +5569,12 @@
       "name": "Thomson",
       "integration_type": "hub",
       "config_flow": false,
+      "iot_class": "local_polling"
+    },
+    "thread": {
+      "name": "Thread",
+      "integration_type": "service",
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "tibber": {

@@ -8,6 +8,13 @@
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
         "step": {
+            "confirm_discovery": {
+                "data": {
+                    "password": "Jelsz\u00f3 (alap\u00e9rtelmezett: PIN-k\u00f3d a h\u00e1toldalon)",
+                    "use_legacy_protocol": "Hagyom\u00e1nyos protokoll haszn\u00e1lata",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                }
+            },
             "user": {
                 "data": {
                     "host": "C\u00edm",

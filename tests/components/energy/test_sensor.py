@@ -19,10 +19,8 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNKNOWN,
-    VOLUME_CUBIC_FEET,
-    VOLUME_CUBIC_METERS,
-    VOLUME_GALLONS,
     UnitOfEnergy,
+    UnitOfVolume,
 )
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -857,7 +855,7 @@ async def test_cost_sensor_handle_price_units(
 
 @pytest.mark.parametrize(
     "unit",
-    (VOLUME_CUBIC_FEET, VOLUME_CUBIC_METERS),
+    (UnitOfVolume.CUBIC_FEET, UnitOfVolume.CUBIC_METERS),
 )
 async def test_cost_sensor_handle_gas(
     setup_integration, hass, hass_storage, unit
@@ -963,9 +961,9 @@ async def test_cost_sensor_handle_gas_kwh(
     "unit_system,usage_unit,growth",
     (
         # 1 cubic foot = 7.47 gl, 100 ft3 growth @ 0.5/ft3:
-        (US_CUSTOMARY_SYSTEM, VOLUME_CUBIC_FEET, 374.025974025974),
-        (US_CUSTOMARY_SYSTEM, VOLUME_GALLONS, 50.0),
-        (METRIC_SYSTEM, VOLUME_CUBIC_METERS, 50.0),
+        (US_CUSTOMARY_SYSTEM, UnitOfVolume.CUBIC_FEET, 374.025974025974),
+        (US_CUSTOMARY_SYSTEM, UnitOfVolume.GALLONS, 50.0),
+        (METRIC_SYSTEM, UnitOfVolume.CUBIC_METERS, 50.0),
     ),
 )
 async def test_cost_sensor_handle_water(
@@ -1165,7 +1163,7 @@ async def test_inherit_source_unique_id(setup_integration, hass, hass_storage):
         "sensor.gas_consumption",
         100,
         {
-            ATTR_UNIT_OF_MEASUREMENT: VOLUME_CUBIC_METERS,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfVolume.CUBIC_METERS,
             ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
         },
     )

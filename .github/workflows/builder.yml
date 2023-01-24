@@ -10,7 +10,7 @@ on:
 
 env:
   BUILD_TYPE: core
-  DEFAULT_PYTHON: 3.9
+  DEFAULT_PYTHON: "3.10"
 
 jobs:
   init:
@@ -162,6 +162,9 @@ jobs:
               --inplace e -o json \
               '.requirements += ["home-assistant-intents=="+env(intents_version)]' \
               homeassistant/components/conversation/manifest.json
+
+            sed -i "s|home-assistant-intents==.*|home-assistant-intents==${BASH_REMATCH[1]}|" \
+              homeassistant/package_constraints.txt
 
             python -m script.gen_requirements_all
           fi
