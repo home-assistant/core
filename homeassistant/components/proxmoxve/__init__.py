@@ -110,7 +110,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         LOGGER.warning(
             # Proxmox VE config flow added in 2022.10 and should be removed in 2022.12
             "Configuration of the Proxmox in YAML is deprecated and should "
-            "be removed in 2022.12. Resolve the import issues and remove the "
+            "be removed in 2023.05. Resolve the import issues and remove the "
             "YAML configuration from your configuration.yaml file",
         )
         async_create_issue(
