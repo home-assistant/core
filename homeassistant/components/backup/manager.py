@@ -185,7 +185,12 @@ class BackupManager:
                 "compressed": True,
             }
             tar_file_path = Path(self.backup_dir, f"{backup_data['slug']}.tar")
-
+            event_data = {
+                "device_id": "backup.create",
+                "type": "backup_started",
+                "backup_data": backup_data,
+            }
+            self.hass.bus.async_fire("backup_event", event_data)
             if not self.backup_dir.exists():
                 LOGGER.debug("Creating backup directory")
                 self.hass.async_add_executor_job(self.backup_dir.mkdir)
@@ -204,6 +209,12 @@ class BackupManager:
             )
             if self.loaded_backups:
                 self.backups[slug] = backup
+            event_data = {
+                "device_id": "backup.create",
+                "type": "backup_complete",
+                "backup_data": backup,
+            }
+            self.hass.bus.async_fire("backup_event", event_data)
             LOGGER.debug("Generated new backup with slug %s", slug)
             return backup
         finally:
