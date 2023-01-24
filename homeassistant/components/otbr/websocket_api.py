@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 
 @callback
-def async_setup(hass) -> None:
+def async_setup(hass: HomeAssistant) -> None:
     """Set up the OTBR Websocket API."""
     async_register_command(hass, websocket_info)
 
@@ -44,13 +44,10 @@ async def websocket_info(
         connection.send_error(msg["id"], "get_dataset_failed", str(exc))
         return
 
-    if dataset:
-        dataset = dataset.hex()
-
     connection.send_result(
         msg["id"],
         {
             "url": data.url,
-            "active_dataset_tlvs": dataset,
+            "active_dataset_tlvs": dataset.hex() if dataset else None,
         },
     )
