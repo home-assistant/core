@@ -159,8 +159,8 @@ class Events(Base):
     )
     __tablename__ = TABLE_EVENTS
     event_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
-    event_type: Mapped[str] = mapped_column(
-        String(MAX_LENGTH_EVENT_EVENT_TYPE), nullable=False
+    event_type: Mapped[str | None] = mapped_column(
+        String(MAX_LENGTH_EVENT_EVENT_TYPE),
     )
     event_data: Mapped[str | None] = mapped_column(
         Text().with_variant(mysql.LONGTEXT, "mysql")
@@ -231,7 +231,7 @@ class Events(Base):
         )
         try:
             return Event(
-                self.event_type,
+                self.event_type or "",
                 json_loads(self.event_data) if self.event_data else {},
                 EventOrigin(self.origin)
                 if self.origin
@@ -313,9 +313,7 @@ class States(Base):
     )
     __tablename__ = TABLE_STATES
     state_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
-    entity_id: Mapped[str] = mapped_column(
-        String(MAX_LENGTH_STATE_ENTITY_ID), nullable=False
-    )
+    entity_id: Mapped[str | None] = mapped_column(String(MAX_LENGTH_STATE_ENTITY_ID))
     state: Mapped[str | None] = mapped_column(String(MAX_LENGTH_STATE_STATE))
     attributes: Mapped[str | None] = mapped_column(
         Text().with_variant(mysql.LONGTEXT, "mysql")
@@ -427,7 +425,7 @@ class States(Base):
             last_updated = dt_util.utc_from_timestamp(self.last_updated_ts or 0)
             last_changed = dt_util.utc_from_timestamp(self.last_changed_ts or 0)
         return State(
-            self.entity_id,
+            self.entity_id or "",
             self.state,  # type: ignore[arg-type]
             # Join the state_attributes table on attributes_id to get the attributes
             # for newer states
