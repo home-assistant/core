@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from jvcprojector import JvcProjectorAuthError, JvcProjectorConnectError
+import pytest
 
 from homeassistant.components.jvc_projector.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
@@ -14,7 +15,10 @@ from . import MOCK_HOST, MOCK_PASSWORD, MOCK_PORT
 
 from tests.common import MockConfigEntry
 
+TARGET = "homeassistant.components.jvc_projector.config_flow.JvcProjector"
 
+
+@pytest.mark.parametrize("mock_device", [TARGET], indirect=True)
 async def test_user_config_flow_success(
     hass: HomeAssistant, mock_device: AsyncMock
 ) -> None:
@@ -42,6 +46,7 @@ async def test_user_config_flow_success(
     assert result["data"][CONF_PASSWORD] == MOCK_PASSWORD
 
 
+@pytest.mark.parametrize("mock_device", [TARGET], indirect=True)
 async def test_user_config_flow_bad_connect_errors(
     hass: HomeAssistant, mock_device: AsyncMock
 ) -> None:
@@ -75,6 +80,7 @@ async def test_user_config_flow_bad_connect_errors(
     assert result["data"][CONF_PASSWORD] == MOCK_PASSWORD
 
 
+@pytest.mark.parametrize("mock_device", [TARGET], indirect=True)
 async def test_user_config_flow_device_exists_abort(
     hass: HomeAssistant, mock_device: AsyncMock, mock_integration: MockConfigEntry
 ) -> None:
@@ -88,6 +94,7 @@ async def test_user_config_flow_device_exists_abort(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.parametrize("mock_device", [TARGET], indirect=True)
 async def test_user_config_flow_bad_host_errors(
     hass: HomeAssistant, mock_device: AsyncMock
 ) -> None:
@@ -117,6 +124,7 @@ async def test_user_config_flow_bad_host_errors(
     assert result["data"][CONF_PASSWORD] == MOCK_PASSWORD
 
 
+@pytest.mark.parametrize("mock_device", [TARGET], indirect=True)
 async def test_user_config_flow_bad_auth_errors(
     hass: HomeAssistant, mock_device: AsyncMock
 ) -> None:
@@ -150,6 +158,7 @@ async def test_user_config_flow_bad_auth_errors(
     assert result["data"][CONF_PASSWORD] == MOCK_PASSWORD
 
 
+@pytest.mark.parametrize("mock_device", [TARGET], indirect=True)
 async def test_reauth_config_flow_success(
     hass: HomeAssistant, mock_device: AsyncMock, mock_integration: MockConfigEntry
 ) -> None:
@@ -178,6 +187,7 @@ async def test_reauth_config_flow_success(
     assert mock_integration.data[CONF_PASSWORD] == MOCK_PASSWORD
 
 
+@pytest.mark.parametrize("mock_device", [TARGET], indirect=True)
 async def test_reauth_config_flow_auth_error(
     hass: HomeAssistant, mock_device: AsyncMock, mock_integration: MockConfigEntry
 ) -> None:
@@ -232,6 +242,7 @@ async def test_reauth_config_flow_auth_error(
     assert mock_integration.data[CONF_PASSWORD] == MOCK_PASSWORD
 
 
+@pytest.mark.parametrize("mock_device", [TARGET], indirect=True)
 async def test_reauth_config_flow_connect_error(
     hass: HomeAssistant, mock_device: AsyncMock, mock_integration: MockConfigEntry
 ) -> None:

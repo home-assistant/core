@@ -15,11 +15,13 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="mock_device")
-def fixture_mock_device() -> Generator[None, AsyncMock, None]:
+def fixture_mock_device(request) -> Generator[None, AsyncMock, None]:
     """Return a mocked JVC Projector device."""
-    with patch(
-        "homeassistant.components.jvc_projector.JvcProjector", autospec=True
-    ) as mock:
+    target = "homeassistant.components.jvc_projector.JvcProjector"
+    if hasattr(request, "param"):
+        target = request.param
+
+    with patch(target, autospec=True) as mock:
         device = mock.return_value
         device.host = MOCK_HOST
         device.port = MOCK_PORT

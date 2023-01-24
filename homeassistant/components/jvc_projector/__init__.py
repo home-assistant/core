@@ -63,13 +63,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await hass.data[DOMAIN][entry.entry_id].device.disconnect()
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
-
-
-async def get_mac_address(host: str, port: int, password: str | None) -> str:
-    """Get device mac address for config flow."""
-    device = JvcProjector(host, port=port, password=password)
-    try:
-        await device.connect(True)
-    finally:
-        await device.disconnect()
-    return device.mac
