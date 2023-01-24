@@ -29,7 +29,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     await client.async_setup()
 
-    hass.data.setdefault(DOMAIN, client)
     return True
 
 
@@ -154,6 +153,8 @@ class IslamicPrayerClient:
 
         await self.async_update()
         self.config_entry.add_update_listener(self.async_options_updated)
+
+        self.hass.data.setdefault(DOMAIN, self)
 
         await self.hass.config_entries.async_forward_entry_setups(
             self.config_entry, PLATFORMS
