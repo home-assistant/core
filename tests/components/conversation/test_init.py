@@ -524,3 +524,28 @@ async def test_language_region(hass, init_components):
     assert call.domain == HASS_DOMAIN
     assert call.service == "turn_on"
     assert call.data == {"entity_id": "light.kitchen"}
+
+
+async def test_reload_on_new_component(hass):
+    """Test intents being reloaded when a new component is loaded."""
+    language = hass.config.language
+    assert await async_setup_component(hass, "conversation", {})
+
+    # Load intents
+    agent = await conversation._get_agent(hass)
+    assert isinstance(agent, conversation.DefaultAgent)
+    await agent.async_prepare()
+
+    lang_intents = agent._lang_intents.get(language)
+    assert lang_intents is not None
+    loaded_components = set(lang_intents.loaded_components)
+
+    # Load another component
+    assert await async_setup_component(hass, "light", {})
+
+    # Intents should reload
+    await agent.async_prepare()
+    lang_intents = agent._lang_intents.get(language)
+    assert lang_intents is not None
+
+    assert {"light"} == (lang_intents.loaded_components - loaded_components)
