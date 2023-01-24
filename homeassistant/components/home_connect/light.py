@@ -193,7 +193,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                 _LOGGER.debug("Updated, new brightness: %s", self._brightness)
 
         else:
-            brightness = self.device.appliance.status.get(self._brightness_key, {})
+            brightness = self.device.appliance.status.get(self._brightness_key)
             if not brightness or ATTR_VALUE not in brightness:
                 self._brightness = None
             else:
