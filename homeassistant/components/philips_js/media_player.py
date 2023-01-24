@@ -167,12 +167,18 @@ class PhilipsTVMediaPlayer(
 
     async def async_media_previous_track(self) -> None:
         """Send rewind command."""
-        await self._tv.sendKey("Previous")
+        if self._tv.channel_active:
+            await self._tv.sendKey("ChannelStepDown")
+        else:
+            await self._tv.sendKey("Previous")
         await self._async_update_soon()
 
     async def async_media_next_track(self) -> None:
         """Send fast forward command."""
-        await self._tv.sendKey("Next")
+        if self._tv.channel_active:
+            await self._tv.sendKey("ChannelStepUp")
+        else:
+            await self._tv.sendKey("Next")
         await self._async_update_soon()
 
     async def async_media_play_pause(self) -> None:
