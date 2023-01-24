@@ -326,7 +326,7 @@ def get_rpc_entity_name(
     channel_name = get_rpc_channel_name(device, key)
 
     if description:
-        return f"{channel_name} {description}"
+        return f"{channel_name} {description.lower()}"
 
     return channel_name
 
