@@ -95,6 +95,7 @@ def sensor_update_to_bluetooth_data_update(
                 device_key.key
             ]
             for device_key in sensor_update.entity_descriptions
+            if device_key.key in SENSOR_DESCRIPTIONS
         },
         entity_data={
             device_key_to_bluetooth_entity_key(device_key): sensor_values.native_value
