@@ -8,9 +8,6 @@ omit =
     homeassistant/scripts/ensure_config.py
     homeassistant/scripts/benchmark/__init__.py
     homeassistant/scripts/macos/__init__.py
-    homeassistant/scripts/ensure_config.py
-    homeassistant/scripts/benchmark/__init__.py
-    homeassistant/scripts/macos/__init__.py
 
     # omit pieces of code that rely on external devices being present
     homeassistant/components/acer_projector/*
