@@ -168,13 +168,11 @@ class Events(Base):
     origin: Mapped[str | None] = mapped_column(
         String(MAX_LENGTH_EVENT_ORIGIN)
     )  # no longer used for new rows
-    origin_idx: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    origin_idx: Mapped[int] = mapped_column(SmallInteger)
     time_fired: Mapped[datetime | None] = mapped_column(
         DATETIME_TYPE
     )  # no longer used for new rows
-    time_fired_ts: Mapped[float | None] = mapped_column(
-        TIMESTAMP_TYPE, index=True, nullable=False
-    )
+    time_fired_ts: Mapped[float | None] = mapped_column(TIMESTAMP_TYPE, index=True)
     context_id: Mapped[str | None] = mapped_column(
         String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True
     )
