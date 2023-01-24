@@ -7,15 +7,18 @@ from typing import Any, Generic, TypeVar
 
 from devolo_plc_api.device import Device
 from devolo_plc_api.device_api import ConnectedStationInfo, NeighborAPInfo
-from devolo_plc_api.plcnet_api import LogicalNetwork
+from devolo_plc_api.plcnet_api import REMOTE, DataRate, LogicalNetwork
+from devolo_plc_api.plcnet_api.getnetworkoverview_pb2 import GetNetworkOverview
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, UnitOfDataRate
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -25,13 +28,22 @@ from .const import (
     CONNECTED_WIFI_CLIENTS,
     DOMAIN,
     NEIGHBORING_WIFI_NETWORKS,
+    PLC_RX_RATE,
+    PLC_TX_RATE,
 )
 from .entity import DevoloCoordinatorEntity
 
 _DataT = TypeVar(
     "_DataT",
-    bound=LogicalNetwork | list[ConnectedStationInfo] | list[NeighborAPInfo],
+    bound=LogicalNetwork | DataRate | list[ConnectedStationInfo] | list[NeighborAPInfo],
 )
+
+
+class DataRateDirection(StrEnum):
+    """Direction of data transfer."""
+
+    RX = "rx_rate"
+    TX = "tx_rate"
 
 
 @dataclass
@@ -71,6 +83,22 @@ SENSOR_TYPES: dict[str, DevoloSensorEntityDescription[Any]] = {
         icon="mdi:wifi-marker",
         value_func=len,
     ),
+    PLC_RX_RATE: DevoloSensorEntityDescription[GetNetworkOverview.DataRate](
+        key=PLC_RX_RATE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        name="PLC downlink phyrate",
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
+        value_func=lambda data: round(getattr(data, DataRateDirection.RX)),
+    ),
+    PLC_TX_RATE: DevoloSensorEntityDescription[GetNetworkOverview.DataRate](
+        key=PLC_TX_RATE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        name="PLC uplink phyrate",
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
+        value_func=lambda data: round(getattr(data, DataRateDirection.TX)),
+    ),
 }
 
 
@@ -93,6 +121,29 @@ async def async_setup_entry(
                 device,
             )
         )
+        network = await device.plcnet.async_get_network_overview()
+        peers = [
+            peer.mac_address for peer in network.devices if peer.topology == REMOTE
+        ]
+        for peer in peers:
+            entities.append(
+                DevoloPlcDataRateSensorEntity(
+                    entry,
+                    coordinators[CONNECTED_PLC_DEVICES],
+                    SENSOR_TYPES[PLC_TX_RATE],
+                    device,
+                    peer,
+                )
+            )
+            entities.append(
+                DevoloPlcDataRateSensorEntity(
+                    entry,
+                    coordinators[CONNECTED_PLC_DEVICES],
+                    SENSOR_TYPES[PLC_RX_RATE],
+                    device,
+                    peer,
+                )
+            )
     if device.device and "wifi1" in device.device.features:
         entities.append(
             DevoloSensorEntity(
@@ -133,3 +184,42 @@ class DevoloSensorEntity(DevoloCoordinatorEntity[_DataT], SensorEntity):
     def native_value(self) -> int:
         """State of the sensor."""
         return self.entity_description.value_func(self.coordinator.data)
+
+
+class DevoloPlcDataRateSensorEntity(DevoloSensorEntity[LogicalNetwork]):
+    """Representation of a devolo PLC data rate sensor."""
+
+    entity_description: DevoloSensorEntityDescription[GetNetworkOverview.DataRate]
+
+    def __init__(
+        self,
+        entry: ConfigEntry,
+        coordinator: DataUpdateCoordinator[LogicalNetwork],
+        description: DevoloSensorEntityDescription[GetNetworkOverview.DataRate],
+        device: Device,
+        peer: str,
+    ) -> None:
+        """Initialize entity."""
+        super().__init__(entry, coordinator, description, device)
+        self._peer = peer
+        peer_device = next(
+            device
+            for device in self.coordinator.data.devices
+            if device.mac_address == peer
+        )
+
+        self._attr_unique_id = f"{self._attr_unique_id}_{peer}"
+        self._attr_name = f"{description.name} ({peer_device.user_device_name})"
+        self._attr_entity_registry_enabled_default = peer_device.attached_to_router
+
+    @property
+    def native_value(self) -> int:
+        """State of the sensor."""
+        return self.entity_description.value_func(
+            next(
+                data_rate
+                for data_rate in self.coordinator.data.data_rates
+                if data_rate.mac_address_from == self.device.mac
+                and data_rate.mac_address_to == self._peer
+            )
+        )
