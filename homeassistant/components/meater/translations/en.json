@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Account is already configured"
+        },
         "error": {
             "invalid_auth": "Invalid authentication",
             "service_unavailable_error": "The API is currently unavailable, please try again later.",

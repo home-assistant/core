@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
         "error": {
             "cannot_connect": "Failed to connect",
             "powered_off": "Is projector turned on? You need to turn on projector for initial configuration."

@@ -44,7 +44,7 @@ async def test_open(hass: HomeAssistant) -> None:
     """Test the cover can be opened."""
     await setup_platform(hass, COVER_DOMAIN)
 
-    with patch("abodepy.AbodeCover.open_cover") as mock_open:
+    with patch("jaraco.abode.devices.cover.Cover.open_cover") as mock_open:
         await hass.services.async_call(
             COVER_DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: DEVICE_ID}, blocking=True
         )
@@ -56,7 +56,7 @@ async def test_close(hass: HomeAssistant) -> None:
     """Test the cover can be closed."""
     await setup_platform(hass, COVER_DOMAIN)
 
-    with patch("abodepy.AbodeCover.close_cover") as mock_close:
+    with patch("jaraco.abode.devices.cover.Cover.close_cover") as mock_close:
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_CLOSE_COVER,

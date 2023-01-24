@@ -23,11 +23,8 @@ from .const import (
     NAME_PLAYERS_ONLINE,
     NAME_PROTOCOL_VERSION,
     NAME_VERSION,
-    UNIT_MOTD,
     UNIT_PLAYERS_MAX,
     UNIT_PLAYERS_ONLINE,
-    UNIT_PROTOCOL_VERSION,
-    UNIT_VERSION,
 )
 
 
@@ -61,7 +58,7 @@ class MinecraftServerSensorEntity(MinecraftServerEntity, SensorEntity):
         server: MinecraftServer,
         type_name: str,
         icon: str,
-        unit: str | None,
+        unit: str | None = None,
         device_class: str | None = None,
     ) -> None:
         """Initialize sensor base entity."""
@@ -79,9 +76,7 @@ class MinecraftServerVersionSensor(MinecraftServerSensorEntity):
 
     def __init__(self, server: MinecraftServer) -> None:
         """Initialize version sensor."""
-        super().__init__(
-            server=server, type_name=NAME_VERSION, icon=ICON_VERSION, unit=UNIT_VERSION
-        )
+        super().__init__(server=server, type_name=NAME_VERSION, icon=ICON_VERSION)
 
     async def async_update(self) -> None:
         """Update version."""
@@ -97,7 +92,6 @@ class MinecraftServerProtocolVersionSensor(MinecraftServerSensorEntity):
             server=server,
             type_name=NAME_PROTOCOL_VERSION,
             icon=ICON_PROTOCOL_VERSION,
-            unit=UNIT_PROTOCOL_VERSION,
         )
 
     async def async_update(self) -> None:
@@ -173,7 +167,6 @@ class MinecraftServerMOTDSensor(MinecraftServerSensorEntity):
             server=server,
             type_name=NAME_MOTD,
             icon=ICON_MOTD,
-            unit=UNIT_MOTD,
         )
 
     async def async_update(self) -> None:
