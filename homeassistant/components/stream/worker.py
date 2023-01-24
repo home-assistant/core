@@ -50,7 +50,7 @@ class StreamEndedError(StreamWorkerError):
 
 
 class StreamState:
-    """Responsible for trakcing output and playback state for a stream.
+    """Responsible for tracking output and playback state for a stream.
 
     Holds state used for playback to interpret a decoded stream. A source stream
     may be reset (e.g. reconnecting to an rtsp stream) and this object tracks
@@ -141,6 +141,16 @@ class StreamMuxer:
         self._stream_settings = stream_settings
         self._stream_state = stream_state
         self._start_time = datetime.datetime.utcnow()
+        self._frag_duration_ts = (
+            self._stream_settings.part_target_duration * 0.85 / video_stream.time_base
+        )
+        self._max_frag_duration_ts = int(
+            self._stream_settings.part_target_duration / video_stream.time_base
+        )
+        self._max_frag_duration_exceeded = False
+        # We keep track of recent packets to help us track FFmpeg's interleave queues
+        self._buffered_video_packets: deque[av.Packet] = deque()
+        self._last_packet_was_audio = False
 
     def make_new_av(
         self,
@@ -193,10 +203,10 @@ class StreamMuxer:
                         # of the range, hoping that the parts stay pretty well bounded, and we adjust the part
                         # durations a bit in the hls metadata so that everything "looks" ok.
                         "frag_duration": str(
-                            int(self._stream_settings.part_target_duration * 9e5)
+                            int(self._frag_duration_ts * input_vstream.time_base * 1e6)
                         ),
                     }
-                    if self._stream_settings.ll_hls
+                    if not input_astream
                     else {}
                 ),
             },
@@ -216,6 +226,7 @@ class StreamMuxer:
     def reset(self, video_dts: int) -> None:
         """Initialize a new stream segment."""
         self._part_start_dts = self._segment_start_dts = video_dts
+        self._last_packet_was_audio = False
         self._segment = None
         self._memory_file = BytesIO()
         self._memory_file_pos = 0
@@ -247,11 +258,45 @@ class StreamMuxer:
 
             # Mux the packet
             packet.stream = self._output_video_stream
-            self._av_output.mux(packet)
-            self.check_flush_part(packet)
-            self._part_has_keyframe |= packet.is_keyframe
+            # Mux the current video packet
+            if self._input_audio_stream:
+                part_duration_ts = packet.dts - self._part_start_dts
+                if not self._max_frag_duration_exceeded:
+                    # If the max frag duration is exceeded, adjust the packet back down
+                    # to the max frag duration. We can only do this once per fragment,
+                    # otherwise we will have duplicate dts values.
+                    frag_end_adjustment = self._max_frag_duration_ts - part_duration_ts
+                    if frag_end_adjustment <= 0:
+                        packet.dts += frag_end_adjustment
+                        self._max_frag_duration_exceeded = True
+
+                self._av_output.mux(packet)
+                self._buffered_video_packets.append(packet)
+                if (
+                    self._last_packet_was_audio
+                    and part_duration_ts >= self._frag_duration_ts
+                ):
+                    # Since we are processing the packets in time order between
+                    # both streams, all the video packets before the last audio
+                    # packet have been muxed. We can flush the fragment here
+                    # and the next fragment will start with this packet which should
+                    # still be in the interleave queue.
+                    self._av_output.flush()
+                    self.check_flush_part(packet)
+                self._last_packet_was_audio = False
+            else:
+                self._av_output.mux(packet)
+                self.check_flush_part(packet)
+                self._part_has_keyframe |= packet.is_keyframe
 
         elif packet.stream == self._input_audio_stream:
+            # This audio packet should release any pending video packets. Update the
+            # keyframe metadata accordingly.
+            self._part_has_keyframe |= any(
+                pkt.is_keyframe for pkt in self._buffered_video_packets
+            )
+            self._buffered_video_packets.clear()
+            self._last_packet_was_audio = True
             if self._audio_bsf_context:
                 self._audio_bsf_context.send(packet)
                 while packet := self._audio_bsf_context.recv():
@@ -283,11 +328,11 @@ class StreamMuxer:
             # We have our first non-zero byte position. This means the init has just
             # been written. Create a Segment and put it to the queue of each output.
             self.create_segment()
-            # When using delay_moov, the moov is not written until a moof is also ready
-            # Flush the moof
-            self.flush(packet, last_part=False)
-        else:  # These are the ends of the part segments
-            self.flush(packet, last_part=False)
+            if self._input_audio_stream:
+                # If we are manually flushing, the first flush only wrote the moov
+                self._av_output.flush()
+        # Flush the moof
+        self.flush(packet, last_part=False)
 
     def flush(self, packet: av.Packet, last_part: bool) -> None:
         """Output a part from the most recent bytes in the memory_file.
@@ -309,45 +354,31 @@ class StreamMuxer:
         durations in the metadata and those in the media and result in
         playback issues in some clients.
         """
-        # Part durations should not exceed the part target duration
-        adjusted_dts = min(
-            packet.dts,
-            self._part_start_dts
-            + self._stream_settings.part_target_duration / packet.time_base,
-        )
         if last_part:
             # Closing the av_output will write the remaining buffered data to the
             # memory_file as a new moof/mdat.
             self._av_output.close()
+            # Closing the av_output flushes the remaining packets, so update the keyframe metadata
+            self._part_has_keyframe |= any(
+                pkt.is_keyframe for pkt in self._buffered_video_packets
+            )
+            self._buffered_video_packets.clear()
             # With delay_moov, this may be the first time the file pointer has
             # moved, so the segment may not yet have been created
             if not self._segment:
                 self.create_segment()
-        elif not self._part_has_keyframe:
-            # Parts which are not the last part or an independent part should
-            # not have durations below 0.85 of the part target duration.
-            adjusted_dts = max(
-                adjusted_dts,
-                self._part_start_dts
-                + 0.85 * self._stream_settings.part_target_duration / packet.time_base,
-            )
-        # Undo dts adjustments if we don't have ll_hls
-        if not self._stream_settings.ll_hls:
-            adjusted_dts = packet.dts
         assert self._segment
         self._memory_file.seek(self._memory_file_pos)
         self._hass.loop.call_soon_threadsafe(
             self._segment.async_add_part,
             Part(
-                duration=float(
-                    (adjusted_dts - self._part_start_dts) * packet.time_base
-                ),
+                duration=float((packet.dts - self._part_start_dts) * packet.time_base),
                 has_keyframe=self._part_has_keyframe,
                 data=self._memory_file.read(),
             ),
             (
                 segment_duration := float(
-                    (adjusted_dts - self._segment_start_dts) * packet.time_base
+                    (packet.dts - self._segment_start_dts) * packet.time_base
                 )
             )
             if last_part
@@ -363,8 +394,9 @@ class StreamMuxer:
             # For the last part, these will get set again elsewhere so we can skip
             # setting them here.
             self._memory_file_pos = self._memory_file.tell()
-            self._part_start_dts = adjusted_dts
+            self._part_start_dts = packet.dts
         self._part_has_keyframe = False
+        self._max_frag_duration_exceeded = False
 
     def close(self) -> None:
         """Close stream buffer."""
@@ -486,6 +518,35 @@ def get_audio_bitstream_filter(
     return None
 
 
+def sort_interleaved_packets(packets: PeekIterator) -> Iterator[av.Packet]:
+    """
+    Return an iterator which yields the interleaved audio and video packets in order.
+
+    This assumes there is one video and one audio stream and each stream already yields
+    its packets in order.
+    """
+
+    audio_deque: deque[av.Packet] = deque()
+    video_deque: deque[av.Packet] = deque()
+    for packet in packets:
+        if packet.stream.type == "video":
+            video_deque.append(packet)
+        else:
+            audio_deque.append(packet)
+        while audio_deque and video_deque:
+            if (
+                video_deque[0].dts * video_deque[0].time_base
+                <= audio_deque[0].dts * audio_deque[0].time_base
+            ):
+                yield video_deque.popleft()
+            else:
+                yield audio_deque.popleft()
+    while video_deque:
+        yield video_deque.popleft()
+    while audio_deque:
+        yield audio_deque.popleft()
+
+
 def stream_worker(
     source: str,
     pyav_options: dict[str, str],
@@ -596,10 +657,16 @@ def stream_worker(
     # Mux the first keyframe, then proceed through the rest of the packets
     muxer.mux_packet(first_keyframe)
 
+    sorted_container_packets = (
+        sort_interleaved_packets(container_packets)
+        if audio_stream
+        else container_packets
+    )
+
     with contextlib.closing(container), contextlib.closing(muxer):
         while not quit_event.is_set():
             try:
-                packet = next(container_packets)
+                packet = next(sorted_container_packets)
             except StreamWorkerError as ex:
                 raise ex
             except StopIteration as ex:

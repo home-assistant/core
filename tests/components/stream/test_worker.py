@@ -48,7 +48,12 @@ from homeassistant.components.stream.worker import (
 )
 from homeassistant.setup import async_setup_component
 
-from .common import dynamic_stream_settings, generate_h264_video, generate_h265_video
+from .common import (
+    dynamic_stream_settings,
+    generate_h264_video,
+    generate_h265_video,
+    remux_with_audio,
+)
 from .test_ll_hls import TEST_PART_DURATION
 
 from tests.components.camera.common import EMPTY_8_6_JPEG, mock_turbo_jpeg
@@ -250,6 +255,10 @@ class FakePyAvBuffer:
         """Close the buffer."""
         # Make the final segment data available to the worker
         self.memory_file.write(b"0")
+
+    def flush(self):
+        """Flush the fragment."""
+        return
 
     def capture_output_segment(self, segment):
         """Capture the output segment for tests to inspect."""
@@ -589,6 +598,9 @@ async def test_audio_is_first_packet(hass):
     packets[2].stream = AUDIO_STREAM
     packets[2].dts = round(packets[3].dts * VIDEO_TIME_BASE * AUDIO_SAMPLE_RATE)
     packets[2].pts = round(packets[3].pts * VIDEO_TIME_BASE * AUDIO_SAMPLE_RATE)
+    packets[0].duration = packets[2].duration = round(
+        PACKET_DURATION * AUDIO_SAMPLE_RATE
+    )
 
     decoded_stream = await async_decode_stream(hass, packets, py_av=py_av)
     complete_segments = decoded_stream.complete_segments
@@ -787,12 +799,22 @@ def worker_finished_stream():
     return worker_finished, MockStream
 
 
-async def test_durations(hass, worker_finished_stream):
+# Use a target part duration which has a slight mismatch
+# with the incoming frame rate to better expose problems.
+TEST_DURATIONS_PART_DURATION = TEST_PART_DURATION - 0.01
+TEST_DURATIONS_SOURCE = generate_h264_video(
+    duration=round(SEGMENT_DURATION + TEST_DURATIONS_PART_DURATION + 1)
+)
+test_durations_sources = (
+    TEST_DURATIONS_SOURCE,
+    remux_with_audio(TEST_DURATIONS_SOURCE, "mov", "aac"),
+)
+
+
+@pytest.mark.parametrize("source", test_durations_sources)
+async def test_durations(hass, worker_finished_stream, source):
     """Test that the duration metadata matches the media."""
 
-    # Use a target part duration which has a slight mismatch
-    # with the incoming frame rate to better expose problems.
-    target_part_duration = TEST_PART_DURATION - 0.01
     await async_setup_component(
         hass,
         "stream",
@@ -800,14 +822,11 @@ async def test_durations(hass, worker_finished_stream):
             "stream": {
                 CONF_LL_HLS: True,
                 CONF_SEGMENT_DURATION: SEGMENT_DURATION,
-                CONF_PART_DURATION: target_part_duration,
+                CONF_PART_DURATION: TEST_DURATIONS_PART_DURATION,
             }
         },
     )
 
-    source = generate_h264_video(
-        duration=round(SEGMENT_DURATION + target_part_duration + 1)
-    )
     worker_finished, mock_stream = worker_finished_stream
 
     with patch("homeassistant.components.stream.Stream", wraps=mock_stream):
@@ -840,23 +859,25 @@ async def test_durations(hass, worker_finished_stream):
             # metadata duration may be adjusted up or down.
             # We check here that the divergence between the metadata duration and the
             # media duration is not too large (2 frames seems reasonable here).
+            video_stream = av_part.streams[0]
             assert math.isclose(
-                (av_part.duration - av_part.start_time) / av.time_base,
+                (video_stream.duration - video_stream.start_time)
+                * video_stream.time_base,
                 part.duration,
-                abs_tol=2 / av_part.streams.video[0].average_rate + 1e-6,
+                abs_tol=2 / video_stream.average_rate + 1e-6,
             )
             # Also check that the sum of the durations so far matches the last dts
             # in the media.
             assert math.isclose(
                 running_metadata_duration,
-                av_part.duration / av.time_base,
+                video_stream.duration * video_stream.time_base,
                 abs_tol=1e-6,
             )
             # And check that the metadata duration is between 0.85x and 1.0x of
             # the part target duration
             if not (part.has_keyframe or part_num == len(segment.parts) - 1):
-                assert part.duration > 0.85 * target_part_duration - 1e-6
-            assert part.duration < target_part_duration + 1e-6
+                assert part.duration > 0.85 * TEST_DURATIONS_PART_DURATION - 1e-6
+            assert part.duration < TEST_DURATIONS_PART_DURATION + 1e-6
             av_part.close()
     # check that the Part durations are consistent with the Segment durations
     for segment in complete_segments:
