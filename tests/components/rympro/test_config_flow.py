@@ -128,7 +128,10 @@ async def test_form_reauth(hass, _config_entry):
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_REAUTH},
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": _config_entry.entry_id,
+        },
         data=_config_entry.data,
     )
     assert result["type"] == "form"
@@ -164,7 +167,10 @@ async def test_form_reauth_with_new_account(hass, _config_entry):
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_REAUTH},
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": _config_entry.entry_id,
+        },
         data=_config_entry.data,
     )
     assert result["type"] == "form"

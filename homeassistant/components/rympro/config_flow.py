@@ -94,5 +94,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
-        self._reauth_entry = await self.async_set_unique_id(entry_data[CONF_UNIQUE_ID])
+        self._reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
         return await self.async_step_user()
