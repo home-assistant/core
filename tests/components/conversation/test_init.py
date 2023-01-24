@@ -5,7 +5,8 @@ from unittest.mock import ANY, patch
 import pytest
 
 from homeassistant.components import conversation
-from homeassistant.core import DOMAIN as HASS_DOMAIN
+from homeassistant.components.cover import SERVICE_OPEN_COVER
+from homeassistant.core import DOMAIN as HASS_DOMAIN, Context
 from homeassistant.helpers import entity_registry, intent
 from homeassistant.setup import async_setup_component
 
@@ -549,3 +550,15 @@ async def test_reload_on_new_component(hass):
     assert lang_intents is not None
 
     assert {"light"} == (lang_intents.loaded_components - loaded_components)
+
+
+async def test_non_default_response(hass, init_components):
+    """Test intent response that is not the default."""
+    hass.states.async_set("cover.front_door", "closed")
+    async_mock_service(hass, "cover", SERVICE_OPEN_COVER)
+
+    agent = await conversation._get_agent(hass)
+    assert isinstance(agent, conversation.DefaultAgent)
+
+    result = await agent.async_process("open the front door", Context())
+    assert result.response.speech["plain"]["speech"] == "Opened front door"
