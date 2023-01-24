@@ -145,6 +145,35 @@ async def test_send_text_command(
     mock_text_assistant.assert_has_calls([call().__enter__().assist(command)])
 
 
+async def test_send_text_commands(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+) -> None:
+    """Test service call send_text_command calls TextAssistant."""
+    await setup_integration()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state is ConfigEntryState.LOADED
+
+    command1 = "open the garage door"
+    command2 = "1234"
+    with patch(
+        "homeassistant.components.google_assistant_sdk.helpers.TextAssistant"
+    ) as mock_text_assistant:
+        await hass.services.async_call(
+            DOMAIN,
+            "send_text_command",
+            {"command": [command1, command2]},
+            blocking=True,
+        )
+    mock_text_assistant.assert_called_once_with(
+        ExpectedCredentials(), "en-US", audio_out=False
+    )
+    mock_text_assistant.assert_has_calls([call().__enter__().assist(command1)])
+    mock_text_assistant.assert_has_calls([call().__enter__().assist(command2)])
+
+
 @pytest.mark.parametrize(
     "status,requires_reauth",
     [
