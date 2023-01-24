@@ -183,12 +183,6 @@ def test_norway_in_june(hass):
 
     june = datetime(2016, 6, 1, tzinfo=dt_util.UTC)
 
-    print(sun.get_astral_event_date(hass, SUN_EVENT_SUNRISE, datetime(2017, 7, 25)))
-    print(sun.get_astral_event_date(hass, SUN_EVENT_SUNSET, datetime(2017, 7, 25)))
-
-    print(sun.get_astral_event_date(hass, SUN_EVENT_SUNRISE, datetime(2017, 7, 26)))
-    print(sun.get_astral_event_date(hass, SUN_EVENT_SUNSET, datetime(2017, 7, 26)))
-
     assert sun.get_astral_event_next(hass, SUN_EVENT_SUNRISE, june) == datetime(
         2016, 7, 24, 22, 59, 45, 689645, tzinfo=dt_util.UTC
     )

@@ -262,6 +262,7 @@ select = [
     "D",  # docstrings
     "E",  # pycodestyle
     "F",  # pyflakes/autoflake
+    "T20",  # flake8-print
     "W",  # pycodestyle
     "UP",  # pyupgrade
     "PGH004",  # Use specific rule codes when using noqa
@@ -277,6 +278,11 @@ select = [
 "homeassistant/components/light/__init__.py" = ["C901"]
 "homeassistant/components/mqtt/discovery.py" = ["C901"]
 "homeassistant/components/websocket_api/http.py" = ["C901"]
+
+# Allow for main entry & scripts to write to stdout
+"homeassistant/__main__.py" = ["T201"]
+"homeassistant/scripts/*" = ["T201"]
+"script/*" = ["T20"]
 
 [tool.ruff.mccabe]
 max-complexity = 25
