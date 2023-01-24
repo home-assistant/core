@@ -453,7 +453,6 @@
         }
       },
       "language": {
-        "name": "Language",
         "state": {
           "chinese_simplified": "Chinese Simplified",
           "english": "English",
@@ -470,7 +469,6 @@
         }
       },
       "lock_alarm_volume": {
-        "name": "Alert volume",
         "state": {
           "mute": "Mute",
           "low": "Low",
@@ -479,33 +477,13 @@
         }
       },
       "lock_basic_nightvision": {
-        "name": "Infrared (IR) night vision",
         "state": {
           "0": "Level 1",
           "1": "Level 2",
           "2": "Level 3"
         }
       },
-      "lock_voice_volume": {
-        "name": "Local voice volume",
-        "state": {
-          "mute": "Mute",
-          "low": "Low",
-          "normal": "Normal",
-          "high": "High"
-        }
-      },
       "lock_doorbell_volume": {
-        "name": "Doorbell volume",
-        "state": {
-          "mute": "Mute",
-          "low": "Low",
-          "normal": "Normal",
-          "high": "High"
-        }
-      },
-      "lock_keypress_volume": {
-        "name": "Volume on keypress",
         "state": {
           "mute": "Mute",
           "low": "Low",
@@ -514,7 +492,6 @@
         }
       },
       "lock_door_unclosed_trigger": {
-        "name": "Trigger time of unclosed",
         "state": {
           "5s": "5 seconds",
           "10s": "10 seconds",
@@ -524,7 +501,6 @@
         }
       },
       "lock_doorbell_song": {
-        "name": "Doorbell ringtone",
         "state": {
           "ding_0": "Song 1",
           "ding_1": "Song 2",
@@ -539,14 +515,12 @@
         }
       },
       "lock_motor_direction": {
-        "name": "Rotation direction of motor",
         "state": {
           "clockwise": "Clockwise",
           "anti_clockwise": "Anti Clockwise"
         }
       },
       "lock_low_power_threshold": {
-        "name": "Low battery alert",
         "state": {
           "5_percent": "5%",
           "10_percent": "10%",
@@ -555,7 +529,6 @@
         }
       },
       "lock_motor_torque": {
-        "name": "Torque force of motor",
         "state": {
           "torque_low": "Low",
           "torque_middle": "Middle",
@@ -563,7 +536,6 @@
         }
       },
       "lock_open_speed_state": {
-        "name": "Unlocking speed",
         "state": {
           "low": "Low",
           "middle": "Middle",
@@ -571,7 +543,6 @@
         }
       },
       "lock_photo_mode": {
-        "name": "Photo mode",
         "state": {
           "close": "Close",
           "power_save": "Power Save",
@@ -580,7 +551,6 @@
         }
       },
       "lock_ringtone": {
-        "name": "Local ringtone",
         "state": {
           "sound_1": "Sound 1",
           "sound_2": "Sound 2",
@@ -591,7 +561,6 @@
         }
       },
       "lock_sound_mode": {
-        "name": "Sound mode",
         "state": {
           "ringtone_0": "Ringtone 1",
           "ringtone_1": "Ringtone 2",
@@ -602,7 +571,6 @@
         }
       },
       "lock_stay_alarm_mode": {
-        "name": "Loitering alert mode",
         "state": {
           "close": "Close",
           "normal": "Normal",
@@ -611,14 +579,12 @@
         }
       },
       "lock_stay_capture_mode": {
-        "name": "Loitering photo capture mode",
         "state": {
           "mode_1": "Mode 1",
           "mode_2": "Mode 2"
         }
       },
       "lock_stay_trigger_distance": {
-        "name": "Loitering sensing range",
         "state": {
           "away_from": "Away From",
           "close_to": "Close To",
@@ -626,7 +592,6 @@
         }
       },
       "lock_unlock_switch": {
-        "name": "Unlock mode",
         "state": {
           "combination": "Combination",
           "single_unlock": "Single Unlock",
@@ -817,7 +782,6 @@
         }
       },
       "lock_alarm": {
-        "name": "Last alert",
         "state": {
           "wrong_finger": "Wrong Finger",
           "wrong_password": "Wrong Passwod",
@@ -836,333 +800,22 @@
         }
       },
       "lock_status": {
-        "name": "Door",
         "state": {
           "open": "[%key:common::state::unlocked%]",
           "closed": "[%key:common::state::locked%]"
         }
       },
       "lock_antilock": {
-        "name": "Double locking status",
         "state": {
           "unlocked": "Unlocked",
           "anti_locked": "Anti locked"
         }
       },
       "lock_insurance": {
-        "name": "Latching status",
         "state": {
           "uninsured_lock": "Uninsured Lock",
           "insured_lock": "Insured Lock"
         }
-      },
-      "lock_last_fingerprint": {
-        "name": "Last ID fingerprint"
-      },
-      "lock_last_password": {
-        "name": "Last ID password"
-      },
-      "lock_last_temporary_password": {
-        "name": "Last ID temporary password"
-      },
-      "lock_last_dynamic_password": {
-        "name": "Last ID dynamic password"
-      },
-      "lock_last_card": {
-        "name": "Last ID card"
-      },
-      "lock_last_identity_card": {
-        "name": "Last ID identity card"
-      },
-      "lock_last_face_recognition": {
-        "name": "Last ID face recognition"
-      },
-      "lock_last_mechanical_key": {
-        "name": "Last ID mechanical key"
-      },
-      "lock_last_iris": {
-        "name": "Last ID iris"
-      },
-      "lock_last_palm_print": {
-        "name": "Last ID palm print"
-      },
-      "lock_last_finger_vein": {
-        "name": "Last ID finger vein"
-      },
-      "lock_last_bluetooth": {
-        "name": "Last ID bluetoot"
-      },
-      "lock_last_remote": {
-        "name": "Last ID remote"
-      },
-      "lock_last_mobile_phone": {
-        "name": "Last ID mobile phone"
-      },
-      "lock_last_voice": {
-        "name": "Last ID voice (remote)"
-      },
-      "lock_last_app": {
-        "name": "Last ID app (remote)"
-      },
-      "lock_last_access_control_system": {
-        "name": "Last ID access control system"
-      },
-      "lock_last_emergency_password": {
-        "name": "Last ID emergency password"
-      },
-      "lock_last_administrator": {
-        "name": "Last ID administrator"
-      },
-      "lock_last_housekeeper": {
-        "name": "Last ID housekeeper"
-      }
-    },
-    "switch": {
-      "start": {
-        "name": "Start"
-      },
-      "heat_preservation": {
-        "name": "Heat preservation"
-      },
-      "disinfection": {
-        "name": "Disinfection"
-      },
-      "water": {
-        "name": "Water"
-      },
-      "slow_feed": {
-        "name": "Slow feed"
-      },
-      "filter_reset": {
-        "name": "Filter reset"
-      },
-      "water_pump_reset": {
-        "name": "Water pump reset"
-      },
-      "power": {
-        "name": "Power"
-      },
-      "reset_of_water_usage_days": {
-        "name": "Reset of water usage days"
-      },
-      "uv_sterilization": {
-        "name": "UV sterilization"
-      },
-      "plug": {
-        "name": "Plug"
-      },
-      "child_lock": {
-        "name": "Child lock"
-      },
-      "switch": {
-        "name": "Switch"
-      },
-      "socket": {
-        "name": "Socket"
-      },
-      "radio": {
-        "name": "Radio"
-      },
-      "alarm_1": {
-        "name": "Alarm 1"
-      },
-      "alarm_2": {
-        "name": "Alarm 2"
-      },
-      "alarm_3": {
-        "name": "Alarm 3"
-      },
-      "alarm_4": {
-        "name": "Alarm 4"
-      },
-      "sleep_aid": {
-        "name": "Sleep aid"
-      },
-      "switch_1": {
-        "name": "Switch 1"
-      },
-      "switch_2": {
-        "name": "Switch 2"
-      },
-      "switch_3": {
-        "name": "Switch 3"
-      },
-      "switch_4": {
-        "name": "Switch 4"
-      },
-      "switch_5": {
-        "name": "Switch 5"
-      },
-      "switch_6": {
-        "name": "Switch 6"
-      },
-      "switch_7": {
-        "name": "Switch 7"
-      },
-      "switch_8": {
-        "name": "Switch 8"
-      },
-      "usb_1": {
-        "name": "USB 1"
-      },
-      "usb_2": {
-        "name": "USB 2"
-      },
-      "usb_3": {
-        "name": "USB 3"
-      },
-      "usb_4": {
-        "name": "USB 4"
-      },
-      "usb_5": {
-        "name": "USB 5"
-      },
-      "usb_6": {
-        "name": "USB 6"
-      },
-      "socket_1": {
-        "name": "Socket 1"
-      },
-      "socket_2": {
-        "name": "Socket 2"
-      },
-      "socket_3": {
-        "name": "Socket 3"
-      },
-      "socket_4": {
-        "name": "Socket 4"
-      },
-      "socket_5": {
-        "name": "Socket 5"
-      },
-      "socket_6": {
-        "name": "Socket 6"
-      },
-      "ionizer": {
-        "name": "Ionizer"
-      },
-      "filter_cartridge_reset": {
-        "name": "Filter cartridge reset"
-      },
-      "humidification": {
-        "name": "Humidification"
-      },
-      "do_not_disturb": {
-        "name": "Do not disturb"
-      },
-      "mute_voice": {
-        "name": "Mute voice"
-      },
-      "mute": {
-        "name": "Mute"
-      },
-      "battery_lock": {
-        "name": "Battery lock"
-      },
-      "cry_detection": {
-        "name": "Cry detection"
-      },
-      "sound_detection": {
-        "name": "Sound detection"
-      },
-      "video_recording": {
-        "name": "Video recording"
-      },
-      "motion_recording": {
-        "name": "Motion recording"
-      },
-      "privacy_mode": {
-        "name": "Privacy mode"
-      },
-      "flip": {
-        "name": "Flip"
-      },
-      "time_watermark": {
-        "name": "Time watermark"
-      },
-      "wide_dynamic_range": {
-        "name": "Wide dynamic range"
-      },
-      "motion_tracking": {
-        "name": "Motion tracking"
-      },
-      "motion_alarm": {
-        "name": "Motion alarm"
-      },
-      "energy_saving": {
-        "name": "Energy saving"
-      },
-      "open_window_detection": {
-        "name": "Open window detection"
-      },
-      "spray": {
-        "name": "Spray"
-      },
-      "voice": {
-        "name": "Voice"
-      },
-      "anion": {
-        "name": "Anion"
-      },
-      "oxygen_bar": {
-        "name": "Oxygen bar"
-      },
-      "natural_wind": {
-        "name": "Natural wind"
-      },
-      "sound": {
-        "name": "Sound"
-      },
-      "reverse": {
-        "name": "Reverse"
-      },
-      "sleep": {
-        "name": "Sleep"
-      },
-      "sterilization": {
-        "name": "Sterilization"
-      },
-      "lock_auto": {
-        "name": "Auto-lock"
-      },
-      "lock_arming": {
-        "name": "Arming"
-      },
-      "lock_hibernation": {
-        "name": "Hibernation"
-      },
-      "lock_verification_free": {
-        "name": "Verification-free"
-      },
-      "lock_double_locking_limit": {
-        "name": "Double locking limit"
-      },
-      "disconnection_alert": {
-        "name": "Disconnection alert"
-      },
-      "lock_function": {
-        "name": "Lock function"
-      },
-      "lock_mandatory_double": {
-        "name": "Mandatory double locking"
-      },
-      "lock_phone_call": {
-        "name": "Phone call"
-      },
-      "lock_normally_open": {
-        "name": "Normally open"
-      },
-      "lock_special_control": {
-        "name": "Special control"
-      },
-      "lock_wakeup": {
-        "name": "Wake-up status"
-      },
-      "lock_password_free_feedback": {
-        "name": "Password-free unlocking feedback"
-      },
-      "lock_unlock_secret_key": {
-        "name": "Unlock with special secret key"
       }
     }
   },
