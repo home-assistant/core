@@ -247,7 +247,6 @@ ignore = [
     "D203",  # 1 blank line required before class docstring
     "D212",  # Multi-line docstring summary should start at the first line
     "D213",  # Multi-line docstring summary should start at the second line
-    "D401",  # TODO: Enable when https://github.com/charliermarsh/ruff/pull/2071 is released
     "D404",  # First word of the docstring should not be This
     "D406",  # Section name should end with a newline
     "D407",  # Section name underlining
