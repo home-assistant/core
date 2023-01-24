@@ -63,6 +63,7 @@ SENSOR_DESCRIPTIONS = {
     "reading_quality": SensorEntityDescription(
         key="reading_quality",
         entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=PERCENTAGE,
     ),
     "temperature": SensorEntityDescription(
         key="temperature",
