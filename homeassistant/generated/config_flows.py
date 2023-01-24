@@ -359,6 +359,7 @@ FLOWS = {
         "ruckus_unleashed",
         "ruuvi_gateway",
         "ruuvitag_ble",
+        "rympro",
         "sabnzbd",
         "samsungtv",
         "scrape",
