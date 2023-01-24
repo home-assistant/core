@@ -31,7 +31,7 @@ async def test_sensors_bad_signal(hass):
     assert len(hass.states.async_all("sensor")) == 0
     inject_bluetooth_service_info(hass, PRO_SERVICE_INFO)
     await hass.async_block_till_done()
-    assert len(hass.states.async_all("sensor")) == 6
+    assert len(hass.states.async_all("sensor")) == 4
 
     temp_sensor = hass.states.get("sensor.pro_plus_eeff_temperature")
     temp_sensor_attrs = temp_sensor.attributes
@@ -65,7 +65,7 @@ async def test_sensors_good_signal(hass):
     assert len(hass.states.async_all("sensor")) == 0
     inject_bluetooth_service_info(hass, PRO_GOOD_SIGNAL_SERVICE_INFO)
     await hass.async_block_till_done()
-    assert len(hass.states.async_all("sensor")) == 6
+    assert len(hass.states.async_all("sensor")) == 4
 
     temp_sensor = hass.states.get("sensor.pro_plus_eeff_temperature")
     temp_sensor_attrs = temp_sensor.attributes
