@@ -585,10 +585,16 @@ class SensorEntity(Entity):
                     numerical_value = int(value)
                 else:
                     numerical_value = float(value)  # type:ignore[arg-type]
-            except (TypeError, ValueError):
+            except (TypeError, ValueError) as err:
                 # Raise if precision is not None, for other cases log a warning
                 if precision is not None:
-                    raise
+                    raise ValueError(
+                        f"Sensor {self.entity_id} has device class {device_class}, "
+                        f"state class {state_class} unit {unit_of_measurement} and "
+                        f"precision {precision} thus indicating it has a numeric value;"
+                        f" however, it has the non-numeric value: {value} "
+                        f"({type(value)})"
+                    ) from err
                 # This should raise in Home Assistant Core 2023.4
                 self._invalid_numeric_value_reported = True
                 report_issue = self._suggest_report_issue()
