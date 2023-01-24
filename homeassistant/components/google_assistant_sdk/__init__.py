@@ -38,7 +38,7 @@ SERVICE_SEND_TEXT_COMMAND_FIELD_MEDIA_PLAYER = "media_player"
 SERVICE_SEND_TEXT_COMMAND_SCHEMA = vol.All(
     {
         vol.Required(SERVICE_SEND_TEXT_COMMAND_FIELD_COMMAND): vol.All(
-            str, vol.Length(min=1)
+            cv.ensure_list, [vol.All(str, vol.Length(min=1))]
         ),
         vol.Optional(SERVICE_SEND_TEXT_COMMAND_FIELD_MEDIA_PLAYER): cv.comp_entity_ids,
     },
@@ -106,11 +106,11 @@ async def async_setup_service(hass: HomeAssistant) -> None:
 
     async def send_text_command(call: ServiceCall) -> None:
         """Send a text command to Google Assistant SDK."""
-        command: str = call.data[SERVICE_SEND_TEXT_COMMAND_FIELD_COMMAND]
+        commands: list[str] = call.data[SERVICE_SEND_TEXT_COMMAND_FIELD_COMMAND]
         media_players: list[str] | None = call.data.get(
             SERVICE_SEND_TEXT_COMMAND_FIELD_MEDIA_PLAYER
         )
-        await async_send_text_commands(hass, [command], media_players)
+        await async_send_text_commands(hass, commands, media_players)
 
     hass.services.async_register(
         DOMAIN,
