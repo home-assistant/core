@@ -1,7 +1,11 @@
 """Sensor for myUplink."""
 from myuplink.models import DevicePoint
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
@@ -23,7 +27,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the myUplink sensor."""
+    """Set up myUplink sensor."""
 
     entities: list[MyUplinkSensor] = []
 
@@ -34,7 +38,7 @@ async def async_setup_entry(
     mu_devices = coordinator.data[MU_DATAGROUP_DEVICES]
 
     for device_id in mu_devices:
-        entities.append(
+        entities += [
             MyUplinkSensor(
                 coordinator=coordinator,
                 data_group=MU_DATAGROUP_DEVICES,
@@ -43,9 +47,7 @@ async def async_setup_entry(
                 name="Firmware Current",
                 u_id="firmware_current",
                 diag=True,
-            )
-        )
-        entities.append(
+            ),
             MyUplinkSensor(
                 coordinator=coordinator,
                 data_group=MU_DATAGROUP_DEVICES,
@@ -54,9 +56,7 @@ async def async_setup_entry(
                 name="Firmware Desired",
                 u_id="firmware_desired",
                 diag=True,
-            )
-        )
-        entities.append(
+            ),
             MyUplinkSensor(
                 coordinator=coordinator,
                 data_group=MU_DATAGROUP_DEVICES,
@@ -65,8 +65,8 @@ async def async_setup_entry(
                 name="Connection State",
                 u_id="connectionstate",
                 diag=True,
-            )
-        )
+            ),
+        ]
 
     # Setup device point sensors
     mu_device_points = coordinator.data[MU_DATAGROUP_POINTS]
@@ -112,15 +112,15 @@ class MyUplinkSensor(SensorEntity):
         self.mu_data_group = data_group
         self.mu_data_id = data_id
 
-        # Coordinator setup
+        # Coordinator
         self.coordinator = coordinator
-        self.coordinator.async_add_listener(self.async_update_state)
 
         # Basic values
         self._attr_has_entity_name = True
         self._attr_name = name
         self._attr_unique_id = f"{device_id}-{u_id}"
         self._attr_device_info = {"identifiers": {(DOMAIN, device_id)}}
+        self._attr_state_class = SensorStateClass.MEASUREMENT
 
         # Set unit of measurement and device class for device points
         if self.mu_data_group == MU_DATAGROUP_POINTS:
@@ -150,6 +150,10 @@ class MyUplinkSensor(SensorEntity):
             return device_point.value
 
         return data_value
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe for updates from coordinator."""
+        self.coordinator.async_add_listener(self.async_update_state)
 
     def async_update_state(self) -> None:
         """Update state on sensor."""
