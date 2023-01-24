@@ -194,7 +194,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
 
         else:
             brightness = self.device.appliance.status.get(self._brightness_key, {})
-            if not brightness:
+            if not brightness or ATTR_VALUE not in brightness:
                 self._brightness = None
             else:
                 self._brightness = ceil((brightness.get(ATTR_VALUE) - 10) * 255 / 90)
