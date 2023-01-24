@@ -188,6 +188,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
     async def async_update_playing(self) -> None:
         """Update current playing information."""
         playing_info = await self.client.get_playing_info()
+        _LOGGER.debug("fetched braviatv playing_info: %s", playing_info)
         self.media_title = playing_info.get("title")
         self.media_uri = playing_info.get("uri")
         self.media_duration = playing_info.get("durationSec")
