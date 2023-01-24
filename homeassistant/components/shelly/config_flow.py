@@ -21,11 +21,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.selector import (
-    SelectOptionDict,
-    SelectSelector,
-    SelectSelectorConfig,
-)
+from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
 from .const import (
     BLE_MIN_VERSION,
@@ -53,9 +49,9 @@ HOST_SCHEMA: Final = vol.Schema({vol.Required(CONF_HOST): str})
 
 
 BLE_SCANNER_OPTIONS = [
-    SelectOptionDict(value=BLEScannerMode.DISABLED, label="Disabled"),
-    SelectOptionDict(value=BLEScannerMode.ACTIVE, label="Active"),
-    SelectOptionDict(value=BLEScannerMode.PASSIVE, label="Passive"),
+    BLEScannerMode.DISABLED,
+    BLEScannerMode.ACTIVE,
+    BLEScannerMode.PASSIVE,
 ]
 
 INTERNAL_WIFI_AP_IP = "192.168.33.1"
@@ -403,7 +399,10 @@ class OptionsFlowHandler(OptionsFlow):
                             CONF_BLE_SCANNER_MODE, BLEScannerMode.DISABLED
                         ),
                     ): SelectSelector(
-                        SelectSelectorConfig(options=BLE_SCANNER_OPTIONS),
+                        SelectSelectorConfig(
+                            options=BLE_SCANNER_OPTIONS,
+                            translation_key=CONF_BLE_SCANNER_MODE,
+                        ),
                     ),
                 }
             ),
