@@ -254,9 +254,14 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
         self.bridge_id = normalize_bridge_id(discovery_info.config[CONF_SERIAL])
         await self.async_set_unique_id(self.bridge_id)
 
-        self.host = discovery_info.config[CONF_HOST]
-        self.port = discovery_info.config[CONF_PORT]
-        self.api_key = discovery_info.config[CONF_API_KEY]
+        self.host: str = discovery_info.config[CONF_HOST]
+        self.port: int = discovery_info.config[CONF_PORT]
+        self.api_key: str = discovery_info.config[CONF_API_KEY]
+
+        for entry_id in self.hass.data.get(DOMAIN, []):
+            gateway: DeconzGateway = self.hass.data[DOMAIN][entry_id]
+            if gateway.bridgeid == self.bridge_id and gateway.available:
+                return self.async_abort(reason="already_configured")
 
         self._abort_if_unique_id_configured(
             updates={

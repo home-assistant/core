@@ -20,6 +20,7 @@ from homeassistant.components.deconz.const import (
     DOMAIN as DECONZ_DOMAIN,
     HASSIO_CONFIGURATION_URL,
 )
+from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
 from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.components.ssdp import ATTR_UPNP_MANUFACTURER_URL, ATTR_UPNP_SERIAL
 from homeassistant.config_entries import (
@@ -579,14 +580,47 @@ async def test_flow_hassio_discovery(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_hassio_discovery_update_configuration(hass, aioclient_mock):
-    """Test we can update an existing config entry."""
+async def test_hassio_discovery_not_update_configuration(hass, aioclient_mock):
+    """Test we can skip update an existing config entry."""
     config_entry = await setup_deconz_integration(hass, aioclient_mock)
 
     with patch(
         "homeassistant.components.deconz.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DECONZ_DOMAIN,
+            data=HassioServiceInfo(
+                config={
+                    CONF_HOST: "2.3.4.5",
+                    CONF_PORT: 8080,
+                    CONF_API_KEY: "updated",
+                    CONF_SERIAL: BRIDGEID,
+                },
+                name="Mock Addon",
+                slug="deconz",
+            ),
+            context={"source": SOURCE_HASSIO},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry.data[CONF_HOST] == "1.2.3.4"
+    assert config_entry.data[CONF_PORT] == 80
+    assert config_entry.data[CONF_API_KEY] == API_KEY
+    assert len(mock_setup_entry.mock_calls) == 0
+
+
+async def test_hassio_discovery_update_configuration(hass, aioclient_mock):
+    """Test we can update an existing config entry."""
+    config_entry = await setup_deconz_integration(hass, aioclient_mock)
+    gateway = get_gateway_from_config_entry(hass, config_entry)
+
+    with patch(
+        "homeassistant.components.deconz.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry, patch.object(gateway, "available", False):
         result = await hass.config_entries.flow.async_init(
             DECONZ_DOMAIN,
             data=HassioServiceInfo(
