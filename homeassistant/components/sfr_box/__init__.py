@@ -13,7 +13,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.httpx_client import get_async_client
 
-from .const import DOMAIN, PLATFORMS
+from .const import DOMAIN, PLATFORMS, PLATFORMS_WITH_AUTH
 from .coordinator import SFRDataUpdateCoordinator
 from .models import DomainData
 
@@ -21,6 +21,7 @@ from .models import DomainData
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up SFR box as config entry."""
     box = SFRBox(ip=entry.data[CONF_HOST], client=get_async_client(hass))
+    platforms = PLATFORMS
     if (username := entry.data.get(CONF_USERNAME)) and (
         password := entry.data.get(CONF_PASSWORD)
     ):
@@ -30,8 +31,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             raise ConfigEntryAuthFailed() from err
         except SFRBoxError as err:
             raise ConfigEntryNotReady() from err
+        platforms = PLATFORMS_WITH_AUTH
 
     data = DomainData(
+        box=box,
         dsl=SFRDataUpdateCoordinator(hass, box, "dsl", lambda b: b.dsl_get_info()),
         system=SFRDataUpdateCoordinator(
             hass, box, "system", lambda b: b.system_get_info()
@@ -56,7 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         configuration_url=f"http://{entry.data[CONF_HOST]}",
     )
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, platforms)
 
     return True
 
