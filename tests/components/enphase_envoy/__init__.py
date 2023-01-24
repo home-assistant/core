@@ -1,9 +1,9 @@
 """Tests for the Enphase Envoy integration."""
-import pytest
-from homeassistant.components.enphase_envoy import async_remove_config_entry_device
-from homeassistant.core import HomeAssistant
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.components.enphase_envoy import DOMAIN
+from homeassistant.components.enphase_envoy import async_remove_config_entry_device
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+
 
 @pytest.fixture
 def hass():
