@@ -186,7 +186,7 @@ class Recorder(threading.Thread):
         self.run_history = RunHistory()
 
         self.entity_filter = entity_filter
-        self.exclude_t = exclude_t
+        self.exclude_t = set(exclude_t)
 
         self.schema_version = 0
         self._commits_without_expire = 0

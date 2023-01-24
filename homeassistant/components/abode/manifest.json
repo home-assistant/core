@@ -3,11 +3,11 @@
   "name": "Abode",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/abode",
-  "requirements": ["abodepy==1.2.0"],
+  "requirements": ["jaraco.abode==3.2.1"],
   "codeowners": ["@shred86"],
   "homekit": {
     "models": ["Abode", "Iota"]
   },
   "iot_class": "cloud_push",
-  "loggers": ["abodepy", "lomond"]
+  "loggers": ["jaraco.abode", "lomond"]
 }

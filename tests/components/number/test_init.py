@@ -25,8 +25,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_PLATFORM,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
@@ -443,8 +442,8 @@ async def test_deprecated_methods(
     [
         (
             US_CUSTOMARY_SYSTEM,
-            TEMP_FAHRENHEIT,
-            TEMP_FAHRENHEIT,
+            UnitOfTemperature.FAHRENHEIT,
+            UnitOfTemperature.FAHRENHEIT,
             100,
             100,
             50,
@@ -458,8 +457,8 @@ async def test_deprecated_methods(
         ),
         (
             US_CUSTOMARY_SYSTEM,
-            TEMP_CELSIUS,
-            TEMP_FAHRENHEIT,
+            UnitOfTemperature.CELSIUS,
+            UnitOfTemperature.FAHRENHEIT,
             38,
             100,
             10,
@@ -473,8 +472,8 @@ async def test_deprecated_methods(
         ),
         (
             METRIC_SYSTEM,
-            TEMP_FAHRENHEIT,
-            TEMP_CELSIUS,
+            UnitOfTemperature.FAHRENHEIT,
+            UnitOfTemperature.CELSIUS,
             100,
             38,
             50,
@@ -488,8 +487,8 @@ async def test_deprecated_methods(
         ),
         (
             METRIC_SYSTEM,
-            TEMP_CELSIUS,
-            TEMP_CELSIUS,
+            UnitOfTemperature.CELSIUS,
+            UnitOfTemperature.CELSIUS,
             38,
             38,
             10,
@@ -610,7 +609,7 @@ async def test_restore_number_save_state(
             native_max_value=200.0,
             native_min_value=-10.0,
             native_step=2.0,
-            native_unit_of_measurement=TEMP_FAHRENHEIT,
+            native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
             native_value=123.0,
             device_class=NumberDeviceClass.TEMPERATURE,
         )
@@ -705,25 +704,25 @@ async def test_restore_number_restore_state(
         # Not a supported temperature unit
         (
             NumberDeviceClass.TEMPERATURE,
-            TEMP_CELSIUS,
+            UnitOfTemperature.CELSIUS,
             "my_temperature_unit",
-            TEMP_CELSIUS,
+            UnitOfTemperature.CELSIUS,
             1000,
             1000,
         ),
         (
             NumberDeviceClass.TEMPERATURE,
-            TEMP_CELSIUS,
-            TEMP_FAHRENHEIT,
-            TEMP_FAHRENHEIT,
+            UnitOfTemperature.CELSIUS,
+            UnitOfTemperature.FAHRENHEIT,
+            UnitOfTemperature.FAHRENHEIT,
             37.5,
             99.5,
         ),
         (
             NumberDeviceClass.TEMPERATURE,
-            TEMP_FAHRENHEIT,
-            TEMP_CELSIUS,
-            TEMP_CELSIUS,
+            UnitOfTemperature.FAHRENHEIT,
+            UnitOfTemperature.CELSIUS,
+            UnitOfTemperature.CELSIUS,
             100,
             38.0,
         ),
@@ -773,25 +772,33 @@ async def test_custom_unit(
     "native_unit, custom_unit, used_custom_unit, default_unit, native_value, custom_value, default_value",
     [
         (
-            TEMP_CELSIUS,
-            TEMP_FAHRENHEIT,
-            TEMP_FAHRENHEIT,
-            TEMP_CELSIUS,
+            UnitOfTemperature.CELSIUS,
+            UnitOfTemperature.FAHRENHEIT,
+            UnitOfTemperature.FAHRENHEIT,
+            UnitOfTemperature.CELSIUS,
             37.5,
             99.5,
             37.5,
         ),
         (
-            TEMP_FAHRENHEIT,
-            TEMP_FAHRENHEIT,
-            TEMP_FAHRENHEIT,
-            TEMP_CELSIUS,
+            UnitOfTemperature.FAHRENHEIT,
+            UnitOfTemperature.FAHRENHEIT,
+            UnitOfTemperature.FAHRENHEIT,
+            UnitOfTemperature.CELSIUS,
             100,
             100,
             38.0,
         ),
         # Not a supported temperature unit
-        (TEMP_CELSIUS, "no_unit", TEMP_CELSIUS, TEMP_CELSIUS, 1000, 1000, 1000),
+        (
+            UnitOfTemperature.CELSIUS,
+            "no_unit",
+            UnitOfTemperature.CELSIUS,
+            UnitOfTemperature.CELSIUS,
+            1000,
+            1000,
+            1000,
+        ),
     ],
 )
 async def test_custom_unit_change(

@@ -10,7 +10,7 @@
         "flow_title": "MusicCast: {name}",
         "step": {
             "confirm": {
-                "description": "Kuruluma ba\u015flamak ister misiniz?"
+                "description": "Kurulumu ba\u015flatmak istiyor musunuz?"
             },
             "user": {
                 "data": {
@@ -58,13 +58,9 @@
             },
             "zone_sleep": {
                 "state": {
-                    "120 min": "120 Dakika",
                     "120_min": "120 Dakika",
-                    "30 min": "30 Dakika",
                     "30_min": "30 Dakika",
-                    "60 min": "60 Dakika",
                     "60_min": "60 Dakika",
-                    "90 min": "90 Dakika",
                     "90_min": "90 Dakika",
                     "off": "Kapal\u0131"
                 }

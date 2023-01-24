@@ -6,7 +6,9 @@ import pytest
 from reolink_aio.exceptions import ApiError, CredentialsInvalidError, ReolinkError
 
 from homeassistant import config_entries, data_entry_flow
+from homeassistant.components import dhcp
 from homeassistant.components.reolink import const
+from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.helpers.device_registry import format_mac
 
@@ -31,7 +33,7 @@ def get_mock_info(error=None, user_level="admin"):
         host_mock.get_host_data = AsyncMock(return_value=None)
     else:
         host_mock.get_host_data = AsyncMock(side_effect=error)
-    host_mock.unsubscribe_all = AsyncMock(return_value=True)
+    host_mock.unsubscribe = AsyncMock(return_value=True)
     host_mock.logout = AsyncMock(return_value=True)
     host_mock.mac_address = TEST_MAC
     host_mock.onvif_enabled = True
@@ -85,7 +87,7 @@ async def test_config_flow_manual_success(hass):
         const.CONF_USE_HTTPS: TEST_USE_HTTPS,
     }
     assert result["options"] == {
-        const.CONF_PROTOCOL: const.DEFAULT_PROTOCOL,
+        const.CONF_PROTOCOL: DEFAULT_PROTOCOL,
     }
 
 
@@ -195,7 +197,7 @@ async def test_config_flow_errors(hass):
         const.CONF_USE_HTTPS: TEST_USE_HTTPS,
     }
     assert result["options"] == {
-        const.CONF_PROTOCOL: const.DEFAULT_PROTOCOL,
+        const.CONF_PROTOCOL: DEFAULT_PROTOCOL,
     }
 
 
@@ -250,7 +252,7 @@ async def test_change_connection_settings(hass):
             const.CONF_USE_HTTPS: TEST_USE_HTTPS,
         },
         options={
-            const.CONF_PROTOCOL: const.DEFAULT_PROTOCOL,
+            const.CONF_PROTOCOL: DEFAULT_PROTOCOL,
         },
         title=TEST_NVR_NAME,
     )
@@ -293,7 +295,7 @@ async def test_reauth(hass):
             const.CONF_USE_HTTPS: TEST_USE_HTTPS,
         },
         options={
-            const.CONF_PROTOCOL: const.DEFAULT_PROTOCOL,
+            const.CONF_PROTOCOL: DEFAULT_PROTOCOL,
         },
         title=TEST_NVR_NAME,
     )
@@ -313,7 +315,7 @@ async def test_reauth(hass):
         data=config_entry.data,
     )
 
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(
@@ -321,21 +323,94 @@ async def test_reauth(hass):
         {},
     )
 
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_HOST: TEST_HOST2,
             CONF_USERNAME: TEST_USERNAME2,
             CONF_PASSWORD: TEST_PASSWORD2,
         },
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
-    assert config_entry.data[CONF_HOST] == TEST_HOST2
+    assert config_entry.data[CONF_HOST] == TEST_HOST
     assert config_entry.data[CONF_USERNAME] == TEST_USERNAME2
     assert config_entry.data[CONF_PASSWORD] == TEST_PASSWORD2
+
+
+async def test_dhcp_flow(hass):
+    """Successful flow from DHCP discovery."""
+    dhcp_data = dhcp.DhcpServiceInfo(
+        ip=TEST_HOST,
+        hostname="Reolink",
+        macaddress=TEST_MAC,
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=dhcp_data
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+        },
+    )
+
+    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["title"] == TEST_NVR_NAME
+    assert result["data"] == {
+        CONF_HOST: TEST_HOST,
+        CONF_USERNAME: TEST_USERNAME,
+        CONF_PASSWORD: TEST_PASSWORD,
+        CONF_PORT: TEST_PORT,
+        const.CONF_USE_HTTPS: TEST_USE_HTTPS,
+    }
+    assert result["options"] == {
+        const.CONF_PROTOCOL: DEFAULT_PROTOCOL,
+    }
+
+
+async def test_dhcp_abort_flow(hass):
+    """Test dhcp discovery aborts if already configured."""
+    config_entry = MockConfigEntry(
+        domain=const.DOMAIN,
+        unique_id=format_mac(TEST_MAC),
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_PORT: TEST_PORT,
+            const.CONF_USE_HTTPS: TEST_USE_HTTPS,
+        },
+        options={
+            const.CONF_PROTOCOL: DEFAULT_PROTOCOL,
+        },
+        title=TEST_NVR_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    dhcp_data = dhcp.DhcpServiceInfo(
+        ip=TEST_HOST,
+        hostname="Reolink",
+        macaddress=TEST_MAC,
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=dhcp_data
+    )
+
+    assert result["type"] is data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "already_configured"

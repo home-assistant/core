@@ -16,7 +16,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 from .agent import AbstractConversationAgent, ConversationResult
-from .default_agent import DefaultAgent, async_register
+from .default_agent import DefaultAgent
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,14 +30,25 @@ DATA_AGENT = "conversation_agent"
 DATA_CONFIG = "conversation_config"
 
 SERVICE_PROCESS = "process"
+SERVICE_RELOAD = "reload"
 
 SERVICE_PROCESS_SCHEMA = vol.Schema(
-    {vol.Required(ATTR_TEXT): cv.string, vol.Optional(ATTR_LANGUAGE): cv.string}
+    {
+        vol.Required(ATTR_TEXT): cv.string,
+        vol.Optional(ATTR_LANGUAGE): cv.string,
+    }
+)
+
+
+SERVICE_RELOAD_SCHEMA = vol.Schema(
+    {
+        vol.Optional(ATTR_LANGUAGE): cv.string,
+    }
 )
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
+        vol.Optional(DOMAIN): vol.Schema(
             {
                 vol.Optional("intents"): vol.Schema(
                     {cv.string: vol.All(cv.ensure_list, [cv.string])}
@@ -47,8 +58,6 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
-
-async_register = bind_hass(async_register)
 
 
 @core.callback
@@ -60,9 +69,10 @@ def async_set_agent(hass: core.HomeAssistant, agent: AbstractConversationAgent |
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Register the process service."""
-    hass.data[DATA_CONFIG] = config
+    if config_intents := config.get(DOMAIN, {}).get("intents"):
+        hass.data[DATA_CONFIG] = config_intents
 
-    async def handle_service(service: core.ServiceCall) -> None:
+    async def handle_process(service: core.ServiceCall) -> None:
         """Parse text into commands."""
         text = service.data[ATTR_TEXT]
         _LOGGER.debug("Processing: <%s>", text)
@@ -74,11 +84,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         except intent.IntentHandleError as err:
             _LOGGER.error("Error processing %s: %s", text, err)
 
+    async def handle_reload(service: core.ServiceCall) -> None:
+        """Reload intents."""
+        agent = await _get_agent(hass)
+        await agent.async_reload(language=service.data.get(ATTR_LANGUAGE))
+
     hass.services.async_register(
-        DOMAIN, SERVICE_PROCESS, handle_service, schema=SERVICE_PROCESS_SCHEMA
+        DOMAIN, SERVICE_PROCESS, handle_process, schema=SERVICE_PROCESS_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, SERVICE_RELOAD, handle_reload, schema=SERVICE_RELOAD_SCHEMA
     )
     hass.http.register_view(ConversationProcessView())
     websocket_api.async_register_command(hass, websocket_process)
+    websocket_api.async_register_command(hass, websocket_prepare)
     websocket_api.async_register_command(hass, websocket_get_agent_info)
     websocket_api.async_register_command(hass, websocket_set_onboarding)
 
@@ -87,8 +106,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 @websocket_api.websocket_command(
     {
-        "type": "conversation/process",
-        "text": str,
+        vol.Required("type"): "conversation/process",
+        vol.Required("text"): str,
         vol.Optional("conversation_id"): vol.Any(str, None),
         vol.Optional("language"): str,
     }
@@ -100,7 +119,7 @@ async def websocket_process(
     msg: dict[str, Any],
 ) -> None:
     """Process text."""
-    result = await _async_converse(
+    result = await async_converse(
         hass,
         msg["text"],
         msg.get("conversation_id"),
@@ -110,7 +129,29 @@ async def websocket_process(
     connection.send_result(msg["id"], result.as_dict())
 
 
-@websocket_api.websocket_command({"type": "conversation/agent/info"})
+@websocket_api.websocket_command(
+    {
+        "type": "conversation/prepare",
+        vol.Optional("language"): str,
+    }
+)
+@websocket_api.async_response
+async def websocket_prepare(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Reload intents."""
+    agent = await _get_agent(hass)
+    await agent.async_prepare(msg.get("language"))
+    connection.send_result(msg["id"])
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "conversation/agent/info",
+    }
+)
 @websocket_api.async_response
 async def websocket_get_agent_info(
     hass: HomeAssistant,
@@ -129,7 +170,12 @@ async def websocket_get_agent_info(
     )
 
 
-@websocket_api.websocket_command({"type": "conversation/onboarding/set", "shown": bool})
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "conversation/onboarding/set",
+        vol.Required("shown"): bool,
+    }
+)
 @websocket_api.async_response
 async def websocket_set_onboarding(
     hass: HomeAssistant,
@@ -165,7 +211,7 @@ class ConversationProcessView(http.HomeAssistantView):
     async def post(self, request, data):
         """Send a request for processing."""
         hass = request.app["hass"]
-        result = await _async_converse(
+        result = await async_converse(
             hass,
             text=data["text"],
             conversation_id=data.get("conversation_id"),
@@ -184,7 +230,7 @@ async def _get_agent(hass: core.HomeAssistant) -> AbstractConversationAgent:
     return agent
 
 
-async def _async_converse(
+async def async_converse(
     hass: core.HomeAssistant,
     text: str,
     conversation_id: str | None,
@@ -196,44 +242,5 @@ async def _async_converse(
     if language is None:
         language = hass.config.language
 
-    result: ConversationResult | None = None
-    intent_response: intent.IntentResponse | None = None
-
-    try:
-        result = await agent.async_process(text, context, conversation_id, language)
-    except intent.IntentHandleError as err:
-        # Match was successful, but target(s) were invalid
-        intent_response = intent.IntentResponse(language=language)
-        intent_response.async_set_error(
-            intent.IntentResponseErrorCode.NO_VALID_TARGETS,
-            str(err),
-        )
-    except intent.IntentUnexpectedError as err:
-        # Match was successful, but an error occurred while handling intent
-        intent_response = intent.IntentResponse(language=language)
-        intent_response.async_set_error(
-            intent.IntentResponseErrorCode.FAILED_TO_HANDLE,
-            str(err),
-        )
-    except intent.IntentError as err:
-        # Unknown error
-        intent_response = intent.IntentResponse(language=language)
-        intent_response.async_set_error(
-            intent.IntentResponseErrorCode.UNKNOWN,
-            str(err),
-        )
-
-    if result is None:
-        if intent_response is None:
-            # Match was not successful
-            intent_response = intent.IntentResponse(language=language)
-            intent_response.async_set_error(
-                intent.IntentResponseErrorCode.NO_INTENT_MATCH,
-                "Sorry, I didn't understand that",
-            )
-
-        result = ConversationResult(
-            response=intent_response, conversation_id=conversation_id
-        )
-
+    result = await agent.async_process(text, context, conversation_id, language)
     return result

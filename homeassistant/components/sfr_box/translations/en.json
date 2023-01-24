@@ -1,17 +1,32 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured"
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful"
         },
         "error": {
             "cannot_connect": "Failed to connect",
-            "unknown": "Unexpected error"
+            "invalid_auth": "Invalid authentication"
         },
         "step": {
+            "auth": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                }
+            },
+            "choose_auth": {
+                "description": "Setting credentials enables additional functionality.",
+                "menu_options": {
+                    "auth": "Set credentials (recommended)",
+                    "skip_auth": "Skip authentication"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Host"
-                }
+                },
+                "description": "Setting the credentials is optional, but enables additional functionality."
             }
         }
     },

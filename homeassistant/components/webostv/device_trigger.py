@@ -16,7 +16,7 @@ from homeassistant.helpers.typing import ConfigType
 from . import trigger
 from .const import DOMAIN
 from .helpers import (
-    async_get_client_wrapper_by_device_entry,
+    async_get_client_by_device_entry,
     async_get_device_entry_by_device_id,
 )
 from .triggers.turn_on import (
@@ -43,7 +43,7 @@ async def async_validate_trigger_config(
         try:
             device = async_get_device_entry_by_device_id(hass, device_id)
             if DOMAIN in hass.data:
-                async_get_client_wrapper_by_device_entry(hass, device)
+                async_get_client_by_device_entry(hass, device)
         except ValueError as err:
             raise InvalidDeviceAutomationConfig(err) from err
 

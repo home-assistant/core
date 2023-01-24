@@ -364,6 +364,11 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         return self._player.title
 
     @property
+    def media_channel(self):
+        """Channel (e.g. webradio name) of current playing media."""
+        return self._player.remote_title
+
+    @property
     def media_artist(self):
         """Artist of current playing media."""
         return self._player.artist

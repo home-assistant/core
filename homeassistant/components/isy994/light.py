@@ -146,4 +146,16 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
 
     async def async_set_ramp_rate(self, value: int) -> None:
         """Set the Ramp Rate for a device."""
+        entity_registry = er.async_get(self.hass)
+        async_log_deprecated_service_call(
+            self.hass,
+            call=ServiceCall(domain=DOMAIN, service=SERVICE_SET_ON_LEVEL),
+            alternate_service="select.select_option",
+            alternate_target=entity_registry.async_get_entity_id(
+                Platform.NUMBER,
+                DOMAIN,
+                f"{self._node.isy.uuid}_{self._node.address}_RR",
+            ),
+            breaks_in_ha_version="2023.5.0",
+        )
         await self._node.set_ramp_rate(value)

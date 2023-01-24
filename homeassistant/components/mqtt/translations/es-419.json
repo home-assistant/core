@@ -46,5 +46,12 @@
             "button_short_release": "\"{subtype}\" soltado",
             "button_triple_press": "\"{subtype}\" pulsado 3 veces"
         }
+    },
+    "selector": {
+        "set_ca_cert": {
+            "options": {
+                "off": "Apagado"
+            }
+        }
     }
 }

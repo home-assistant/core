@@ -4,8 +4,8 @@ from __future__ import annotations
 import contextlib
 from typing import Any, Final
 
-import aioshelly
 from aioshelly.block_device import BlockDevice
+from aioshelly.common import ConnectionOptions
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
 from aioshelly.rpc_device import RpcDevice, UpdateType
 import voluptuous as vol
@@ -14,8 +14,13 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, device_registry
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    async_get as dr_async_get,
+    format_mac,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -116,32 +121,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Shelly block based device from a config entry."""
-    options = aioshelly.common.ConnectionOptions(
+    options = ConnectionOptions(
         entry.data[CONF_HOST],
         entry.data.get(CONF_USERNAME),
         entry.data.get(CONF_PASSWORD),
+        device_mac=entry.unique_id,
     )
 
     coap_context = await get_coap_context(hass)
 
     device = await BlockDevice.create(
-        aiohttp_client.async_get_clientsession(hass),
+        async_get_clientsession(hass),
         coap_context,
         options,
         False,
     )
 
-    dev_reg = device_registry.async_get(hass)
+    dev_reg = dr_async_get(hass)
     device_entry = None
     if entry.unique_id is not None:
         device_entry = dev_reg.async_get_device(
             identifiers=set(),
-            connections={
-                (
-                    device_registry.CONNECTION_NETWORK_MAC,
-                    device_registry.format_mac(entry.unique_id),
-                )
-            },
+            connections={(CONNECTION_NETWORK_MAC, format_mac(entry.unique_id))},
         )
     # https://github.com/home-assistant/core/pull/48076
     if device_entry and entry.entry_id not in device_entry.config_entries:
@@ -205,32 +206,28 @@ async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
 
 async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Shelly RPC based device from a config entry."""
-    options = aioshelly.common.ConnectionOptions(
+    options = ConnectionOptions(
         entry.data[CONF_HOST],
         entry.data.get(CONF_USERNAME),
         entry.data.get(CONF_PASSWORD),
+        device_mac=entry.unique_id,
     )
 
     ws_context = await get_ws_context(hass)
 
     device = await RpcDevice.create(
-        aiohttp_client.async_get_clientsession(hass),
+        async_get_clientsession(hass),
         ws_context,
         options,
         False,
     )
 
-    dev_reg = device_registry.async_get(hass)
+    dev_reg = dr_async_get(hass)
     device_entry = None
     if entry.unique_id is not None:
         device_entry = dev_reg.async_get_device(
             identifiers=set(),
-            connections={
-                (
-                    device_registry.CONNECTION_NETWORK_MAC,
-                    device_registry.format_mac(entry.unique_id),
-                )
-            },
+            connections={(CONNECTION_NETWORK_MAC, format_mac(entry.unique_id))},
         )
     # https://github.com/home-assistant/core/pull/48076
     if device_entry and entry.entry_id not in device_entry.config_entries:

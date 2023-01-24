@@ -2,11 +2,11 @@
     "config": {
         "abort": {
             "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana",
-            "reauth_successful": "Ponowne uwierzytelnianie przebieg\u0142o pomy\u015blnie"
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
-            "invalid_auth": "Nieprawid\u0142owe uwierzytelnienie"
+            "invalid_auth": "Niepoprawne uwierzytelnienie"
         },
         "step": {
             "api_key": {
@@ -18,8 +18,8 @@
                 "data": {
                     "api_key": "Klucz API"
                 },
-                "description": "Podaj nowy klucz api dla PI-Hole spod adresu",
-                "title": "Ponowne uwierzytelnienie integracji PI-Hole"
+                "description": "Wprowad\u017a nowy klucz API PI-Hole dla {host}/{location}",
+                "title": "Ponownie uwierzytelnij integracj\u0119 PI-Hole"
             },
             "user": {
                 "data": {
@@ -29,16 +29,9 @@
                     "name": "Nazwa",
                     "port": "Port",
                     "ssl": "Certyfikat SSL",
-                    "statistics_only": "Tylko statystyki",
                     "verify_ssl": "Weryfikacja certyfikatu SSL"
                 }
             }
-        }
-    },
-    "issues": {
-        "deprecated_yaml": {
-            "description": "Konfiguracja PI-Hole przy u\u017cyciu YAML zostanie usuni\u0119ta. \n\nTwoja istniej\u0105ca konfiguracja YAML zosta\u0142a automatycznie zaimportowana do interfejsu u\u017cytkownika. \n\nUsu\u0144 konfiguracj\u0119 YAML z pliku configuration.yaml i uruchom ponownie Home Assistanta, aby rozwi\u0105za\u0107 ten problem.",
-            "title": "Konfiguracja YAML dla PI-Hole zostanie usuni\u0119ta"
         }
     }
 }

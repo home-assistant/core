@@ -4,7 +4,7 @@ from __future__ import annotations
 import datetime
 from typing import Any
 
-import somecomfort
+import AIOSomecomfort
 
 from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
@@ -26,6 +26,7 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import HoneywellData
 from .const import (
     _LOGGER,
     CONF_COOL_AWAY_TEMPERATURE,
@@ -38,6 +39,9 @@ ATTR_FAN_ACTION = "fan_action"
 ATTR_PERMANENT_HOLD = "permanent_hold"
 
 PRESET_HOLD = "Hold"
+
+HEATING_MODES = {"heat", "emheat", "auto"}
+COOLING_MODES = {"cool", "auto"}
 
 HVAC_MODE_TO_HW_MODE = {
     "SwitchOffAllowed": {HVACMode.OFF: "off"},
@@ -70,7 +74,7 @@ HW_FAN_MODE_TO_HA = {
     "follow schedule": FAN_AUTO,
 }
 
-PARALLEL_UPDATES = 1
+SCAN_INTERVAL = datetime.timedelta(seconds=30)
 
 
 async def async_setup_entry(
@@ -80,7 +84,7 @@ async def async_setup_entry(
     cool_away_temp = entry.options.get(CONF_COOL_AWAY_TEMPERATURE)
     heat_away_temp = entry.options.get(CONF_HEAT_AWAY_TEMPERATURE)
 
-    data = hass.data[DOMAIN][entry.entry_id]
+    data: HoneywellData = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
         [
@@ -93,7 +97,13 @@ async def async_setup_entry(
 class HoneywellUSThermostat(ClimateEntity):
     """Representation of a Honeywell US Thermostat."""
 
-    def __init__(self, data, device, cool_away_temp, heat_away_temp):
+    def __init__(
+        self,
+        data: HoneywellData,
+        device: AIOSomecomfort.device.Device,
+        cool_away_temp: int | None,
+        heat_away_temp: int | None,
+    ) -> None:
         """Initialize the thermostat."""
         self._data = data
         self._device = device
@@ -110,8 +120,13 @@ class HoneywellUSThermostat(ClimateEntity):
         self._attr_is_aux_heat = device.system_mode == "emheat"
 
         # not all honeywell HVACs support all modes
-        mappings = [v for k, v in HVAC_MODE_TO_HW_MODE.items() if device.raw_ui_data[k]]
-        self._hvac_mode_map = {k: v for d in mappings for k, v in d.items()}
+
+        self._hvac_mode_map = {
+            key2: value2
+            for key1, value1 in HVAC_MODE_TO_HW_MODE.items()
+            if device.raw_ui_data[key1]
+            for key2, value2 in value1.items()
+        }
         self._attr_hvac_modes = list(self._hvac_mode_map)
 
         self._attr_supported_features = (
@@ -130,8 +145,12 @@ class HoneywellUSThermostat(ClimateEntity):
             return
 
         # not all honeywell fans support all modes
-        mappings = [v for k, v in FAN_MODE_TO_HW.items() if device.raw_fan_data[k]]
-        self._fan_mode_map = {k: v for d in mappings for k, v in d.items()}
+        self._fan_mode_map = {
+            key2: value2
+            for key1, value1 in FAN_MODE_TO_HW.items()
+            if device.raw_fan_data[key1]
+            for key2, value2 in value1.items()
+        }
 
         self._attr_fan_modes = list(self._fan_mode_map)
 
@@ -180,7 +199,7 @@ class HoneywellUSThermostat(ClimateEntity):
         """Return the current running hvac operation if supported."""
         if self.hvac_mode == HVACMode.OFF:
             return None
-        return HW_MODE_TO_HA_HVAC_ACTION[self._device.equipment_output_status]
+        return HW_MODE_TO_HA_HVAC_ACTION.get(self._device.equipment_output_status)
 
     @property
     def current_temperature(self) -> float | None:
@@ -223,14 +242,14 @@ class HoneywellUSThermostat(ClimateEntity):
     @property
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
-        return HW_FAN_MODE_TO_HA[self._device.fan_mode]
+        return HW_FAN_MODE_TO_HA.get(self._device.fan_mode)
 
     def _is_permanent_hold(self) -> bool:
         heat_status = self._device.raw_ui_data.get("StatusHeat", 0)
         cool_status = self._device.raw_ui_data.get("StatusCool", 0)
         return heat_status == 2 or cool_status == 2
 
-    def _set_temperature(self, **kwargs) -> None:
+    async def _set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
@@ -246,35 +265,43 @@ class HoneywellUSThermostat(ClimateEntity):
                 # Get next period time
                 hour, minute = divmod(next_period * 15, 60)
                 # Set hold time
-                setattr(self._device, f"hold_{mode}", datetime.time(hour, minute))
+                if mode in COOLING_MODES:
+                    await self._device.set_hold_cool(datetime.time(hour, minute))
+                elif mode in HEATING_MODES:
+                    await self._device.set_hold_heat(datetime.time(hour, minute))
+
             # Set temperature
-            setattr(self._device, f"setpoint_{mode}", temperature)
-        except somecomfort.SomeComfortError:
+            if mode in COOLING_MODES:
+                await self._device.set_setpoint_cool(temperature)
+            elif mode in HEATING_MODES:
+                await self._device.set_setpoint_heat(temperature)
+
+        except AIOSomecomfort.SomeComfortError:
             _LOGGER.error("Temperature %.1f out of range", temperature)
 
-    def set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if {HVACMode.COOL, HVACMode.HEAT} & set(self._hvac_mode_map):
-            self._set_temperature(**kwargs)
+            await self._set_temperature(**kwargs)
 
         try:
             if HVACMode.HEAT_COOL in self._hvac_mode_map:
                 if temperature := kwargs.get(ATTR_TARGET_TEMP_HIGH):
-                    self._device.setpoint_cool = temperature
+                    await self._device.set_setpoint_cool(temperature)
                 if temperature := kwargs.get(ATTR_TARGET_TEMP_LOW):
-                    self._device.setpoint_heat = temperature
-        except somecomfort.SomeComfortError as err:
+                    await self._device.set_setpoint_heat(temperature)
+        except AIOSomecomfort.SomeComfortError as err:
             _LOGGER.error("Invalid temperature %s: %s", temperature, err)
 
-    def set_fan_mode(self, fan_mode: str) -> None:
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        self._device.fan_mode = self._fan_mode_map[fan_mode]
+        await self._device.set_fan_mode(self._fan_mode_map[fan_mode])
 
-    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        self._device.system_mode = self._hvac_mode_map[hvac_mode]
+        await self._device.set_system_mode(self._hvac_mode_map[hvac_mode])
 
-    def _turn_away_mode_on(self) -> None:
+    async def _turn_away_mode_on(self) -> None:
         """Turn away on.
 
         Somecomfort does have a proprietary away mode, but it doesn't really
@@ -285,73 +312,95 @@ class HoneywellUSThermostat(ClimateEntity):
         try:
             # Get current mode
             mode = self._device.system_mode
-        except somecomfort.SomeComfortError:
+        except AIOSomecomfort.SomeComfortError:
             _LOGGER.error("Can not get system mode")
             return
         try:
 
             # Set permanent hold
-            setattr(self._device, f"hold_{mode}", True)
-            # Set temperature
-            setattr(
-                self._device,
-                f"setpoint_{mode}",
-                getattr(self, f"_{mode}_away_temp"),
-            )
-        except somecomfort.SomeComfortError:
+            # and Set temperature
+            if mode in COOLING_MODES:
+                await self._device.set_hold_cool(True)
+                await self._device.set_setpoint_cool(self._cool_away_temp)
+            elif mode in HEATING_MODES:
+                await self._device.set_hold_heat(True)
+                await self._device.set_setpoint_heat(self._heat_away_temp)
+
+        except AIOSomecomfort.SomeComfortError:
+
             _LOGGER.error(
-                "Temperature %.1f out of range", getattr(self, f"_{mode}_away_temp")
+                "Temperature out of range. Mode: %s, Heat Temperature:  %.1f, Cool Temperature: %.1f",
+                mode,
+                self._heat_away_temp,
+                self._cool_away_temp,
             )
 
-    def _turn_hold_mode_on(self) -> None:
+    async def _turn_hold_mode_on(self) -> None:
         """Turn permanent hold on."""
         try:
             # Get current mode
             mode = self._device.system_mode
-        except somecomfort.SomeComfortError:
+        except AIOSomecomfort.SomeComfortError:
             _LOGGER.error("Can not get system mode")
             return
         # Check that we got a valid mode back
         if mode in HW_MODE_TO_HVAC_MODE:
             try:
                 # Set permanent hold
-                setattr(self._device, f"hold_{mode}", True)
-            except somecomfort.SomeComfortError:
+                if mode in COOLING_MODES:
+                    await self._device.set_hold_cool(True)
+                elif mode in HEATING_MODES:
+                    await self._device.set_hold_heat(True)
+
+            except AIOSomecomfort.SomeComfortError:
                 _LOGGER.error("Couldn't set permanent hold")
         else:
             _LOGGER.error("Invalid system mode returned: %s", mode)
 
-    def _turn_away_mode_off(self) -> None:
+    async def _turn_away_mode_off(self) -> None:
         """Turn away/hold off."""
         self._away = False
         try:
             # Disabling all hold modes
-            self._device.hold_cool = False
-            self._device.hold_heat = False
-        except somecomfort.SomeComfortError:
+            await self._device.set_hold_cool(False)
+            await self._device.set_hold_heat(False)
+        except AIOSomecomfort.SomeComfortError:
             _LOGGER.error("Can not stop hold mode")
 
-    def set_preset_mode(self, preset_mode: str) -> None:
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         if preset_mode == PRESET_AWAY:
-            self._turn_away_mode_on()
+            await self._turn_away_mode_on()
         elif preset_mode == PRESET_HOLD:
             self._away = False
-            self._turn_hold_mode_on()
+            await self._turn_hold_mode_on()
         else:
-            self._turn_away_mode_off()
+            await self._turn_away_mode_off()
 
-    def turn_aux_heat_on(self) -> None:
+    async def async_turn_aux_heat_on(self) -> None:
         """Turn auxiliary heater on."""
-        self._device.system_mode = "emheat"
+        await self._device.set_system_mode("emheat")
 
-    def turn_aux_heat_off(self) -> None:
+    async def async_turn_aux_heat_off(self) -> None:
         """Turn auxiliary heater off."""
         if HVACMode.HEAT in self.hvac_modes:
-            self.set_hvac_mode(HVACMode.HEAT)
+            await self.async_set_hvac_mode(HVACMode.HEAT)
         else:
-            self.set_hvac_mode(HVACMode.OFF)
+            await self.async_set_hvac_mode(HVACMode.OFF)
 
     async def async_update(self) -> None:
         """Get the latest state from the service."""
-        await self._data.async_update()
+        try:
+            await self._device.refresh()
+        except (
+            AIOSomecomfort.SomeComfortError,
+            OSError,
+        ):
+            try:
+                await self._data.client.login()
+
+            except AIOSomecomfort.SomeComfortError:
+                self._attr_available = False
+                await self.hass.async_create_task(
+                    self.hass.config_entries.async_reload(self._data.entry_id)
+                )

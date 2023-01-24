@@ -38,6 +38,7 @@ from .fmp4utils import read_init
 from .hls import HlsStreamOutput
 
 _LOGGER = logging.getLogger(__name__)
+NEGATIVE_INF = float("-inf")
 
 
 class StreamWorkerError(Exception):
@@ -192,7 +193,7 @@ class StreamMuxer:
                         # of the range, hoping that the parts stay pretty well bounded, and we adjust the part
                         # durations a bit in the hls metadata so that everything "looks" ok.
                         "frag_duration": str(
-                            self._stream_settings.part_target_duration * 9e5
+                            int(self._stream_settings.part_target_duration * 9e5)
                         ),
                     }
                     if self._stream_settings.ll_hls
@@ -416,14 +417,21 @@ class PeekIterator(Iterator):
 class TimestampValidator:
     """Validate ordering of timestamps for packets in a stream."""
 
-    def __init__(self) -> None:
+    def __init__(self, inv_video_time_base: int, inv_audio_time_base: int) -> None:
         """Initialize the TimestampValidator."""
         # Decompression timestamp of last packet in each stream
         self._last_dts: dict[av.stream.Stream, int | float] = defaultdict(
-            lambda: float("-inf")
+            lambda: NEGATIVE_INF
         )
         # Number of consecutive missing decompression timestamps
         self._missing_dts = 0
+        # For the bounds, just use the larger of the two values. If the error is not flagged
+        # by one stream, it should just get flagged by the other stream. Either value should
+        # result in a value which is much less than a 32 bit INT_MAX, which helps avoid the
+        # assertion error from FFmpeg.
+        self._max_dts_gap = MAX_TIMESTAMP_GAP * max(
+            inv_video_time_base, inv_audio_time_base
+        )
 
     def is_valid(self, packet: av.Packet) -> bool:
         """Validate the packet timestamp based on ordering within the stream."""
@@ -438,13 +446,12 @@ class TimestampValidator:
         self._missing_dts = 0
         # Discard when dts is not monotonic. Terminate if gap is too wide.
         prev_dts = self._last_dts[packet.stream]
+        if abs(prev_dts - packet.dts) > self._max_dts_gap and prev_dts != NEGATIVE_INF:
+            raise StreamWorkerError(
+                f"Timestamp discontinuity detected: last dts = {prev_dts}, dts ="
+                f" {packet.dts}"
+            )
         if packet.dts <= prev_dts:
-            gap = packet.time_base * (prev_dts - packet.dts)
-            if gap > MAX_TIMESTAMP_GAP:
-                raise StreamWorkerError(
-                    f"Timestamp overflow detected: last dts = {prev_dts}, dts ="
-                    f" {packet.dts}"
-                )
             return False
         self._last_dts[packet.stream] = packet.dts
         return True
@@ -527,7 +534,10 @@ def stream_worker(
     if audio_stream:
         stream_state.diagnostics.set_value("audio_codec", audio_stream.name)
 
-    dts_validator = TimestampValidator()
+    dts_validator = TimestampValidator(
+        int(1 / video_stream.time_base),
+        1 / audio_stream.time_base if audio_stream else 1,
+    )
     container_packets = PeekIterator(
         filter(dts_validator.is_valid, container.demux((video_stream, audio_stream)))
     )
