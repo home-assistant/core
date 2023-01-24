@@ -4,10 +4,12 @@ from __future__ import annotations
 import asyncio
 
 from sfrbox_api.bridge import SFRBox
+from sfrbox_api.exceptions import SFRBoxAuthenticationError, SFRBoxError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.httpx_client import get_async_client
 
@@ -19,6 +21,16 @@ from .models import DomainData
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up SFR box as config entry."""
     box = SFRBox(ip=entry.data[CONF_HOST], client=get_async_client(hass))
+    if (username := entry.data.get(CONF_USERNAME)) and (
+        password := entry.data.get(CONF_PASSWORD)
+    ):
+        try:
+            await box.authenticate(username=username, password=password)
+        except SFRBoxAuthenticationError as err:
+            raise ConfigEntryAuthFailed() from err
+        except SFRBoxError as err:
+            raise ConfigEntryNotReady() from err
+
     data = DomainData(
         dsl=SFRDataUpdateCoordinator(hass, box, "dsl", lambda b: b.dsl_get_info()),
         system=SFRDataUpdateCoordinator(
