@@ -449,6 +449,119 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             icon="mdi:water-percent",
         ),
     ),
+    # Smart Lock
+    # https://developer.tuya.com/en/docs/iot/f?id=Kb0o2vbzuzl81
+    "ms": (
+        SelectEntityDescription(
+            key=DPCode.ALARM_VOLUME,
+            name="Alert Volume",
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:volume-high",
+        ),
+        SelectEntityDescription(
+            key=DPCode.BASIC_NIGHTVISION,
+            name="Infrared (IR) Night Vision",
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:weather-night",
+        ),
+        SelectEntityDescription(
+            key=DPCode.BEEP_VOLUME,
+            name="Local Voice Volume",
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:volume-high",
+        ),
+        SelectEntityDescription(
+            key=DPCode.DOOR_UNCLOSED_TRIGGER,
+            name="Trigger Time of Unclosed",
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:timer-cog-outline",
+        ),
+        SelectEntityDescription(
+            key=DPCode.DOORBELL_SONG,
+            name="Doorbell Ringtone",
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:music-box-multiple-outline",
+        ),
+        SelectEntityDescription(
+            key=DPCode.DOORBELL_VOLUME,
+            name="Doorbell Volume",
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:volume-high",
+        ),
+        SelectEntityDescription(
+            key=DPCode.KEY_TONE,
+            name="Volume on Keypress",
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:music-box-multiple-outline",
+        ),
+        SelectEntityDescription(
+            key=DPCode.LOCK_MOTOR_DIRECTION,
+            name="Rotation Direction of Motor",
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:swap-horizontal",
+        ),
+        SelectEntityDescription(
+            key=DPCode.LOW_POWER_THRESHOLD,
+            name="Low Battery Alert",
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:battery-alert-variant-outline",
+        ),
+        SelectEntityDescription(
+            key=DPCode.MOTOR_TORQUE,
+            name="Torque Force of Motor",
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:hexagon-multiple-outline",
+        ),
+        SelectEntityDescription(
+            key=DPCode.OPEN_SPEED_STATE,
+            name="Unlocking Speed",
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:speedometer",
+        ),
+        SelectEntityDescription(
+            key=DPCode.PHOTO_MODE,
+            name="Photo Mode",
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:image-multiple-outline",
+        ),
+        SelectEntityDescription(
+            key=DPCode.RINGTONE,
+            name="Local Ringtone",
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:music-box-multiple-outline",
+        ),
+        SelectEntityDescription(
+            key=DPCode.SOUND_MODE,
+            name="Sound Mode",
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:music-box-multiple-outline",
+        ),
+        SelectEntityDescription(
+            key=DPCode.STAY_ALARM_MODE,
+            name="Loitering Alert Mode",
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:star-box-multiple-outline",
+        ),
+        SelectEntityDescription(
+            key=DPCode.STAY_CAPTURE_MODE,
+            name="Loitering Photo Capture Mode",
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:image-multiple-outline",
+        ),
+        SelectEntityDescription(
+            key=DPCode.STAY_TRIGGER_DISTANCE,
+            name="Loitering Sensing Range",
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:signal-distance-variant",
+        ),
+        SelectEntityDescription(
+            key=DPCode.UNLOCK_SWITCH,
+            name="Unlock Mode",
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:shield-lock-open-outline",
+        ),
+        *LANGUAGE_SELECT,
+    ),
 }
 
 # Socket (duplicate of `kg`)
