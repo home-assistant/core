@@ -7,7 +7,7 @@
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
-            "project_error": "Konnte keine Projektinformationen erhalten."
+            "project_error": "Es konnten keine Projektinformationen erhalten werden"
         },
         "flow_title": "{project_url}",
         "step": {

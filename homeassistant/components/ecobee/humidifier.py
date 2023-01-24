@@ -4,14 +4,12 @@ from __future__ import annotations
 from datetime import timedelta
 
 from homeassistant.components.humidifier import (
-    HumidifierDeviceClass,
-    HumidifierEntity,
-    HumidifierEntityFeature,
-)
-from homeassistant.components.humidifier.const import (
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
     MODE_AUTO,
+    HumidifierDeviceClass,
+    HumidifierEntity,
+    HumidifierEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -139,13 +137,14 @@ class EcobeeHumidifier(HumidifierEntity):
         """Set humidifier mode (auto, off, manual)."""
         if mode.lower() not in (self.available_modes):
             raise ValueError(
-                f"Invalid mode value: {mode}  Valid values are {', '.join(self.available_modes)}."
+                f"Invalid mode value: {mode}  Valid values are"
+                f" {', '.join(self.available_modes)}."
             )
 
         self.data.ecobee.set_humidifier_mode(self.thermostat_index, mode)
         self.update_without_throttle = True
 
-    def set_humidity(self, humidity):
+    def set_humidity(self, humidity: int) -> None:
         """Set the humidity level."""
         self.data.ecobee.set_humidity(self.thermostat_index, humidity)
         self.update_without_throttle = True

@@ -6,8 +6,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "C\u00edm",
-                    "name": "Elnevez\u00e9s"
+                    "host": "C\u00edm"
                 },
                 "data_description": {
                     "host": "A P1 Monitor rendszer\u00e9nek IP-c\u00edme vagy hostneve."

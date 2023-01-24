@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any
 
@@ -18,19 +18,18 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .models import MelnorDataUpdateCoordinator, MelnorZoneEntity
-
-
-def set_is_watering(valve: Valve, value: bool) -> None:
-    """Set the is_watering state of a valve."""
-    valve.is_watering = value
+from .models import (
+    MelnorDataUpdateCoordinator,
+    MelnorZoneEntity,
+    get_entities_for_valves,
+)
 
 
 @dataclass
 class MelnorSwitchEntityDescriptionMixin:
     """Mixin for required keys."""
 
-    on_off_fn: Callable[[Valve, bool], Any]
+    on_off_fn: Callable[[Valve, bool], Coroutine[Any, Any, None]]
     state_fn: Callable[[Valve], Any]
 
 
@@ -41,37 +40,35 @@ class MelnorSwitchEntityDescription(
     """Describes Melnor switch entity."""
 
 
+ZONE_ENTITY_DESCRIPTIONS = [
+    MelnorSwitchEntityDescription(
+        device_class=SwitchDeviceClass.SWITCH,
+        icon="mdi:sprinkler",
+        key="manual",
+        on_off_fn=lambda valve, bool: valve.set_is_watering(bool),
+        state_fn=lambda valve: valve.is_watering,
+    )
+]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_devices: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the switch platform."""
-    entities: list[MelnorZoneSwitch] = []
 
     coordinator: MelnorDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    # This device may not have 4 valves total, but the library will only expose the right number of valves
-    for i in range(1, 5):
-        valve = coordinator.data[f"zone{i}"]
-        if valve is not None:
-
-            entities.append(
-                MelnorZoneSwitch(
-                    coordinator,
-                    valve,
-                    MelnorSwitchEntityDescription(
-                        device_class=SwitchDeviceClass.SWITCH,
-                        icon="mdi:sprinkler",
-                        key="manual",
-                        name="Manual",
-                        on_off_fn=set_is_watering,
-                        state_fn=lambda valve: valve.is_watering,
-                    ),
-                )
-            )
-
-    async_add_devices(entities)
+    async_add_entities(
+        get_entities_for_valves(
+            coordinator,
+            ZONE_ENTITY_DESCRIPTIONS,
+            lambda valve, description: MelnorZoneSwitch(
+                coordinator, description, valve
+            ),
+        )
+    )
 
 
 class MelnorZoneSwitch(MelnorZoneEntity, SwitchEntity):
@@ -82,14 +79,11 @@ class MelnorZoneSwitch(MelnorZoneEntity, SwitchEntity):
     def __init__(
         self,
         coordinator: MelnorDataUpdateCoordinator,
-        valve: Valve,
         entity_description: MelnorSwitchEntityDescription,
+        valve: Valve,
     ) -> None:
         """Initialize a switch for a melnor device."""
-        super().__init__(coordinator, valve)
-
-        self._attr_unique_id = f"{self._device.mac}-zone{valve.id}-manual"
-        self.entity_description = entity_description
+        super().__init__(coordinator, entity_description, valve)
 
     @property
     def is_on(self) -> bool:
@@ -98,12 +92,10 @@ class MelnorZoneSwitch(MelnorZoneEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        self.entity_description.on_off_fn(self._valve, True)
-        await self._device.push_state()
+        await self.entity_description.on_off_fn(self._valve, True)
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        self.entity_description.on_off_fn(self._valve, False)
-        await self._device.push_state()
+        await self.entity_description.on_off_fn(self._valve, False)
         self.async_write_ha_state()

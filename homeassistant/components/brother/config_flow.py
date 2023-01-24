@@ -46,7 +46,9 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 snmp_engine = get_snmp_engine(self.hass)
 
-                brother = Brother(user_input[CONF_HOST], snmp_engine=snmp_engine)
+                brother = await Brother.create(
+                    user_input[CONF_HOST], snmp_engine=snmp_engine
+                )
                 await brother.async_update()
 
                 await self.async_set_unique_id(brother.serial.lower())
@@ -80,7 +82,9 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         model = discovery_info.properties.get("product")
 
         try:
-            self.brother = Brother(self.host, snmp_engine=snmp_engine, model=model)
+            self.brother = await Brother.create(
+                self.host, snmp_engine=snmp_engine, model=model
+            )
             await self.brother.async_update()
         except UnsupportedModel:
             return self.async_abort(reason="unsupported_model")

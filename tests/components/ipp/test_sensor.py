@@ -3,13 +3,17 @@ from datetime import datetime
 from unittest.mock import patch
 
 from homeassistant.components.ipp.const import DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import (
+    ATTR_OPTIONS as SENSOR_ATTR_OPTIONS,
+    DOMAIN as SENSOR_DOMAIN,
+)
 from homeassistant.const import ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT, PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from tests.components.ipp import init_integration, mock_connection
+from . import init_integration, mock_connection
+
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -40,6 +44,11 @@ async def test_sensors(
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:printer"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
+    assert state.attributes.get(SENSOR_ATTR_OPTIONS) == ["idle", "printing", "stopped"]
+
+    entry = registry.async_get("sensor.epson_xp_6000_series")
+    assert entry
+    assert entry.translation_key == "printer"
 
     state = hass.states.get("sensor.epson_xp_6000_series_black_ink")
     assert state

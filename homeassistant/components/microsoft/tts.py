@@ -166,6 +166,16 @@ class MicrosoftProvider(Provider):
         """Return list of supported languages."""
         return SUPPORTED_LANGUAGES
 
+    @property
+    def supported_options(self):
+        """Return list of supported options like voice, emotion."""
+        return [CONF_GENDER, CONF_TYPE]
+
+    @property
+    def default_options(self):
+        """Return a dict include default options."""
+        return {CONF_GENDER: self._gender, CONF_TYPE: self._type}
+
     def get_tts_audio(self, message, language, options=None):
         """Load TTS from Microsoft."""
         if language is None:
@@ -175,8 +185,8 @@ class MicrosoftProvider(Provider):
             trans = pycsspeechtts.TTSTranslator(self._apikey, self._region)
             data = trans.speak(
                 language=language,
-                gender=self._gender,
-                voiceType=self._type,
+                gender=options[CONF_GENDER],
+                voiceType=options[CONF_TYPE],
                 output=self._output,
                 rate=self._rate,
                 volume=self._volume,

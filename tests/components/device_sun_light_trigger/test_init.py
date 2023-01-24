@@ -1,5 +1,5 @@
 """The tests device sun light trigger component."""
-# pylint: disable=protected-access
+
 from datetime import datetime
 from unittest.mock import patch
 
@@ -11,7 +11,7 @@ from homeassistant.components import (
     group,
     light,
 )
-from homeassistant.components.device_tracker.const import DOMAIN
+from homeassistant.components.device_tracker import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_PLATFORM,

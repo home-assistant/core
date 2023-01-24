@@ -24,13 +24,6 @@
                     "country": "Zem\u011b"
                 }
             },
-            "node_pro": {
-                "data": {
-                    "ip_address": "Hostitel",
-                    "password": "Heslo"
-                },
-                "title": "Nastaven\u00ed AirVisual Node/Pro"
-            },
             "reauth_confirm": {
                 "data": {
                     "api_key": "Kl\u00ed\u010d API"
@@ -40,6 +33,16 @@
             "user": {
                 "description": "Vyberte, jak\u00fd typ dat AirVisual chcete sledovat.",
                 "title": "Nastaven\u00ed AirVisual"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "pollutant_level": {
+                "state": {
+                    "good": "Dobr\u00e9",
+                    "hazardous": "Nebezpe\u010dn\u00e9"
+                }
             }
         }
     },

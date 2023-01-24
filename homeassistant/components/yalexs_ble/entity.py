@@ -56,7 +56,9 @@ class YALEXSBLEEntity(Entity):
         self.async_write_ha_state()
 
     @callback
-    def _async_device_unavailable(self, _address: str) -> None:
+    def _async_device_unavailable(
+        self, _service_info: bluetooth.BluetoothServiceInfoBleak
+    ) -> None:
         """Handle device not longer being seen by the bluetooth stack."""
         self._attr_available = False
         self.async_write_ha_state()

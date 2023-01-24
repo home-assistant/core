@@ -78,15 +78,15 @@ class DemoCover(CoverEntity):
         position: int | None = None,
         tilt_position: int | None = None,
         device_class: CoverDeviceClass | None = None,
-        supported_features: int | None = None,
+        supported_features: CoverEntityFeature | None = None,
     ) -> None:
         """Initialize the cover."""
         self.hass = hass
         self._unique_id = unique_id
         self._attr_name = name
         self._position = position
-        self._device_class = device_class
-        self._supported_features = supported_features
+        self._attr_device_class = device_class
+        self._attr_supported_features = supported_features
         self._set_position: int | None = None
         self._set_tilt_position: int | None = None
         self._tilt_position = tilt_position
@@ -141,18 +141,6 @@ class DemoCover(CoverEntity):
     def is_opening(self) -> bool:
         """Return if the cover is opening."""
         return self._is_opening
-
-    @property
-    def device_class(self) -> CoverDeviceClass | None:
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return self._device_class
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        if self._supported_features is not None:
-            return self._supported_features
-        return super().supported_features
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""

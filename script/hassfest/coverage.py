@@ -10,6 +10,7 @@ DONT_IGNORE = (
     "device_action.py",
     "device_condition.py",
     "device_trigger.py",
+    "diagnostics.py",
     "group.py",
     "intent.py",
     "logbook.py",
@@ -20,21 +21,56 @@ DONT_IGNORE = (
 # They were violating when we introduced this check
 # Need to be fixed in a future PR.
 ALLOWED_IGNORE_VIOLATIONS = {
+    ("advantage_air", "diagnostics.py"),
+    ("androidtv", "diagnostics.py"),
+    ("asuswrt", "diagnostics.py"),
+    ("aussie_broadband", "diagnostics.py"),
     ("doorbird", "logbook.py"),
+    ("ecowitt", "diagnostics.py"),
     ("elkm1", "scene.py"),
     ("fibaro", "scene.py"),
+    ("hunterdouglas_powerview", "diagnostics.py"),
+    ("hunterdouglas_powerview", "scene.py"),
+    ("jellyfin", "media_source.py"),
+    ("launch_library", "diagnostics.py"),
     ("lcn", "scene.py"),
+    ("lifx_cloud", "scene.py"),
     ("lutron", "scene.py"),
+    ("lutron_caseta", "scene.py"),
+    ("nanoleaf", "diagnostics.py"),
+    ("nanoleaf", "device_trigger.py"),
+    ("nut", "diagnostics.py"),
+    ("open_meteo", "diagnostics.py"),
+    ("overkiz", "diagnostics.py"),
+    ("overkiz", "scene.py"),
+    ("philips_js", "diagnostics.py"),
+    ("radio_browser", "media_source.py"),
+    ("rfxtrx", "diagnostics.py"),
+    ("screenlogic", "diagnostics.py"),
+    ("sonos", "diagnostics.py"),
+    ("stookalert", "diagnostics.py"),
+    ("stookwijzer", "diagnostics.py"),
+    ("synology_dsm", "diagnostics.py"),
+    ("system_bridge", "media_source.py"),
+    ("tractive", "diagnostics.py"),
+    ("tuya", "diagnostics.py"),
     ("tuya", "scene.py"),
+    ("upb", "scene.py"),
+    ("velbus", "diagnostics.py"),
     ("velux", "scene.py"),
+    ("verisure", "diagnostics.py"),
+    ("vicare", "diagnostics.py"),
+    ("xbox", "media_source.py"),
+    ("xiaomi_miio", "diagnostics.py"),
+    ("yale_smart_alarm", "diagnostics.py"),
 }
 
 
-def validate(integrations: dict[str, Integration], config: Config):
+def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Validate coverage."""
     coverage_path = config.root / ".coveragerc"
 
-    not_found = []
+    not_found: list[str] = []
     checking = False
 
     with coverage_path.open("rt") as fp:
@@ -64,18 +100,26 @@ def validate(integrations: dict[str, Integration], config: Config):
                 not_found.append(line)
                 continue
 
-            if (
-                not line.startswith("homeassistant/components/")
-                or len(path.parts) != 4
-                or path.parts[-1] != "*"
-            ):
+            if not line.startswith("homeassistant/components/") or len(path.parts) != 4:
                 continue
 
             integration_path = path.parent
 
             integration = integrations[integration_path.name]
 
+            if (
+                path.parts[-1] == "*"
+                and Path(f"tests/components/{integration.domain}/__init__.py").exists()
+            ):
+                integration.add_error(
+                    "coverage",
+                    "has tests and should not use wildcard in .coveragerc file",
+                )
+
             for check in DONT_IGNORE:
+                if path.parts[-1] not in {"*", check}:
+                    continue
+
                 if (integration_path.name, check) in ALLOWED_IGNORE_VIOLATIONS:
                     continue
 
@@ -85,14 +129,7 @@ def validate(integrations: dict[str, Integration], config: Config):
                         f"{check} must not be ignored by the .coveragerc file",
                     )
 
-    if not not_found:
-        return
-
-    errors = []
-
     if not_found:
-        errors.append(
+        raise RuntimeError(
             f".coveragerc references files that don't exist: {', '.join(not_found)}."
         )
-
-    raise RuntimeError(" ".join(errors))

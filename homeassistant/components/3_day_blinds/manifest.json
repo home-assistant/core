@@ -1,0 +1,6 @@
+{
+  "domain": "3_day_blinds",
+  "name": "3 Day Blinds",
+  "integration_type": "virtual",
+  "supported_by": "motion_blinds"
+}

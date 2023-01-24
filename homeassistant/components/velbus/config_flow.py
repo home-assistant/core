@@ -10,25 +10,16 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import usb
 from homeassistant.const import CONF_NAME, CONF_PORT
-from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.util import slugify
 
 from .const import DOMAIN
 
 
-@callback
-def velbus_entries(hass: HomeAssistant) -> set[str]:
-    """Return connections for Velbus domain."""
-    return {
-        entry.data[CONF_PORT] for entry in hass.config_entries.async_entries(DOMAIN)
-    }
-
-
 class VelbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
-    VERSION = 1
+    VERSION = 2
 
     def __init__(self) -> None:
         """Initialize the velbus config flow."""
@@ -51,10 +42,6 @@ class VelbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return False
         return True
 
-    def _prt_in_configuration_exists(self, prt: str) -> bool:
-        """Return True if port exists in configuration."""
-        return prt in velbus_entries(self.hass)
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -63,11 +50,9 @@ class VelbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             name = slugify(user_input[CONF_NAME])
             prt = user_input[CONF_PORT]
-            if not self._prt_in_configuration_exists(prt):
-                if await self._test_connection(prt):
-                    return self._create_device(name, prt)
-            else:
-                self._errors[CONF_PORT] = "already_configured"
+            self._async_abort_entries_match({CONF_PORT: prt})
+            if await self._test_connection(prt):
+                return self._create_device(name, prt)
         else:
             user_input = {}
             user_input[CONF_NAME] = ""
@@ -93,8 +78,7 @@ class VelbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             usb.get_serial_by_id, discovery_info.device
         )
         # check if this device is not already configured
-        if self._prt_in_configuration_exists(dev_path):
-            return self.async_abort(reason="already_configured")
+        self._async_abort_entries_match({CONF_PORT: dev_path})
         # check if we can make a valid velbus connection
         if not await self._test_connection(dev_path):
             return self.async_abort(reason="cannot_connect")

@@ -13,21 +13,21 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.modbus import get_hub
-from homeassistant.components.modbus.const import (
+from homeassistant.components.modbus import (
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
     CALL_TYPE_WRITE_REGISTER,
     CONF_HUB,
     DEFAULT_HUB,
+    ModbusHub,
+    get_hub,
 )
-from homeassistant.components.modbus.modbus import ModbusHub
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_NAME,
     CONF_SLAVE,
     DEVICE_DEFAULT_NAME,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -67,7 +67,7 @@ class Flexit(ClimateEntity):
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
     )
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(
         self, hub: ModbusHub, modbus_slave: int | None, name: str | None

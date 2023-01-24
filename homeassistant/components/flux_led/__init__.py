@@ -58,7 +58,12 @@ PLATFORMS_BY_TYPE: Final = {
         Platform.SENSOR,
         Platform.SWITCH,
     ],
-    DeviceType.Switch: [Platform.BUTTON, Platform.SELECT, Platform.SWITCH],
+    DeviceType.Switch: [
+        Platform.BUTTON,
+        Platform.SELECT,
+        Platform.SENSOR,
+        Platform.SWITCH,
+    ],
 }
 DISCOVERY_INTERVAL: Final = timedelta(minutes=15)
 REQUEST_REFRESH_DELAY: Final = 1.5
@@ -106,7 +111,7 @@ async def _async_migrate_unique_ids(hass: HomeAssistant, entry: ConfigEntry) -> 
         new_unique_id = None
         if entity_unique_id.startswith(entry_id):
             # Old format {entry_id}....., New format {unique_id}....
-            new_unique_id = f"{unique_id}{entity_unique_id[len(entry_id):]}"
+            new_unique_id = f"{unique_id}{entity_unique_id.removeprefix(entry_id)}"
         elif (
             ":" in entity_mac
             and entity_mac != unique_id
@@ -172,7 +177,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if not mac_matches_by_one(mac, entry.unique_id):
             # The device is offline and another flux_led device is now using the ip address
             raise ConfigEntryNotReady(
-                f"Unexpected device found at {host}; Expected {entry.unique_id}, found {mac}"
+                f"Unexpected device found at {host}; Expected {entry.unique_id}, found"
+                f" {mac}"
             )
 
     if not discovery_cached:

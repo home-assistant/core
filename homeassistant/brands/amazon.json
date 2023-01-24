@@ -1,0 +1,5 @@
+{
+  "domain": "amazon",
+  "name": "Amazon",
+  "integrations": ["alexa", "amazon_polly", "aws", "fire_tv", "route53"]
+}

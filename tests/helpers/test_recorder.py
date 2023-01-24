@@ -9,7 +9,7 @@ from tests.common import SetupRecorderInstanceT
 
 
 async def test_async_migration_in_progress(
-    hass: HomeAssistant, async_setup_recorder_instance: SetupRecorderInstanceT
+    async_setup_recorder_instance: SetupRecorderInstanceT, hass: HomeAssistant
 ):
     """Test async_migration_in_progress wraps the recorder."""
     with patch(

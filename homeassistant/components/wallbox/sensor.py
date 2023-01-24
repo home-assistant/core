@@ -13,11 +13,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ELECTRIC_CURRENT_AMPERE,
-    ENERGY_KILO_WATT_HOUR,
-    LENGTH_KILOMETERS,
     PERCENTAGE,
-    POWER_KILO_WATT,
+    UnitOfElectricCurrent,
+    UnitOfEnergy,
+    UnitOfLength,
+    UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -31,9 +31,11 @@ from .const import (
     CHARGER_CHARGING_POWER_KEY,
     CHARGER_CHARGING_SPEED_KEY,
     CHARGER_COST_KEY,
+    CHARGER_CURRENCY_KEY,
     CHARGER_CURRENT_MODE_KEY,
     CHARGER_DATA_KEY,
     CHARGER_DEPOT_PRICE_KEY,
+    CHARGER_ENERGY_PRICE_KEY,
     CHARGER_MAX_AVAILABLE_POWER_KEY,
     CHARGER_MAX_CHARGING_CURRENT_KEY,
     CHARGER_SERIAL_NUMBER_KEY,
@@ -60,7 +62,7 @@ SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {
         key=CHARGER_CHARGING_POWER_KEY,
         name="Charging Power",
         precision=2,
-        native_unit_of_measurement=POWER_KILO_WATT,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -68,7 +70,7 @@ SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {
         key=CHARGER_MAX_AVAILABLE_POWER_KEY,
         name="Max Available Power",
         precision=0,
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -84,14 +86,15 @@ SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {
         icon="mdi:map-marker-distance",
         name="Added Range",
         precision=0,
-        native_unit_of_measurement=LENGTH_KILOMETERS,
+        native_unit_of_measurement=UnitOfLength.KILOMETERS,
+        device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     CHARGER_ADDED_ENERGY_KEY: WallboxSensorEntityDescription(
         key=CHARGER_ADDED_ENERGY_KEY,
         name="Added Energy",
         precision=2,
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -99,7 +102,7 @@ SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {
         key=CHARGER_ADDED_DISCHARGED_ENERGY_KEY,
         name="Discharged Energy",
         precision=2,
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -126,6 +129,14 @@ SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {
         icon="mdi:ev-station",
         name="Depot Price",
         precision=2,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    CHARGER_ENERGY_PRICE_KEY: WallboxSensorEntityDescription(
+        key=CHARGER_ENERGY_PRICE_KEY,
+        icon="mdi:ev-station",
+        name="Energy Price",
+        precision=2,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     CHARGER_STATUS_DESCRIPTION_KEY: WallboxSensorEntityDescription(
         key=CHARGER_STATUS_DESCRIPTION_KEY,
@@ -135,7 +146,7 @@ SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {
     CHARGER_MAX_CHARGING_CURRENT_KEY: WallboxSensorEntityDescription(
         key=CHARGER_MAX_CHARGING_CURRENT_KEY,
         name="Max. Charging Current",
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -187,3 +198,13 @@ class WallboxSensor(WallboxEntity, SensorEntity):
                 round(self.coordinator.data[self.entity_description.key], sensor_round),
             )
         return cast(StateType, self.coordinator.data[self.entity_description.key])
+
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the unit of measurement of the sensor. When monetary, get the value from the api."""
+        if self.entity_description.key in (
+            CHARGER_ENERGY_PRICE_KEY,
+            CHARGER_DEPOT_PRICE_KEY,
+        ):
+            return cast(str, self.coordinator.data[CHARGER_CURRENCY_KEY])
+        return cast(str, self.entity_description.native_unit_of_measurement)

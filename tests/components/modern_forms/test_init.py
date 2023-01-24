@@ -8,10 +8,8 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.components.modern_forms import (
-    init_integration,
-    modern_forms_no_light_call_mock,
-)
+from . import init_integration, modern_forms_no_light_call_mock
+
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 

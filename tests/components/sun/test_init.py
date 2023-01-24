@@ -18,9 +18,7 @@ async def test_setting_rising(hass):
     """Test retrieving sun setting and rising."""
     utc_now = datetime(2016, 11, 1, 8, 0, 0, tzinfo=dt_util.UTC)
     with freeze_time(utc_now):
-        await async_setup_component(
-            hass, sun.DOMAIN, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}}
-        )
+        await async_setup_component(hass, sun.DOMAIN, {sun.DOMAIN: {}})
 
     await hass.async_block_till_done()
     state = hass.states.get(sun.ENTITY_ID)
@@ -112,9 +110,7 @@ async def test_state_change(hass, caplog):
     """Test if the state changes at next setting/rising."""
     now = datetime(2016, 6, 1, 8, 0, 0, tzinfo=dt_util.UTC)
     with freeze_time(now):
-        await async_setup_component(
-            hass, sun.DOMAIN, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}}
-        )
+        await async_setup_component(hass, sun.DOMAIN, {sun.DOMAIN: {}})
 
     await hass.async_block_till_done()
 
@@ -167,9 +163,7 @@ async def test_norway_in_june(hass):
     june = datetime(2016, 6, 1, tzinfo=dt_util.UTC)
 
     with patch("homeassistant.helpers.condition.dt_util.utcnow", return_value=june):
-        assert await async_setup_component(
-            hass, sun.DOMAIN, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}}
-        )
+        assert await async_setup_component(hass, sun.DOMAIN, {sun.DOMAIN: {}})
 
     state = hass.states.get(sun.ENTITY_ID)
     assert state is not None
@@ -195,9 +189,7 @@ async def test_state_change_count(hass):
     now = datetime(2016, 6, 1, tzinfo=dt_util.UTC)
 
     with freeze_time(now):
-        assert await async_setup_component(
-            hass, sun.DOMAIN, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}}
-        )
+        assert await async_setup_component(hass, sun.DOMAIN, {sun.DOMAIN: {}})
 
     events = []
 

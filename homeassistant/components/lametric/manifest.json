@@ -2,8 +2,8 @@
   "domain": "lametric",
   "name": "LaMetric",
   "documentation": "https://www.home-assistant.io/integrations/lametric",
-  "requirements": ["demetriek==0.2.2"],
-  "codeowners": ["@robbiet480", "@frenck"],
+  "requirements": ["demetriek==0.4.0"],
+  "codeowners": ["@robbiet480", "@frenck", "@bachya"],
   "iot_class": "local_polling",
   "dependencies": ["application_credentials"],
   "loggers": ["demetriek"],
@@ -12,5 +12,8 @@
     {
       "deviceType": "urn:schemas-upnp-org:device:LaMetric:1"
     }
-  ]
+  ],
+  "dhcp": [{ "registered_devices": true }],
+  "quality_scale": "platinum",
+  "integration_type": "device"
 }

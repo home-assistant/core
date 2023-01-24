@@ -8,7 +8,7 @@
             "cannot_authenticate": "Tidak dapat mengautentikasi, apakah Gateway dipasangkan dengan server lain seperti misalnya Homekit?",
             "cannot_connect": "Gagal terhubung",
             "invalid_key": "Gagal mendaftar dengan kunci yang disediakan. Jika ini terus terjadi, coba mulai ulang gateway.",
-            "timeout": "Waktu tunggu memvalidasi kode telah habis."
+            "timeout": "Waktu tunggu validasi kode telah habis."
         },
         "step": {
             "auth": {

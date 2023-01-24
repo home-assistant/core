@@ -7,7 +7,7 @@ import pytest
 import zigpy.profiles.zha as zha
 import zigpy.zcl.clusters.security as security
 
-from homeassistant.components.diagnostics.const import REDACTED
+from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.zha.core.device import ZHADevice
 from homeassistant.components.zha.diagnostics import KEYS_TO_REDACT
 from homeassistant.const import Platform
@@ -31,7 +31,7 @@ CONFIG_ENTRY_DIAGNOSTICS_KEYS = [
 
 @pytest.fixture(autouse=True)
 def required_platforms_only():
-    """Only setup the required platform and required base platforms to speed up tests."""
+    """Only set up the required platform and required base platforms to speed up tests."""
     with patch(
         "homeassistant.components.zha.PLATFORMS", (Platform.ALARM_CONTROL_PANEL,)
     ):

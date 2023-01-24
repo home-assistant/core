@@ -18,6 +18,10 @@
             "link": {
                 "description": "Roon'da HomeAssistant\u0131 yetkilendirmelisiniz. G\u00f6nder'e t\u0131klad\u0131ktan sonra, Roon Core uygulamas\u0131na gidin, Ayarlar'\u0131 a\u00e7\u0131n ve Uzant\u0131lar sekmesinde HomeAssistant'\u0131 etkinle\u015ftirin.",
                 "title": "Roon'da HomeAssistant'\u0131 Yetkilendirme"
+            },
+            "user": {
+                "one": "Bo\u015f",
+                "other": "Bo\u015f"
             }
         }
     }

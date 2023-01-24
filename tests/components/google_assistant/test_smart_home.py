@@ -3,13 +3,10 @@ import asyncio
 from unittest.mock import ANY, call, patch
 
 import pytest
+from pytest_unordered import unordered
 
 from homeassistant.components import camera
-from homeassistant.components.climate.const import (
-    ATTR_MAX_TEMP,
-    ATTR_MIN_TEMP,
-    HVAC_MODE_HEAT,
-)
+from homeassistant.components.climate import ATTR_MAX_TEMP, ATTR_MIN_TEMP, HVACMode
 from homeassistant.components.demo.binary_sensor import DemoBinarySensor
 from homeassistant.components.demo.cover import DemoCover
 from homeassistant.components.demo.light import LIGHT_EFFECT_LIST, DemoLight
@@ -24,7 +21,7 @@ from homeassistant.components.google_assistant import (
     trait,
 )
 from homeassistant.config import async_process_ha_core_config
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, __version__
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, UnitOfTemperature, __version__
 from homeassistant.core import EVENT_CALL_SERVICE, State
 from homeassistant.helpers import device_registry, entity_platform
 from homeassistant.setup import async_setup_component
@@ -105,10 +102,21 @@ async def test_async_handle_message(hass):
     await hass.async_block_till_done()
 
 
-async def test_sync_message(hass):
+async def test_sync_message(hass, registries):
     """Test a sync message."""
+    entity = registries.entity.async_get_or_create(
+        "light",
+        "test",
+        "unique-demo-light",
+        suggested_object_id="demo_light",
+    )
+    registries.entity.async_update_entity(
+        entity.entity_id,
+        aliases={"Stay", "Healthy"},
+    )
+
     light = DemoLight(
-        None,
+        "unique-demo-light",
         "Demo Light",
         state=False,
         hs_color=(180, 75),
@@ -154,7 +162,15 @@ async def test_sync_message(hass):
                     "id": "light.demo_light",
                     "name": {
                         "name": "Demo Light",
-                        "nicknames": ["Demo Light", "Hello", "World"],
+                        "nicknames": unordered(
+                            [
+                                "Demo Light",
+                                "Hello",
+                                "World",
+                                "Stay",
+                                "Healthy",
+                            ]
+                        ),
                     },
                     "traits": [
                         trait.TRAIT_BRIGHTNESS,
@@ -185,7 +201,10 @@ async def test_sync_message(hass):
                                     {
                                         "setting_name": "none",
                                         "setting_values": [
-                                            {"lang": "en", "setting_synonym": ["none"]}
+                                            {
+                                                "lang": "en",
+                                                "setting_synonym": ["none"],
+                                            }
                                         ],
                                     },
                                 ],
@@ -209,7 +228,6 @@ async def test_sync_message(hass):
     assert events[0].data == {"request_id": REQ_ID, "source": "cloud"}
 
 
-# pylint: disable=redefined-outer-name
 @pytest.mark.parametrize("area_on_device", [True, False])
 async def test_sync_in_area(area_on_device, hass, registries):
     """Test a sync message where room hint comes from area."""
@@ -383,7 +401,7 @@ async def test_query_message(hass):
         "payload": {
             "devices": {
                 "light.non_existing": {"online": False},
-                "light.demo_light": {"on": False, "online": True, "brightness": 0},
+                "light.demo_light": {"on": False, "online": True},
                 "light.another_light": {
                     "on": True,
                     "online": True,
@@ -727,7 +745,6 @@ async def test_execute_times_out(hass, report_state, on, brightness, value):
                     "states": {
                         "on": on,
                         "online": True,
-                        "brightness": brightness,
                     },
                 },
                 {
@@ -808,8 +825,12 @@ async def test_raising_error_trait(hass):
     """Test raising an error while executing a trait command."""
     hass.states.async_set(
         "climate.bla",
-        HVAC_MODE_HEAT,
-        {ATTR_MIN_TEMP: 15, ATTR_MAX_TEMP: 30, ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+        HVACMode.HEAT,
+        {
+            ATTR_MIN_TEMP: 15,
+            ATTR_MAX_TEMP: 30,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
+        },
     )
 
     events = async_capture_events(hass, EVENT_COMMAND_RECEIVED)
@@ -875,7 +896,6 @@ async def test_raising_error_trait(hass):
 async def test_serialize_input_boolean(hass):
     """Test serializing an input boolean entity."""
     state = State("input_boolean.bla", "on")
-    # pylint: disable=protected-access
     entity = sh.GoogleEntity(hass, BASIC_CONFIG, state)
     result = entity.sync_serialize(None, "mock-uuid")
     assert result == {
@@ -900,7 +920,7 @@ async def test_unavailable_state_does_sync(hass):
     )
     light.hass = hass
     light.entity_id = "light.demo_light"
-    light._available = False  # pylint: disable=protected-access
+    light._available = False
     await light.async_update_ha_state()
 
     events = async_capture_events(hass, EVENT_SYNC_RECEIVED)

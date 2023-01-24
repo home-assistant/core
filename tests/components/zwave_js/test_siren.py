@@ -1,8 +1,11 @@
 """Test the Z-Wave JS siren platform."""
 from zwave_js_server.event import Event
 
-from homeassistant.components.siren import ATTR_TONE, ATTR_VOLUME_LEVEL
-from homeassistant.components.siren.const import ATTR_AVAILABLE_TONES
+from homeassistant.components.siren import (
+    ATTR_AVAILABLE_TONES,
+    ATTR_TONE,
+    ATTR_VOLUME_LEVEL,
+)
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
 
 SIREN_ENTITY = "siren.indoor_siren_6_2"
@@ -112,7 +115,11 @@ async def test_siren(hass, client, aeotec_zw164_siren, integration):
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == node.node_id
-    assert args["valueId"] == TONE_ID_VALUE_ID
+    assert args["valueId"] == {
+        "endpoint": 2,
+        "commandClass": 121,
+        "property": "toneId",
+    }
     assert args["value"] == 255
 
     client.async_send_command.reset_mock()
@@ -156,7 +163,11 @@ async def test_siren(hass, client, aeotec_zw164_siren, integration):
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == node.node_id
-    assert args["valueId"] == {**TONE_ID_VALUE_ID, "value": 255}
+    assert args["valueId"] == {
+        "endpoint": 2,
+        "commandClass": 121,
+        "property": "toneId",
+    }
     assert args["value"] == 1
     assert args["options"] == {"volume": 50}
 
@@ -178,7 +189,11 @@ async def test_siren(hass, client, aeotec_zw164_siren, integration):
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == node.node_id
-    assert args["valueId"] == {**TONE_ID_VALUE_ID, "value": 255}
+    assert args["valueId"] == {
+        "endpoint": 2,
+        "commandClass": 121,
+        "property": "toneId",
+    }
     assert args["value"] == 1
     assert args["options"] == {"volume": 50}
 
@@ -196,7 +211,11 @@ async def test_siren(hass, client, aeotec_zw164_siren, integration):
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == node.node_id
-    assert args["valueId"] == {**TONE_ID_VALUE_ID, "value": 255}
+    assert args["valueId"] == {
+        "endpoint": 2,
+        "commandClass": 121,
+        "property": "toneId",
+    }
     assert args["value"] == 0
 
     client.async_send_command.reset_mock()

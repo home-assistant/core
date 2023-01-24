@@ -17,6 +17,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
+    MediaType,
     async_process_play_media_url,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -64,26 +65,26 @@ class EsphomeMediaPlayer(
 
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
 
-    @property  # type: ignore[misc]
+    @property
     @esphome_state_property
     def state(self) -> MediaPlayerState | None:
         """Return current state."""
         return _STATES.from_esphome(self._state.state)
 
-    @property  # type: ignore[misc]
+    @property
     @esphome_state_property
     def is_volume_muted(self) -> bool:
         """Return true if volume is muted."""
         return self._state.muted
 
-    @property  # type: ignore[misc]
+    @property
     @esphome_state_property
     def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
         return self._state.volume
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag supported features."""
         flags = (
             MediaPlayerEntityFeature.PLAY_MEDIA
@@ -97,7 +98,7 @@ class EsphomeMediaPlayer(
         return flags
 
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Send the play command with media url to the media player."""
         if media_source.is_media_source_id(media_id):

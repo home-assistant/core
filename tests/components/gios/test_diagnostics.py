@@ -1,9 +1,10 @@
 """Test GIOS diagnostics."""
 import json
 
+from . import init_integration
+
 from tests.common import load_fixture
 from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.components.gios import init_integration
 
 
 async def test_entry_diagnostics(hass, hass_client):

@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured_account": "Konto wurde bereits konfiguriert",
-            "ezviz_cloud_account_missing": "Ezviz-Cloud-Konto fehlt. Bitte konfiguriere das Ezviz-Cloud-Konto neu",
+            "ezviz_cloud_account_missing": "EZVIZ-Cloud-Konto fehlt. Bitte konfiguriere das EZVIZ-Cloud-Konto neu",
             "unknown": "Unerwarteter Fehler"
         },
         "error": {
@@ -17,8 +17,8 @@
                     "password": "Passwort",
                     "username": "Benutzername"
                 },
-                "description": "RTSP-Anmeldeinformationen f\u00fcr Ezviz-Kamera {serial} mit IP {ip_address} eingeben",
-                "title": "Entdeckte Ezviz-Kamera"
+                "description": "RTSP-Anmeldeinformationen f\u00fcr EZVIZ-Kamera {serial} mit IP {ip_address} eingeben",
+                "title": "Entdeckte EZVIZ-Kamera"
             },
             "user": {
                 "data": {
@@ -26,7 +26,7 @@
                     "url": "URL",
                     "username": "Benutzername"
                 },
-                "title": "Verbinden mit Ezviz Cloud"
+                "title": "Verbindung zur EZVIZ Cloud"
             },
             "user_custom_url": {
                 "data": {
@@ -35,7 +35,7 @@
                     "username": "Benutzername"
                 },
                 "description": "URL Region manuell festlegen",
-                "title": "Verbinden mit benutzerdefinierter Ezviz-URL"
+                "title": "Verbinden mit benutzerdefinierter EZVIZ-URL"
             }
         }
     },

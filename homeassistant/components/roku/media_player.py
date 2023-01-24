@@ -21,7 +21,7 @@ from homeassistant.components.media_player import (
     MediaType,
     async_process_play_media_url,
 )
-from homeassistant.components.stream.const import FORMAT_CONTENT_TYPE, HLS_PROVIDER
+from homeassistant.components.stream import FORMAT_CONTENT_TYPE, HLS_PROVIDER
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant
@@ -130,7 +130,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         return self.coordinator.data.media.duration > 0
 
     @property
-    def device_class(self) -> str | None:
+    def device_class(self) -> MediaPlayerDeviceClass:
         """Return the class of this device."""
         if self.coordinator.data.info.device_type == "tv":
             return MediaPlayerDeviceClass.TV

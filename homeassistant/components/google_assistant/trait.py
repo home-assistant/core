@@ -9,9 +9,11 @@ from homeassistant.components import (
     binary_sensor,
     button,
     camera,
+    climate,
     cover,
     fan,
     group,
+    humidifier,
     input_boolean,
     input_button,
     input_select,
@@ -25,10 +27,8 @@ from homeassistant.components import (
     switch,
     vacuum,
 )
-from homeassistant.components.climate import const as climate
-from homeassistant.components.humidifier import const as humidifier
 from homeassistant.components.lock import STATE_JAMMED, STATE_UNLOCKING
-from homeassistant.components.media_player.const import MEDIA_TYPE_CHANNEL
+from homeassistant.components.media_player import MediaType
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_BATTERY_LEVEL,
@@ -63,16 +63,16 @@ from homeassistant.const import (
     STATE_STANDBY,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.helpers.network import get_url
-from homeassistant.util import color as color_util, dt, temperature as temp_util
+from homeassistant.util import color as color_util, dt
 from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
     percentage_to_ordered_list_item,
 )
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (
     CHALLENGE_ACK_NEEDED,
@@ -174,7 +174,7 @@ def register_trait(trait):
 
 def _google_temp_unit(units):
     """Return Google temperature unit."""
-    if units == TEMP_FAHRENHEIT:
+    if units == UnitOfTemperature.FAHRENHEIT:
         return "F"
     return "C"
 
@@ -260,8 +260,6 @@ class BrightnessTrait(_Trait):
             brightness = self.state.attributes.get(light.ATTR_BRIGHTNESS)
             if brightness is not None:
                 response["brightness"] = round(100 * (brightness / 255))
-            else:
-                response["brightness"] = 0
 
         return response
 
@@ -845,7 +843,12 @@ class TemperatureControlTrait(_Trait):
         unit = self.hass.config.units.temperature_unit
         current_temp = self.state.state
         if current_temp not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
-            temp = round(temp_util.convert(float(current_temp), unit, TEMP_CELSIUS), 1)
+            temp = round(
+                TemperatureConverter.convert(
+                    float(current_temp), unit, UnitOfTemperature.CELSIUS
+                ),
+                1,
+            )
             response["temperatureSetpointCelsius"] = temp
             response["temperatureAmbientCelsius"] = temp
 
@@ -950,7 +953,10 @@ class TemperatureSettingTrait(_Trait):
         current_temp = attrs.get(climate.ATTR_CURRENT_TEMPERATURE)
         if current_temp is not None:
             response["thermostatTemperatureAmbient"] = round(
-                temp_util.convert(current_temp, unit, TEMP_CELSIUS), 1
+                TemperatureConverter.convert(
+                    current_temp, unit, UnitOfTemperature.CELSIUS
+                ),
+                1,
             )
 
         current_humidity = attrs.get(climate.ATTR_CURRENT_HUMIDITY)
@@ -960,28 +966,38 @@ class TemperatureSettingTrait(_Trait):
         if operation in (climate.HVACMode.AUTO, climate.HVACMode.HEAT_COOL):
             if supported & climate.SUPPORT_TARGET_TEMPERATURE_RANGE:
                 response["thermostatTemperatureSetpointHigh"] = round(
-                    temp_util.convert(
-                        attrs[climate.ATTR_TARGET_TEMP_HIGH], unit, TEMP_CELSIUS
+                    TemperatureConverter.convert(
+                        attrs[climate.ATTR_TARGET_TEMP_HIGH],
+                        unit,
+                        UnitOfTemperature.CELSIUS,
                     ),
                     1,
                 )
                 response["thermostatTemperatureSetpointLow"] = round(
-                    temp_util.convert(
-                        attrs[climate.ATTR_TARGET_TEMP_LOW], unit, TEMP_CELSIUS
+                    TemperatureConverter.convert(
+                        attrs[climate.ATTR_TARGET_TEMP_LOW],
+                        unit,
+                        UnitOfTemperature.CELSIUS,
                     ),
                     1,
                 )
             else:
                 if (target_temp := attrs.get(ATTR_TEMPERATURE)) is not None:
                     target_temp = round(
-                        temp_util.convert(target_temp, unit, TEMP_CELSIUS), 1
+                        TemperatureConverter.convert(
+                            target_temp, unit, UnitOfTemperature.CELSIUS
+                        ),
+                        1,
                     )
                     response["thermostatTemperatureSetpointHigh"] = target_temp
                     response["thermostatTemperatureSetpointLow"] = target_temp
         else:
             if (target_temp := attrs.get(ATTR_TEMPERATURE)) is not None:
                 response["thermostatTemperatureSetpoint"] = round(
-                    temp_util.convert(target_temp, unit, TEMP_CELSIUS), 1
+                    TemperatureConverter.convert(
+                        target_temp, unit, UnitOfTemperature.CELSIUS
+                    ),
+                    1,
                 )
 
         return response
@@ -994,10 +1010,10 @@ class TemperatureSettingTrait(_Trait):
         max_temp = self.state.attributes[climate.ATTR_MAX_TEMP]
 
         if command == COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT:
-            temp = temp_util.convert(
-                params["thermostatTemperatureSetpoint"], TEMP_CELSIUS, unit
+            temp = TemperatureConverter.convert(
+                params["thermostatTemperatureSetpoint"], UnitOfTemperature.CELSIUS, unit
             )
-            if unit == TEMP_FAHRENHEIT:
+            if unit == UnitOfTemperature.FAHRENHEIT:
                 temp = round(temp)
 
             if temp < min_temp or temp > max_temp:
@@ -1015,32 +1031,36 @@ class TemperatureSettingTrait(_Trait):
             )
 
         elif command == COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE:
-            temp_high = temp_util.convert(
-                params["thermostatTemperatureSetpointHigh"], TEMP_CELSIUS, unit
+            temp_high = TemperatureConverter.convert(
+                params["thermostatTemperatureSetpointHigh"],
+                UnitOfTemperature.CELSIUS,
+                unit,
             )
-            if unit == TEMP_FAHRENHEIT:
+            if unit == UnitOfTemperature.FAHRENHEIT:
                 temp_high = round(temp_high)
 
             if temp_high < min_temp or temp_high > max_temp:
                 raise SmartHomeError(
                     ERR_VALUE_OUT_OF_RANGE,
                     (
-                        f"Upper bound for temperature range should be between "
+                        "Upper bound for temperature range should be between "
                         f"{min_temp} and {max_temp}"
                     ),
                 )
 
-            temp_low = temp_util.convert(
-                params["thermostatTemperatureSetpointLow"], TEMP_CELSIUS, unit
+            temp_low = TemperatureConverter.convert(
+                params["thermostatTemperatureSetpointLow"],
+                UnitOfTemperature.CELSIUS,
+                unit,
             )
-            if unit == TEMP_FAHRENHEIT:
+            if unit == UnitOfTemperature.FAHRENHEIT:
                 temp_low = round(temp_low)
 
             if temp_low < min_temp or temp_low > max_temp:
                 raise SmartHomeError(
                     ERR_VALUE_OUT_OF_RANGE,
                     (
-                        f"Lower bound for temperature range should be between "
+                        "Lower bound for temperature range should be between "
                         f"{min_temp} and {max_temp}"
                     ),
                 )
@@ -2347,7 +2367,7 @@ class ChannelTrait(_Trait):
             {
                 ATTR_ENTITY_ID: self.state.entity_id,
                 media_player.ATTR_MEDIA_CONTENT_ID: channel_number,
-                media_player.ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_CHANNEL,
+                media_player.ATTR_MEDIA_CONTENT_TYPE: MediaType.CHANNEL,
             },
             blocking=not self.config.should_report_state,
             context=data.context,

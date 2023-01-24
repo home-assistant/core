@@ -629,11 +629,33 @@ async def test_default_profiles_group(
             },
             {
                 light.ATTR_COLOR_TEMP: 600,
+                light.ATTR_COLOR_TEMP_KELVIN: 1666,
                 light.ATTR_BRIGHTNESS: 11,
                 light.ATTR_TRANSITION: 1,
             },
             {
                 light.ATTR_COLOR_TEMP: 600,
+                light.ATTR_COLOR_TEMP_KELVIN: 1666,
+                light.ATTR_BRIGHTNESS: 11,
+                light.ATTR_TRANSITION: 1,
+            },
+        ),
+        (
+            # Color temp in turn on params, color from profile ignored
+            {
+                light.ATTR_COLOR_TEMP_KELVIN: 6500,
+                light.ATTR_BRIGHTNESS: 11,
+                light.ATTR_TRANSITION: 1,
+            },
+            {
+                light.ATTR_COLOR_TEMP: 153,
+                light.ATTR_COLOR_TEMP_KELVIN: 6500,
+                light.ATTR_BRIGHTNESS: 11,
+                light.ATTR_TRANSITION: 1,
+            },
+            {
+                light.ATTR_COLOR_TEMP: 153,
+                light.ATTR_COLOR_TEMP_KELVIN: 6500,
                 light.ATTR_BRIGHTNESS: 11,
                 light.ATTR_TRANSITION: 1,
             },
@@ -1171,7 +1193,7 @@ async def test_light_backwards_compatibility_color_mode(
 
     entity2 = platform.ENTITIES[2]
     entity2.supported_features = light.SUPPORT_BRIGHTNESS | light.SUPPORT_COLOR_TEMP
-    entity2.color_temp = 100
+    entity2.color_temp_kelvin = 10000
 
     entity3 = platform.ENTITIES[3]
     entity3.supported_features = light.SUPPORT_BRIGHTNESS | light.SUPPORT_COLOR
@@ -1182,7 +1204,7 @@ async def test_light_backwards_compatibility_color_mode(
         light.SUPPORT_BRIGHTNESS | light.SUPPORT_COLOR | light.SUPPORT_COLOR_TEMP
     )
     entity4.hs_color = (240, 100)
-    entity4.color_temp = 100
+    entity4.color_temp_kelvin = 10000
 
     assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
     await hass.async_block_till_done()
@@ -1440,7 +1462,7 @@ async def test_light_service_call_color_conversion(hass, enable_custom_integrati
     _, data = entity5.last_call("turn_on")
     assert data == {"brightness": 255, "rgbw_color": (0, 0, 0, 255)}
     _, data = entity6.last_call("turn_on")
-    # The midpoint the the white channels is warm, compensated by adding green + blue
+    # The midpoint of the the white channels is warm, compensated by adding green + blue
     assert data == {"brightness": 255, "rgbww_color": (0, 76, 141, 255, 255)}
 
     await hass.services.async_call(
@@ -1843,7 +1865,7 @@ async def test_light_service_call_color_temp_emulation(
         blocking=True,
     )
     _, data = entity0.last_call("turn_on")
-    assert data == {"brightness": 255, "color_temp": 200}
+    assert data == {"brightness": 255, "color_temp": 200, "color_temp_kelvin": 5000}
     _, data = entity1.last_call("turn_on")
     assert data == {"brightness": 255, "hs_color": (27.001, 19.243)}
     _, data = entity2.last_call("turn_on")
@@ -1868,6 +1890,10 @@ async def test_light_service_call_color_temp_conversion(
 
     entity1 = platform.ENTITIES[1]
     entity1.supported_color_modes = {light.ColorMode.RGBWW}
+    assert entity1.min_mireds == 153
+    assert entity1.max_mireds == 500
+    assert entity1.min_color_temp_kelvin == 2000
+    assert entity1.max_color_temp_kelvin == 6500
 
     assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
     await hass.async_block_till_done()
@@ -1877,6 +1903,10 @@ async def test_light_service_call_color_temp_conversion(
         light.ColorMode.COLOR_TEMP,
         light.ColorMode.RGBWW,
     ]
+    assert state.attributes["min_mireds"] == 153
+    assert state.attributes["max_mireds"] == 500
+    assert state.attributes["min_color_temp_kelvin"] == 2000
+    assert state.attributes["max_color_temp_kelvin"] == 6500
 
     state = hass.states.get(entity1.entity_id)
     assert state.attributes["supported_color_modes"] == [light.ColorMode.RGBWW]
@@ -1895,7 +1925,7 @@ async def test_light_service_call_color_temp_conversion(
         blocking=True,
     )
     _, data = entity0.last_call("turn_on")
-    assert data == {"brightness": 255, "color_temp": 153}
+    assert data == {"brightness": 255, "color_temp": 153, "color_temp_kelvin": 6535}
     _, data = entity1.last_call("turn_on")
     # Home Assistant uses RGBCW so a mireds of 153 should be maximum cold at 100% brightness so 255
     assert data == {"brightness": 255, "rgbww_color": (0, 0, 0, 255, 0)}
@@ -1914,7 +1944,7 @@ async def test_light_service_call_color_temp_conversion(
         blocking=True,
     )
     _, data = entity0.last_call("turn_on")
-    assert data == {"brightness": 128, "color_temp": 500}
+    assert data == {"brightness": 128, "color_temp": 500, "color_temp_kelvin": 2000}
     _, data = entity1.last_call("turn_on")
     # Home Assistant uses RGBCW so a mireds of 500 should be maximum warm at 50% brightness so 128
     assert data == {"brightness": 128, "rgbww_color": (0, 0, 0, 0, 128)}
@@ -1933,7 +1963,7 @@ async def test_light_service_call_color_temp_conversion(
         blocking=True,
     )
     _, data = entity0.last_call("turn_on")
-    assert data == {"brightness": 255, "color_temp": 327}
+    assert data == {"brightness": 255, "color_temp": 327, "color_temp_kelvin": 3058}
     _, data = entity1.last_call("turn_on")
     # Home Assistant uses RGBCW so a mireds of 328 should be the midway point at 100% brightness so 127 (rounding), 128
     assert data == {"brightness": 255, "rgbww_color": (0, 0, 0, 127, 128)}
@@ -1952,7 +1982,7 @@ async def test_light_service_call_color_temp_conversion(
         blocking=True,
     )
     _, data = entity0.last_call("turn_on")
-    assert data == {"brightness": 255, "color_temp": 240}
+    assert data == {"brightness": 255, "color_temp": 240, "color_temp_kelvin": 4166}
     _, data = entity1.last_call("turn_on")
     assert data == {"brightness": 255, "rgbww_color": (0, 0, 0, 191, 64)}
 
@@ -1970,9 +2000,55 @@ async def test_light_service_call_color_temp_conversion(
         blocking=True,
     )
     _, data = entity0.last_call("turn_on")
-    assert data == {"brightness": 255, "color_temp": 410}
+    assert data == {"brightness": 255, "color_temp": 410, "color_temp_kelvin": 2439}
     _, data = entity1.last_call("turn_on")
     assert data == {"brightness": 255, "rgbww_color": (0, 0, 0, 66, 189)}
+
+
+async def test_light_mired_color_temp_conversion(hass, enable_custom_integrations):
+    """Test color temp conversion from K to legacy mired."""
+    platform = getattr(hass.components, "test.light")
+    platform.init(empty=True)
+
+    platform.ENTITIES.append(platform.MockLight("Test_rgbww_ct", STATE_ON))
+    platform.ENTITIES.append(platform.MockLight("Test_rgbww", STATE_ON))
+
+    entity0 = platform.ENTITIES[0]
+    entity0.supported_color_modes = {
+        light.ColorMode.COLOR_TEMP,
+    }
+    entity0._attr_min_color_temp_kelvin = 1800
+    entity0._attr_max_color_temp_kelvin = 6700
+
+    assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity0.entity_id)
+    assert state.attributes["supported_color_modes"] == [light.ColorMode.COLOR_TEMP]
+    assert state.attributes["min_mireds"] == 149
+    assert state.attributes["max_mireds"] == 555
+    assert state.attributes["min_color_temp_kelvin"] == 1800
+    assert state.attributes["max_color_temp_kelvin"] == 6700
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {
+            "entity_id": [
+                entity0.entity_id,
+            ],
+            "brightness_pct": 100,
+            "color_temp_kelvin": 3500,
+        },
+        blocking=True,
+    )
+    _, data = entity0.last_call("turn_on")
+    assert data == {"brightness": 255, "color_temp": 285, "color_temp_kelvin": 3500}
+
+    state = hass.states.get(entity0.entity_id)
+    assert state.attributes["color_mode"] == light.ColorMode.COLOR_TEMP
+    assert state.attributes["color_temp"] == 285
+    assert state.attributes["color_temp_kelvin"] == 3500
 
 
 async def test_light_service_call_white_mode(hass, enable_custom_integrations):

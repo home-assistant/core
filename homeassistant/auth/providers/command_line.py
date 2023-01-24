@@ -88,12 +88,12 @@ class CommandLineAuthProvider(AuthProvider):
             for _line in stdout.splitlines():
                 try:
                     line = _line.decode().lstrip()
-                    if line.startswith("#"):
-                        continue
-                    key, value = line.split("=", 1)
                 except ValueError:
                     # malformed line
                     continue
+                if line.startswith("#") or "=" not in line:
+                    continue
+                key, _, value = line.partition("=")
                 key = key.strip()
                 value = value.strip()
                 if key in self.ALLOWED_META_KEYS:

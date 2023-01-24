@@ -17,7 +17,7 @@
                 "data": {
                     "host": "Host"
                 },
-                "description": "Konfiguriere die IP-Adresse oder den lokalen Hostnamen deines Fronius-Ger\u00e4ts.",
+                "description": "Konfiguriere die IP-Adresse oder den lokalen Hostnamen deines Fronius Ger\u00e4ts.",
                 "title": "Fronius SolarNet"
             }
         }

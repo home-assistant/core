@@ -14,14 +14,15 @@ from homeassistant.components.elmax.const import (
 )
 from homeassistant.config_entries import SOURCE_REAUTH
 
-from tests.common import MockConfigEntry
-from tests.components.elmax import (
+from . import (
     MOCK_PANEL_ID,
     MOCK_PANEL_NAME,
     MOCK_PANEL_PIN,
     MOCK_PASSWORD,
     MOCK_USERNAME,
 )
+
+from tests.common import MockConfigEntry
 
 CONF_POLLING = "polling"
 

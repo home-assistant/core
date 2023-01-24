@@ -18,12 +18,9 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
+from .conftest import CLIENT_ID, CLIENT_SECRET, SUBSCRIPTION_KEY
+
 from tests.common import async_fire_time_changed
-from tests.components.home_plus_control.conftest import (
-    CLIENT_ID,
-    CLIENT_SECRET,
-    SUBSCRIPTION_KEY,
-)
 
 
 def entity_assertions(

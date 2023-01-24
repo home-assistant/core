@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant.components.media_player.const import DOMAIN, SUPPORT_TURN_ON
+from homeassistant.components.media_player import DOMAIN, SUPPORT_TURN_ON
 from homeassistant.components.samsungtv.const import (
     CONF_ON_ACTION,
     CONF_SSDP_MAIN_TV_AGENT_LOCATION,

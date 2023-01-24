@@ -29,5 +29,24 @@
                 }
             }
         }
+    },
+    "entity": {
+        "select": {
+            "light": {
+                "state": {
+                    "dim": "\u8584\u6697\u3044",
+                    "off": "\u30aa\u30d5",
+                    "on": "\u30aa\u30f3"
+                }
+            }
+        },
+        "sensor": {
+            "smart_type": {
+                "state": {
+                    "humidity": "\u6e7f\u5ea6",
+                    "temperature": "\u6e29\u5ea6"
+                }
+            }
+        }
     }
 }

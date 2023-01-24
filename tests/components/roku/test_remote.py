@@ -10,12 +10,11 @@ from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_O
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
+from . import UPNP_SERIAL
+
 from tests.common import MockConfigEntry
-from tests.components.roku import UPNP_SERIAL
 
 MAIN_ENTITY_ID = f"{REMOTE_DOMAIN}.my_roku_3"
-
-# pylint: disable=redefined-outer-name
 
 
 async def test_setup(hass: HomeAssistant, init_integration: MockConfigEntry) -> None:

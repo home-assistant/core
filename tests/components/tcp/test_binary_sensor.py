@@ -8,8 +8,9 @@ from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
+from . import test_sensor as test_tcp
+
 from tests.common import assert_setup_component, async_fire_time_changed
-import tests.components.tcp.test_sensor as test_tcp
 
 BINARY_SENSOR_CONFIG = test_tcp.TEST_CONFIG["sensor"]
 TEST_CONFIG = {"binary_sensor": BINARY_SENSOR_CONFIG}

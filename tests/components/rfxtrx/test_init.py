@@ -11,8 +11,9 @@ from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
+from .conftest import create_rfx_test_cfg, setup_rfx_test_cfg
+
 from tests.common import MockConfigEntry
-from tests.components.rfxtrx.conftest import create_rfx_test_cfg, setup_rfx_test_cfg
 
 SOME_PROTOCOLS = ["ac", "arc"]
 

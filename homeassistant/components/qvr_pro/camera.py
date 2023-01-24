@@ -71,8 +71,6 @@ class QVRProCamera(Camera):
         self._client = client
         self._stream_source = stream_source
 
-        self._supported_features = 0
-
         super().__init__()
 
     @property
@@ -113,8 +111,3 @@ class QVRProCamera(Camera):
     async def stream_source(self):
         """Get stream source."""
         return self._stream_source
-
-    @property
-    def supported_features(self):
-        """Get supported features."""
-        return self._supported_features

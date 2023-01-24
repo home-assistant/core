@@ -1,0 +1,19 @@
+{
+  "domain": "keymitt_ble",
+  "name": "Keymitt MicroBot Push",
+  "documentation": "https://www.home-assistant.io/integrations/keymitt_ble",
+  "config_flow": true,
+  "bluetooth": [
+    {
+      "service_uuid": "0000abcd-0000-1000-8000-00805f9b34fb"
+    },
+    {
+      "local_name": "mib*"
+    }
+  ],
+  "codeowners": ["@spycle"],
+  "requirements": ["PyMicroBot==0.0.8"],
+  "iot_class": "assumed_state",
+  "dependencies": ["bluetooth_adapters"],
+  "loggers": ["keymitt_ble"]
+}

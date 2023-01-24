@@ -41,7 +41,7 @@ _ZhaGroupEntitySelfT = TypeVar("_ZhaGroupEntitySelfT", bound="ZhaGroupEntity")
 _LOGGER = logging.getLogger(__name__)
 
 ENTITY_SUFFIX = "entity_suffix"
-UPDATE_GROUP_FROM_CHILD_DELAY = 0.5
+DEFAULT_UPDATE_GROUP_FROM_CHILD_DELAY = 0.5
 
 
 class BaseZhaEntity(LogMixin, entity.Entity):
@@ -66,6 +66,8 @@ class BaseZhaEntity(LogMixin, entity.Entity):
     @property
     def name(self) -> str:
         """Return Entity's default name."""
+        if hasattr(self, "_attr_name") and self._attr_name is not None:
+            return self._attr_name
         return self._name
 
     @property
@@ -75,7 +77,7 @@ class BaseZhaEntity(LogMixin, entity.Entity):
 
     @property
     def zha_device(self) -> ZHADevice:
-        """Return the zha device this entity is attached to."""
+        """Return the ZHA device this entity is attached to."""
         return self._zha_device
 
     @property
@@ -256,7 +258,7 @@ class ZhaGroupEntity(BaseZhaEntity):
         zha_device: ZHADevice,
         **kwargs: Any,
     ) -> None:
-        """Initialize a light group."""
+        """Initialize a ZHA group."""
         super().__init__(unique_id, zha_device, **kwargs)
         self._available = False
         self._group = zha_device.gateway.groups.get(group_id)
@@ -268,6 +270,7 @@ class ZhaGroupEntity(BaseZhaEntity):
         self._async_unsub_state_changed: CALLBACK_TYPE | None = None
         self._handled_group_membership = False
         self._change_listener_debouncer: Debouncer | None = None
+        self._update_group_from_child_delay = DEFAULT_UPDATE_GROUP_FROM_CHILD_DELAY
 
     @property
     def available(self) -> bool:
@@ -314,7 +317,7 @@ class ZhaGroupEntity(BaseZhaEntity):
             self._change_listener_debouncer = Debouncer(
                 self.hass,
                 _LOGGER,
-                cooldown=UPDATE_GROUP_FROM_CHILD_DELAY,
+                cooldown=self._update_group_from_child_delay,
                 immediate=False,
                 function=functools.partial(self.async_update_ha_state, True),
             )

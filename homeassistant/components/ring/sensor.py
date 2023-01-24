@@ -206,7 +206,7 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription, ...] = (
         name="Battery",
         category=["doorbots", "authorized_doorbots", "stickup_cams"],
         native_unit_of_measurement=PERCENTAGE,
-        device_class="battery",
+        device_class=SensorDeviceClass.BATTERY,
         cls=RingSensor,
     ),
     RingSensorEntityDescription(
@@ -255,7 +255,7 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription, ...] = (
         category=["chimes", "doorbots", "authorized_doorbots", "stickup_cams"],
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         icon="mdi:wifi",
-        device_class="signal_strength",
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         cls=HealthDataRingSensor,
     ),
 )

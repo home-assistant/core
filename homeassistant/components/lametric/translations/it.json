@@ -7,7 +7,10 @@
             "link_local_address": "Gli indirizzi locali di collegamento non sono supportati",
             "missing_configuration": "L'integrazione LaMetric non \u00e8 configurata. Segui la documentazione.",
             "no_devices": "L'utente autorizzato non dispone di dispositivi LaMetric",
-            "no_url_available": "Nessun URL disponibile. Per informazioni su questo errore, [controlla la sezione della guida]({docs_url})"
+            "no_url_available": "Nessun URL disponibile. Per informazioni su questo errore, [controlla la sezione della guida]({docs_url})",
+            "reauth_device_not_found": "Il dispositivo che stai tentando di riautenticare non \u00e8 stato trovato in questo account LaMetric",
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente",
+            "unknown": "Errore imprevisto"
         },
         "error": {
             "cannot_connect": "Impossibile connettersi",
@@ -41,9 +44,19 @@
             }
         }
     },
+    "entity": {
+        "select": {
+            "brightness_mode": {
+                "state": {
+                    "auto": "Automatico",
+                    "manual": "Manuale"
+                }
+            }
+        }
+    },
     "issues": {
         "manual_migration": {
-            "description": "L'integrazione LaMetric \u00e8 stata modernizzata: viene ora configurata e inizializzata tramite l'interfaccia utente e le comunicazioni sono ora locali. \n\nSfortunatamente, la migrazione automatica non \u00e8 disponibile, quindi \u00e8 necessario configurare nuovamente LaMetric con Home Assistant. Consulta la documentazione di Home Assistant sull'integrazione LaMetric per sapere come configurarlo. \n\nRimuovere la vecchia configurazione YAML di LaMetric dal file configuration.yaml e riavviare Home Assistant per risolvere questo problema.",
+            "description": "L'integrazione di LaMetric \u00e8 stata modernizzata: ora \u00e8 configurata e impostata tramite l'interfaccia utente e le comunicazioni sono ora locali. \n\n Sfortunatamente, non \u00e8 possibile un percorso di migrazione automatica e quindi \u00e8 necessario riconfigurare LaMetric con Home Assistant. Si prega di consultare la documentazione sull'integrazione di Home Assistant LaMetric su come configurarlo. \n\n Rimuovi la vecchia configurazione YAML di LaMetric dal tuo file configuration.yaml e riavvia Home Assistant per risolvere questo problema.",
             "title": "Migrazione manuale richiesta per LaMetric"
         }
     }

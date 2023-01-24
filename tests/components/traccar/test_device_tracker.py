@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from pytraccar import ReportsEventeModel
 
-from homeassistant.components.device_tracker.const import DOMAIN
+from homeassistant.components.device_tracker import DOMAIN
 from homeassistant.components.traccar.device_tracker import (
     PLATFORM_SCHEMA as TRACCAR_PLATFORM_SCHEMA,
 )

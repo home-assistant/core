@@ -7,6 +7,7 @@ from advantage_air import ApiError, advantage_air
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -60,7 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 if await func(param):
                     await coordinator.async_refresh()
             except ApiError as err:
-                _LOGGER.warning(err)
+                raise HomeAssistantError(err) from err
 
         return error_handle
 
@@ -69,8 +70,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         "coordinator": coordinator,
-        "async_change": error_handle_factory(api.aircon.async_set),
-        "async_set_light": error_handle_factory(api.lights.async_set),
+        "aircon": error_handle_factory(api.aircon.async_set),
+        "lights": error_handle_factory(api.lights.async_set),
     }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

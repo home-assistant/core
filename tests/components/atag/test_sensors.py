@@ -3,7 +3,8 @@ from homeassistant.components.atag.sensor import SENSORS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.components.atag import UID, init_integration
+from . import UID, init_integration
+
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 

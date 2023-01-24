@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion",
+            "wrong_password": "Le mot de passe est erron\u00e9."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Adresse IP",
+                    "password": "Mot de passe"
+                }
+            }
+        }
+    }
+}

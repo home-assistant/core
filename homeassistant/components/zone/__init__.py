@@ -185,7 +185,7 @@ class ZoneStorageCollection(collection.StorageCollection):
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up configured zones as well as Home Assistant zone if necessary."""
-    component = entity_component.EntityComponent(_LOGGER, DOMAIN, hass)
+    component = entity_component.EntityComponent[Zone](_LOGGER, DOMAIN, hass)
     id_manager = collection.IDManager()
 
     yaml_collection = collection.IDLessCollection(

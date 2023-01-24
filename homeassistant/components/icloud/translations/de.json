@@ -11,13 +11,6 @@
             "validate_verification_code": "Verifizierung des Verifizierungscodes fehlgeschlagen. W\u00e4hle ein vertrauensw\u00fcrdiges Ger\u00e4t aus und starte die Verifizierung erneut"
         },
         "step": {
-            "reauth": {
-                "data": {
-                    "password": "Passwort"
-                },
-                "description": "Dein zuvor eingegebenes Passwort f\u00fcr {username} funktioniert nicht mehr. Aktualisiere dein Passwort, um diese Integration weiterhin zu verwenden.",
-                "title": "Integration erneut authentifizieren"
-            },
             "reauth_confirm": {
                 "data": {
                     "password": "Passwort"

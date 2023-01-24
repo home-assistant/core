@@ -4,7 +4,7 @@ from unittest.mock import Mock, call
 
 from requests.exceptions import HTTPError
 
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
@@ -36,7 +36,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_DEVICES,
     PERCENTAGE,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
@@ -87,14 +87,14 @@ async def test_setup(hass: HomeAssistant, fritz: Mock):
     assert (
         state.attributes[ATTR_FRIENDLY_NAME] == f"{CONF_FAKE_NAME} Comfort Temperature"
     )
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
     assert ATTR_STATE_CLASS not in state.attributes
 
     state = hass.states.get(f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_eco_temperature")
     assert state
     assert state.state == "16.0"
     assert state.attributes[ATTR_FRIENDLY_NAME] == f"{CONF_FAKE_NAME} Eco Temperature"
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
     assert ATTR_STATE_CLASS not in state.attributes
 
     state = hass.states.get(
@@ -106,7 +106,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock):
         state.attributes[ATTR_FRIENDLY_NAME]
         == f"{CONF_FAKE_NAME} Next Scheduled Temperature"
     )
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
     assert ATTR_STATE_CLASS not in state.attributes
 
     state = hass.states.get(
@@ -139,6 +139,22 @@ async def test_setup(hass: HomeAssistant, fritz: Mock):
         == f"{CONF_FAKE_NAME} Current Scheduled Preset"
     )
     assert ATTR_STATE_CLASS not in state.attributes
+
+    device.nextchange_temperature = 16
+
+    next_update = dt_util.utcnow() + timedelta(seconds=200)
+    async_fire_time_changed(hass, next_update)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_next_scheduled_preset")
+    assert state
+    assert state.state == PRESET_ECO
+
+    state = hass.states.get(
+        f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_current_scheduled_preset"
+    )
+    assert state
+    assert state.state == PRESET_COMFORT
 
 
 async def test_target_temperature_on(hass: HomeAssistant, fritz: Mock):

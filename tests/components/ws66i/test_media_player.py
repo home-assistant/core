@@ -2,13 +2,13 @@
 from collections import defaultdict
 from unittest.mock import patch
 
-from homeassistant.components.media_player import MediaPlayerEntityFeature
-from homeassistant.components.media_player.const import (
+from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_VOLUME_LEVEL,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_SELECT_SOURCE,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.components.ws66i.const import (
     CONF_SOURCES,

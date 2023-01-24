@@ -1,16 +1,25 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Der Dienst ist bereits konfiguriert"
+            "already_configured": "Der Dienst ist bereits konfiguriert",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
         },
         "error": {
-            "cannot_connect": "Verbindung fehlgeschlagen"
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung"
         },
         "step": {
             "api_key": {
                 "data": {
                     "api_key": "API-Schl\u00fcssel"
                 }
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API-Schl\u00fcssel"
+                },
+                "description": "Bitte gib einen neuen API-Schl\u00fcssel f\u00fcr PI-Hole unter {host}/{location} ein",
+                "title": "PI-Hole Integration erneut authentifizieren"
             },
             "user": {
                 "data": {
@@ -20,7 +29,6 @@
                     "name": "Name",
                     "port": "Port",
                     "ssl": "Verwendet ein SSL-Zertifikat",
-                    "statistics_only": "Nur Statistiken",
                     "verify_ssl": "SSL-Zertifikat \u00fcberpr\u00fcfen"
                 }
             }

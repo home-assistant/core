@@ -17,14 +17,15 @@ from homeassistant.const import (
 from homeassistant.helpers import device_registry as dr
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_fire_time_changed
-from tests.components.august.mocks import (
+from .mocks import (
     _create_august_with_devices,
     _mock_activities_from_fixture,
     _mock_doorbell_from_fixture,
     _mock_doorsense_enabled_august_lock_detail,
     _mock_lock_from_fixture,
 )
+
+from tests.common import async_fire_time_changed
 
 
 def _timetoken():
@@ -190,7 +191,9 @@ async def test_doorbell_update_via_pubnub(hass):
                 "data": {
                     "result": {
                         "created_at": "2021-03-16T01:07:08.817Z",
-                        "secure_url": "https://dyu7azbnaoi74.cloudfront.net/zip/images/zip.jpeg",
+                        "secure_url": (
+                            "https://dyu7azbnaoi74.cloudfront.net/zip/images/zip.jpeg"
+                        ),
                     },
                 },
             },
@@ -219,7 +222,9 @@ async def test_doorbell_update_via_pubnub(hass):
                         "format": "jpg",
                         "created_at": "2021-03-16T02:36:26.886Z",
                         "bytes": 14061,
-                        "secure_url": "https://dyu7azbnaoi74.cloudfront.net/images/1f8.jpeg",
+                        "secure_url": (
+                            "https://dyu7azbnaoi74.cloudfront.net/images/1f8.jpeg"
+                        ),
                         "url": "https://dyu7azbnaoi74.cloudfront.net/images/1f8.jpeg",
                         "etag": "09e839331c4ea59eef28081f2caa0e90",
                     },

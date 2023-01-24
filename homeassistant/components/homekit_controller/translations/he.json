@@ -11,5 +11,14 @@
                 }
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "thread_status": {
+                "state": {
+                    "disabled": "\u05de\u05d5\u05e9\u05d1\u05ea"
+                }
+            }
+        }
     }
 }

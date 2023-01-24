@@ -52,6 +52,15 @@ def mock_cloud_login(hass, mock_cloud_setup):
         yield
 
 
+@pytest.fixture(name="mock_auth")
+def mock_auth_fixture():
+    """Mock check token."""
+    with patch("hass_nabucasa.auth.CognitoAuth.async_check_token"), patch(
+        "hass_nabucasa.auth.CognitoAuth.async_renew_access_token"
+    ):
+        yield
+
+
 @pytest.fixture
 def mock_expired_cloud_login(hass, mock_cloud_setup):
     """Mock cloud is logged in."""

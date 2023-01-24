@@ -1,0 +1,35 @@
+{
+    "application_credentials": {
+        "description": "Segueix les [instruccions]({more_info_url}) de [la pantalla de consentiment OAuth]({oauth_consent_url}) perqu\u00e8 Home Assistant tingui acc\u00e9s als teus fulls de c\u00e0lcul de Google. Tamb\u00e9 has de crear les credencials d'aplicaci\u00f3 enlla\u00e7ades al teu compte:\n 1. V\u00e9s a [Credencials]({oauth_creds_url}) i fes clic a **Crear credencials**.\n 2. A la llista desplegable, selecciona **ID de client OAuth**.\n 3. Selecciona **Aplicaci\u00f3 Web** al tipus d'aplicaci\u00f3.\n \n "
+    },
+    "config": {
+        "abort": {
+            "already_configured": "El compte ja est\u00e0 configurat",
+            "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "create_spreadsheet_failure": "Error en crear el full de c\u00e0lcul, consulta el registre d'errors per m\u00e9s informaci\u00f3",
+            "invalid_access_token": "Token d'acc\u00e9s inv\u00e0lid",
+            "missing_configuration": "El component no est\u00e0 configurat. Mira'n la documentaci\u00f3.",
+            "oauth_error": "S'han rebut dades token inv\u00e0lides.",
+            "open_spreadsheet_failure": "Error en obrir el full de c\u00e0lcul, consulta el registre d'errors per m\u00e9s informaci\u00f3",
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament",
+            "timeout_connect": "S'ha esgotat el temps m\u00e0xim d'espera per establir connexi\u00f3",
+            "unknown": "Error inesperat"
+        },
+        "create_entry": {
+            "default": "S'ha autenticat correctament i s'ha creat un full de c\u00e0lcul a: {url}"
+        },
+        "step": {
+            "auth": {
+                "title": "Vinculaci\u00f3 amb compte de Google"
+            },
+            "pick_implementation": {
+                "title": "Selecciona el m\u00e8tode d'autenticaci\u00f3"
+            },
+            "reauth_confirm": {
+                "description": "La integraci\u00f3 Google Sheets ha de tornar a autenticar-se amb el teu compte",
+                "title": "Reautenticaci\u00f3 de la integraci\u00f3"
+            }
+        }
+    }
+}

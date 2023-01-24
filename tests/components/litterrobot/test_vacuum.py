@@ -1,14 +1,12 @@
 """Test the Litter-Robot vacuum entity."""
 from __future__ import annotations
 
-from datetime import timedelta
 from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
 
 from homeassistant.components.litterrobot import DOMAIN
-from homeassistant.components.litterrobot.entity import REFRESH_WAIT_TIME_SECONDS
 from homeassistant.components.litterrobot.vacuum import SERVICE_SET_SLEEP_MODE
 from homeassistant.components.vacuum import (
     ATTR_STATUS,
@@ -22,15 +20,11 @@ from homeassistant.components.vacuum import (
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
-from homeassistant.util.dt import utcnow
 
 from .common import VACUUM_ENTITY_ID
 from .conftest import setup_integration
 
-from tests.common import async_fire_time_changed
-
-VACUUM_UNIQUE_ID_OLD = "LR3C012345-Litter Box"
-VACUUM_UNIQUE_ID_NEW = "LR3C012345-litter_box"
+VACUUM_UNIQUE_ID = "LR3C012345-litter_box"
 
 COMPONENT_SERVICE_DOMAIN = {
     SERVICE_SET_SLEEP_MODE: DOMAIN,
@@ -41,15 +35,14 @@ async def test_vacuum(hass: HomeAssistant, mock_account: MagicMock) -> None:
     """Tests the vacuum entity was set up."""
     ent_reg = er.async_get(hass)
 
-    # Create entity entry to migrate to new unique ID
     ent_reg.async_get_or_create(
         PLATFORM_DOMAIN,
         DOMAIN,
-        VACUUM_UNIQUE_ID_OLD,
+        VACUUM_UNIQUE_ID,
         suggested_object_id=VACUUM_ENTITY_ID.replace(PLATFORM_DOMAIN, ""),
     )
     ent_reg_entry = ent_reg.async_get(VACUUM_ENTITY_ID)
-    assert ent_reg_entry.unique_id == VACUUM_UNIQUE_ID_OLD
+    assert ent_reg_entry.unique_id == VACUUM_UNIQUE_ID
 
     await setup_integration(hass, mock_account, PLATFORM_DOMAIN)
     assert len(ent_reg.entities) == 1
@@ -61,7 +54,7 @@ async def test_vacuum(hass: HomeAssistant, mock_account: MagicMock) -> None:
     assert vacuum.attributes["is_sleeping"] is False
 
     ent_reg_entry = ent_reg.async_get(VACUUM_ENTITY_ID)
-    assert ent_reg_entry.unique_id == VACUUM_UNIQUE_ID_NEW
+    assert ent_reg_entry.unique_id == VACUUM_UNIQUE_ID
 
 
 async def test_vacuum_status_when_sleeping(
@@ -141,7 +134,5 @@ async def test_commands(
         data,
         blocking=True,
     )
-    future = utcnow() + timedelta(seconds=REFRESH_WAIT_TIME_SECONDS)
-    async_fire_time_changed(hass, future)
     getattr(mock_account.robots[0], command).assert_called_once()
     assert (f"'{DOMAIN}.{service}' service is deprecated" in caplog.text) is deprecated

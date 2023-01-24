@@ -36,8 +36,7 @@ async def async_setup_entry(
             )
         )
 
-    if entities:
-        async_add_entities(entities)
+    async_add_entities(entities)
 
 
 class ShutterControlCover(SHCEntity, CoverEntity):

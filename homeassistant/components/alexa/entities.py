@@ -11,9 +11,11 @@ from homeassistant.components import (
     binary_sensor,
     button,
     camera,
+    climate,
     cover,
     fan,
     group,
+    humidifier,
     image_processing,
     input_boolean,
     input_button,
@@ -28,7 +30,6 @@ from homeassistant.components import (
     timer,
     vacuum,
 )
-from homeassistant.components.climate import const as climate
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_SUPPORTED_FEATURES,
@@ -36,8 +37,7 @@ from homeassistant.const import (
     CLOUD_NEVER_EXPOSED_ENTITIES,
     CONF_DESCRIPTION,
     CONF_NAME,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
     __version__,
 )
 from homeassistant.core import HomeAssistant, State, callback
@@ -100,7 +100,11 @@ class DisplayCategory:
     # to HDMI1. Applies to Scenes
     ACTIVITY_TRIGGER = "ACTIVITY_TRIGGER"
 
-    # Indicates a device that emits pleasant odors and masks unpleasant odors in interior spaces.
+    # Indicates a device that cools the air in interior spaces.
+    AIR_CONDITIONER = "AIR_CONDITIONER"
+
+    # Indicates a device that emits pleasant odors and masks unpleasant
+    # odors in interior spaces.
     AIR_FRESHENER = "AIR_FRESHENER"
 
     # Indicates a device that improves the quality of air in interior spaces.
@@ -140,7 +144,8 @@ class DisplayCategory:
     GAME_CONSOLE = "GAME_CONSOLE"
 
     # Indicates a garage door.
-    # Garage doors must implement the ModeController interface to open and close the door.
+    # Garage doors must implement the ModeController interface to
+    # open and close the door.
     GARAGE_DOOR = "GARAGE_DOOR"
 
     # Indicates a wearable device that transmits audio directly into the ear.
@@ -203,8 +208,8 @@ class DisplayCategory:
     # Indicates a security system.
     SECURITY_SYSTEM = "SECURITY_SYSTEM"
 
-    # Indicates an electric cooking device that sits on a countertop, cooks at low temperatures,
-    # and is often shaped like a cooking pot.
+    # Indicates an electric cooking device that sits on a countertop,
+    # cooks at low temperatures, and is often shaped like a cooking pot.
     SLOW_COOKER = "SLOW_COOKER"
 
     # Indicates an endpoint that locks.
@@ -240,7 +245,8 @@ class DisplayCategory:
     # Indicates a vacuum cleaner.
     VACUUM_CLEANER = "VACUUM_CLEANER"
 
-    # Indicates a network-connected wearable device, such as an Apple Watch, Fitbit, or Samsung Gear.
+    # Indicates a network-connected wearable device, such as an Apple Watch,
+    # Fitbit, or Samsung Gear.
     WEARABLE = "WEARABLE"
 
 
@@ -299,12 +305,6 @@ class AlexaEntity:
         See also DisplayCategory.
         """
         raise NotImplementedError
-
-    def get_interface(self, capability) -> AlexaCapability:
-        """Return the given AlexaInterface.
-
-        Raises _UnsupportedInterface.
-        """
 
     def interfaces(self) -> list[AlexaCapability]:
         """Return a list of supported interfaces.
@@ -577,13 +577,38 @@ class FanCapabilities(AlexaEntity):
             force_range_controller = False
 
         # AlexaRangeController controls the Fan Speed Percentage.
-        # For fans which only support on/off, no controller is added. This makes the
-        # fan impossible to turn on or off through Alexa, most likely due to a bug in Alexa.
-        # As a workaround, we add a range controller which can only be set to 0% or 100%.
+        # For fans which only support on/off, no controller is added. This makes
+        # the fan impossible to turn on or off through Alexa, most likely due
+        # to a bug in Alexa. As a workaround, we add a range controller which
+        # can only be set to 0% or 100%.
         if force_range_controller or supported & fan.FanEntityFeature.SET_SPEED:
             yield AlexaRangeController(
                 self.entity, instance=f"{fan.DOMAIN}.{fan.ATTR_PERCENTAGE}"
             )
+
+        yield AlexaEndpointHealth(self.hass, self.entity)
+        yield Alexa(self.hass)
+
+
+@ENTITY_ADAPTERS.register(humidifier.DOMAIN)
+class HumidifierCapabilities(AlexaEntity):
+    """Class to represent Humidifier capabilities."""
+
+    def default_display_categories(self):
+        """Return the display categories for this entity."""
+        return [DisplayCategory.OTHER]
+
+    def interfaces(self):
+        """Yield the supported interfaces."""
+        yield AlexaPowerController(self.entity)
+        supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        if supported & humidifier.HumidifierEntityFeature.MODES:
+            yield AlexaModeController(
+                self.entity, instance=f"{humidifier.DOMAIN}.{humidifier.ATTR_MODE}"
+            )
+        yield AlexaRangeController(
+            self.entity, instance=f"{humidifier.DOMAIN}.{humidifier.ATTR_HUMIDITY}"
+        )
 
         yield AlexaEndpointHealth(self.hass, self.entity)
         yield Alexa(self.hass)
@@ -723,7 +748,10 @@ class SensorCapabilities(AlexaEntity):
     def interfaces(self):
         """Yield the supported interfaces."""
         attrs = self.entity.attributes
-        if attrs.get(ATTR_UNIT_OF_MEASUREMENT) in (TEMP_FAHRENHEIT, TEMP_CELSIUS):
+        if attrs.get(ATTR_UNIT_OF_MEASUREMENT) in {
+            UnitOfTemperature.FAHRENHEIT,
+            UnitOfTemperature.CELSIUS,
+        }:
             yield AlexaTemperatureSensor(self.hass, self.entity)
             yield AlexaEndpointHealth(self.hass, self.entity)
             yield Alexa(self.hass)

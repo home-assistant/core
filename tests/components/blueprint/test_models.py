@@ -47,7 +47,9 @@ def blueprint_2():
 @pytest.fixture
 def domain_bps(hass):
     """Domain blueprints fixture."""
-    return models.DomainBlueprints(hass, "automation", logging.getLogger(__name__))
+    return models.DomainBlueprints(
+        hass, "automation", logging.getLogger(__name__), None
+    )
 
 
 def test_blueprint_model_init():
@@ -222,7 +224,7 @@ async def test_domain_blueprints_caching(domain_bps):
     assert await domain_bps.async_get_blueprint("something") is obj
 
     obj_2 = object()
-    domain_bps.async_reset_cache()
+    await domain_bps.async_reset_cache()
 
     # Now we call this method again.
     with patch.object(domain_bps, "_load_blueprint", return_value=obj_2):
@@ -254,10 +256,10 @@ async def test_domain_blueprints_add_blueprint(domain_bps, blueprint_1):
     with patch.object(domain_bps, "_create_file") as create_file_mock:
         # Should add extension when not present.
         await domain_bps.async_add_blueprint(blueprint_1, "something")
-        assert create_file_mock.call_args[0][1] == ("something.yaml")
+        assert create_file_mock.call_args[0][1] == "something.yaml"
 
         await domain_bps.async_add_blueprint(blueprint_1, "something2.yaml")
-        assert create_file_mock.call_args[0][1] == ("something2.yaml")
+        assert create_file_mock.call_args[0][1] == "something2.yaml"
 
     # Should be in cache.
     with patch.object(domain_bps, "_load_blueprint") as mock_load:

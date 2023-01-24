@@ -1,4 +1,6 @@
 """Advantage Air Update platform."""
+from typing import Any
+
 from homeassistant.components.update import UpdateEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -26,7 +28,7 @@ class AdvantageAirApp(AdvantageAirEntity, UpdateEntity):
 
     _attr_name = "App"
 
-    def __init__(self, instance):
+    def __init__(self, instance: dict[str, Any]) -> None:
         """Initialize the Advantage Air App."""
         super().__init__(instance)
         self._attr_device_info = DeviceInfo(
@@ -40,12 +42,12 @@ class AdvantageAirApp(AdvantageAirEntity, UpdateEntity):
         )
 
     @property
-    def installed_version(self):
+    def installed_version(self) -> str:
         """Return the current app version."""
         return self.coordinator.data["system"]["myAppRev"]
 
     @property
-    def latest_version(self):
+    def latest_version(self) -> str:
         """Return if there is an update."""
         if self.coordinator.data["system"]["needsUpdate"]:
             return "Needs Update"

@@ -6,7 +6,8 @@
         },
         "error": {
             "invalid_auth": "Ongeldige authenticatie",
-            "unknown": "Onverwachte fout"
+            "unknown": "Onverwachte fout",
+            "unknown_mfa": "Onbekende fout opgetreden tijdens het instellen van MFA"
         },
         "step": {
             "installation": {
@@ -17,7 +18,8 @@
             },
             "mfa": {
                 "data": {
-                    "code": "Verificatiecode"
+                    "code": "Verificatiecode",
+                    "description": "Uw account heeft verificatie in 2 stappen ingeschakeld. Voer de verificatiecode in die Verisure u toestuurt."
                 }
             },
             "reauth_confirm": {
@@ -29,7 +31,8 @@
             },
             "reauth_mfa": {
                 "data": {
-                    "code": "Verificatiecode"
+                    "code": "Verificatiecode",
+                    "description": "Uw account heeft verificatie in 2 stappen ingeschakeld. Voer de verificatiecode in die Verisure u toestuurt."
                 }
             },
             "user": {

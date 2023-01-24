@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "\u00da\u010det je ji\u017e nastaven"
+        },
         "error": {
             "wrong_location": "Lokalita pouze pro \u0160v\u00e9dsko"
         },

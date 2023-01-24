@@ -16,11 +16,17 @@
                     "username": "Gebruikersnaam"
                 }
             },
-            "user": {
+            "local": {
                 "data": {
-                    "password": "Wachtwoord",
+                    "host": "Host",
                     "pin": "Pincode",
-                    "username": "Gebruikersnaam"
+                    "port": "Poort"
+                }
+            },
+            "user": {
+                "menu_options": {
+                    "cloud": "Risco Cloud (aanbevolen)",
+                    "local": "Lokaal Risco paneel (geavanceerd)"
                 }
             }
         }

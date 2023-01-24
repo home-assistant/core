@@ -2,6 +2,7 @@
     "config": {
         "error": {
             "invalid_api_token": "Ugyldig API-n\u00f8kkel",
+            "no_site": "Ingen side oppgitt",
             "unknown_error": "Uventet feil"
         },
         "step": {

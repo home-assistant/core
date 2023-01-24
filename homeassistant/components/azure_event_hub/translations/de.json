@@ -16,11 +16,11 @@
                     "event_hub_connection_string": "Event Hub-Verbindungszeichenfolge"
                 },
                 "description": "Bitte gib die Verbindungszeichenfolge ein f\u00fcr: {event_hub_instance_name}",
-                "title": "Verbindungszeichenfolgenmethode"
+                "title": "Verbindungszeichenfolge Methode"
             },
             "sas": {
                 "data": {
-                    "event_hub_namespace": "Event Hub-Namespace",
+                    "event_hub_namespace": "Event Hub-Namensraum",
                     "event_hub_sas_key": "Event Hub SAS-Schl\u00fcssel",
                     "event_hub_sas_policy": "Event Hub SAS-Richtlinie"
                 },
@@ -40,7 +40,7 @@
         "step": {
             "options": {
                 "data": {
-                    "send_interval": "Intervall zwischen dem Senden von Batches an den Hub."
+                    "send_interval": "Intervall zwischen dem Senden von Stapeln an den Hub."
                 },
                 "title": "Optionen f\u00fcr den Azure Event Hub."
             }

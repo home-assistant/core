@@ -47,7 +47,6 @@ TEST_API_CALENDAR = {
     "id": CALENDAR_ID,
     "etag": '"3584134138943410"',
     "timeZone": "UTC",
-    "accessRole": "reader",
     "foregroundColor": "#000000",
     "selected": True,
     "kind": "calendar#calendarListEntry",
@@ -62,10 +61,19 @@ CLIENT_ID = "client-id"
 CLIENT_SECRET = "client-secret"
 
 
+@pytest.fixture(name="calendar_access_role")
+def test_calendar_access_role() -> str:
+    """Default access role to use for test_api_calendar in tests."""
+    return "owner"
+
+
 @pytest.fixture
-def test_api_calendar():
+def test_api_calendar(calendar_access_role: str):
     """Return a test calendar object used in API responses."""
-    return TEST_API_CALENDAR
+    return {
+        **TEST_API_CALENDAR,
+        "accessRole": calendar_access_role,
+    }
 
 
 @pytest.fixture
@@ -113,7 +121,9 @@ def mock_calendars_yaml(
     calendars_config: list[dict[str, Any]],
 ) -> Generator[Mock, None, None]:
     """Fixture that prepares the google_calendars.yaml mocks."""
-    mocked_open_function = mock_open(read_data=yaml.dump(calendars_config))
+    mocked_open_function = mock_open(
+        read_data=yaml.dump(calendars_config) if calendars_config else None
+    )
     with patch("homeassistant.components.google.open", mocked_open_function):
         yield mocked_open_function
 
@@ -206,9 +216,13 @@ def mock_events_list(
     ) -> None:
         if calendar_id is None:
             calendar_id = CALENDAR_ID
+        resp = {
+            **response,
+            "nextSyncToken": "sync-token",
+        }
         aioclient_mock.get(
             f"{API_BASE_URL}/calendars/{calendar_id}/events",
-            json=response,
+            json=resp,
             exc=exc,
         )
         return
@@ -236,9 +250,13 @@ def mock_calendars_list(
     """Fixture to construct a fake calendar list API response."""
 
     def _result(response: dict[str, Any], exc: ClientError | None = None) -> None:
+        resp = {
+            **response,
+            "nextSyncToken": "sync-token",
+        }
         aioclient_mock.get(
             f"{API_BASE_URL}/users/me/calendarList",
-            json=response,
+            json=resp,
             exc=exc,
         )
         return

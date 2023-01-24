@@ -20,7 +20,7 @@
     },
     "state": {
         "_": {
-            "buffering": "Buforowanie",
+            "buffering": "buforowanie",
             "idle": "nieaktywny",
             "off": "wy\u0142.",
             "on": "w\u0142.",

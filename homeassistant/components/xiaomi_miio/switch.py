@@ -46,12 +46,14 @@ from .const import (
     FEATURE_FLAGS_AIRPURIFIER_2S,
     FEATURE_FLAGS_AIRPURIFIER_3C,
     FEATURE_FLAGS_AIRPURIFIER_4,
+    FEATURE_FLAGS_AIRPURIFIER_4_LITE,
     FEATURE_FLAGS_AIRPURIFIER_MIIO,
     FEATURE_FLAGS_AIRPURIFIER_MIOT,
     FEATURE_FLAGS_AIRPURIFIER_PRO,
     FEATURE_FLAGS_AIRPURIFIER_PRO_V7,
     FEATURE_FLAGS_AIRPURIFIER_V1,
     FEATURE_FLAGS_AIRPURIFIER_V3,
+    FEATURE_FLAGS_AIRPURIFIER_ZA1,
     FEATURE_FLAGS_FAN,
     FEATURE_FLAGS_FAN_1C,
     FEATURE_FLAGS_FAN_P5,
@@ -82,11 +84,14 @@ from .const import (
     MODEL_AIRPURIFIER_2S,
     MODEL_AIRPURIFIER_3C,
     MODEL_AIRPURIFIER_4,
+    MODEL_AIRPURIFIER_4_LITE_RMA1,
+    MODEL_AIRPURIFIER_4_LITE_RMB1,
     MODEL_AIRPURIFIER_4_PRO,
     MODEL_AIRPURIFIER_PRO,
     MODEL_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V1,
     MODEL_AIRPURIFIER_V3,
+    MODEL_AIRPURIFIER_ZA1,
     MODEL_FAN_1C,
     MODEL_FAN_P5,
     MODEL_FAN_P9,
@@ -197,8 +202,11 @@ MODEL_TO_FEATURES_MAP = {
     MODEL_AIRPURIFIER_PRO_V7: FEATURE_FLAGS_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V1: FEATURE_FLAGS_AIRPURIFIER_V1,
     MODEL_AIRPURIFIER_V3: FEATURE_FLAGS_AIRPURIFIER_V3,
+    MODEL_AIRPURIFIER_4_LITE_RMA1: FEATURE_FLAGS_AIRPURIFIER_4_LITE,
+    MODEL_AIRPURIFIER_4_LITE_RMB1: FEATURE_FLAGS_AIRPURIFIER_4_LITE,
     MODEL_AIRPURIFIER_4: FEATURE_FLAGS_AIRPURIFIER_4,
     MODEL_AIRPURIFIER_4_PRO: FEATURE_FLAGS_AIRPURIFIER_4,
+    MODEL_AIRPURIFIER_ZA1: FEATURE_FLAGS_AIRPURIFIER_ZA1,
     MODEL_FAN_1C: FEATURE_FLAGS_FAN_1C,
     MODEL_FAN_P10: FEATURE_FLAGS_FAN_P10_P11,
     MODEL_FAN_P11: FEATURE_FLAGS_FAN_P10_P11,
@@ -462,9 +470,11 @@ async def async_setup_other_entry(hass, config_entry, async_add_entities):
             hass.data[DATA_KEY][host] = device
         else:
             _LOGGER.error(
-                "Unsupported device found! Please create an issue at "
-                "https://github.com/rytilahti/python-miio/issues "
-                "and provide the following data: %s",
+                (
+                    "Unsupported device found! Please create an issue at "
+                    "https://github.com/rytilahti/python-miio/issues "
+                    "and provide the following data: %s"
+                ),
                 model,
             )
 

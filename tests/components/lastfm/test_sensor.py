@@ -30,7 +30,6 @@ class MockUser:
 
     def get_image(self):
         """Get mock image."""
-        pass
 
     def get_recent_tracks(self, limit):
         """Get mock recent tracks."""

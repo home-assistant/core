@@ -12,12 +12,12 @@ from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_ble_device_from_address,
 )
-from homeassistant.components.bluetooth.active_update_coordinator import (
+from homeassistant.components.bluetooth.active_update_processor import (
     ActiveBluetoothProcessorCoordinator,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant
 
 from .const import DOMAIN
 
@@ -60,7 +60,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     def _needs_poll(
         service_info: BluetoothServiceInfoBleak, last_poll: float | None
     ) -> bool:
-        return data.poll_needed(service_info, last_poll)
+        # Only poll if hass is running, we need to poll,
+        # and we actually have a way to connect to the device
+        return (
+            hass.state == CoreState.running
+            and data.poll_needed(service_info, last_poll)
+            and bool(
+                async_ble_device_from_address(
+                    hass, service_info.device.address, connectable=True
+                )
+            )
+        )
 
     async def _async_poll(service_info: BluetoothServiceInfoBleak):
         # BluetoothServiceInfoBleak is defined in HA, otherwise would just pass it

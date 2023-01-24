@@ -1,5 +1,5 @@
 """Test fixtures for the cast integration."""
-# pylint: disable=protected-access
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pychromecast

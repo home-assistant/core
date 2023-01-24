@@ -31,6 +31,10 @@ TYPE_BATT9 = "batt9"
 TYPE_BATTIN = "battin"
 TYPE_BATTOUT = "battout"
 TYPE_BATT_CO2 = "batt_co2"
+TYPE_BATT_LEAK1 = "batleak1"
+TYPE_BATT_LEAK2 = "batleak2"
+TYPE_BATT_LEAK3 = "batleak3"
+TYPE_BATT_LEAK4 = "batleak4"
 TYPE_BATT_LIGHTNING = "batt_lightning"
 TYPE_BATT_SM1 = "battsm1"
 TYPE_BATT_SM10 = "battsm10"
@@ -42,6 +46,10 @@ TYPE_BATT_SM6 = "battsm6"
 TYPE_BATT_SM7 = "battsm7"
 TYPE_BATT_SM8 = "battsm8"
 TYPE_BATT_SM9 = "battsm9"
+TYPE_LEAK1 = "leak1"
+TYPE_LEAK2 = "leak2"
+TYPE_LEAK3 = "leak3"
+TYPE_LEAK4 = "leak4"
 TYPE_PM25IN_BATT = "batt_25in"
 TYPE_PM25_BATT = "batt_25"
 TYPE_RELAY1 = "relay1"
@@ -156,6 +164,34 @@ BINARY_SENSOR_DESCRIPTIONS = (
         on_state=0,
     ),
     AmbientBinarySensorDescription(
+        key=TYPE_BATT_LEAK1,
+        name="Leak detector battery 1",
+        device_class=BinarySensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        on_state=0,
+    ),
+    AmbientBinarySensorDescription(
+        key=TYPE_BATT_LEAK2,
+        name="Leak detector battery 2",
+        device_class=BinarySensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        on_state=0,
+    ),
+    AmbientBinarySensorDescription(
+        key=TYPE_BATT_LEAK3,
+        name="Leak detector battery 3",
+        device_class=BinarySensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        on_state=0,
+    ),
+    AmbientBinarySensorDescription(
+        key=TYPE_BATT_LEAK4,
+        name="Leak detector battery 4",
+        device_class=BinarySensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        on_state=0,
+    ),
+    AmbientBinarySensorDescription(
         key=TYPE_BATT_SM1,
         name="Soil monitor battery 1",
         device_class=BinarySensorDeviceClass.BATTERY,
@@ -238,6 +274,30 @@ BINARY_SENSOR_DESCRIPTIONS = (
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         on_state=0,
+    ),
+    AmbientBinarySensorDescription(
+        key=TYPE_LEAK1,
+        name="Leak detector 1",
+        device_class=BinarySensorDeviceClass.MOISTURE,
+        on_state=1,
+    ),
+    AmbientBinarySensorDescription(
+        key=TYPE_LEAK2,
+        name="Leak detector 2",
+        device_class=BinarySensorDeviceClass.MOISTURE,
+        on_state=1,
+    ),
+    AmbientBinarySensorDescription(
+        key=TYPE_LEAK3,
+        name="Leak detector 3",
+        device_class=BinarySensorDeviceClass.MOISTURE,
+        on_state=1,
+    ),
+    AmbientBinarySensorDescription(
+        key=TYPE_LEAK4,
+        name="Leak detector 4",
+        device_class=BinarySensorDeviceClass.MOISTURE,
+        on_state=1,
     ),
     AmbientBinarySensorDescription(
         key=TYPE_PM25IN_BATT,

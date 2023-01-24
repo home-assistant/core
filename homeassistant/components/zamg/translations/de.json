@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "station_not_found": "Stations-ID bei ZAMG nicht gefunden"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "station_not_found": "Stations-ID bei ZAMG nicht gefunden"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "station_id": "Station-ID (standardm\u00e4\u00dfig die n\u00e4chstgelegene Station)"
+                },
+                "description": "Richte ZAMG f\u00fcr die Integration mit Home Assistant ein."
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Die Konfiguration von ZAMG mit YAML wird entfernt. \n\nDeine vorhandene YAML-Konfiguration wurde automatisch in die Benutzeroberfl\u00e4che importiert. \n\nEntferne die ZAMG-YAML-Konfiguration aus deiner configuration.yaml-Datei und starte Home Assistant neu, um dieses Problem zu beheben.",
+            "title": "Die ZAMG YAML-Konfiguration wird entfernt"
+        }
+    }
+}

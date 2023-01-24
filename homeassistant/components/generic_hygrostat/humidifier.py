@@ -5,15 +5,13 @@ import asyncio
 import logging
 
 from homeassistant.components.humidifier import (
+    ATTR_HUMIDITY,
+    MODE_AWAY,
+    MODE_NORMAL,
     PLATFORM_SCHEMA,
     HumidifierDeviceClass,
     HumidifierEntity,
     HumidifierEntityFeature,
-)
-from homeassistant.components.humidifier.const import (
-    ATTR_HUMIDITY,
-    MODE_AWAY,
-    MODE_NORMAL,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -149,7 +147,6 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         self._min_humidity = min_humidity
         self._max_humidity = max_humidity
         self._target_humidity = target_humidity
-        self._attr_supported_features = 0
         if away_humidity:
             self._attr_supported_features |= HumidifierEntityFeature.MODES
         self._away_humidity = away_humidity
@@ -273,7 +270,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
             await self._async_device_turn_off()
         await self.async_update_ha_state()
 
-    async def async_set_humidity(self, humidity: int):
+    async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
         if humidity is None:
             return
@@ -284,7 +281,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
             return
 
         self._target_humidity = humidity
-        await self._async_operate(force=True)
+        await self._async_operate()
         await self.async_update_ha_state()
 
     @property
@@ -361,8 +358,10 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
                 self._active = True
                 force = True
                 _LOGGER.info(
-                    "Obtained current and target humidity. "
-                    "Generic hygrostat active. %s, %s",
+                    (
+                        "Obtained current and target humidity. "
+                        "Generic hygrostat active. %s, %s"
+                    ),
                     self._cur_humidity,
                     self._target_humidity,
                 )

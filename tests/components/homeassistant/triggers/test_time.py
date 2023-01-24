@@ -5,8 +5,9 @@ from unittest.mock import Mock, patch
 import pytest
 import voluptuous as vol
 
-from homeassistant.components import automation, sensor
+from homeassistant.components import automation
 from homeassistant.components.homeassistant.triggers import time
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ENTITY_ID, SERVICE_TURN_OFF
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -406,7 +407,7 @@ async def test_if_fires_using_at_sensor(hass, calls):
     hass.states.async_set(
         "sensor.next_alarm",
         trigger_dt.isoformat(),
-        {ATTR_DEVICE_CLASS: sensor.DEVICE_CLASS_TIMESTAMP},
+        {ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP},
     )
 
     time_that_will_not_match_right_away = trigger_dt - timedelta(minutes=1)
@@ -445,7 +446,7 @@ async def test_if_fires_using_at_sensor(hass, calls):
     hass.states.async_set(
         "sensor.next_alarm",
         trigger_dt.isoformat(),
-        {ATTR_DEVICE_CLASS: sensor.DEVICE_CLASS_TIMESTAMP},
+        {ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP},
     )
     await hass.async_block_till_done()
 
@@ -462,13 +463,13 @@ async def test_if_fires_using_at_sensor(hass, calls):
         hass.states.async_set(
             "sensor.next_alarm",
             trigger_dt.isoformat(),
-            {ATTR_DEVICE_CLASS: sensor.DEVICE_CLASS_TIMESTAMP},
+            {ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP},
         )
         await hass.async_block_till_done()
         hass.states.async_set(
             "sensor.next_alarm",
             broken,
-            {ATTR_DEVICE_CLASS: sensor.DEVICE_CLASS_TIMESTAMP},
+            {ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP},
         )
         await hass.async_block_till_done()
 
@@ -482,7 +483,7 @@ async def test_if_fires_using_at_sensor(hass, calls):
     hass.states.async_set(
         "sensor.next_alarm",
         trigger_dt.isoformat(),
-        {ATTR_DEVICE_CLASS: sensor.DEVICE_CLASS_TIMESTAMP},
+        {ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP},
     )
     await hass.async_block_till_done()
     hass.states.async_set(

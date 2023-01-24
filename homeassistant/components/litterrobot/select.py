@@ -8,18 +8,15 @@ from typing import Any, Generic, TypeVar
 
 from pylitterbot import FeederRobot, LitterRobot
 
-from homeassistant.components.select import (
-    DOMAIN as PLATFORM,
-    SelectEntity,
-    SelectEntityDescription,
-)
+from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TIME_MINUTES
+from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .entity import LitterRobotConfigEntity, _RobotT, async_update_unique_id
+from .entity import LitterRobotEntity, _RobotT
 from .hub import LitterRobotHub
 
 _CastTypeT = TypeVar("_CastTypeT", int, float)
@@ -31,10 +28,7 @@ class RequiredKeysMixin(Generic[_RobotT, _CastTypeT]):
 
     current_fn: Callable[[_RobotT], _CastTypeT]
     options_fn: Callable[[_RobotT], list[_CastTypeT]]
-    select_fn: Callable[
-        [_RobotT, str],
-        tuple[Callable[[_CastTypeT], Coroutine[Any, Any, bool]], _CastTypeT],
-    ]
+    select_fn: Callable[[_RobotT, str], Coroutine[Any, Any, bool]]
 
 
 @dataclass
@@ -43,15 +37,17 @@ class RobotSelectEntityDescription(
 ):
     """A class that describes robot select entities."""
 
+    entity_category: EntityCategory = EntityCategory.CONFIG
+
 
 LITTER_ROBOT_SELECT = RobotSelectEntityDescription[LitterRobot, int](
     key="cycle_delay",
-    name="Clean Cycle Wait Time Minutes",
+    name="Clean cycle wait time minutes",
     icon="mdi:timer-outline",
-    unit_of_measurement=TIME_MINUTES,
+    unit_of_measurement=UnitOfTime.MINUTES,
     current_fn=lambda robot: robot.clean_cycle_wait_time_minutes,
     options_fn=lambda robot: robot.VALID_WAIT_TIMES,
-    select_fn=lambda robot, option: (robot.set_wait_time, int(option)),
+    select_fn=lambda robot, option: robot.set_wait_time(int(option)),
 )
 FEEDER_ROBOT_SELECT = RobotSelectEntityDescription[FeederRobot, float](
     key="meal_insert_size",
@@ -60,7 +56,7 @@ FEEDER_ROBOT_SELECT = RobotSelectEntityDescription[FeederRobot, float](
     unit_of_measurement="cups",
     current_fn=lambda robot: robot.meal_insert_size,
     options_fn=lambda robot: robot.VALID_MEAL_INSERT_SIZES,
-    select_fn=lambda robot, option: (robot.set_meal_insert_size, float(option)),
+    select_fn=lambda robot, option: robot.set_meal_insert_size(float(option)),
 )
 
 
@@ -83,12 +79,11 @@ async def async_setup_entry(
             ),
         )
     )
-    async_update_unique_id(hass, PLATFORM, entities)
     async_add_entities(entities)
 
 
 class LitterRobotSelect(
-    LitterRobotConfigEntity[_RobotT], SelectEntity, Generic[_RobotT, _CastTypeT]
+    LitterRobotEntity[_RobotT], SelectEntity, Generic[_RobotT, _CastTypeT]
 ):
     """Litter-Robot Select."""
 
@@ -112,5 +107,4 @@ class LitterRobotSelect(
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        action, adjusted_option = self.entity_description.select_fn(self.robot, option)
-        await self.perform_action_and_refresh(action, adjusted_option)
+        await self.entity_description.select_fn(self.robot, option)

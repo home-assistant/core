@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
-from tests.components.speedtestdotnet import MOCK_RESULTS, MOCK_SERVERS
+from . import MOCK_RESULTS, MOCK_SERVERS
 
 
 @pytest.fixture(autouse=True)

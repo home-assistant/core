@@ -15,6 +15,7 @@ from .const import DOMAIN
 from .models import MelnorDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [
+    Platform.NUMBER,
     Platform.SENSOR,
     Platform.SWITCH,
 ]

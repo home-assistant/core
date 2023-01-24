@@ -19,8 +19,7 @@
             "init": {
                 "data": {
                     "power": "Gecontracteerd vermogen (kW)",
-                    "power_p3": "Gecontracteerd vermogen voor dalperiode P3 (kW)",
-                    "tariff": "Toepasselijk tarief per geografische zone"
+                    "power_p3": "Gecontracteerd vermogen voor dalperiode P3 (kW)"
                 }
             }
         }

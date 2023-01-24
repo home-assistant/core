@@ -3,8 +3,8 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import VOLUME_GALLONS
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.const import UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -80,6 +80,9 @@ class StreamlabsUsageData:
 class StreamLabsDailyUsage(SensorEntity):
     """Monitors the daily water usage."""
 
+    _attr_device_class = SensorDeviceClass.WATER
+    _attr_native_unit_of_measurement = UnitOfVolume.GALLONS
+
     def __init__(self, location_name, streamlabs_usage_data):
         """Initialize the daily water usage device."""
         self._location_name = location_name
@@ -87,24 +90,14 @@ class StreamLabsDailyUsage(SensorEntity):
         self._state = None
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name for daily usage."""
         return f"{self._location_name} {NAME_DAILY_USAGE}"
-
-    @property
-    def icon(self):
-        """Return the daily usage icon."""
-        return WATER_ICON
 
     @property
     def native_value(self):
         """Return the current daily usage."""
         return self._streamlabs_usage_data.get_daily_usage()
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return gallons as the unit measurement for water."""
-        return VOLUME_GALLONS
 
     def update(self) -> None:
         """Retrieve the latest daily usage."""
@@ -115,7 +108,7 @@ class StreamLabsMonthlyUsage(StreamLabsDailyUsage):
     """Monitors the monthly water usage."""
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name for monthly usage."""
         return f"{self._location_name} {NAME_MONTHLY_USAGE}"
 
@@ -129,7 +122,7 @@ class StreamLabsYearlyUsage(StreamLabsDailyUsage):
     """Monitors the yearly water usage."""
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name for yearly usage."""
         return f"{self._location_name} {NAME_YEARLY_USAGE}"
 

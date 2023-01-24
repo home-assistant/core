@@ -6,7 +6,12 @@ import logging
 from typing import Any
 
 from homeassistant.components.sensor import CONF_STATE_CLASS, SensorEntity
-from homeassistant.const import CONF_NAME, CONF_SENSORS, CONF_UNIT_OF_MEASUREMENT
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_SENSORS,
+    CONF_UNIQUE_ID,
+    CONF_UNIT_OF_MEASUREMENT,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -58,7 +63,7 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreEntity, SensorEntity):
     ) -> None:
         """Initialize the modbus register sensor."""
         super().__init__(hub, entry)
-        self._coordinator: DataUpdateCoordinator[Any] | None = None
+        self._coordinator: DataUpdateCoordinator[list[int] | None] | None = None
         self._attr_native_unit_of_measurement = entry.get(CONF_UNIT_OF_MEASUREMENT)
         self._attr_state_class = entry.get(CONF_STATE_CLASS)
 
@@ -110,7 +115,9 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreEntity, SensorEntity):
         result = self.unpack_structure_result(raw_result.registers)
         if self._coordinator:
             if result:
-                result_array = result.split(",")
+                result_array = list(
+                    map(float if self._precision else int, result.split(","))
+                )
                 self._attr_native_value = result_array[0]
                 self._coordinator.async_set_updated_data(result_array)
             else:
@@ -126,16 +133,26 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreEntity, SensorEntity):
         self.async_write_ha_state()
 
 
-class SlaveSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
-    """Modbus slave binary sensor."""
+class SlaveSensor(
+    CoordinatorEntity[DataUpdateCoordinator[list[int] | None]],
+    RestoreEntity,
+    SensorEntity,
+):
+    """Modbus slave register sensor."""
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator[Any], idx: int, entry: dict[str, Any]
+        self,
+        coordinator: DataUpdateCoordinator[list[int] | None],
+        idx: int,
+        entry: dict[str, Any],
     ) -> None:
-        """Initialize the Modbus binary sensor."""
+        """Initialize the Modbus register sensor."""
         idx += 1
         self._idx = idx
         self._attr_name = f"{entry[CONF_NAME]} {idx}"
+        self._attr_unique_id = entry.get(CONF_UNIQUE_ID)
+        if self._attr_unique_id:
+            self._attr_unique_id = f"{self._attr_unique_id}_{idx}"
         self._attr_available = False
         super().__init__(coordinator)
 
@@ -149,6 +166,5 @@ class SlaveSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         result = self.coordinator.data
-        if result:
-            self._attr_native_value = result[self._idx]
+        self._attr_native_value = result[self._idx] if result else None
         super()._handle_coordinator_update()
