@@ -131,7 +131,7 @@ class GoogleAssistantConversationAgent(conversation.AbstractConversationAgent):
         context: Context,
         conversation_id: str | None = None,
         language: str | None = None,
-    ) -> conversation.ConversationResult | None:
+    ) -> conversation.ConversationResult:
         """Process a sentence."""
         if self.session:
             session = self.session
