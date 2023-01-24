@@ -76,9 +76,6 @@ async def test_sensors(
         }
     }
 
-    assert await async_setup_component(hass, "sensor", config)
-    await hass.async_block_till_done()
-
     entity_ids = config["sensor"]["entities"]
 
     for entity_id, value in dict(zip(entity_ids, VALUES)).items():
@@ -92,6 +89,9 @@ async def test_sensors(
             },
         )
         await hass.async_block_till_done()
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
 
     state = hass.states.get(f"sensor.sensor_group_{sensor_type}")
 
@@ -156,6 +156,7 @@ async def test_not_enough_sensor_value(hass: HomeAssistant) -> None:
             "platform": GROUP_DOMAIN,
             "name": "test_max",
             "type": "max",
+            "ignore_non_numeric": True,
             "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
             "state_class": SensorStateClass.MEASUREMENT,
         }
@@ -247,6 +248,7 @@ async def test_sensor_incorrect_state(
             "platform": GROUP_DOMAIN,
             "name": "test_failure",
             "type": "min",
+            "ignore_non_numeric": True,
             "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
             "unique_id": "very_unique_id",
             "state_class": SensorStateClass.MEASUREMENT,
