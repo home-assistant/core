@@ -23,6 +23,8 @@ def requests_mock_fixture(requests_mock):
 def mock_ecobee():
     """Mock an Ecobee object."""
     ecobee = MagicMock()
+    ecobee.request_pin.return_value = True
+    ecobee.refresh_tokens.return_value = True
     # TODO: build out the mock_ecobee so the integration
     # can actually be setup and tested
     with patch("homeassistant.components.ecobee.Ecobee", return_value=ecobee):

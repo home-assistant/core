@@ -397,6 +397,7 @@ async def test_set_fan_mode_auto(thermostat, data):
 async def test_turn_aux_heat_on(hass: HomeAssistant, mock_ecobee: MagicMock) -> None:
     """Test when aux heat is set on.  This must change the HVAC mode."""
     mock_ecobee.get_thermostat.return_value = GENERIC_THERMOSTAT_INFO_WITH_HEATPUMP
+    mock_ecobee.thermostats = [GENERIC_THERMOSTAT_INFO_WITH_HEATPUMP]
     await setup_platform(hass, const.Platform.CLIMATE)
     await hass.services.async_call(
         climate.DOMAIN,
@@ -407,6 +408,7 @@ async def test_turn_aux_heat_on(hass: HomeAssistant, mock_ecobee: MagicMock) -> 
     assert mock_ecobee.const.settings.assert_has_calls(
         [mock.call(1, ECOBEE_AUX_HEAT_ONLY)]
     )
+    # assert mock_ecobee.settings.assert_has_calls([mock.call(1, ECOBEE_AUX_HEAT_ONLY)])
 
 
 async def test_turn_aux_heat_off(hass):
