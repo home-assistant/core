@@ -29,6 +29,27 @@ class TimePattern:
             if value == "*":
                 return value
 
+            if isinstance(value, str) and ("-" in value or "," in value):
+                value = sum(
+                    (
+                        (
+                            list(
+                                range(*[int(j) + k for k, j in enumerate(i.split("-"))])
+                            )
+                            if "-" in i
+                            else [int(i)]
+                        )
+                        for i in value.split(",")
+                    ),
+                    [],
+                )
+                for number in value:
+                    if not (0 <= number <= self.maximum):
+                        raise vol.Invalid(
+                            f"must be a value between 0 and {self.maximum}"
+                        )
+                return value
+
             if isinstance(value, str) and value.startswith("/"):
                 number = int(value[1:])
             else:

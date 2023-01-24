@@ -299,6 +299,65 @@ async def test_if_fires_periodic_hours(hass, calls):
     assert len(calls) == 1
 
 
+async def test_if_fires_ranges_minutes(hass, calls):
+    """Test for firing in ranges every in-range minute."""
+    now = dt_util.utcnow()
+    time_that_will_not_match_right_away = dt_util.utcnow().replace(
+        year=now.year + 1, hour=1
+    )
+    with patch(
+        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
+    ):
+        assert await async_setup_component(
+            hass,
+            automation.DOMAIN,
+            {
+                automation.DOMAIN: {
+                    "trigger": {
+                        "platform": "time_pattern",
+                        "minutes": "2-4,9",
+                    },
+                    "action": {"service": "test.automation"},
+                }
+            },
+        )
+
+    async_fire_time_changed(
+        hass, now.replace(year=now.year + 2, hour=2, minute=2, second=0)
+    )
+
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    async_fire_time_changed(
+        hass, now.replace(year=now.year + 2, hour=2, minute=3, second=0)
+    )
+
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+
+    async_fire_time_changed(
+        hass, now.replace(year=now.year + 2, hour=2, minute=4, second=0)
+    )
+
+    await hass.async_block_till_done()
+    assert len(calls) == 3
+
+    async_fire_time_changed(
+        hass, now.replace(year=now.year + 2, hour=2, minute=5, second=0)
+    )
+
+    await hass.async_block_till_done()
+    assert len(calls) == 3
+
+    async_fire_time_changed(
+        hass, now.replace(year=now.year + 2, hour=2, minute=9, second=0)
+    )
+
+    await hass.async_block_till_done()
+    assert len(calls) == 4
+
+
 async def test_default_values(hass, calls):
     """Test for firing at 2 minutes every hour."""
     now = dt_util.utcnow()
@@ -351,6 +410,7 @@ async def test_invalid_schemas(hass, calls):
         {"platform": "time_pattern", "minutes": "*/5"},
         {"platform": "time_pattern", "minutes": "/90"},
         {"platform": "time_pattern", "hours": 12, "minutes": 0, "seconds": 100},
+        {"platform": "time_pattern", "hours": "12-25"},
     )
 
     for value in schemas:
