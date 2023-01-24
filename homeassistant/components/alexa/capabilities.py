@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import logging
 
+from wolf_smartset import PERCENTAGE
+
 from homeassistant.components import (
     button,
     climate,
@@ -14,6 +16,7 @@ from homeassistant.components import (
     input_number,
     light,
     media_player,
+    number,
     timer,
     vacuum,
 )
@@ -41,8 +44,13 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     STATE_UNLOCKED,
     STATE_UNLOCKING,
+    UnitOfLength,
+    UnitOfMass,
+    UnitOfTemperature,
+    UnitOfVolume,
 )
 from homeassistant.core import State
+from homeassistant.helpers.entity import Entity
 import homeassistant.util.color as color_util
 import homeassistant.util.dt as dt_util
 
@@ -64,6 +72,51 @@ from .resources import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def get_resource_by_unit_of_measurement(entity: Entity) -> str:
+    """Translate the unit of measurement to an Alexa Global Catalog keyword."""
+    if not (unit := entity.unit_of_measurement):
+        return AlexaGlobalCatalog.SETTING_PRESET
+
+    if unit == UnitOfTemperature.CELSIUS:
+        return AlexaGlobalCatalog.UNIT_TEMPERATURE_CELSIUS
+    if unit == UnitOfTemperature.FAHRENHEIT:
+        return AlexaGlobalCatalog.UNIT_TEMPERATURE_FAHRENHEIT
+    if unit == UnitOfTemperature.KELVIN:
+        return AlexaGlobalCatalog.UNIT_TEMPERATURE_KELVIN
+    if unit == UnitOfLength.METERS:
+        return AlexaGlobalCatalog.UNIT_DISTANCE_METERS
+    if unit == UnitOfLength.KILOMETERS:
+        return AlexaGlobalCatalog.UNIT_DISTANCE_KILOMETERS
+    if unit == UnitOfLength.INCHES:
+        return AlexaGlobalCatalog.UNIT_DISTANCE_INCHES
+    if unit == UnitOfLength.FEET:
+        return AlexaGlobalCatalog.UNIT_DISTANCE_FEET
+    if unit == UnitOfLength.YARDS:
+        return AlexaGlobalCatalog.UNIT_DISTANCE_YARDS
+    if unit == UnitOfLength.MILES:
+        return AlexaGlobalCatalog.UNIT_DISTANCE_MILES
+    if unit == UnitOfMass.GRAMS:
+        return AlexaGlobalCatalog.UNIT_MASS_GRAMS
+    if unit == UnitOfMass.KILOGRAMS:
+        return AlexaGlobalCatalog.UNIT_MASS_KILOGRAMS
+    if unit == UnitOfMass.POUNDS:
+        return AlexaGlobalCatalog.UNIT_WEIGHT_POUNDS
+    if unit == UnitOfMass.OUNCES:
+        return AlexaGlobalCatalog.UNIT_WEIGHT_OUNCES
+    if unit == UnitOfVolume.LITERS:
+        return AlexaGlobalCatalog.UNIT_VOLUME_LITERS
+    if unit == UnitOfVolume.CUBIC_FEET:
+        return AlexaGlobalCatalog.UNIT_VOLUME_CUBIC_FEET
+    if unit == UnitOfVolume.CUBIC_METERS:
+        return AlexaGlobalCatalog.UNIT_VOLUME_CUBIC_METERS
+    if unit == UnitOfVolume.GALLONS:
+        return AlexaGlobalCatalog.UNIT_VOLUME_GALLONS
+    if unit == PERCENTAGE:
+        return AlexaGlobalCatalog.UNIT_PERCENT
+
+    return AlexaGlobalCatalog.SETTING_PRESET
 
 
 class AlexaCapability:
@@ -1579,6 +1632,10 @@ class AlexaRangeController(AlexaCapability):
         if self.instance == f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}":
             return float(self.entity.state)
 
+        # Number Value
+        if self.instance == f"{number.DOMAIN}.{number.ATTR_VALUE}":
+            return float(self.entity.state)
+
         # Vacuum Fan Speed
         if self.instance == f"{vacuum.DOMAIN}.{vacuum.ATTR_FAN_SPEED}":
             speed_list = self.entity.attributes.get(vacuum.ATTR_FAN_SPEED_LIST)
@@ -1656,7 +1713,29 @@ class AlexaRangeController(AlexaCapability):
             unit = self.entity.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
             self._resource = AlexaPresetResource(
-                ["Value", AlexaGlobalCatalog.SETTING_PRESET],
+                ["Value", get_resource_by_unit_of_measurement(self.entity)],
+                min_value=min_value,
+                max_value=max_value,
+                precision=precision,
+                unit=unit,
+            )
+            self._resource.add_preset(
+                value=min_value, labels=[AlexaGlobalCatalog.VALUE_MINIMUM]
+            )
+            self._resource.add_preset(
+                value=max_value, labels=[AlexaGlobalCatalog.VALUE_MAXIMUM]
+            )
+            return self._resource.serialize_capability_resources()
+
+        # Number Value
+        if self.instance == f"{number.DOMAIN}.{number.ATTR_VALUE}":
+            min_value = float(self.entity.attributes[number.ATTR_MIN])
+            max_value = float(self.entity.attributes[number.ATTR_MAX])
+            precision = float(self.entity.attributes.get(number.ATTR_STEP, 1))
+            unit = self.entity.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+
+            self._resource = AlexaPresetResource(
+                ["Value", get_resource_by_unit_of_measurement(self.entity)],
                 min_value=min_value,
                 max_value=max_value,
                 precision=precision,

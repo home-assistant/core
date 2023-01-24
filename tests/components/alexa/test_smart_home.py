@@ -3370,7 +3370,7 @@ async def test_input_number(hass, domain: str):
     )
 
     range_capability = get_capability(
-        capabilities, "Alexa.RangeController", "input_number.value"
+        capabilities, "Alexa.RangeController", f"{domain}.value"
     )
 
     capability_resources = range_capability["capabilityResources"]
@@ -3414,7 +3414,7 @@ async def test_input_number(hass, domain: str):
         f"{domain}.set_value",
         hass,
         payload={"rangeValue": 10},
-        instance="input_number.value",
+        instance=f"{domain}.value",
     )
     assert call.data["value"] == 10
 
@@ -3426,7 +3426,7 @@ async def test_input_number(hass, domain: str):
         f"{domain}#test_slider",
         f"{domain}.set_value",
         "value",
-        instance="input_number.value",
+        instance=f"{domain}.value",
     )
 
 
@@ -3456,7 +3456,7 @@ async def test_input_number_float(hass, domain: str):
     )
 
     range_capability = get_capability(
-        capabilities, "Alexa.RangeController", "input_number.value"
+        capabilities, "Alexa.RangeController", f"{domain}.value"
     )
 
     capability_resources = range_capability["capabilityResources"]
@@ -3500,7 +3500,7 @@ async def test_input_number_float(hass, domain: str):
         f"{domain}.set_value",
         hass,
         payload={"rangeValue": 0.333},
-        instance="input_number.value",
+        instance=f"{domain}.value",
     )
     assert call.data["value"] == 0.333
 
@@ -3518,7 +3518,7 @@ async def test_input_number_float(hass, domain: str):
         f"{domain}#test_slider_float",
         f"{domain}.set_value",
         "value",
-        instance="input_number.value",
+        instance=f"{domain}.value",
     )
 
 

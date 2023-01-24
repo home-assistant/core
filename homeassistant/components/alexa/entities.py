@@ -856,7 +856,7 @@ class ImageProcessingCapabilities(AlexaEntity):
 @ENTITY_ADAPTERS.register(input_number.DOMAIN)
 @ENTITY_ADAPTERS.register(number.DOMAIN)
 class InputNumberCapabilities(AlexaEntity):
-    """Class to represent input_number capabilities."""
+    """Class to represent number and input_number capabilities."""
 
     def default_display_categories(self):
         """Return the display categories for this entity."""
@@ -864,10 +864,8 @@ class InputNumberCapabilities(AlexaEntity):
 
     def interfaces(self):
         """Yield the supported interfaces."""
-
-        yield AlexaRangeController(
-            self.entity, instance=f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}"
-        )
+        domain = self.entity.domain
+        yield AlexaRangeController(self.entity, instance=f"{domain}.value")
         yield AlexaEndpointHealth(self.hass, self.entity)
         yield Alexa(self.hass)
 
