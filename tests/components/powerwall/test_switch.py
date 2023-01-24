@@ -3,7 +3,7 @@
 from unittest.mock import Mock, patch
 
 import pytest
-from tesla_powerwall import GridStatus
+from tesla_powerwall import GridStatus, PowerwallError
 
 from homeassistant.components.powerwall.const import DOMAIN
 from homeassistant.components.switch import (
@@ -12,6 +12,7 @@ from homeassistant.components.switch import (
     SERVICE_TURN_ON,
 )
 from homeassistant.const import ATTR_ENTITY_ID, CONF_IP_ADDRESS, STATE_OFF, STATE_ON
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as ent_reg
 
 from .mocks import _mock_powerwall_with_fixtures
@@ -46,7 +47,7 @@ async def test_entity_registry(hass, mock_powerwall):
     assert ENTITY_ID in entity_registry.entities
 
 
-async def test_initial_gridstatus(hass, mock_powerwall):
+async def test_initial(hass, mock_powerwall):
     """Test initial grid status without off grid switch selected."""
 
     mock_powerwall.get_grid_status = Mock(return_value=GridStatus.CONNECTED)
@@ -55,7 +56,7 @@ async def test_initial_gridstatus(hass, mock_powerwall):
     assert state.state == STATE_OFF
 
 
-async def test_gridstatus_off(hass, mock_powerwall):
+async def test_on(hass, mock_powerwall):
     """Test state once offgrid switch has been turned on."""
 
     mock_powerwall.get_grid_status = Mock(return_value=GridStatus.ISLANDED)
@@ -71,7 +72,7 @@ async def test_gridstatus_off(hass, mock_powerwall):
     assert state.state == STATE_ON
 
 
-async def test_gridstatus_on(hass, mock_powerwall):
+async def test_off(hass, mock_powerwall):
     """Test state once offgrid switch has been turned off."""
 
     mock_powerwall.get_grid_status = Mock(return_value=GridStatus.CONNECTED)
@@ -87,27 +88,17 @@ async def test_gridstatus_on(hass, mock_powerwall):
     assert state.state == STATE_OFF
 
 
-async def test_turn_on_without_entity_id(hass, mock_powerwall):
-    """Test switch turn on all switches."""
+async def test_exception_on_powerwall_error(hass, mock_powerwall):
+    """Ensure that an exception in the tesla_powerwall library causes a HomeAssistantError."""
 
-    mock_powerwall.get_grid_status = Mock(return_value=GridStatus.ISLANDED)
+    with pytest.raises(HomeAssistantError, match="Setting off-grid operation to"):
+        mock_powerwall.set_island_mode = Mock(
+            side_effect=PowerwallError("Mock exception")
+        )
 
-    await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: "all"}, blocking=True
-    )
-
-    state = hass.states.get(ENTITY_ID)
-    assert state.state == STATE_ON
-
-
-async def test_turn_off_without_entity_id(hass, mock_powerwall):
-    """Test switch turn off all switches."""
-
-    mock_powerwall.get_grid_status = Mock(return_value=GridStatus.CONNECTED)
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "all"}, blocking=True
-    )
-
-    state = hass.states.get(ENTITY_ID)
-    assert state.state == STATE_OFF
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: ENTITY_ID},
+            blocking=True,
+        )
