@@ -270,6 +270,26 @@ DHCP: list[dict[str, str | bool]] = [
         "hostname": "litter-robot4",
     },
     {
+        "domain": "luxtronik",
+        "macaddress": "000E8C*",
+    },
+    {
+        "domain": "luxtronik",
+        "macaddress": "001999*",
+    },
+    {
+        "domain": "luxtronik",
+        "macaddress": "000982*",
+    },
+    {
+        "domain": "luxtronik",
+        "macaddress": "04D16E*",
+    },
+    {
+        "domain": "luxtronik",
+        "hostname": "wp-novelan",
+    },
+    {
         "domain": "lyric",
         "hostname": "lyric-*",
         "macaddress": "48A2E6*",

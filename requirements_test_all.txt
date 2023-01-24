@@ -803,6 +803,9 @@ logi_circle==0.2.3
 # homeassistant.components.luftdaten
 luftdaten==0.7.4
 
+# homeassistant.components.luxtronik
+luxtronik==0.3.14
+
 # homeassistant.components.scrape
 lxml==4.9.1
 

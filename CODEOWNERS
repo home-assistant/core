@@ -682,6 +682,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/lutron/ @cdheiser
 /homeassistant/components/lutron_caseta/ @swails @bdraco @danaues
 /tests/components/lutron_caseta/ @swails @bdraco @danaues
+/homeassistant/components/luxtronik/ @BenPru
+/tests/components/luxtronik/ @BenPru
 /homeassistant/components/lyric/ @timmo001
 /tests/components/lyric/ @timmo001
 /homeassistant/components/mastodon/ @fabaff

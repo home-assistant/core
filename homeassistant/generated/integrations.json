@@ -3055,6 +3055,12 @@
       "integration_type": "virtual",
       "supported_by": "hunterdouglas_powerview"
     },
+    "luxtronik": {
+      "name": "Luxtronik",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "lw12wifi": {
       "name": "LAGUTE LW-12",
       "integration_type": "hub",

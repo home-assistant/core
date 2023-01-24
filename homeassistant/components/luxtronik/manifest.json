@@ -1,0 +1,22 @@
+{
+  "domain": "luxtronik",
+  "name": "Luxtronik",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/luxtronik",
+  "requirements": ["luxtronik==0.3.14"],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": ["http"],
+  "codeowners": ["@BenPru"],
+  "iot_class": "local_polling",
+  "dhcp": [
+    { "macaddress": "000E8C*" },
+    { "macaddress": "001999*" },
+    { "macaddress": "000982*" },
+    { "macaddress": "04D16E*" },
+    { "hostname": "wp-novelan" }
+  ],
+  "integration_type": "hub",
+  "loggers": ["luxtronik"]
+}
