@@ -125,6 +125,7 @@ async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
         entry.data[CONF_HOST],
         entry.data.get(CONF_USERNAME),
         entry.data.get(CONF_PASSWORD),
+        device_mac=entry.unique_id,
     )
 
     coap_context = await get_coap_context(hass)
@@ -209,6 +210,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
         entry.data[CONF_HOST],
         entry.data.get(CONF_USERNAME),
         entry.data.get(CONF_PASSWORD),
+        device_mac=entry.unique_id,
     )
 
     ws_context = await get_ws_context(hass)
