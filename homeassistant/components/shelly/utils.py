@@ -98,7 +98,7 @@ def get_block_entity_name(
     channel_name = get_block_channel_name(device, block)
 
     if description:
-        return f"{channel_name} {description}".capitalize()
+        return f"{channel_name} {description.lower()}"
 
     return channel_name
 
