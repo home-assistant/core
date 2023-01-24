@@ -362,6 +362,14 @@
           "severe": "Severe"
         }
       },
+      "battery_state": {
+        "state": {
+          "high": "High",
+          "medium": "Medium",
+          "low": "Low",
+          "poweroff": "Power off"
+        }
+      },
       "lock_alarm": {
         "state": {
           "wrong_finger": "Wrong Finger",
