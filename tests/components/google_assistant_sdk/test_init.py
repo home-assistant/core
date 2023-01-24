@@ -167,7 +167,9 @@ async def test_send_text_commands(
             {"command": [command1, command2]},
             blocking=True,
         )
-    mock_text_assistant.assert_called_once_with(ExpectedCredentials(), "en-US")
+    mock_text_assistant.assert_called_once_with(
+        ExpectedCredentials(), "en-US", audio_out=False
+    )
     mock_text_assistant.assert_has_calls([call().__enter__().assist(command1)])
     mock_text_assistant.assert_has_calls([call().__enter__().assist(command2)])
 
