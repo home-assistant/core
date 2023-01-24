@@ -140,7 +140,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     services.register(hass, controller)
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     group_manager.connect_update()
     entry.async_on_unload(group_manager.disconnect_update)
 
