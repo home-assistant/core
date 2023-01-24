@@ -294,7 +294,7 @@ class AlmondAgent(conversation.AbstractConversationAgent):
         context: Context,
         conversation_id: str | None = None,
         language: str | None = None,
-    ) -> conversation.ConversationResult | None:
+    ) -> conversation.ConversationResult:
         """Process a sentence."""
         response = await self.api.async_converse_text(text, conversation_id)
         language = language or self.hass.config.language

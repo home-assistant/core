@@ -20,7 +20,7 @@ class MockAgent(conversation.AbstractConversationAgent):
         context: Context,
         conversation_id: str | None = None,
         language: str | None = None,
-    ) -> conversation.ConversationResult | None:
+    ) -> conversation.ConversationResult:
         """Process some text."""
         self.calls.append((text, context, conversation_id, language))
         response = intent.IntentResponse(language=language)
