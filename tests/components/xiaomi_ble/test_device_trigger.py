@@ -46,10 +46,10 @@ def calls(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-async def _async_setup_xiaomi_motion_device(hass):
+async def _async_setup_xiaomi_device(hass, mac: str):
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="DE:70:E8:B2:39:0C",
+        unique_id=mac,
     )
     config_entry.add_to_hass(hass)
 
@@ -61,13 +61,14 @@ async def _async_setup_xiaomi_motion_device(hass):
 
 async def test_event_motion_detected(hass):
     """Make sure that a motion detected event is fired."""
-    entry = await _async_setup_xiaomi_motion_device(hass)
+    mac = "DE:70:E8:B2:39:0C"
+    entry = await _async_setup_xiaomi_device(hass, mac)
     events = async_capture_events(hass, "xiaomi_ble_event")
 
     # Emit motion detected event
     inject_bluetooth_service_info_bleak(
         hass,
-        make_advertisement("DE:70:E8:B2:39:0C", b"@0\xdd\x03$\x03\x00\x01\x01"),
+        make_advertisement(mac, b"@0\xdd\x03$\x03\x00\x01\x01"),
     )
 
     # wait for the event
@@ -83,13 +84,14 @@ async def test_event_motion_detected(hass):
 
 async def test_get_triggers(hass):
     """Test that we get the expected triggers from a Xiaomi BLE motion sensor."""
-    entry = await _async_setup_xiaomi_motion_device(hass)
+    mac = "DE:70:E8:B2:39:0C"
+    entry = await _async_setup_xiaomi_device(hass, mac)
     events = async_capture_events(hass, "xiaomi_ble_event")
 
     # Emit motion detected event so it creates the device in the registry
     inject_bluetooth_service_info_bleak(
         hass,
-        make_advertisement("DE:70:E8:B2:39:0C", b"@0\xdd\x03$\x03\x00\x01\x01"),
+        make_advertisement(mac, b"@0\xdd\x03$\x03\x00\x01\x01"),
     )
 
     # wait for the event
@@ -97,7 +99,7 @@ async def test_get_triggers(hass):
     assert len(events) == 1
 
     dev_reg = async_get_dev_reg(hass)
-    device = dev_reg.async_get_device({get_device_id("DE:70:E8:B2:39:0C")})
+    device = dev_reg.async_get_device({get_device_id(mac)})
     assert device
     expected_trigger = {
         CONF_PLATFORM: "device",
@@ -116,14 +118,46 @@ async def test_get_triggers(hass):
     await hass.async_block_till_done()
 
 
-async def test_get_triggers_for_invalid_device_id(hass):
-    """Test that we don't get triggers when using an invalid device_id."""
-    entry = await _async_setup_xiaomi_motion_device(hass)
+async def test_get_triggers_for_invalid_xiami_ble_device(hass):
+    """Test that we don't get triggers for an invalid device."""
+    mac = "DE:70:E8:B2:39:0C"
+    entry = await _async_setup_xiaomi_device(hass, mac)
+    events = async_capture_events(hass, "xiaomi_ble_event")
 
     # Emit motion detected event so it creates the device in the registry
     inject_bluetooth_service_info_bleak(
         hass,
-        make_advertisement("DE:70:E8:B2:39:0C", b"@0\xdd\x03$\x03\x00\x01\x01"),
+        make_advertisement(mac, b"@0\xdd\x03$\x03\x00\x01\x01"),
+    )
+
+    # wait for the event
+    await hass.async_block_till_done()
+    assert len(events) == 1
+
+    dev_reg = async_get_dev_reg(hass)
+    invalid_device = dev_reg.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "invdevmac")},
+    )
+
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, invalid_device.id
+    )
+    assert triggers == []
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_get_triggers_for_invalid_device_id(hass):
+    """Test that we don't get triggers when using an invalid device_id."""
+    mac = "DE:70:E8:B2:39:0C"
+    entry = await _async_setup_xiaomi_device(hass, mac)
+
+    # Emit motion detected event so it creates the device in the registry
+    inject_bluetooth_service_info_bleak(
+        hass,
+        make_advertisement(mac, b"@0\xdd\x03$\x03\x00\x01\x01"),
     )
 
     # wait for the event
@@ -147,19 +181,20 @@ async def test_get_triggers_for_invalid_device_id(hass):
 
 async def test_if_fires_on_motion_detected(hass, calls):
     """Test for motion event trigger firing."""
-    entry = await _async_setup_xiaomi_motion_device(hass)
+    mac = "DE:70:E8:B2:39:0C"
+    entry = await _async_setup_xiaomi_device(hass, mac)
 
     # Emit motion detected event so it creates the device in the registry
     inject_bluetooth_service_info_bleak(
         hass,
-        make_advertisement("DE:70:E8:B2:39:0C", b"@0\xdd\x03$\x03\x00\x01\x01"),
+        make_advertisement(mac, b"@0\xdd\x03$\x03\x00\x01\x01"),
     )
 
     # wait for the event
     await hass.async_block_till_done()
 
     dev_reg = async_get_dev_reg(hass)
-    device = dev_reg.async_get_device({get_device_id("DE:70:E8:B2:39:0C")})
+    device = dev_reg.async_get_device({get_device_id(mac)})
     device_id = device.id
 
     assert await async_setup_component(
@@ -201,21 +236,22 @@ async def test_if_fires_on_motion_detected(hass, calls):
     await hass.async_block_till_done()
 
 
-async def test_validate_trigger_invalid_trigger(hass, caplog):
-    """Test for motion event with invalid triggers."""
-    entry = await _async_setup_xiaomi_motion_device(hass)
+async def test_automation_with_invalid_trigger_type(hass, caplog):
+    """Test for automation with invalid trigger type."""
+    mac = "DE:70:E8:B2:39:0C"
+    entry = await _async_setup_xiaomi_device(hass, mac)
 
     # Emit motion detected event so it creates the device in the registry
     inject_bluetooth_service_info_bleak(
         hass,
-        make_advertisement("DE:70:E8:B2:39:0C", b"@0\xdd\x03$\x03\x00\x01\x01"),
+        make_advertisement(mac, b"@0\xdd\x03$\x03\x00\x01\x01"),
     )
 
     # wait for the event
     await hass.async_block_till_done()
 
     dev_reg = async_get_dev_reg(hass)
-    device = dev_reg.async_get_device({get_device_id("DE:70:E8:B2:39:0C")})
+    device = dev_reg.async_get_device({get_device_id(mac)})
     device_id = device.id
 
     assert await async_setup_component(
@@ -239,8 +275,109 @@ async def test_validate_trigger_invalid_trigger(hass, caplog):
             ]
         },
     )
-
+    # Logs should return message to make sure event type is of one ["motion_detected"]
     assert "motion_detected" in caplog.text
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_automation_with_invalid_trigger_event_property(hass, caplog):
+    """Test for automation with invalid trigger event property."""
+    mac = "DE:70:E8:B2:39:0C"
+    entry = await _async_setup_xiaomi_device(hass, mac)
+
+    # Emit motion detected event so it creates the device in the registry
+    inject_bluetooth_service_info_bleak(
+        hass,
+        make_advertisement(mac, b"@0\xdd\x03$\x03\x00\x01\x01"),
+    )
+
+    # wait for the event
+    await hass.async_block_till_done()
+
+    dev_reg = async_get_dev_reg(hass)
+    device = dev_reg.async_get_device({get_device_id(mac)})
+    device_id = device.id
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        CONF_PLATFORM: "device",
+                        CONF_DOMAIN: DOMAIN,
+                        CONF_DEVICE_ID: device_id,
+                        CONF_TYPE: "motion_detected",
+                        CONF_EVENT_PROPERTIES: "invalid_property",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": "test_trigger_motion_detected"},
+                    },
+                },
+            ]
+        },
+    )
+    # Logs should return message to make sure event property is of one [None] for motion event
+    assert str([None]) in caplog.text
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_triggers_for_invalid__model(hass, calls):
+    """Test invalid model doesn't return triggers."""
+    mac = "DE:70:E8:B2:39:0C"
+    entry = await _async_setup_xiaomi_device(hass, mac)
+
+    # Emit motion detected event so it creates the device in the registry
+    inject_bluetooth_service_info_bleak(
+        hass,
+        make_advertisement(mac, b"@0\xdd\x03$\x03\x00\x01\x01"),
+    )
+
+    # wait for the event
+    await hass.async_block_till_done()
+
+    dev_reg = async_get_dev_reg(hass)
+    # modify model to invalid model
+    invalid_model = dev_reg.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, mac)},
+        model="invalid model",
+    )
+    invalid_model_id = invalid_model.id
+
+    # setup automation to validate trigger config
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        CONF_PLATFORM: "device",
+                        CONF_DOMAIN: DOMAIN,
+                        CONF_DEVICE_ID: invalid_model_id,
+                        CONF_TYPE: "motion_detected",
+                        CONF_EVENT_PROPERTIES: None,
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": "test_trigger_motion_detected"},
+                    },
+                },
+            ]
+        },
+    )
+
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, invalid_model_id
+    )
+    assert triggers == []
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

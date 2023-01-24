@@ -77,7 +77,6 @@ async def async_get_triggers(
     # Check if device is a model supporting device triggers.
     if not (model_data := _async_trigger_model_data(hass, device_id)):
         return []
-
     return [
         {
             CONF_PLATFORM: "device",
@@ -100,11 +99,8 @@ async def async_attach_trigger(
     event_data = {
         CONF_DEVICE_ID: config[CONF_DEVICE_ID],
         EVENT_TYPE: config[CONF_TYPE],
+        EVENT_PROPERTIES: config[CONF_EVENT_PROPERTIES],
     }
-
-    if event_properties := config.get(CONF_EVENT_PROPERTIES):
-        event_data[EVENT_PROPERTIES] = event_properties
-
     return await event_trigger.async_attach_trigger(
         hass,
         event_trigger.TRIGGER_SCHEMA(
