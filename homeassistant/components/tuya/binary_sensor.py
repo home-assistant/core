@@ -215,12 +215,12 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
     "ms": (
         TuyaBinarySensorEntityDescription(
             key=DPCode.OPEN_INSIDE,
-            name="Unlock Inside of Door",
+            name="Unlock inside of door",
             icon="mdi:home-export-outline",
         ),
         TuyaBinarySensorEntityDescription(
             key=DPCode.OPEN_CLOSE,
-            name="Locking and Unlocking Event",
+            name="Locking and unlocking event",
             icon="mdi:lock-pattern",
         ),
         TuyaBinarySensorEntityDescription(
@@ -230,11 +230,11 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         ),
         TuyaBinarySensorEntityDescription(
             key=DPCode.REVERSE_LOCK,
-            name="Double Locking Status",
+            name="Double locking status",
         ),
         TuyaBinarySensorEntityDescription(
             key=DPCode.CHILD_LOCK,
-            name="Child Lock",
+            name="Child lock",
             icon="mdi:account-lock",
             entity_category=EntityCategory.CONFIG,
         ),
@@ -245,7 +245,7 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         ),
         TuyaBinarySensorEntityDescription(
             key=DPCode.ANTI_LOCK_OUTSIDE,
-            name="Double Locking by Lifting Up",
+            name="Double locking by lifting up",
         ),
         TuyaBinarySensorEntityDescription(
             key=DPCode.LOCK_MOTOR_STATE,
@@ -254,7 +254,7 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         ),
         TuyaBinarySensorEntityDescription(
             key=DPCode.HIJACK,
-            name="Duress Alert",
+            name="Duress alert",
             icon="mdi:lock-alert-outline",
             device_class=BinarySensorDeviceClass.SAFETY,
         ),

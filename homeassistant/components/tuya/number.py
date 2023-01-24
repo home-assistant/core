@@ -9,7 +9,7 @@ from homeassistant.components.number import (
     NumberEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfTime
+from homeassistant.const import PERCENTAGE, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
@@ -138,24 +138,25 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "ms": (
         NumberEntityDescription(
             key=DPCode.AUTO_LOCK_TIME,
-            name="Auto Lock Time",
+            name="Auto lock time",
             icon="mdi:timer-cog-outline",
             native_unit_of_measurement=UnitOfTime.SECONDS,
         ),
         NumberEntityDescription(
             key=DPCode.STAY_HOLD_TIME,
-            name="Loitering Hold Time",
+            name="Loitering hold time",
             icon="mdi:timer-cog-outline",
             native_unit_of_measurement=UnitOfTime.SECONDS,
         ),
         NumberEntityDescription(
             key=DPCode.OPEN_RATE,
-            name="Opening Percentage",
+            name="Opening percentage",
             icon="mdi:percent",
+            native_unit_of_measurement=PERCENTAGE,
         ),
         NumberEntityDescription(
             key=DPCode.ALARM_TIME,
-            name="Alert Duration",
+            name="Alert duration",
             icon="mdi:timer-cog-outline",
             native_unit_of_measurement=UnitOfTime.SECONDS,
         ),
