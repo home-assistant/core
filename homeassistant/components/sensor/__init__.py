@@ -390,7 +390,7 @@ class SensorEntity(Entity):
                 )
             )
             ratio_log = floor(ratio_log) if ratio_log > 0 else ceil(ratio_log)
-            precision = max(0, precision + floor(ratio_log))
+            precision = max(0, precision + ratio_log)
 
         return precision
 
@@ -565,18 +565,19 @@ class SensorEntity(Entity):
                 )
             return value
 
-        # If the sensor has neither a device class, a state class nor
-        # a unit_of measurement then there are no further checks or conversions
+        prec = self.precision
+
+        # If the sensor has neither a device class, a state class, a unit of measurement
+        # nor a precision then there are no further checks or conversions
         if (
             not device_class
             and not state_class
             and not unit_of_measurement
-            and (prec := self.precision) is None
+            and prec is None
         ):
             return value
 
-        numerical_value: int | float | Decimal | None = None
-        numerical_conversion_failed = None
+        numerical_value: int | float | Decimal
         if not isinstance(value, (int, float, Decimal)):
             try:
                 if isinstance(value, str) and "." not in value:
@@ -587,32 +588,28 @@ class SensorEntity(Entity):
                 # Raise if precision is not None, for other cases log a warning
                 if prec is not None:
                     raise
-                numerical_conversion_failed = True
+                # This should raise in Home Assistant Core 2023.4
+                self._invalid_numeric_value_reported = True
+                report_issue = self._suggest_report_issue()
+                _LOGGER.warning(
+                    "Sensor %s has device class %s, state class %s and unit %s "
+                    "thus indicating it has a numeric value; however, it has the "
+                    "non-numeric value: %s (%s); Please update your configuration "
+                    "if your entity is manually configured, otherwise %s",
+                    self.entity_id,
+                    device_class,
+                    state_class,
+                    unit_of_measurement,
+                    value,
+                    type(value),
+                    report_issue,
+                )
+                return value
         else:
             numerical_value = value
 
-        if not self._invalid_numeric_value_reported and numerical_conversion_failed:
-            # This should raise in Home Assistant Core 2023.4
-            self._invalid_numeric_value_reported = True
-            report_issue = self._suggest_report_issue()
-            _LOGGER.warning(
-                "Sensor %s has device class %s, state class %s and unit %s "
-                "thus indicating it has a numeric value; however, it has the "
-                "non-numeric value: %s (%s); Please update your configuration "
-                "if your entity is manually configured, otherwise %s",
-                self.entity_id,
-                device_class,
-                state_class,
-                unit_of_measurement,
-                value,
-                type(value),
-                report_issue,
-            )
-            return value
-
         if (
             prec is not None
-            and numerical_value is not None
             and (self._sensor_option_precision or not isinstance(value, int))
             and (
                 native_unit_of_measurement == unit_of_measurement
@@ -624,7 +621,6 @@ class SensorEntity(Entity):
         if (
             native_unit_of_measurement != unit_of_measurement
             and device_class in UNIT_CONVERTERS
-            and numerical_value is not None
         ):
             prec = self.precision
             converter = UNIT_CONVERTERS[device_class]
