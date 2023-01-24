@@ -31,15 +31,13 @@ from typing import (
     Any,
     Generic,
     NamedTuple,
-    Optional,
+    ParamSpec,
     TypeVar,
-    Union,
     cast,
     overload,
 )
 from urllib.parse import urlparse
 
-from typing_extensions import ParamSpec
 import voluptuous as vol
 import yarl
 
@@ -448,7 +446,7 @@ class HomeAssistant:
         # the type used for the cast. For history see:
         # https://github.com/home-assistant/core/pull/71960
         if TYPE_CHECKING:
-            target = cast(Callable[..., Union[Coroutine[Any, Any, _R], _R]], target)
+            target = cast(Callable[..., Coroutine[Any, Any, _R] | _R], target)
         return self.async_add_hass_job(HassJob(target), *args)
 
     @overload
@@ -626,7 +624,7 @@ class HomeAssistant:
         # the type used for the cast. For history see:
         # https://github.com/home-assistant/core/pull/71960
         if TYPE_CHECKING:
-            target = cast(Callable[..., Union[Coroutine[Any, Any, _R], _R]], target)
+            target = cast(Callable[..., Coroutine[Any, Any, _R] | _R], target)
         return self.async_run_hass_job(HassJob(target), *args)
 
     def block_till_done(self) -> None:
@@ -2011,13 +2009,13 @@ class Config:
         if time_zone is not None:
             self.set_time_zone(time_zone)
         if external_url is not _UNDEF:
-            self.external_url = cast(Optional[str], external_url)
+            self.external_url = cast(str | None, external_url)
         if internal_url is not _UNDEF:
-            self.internal_url = cast(Optional[str], internal_url)
+            self.internal_url = cast(str | None, internal_url)
         if currency is not None:
             self.currency = currency
         if country is not _UNDEF:
-            self.country = cast(Optional[str], country)
+            self.country = cast(str | None, country)
         if language is not None:
             self.language = language
 

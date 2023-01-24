@@ -3,7 +3,7 @@ repos:
     rev: v3.3.1
     hooks:
       - id: pyupgrade
-        args: [--py39-plus]
+        args: [--py310-plus]
   - repo: https://github.com/PyCQA/autoflake
     rev: v2.0.0
     hooks:
@@ -55,7 +55,7 @@ repos:
     hooks:
       - id: isort
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v3.2.0
+    rev: v4.4.0
     hooks:
       - id: check-executables-have-shebangs
         stages: [manual]
@@ -84,7 +84,7 @@ repos:
       - id: python-typing-update
         stages: [manual]
         args:
-          - --py39-plus
+          - --py310-plus
           - --force
           - --keep-updates
         files: ^(homeassistant|tests|script)/.+\.py$

@@ -5,7 +5,7 @@ import asyncio
 from copy import deepcopy
 from itertools import chain
 import re
-from typing import Union, cast
+from typing import TypeAlias, cast
 
 import pypck
 import voluptuous as vol
@@ -60,9 +60,10 @@ from .const import (
 
 # typing
 AddressType = tuple[int, int, bool]
-DeviceConnectionType = Union[
-    pypck.module.ModuleConnection, pypck.module.GroupConnection
-]
+DeviceConnectionType: TypeAlias = (
+    pypck.module.ModuleConnection | pypck.module.GroupConnection
+)
+
 InputType = type[pypck.inputs.Input]
 
 # Regex for address validation

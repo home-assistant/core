@@ -159,7 +159,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _hassio_discovery = None
+    _hassio_discovery: dict[str, Any] | None = None
 
     @staticmethod
     @callback

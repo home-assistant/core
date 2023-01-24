@@ -42,6 +42,7 @@ ABBREVIATIONS = {
     "cmd_tpl": "command_template",
     "cod_arm_req": "code_arm_required",
     "cod_dis_req": "code_disarm_required",
+    "cod_form": "code_format",
     "cod_trig_req": "code_trigger_required",
     "curr_hum_t": "current_humidity_topic",
     "curr_hum_tpl": "current_humidity_template",

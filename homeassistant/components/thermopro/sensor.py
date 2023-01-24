@@ -1,8 +1,6 @@
 """Support for thermopro ble sensors."""
 from __future__ import annotations
 
-from typing import Optional, Union
-
 from thermopro_ble import (
     DeviceKey,
     SensorDeviceClass as ThermoProSensorDeviceClass,
@@ -117,9 +115,7 @@ async def async_setup_entry(
 
 
 class ThermoProBluetoothSensorEntity(
-    PassiveBluetoothProcessorEntity[
-        PassiveBluetoothDataProcessor[Optional[Union[float, int]]]
-    ],
+    PassiveBluetoothProcessorEntity[PassiveBluetoothDataProcessor[float | int | None]],
     SensorEntity,
 ):
     """Representation of a thermopro ble sensor."""

@@ -5571,6 +5571,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "thread": {
+      "name": "Thread",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "tibber": {
       "name": "Tibber",
       "integration_type": "hub",

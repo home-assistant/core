@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any, Generic, TypeVar, Union
+from typing import Any, Generic, TypeVar
 
 from devolo_plc_api.device import Device
 from devolo_plc_api.device_api import WifiGuestAccessGet
@@ -19,13 +19,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import DOMAIN, SWITCH_GUEST_WIFI, SWITCH_LEDS
 from .entity import DevoloEntity
 
-_DataT = TypeVar(
-    "_DataT",
-    bound=Union[
-        WifiGuestAccessGet,
-        bool,
-    ],
-)
+_DataT = TypeVar("_DataT", bound=WifiGuestAccessGet | bool)
 
 
 @dataclass
