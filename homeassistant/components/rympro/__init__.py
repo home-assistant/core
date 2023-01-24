@@ -15,6 +15,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN
 
+SCAN_INTERVAL = 60 * 60
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except UnauthorizedError as error:
             raise ConfigEntryAuthFailed from error
 
-    coordinator = RymProDataUpdateCoordinator(hass, rympro, 60 * 60)
+    coordinator = RymProDataUpdateCoordinator(hass, rympro, SCAN_INTERVAL)
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})

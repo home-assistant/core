@@ -36,6 +36,12 @@ async def async_setup_entry(
 class RymProSensor(CoordinatorEntity[RymProDataUpdateCoordinator], SensorEntity):
     """Sensor for RymPro meters."""
 
+    _attr_has_entity_name = True
+    _attr_name = "Last Read"
+    _attr_device_class = SensorDeviceClass.WATER
+    _attr_native_unit_of_measurement = UnitOfVolume.CUBIC_METERS
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+
     def __init__(
         self,
         coordinator: RymProDataUpdateCoordinator,
@@ -49,11 +55,6 @@ class RymProSensor(CoordinatorEntity[RymProDataUpdateCoordinator], SensorEntity)
         self._entity_registry: er.EntityRegistry | None = None
         unique_id = f"{entry_id}_{meter_id}"
         self._attr_unique_id = f"{unique_id}_last_read"
-        self._attr_has_entity_name = True
-        self._attr_name = "Last Read"
-        self._attr_device_class = SensorDeviceClass.WATER
-        self._attr_native_unit_of_measurement = UnitOfVolume.CUBIC_METERS
-        self._attr_state_class = SensorStateClass.TOTAL_INCREASING
         self._attr_extra_state_attributes = {"meter_id": str(meter_id)}
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
