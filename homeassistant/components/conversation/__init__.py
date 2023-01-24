@@ -242,44 +242,5 @@ async def async_converse(
     if language is None:
         language = hass.config.language
 
-    result: ConversationResult | None = None
-    intent_response: intent.IntentResponse | None = None
-
-    try:
-        result = await agent.async_process(text, context, conversation_id, language)
-    except intent.IntentHandleError as err:
-        # Match was successful, but target(s) were invalid
-        intent_response = intent.IntentResponse(language=language)
-        intent_response.async_set_error(
-            intent.IntentResponseErrorCode.NO_VALID_TARGETS,
-            str(err),
-        )
-    except intent.IntentUnexpectedError as err:
-        # Match was successful, but an error occurred while handling intent
-        intent_response = intent.IntentResponse(language=language)
-        intent_response.async_set_error(
-            intent.IntentResponseErrorCode.FAILED_TO_HANDLE,
-            str(err),
-        )
-    except intent.IntentError as err:
-        # Unknown error
-        intent_response = intent.IntentResponse(language=language)
-        intent_response.async_set_error(
-            intent.IntentResponseErrorCode.UNKNOWN,
-            str(err),
-        )
-
-    if result is None:
-        if intent_response is None:
-            # Match was not successful
-            intent_response = intent.IntentResponse(language=language)
-            intent_response.async_set_error(
-                intent.IntentResponseErrorCode.NO_INTENT_MATCH,
-                "Sorry, I didn't understand that",
-            )
-
-        result = ConversationResult(
-            response=intent_response, conversation_id=conversation_id
-        )
-
+    result = await agent.async_process(text, context, conversation_id, language)
     return result

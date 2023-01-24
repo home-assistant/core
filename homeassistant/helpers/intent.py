@@ -286,7 +286,7 @@ class ServiceIntentHandler(IntentHandler):
     }
 
     def __init__(
-        self, intent_type: str, domain: str, service: str, speech: str
+        self, intent_type: str, domain: str, service: str, speech: str | None = None
     ) -> None:
         """Create Service Intent Handler."""
         self.intent_type = intent_type
@@ -382,7 +382,9 @@ class ServiceIntentHandler(IntentHandler):
         response.async_set_results(
             success_results=success_results,
         )
-        response.async_set_speech(self.speech.format(speech_name))
+
+        if self.speech is not None:
+            response.async_set_speech(self.speech.format(speech_name))
 
         return response
 
