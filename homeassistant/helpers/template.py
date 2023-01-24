@@ -13,7 +13,7 @@ from functools import cache, lru_cache, partial, wraps
 import json
 import logging
 import math
-from operator import attrgetter
+from operator import attrgetter, contains
 import random
 import re
 import statistics
@@ -1774,11 +1774,6 @@ def regex_match(value, find="", ignorecase=False):
         value = str(value)
     flags = re.I if ignorecase else 0
     return bool(_regex_cache(find, flags).match(value))
-
-
-def contains(seq, value):
-    """Opposite of the ``in`` test, allowing use as a test in filters like ``selectattr``."""
-    return value in seq
 
 
 @lru_cache(maxsize=128)
