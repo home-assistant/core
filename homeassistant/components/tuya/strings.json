@@ -187,6 +187,157 @@
           "4": "Mood 4",
           "5": "Mood 5"
         }
+      },
+      "language": {
+        "state": {
+          "chinese_simplified": "Chinese Simplified",
+          "english": "English",
+          "japanese": "Japanese",
+          "german": "German",
+          "spanish": "Spanish",
+          "latin": "Latin",
+          "french": "French",
+          "russian": "Russian",
+          "italian": "Italian",
+          "chinese_traditional": "Chinese Traditional",
+          "korean": "Korean",
+          "portuguese": "Portuguese"
+        }
+      },
+      "lock_alarm_volume": {
+        "state": {
+          "mute": "Mute",
+          "low": "Low",
+          "normal": "Normal",
+          "high": "High"
+        }
+      },
+      "lock_basic_nightvision": {
+        "state": {
+          "0": "Level 1",
+          "1": "Level 2",
+          "2": "Level 3"
+        }
+      },
+      "lock_doorbell_volume": {
+        "state": {
+          "mute": "Mute",
+          "low": "Low",
+          "normal": "Normal",
+          "high": "High"
+        }
+      },
+      "lock_door_unclosed_trigger": {
+        "state": {
+          "5s": "5 seconds",
+          "10s": "10 seconds",
+          "15s": "15 seconds",
+          "20s": "20 seconds",
+          "25s": "25 seconds"
+        }
+      },
+      "lock_doorbell_song": {
+        "state": {
+          "ding_0": "Song 1",
+          "ding_1": "Song 2",
+          "ding_2": "Song 3",
+          "ding_3": "Song 4",
+          "ding_4": "Song 5",
+          "ding_5": "Song 6",
+          "ding_6": "Song 7",
+          "ding_7": "Song 8",
+          "ding_8": "Song 9",
+          "ding_9": "Song 10"
+        }
+      },
+      "lock_motor_direction": {
+        "state": {
+          "clockwise": "Clockwise",
+          "anti_clockwise": "Anti Clockwise"
+        }
+      },
+      "lock_low_power_threshold": {
+        "state": {
+          "5_percent": "5%",
+          "10_percent": "10%",
+          "15_percent": "15%",
+          "20_percent": "20%"
+        }
+      },
+      "lock_motor_torque": {
+        "state": {
+          "torque_low": "Low",
+          "torque_middle": "Middle",
+          "torque_high": "High"
+        }
+      },
+      "lock_open_speed_state": {
+        "state": {
+          "low": "Low",
+          "middle": "Middle",
+          "high": "High"
+        }
+      },
+      "lock_photo_mode": {
+        "state": {
+          "close": "Close",
+          "power_save": "Power Save",
+          "standard": "Standard",
+          "security": "Security"
+        }
+      },
+      "lock_ringtone": {
+        "state": {
+          "sound_1": "Sound 1",
+          "sound_2": "Sound 2",
+          "sound_3": "Sound 3",
+          "sound_4": "Sound 4",
+          "sound_5": "Sound 5",
+          "sound_6": "Sound 6"
+        }
+      },
+      "lock_sound_mode": {
+        "state": {
+          "ringtone_0": "Ringtone 1",
+          "ringtone_1": "Ringtone 2",
+          "ringtone_2": "Ringtone 3",
+          "ringtone_3": "Ringtone 4",
+          "ringtone_4": "Ringtone 5",
+          "ringtone_5": "Ringtone 6"
+        }
+      },
+      "lock_stay_alarm_mode": {
+        "state": {
+          "close": "Close",
+          "normal": "Normal",
+          "high": "High",
+          "custom": "Custom"
+        }
+      },
+      "lock_stay_capture_mode": {
+        "state": {
+          "mode_1": "Mode 1",
+          "mode_2": "Mode 2"
+        }
+      },
+      "lock_stay_trigger_distance": {
+        "state": {
+          "away_from": "Away From",
+          "close_to": "Close To",
+          "middle": "Middle"
+        }
+      },
+      "lock_unlock_switch": {
+        "state": {
+          "combination": "Combination",
+          "single_unlock": "Single Unlock",
+          "finger_password": "Finger and Password",
+          "finger_card": "Finger and Card",
+          "finger_face": "Finger and Face",
+          "password_card": "Password and Card",
+          "password_face": "Password and Face",
+          "card_face": "Card and Face"
+        }
       }
     },
     "sensor": {
@@ -209,6 +360,42 @@
           "mild": "Mild",
           "good": "Good",
           "severe": "Severe"
+        }
+      },
+      "lock_alarm": {
+        "state": {
+          "wrong_finger": "Wrong Finger",
+          "wrong_password": "Wrong Passwod",
+          "wrong_card": "Wrong Card",
+          "wrong_face": "Wrong Face",
+          "tongue_bad": "Bolt Stuck",
+          "too_hot": "High Temperature",
+          "tongue_not_out": "Bolt Popup Failure",
+          "pry": "Prying",
+          "key_in": "Key In",
+          "power_off": "Power Off",
+          "shock": "Shock",
+          "unclosed_time": "Unclosed Time",
+          "low_battery": "Low Battery",
+          "defense": "Defense"
+        }
+      },
+      "lock_status": {
+        "state": {
+          "open": "[%key:common::state::unlocked%]",
+          "closed": "[%key:common::state::locked%]"
+        }
+      },
+      "lock_antilock": {
+        "state": {
+          "unlocked": "Unlocked",
+          "anti_locked": "Anti locked"
+        }
+      },
+      "lock_insurance": {
+        "state": {
+          "uninsured_lock": "Uninsured Lock",
+          "insured_lock": "Insured Lock"
         }
       }
     }
