@@ -24,21 +24,13 @@ async def test_component_dependencies(hass):
     mock_integration(hass, MockModule("mod1", ["mod3"]))
 
     with pytest.raises(loader.CircularDependency):
-        print(
-            await loader._async_component_dependencies(
-                hass, "mod_3", mod_3, set(), set()
-            )
-        )
+        await loader._async_component_dependencies(hass, "mod_3", mod_3, set(), set())
 
     # Depend on non-existing component
     mod_1 = mock_integration(hass, MockModule("mod1", ["nonexisting"]))
 
     with pytest.raises(loader.IntegrationNotFound):
-        print(
-            await loader._async_component_dependencies(
-                hass, "mod_1", mod_1, set(), set()
-            )
-        )
+        await loader._async_component_dependencies(hass, "mod_1", mod_1, set(), set())
 
     # Having an after dependency 2 deps down that is circular
     mod_1 = mock_integration(
@@ -46,11 +38,7 @@ async def test_component_dependencies(hass):
     )
 
     with pytest.raises(loader.CircularDependency):
-        print(
-            await loader._async_component_dependencies(
-                hass, "mod_3", mod_3, set(), set()
-            )
-        )
+        await loader._async_component_dependencies(hass, "mod_3", mod_3, set(), set())
 
 
 def test_component_loader(hass):

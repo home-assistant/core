@@ -17,6 +17,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.trigger import PluggableAction
@@ -166,12 +167,18 @@ class PhilipsTVMediaPlayer(
 
     async def async_media_previous_track(self) -> None:
         """Send rewind command."""
-        await self._tv.sendKey("Previous")
+        if self._tv.channel_active:
+            await self._tv.sendKey("ChannelStepDown")
+        else:
+            await self._tv.sendKey("Previous")
         await self._async_update_soon()
 
     async def async_media_next_track(self) -> None:
         """Send fast forward command."""
-        await self._tv.sendKey("Next")
+        if self._tv.channel_active:
+            await self._tv.sendKey("ChannelStepUp")
+        else:
+            await self._tv.sendKey("Next")
         await self._async_update_soon()
 
     async def async_media_play_pause(self) -> None:
@@ -211,6 +218,22 @@ class PhilipsTVMediaPlayer(
             )
         return None
 
+    async def async_play_media_channel(self, media_id: str):
+        """Play a channel."""
+        list_id, _, channel_id = media_id.partition("/")
+        if channel_id:
+            await self._tv.setChannel(channel_id, list_id)
+            await self._async_update_soon()
+            return
+
+        for channel in self._tv.channels_current:
+            if channel.get("preset") == media_id:
+                await self._tv.setChannel(channel["ccid"], self._tv.channel_list_id)
+                await self._async_update_soon()
+                return
+
+        raise HomeAssistantError(f"Unable to find channel {media_id}")
+
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -218,34 +241,29 @@ class PhilipsTVMediaPlayer(
         _LOGGER.debug("Call play media type <%s>, Id <%s>", media_type, media_id)
 
         if media_type == MediaType.CHANNEL:
-            list_id, _, channel_id = media_id.partition("/")
-            if channel_id:
-                await self._tv.setChannel(channel_id, list_id)
-                await self._async_update_soon()
-            else:
-                _LOGGER.error("Unable to find channel <%s>", media_id)
+            await self.async_play_media_channel(media_id)
         elif media_type == MediaType.APP:
             if app := self._tv.applications.get(media_id):
                 await self._tv.setApplication(app["intent"])
                 await self._async_update_soon()
             else:
-                _LOGGER.error("Unable to find application <%s>", media_id)
+                raise HomeAssistantError(f"Unable to find application {media_id}")
         else:
-            _LOGGER.error("Unsupported media type <%s>", media_type)
+            raise HomeAssistantError(f"Unsupported media type {media_type}")
 
-    async def async_browse_media_channels(self, expanded):
+    async def async_browse_media_channels(self, expanded: bool) -> BrowseMedia:
         """Return channel media objects."""
         if expanded:
             children = [
                 BrowseMedia(
-                    title=channel.get("name", f"Channel: {channel_id}"),
+                    title=channel.get("name", f"Channel: {channel['ccid']}"),
                     media_class=MediaClass.CHANNEL,
-                    media_content_id=f"alltv/{channel_id}",
+                    media_content_id=f"{self._tv.channel_list_id}/{channel['ccid']}",
                     media_content_type=MediaType.CHANNEL,
                     can_play=True,
                     can_expand=False,
                 )
-                for channel_id, channel in self._tv.channels.items()
+                for channel in self._tv.channels_current
             ]
         else:
             children = None
@@ -261,10 +279,12 @@ class PhilipsTVMediaPlayer(
             children=children,
         )
 
-    async def async_browse_media_favorites(self, list_id, expanded):
+    async def async_browse_media_favorites(
+        self, list_id: str, expanded: bool
+    ) -> BrowseMedia:
         """Return channel media objects."""
         if expanded:
-            favorites = await self._tv.getFavoriteList(list_id)
+            favorites = self._tv.favorite_lists.get(list_id)
             if favorites:
 
                 def get_name(channel):
@@ -282,7 +302,7 @@ class PhilipsTVMediaPlayer(
                         can_play=True,
                         can_expand=False,
                     )
-                    for channel in favorites
+                    for channel in favorites.get("channels", [])
                 ]
             else:
                 children = None
@@ -377,10 +397,7 @@ class PhilipsTVMediaPlayer(
         if not self._tv.on:
             raise BrowseError("Can't browse when tv is turned off")
 
-        if media_content_id is None:
-            raise BrowseError("Missing media content id")
-
-        if media_content_id in (None, ""):
+        if media_content_id is None or media_content_id == "":
             return await self.async_browse_media_root()
         path = media_content_id.partition("/")
         if path[0] == "channels":

@@ -11,6 +11,7 @@
             "not_admin": "Pengguna harus memiliki izin admin, pengguna ''{username}'' memiliki tingkat otorisasi ''{userlevel}''",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
+        "flow_title": "{short_mac} ({ip_address})",
         "step": {
             "reauth_confirm": {
                 "description": "Integrasi Reolink perlu mengautentikasi ulang koneksi Anda",
