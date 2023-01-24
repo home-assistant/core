@@ -3,7 +3,7 @@
 from unittest.mock import Mock, patch
 
 import pytest
-from tesla_powerwall import GridStatus
+from tesla_powerwall import GridStatus, PowerwallError
 
 from homeassistant.components.powerwall.const import DOMAIN
 from homeassistant.components.switch import (
@@ -12,6 +12,7 @@ from homeassistant.components.switch import (
     SERVICE_TURN_ON,
 )
 from homeassistant.const import ATTR_ENTITY_ID, CONF_IP_ADDRESS, STATE_OFF, STATE_ON
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as ent_reg
 
 from .mocks import _mock_powerwall_with_fixtures
@@ -85,3 +86,19 @@ async def test_off(hass, mock_powerwall):
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_OFF
+
+
+async def test_exception_on_powerwall_error(hass, mock_powerwall):
+    """Ensure that an exception in the tesla_powerwall library causes a HomeAssistantError."""
+
+    with pytest.raises(HomeAssistantError, match="Setting off-grid operation to"):
+        mock_powerwall.set_island_mode = Mock(
+            side_effect=PowerwallError("Mock exception")
+        )
+
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: ENTITY_ID},
+            blocking=True,
+        )
