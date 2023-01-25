@@ -26,7 +26,7 @@ class LektricoNumberEntityDescription(NumberEntityDescription):
     value: Callable[[Any], int] | None = None
 
     @classmethod
-    async def set_value(
+    async def set_native_value(
         cls, device: lektricowifi.Charger, value: float, data: Any
     ) -> bool | None:
         """Return None."""
@@ -38,7 +38,7 @@ class LedBrightnessNumberEntityDescription(LektricoNumberEntityDescription):
     """A class that describes the Lektrico Led Brightness number entity."""
 
     @classmethod
-    async def set_value(
+    async def set_native_value(
         cls, device: lektricowifi.Charger, value: float, data: Any
     ) -> bool:
         """Set the value for the led brightness in %, from 20 to 100."""
@@ -56,7 +56,7 @@ class DynamicCurrentNumberEntityDescription(LektricoNumberEntityDescription):
     """A class that describes the Lektrico Dynamic Current number entity."""
 
     @classmethod
-    async def set_value(
+    async def set_native_value(
         cls, device: lektricowifi.Charger, value: float, data: Any
     ) -> bool:
         """Set the value of the dynamic current, as int between 0 and 32 A."""
@@ -74,7 +74,7 @@ class UserCurrentNumberEntityDescription(LektricoNumberEntityDescription):
     """A class that describes the Lektrico User Current number entity."""
 
     @classmethod
-    async def set_value(
+    async def set_native_value(
         cls, device: lektricowifi.Charger, value: float, data: Any
     ) -> bool:
         """Set the value of the user current, as int between 6 and 32 A."""
@@ -178,7 +178,7 @@ class LektricoNumber(CoordinatorEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the value of the number."""
-        await self.entity_description.set_value(
+        await self.entity_description.set_native_value(
             self.coordinator.device, value, self.coordinator.data
         )
         # Refresh the coordinator because some buttons change some values.
