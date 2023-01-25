@@ -73,8 +73,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Device registration for the bridge
     info = bridge.info()
     bridge_id = parse_id(info["ids"]["hardwareId"])
-    dr = device_registry.async_get(hass)
-    dr.async_get_or_create(
+    dev_reg = device_registry.async_get(hass)
+    dev_reg.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, bridge_id)},
         manufacturer="Nuki Home Solutions GmbH",
