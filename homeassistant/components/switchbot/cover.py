@@ -112,7 +112,7 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
 class SwitchBotBlindTiltEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
     """Representation of a Switchbot."""
 
-    _device: switchbot.SwitchbotCurtain
+    _device: switchbot.SwitchbotBlindTilt
     _attr_device_class = CoverDeviceClass.CURTAIN
     _attr_supported_features = (
         CoverEntityFeature.OPEN_TILT
