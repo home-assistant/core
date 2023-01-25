@@ -9,7 +9,7 @@ import lektricowifi
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_FRIENDLY_NAME, ELECTRIC_CURRENT_AMPERE, PERCENTAGE
+from homeassistant.const import CONF_FRIENDLY_NAME, PERCENTAGE, UnitOfElectricCurrent
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -103,7 +103,7 @@ SENSORS: tuple[LektricoNumberEntityDescription, ...] = (
         native_min_value=0,
         native_max_value=32,
         native_step=1,
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         value=lambda data: int(data.dynamic_current),
     ),
     UserCurrentNumberEntityDescription(
@@ -112,7 +112,7 @@ SENSORS: tuple[LektricoNumberEntityDescription, ...] = (
         native_min_value=6,
         native_max_value=32,
         native_step=1,
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         value=lambda data: int(data.user_current),
     ),
 )
