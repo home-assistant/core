@@ -11,6 +11,19 @@ coverage:
         threshold: 1
         paths:
           - homeassistant/components/*/config_flow.py
+      required:
+        target: auto
+        threshold: 1
+        paths:
+          - homeassistant/components/*/device_action.py
+          - homeassistant/components/*/device_condition.py
+          - homeassistant/components/*/device_trigger.py
+          - homeassistant/components/*/diagnostics.py
+          - homeassistant/components/*/group.py
+          - homeassistant/components/*/intent.py
+          - homeassistant/components/*/logbook.py
+          - homeassistant/components/*/media_source.py
+          - homeassistant/components/*/scene.py
     patch:
       default:
         target: auto
@@ -19,6 +32,19 @@ coverage:
         threshold: 0
         paths:
           - homeassistant/components/*/config_flow.py
+      required:
+        target: 100
+        threshold: 0
+        paths:
+          - homeassistant/components/*/device_action.py
+          - homeassistant/components/*/device_condition.py
+          - homeassistant/components/*/device_trigger.py
+          - homeassistant/components/*/diagnostics.py
+          - homeassistant/components/*/group.py
+          - homeassistant/components/*/intent.py
+          - homeassistant/components/*/logbook.py
+          - homeassistant/components/*/media_source.py
+          - homeassistant/components/*/scene.py
 comment: false
 
 # To make partial tests possible,
