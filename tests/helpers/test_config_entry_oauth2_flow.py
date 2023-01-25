@@ -726,3 +726,10 @@ async def test_oauth_session_refresh_failure(
     session = config_entry_oauth2_flow.OAuth2Session(hass, config_entry, local_impl)
     with pytest.raises(aiohttp.client_exceptions.ClientResponseError):
         await session.async_request("post", "https://example.com")
+
+
+async def test_oauth2_without_secret_init(local_impl, hass_client_no_auth):
+    """Check authorize callback without secret initalizated."""
+    client = await hass_client_no_auth()
+    resp = await client.get("/auth/external/callback?code=abcd&state=qwer")
+    assert resp.status == 400
