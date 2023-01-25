@@ -14,12 +14,12 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_FRIENDLY_NAME,
-    ELECTRIC_CURRENT_AMPERE,
-    ELECTRIC_POTENTIAL_VOLT,
-    ENERGY_KILO_WATT_HOUR,
-    POWER_KILO_WATT,
-    TEMP_CELSIUS,
-    TIME_SECONDS,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
@@ -46,7 +46,7 @@ SENSORS: tuple[LektricoSensorEntityDescription, ...] = (
     LektricoSensorEntityDescription(
         key="charging_time",
         name="Charging time",
-        native_unit_of_measurement=TIME_SECONDS,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         value=lambda data: int(data.charging_time),
     ),
     LektricoSensorEntityDescription(
@@ -54,7 +54,7 @@ SENSORS: tuple[LektricoSensorEntityDescription, ...] = (
         name="Current",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.CURRENT,
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         value=lambda data: float(data.current),
     ),
     LektricoSensorEntityDescription(
@@ -62,14 +62,14 @@ SENSORS: tuple[LektricoSensorEntityDescription, ...] = (
         name="Instant power",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=POWER_KILO_WATT,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
         value=lambda data: float(data.instant_power),
     ),
     LektricoSensorEntityDescription(
         key="session_energy",
         name="Session energy",
         device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda data: float(data.session_energy),
     ),
     LektricoSensorEntityDescription(
@@ -77,7 +77,7 @@ SENSORS: tuple[LektricoSensorEntityDescription, ...] = (
         name="Temperature",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value=lambda data: float(data.temperature),
     ),
     LektricoSensorEntityDescription(
@@ -85,21 +85,21 @@ SENSORS: tuple[LektricoSensorEntityDescription, ...] = (
         name="Total charged energy",
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda data: int(data.total_charged_energy),
     ),
     LektricoSensorEntityDescription(
         key="voltage",
         name="Voltage",
         device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         value=lambda data: float(data.voltage),
     ),
     LektricoSensorEntityDescription(
         key="install_current",
         name="Install current",
         device_class=SensorDeviceClass.CURRENT,
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         value=lambda data: int(data.install_current),
     ),
 )
