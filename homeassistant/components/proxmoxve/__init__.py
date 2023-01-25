@@ -191,7 +191,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         raise ConfigEntryAuthFailed from error
     except SSLError as error:
         raise ConfigEntryNotReady(
-            f"Unable to verify proxmox server SSL. Try using 'verify_ssl: false' for proxmox instance {host}:{port}"
+            "Unable to verify proxmox server SSL. Try using 'verify_ssl: false' "
+            f"for proxmox instance {host}:{port}"
         ) from error
     except ConnectTimeout as error:
         raise ConfigEntryNotReady(
@@ -269,7 +270,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                 coordinator = coordinators[vm_id] = DataUpdateCoordinator(
                     hass,
                     logger=LOGGER,
-                    name=f"{config_entry.data[CONF_HOST]}:{config_entry.data[CONF_PORT]} - {config_entry.data[CONF_NODE]} - {vm_id} {api_category}",
+                    name=(
+                        f"{config_entry.data[CONF_HOST]}:{config_entry.data[CONF_PORT]}"
+                        f" - {config_entry.data[CONF_NODE]} - {vm_id} {api_category}"
+                    ),
                     update_interval=update_interval,
                     update_method=partial(
                         async_update,
@@ -283,7 +287,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             coordinator = coordinators[api_category] = DataUpdateCoordinator(
                 hass,
                 logger=LOGGER,
-                name=f"{config_entry.data[CONF_HOST]}:{config_entry.data[CONF_PORT]} - {config_entry.data[CONF_NODE]} - {api_category}",
+                name=(
+                    f"{config_entry.data[CONF_HOST]}:{config_entry.data[CONF_PORT]}"
+                    f" - {config_entry.data[CONF_NODE]} - {api_category}"
+                ),
                 update_interval=update_interval,
                 update_method=partial(
                     async_update,
@@ -423,12 +430,12 @@ def device_info(
 
     proxmox_version = None
     coordinator = coordinators[ProxmoxType.Proxmox]
-    if not (coordinator_data := coordinator.data) is None:
+    if (coordinator_data := coordinator.data) is not None:
         proxmox_version = f"Proxmox {coordinator_data[ProxmoxKeyAPIParse.VERSION]}"
 
     if api_category in (ProxmoxType.QEMU, ProxmoxType.LXC):
         coordinator = coordinators[vm_id]
-        if not (coordinator_data := coordinator.data) is None:
+        if (coordinator_data := coordinator.data) is not None:
             vm_name = coordinator_data[ProxmoxKeyAPIParse.NAME]
 
         name = f"{node} {vm_name} ({vm_id})"
@@ -438,7 +445,7 @@ def device_info(
         default_model = api_category.upper()
     elif api_category is ProxmoxType.Node:
         coordinator = coordinators[ProxmoxType.Node]
-        if not (coordinator_data := coordinator.data) is None:
+        if (coordinator_data := coordinator.data) is not None:
             model_processor = coordinator_data[ProxmoxKeyAPIParse.MODEL]
 
         name = f"Node {node} - {host}:{port}"
@@ -541,7 +548,7 @@ class ProxmoxClient:
         self._connection_start_time = None
 
     def build_client(self):
-        """Construct the ProxmoxAPI client. Allows inserting the realm within the `user` value."""
+        """Construct the ProxmoxAPI client."""
 
         if "@" in self._user:
             user_id = self._user

@@ -187,9 +187,10 @@ class ProxmoxOptionsFlowHandler(config_entries.OptionsFlow):
                         vol.Required(CONF_NODE): node,
                         vol.Optional(CONF_QEMU, default=old_qemu): cv.multi_select(
                             {
-                                str(
-                                    qemu[ID]
-                                ): f"{qemu[ID]} {qemu['name'] if 'name' in qemu else None}"
+                                str(qemu[ID]): (
+                                    f"{qemu[ID]}"
+                                    f"{qemu['name'] if 'name' in qemu else None}"
+                                )
                                 for qemu in await self.hass.async_add_executor_job(
                                     proxmox.nodes(node).qemu.get
                                 )
@@ -246,7 +247,11 @@ class ProxmoxOptionsFlowHandler(config_entries.OptionsFlow):
         for qemu in self.config_entry.data[CONF_QEMU]:
             if qemu not in self._config[CONF_QEMU]:
                 # Remove device
-                host_port_node_vm = f"{self.config_entry.data[CONF_HOST]}_{self.config_entry.data[CONF_PORT]}_{self.config_entry.data[CONF_NODE]}_{qemu}"
+                host_port_node_vm = (
+                    f"{self.config_entry.data[CONF_HOST]}_"
+                    f"{self.config_entry.data[CONF_PORT]}_"
+                    f"{self.config_entry.data[CONF_NODE]}_{qemu}"
+                )
                 device_identifiers = {(DOMAIN, host_port_node_vm)}
                 dev_reg = dr.async_get(self.hass)
                 device = dev_reg.async_get_or_create(
@@ -262,7 +267,11 @@ class ProxmoxOptionsFlowHandler(config_entries.OptionsFlow):
         for lxc in self.config_entry.data[CONF_LXC]:
             if lxc not in self._config[CONF_LXC]:
                 # Remove device
-                host_port_node_vm = f"{self.config_entry.data[CONF_HOST]}_{self.config_entry.data[CONF_PORT]}_{self.config_entry.data[CONF_NODE]}_{lxc}"
+                host_port_node_vm = (
+                    f"{self.config_entry.data[CONF_HOST]}_"
+                    f"{self.config_entry.data[CONF_PORT]}_"
+                    f"{self.config_entry.data[CONF_NODE]}_{lxc}"
+                )
                 device_identifiers = {(DOMAIN, host_port_node_vm)}
                 dev_reg = dr.async_get(self.hass)
                 device = dev_reg.async_get_or_create(
@@ -357,7 +366,10 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             f"{import_config.get(CONF_HOST)}_{import_config.get(CONF_PORT)}_{import_config.get(CONF_NODE)}"
         ):
             LOGGER.warning(
-                "The node %s of instance %s:%s already configured, you can remove it from configuration.yaml if you still have it",
+                (
+                    "The node %s of instance %s:%s already configured, "
+                    "you can remove it from configuration.yaml if you still have it"
+                ),
                 import_config.get(CONF_NODE),
                 import_config.get(CONF_HOST),
                 import_config.get(CONF_PORT),
@@ -519,7 +531,10 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         import_options[CONF_SCAN_INTERVAL_LXC] = UPDATE_INTERVAL_DEFAULT
 
         return self.async_create_entry(
-            title=f"{import_config.get(CONF_NODE)} - {import_config.get(CONF_HOST)}:{import_config.get(CONF_PORT)}",
+            title=(
+                f"{import_config.get(CONF_NODE)} - {import_config.get(CONF_HOST)}:"
+                f"{import_config.get(CONF_PORT)}"
+            ),
             data=import_config,
             options=import_options,
         )
@@ -774,9 +789,10 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         vol.Required(CONF_NODE): node,
                         vol.Optional(CONF_QEMU): cv.multi_select(
                             {
-                                str(
-                                    qemu[ID]
-                                ): f"{qemu[ID]} {qemu['name'] if 'name' in qemu else None}"
+                                str(qemu[ID]): (
+                                    f"{qemu[ID]} "
+                                    f"{qemu['name'] if 'name' in qemu else None}"
+                                )
                                 for qemu in await self.hass.async_add_executor_job(
                                     proxmox.nodes(node).qemu.get
                                 )
@@ -821,7 +837,10 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         conf_options[CONF_SCAN_INTERVAL_LXC] = UPDATE_INTERVAL_DEFAULT
 
         return self.async_create_entry(
-            title=f"{self._config[CONF_NODE]} - {self._config[CONF_HOST]}:{self._config[CONF_PORT]}",
+            title=(
+                f"{self._config[CONF_NODE]} - {self._config[CONF_HOST]}:"
+                f"{self._config[CONF_PORT]}"
+            ),
             data=self._config,
             options=conf_options,
         )
