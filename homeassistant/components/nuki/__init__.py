@@ -126,14 +126,13 @@ class NukiEntity(CoordinatorEntity[DataUpdateCoordinator[None]]):
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator)
         self._nuki_device = nuki_device
-        self._attr_name = nuki_device.name
 
     @property
     def device_info(self):
         """Device info for Nuki entities."""
         return {
             "identifiers": {(DOMAIN, parse_id(self._nuki_device.nuki_id))},
-            "name": self._attr_name,
+            "name": self._nuki_device.name,
             "manufacturer": "Nuki",
             "model": self._nuki_device.device_type_str.capitalize(),
             "sw_version": self._nuki_device.firmware_version,
