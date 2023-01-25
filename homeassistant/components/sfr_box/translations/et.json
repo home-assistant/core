@@ -1,17 +1,32 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
         },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
-            "unknown": "Ootamatu t\u00f5rge"
+            "invalid_auth": "Vigane autentimine"
         },
         "step": {
+            "auth": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                }
+            },
+            "choose_auth": {
+                "description": "Volituste seadistamine v\u00f5imaldab lisafunktsioone.",
+                "menu_options": {
+                    "auth": "M\u00e4\u00e4ra mandaadid (soovitatav)",
+                    "skip_auth": "J\u00e4ta autentimine vahele"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Host"
-                }
+                },
+                "description": "Mandaadi m\u00e4\u00e4ramine on valikuline kuid lubab lisafunktsioone."
             }
         }
     },
@@ -24,6 +39,14 @@
                     "loss_of_signal_quality": "Signaali kvaliteedi kaotus",
                     "no_defect": "Korras",
                     "of_frame": "Kaadrist",
+                    "unknown": "Teadmata"
+                }
+            },
+            "net_infra": {
+                "state": {
+                    "adsl": "ADSL",
+                    "ftth": "FTTH",
+                    "gprs": "GPRS",
                     "unknown": "Teadmata"
                 }
             },

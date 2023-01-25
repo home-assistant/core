@@ -4,8 +4,7 @@
             "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9"
         },
         "error": {
-            "cannot_connect": "Nepodarilo sa pripoji\u0165",
-            "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
+            "cannot_connect": "Nepodarilo sa pripoji\u0165"
         },
         "step": {
             "user": {
@@ -25,6 +24,14 @@
                     "no_defect": "Bez defektu",
                     "of_frame": "Of Frame",
                     "unknown": "Nezn\u00e1me"
+                }
+            },
+            "net_infra": {
+                "state": {
+                    "adsl": "ADSL",
+                    "ftth": "FTTH",
+                    "gprs": "GPRS",
+                    "unknown": "Nezn\u00e1my"
                 }
             },
             "training": {

@@ -1,39 +1,31 @@
 """The test for sensor entity."""
+from __future__ import annotations
+
 from datetime import date, datetime, timezone
 from decimal import Decimal
+from typing import Any
 
 import pytest
 from pytest import approx
 
 from homeassistant.components.number import NumberDeviceClass
-from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.components.sensor import (
+    DEVICE_CLASS_UNITS,
+    SensorDeviceClass,
+    SensorStateClass,
+)
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
-    LENGTH_CENTIMETERS,
-    LENGTH_INCHES,
-    LENGTH_KILOMETERS,
-    LENGTH_METERS,
-    LENGTH_MILES,
-    LENGTH_YARD,
-    MASS_GRAMS,
-    MASS_OUNCES,
-    PRESSURE_HPA,
-    PRESSURE_INHG,
-    PRESSURE_KPA,
-    PRESSURE_MMHG,
-    SPEED_INCHES_PER_HOUR,
-    SPEED_KILOMETERS_PER_HOUR,
-    SPEED_MILES_PER_HOUR,
-    SPEED_MILLIMETERS_PER_DAY,
+    PERCENTAGE,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-    VOLUME_CUBIC_FEET,
-    VOLUME_CUBIC_METERS,
-    VOLUME_FLUID_OUNCE,
-    VOLUME_LITERS,
     UnitOfEnergy,
+    UnitOfLength,
+    UnitOfMass,
+    UnitOfPressure,
+    UnitOfSpeed,
     UnitOfTemperature,
+    UnitOfVolume,
+    UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
@@ -48,10 +40,34 @@ from tests.common import mock_restore_cache_with_extra_data
 @pytest.mark.parametrize(
     "unit_system,native_unit,state_unit,native_value,state_value",
     [
-        (US_CUSTOMARY_SYSTEM, TEMP_FAHRENHEIT, TEMP_FAHRENHEIT, 100, 100),
-        (US_CUSTOMARY_SYSTEM, TEMP_CELSIUS, TEMP_FAHRENHEIT, 38, 100),
-        (METRIC_SYSTEM, TEMP_FAHRENHEIT, TEMP_CELSIUS, 100, 38),
-        (METRIC_SYSTEM, TEMP_CELSIUS, TEMP_CELSIUS, 38, 38),
+        (
+            US_CUSTOMARY_SYSTEM,
+            UnitOfTemperature.FAHRENHEIT,
+            UnitOfTemperature.FAHRENHEIT,
+            100,
+            "100",
+        ),
+        (
+            US_CUSTOMARY_SYSTEM,
+            UnitOfTemperature.CELSIUS,
+            UnitOfTemperature.FAHRENHEIT,
+            38,
+            "100",
+        ),
+        (
+            METRIC_SYSTEM,
+            UnitOfTemperature.FAHRENHEIT,
+            UnitOfTemperature.CELSIUS,
+            100,
+            "38",
+        ),
+        (
+            METRIC_SYSTEM,
+            UnitOfTemperature.CELSIUS,
+            UnitOfTemperature.CELSIUS,
+            38,
+            "38",
+        ),
     ],
 )
 async def test_temperature_conversion(
@@ -79,7 +95,7 @@ async def test_temperature_conversion(
     await hass.async_block_till_done()
 
     state = hass.states.get(entity0.entity_id)
-    assert float(state.state) == approx(float(state_value))
+    assert state.state == state_value
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == state_unit
 
 
@@ -93,7 +109,7 @@ async def test_temperature_conversion_wrong_device_class(
     platform.ENTITIES["0"] = platform.MockSensor(
         name="Test",
         native_value="0.0",
-        native_unit_of_measurement=TEMP_FAHRENHEIT,
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=device_class,
     )
 
@@ -104,7 +120,7 @@ async def test_temperature_conversion_wrong_device_class(
     # Check temperature is not converted
     state = hass.states.get(entity0.entity_id)
     assert state.state == "0.0"
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_FAHRENHEIT
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.FAHRENHEIT
 
 
 @pytest.mark.parametrize("state_class", ("measurement", "total_increasing"))
@@ -401,57 +417,65 @@ async def test_restore_sensor_restore_state(
 
 
 @pytest.mark.parametrize(
-    "device_class,native_unit,custom_unit,state_unit,native_value,custom_value",
+    "device_class, native_unit, custom_unit, state_unit, native_value, custom_state",
     [
         # Smaller to larger unit, InHg is ~33x larger than hPa -> 1 more decimal
         (
             SensorDeviceClass.PRESSURE,
-            PRESSURE_HPA,
-            PRESSURE_INHG,
-            PRESSURE_INHG,
+            UnitOfPressure.HPA,
+            UnitOfPressure.INHG,
+            UnitOfPressure.INHG,
             1000.0,
-            29.53,
+            "29.53",
         ),
         (
             SensorDeviceClass.PRESSURE,
-            PRESSURE_KPA,
-            PRESSURE_HPA,
-            PRESSURE_HPA,
+            UnitOfPressure.KPA,
+            UnitOfPressure.HPA,
+            UnitOfPressure.HPA,
             1.234,
-            12.34,
+            "12.340",
+        ),
+        (
+            SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+            UnitOfPressure.HPA,
+            UnitOfPressure.MMHG,
+            UnitOfPressure.MMHG,
+            1000,
+            "750",
         ),
         (
             SensorDeviceClass.PRESSURE,
-            PRESSURE_HPA,
-            PRESSURE_MMHG,
-            PRESSURE_MMHG,
+            UnitOfPressure.HPA,
+            UnitOfPressure.MMHG,
+            UnitOfPressure.MMHG,
             1000,
-            750,
+            "750",
         ),
         # Not a supported pressure unit
         (
             SensorDeviceClass.PRESSURE,
-            PRESSURE_HPA,
+            UnitOfPressure.HPA,
             "peer_pressure",
-            PRESSURE_HPA,
+            UnitOfPressure.HPA,
             1000,
-            1000,
+            "1000",
         ),
         (
             SensorDeviceClass.TEMPERATURE,
-            TEMP_CELSIUS,
-            TEMP_FAHRENHEIT,
-            TEMP_FAHRENHEIT,
+            UnitOfTemperature.CELSIUS,
+            UnitOfTemperature.FAHRENHEIT,
+            UnitOfTemperature.FAHRENHEIT,
             37.5,
-            99.5,
+            "99.5",
         ),
         (
             SensorDeviceClass.TEMPERATURE,
-            TEMP_FAHRENHEIT,
-            TEMP_CELSIUS,
-            TEMP_CELSIUS,
+            UnitOfTemperature.FAHRENHEIT,
+            UnitOfTemperature.CELSIUS,
+            UnitOfTemperature.CELSIUS,
             100,
-            38.0,
+            "38",
         ),
     ],
 )
@@ -463,7 +487,7 @@ async def test_custom_unit(
     custom_unit,
     state_unit,
     native_value,
-    custom_value,
+    custom_state,
 ):
     """Test custom unit."""
     entity_registry = er.async_get(hass)
@@ -489,36 +513,211 @@ async def test_custom_unit(
     await hass.async_block_till_done()
 
     state = hass.states.get(entity0.entity_id)
-    assert float(state.state) == approx(float(custom_value))
+    assert state.state == custom_state
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == state_unit
 
 
 @pytest.mark.parametrize(
-    "native_unit,custom_unit,state_unit,native_value,custom_value,device_class",
+    "device_class,native_unit,custom_unit,native_value,native_precision,default_state,custom_state",
+    [
+        (
+            SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+            UnitOfPressure.HPA,
+            UnitOfPressure.INHG,
+            1000.0,
+            2,
+            "1000.00",  # Native precision is 2
+            "29.530",  # One digit of precision added when converting
+        ),
+        (
+            SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+            UnitOfPressure.INHG,
+            UnitOfPressure.HPA,
+            29.9211,
+            3,
+            "29.921",  # Native precision is 3
+            "1013.24",  # One digit of precision removed when converting
+        ),
+    ],
+)
+async def test_native_precision_scaling(
+    hass,
+    enable_custom_integrations,
+    device_class,
+    native_unit,
+    custom_unit,
+    native_value,
+    native_precision,
+    default_state,
+    custom_state,
+):
+    """Test native precision is influenced by unit conversion."""
+    entity_registry = er.async_get(hass)
+
+    entry = entity_registry.async_get_or_create("sensor", "test", "very_unique")
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test",
+        native_value=str(native_value),
+        native_precision=native_precision,
+        native_unit_of_measurement=native_unit,
+        device_class=device_class,
+        unique_id="very_unique",
+    )
+
+    entity0 = platform.ENTITIES["0"]
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity0.entity_id)
+    assert state.state == default_state
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == native_unit
+
+    entity_registry.async_update_entity_options(
+        entry.entity_id, "sensor", {"unit_of_measurement": custom_unit}
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity0.entity_id)
+    assert state.state == custom_state
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == custom_unit
+
+
+@pytest.mark.parametrize(
+    "device_class,native_unit,custom_precision,native_value,default_state,custom_state",
+    [
+        (
+            SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+            UnitOfPressure.HPA,
+            4,
+            1000.0,
+            "1000.000",
+            "1000.0000",
+        ),
+    ],
+)
+async def test_custom_precision_native_precision(
+    hass,
+    enable_custom_integrations,
+    device_class,
+    native_unit,
+    custom_precision,
+    native_value,
+    default_state,
+    custom_state,
+):
+    """Test custom precision."""
+    entity_registry = er.async_get(hass)
+
+    entry = entity_registry.async_get_or_create("sensor", "test", "very_unique")
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test",
+        native_value=str(native_value),
+        native_precision=3,
+        native_unit_of_measurement=native_unit,
+        device_class=device_class,
+        unique_id="very_unique",
+    )
+
+    entity0 = platform.ENTITIES["0"]
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity0.entity_id)
+    assert state.state == default_state
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == native_unit
+
+    entity_registry.async_update_entity_options(
+        entry.entity_id, "sensor", {"precision": custom_precision}
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity0.entity_id)
+    assert state.state == custom_state
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == native_unit
+
+
+@pytest.mark.parametrize(
+    "device_class,native_unit,custom_precision,native_value,custom_state",
+    [
+        (
+            SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+            UnitOfPressure.HPA,
+            4,
+            1000.0,
+            "1000.0000",
+        ),
+    ],
+)
+async def test_custom_precision_no_native_precision(
+    hass,
+    enable_custom_integrations,
+    device_class,
+    native_unit,
+    custom_precision,
+    native_value,
+    custom_state,
+):
+    """Test custom precision."""
+    entity_registry = er.async_get(hass)
+
+    entry = entity_registry.async_get_or_create("sensor", "test", "very_unique")
+    entity_registry.async_update_entity_options(
+        entry.entity_id, "sensor", {"precision": custom_precision}
+    )
+    await hass.async_block_till_done()
+
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test",
+        native_value=str(native_value),
+        native_unit_of_measurement=native_unit,
+        device_class=device_class,
+        unique_id="very_unique",
+    )
+
+    entity0 = platform.ENTITIES["0"]
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity0.entity_id)
+    assert state.state == custom_state
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == native_unit
+
+
+@pytest.mark.parametrize(
+    "native_unit, custom_unit, state_unit, native_value, native_state, custom_state, device_class",
     [
         # Distance
         (
-            LENGTH_KILOMETERS,
-            LENGTH_MILES,
-            LENGTH_MILES,
+            UnitOfLength.KILOMETERS,
+            UnitOfLength.MILES,
+            UnitOfLength.MILES,
             1000,
-            621,
+            "1000",
+            "621",
             SensorDeviceClass.DISTANCE,
         ),
         (
-            LENGTH_CENTIMETERS,
-            LENGTH_INCHES,
-            LENGTH_INCHES,
+            UnitOfLength.CENTIMETERS,
+            UnitOfLength.INCHES,
+            UnitOfLength.INCHES,
             7.24,
-            2.85,
+            "7.24",
+            "2.85",
             SensorDeviceClass.DISTANCE,
         ),
         (
-            LENGTH_KILOMETERS,
+            UnitOfLength.KILOMETERS,
             "peer_distance",
-            LENGTH_KILOMETERS,
+            UnitOfLength.KILOMETERS,
             1000,
-            1000,
+            "1000",
+            "1000",
             SensorDeviceClass.DISTANCE,
         ),
         # Energy
@@ -527,7 +726,8 @@ async def test_custom_unit(
             UnitOfEnergy.MEGA_WATT_HOUR,
             UnitOfEnergy.MEGA_WATT_HOUR,
             1000,
-            1.0,
+            "1000",
+            "1.000",
             SensorDeviceClass.ENERGY,
         ),
         (
@@ -535,7 +735,8 @@ async def test_custom_unit(
             UnitOfEnergy.MEGA_WATT_HOUR,
             UnitOfEnergy.MEGA_WATT_HOUR,
             1000,
-            278,
+            "1000",
+            "278",
             SensorDeviceClass.ENERGY,
         ),
         (
@@ -543,117 +744,159 @@ async def test_custom_unit(
             "BTU",
             UnitOfEnergy.KILO_WATT_HOUR,
             1000,
-            1000,
+            "1000",
+            "1000",
             SensorDeviceClass.ENERGY,
+        ),
+        # Power factor
+        (
+            None,
+            PERCENTAGE,
+            PERCENTAGE,
+            1.0,
+            "1.0",
+            "100.0",
+            SensorDeviceClass.POWER_FACTOR,
+        ),
+        (
+            PERCENTAGE,
+            None,
+            None,
+            100,
+            "100",
+            "1.00",
+            SensorDeviceClass.POWER_FACTOR,
+        ),
+        (
+            "Cos φ",
+            None,
+            "Cos φ",
+            1.0,
+            "1.0",
+            "1.0",
+            SensorDeviceClass.POWER_FACTOR,
         ),
         # Pressure
         # Smaller to larger unit, InHg is ~33x larger than hPa -> 1 more decimal
         (
-            PRESSURE_HPA,
-            PRESSURE_INHG,
-            PRESSURE_INHG,
+            UnitOfPressure.HPA,
+            UnitOfPressure.INHG,
+            UnitOfPressure.INHG,
             1000.0,
-            29.53,
+            "1000.0",
+            "29.53",
             SensorDeviceClass.PRESSURE,
         ),
         (
-            PRESSURE_KPA,
-            PRESSURE_HPA,
-            PRESSURE_HPA,
+            UnitOfPressure.KPA,
+            UnitOfPressure.HPA,
+            UnitOfPressure.HPA,
             1.234,
-            12.34,
+            "1.234",
+            "12.340",
             SensorDeviceClass.PRESSURE,
         ),
         (
-            PRESSURE_HPA,
-            PRESSURE_MMHG,
-            PRESSURE_MMHG,
+            UnitOfPressure.HPA,
+            UnitOfPressure.MMHG,
+            UnitOfPressure.MMHG,
             1000,
-            750,
+            "1000",
+            "750",
             SensorDeviceClass.PRESSURE,
         ),
         # Not a supported pressure unit
         (
-            PRESSURE_HPA,
+            UnitOfPressure.HPA,
             "peer_pressure",
-            PRESSURE_HPA,
+            UnitOfPressure.HPA,
             1000,
-            1000,
+            "1000",
+            "1000",
             SensorDeviceClass.PRESSURE,
         ),
         # Speed
         (
-            SPEED_KILOMETERS_PER_HOUR,
-            SPEED_MILES_PER_HOUR,
-            SPEED_MILES_PER_HOUR,
+            UnitOfSpeed.KILOMETERS_PER_HOUR,
+            UnitOfSpeed.MILES_PER_HOUR,
+            UnitOfSpeed.MILES_PER_HOUR,
             100,
-            62,
+            "100",
+            "62",
             SensorDeviceClass.SPEED,
         ),
         (
-            SPEED_MILLIMETERS_PER_DAY,
-            SPEED_INCHES_PER_HOUR,
-            SPEED_INCHES_PER_HOUR,
+            UnitOfVolumetricFlux.MILLIMETERS_PER_DAY,
+            UnitOfVolumetricFlux.INCHES_PER_HOUR,
+            UnitOfVolumetricFlux.INCHES_PER_HOUR,
             78,
-            0.13,
+            "78",
+            "0.13",
             SensorDeviceClass.SPEED,
         ),
         (
-            SPEED_KILOMETERS_PER_HOUR,
+            UnitOfSpeed.KILOMETERS_PER_HOUR,
             "peer_distance",
-            SPEED_KILOMETERS_PER_HOUR,
+            UnitOfSpeed.KILOMETERS_PER_HOUR,
             100,
-            100,
+            "100",
+            "100",
             SensorDeviceClass.SPEED,
         ),
         # Volume
         (
-            VOLUME_CUBIC_METERS,
-            VOLUME_CUBIC_FEET,
-            VOLUME_CUBIC_FEET,
+            UnitOfVolume.CUBIC_METERS,
+            UnitOfVolume.CUBIC_FEET,
+            UnitOfVolume.CUBIC_FEET,
             100,
-            3531,
+            "100",
+            "3531",
             SensorDeviceClass.VOLUME,
         ),
         (
-            VOLUME_LITERS,
-            VOLUME_FLUID_OUNCE,
-            VOLUME_FLUID_OUNCE,
+            UnitOfVolume.LITERS,
+            UnitOfVolume.FLUID_OUNCES,
+            UnitOfVolume.FLUID_OUNCES,
             2.3,
-            77.8,
+            "2.3",
+            "77.8",
             SensorDeviceClass.VOLUME,
         ),
         (
-            VOLUME_CUBIC_METERS,
+            UnitOfVolume.CUBIC_METERS,
             "peer_distance",
-            VOLUME_CUBIC_METERS,
+            UnitOfVolume.CUBIC_METERS,
             100,
-            100,
+            "100",
+            "100",
             SensorDeviceClass.VOLUME,
         ),
         # Weight
         (
-            MASS_GRAMS,
-            MASS_OUNCES,
-            MASS_OUNCES,
+            UnitOfMass.GRAMS,
+            UnitOfMass.OUNCES,
+            UnitOfMass.OUNCES,
             100,
-            3.5,
+            "100",
+            "3.5",
             SensorDeviceClass.WEIGHT,
         ),
         (
-            MASS_OUNCES,
-            MASS_GRAMS,
-            MASS_GRAMS,
+            UnitOfMass.OUNCES,
+            UnitOfMass.GRAMS,
+            UnitOfMass.GRAMS,
             78,
-            2211,
+            "78",
+            "2211",
             SensorDeviceClass.WEIGHT,
         ),
         (
-            MASS_GRAMS,
+            UnitOfMass.GRAMS,
             "peer_distance",
-            MASS_GRAMS,
+            UnitOfMass.GRAMS,
             100,
-            100,
+            "100",
+            "100",
             SensorDeviceClass.WEIGHT,
         ),
     ],
@@ -665,7 +908,8 @@ async def test_custom_unit_change(
     custom_unit,
     state_unit,
     native_value,
-    custom_value,
+    native_state,
+    custom_state,
     device_class,
 ):
     """Test custom unit changes are picked up."""
@@ -685,8 +929,8 @@ async def test_custom_unit_change(
     await hass.async_block_till_done()
 
     state = hass.states.get(entity0.entity_id)
-    assert float(state.state) == approx(float(native_value))
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == native_unit
+    assert state.state == native_state
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == native_unit
 
     entity_registry.async_update_entity_options(
         "sensor.test", "sensor", {"unit_of_measurement": custom_unit}
@@ -694,8 +938,8 @@ async def test_custom_unit_change(
     await hass.async_block_till_done()
 
     state = hass.states.get(entity0.entity_id)
-    assert float(state.state) == approx(float(custom_value))
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == state_unit
+    assert state.state == custom_state
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == state_unit
 
     entity_registry.async_update_entity_options(
         "sensor.test", "sensor", {"unit_of_measurement": native_unit}
@@ -703,31 +947,32 @@ async def test_custom_unit_change(
     await hass.async_block_till_done()
 
     state = hass.states.get(entity0.entity_id)
-    assert float(state.state) == approx(float(native_value))
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == native_unit
+    assert state.state == native_state
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == native_unit
 
     entity_registry.async_update_entity_options("sensor.test", "sensor", None)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity0.entity_id)
-    assert float(state.state) == approx(float(native_value))
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == native_unit
+    assert state.state == native_state
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == native_unit
 
 
 @pytest.mark.parametrize(
-    "unit_system, native_unit, automatic_unit, suggested_unit, custom_unit, native_value, automatic_value, suggested_value, custom_value, device_class",
+    "unit_system, native_unit, automatic_unit, suggested_unit, custom_unit, native_value, native_state, automatic_state, suggested_state, custom_state, device_class",
     [
         # Distance
         (
             US_CUSTOMARY_SYSTEM,
-            LENGTH_KILOMETERS,
-            LENGTH_MILES,
-            LENGTH_METERS,
-            LENGTH_YARD,
+            UnitOfLength.KILOMETERS,
+            UnitOfLength.MILES,
+            UnitOfLength.METERS,
+            UnitOfLength.YARDS,
             1000,
-            621,
-            1000000,
-            1093613,
+            "1000",
+            "621",
+            "1000000",
+            "1093613",
             SensorDeviceClass.DISTANCE,
         ),
     ],
@@ -741,9 +986,10 @@ async def test_unit_conversion_priority(
     suggested_unit,
     custom_unit,
     native_value,
-    automatic_value,
-    suggested_value,
-    custom_value,
+    native_state,
+    automatic_state,
+    suggested_state,
+    custom_state,
     device_class,
 ):
     """Test priority of unit conversion."""
@@ -795,7 +1041,7 @@ async def test_unit_conversion_priority(
 
     # Registered entity -> Follow automatic unit conversion
     state = hass.states.get(entity0.entity_id)
-    assert float(state.state) == approx(float(automatic_value))
+    assert state.state == automatic_state
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == automatic_unit
     # Assert the automatic unit conversion is stored in the registry
     entry = entity_registry.async_get(entity0.entity_id)
@@ -805,12 +1051,12 @@ async def test_unit_conversion_priority(
 
     # Unregistered entity -> Follow native unit
     state = hass.states.get(entity1.entity_id)
-    assert float(state.state) == approx(float(native_value))
+    assert state.state == native_state
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == native_unit
 
     # Registered entity with suggested unit
     state = hass.states.get(entity2.entity_id)
-    assert float(state.state) == approx(float(suggested_value))
+    assert state.state == suggested_state
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == suggested_unit
     # Assert the suggested unit is stored in the registry
     entry = entity_registry.async_get(entity2.entity_id)
@@ -820,7 +1066,7 @@ async def test_unit_conversion_priority(
 
     # Unregistered entity with suggested unit
     state = hass.states.get(entity3.entity_id)
-    assert float(state.state) == approx(float(suggested_value))
+    assert state.state == suggested_state
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == suggested_unit
 
     # Set a custom unit, this should have priority over the automatic unit conversion
@@ -830,7 +1076,7 @@ async def test_unit_conversion_priority(
     await hass.async_block_till_done()
 
     state = hass.states.get(entity0.entity_id)
-    assert float(state.state) == approx(float(custom_value))
+    assert state.state == custom_state
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == custom_unit
 
     entity_registry.async_update_entity_options(
@@ -839,7 +1085,7 @@ async def test_unit_conversion_priority(
     await hass.async_block_till_done()
 
     state = hass.states.get(entity2.entity_id)
-    assert float(state.state) == approx(float(custom_value))
+    assert state.state == custom_state
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == custom_unit
 
 
@@ -849,9 +1095,9 @@ async def test_unit_conversion_priority(
         # Distance
         (
             US_CUSTOMARY_SYSTEM,
-            LENGTH_KILOMETERS,
-            LENGTH_YARD,
-            LENGTH_METERS,
+            UnitOfLength.KILOMETERS,
+            UnitOfLength.YARDS,
+            UnitOfLength.METERS,
             1000,
             1093613,
             SensorDeviceClass.DISTANCE,
@@ -930,16 +1176,16 @@ async def test_unit_conversion_priority_suggested_unit_change(
         # Distance
         (
             US_CUSTOMARY_SYSTEM,
-            LENGTH_KILOMETERS,
-            LENGTH_MILES,
+            UnitOfLength.KILOMETERS,
+            UnitOfLength.MILES,
             1000,
-            621,
+            621.0,
             SensorDeviceClass.DISTANCE,
         ),
         (
             US_CUSTOMARY_SYSTEM,
-            LENGTH_METERS,
-            LENGTH_MILES,
+            UnitOfLength.METERS,
+            UnitOfLength.MILES,
             1000000,
             621.371,
             SensorDeviceClass.DISTANCE,
@@ -1073,40 +1319,6 @@ async def test_invalid_enumeration_entity_without_device_class(
         SensorDeviceClass.TIMESTAMP,
     ),
 )
-async def test_non_numeric_device_class_with_state_class(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    enable_custom_integrations: None,
-    device_class: SensorDeviceClass,
-):
-    """Test error on numeric entities that provide an state class."""
-    platform = getattr(hass.components, "test.sensor")
-    platform.init(empty=True)
-    platform.ENTITIES["0"] = platform.MockSensor(
-        name="Test",
-        native_value=None,
-        device_class=device_class,
-        state_class=SensorStateClass.MEASUREMENT,
-        options=["option1", "option2"],
-    )
-
-    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
-    await hass.async_block_till_done()
-
-    assert (
-        "Sensor sensor.test has a state class and thus indicating it has a numeric "
-        f"value; however, it has the non-numeric device class: {device_class}"
-    ) in caplog.text
-
-
-@pytest.mark.parametrize(
-    "device_class",
-    (
-        SensorDeviceClass.DATE,
-        SensorDeviceClass.ENUM,
-        SensorDeviceClass.TIMESTAMP,
-    ),
-)
 async def test_non_numeric_device_class_with_unit_of_measurement(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
@@ -1195,11 +1407,220 @@ async def test_device_classes_with_invalid_unit_of_measurement(
         device_class=device_class,
         native_unit_of_measurement="INVALID!",
     )
-
+    units = [
+        str(unit) if unit else "no unit of measurement"
+        for unit in DEVICE_CLASS_UNITS.get(device_class, set())
+    ]
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
     assert (
         "is using native unit of measurement 'INVALID!' which is not a valid "
-        f"unit for the device class ('{device_class}') it is using"
+        f"unit for the device class ('{device_class}') it is using; "
+        f"expected one of {units}"
+    ) in caplog.text
+
+
+@pytest.mark.parametrize(
+    "device_class,state_class,unit",
+    [
+        (SensorDeviceClass.AQI, None, None),
+        (None, SensorStateClass.MEASUREMENT, None),
+        (None, None, UnitOfTemperature.CELSIUS),
+    ],
+)
+@pytest.mark.parametrize(
+    "native_value,expected",
+    [
+        ("abc", "abc"),
+        ("13.7.1", "13.7.1"),
+        (datetime(2012, 11, 10, 7, 35, 1), "2012-11-10 07:35:01"),
+        (date(2012, 11, 10), "2012-11-10"),
+    ],
+)
+async def test_non_numeric_validation_warn(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+    native_value: Any,
+    expected: str,
+    device_class: SensorDeviceClass | None,
+    state_class: SensorStateClass | None,
+    unit: str | None,
+) -> None:
+    """Test error on expected numeric entities."""
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test",
+        native_value=native_value,
+        device_class=device_class,
+        native_unit_of_measurement=unit,
+        state_class=state_class,
+    )
+    entity0 = platform.ENTITIES["0"]
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity0.entity_id)
+    assert state.state == expected
+
+    assert (
+        "thus indicating it has a numeric value; "
+        f"however, it has the non-numeric value: {native_value}"
+    ) in caplog.text
+
+
+@pytest.mark.parametrize(
+    "device_class,state_class,unit,precision", ((None, None, None, 1),)
+)
+@pytest.mark.parametrize(
+    "native_value,expected",
+    [
+        ("abc", "abc"),
+        ("13.7.1", "13.7.1"),
+        (datetime(2012, 11, 10, 7, 35, 1), "2012-11-10 07:35:01"),
+        (date(2012, 11, 10), "2012-11-10"),
+    ],
+)
+async def test_non_numeric_validation_raise(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+    native_value: Any,
+    expected: str,
+    device_class: SensorDeviceClass | None,
+    state_class: SensorStateClass | None,
+    unit: str | None,
+    precision,
+) -> None:
+    """Test error on expected numeric entities."""
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test",
+        device_class=device_class,
+        native_precision=precision,
+        native_unit_of_measurement=unit,
+        native_value=native_value,
+        state_class=state_class,
+    )
+    entity0 = platform.ENTITIES["0"]
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity0.entity_id)
+    assert state is None
+
+    assert ("Error adding entities for domain sensor with platform test") in caplog.text
+
+
+@pytest.mark.parametrize(
+    "device_class,state_class,unit",
+    [
+        (SensorDeviceClass.AQI, None, None),
+        (None, SensorStateClass.MEASUREMENT, None),
+        (None, None, UnitOfTemperature.CELSIUS),
+    ],
+)
+@pytest.mark.parametrize(
+    "native_value,expected",
+    [
+        (13, "13"),
+        (17.50, "17.5"),
+        (Decimal(18.50), "18.5"),
+        ("19.70", "19.70"),
+        (None, STATE_UNKNOWN),
+    ],
+)
+async def test_numeric_validation(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+    native_value: Any,
+    expected: str,
+    device_class: SensorDeviceClass | None,
+    state_class: SensorStateClass | None,
+    unit: str | None,
+) -> None:
+    """Test does not error on expected numeric entities."""
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test",
+        native_value=native_value,
+        device_class=device_class,
+        native_unit_of_measurement=unit,
+        state_class=state_class,
+    )
+    entity0 = platform.ENTITIES["0"]
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity0.entity_id)
+    assert state.state == expected
+
+    assert (
+        "thus indicating it has a numeric value; "
+        f"however, it has the non-numeric value: {native_value}"
+    ) not in caplog.text
+
+
+async def test_numeric_validation_ignores_custom_device_class(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+) -> None:
+    """Test does not error on expected numeric entities."""
+    native_value = "Three elephants"
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test",
+        native_value=native_value,
+        device_class="custom__deviceclass",
+    )
+    entity0 = platform.ENTITIES["0"]
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity0.entity_id)
+    assert state.state == "Three elephants"
+
+    assert (
+        "thus indicating it has a numeric value; "
+        f"however, it has the non-numeric value: {native_value}"
+    ) not in caplog.text
+
+
+@pytest.mark.parametrize(
+    "device_class",
+    list(SensorDeviceClass),
+)
+async def test_device_classes_with_invalid_state_class(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+    device_class: SensorDeviceClass,
+):
+    """Test error when unit of measurement is not valid for used device class."""
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test",
+        native_value=None,
+        state_class="INVALID!",
+        device_class=device_class,
+    )
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    assert (
+        "is using state class 'INVALID!' which is impossible considering device "
+        f"class ('{device_class}') it is using"
     ) in caplog.text

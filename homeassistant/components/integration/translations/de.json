@@ -32,5 +32,22 @@
             }
         }
     },
+    "selector": {
+        "method": {
+            "options": {
+                "left": "Linke Riemannsche Summe",
+                "right": "Rechte Riemannsche Summe",
+                "trapezoidal": "Trapezregel"
+            }
+        },
+        "unit_time": {
+            "options": {
+                "d": "Tage",
+                "h": "Stunden",
+                "min": "Minuten",
+                "s": "Sekunden"
+            }
+        }
+    },
     "title": "Integration - Riemann Summenintegralsensor"
 }

@@ -1,0 +1,214 @@
+{
+  "routes": [
+    {
+      "id": "6d8ae729-3b30-4d81-adaf-6a485b15b70a",
+      "sections": [
+        {
+          "id": "c8d12b37-05e1-47f0-a5c2-43f5fb589768",
+          "type": "pedestrian",
+          "departure": {
+            "time": "2023-01-23T18:26:12+01:00",
+            "place": {
+              "type": "place",
+              "location": {
+                "lat": 49.1260894,
+                "lng": 6.1843356
+              },
+              "originalLocation": {
+                "lat": 49.1264093,
+                "lng": 6.1841419
+              }
+            }
+          },
+          "arrival": {
+            "time": "2023-01-23T18:29:09+01:00",
+            "place": {
+              "type": "place",
+              "location": {
+                "lat": 49.12547,
+                "lng": 6.18242
+              }
+            }
+          },
+          "summary": {
+            "duration": 177,
+            "length": 157,
+            "baseDuration": 177
+          },
+          "polyline": "BGyst29Cg5u5LpOj2BjIzZnQ_nB",
+          "spans": [
+            {
+              "offset": 0,
+              "names": [
+                {
+                  "value": "Chemin de Halage",
+                  "language": "fr"
+                }
+              ]
+            }
+          ],
+          "transport": {
+            "mode": "pedestrian"
+          }
+        },
+        {
+          "id": "d37123f4-034a-4c46-8678-596f999e8eae",
+          "type": "vehicle",
+          "departure": {
+            "time": "2023-01-23T18:29:09+01:00",
+            "place": {
+              "type": "place",
+              "location": {
+                "lat": 49.12547,
+                "lng": 6.18242
+              }
+            }
+          },
+          "arrival": {
+            "time": "2023-01-23T18:44:41+01:00",
+            "place": {
+              "type": "place",
+              "location": {
+                "lat": 49.1025668,
+                "lng": 6.1768518
+              },
+              "originalLocation": {
+                "lat": 49.1025784,
+                "lng": 6.1770297
+              }
+            }
+          },
+          "summary": {
+            "duration": 932,
+            "length": 3426,
+            "baseDuration": 932
+          },
+          "polyline": "BG8ls29Cohr5L0UjXgFvH4DnGgFrJ7G3IvHrJrJvMnB7B_JjN_JzPvH_JjDsJjD8G7B4DrEkIvHwMzF4I7GgKjDgF7BwC7G0KjN0U3I4D7GsEvHkDzK4D7a4I3IwCzesJvH8B7GoBjDU7LsEjIwC_JkDrJkD_JsEvH4DvH4DvHsE3IgFrEkD_E4DvH0F7G0FrJ4IzFsErE4DjDgFnGsE_EwCrEoB3DUzFUnGAvHT7GTjDTvHT7GU7BArJUjD4DvCwCzFgF_EsE_EgF_JoLzF0F_EsEzFsErEkD3DwC3D8B3D8BrE8B3DoBvH8BjI8BzFoBzFUjIUnGAjSAzFTnLvC_E7BzF7B_E7B_EjD7G3D7G7B_ETnpBvCnQTzUnB3DAvMT7B7BnGvCzFrErEvCzFjDzF3DnGzF_EzF3I7LnV3cnG3IzF0K7LsTrE8G3I4NvC4DvC4D7BwC7BwCvCwCjD4DvCkDjD4D3D4DjDkDzFsEvCA3DUjDUrEUrEUrEU_ETrEvCnGrErd_nB3DnGnLnQ_JzP7Q_Y7G_JvR7ajI7Lrd3rBvH7LzZrnBnL3SnLjSjI7Lna7pBjN_T_EjIvCrE7GnL7GjNrE3IjDrEjDrEvCjDzF3IvCrE_JzU3Nrd_J_TvCrEvC3DT7BnBvC7B3D3XvvB7kBjuCoB7BoB7BUnBU7BU7BU3DAvCTjDT7BnBjDnBvC7BvCnBnB7BT7BTnBA7BU7BoBnBoBnB8BnB8BnBkDTwC_vC0PzoBwMvb8GnB0jB7B4cUgP4D0oB7foGZE",
+          "spans": [
+            {
+              "offset": 0
+            },
+            {
+              "offset": 4,
+              "names": [
+                {
+                  "value": "Avenue de Blida",
+                  "language": "fr"
+                }
+              ]
+            },
+            {
+              "offset": 11,
+              "names": [
+                {
+                  "value": "Pont des Grilles",
+                  "language": "fr"
+                }
+              ]
+            },
+            {
+              "offset": 22,
+              "names": [
+                {
+                  "value": "Boulevard Paixhans",
+                  "language": "fr"
+                }
+              ]
+            },
+            {
+              "offset": 49,
+              "names": [
+                {
+                  "value": "Boulevard André Maginot",
+                  "language": "fr"
+                }
+              ]
+            },
+            {
+              "offset": 97,
+              "names": [
+                {
+                  "value": "Boulevard André Maginot",
+                  "language": "fr"
+                },
+                {
+                  "value": "Place Jean Cocteau",
+                  "language": "fr"
+                }
+              ]
+            },
+            {
+              "offset": 98,
+              "names": [
+                {
+                  "value": "Place Mazelle",
+                  "language": "fr"
+                }
+              ]
+            },
+            {
+              "offset": 110,
+              "names": [
+                {
+                  "value": "Passage de Plantières",
+                  "language": "fr"
+                }
+              ]
+            },
+            {
+              "offset": 119
+            },
+            {
+              "offset": 127,
+              "names": [
+                {
+                  "value": "Avenue de lAmphithéâtre",
+                  "language": "fr"
+                }
+              ]
+            },
+            {
+              "offset": 146,
+              "names": [
+                {
+                  "value": "Rue aux Arènes",
+                  "language": "fr"
+                }
+              ]
+            },
+            {
+              "offset": 192,
+              "names": [
+                {
+                  "value": "Rue Saint-Pierre",
+                  "language": "fr"
+                }
+              ]
+            },
+            {
+              "offset": 195,
+              "names": [
+                {
+                  "value": "Rue Émile Boilvin",
+                  "language": "fr"
+                }
+              ]
+            },
+            {
+              "offset": 199,
+              "names": [
+                {
+                  "value": "Rue Charles Sadoul",
+                  "language": "fr"
+                }
+              ]
+            }
+          ],
+          "transport": {
+            "mode": "bicycle"
+          }
+        }
+      ]
+    }
+  ]
+}

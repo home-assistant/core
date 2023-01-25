@@ -7,9 +7,7 @@ from dataclasses import dataclass
 from enum import Enum
 from functools import partial, wraps
 import logging
-from typing import Any, TypeVar
-
-from typing_extensions import Concatenate, ParamSpec
+from typing import Any, Concatenate, ParamSpec, TypeVar
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError

@@ -112,6 +112,7 @@ homeassistant.components.fastdotcom.*
 homeassistant.components.feedreader.*
 homeassistant.components.file_upload.*
 homeassistant.components.filesize.*
+homeassistant.components.filter.*
 homeassistant.components.fitbit.*
 homeassistant.components.flux_led.*
 homeassistant.components.forecast_solar.*
@@ -174,6 +175,7 @@ homeassistant.components.jewish_calendar.*
 homeassistant.components.kaleidescape.*
 homeassistant.components.knx.*
 homeassistant.components.kraken.*
+homeassistant.components.lacrosse.*
 homeassistant.components.lacrosse_view.*
 homeassistant.components.lametric.*
 homeassistant.components.laundrify.*
@@ -201,6 +203,7 @@ homeassistant.components.mjpeg.*
 homeassistant.components.modbus.*
 homeassistant.components.modem_callerid.*
 homeassistant.components.moon.*
+homeassistant.components.mopeka.*
 homeassistant.components.mqtt.*
 homeassistant.components.mysensors.*
 homeassistant.components.nam.*
@@ -222,6 +225,7 @@ homeassistant.components.onewire.*
 homeassistant.components.open_meteo.*
 homeassistant.components.openexchangerates.*
 homeassistant.components.openuv.*
+homeassistant.components.otbr.*
 homeassistant.components.overkiz.*
 homeassistant.components.peco.*
 homeassistant.components.persistent_notification.*
@@ -248,12 +252,14 @@ homeassistant.components.ridwell.*
 homeassistant.components.rituals_perfume_genie.*
 homeassistant.components.roku.*
 homeassistant.components.rpi_power.*
+homeassistant.components.rss_feed_template.*
 homeassistant.components.rtsp_to_webrtc.*
 homeassistant.components.ruuvi_gateway.*
 homeassistant.components.ruuvitag_ble.*
 homeassistant.components.samsungtv.*
 homeassistant.components.scene.*
 homeassistant.components.schedule.*
+homeassistant.components.scrape.*
 homeassistant.components.select.*
 homeassistant.components.senseme.*
 homeassistant.components.sensibo.*

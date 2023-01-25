@@ -24,6 +24,7 @@ from homeassistant.helpers import aiohttp_client, config_validation as cv
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -43,49 +44,42 @@ from .const import (
     ISY_CONF_MODEL,
     ISY_CONF_NAME,
     ISY_CONF_NETWORKING,
-    ISY_DEVICES,
-    ISY_NET_RES,
-    ISY_NODES,
-    ISY_PROGRAMS,
-    ISY_ROOT,
-    ISY_ROOT_NODES,
-    ISY_VARIABLES,
     MANUFACTURER,
-    NODE_PLATFORMS,
     PLATFORMS,
-    PROGRAM_PLATFORMS,
-    ROOT_NODE_PLATFORMS,
     SCHEME_HTTP,
     SCHEME_HTTPS,
-    SENSOR_AUX,
-    VARIABLE_PLATFORMS,
 )
 from .helpers import _categorize_nodes, _categorize_programs, _categorize_variables
+from .models import IsyData
 from .services import async_setup_services, async_unload_services
+from .util import _async_cleanup_registry_entries
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_HOST): cv.url,
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_TLS_VER): vol.Coerce(float),
-                vol.Optional(
-                    CONF_IGNORE_STRING, default=DEFAULT_IGNORE_STRING
-                ): cv.string,
-                vol.Optional(
-                    CONF_SENSOR_STRING, default=DEFAULT_SENSOR_STRING
-                ): cv.string,
-                vol.Optional(
-                    CONF_VAR_SENSOR_STRING, default=DEFAULT_VAR_SENSOR_STRING
-                ): cv.string,
-                vol.Required(
-                    CONF_RESTORE_LIGHT_STATE, default=DEFAULT_RESTORE_LIGHT_STATE
-                ): bool,
-            }
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Required(CONF_HOST): cv.url,
+                    vol.Required(CONF_USERNAME): cv.string,
+                    vol.Required(CONF_PASSWORD): cv.string,
+                    vol.Optional(CONF_TLS_VER): vol.Coerce(float),
+                    vol.Optional(
+                        CONF_IGNORE_STRING, default=DEFAULT_IGNORE_STRING
+                    ): cv.string,
+                    vol.Optional(
+                        CONF_SENSOR_STRING, default=DEFAULT_SENSOR_STRING
+                    ): cv.string,
+                    vol.Optional(
+                        CONF_VAR_SENSOR_STRING, default=DEFAULT_VAR_SENSOR_STRING
+                    ): cv.string,
+                    vol.Required(
+                        CONF_RESTORE_LIGHT_STATE, default=DEFAULT_RESTORE_LIGHT_STATE
+                    ): bool,
+                },
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -97,6 +91,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     if not isy_config:
         return True
+
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2023.5.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+    )
 
     # Only import if we haven't before.
     config_entry = _async_find_matching_config_entry(hass)
@@ -135,15 +139,7 @@ async def async_setup_entry(
     # they are missing from the options
     _async_import_options_from_data_if_missing(hass, entry)
 
-    hass.data[DOMAIN][entry.entry_id] = {}
-    hass_isy_data = hass.data[DOMAIN][entry.entry_id]
-
-    hass_isy_data[ISY_NODES] = {p: [] for p in (NODE_PLATFORMS + [SENSOR_AUX])}
-    hass_isy_data[ISY_ROOT_NODES] = {p: [] for p in ROOT_NODE_PLATFORMS}
-    hass_isy_data[ISY_PROGRAMS] = {p: [] for p in PROGRAM_PLATFORMS}
-    hass_isy_data[ISY_VARIABLES] = {p: [] for p in VARIABLE_PLATFORMS}
-    hass_isy_data[ISY_NET_RES] = []
-    hass_isy_data[ISY_DEVICES] = {}
+    isy_data = hass.data[DOMAIN][entry.entry_id] = IsyData()
 
     isy_config = entry.data
     isy_options = entry.options
@@ -212,33 +208,36 @@ async def async_setup_entry(
             f"Invalid response ISY, device is likely still starting: {err}"
         ) from err
 
-    _categorize_nodes(hass_isy_data, isy.nodes, ignore_identifier, sensor_identifier)
-    _categorize_programs(hass_isy_data, isy.programs)
+    _categorize_nodes(isy_data, isy.nodes, ignore_identifier, sensor_identifier)
+    _categorize_programs(isy_data, isy.programs)
     # Categorize variables call to be removed with variable sensors in 2023.5.0
-    _categorize_variables(hass_isy_data, isy.variables, variable_identifier)
+    _categorize_variables(isy_data, isy.variables, variable_identifier)
     # Gather ISY Variables to be added. Identifier used to enable by default.
-    if len(isy.variables.children) > 0:
-        hass_isy_data[ISY_DEVICES][CONF_VARIABLES] = _create_service_device_info(
+    if isy.variables.children:
+        isy_data.devices[CONF_VARIABLES] = _create_service_device_info(
             isy, name=CONF_VARIABLES.title(), unique_id=CONF_VARIABLES
         )
-        numbers = hass_isy_data[ISY_VARIABLES][Platform.NUMBER]
-        for vtype, vname, vid in isy.variables.children:
-            numbers.append((isy.variables[vtype][vid], variable_identifier in vname))
+        numbers = isy_data.variables[Platform.NUMBER]
+        for vtype, _, vid in isy.variables.children:
+            numbers.append(isy.variables[vtype][vid])
     if isy.conf[ISY_CONF_NETWORKING]:
-        hass_isy_data[ISY_DEVICES][CONF_NETWORK] = _create_service_device_info(
+        isy_data.devices[CONF_NETWORK] = _create_service_device_info(
             isy, name=ISY_CONF_NETWORKING, unique_id=CONF_NETWORK
         )
         for resource in isy.networking.nobjs:
-            hass_isy_data[ISY_NET_RES].append(resource)
+            isy_data.net_resources.append(resource)
 
     # Dump ISY Clock Information. Future: Add ISY as sensor to Hass with attrs
     _LOGGER.info(repr(isy.clock))
 
-    hass_isy_data[ISY_ROOT] = isy
+    isy_data.root = isy
     _async_get_or_create_isy_device_in_registry(hass, entry, isy)
 
     # Load platforms for the devices in the ISY controller that we support.
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Clean-up any old entities that we no longer provide.
+    _async_cleanup_registry_entries(hass, entry.entry_id)
 
     @callback
     def _async_stop_auto_update(event: Event) -> None:
@@ -328,9 +327,9 @@ async def async_unload_entry(
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    hass_isy_data = hass.data[DOMAIN][entry.entry_id]
+    isy_data = hass.data[DOMAIN][entry.entry_id]
 
-    isy: ISY = hass_isy_data[ISY_ROOT]
+    isy: ISY = isy_data.root
 
     _LOGGER.debug("ISY Stopping Event Stream and automatic updates")
     isy.websocket.stop()
@@ -349,7 +348,7 @@ async def async_remove_config_entry_device(
     device_entry: dr.DeviceEntry,
 ) -> bool:
     """Remove ISY config entry from a device."""
-    hass_isy_devices = hass.data[DOMAIN][config_entry.entry_id][ISY_DEVICES]
+    isy_data = hass.data[DOMAIN][config_entry.entry_id]
     return not device_entry.identifiers.intersection(
-        (DOMAIN, unique_id) for unique_id in hass_isy_devices
+        (DOMAIN, unique_id) for unique_id in isy_data.devices
     )

@@ -9,8 +9,7 @@
         },
         "error": {
             "auth_failed": "\u9a57\u8b49\u5931\u6557\uff1a{error_detail}",
-            "encryption_key_invalid": "\u91d1\u9470 ID \u6216\u52a0\u5bc6\u91d1\u9470\u7121\u6548",
-            "key_id_invalid": "\u91d1\u9470 ID \u6216\u52a0\u5bc6\u91d1\u9470\u7121\u6548"
+            "encryption_key_invalid": "\u91d1\u9470 ID \u6216\u52a0\u5bc6\u91d1\u9470\u7121\u6548"
         },
         "flow_title": "{name} ({address})",
         "step": {
@@ -29,13 +28,6 @@
                 "menu_options": {
                     "lock_auth": "SwitchBot \u5e33\u865f\uff08\u63a8\u85a6\uff09",
                     "lock_key": "\u624b\u52d5\u8f38\u5165\u9580\u9396\u52a0\u5bc6\u91d1\u9470"
-                }
-            },
-            "lock_chose_method": {
-                "description": "\u9078\u64c7\u8a2d\u5b9a\u6a21\u5f0f\u3001\u8acb\u53c3\u95b1\u6587\u4ef6\u7372\u5f97\u8a73\u7d30\u8cc7\u8a0a\u3002",
-                "menu_options": {
-                    "lock_auth": "SwitchBot app \u767b\u5165\u5e33\u865f\u8207\u5bc6\u78bc",
-                    "lock_key": "\u9580\u9396\u52a0\u5bc6\u91d1\u9470"
                 }
             },
             "lock_key": {

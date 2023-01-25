@@ -52,8 +52,19 @@
     },
     "issues": {
         "deprecate_smart_sensor": {
-            "description": "Sensor \"Objek Terdeteksi\" terpadu untuk deteksi cerdas sekarang sudah tidak digunakan lagi. Sensor ini telah diganti dengan sensor biner deteksi cerdas individual untuk setiap jenis deteksi cerdas. Perbarui semua templat atau otomasi yang terkait.",
+            "description": "Sensor \"Objek Terdeteksi\" terpadu untuk deteksi cerdas sekarang sudah tidak digunakan lagi. Sensor ini telah diganti dengan sensor biner deteksi cerdas individual untuk setiap jenis deteksi cerdas. Perbarui semua templat atau otomasi yang terkait.\n\nDi bawah ini adalah otomasi atau skrip yang terdeteksi yang menggunakan satu atau lebih entitas yang sudah tidak digunakan lagi:\n{items}\nDaftar di atas mungkin tidak lengkap dan tidak termasuk penggunaan semua templat dalam dasbor. Perbarui templat, otomatisasi, atau skrip apa pun yang sesuai.",
             "title": "Sensor Deteksi Cerdas Tidak Digunakan Lagi"
+        },
+        "deprecated_service_set_doorbell_message": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Layanan `unifiprotect.set_doorbell_message` tidak digunakan lagi dan sebagai gantinya tersedia entitas Teks Bel baru yang ditambahkan ke setiap perangkat Bel Pintu. Layanan akan dihapus di Home Assistant 2023.3.0. Perbarui dengan menggunakan [layanan `text.set_value`]({link}).",
+                        "title": "set_doorbell_message sudah tidak digunakan lagi"
+                    }
+                }
+            },
+            "title": "set_doorbell_message sudah tidak digunakan lagi"
         },
         "ea_setup_failed": {
             "description": "Anda menggunakan v{version} dari UniFi Protect yang merupakan versi Early Access. Terjadi kesalahan yang tidak dapat dipulihkan saat mencoba memuat integrasi. Silakan [turunkan ke versi stabil](https://www.home-assistant.io/integrations/unifiprotect#downgrading-unifi-protect) dari UniFi Protect untuk terus menggunakan integrasi.\n\nKesalahan: {error}",

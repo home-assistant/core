@@ -4,8 +4,8 @@ from __future__ import annotations
 from math import ceil
 from typing import Any
 
-from abodepy.devices.light import AbodeLight as AbodeLT
-import abodepy.helpers.constants as CONST
+from jaraco.abode.devices.light import Light as AbodeLT
+from jaraco.abode.helpers import constants as CONST
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,

@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "El compte ja est\u00e0 configurat"
+        },
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",
             "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
@@ -49,9 +52,9 @@
             },
             "whirlpool_tank": {
                 "state": {
-                    "100%": "100%",
-                    "25%": "25%",
-                    "50%": "50%",
+                    "100": "100%",
+                    "25": "25%",
+                    "50": "50%",
                     "active": "Actiu",
                     "empty": "Buit",
                     "unknown": "Desconegut"

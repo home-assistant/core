@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Der Dienst ist bereits konfiguriert"
+        },
         "error": {
             "bad_station_id": "Die Stations-ID ist ung\u00fcltig, fehlt oder wurde in der Stations-ID-Datenbank nicht gefunden",
             "cannot_connect": "Verbindung fehlgeschlagen",

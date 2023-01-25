@@ -71,5 +71,14 @@
                 "description": "Bluetoothi skannimine v\u00f5ib olla aktiivne v\u00f5i passiivne. Aktiivse oleku korral k\u00fcsib Shelly andmeid l\u00e4hedalasuvatest seadmetest, passiivse puhul saab Shelly l\u00e4hedalasuvatest seadmetest soovimatuid andmeid."
             }
         }
+    },
+    "selector": {
+        "ble_scanner_mode": {
+            "options": {
+                "active": "Aktiivne",
+                "disabled": "Keelatud",
+                "passive": "Passiivne"
+            }
+        }
     }
 }

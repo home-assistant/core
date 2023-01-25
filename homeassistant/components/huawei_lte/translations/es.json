@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "not_huawei_lte": "No es un dispositivo Huawei LTE",
-            "reauth_successful": "La autenticaci\u00f3n se volvi\u00f3 a realizar correctamente"
+            "reauth_successful": "La autenticaci\u00f3n se volvi\u00f3 a realizar correctamente",
+            "unsupported_device": "Dispositivo no compatible"
         },
         "error": {
             "connection_timeout": "Tiempo de espera de la conexi\u00f3n superado",

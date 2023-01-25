@@ -1,6 +1,8 @@
 """Constants for SFR Box tests."""
-from homeassistant.components.select.const import ATTR_OPTIONS
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.button import ButtonDeviceClass
 from homeassistant.components.sensor import (
+    ATTR_OPTIONS,
     ATTR_STATE_CLASS,
     SensorDeviceClass,
     SensorStateClass,
@@ -16,8 +18,12 @@ from homeassistant.const import (
     ATTR_SW_VERSION,
     ATTR_UNIT_OF_MEASUREMENT,
     SIGNAL_STRENGTH_DECIBELS,
+    STATE_ON,
+    STATE_UNKNOWN,
     Platform,
     UnitOfDataRate,
+    UnitOfElectricPotential,
+    UnitOfTemperature,
 )
 
 ATTR_DEFAULT_DISABLED = "default_disabled"
@@ -36,7 +42,47 @@ EXPECTED_ENTITIES = {
         ATTR_NAME: "SFR Box",
         ATTR_SW_VERSION: "NB6VAC-MAIN-R4.0.44k",
     },
+    Platform.BINARY_SENSOR: [
+        {
+            ATTR_DEVICE_CLASS: BinarySensorDeviceClass.CONNECTIVITY,
+            ATTR_ENTITY_ID: "binary_sensor.sfr_box_status",
+            ATTR_STATE: STATE_ON,
+            ATTR_UNIQUE_ID: "e4:5d:51:00:11:22_dsl_status",
+        },
+    ],
+    Platform.BUTTON: [
+        {
+            ATTR_DEVICE_CLASS: ButtonDeviceClass.RESTART,
+            ATTR_ENTITY_ID: "button.sfr_box_reboot",
+            ATTR_STATE: STATE_UNKNOWN,
+            ATTR_UNIQUE_ID: "e4:5d:51:00:11:22_system_reboot",
+        },
+    ],
     Platform.SENSOR: [
+        {
+            ATTR_DEFAULT_DISABLED: True,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENUM,
+            ATTR_ENTITY_ID: "sensor.sfr_box_network_infrastructure",
+            ATTR_OPTIONS: ["adsl", "ftth", "gprs", "unknown"],
+            ATTR_STATE: "adsl",
+            ATTR_UNIQUE_ID: "e4:5d:51:00:11:22_system_net_infra",
+        },
+        {
+            ATTR_DEFAULT_DISABLED: True,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
+            ATTR_ENTITY_ID: "sensor.sfr_box_temperature",
+            ATTR_STATE: "27.56",
+            ATTR_UNIQUE_ID: "e4:5d:51:00:11:22_system_temperature",
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
+        },
+        {
+            ATTR_DEFAULT_DISABLED: True,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.VOLTAGE,
+            ATTR_ENTITY_ID: "sensor.sfr_box_voltage",
+            ATTR_STATE: "12251",
+            ATTR_UNIQUE_ID: "e4:5d:51:00:11:22_system_alimvoltage",
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfElectricPotential.MILLIVOLT,
+        },
         {
             ATTR_DEFAULT_DISABLED: True,
             ATTR_ENTITY_ID: "sensor.sfr_box_line_mode",

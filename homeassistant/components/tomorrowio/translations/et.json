@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Teenus on juba seadistatud"
+        },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
             "invalid_api_key": "Vigane API v\u00f5ti",

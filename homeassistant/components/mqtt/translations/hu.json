@@ -76,7 +76,7 @@
             "title": "A manu\u00e1lisan konfigur\u00e1lt MQTT {platform} figyelmet ig\u00e9nyel"
         },
         "deprecated_yaml_broker_settings": {
-            "description": "A k\u00f6vetkez\u0151 be\u00e1ll\u00edt\u00e1sok a `configuration.yaml'-ben tal\u00e1lhat\u00f3ak, \u00e1tker\u00fcltek az MQTT config bejegyz\u00e9sbe, \u00e9s mostant\u00f3l fel\u00fcl\u00edrj\u00e1k a `configuration.yaml'-ben tal\u00e1lhat\u00f3 be\u00e1ll\u00edt\u00e1sokat:\n`{deprecated_settings}`\n\nK\u00e9rj\u00fck, t\u00e1vol\u00edtsa el ezeket a be\u00e1ll\u00edt\u00e1sokat a `configuration.yaml` f\u00e1jlb\u00f3l \u00e9s ind\u00edtsa \u00fajra a Home Assistant-ot a probl\u00e9ma megold\u00e1s\u00e1hoz. Tov\u00e1bbi inform\u00e1ci\u00f3 a [document\u00e1ci\u00f3ban]({more_info_url}).",
+            "description": "A k\u00f6vetkez\u0151 be\u00e1ll\u00edt\u00e1sok a `configuration.yaml'-ben tal\u00e1lhat\u00f3ak, \u00e1tker\u00fcltek az MQTT config bejegyz\u00e9sbe, \u00e9s mostant\u00f3l fel\u00fcl\u00edrj\u00e1k a `configuration.yaml'-ben tal\u00e1lhat\u00f3 be\u00e1ll\u00edt\u00e1sokat:\n`{deprecated_settings}`\n\nK\u00e9rem, t\u00e1vol\u00edtsa el ezeket a be\u00e1ll\u00edt\u00e1sokat a `configuration.yaml` f\u00e1jlb\u00f3l \u00e9s ind\u00edtsa \u00fajra a Home Assistant-ot a probl\u00e9ma megold\u00e1s\u00e1hoz. Tov\u00e1bbi inform\u00e1ci\u00f3 a [document\u00e1ci\u00f3ban]({more_info_url}).",
             "title": "Elavult MQTT-be\u00e1ll\u00edt\u00e1sok tal\u00e1lhat\u00f3k a \"configuration.yaml\" f\u00e1jlban"
         }
     },
@@ -134,6 +134,15 @@
                 },
                 "description": "Discovery - Ha a felfedez\u00e9s enged\u00e9lyezve van (aj\u00e1nlott), akkor Home Assistant automatikusan felfedezi azokat az eszk\u00f6z\u00f6ket \u00e9s entit\u00e1sokat, amelyek k\u00f6zz\u00e9teszik konfigur\u00e1ci\u00f3jukat az MQTT br\u00f3keren. Ha a felfedez\u00e9s le van tiltva, minden konfigur\u00e1ci\u00f3t manu\u00e1lisan kell elv\u00e9gezni.\nBirth \u00fczenet - A sz\u00fclet\u00e9si \u00fczenet minden alkalommal el lesz k\u00fcldve, amikor Home Assistant (\u00fajra) csatlakozik az MQTT br\u00f3kerhez.\nWill \u00fczenet - Az akarat\u00fczenet minden alkalommal el lesz k\u00fcldve, amikor Home Assistant elvesz\u00edti a kapcsolatot a k\u00f6zvet\u00edt\u0151vel, mind tiszta esetben (pl. Home Assistant le\u00e1ll\u00edt\u00e1sa), mind rendelenes helyzetben (pl. Home Assistant lefagy vagy megszakad a h\u00e1l\u00f3zati kapcsolata).",
                 "title": "MQTT opci\u00f3k"
+            }
+        }
+    },
+    "selector": {
+        "set_ca_cert": {
+            "options": {
+                "auto": "Automatikus",
+                "custom": "Egy\u00e9ni",
+                "off": "Ki"
             }
         }
     }

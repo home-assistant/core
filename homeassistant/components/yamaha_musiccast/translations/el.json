@@ -58,13 +58,9 @@
             },
             "zone_sleep": {
                 "state": {
-                    "120 min": "120 \u03bb\u03b5\u03c0\u03c4\u03ac",
                     "120_min": "120 \u039b\u03b5\u03c0\u03c4\u03ac",
-                    "30 min": "30 \u03bb\u03b5\u03c0\u03c4\u03ac",
                     "30_min": "30 \u03bb\u03b5\u03c0\u03c4\u03ac",
-                    "60 min": "60 \u03bb\u03b5\u03c0\u03c4\u03ac",
                     "60_min": "60 \u039b\u03b5\u03c0\u03c4\u03ac",
-                    "90 min": "90 \u03bb\u03b5\u03c0\u03c4\u03ac",
                     "90_min": "90 \u039b\u03b5\u03c0\u03c4\u03ac",
                     "off": "\u0391\u03bd\u03b5\u03bd\u03b5\u03c1\u03b3\u03cc"
                 }

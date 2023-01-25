@@ -58,6 +58,20 @@
                     "left": "Links",
                     "right": "Rechts"
                 }
+            },
+            "led_brightness": {
+                "state": {
+                    "bright": "Helder",
+                    "dim": "Dimmen",
+                    "off": "Uit"
+                }
+            },
+            "ptc_level": {
+                "state": {
+                    "high": "Hoog",
+                    "low": "Laag",
+                    "medium": "Medium"
+                }
             }
         }
     },

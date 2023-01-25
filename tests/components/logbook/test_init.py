@@ -1,11 +1,11 @@
 """The tests for the logbook component."""
-# pylint: disable=protected-access,invalid-name
+# pylint: disable=invalid-name
 import asyncio
 import collections
+from collections.abc import Callable
 from datetime import datetime, timedelta
 from http import HTTPStatus
 import json
-from typing import Callable
 from unittest.mock import Mock, patch
 
 import pytest
@@ -16,7 +16,7 @@ from homeassistant.components.alexa.smart_home import EVENT_ALEXA_SMART_HOME
 from homeassistant.components.automation import EVENT_AUTOMATION_TRIGGERED
 from homeassistant.components.logbook.models import LazyEventPartialState
 from homeassistant.components.logbook.processor import EventProcessor
-from homeassistant.components.logbook.queries.common import PSUEDO_EVENT_STATE_CHANGED
+from homeassistant.components.logbook.queries.common import PSEUDO_EVENT_STATE_CHANGED
 from homeassistant.components.script import EVENT_SCRIPT_STARTED
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import (
@@ -332,7 +332,7 @@ def create_state_changed_event_from_old_new(
         ],
     )
 
-    row.event_type = PSUEDO_EVENT_STATE_CHANGED
+    row.event_type = PSEUDO_EVENT_STATE_CHANGED
     row.event_data = "{}"
     row.shared_data = "{}"
     row.attributes = attributes_json

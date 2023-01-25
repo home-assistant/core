@@ -1,13 +1,17 @@
 """Config flow to configure the honeywell integration."""
 from __future__ import annotations
 
+import asyncio
+
+import AIOSomecomfort
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from . import get_somecomfort_client
 from .const import (
     CONF_COOL_AWAY_TEMPERATURE,
     CONF_HEAT_AWAY_TEMPERATURE,
@@ -22,19 +26,26 @@ class HoneywellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input=None) -> FlowResult:
         """Create config entry. Show the setup form to the user."""
         errors = {}
-
         if user_input is not None:
-            valid = await self.is_valid(**user_input)
-            if valid:
+            try:
+                await self.is_valid(**user_input)
+            except AIOSomecomfort.AuthError:
+                errors["base"] = "invalid_auth"
+            except (
+                AIOSomecomfort.ConnectionError,
+                AIOSomecomfort.ConnectionTimeout,
+                asyncio.TimeoutError,
+            ):
+                errors["base"] = "cannot_connect"
+
+            if not errors:
                 return self.async_create_entry(
                     title=DOMAIN,
                     data=user_input,
                 )
-
-            errors["base"] = "invalid_auth"
 
         data_schema = {
             vol.Required(CONF_USERNAME): str,
@@ -46,11 +57,14 @@ class HoneywellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def is_valid(self, **kwargs) -> bool:
         """Check if login credentials are valid."""
-        client = await self.hass.async_add_executor_job(
-            get_somecomfort_client, kwargs[CONF_USERNAME], kwargs[CONF_PASSWORD]
+        client = AIOSomecomfort.AIOSomeComfort(
+            kwargs[CONF_USERNAME],
+            kwargs[CONF_PASSWORD],
+            session=async_get_clientsession(self.hass),
         )
 
-        return client is not None
+        await client.login()
+        return True
 
     @staticmethod
     @callback
@@ -68,7 +82,7 @@ class HoneywellOptionsFlowHandler(config_entries.OptionsFlow):
         """Initialize Honeywell options flow."""
         self.config_entry = entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(self, user_input=None) -> FlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title=DOMAIN, data=user_input)

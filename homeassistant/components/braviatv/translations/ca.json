@@ -4,8 +4,7 @@
             "already_configured": "El dispositiu ja est\u00e0 configurat",
             "no_ip_control": "El control IP del teu televisor est\u00e0 desactivat o aquest no \u00e9s compatible.",
             "not_bravia_device": "El dispositiu no \u00e9s un televisor Bravia.",
-            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament",
-            "reauth_unsuccessful": "La re-autenticaci\u00f3 no ha tingut \u00e8xit, elimina la integraci\u00f3 i torna-la a configurar."
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
         },
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",
@@ -16,7 +15,6 @@
         "step": {
             "authorize": {
                 "data": {
-                    "pin": "Codi PIN",
                     "use_psk": "Utilitza autenticaci\u00f3 PSK"
                 },
                 "description": "Assegureu-vos que teniu habilitada l'opci\u00f3 \u00abControl Remot\u00bb al vostre aparell de TV; per fer-ho aneu a: Configuraci\u00f3 -> Xarxa -> Configuraci\u00f3 de dispositiu remot -> Control remot.\n\nHi ha dos m\u00e8todes d'autenticaci\u00f3: Codi PIN o PSK (Pre-Shared-Key). L'autorizaci\u00f3 via PSK \u00e9s la recomanada perqu\u00e8 \u00e9s m\u00e9s estable.",
@@ -38,13 +36,6 @@
                 },
                 "description": "Per tal d'establir la PSK a la vostra TV, aneu a: Configuraci\u00f3 -> Xarxa -> Configuraci\u00f3 de la Xarxa Local -> Control de la IP. Establiu l'\u00abAutenticaci\u00f3\u00bb a \u00abNormal i Clau Pre-Compartida\u00ab o b\u00e9 \u00abClau Pre-Compartida\u00bb i definiu la vostra Clau (p.ex.: sony)",
                 "title": "Autoritza la TV Sony Bravia"
-            },
-            "reauth_confirm": {
-                "data": {
-                    "pin": "Codi PIN",
-                    "use_psk": "Utilitza autenticaci\u00f3 PSK"
-                },
-                "description": "Introdueix el codi PIN que es mostra al televisor Sony Bravia.\n\nSi no es mostra el codi, has d'eliminar Home Assistant del teu televisor. V\u00e9s a: Configuraci\u00f3 -> Xarxa -> Configuraci\u00f3 de dispositiu remot -> Elimina dispositiu remot.\n\nPots utilitzar una clau PSK (Pre-Shared-Key) enlloc d'un codi PIN. La clau PSK est\u00e0 definida per l'usuari i s'utilitza per al control d'acc\u00e9s. Es recomana aquest m\u00e8tode d'autenticaci\u00f3, ja que \u00e9s m\u00e9s estable. Per activar la clau PSK, v\u00e9s a: Configuraci\u00f3 -> Xarxa -> Configuraci\u00f3 de xarxa local -> Control IP. Tot seguit, marca la casella \u00abUtilitza autenticaci\u00f3 PSK\u00bb i introdueix la clau que desitgis enlloc del PIN."
             },
             "user": {
                 "data": {
