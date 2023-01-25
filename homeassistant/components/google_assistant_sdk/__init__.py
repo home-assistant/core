@@ -167,7 +167,7 @@ class GoogleAssistantConversationAgent(conversation.AbstractConversationAgent):
             self.assistant = TextAssistant(credentials, language_code)
 
         resp = self.assistant.assist(user_input.text)
-        text_response = resp[0]
+        text_response = resp[0] or "<empty response>"
 
         intent_response = intent.IntentResponse(language=user_input.language)
         intent_response.async_set_speech(text_response)

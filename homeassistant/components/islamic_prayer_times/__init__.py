@@ -26,10 +26,9 @@ CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the Islamic Prayer Component."""
     client = IslamicPrayerClient(hass, config_entry)
-
+    hass.data[DOMAIN] = client
     await client.async_setup()
 
-    hass.data.setdefault(DOMAIN, client)
     return True
 
 

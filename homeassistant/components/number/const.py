@@ -122,7 +122,7 @@ class NumberDeviceClass(StrEnum):
     ENERGY = "energy"
     """Energy.
 
-    Unit of measurement: `Wh`, `kWh`, `MWh`, `GJ`
+    Unit of measurement: `Wh`, `kWh`, `MWh`, `MJ`, `GJ`
     """
 
     FREQUENCY = "frequency"
@@ -289,7 +289,7 @@ class NumberDeviceClass(StrEnum):
     TEMPERATURE = "temperature"
     """Temperature.
 
-    Unit of measurement: `°C`, `°F`
+    Unit of measurement: `°C`, `°F`, `K`
     """
 
     VOLATILE_ORGANIC_COMPOUNDS = "volatile_organic_compounds"
@@ -384,10 +384,7 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.SOUND_PRESSURE: set(UnitOfSoundPressure),
     NumberDeviceClass.SPEED: set(UnitOfSpeed).union(set(UnitOfVolumetricFlux)),
     NumberDeviceClass.SULPHUR_DIOXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
-    NumberDeviceClass.TEMPERATURE: {
-        UnitOfTemperature.CELSIUS,
-        UnitOfTemperature.FAHRENHEIT,
-    },
+    NumberDeviceClass.TEMPERATURE: set(UnitOfTemperature),
     NumberDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: {
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     },

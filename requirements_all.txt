@@ -107,7 +107,7 @@ aio_geojson_geonetnz_volcano==0.8
 aio_geojson_nsw_rfs_incidents==0.6
 
 # homeassistant.components.usgs_earthquakes_feed
-aio_geojson_usgs_earthquakes==0.1
+aio_geojson_usgs_earthquakes==0.2
 
 # homeassistant.components.gdacs
 aio_georss_gdacs==0.7
@@ -754,7 +754,7 @@ fritzconnection==1.10.3
 gTTS==2.2.4
 
 # homeassistant.components.google_assistant_sdk
-gassist-text==0.0.8
+gassist-text==0.0.10
 
 # homeassistant.components.google
 gcal-sync==4.1.2
@@ -907,10 +907,10 @@ hole==0.8.0
 holidays==0.18.0
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230110.0
+home-assistant-frontend==20230125.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2022.1.23
+home-assistant-intents==2023.1.25
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1271,6 +1271,9 @@ open-garage==0.2.0
 # homeassistant.components.open_meteo
 open-meteo==0.2.1
 
+# homeassistant.components.openai_conversation
+openai==0.26.2
+
 # homeassistant.components.opencv
 # opencv-python-headless==4.6.0.66
 
@@ -1493,9 +1496,6 @@ pyairnow==1.1.0
 # homeassistant.components.airvisual
 # homeassistant.components.airvisual_pro
 pyairvisual==2022.12.1
-
-# homeassistant.components.almond
-pyalmond==0.0.2
 
 # homeassistant.components.atag
 pyatag==0.3.5.3
@@ -2051,7 +2051,7 @@ python-gc100==1.0.3a0
 python-gitlab==1.6.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==1.7.0
+python-homewizard-energy==1.8.0
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.3
@@ -2072,7 +2072,7 @@ python-kasa==0.5.0
 # python-lirc==1.2.3
 
 # homeassistant.components.matter
-python-matter-server==2.0.0
+python-matter-server==2.0.1
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
@@ -2693,7 +2693,7 @@ zeroconf==0.47.1
 zeversolar==0.2.0
 
 # homeassistant.components.zha
-zha-quirks==0.0.90
+zha-quirks==0.0.91
 
 # homeassistant.components.zhong_hong
 zhong_hong_hvac==1.0.9

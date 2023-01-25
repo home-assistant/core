@@ -75,12 +75,10 @@ SENSOR_DESCRIPTIONS = {
     "accelerometer_x": SensorEntityDescription(
         key="accelerometer_x",
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
     ),
     "accelerometer_y": SensorEntityDescription(
         key="accelerometer_y",
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
     ),
 }
 

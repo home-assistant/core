@@ -158,12 +158,6 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
-    "almond": {
-      "name": "Almond",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_polling"
-    },
     "alpha_vantage": {
       "name": "Alpha Vantage",
       "integration_type": "hub",
@@ -3391,7 +3385,7 @@
     },
     "mopeka": {
       "name": "Mopeka",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -3836,6 +3830,12 @@
     },
     "open_meteo": {
       "name": "Open-Meteo",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
+    "openai_conversation": {
+      "name": "OpenAI Conversation",
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
