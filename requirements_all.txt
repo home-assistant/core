@@ -754,7 +754,7 @@ fritzconnection==1.10.3
 gTTS==2.2.4
 
 # homeassistant.components.google_assistant_sdk
-gassist-text==0.0.8
+gassist-text==0.0.10
 
 # homeassistant.components.google
 gcal-sync==4.1.2
@@ -910,7 +910,7 @@ holidays==0.18.0
 home-assistant-frontend==20230125.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2022.1.23
+home-assistant-intents==2023.1.25
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1267,6 +1267,9 @@ open-garage==0.2.0
 
 # homeassistant.components.open_meteo
 open-meteo==0.2.1
+
+# homeassistant.components.openai_conversation
+openai==0.26.2
 
 # homeassistant.components.opencv
 # opencv-python-headless==4.6.0.66
@@ -2045,7 +2048,7 @@ python-gc100==1.0.3a0
 python-gitlab==1.6.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==1.7.0
+python-homewizard-energy==1.8.0
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.3
@@ -2066,7 +2069,7 @@ python-kasa==0.5.0
 # python-lirc==1.2.3
 
 # homeassistant.components.matter
-python-matter-server==2.0.0
+python-matter-server==2.0.1
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
