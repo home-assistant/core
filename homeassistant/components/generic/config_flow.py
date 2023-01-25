@@ -425,16 +425,14 @@ class GenericOptionsFlowHandler(OptionsFlow):
                     # The automatically generated still image that stream generates
                     # is always jpeg
                     still_format = "image/jpeg"
-                data = user_input
-                data[CONF_CONTENT_TYPE] = still_format or self.config_entry.options.get(
-                    CONF_CONTENT_TYPE
-                )
-                if CONF_USE_WALLCLOCK_AS_TIMESTAMPS not in user_input:
-                    data[CONF_USE_WALLCLOCK_AS_TIMESTAMPS] = (
-                        self.config_entry.options.get(
-                            CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False
-                        ),
-                    )
+                data = {
+                    CONF_USE_WALLCLOCK_AS_TIMESTAMPS: self.config_entry.options.get(
+                        CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False
+                    ),
+                    **user_input,
+                    CONF_CONTENT_TYPE: still_format
+                    or self.config_entry.options.get(CONF_CONTENT_TYPE),
+                }
                 self.user_input = data
                 # temporary preview for user to check the image
                 self.context["preview_cam"] = data
