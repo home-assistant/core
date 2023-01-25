@@ -37,10 +37,12 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="mock_config_entry")
-async def mock_config_entry_fixture(prepare_config_entry):
+async def mock_config_entry_fixture(hass, config_entry):
     """Mock config entry and setup entry."""
     with patch("homeassistant.components.axis.async_setup_entry", return_value=True):
-        yield await prepare_config_entry()
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        yield config_entry
 
 
 async def test_flow_manual_configuration(hass, setup_default_vapix_requests):
