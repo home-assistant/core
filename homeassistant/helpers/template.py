@@ -2167,6 +2167,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         add_ext("max", glob=min_max_from_filter(self.filters["max"], "max"))
         add_ext("min", glob=min_max_from_filter(self.filters["min"], "min"))
         add_ext("version", filt=version, glob=version)
+        add_ext("contains", filt=contains, test=contains)
         add_ext(
             "config_entry_id",
             filt=config_entry_id,
