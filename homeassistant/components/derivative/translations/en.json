@@ -39,15 +39,15 @@
             }
         }
     },
-    "title": "Derivative sensor",
     "selector": {
         "time_unit": {
             "options": {
-                "s": "Seconds",
-                "min": "Minutes",
+                "d": "Days",
                 "h": "Hours",
-                "d": "Days"
+                "min": "Minutes",
+                "s": "Seconds"
             }
         }
-    }
+    },
+    "title": "Derivative sensor"
 }
