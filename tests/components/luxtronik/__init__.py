@@ -1,1 +1,1 @@
-"""Tests for the Luxtronik integration."""
+"""Tests for the Luxtronik Heat Pump integration."""
