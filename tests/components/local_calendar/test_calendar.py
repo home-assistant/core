@@ -960,3 +960,39 @@ async def test_update_invalid_event_id(
     assert not resp.get("success")
     assert "error" in resp
     assert resp.get("error").get("code") == "failed"
+
+
+async def test_create_event_service(
+    hass: HomeAssistant, setup_integration: None, get_events: GetEventsFn
+):
+    """Test creating an event using the create_event service."""
+
+    await hass.services.async_call(
+        "calendar",
+        "create_event",
+        {
+            "start_date_time": "1997-07-14T17:00:00+00:00",
+            "end_date_time": "1997-07-15T04:00:00+00:00",
+            "summary": "Bastille Day Party",
+        },
+        target={"entity_id": TEST_ENTITY},
+        blocking=True,
+    )
+
+    events = await get_events("1997-07-14T00:00:00Z", "1997-07-16T00:00:00Z")
+    assert list(map(event_fields, events)) == [
+        {
+            "summary": "Bastille Day Party",
+            "start": {"dateTime": "1997-07-14T11:00:00-06:00"},
+            "end": {"dateTime": "1997-07-14T22:00:00-06:00"},
+        }
+    ]
+
+    events = await get_events("1997-07-13T00:00:00Z", "1997-07-14T18:00:00Z")
+    assert list(map(event_fields, events)) == [
+        {
+            "summary": "Bastille Day Party",
+            "start": {"dateTime": "1997-07-14T11:00:00-06:00"},
+            "end": {"dateTime": "1997-07-14T22:00:00-06:00"},
+        }
+    ]

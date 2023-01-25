@@ -7,7 +7,7 @@
     "bellows==0.34.6",
     "pyserial==3.5",
     "pyserial-asyncio==0.6",
-    "zha-quirks==0.0.90",
+    "zha-quirks==0.0.91",
     "zigpy-deconz==0.19.2",
     "zigpy==0.53.0",
     "zigpy-xbee==0.16.2",
