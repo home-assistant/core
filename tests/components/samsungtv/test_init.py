@@ -5,11 +5,14 @@ import pytest
 
 from homeassistant.components.media_player import DOMAIN, SUPPORT_TURN_ON
 from homeassistant.components.samsungtv.const import (
+    CONF_MANUFACTURER,
     CONF_ON_ACTION,
     CONF_SESSION_ID,
     CONF_SSDP_MAIN_TV_AGENT_LOCATION,
     CONF_SSDP_RENDERING_CONTROL_LOCATION,
     DOMAIN as SAMSUNGTV_DOMAIN,
+    LEGACY_PORT,
+    METHOD_LEGACY,
     METHOD_WEBSOCKET,
     UPNP_SVC_MAIN_TV_AGENT,
     UPNP_SVC_RENDERING_CONTROL,
@@ -23,6 +26,7 @@ from homeassistant.const import (
     CONF_MAC,
     CONF_METHOD,
     CONF_NAME,
+    CONF_PORT,
     CONF_TOKEN,
     SERVICE_VOLUME_UP,
 )
@@ -214,3 +218,16 @@ async def test_reauth_triggered_encrypted(hass: HomeAssistant) -> None:
         if flow["context"]["source"] == "reauth"
     ]
     assert len(flows_in_progress) == 1
+
+
+@pytest.mark.usefixtures("remote", "remotews", "rest_api_failing")
+async def test_update_imported_legacy_without_method(hass: HomeAssistant) -> None:
+    """Test updating an imported legacy entry without a method."""
+    await setup_samsungtv_entry(
+        hass, {CONF_HOST: "fake_host", CONF_MANUFACTURER: "Samsung"}
+    )
+
+    entries = hass.config_entries.async_entries(SAMSUNGTV_DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].data[CONF_METHOD] == METHOD_LEGACY
+    assert entries[0].data[CONF_PORT] == LEGACY_PORT
