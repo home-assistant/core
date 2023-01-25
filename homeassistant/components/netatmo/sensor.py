@@ -113,7 +113,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         name="Pressure",
         netatmo_name="pressure",
         entity_registry_enabled_default=True,
-        native_unit_of_measurement=UnitOfPressure.HPA,
+        native_unit_of_measurement=UnitOfPressure.MBAR,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
     ),
