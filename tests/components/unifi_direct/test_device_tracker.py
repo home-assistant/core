@@ -80,6 +80,11 @@ async def test_get_device_name(mock_ssh, hass):
     assert len(devices) == 23
     assert scanner.get_device_name("98:00:c6:56:34:12") == "iPhone"
     assert scanner.get_device_name("98:00:C6:56:34:12") == "iPhone"
+    assert scanner.get_device_name("de:ad:be:ef:ff:ff") is None
+    assert scanner.get_extra_attributes("98:00:C6:56:34:12") == {
+        "bssid": "80:2a:a8:97:36:3c",
+        "ap_name": "UBNT",
+    }
 
 
 @patch("pexpect.pxssh.pxssh.logout")

@@ -65,17 +65,19 @@ class UnifiDeviceScanner(DeviceScanner):
 
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
-        hostname = next(
-            (
-                value.get("hostname")
-                for key, value in self.last_results.items()
-                if key.upper() == device.upper()
-            ),
-            None,
-        )
-        if hostname is not None:
-            hostname = str(hostname)
-        return hostname
+        client = self.last_results.get(device.lower())
+        if client:
+            return client.get("hostname") or None
+        return None
+
+    def get_extra_attributes(self, device: str):
+        """Get extra attributes of clients."""
+        client = self.last_results.get(device.lower())
+        extra = {}
+        if client:
+            extra["bssid"] = client["bssid"]
+            extra["ap_name"] = client["ap_name"]
+        return extra
 
     def _connect(self):
         """Connect to the Unifi AP SSH server."""
@@ -133,7 +135,9 @@ def _response_to_json(response):
         for ssid in ssid_table:
             client_table = ssid.get(UNIFI_CLIENT_TABLE)
             for client in client_table:
-                active_clients[client.get("mac")] = client
+                client["bssid"] = ssid["bssid"]
+                client["ap_name"] = json_response["hostname"]
+                active_clients[client.get("mac").lower()] = client
 
         return active_clients
     except (ValueError, TypeError):
