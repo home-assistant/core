@@ -22,7 +22,7 @@ from homeassistant.const import (
     CONF_TYPE,
     EVENT_HOMEASSISTANT_START,
 )
-from homeassistant.core import Context, CoreState, HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
     aiohttp_client,
@@ -265,15 +265,12 @@ class AlmondAgent(conversation.AbstractConversationAgent):
         return {"name": "Powered by Almond", "url": "https://almond.stanford.edu/"}
 
     async def async_process(
-        self,
-        text: str,
-        context: Context,
-        conversation_id: str | None = None,
-        language: str | None = None,
+        self, user_input: conversation.ConversationInput
     ) -> conversation.ConversationResult:
         """Process a sentence."""
-        response = await self.api.async_converse_text(text, conversation_id)
-        language = language or self.hass.config.language
+        response = await self.api.async_converse_text(
+            user_input.text, user_input.conversation_id
+        )
 
         first_choice = True
         buffer = ""
@@ -294,8 +291,8 @@ class AlmondAgent(conversation.AbstractConversationAgent):
                     buffer += ","
                 buffer += f" {message['title']}"
 
-        intent_response = intent.IntentResponse(language=language)
+        intent_response = intent.IntentResponse(language=user_input.language)
         intent_response.async_set_speech(buffer.strip())
         return conversation.ConversationResult(
-            response=intent_response, conversation_id=conversation_id
+            response=intent_response, conversation_id=user_input.conversation_id
         )

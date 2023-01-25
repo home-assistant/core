@@ -10,6 +10,16 @@ from homeassistant.helpers import intent
 
 
 @dataclass
+class ConversationInput:
+    """User input to be processed."""
+
+    text: str
+    context: Context
+    conversation_id: str | None
+    language: str
+
+
+@dataclass
 class ConversationResult:
     """Result of async_process."""
 
@@ -40,13 +50,7 @@ class AbstractConversationAgent(ABC):
         return None
 
     @abstractmethod
-    async def async_process(
-        self,
-        text: str,
-        context: Context,
-        conversation_id: str | None = None,
-        language: str | None = None,
-    ) -> ConversationResult:
+    async def async_process(self, user_input: ConversationInput) -> ConversationResult:
         """Process a sentence."""
 
     async def async_reload(self, language: str | None = None) -> None:

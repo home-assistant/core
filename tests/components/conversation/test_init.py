@@ -1,6 +1,6 @@
 """The tests for the Conversation component."""
 from http import HTTPStatus
-from unittest.mock import ANY, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -295,10 +295,10 @@ async def test_custom_agent(hass, hass_client, hass_admin_user, mock_agent):
     }
 
     assert len(mock_agent.calls) == 1
-    assert mock_agent.calls[0][0] == "Test Text"
-    assert mock_agent.calls[0][1].user_id == hass_admin_user.id
-    assert mock_agent.calls[0][2] == "test-conv-id"
-    assert mock_agent.calls[0][3] == "test-language"
+    assert mock_agent.calls[0].text == "Test Text"
+    assert mock_agent.calls[0].context.user_id == hass_admin_user.id
+    assert mock_agent.calls[0].conversation_id == "test-conv-id"
+    assert mock_agent.calls[0].language == "test-language"
 
 
 @pytest.mark.parametrize(
@@ -349,7 +349,7 @@ async def test_ws_api(hass, hass_ws_client, payload):
             "language": payload.get("language", hass.config.language),
             "data": {"code": "no_intent_match"},
         },
-        "conversation_id": payload.get("conversation_id") or ANY,
+        "conversation_id": None,
     }
 
 
@@ -560,5 +560,12 @@ async def test_non_default_response(hass, init_components):
     agent = await conversation._get_agent(hass)
     assert isinstance(agent, conversation.DefaultAgent)
 
-    result = await agent.async_process("open the front door", Context())
+    result = await agent.async_process(
+        conversation.ConversationInput(
+            text="open the front door",
+            context=Context(),
+            conversation_id=None,
+            language=hass.config.language,
+        )
+    )
     assert result.response.speech["plain"]["speech"] == "Opened front door"

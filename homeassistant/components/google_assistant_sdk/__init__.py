@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME, Platform
-from homeassistant.core import Context, HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, discovery, intent
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -148,11 +148,7 @@ class GoogleAssistantConversationAgent(conversation.AbstractConversationAgent):
         }
 
     async def async_process(
-        self,
-        text: str,
-        context: Context,
-        conversation_id: str | None = None,
-        language: str | None = None,
+        self, user_input: conversation.ConversationInput
     ) -> conversation.ConversationResult:
         """Process a sentence."""
         if self.session:
@@ -170,12 +166,11 @@ class GoogleAssistantConversationAgent(conversation.AbstractConversationAgent):
             )
             self.assistant = TextAssistant(credentials, language_code)
 
-        resp = self.assistant.assist(text)
+        resp = self.assistant.assist(user_input.text)
         text_response = resp[0]
 
-        language = language or self.hass.config.language
-        intent_response = intent.IntentResponse(language=language)
+        intent_response = intent.IntentResponse(language=user_input.language)
         intent_response.async_set_speech(text_response)
         return conversation.ConversationResult(
-            response=intent_response, conversation_id=conversation_id
+            response=intent_response, conversation_id=user_input.conversation_id
         )

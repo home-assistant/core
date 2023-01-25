@@ -16,7 +16,7 @@ from homeassistant.helpers import config_validation as cv, intent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
-from .agent import AbstractConversationAgent, ConversationResult
+from .agent import AbstractConversationAgent, ConversationInput, ConversationResult
 from .default_agent import DefaultAgent
 
 _LOGGER = logging.getLogger(__name__)
@@ -94,7 +94,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         agent = await _get_agent(hass)
         try:
             await agent.async_process(
-                text, service.context, language=service.data.get(ATTR_LANGUAGE)
+                ConversationInput(
+                    text=text,
+                    context=service.context,
+                    conversation_id=None,
+                    language=service.data.get(ATTR_LANGUAGE, hass.config.language),
+                )
             )
         except intent.IntentHandleError as err:
             _LOGGER.error("Error processing %s: %s", text, err)
@@ -232,5 +237,12 @@ async def async_converse(
     if language is None:
         language = hass.config.language
 
-    result = await agent.async_process(text, context, conversation_id, language)
+    result = await agent.async_process(
+        ConversationInput(
+            text=text,
+            context=context,
+            conversation_id=conversation_id,
+            language=language,
+        )
+    )
     return result
