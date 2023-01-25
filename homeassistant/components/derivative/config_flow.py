@@ -34,10 +34,10 @@ UNIT_PREFIXES = [
     selector.SelectOptionDict(value="P", label="P (peta)"),
 ]
 TIME_UNITS = [
-    selector.SelectOptionDict(value=UnitOfTime.SECONDS, label="Seconds"),
-    selector.SelectOptionDict(value=UnitOfTime.MINUTES, label="Minutes"),
-    selector.SelectOptionDict(value=UnitOfTime.HOURS, label="Hours"),
-    selector.SelectOptionDict(value=UnitOfTime.DAYS, label="Days"),
+    UnitOfTime.SECONDS,
+    UnitOfTime.MINUTES,
+    UnitOfTime.HOURS,
+    UnitOfTime.DAYS,
 ]
 
 OPTIONS_SCHEMA = vol.Schema(
@@ -55,7 +55,9 @@ OPTIONS_SCHEMA = vol.Schema(
             selector.SelectSelectorConfig(options=UNIT_PREFIXES),
         ),
         vol.Required(CONF_UNIT_TIME, default=UnitOfTime.HOURS): selector.SelectSelector(
-            selector.SelectSelectorConfig(options=TIME_UNITS),
+            selector.SelectSelectorConfig(
+                options=TIME_UNITS, translation_key="time_unit"
+            ),
         ),
     }
 )

@@ -54,6 +54,7 @@ async def async_setup_entry(
                 for chem_alarm in coordinator.data[SL_DATA.KEY_CHEMISTRY][
                     SL_DATA.KEY_ALERTS
                 ]
+                if chem_alarm != "_raw"
             ]
         )
 
@@ -64,6 +65,7 @@ async def async_setup_entry(
                 for chem_notif in coordinator.data[SL_DATA.KEY_CHEMISTRY][
                     SL_DATA.KEY_NOTIFICATIONS
                 ]
+                if chem_notif != "_raw"
             ]
         )
 

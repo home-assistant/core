@@ -4,7 +4,7 @@
   "integration_type": "device",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/devolo_home_network",
-  "requirements": ["devolo-plc-api==1.0.0"],
+  "requirements": ["devolo-plc-api==1.1.0"],
   "zeroconf": [
     { "type": "_dvl-deviceapi._tcp.local.", "properties": { "MT": "*" } }
   ],

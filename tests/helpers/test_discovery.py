@@ -166,7 +166,6 @@ async def test_1st_discovers_2nd_component(hass):
 
     async def component1_setup(hass, config):
         """Set up mock component."""
-        print("component1 setup")
         await discovery.async_discover(
             hass, "test_component2", {}, "test_component2", {}
         )

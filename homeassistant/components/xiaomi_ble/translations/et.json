@@ -38,5 +38,10 @@
                 "description": "Vali h\u00e4\u00e4lestatav seade"
             }
         }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "motion_detected": "Tuvastati liikumine"
+        }
     }
 }
