@@ -26,9 +26,10 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
-    EventStateChangedData,
     async_track_state_change_event,
+    EventStateChangedData,
 )
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import (
     ConfigType,
@@ -85,6 +86,16 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Initialize min/max/mean config entry."""
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_integration",
+        breaks_in_ha_version="2023.4.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_integration",
+    )
+
     registry = er.async_get(hass)
     entity_ids = er.async_validate_entity_ids(
         registry, config_entry.options[CONF_ENTITY_IDS]
@@ -112,6 +123,16 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the min/max/mean sensor."""
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_integration",
+        breaks_in_ha_version="2023.4.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_integration",
+    )
+
     entity_ids: list[str] = config[CONF_ENTITY_IDS]
     name: str | None = config.get(CONF_NAME)
     sensor_type: str = config[CONF_TYPE]

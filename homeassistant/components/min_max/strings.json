@@ -49,5 +49,11 @@
       "name": "[%key:common::action::reload%]",
       "description": "Reloads min/max sensors from the YAML-configuration."
     }
+  },
+  "issues": {
+    "deprecated_integration": {
+      "title": "The Min/Max integration has been deprecated",
+      "description": "The Min/Max integration has been deprecated.\n\nThe functionality has been moved into Group sensor.\n\nRemove this integration and recreate your sensor using the Group sensor instead."
+    }
   }
 }
