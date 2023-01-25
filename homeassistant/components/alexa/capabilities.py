@@ -50,7 +50,6 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import State
-from homeassistant.helpers.entity import Entity
 import homeassistant.util.color as color_util
 import homeassistant.util.dt as dt_util
 
@@ -74,9 +73,9 @@ from .resources import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_resource_by_unit_of_measurement(entity: Entity) -> str:
+def get_resource_by_unit_of_measurement(entity: State) -> str:
     """Translate the unit of measurement to an Alexa Global Catalog keyword."""
-    if not (unit := entity.unit_of_measurement):
+    if not (unit := entity.attributes.get("unit_of_measurement")):
         return AlexaGlobalCatalog.SETTING_PRESET
 
     if unit == UnitOfTemperature.CELSIUS:
@@ -131,10 +130,16 @@ class AlexaCapability:
 
     supported_locales = {"en-US"}
 
-    def __init__(self, entity: State, instance: str | None = None) -> None:
+    def __init__(
+        self,
+        entity: State,
+        instance: str | None = None,
+        non_controllable_properties: bool | None = None,
+    ) -> None:
         """Initialize an Alexa capability."""
         self.entity = entity
         self.instance = instance
+        self._non_controllable_properties = non_controllable_properties
 
     def name(self) -> str:
         """Return the Alexa API name of this interface."""
@@ -154,7 +159,7 @@ class AlexaCapability:
 
     def properties_non_controllable(self) -> bool | None:
         """Return True if non controllable."""
-        return None
+        return self._non_controllable_properties
 
     def get_property(self, name):
         """Read and return a property.
@@ -1363,10 +1368,9 @@ class AlexaModeController(AlexaCapability):
 
     def __init__(self, entity, instance, non_controllable=False):
         """Initialize the entity."""
-        super().__init__(entity, instance)
+        AlexaCapability.__init__(self, entity, instance, non_controllable)
         self._resource = None
         self._semantics = None
-        self.properties_non_controllable = lambda: non_controllable
 
     def name(self):
         """Return the Alexa API name of this interface."""
@@ -1573,12 +1577,13 @@ class AlexaRangeController(AlexaCapability):
         "pt-BR",
     }
 
-    def __init__(self, entity, instance, non_controllable=False):
+    def __init__(
+        self, entity: State, instance: str | None, non_controllable: bool = False
+    ) -> None:
         """Initialize the entity."""
-        super().__init__(entity, instance)
+        AlexaCapability.__init__(self, entity, instance, non_controllable)
         self._resource = None
         self._semantics = None
-        self.properties_non_controllable = lambda: non_controllable
 
     def name(self):
         """Return the Alexa API name of this interface."""
@@ -1886,10 +1891,9 @@ class AlexaToggleController(AlexaCapability):
 
     def __init__(self, entity, instance, non_controllable=False):
         """Initialize the entity."""
-        super().__init__(entity, instance)
+        AlexaCapability.__init__(self, entity, instance, non_controllable)
         self._resource = None
         self._semantics = None
-        self.properties_non_controllable = lambda: non_controllable
 
     def name(self):
         """Return the Alexa API name of this interface."""
