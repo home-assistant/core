@@ -7,12 +7,19 @@
           "host": "[%key:common::config_flow::data::ip%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The LIVISI integration needs to re-authenticate your account"
       }
     },
     "error": {
       "wrong_password": "The password is incorrect.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "wrong_ip_address": "The IP address is incorrect or the SHC cannot be reached locally."
+    },
+    "abort": {
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   }
 }
