@@ -19,6 +19,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    UnitOfElectricPotential,
     UnitOfLength,
     UnitOfTemperature,
 )
@@ -41,7 +42,7 @@ SENSOR_DESCRIPTIONS = {
     "battery_voltage": SensorEntityDescription(
         key="battery_voltage",
         device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,

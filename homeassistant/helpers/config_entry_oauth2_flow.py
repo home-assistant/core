@@ -13,7 +13,7 @@ from collections.abc import Awaitable, Callable
 import logging
 import secrets
 import time
-from typing import Any, cast
+from typing import Any, Optional, cast
 
 from aiohttp import client, web
 import async_timeout
@@ -437,7 +437,10 @@ class OAuth2AuthorizeCallbackView(http.HomeAssistantView):
         state = _decode_jwt(hass, request.query["state"])
 
         if state is None:
-            return web.Response(text="Invalid state")
+            return web.Response(
+                text="Invalid state. Is My Home Assistant configured to go to the right instance?",
+                status=400,
+            )
 
         user_input: dict[str, Any] = {"state": state}
 
@@ -538,7 +541,10 @@ def _encode_jwt(hass: HomeAssistant, data: dict) -> str:
 @callback
 def _decode_jwt(hass: HomeAssistant, encoded: str) -> dict | None:
     """JWT encode data."""
-    secret = cast(str, hass.data.get(DATA_JWT_SECRET))
+    secret = cast(Optional[str], hass.data.get(DATA_JWT_SECRET))
+
+    if secret is None:
+        return None
 
     try:
         return jwt.decode(encoded, secret, algorithms=["HS256"])
