@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME, Platform
-from homeassistant.core import Context, HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, discovery, intent
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -38,7 +38,7 @@ SERVICE_SEND_TEXT_COMMAND_FIELD_MEDIA_PLAYER = "media_player"
 SERVICE_SEND_TEXT_COMMAND_SCHEMA = vol.All(
     {
         vol.Required(SERVICE_SEND_TEXT_COMMAND_FIELD_COMMAND): vol.All(
-            str, vol.Length(min=1)
+            cv.ensure_list, [vol.All(str, vol.Length(min=1))]
         ),
         vol.Optional(SERVICE_SEND_TEXT_COMMAND_FIELD_MEDIA_PLAYER): cv.comp_entity_ids,
     },
@@ -106,11 +106,11 @@ async def async_setup_service(hass: HomeAssistant) -> None:
 
     async def send_text_command(call: ServiceCall) -> None:
         """Send a text command to Google Assistant SDK."""
-        command: str = call.data[SERVICE_SEND_TEXT_COMMAND_FIELD_COMMAND]
+        commands: list[str] = call.data[SERVICE_SEND_TEXT_COMMAND_FIELD_COMMAND]
         media_players: list[str] | None = call.data.get(
             SERVICE_SEND_TEXT_COMMAND_FIELD_MEDIA_PLAYER
         )
-        await async_send_text_commands(hass, [command], media_players)
+        await async_send_text_commands(hass, commands, media_players)
 
     hass.services.async_register(
         DOMAIN,
@@ -124,9 +124,9 @@ async def update_listener(hass, entry):
     """Handle options update."""
     if entry.options.get(CONF_ENABLE_CONVERSATION_AGENT, False):
         agent = GoogleAssistantConversationAgent(hass, entry)
-        conversation.async_set_agent(hass, agent)
+        conversation.async_set_agent(hass, entry, agent)
     else:
-        conversation.async_set_agent(hass, None)
+        conversation.async_unset_agent(hass, entry)
 
 
 class GoogleAssistantConversationAgent(conversation.AbstractConversationAgent):
@@ -148,11 +148,7 @@ class GoogleAssistantConversationAgent(conversation.AbstractConversationAgent):
         }
 
     async def async_process(
-        self,
-        text: str,
-        context: Context,
-        conversation_id: str | None = None,
-        language: str | None = None,
+        self, user_input: conversation.ConversationInput
     ) -> conversation.ConversationResult:
         """Process a sentence."""
         if self.session:
@@ -170,12 +166,11 @@ class GoogleAssistantConversationAgent(conversation.AbstractConversationAgent):
             )
             self.assistant = TextAssistant(credentials, language_code)
 
-        resp = self.assistant.assist(text)
+        resp = self.assistant.assist(user_input.text)
         text_response = resp[0] or "<empty response>"
 
-        language = language or self.hass.config.language
-        intent_response = intent.IntentResponse(language=language)
+        intent_response = intent.IntentResponse(language=user_input.language)
         intent_response.async_set_speech(text_response)
         return conversation.ConversationResult(
-            response=intent_response, conversation_id=conversation_id
+            response=intent_response, conversation_id=user_input.conversation_id
         )

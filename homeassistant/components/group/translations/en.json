@@ -51,6 +51,21 @@
                 },
                 "title": "Add Group"
             },
+            "sensor": {
+                "data": {
+                    "device_class": "Device class",
+                    "entities": "Members",
+                    "hide_members": "Hide members",
+                    "ignore_non_numeric": "Ignore non-numeric",
+                    "name": "Name",
+                    "round_digits": "Round value to number of decimals",
+                    "state_class": "State class",
+                    "type": "Type",
+                    "unit_of_measurement": "Unit of Measurement"
+                },
+                "description": "If \"ignore non-numeric\" is enabled, the group's state is calculated if at least one member has a numerical value. If \"ignore non-numeric\" is disabled, the group's state is calculated only if all group members have numerical values.",
+                "title": "Add Group"
+            },
             "switch": {
                 "data": {
                     "entities": "Members",
@@ -68,6 +83,7 @@
                     "light": "Light group",
                     "lock": "Lock group",
                     "media_player": "Media player group",
+                    "sensor": "Sensor group",
                     "switch": "Switch group"
                 },
                 "title": "Add Group"
@@ -115,6 +131,19 @@
                     "entities": "Members",
                     "hide_members": "Hide members"
                 }
+            },
+            "sensor": {
+                "data": {
+                    "device_class": "Device class",
+                    "entities": "Members",
+                    "hide_members": "Hide members",
+                    "ignore_non_numeric": "Ignore non-numeric",
+                    "round_digits": "Round value to number of decimals",
+                    "state_class": "State class",
+                    "type": "Type",
+                    "unit_of_measurement": "Unit of Measurement"
+                },
+                "description": "If \"ignore non-numeric\" is enabled, the group's state is calculated if at least one member has a numerical value. If \"ignore non-numeric\" is disabled, the group's state is calculated only if all group members have numerical values."
             },
             "switch": {
                 "data": {

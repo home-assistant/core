@@ -14,7 +14,7 @@ from homeassistant.helpers import device_registry as dr
 from .const import DOMAIN, ID_TYPE_DEVICE_ID
 from .helpers import get_device_id, get_matter
 
-ATTRIBUTES_TO_REDACT = {"chip.clusters.Objects.Basic.Attributes.Location"}
+ATTRIBUTES_TO_REDACT = {"chip.clusters.Objects.BasicInformation.Attributes.Location"}
 
 
 def redact_matter_attributes(node_data: dict[str, Any]) -> dict[str, Any]:
