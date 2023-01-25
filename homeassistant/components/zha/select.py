@@ -494,3 +494,18 @@ class AqaraPetFeederMode(ZCLEnumSelectEntity, id_suffix="feeding_mode"):
     _enum = AqaraFeedingMode
     _attr_name = "Mode"
     _attr_icon: str = "mdi:wrench-clock"
+
+class MotorDirection(types.enum8):
+    """Tuya motor reversal."""
+
+    Normal = 0x00
+    Inverted = 0x01
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="tuya_window_covering")
+class TuyaCoverMode(ZCLEnumSelectEntity, id_suffix="motor_reversal"):
+    """Representation of a ZHA curtain mode configuration entity."""
+
+    _select_attr = "motor_reversal"
+    _enum = MotorDirection
+    _attr_name = "Motor direction"
