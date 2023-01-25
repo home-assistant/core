@@ -114,7 +114,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, websocket_process)
     websocket_api.async_register_command(hass, websocket_prepare)
     websocket_api.async_register_command(hass, websocket_get_agent_info)
-    websocket_api.async_register_command(hass, websocket_set_onboarding)
 
     return True
 
@@ -173,39 +172,15 @@ async def websocket_get_agent_info(
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
-    """Do we need onboarding."""
+    """Info about the agent in use."""
     agent = await _get_agent(hass)
 
     connection.send_result(
         msg["id"],
         {
-            "onboarding": await agent.async_get_onboarding(),
             "attribution": agent.attribution,
         },
     )
-
-
-@websocket_api.websocket_command(
-    {
-        vol.Required("type"): "conversation/onboarding/set",
-        vol.Required("shown"): bool,
-    }
-)
-@websocket_api.async_response
-async def websocket_set_onboarding(
-    hass: HomeAssistant,
-    connection: websocket_api.ActiveConnection,
-    msg: dict[str, Any],
-) -> None:
-    """Set onboarding status."""
-    agent = await _get_agent(hass)
-
-    success = await agent.async_set_onboarding(msg["shown"])
-
-    if success:
-        connection.send_result(msg["id"])
-    else:
-        connection.send_error(msg["id"], "error", "Failed to set onboarding")
 
 
 class ConversationProcessView(http.HomeAssistantView):

@@ -264,30 +264,6 @@ class AlmondAgent(conversation.AbstractConversationAgent):
         """Return the attribution."""
         return {"name": "Powered by Almond", "url": "https://almond.stanford.edu/"}
 
-    async def async_get_onboarding(self):
-        """Get onboard url if not onboarded."""
-        if self.entry.data.get("onboarded"):
-            return None
-
-        host = self.entry.data["host"]
-        if self.entry.data.get("is_hassio"):
-            host = "/core_almond"
-        return {
-            "text": (
-                "Would you like to opt-in to share your anonymized commands with"
-                " Stanford to improve Almond's responses?"
-            ),
-            "url": f"{host}/conversation",
-        }
-
-    async def async_set_onboarding(self, shown):
-        """Set onboarding status."""
-        self.hass.config_entries.async_update_entry(
-            self.entry, data={**self.entry.data, "onboarded": shown}
-        )
-
-        return True
-
     async def async_process(
         self,
         text: str,
