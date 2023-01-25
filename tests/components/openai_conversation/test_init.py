@@ -8,10 +8,6 @@ from homeassistant.helpers import device_registry
 
 async def test_default_prompt(hass, mock_init_component):
     """Test that the default prompt works."""
-    hass.states.async_set(
-        "person.test_person", "home", {"friendly_name": "Test Person"}
-    )
-
     device_reg = device_registry.async_get(hass)
 
     device_reg.async_get_or_create(
@@ -46,10 +42,6 @@ async def test_default_prompt(hass, mock_init_component):
         mock_create.mock_calls[0][2]["prompt"]
         == """You are a conversational AI for a smart home named test home.
 If a user wants to control a device, reject the request and suggest using the Home Assistant UI.
-
-The people living in this smart home are:
-
-- Test Person is home
 
 An overview of the areas and the devices in this smart home:
 
