@@ -30,18 +30,18 @@
             }
         }
     },
-    "title": "Combine the state of several sensors",
     "selector": {
         "type": {
-            "options":{
-                "min": "Minimum",
+            "options": {
+                "last": "Most recently updated",
                 "max": "Maximum",
                 "mean": "Arithmetic mean",
                 "median": "Median",
-                "last": "Most recently updated",
+                "min": "Minimum",
                 "range": "Statistical range",
                 "sum": "Sum"
             }
         }
-    }
+    },
+    "title": "Combine the state of several sensors"
 }

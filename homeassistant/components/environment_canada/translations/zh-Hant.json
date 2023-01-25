@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "\u670d\u52d9\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
         "error": {
             "bad_station_id": "\u6c23\u8c61\u7ad9 ID \u7121\u6548\u3001\u907a\u5931\u6216\u8cc7\u6599\u5eab\u4e2d\u627e\u4e0d\u5230\u8a72 ID",
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
