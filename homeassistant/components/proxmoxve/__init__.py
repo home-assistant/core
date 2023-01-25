@@ -108,16 +108,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # import to config flow
     if DOMAIN in config:
         LOGGER.warning(
-            # Proxmox VE config flow added in 2022.10 and should be removed in 2022.12
+            # Proxmox VE config flow added and should be removed in 2023.5.
             "Configuration of the Proxmox in YAML is deprecated and should "
-            "be removed in 2023.05. Resolve the import issues and remove the "
+            "be removed in 2023.5. Resolve the import issues and remove the "
             "YAML configuration from your configuration.yaml file",
         )
         async_create_issue(
             async_get_hass(),
             DOMAIN,
             "yaml_deprecated",
-            breaks_in_ha_version="2022.12.0",
+            breaks_in_ha_version="2023.5",
             is_fixable=False,
             severity=IssueSeverity.WARNING,
             translation_key="yaml_deprecated",
@@ -138,7 +138,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     is_fixable=False,
                     severity=IssueSeverity.ERROR,
                     translation_key="import_invalid_port",
-                    breaks_in_ha_version="2022.12.0",
+                    breaks_in_ha_version="2023.5",
                     translation_placeholders={
                         "integration": INTEGRATION_NAME,
                         "platform": DOMAIN,
