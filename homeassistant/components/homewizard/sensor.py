@@ -37,9 +37,9 @@ from .const import DOMAIN
 from .coordinator import HWEnergyDeviceUpdateCoordinator
 from .entity import HomeWizardEntity
 
-PARALLEL_UPDATES = 1
-
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 1
 
 
 @dataclass
@@ -369,6 +369,39 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
 )
 
+EXTERNAL_SENSORS = {
+    ExternalDevice.DeviceType.GAS_METER: SensorEntityDescription(
+        key="Gas meter",
+        name="Total gas",
+        device_class=SensorDeviceClass.GAS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    ExternalDevice.DeviceType.HEAT_METER: SensorEntityDescription(
+        key="Heat meter",
+        name="Total energy consumed",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    ExternalDevice.DeviceType.WARM_WATER_METER: SensorEntityDescription(
+        key="Warm water meter",
+        name="Total water",
+        device_class=SensorDeviceClass.WATER,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    ExternalDevice.DeviceType.WATER_METER: SensorEntityDescription(
+        key="Water meter",
+        name="Total water",
+        device_class=SensorDeviceClass.WATER,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    ExternalDevice.DeviceType.INLET_HEAT_METER: SensorEntityDescription(
+        key="Inlet Heat meter",
+        name="Total energy",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -401,49 +434,7 @@ async def async_setup_entry(
     if coordinator.data.data.external_devices is not None:
         for (unique_id, device) in coordinator.data.data.external_devices.items():
 
-            description: SensorEntityDescription | None = None
-
-            if device.meter_type == ExternalDevice.DeviceType.GAS_METER:
-                description = SensorEntityDescription(
-                    key="Gas meter",
-                    name="Total gas",
-                    device_class=SensorDeviceClass.GAS,
-                    state_class=SensorStateClass.TOTAL_INCREASING,
-                )
-
-            if device.meter_type == ExternalDevice.DeviceType.HEAT_METER:
-                description = SensorEntityDescription(
-                    key="Gas meter",
-                    name="Total energy consumed",
-                    device_class=SensorDeviceClass.ENERGY,
-                    state_class=SensorStateClass.TOTAL_INCREASING,
-                )
-
-            if device.meter_type == ExternalDevice.DeviceType.WARM_WATER_METER:
-                description = SensorEntityDescription(
-                    key="Warm water meter",
-                    name="Total water",
-                    device_class=SensorDeviceClass.WATER,
-                    state_class=SensorStateClass.TOTAL_INCREASING,
-                )
-
-            if device.meter_type == ExternalDevice.DeviceType.WATER_METER:
-                description = SensorEntityDescription(
-                    key="Water meter",
-                    name="Total water",
-                    device_class=SensorDeviceClass.WATER,
-                    state_class=SensorStateClass.TOTAL_INCREASING,
-                )
-
-            if device.meter_type == ExternalDevice.DeviceType.INLET_HEAT_METER:
-                description = SensorEntityDescription(
-                    key="Inlet Heat meter",
-                    name="Total energy",
-                    device_class=SensorDeviceClass.ENERGY,
-                    state_class=SensorStateClass.TOTAL_INCREASING,
-                )
-
-            if description:
+            if description := EXTERNAL_SENSORS.get(device.meter_type):
                 entities.append(
                     HomeWizardExternalSensorEntity(coordinator, description, unique_id)
                 )
@@ -465,7 +456,6 @@ class HomeWizardExternalSensorEntity(HomeWizardEntity, SensorEntity):
         self._attr_unique_id = f"{DOMAIN}_{device_unique_id}"
         self._device_id = device_unique_id
         self.entity_description = description
-        self._attr_native_unit_of_measurement = self._get_native_unit_of_measurement()
 
         if self._attr_device_info is not None:
             self._attr_device_info[ATTR_IDENTIFIERS] = {(DOMAIN, self._attr_unique_id)}
@@ -498,25 +488,14 @@ class HomeWizardExternalSensorEntity(HomeWizardEntity, SensorEntity):
         """Return availability of meter."""
         return super().available and self.native_value is not None
 
-    def _get_native_unit_of_measurement(self) -> str | None:
-        """Return native unit of measurement of sensor by matching real value with built-in."""
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return unit of measurement based on device unit."""
         if (device := self.device) is None:
             return None
 
-        if device.unit in (UnitOfVolume.CUBIC_METERS, "m3"):
+        if device.unit == "m3":
             return UnitOfVolume.CUBIC_METERS
-
-        if device.unit == UnitOfEnergy.GIGA_JOULE:
-            return UnitOfEnergy.GIGA_JOULE
-
-        if device.unit == UnitOfEnergy.KILO_WATT_HOUR:
-            return UnitOfEnergy.KILO_WATT_HOUR
-
-        if device.unit == UnitOfEnergy.MEGA_WATT_HOUR:
-            return UnitOfEnergy.MEGA_WATT_HOUR
-
-        if device.unit == UnitOfEnergy.WATT_HOUR:
-            return UnitOfEnergy.WATT_HOUR
 
         return device.unit
 
