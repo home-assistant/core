@@ -61,7 +61,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
 
-from . import setup_samsungtv_entry
 from .const import (
     MOCK_CONFIG_ENCRYPTED_WS,
     MOCK_ENTRYDATA_ENCRYPTED_WS,
@@ -1995,15 +1994,17 @@ async def test_form_reauth_encrypted(hass: HomeAssistant) -> None:
     del encrypted_entry_data[CONF_TOKEN]
     del encrypted_entry_data[CONF_SESSION_ID]
 
-    entry = await setup_samsungtv_entry(hass, encrypted_entry_data)
-    assert entry.state == config_entries.ConfigEntryState.SETUP_ERROR
-    flows_in_progress = [
-        flow
-        for flow in hass.config_entries.flow.async_progress()
-        if flow["context"]["source"] == "reauth"
-    ]
-    assert len(flows_in_progress) == 1
-    result = flows_in_progress[0]
+    entry = MockConfigEntry(domain=DOMAIN, data=encrypted_entry_data)
+    entry.add_to_hass(hass)
+    assert entry.state == config_entries.ConfigEntryState.NOT_LOADED
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"entry_id": entry.entry_id, "source": config_entries.SOURCE_REAUTH},
+        data=entry.data,
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {}
 
     with patch(
         "homeassistant.components.samsungtv.config_flow.SamsungTVEncryptedWSAsyncAuthenticator",
