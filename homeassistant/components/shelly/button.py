@@ -53,7 +53,7 @@ BUTTONS: Final[list[ShellyButtonDescription[Any]]] = [
     ),
     ShellyButtonDescription[ShellyBlockCoordinator](
         key="self_test",
-        name="Self Test",
+        name="Self test",
         icon="mdi:progress-wrench",
         entity_category=EntityCategory.DIAGNOSTIC,
         press_action=lambda coordinator: coordinator.device.trigger_shelly_gas_self_test(),

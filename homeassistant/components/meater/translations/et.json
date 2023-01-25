@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Kasutaja on juba seadistatud"
+        },
         "error": {
             "invalid_auth": "Tuvastamine nurjus",
             "service_unavailable_error": "API pole praegu saadaval, proovi hiljem uuesti.",

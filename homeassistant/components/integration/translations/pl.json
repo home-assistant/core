@@ -32,5 +32,22 @@
             }
         }
     },
+    "selector": {
+        "method": {
+            "options": {
+                "left": "lewa suma Riemanna",
+                "right": "prawa suma Riemanna",
+                "trapezoidal": "metoda trapez\u00f3w"
+            }
+        },
+        "unit_time": {
+            "options": {
+                "d": "dni",
+                "h": "godziny",
+                "min": "minuty",
+                "s": "sekundy"
+            }
+        }
+    },
     "title": "Integracja - czujnik ca\u0142kuj\u0105cy sum\u0119 Riemanna"
 }

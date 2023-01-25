@@ -71,5 +71,14 @@
                 "description": "L'escaneig Bluetooth pot ser actiu o passiu. Si \u00e9s actiu, el Shelly sol\u00b7licita dades a dispositius propers; en passiu, el Shelly rep dades no sol\u00b7licitades de dispositius propers."
             }
         }
+    },
+    "selector": {
+        "ble_scanner_mode": {
+            "options": {
+                "active": "Actiu",
+                "disabled": "Desactivat",
+                "passive": "Passiu"
+            }
+        }
     }
 }
