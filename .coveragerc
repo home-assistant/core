@@ -674,6 +674,14 @@ omit =
     homeassistant/components/lutron_caseta/light.py
     homeassistant/components/lutron_caseta/scene.py
     homeassistant/components/lutron_caseta/switch.py
+    homeassistant/components/luxtronik/__init__.py
+    homeassistant/components/luxtronik/base.py
+    homeassistant/components/luxtronik/common.py
+    homeassistant/components/luxtronik/const.py
+    homeassistant/components/luxtronik/coordinator.py
+    homeassistant/components/luxtronik/lux_helper.py
+    homeassistant/components/luxtronik/model.py
+    homeassistant/components/luxtronik/water_heater.py
     homeassistant/components/lw12wifi/light.py
     homeassistant/components/lyric/__init__.py
     homeassistant/components/lyric/api.py
