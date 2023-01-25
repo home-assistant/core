@@ -258,6 +258,7 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
         self.port: int = discovery_info.config[CONF_PORT]
         self.api_key: str = discovery_info.config[CONF_API_KEY]
 
+        # Workaround for https://github.com/home-assistant/addons/issues/2831
         for entry_id in self.hass.data.get(DOMAIN, []):
             gateway: DeconzGateway = self.hass.data[DOMAIN][entry_id]
             if gateway.bridgeid == self.bridge_id and gateway.available:
