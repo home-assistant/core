@@ -147,7 +147,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, almond_hass_start)
 
-    conversation.async_set_agent(hass, agent)
+    conversation.async_set_agent(hass, entry, agent)
     return True
 
 
@@ -223,7 +223,7 @@ async def _configure_almond_for_ha(
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Almond."""
-    conversation.async_set_agent(hass, None)
+    conversation.async_unset_agent(hass, entry)
     return True
 
 

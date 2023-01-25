@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant import core
 from homeassistant.components import http, websocket_api
 from homeassistant.components.http.data_validator import RequestDataValidator
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, intent
 from homeassistant.helpers.typing import ConfigType
@@ -62,9 +63,23 @@ CONFIG_SCHEMA = vol.Schema(
 
 @core.callback
 @bind_hass
-def async_set_agent(hass: core.HomeAssistant, agent: AbstractConversationAgent | None):
+def async_set_agent(
+    hass: core.HomeAssistant,
+    config_entry: ConfigEntry,
+    agent: AbstractConversationAgent,
+):
     """Set the agent to handle the conversations."""
     hass.data[DATA_AGENT] = agent
+
+
+@core.callback
+@bind_hass
+def async_unset_agent(
+    hass: core.HomeAssistant,
+    config_entry: ConfigEntry,
+):
+    """Set the agent to handle the conversations."""
+    hass.data[DATA_AGENT] = None
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

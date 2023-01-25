@@ -124,9 +124,9 @@ async def update_listener(hass, entry):
     """Handle options update."""
     if entry.options.get(CONF_ENABLE_CONVERSATION_AGENT, False):
         agent = GoogleAssistantConversationAgent(hass, entry)
-        conversation.async_set_agent(hass, agent)
+        conversation.async_set_agent(hass, entry, agent)
     else:
-        conversation.async_set_agent(hass, None)
+        conversation.async_unset_agent(hass, entry)
 
 
 class GoogleAssistantConversationAgent(conversation.AbstractConversationAgent):
