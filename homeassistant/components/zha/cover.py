@@ -185,6 +185,7 @@ class ZhaCover(ZhaEntity, CoverEntity):
                 self._current_position = None
                 self._state = None
 
+
 @MULTI_MATCH(channel_names="tuya_window_covering")
 class ZhaTuyaCover(ZhaCover):
     """Representation of a ZHA cover."""
@@ -194,6 +195,7 @@ class ZhaTuyaCover(ZhaCover):
         super().__init__(unique_id, zha_device, channels, **kwargs)
         self._cover_channel = self.cluster_channels.get("tuya_window_covering")
         self._current_position = None
+
 
 @MULTI_MATCH(channel_names={CHANNEL_LEVEL, CHANNEL_ON_OFF, CHANNEL_SHADE})
 class Shade(ZhaEntity, CoverEntity):

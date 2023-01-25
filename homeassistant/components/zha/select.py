@@ -495,6 +495,7 @@ class AqaraPetFeederMode(ZCLEnumSelectEntity, id_suffix="feeding_mode"):
     _attr_name = "Mode"
     _attr_icon: str = "mdi:wrench-clock"
 
+
 class MotorDirection(types.enum8):
     """Tuya motor reversal."""
 
