@@ -7,6 +7,8 @@ import pytest
 
 from homeassistant import core
 from homeassistant.components.alexa import errors, state_report
+from homeassistant.components.alexa.resources import AlexaGlobalCatalog
+from homeassistant.const import PERCENTAGE, UnitOfLength, UnitOfTemperature
 
 from .test_common import TEST_URL, get_default_config
 
@@ -334,27 +336,57 @@ async def test_report_state_humidifier(hass, aioclient_mock):
 
 
 @pytest.mark.parametrize(
-    "domain,value",
+    "domain,value,unit,label",
     [
-        ("number", 50),
-        ("input_number", 40),
-        ("number", 20.5),
-        ("input_number", 40.5),
+        (
+            "number",
+            50,
+            None,
+            AlexaGlobalCatalog.SETTING_PRESET,
+        ),
+        (
+            "input_number",
+            40,
+            UnitOfLength.METERS,
+            AlexaGlobalCatalog.UNIT_DISTANCE_METERS,
+        ),
+        (
+            "number",
+            20.5,
+            UnitOfTemperature.CELSIUS,
+            AlexaGlobalCatalog.UNIT_TEMPERATURE_CELSIUS,
+        ),
+        (
+            "input_number",
+            40.5,
+            UnitOfLength.MILLIMETERS,
+            AlexaGlobalCatalog.SETTING_PRESET,
+        ),
+        (
+            "number",
+            20.5,
+            PERCENTAGE,
+            AlexaGlobalCatalog.UNIT_PERCENT,
+        ),
     ],
 )
-async def test_report_state_number(hass, aioclient_mock, domain, value):
+async def test_report_state_number(hass, aioclient_mock, domain, value, unit, label):
     """Test proactive state reports with number or input_number instance."""
     aioclient_mock.post(TEST_URL, text="", status=202)
+    state = {
+        "friendly_name": f"Test {domain}",
+        "min": 10,
+        "max": 100,
+        "step": 0.1,
+    }
+
+    if unit:
+        state["unit_of_measurement"]: unit
 
     hass.states.async_set(
         f"{domain}.test_{domain}",
         None,
-        {
-            "friendly_name": f"Test {domain}",
-            "min": 10,
-            "max": 100,
-            "step": 0.1,
-        },
+        state,
     )
 
     await state_report.async_enable_proactive_mode(hass, get_default_config(hass))
@@ -362,12 +394,7 @@ async def test_report_state_number(hass, aioclient_mock, domain, value):
     hass.states.async_set(
         f"{domain}.test_{domain}",
         value,
-        {
-            "friendly_name": f"Test {domain}",
-            "min": 10,
-            "max": 100,
-            "step": 0.1,
-        },
+        state,
     )
 
     # To trigger event listener

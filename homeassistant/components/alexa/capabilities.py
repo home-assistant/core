@@ -3,8 +3,6 @@ from __future__ import annotations
 
 import logging
 
-from wolf_smartset import PERCENTAGE
-
 from homeassistant.components import (
     button,
     climate,
@@ -29,6 +27,7 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     ATTR_UNIT_OF_MEASUREMENT,
+    PERCENTAGE,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME,
@@ -72,50 +71,33 @@ from .resources import (
 
 _LOGGER = logging.getLogger(__name__)
 
+UNIT_TO_CATALOG_TAG = {
+    UnitOfTemperature.CELSIUS: AlexaGlobalCatalog.UNIT_TEMPERATURE_CELSIUS,
+    UnitOfTemperature.FAHRENHEIT: AlexaGlobalCatalog.UNIT_TEMPERATURE_FAHRENHEIT,
+    UnitOfTemperature.KELVIN: AlexaGlobalCatalog.UNIT_TEMPERATURE_KELVIN,
+    UnitOfLength.METERS: AlexaGlobalCatalog.UNIT_DISTANCE_METERS,
+    UnitOfLength.KILOMETERS: AlexaGlobalCatalog.UNIT_DISTANCE_KILOMETERS,
+    UnitOfLength.INCHES: AlexaGlobalCatalog.UNIT_DISTANCE_INCHES,
+    UnitOfLength.FEET: AlexaGlobalCatalog.UNIT_DISTANCE_FEET,
+    UnitOfLength.YARDS: AlexaGlobalCatalog.UNIT_DISTANCE_YARDS,
+    UnitOfLength.MILES: AlexaGlobalCatalog.UNIT_DISTANCE_MILES,
+    UnitOfMass.GRAMS: AlexaGlobalCatalog.UNIT_MASS_GRAMS,
+    UnitOfMass.KILOGRAMS: AlexaGlobalCatalog.UNIT_MASS_KILOGRAMS,
+    UnitOfMass.POUNDS: AlexaGlobalCatalog.UNIT_WEIGHT_POUNDS,
+    UnitOfMass.OUNCES: AlexaGlobalCatalog.UNIT_WEIGHT_OUNCES,
+    UnitOfVolume.LITERS: AlexaGlobalCatalog.UNIT_VOLUME_LITERS,
+    UnitOfVolume.CUBIC_FEET: AlexaGlobalCatalog.UNIT_VOLUME_CUBIC_FEET,
+    UnitOfVolume.CUBIC_METERS: AlexaGlobalCatalog.UNIT_VOLUME_CUBIC_METERS,
+    UnitOfVolume.GALLONS: AlexaGlobalCatalog.UNIT_VOLUME_GALLONS,
+    PERCENTAGE: AlexaGlobalCatalog.UNIT_PERCENT,
+    "preset": AlexaGlobalCatalog.SETTING_PRESET,
+}
+
 
 def get_resource_by_unit_of_measurement(entity: State) -> str:
     """Translate the unit of measurement to an Alexa Global Catalog keyword."""
-    if not (unit := entity.attributes.get("unit_of_measurement")):
-        return AlexaGlobalCatalog.SETTING_PRESET
-
-    if unit == UnitOfTemperature.CELSIUS:
-        return AlexaGlobalCatalog.UNIT_TEMPERATURE_CELSIUS
-    if unit == UnitOfTemperature.FAHRENHEIT:
-        return AlexaGlobalCatalog.UNIT_TEMPERATURE_FAHRENHEIT
-    if unit == UnitOfTemperature.KELVIN:
-        return AlexaGlobalCatalog.UNIT_TEMPERATURE_KELVIN
-    if unit == UnitOfLength.METERS:
-        return AlexaGlobalCatalog.UNIT_DISTANCE_METERS
-    if unit == UnitOfLength.KILOMETERS:
-        return AlexaGlobalCatalog.UNIT_DISTANCE_KILOMETERS
-    if unit == UnitOfLength.INCHES:
-        return AlexaGlobalCatalog.UNIT_DISTANCE_INCHES
-    if unit == UnitOfLength.FEET:
-        return AlexaGlobalCatalog.UNIT_DISTANCE_FEET
-    if unit == UnitOfLength.YARDS:
-        return AlexaGlobalCatalog.UNIT_DISTANCE_YARDS
-    if unit == UnitOfLength.MILES:
-        return AlexaGlobalCatalog.UNIT_DISTANCE_MILES
-    if unit == UnitOfMass.GRAMS:
-        return AlexaGlobalCatalog.UNIT_MASS_GRAMS
-    if unit == UnitOfMass.KILOGRAMS:
-        return AlexaGlobalCatalog.UNIT_MASS_KILOGRAMS
-    if unit == UnitOfMass.POUNDS:
-        return AlexaGlobalCatalog.UNIT_WEIGHT_POUNDS
-    if unit == UnitOfMass.OUNCES:
-        return AlexaGlobalCatalog.UNIT_WEIGHT_OUNCES
-    if unit == UnitOfVolume.LITERS:
-        return AlexaGlobalCatalog.UNIT_VOLUME_LITERS
-    if unit == UnitOfVolume.CUBIC_FEET:
-        return AlexaGlobalCatalog.UNIT_VOLUME_CUBIC_FEET
-    if unit == UnitOfVolume.CUBIC_METERS:
-        return AlexaGlobalCatalog.UNIT_VOLUME_CUBIC_METERS
-    if unit == UnitOfVolume.GALLONS:
-        return AlexaGlobalCatalog.UNIT_VOLUME_GALLONS
-    if unit == PERCENTAGE:
-        return AlexaGlobalCatalog.UNIT_PERCENT
-
-    return AlexaGlobalCatalog.SETTING_PRESET
+    unit: str = entity.attributes.get("unit_of_measurement", "preset")
+    return UNIT_TO_CATALOG_TAG.get(unit, AlexaGlobalCatalog.SETTING_PRESET)
 
 
 class AlexaCapability:
