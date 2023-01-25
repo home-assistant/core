@@ -10,6 +10,17 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 
+async def test_single_instance_allowed(
+    hass: HomeAssistant, mock_config_entry: config_entries.ConfigEntry
+) -> None:
+    """Test that config flow only allows a single instance."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
+
+
 async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
