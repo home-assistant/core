@@ -9,11 +9,10 @@ from http import HTTPStatus
 from ipaddress import IPv4Address, IPv6Address, ip_address
 import logging
 from socket import gethostbyaddr, herror
-from typing import Any, Final, TypeVar
+from typing import Any, Concatenate, Final, ParamSpec, TypeVar
 
 from aiohttp.web import Application, Request, Response, StreamResponse, middleware
 from aiohttp.web_exceptions import HTTPForbidden, HTTPUnauthorized
-from typing_extensions import Concatenate, ParamSpec
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
@@ -141,7 +140,7 @@ async def process_wrong_login(request: Request) -> None:
 
     # Supervisor IP should never be banned
     if "hassio" in hass.config.components:
-        # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel
         from homeassistant.components import hassio
 
         if hassio.get_supervisor_ip() == str(remote_addr):

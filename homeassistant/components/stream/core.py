@@ -374,7 +374,6 @@ class StreamView(HomeAssistantView):
     """
 
     requires_auth = False
-    platform = None
 
     async def get(
         self, request: web.Request, token: str, sequence: str = "", part_num: str = ""
@@ -438,7 +437,7 @@ class KeyFrameConverter:
         """Initialize."""
 
         # Keep import here so that we can import stream integration without installing reqs
-        # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel
         from homeassistant.components.camera.img_util import TurboJPEGSingleton
 
         self.packet: Packet = None
@@ -461,7 +460,7 @@ class KeyFrameConverter:
             return
 
         # Keep import here so that we can import stream integration without installing reqs
-        # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel
         from av import CodecContext
 
         self._codec_context = CodecContext.create(codec_context.name, "r")

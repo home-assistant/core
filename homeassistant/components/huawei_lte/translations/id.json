@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "not_huawei_lte": "Bukan perangkat Huawei LTE",
             "reauth_successful": "Autentikasi ulang berhasil",
             "unsupported_device": "Perangkat tidak didukung"
         },

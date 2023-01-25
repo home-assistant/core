@@ -1,5 +1,4 @@
-"""Test the Xiaomi config flow."""
-
+"""Test Xiaomi BLE sensors."""
 
 from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.components.xiaomi_ble.const import DOMAIN

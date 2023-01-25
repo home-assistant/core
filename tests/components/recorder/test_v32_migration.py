@@ -1,5 +1,5 @@
 """The tests for recorder platform migrating data from v30."""
-# pylint: disable=protected-access,invalid-name
+# pylint: disable=invalid-name
 from datetime import timedelta
 import importlib
 import sys

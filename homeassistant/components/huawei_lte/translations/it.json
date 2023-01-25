@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "not_huawei_lte": "Non \u00e8 un dispositivo Huawei LTE",
             "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente",
             "unsupported_device": "Dispositivo non supportato"
         },

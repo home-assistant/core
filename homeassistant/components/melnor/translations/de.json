@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
             "no_devices_found": "In der N\u00e4he gibt es keine Melnor Bluetooth-Ger\u00e4te."
         },
         "step": {

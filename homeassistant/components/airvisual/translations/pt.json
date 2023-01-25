@@ -15,12 +15,6 @@
                     "latitude": "Latitude"
                 }
             },
-            "node_pro": {
-                "data": {
-                    "ip_address": "Endere\u00e7o",
-                    "password": "Palavra-passe"
-                }
-            },
             "reauth_confirm": {
                 "data": {
                     "api_key": "Chave da API"

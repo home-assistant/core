@@ -11,6 +11,7 @@
             "not_admin": "Pou\u017e\u00edvate\u013e mus\u00ed by\u0165 spr\u00e1vcom, pou\u017e\u00edvate\u013e ''{username}'' m\u00e1 \u00farove\u0148 autoriz\u00e1cie ''{userlevel}''",
             "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
         },
+        "flow_title": "{short_mac} ({ip_address})",
         "step": {
             "reauth_confirm": {
                 "description": "Integr\u00e1cia Reolink potrebuje op\u00e4tovne overi\u0165 \u00fadaje o pripojen\u00ed",

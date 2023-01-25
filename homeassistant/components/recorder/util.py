@@ -8,7 +8,7 @@ import functools
 import logging
 import os
 import time
-from typing import TYPE_CHECKING, Any, NoReturn, TypeVar
+from typing import TYPE_CHECKING, Any, Concatenate, NoReturn, ParamSpec, TypeVar
 
 from awesomeversion import (
     AwesomeVersion,
@@ -23,7 +23,6 @@ from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm.query import Query
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.lambdas import StatementLambdaElement
-from typing_extensions import Concatenate, ParamSpec
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant
@@ -404,8 +403,6 @@ def build_mysqldb_conv() -> dict:
     # Late imports since we only call this if they are using mysqldb
     # pylint: disable=import-outside-toplevel,import-error
     from MySQLdb.constants import FIELD_TYPE
-
-    # pylint: disable=import-outside-toplevel,import-error
     from MySQLdb.converters import conversions
 
     return {**conversions, FIELD_TYPE.DATETIME: _datetime_or_none}

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from time import localtime, mktime
-from typing import Optional, cast
+from typing import cast
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -79,7 +79,7 @@ class SteamSensor(SteamEntity, SensorEntity):
                 attrs["game_icon"] = f"{STEAM_ICON_URL}{game_id}/{info}.jpg"
         self._attr_name = str(player["personaname"]) or None
         self._attr_entity_picture = str(player["avatarmedium"]) or None
-        if last_online := cast(Optional[int], player.get("lastlogoff")):
+        if last_online := cast(int | None, player.get("lastlogoff")):
             attrs["last_online"] = utc_from_timestamp(mktime(localtime(last_online)))
         if level := self.coordinator.data[self.entity_description.key]["level"]:
             attrs["level"] = level

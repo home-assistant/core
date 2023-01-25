@@ -1,8 +1,6 @@
 """Support for Xiaomi binary sensors."""
 from __future__ import annotations
 
-from typing import Optional
-
 from xiaomi_ble.parser import (
     BinarySensorDeviceClass as XiaomiBinarySensorDeviceClass,
     ExtendedBinarySensorDeviceClass,
@@ -121,7 +119,7 @@ async def async_setup_entry(
 
 
 class XiaomiBluetoothSensorEntity(
-    PassiveBluetoothProcessorEntity[PassiveBluetoothDataProcessor[Optional[bool]]],
+    PassiveBluetoothProcessorEntity[PassiveBluetoothDataProcessor[bool | None]],
     BinarySensorEntity,
 ):
     """Representation of a Xiaomi binary sensor."""

@@ -8,10 +8,11 @@ import voluptuous as vol
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback, split_entity_id
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .. import mysensors
 from .const import (
@@ -151,8 +152,35 @@ class MySensorsIRSwitch(MySensorsSwitch):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the IR switch on."""
         set_req = self.gateway.const.SetReq
+        placeholders = {
+            "deprecated_entity": self.entity_id,
+            "alternate_target": f"remote.{split_entity_id(self.entity_id)[1]}",
+        }
+
         if ATTR_IR_CODE in kwargs:
             self._ir_code = kwargs[ATTR_IR_CODE]
+            placeholders[
+                "deprecated_service"
+            ] = f"{MYSENSORS_DOMAIN}.{SERVICE_SEND_IR_CODE}"
+            placeholders["alternate_service"] = "remote.send_command"
+        else:
+            placeholders["deprecated_service"] = "switch.turn_on"
+            placeholders["alternate_service"] = "remote.turn_on"
+
+        async_create_issue(
+            self.hass,
+            MYSENSORS_DOMAIN,
+            (
+                "deprecated_ir_switch_entity_"
+                f"{self.entity_id}_{placeholders['deprecated_service']}"
+            ),
+            breaks_in_ha_version="2023.4.0",
+            is_fixable=True,
+            is_persistent=True,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_entity",
+            translation_placeholders=placeholders,
+        )
         self.gateway.set_child_value(
             self.node_id, self.child_id, self.value_type, self._ir_code
         )
@@ -169,6 +197,22 @@ class MySensorsIRSwitch(MySensorsSwitch):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the IR switch off."""
+        async_create_issue(
+            self.hass,
+            MYSENSORS_DOMAIN,
+            f"deprecated_ir_switch_entity_{self.entity_id}_switch.turn_off",
+            breaks_in_ha_version="2023.4.0",
+            is_fixable=True,
+            is_persistent=True,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_entity",
+            translation_placeholders={
+                "deprecated_entity": self.entity_id,
+                "deprecated_service": "switch.turn_off",
+                "alternate_service": "remote.turn_off",
+                "alternate_target": f"remote.{split_entity_id(self.entity_id)[1]}",
+            },
+        )
         set_req = self.gateway.const.SetReq
         self.gateway.set_child_value(
             self.node_id, self.child_id, set_req.V_LIGHT, 0, ack=1

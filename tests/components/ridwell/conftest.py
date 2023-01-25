@@ -11,8 +11,10 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from tests.common import MockConfigEntry
 
 TEST_ACCOUNT_ID = "12345"
+TEST_DASHBOARD_URL = "https://www.ridwell.com/users/12345/dashboard"
 TEST_PASSWORD = "password"
 TEST_USERNAME = "user@email.com"
+TEST_USER_ID = "12345"
 
 
 @pytest.fixture(name="account")
@@ -44,6 +46,8 @@ def client_fixture(account):
     return Mock(
         async_authenticate=AsyncMock(),
         async_get_accounts=AsyncMock(return_value={TEST_ACCOUNT_ID: account}),
+        get_dashboard_url=Mock(return_value=TEST_DASHBOARD_URL),
+        user_id=TEST_USER_ID,
     )
 
 
@@ -70,7 +74,10 @@ async def mock_aioridwell_fixture(hass, client, config):
     with patch(
         "homeassistant.components.ridwell.config_flow.async_get_client",
         return_value=client,
-    ), patch("homeassistant.components.ridwell.async_get_client", return_value=client):
+    ), patch(
+        "homeassistant.components.ridwell.coordinator.async_get_client",
+        return_value=client,
+    ):
         yield
 
 

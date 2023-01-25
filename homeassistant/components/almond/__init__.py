@@ -22,7 +22,7 @@ from homeassistant.const import (
     CONF_TYPE,
     EVENT_HOMEASSISTANT_START,
 )
-from homeassistant.core import Context, CoreState, HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
     aiohttp_client,
@@ -147,7 +147,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, almond_hass_start)
 
-    conversation.async_set_agent(hass, agent)
+    conversation.async_set_agent(hass, entry, agent)
     return True
 
 
@@ -223,7 +223,7 @@ async def _configure_almond_for_ha(
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Almond."""
-    conversation.async_set_agent(hass, None)
+    conversation.async_unset_agent(hass, entry)
     return True
 
 
@@ -264,40 +264,13 @@ class AlmondAgent(conversation.AbstractConversationAgent):
         """Return the attribution."""
         return {"name": "Powered by Almond", "url": "https://almond.stanford.edu/"}
 
-    async def async_get_onboarding(self):
-        """Get onboard url if not onboarded."""
-        if self.entry.data.get("onboarded"):
-            return None
-
-        host = self.entry.data["host"]
-        if self.entry.data.get("is_hassio"):
-            host = "/core_almond"
-        return {
-            "text": (
-                "Would you like to opt-in to share your anonymized commands with"
-                " Stanford to improve Almond's responses?"
-            ),
-            "url": f"{host}/conversation",
-        }
-
-    async def async_set_onboarding(self, shown):
-        """Set onboarding status."""
-        self.hass.config_entries.async_update_entry(
-            self.entry, data={**self.entry.data, "onboarded": shown}
-        )
-
-        return True
-
     async def async_process(
-        self,
-        text: str,
-        context: Context,
-        conversation_id: str | None = None,
-        language: str | None = None,
-    ) -> conversation.ConversationResult | None:
+        self, user_input: conversation.ConversationInput
+    ) -> conversation.ConversationResult:
         """Process a sentence."""
-        response = await self.api.async_converse_text(text, conversation_id)
-        language = language or self.hass.config.language
+        response = await self.api.async_converse_text(
+            user_input.text, user_input.conversation_id
+        )
 
         first_choice = True
         buffer = ""
@@ -318,8 +291,8 @@ class AlmondAgent(conversation.AbstractConversationAgent):
                     buffer += ","
                 buffer += f" {message['title']}"
 
-        intent_response = intent.IntentResponse(language=language)
+        intent_response = intent.IntentResponse(language=user_input.language)
         intent_response.async_set_speech(buffer.strip())
         return conversation.ConversationResult(
-            response=intent_response, conversation_id=conversation_id
+            response=intent_response, conversation_id=user_input.conversation_id
         )

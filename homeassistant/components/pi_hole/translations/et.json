@@ -29,16 +29,9 @@
                     "name": "Nimi",
                     "port": "",
                     "ssl": "Kasuatb SSL serti",
-                    "statistics_only": "Ainult statistika",
                     "verify_ssl": "Kontrolli SSL sertifikaati"
                 }
             }
-        }
-    },
-    "issues": {
-        "deprecated_yaml": {
-            "description": "PI-Hole'i konfigureerimine YAML-i abil eemaldatakse.\n\nTeie olemasolev YAML-konfiguratsioon on automaatselt kasutajaliidesesse imporditud.\n\nEemaldage PI-Hole'i YAML-konfiguratsioon oma configuration.yaml-failist ja k\u00e4ivitage Home Assistant uuesti, et see probleem lahendada.",
-            "title": "PI-Hole YAML-i konfiguratsiooni eemaldatakse"
         }
     }
 }

@@ -37,7 +37,7 @@
             "title": "Uventet m\u00e5leenhet"
         },
         "entity_unexpected_unit_gas": {
-            "description": "F\u00f8lgende enheter har ikke en forventet m\u00e5leenhet (enten av {energy_units} for en energisensor eller en av {gas_units} for en gasssensor:)",
+            "description": "F\u00f8lgende enheter har ikke en forventet m\u00e5leenhet (enten p\u00e5 {energy_units} for en energisensor eller en av {gas_units} for en gasssensor):",
             "title": "Uventet m\u00e5leenhet"
         },
         "entity_unexpected_unit_gas_price": {

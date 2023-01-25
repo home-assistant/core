@@ -141,7 +141,7 @@ async def async_setup_legacy_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
     if not await hass.async_add_executor_job(hass.data[DATA_NEST].initialize):
         return False
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     def validate_structures(target_structures):
         all_structures = [structure.name for structure in nest.structures]

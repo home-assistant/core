@@ -26,5 +26,18 @@
                 }
             }
         }
+    },
+    "selector": {
+        "weekday": {
+            "options": {
+                "fri": "pi\u0105tek",
+                "mon": "poniedzia\u0142ek",
+                "sat": "sobota",
+                "sun": "niedziela",
+                "thu": "czwartek",
+                "tue": "wtorek",
+                "wed": "\u015broda"
+            }
+        }
     }
 }

@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Generic, Union, cast
+from typing import Any, Generic, cast
 
 from pylitterbot import FeederRobot, LitterRobot, LitterRobot4, Robot
 
@@ -55,7 +55,7 @@ class LitterRobotSensorEntity(LitterRobotEntity[_RobotT], SensorEntity):
         if self.entity_description.should_report(self.robot):
             if isinstance(val := getattr(self.robot, self.entity_description.key), str):
                 return val.lower()
-            return cast(Union[float, datetime, None], val)
+            return cast(float | datetime | None, val)
         return None
 
     @property
@@ -141,7 +141,7 @@ ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
             name="Pet weight",
             native_unit_of_measurement=UnitOfMass.POUNDS,
             device_class=SensorDeviceClass.WEIGHT,
-            state_class=SensorStateClass.MEASUREMENT,
+            state_class=SensorStateClass.TOTAL,
         ),
     ],
     FeederRobot: [

@@ -10,9 +10,11 @@
         "step": {
             "broker": {
                 "data": {
+                    "advanced_options": "Avancerade inst\u00e4llningar",
                     "broker": "Broker",
                     "password": "L\u00f6senord",
                     "port": "Port",
+                    "protocol": "MQTT-protokoll",
                     "username": "Anv\u00e4ndarnamn"
                 },
                 "description": "V\u00e4nligen ange anslutningsinformationen f\u00f6r din MQTT broker."
@@ -38,13 +40,13 @@
             "turn_on": "Starta"
         },
         "trigger_type": {
-            "button_double_press": "\"{subtyp}\" dubbelklickad",
-            "button_long_press": "\" {subtype} \" kontinuerligt nedtryckt",
-            "button_long_release": "\" {subtype} \" sl\u00e4pptes efter l\u00e5ng tryckning",
-            "button_quadruple_press": "\"{subtyp}\" fyrdubbelt klickad",
-            "button_quintuple_press": "\"{subtype}\" kvintubbel klickade",
-            "button_short_press": "\"{subtyp}\" tryckt",
-            "button_short_release": "\"{subtyp}\" sl\u00e4pptes",
+            "button_double_press": "\"{subtype}\" dubbelklickad",
+            "button_long_press": "\"{subtype}\" kontinuerligt nedtryckt",
+            "button_long_release": "\"{subtype}\" sl\u00e4pptes efter l\u00e5ng tryckning",
+            "button_quadruple_press": "\"{subtype}\" fyrdubbelt klickad",
+            "button_quintuple_press": "\"{subtype}\" kvintubbelt klickad",
+            "button_short_press": "\"{subtype}\" tryckt",
+            "button_short_release": "\"{subtype}\" sl\u00e4pptes",
             "button_triple_press": "\" {subtype}\" trippelklickad"
         }
     },
@@ -87,6 +89,15 @@
                 },
                 "description": "Uppt\u00e4ckt - Om uppt\u00e4ckt \u00e4r aktiverat (rekommenderas), kommer Home Assistant automatiskt att uppt\u00e4cka enheter och enheter som publicerar sin konfiguration p\u00e5 MQTT-brokern. Om uppt\u00e4ckten \u00e4r inaktiverad m\u00e5ste all konfiguration g\u00f6ras manuellt.\n F\u00f6delsemeddelande - F\u00f6delsemeddelandet kommer att skickas varje g\u00e5ng Home Assistant (\u00e5ter)ansluter till MQTT-brokern.\n Kommer meddelande - Viljemeddelandet kommer att skickas varje g\u00e5ng Home Assistant f\u00f6rlorar sin anslutning till brokern, b\u00e5de i h\u00e4ndelse av en reng\u00f6ring (t.ex. Home Assistant st\u00e4ngs av) och i h\u00e4ndelse av en oren (t.ex. Home Assistant kraschar eller f\u00f6rlorar sin n\u00e4tverksanslutning) koppla ifr\u00e5n.",
                 "title": "MQTT-alternativ"
+            }
+        }
+    },
+    "selector": {
+        "set_ca_cert": {
+            "options": {
+                "auto": "Auto",
+                "custom": "Anpassad",
+                "off": "Fr\u00e5n"
             }
         }
     }

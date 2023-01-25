@@ -13,8 +13,6 @@
         "step": {
             "init": {
                 "data": {
-                    "manual": "Nonaktifkan pembaruan otomatis",
-                    "scan_interval": "Frekuensi pembaruan (menit)",
                     "server_name": "Pilih server uji"
                 }
             }

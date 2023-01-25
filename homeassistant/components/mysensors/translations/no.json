@@ -85,6 +85,17 @@
         }
     },
     "issues": {
+        "deprecated_entity": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Oppdater eventuelle automatiseringer eller skript som bruker denne enheten i tjenesteanrop ved \u00e5 bruke ` {deprecated_service} `-tjenesten for i stedet \u00e5 bruke ` {alternate_service} `-tjenesten med en m\u00e5lenhets-ID p\u00e5 ` {alternate_target} `.",
+                        "title": "{deprecated_entity} -enheten vil bli fjernet"
+                    }
+                }
+            },
+            "title": "{deprecated_entity} -enheten vil bli fjernet"
+        },
         "deprecated_service": {
             "fix_flow": {
                 "step": {
