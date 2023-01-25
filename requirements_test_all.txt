@@ -1453,7 +1453,7 @@ python-forecastio==1.4.0
 python-fullykiosk==0.0.12
 
 # homeassistant.components.homewizard
-python-homewizard-energy==1.7.0
+python-homewizard-energy==1.8.0
 
 # homeassistant.components.izone
 python-izone==1.2.9
