@@ -133,7 +133,7 @@ class NukiEntity(CoordinatorEntity[DataUpdateCoordinator[None]]):
         return {
             "identifiers": {(DOMAIN, parse_id(self._nuki_device.nuki_id))},
             "name": self._nuki_device.name,
-            "manufacturer": "Nuki",
+            "manufacturer": "Nuki Home Solutions GmbH",
             "model": self._nuki_device.device_type_str.capitalize(),
             "sw_version": self._nuki_device.firmware_version,
             "via_device": (DOMAIN, self.coordinator.bridge_id),
