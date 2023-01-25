@@ -107,7 +107,7 @@ aio_geojson_geonetnz_volcano==0.8
 aio_geojson_nsw_rfs_incidents==0.6
 
 # homeassistant.components.usgs_earthquakes_feed
-aio_geojson_usgs_earthquakes==0.1
+aio_geojson_usgs_earthquakes==0.2
 
 # homeassistant.components.gdacs
 aio_georss_gdacs==0.7
