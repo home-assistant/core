@@ -110,7 +110,7 @@ async def test_sensors_gj(mock_heat_meter, hass):
     state = hass.states.get("sensor.heat_meter_volume_usage")
     assert state
     assert state.state == "456.0"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == VOLUME_CUBIC_METERS
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfVolume.CUBIC_METERS
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL
 
     state = hass.states.get("sensor.heat_meter_device_number")
