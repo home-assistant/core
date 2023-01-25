@@ -171,7 +171,7 @@ class GoogleAssistantConversationAgent(conversation.AbstractConversationAgent):
             self.assistant = TextAssistant(credentials, language_code)
 
         resp = self.assistant.assist(text)
-        text_response = resp[0]
+        text_response = resp[0] or "<empty response>"
 
         language = language or self.hass.config.language
         intent_response = intent.IntentResponse(language=language)
