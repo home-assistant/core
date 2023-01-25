@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Kasutaja on juba seadistatud"
+        },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
             "invalid_auth": "Tuvastamine nurjus",

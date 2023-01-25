@@ -31,20 +31,20 @@
             }
         }
     },
-    "title": "Utility Meter",
     "selector": {
         "cycle": {
             "options": {
+                "bimonthly": "Every two months",
+                "daily": "Daily",
+                "hourly": "Hourly",
+                "monthly": "Monthly",
                 "none": "No cycle",
                 "quarter-hourly": "Every 15 minutes",
-                "hourly": "Hourly",
-                "daily": "Daily",
-                "weekly": "Weekly",
-                "monthly": "Monthly",
-                "bimonthly": "Every two months",
                 "quarterly": "Quarterly",
+                "weekly": "Weekly",
                 "yearly": "Yearly"
             }
-            }
-      }
+        }
+    },
+    "title": "Utility Meter"
 }

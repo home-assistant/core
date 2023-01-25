@@ -91,10 +91,10 @@ aio_geojson_geonetnz_quakes==0.15
 aio_geojson_geonetnz_volcano==0.8
 
 # homeassistant.components.nsw_rural_fire_service_feed
-aio_geojson_nsw_rfs_incidents==0.4
+aio_geojson_nsw_rfs_incidents==0.6
 
 # homeassistant.components.usgs_earthquakes_feed
-aio_geojson_usgs_earthquakes==0.1
+aio_geojson_usgs_earthquakes==0.2
 
 # homeassistant.components.gdacs
 aio_georss_gdacs==0.7
@@ -399,7 +399,7 @@ brother==2.1.1
 brunt==1.2.0
 
 # homeassistant.components.bthome
-bthome-ble==2.5.0
+bthome-ble==2.5.1
 
 # homeassistant.components.buienradar
 buienradar==1.0.5
@@ -620,7 +620,7 @@ google-api-python-client==2.71.0
 google-cloud-pubsub==2.13.11
 
 # homeassistant.components.nest
-google-nest-sdm==2.2.2
+google-nest-sdm==2.2.4
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -1614,7 +1614,7 @@ samsungtvws[async,encrypted]==2.5.0
 scapy==2.5.0
 
 # homeassistant.components.screenlogic
-screenlogicpy==0.6.3
+screenlogicpy==0.6.4
 
 # homeassistant.components.backup
 securetar==2022.2.0

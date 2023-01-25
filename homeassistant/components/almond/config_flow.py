@@ -39,8 +39,8 @@ class AlmondFlowHandler(
 
     DOMAIN = DOMAIN
 
-    host = None
-    hassio_discovery = None
+    host: str | None = None
+    hassio_discovery: dict[str, Any] | None = None
 
     @property
     def logger(self) -> logging.Logger:
