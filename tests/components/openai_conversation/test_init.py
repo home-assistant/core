@@ -42,14 +42,14 @@ async def test_default_prompt(hass):
     assert (
         agent._async_generate_prompt()
         == """
-You are a smart home named test home.
-Reject any request to control a device and tell user to use the Home Assistant UI.
+You are a conversational AI for a smart home named test home.
+If a user wants to control a device, reject the request and suggest using the Home Assistant UI.
 
-The people living in the home are:
-- Test Person. They are currently home
+The people living in this smart home are:
 
-An overview of the areas and the devices in the home:
+- Test Person is home
 
+An overview of the areas and the devices in this smart home:
 
 Test Area:
 
