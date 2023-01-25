@@ -943,7 +943,9 @@ async def test_import_legacy(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("remote", "remotews", "rest_api_failing")
-async def test_import_legacy_without_name(hass: HomeAssistant) -> None:
+async def test_import_legacy_without_name(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test importing from yaml without a name."""
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVEncryptedWSAsyncRemote.start_listening",
@@ -961,10 +963,13 @@ async def test_import_legacy_without_name(hass: HomeAssistant) -> None:
     assert result["data"][CONF_MANUFACTURER] == "Samsung"
     assert result["result"].unique_id is None
 
+    mock_setup_entry.assert_called_once()
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
-    assert entries[0].data[CONF_METHOD] == METHOD_LEGACY
-    assert entries[0].data[CONF_PORT] == LEGACY_PORT
+    # METHOD / PORT failed during import
+    # They will get checked/set on setup
+    assert CONF_METHOD not in entries[0].data
+    assert CONF_PORT not in entries[0].data
 
 
 @pytest.mark.usefixtures("remotews", "rest_api")
