@@ -13,7 +13,7 @@ from functools import cache, lru_cache, partial, wraps
 import json
 import logging
 import math
-from operator import attrgetter
+from operator import attrgetter, contains
 import random
 import re
 import statistics
@@ -2085,6 +2085,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["iif"] = iif
         self.filters["bool"] = forgiving_boolean
         self.filters["version"] = version
+        self.filters["contains"] = contains
         self.globals["log"] = logarithm
         self.globals["sin"] = sine
         self.globals["cos"] = cosine
@@ -2121,6 +2122,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.tests["is_number"] = is_number
         self.tests["match"] = regex_match
         self.tests["search"] = regex_search
+        self.tests["contains"] = contains
 
         if hass is None:
             return

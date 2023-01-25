@@ -4070,3 +4070,33 @@ async def test_template_states_can_serialize(hass: HomeAssistant) -> None:
     template_state = template.TemplateState(hass, state, True)
     assert template_state.as_dict() is template_state.as_dict()
     assert json_dumps(template_state) == json_dumps(template_state)
+
+
+@pytest.mark.parametrize(
+    "seq, value, expected",
+    [
+        ([0], 0, True),
+        ([1], 0, False),
+        ([False], 0, True),
+        ([True], 0, False),
+        ([0], [0], False),
+        (["toto", 1], "toto", True),
+        (["toto", 1], "tata", False),
+        ([], 0, False),
+        ([], None, False),
+    ],
+)
+def test_contains(hass, seq, value, expected):
+    """Test contains."""
+    assert (
+        template.Template("{{ seq | contains(value) }}", hass).async_render(
+            {"seq": seq, "value": value}
+        )
+        == expected
+    )
+    assert (
+        template.Template("{{ seq is contains(value) }}", hass).async_render(
+            {"seq": seq, "value": value}
+        )
+        == expected
+    )
