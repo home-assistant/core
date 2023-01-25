@@ -378,7 +378,7 @@ EXTERNAL_SENSORS = {
     ),
     ExternalDevice.DeviceType.HEAT_METER: SensorEntityDescription(
         key="Heat meter",
-        name="Total energy consumed",
+        name="Total energy",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -395,7 +395,7 @@ EXTERNAL_SENSORS = {
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     ExternalDevice.DeviceType.INLET_HEAT_METER: SensorEntityDescription(
-        key="Inlet Heat meter",
+        key="Inlet heat meter",
         name="Total energy",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
