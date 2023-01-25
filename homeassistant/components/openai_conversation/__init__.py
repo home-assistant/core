@@ -29,6 +29,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await hass.async_add_executor_job(
             partial(openai.Engine.list, request_timeout=10)
         )
+    except error.AuthenticationError as err:
+        _LOGGER.error("Invalid API key: %s", err)
+        return False
     except error.OpenAIError as err:
         raise ConfigEntryNotReady(err) from err
 
