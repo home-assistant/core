@@ -1,13 +1,13 @@
 """Tests for the OpenAI integration."""
+from unittest.mock import patch
 
-from homeassistant.components.openai_conversation import OpenAIAgent
+from homeassistant.components import conversation
+from homeassistant.core import Context
 from homeassistant.helpers import device_registry
 
 
-async def test_default_prompt(hass):
+async def test_default_prompt(hass, mock_init_component):
     """Test that the default prompt works."""
-    agent = OpenAIAgent(hass, None)
-
     hass.states.async_set(
         "person.test_person", "home", {"friendly_name": "Test Person"}
     )
@@ -39,10 +39,12 @@ async def test_default_prompt(hass):
         suggested_area="Test Area 2",
     )
 
+    with patch("openai.Completion.create") as mock_create:
+        await conversation.async_converse(hass, "hello", None, Context())
+
     assert (
-        agent._async_generate_prompt()
-        == """
-You are a conversational AI for a smart home named test home.
+        mock_create.mock_calls[0][2]["prompt"]
+        == """You are a conversational AI for a smart home named test home.
 If a user wants to control a device, reject the request and suggest using the Home Assistant UI.
 
 The people living in this smart home are:
@@ -64,5 +66,6 @@ Test Area 2:
 Now finish this conversation:
 
 Smart home: How can I assist?
-""".strip()
+User: hello
+Smart home: """
     )
