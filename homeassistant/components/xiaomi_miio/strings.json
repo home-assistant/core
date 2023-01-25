@@ -79,6 +79,13 @@
           "right": "Right"
         }
       },
+      "mode": {
+        "state": {
+          "Silent": "Silent",
+          "Auto": "Auto",
+          "Favorite": "Favorite"
+        }
+      },
       "ptc_level": {
         "state": {
           "low": "Low",

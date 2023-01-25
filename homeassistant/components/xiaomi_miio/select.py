@@ -15,6 +15,7 @@ from miio.integrations.airpurifier.zhimi.airfresh import (
 )
 from miio.integrations.airpurifier.zhimi.airpurifier import (
     LedBrightness as AirpurifierLedBrightness,
+    OperationMode as AirpurifierOperationMode,
 )
 from miio.integrations.airpurifier.zhimi.airpurifier_miot import (
     LedBrightness as AirpurifierMiotLedBrightness,
@@ -52,6 +53,7 @@ from .const import (
     MODEL_AIRPURIFIER_4_PRO,
     MODEL_AIRPURIFIER_M1,
     MODEL_AIRPURIFIER_M2,
+    MODEL_AIRPURIFIER_MA2,
     MODEL_AIRPURIFIER_PROH,
     MODEL_AIRPURIFIER_ZA1,
     MODEL_FAN_SA1,
@@ -66,7 +68,7 @@ from .device import XiaomiCoordinatedMiioEntity
 ATTR_DISPLAY_ORIENTATION = "display_orientation"
 ATTR_LED_BRIGHTNESS = "led_brightness"
 ATTR_PTC_LEVEL = "ptc_level"
-
+ATTR_MODE = "mode"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -111,6 +113,7 @@ MODEL_TO_ATTR_MAP: dict[str, list] = {
     MODEL_AIRHUMIDIFIER_V1: [
         AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirhumidifierLedBrightness)
     ],
+    MODEL_AIRPURIFIER_MA2: [AttributeEnumMapping(ATTR_MODE, AirpurifierOperationMode)],
     MODEL_AIRPURIFIER_3: [
         AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirpurifierMiotLedBrightness)
     ],
@@ -158,6 +161,17 @@ SELECTOR_TYPES = (
         icon="mdi:tablet",
         translation_key="display_orientation",
         options=["forward", "left", "right"],
+        entity_category=EntityCategory.CONFIG,
+    ),
+    XiaomiMiioSelectDescription(
+        key=ATTR_MODE,
+        attr_name=ATTR_MODE,
+        name="Mode",
+        set_method="set_mode",
+        set_method_error_message="Setting the mode of the fan",
+        icon="mdi:fan",
+        translation_key="mode",
+        options=["silent", "auto", "favorite"],
         entity_category=EntityCategory.CONFIG,
     ),
     XiaomiMiioSelectDescription(
