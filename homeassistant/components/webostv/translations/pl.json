@@ -3,7 +3,9 @@
         "abort": {
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
             "already_in_progress": "Konfiguracja jest ju\u017c w toku",
-            "error_pairing": "Po\u0142\u0105czono z telewizorem LG webOS, ale nie sparowano"
+            "error_pairing": "Po\u0142\u0105czono z telewizorem LG webOS, ale nie sparowano",
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119",
+            "reauth_unsuccessful": "B\u0142\u0105d ponownego uwierzytelnienia, w\u0142\u0105cz telewizor i spr\u00f3buj ponownie."
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia, w\u0142\u0105cz telewizor lub sprawd\u017a adres IP"
@@ -11,6 +13,10 @@
         "flow_title": "LG webOS Smart TV",
         "step": {
             "pairing": {
+                "description": "Kliknij \"Zatwierd\u017a\" i zaakceptuj \u017c\u0105danie parowania na swoim telewizorze. \n\n![Obraz](/static/images/config_webos.png)",
+                "title": "Parowanie webOS TV"
+            },
+            "reauth_confirm": {
                 "description": "Kliknij \"Zatwierd\u017a\" i zaakceptuj \u017c\u0105danie parowania na swoim telewizorze. \n\n![Obraz](/static/images/config_webos.png)",
                 "title": "Parowanie webOS TV"
             },
@@ -31,8 +37,7 @@
     },
     "options": {
         "error": {
-            "cannot_retrieve": "Nie mo\u017cna pobra\u0107 listy \u017ar\u00f3de\u0142. Upewnij si\u0119, \u017ce urz\u0105dzenie jest w\u0142\u0105czone",
-            "script_not_found": "Skrypt nie zosta\u0142 znaleziony"
+            "cannot_retrieve": "Nie mo\u017cna pobra\u0107 listy \u017ar\u00f3de\u0142. Upewnij si\u0119, \u017ce urz\u0105dzenie jest w\u0142\u0105czone"
         },
         "step": {
             "init": {

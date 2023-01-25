@@ -84,7 +84,6 @@ async def test_full_flow(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    # pylint: disable=protected-access
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -151,7 +150,6 @@ async def test_abort_if_spotify_error(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    # pylint: disable=protected-access
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -213,7 +211,6 @@ async def test_reauthentication(
 
     result = await hass.config_entries.flow.async_configure(flows[0]["flow_id"], {})
 
-    # pylint: disable=protected-access
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -279,7 +276,6 @@ async def test_reauth_account_mismatch(
     flows = hass.config_entries.flow.async_progress()
     result = await hass.config_entries.flow.async_configure(flows[0]["flow_id"], {})
 
-    # pylint: disable=protected-access
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {

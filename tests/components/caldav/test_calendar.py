@@ -10,8 +10,6 @@ from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
-# pylint: disable=redefined-outer-name
-
 DEVICE_DATA = {"name": "Private Calendar", "device_id": "Private Calendar"}
 
 EVENTS = [
@@ -351,12 +349,12 @@ def _mocked_dav_client(*names, calendars=None):
 
 
 def _mock_calendar(name):
+    calendar = Mock()
     events = []
     for idx, event in enumerate(EVENTS):
-        events.append(Event(None, "%d.ics" % idx, event, None, str(idx)))
+        events.append(Event(None, "%d.ics" % idx, event, calendar, str(idx)))
 
-    calendar = Mock()
-    calendar.date_search = MagicMock(return_value=events)
+    calendar.search = MagicMock(return_value=events)
     calendar.name = name
     return calendar
 

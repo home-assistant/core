@@ -17,7 +17,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.BINARY_SENSOR]
+PLATFORMS = [Platform.BUTTON, Platform.CLIMATE, Platform.SENSOR, Platform.BINARY_SENSOR]
 
 UPDATE_INTERVAL = timedelta(seconds=60)
 
@@ -124,7 +124,7 @@ class Alpha2BaseCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         """Set the mode of the given heat area."""
         # HEATAREA_MODE: 0=Auto, 1=Tag, 2=Nacht
         if heat_area_mode not in (0, 1, 2):
-            ValueError(f"Invalid heat area mode: {heat_area_mode}")
+            raise ValueError(f"Invalid heat area mode: {heat_area_mode}")
         _LOGGER.debug(
             "Setting mode of heat area %s to %d",
             heat_area_id,

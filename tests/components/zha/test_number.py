@@ -358,6 +358,7 @@ async def test_color_number(
                 "color_temp_physical_max",
                 "color_capabilities",
                 "start_up_color_temperature",
+                "options",
             ],
             allow_cache=True,
             only_cache=False,

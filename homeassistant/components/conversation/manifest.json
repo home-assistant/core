@@ -2,7 +2,7 @@
   "domain": "conversation",
   "name": "Conversation",
   "documentation": "https://www.home-assistant.io/integrations/conversation",
-  "requirements": ["hassil==0.2.3", "home-assistant-intents==0.0.1"],
+  "requirements": ["hassil==0.2.5", "home-assistant-intents==2023.1.25"],
   "dependencies": ["http"],
   "codeowners": ["@home-assistant/core"],
   "quality_scale": "internal",

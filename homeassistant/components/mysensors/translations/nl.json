@@ -71,7 +71,8 @@
             "select_gateway_type": {
                 "menu_options": {
                     "gw_mqtt": "Configureer een MQTT-gateway",
-                    "gw_serial": "Configureer een seri\u00eble gateway"
+                    "gw_serial": "Configureer een seri\u00eble gateway",
+                    "gw_tcp": "Configureer een TCP-gateway"
                 }
             },
             "user": {
@@ -87,6 +88,7 @@
             "fix_flow": {
                 "step": {
                     "confirm": {
+                        "description": "Werk automatiseringen of scripts bij die deze dienst gebruiken en gebruik in plaats daarvan de `{alternate_service}` dienst met doel entiteit ID `{alternate_target}`.",
                         "title": "De {deprecated_service} service zal worden verwijderd"
                     }
                 }

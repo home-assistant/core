@@ -55,7 +55,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def raise_if_exception_missing_str(ex: Exception, match_substrs: Iterable[str]) -> None:
-    """Raise an exception if the exception and cause do not contain the match substrs."""
+    """Raise if the exception and cause do not contain the match substrs."""
     lower_ex_strs = [str(ex).lower(), str(ex.__cause__).lower()]
     for str_sub in match_substrs:
         for exc_str in lower_ex_strs:
@@ -665,7 +665,8 @@ def _apply_update(  # noqa: C901
                     with session_scope(session=session_maker()) as session:
                         connection = session.connection()
                         connection.execute(
-                            # Using LOCK=EXCLUSIVE to prevent the database from corrupting
+                            # Using LOCK=EXCLUSIVE to prevent
+                            # the database from corrupting
                             # https://github.com/home-assistant/core/issues/56104
                             text(
                                 f"ALTER TABLE {table} CONVERT TO CHARACTER SET utf8mb4"
@@ -806,7 +807,8 @@ def _apply_update(  # noqa: C901
             with contextlib.suppress(SQLAlchemyError):
                 with session_scope(session=session_maker()) as session:
                     connection = session.connection()
-                    # This is safe to run multiple times and fast since the table is small
+                    # This is safe to run multiple times and fast
+                    # since the table is small.
                     connection.execute(
                         text("ALTER TABLE statistics_meta ROW_FORMAT=DYNAMIC")
                     )
@@ -935,7 +937,7 @@ def _migrate_columns_to_timestamp(
 
 
 def _initialize_database(session: Session) -> bool:
-    """Initialize a new database, or a database created before introducing schema changes.
+    """Initialize a new database.
 
     The function determines the schema version by inspecting the db structure.
 
@@ -962,7 +964,7 @@ def _initialize_database(session: Session) -> bool:
 
 
 def initialize_database(session_maker: Callable[[], Session]) -> bool:
-    """Initialize a new database, or a database created before introducing schema changes."""
+    """Initialize a new database."""
     try:
         with session_scope(session=session_maker()) as session:
             if _get_schema_version(session) is not None:

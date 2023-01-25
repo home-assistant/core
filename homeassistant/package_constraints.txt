@@ -9,30 +9,33 @@ async_timeout==4.0.2
 atomicwrites-homeassistant==1.4.1
 attrs==22.2.0
 awesomeversion==22.9.0
-bcrypt==3.1.7
+bcrypt==4.0.1
 bleak-retry-connector==2.13.0
-bleak==0.19.2
+bleak==0.19.5
 bluetooth-adapters==0.15.2
 bluetooth-auto-recovery==1.0.3
 bluetooth-data-tools==0.3.1
 certifi>=2021.5.30
 ciso8601==2.3.0
-cryptography==38.0.3
-dbus-fast==1.82.0
+cryptography==39.0.0
+dbus-fast==1.84.0
 fnvhash==0.1.0
 hass-nabucasa==0.61.0
+hassil==0.2.5
 home-assistant-bluetooth==1.9.2
-home-assistant-frontend==20230104.0
-httpx==0.23.2
+home-assistant-frontend==20230125.0
+home-assistant-intents==2023.1.25
+httpx==0.23.3
 ifaddr==0.1.7
 janus==1.0.0
 jinja2==3.1.2
 lru-dict==1.1.8
-orjson==3.8.4
+orjson==3.8.5
 paho-mqtt==1.6.1
 pillow==9.4.0
 pip>=21.0,<22.4
 psutil-home-assistant==0.0.1
+pyOpenSSL==23.0.0
 pyserial==3.5
 python-slugify==4.0.1
 pyudev==0.23.2
@@ -138,3 +141,7 @@ uamqp==1.6.0
 # Matplotlib 3.6.2 has issues building wheels on armhf/armv7
 # We need at least >=2.1.0 (tensorflow integration -> pycocotools)
 matplotlib==3.6.1
+
+# pyOpenSSL 23.0.0 or later required to avoid import errors when
+# cryptography 39.0.0 is installed with botocore
+pyOpenSSL>=23.0.0

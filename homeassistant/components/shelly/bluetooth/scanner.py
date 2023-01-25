@@ -1,7 +1,6 @@
 """Bluetooth scanner for shelly."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from aioshelly.ble import parse_ble_scan_result_event
@@ -10,7 +9,7 @@ from aioshelly.ble.const import BLE_SCAN_RESULT_EVENT, BLE_SCAN_RESULT_VERSION
 from homeassistant.components.bluetooth import BaseHaRemoteScanner
 from homeassistant.core import callback
 
-_LOGGER = logging.getLogger(__name__)
+from ..const import LOGGER
 
 
 class ShellyBLEScanner(BaseHaRemoteScanner):
@@ -25,7 +24,7 @@ class ShellyBLEScanner(BaseHaRemoteScanner):
         data = event["data"]
 
         if data[0] != BLE_SCAN_RESULT_VERSION:
-            _LOGGER.warning("Unsupported BLE scan result version: %s", data[0])
+            LOGGER.warning("Unsupported BLE scan result version: %s", data[0])
             return
 
         try:
@@ -33,7 +32,7 @@ class ShellyBLEScanner(BaseHaRemoteScanner):
         except Exception as err:  # pylint: disable=broad-except
             # Broad exception catch because we have no
             # control over the data that is coming in.
-            _LOGGER.error("Failed to parse BLE event: %s", err, exc_info=True)
+            LOGGER.error("Failed to parse BLE event: %s", err, exc_info=True)
             return
 
         self._async_on_advertisement(

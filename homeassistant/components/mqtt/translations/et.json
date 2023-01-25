@@ -136,5 +136,14 @@
                 "title": "MQTT valikud"
             }
         }
+    },
+    "selector": {
+        "set_ca_cert": {
+            "options": {
+                "auto": "Automaatne",
+                "custom": "Kohandatud",
+                "off": "V\u00e4ljas"
+            }
+        }
     }
 }

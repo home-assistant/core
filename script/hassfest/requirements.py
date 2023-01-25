@@ -11,10 +11,8 @@ import sys
 from typing import Any
 
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
-from stdlib_list import stdlib_list
 from tqdm import tqdm
 
-from homeassistant.const import REQUIRED_NEXT_PYTHON_VER, REQUIRED_PYTHON_VER
 import homeassistant.util.package as pkg_util
 from script.gen_requirements_all import COMMENT_REQUIREMENTS, normalize_package_name
 
@@ -28,17 +26,6 @@ PACKAGE_REGEX = re.compile(
 )
 PIP_REGEX = re.compile(r"^(--.+\s)?([-_\.\w\d]+.*(?:==|>=|<=|~=|!=|<|>|===)?.*$)")
 PIP_VERSION_RANGE_SEPARATOR = re.compile(r"^(==|>=|<=|~=|!=|<|>|===)?(.*)$")
-SUPPORTED_PYTHON_TUPLES = [
-    REQUIRED_PYTHON_VER[:2],
-]
-if REQUIRED_PYTHON_VER[0] == REQUIRED_NEXT_PYTHON_VER[0]:
-    for minor in range(REQUIRED_PYTHON_VER[1] + 1, REQUIRED_NEXT_PYTHON_VER[1] + 1):
-        if minor < 10:  # stdlib list does not support 3.10+
-            SUPPORTED_PYTHON_TUPLES.append((REQUIRED_PYTHON_VER[0], minor))
-SUPPORTED_PYTHON_VERSIONS = [
-    ".".join(map(str, version_tuple)) for version_tuple in SUPPORTED_PYTHON_TUPLES
-]
-STD_LIBS = {version: set(stdlib_list(version)) for version in SUPPORTED_PYTHON_VERSIONS}
 
 IGNORE_VIOLATIONS = {
     # Still has standard library requirements.
@@ -161,13 +148,12 @@ def validate_requirements(integration: Integration) -> None:
         return
 
     # Check for requirements incompatible with standard library.
-    for version, std_libs in STD_LIBS.items():
-        for req in all_integration_requirements:
-            if req in std_libs:
-                integration.add_error(
-                    "requirements",
-                    f"Package {req} is not compatible with Python {version} standard library",
-                )
+    for req in all_integration_requirements:
+        if req in sys.stlib_module_names:
+            integration.add_error(
+                "requirements",
+                f"Package {req} is not compatible with the Python standard library",
+            )
 
 
 @cache

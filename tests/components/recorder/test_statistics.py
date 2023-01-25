@@ -1,5 +1,5 @@
 """The tests for sensor recorder platform."""
-# pylint: disable=protected-access,invalid-name
+# pylint: disable=invalid-name
 from datetime import datetime, timedelta
 import importlib
 import sys
@@ -30,7 +30,7 @@ from homeassistant.components.recorder.statistics import (
     list_statistic_ids,
 )
 from homeassistant.components.recorder.util import session_scope
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import recorder as recorder_helper
@@ -1693,7 +1693,7 @@ def record_states(hass):
     sns1_attr = {
         "device_class": "temperature",
         "state_class": "measurement",
-        "unit_of_measurement": TEMP_CELSIUS,
+        "unit_of_measurement": UnitOfTemperature.CELSIUS,
     }
     sns2_attr = {
         "device_class": "humidity",

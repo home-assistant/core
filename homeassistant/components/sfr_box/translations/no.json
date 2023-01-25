@@ -5,13 +5,27 @@
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
-            "unknown": "Uventet feil"
+            "invalid_auth": "Ugyldig godkjenning"
         },
         "step": {
+            "auth": {
+                "data": {
+                    "password": "Passord",
+                    "username": "Brukernavn"
+                }
+            },
+            "choose_auth": {
+                "description": "Innstilling av legitimasjon muliggj\u00f8r ekstra funksjonalitet.",
+                "menu_options": {
+                    "auth": "Angi legitimasjon (anbefalt)",
+                    "skip_auth": "Hopp over autentisering"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Vert"
-                }
+                },
+                "description": "Innstilling av legitimasjon er valgfritt, men muliggj\u00f8r tilleggsfunksjonalitet."
             }
         }
     },
@@ -24,6 +38,14 @@
                     "loss_of_signal_quality": "Tap av signalkvalitet",
                     "no_defect": "Ingen feil",
                     "of_frame": "Av ramme",
+                    "unknown": "Ukjent"
+                }
+            },
+            "net_infra": {
+                "state": {
+                    "adsl": "ADSL",
+                    "ftth": "FTTH",
+                    "gprs": "GPRS",
                     "unknown": "Ukjent"
                 }
             },

@@ -3,7 +3,9 @@
         "abort": {
             "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "already_in_progress": "\u8a2d\u5b9a\u5df2\u7d93\u9032\u884c\u4e2d",
-            "error_pairing": "\u5df2\u9023\u7dda\u81f3 LG webOS TV \u4f46\u672a\u914d\u5c0d"
+            "error_pairing": "\u5df2\u9023\u7dda\u81f3 LG webOS TV \u4f46\u672a\u914d\u5c0d",
+            "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f",
+            "reauth_unsuccessful": "\u91cd\u65b0\u8a8d\u8b49\u5931\u6557\uff0c\u8acb\u958b\u555f\u96fb\u8996\u5f8c\u518d\u8a66\u4e00\u6b21\u3002"
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557\uff0c\u8acb\u78ba\u8a8d\u96fb\u8996\u5df2\u958b\u555f\u6216\u6aa2\u67e5 IP \u4f4d\u5740"
@@ -11,6 +13,10 @@
         "flow_title": "LG webOS Smart TV",
         "step": {
             "pairing": {
+                "description": "\u9ede\u9078\u50b3\u9001\u4e26\u65bc\u96fb\u8996\u4e0a\u63a5\u53d7\u914d\u5c0d\u3002\n\n![Image](/static/images/config_webos.png)",
+                "title": "webOS TV \u914d\u5c0d\u4e2d"
+            },
+            "reauth_confirm": {
                 "description": "\u9ede\u9078\u50b3\u9001\u4e26\u65bc\u96fb\u8996\u4e0a\u63a5\u53d7\u914d\u5c0d\u3002\n\n![Image](/static/images/config_webos.png)",
                 "title": "webOS TV \u914d\u5c0d\u4e2d"
             },
@@ -31,8 +37,7 @@
     },
     "options": {
         "error": {
-            "cannot_retrieve": "\u7121\u6cd5\u63a5\u6536\u4f86\u6e90\u5217\u8868\uff0c\u8acb\u78ba\u5b9a\u88dd\u7f6e\u70ba\u958b\u555f\u72c0\u614b",
-            "script_not_found": "\u627e\u4e0d\u5230\u8173\u672c"
+            "cannot_retrieve": "\u7121\u6cd5\u63a5\u6536\u4f86\u6e90\u5217\u8868\uff0c\u8acb\u78ba\u5b9a\u88dd\u7f6e\u70ba\u958b\u555f\u72c0\u614b"
         },
         "step": {
             "init": {

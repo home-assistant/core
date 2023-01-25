@@ -13,8 +13,6 @@
         "step": {
             "init": {
                 "data": {
-                    "manual": "Otomatik g\u00fcncellemeyi devre d\u0131\u015f\u0131 b\u0131rak\u0131n",
-                    "scan_interval": "G\u00fcncelleme s\u0131kl\u0131\u011f\u0131 (dakika)",
                     "server_name": "Test sunucusunu se\u00e7in"
                 }
             }

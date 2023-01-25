@@ -26,7 +26,6 @@ from aioesphomeapi import (
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
-from homeassistant import const
 from homeassistant.components import tag, zeroconf
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -36,6 +35,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
+    __version__ as ha_version,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall, State, callback
 from homeassistant.exceptions import TemplateError
@@ -56,16 +56,19 @@ from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.template import Template
 
 from .bluetooth import async_connect_scanner
-from .domain_data import DOMAIN, DomainData
+from .const import DOMAIN
+from .dashboard import async_get_dashboard
+from .domain_data import DomainData
 
 # Import config flow so that it's added to the registry
 from .entry_data import RuntimeEntryData
 
+CONF_DEVICE_NAME = "device_name"
 CONF_NOISE_PSK = "noise_psk"
 _LOGGER = logging.getLogger(__name__)
 _R = TypeVar("_R")
 
-STABLE_BLE_VERSION_STR = "2022.12.0"
+STABLE_BLE_VERSION_STR = "2022.12.4"
 STABLE_BLE_VERSION = AwesomeVersion(STABLE_BLE_VERSION_STR)
 PROJECT_URLS = {
     "esphome.bluetooth-proxy": "https://esphome.github.io/bluetooth-proxies/",
@@ -104,6 +107,30 @@ def _async_check_firmware_version(
     )
 
 
+@callback
+def _async_check_using_api_password(
+    hass: HomeAssistant, device_info: EsphomeDeviceInfo, has_password: bool
+) -> None:
+    """Create or delete an the api_password_deprecated issue."""
+    # ESPHome device_info.mac_address is the unique_id
+    issue = f"api_password_deprecated-{device_info.mac_address}"
+    if not has_password:
+        async_delete_issue(hass, DOMAIN, issue)
+        return
+    async_create_issue(
+        hass,
+        DOMAIN,
+        issue,
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        learn_more_url="https://esphome.io/components/api.html",
+        translation_key="api_password_deprecated",
+        translation_placeholders={
+            "name": device_info.name,
+        },
+    )
+
+
 async def async_setup_entry(  # noqa: C901
     hass: HomeAssistant, entry: ConfigEntry
 ) -> bool:
@@ -120,7 +147,7 @@ async def async_setup_entry(  # noqa: C901
         host,
         port,
         password,
-        client_info=f"Home Assistant {const.__version__}",
+        client_info=f"Home Assistant {ha_version}",
         zeroconf_instance=zeroconf_instance,
         noise_psk=noise_psk,
     )
@@ -139,7 +166,8 @@ async def async_setup_entry(  # noqa: C901
 
     # Use async_listen instead of async_listen_once so that we don't deregister
     # the callback twice when shutting down Home Assistant.
-    # "Unable to remove unknown listener <function EventBus.async_listen_once.<locals>.onetime_listener>"
+    # "Unable to remove unknown listener
+    # <function EventBus.async_listen_once.<locals>.onetime_listener>"
     entry_data.cleanup_callbacks.append(
         hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, on_stop)
     )
@@ -267,6 +295,13 @@ async def async_setup_entry(  # noqa: C901
                     entry, unique_id=format_mac(device_info.mac_address)
                 )
 
+            # Make sure we have the correct device name stored
+            # so we can map the device to ESPHome Dashboard config
+            if entry.data.get(CONF_DEVICE_NAME) != device_info.name:
+                hass.config_entries.async_update_entry(
+                    entry, data={**entry.data, CONF_DEVICE_NAME: device_info.name}
+                )
+
             entry_data.device_info = device_info
             assert cli.api_version is not None
             entry_data.api_version = cli.api_version
@@ -298,6 +333,7 @@ async def async_setup_entry(  # noqa: C901
             await cli.disconnect()
         else:
             _async_check_firmware_version(hass, device_info)
+            _async_check_using_api_password(hass, device_info, bool(password))
 
     async def on_disconnect() -> None:
         """Run disconnect callbacks on API disconnect."""
@@ -352,6 +388,8 @@ def _async_setup_device_registry(
     configuration_url = None
     if device_info.webserver_port > 0:
         configuration_url = f"http://{entry.data['host']}:{device_info.webserver_port}"
+    elif dashboard := async_get_dashboard(hass):
+        configuration_url = f"homeassistant://hassio/ingress/{dashboard.addon_slug}"
 
     manufacturer = "espressif"
     if device_info.manufacturer:
@@ -369,7 +407,7 @@ def _async_setup_device_registry(
         config_entry_id=entry.entry_id,
         configuration_url=configuration_url,
         connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)},
-        name=device_info.name,
+        name=device_info.friendly_name or device_info.name,
         manufacturer=manufacturer,
         model=model,
         sw_version=sw_version,
@@ -640,7 +678,9 @@ class EsphomeEnumMapper(Generic[_EnumT, _ValT]):
     def __init__(self, mapping: dict[_EnumT, _ValT]) -> None:
         """Construct a EsphomeEnumMapper."""
         # Add none mapping
-        augmented_mapping: dict[_EnumT | None, _ValT | None] = mapping  # type: ignore[assignment]
+        augmented_mapping: dict[
+            _EnumT | None, _ValT | None
+        ] = mapping  # type: ignore[assignment]
         augmented_mapping[None] = None
 
         self._mapping = augmented_mapping
@@ -694,6 +734,8 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         self._component_key = component_key
         self._key = key
         self._state_type = state_type
+        if entry_data.device_info is not None and entry_data.device_info.friendly_name:
+            self._attr_has_entity_name = True
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -810,7 +852,10 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
 
     @property
     def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
+        """Return if the entity should be enabled when first added.
+
+        This only applies when fist added to the entity registry.
+        """
         return not self._static_info.disabled_by_default
 
     @property

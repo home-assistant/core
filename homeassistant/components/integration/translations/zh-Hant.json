@@ -32,5 +32,22 @@
             }
         }
     },
+    "selector": {
+        "method": {
+            "options": {
+                "left": "\u5de6\u9ece\u66fc\u548c",
+                "right": "\u53f3\u9ece\u66fc\u548c",
+                "trapezoidal": "\u68af\u5f62\u516c\u5f0f"
+            }
+        },
+        "unit_time": {
+            "options": {
+                "d": "\u5929",
+                "h": "\u5c0f\u6642",
+                "min": "\u5206\u9418",
+                "s": "\u79d2\u9418"
+            }
+        }
+    },
     "title": "\u6574\u5408 - \u9ece\u66fc\u548c\u7a4d\u5206\u611f\u6e2c\u5668"
 }

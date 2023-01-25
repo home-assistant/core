@@ -4,8 +4,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any, Final
 
-import aioshelly
 from aioshelly.block_device import BlockDevice
+from aioshelly.common import ConnectionOptions, get_info
 from aioshelly.exceptions import (
     DeviceConnectionError,
     FirmwareUnsupported,
@@ -15,12 +15,13 @@ from aioshelly.rpc_device import RpcDevice
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.components import zeroconf
+from homeassistant.components.zeroconf import ZeroconfServiceInfo
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers import aiohttp_client, selector
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
 from .const import (
     BLE_MIN_VERSION,
@@ -48,9 +49,9 @@ HOST_SCHEMA: Final = vol.Schema({vol.Required(CONF_HOST): str})
 
 
 BLE_SCANNER_OPTIONS = [
-    selector.SelectOptionDict(value=BLEScannerMode.DISABLED, label="Disabled"),
-    selector.SelectOptionDict(value=BLEScannerMode.ACTIVE, label="Active"),
-    selector.SelectOptionDict(value=BLEScannerMode.PASSIVE, label="Passive"),
+    BLEScannerMode.DISABLED,
+    BLEScannerMode.ACTIVE,
+    BLEScannerMode.PASSIVE,
 ]
 
 INTERNAL_WIFI_AP_IP = "192.168.33.1"
@@ -66,16 +67,12 @@ async def validate_input(
 
     Data has the keys from HOST_SCHEMA with values provided by the user.
     """
-    options = aioshelly.common.ConnectionOptions(
-        host,
-        data.get(CONF_USERNAME),
-        data.get(CONF_PASSWORD),
-    )
+    options = ConnectionOptions(host, data.get(CONF_USERNAME), data.get(CONF_PASSWORD))
 
     if get_info_gen(info) == 2:
         ws_context = await get_ws_context(hass)
         rpc_device = await RpcDevice.create(
-            aiohttp_client.async_get_clientsession(hass),
+            async_get_clientsession(hass),
             ws_context,
             options,
         )
@@ -92,7 +89,7 @@ async def validate_input(
     # Gen1
     coap_context = await get_coap_context(hass)
     block_device = await BlockDevice.create(
-        aiohttp_client.async_get_clientsession(hass),
+        async_get_clientsession(hass),
         coap_context,
         options,
     )
@@ -105,7 +102,7 @@ async def validate_input(
     }
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Shelly."""
 
     VERSION = 1
@@ -113,7 +110,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     host: str = ""
     info: dict[str, Any] = {}
     device_info: dict[str, Any] = {}
-    entry: config_entries.ConfigEntry | None = None
+    entry: ConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -217,7 +214,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Abort and reconnect soon if the device with the mac address is already configured."""
         if (
             current_entry := await self.async_set_unique_id(mac)
-        ) and current_entry.data[CONF_HOST] == host:
+        ) and current_entry.data.get(CONF_HOST) == host:
             await async_reconnect_soon(self.hass, current_entry)
         if host == INTERNAL_WIFI_AP_IP:
             # If the device is broadcasting the internal wifi ap ip
@@ -232,7 +229,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured({CONF_HOST: host})
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
         host = discovery_info.host
@@ -329,12 +326,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await validate_input(self.hass, host, info, user_input)
             except (DeviceConnectionError, InvalidAuthError, FirmwareUnsupported):
                 return self.async_abort(reason="reauth_unsuccessful")
-            else:
-                self.hass.config_entries.async_update_entry(
-                    self.entry, data={**self.entry.data, **user_input}
-                )
-                await self.hass.config_entries.async_reload(self.entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
+
+            self.hass.config_entries.async_update_entry(
+                self.entry, data={**self.entry.data, **user_input}
+            )
+            await self.hass.config_entries.async_reload(self.entry.entry_id)
+            return self.async_abort(reason="reauth_successful")
 
         if self.entry.data.get("gen", 1) == 1:
             schema = {
@@ -352,33 +349,27 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_get_info(self, host: str) -> dict[str, Any]:
         """Get info from shelly device."""
-        return await aioshelly.common.get_info(
-            aiohttp_client.async_get_clientsession(self.hass), host
-        )
+        return await get_info(async_get_clientsession(self.hass), host)
 
     @staticmethod
     @callback
-    def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> OptionsFlowHandler:
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
     @classmethod
     @callback
-    def async_supports_options_flow(
-        cls, config_entry: config_entries.ConfigEntry
-    ) -> bool:
+    def async_supports_options_flow(cls, config_entry: ConfigEntry) -> bool:
         """Return options flow support for this handler."""
         return config_entry.data.get("gen") == 2 and not config_entry.data.get(
             CONF_SLEEP_PERIOD
         )
 
 
-class OptionsFlowHandler(config_entries.OptionsFlow):
+class OptionsFlowHandler(OptionsFlow):
     """Handle the option flow for shelly."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 
@@ -407,8 +398,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         default=self.config_entry.options.get(
                             CONF_BLE_SCANNER_MODE, BLEScannerMode.DISABLED
                         ),
-                    ): selector.SelectSelector(
-                        selector.SelectSelectorConfig(options=BLE_SCANNER_OPTIONS),
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=BLE_SCANNER_OPTIONS,
+                            translation_key=CONF_BLE_SCANNER_MODE,
+                        ),
                     ),
                 }
             ),
