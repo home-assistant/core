@@ -937,6 +937,9 @@ open-garage==0.2.0
 # homeassistant.components.open_meteo
 open-meteo==0.2.1
 
+# homeassistant.components.openai_conversation
+openai==0.26.2
+
 # homeassistant.components.openerz
 openerz-api==0.2.0
 
