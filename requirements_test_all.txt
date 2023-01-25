@@ -1085,9 +1085,6 @@ pyairnow==1.1.0
 # homeassistant.components.airvisual_pro
 pyairvisual==2022.12.1
 
-# homeassistant.components.almond
-pyalmond==0.0.2
-
 # homeassistant.components.atag
 pyatag==0.3.5.3
 
