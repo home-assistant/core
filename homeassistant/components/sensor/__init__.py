@@ -665,6 +665,7 @@ class SensorEntity(Entity):
                 (
                     "Entity %s (%s) is using native unit of measurement '%s' which "
                     "is not a valid unit for the device class ('%s') it is using; "
+                    "expected one of %s; "
                     "Please update your configuration if your entity is manually "
                     "configured, otherwise %s"
                 ),
@@ -672,6 +673,7 @@ class SensorEntity(Entity):
                 type(self),
                 native_unit_of_measurement,
                 device_class,
+                [str(unit) if unit else "no unit of measurement" for unit in units],
                 report_issue,
             )
 
