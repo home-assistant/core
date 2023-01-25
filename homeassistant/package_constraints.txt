@@ -25,7 +25,7 @@ hassil==0.2.5
 home-assistant-bluetooth==1.9.2
 home-assistant-frontend==20230110.0
 home-assistant-intents==2022.1.23
-httpx==0.23.2
+httpx==0.23.3
 ifaddr==0.1.7
 janus==1.0.0
 jinja2==3.1.2
