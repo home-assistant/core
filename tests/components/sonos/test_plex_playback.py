@@ -54,8 +54,8 @@ async def test_plex_play_media(hass, async_autosetup_sonos):
         mock_lookup.reset_mock()
         mock_add_to_queue.reset_mock()
         shuffle_media_content_id = (
-            '{"library_name": "Music", "artist_name": "Artist", "album_name": "Album",'
-            ' "shuffle": 1}'
+            '{"library_name": "Music", "artist_name": "Artist", '
+            '"album_name": "Album", "shuffle": 1}'
         )
 
         assert await hass.services.async_call(
