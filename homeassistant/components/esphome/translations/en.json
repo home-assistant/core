@@ -50,6 +50,10 @@
         "ble_firmware_outdated": {
             "description": "To improve Bluetooth reliability and performance, we highly recommend updating {name} with ESPHome {version} or later. When updating the device to ESPHome {version}, it is recommended to use a serial cable instead of an over-the-air update to take advantage of the new partition scheme.",
             "title": "Update {name} with ESPHome {version} or later"
+        },
+        "api_password_deprecated": {
+            "title": "API Password deprecated on {name}",
+            "description": "The API password for ESPHome is deprecated and we recommend you replace the password with an API encryption key."
         }
     }
 }
