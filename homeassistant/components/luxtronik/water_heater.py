@@ -85,7 +85,7 @@ async def async_setup_entry(
 
 
 class LuxtronikWaterHeater(LuxtronikEntity, WaterHeaterEntity):
-    """Representation of an ATAG water heater."""
+    """Representation of an Luxtronik water heater."""
 
     entity_description: LuxtronikWaterHeaterDescription
 
