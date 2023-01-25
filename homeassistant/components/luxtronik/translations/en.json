@@ -5,8 +5,12 @@
             "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "step": {
-            "confirm": {
-                "description": "Do you want to start setup?"
+            "user": {
+                "data": {
+                  "host": "Hostname or ip address",
+                  "port": "Network Port (Usually 8888 or 8889)"
+                },
+                "description": "Set up your Luxtronik heatpump controller to allow monitoring and control."
             }
         }
     }

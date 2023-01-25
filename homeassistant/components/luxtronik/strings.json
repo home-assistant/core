@@ -1,8 +1,12 @@
 {
   "config": {
     "step": {
-      "confirm": {
-        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      "user": {
+        "data": {
+          "host": "Hostname or ip address",
+          "port": "Network Port (Usually 8888 or 8889)"
+        },
+        "description": "Set up your Luxtronik heatpump controller to allow monitoring and control."
       }
     },
     "abort": {
