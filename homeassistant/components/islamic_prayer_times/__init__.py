@@ -154,7 +154,6 @@ class IslamicPrayerClient:
         await self.async_update()
         self.config_entry.add_update_listener(self.async_options_updated)
 
-        self.hass.data.setdefault(DOMAIN, self)
 
         await self.hass.config_entries.async_forward_entry_setups(
             self.config_entry, PLATFORMS
