@@ -149,8 +149,7 @@ class EventProcessor:
             # even and RPi3 that number seems higher in testing
             # so we don't switch over until we request > 1 day+ of data.
             #
-            result = result.yield_per(1024)
-            raise Exception
+            return result.yield_per(1024)
 
         stmt = statement_for_request(
             start_day,
