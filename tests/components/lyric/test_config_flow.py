@@ -19,7 +19,7 @@ CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 
 
-@pytest.fixture()
+@pytest.fixture
 async def mock_impl(hass):
     """Mock implementation."""
     await async_setup_component(hass, DOMAIN, {})
