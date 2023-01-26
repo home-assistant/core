@@ -267,15 +267,13 @@ class HoneywellUSThermostat(ClimateEntity):
             mode = self._device.system_mode
             # Set hold if this is not the case
             if self._device.hold_heat is False and self._device.hold_cool is False:
-                # Get next period key
-                next_period_key_heat = "HEATNextPeriod"
-                next_period_key_cool = "COOLNextPeriod"
-                # Get next period raw value
-                next_period_heat = self._device.raw_ui_data.get(next_period_key_heat)
-                next_period_cool = self._device.raw_ui_data.get(next_period_key_cool)
                 # Get next period time
-                hour_heat, minute_heat = divmod(next_period_heat * 15, 60)
-                hour_cool, minute_cool = divmod(next_period_cool * 15, 60)
+                hour_heat, minute_heat = divmod(
+                    self._device.raw_ui_data.get("HEATNextPeriod") * 15, 60
+                )
+                hour_cool, minute_cool = divmod(
+                    self._device.raw_ui_data.get("COOLNextPeriod") * 15, 60
+                )
                 # Set hold time
                 if mode in COOLING_MODES:
                     await self._device.set_hold_cool(
