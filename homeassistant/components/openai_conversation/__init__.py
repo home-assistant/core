@@ -73,6 +73,7 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
             try:
                 prompt = self._async_generate_prompt()
             except TemplateError as err:
+                _LOGGER.error("Error rendering prompt: %s", err)
                 intent_response = intent.IntentResponse(language=user_input.language)
                 intent_response.async_set_error(
                     intent.IntentResponseErrorCode.UNKNOWN,
