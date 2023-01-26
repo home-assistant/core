@@ -507,7 +507,9 @@ def climate_radio_thermostat_ct101_multiple_temp_units_state_fixture():
 
 
 @pytest.fixture(
-    name="climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints_state",
+    name=(
+        "climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints_state"
+    ),
     scope="session",
 )
 def climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints_state_fixture():

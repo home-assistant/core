@@ -102,8 +102,8 @@ def test_secrets(mock_is_file, event_loop):
 
     files = {
         get_test_config_dir(YAML_CONFIG_FILE): BASE_CONFIG
-        + ("http:\n  cors_allowed_origins: !secret http_pw"),
-        secrets_path: ("logger: debug\nhttp_pw: http://google.com"),
+        + "http:\n  cors_allowed_origins: !secret http_pw",
+        secrets_path: "logger: debug\nhttp_pw: http://google.com",
     }
 
     with patch_yaml_files(files):
@@ -129,9 +129,7 @@ def test_secrets(mock_is_file, event_loop):
 
 def test_package_invalid(mock_is_file, event_loop):
     """Test an invalid package."""
-    files = {
-        YAML_CONFIG_FILE: BASE_CONFIG + ("  packages:\n    p1:\n" '      group: ["a"]')
-    }
+    files = {YAML_CONFIG_FILE: BASE_CONFIG + '  packages:\n    p1:\n      group: ["a"]'}
     with patch_yaml_files(files):
         res = check_config.check(get_test_config_dir())
 
