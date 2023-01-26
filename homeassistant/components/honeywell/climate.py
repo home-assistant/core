@@ -178,10 +178,17 @@ class HoneywellUSThermostat(ClimateEntity):
     @property
     def min_temp(self) -> float:
         """Return the minimum temperature."""
-        if self.hvac_mode in [HVACMode.COOL, HVACMode.HEAT_COOL]:
+        if self.hvac_mode in [HVACMode.COOL]:
             return self._device.raw_ui_data["CoolLowerSetptLimit"]
         if self.hvac_mode == HVACMode.HEAT:
             return self._device.raw_ui_data["HeatLowerSetptLimit"]
+        if self.hvac_mode == HVACMode.HEAT_COOL:
+            return min(
+                [
+                    self._device.raw_ui_data["CoolLowerSetptLimit"],
+                    self._device.raw_ui_data["HeatLowerSetptLimit"],
+                ]
+            )
         return DEFAULT_MIN_TEMP
 
     @property
@@ -191,6 +198,13 @@ class HoneywellUSThermostat(ClimateEntity):
             return self._device.raw_ui_data["CoolUpperSetptLimit"]
         if self.hvac_mode in [HVACMode.HEAT, HVACMode.HEAT_COOL]:
             return self._device.raw_ui_data["HeatUpperSetptLimit"]
+        if self.hvac_mode == HVACMode.HEAT_COOL:
+            return min(
+                [
+                    self._device.raw_ui_data["CoolUpperSetptLimit"],
+                    self._device.raw_ui_data["HeatUpperSetptLimit"],
+                ]
+            )
         return DEFAULT_MAX_TEMP
 
     @property
@@ -287,7 +301,7 @@ class HoneywellUSThermostat(ClimateEntity):
             # Set temperature
             if mode in COOLING_MODES:
                 await self._device.set_setpoint_cool(temperature)
-            elif mode in HEATING_MODES:
+            if mode in HEATING_MODES:
                 await self._device.set_setpoint_heat(temperature)
 
         except AIOSomecomfort.SomeComfortError:
