@@ -1,4 +1,7 @@
 """Battery sensor for the Nuki Lock."""
+from __future__ import annotations
+
+from pynuki.device import NukiDevice
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -23,7 +26,7 @@ async def async_setup_entry(
     )
 
 
-class NukiBatterySensor(NukiEntity, SensorEntity):
+class NukiBatterySensor(NukiEntity[NukiDevice], SensorEntity):
     """Representation of a Nuki Lock Battery sensor."""
 
     _attr_has_entity_name = True
