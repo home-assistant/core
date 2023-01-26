@@ -70,11 +70,6 @@ class NukiDeviceEntity(NukiEntity, LockEntity, ABC):
     _attr_supported_features = LockEntityFeature.OPEN
 
     @property
-    def name(self) -> str | None:
-        """Return the name of the lock."""
-        return self._nuki_device.name
-
-    @property
     def unique_id(self) -> str | None:
         """Return a unique ID."""
         return self._nuki_device.nuki_id
