@@ -4,8 +4,6 @@ from unittest.mock import AsyncMock
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 import pytest
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.shelly.const import DOMAIN
 from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
@@ -21,44 +19,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_registry import async_get
 
 from . import MOCK_MAC, init_integration, mock_rest_update
-
-
-@pytest.mark.parametrize(
-    "gen, domain, unique_id, object_id",
-    [
-        (1, BINARY_SENSOR_DOMAIN, f"{MOCK_MAC}-fwupdate", "firmware_update"),
-        (1, BUTTON_DOMAIN, "test_name_ota_update", "ota_update"),
-        (1, BUTTON_DOMAIN, "test_name_ota_update_beta", "ota_update_beta"),
-        (2, BINARY_SENSOR_DOMAIN, f"{MOCK_MAC}-sys-fwupdate", "firmware_update"),
-        (2, BUTTON_DOMAIN, "test_name_ota_update", "ota_update"),
-        (2, BUTTON_DOMAIN, "test_name_ota_update_beta", "ota_update_beta"),
-    ],
-)
-async def test_remove_legacy_entities(
-    hass: HomeAssistant,
-    gen,
-    domain,
-    unique_id,
-    object_id,
-    mock_block_device,
-    mock_rpc_device,
-):
-    """Test removes legacy update entities."""
-    entity_id = f"{domain}.test_name_{object_id}"
-    entity_registry = async_get(hass)
-    entity_registry.async_get_or_create(
-        domain,
-        DOMAIN,
-        unique_id,
-        suggested_object_id=f"test_name_{object_id}",
-        disabled_by=None,
-    )
-
-    assert entity_registry.async_get(entity_id) is not None
-
-    await init_integration(hass, gen)
-
-    assert entity_registry.async_get(entity_id) is None
 
 
 async def test_block_update(hass: HomeAssistant, mock_block_device, monkeypatch):
