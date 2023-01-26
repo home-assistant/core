@@ -71,6 +71,36 @@ def json_bytes(data: Any) -> bytes:
     )
 
 
+def json_bytes_strip_null(data: Any) -> bytes:
+    """Dump json bytes after terminating strings at the first NUL."""
+
+    def process_dict(_dict: dict[Any, Any]) -> dict[Any, Any]:
+        """Strip null from objects in a list."""
+        return {key: strip_null(o) for key, o in _dict.items()}
+
+    def process_list(_list: list[Any]) -> list[Any]:
+        """Strip null from objects in a list."""
+        return [strip_null(o) for o in _list]
+
+    def strip_null(obj: Any) -> Any:
+        """Strip null from an object."""
+        if isinstance(obj, str):
+            return obj.split("\0", 1)[0]
+        if isinstance(obj, dict):
+            return process_dict(obj)
+        if isinstance(obj, list):
+            return process_list(obj)
+        return obj
+
+    result = json_bytes(data)
+    if b"\\u0000" in result:
+        data_processed = orjson.loads(result)
+        data_processed = strip_null(data_processed)
+        result = json_bytes(data_processed)
+
+    return result
+
+
 def json_dumps(data: Any) -> str:
     """Dump json string.
 

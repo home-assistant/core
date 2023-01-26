@@ -42,7 +42,7 @@ from homeassistant.core import Context, Event, EventOrigin, State, split_entity_
 from homeassistant.helpers.json import (
     JSON_DECODE_EXCEPTIONS,
     JSON_DUMP,
-    json_bytes,
+    json_bytes_strip_null,
     json_loads,
 )
 import homeassistant.util.dt as dt_util
@@ -244,7 +244,7 @@ class EventData(Base):  # type: ignore[misc,valid-type]
     @staticmethod
     def from_event(event: Event) -> EventData:
         """Create object from an event."""
-        shared_data = json_bytes(event.data)
+        shared_data = json_bytes_strip_null(event.data)
         return EventData(
             shared_data=shared_data.decode("utf-8"),
             hash=EventData.hash_shared_data_bytes(shared_data),
@@ -253,7 +253,7 @@ class EventData(Base):  # type: ignore[misc,valid-type]
     @staticmethod
     def shared_data_bytes_from_event(event: Event) -> bytes:
         """Create shared_data from an event."""
-        return json_bytes(event.data)
+        return json_bytes_strip_null(event.data)
 
     @staticmethod
     def hash_shared_data_bytes(shared_data_bytes: bytes) -> int:
@@ -409,7 +409,7 @@ class StateAttributes(Base):  # type: ignore[misc,valid-type]
         """Create object from a state_changed event."""
         state: State | None = event.data.get("new_state")
         # None state means the state was removed from the state machine
-        attr_bytes = b"{}" if state is None else json_bytes(state.attributes)
+        attr_bytes = b"{}" if state is None else json_bytes_strip_null(state.attributes)
         dbstate = StateAttributes(shared_attrs=attr_bytes.decode("utf-8"))
         dbstate.hash = StateAttributes.hash_shared_attrs_bytes(attr_bytes)
         return dbstate
@@ -427,7 +427,7 @@ class StateAttributes(Base):  # type: ignore[misc,valid-type]
         exclude_attrs = (
             exclude_attrs_by_domain.get(domain, set()) | ALL_DOMAIN_EXCLUDE_ATTRS
         )
-        return json_bytes(
+        return json_bytes_strip_null(
             {k: v for k, v in state.attributes.items() if k not in exclude_attrs}
         )
 

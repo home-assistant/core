@@ -223,6 +223,30 @@ async def test_saving_state(recorder_mock, hass: HomeAssistant):
     assert state == _state_with_context(hass, entity_id)
 
 
+async def test_saving_state_with_nul(recorder_mock, hass: HomeAssistant):
+    """Test saving and restoring a state with nul in attributes."""
+    entity_id = "test.recorder"
+    state = "restoring_from_db"
+    attributes = {"test_attr": 5, "test_attr_10": "silly\0stuff"}
+
+    hass.states.async_set(entity_id, state, attributes)
+
+    await async_wait_recording_done(hass)
+
+    with session_scope(hass=hass) as session:
+        db_states = []
+        for db_state, db_state_attributes in session.query(States, StateAttributes):
+            db_states.append(db_state)
+            state = db_state.to_native()
+            state.attributes = db_state_attributes.to_native()
+        assert len(db_states) == 1
+        assert db_states[0].event_id is None
+
+    expected = _state_with_context(hass, entity_id)
+    expected.attributes = {**expected.attributes, "test_attr_10": "silly"}
+    assert state == expected
+
+
 async def test_saving_many_states(
     async_setup_recorder_instance: SetupRecorderInstanceT, hass: HomeAssistant
 ):
