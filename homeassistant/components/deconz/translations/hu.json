@@ -65,8 +65,8 @@
         "trigger_type": {
             "remote_awakened": "A k\u00e9sz\u00fcl\u00e9k fel\u00e9bredt",
             "remote_button_double_press": "\"{subtype}\" gombra k\u00e9tszer kattintottak",
-            "remote_button_long_press": "A \"{subtype}\" gomb folyamatosan lenyomva",
-            "remote_button_long_release": "A \"{subtype}\" gomb hossz\u00fa megnyom\u00e1s ut\u00e1n elengedve",
+            "remote_button_long_press": "\"{subtype}\" gomb folyamatosan lenyomva",
+            "remote_button_long_release": "\"{subtype}\" gomb hossz\u00fa megnyom\u00e1s ut\u00e1n elengedve",
             "remote_button_quadruple_press": "\"{subtype}\" gombra n\u00e9gyszer kattintottak",
             "remote_button_quintuple_press": "\"{subtype}\" gombra \u00f6tsz\u00f6r kattintottak",
             "remote_button_rotated": "A gomb elforgatva: \"{subtype}\"",
