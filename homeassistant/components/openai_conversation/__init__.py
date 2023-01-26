@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from functools import partial
 import logging
-from typing import cast
 
 import openai
 from openai import error
@@ -13,7 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, TemplateError
-from homeassistant.helpers import area_registry, device_registry, intent, template
+from homeassistant.helpers import area_registry, intent, template
 from homeassistant.util import ulid
 
 from .const import DEFAULT_MODEL, DEFAULT_PROMPT
@@ -97,15 +96,26 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
 
         _LOGGER.debug("Prompt for %s: %s", model, prompt)
 
-        result = await self.hass.async_add_executor_job(
-            partial(
-                openai.Completion.create,
-                engine=model,
-                prompt=prompt,
-                max_tokens=150,
-                user=conversation_id,
+        try:
+            result = await self.hass.async_add_executor_job(
+                partial(
+                    openai.Completion.create,
+                    engine=model,
+                    prompt=prompt,
+                    max_tokens=150,
+                    user=conversation_id,
+                )
             )
-        )
+        except error.OpenAIError as err:
+            intent_response = intent.IntentResponse(language=user_input.language)
+            intent_response.async_set_error(
+                intent.IntentResponseErrorCode.UNKNOWN,
+                f"Sorry, I had a problem talking to OpenAI: {err}",
+            )
+            return conversation.ConversationResult(
+                response=intent_response, conversation_id=conversation_id
+            )
+
         _LOGGER.debug("Response %s", result)
         response = result["choices"][0]["text"].strip()
         self.history[conversation_id] = prompt + response
@@ -122,20 +132,9 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
 
     def _async_generate_prompt(self) -> str:
         """Generate a prompt for the user."""
-        dev_reg = device_registry.async_get(self.hass)
         return template.Template(DEFAULT_PROMPT, self.hass).async_render(
             {
                 "ha_name": self.hass.config.location_name,
-                "areas": [
-                    area
-                    for area in area_registry.async_get(self.hass).areas.values()
-                    # Filter out areas without devices
-                    if any(
-                        not dev.disabled_by
-                        for dev in device_registry.async_entries_for_area(
-                            dev_reg, cast(str, area.id)
-                        )
-                    )
-                ],
+                "areas": list(area_registry.async_get(self.hass).areas.values()),
             }
         )

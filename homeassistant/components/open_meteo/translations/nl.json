@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Dienst is al ingesteld"
+        },
         "step": {
             "user": {
                 "data": {

@@ -32,5 +32,22 @@
             }
         }
     },
+    "selector": {
+        "method": {
+            "options": {
+                "left": "\u013dav\u00fd Riemannov s\u00fa\u010det",
+                "right": "Prav\u00fd Riemannov s\u00fa\u010det",
+                "trapezoidal": "Lichobe\u017en\u00edkov\u00e9 pravidlo"
+            }
+        },
+        "unit_time": {
+            "options": {
+                "d": "Dni",
+                "h": "Hodiny",
+                "min": "Min\u00faty",
+                "s": "Sekundy"
+            }
+        }
+    },
     "title": "Integr\u00e1cia - Riemannov s\u00fa\u010dtov\u00fd integr\u00e1lny sn\u00edma\u010d"
 }
