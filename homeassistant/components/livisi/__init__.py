@@ -4,12 +4,12 @@ from __future__ import annotations
 from typing import Final
 
 from aiohttp import ClientConnectorError
-from aiolivisi import AioLivisi, errors
+from aiolivisi import AioLivisi
 
 from homeassistant import core
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry as dr
 
 from .const import CLIMATE_PLATFORM, DOMAIN, SWITCH_PLATFORM
@@ -28,8 +28,6 @@ async def async_setup_entry(hass: core.HomeAssistant, entry: ConfigEntry) -> boo
         await coordinator.async_set_all_rooms()
     except ClientConnectorError as exception:
         raise ConfigEntryNotReady from exception
-    except errors.TokenExpiredException as exception:
-        raise ConfigEntryAuthFailed() from exception
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
     device_registry = dr.async_get(hass)

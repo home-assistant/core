@@ -9,7 +9,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -113,7 +113,8 @@ class LivisiClimate(CoordinatorEntity[LivisiDataUpdateCoordinator], ClimateEntit
         self.aio_livisi = coordinator.aiolivisi
         self._attr_available = False
         self._attr_hvac_modes = [HVACMode.HEAT]
-        self._attr_temperature_unit = TEMP_CELSIUS
+        self._attr_hvac_mode = HVACMode.HEAT
+        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
         self._attr_target_temperature_high = MAX_TEMPERATURE
         self._attr_target_temperature_low = MIN_TEMPERATURE
@@ -159,7 +160,6 @@ class LivisiClimate(CoordinatorEntity[LivisiDataUpdateCoordinator], ClimateEntit
             self._attr_target_temperature = target_temperature
             self._attr_current_temperature = temperature
             self._attr_current_humidity = humidity
-            self._attr_hvac_mode = HVACMode.HEAT
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
