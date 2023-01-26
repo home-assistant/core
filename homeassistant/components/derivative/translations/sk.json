@@ -39,5 +39,15 @@
             }
         }
     },
+    "selector": {
+        "time_unit": {
+            "options": {
+                "d": "Dni",
+                "h": "Hodiny",
+                "min": "Min\u00faty",
+                "s": "Sekundy"
+            }
+        }
+    },
     "title": "Deriva\u010dn\u00fd sn\u00edma\u010d"
 }

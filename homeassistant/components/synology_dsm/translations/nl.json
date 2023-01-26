@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd",
+            "no_mac_address": "Het MAC address werd niet gevonden via de zeroconf informatie",
             "reauth_successful": "Herauthenticatie geslaagd",
             "reconfigure_successful": "Herconfiguratie was succesvol"
         },
