@@ -266,7 +266,7 @@ class HoneywellUSThermostat(ClimateEntity):
             # Get current mode
             mode = self._device.system_mode
             # Set hold if this is not the case
-            if getattr(self._device, f"hold_{mode}", None) is False:
+            if self._device.hold_heat is False and self._device.hold_cool is False:
                 # Get next period key
                 next_period_key = f"{mode.capitalize()}NextPeriod"
                 # Get next period raw value
