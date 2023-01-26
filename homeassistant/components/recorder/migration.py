@@ -888,8 +888,16 @@ def _wipe_old_string_time_columns(session: Session) -> None:
     # Wipe Events.time_fired since its been replaced by Events.time_fired_ts
     # Wipe States.last_updated since its been replaced by States.last_updated_ts
     # Wipe States.last_changed since its been replaced by States.last_changed_ts
-    session.execute(text("UPDATE events set time_fired=NULL;"))
-    session.execute(text("UPDATE states set last_updated=NULL, last_changed=NULL;"))
+    #
+    # Since this is only to save space we limit the number of rows we update
+    # to 50,000,000 since we do not want to block the database for too long
+    # or run out of innodb_buffer_pool_size on MySQL. The old data will eventually
+    # be cleaned up by the recorder purge.
+    #
+    session.execute(text("UPDATE events set time_fired=NULL LIMIT 10000000;"))
+    session.execute(
+        text("UPDATE states set last_updated=NULL, last_changed=NULL LIMIT 40000000;")
+    )
     session.commit()
 
 
