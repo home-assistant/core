@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 
 import sqlalchemy
 from sqlalchemy import ForeignKeyConstraint, MetaData, Table, func, text
-from sqlalchemy.engine import Engine
+from sqlalchemy.engine import CursorResult, Engine
 from sqlalchemy.exc import (
     DatabaseError,
     InternalError,
@@ -50,6 +50,7 @@ if TYPE_CHECKING:
     from . import Recorder
 
 LIVE_MIGRATION_MIN_SCHEMA_VERSION = 0
+UPDATE_CHUNK_SIZE = 5000
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -915,15 +916,27 @@ def _migrate_columns_to_timestamp(
             )
         )
     elif engine.dialect.name == SupportedDialect.MYSQL:
-        connection.execute(
-            text("UPDATE events set time_fired_ts=UNIX_TIMESTAMP(time_fired);")
-        )
-        connection.execute(
-            text(
-                "UPDATE states set last_updated_ts=UNIX_TIMESTAMP(last_updated), "
-                "last_changed_ts=UNIX_TIMESTAMP(last_changed);"
+        # With MySQL we do this in chunks to avoid locking the table for too long.
+        # We also need to do this in a loop since we can't be sure that we have
+        # updated all rows in the table.
+        result: CursorResult | None = None
+        while result is None or result.rowcount > 0:
+            result = connection.execute(
+                text(
+                    "UPDATE events set time_fired_ts=UNIX_TIMESTAMP(time_fired) "
+                    "where time_fired_ts is NULL LIMIT {UPDATE_CHUNK_SIZE};"
+                )
             )
-        )
+        result = None
+        while result is None or result.rowcount > 0:
+            result = connection.execute(
+                text(
+                    "UPDATE states set last_updated_ts=UNIX_TIMESTAMP(last_updated), "
+                    "last_changed_ts=UNIX_TIMESTAMP(last_changed) "
+                    " where last_updated_ts is NULL "
+                    " LIMIT {UPDATE_CHUNK_SIZE};"
+                )
+            )
     elif engine.dialect.name == SupportedDialect.POSTGRESQL:
         connection.execute(
             text("UPDATE events set time_fired_ts=EXTRACT(EPOCH FROM time_fired);")
