@@ -43,7 +43,7 @@ from .statistics import (
     get_start_time,
     validate_db_schema as statistics_validate_db_schema,
 )
-from .tasks import PostSchemaMigrationTask
+from .tasks import CommitTask, PostSchemaMigrationTask
 from .util import session_scope
 
 if TYPE_CHECKING:
@@ -166,6 +166,9 @@ def migrate_schema(
 
     if current_version != SCHEMA_VERSION:
         instance.queue_task(PostSchemaMigrationTask(current_version, SCHEMA_VERSION))
+        # Make sure the post schema migration task is committed in case
+        # the next task does not have commit_before = True
+        instance.queue_task(CommitTask())
 
 
 def _create_index(
