@@ -513,7 +513,7 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass | None]
     SensorDeviceClass.DATA_SIZE: set(SensorStateClass),
     SensorDeviceClass.DATE: set(),
     SensorDeviceClass.DISTANCE: set(SensorStateClass),
-    SensorDeviceClass.DURATION: set(),
+    SensorDeviceClass.DURATION: set(SensorStateClass),
     SensorDeviceClass.ENERGY: {
         SensorStateClass.TOTAL,
         SensorStateClass.TOTAL_INCREASING,
