@@ -66,7 +66,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         platforms += [Platform.BINARY_SENSOR, Platform.SENSOR]
         await device.events.async_stop()
     if device.capabilities.imaging:
-        platforms += [Platform.SENSOR]
+        platforms += [Platform.SWITCH]
 
     return await hass.config_entries.async_unload_platforms(entry, platforms)
 
