@@ -298,10 +298,10 @@ class HoneywellUSThermostat(ClimateEntity):
                         datetime.time(hour_heat, minute_heat)
                     )
 
-            # Set temperature
-            if mode in COOLING_MODES:
+            # Set temperature if not in auto
+            if mode == "cool":
                 await self._device.set_setpoint_cool(temperature)
-            if mode in HEATING_MODES:
+            if mode == "heat":
                 await self._device.set_setpoint_heat(temperature)
 
         except AIOSomecomfort.SomeComfortError:
@@ -313,7 +313,10 @@ class HoneywellUSThermostat(ClimateEntity):
             await self._set_temperature(**kwargs)
 
         try:
-            if HVACMode.HEAT_COOL in self._hvac_mode_map:
+            if (
+                HVACMode.HEAT_COOL in self._hvac_mode_map
+                and self._device.system_mode == "auto"
+            ):
                 if temperature := kwargs.get(ATTR_TARGET_TEMP_HIGH):
                     await self._device.set_setpoint_cool(temperature)
                 if temperature := kwargs.get(ATTR_TARGET_TEMP_LOW):
