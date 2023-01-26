@@ -37,11 +37,6 @@ class NukiDoorsensorEntity(NukiEntity, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.DOOR
 
     @property
-    def name(self):
-        """Return the name of the lock."""
-        return self._nuki_device.name
-
-    @property
     def unique_id(self) -> str:
         """Return a unique ID."""
         return f"{self._nuki_device.nuki_id}_doorsensor"
