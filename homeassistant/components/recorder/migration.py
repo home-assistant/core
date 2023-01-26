@@ -923,7 +923,8 @@ def _migrate_columns_to_timestamp(
             result = connection.execute(
                 text(
                     "UPDATE events set time_fired_ts=UNIX_TIMESTAMP(time_fired) "
-                    "where time_fired_ts is NULL LIMIT 5000;"
+                    "where time_fired_ts is NULL and time_fired is not NULL "
+                    " LIMIT 5000;"
                 )
             )
         result = None
@@ -932,7 +933,7 @@ def _migrate_columns_to_timestamp(
                 text(
                     "UPDATE states set last_updated_ts=UNIX_TIMESTAMP(last_updated), "
                     "last_changed_ts=UNIX_TIMESTAMP(last_changed) "
-                    " where last_updated_ts is NULL "
+                    " where last_updated_ts is NULL and last_updated is not NULL "
                     " LIMIT 5000;"
                 )
             )
