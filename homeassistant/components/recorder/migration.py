@@ -937,7 +937,7 @@ def _migrate_columns_to_timestamp(
             with session_scope(session=session_maker()) as session:
                 result = session.connection().execute(
                     text(
-                        "UPDATE states set last_updated_ts= "
+                        "UPDATE states set last_updated_ts="
                         "IF(last_updated is NULL,0,UNIX_TIMESTAMP(last_updated)), "
                         "last_changed_ts=UNIX_TIMESTAMP(last_changed) "
                         "where last_updated_ts is NULL "
