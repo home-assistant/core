@@ -1,7 +1,7 @@
 """Nuki.io lock platform."""
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from typing import Any, TypeVar
 
 from pynuki import NukiLock, NukiOpener
@@ -66,7 +66,7 @@ async def async_setup_entry(
     )
 
 
-class NukiDeviceEntity(NukiEntity[_NukiDeviceT], LockEntity, ABC):
+class NukiDeviceEntity(NukiEntity[_NukiDeviceT], LockEntity):
     """Representation of a Nuki device."""
 
     _attr_has_entity_name = True
