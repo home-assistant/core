@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import CONF_RECEIVER, DOMAIN
 from .receiver import OnkyoNetworkReceiver
 
-PLATFORMS: list[str] = ["media_player", "number"]
+PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER, Platform.NUMBER]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
