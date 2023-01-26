@@ -1,9 +1,11 @@
 """Tests for the OpenAI integration."""
 from unittest.mock import patch
 
+from openai import error
+
 from homeassistant.components import conversation
 from homeassistant.core import Context
-from homeassistant.helpers import device_registry
+from homeassistant.helpers import device_registry, intent
 
 
 async def test_default_prompt(hass, mock_init_component):
@@ -20,10 +22,19 @@ async def test_default_prompt(hass, mock_init_component):
     )
     device_reg.async_get_or_create(
         config_entry_id="1234",
+        connections={("test", "abcd")},
+        name="Test Service",
+        manufacturer="Test Manufacturer",
+        model="Test Model",
+        suggested_area="Test Area",
+        entry_type=device_registry.DeviceEntryType.SERVICE,
+    )
+    device_reg.async_get_or_create(
+        config_entry_id="1234",
         connections={("test", "5678")},
         name="Test Device 2",
         manufacturer="Test Manufacturer 2",
-        model="Test Model 2",
+        model="Test Device 2",
         suggested_area="Test Area 2",
     )
     device_reg.async_get_or_create(
@@ -31,7 +42,7 @@ async def test_default_prompt(hass, mock_init_component):
         connections={("test", "9876")},
         name="Test Device 3",
         manufacturer="Test Manufacturer 3",
-        model="Test Model 3",
+        model="Test Model 3A",
         suggested_area="Test Area 2",
     )
 
@@ -46,13 +57,11 @@ If a user wants to control a device, reject the request and suggest using the Ho
 An overview of the areas and the devices in this smart home:
 
 Test Area:
-
-- Test Device (Test Model by Test Manufacturer)
+- Test Device (Test Model)
 
 Test Area 2:
-
-- Test Device 2 (Test Model 2 by Test Manufacturer 2)
-- Test Device 3 (Test Model 3 by Test Manufacturer 3)
+- Test Device 2
+- Test Device 3 (Test Model 3A)
 
 
 Now finish this conversation:
@@ -61,3 +70,12 @@ Smart home: How can I assist?
 User: hello
 Smart home: """
     )
+
+
+async def test_error_handling(hass, mock_init_component):
+    """Test that the default prompt works."""
+    with patch("openai.Completion.create", side_effect=error.ServiceUnavailableError):
+        result = await conversation.async_converse(hass, "hello", None, Context())
+
+    assert result.response.response_type == intent.IntentResponseType.ERROR, result
+    assert result.response.error_code == "unknown", result

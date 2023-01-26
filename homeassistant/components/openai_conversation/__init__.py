@@ -97,15 +97,26 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
 
         _LOGGER.debug("Prompt for %s: %s", model, prompt)
 
-        result = await self.hass.async_add_executor_job(
-            partial(
-                openai.Completion.create,
-                engine=model,
-                prompt=prompt,
-                max_tokens=150,
-                user=conversation_id,
+        try:
+            result = await self.hass.async_add_executor_job(
+                partial(
+                    openai.Completion.create,
+                    engine=model,
+                    prompt=prompt,
+                    max_tokens=150,
+                    user=conversation_id,
+                )
             )
-        )
+        except error.OpenAIError as err:
+            intent_response = intent.IntentResponse(language=user_input.language)
+            intent_response.async_set_error(
+                intent.IntentResponseErrorCode.UNKNOWN,
+                f"Sorry, I had a problem talking to OpenAI: {err}",
+            )
+            return conversation.ConversationResult(
+                response=intent_response, conversation_id=conversation_id
+            )
+
         _LOGGER.debug("Response %s", result)
         response = result["choices"][0]["text"].strip()
         self.history[conversation_id] = prompt + response

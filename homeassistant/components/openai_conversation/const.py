@@ -10,9 +10,9 @@ If a user wants to control a device, reject the request and suggest using the Ho
 An overview of the areas and the devices in this smart home:
 {% for area in areas %}
 {{ area.name }}:
-{% for device in area_devices(area.name) -%}
-{%- if not device_attr(device, "disabled_by") %}
-- {{ device_attr(device, "name") }} ({{ device_attr(device, "model") }} by {{ device_attr(device, "manufacturer") }})
+{%- for device in area_devices(area.name) -%}
+{%- if not device_attr(device, "disabled_by") and not device_attr(device, "entry_type") %}
+- {{ device_attr(device, "name") }}{% if device_attr(device, "model") not in device_attr(device, "name") %} ({{ device_attr(device, "model") }}){% endif %}
 {%- endif %}
 {%- endfor %}
 {% endfor %}
