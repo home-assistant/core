@@ -199,7 +199,7 @@ class HoneywellUSThermostat(ClimateEntity):
         if self.hvac_mode == HVACMode.HEAT:
             return self._device.raw_ui_data["HeatUpperSetptLimit"]
         if self.hvac_mode == HVACMode.HEAT_COOL:
-            return min(
+            return max(
                 [
                     self._device.raw_ui_data["CoolUpperSetptLimit"],
                     self._device.raw_ui_data["HeatUpperSetptLimit"],
