@@ -159,9 +159,7 @@ class Events(Base):
     )
     __tablename__ = TABLE_EVENTS
     event_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
-    event_type: Mapped[str | None] = mapped_column(
-        String(MAX_LENGTH_EVENT_EVENT_TYPE),
-    )
+    event_type: Mapped[str | None] = mapped_column(String(MAX_LENGTH_EVENT_EVENT_TYPE))
     event_data: Mapped[str | None] = mapped_column(
         Text().with_variant(mysql.LONGTEXT, "mysql")
     )
@@ -291,7 +289,7 @@ class EventData(Base):
         return cast(int, fnv1a_32(shared_data_bytes))
 
     def to_native(self) -> dict[str, Any]:
-        """Convert to an HA state object."""
+        """Convert to an event data dictionary."""
         shared_data = self.shared_data
         if shared_data is None:
             return {}
@@ -497,7 +495,7 @@ class StateAttributes(Base):
         return cast(int, fnv1a_32(shared_attrs_bytes))
 
     def to_native(self) -> dict[str, Any]:
-        """Convert to an HA state object."""
+        """Convert to a state attributes dictionary."""
         shared_attrs = self.shared_attrs
         if shared_attrs is None:
             return {}
