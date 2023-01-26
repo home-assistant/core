@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Dienst is al ingesteld"
+        },
         "error": {
             "bad_station_id": "Station-ID is ongeldig, ontbreekt of is niet gevonden in de database met stations-ID's",
             "cannot_connect": "Kan geen verbinding maken",

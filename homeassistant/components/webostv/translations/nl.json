@@ -14,6 +14,9 @@
                 "description": "Klik op verzenden en accepteer het koppelingsverzoek op uw tv.\n\n![Image](/static/images/config_webos.png)",
                 "title": "webOS TV-koppeling"
             },
+            "reauth_confirm": {
+                "title": "webOS TV pairing"
+            },
             "user": {
                 "data": {
                     "host": "Host",

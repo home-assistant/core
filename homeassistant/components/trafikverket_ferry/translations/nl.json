@@ -26,5 +26,18 @@
                 }
             }
         }
+    },
+    "selector": {
+        "weekday": {
+            "options": {
+                "fri": "Vrijdag",
+                "mon": "Maandag",
+                "sat": "Zaterdag",
+                "sun": "Zondag",
+                "thu": "Donderdag",
+                "tue": "Dinsdag",
+                "wed": "Woensdag"
+            }
+        }
     }
 }

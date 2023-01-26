@@ -97,7 +97,10 @@ async def test_component_requirement_not_found(hass):
 
         assert res.keys() == {"homeassistant"}
         assert res.errors[0] == CheckConfigError(
-            "Integration error: test_custom_component - Requirements for test_custom_component not found: ['any'].",
+            (
+                "Integration error: test_custom_component - Requirements for"
+                " test_custom_component not found: ['any']."
+            ),
             None,
             None,
         )
@@ -157,9 +160,7 @@ async def test_platform_not_found_safe_mode(hass):
 
 async def test_package_invalid(hass):
     """Test a valid platform setup."""
-    files = {
-        YAML_CONFIG_FILE: BASE_CONFIG + ("  packages:\n    p1:\n" '      group: ["a"]')
-    }
+    files = {YAML_CONFIG_FILE: BASE_CONFIG + '  packages:\n    p1:\n      group: ["a"]'}
     with patch("os.path.isfile", return_value=True), patch_yaml_files(files):
         res = await async_check_ha_config_file(hass)
         log_ha_config(res)
