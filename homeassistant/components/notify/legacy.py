@@ -219,6 +219,7 @@ class BaseNotificationService:
 
     # Name => target
     registered_targets: dict[str, str]
+    targets: dict[str, str]
 
     def send_message(self, message: str, **kwargs: Any) -> None:
         """Send a message.
@@ -283,8 +284,7 @@ class BaseNotificationService:
         if hasattr(self, "targets"):
             stale_targets = set(self.registered_targets)
 
-            targets: dict[str, str] = self.targets
-            for name, target in targets.items():
+            for name, target in self.targets.items():
                 target_name = slugify(f"{self._target_service_name_prefix}_{name}")
                 if target_name in stale_targets:
                     stale_targets.remove(target_name)
