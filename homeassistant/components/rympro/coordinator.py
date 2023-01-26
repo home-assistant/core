@@ -32,7 +32,9 @@ class RymProDataUpdateCoordinator(DataUpdateCoordinator[dict[int, dict]]):
         """Fetch data from Rym Pro."""
         try:
             return await self.rympro.last_read()
-        except UnauthorizedError:
+        except UnauthorizedError as error:
+            assert self.config_entry
             await self.hass.config_entries.async_reload(self.config_entry.entry_id)
+            raise UpdateFailed(error) from error
         except (CannotConnectError, OperationError) as error:
             raise UpdateFailed(error) from error
