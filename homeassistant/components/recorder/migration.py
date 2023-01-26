@@ -929,7 +929,7 @@ def _migrate_columns_to_timestamp(
                         "UPDATE events set time_fired_ts="
                         "IF(time_fired is NULL,0,UNIX_TIMESTAMP(time_fired)) "
                         "where time_fired_ts is NULL "
-                        " LIMIT 250000;"
+                        "LIMIT 250000;"
                     )
                 )
         result = None
@@ -939,10 +939,9 @@ def _migrate_columns_to_timestamp(
                     text(
                         "UPDATE states set last_updated_ts= "
                         "IF(last_updated is NULL,0,UNIX_TIMESTAMP(last_updated)), "
-                        " last_changed_ts="
-                        "IF(last_changed is NULL,0,UNIX_TIMESTAMP(last_changed)) "
-                        " where last_updated_ts is NULL "
-                        " LIMIT 250000;"
+                        "last_changed_ts=UNIX_TIMESTAMP(last_changed) "
+                        "where last_updated_ts is NULL "
+                        "LIMIT 250000;"
                     )
                 )
     elif engine.dialect.name == SupportedDialect.POSTGRESQL:
