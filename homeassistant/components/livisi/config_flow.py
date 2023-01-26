@@ -1,7 +1,6 @@
 """Config flow for Livisi Home Assistant."""
 from __future__ import annotations
 
-from collections.abc import Mapping
 from contextlib import suppress
 from typing import Any
 
@@ -10,7 +9,6 @@ from aiolivisi import AioLivisi, errors as livisi_errors
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
 
@@ -19,8 +17,6 @@ from .const import AVATAR, AVATAR_VERSION, CONF_HOST, CONF_PASSWORD, DOMAIN, LOG
 
 class LivisiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Livisi Smart Home config flow."""
-
-    reauth_entry: ConfigEntry | None = None
 
     def __init__(self) -> None:
         """Create the configuration file."""
@@ -60,24 +56,6 @@ class LivisiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=self.data_schema, errors=errors
         )
 
-    async def async_step_reauth(self, user_input: Mapping[str, Any]) -> FlowResult:
-        """Perform reauth upon an API authentication error."""
-        self.reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
-        return await self.async_step_reauth_confirm(user_input)
-
-    async def async_step_reauth_confirm(
-        self, user_input: Mapping[str, Any]
-    ) -> FlowResult:
-        """Dialog that informs the user that reauth is required."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="reauth_confirm",
-                data_schema=vol.Schema({}),
-            )
-        return await self.async_step_user()
-
     async def _login(self, user_input: dict[str, str]) -> None:
         """Login into Livisi Smart Home."""
         web_session = aiohttp_client.async_get_clientsession(self.hass)
@@ -93,13 +71,6 @@ class LivisiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, str], controller_info: dict[str, Any]
     ) -> FlowResult:
         """Create LIVISI entity."""
-        if self.reauth_entry:
-            self.hass.config_entries.async_update_entry(
-                self.reauth_entry, data=controller_info
-            )
-            await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
-            return self.async_abort(reason="reauth_successful")
-
         if (controller_data := controller_info.get("gateway")) is None:
             controller_data = controller_info
         controller_type = controller_data["controllerType"]
