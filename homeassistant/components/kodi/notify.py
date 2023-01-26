@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from typing import cast
 
 import aiohttp
 import jsonrpc_async
@@ -72,9 +71,8 @@ async def async_get_service(
     http_protocol = "https" if encryption else "http"
     url = f"{http_protocol}://{host}:{port}/jsonrpc"
 
-    if username is not None:
-        # username and password are Inclusive
-        auth = aiohttp.BasicAuth(username, cast(str, password))
+    if username is not None and password is not None:
+        auth = aiohttp.BasicAuth(username, password)
     else:
         auth = None
 
