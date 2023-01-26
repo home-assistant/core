@@ -96,6 +96,30 @@ async def test_login_error(hass, exception, error):
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": error}
 
+    with patch(
+        "homeassistant.components.rympro.config_flow.RymPro.login",
+        return_value="test-token",
+    ), patch(
+        "homeassistant.components.rympro.config_flow.RymPro.account_info",
+        return_value={"accountNumber": TEST_DATA[CONF_UNIQUE_ID]},
+    ), patch(
+        "homeassistant.components.rympro.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                CONF_EMAIL: TEST_DATA[CONF_EMAIL],
+                CONF_PASSWORD: TEST_DATA[CONF_PASSWORD],
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["title"] == TEST_DATA[CONF_EMAIL]
+    assert result3["data"] == TEST_DATA
+    assert len(mock_setup_entry.mock_calls) == 1
+
 
 async def test_form_already_exists(hass, _config_entry):
     """Test that a flow with an existing account aborts."""
