@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
             "cannot_connect": "Ei saanud \u00fchendust URL-il {base_url} asuva kontrolleriga"
         },
         "step": {

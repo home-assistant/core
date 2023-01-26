@@ -1,8 +1,9 @@
 """Config helpers for Alexa."""
 from abc import ABC, abstractmethod
+import asyncio
 import logging
 
-from homeassistant.core import callback
+from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN
@@ -16,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 class AbstractConfig(ABC):
     """Hold the configuration for Alexa."""
 
-    _unsub_proactive_report = None
+    _unsub_proactive_report: asyncio.Task[CALLBACK_TYPE] | None = None
 
     def __init__(self, hass):
         """Initialize abstract config."""

@@ -1,4 +1,5 @@
 """Tests for Google Assistant SDK."""
+from datetime import timedelta
 import http
 import time
 from unittest.mock import call, patch
@@ -10,10 +11,20 @@ from homeassistant.components.google_assistant_sdk import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util.dt import utcnow
 
 from .conftest import ComponentSetup, ExpectedCredentials
 
+from tests.common import async_fire_time_changed, async_mock_service
 from tests.test_util.aiohttp import AiohttpClientMocker
+
+
+async def fetch_api_url(hass_client, url):
+    """Fetch an API URL and return HTTP status and contents."""
+    client = await hass_client()
+    response = await client.get(url)
+    contents = await response.read()
+    return response.status, contents
 
 
 async def test_setup_success(
@@ -129,9 +140,38 @@ async def test_send_text_command(
             blocking=True,
         )
     mock_text_assistant.assert_called_once_with(
-        ExpectedCredentials(), expected_language_code
+        ExpectedCredentials(), expected_language_code, audio_out=False
     )
     mock_text_assistant.assert_has_calls([call().__enter__().assist(command)])
+
+
+async def test_send_text_commands(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+) -> None:
+    """Test service call send_text_command calls TextAssistant."""
+    await setup_integration()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state is ConfigEntryState.LOADED
+
+    command1 = "open the garage door"
+    command2 = "1234"
+    with patch(
+        "homeassistant.components.google_assistant_sdk.helpers.TextAssistant"
+    ) as mock_text_assistant:
+        await hass.services.async_call(
+            DOMAIN,
+            "send_text_command",
+            {"command": [command1, command2]},
+            blocking=True,
+        )
+    mock_text_assistant.assert_called_once_with(
+        ExpectedCredentials(), "en-US", audio_out=False
+    )
+    mock_text_assistant.assert_has_calls([call().__enter__().assist(command1)])
+    mock_text_assistant.assert_has_calls([call().__enter__().assist(command2)])
 
 
 @pytest.mark.parametrize(
@@ -178,6 +218,88 @@ async def test_send_text_command_expired_token_refresh_failure(
         )
 
     assert any(entry.async_get_active_flows(hass, {"reauth"})) == requires_reauth
+
+
+async def test_send_text_command_media_player(
+    hass: HomeAssistant, setup_integration: ComponentSetup, hass_client
+) -> None:
+    """Test send_text_command with media_player."""
+    await setup_integration()
+
+    play_media_calls = async_mock_service(hass, "media_player", "play_media")
+
+    command = "tell me a joke"
+    media_player = "media_player.office_speaker"
+    audio_response1 = b"joke1 audio response bytes"
+    audio_response2 = b"joke2 audio response bytes"
+    with patch(
+        "homeassistant.components.google_assistant_sdk.helpers.TextAssistant.assist",
+        side_effect=[
+            ("joke1 text", None, audio_response1),
+            ("joke2 text", None, audio_response2),
+        ],
+    ) as mock_assist_call:
+        # Run the same command twice, getting different audio response each time.
+        await hass.services.async_call(
+            DOMAIN,
+            "send_text_command",
+            {
+                "command": command,
+                "media_player": media_player,
+            },
+            blocking=True,
+        )
+        await hass.services.async_call(
+            DOMAIN,
+            "send_text_command",
+            {
+                "command": command,
+                "media_player": media_player,
+            },
+            blocking=True,
+        )
+
+    mock_assist_call.assert_has_calls([call(command), call(command)])
+    assert len(play_media_calls) == 2
+    for play_media_call in play_media_calls:
+        assert play_media_call.data["entity_id"] == [media_player]
+        assert play_media_call.data["media_content_id"].startswith(
+            "/api/google_assistant_sdk/audio/"
+        )
+
+    audio_url1 = play_media_calls[0].data["media_content_id"]
+    audio_url2 = play_media_calls[1].data["media_content_id"]
+    assert audio_url1 != audio_url2
+
+    # Assert that both audio responses can be served
+    status, response = await fetch_api_url(hass_client, audio_url1)
+    assert status == http.HTTPStatus.OK
+    assert response == audio_response1
+    status, response = await fetch_api_url(hass_client, audio_url2)
+    assert status == http.HTTPStatus.OK
+    assert response == audio_response2
+
+    # Assert a nonexistent URL returns 404
+    status, _ = await fetch_api_url(
+        hass_client, "/api/google_assistant_sdk/audio/nonexistent"
+    )
+    assert status == http.HTTPStatus.NOT_FOUND
+
+    # Assert that both audio responses can still be served before the 5 minutes expiration
+    async_fire_time_changed(hass, utcnow() + timedelta(minutes=4))
+    status, response = await fetch_api_url(hass_client, audio_url1)
+    assert status == http.HTTPStatus.OK
+    assert response == audio_response1
+    status, response = await fetch_api_url(hass_client, audio_url2)
+    assert status == http.HTTPStatus.OK
+    assert response == audio_response2
+
+    # Assert that they cannot be served after the 5 minutes expiration
+    async_fire_time_changed(hass, utcnow() + timedelta(minutes=6))
+    status, response = await fetch_api_url(hass_client, audio_url1)
+    assert status == http.HTTPStatus.NOT_FOUND
+    status, response = await fetch_api_url(hass_client, audio_url2)
+    assert status == http.HTTPStatus.NOT_FOUND
 
 
 async def test_conversation_agent(

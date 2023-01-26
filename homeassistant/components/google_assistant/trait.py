@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, TypeVar
 
 from homeassistant.components import (
     alarm_control_panel,
@@ -161,13 +161,15 @@ COMMAND_SELECT_CHANNEL = f"{PREFIX_COMMANDS}selectChannel"
 COMMAND_LOCATE = f"{PREFIX_COMMANDS}Locate"
 COMMAND_CHARGE = f"{PREFIX_COMMANDS}Charge"
 
-TRAITS = []
+TRAITS: list[type[_Trait]] = []
 
 FAN_SPEED_MAX_SPEED_COUNT = 5
 
+_TraitT = TypeVar("_TraitT", bound="_Trait")
 
-def register_trait(trait):
-    """Decorate a function to register a trait."""
+
+def register_trait(trait: type[_TraitT]) -> type[_TraitT]:
+    """Decorate a class to register a trait."""
     TRAITS.append(trait)
     return trait
 
@@ -288,7 +290,7 @@ class CameraStreamTrait(_Trait):
     name = TRAIT_CAMERA_STREAM
     commands = [COMMAND_GET_CAMERA_STREAM]
 
-    stream_info = None
+    stream_info: dict[str, str] | None = None
 
     @staticmethod
     def supported(domain, features, device_class, _):

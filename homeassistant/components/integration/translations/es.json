@@ -32,5 +32,22 @@
             }
         }
     },
+    "selector": {
+        "method": {
+            "options": {
+                "left": "Suma de Riemann izquierda",
+                "right": "Suma de Riemann derecha",
+                "trapezoidal": "Regla trapezoidal"
+            }
+        },
+        "unit_time": {
+            "options": {
+                "d": "D\u00edas",
+                "h": "Horas",
+                "min": "Minutos",
+                "s": "Segundos"
+            }
+        }
+    },
     "title": "Integraci\u00f3n - Sensor de suma integral de Riemann"
 }

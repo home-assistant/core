@@ -79,7 +79,7 @@ SENSORS: Final = {
     ),
     ("device", "deviceTemp"): BlockSensorDescription(
         key="device|deviceTemp",
-        name="Device Temperature",
+        name="Device temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value=lambda value: round(value, 1),
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -139,7 +139,7 @@ SENSORS: Final = {
     ),
     ("emeter", "powerFactor"): BlockSensorDescription(
         key="emeter|powerFactor",
-        name="Power Factor",
+        name="Power factor",
         native_unit_of_measurement=PERCENTAGE,
         value=lambda value: round(value * 100, 1),
         device_class=SensorDeviceClass.POWER_FACTOR,
@@ -180,7 +180,7 @@ SENSORS: Final = {
     ),
     ("emeter", "energyReturned"): BlockSensorDescription(
         key="emeter|energyReturned",
-        name="Energy Returned",
+        name="Energy returned",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda value: round(value / 1000, 2),
         device_class=SensorDeviceClass.ENERGY,
@@ -214,7 +214,7 @@ SENSORS: Final = {
     ),
     ("sensor", "concentration"): BlockSensorDescription(
         key="sensor|concentration",
-        name="Gas Concentration",
+        name="Gas concentration",
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         icon="mdi:gauge",
         state_class=SensorStateClass.MEASUREMENT,
@@ -265,7 +265,7 @@ SENSORS: Final = {
     ),
     ("relay", "totalWorkTime"): BlockSensorDescription(
         key="relay|totalWorkTime",
-        name="Lamp Life",
+        name="Lamp life",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:progress-wrench",
         value=lambda value: round(100 - (value / 3600 / SHAIR_MAX_WORK_HOURS), 1),
@@ -467,7 +467,7 @@ RPC_SENSORS: Final = {
     "temperature": RpcSensorDescription(
         key="switch",
         sub_key="temperature",
-        name="Device Temperature",
+        name="Device temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value=lambda status, _: round(status["tC"], 1),
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -538,7 +538,7 @@ RPC_SENSORS: Final = {
     "analoginput": RpcSensorDescription(
         key="input",
         sub_key="percent",
-        name="Analog Input",
+        name="Analog input",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,

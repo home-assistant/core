@@ -171,7 +171,7 @@ async def test_with_pending(hass, service, expected_state):
 
     future = dt_util.utcnow() + timedelta(seconds=1)
     with patch(
-        ("homeassistant.components.manual.alarm_control_panel.dt_util.utcnow"),
+        "homeassistant.components.manual.alarm_control_panel.dt_util.utcnow",
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -313,7 +313,7 @@ async def test_with_specific_pending(hass, service, expected_state):
 
     future = dt_util.utcnow() + timedelta(seconds=2)
     with patch(
-        ("homeassistant.components.manual.alarm_control_panel.dt_util.utcnow"),
+        "homeassistant.components.manual.alarm_control_panel.dt_util.utcnow",
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -348,7 +348,7 @@ async def test_trigger_no_pending(hass):
 
     future = dt_util.utcnow() + timedelta(seconds=60)
     with patch(
-        ("homeassistant.components.manual.alarm_control_panel.dt_util.utcnow"),
+        "homeassistant.components.manual.alarm_control_panel.dt_util.utcnow",
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -393,7 +393,7 @@ async def test_trigger_with_delay(hass):
 
     future = dt_util.utcnow() + timedelta(seconds=1)
     with patch(
-        ("homeassistant.components.manual.alarm_control_panel.dt_util.utcnow"),
+        "homeassistant.components.manual.alarm_control_panel.dt_util.utcnow",
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -486,7 +486,7 @@ async def test_trigger_with_pending(hass):
 
     future = dt_util.utcnow() + timedelta(seconds=2)
     with patch(
-        ("homeassistant.components.manual.alarm_control_panel.dt_util.utcnow"),
+        "homeassistant.components.manual.alarm_control_panel.dt_util.utcnow",
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -498,7 +498,7 @@ async def test_trigger_with_pending(hass):
 
     future = dt_util.utcnow() + timedelta(seconds=5)
     with patch(
-        ("homeassistant.components.manual.alarm_control_panel.dt_util.utcnow"),
+        "homeassistant.components.manual.alarm_control_panel.dt_util.utcnow",
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -543,7 +543,7 @@ async def test_trigger_with_unused_specific_delay(hass):
 
     future = dt_util.utcnow() + timedelta(seconds=5)
     with patch(
-        ("homeassistant.components.manual.alarm_control_panel.dt_util.utcnow"),
+        "homeassistant.components.manual.alarm_control_panel.dt_util.utcnow",
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -589,7 +589,7 @@ async def test_trigger_with_specific_delay(hass):
 
     future = dt_util.utcnow() + timedelta(seconds=1)
     with patch(
-        ("homeassistant.components.manual.alarm_control_panel.dt_util.utcnow"),
+        "homeassistant.components.manual.alarm_control_panel.dt_util.utcnow",
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -634,7 +634,7 @@ async def test_trigger_with_pending_and_delay(hass):
 
     future = dt_util.utcnow() + timedelta(seconds=1)
     with patch(
-        ("homeassistant.components.manual.alarm_control_panel.dt_util.utcnow"),
+        "homeassistant.components.manual.alarm_control_panel.dt_util.utcnow",
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -646,7 +646,7 @@ async def test_trigger_with_pending_and_delay(hass):
 
     future += timedelta(seconds=1)
     with patch(
-        ("homeassistant.components.manual.alarm_control_panel.dt_util.utcnow"),
+        "homeassistant.components.manual.alarm_control_panel.dt_util.utcnow",
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -692,7 +692,7 @@ async def test_trigger_with_pending_and_specific_delay(hass):
 
     future = dt_util.utcnow() + timedelta(seconds=1)
     with patch(
-        ("homeassistant.components.manual.alarm_control_panel.dt_util.utcnow"),
+        "homeassistant.components.manual.alarm_control_panel.dt_util.utcnow",
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -704,7 +704,7 @@ async def test_trigger_with_pending_and_specific_delay(hass):
 
     future += timedelta(seconds=1)
     with patch(
-        ("homeassistant.components.manual.alarm_control_panel.dt_util.utcnow"),
+        "homeassistant.components.manual.alarm_control_panel.dt_util.utcnow",
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -741,7 +741,7 @@ async def test_trigger_with_specific_pending(hass):
 
     future = dt_util.utcnow() + timedelta(seconds=2)
     with patch(
-        ("homeassistant.components.manual.alarm_control_panel.dt_util.utcnow"),
+        "homeassistant.components.manual.alarm_control_panel.dt_util.utcnow",
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -753,7 +753,7 @@ async def test_trigger_with_specific_pending(hass):
 
     future = dt_util.utcnow() + timedelta(seconds=5)
     with patch(
-        ("homeassistant.components.manual.alarm_control_panel.dt_util.utcnow"),
+        "homeassistant.components.manual.alarm_control_panel.dt_util.utcnow",
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -791,7 +791,7 @@ async def test_trigger_with_disarm_after_trigger(hass):
 
     future = dt_util.utcnow() + timedelta(seconds=5)
     with patch(
-        ("homeassistant.components.manual.alarm_control_panel.dt_util.utcnow"),
+        "homeassistant.components.manual.alarm_control_panel.dt_util.utcnow",
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -857,7 +857,7 @@ async def test_trigger_with_unused_zero_specific_trigger_time(hass):
 
     future = dt_util.utcnow() + timedelta(seconds=5)
     with patch(
-        ("homeassistant.components.manual.alarm_control_panel.dt_util.utcnow"),
+        "homeassistant.components.manual.alarm_control_panel.dt_util.utcnow",
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -895,7 +895,7 @@ async def test_trigger_with_specific_trigger_time(hass):
 
     future = dt_util.utcnow() + timedelta(seconds=5)
     with patch(
-        ("homeassistant.components.manual.alarm_control_panel.dt_util.utcnow"),
+        "homeassistant.components.manual.alarm_control_panel.dt_util.utcnow",
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -938,7 +938,7 @@ async def test_trigger_with_no_disarm_after_trigger(hass):
 
     future = dt_util.utcnow() + timedelta(seconds=5)
     with patch(
-        ("homeassistant.components.manual.alarm_control_panel.dt_util.utcnow"),
+        "homeassistant.components.manual.alarm_control_panel.dt_util.utcnow",
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -981,7 +981,7 @@ async def test_back_to_back_trigger_with_no_disarm_after_trigger(hass):
 
     future = dt_util.utcnow() + timedelta(seconds=5)
     with patch(
-        ("homeassistant.components.manual.alarm_control_panel.dt_util.utcnow"),
+        "homeassistant.components.manual.alarm_control_panel.dt_util.utcnow",
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -997,7 +997,7 @@ async def test_back_to_back_trigger_with_no_disarm_after_trigger(hass):
 
     future = dt_util.utcnow() + timedelta(seconds=5)
     with patch(
-        ("homeassistant.components.manual.alarm_control_panel.dt_util.utcnow"),
+        "homeassistant.components.manual.alarm_control_panel.dt_util.utcnow",
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -1036,7 +1036,7 @@ async def test_disarm_while_pending_trigger(hass):
 
     future = dt_util.utcnow() + timedelta(seconds=5)
     with patch(
-        ("homeassistant.components.manual.alarm_control_panel.dt_util.utcnow"),
+        "homeassistant.components.manual.alarm_control_panel.dt_util.utcnow",
         return_value=future,
     ):
         async_fire_time_changed(hass, future)
@@ -1080,7 +1080,7 @@ async def test_disarm_during_trigger_with_invalid_code(hass):
 
     future = dt_util.utcnow() + timedelta(seconds=5)
     with patch(
-        ("homeassistant.components.manual.alarm_control_panel.dt_util.utcnow"),
+        "homeassistant.components.manual.alarm_control_panel.dt_util.utcnow",
         return_value=future,
     ):
         async_fire_time_changed(hass, future)

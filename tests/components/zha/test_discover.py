@@ -375,8 +375,10 @@ def _ch_mock(cluster):
 
 
 @mock.patch(
-    "homeassistant.components.zha.core.discovery.ProbeEndpoint"
-    ".handle_on_off_output_cluster_exception",
+    (
+        "homeassistant.components.zha.core.discovery.ProbeEndpoint"
+        ".handle_on_off_output_cluster_exception"
+    ),
     new=mock.MagicMock(),
 )
 @mock.patch(

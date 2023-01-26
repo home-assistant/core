@@ -1,16 +1,32 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9"
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
+            "reauth_successful": "Op\u00e4tovn\u00e9 overenie bolo \u00faspe\u0161n\u00e9"
         },
         "error": {
-            "cannot_connect": "Nepodarilo sa pripoji\u0165"
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "invalid_auth": "Neplatn\u00e9 overenie"
         },
         "step": {
+            "auth": {
+                "data": {
+                    "password": "Heslo",
+                    "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
+                }
+            },
+            "choose_auth": {
+                "description": "Nastavenie prihlasovac\u00edch \u00fadajov umo\u017e\u0148uje \u010fal\u0161ie funkcie.",
+                "menu_options": {
+                    "auth": "Nastavi\u0165 poverenia (odpor\u00fa\u010dan\u00e9)",
+                    "skip_auth": "Vynecha\u0165 overovanie"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Hostite\u013e"
-                }
+                },
+                "description": "Nastavenie poveren\u00ed je volite\u013en\u00e9, ale umo\u017e\u0148uje \u010fal\u0161ie funkcie."
             }
         }
     },

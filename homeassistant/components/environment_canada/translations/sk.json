@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Slu\u017eba u\u017e je nakonfigurovan\u00e1"
+        },
         "error": {
             "bad_station_id": "ID stanice je neplatn\u00e9, ch\u00fdba alebo sa nenach\u00e1dza v datab\u00e1ze ID stanice",
             "cannot_connect": "Nepodarilo sa pripoji\u0165",
