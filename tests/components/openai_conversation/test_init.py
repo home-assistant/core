@@ -13,7 +13,8 @@ async def test_default_prompt(hass, mock_init_component):
     device_reg = device_registry.async_get(hass)
     area_reg = area_registry.async_get(hass)
 
-    area_reg.async_create("Empty Area")
+    for i in range(3):
+        area_reg.async_create(f"{i}Empty Area")
 
     device_reg.async_get_or_create(
         config_entry_id="1234",
@@ -23,15 +24,16 @@ async def test_default_prompt(hass, mock_init_component):
         model="Test Model",
         suggested_area="Test Area",
     )
-    device_reg.async_get_or_create(
-        config_entry_id="1234",
-        connections={("test", "abcd")},
-        name="Test Service",
-        manufacturer="Test Manufacturer",
-        model="Test Model",
-        suggested_area="Test Area",
-        entry_type=device_registry.DeviceEntryType.SERVICE,
-    )
+    for i in range(3):
+        device_reg.async_get_or_create(
+            config_entry_id="1234",
+            connections={("test", f"{i}abcd")},
+            name="Test Service",
+            manufacturer="Test Manufacturer",
+            model="Test Model",
+            suggested_area="Test Area",
+            entry_type=device_registry.DeviceEntryType.SERVICE,
+        )
     device_reg.async_get_or_create(
         config_entry_id="1234",
         connections={("test", "5678")},
@@ -54,8 +56,7 @@ async def test_default_prompt(hass, mock_init_component):
 
     assert (
         mock_create.mock_calls[0][2]["prompt"]
-        == """You are a conversational AI for a smart home named test home.
-If a user wants to control a device, reject the request and suggest using the Home Assistant UI.
+        == """This smart home is controlled by Home Assistant.
 
 An overview of the areas and the devices in this smart home:
 
@@ -66,6 +67,9 @@ Test Area 2:
 - Test Device 2
 - Test Device 3 (Test Model 3A)
 
+Answer the users questions about the world truthfully.
+
+If the user wants to control a device, reject the request and suggest using the Home Assistant UI.
 
 Now finish this conversation:
 
