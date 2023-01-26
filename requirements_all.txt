@@ -202,7 +202,7 @@ aiolifx_effects==0.3.1
 aiolifx_themes==0.4.0
 
 # homeassistant.components.livisi
-aiolivisi==0.0.14
+aiolivisi==0.0.15
 
 # homeassistant.components.lookin
 aiolookin==1.0.0
@@ -1171,7 +1171,7 @@ mycroftapi==2.0
 nad_receiver==0.3.0
 
 # homeassistant.components.keenetic_ndms2
-ndms2_client==0.1.1
+ndms2_client==0.1.2
 
 # homeassistant.components.ness_alarm
 nessclient==0.10.0
@@ -2075,7 +2075,7 @@ python-kasa==0.5.0
 # python-lirc==1.2.3
 
 # homeassistant.components.matter
-python-matter-server==2.0.1
+python-matter-server==2.0.2
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
@@ -2696,7 +2696,7 @@ zeroconf==0.47.1
 zeversolar==0.2.0
 
 # homeassistant.components.zha
-zha-quirks==0.0.91
+zha-quirks==0.0.92
 
 # homeassistant.components.zhong_hong
 zhong_hong_hvac==1.0.9

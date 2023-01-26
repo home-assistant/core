@@ -30,6 +30,7 @@ on:
 env:
   CACHE_VERSION: 3
   PIP_CACHE_VERSION: 3
+  MYPY_CACHE_VERSION: 3
   HA_SHORT_VERSION: 2023.3
   DEFAULT_PYTHON: "3.10"
   ALL_PYTHON_VERSIONS: "['3.10']"
@@ -756,6 +757,13 @@ jobs:
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
+      - name: Generate partial mypy restore key
+        id: generate-mypy-key
+        run: |
+          mypy_version=$(cat requirements_test.txt | grep mypy | cut -d '=' -f 3)
+          echo "version=$mypy_version" >> $GITHUB_OUTPUT
+          echo "key=mypy-${{ env.MYPY_CACHE_VERSION }}-$mypy_version-${{
+            env.HA_SHORT_VERSION }}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
         uses: actions/cache/restore@v3.2.3
@@ -769,6 +777,17 @@ jobs:
         run: |
           echo "Failed to restore Python virtual environment from cache"
           exit 1
+      - name: Restore mypy cache
+        uses: actions/cache@v3.2.3
+        with:
+          path: .mypy_cache
+          key: >-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            steps.generate-mypy-key.outputs.key }}
+          restore-keys: |
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-mypy-${{
+            env.MYPY_CACHE_VERSION }}-${{ steps.generate-mypy-key.outputs.version }}-${{
+            env.HA_SHORT_VERSION }}-
       - name: Register mypy problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/mypy.json"

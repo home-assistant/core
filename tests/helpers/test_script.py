@@ -3049,8 +3049,8 @@ async def test_parallel(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
     assert events[1].data["what"] == "world"
 
     assert (
-        "Test Name: Parallel action at step 1: Sequential group: Executing step Waiting for trigger"
-        in caplog.text
+        "Test Name: Parallel action at step 1: Sequential group: Executing step Waiting"
+        " for trigger" in caplog.text
     )
     assert (
         "Parallel action at step 1: parallel 2: Executing step Don't wait at all"
@@ -3659,7 +3659,10 @@ async def test_referenced_devices(hass):
                 {
                     "choose": [
                         {
-                            "conditions": "{{ is_device_attr('choice-2-cond-dev-id', 'model', 'blah') }}",
+                            "conditions": (
+                                "{{ is_device_attr('choice-2-cond-dev-id', 'model',"
+                                " 'blah') }}"
+                            ),
                             "sequence": [
                                 {
                                     "service": "test.script",
@@ -4427,7 +4430,9 @@ async def test_embedded_wait_for_trigger_in_automation(hass):
                         "while": [
                             {
                                 "condition": "template",
-                                "value_template": '{{ is_state("test.value1", "trigger-while") }}',
+                                "value_template": (
+                                    '{{ is_state("test.value1", "trigger-while") }}'
+                                ),
                             }
                         ],
                         "sequence": [
@@ -4436,7 +4441,10 @@ async def test_embedded_wait_for_trigger_in_automation(hass):
                                 "wait_for_trigger": [
                                     {
                                         "platform": "template",
-                                        "value_template": '{{ is_state("test.value2", "trigger-wait") }}',
+                                        "value_template": (
+                                            '{{ is_state("test.value2",'
+                                            ' "trigger-wait") }}'
+                                        ),
                                     }
                                 ]
                             },

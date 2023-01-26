@@ -1,4 +1,6 @@
 """Notify.Events platform for notify component."""
+from __future__ import annotations
+
 import logging
 import os.path
 
@@ -10,6 +12,8 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.const import CONF_TOKEN
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN
 
@@ -33,7 +37,11 @@ ATTR_TOKEN = "token"
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_service(hass, config, discovery_info=None):
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> NotifyEventsNotificationService:
     """Get the Notify.Events notification service."""
     return NotifyEventsNotificationService(hass.data[DOMAIN][CONF_TOKEN])
 

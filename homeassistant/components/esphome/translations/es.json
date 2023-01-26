@@ -47,6 +47,10 @@
         }
     },
     "issues": {
+        "api_password_deprecated": {
+            "description": "La contrase\u00f1a API para ESPHome est\u00e1 obsoleta y se recomienda el uso de una clave de cifrado API en su lugar. \n\nElimina la contrase\u00f1a API y a\u00f1ade una clave de cifrado a tu dispositivo ESPHome para resolver este problema.",
+            "title": "Contrase\u00f1a API obsoleta en {name}"
+        },
         "ble_firmware_outdated": {
             "description": "Para mejorar la confiabilidad y el rendimiento de Bluetooth, recomendamos actualizar {name} con ESPHome {version} o posterior. Al actualizar el dispositivo a ESPHome {version}, se recomienda utilizar un cable serie en lugar de una actualizaci\u00f3n inal\u00e1mbrica para aprovechar el nuevo esquema de partici\u00f3n.",
             "title": "Actualizar {name} con ESPHome {version} o posterior"

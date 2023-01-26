@@ -32,5 +32,22 @@
             }
         }
     },
+    "selector": {
+        "method": {
+            "options": {
+                "left": "Venstre Riemann sum",
+                "right": "H\u00f8yre Riemann-sum",
+                "trapezoidal": "Trapesformet regel"
+            }
+        },
+        "unit_time": {
+            "options": {
+                "d": "Dager",
+                "h": "Timer",
+                "min": "Minutter",
+                "s": "Sekunder"
+            }
+        }
+    },
     "title": "Integrasjon - Riemann sum integral sensor"
 }
