@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 from sqlalchemy import lambda_stmt
-from sqlalchemy.orm import Query
-from sqlalchemy.sql.elements import ClauseList
+from sqlalchemy.sql.elements import ColumnElement
 from sqlalchemy.sql.lambdas import StatementLambdaElement
+from sqlalchemy.sql.selectable import Select
 
 from homeassistant.components.recorder.db_schema import (
     LAST_UPDATED_INDEX_TS,
@@ -24,13 +24,14 @@ def all_stmt(
     start_day: float,
     end_day: float,
     event_types: tuple[str, ...],
-    states_entity_filter: ClauseList | None = None,
-    events_entity_filter: ClauseList | None = None,
+    states_entity_filter: ColumnElement | None = None,
+    events_entity_filter: ColumnElement | None = None,
     context_id: str | None = None,
 ) -> StatementLambdaElement:
     """Generate a logbook query for all entities."""
     stmt = lambda_stmt(
-        lambda: select_events_without_states(start_day, end_day, event_types)
+        # https://github.com/sqlalchemy/sqlalchemy/issues/9120
+        lambda: select_events_without_states(start_day, end_day, event_types)  # type: ignore[arg-type]
     )
     if context_id is not None:
         # Once all the old `state_changed` events
@@ -55,20 +56,20 @@ def all_stmt(
     return stmt
 
 
-def _states_query_for_all(start_day: float, end_day: float) -> Query:
+def _states_query_for_all(start_day: float, end_day: float) -> Select:
     return apply_states_filters(_apply_all_hints(select_states()), start_day, end_day)
 
 
-def _apply_all_hints(query: Query) -> Query:
+def _apply_all_hints(sel: Select) -> Select:
     """Force mysql to use the right index on large selects."""
-    return query.with_hint(
+    return sel.with_hint(
         States, f"FORCE INDEX ({LAST_UPDATED_INDEX_TS})", dialect_name="mysql"
     )
 
 
 def _states_query_for_context_id(
     start_day: float, end_day: float, context_id: str
-) -> Query:
+) -> Select:
     return apply_states_filters(select_states(), start_day, end_day).where(
         States.context_id == context_id
     )
