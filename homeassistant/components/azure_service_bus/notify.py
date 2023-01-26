@@ -1,6 +1,9 @@
 """Support for azure service bus notification."""
+from __future__ import annotations
+
 import json
 import logging
+from typing import cast
 
 from azure.servicebus import ServiceBusMessage
 from azure.servicebus.aio import ServiceBusClient
@@ -19,7 +22,9 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.const import CONTENT_TYPE_JSON
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 CONF_CONNECTION_STRING = "connection_string"
 CONF_QUEUE_NAME = "queue"
@@ -47,11 +52,15 @@ PLATFORM_SCHEMA = vol.All(
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_service(hass, config, discovery_info=None):
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> ServiceBusNotificationService | None:
     """Get the notification service."""
-    connection_string = config[CONF_CONNECTION_STRING]
-    queue_name = config.get(CONF_QUEUE_NAME)
-    topic_name = config.get(CONF_TOPIC_NAME)
+    connection_string: str = config[CONF_CONNECTION_STRING]
+    queue_name: str | None = config.get(CONF_QUEUE_NAME)
+    topic_name: str | None = config.get(CONF_TOPIC_NAME)
 
     # Library can do synchronous IO when creating the clients.
     # Passes in loop here, but can't run setup on the event loop.
@@ -63,7 +72,8 @@ def get_service(hass, config, discovery_info=None):
         if queue_name:
             client = servicebus.get_queue_sender(queue_name)
         else:
-            client = servicebus.get_topic_sender(topic_name)
+            # cast because queue_name and topic_name are Exclusive
+            client = servicebus.get_topic_sender(cast(str, topic_name))
     except (ServiceBusConnectionError, MessagingEntityNotFoundError) as err:
         _LOGGER.error(
             "Connection error while creating client for queue/topic '%s'. %s",
