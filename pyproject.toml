@@ -239,8 +239,19 @@ log_date_format = "%Y-%m-%d %H:%M:%S"
 asyncio_mode = "auto"
 
 [tool.ruff]
+required-version = "0.0.231"
 target-version = "py310"
-exclude = []
+
+select = [
+    "C",  # complexity
+    "D",  # docstrings
+    "E",  # pycodestyle
+    "F",  # pyflakes/autoflake
+    "T20",  # flake8-print
+    "W",  # pycodestyle
+    "UP",  # pyupgrade
+    "PGH004",  # Use specific rule codes when using noqa
+]
 
 ignore = [
     "D202",  # No blank lines allowed after function docstring
@@ -256,16 +267,6 @@ ignore = [
     "E713",  # Test for membership should be 'not in'
     "E731",  # do not assign a lambda expression, use a def
     "UP024", # Replace aliased errors with `OSError`
-]
-select = [
-    "C",  # complexity
-    "D",  # docstrings
-    "E",  # pycodestyle
-    "F",  # pyflakes/autoflake
-    "T20",  # flake8-print
-    "W",  # pycodestyle
-    "UP",  # pyupgrade
-    "PGH004",  # Use specific rule codes when using noqa
 ]
 
 [tool.ruff.per-file-ignores]
