@@ -5,12 +5,15 @@ from openai import error
 
 from homeassistant.components import conversation
 from homeassistant.core import Context
-from homeassistant.helpers import device_registry, intent
+from homeassistant.helpers import area_registry, device_registry, intent
 
 
 async def test_default_prompt(hass, mock_init_component):
     """Test that the default prompt works."""
     device_reg = device_registry.async_get(hass)
+    area_reg = area_registry.async_get(hass)
+
+    area_reg.async_create("Empty Area")
 
     device_reg.async_get_or_create(
         config_entry_id="1234",
@@ -34,7 +37,7 @@ async def test_default_prompt(hass, mock_init_component):
         connections={("test", "5678")},
         name="Test Device 2",
         manufacturer="Test Manufacturer 2",
-        model="Test Device 2",
+        model="Device 2",
         suggested_area="Test Area 2",
     )
     device_reg.async_get_or_create(
