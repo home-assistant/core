@@ -309,6 +309,7 @@ jobs:
           . venv/bin/activate
           shopt -s globstar
           pre-commit run --hook-stage manual flake8 --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/{*,**/*}
+
   lint-ruff:
     name: Check ruff
     runs-on: ubuntu-latest
@@ -357,6 +358,7 @@ jobs:
           . venv/bin/activate
           shopt -s globstar
           pre-commit run --hook-stage manual ruff --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/{*,**/*}
+
   lint-isort:
     name: Check isort
     runs-on: ubuntu-20.04
