@@ -9,8 +9,9 @@ from typing import Any, Protocol, cast
 from homeassistant.const import CONF_DESCRIPTION, CONF_NAME
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_per_platform, discovery, template
+from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.service import async_set_service_schema
+from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.setup import async_prepare_setup_platform, async_start_setup
@@ -144,7 +145,7 @@ def async_setup_legacy(
 
 
 @callback
-def check_templates_warn(hass: HomeAssistant, tpl: template.Template) -> None:
+def check_templates_warn(hass: HomeAssistant, tpl: Template) -> None:
     """Warn user that passing templates to notify service is deprecated."""
     if tpl.is_static or hass.data.get("notify_template_warned"):
         return
@@ -238,8 +239,8 @@ class BaseNotificationService:
     async def _async_notify_message_service(self, service: ServiceCall) -> None:
         """Handle sending notification message service calls."""
         kwargs = {}
-        message = service.data[ATTR_MESSAGE]
-
+        message: Template = service.data[ATTR_MESSAGE]
+        title: Template | None
         if title := service.data.get(ATTR_TITLE):
             check_templates_warn(self.hass, title)
             title.hass = self.hass
@@ -282,7 +283,8 @@ class BaseNotificationService:
         if hasattr(self, "targets"):
             stale_targets = set(self.registered_targets)
 
-            for name, target in self.targets.items():
+            targets: dict[str, str] = self.targets
+            for name, target in targets.items():
                 target_name = slugify(f"{self._target_service_name_prefix}_{name}")
                 if target_name in stale_targets:
                     stale_targets.remove(target_name)
