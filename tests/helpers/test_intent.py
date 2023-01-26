@@ -111,6 +111,9 @@ async def test_match_device_area(hass):
     state2 = State(
         "light.bedroom", "on", attributes={ATTR_FRIENDLY_NAME: "bedroom light"}
     )
+    state3 = State(
+        "light.living_room", "on", attributes={ATTR_FRIENDLY_NAME: "living room light"}
+    )
     entities = entity_registry.async_get(hass)
     entities.async_get_or_create("light", "demo", "1234", suggested_object_id="kitchen")
     entities.async_update_entity(state1.entity_id, device_id=kitchen_device.id)
@@ -121,7 +124,10 @@ async def test_match_device_area(hass):
     # Match on area/domain
     assert [state1] == list(
         intent.async_match_states(
-            hass, domains={"light"}, area_name="kitchen", states=[state1, state2]
+            hass,
+            domains={"light"},
+            area_name="kitchen",
+            states=[state1, state2, state3],
         )
     )
 
