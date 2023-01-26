@@ -14,12 +14,7 @@ import voluptuous as vol
 
 from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_MODE,
-    CONF_UNIT_OF_MEASUREMENT,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-)
+from homeassistant.const import ATTR_MODE, CONF_UNIT_OF_MEASUREMENT, UnitOfTemperature
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -29,7 +24,6 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.unit_conversion import BaseUnitConverter, TemperatureConverter
 
 from .const import (
     ATTR_MAX,
@@ -41,7 +35,10 @@ from .const import (
     DEFAULT_STEP,
     DOMAIN,
     SERVICE_SET_VALUE,
+    UNIT_CONVERTERS,
+    NumberDeviceClass,
 )
+from .websocket_api import async_setup as async_setup_ws_api
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -50,14 +47,6 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 _LOGGER = logging.getLogger(__name__)
-
-
-class NumberDeviceClass(StrEnum):
-    """Device class for numbers."""
-
-    # temperature (C/F)
-    TEMPERATURE = "temperature"
-
 
 DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(NumberDeviceClass))
 
@@ -70,10 +59,6 @@ class NumberMode(StrEnum):
     SLIDER = "slider"
 
 
-UNIT_CONVERTERS: dict[str, type[BaseUnitConverter]] = {
-    NumberDeviceClass.TEMPERATURE: TemperatureConverter,
-}
-
 # mypy: disallow-any-generics
 
 
@@ -82,6 +67,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component = hass.data[DOMAIN] = EntityComponent[NumberEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
+    async_setup_ws_api(hass)
     await component.async_setup(config)
 
     component.async_register_entity_service(
@@ -98,7 +84,8 @@ async def async_set_value(entity: NumberEntity, service_call: ServiceCall) -> No
     value = service_call.data["value"]
     if value < entity.min_value or value > entity.max_value:
         raise ValueError(
-            f"Value {value} for {entity.name} is outside valid range {entity.min_value} - {entity.max_value}"
+            f"Value {value} for {entity.name} is outside valid range"
+            f" {entity.min_value} - {entity.max_value}"
         )
     try:
         native_value = entity.convert_to_native_value(value)
@@ -127,6 +114,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class NumberEntityDescription(EntityDescription):
     """A class that describes number entities."""
 
+    device_class: NumberDeviceClass | None = None
     max_value: None = None
     min_value: None = None
     native_max_value: float | None = None
@@ -144,7 +132,9 @@ class NumberEntityDescription(EntityDescription):
             or self.step is not None
             or self.unit_of_measurement is not None
         ):
-            if self.__class__.__name__ == "NumberEntityDescription":  # type: ignore[unreachable]
+            if (  # type: ignore[unreachable]
+                self.__class__.__name__ == "NumberEntityDescription"
+            ):
                 caller = inspect.stack()[2]
                 module = inspect.getmodule(caller[0])
             else:
@@ -157,9 +147,11 @@ class NumberEntityDescription(EntityDescription):
                     "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
                 )
             _LOGGER.warning(
-                "%s is setting deprecated attributes on an instance of "
-                "NumberEntityDescription, this is not valid and will be unsupported "
-                "from Home Assistant 2022.10. Please %s",
+                (
+                    "%s is setting deprecated attributes on an instance of"
+                    " NumberEntityDescription, this is not valid and will be"
+                    " unsupported from Home Assistant 2022.10. Please %s"
+                ),
                 module.__name__ if module else self.__class__.__name__,
                 report_issue,
             )
@@ -188,6 +180,7 @@ class NumberEntity(Entity):
     """Representation of a Number entity."""
 
     entity_description: NumberEntityDescription
+    _attr_device_class: NumberDeviceClass | None
     _attr_max_value: None
     _attr_min_value: None
     _attr_mode: NumberMode = NumberMode.AUTO
@@ -227,9 +220,11 @@ class NumberEntity(Entity):
                     "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
                 )
             _LOGGER.warning(
-                "%s::%s is overriding deprecated methods on an instance of "
-                "NumberEntity, this is not valid and will be unsupported "
-                "from Home Assistant 2022.10. Please %s",
+                (
+                    "%s::%s is overriding deprecated methods on an instance of "
+                    "NumberEntity, this is not valid and will be unsupported "
+                    "from Home Assistant 2022.10. Please %s"
+                ),
                 cls.__module__,
                 cls.__name__,
                 report_issue,
@@ -251,6 +246,15 @@ class NumberEntity(Entity):
             ATTR_STEP: self.step,
             ATTR_MODE: self.mode,
         }
+
+    @property
+    def device_class(self) -> NumberDeviceClass | None:
+        """Return the class of this entity."""
+        if hasattr(self, "_attr_device_class"):
+            return self._attr_device_class
+        if hasattr(self, "entity_description"):
+            return self.entity_description.device_class
+        return None
 
     @property
     def native_min_value(self) -> float:
@@ -374,13 +378,16 @@ class NumberEntity(Entity):
             hasattr(self, "entity_description")
             and self.entity_description.unit_of_measurement is not None
         ):
-            return self.entity_description.unit_of_measurement  # type: ignore[unreachable]
+            return (  # type: ignore[unreachable]
+                self.entity_description.unit_of_measurement
+            )
 
         native_unit_of_measurement = self.native_unit_of_measurement
 
         if (
             self.device_class == NumberDeviceClass.TEMPERATURE
-            and native_unit_of_measurement in (TEMP_CELSIUS, TEMP_FAHRENHEIT)
+            and native_unit_of_measurement
+            in (UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT)
         ):
             return self.hass.config.units.temperature_unit
 
@@ -482,8 +489,10 @@ class NumberEntity(Entity):
             self._deprecated_number_entity_reported = True
             report_issue = self._suggest_report_issue()
             _LOGGER.warning(
-                "Entity %s (%s) is using deprecated NumberEntity features which will "
-                "be unsupported from Home Assistant Core 2022.10, please %s",
+                (
+                    "Entity %s (%s) is using deprecated NumberEntity features which"
+                    " will be unsupported from Home Assistant Core 2022.10, please %s"
+                ),
                 self.entity_id,
                 type(self),
                 report_issue,

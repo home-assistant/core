@@ -24,10 +24,9 @@
                 }
             },
             "user": {
-                "data": {
-                    "password": "Wachtwoord",
-                    "pin": "Pincode",
-                    "username": "Gebruikersnaam"
+                "menu_options": {
+                    "cloud": "Risco Cloud (aanbevolen)",
+                    "local": "Lokaal Risco paneel (geavanceerd)"
                 }
             }
         }

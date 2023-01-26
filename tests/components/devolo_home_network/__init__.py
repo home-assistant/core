@@ -1,6 +1,6 @@
 """Tests for the devolo Home Network integration."""
 from homeassistant.components.devolo_home_network.const import DOMAIN
-from homeassistant.const import CONF_IP_ADDRESS
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
 from .const import IP
@@ -12,6 +12,7 @@ def configure_integration(hass: HomeAssistant) -> MockConfigEntry:
     """Configure the integration."""
     config = {
         CONF_IP_ADDRESS: IP,
+        CONF_PASSWORD: "test",
     }
     entry = MockConfigEntry(domain=DOMAIN, data=config)
     entry.add_to_hass(hass)

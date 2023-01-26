@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Perangkat sudah dikonfigurasi",
+            "no_mac_address": "Alamat MAC tidak ada dalam data zeroconf",
             "reauth_successful": "Autentikasi ulang berhasil",
             "reconfigure_successful": "Konfigurasi ulang berhasil"
         },

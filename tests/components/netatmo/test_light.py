@@ -27,14 +27,14 @@ async def test_camera_light_setup_and_services(hass, config_entry, netatmo_auth)
     await simulate_webhook(hass, webhook_id, FAKE_WEBHOOK_ACTIVATION)
     await hass.async_block_till_done()
 
-    light_entity = "light.garden"
+    light_entity = "light.front"
     assert hass.states.get(light_entity).state == "unavailable"
 
     # Trigger light mode change
     response = {
         "event_type": "light_mode",
-        "device_id": "12:34:56:00:a5:a4",
-        "camera_id": "12:34:56:00:a5:a4",
+        "device_id": "12:34:56:10:b9:0e",
+        "camera_id": "12:34:56:10:b9:0e",
         "event_id": "601dce1560abca1ebad9b723",
         "push_type": "NOC-light_mode",
         "sub_type": "on",
@@ -46,7 +46,7 @@ async def test_camera_light_setup_and_services(hass, config_entry, netatmo_auth)
     # Trigger light mode change with erroneous webhook data
     response = {
         "event_type": "light_mode",
-        "device_id": "12:34:56:00:a5:a4",
+        "device_id": "12:34:56:10:b9:0e",
     }
     await simulate_webhook(hass, webhook_id, response)
 
@@ -62,7 +62,7 @@ async def test_camera_light_setup_and_services(hass, config_entry, netatmo_auth)
         )
         await hass.async_block_till_done()
         mock_set_state.assert_called_once_with(
-            {"modules": [{"id": "12:34:56:00:a5:a4", "floodlight": "auto"}]}
+            {"modules": [{"id": "12:34:56:10:b9:0e", "floodlight": "auto"}]}
         )
 
     # Test turning light on
@@ -75,7 +75,7 @@ async def test_camera_light_setup_and_services(hass, config_entry, netatmo_auth)
         )
         await hass.async_block_till_done()
         mock_set_state.assert_called_once_with(
-            {"modules": [{"id": "12:34:56:00:a5:a4", "floodlight": "on"}]}
+            {"modules": [{"id": "12:34:56:10:b9:0e", "floodlight": "on"}]}
         )
 
 

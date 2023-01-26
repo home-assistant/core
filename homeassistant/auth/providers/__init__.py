@@ -250,9 +250,7 @@ class LoginFlow(data_entry_flow.FlowHandler):
             auth_module, "async_initialize_login_mfa_step"
         ):
             try:
-                await auth_module.async_initialize_login_mfa_step(  # type: ignore[attr-defined]
-                    self.user.id
-                )
+                await auth_module.async_initialize_login_mfa_step(self.user.id)
             except HomeAssistantError:
                 _LOGGER.exception("Error initializing MFA step")
                 return self.async_abort(reason="unknown_error")
@@ -286,4 +284,4 @@ class LoginFlow(data_entry_flow.FlowHandler):
 
     async def async_finish(self, flow_result: Any) -> FlowResult:
         """Handle the pass of login flow."""
-        return self.async_create_entry(title=self._auth_provider.name, data=flow_result)
+        return self.async_create_entry(data=flow_result)

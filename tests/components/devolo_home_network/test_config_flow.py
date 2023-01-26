@@ -7,19 +7,28 @@ from unittest.mock import patch
 from devolo_plc_api.exceptions.device import DeviceNotFound
 import pytest
 
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.devolo_home_network import config_flow
 from homeassistant.components.devolo_home_network.const import (
     DOMAIN,
     SERIAL_NUMBER,
     TITLE,
 )
-from homeassistant.const import CONF_BASE, CONF_IP_ADDRESS, CONF_NAME
+from homeassistant.const import CONF_BASE, CONF_IP_ADDRESS, CONF_NAME, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .const import DISCOVERY_INFO, DISCOVERY_INFO_WRONG_DEVICE, IP
+from . import configure_integration
+from .const import (
+    DISCOVERY_INFO,
+    DISCOVERY_INFO_CHANGED,
+    DISCOVERY_INFO_WRONG_DEVICE,
+    IP,
+    IP_ALT,
+)
 from .mock import MockDevice
+
+from tests.common import MockConfigEntry
 
 
 async def test_form(hass: HomeAssistant, info: dict[str, Any]):
@@ -47,6 +56,7 @@ async def test_form(hass: HomeAssistant, info: dict[str, Any]):
     assert result2["title"] == info["title"]
     assert result2["data"] == {
         CONF_IP_ADDRESS: IP,
+        CONF_PASSWORD: "",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -112,6 +122,7 @@ async def test_zeroconf(hass: HomeAssistant):
     assert result2["title"] == "test"
     assert result2["data"] == {
         CONF_IP_ADDRESS: IP,
+        CONF_PASSWORD: "",
     }
 
 
@@ -129,20 +140,11 @@ async def test_abort_zeroconf_wrong_device(hass: HomeAssistant):
 @pytest.mark.usefixtures("info")
 async def test_abort_if_configued(hass: HomeAssistant):
     """Test we abort config flow if already configured."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    serial_number = DISCOVERY_INFO.properties["SN"]
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=serial_number, data={CONF_IP_ADDRESS: IP}
     )
-    with patch(
-        "homeassistant.components.devolo_home_network.async_setup_entry",
-        return_value=True,
-    ):
-        await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_IP_ADDRESS: IP,
-            },
-        )
-        await hass.async_block_till_done()
+    entry.add_to_hass(hass)
 
     # Abort on concurrent user flow
     result = await hass.config_entries.flow.async_init(
@@ -162,12 +164,54 @@ async def test_abort_if_configued(hass: HomeAssistant):
     result3 = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=DISCOVERY_INFO,
+        data=DISCOVERY_INFO_CHANGED,
     )
     assert result3["type"] == FlowResultType.ABORT
     assert result3["reason"] == "already_configured"
+    assert entry.data[CONF_IP_ADDRESS] == IP_ALT
 
 
+@pytest.mark.usefixtures("mock_device")
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_form_reauth(hass: HomeAssistant):
+    """Test that the reauth confirmation form is served."""
+    entry = configure_integration(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+            "title_placeholders": {
+                CONF_NAME: DISCOVERY_INFO.hostname.split(".")[0],
+            },
+        },
+        data=entry.data,
+    )
+
+    assert result["step_id"] == "reauth_confirm"
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+    with patch(
+        "homeassistant.components.devolo_home_network.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_PASSWORD: "test-password-new"},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result2["reason"] == "reauth_successful"
+    assert len(mock_setup_entry.mock_calls) == 1
+
+    await hass.config_entries.async_unload(entry.entry_id)
+
+
+@pytest.mark.usefixtures("mock_device")
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_validate_input(hass: HomeAssistant):
     """Test input validation."""
     with patch(

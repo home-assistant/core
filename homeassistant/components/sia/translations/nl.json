@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Apparaat is al ingesteld"
+        },
         "error": {
             "invalid_account_format": "Het account is geen hex waarde, gebruik alleen 0-9 en A-F.",
             "invalid_account_length": "Het account heeft niet de juiste lengte, het moet tussen de 3 en 16 karakters zijn.",

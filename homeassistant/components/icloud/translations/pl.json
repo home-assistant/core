@@ -11,13 +11,6 @@
             "validate_verification_code": "Nie uda\u0142o si\u0119 zweryfikowa\u0107 kodu weryfikacyjnego, spr\u00f3buj ponownie"
         },
         "step": {
-            "reauth": {
-                "data": {
-                    "password": "Has\u0142o"
-                },
-                "description": "Twoje poprzednio wprowadzone has\u0142o dla {username} ju\u017c nie dzia\u0142a. Zaktualizuj swoje has\u0142o, aby nadal korzysta\u0107 z tej integracji.",
-                "title": "Ponownie uwierzytelnij integracj\u0119"
-            },
             "reauth_confirm": {
                 "data": {
                     "password": "Has\u0142o"

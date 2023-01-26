@@ -46,7 +46,7 @@ async def test_hue_bridge_setup(hass):
                             capabilities={"state_class": SensorStateClass.MEASUREMENT},
                             friendly_name="Hue dimmer switch battery",
                             entity_category=EntityCategory.DIAGNOSTIC,
-                            unique_id="homekit-6623462389072572-644245094400",
+                            unique_id="00:00:00:00:00:00_6623462389072572_644245094400",
                             unit_of_measurement=PERCENTAGE,
                             state="100",
                         )

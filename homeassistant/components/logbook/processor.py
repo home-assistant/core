@@ -56,7 +56,7 @@ from .const import (
 from .helpers import is_sensor_continuous
 from .models import EventAsRow, LazyEventPartialState, async_event_to_row
 from .queries import statement_for_request
-from .queries.common import PSUEDO_EVENT_STATE_CHANGED
+from .queries.common import PSEUDO_EVENT_STATE_CHANGED
 
 
 @dataclass
@@ -201,7 +201,7 @@ def _humanify(
         event_type = row.event_type
         if event_type == EVENT_CALL_SERVICE:
             continue
-        if event_type is PSUEDO_EVENT_STATE_CHANGED:
+        if event_type is PSEUDO_EVENT_STATE_CHANGED:
             entity_id = row.entity_id
             assert entity_id is not None
             # Skip continuous sensors
@@ -388,12 +388,14 @@ def _rows_match(row: Row | EventAsRow, other_row: Row | EventAsRow) -> bool:
 
 def _row_time_fired_isoformat(row: Row | EventAsRow) -> str:
     """Convert the row timed_fired to isoformat."""
-    return process_timestamp_to_utc_isoformat(row.time_fired or dt_util.utcnow())
+    return process_timestamp_to_utc_isoformat(
+        dt_util.utc_from_timestamp(row.time_fired_ts) or dt_util.utcnow()
+    )
 
 
 def _row_time_fired_timestamp(row: Row | EventAsRow) -> float:
     """Convert the row timed_fired to timestamp."""
-    return process_datetime_to_timestamp(row.time_fired or dt_util.utcnow())
+    return row.time_fired_ts or process_datetime_to_timestamp(dt_util.utcnow())
 
 
 class EntityNameCache:

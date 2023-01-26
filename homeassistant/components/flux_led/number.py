@@ -89,8 +89,7 @@ async def async_setup_entry(
             FluxSpeedNumber(coordinator, base_unique_id, f"{name} Effect Speed", None)
         )
 
-    if entities:
-        async_add_entities(entities)
+    async_add_entities(entities)
 
 
 class FluxSpeedNumber(

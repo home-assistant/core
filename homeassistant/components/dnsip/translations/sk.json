@@ -1,0 +1,32 @@
+{
+    "config": {
+        "error": {
+            "invalid_hostname": "Neplatn\u00fd n\u00e1zov hostite\u013ea"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "hostname": "N\u00e1zov hostite\u013ea, pre ktor\u00fd sa m\u00e1 vykona\u0165 po\u017eiadavka DNS",
+                    "resolver": "Resolver pre lookup IPV4",
+                    "resolver_ipv6": "Resolver pre lookup IPV6"
+                }
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "already_configured": "Slu\u017eba u\u017e je nakonfigurovan\u00e1"
+        },
+        "error": {
+            "invalid_resolver": "Neplatn\u00e1 adresa IP pre resolver"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "resolver": "Resolver pre lookup IPV4",
+                    "resolver_ipv6": "Resolver pre lookup IPV6"
+                }
+            }
+        }
+    }
+}

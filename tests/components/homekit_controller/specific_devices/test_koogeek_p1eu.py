@@ -33,13 +33,13 @@ async def test_koogeek_p1eu_setup(hass):
                 EntityTestInfo(
                     entity_id="switch.koogeek_p1_a00aa0_outlet",
                     friendly_name="Koogeek-P1-A00AA0 outlet",
-                    unique_id="homekit-EUCP03190xxxxx48-7",
+                    unique_id="00:00:00:00:00:00_1_7",
                     state="off",
                 ),
                 EntityTestInfo(
                     entity_id="sensor.koogeek_p1_a00aa0_power",
                     friendly_name="Koogeek-P1-A00AA0 Power",
-                    unique_id="homekit-EUCP03190xxxxx48-aid:1-sid:21-cid:22",
+                    unique_id="00:00:00:00:00:00_1_21_22",
                     unit_of_measurement=POWER_WATT,
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
                     state="5",

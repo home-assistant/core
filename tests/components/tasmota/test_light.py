@@ -1236,7 +1236,10 @@ async def test_transition(hass, mqtt_mock, setup_tasmota):
     async_fire_mqtt_message(
         hass,
         "tasmota_49A3BC/tele/STATE",
-        '{"POWER":"ON","Dimmer":50, "Color":"0,255,0","HSBColor":"120,100,50","White":0}',
+        (
+            '{"POWER":"ON","Dimmer":50,'
+            ' "Color":"0,255,0","HSBColor":"120,100,50","White":0}'
+        ),
     )
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
@@ -1247,7 +1250,10 @@ async def test_transition(hass, mqtt_mock, setup_tasmota):
     await common.async_turn_on(hass, "light.test", rgb_color=[255, 0, 0], transition=6)
     mqtt_mock.async_publish.assert_called_once_with(
         "tasmota_49A3BC/cmnd/Backlog",
-        "NoDelay;Fade2 1;NoDelay;Speed2 24;NoDelay;Power1 ON;NoDelay;HsbColor1 0;NoDelay;HsbColor2 100",
+        (
+            "NoDelay;Fade2 1;NoDelay;Speed2 24;NoDelay;Power1 ON;NoDelay;HsbColor1"
+            " 0;NoDelay;HsbColor2 100"
+        ),
         0,
         False,
     )
@@ -1268,7 +1274,10 @@ async def test_transition(hass, mqtt_mock, setup_tasmota):
     await common.async_turn_on(hass, "light.test", rgb_color=[255, 0, 0], transition=6)
     mqtt_mock.async_publish.assert_called_once_with(
         "tasmota_49A3BC/cmnd/Backlog",
-        "NoDelay;Fade2 1;NoDelay;Speed2 12;NoDelay;Power1 ON;NoDelay;HsbColor1 0;NoDelay;HsbColor2 100",
+        (
+            "NoDelay;Fade2 1;NoDelay;Speed2 12;NoDelay;Power1 ON;NoDelay;HsbColor1"
+            " 0;NoDelay;HsbColor2 100"
+        ),
         0,
         False,
     )

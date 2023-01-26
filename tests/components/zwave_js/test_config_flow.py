@@ -15,7 +15,7 @@ from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.components.zwave_js.config_flow import SERVER_VERSION_TIMEOUT, TITLE
-from homeassistant.components.zwave_js.const import DOMAIN
+from homeassistant.components.zwave_js.const import ADDON_SLUG, DOMAIN
 
 from tests.common import MockConfigEntry
 
@@ -88,7 +88,7 @@ def discovery_info_side_effect_fixture():
 def mock_get_addon_discovery_info(discovery_info, discovery_info_side_effect):
     """Mock get add-on discovery info."""
     with patch(
-        "homeassistant.components.zwave_js.addon.async_get_addon_discovery_info",
+        "homeassistant.components.hassio.addon_manager.async_get_addon_discovery_info",
         side_effect=discovery_info_side_effect,
         return_value=discovery_info,
     ) as get_addon_discovery_info:
@@ -162,7 +162,12 @@ def mock_list_ports_fixture(serial_port) -> Generator[MagicMock, None, None]:
         another_port.description = "New serial port"
         another_port.serial_number = "5678"
         another_port.pid = 8765
-        mock_list_ports.return_value = [serial_port, another_port]
+        no_vid_port = copy(serial_port)
+        no_vid_port.device = "/no_vid"
+        no_vid_port.description = "Port without vid"
+        no_vid_port.serial_number = "9123"
+        no_vid_port.vid = None
+        mock_list_ports.return_value = [serial_port, another_port, no_vid_port]
         yield mock_list_ports
 
 
@@ -326,7 +331,11 @@ async def test_supervisor_discovery(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
-        data=HassioServiceInfo(config=ADDON_DISCOVERY_INFO),
+        data=HassioServiceInfo(
+            config=ADDON_DISCOVERY_INFO,
+            name="Z-Wave JS",
+            slug=ADDON_SLUG,
+        ),
     )
 
     with patch(
@@ -366,7 +375,11 @@ async def test_supervisor_discovery_cannot_connect(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
-        data=HassioServiceInfo(config=ADDON_DISCOVERY_INFO),
+        data=HassioServiceInfo(
+            config=ADDON_DISCOVERY_INFO,
+            name="Z-Wave JS",
+            slug=ADDON_SLUG,
+        ),
     )
 
     assert result["type"] == "abort"
@@ -388,7 +401,11 @@ async def test_clean_discovery_on_user_create(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
-        data=HassioServiceInfo(config=ADDON_DISCOVERY_INFO),
+        data=HassioServiceInfo(
+            config=ADDON_DISCOVERY_INFO,
+            name="Z-Wave JS",
+            slug=ADDON_SLUG,
+        ),
     )
 
     assert result["type"] == "form"
@@ -454,7 +471,11 @@ async def test_abort_discovery_with_existing_entry(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
-        data=HassioServiceInfo(config=ADDON_DISCOVERY_INFO),
+        data=HassioServiceInfo(
+            config=ADDON_DISCOVERY_INFO,
+            name="Z-Wave JS",
+            slug=ADDON_SLUG,
+        ),
     )
 
     assert result["type"] == "abort"
@@ -478,17 +499,44 @@ async def test_abort_hassio_discovery_with_existing_flow(
     result2 = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
-        data=HassioServiceInfo(config=ADDON_DISCOVERY_INFO),
+        data=HassioServiceInfo(
+            config=ADDON_DISCOVERY_INFO,
+            name="Z-Wave JS",
+            slug=ADDON_SLUG,
+        ),
     )
 
     assert result2["type"] == "abort"
     assert result2["reason"] == "already_in_progress"
 
 
+async def test_abort_hassio_discovery_for_other_addon(
+    hass, supervisor, addon_installed, addon_options
+):
+    """Test hassio discovery flow is aborted for a non official add-on discovery."""
+    result2 = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_HASSIO},
+        data=HassioServiceInfo(
+            config={
+                "addon": "Other Z-Wave JS",
+                "host": "host1",
+                "port": 3001,
+            },
+            name="Other Z-Wave JS",
+            slug="other_addon",
+        ),
+    )
+
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "not_zwave_js_addon"
+
+
 @pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
 async def test_usb_discovery(
     hass,
     supervisor,
+    addon_not_installed,
     install_addon,
     addon_options,
     get_addon_discovery_info,
@@ -673,7 +721,11 @@ async def test_discovery_addon_not_running(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
-        data=HassioServiceInfo(config=ADDON_DISCOVERY_INFO),
+        data=HassioServiceInfo(
+            config=ADDON_DISCOVERY_INFO,
+            name="Z-Wave JS",
+            slug=ADDON_SLUG,
+        ),
     )
 
     assert result["step_id"] == "hassio_confirm"
@@ -753,7 +805,11 @@ async def test_discovery_addon_not_installed(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
-        data=HassioServiceInfo(config=ADDON_DISCOVERY_INFO),
+        data=HassioServiceInfo(
+            config=ADDON_DISCOVERY_INFO,
+            name="Z-Wave JS",
+            slug=ADDON_SLUG,
+        ),
     )
 
     assert result["step_id"] == "hassio_confirm"
@@ -834,7 +890,11 @@ async def test_abort_usb_discovery_with_existing_flow(hass, supervisor, addon_op
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
-        data=HassioServiceInfo(config=ADDON_DISCOVERY_INFO),
+        data=HassioServiceInfo(
+            config=ADDON_DISCOVERY_INFO,
+            name="Z-Wave JS",
+            slug=ADDON_SLUG,
+        ),
     )
 
     assert result["type"] == "form"
@@ -1004,8 +1064,10 @@ async def test_addon_running(
 
 
 @pytest.mark.parametrize(
-    "discovery_info, discovery_info_side_effect, server_version_side_effect, "
-    "addon_info_side_effect, abort_reason",
+    (
+        "discovery_info, discovery_info_side_effect, server_version_side_effect, "
+        "addon_info_side_effect, abort_reason"
+    ),
     [
         (
             {"config": ADDON_DISCOVERY_INFO},
@@ -1683,7 +1745,10 @@ async def test_options_not_addon(hass, client, supervisor, integration):
 
 
 @pytest.mark.parametrize(
-    "discovery_info, entry_data, old_addon_options, new_addon_options, disconnect_calls",
+    (
+        "discovery_info, entry_data, old_addon_options, new_addon_options,"
+        " disconnect_calls"
+    ),
     [
         (
             {"config": ADDON_DISCOVERY_INFO},
@@ -1924,7 +1989,10 @@ async def different_device_server_version(*args):
 
 
 @pytest.mark.parametrize(
-    "discovery_info, entry_data, old_addon_options, new_addon_options, disconnect_calls, server_version_side_effect",
+    (
+        "discovery_info, entry_data, old_addon_options, new_addon_options,"
+        " disconnect_calls, server_version_side_effect"
+    ),
     [
         (
             {"config": ADDON_DISCOVERY_INFO},
@@ -2072,7 +2140,10 @@ async def test_options_different_device(
 
 
 @pytest.mark.parametrize(
-    "discovery_info, entry_data, old_addon_options, new_addon_options, disconnect_calls, restart_addon_side_effect",
+    (
+        "discovery_info, entry_data, old_addon_options, new_addon_options,"
+        " disconnect_calls, restart_addon_side_effect"
+    ),
     [
         (
             {"config": ADDON_DISCOVERY_INFO},
@@ -2221,7 +2292,10 @@ async def test_options_addon_restart_failed(
 
 
 @pytest.mark.parametrize(
-    "discovery_info, entry_data, old_addon_options, new_addon_options, disconnect_calls, server_version_side_effect",
+    (
+        "discovery_info, entry_data, old_addon_options, new_addon_options,"
+        " disconnect_calls, server_version_side_effect"
+    ),
     [
         (
             {"config": ADDON_DISCOVERY_INFO},
@@ -2305,7 +2379,10 @@ async def test_options_addon_running_server_info_failure(
 
 
 @pytest.mark.parametrize(
-    "discovery_info, entry_data, old_addon_options, new_addon_options, disconnect_calls",
+    (
+        "discovery_info, entry_data, old_addon_options, new_addon_options,"
+        " disconnect_calls"
+    ),
     [
         (
             {"config": ADDON_DISCOVERY_INFO},

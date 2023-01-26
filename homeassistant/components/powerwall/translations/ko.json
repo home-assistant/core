@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
             "reauth_successful": "\uc7ac\uc778\uc99d\uc5d0 \uc131\uacf5\ud588\uc2b5\ub2c8\ub2e4"
         },
         "error": {
@@ -12,6 +13,11 @@
         },
         "flow_title": "Tesla Powerwall ({ip_address})",
         "step": {
+            "reauth_confim": {
+                "data": {
+                    "password": "\ube44\ubc00\ubc88\ud638"
+                }
+            },
             "user": {
                 "data": {
                     "ip_address": "IP \uc8fc\uc18c",

@@ -24,11 +24,6 @@
                 }
             },
             "user": {
-                "data": {
-                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
-                    "pin": "PIN\u30b3\u30fc\u30c9",
-                    "username": "\u30e6\u30fc\u30b6\u30fc\u540d"
-                },
                 "menu_options": {
                     "cloud": "Risco Cloud(\u63a8\u5968)",
                     "local": "Local Risco Panel(\u30a2\u30c9\u30d0\u30f3\u30b9\u30c9)"

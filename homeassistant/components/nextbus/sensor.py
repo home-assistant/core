@@ -122,7 +122,7 @@ class NextBusDepartureSensor(SensorEntity):
     both the route and the stop.
 
     This is possibly a little convoluted to provide as it requires making a
-    request to the service to get these values. Perhaps it can be simplifed in
+    request to the service to get these values. Perhaps it can be simplified in
     the future using fuzzy logic and matching.
     """
 

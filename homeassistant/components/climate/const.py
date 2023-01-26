@@ -1,6 +1,6 @@
 """Provides the constants needed for component."""
 
-from enum import IntEnum
+from enum import IntFlag
 
 from homeassistant.backports.enum import StrEnum
 
@@ -146,7 +146,7 @@ SERVICE_SET_SWING_MODE = "set_swing_mode"
 SERVICE_SET_TEMPERATURE = "set_temperature"
 
 
-class ClimateEntityFeature(IntEnum):
+class ClimateEntityFeature(IntFlag):
     """Supported features of the climate entity."""
 
     TARGET_TEMPERATURE = 1

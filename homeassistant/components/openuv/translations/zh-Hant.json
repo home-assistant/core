@@ -1,12 +1,20 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u5ea7\u6a19\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+            "already_configured": "\u5ea7\u6a19\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f"
         },
         "error": {
             "invalid_api_key": "API \u91d1\u9470\u7121\u6548"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API \u91d1\u9470"
+                },
+                "description": "\u8acb\u91cd\u65b0\u8f38\u5165 {latitude}\u3001{longitude} API \u5bc6\u9470\u3002",
+                "title": "\u91cd\u65b0\u8a8d\u8b49\u6574\u5408"
+            },
             "user": {
                 "data": {
                     "api_key": "API \u91d1\u9470",

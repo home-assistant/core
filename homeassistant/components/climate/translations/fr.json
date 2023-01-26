@@ -25,5 +25,22 @@
             "off": "D\u00e9sactiv\u00e9"
         }
     },
+    "state_attributes": {
+        "_": {
+            "hvac_action": {
+                "state": {
+                    "heating": "Chauffe",
+                    "idle": "Inactif",
+                    "off": "Arr\u00eat"
+                }
+            },
+            "preset_mode": {
+                "state": {
+                    "away": "Absent",
+                    "comfort": "Confort"
+                }
+            }
+        }
+    },
     "title": "Thermostat"
 }

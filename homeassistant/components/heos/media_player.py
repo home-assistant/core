@@ -5,10 +5,9 @@ from collections.abc import Awaitable, Callable, Coroutine
 from functools import reduce, wraps
 import logging
 from operator import ior
-from typing import Any
+from typing import Any, ParamSpec
 
 from pyheos import HeosError, const as heos_const
-from typing_extensions import ParamSpec
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -413,7 +412,7 @@ class HeosMediaPlayer(MediaPlayerEntity):
         return self._source_manager.source_list
 
     @property
-    def state(self) -> str:
+    def state(self) -> MediaPlayerState:
         """State of the player."""
         return PLAY_STATE_TO_STATE[self._player.state]
 

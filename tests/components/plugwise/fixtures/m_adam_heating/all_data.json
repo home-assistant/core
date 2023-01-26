@@ -10,23 +10,24 @@
     "ad4838d7d35c4d6ea796ee12ae5aedf8": {
       "dev_class": "thermostat",
       "location": "f2bf9048bef64cc5b6d5110154e33c81",
-      "model": "Anna",
+      "model": "ThermoTouch",
       "name": "Anna",
-      "vendor": "Plugwise B.V.",
+      "vendor": "Plugwise",
       "thermostat": {
-        "setpoint": 18.5,
+        "setpoint": 20.0,
         "lower_bound": 1.0,
         "upper_bound": 35.0,
         "resolution": 0.01
       },
-      "preset_modes": ["home", "asleep", "away", "no_frost"],
+      "available": true,
+      "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
       "active_preset": "asleep",
       "available_schedules": ["Weekschema", "Badkamer", "Test"],
       "selected_schedule": "None",
       "last_used": "Weekschema",
       "control_state": "heating",
       "mode": "heat",
-      "sensors": { "temperature": 18.1, "setpoint": 18.5 }
+      "sensors": { "temperature": 19.1, "setpoint": 20.0 }
     },
     "1772a4ea304041adb83f357b751341ff": {
       "dev_class": "thermo_sensor",
@@ -37,8 +38,9 @@
       "name": "Tom Badkamer",
       "zigbee_mac_address": "ABCD012345670A01",
       "vendor": "Plugwise",
+      "available": true,
       "sensors": {
-        "temperature": 21.6,
+        "temperature": 18.6,
         "battery": 99,
         "temperature_difference": 2.3,
         "valve_position": 0.0
@@ -59,7 +61,8 @@
         "upper_bound": 99.9,
         "resolution": 0.01
       },
-      "preset_modes": ["home", "asleep", "away", "no_frost"],
+      "available": true,
+      "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
       "active_preset": "home",
       "available_schedules": ["Weekschema", "Badkamer", "Test"],
       "selected_schedule": "Badkamer",
@@ -78,10 +81,10 @@
       "hardware": "AME Smile 2.0 board",
       "location": "bc93488efab249e5bc54fd7e175a6f91",
       "mac_address": "012345670001",
-      "model": "Adam",
+      "model": "Gateway",
       "name": "Adam",
       "zigbee_mac_address": "ABCD012345670101",
-      "vendor": "Plugwise B.V.",
+      "vendor": "Plugwise",
       "regulation_mode": "heating",
       "regulation_modes": ["heating", "off", "bleeding_cold", "bleeding_hot"],
       "binary_sensors": {
@@ -108,6 +111,7 @@
         "upper_bound": 60.0,
         "resolution": 0.01
       },
+      "available": true,
       "binary_sensors": {
         "dhw_state": false,
         "heating_state": true,

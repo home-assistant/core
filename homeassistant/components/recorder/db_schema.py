@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
+import time
 from typing import Any, TypeVar, cast
 
 import ciso8601
@@ -42,18 +43,19 @@ from homeassistant.helpers.json import (
     JSON_DECODE_EXCEPTIONS,
     JSON_DUMP,
     json_bytes,
+    json_bytes_strip_null,
     json_loads,
 )
 import homeassistant.util.dt as dt_util
 
-from .const import ALL_DOMAIN_EXCLUDE_ATTRS
+from .const import ALL_DOMAIN_EXCLUDE_ATTRS, SupportedDialect
 from .models import StatisticData, StatisticMetaData, process_timestamp
 
 # SQLAlchemy Schema
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 30
+SCHEMA_VERSION = 32
 
 _StatisticsBaseSelfT = TypeVar("_StatisticsBaseSelfT", bound="StatisticsBase")
 
@@ -90,8 +92,8 @@ TABLES_TO_CHECK = [
     TABLE_SCHEMA_CHANGES,
 ]
 
-LAST_UPDATED_INDEX = "ix_states_last_updated"
-ENTITY_ID_LAST_UPDATED_INDEX = "ix_states_entity_id_last_updated"
+LAST_UPDATED_INDEX_TS = "ix_states_last_updated_ts"
+ENTITY_ID_LAST_UPDATED_INDEX_TS = "ix_states_entity_id_last_updated_ts"
 EVENTS_CONTEXT_ID_INDEX = "ix_events_context_id"
 STATES_CONTEXT_ID_INDEX = "ix_states_context_id"
 
@@ -122,6 +124,8 @@ DOUBLE_TYPE = (
     .with_variant(postgresql.DOUBLE_PRECISION(), "postgresql")
 )
 
+TIMESTAMP_TYPE = DOUBLE_TYPE
+
 
 class JSONLiteral(JSON):  # type: ignore[misc]
     """Teach SA how to literalize json."""
@@ -146,7 +150,7 @@ class Events(Base):  # type: ignore[misc,valid-type]
     __table_args__ = (
         # Used for fetching events at a specific time
         # see logbook
-        Index("ix_events_event_type_time_fired", "event_type", "time_fired"),
+        Index("ix_events_event_type_time_fired_ts", "event_type", "time_fired_ts"),
         {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
     )
     __tablename__ = TABLE_EVENTS
@@ -155,7 +159,8 @@ class Events(Base):  # type: ignore[misc,valid-type]
     event_data = Column(Text().with_variant(mysql.LONGTEXT, "mysql"))
     origin = Column(String(MAX_LENGTH_EVENT_ORIGIN))  # no longer used for new rows
     origin_idx = Column(SmallInteger)
-    time_fired = Column(DATETIME_TYPE, index=True)
+    time_fired = Column(DATETIME_TYPE)  # no longer used for new rows
+    time_fired_ts = Column(TIMESTAMP_TYPE, index=True)
     context_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
     context_user_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID))
     context_parent_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID))
@@ -165,11 +170,20 @@ class Events(Base):  # type: ignore[misc,valid-type]
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
         return (
-            f"<recorder.Events("
+            "<recorder.Events("
             f"id={self.event_id}, type='{self.event_type}', "
-            f"origin_idx='{self.origin_idx}', time_fired='{self.time_fired}'"
+            f"origin_idx='{self.origin_idx}', time_fired='{self._time_fired_isotime}'"
             f", data_id={self.data_id})>"
         )
+
+    @property
+    def _time_fired_isotime(self) -> str:
+        """Return time_fired as an isotime string."""
+        if self.time_fired_ts is not None:
+            date_time = dt_util.utc_from_timestamp(self.time_fired_ts)
+        else:
+            date_time = process_timestamp(self.time_fired)
+        return date_time.isoformat(sep=" ", timespec="seconds")
 
     @staticmethod
     def from_event(event: Event) -> Events:
@@ -178,7 +192,8 @@ class Events(Base):  # type: ignore[misc,valid-type]
             event_type=event.event_type,
             event_data=None,
             origin_idx=EVENT_ORIGIN_TO_IDX.get(event.origin),
-            time_fired=event.time_fired,
+            time_fired=None,
+            time_fired_ts=dt_util.utc_to_timestamp(event.time_fired),
             context_id=event.context.id,
             context_user_id=event.context.user_id,
             context_parent_id=event.context.parent_id,
@@ -198,7 +213,7 @@ class Events(Base):  # type: ignore[misc,valid-type]
                 EventOrigin(self.origin)
                 if self.origin
                 else EVENT_ORIGIN_ORDER[self.origin_idx],
-                process_timestamp(self.time_fired),
+                dt_util.utc_from_timestamp(self.time_fired_ts),
                 context=context,
             )
         except JSON_DECODE_EXCEPTIONS:
@@ -222,9 +237,9 @@ class EventData(Base):  # type: ignore[misc,valid-type]
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
         return (
-            f"<recorder.EventData("
+            "<recorder.EventData("
             f"id={self.data_id}, hash='{self.hash}', data='{self.shared_data}'"
-            f")>"
+            ")>"
         )
 
     @staticmethod
@@ -237,8 +252,12 @@ class EventData(Base):  # type: ignore[misc,valid-type]
         )
 
     @staticmethod
-    def shared_data_bytes_from_event(event: Event) -> bytes:
+    def shared_data_bytes_from_event(
+        event: Event, dialect: SupportedDialect | None
+    ) -> bytes:
         """Create shared_data from an event."""
+        if dialect == SupportedDialect.POSTGRESQL:
+            return json_bytes_strip_null(event.data)
         return json_bytes(event.data)
 
     @staticmethod
@@ -261,7 +280,7 @@ class States(Base):  # type: ignore[misc,valid-type]
     __table_args__ = (
         # Used for fetching the state of entities at a specific time
         # (get_states in history.py)
-        Index(ENTITY_ID_LAST_UPDATED_INDEX, "entity_id", "last_updated"),
+        Index(ENTITY_ID_LAST_UPDATED_INDEX_TS, "entity_id", "last_updated_ts"),
         {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
     )
     __tablename__ = TABLE_STATES
@@ -274,8 +293,10 @@ class States(Base):  # type: ignore[misc,valid-type]
     event_id = Column(  # no longer used for new rows
         Integer, ForeignKey("events.event_id", ondelete="CASCADE"), index=True
     )
-    last_changed = Column(DATETIME_TYPE)
-    last_updated = Column(DATETIME_TYPE, default=dt_util.utcnow, index=True)
+    last_changed = Column(DATETIME_TYPE)  # no longer used for new rows
+    last_changed_ts = Column(TIMESTAMP_TYPE)
+    last_updated = Column(DATETIME_TYPE)  # no longer used for new rows
+    last_updated_ts = Column(TIMESTAMP_TYPE, default=time.time, index=True)
     old_state_id = Column(Integer, ForeignKey("states.state_id"), index=True)
     attributes_id = Column(
         Integer, ForeignKey("state_attributes.attributes_id"), index=True
@@ -290,13 +311,20 @@ class States(Base):  # type: ignore[misc,valid-type]
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
         return (
-            f"<recorder.States("
-            f"id={self.state_id}, entity_id='{self.entity_id}', "
-            f"state='{self.state}', event_id='{self.event_id}', "
-            f"last_updated='{self.last_updated.isoformat(sep=' ', timespec='seconds')}', "
-            f"old_state_id={self.old_state_id}, attributes_id={self.attributes_id}"
-            f")>"
+            f"<recorder.States(id={self.state_id}, entity_id='{self.entity_id}',"
+            f" state='{self.state}', event_id='{self.event_id}',"
+            f" last_updated='{self._last_updated_isotime}',"
+            f" old_state_id={self.old_state_id}, attributes_id={self.attributes_id})>"
         )
+
+    @property
+    def _last_updated_isotime(self) -> str:
+        """Return last_updated as an isotime string."""
+        if self.last_updated_ts is not None:
+            date_time = dt_util.utc_from_timestamp(self.last_updated_ts)
+        else:
+            date_time = process_timestamp(self.last_updated)
+        return date_time.isoformat(sep=" ", timespec="seconds")
 
     @staticmethod
     def from_event(event: Event) -> States:
@@ -310,21 +338,22 @@ class States(Base):  # type: ignore[misc,valid-type]
             context_user_id=event.context.user_id,
             context_parent_id=event.context.parent_id,
             origin_idx=EVENT_ORIGIN_TO_IDX.get(event.origin),
+            last_updated=None,
+            last_changed=None,
         )
-
         # None state means the state was removed from the state machine
         if state is None:
             dbstate.state = ""
-            dbstate.last_updated = event.time_fired
-            dbstate.last_changed = None
+            dbstate.last_updated_ts = dt_util.utc_to_timestamp(event.time_fired)
+            dbstate.last_changed_ts = None
             return dbstate
 
         dbstate.state = state.state
-        dbstate.last_updated = state.last_updated
+        dbstate.last_updated_ts = dt_util.utc_to_timestamp(state.last_updated)
         if state.last_updated == state.last_changed:
-            dbstate.last_changed = None
+            dbstate.last_changed_ts = None
         else:
-            dbstate.last_changed = state.last_changed
+            dbstate.last_changed_ts = dt_util.utc_to_timestamp(state.last_changed)
 
         return dbstate
 
@@ -341,11 +370,13 @@ class States(Base):  # type: ignore[misc,valid-type]
             # When json_loads fails
             _LOGGER.exception("Error converting row to state: %s", self)
             return None
-        if self.last_changed is None or self.last_changed == self.last_updated:
-            last_changed = last_updated = process_timestamp(self.last_updated)
+        if self.last_changed_ts is None or self.last_changed_ts == self.last_updated_ts:
+            last_changed = last_updated = dt_util.utc_from_timestamp(
+                self.last_updated_ts or 0
+            )
         else:
-            last_updated = process_timestamp(self.last_updated)
-            last_changed = process_timestamp(self.last_changed)
+            last_updated = dt_util.utc_from_timestamp(self.last_updated_ts or 0)
+            last_changed = dt_util.utc_from_timestamp(self.last_changed_ts or 0)
         return State(
             self.entity_id,
             self.state,
@@ -374,9 +405,8 @@ class StateAttributes(Base):  # type: ignore[misc,valid-type]
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
         return (
-            f"<recorder.StateAttributes("
-            f"id={self.attributes_id}, hash='{self.hash}', attributes='{self.shared_attrs}'"
-            f")>"
+            f"<recorder.StateAttributes(id={self.attributes_id}, hash='{self.hash}',"
+            f" attributes='{self.shared_attrs}')>"
         )
 
     @staticmethod
@@ -391,7 +421,9 @@ class StateAttributes(Base):  # type: ignore[misc,valid-type]
 
     @staticmethod
     def shared_attrs_bytes_from_event(
-        event: Event, exclude_attrs_by_domain: dict[str, set[str]]
+        event: Event,
+        exclude_attrs_by_domain: dict[str, set[str]],
+        dialect: SupportedDialect | None,
     ) -> bytes:
         """Create shared_attrs from a state_changed event."""
         state: State | None = event.data.get("new_state")
@@ -402,6 +434,10 @@ class StateAttributes(Base):  # type: ignore[misc,valid-type]
         exclude_attrs = (
             exclude_attrs_by_domain.get(domain, set()) | ALL_DOMAIN_EXCLUDE_ATTRS
         )
+        if dialect == SupportedDialect.POSTGRESQL:
+            return json_bytes_strip_null(
+                {k: v for k, v in state.attributes.items() if k not in exclude_attrs}
+            )
         return json_bytes(
             {k: v for k, v in state.attributes.items() if k not in exclude_attrs}
         )
@@ -511,10 +547,10 @@ class RecorderRuns(Base):  # type: ignore[misc,valid-type]
     __table_args__ = (Index("ix_recorder_runs_start_end", "start", "end"),)
     __tablename__ = TABLE_RECORDER_RUNS
     run_id = Column(Integer, Identity(), primary_key=True)
-    start = Column(DateTime(timezone=True), default=dt_util.utcnow)
-    end = Column(DateTime(timezone=True))
+    start = Column(DATETIME_TYPE, default=dt_util.utcnow)
+    end = Column(DATETIME_TYPE)
     closed_incorrect = Column(Boolean, default=False)
-    created = Column(DateTime(timezone=True), default=dt_util.utcnow)
+    created = Column(DATETIME_TYPE, default=dt_util.utcnow)
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
@@ -522,11 +558,10 @@ class RecorderRuns(Base):  # type: ignore[misc,valid-type]
             f"'{self.end.isoformat(sep=' ', timespec='seconds')}'" if self.end else None
         )
         return (
-            f"<recorder.RecorderRuns("
-            f"id={self.run_id}, start='{self.start.isoformat(sep=' ', timespec='seconds')}', "
-            f"end={end}, closed_incorrect={self.closed_incorrect}, "
-            f"created='{self.created.isoformat(sep=' ', timespec='seconds')}'"
-            f")>"
+            f"<recorder.RecorderRuns(id={self.run_id},"
+            f" start='{self.start.isoformat(sep=' ', timespec='seconds')}', end={end},"
+            f" closed_incorrect={self.closed_incorrect},"
+            f" created='{self.created.isoformat(sep=' ', timespec='seconds')}')>"
         )
 
     def entity_ids(self, point_in_time: datetime | None = None) -> list[str]:
@@ -561,15 +596,15 @@ class SchemaChanges(Base):  # type: ignore[misc,valid-type]
     __tablename__ = TABLE_SCHEMA_CHANGES
     change_id = Column(Integer, Identity(), primary_key=True)
     schema_version = Column(Integer)
-    changed = Column(DateTime(timezone=True), default=dt_util.utcnow)
+    changed = Column(DATETIME_TYPE, default=dt_util.utcnow)
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
         return (
-            f"<recorder.SchemaChanges("
+            "<recorder.SchemaChanges("
             f"id={self.change_id}, schema_version={self.schema_version}, "
             f"changed='{self.changed.isoformat(sep=' ', timespec='seconds')}'"
-            f")>"
+            ")>"
         )
 
 
@@ -578,14 +613,13 @@ class StatisticsRuns(Base):  # type: ignore[misc,valid-type]
 
     __tablename__ = TABLE_STATISTICS_RUNS
     run_id = Column(Integer, Identity(), primary_key=True)
-    start = Column(DateTime(timezone=True), index=True)
+    start = Column(DATETIME_TYPE, index=True)
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
         return (
-            f"<recorder.StatisticsRuns("
-            f"id={self.run_id}, start='{self.start.isoformat(sep=' ', timespec='seconds')}', "
-            f")>"
+            f"<recorder.StatisticsRuns(id={self.run_id},"
+            f" start='{self.start.isoformat(sep=' ', timespec='seconds')}', )>"
         )
 
 

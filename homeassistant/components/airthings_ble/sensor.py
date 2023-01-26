@@ -17,8 +17,8 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
     PERCENTAGE,
-    PRESSURE_MBAR,
-    TEMP_CELSIUS,
+    UnitOfPressure,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH
@@ -29,6 +29,7 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import DOMAIN, VOLUME_BECQUEREL, VOLUME_PICOCURIE
 
@@ -62,7 +63,7 @@ SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
     "temperature": SensorEntityDescription(
         key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         name="Temperature",
     ),
     "humidity": SensorEntityDescription(
@@ -74,7 +75,7 @@ SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
     "pressure": SensorEntityDescription(
         key="pressure",
         device_class=SensorDeviceClass.PRESSURE,
-        native_unit_of_measurement=PRESSURE_MBAR,
+        native_unit_of_measurement=UnitOfPressure.MBAR,
         name="Pressure",
     ),
     "battery": SensorEntityDescription(
@@ -112,7 +113,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Airthings BLE sensors."""
-    is_metric = hass.config.units.is_metric
+    is_metric = hass.config.units is METRIC_SYSTEM
 
     coordinator: DataUpdateCoordinator[AirthingsDevice] = hass.data[DOMAIN][
         entry.entry_id
@@ -153,7 +154,7 @@ class AirthingsSensor(
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[AirthingsDevice],
         airthings_device: AirthingsDevice,
         entity_description: SensorEntityDescription,
     ) -> None:

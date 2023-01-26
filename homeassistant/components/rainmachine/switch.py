@@ -5,10 +5,9 @@ import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, TypeVar
+from typing import Any, Concatenate, ParamSpec, TypeVar
 
 from regenmaschine.errors import RainMachineError
-from typing_extensions import Concatenate, ParamSpec
 import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
@@ -22,8 +21,11 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RainMachineData, RainMachineEntity, async_update_programs_and_zones
 from .const import (
-    CONF_ZONE_RUN_TIME,
+    CONF_DEFAULT_ZONE_RUN_TIME,
+    CONF_DURATION,
+    CONF_USE_APP_RUN_TIMES,
     DATA_PROGRAMS,
+    DATA_PROVISION_SETTINGS,
     DATA_RESTRICTIONS_UNIVERSAL,
     DATA_ZONES,
     DEFAULT_ZONE_RUN,
@@ -34,12 +36,13 @@ from .model import (
     RainMachineEntityDescriptionMixinDataKey,
     RainMachineEntityDescriptionMixinUid,
 )
-from .util import RUN_STATE_MAP
+from .util import RUN_STATE_MAP, key_exists
 
 ATTR_AREA = "area"
 ATTR_CS_ON = "cs_on"
 ATTR_CURRENT_CYCLE = "current_cycle"
 ATTR_CYCLES = "cycles"
+ATTR_ZONE_RUN_TIME = "zone_run_time_from_app"
 ATTR_DELAY = "delay"
 ATTR_DELAY_ON = "delay_on"
 ATTR_FIELD_CAPACITY = "field_capacity"
@@ -186,7 +189,7 @@ async def async_setup_entry(
             "start_zone",
             {
                 vol.Optional(
-                    CONF_ZONE_RUN_TIME, default=DEFAULT_ZONE_RUN
+                    CONF_DEFAULT_ZONE_RUN_TIME, default=DEFAULT_ZONE_RUN
                 ): cv.positive_int
             },
             "async_start_zone",
@@ -237,6 +240,9 @@ async def async_setup_entry(
 
     # Add switches to control restrictions:
     for description in RESTRICTIONS_SWITCH_DESCRIPTIONS:
+        coordinator = data.coordinators[description.api_category]
+        if not key_exists(coordinator.data, description.data_key):
+            continue
         entities.append(RainMachineRestrictionSwitch(entry, data, description))
 
     async_add_entities(entities)
@@ -457,9 +463,21 @@ class RainMachineZone(RainMachineActivitySwitch):
     @raise_on_request_error
     async def async_turn_on_when_active(self, **kwargs: Any) -> None:
         """Turn the switch on when its associated activity is active."""
+        # 1. Use duration parameter if provided from service call
+        duration = kwargs.get(CONF_DURATION)
+        if not duration:
+            if (
+                self._entry.options[CONF_USE_APP_RUN_TIMES]
+                and ATTR_ZONE_RUN_TIME in self._attr_extra_state_attributes
+            ):
+                # 2. Use app's zone-specific default, if enabled and available
+                duration = self._attr_extra_state_attributes[ATTR_ZONE_RUN_TIME]
+            else:
+                # 3. Fall back to global zone default duration
+                duration = self._entry.options[CONF_DEFAULT_ZONE_RUN_TIME]
         await self._data.controller.zones.start(
             self.entity_description.uid,
-            kwargs.get("duration", self._entry.options[CONF_ZONE_RUN_TIME]),
+            duration,
         )
         self._update_activities()
 
@@ -494,6 +512,13 @@ class RainMachineZone(RainMachineActivitySwitch):
                 attrs[ATTR_PRECIP_RATE] = round(
                     data["waterSense"]["precipitationRate"], 2
                 )
+
+        if self._entry.options[CONF_USE_APP_RUN_TIMES]:
+            provision_data = self._data.coordinators[DATA_PROVISION_SETTINGS].data
+            if zone_durations := provision_data.get("system", {}).get("zoneDuration"):
+                attrs[ATTR_ZONE_RUN_TIME] = zone_durations[
+                    list(self.coordinator.data).index(self.entity_description.uid)
+                ]
 
         self._attr_extra_state_attributes.update(attrs)
 

@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
+            "already_configured": "Enheten er allerede konfigurert",
+            "reauth_successful": "Re-autentisering var vellykket"
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes",

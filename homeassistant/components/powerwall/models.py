@@ -9,6 +9,7 @@ from tesla_powerwall import (
     DeviceType,
     GridStatus,
     MetersAggregates,
+    Powerwall,
     PowerwallStatus,
     SiteInfo,
     SiteMaster,
@@ -44,7 +45,8 @@ class PowerwallData:
 class PowerwallRuntimeData(TypedDict):
     """Run time data for the powerwall."""
 
-    coordinator: DataUpdateCoordinator | None
+    coordinator: DataUpdateCoordinator[PowerwallData] | None
+    api_instance: Powerwall
     base_info: PowerwallBaseInfo
     api_changed: bool
     http_session: Session

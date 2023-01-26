@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "El servei ja est\u00e0 configurat"
+        },
         "error": {
             "bad_station_id": "L'ID d'estaci\u00f3 no \u00e9s v\u00e0lid, no est\u00e0 present o no es troba a la base de dades d'IDs d'estacions",
             "cannot_connect": "Ha fallat la connexi\u00f3",

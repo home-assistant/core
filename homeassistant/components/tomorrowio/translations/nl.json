@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Dienst is al ingesteld"
+        },
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
             "invalid_api_key": "Ongeldige API-sleutel",
@@ -14,6 +17,32 @@
                     "name": "Naam"
                 },
                 "description": "Om een API sleutel te krijgen, meld je aan bij [Tomorrow.io](https://app.tomorrow.io/signup)."
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "health_concern": {
+                "state": {
+                    "good": "Goed",
+                    "hazardous": "Gevaarlijk",
+                    "unhealthy": "Ongezond"
+                }
+            },
+            "pollen_index": {
+                "state": {
+                    "high": "Hoog",
+                    "low": "Laag",
+                    "medium": "Medium",
+                    "none": "Geen"
+                }
+            },
+            "precipitation_type": {
+                "state": {
+                    "none": "Geen",
+                    "rain": "Regen",
+                    "snow": "Sneeuw"
+                }
             }
         }
     },

@@ -34,7 +34,6 @@
             "invalid_serial": "Sobimatu jadaport",
             "invalid_subscribe_topic": "Kehtetu tellimisteema",
             "invalid_version": "Sobimatu MySensors versioon",
-            "mqtt_required": "MQTT sidumine on loomata",
             "not_a_number": "Sisesta number",
             "port_out_of_range": "Pordi number peab olema v\u00e4hemalt 1 ja k\u00f5ige rohkem 65535",
             "same_topic": "Tellimise ja avaldamise teemad kattuvad",
@@ -83,6 +82,30 @@
                 },
                 "description": "Vali l\u00fc\u00fcsi \u00fchendusviis"
             }
+        }
+    },
+    "issues": {
+        "deprecated_entity": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "V\u00e4rskenda k\u00f5iki automatiseerimisi v\u00f5i skripte, mis kasutavad seda olemit teenusek\u00f5nedes, kasutades teenust ` {deprecated_service} , et kasutada selle asemel teenust ` {alternate_service} , mille siht\u00fcksuse ID on ` {alternate_target} .",
+                        "title": "\u00dcksus {deprecated_entity} eemaldatakse"
+                    }
+                }
+            },
+            "title": "\u00dcksus {deprecated_entity} eemaldatakse"
+        },
+        "deprecated_service": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "V\u00e4rskenda k\u00f5iki automaatikaid v\u00f5i skripte, mis seda teenust kasutavad, et kasutada selle asemel teenust '{alternate_service}', mille sihtolemi ID on '{alternate_target}'.",
+                        "title": "Teenus {deprecated_service} eemaldatakse"
+                    }
+                }
+            },
+            "title": "Teenus {deprecated_service} eemaldatakse"
         }
     }
 }

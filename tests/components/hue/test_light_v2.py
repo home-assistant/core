@@ -277,7 +277,7 @@ async def test_light_added(hass, mock_bridge_v2):
 
     await setup_platform(hass, mock_bridge_v2, "light")
 
-    test_entity_id = "light.hue_fake_light"
+    test_entity_id = "light.hue_mocked_device"
 
     # verify entity does not exist before we start
     assert hass.states.get(test_entity_id) is None
@@ -290,7 +290,7 @@ async def test_light_added(hass, mock_bridge_v2):
     test_entity = hass.states.get(test_entity_id)
     assert test_entity is not None
     assert test_entity.state == "off"
-    assert test_entity.attributes["friendly_name"] == FAKE_LIGHT["metadata"]["name"]
+    assert test_entity.attributes["friendly_name"] == FAKE_DEVICE["metadata"]["name"]
 
 
 async def test_light_availability(hass, mock_bridge_v2, v2_resources_test_data):

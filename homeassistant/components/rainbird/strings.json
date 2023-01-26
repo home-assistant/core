@@ -1,0 +1,48 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configure Rain Bird",
+        "description": "Please enter the LNK WiFi module information for your Rain Bird device.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure Rain Bird",
+        "data": {
+          "duration": "Default irrigation time in minutes"
+        }
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml": {
+      "title": "The Rain Bird YAML configuration is being removed",
+      "description": "Configuring Rain Bird in configuration.yaml is being removed in Home Assistant 2023.4.\n\nYour configuration has been imported into the UI automatically, however default per-zone irrigation times are no longer supported. Remove the Rain Bird YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+    },
+    "deprecated_raindelay": {
+      "title": "The Rain Bird Rain Delay Service is being removed",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "The Rain Bird Rain Delay Service is being removed",
+            "description": "The Rain Bird service `rainbird.set_rain_delay` is being removed and replaced by a Number entity for managing the rain delay. Any existing automations or scripts will need to be updated to use `number.set_value` with a target of `{alternate_target}` instead."
+          }
+        }
+      }
+    }
+  }
+}

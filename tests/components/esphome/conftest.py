@@ -1,11 +1,24 @@
 """esphome session fixtures."""
-import pytest
+from __future__ import annotations
 
-from homeassistant.components.esphome import CONF_NOISE_PSK, DOMAIN
+from unittest.mock import AsyncMock, Mock, patch
+
+from aioesphomeapi import APIClient, DeviceInfo
+import pytest
+from zeroconf import Zeroconf
+
+from homeassistant.components.esphome import CONF_NOISE_PSK, DOMAIN, dashboard
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 
+from . import DASHBOARD_HOST, DASHBOARD_PORT, DASHBOARD_SLUG
+
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture(autouse=True)
+def mock_bluetooth(enable_bluetooth):
+    """Auto mock bluetooth."""
 
 
 @pytest.fixture(autouse=True)
@@ -25,7 +38,19 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_PASSWORD: "pwd",
             CONF_NOISE_PSK: "12345678123456781234567812345678",
         },
-        unique_id="esphome-device",
+        unique_id="11:22:33:44:55:aa",
+    )
+
+
+@pytest.fixture
+def mock_device_info() -> DeviceInfo:
+    """Return the default mocked device info."""
+    return DeviceInfo(
+        uses_password=False,
+        name="test",
+        bluetooth_proxy_version=0,
+        mac_address="11:22:33:44:55:aa",
+        esphome_version="1.0.0",
     )
 
 
@@ -40,3 +65,52 @@ async def init_integration(
     await hass.async_block_till_done()
 
     return mock_config_entry
+
+
+@pytest.fixture
+def mock_client(mock_device_info):
+    """Mock APIClient."""
+    mock_client = Mock(spec=APIClient)
+
+    def mock_constructor(
+        address: str,
+        port: int,
+        password: str | None,
+        *,
+        client_info: str = "aioesphomeapi",
+        keepalive: float = 15.0,
+        zeroconf_instance: Zeroconf = None,
+        noise_psk: str | None = None,
+        expected_name: str | None = None,
+    ):
+        """Fake the client constructor."""
+        mock_client.host = address
+        mock_client.port = port
+        mock_client.password = password
+        mock_client.zeroconf_instance = zeroconf_instance
+        mock_client.noise_psk = noise_psk
+        return mock_client
+
+    mock_client.side_effect = mock_constructor
+    mock_client.device_info = AsyncMock(return_value=mock_device_info)
+    mock_client.connect = AsyncMock()
+    mock_client.disconnect = AsyncMock()
+
+    with patch("homeassistant.components.esphome.APIClient", mock_client), patch(
+        "homeassistant.components.esphome.config_flow.APIClient", mock_client
+    ):
+        yield mock_client
+
+
+@pytest.fixture
+async def mock_dashboard(hass):
+    """Mock dashboard."""
+    data = {"configured": [], "importable": []}
+    with patch(
+        "esphome_dashboard_api.ESPHomeDashboardAPI.get_devices",
+        return_value=data,
+    ):
+        await dashboard.async_set_dashboard_info(
+            hass, DASHBOARD_SLUG, DASHBOARD_HOST, DASHBOARD_PORT
+        )
+        yield data

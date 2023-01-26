@@ -7,8 +7,8 @@ from collections.abc import Callable
 import logging
 from typing import Any
 
-from pymodbus.client.sync import (
-    BaseModbusClient,
+from pymodbus.client import (
+    ModbusBaseClient,
     ModbusSerialClient,
     ModbusTcpClient,
     ModbusUdpClient,
@@ -132,6 +132,12 @@ async def async_modbus_setup(
 
     await async_setup_reload_service(hass, DOMAIN, [DOMAIN])
 
+    if DOMAIN in hass.data and config[DOMAIN] == []:
+        hubs = hass.data[DOMAIN]
+        for name in hubs:
+            if not await hubs[name].async_setup():
+                return False
+
     hass.data[DOMAIN] = hub_collect = {}
     for conf_hub in config[DOMAIN]:
         my_hub = ModbusHub(hass, conf_hub)
@@ -249,7 +255,7 @@ class ModbusHub:
         """Initialize the Modbus hub."""
 
         # generic configuration
-        self._client: BaseModbusClient | None = None
+        self._client: ModbusBaseClient | None = None
         self._async_cancel_listener: Callable[[], None] | None = None
         self._in_error = False
         self._lock = asyncio.Lock()
@@ -365,16 +371,16 @@ class ModbusHub:
         except ModbusException as exception_error:
             self._log_error(str(exception_error), error_state=False)
             return False
-        else:
-            message = f"modbus {self.name} communication open"
-            _LOGGER.info(message)
-            return True
+
+        message = f"modbus {self.name} communication open"
+        _LOGGER.info(message)
+        return True
 
     def _pymodbus_call(
         self, unit: int | None, address: int, value: int | list[int], use_call: str
     ) -> ModbusResponse:
         """Call sync. pymodbus."""
-        kwargs = {"unit": unit} if unit else {}
+        kwargs = {"slave": unit} if unit else {}
         entry = self._pb_call[use_call]
         try:
             result = entry.func(address, value, **kwargs)

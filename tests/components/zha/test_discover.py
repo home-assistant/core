@@ -1,4 +1,4 @@
-"""Test zha device discovery."""
+"""Test ZHA device discovery."""
 
 import re
 from unittest import mock
@@ -375,8 +375,10 @@ def _ch_mock(cluster):
 
 
 @mock.patch(
-    "homeassistant.components.zha.core.discovery.ProbeEndpoint"
-    ".handle_on_off_output_cluster_exception",
+    (
+        "homeassistant.components.zha.core.discovery.ProbeEndpoint"
+        ".handle_on_off_output_cluster_exception"
+    ),
     new=mock.MagicMock(),
 )
 @mock.patch(
@@ -480,7 +482,7 @@ async def test_device_override(
 async def test_group_probe_cleanup_called(
     hass_disable_services, setup_zha, config_entry
 ):
-    """Test cleanup happens when zha is unloaded."""
+    """Test cleanup happens when ZHA is unloaded."""
     await setup_zha()
     disc.GROUP_PROBE.cleanup = mock.Mock(wraps=disc.GROUP_PROBE.cleanup)
     await config_entry.async_unload(hass_disable_services)

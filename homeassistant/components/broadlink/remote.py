@@ -106,6 +106,8 @@ async def async_setup_entry(
 class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
     """Representation of a Broadlink remote."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, device, codes, flags):
         """Initialize the remote."""
         super().__init__(device)
@@ -116,7 +118,6 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         self._flags = defaultdict(int)
         self._lock = asyncio.Lock()
 
-        self._attr_name = f"{device.name} Remote"
         self._attr_is_on = True
         self._attr_supported_features = (
             RemoteEntityFeature.LEARN_COMMAND | RemoteEntityFeature.DELETE_COMMAND

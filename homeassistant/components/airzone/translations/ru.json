@@ -8,12 +8,19 @@
             "invalid_system_id": "\u041d\u0435\u0432\u0435\u0440\u043d\u044b\u0439 \u0438\u0434\u0435\u043d\u0442\u0438\u0444\u0438\u043a\u0430\u0442\u043e\u0440 \u0441\u0438\u0441\u0442\u0435\u043c\u044b Airzone."
         },
         "step": {
+            "discovered_connection": {
+                "data": {
+                    "host": "\u0425\u043e\u0441\u0442",
+                    "id": "ID \u0441\u0438\u0441\u0442\u0435\u043c\u044b",
+                    "port": "\u041f\u043e\u0440\u0442"
+                }
+            },
             "user": {
                 "data": {
                     "host": "\u0425\u043e\u0441\u0442",
+                    "id": "ID \u0441\u0438\u0441\u0442\u0435\u043c\u044b",
                     "port": "\u041f\u043e\u0440\u0442"
-                },
-                "description": "\u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0430 Home Assistant \u0434\u043b\u044f \u0438\u043d\u0442\u0435\u0433\u0440\u0430\u0446\u0438\u0438 \u0441 Airzone."
+                }
             }
         }
     }

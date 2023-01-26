@@ -7,11 +7,11 @@ import logging
 import re
 from types import MappingProxyType
 from typing import Any, cast
-from urllib.parse import urlparse
 
 import async_timeout
 from elkm1_lib.elements import Element
 from elkm1_lib.elk import Elk
+from elkm1_lib.util import parse_url
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -25,9 +25,8 @@ from homeassistant.const import (
     CONF_TEMPERATURE_UNIT,
     CONF_USERNAME,
     CONF_ZONE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
     Platform,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
@@ -94,6 +93,11 @@ SET_TIME_SERVICE_SCHEMA = vol.Schema(
         vol.Optional("prefix", default=""): cv.string,
     }
 )
+
+
+def hostname_from_url(url: str) -> str:
+    """Return the hostname from a url."""
+    return parse_url(url)[1]
 
 
 def _host_validator(config: dict[str, str]) -> dict[str, str]:
@@ -231,7 +235,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Elk-M1 Control from a config entry."""
     conf: MappingProxyType[str, Any] = entry.data
 
-    host = urlparse(entry.data[CONF_HOST]).hostname
+    host = hostname_from_url(entry.data[CONF_HOST])
 
     _LOGGER.debug("Setting up elkm1 %s", conf["host"])
 
@@ -293,7 +297,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(f"Timed out connecting to {conf[CONF_HOST]}") from exc
 
     elk_temp_unit = elk.panel.temperature_units
-    temperature_unit = TEMP_CELSIUS if elk_temp_unit == "C" else TEMP_FAHRENHEIT
+    if elk_temp_unit == "C":
+        temperature_unit = UnitOfTemperature.CELSIUS
+    else:
+        temperature_unit = UnitOfTemperature.FAHRENHEIT
     config["temperature_unit"] = temperature_unit
     hass.data[DOMAIN][entry.entry_id] = {
         "elk": elk,

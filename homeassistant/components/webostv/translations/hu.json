@@ -3,7 +3,9 @@
         "abort": {
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
             "already_in_progress": "A be\u00e1ll\u00edt\u00e1si folyamat m\u00e1r el lett kezdve",
-            "error_pairing": "Csatlakozva az LG webOS TV-hez, de a p\u00e1ros\u00edt\u00e1s nem siker\u00fclt"
+            "error_pairing": "Csatlakozva az LG webOS TV-hez, de a p\u00e1ros\u00edt\u00e1s nem siker\u00fclt",
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt.",
+            "reauth_unsuccessful": "Az \u00fajrahiteles\u00edt\u00e9s sikertelen volt, kapcsolja be ism\u00e9t a t\u00e9v\u00e9t, \u00e9s pr\u00f3b\u00e1lja \u00fajra."
         },
         "error": {
             "cannot_connect": "Nem siker\u00fclt csatlakozni, k\u00e9rem, kapcsolja be a TV-t vagy ellen\u0151rizze az ip-c\u00edmet."
@@ -12,6 +14,10 @@
         "step": {
             "pairing": {
                 "description": "K\u00fcldje el a k\u00e9r\u00e9st, \u00e9s fogadja el a p\u00e1ros\u00edt\u00e1si k\u00e9relmet a t\u00e9v\u00e9n. \n\n ![Image](/static/images/config_webos.png)",
+                "title": "webOS TV p\u00e1ros\u00edt\u00e1s"
+            },
+            "reauth_confirm": {
+                "description": "Kattintson a k\u00fcld\u00e9s gombra, \u00e9s fogadja el a p\u00e1ros\u00edt\u00e1si k\u00e9relmet a t\u00e9v\u00e9j\u00e9n. \n\n ![K\u00e9p](/static/images/config_webos.png)",
                 "title": "webOS TV p\u00e1ros\u00edt\u00e1s"
             },
             "user": {
@@ -31,8 +37,7 @@
     },
     "options": {
         "error": {
-            "cannot_retrieve": "Nem siker\u00fclt lek\u00e9rni a forr\u00e1sok list\u00e1j\u00e1t. Gy\u0151z\u0151dj\u00f6n meg r\u00f3la, hogy a k\u00e9sz\u00fcl\u00e9k be van kapcsolva",
-            "script_not_found": "A szkript nem tal\u00e1lhat\u00f3"
+            "cannot_retrieve": "Nem siker\u00fclt lek\u00e9rni a forr\u00e1sok list\u00e1j\u00e1t. Gy\u0151z\u0151dj\u00f6n meg r\u00f3la, hogy a k\u00e9sz\u00fcl\u00e9k be van kapcsolva"
         },
         "step": {
             "init": {

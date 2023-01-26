@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.hassio import HassioServiceInfo
+from homeassistant.components.hassio.discovery import HassioServiceInfo
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STARTED
@@ -14,8 +14,8 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockModule, mock_entity_platform, mock_integration
 
 
-@pytest.fixture
-async def mock_mqtt(hass):
+@pytest.fixture(name="mock_mqtt")
+async def mock_mqtt_fixture(hass):
     """Mock the MQTT integration's config flow."""
     mock_integration(hass, MockModule(MQTT_DOMAIN))
     mock_entity_platform(hass, f"config_flow.{MQTT_DOMAIN}", None)
@@ -78,7 +78,9 @@ async def test_hassio_discovery_startup(hass, aioclient_mock, hassio_client, moc
                 "password": "mock-pass",
                 "protocol": "3.1.1",
                 "addon": "Mosquitto Test",
-            }
+            },
+            name="Mosquitto Test",
+            slug="mosquitto",
         )
     )
 
@@ -140,7 +142,9 @@ async def test_hassio_discovery_startup_done(
                     "password": "mock-pass",
                     "protocol": "3.1.1",
                     "addon": "Mosquitto Test",
-                }
+                },
+                name="Mosquitto Test",
+                slug="mosquitto",
             )
         )
 
@@ -190,6 +194,8 @@ async def test_hassio_discovery_webhook(hass, aioclient_mock, hassio_client, moc
                 "password": "mock-pass",
                 "protocol": "3.1.1",
                 "addon": "Mosquitto Test",
-            }
+            },
+            name="Mosquitto Test",
+            slug="mosquitto",
         )
     )

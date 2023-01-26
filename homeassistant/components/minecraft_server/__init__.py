@@ -143,7 +143,10 @@ class MinecraftServer:
             self.online = True
         except OSError as error:
             _LOGGER.debug(
-                "Error occurred while trying to check the connection to '%s:%s' - OSError: %s",
+                (
+                    "Error occurred while trying to check the connection to '%s:%s' -"
+                    " OSError: %s"
+                ),
                 self.host,
                 self.port,
                 error,

@@ -28,6 +28,23 @@ async def test_snips_config(hass, mqtt_mock):
     assert result
 
 
+async def test_snips_no_mqtt(hass, caplog):
+    """Test Snips Config."""
+    result = await async_setup_component(
+        hass,
+        "snips",
+        {
+            "snips": {
+                "feedback_sounds": True,
+                "probability_threshold": 0.5,
+                "site_ids": ["default", "remote"],
+            }
+        },
+    )
+    assert not result
+    assert "MQTT integration is not available" in caplog.text
+
+
 async def test_snips_bad_config(hass, mqtt_mock):
     """Test Snips bad config."""
     result = await async_setup_component(

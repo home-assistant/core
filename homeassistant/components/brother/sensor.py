@@ -395,7 +395,9 @@ async def async_setup_entry(
     async_add_entities(sensors, False)
 
 
-class BrotherPrinterSensor(CoordinatorEntity, SensorEntity):
+class BrotherPrinterSensor(
+    CoordinatorEntity[BrotherDataUpdateCoordinator], SensorEntity
+):
     """Define an Brother Printer sensor."""
 
     _attr_has_entity_name = True

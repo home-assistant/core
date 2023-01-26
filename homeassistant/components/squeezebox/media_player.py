@@ -364,6 +364,11 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         return self._player.title
 
     @property
+    def media_channel(self):
+        """Channel (e.g. webradio name) of current playing media."""
+        return self._player.remote_title
+
+    @property
     def media_artist(self):
         """Artist of current playing media."""
         return self._player.artist
@@ -590,7 +595,8 @@ class SqueezeBoxEntity(MediaPlayerEntity):
     async def async_sync(self, other_player):
         """Sync this Squeezebox player to another. Deprecated."""
         _LOGGER.warning(
-            "Service squeezebox.sync is deprecated; use media_player.join_players instead"
+            "Service squeezebox.sync is deprecated; use media_player.join_players"
+            " instead"
         )
         await self.async_join_players([other_player])
 
@@ -601,7 +607,8 @@ class SqueezeBoxEntity(MediaPlayerEntity):
     async def async_unsync(self):
         """Unsync this Squeezebox player. Deprecated."""
         _LOGGER.warning(
-            "Service squeezebox.unsync is deprecated; use media_player.unjoin_player instead"
+            "Service squeezebox.unsync is deprecated; use media_player.unjoin_player"
+            " instead"
         )
         await self.async_unjoin_player()
 

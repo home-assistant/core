@@ -108,7 +108,10 @@ async def async_setup_entry(
             )
 
             _LOGGER.warning(
-                "Found camera with serial %s without configuration. Please go to integration to complete setup",
+                (
+                    "Found camera with serial %s without configuration. Please go to"
+                    " integration to complete setup"
+                ),
                 camera,
             )
 

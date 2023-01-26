@@ -5,7 +5,8 @@
             "already_in_progress": "La configuration est d\u00e9j\u00e0 en cours",
             "incomplete_info": "Informations incompl\u00e8tes pour configurer l'appareil, aucun h\u00f4te ou jeton fourni.",
             "not_xiaomi_miio": "L'appareil n'est pas (encore) pris en charge par Xiaomi Miio.",
-            "reauth_successful": "La r\u00e9-authentification a r\u00e9ussi"
+            "reauth_successful": "La r\u00e9-authentification a r\u00e9ussi",
+            "unknown": "Erreur inattendue"
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",

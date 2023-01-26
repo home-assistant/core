@@ -17,7 +17,7 @@
                     "api_key": "API Anahtar\u0131"
                 },
                 "data_description": {
-                    "api_key": "Yeni bir api anahtar\u0131 almak i\u00e7in belgeleri izleyin."
+                    "api_key": "API anahtar\u0131n\u0131z\u0131 almak i\u00e7in belgeleri izleyin"
                 }
             },
             "user": {
@@ -25,7 +25,46 @@
                     "api_key": "API Anahtar\u0131"
                 },
                 "data_description": {
-                    "api_key": "API anahtar\u0131n\u0131z\u0131 almak i\u00e7in belgeleri izleyin."
+                    "api_key": "API anahtar\u0131n\u0131z\u0131 almak i\u00e7in belgeleri izleyin"
+                }
+            }
+        }
+    },
+    "entity": {
+        "select": {
+            "horizontalswing": {
+                "state": {
+                    "fixedcenter": "Orta d\u00fczeltildi",
+                    "fixedcenterleft": "Orta sol d\u00fczeltildi",
+                    "fixedcenterright": "Orta sa\u011f d\u00fczeltildi",
+                    "fixedleft": "Sol d\u00fczeltildi",
+                    "fixedleftright": "Sa\u011f sol d\u00fczeltildi",
+                    "fixedright": "Sa\u011f d\u00fczeltildi",
+                    "rangecenter": "Menzil merkezi",
+                    "rangefull": "Menzil dolu",
+                    "stopped": "Durduruldu"
+                }
+            },
+            "light": {
+                "state": {
+                    "dim": "Dim",
+                    "off": "Kapal\u0131",
+                    "on": "A\u00e7\u0131k"
+                }
+            }
+        },
+        "sensor": {
+            "sensitivity": {
+                "state": {
+                    "n": "Normal",
+                    "s": "Duyarl\u0131"
+                }
+            },
+            "smart_type": {
+                "state": {
+                    "feelslike": "Hissedilen",
+                    "humidity": "Nem",
+                    "temperature": "S\u0131cakl\u0131k"
                 }
             }
         }

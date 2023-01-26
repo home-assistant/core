@@ -40,6 +40,8 @@ from .coordinator import FirmwareEffect, LIFXUpdateCoordinator
 from .entity import LIFXEntity
 from .manager import (
     SERVICE_EFFECT_COLORLOOP,
+    SERVICE_EFFECT_FLAME,
+    SERVICE_EFFECT_MORPH,
     SERVICE_EFFECT_MOVE,
     SERVICE_EFFECT_PULSE,
     SERVICE_EFFECT_STOP,
@@ -93,8 +95,10 @@ async def async_setup_entry(
         LIFX_SET_HEV_CYCLE_STATE_SCHEMA,
         "set_hev_cycle_state",
     )
-    if lifx_features(device)["extended_multizone"]:
-        entity: LIFXLight = LIFXExtendedMultiZone(coordinator, manager, entry)
+    if lifx_features(device)["matrix"]:
+        entity: LIFXLight = LIFXMatrix(coordinator, manager, entry)
+    elif lifx_features(device)["extended_multizone"]:
+        entity = LIFXExtendedMultiZone(coordinator, manager, entry)
     elif lifx_features(device)["multizone"]:
         entity = LIFXMultiZone(coordinator, manager, entry)
     elif lifx_features(device)["color"]:
@@ -217,7 +221,10 @@ class LIFXLight(LIFXEntity, LightEntity):
                     Platform.SELECT, INFRARED_BRIGHTNESS
                 )
                 _LOGGER.warning(
-                    "The 'infrared' attribute of 'lifx.set_state' is deprecated: call 'select.select_option' targeting '%s' instead",
+                    (
+                        "The 'infrared' attribute of 'lifx.set_state' is deprecated:"
+                        " call 'select.select_option' targeting '%s' instead"
+                    ),
                     infrared_entity_id,
                 )
                 bulb.set_infrared(convert_8_to_16(kwargs[ATTR_INFRARED]))
@@ -267,7 +274,9 @@ class LIFXLight(LIFXEntity, LightEntity):
                 "This device does not support setting HEV cycle state"
             )
 
-        await self.coordinator.async_set_hev_cycle_state(power, duration or 0)
+        await self.coordinator.sensor_coordinator.async_set_hev_cycle_state(
+            power, duration or 0
+        )
         await self.update_during_transition(duration or 0)
 
     async def set_power(
@@ -471,3 +480,15 @@ class LIFXExtendedMultiZone(LIFXMultiZone):
         # set_extended_color_zones does not update the
         # state of the device, so we need to do that
         await self.get_color()
+
+
+class LIFXMatrix(LIFXColor):
+    """Representation of a LIFX matrix device."""
+
+    _attr_effect_list = [
+        SERVICE_EFFECT_COLORLOOP,
+        SERVICE_EFFECT_FLAME,
+        SERVICE_EFFECT_PULSE,
+        SERVICE_EFFECT_MORPH,
+        SERVICE_EFFECT_STOP,
+    ]

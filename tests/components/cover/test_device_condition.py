@@ -340,7 +340,11 @@ async def test_if_state(hass, calls):
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_open - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_open "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -358,7 +362,11 @@ async def test_if_state(hass, calls):
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_closed - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_closed "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -376,7 +384,11 @@ async def test_if_state(hass, calls):
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_opening - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_opening "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -394,7 +406,11 @@ async def test_if_state(hass, calls):
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_closing - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_closing "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -457,14 +473,22 @@ async def test_if_position(hass, calls, caplog, enable_custom_integrations):
                             "sequence": {
                                 "service": "test.automation",
                                 "data_template": {
-                                    "some": "is_pos_gt_45 - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                                    "some": (
+                                        "is_pos_gt_45 "
+                                        "- {{ trigger.platform }} "
+                                        "- {{ trigger.event.event_type }}"
+                                    )
                                 },
                             },
                         },
                         "default": {
                             "service": "test.automation",
                             "data_template": {
-                                "some": "is_pos_not_gt_45 - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                                "some": (
+                                    "is_pos_not_gt_45 "
+                                    "- {{ trigger.platform }} "
+                                    "- {{ trigger.event.event_type }}"
+                                )
                             },
                         },
                     },
@@ -484,7 +508,11 @@ async def test_if_position(hass, calls, caplog, enable_custom_integrations):
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_pos_lt_90 - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_pos_lt_90 "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -504,7 +532,11 @@ async def test_if_position(hass, calls, caplog, enable_custom_integrations):
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_pos_gt_45_lt_90 - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_pos_gt_45_lt_90 "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -586,14 +618,22 @@ async def test_if_tilt_position(hass, calls, caplog, enable_custom_integrations)
                             "sequence": {
                                 "service": "test.automation",
                                 "data_template": {
-                                    "some": "is_pos_gt_45 - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                                    "some": (
+                                        "is_pos_gt_45 "
+                                        "- {{ trigger.platform }} "
+                                        "- {{ trigger.event.event_type }}"
+                                    )
                                 },
                             },
                         },
                         "default": {
                             "service": "test.automation",
                             "data_template": {
-                                "some": "is_pos_not_gt_45 - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                                "some": (
+                                    "is_pos_not_gt_45 "
+                                    "- {{ trigger.platform }} "
+                                    "- {{ trigger.event.event_type }}"
+                                )
                             },
                         },
                     },
@@ -613,7 +653,11 @@ async def test_if_tilt_position(hass, calls, caplog, enable_custom_integrations)
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_pos_lt_90 - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_pos_lt_90 "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -633,7 +677,11 @@ async def test_if_tilt_position(hass, calls, caplog, enable_custom_integrations)
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_pos_gt_45_lt_90 - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_pos_gt_45_lt_90 "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },

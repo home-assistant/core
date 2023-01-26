@@ -1,0 +1,48 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "timeout_connect": "Id\u0151t\u00fall\u00e9p\u00e9s a kapcsolat l\u00e9trehoz\u00e1sa sor\u00e1n"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "C\u00edm",
+                    "password": "Jelsz\u00f3"
+                },
+                "description": "K\u00e9rem, adja meg a Rain Bird k\u00e9sz\u00fcl\u00e9k\u00e9hez tartoz\u00f3 LNK WiFi modul adatait.",
+                "title": "Rain Bird konfigur\u00e1l\u00e1sa"
+            }
+        }
+    },
+    "issues": {
+        "deprecated_raindelay": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "A Rainbird `rainbird.set_rain_delay` szolg\u00e1ltat\u00e1st elt\u00e1vol\u00edtjuk, \u00e9s egy Sz\u00e1m entit\u00e1sra cser\u00e9lj\u00fck az es\u0151k\u00e9sleltet\u00e9s kezel\u00e9s\u00e9re. Minden megl\u00e9v\u0151 automatiz\u00e1l\u00e1st vagy szkriptet friss\u00edteni kell, hogy helyette a `number.set_value` \u00e9rt\u00e9ket haszn\u00e1lhassa `{alternate_target}` c\u00e9llal.",
+                        "title": "A Rain Bird Rain Delay Service elt\u00e1vol\u00edt\u00e1sra ker\u00fcl"
+                    }
+                }
+            },
+            "title": "A Rain Bird Rain Delay Service elt\u00e1vol\u00edt\u00e1sra ker\u00fcl"
+        },
+        "deprecated_yaml": {
+            "description": "A Rain Bird konfigur\u00e1l\u00e1sa a configuration.yaml f\u00e1jlban elt\u00e1vol\u00edt\u00e1sra ker\u00fcl a Home Assistant 2023.4-ben. \n\n A konfigur\u00e1ci\u00f3 automatikusan import\u00e1l\u00e1sra ker\u00fclt a felhaszn\u00e1l\u00f3i fel\u00fcletre, azonban az alap\u00e9rtelmezett z\u00f3n\u00e1nk\u00e9nti \u00f6nt\u00f6z\u00e9si id\u0151k m\u00e1r nem t\u00e1mogatottak. T\u00e1vol\u00edtsa el a Rain Bird YAML konfigur\u00e1ci\u00f3t a configuration.yaml f\u00e1jlb\u00f3l, \u00e9s ind\u00edtsa \u00fajra a Home Assistant alkalmaz\u00e1st a probl\u00e9ma megold\u00e1s\u00e1hoz.",
+            "title": "A Rain Bird YAML konfigur\u00e1ci\u00f3 elt\u00e1vol\u00edt\u00e1sra ker\u00fcl"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "duration": "Alap\u00e9rtelmezett \u00f6nt\u00f6z\u00e9si id\u0151, percben"
+                },
+                "title": "Rain Bird konfigur\u00e1l\u00e1sa"
+            }
+        }
+    }
+}

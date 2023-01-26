@@ -1,10 +1,11 @@
 """Selectors for Home Assistant."""
 from __future__ import annotations
 
-from collections.abc import Callable, Sequence
-from typing import Any, Literal, TypedDict, cast
+from collections.abc import Callable, Mapping, Sequence
+from typing import Any, Generic, Literal, TypedDict, TypeVar, cast
 from uuid import UUID
 
+from typing_extensions import Required
 import voluptuous as vol
 
 from homeassistant.backports.enum import StrEnum
@@ -16,6 +17,8 @@ from homeassistant.util.yaml import dumper
 from . import config_validation as cv
 
 SELECTORS: decorator.Registry[str, type[Selector]] = decorator.Registry()
+
+_T = TypeVar("_T", bound=Mapping[str, Any])
 
 
 def _get_selector_class(config: Any) -> type[Selector]:
@@ -56,14 +59,14 @@ def validate_selector(config: Any) -> dict:
     }
 
 
-class Selector:
+class Selector(Generic[_T]):
     """Base class for selectors."""
 
     CONFIG_SCHEMA: Callable
-    config: Any
+    config: _T
     selector_type: str
 
-    def __init__(self, config: Any = None) -> None:
+    def __init__(self, config: Mapping[str, Any] | None = None) -> None:
         """Instantiate a selector."""
         # Selectors can be empty
         if config is None:
@@ -71,7 +74,7 @@ class Selector:
 
         self.config = self.CONFIG_SCHEMA(config)
 
-    def serialize(self) -> Any:
+    def serialize(self) -> dict[str, dict[str, _T]]:
         """Serialize Selector for voluptuous_serialize."""
         return {"selector": {self.selector_type: self.config}}
 
@@ -92,7 +95,7 @@ class SingleEntitySelectorConfig(TypedDict, total=False):
     """Class to represent a single entity selector config."""
 
     integration: str
-    domain: str
+    domain: str | list[str]
     device_class: str
 
 
@@ -124,7 +127,7 @@ class ActionSelectorConfig(TypedDict):
 
 
 @SELECTORS.register("action")
-class ActionSelector(Selector):
+class ActionSelector(Selector[ActionSelectorConfig]):
     """Selector of an action sequence (script syntax)."""
 
     selector_type = "action"
@@ -148,7 +151,7 @@ class AddonSelectorConfig(TypedDict, total=False):
 
 
 @SELECTORS.register("addon")
-class AddonSelector(Selector):
+class AddonSelector(Selector[AddonSelectorConfig]):
     """Selector of a add-on."""
 
     selector_type = "addon"
@@ -179,7 +182,7 @@ class AreaSelectorConfig(TypedDict, total=False):
 
 
 @SELECTORS.register("area")
-class AreaSelector(Selector):
+class AreaSelector(Selector[AreaSelectorConfig]):
     """Selector of a single or list of areas."""
 
     selector_type = "area"
@@ -209,12 +212,12 @@ class AreaSelector(Selector):
 class AttributeSelectorConfig(TypedDict, total=False):
     """Class to represent an attribute selector config."""
 
-    entity_id: str
+    entity_id: Required[str]
     hide_attributes: list[str]
 
 
 @SELECTORS.register("attribute")
-class AttributeSelector(Selector):
+class AttributeSelector(Selector[AttributeSelectorConfig]):
     """Selector for an entity attribute."""
 
     selector_type = "attribute"
@@ -243,7 +246,7 @@ class BooleanSelectorConfig(TypedDict):
 
 
 @SELECTORS.register("boolean")
-class BooleanSelector(Selector):
+class BooleanSelector(Selector[BooleanSelectorConfig]):
     """Selector of a boolean value."""
 
     selector_type = "boolean"
@@ -265,7 +268,7 @@ class ColorRGBSelectorConfig(TypedDict):
 
 
 @SELECTORS.register("color_rgb")
-class ColorRGBSelector(Selector):
+class ColorRGBSelector(Selector[ColorRGBSelectorConfig]):
     """Selector of an RGB color value."""
 
     selector_type = "color_rgb"
@@ -290,7 +293,7 @@ class ColorTempSelectorConfig(TypedDict, total=False):
 
 
 @SELECTORS.register("color_temp")
-class ColorTempSelector(Selector):
+class ColorTempSelector(Selector[ColorTempSelectorConfig]):
     """Selector of an color temperature."""
 
     selector_type = "color_temp"
@@ -325,7 +328,7 @@ class ConfigEntrySelectorConfig(TypedDict, total=False):
 
 
 @SELECTORS.register("config_entry")
-class ConfigEntrySelector(Selector):
+class ConfigEntrySelector(Selector[ConfigEntrySelectorConfig]):
     """Selector of a config entry."""
 
     selector_type = "config_entry"
@@ -351,7 +354,7 @@ class DateSelectorConfig(TypedDict):
 
 
 @SELECTORS.register("date")
-class DateSelector(Selector):
+class DateSelector(Selector[DateSelectorConfig]):
     """Selector of a date."""
 
     selector_type = "date"
@@ -373,7 +376,7 @@ class DateTimeSelectorConfig(TypedDict):
 
 
 @SELECTORS.register("datetime")
-class DateTimeSelector(Selector):
+class DateTimeSelector(Selector[DateTimeSelectorConfig]):
     """Selector of a datetime."""
 
     selector_type = "datetime"
@@ -401,7 +404,7 @@ class DeviceSelectorConfig(TypedDict, total=False):
 
 
 @SELECTORS.register("device")
-class DeviceSelector(Selector):
+class DeviceSelector(Selector[DeviceSelectorConfig]):
     """Selector of a single or list of devices."""
 
     selector_type = "device"
@@ -431,7 +434,7 @@ class DurationSelectorConfig(TypedDict, total=False):
 
 
 @SELECTORS.register("duration")
-class DurationSelector(Selector):
+class DurationSelector(Selector[DurationSelectorConfig]):
     """Selector for a duration."""
 
     selector_type = "duration"
@@ -463,7 +466,7 @@ class EntitySelectorConfig(SingleEntitySelectorConfig, total=False):
 
 
 @SELECTORS.register("entity")
-class EntitySelector(Selector):
+class EntitySelector(Selector[EntitySelectorConfig]):
     """Selector of a single or list of entities."""
 
     selector_type = "entity"
@@ -517,7 +520,7 @@ class IconSelectorConfig(TypedDict, total=False):
 
 
 @SELECTORS.register("icon")
-class IconSelector(Selector):
+class IconSelector(Selector[IconSelectorConfig]):
     """Selector for an icon."""
 
     selector_type = "icon"
@@ -545,7 +548,7 @@ class LocationSelectorConfig(TypedDict, total=False):
 
 
 @SELECTORS.register("location")
-class LocationSelector(Selector):
+class LocationSelector(Selector[LocationSelectorConfig]):
     """Selector for a location."""
 
     selector_type = "location"
@@ -576,7 +579,7 @@ class MediaSelectorConfig(TypedDict):
 
 
 @SELECTORS.register("media")
-class MediaSelector(Selector):
+class MediaSelector(Selector[MediaSelectorConfig]):
     """Selector for media."""
 
     selector_type = "media"
@@ -636,7 +639,7 @@ def validate_slider(data: Any) -> Any:
 
 
 @SELECTORS.register("number")
-class NumberSelector(Selector):
+class NumberSelector(Selector[NumberSelectorConfig]):
     """Selector of a numeric value."""
 
     selector_type = "number"
@@ -682,7 +685,7 @@ class ObjectSelectorConfig(TypedDict):
 
 
 @SELECTORS.register("object")
-class ObjectSelector(Selector):
+class ObjectSelector(Selector[ObjectSelectorConfig]):
     """Selector for an arbitrary object."""
 
     selector_type = "object"
@@ -726,14 +729,15 @@ class SelectSelectorMode(StrEnum):
 class SelectSelectorConfig(TypedDict, total=False):
     """Class to represent a select selector config."""
 
-    options: Sequence[SelectOptionDict] | Sequence[str]  # required
+    options: Required[Sequence[SelectOptionDict] | Sequence[str]]
     multiple: bool
     custom_value: bool
     mode: SelectSelectorMode
+    translation_key: str
 
 
 @SELECTORS.register("select")
-class SelectSelector(Selector):
+class SelectSelector(Selector[SelectSelectorConfig]):
     """Selector for an single-choice input select."""
 
     selector_type = "select"
@@ -746,6 +750,7 @@ class SelectSelector(Selector):
             vol.Optional("mode"): vol.All(
                 vol.Coerce(SelectSelectorMode), lambda val: val.value
             ),
+            vol.Optional("translation_key"): cv.string,
         }
     )
 
@@ -755,12 +760,15 @@ class SelectSelector(Selector):
 
     def __call__(self, data: Any) -> Any:
         """Validate the passed selection."""
-        options = []
-        if self.config["options"]:
-            if isinstance(self.config["options"][0], str):
-                options = self.config["options"]
+        options: Sequence[str] = []
+        if config_options := self.config["options"]:
+            if isinstance(config_options[0], str):
+                options = cast(Sequence[str], config_options)
             else:
-                options = [option["value"] for option in self.config["options"]]
+                options = [
+                    option["value"]
+                    for option in cast(Sequence[SelectOptionDict], config_options)
+                ]
 
         parent_schema = vol.In(options)
         if self.config["custom_value"]:
@@ -783,11 +791,11 @@ class TargetSelectorConfig(TypedDict, total=False):
 class StateSelectorConfig(TypedDict, total=False):
     """Class to represent an state selector config."""
 
-    entity_id: str
+    entity_id: Required[str]
 
 
 @SELECTORS.register("state")
-class StateSelector(Selector):
+class StateSelector(Selector[StateSelectorConfig]):
     """Selector for an entity state."""
 
     selector_type = "state"
@@ -814,7 +822,7 @@ class StateSelector(Selector):
 
 
 @SELECTORS.register("target")
-class TargetSelector(Selector):
+class TargetSelector(Selector[TargetSelectorConfig]):
     """Selector of a target value (area ID, device ID, entity ID etc).
 
     Value should follow cv.TARGET_SERVICE_FIELDS format.
@@ -846,7 +854,7 @@ class TemplateSelectorConfig(TypedDict):
 
 
 @SELECTORS.register("template")
-class TemplateSelector(Selector):
+class TemplateSelector(Selector[TemplateSelectorConfig]):
     """Selector for an template."""
 
     selector_type = "template"
@@ -869,6 +877,7 @@ class TextSelectorConfig(TypedDict, total=False):
     multiline: bool
     suffix: str
     type: TextSelectorType
+    autocomplete: str
 
 
 class TextSelectorType(StrEnum):
@@ -890,7 +899,7 @@ class TextSelectorType(StrEnum):
 
 
 @SELECTORS.register("text")
-class TextSelector(Selector):
+class TextSelector(Selector[TextSelectorConfig]):
     """Selector for a multi-line text string."""
 
     selector_type = "text"
@@ -904,6 +913,7 @@ class TextSelector(Selector):
             vol.Optional("type"): vol.All(
                 vol.Coerce(TextSelectorType), lambda val: val.value
             ),
+            vol.Optional("autocomplete"): str,
         }
     )
 
@@ -922,7 +932,7 @@ class ThemeSelectorConfig(TypedDict):
 
 
 @SELECTORS.register("theme")
-class ThemeSelector(Selector):
+class ThemeSelector(Selector[ThemeSelectorConfig]):
     """Selector for an theme."""
 
     selector_type = "theme"
@@ -944,7 +954,7 @@ class TimeSelectorConfig(TypedDict):
 
 
 @SELECTORS.register("time")
-class TimeSelector(Selector):
+class TimeSelector(Selector[TimeSelectorConfig]):
     """Selector of a time value."""
 
     selector_type = "time"
@@ -968,7 +978,7 @@ class FileSelectorConfig(TypedDict):
 
 
 @SELECTORS.register("file")
-class FileSelector(Selector):
+class FileSelector(Selector[FileSelectorConfig]):
     """Selector of a file."""
 
     selector_type = "file"

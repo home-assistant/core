@@ -11,6 +11,9 @@
                 "data": {
                     "host": "Host"
                 }
+            },
+            "zeroconf_confirm": {
+                "title": "Bevestig het toevoegen van Bose SoundTouch-apparaat"
             }
         }
     },

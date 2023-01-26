@@ -1,4 +1,14 @@
 {
+    "device_automation": {
+        "condition_type": {
+            "is_buffering": "{entity_name} er a\u00f0 hla\u00f0a bi\u00f0minni",
+            "is_idle": "{entity_name} er a\u00f0ger\u00f0alaus",
+            "is_off": "{entity_name} er sl\u00f6kkt",
+            "is_on": "{entity_name} er \u00ed gangi",
+            "is_paused": "{entity_name} er \u00ed bi\u00f0",
+            "is_playing": "{entity_name} er a\u00f0 spila"
+        }
+    },
     "state": {
         "_": {
             "idle": "A\u00f0ger\u00f0alaus",

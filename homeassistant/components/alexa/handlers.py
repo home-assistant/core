@@ -14,10 +14,12 @@ from homeassistant.components import (
     cover,
     fan,
     group,
+    humidifier,
     input_button,
     input_number,
     light,
     media_player,
+    number,
     timer,
     vacuum,
 )
@@ -46,8 +48,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
     STATE_ALARM_DISARMED,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 from homeassistant.helpers import network
 from homeassistant.util import color as color_util, dt as dt_util
@@ -154,6 +155,8 @@ async def async_api_turn_on(
         service = cover.SERVICE_OPEN_COVER
     elif domain == fan.DOMAIN:
         service = fan.SERVICE_TURN_ON
+    elif domain == humidifier.DOMAIN:
+        service = humidifier.SERVICE_TURN_ON
     elif domain == vacuum.DOMAIN:
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if (
@@ -201,6 +204,8 @@ async def async_api_turn_off(
         service = cover.SERVICE_CLOSE_COVER
     elif domain == fan.DOMAIN:
         service = fan.SERVICE_TURN_OFF
+    elif domain == humidifier.DOMAIN:
+        service = humidifier.SERVICE_TURN_OFF
     elif domain == vacuum.DOMAIN:
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if (
@@ -438,63 +443,6 @@ async def async_api_deactivate(
     )
 
 
-@HANDLERS.register(("Alexa.PercentageController", "SetPercentage"))
-async def async_api_set_percentage(
-    hass: ha.HomeAssistant,
-    config: AbstractConfig,
-    directive: AlexaDirective,
-    context: ha.Context,
-) -> AlexaResponse:
-    """Process a set percentage request."""
-    entity = directive.entity
-
-    if entity.domain != fan.DOMAIN:
-        raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
-
-    percentage = int(directive.payload["percentage"])
-    service = fan.SERVICE_SET_PERCENTAGE
-    data = {
-        ATTR_ENTITY_ID: entity.entity_id,
-        fan.ATTR_PERCENTAGE: percentage,
-    }
-
-    await hass.services.async_call(
-        entity.domain, service, data, blocking=False, context=context
-    )
-
-    return directive.response()
-
-
-@HANDLERS.register(("Alexa.PercentageController", "AdjustPercentage"))
-async def async_api_adjust_percentage(
-    hass: ha.HomeAssistant,
-    config: AbstractConfig,
-    directive: AlexaDirective,
-    context: ha.Context,
-) -> AlexaResponse:
-    """Process an adjust percentage request."""
-    entity = directive.entity
-
-    if entity.domain != fan.DOMAIN:
-        raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
-
-    percentage_delta = int(directive.payload["percentageDelta"])
-    current = entity.attributes.get(fan.ATTR_PERCENTAGE) or 0
-    # set percentage
-    percentage = min(100, max(0, percentage_delta + current))
-    service = fan.SERVICE_SET_PERCENTAGE
-    data = {
-        ATTR_ENTITY_ID: entity.entity_id,
-        fan.ATTR_PERCENTAGE: percentage,
-    }
-
-    await hass.services.async_call(
-        entity.domain, service, data, blocking=False, context=context
-    )
-
-    return directive.response()
-
-
 @HANDLERS.register(("Alexa.LockController", "Lock"))
 async def async_api_lock(
     hass: ha.HomeAssistant,
@@ -528,7 +476,10 @@ async def async_api_unlock(
 ) -> AlexaResponse:
     """Process an unlock request."""
     if config.locale not in {"de-DE", "en-US", "ja-JP"}:
-        msg = f"The unlock directive is not supported for the following locales: {config.locale}"
+        msg = (
+            "The unlock directive is not supported for the following locales:"
+            f" {config.locale}"
+        )
         raise AlexaInvalidDirectiveError(msg)
 
     entity = directive.entity
@@ -663,9 +614,10 @@ async def async_api_adjust_volume_step(
     """Process an adjust volume step request."""
     # media_player volume up/down service does not support specifying steps
     # each component handles it differently e.g. via config.
-    # This workaround will simply call the volume up/Volume down the amount of steps asked for
-    # When no steps are called in the request, Alexa sends a default of 10 steps which for most
-    # purposes is too high. The default  is set 1 in this case.
+    # This workaround will simply call the volume up/Volume down the amount of
+    # steps asked for. When no steps are called in the request, Alexa sends
+    # a default of 10 steps which for most purposes is too high. The default
+    # is set 1 in this case.
     entity = directive.entity
     volume_int = int(directive.payload["volumeSteps"])
     is_default = bool(directive.payload["volumeStepsDefault"])
@@ -810,11 +762,11 @@ async def async_api_previous(
 def temperature_from_object(hass, temp_obj, interval=False):
     """Get temperature from Temperature object in requested unit."""
     to_unit = hass.config.units.temperature_unit
-    from_unit = TEMP_CELSIUS
+    from_unit = UnitOfTemperature.CELSIUS
     temp = float(temp_obj["value"])
 
     if temp_obj["scale"] == "FAHRENHEIT":
-        from_unit = TEMP_FAHRENHEIT
+        from_unit = UnitOfTemperature.FAHRENHEIT
     elif temp_obj["scale"] == "KELVIN" and not interval:
         # convert to Celsius if absolute temperature
         temp -= 273.15
@@ -1070,8 +1022,9 @@ async def async_api_disarm(
     data = {ATTR_ENTITY_ID: entity.entity_id}
     response = directive.response()
 
-    # Per Alexa Documentation: If you receive a Disarm directive, and the system is already disarmed,
-    # respond with a success response, not an error response.
+    # Per Alexa Documentation: If you receive a Disarm directive, and the
+    # system is already disarmed, respond with a success response,
+    # not an error response.
     if entity.state == STATE_ALARM_DISARMED:
         return response
 
@@ -1130,6 +1083,18 @@ async def async_api_set_mode(
             msg = f"Entity '{entity.entity_id}' does not support Preset '{preset_mode}'"
             raise AlexaInvalidValueError(msg)
 
+    # Humidifier mode
+    elif instance == f"{humidifier.DOMAIN}.{humidifier.ATTR_MODE}":
+        mode = mode.split(".")[1]
+        if mode != PRESET_MODE_NA and mode in entity.attributes.get(
+            humidifier.ATTR_AVAILABLE_MODES
+        ):
+            service = humidifier.SERVICE_SET_MODE
+            data[humidifier.ATTR_MODE] = mode
+        else:
+            msg = f"Entity '{entity.entity_id}' does not support Mode '{mode}'"
+            raise AlexaInvalidValueError(msg)
+
     # Cover Position
     elif instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
         position = mode.split(".")[1]
@@ -1174,7 +1139,8 @@ async def async_api_adjust_mode(
     Only supportedModes with ordered=True support the adjustMode directive.
     """
 
-    # Currently no supportedModes are configured with ordered=True to support this request.
+    # Currently no supportedModes are configured with ordered=True
+    # to support this request.
     raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
 
 
@@ -1306,6 +1272,12 @@ async def async_api_set_range(
             else:
                 service = fan.SERVICE_TURN_ON
 
+    # Humidifier target humidity
+    elif instance == f"{humidifier.DOMAIN}.{humidifier.ATTR_HUMIDITY}":
+        range_value = int(range_value)
+        service = humidifier.SERVICE_SET_HUMIDITY
+        data[humidifier.ATTR_HUMIDITY] = range_value
+
     # Input Number Value
     elif instance == f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}":
         range_value = float(range_value)
@@ -1313,6 +1285,14 @@ async def async_api_set_range(
         min_value = float(entity.attributes[input_number.ATTR_MIN])
         max_value = float(entity.attributes[input_number.ATTR_MAX])
         data[input_number.ATTR_VALUE] = min(max_value, max(min_value, range_value))
+
+    # Input Number Value
+    elif instance == f"{number.DOMAIN}.{number.ATTR_VALUE}":
+        range_value = float(range_value)
+        service = number.SERVICE_SET_VALUE
+        min_value = float(entity.attributes[number.ATTR_MIN])
+        max_value = float(entity.attributes[number.ATTR_MAX])
+        data[number.ATTR_VALUE] = min(max_value, max(min_value, range_value))
 
     # Vacuum Fan Speed
     elif instance == f"{vacuum.DOMAIN}.{vacuum.ATTR_FAN_SPEED}":
@@ -1414,6 +1394,26 @@ async def async_api_adjust_range(
         else:
             service = fan.SERVICE_TURN_OFF
 
+    # Humidifier target humidity
+    elif instance == f"{humidifier.DOMAIN}.{humidifier.ATTR_HUMIDITY}":
+        percentage_step = 5
+        range_delta = (
+            int(range_delta * percentage_step)
+            if range_delta_default
+            else int(range_delta)
+        )
+        service = humidifier.SERVICE_SET_HUMIDITY
+        if not (current := entity.attributes.get(humidifier.ATTR_HUMIDITY)):
+            msg = f"Unable to determine {entity.entity_id} current target humidity"
+            raise AlexaInvalidValueError(msg)
+        min_value = entity.attributes.get(humidifier.ATTR_MIN_HUMIDITY, 10)
+        max_value = entity.attributes.get(humidifier.ATTR_MAX_HUMIDITY, 90)
+        percentage = response_value = min(
+            max_value, max(min_value, range_delta + current)
+        )
+        if percentage:
+            data[humidifier.ATTR_HUMIDITY] = percentage
+
     # Input Number Value
     elif instance == f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}":
         range_delta = float(range_delta)
@@ -1422,6 +1422,17 @@ async def async_api_adjust_range(
         max_value = float(entity.attributes[input_number.ATTR_MAX])
         current = float(entity.state)
         data[input_number.ATTR_VALUE] = response_value = min(
+            max_value, max(min_value, range_delta + current)
+        )
+
+    # Number Value
+    elif instance == f"{number.DOMAIN}.{number.ATTR_VALUE}":
+        range_delta = float(range_delta)
+        service = number.SERVICE_SET_VALUE
+        min_value = float(entity.attributes[number.ATTR_MIN])
+        max_value = float(entity.attributes[number.ATTR_MAX])
+        current = float(entity.state)
+        data[number.ATTR_VALUE] = response_value = min(
             max_value, max(min_value, range_delta + current)
         )
 
@@ -1495,7 +1506,9 @@ async def async_api_changechannel(
     data = {
         ATTR_ENTITY_ID: entity.entity_id,
         media_player.const.ATTR_MEDIA_CONTENT_ID: channel,
-        media_player.const.ATTR_MEDIA_CONTENT_TYPE: media_player.const.MEDIA_TYPE_CHANNEL,
+        media_player.const.ATTR_MEDIA_CONTENT_TYPE: (
+            media_player.const.MEDIA_TYPE_CHANNEL
+        ),
     }
 
     await hass.services.async_call(

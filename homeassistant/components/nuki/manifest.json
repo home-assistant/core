@@ -2,7 +2,7 @@
   "domain": "nuki",
   "name": "Nuki",
   "documentation": "https://www.home-assistant.io/integrations/nuki",
-  "requirements": ["pynuki==1.5.2"],
+  "requirements": ["pynuki==1.6.0"],
   "codeowners": ["@pschmitt", "@pvizeli", "@pree"],
   "config_flow": true,
   "dhcp": [

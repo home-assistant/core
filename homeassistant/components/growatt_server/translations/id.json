@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
             "no_plants": "Tidak ada pembangkit yang ditemukan di akun ini"
         },
         "error": {

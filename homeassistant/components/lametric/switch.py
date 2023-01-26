@@ -16,6 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .coordinator import LaMetricDataUpdateCoordinator
 from .entity import LaMetricEntity
+from .helpers import lametric_exception_handler
 
 
 @dataclass
@@ -91,11 +92,13 @@ class LaMetricSwitchEntity(LaMetricEntity, SwitchEntity):
         """Return state of the switch."""
         return self.entity_description.is_on_fn(self.coordinator.data)
 
+    @lametric_exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.entity_description.set_fn(self.coordinator.lametric, True)
         await self.coordinator.async_request_refresh()
 
+    @lametric_exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.entity_description.set_fn(self.coordinator.lametric, False)

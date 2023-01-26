@@ -6,5 +6,6 @@
   "requirements": ["steamodd==4.21"],
   "codeowners": ["@tkdrob"],
   "iot_class": "cloud_polling",
-  "loggers": ["steam"]
+  "loggers": ["steam"],
+  "integration_type": "service"
 }

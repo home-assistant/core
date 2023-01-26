@@ -11,7 +11,7 @@ import mimetypes
 import os
 from pathlib import Path
 import re
-from typing import TYPE_CHECKING, Any, Optional, TypedDict, cast
+from typing import TYPE_CHECKING, Any, TypedDict, cast
 
 from aiohttp import web
 import mutagen
@@ -51,7 +51,7 @@ from .media_source import generate_media_source_id, media_source_id_to_kwargs
 
 _LOGGER = logging.getLogger(__name__)
 
-TtsAudioType = tuple[Optional[str], Optional[bytes]]
+TtsAudioType = tuple[str | None, bytes | None]
 
 ATTR_CACHE = "cache"
 ATTR_LANGUAGE = "language"
@@ -158,7 +158,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         base_url = conf.get(CONF_BASE_URL)
         if base_url is not None:
             _LOGGER.warning(
-                "TTS base_url option is deprecated. Configure internal/external URL instead"
+                "TTS base_url option is deprecated. Configure internal/external URL"
+                " instead"
             )
         hass.data[BASE_URL_KEY] = base_url
 
@@ -240,8 +241,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         # Register the service description
         service_desc = {
-            CONF_NAME: f"Say an TTS message with {p_type}",
-            CONF_DESCRIPTION: f"Say something using text-to-speech on a media player with {p_type}.",
+            CONF_NAME: f"Say a TTS message with {p_type}",
+            CONF_DESCRIPTION: (
+                f"Say something using text-to-speech on a media player with {p_type}."
+            ),
             CONF_FIELDS: services_dict[SERVICE_SAY][CONF_FIELDS],
         }
         async_set_service_schema(hass, DOMAIN, service_name, service_desc)
@@ -618,9 +621,18 @@ class SpeechManager:
                 if not tts_file.tags:
                     tts_file.add_tags()
                 if isinstance(tts_file.tags, ID3):
-                    tts_file["artist"] = ID3Text(encoding=3, text=artist)
-                    tts_file["album"] = ID3Text(encoding=3, text=album)
-                    tts_file["title"] = ID3Text(encoding=3, text=message)
+                    tts_file["artist"] = ID3Text(
+                        encoding=3,
+                        text=artist,  # type: ignore[no-untyped-call]
+                    )
+                    tts_file["album"] = ID3Text(
+                        encoding=3,
+                        text=album,  # type: ignore[no-untyped-call]
+                    )
+                    tts_file["title"] = ID3Text(
+                        encoding=3,
+                        text=message,  # type: ignore[no-untyped-call]
+                    )
                 else:
                     tts_file["artist"] = artist
                     tts_file["album"] = album

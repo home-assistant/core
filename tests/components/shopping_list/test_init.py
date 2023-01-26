@@ -1,12 +1,16 @@
 """Test shopping list component."""
 from http import HTTPStatus
 
+import pytest
+
+from homeassistant.components.shopping_list import NoMatchingShoppingListItem
 from homeassistant.components.shopping_list.const import (
     DOMAIN,
     EVENT_SHOPPING_LIST_UPDATED,
     SERVICE_ADD_ITEM,
     SERVICE_CLEAR_COMPLETED_ITEMS,
     SERVICE_COMPLETE_ITEM,
+    SERVICE_REMOVE_ITEM,
 )
 from homeassistant.components.websocket_api.const import (
     ERR_INVALID_FORMAT,
@@ -27,6 +31,32 @@ async def test_add_item(hass, sl_setup):
     )
 
     assert response.speech["plain"]["speech"] == "I've added beer to your shopping list"
+
+
+async def test_remove_item(hass, sl_setup):
+    """Test removiung list items."""
+    await intent.async_handle(
+        hass, "test", "HassShoppingListAddItem", {"item": {"value": "beer"}}
+    )
+
+    await intent.async_handle(
+        hass, "test", "HassShoppingListAddItem", {"item": {"value": "cheese"}}
+    )
+
+    assert len(hass.data[DOMAIN].items) == 2
+
+    # Remove a single item
+    item_id = hass.data[DOMAIN].items[0]["id"]
+    await hass.data[DOMAIN].async_remove(item_id)
+
+    assert len(hass.data[DOMAIN].items) == 1
+
+    item = hass.data[DOMAIN].items[0]
+    assert item["name"] == "cheese"
+
+    # Trying to remove the same item twice should fail
+    with pytest.raises(NoMatchingShoppingListItem):
+        await hass.data[DOMAIN].async_remove(item_id)
 
 
 async def test_update_list(hass, sl_setup):
@@ -414,6 +444,47 @@ async def test_ws_add_item_fail(hass, hass_ws_client, sl_setup):
     assert len(hass.data["shopping_list"].items) == 0
 
 
+async def test_ws_remove_item(hass, hass_ws_client, sl_setup):
+    """Test removing shopping_list item websocket command."""
+    client = await hass_ws_client(hass)
+    events = async_capture_events(hass, EVENT_SHOPPING_LIST_UPDATED)
+    await client.send_json({"id": 5, "type": "shopping_list/items/add", "name": "soda"})
+    msg = await client.receive_json()
+    first_item_id = msg["result"]["id"]
+    await client.send_json(
+        {"id": 6, "type": "shopping_list/items/add", "name": "cheese"}
+    )
+    msg = await client.receive_json()
+    assert len(events) == 2
+
+    items = hass.data["shopping_list"].items
+    assert len(items) == 2
+
+    await client.send_json(
+        {"id": 7, "type": "shopping_list/items/remove", "item_id": first_item_id}
+    )
+    msg = await client.receive_json()
+    assert len(events) == 3
+    assert msg["success"] is True
+
+    items = hass.data["shopping_list"].items
+    assert len(items) == 1
+    assert items[0]["name"] == "cheese"
+
+
+async def test_ws_remove_item_fail(hass, hass_ws_client, sl_setup):
+    """Test removing shopping_list item failure websocket command."""
+    client = await hass_ws_client(hass)
+    events = async_capture_events(hass, EVENT_SHOPPING_LIST_UPDATED)
+    await client.send_json({"id": 5, "type": "shopping_list/items/add", "name": "soda"})
+    msg = await client.receive_json()
+    await client.send_json({"id": 6, "type": "shopping_list/items/remove"})
+    msg = await client.receive_json()
+    assert msg["success"] is False
+    assert len(events) == 1
+    assert len(hass.data["shopping_list"].items) == 1
+
+
 async def test_ws_reorder_items(hass, hass_ws_client, sl_setup):
     """Test reordering shopping_list items websocket command."""
     await intent.async_handle(
@@ -556,6 +627,40 @@ async def test_add_item_service(hass, sl_setup):
 
     assert len(hass.data[DOMAIN].items) == 1
     assert len(events) == 1
+
+
+async def test_remove_item_service(hass, sl_setup):
+    """Test removing shopping_list item service."""
+    events = async_capture_events(hass, EVENT_SHOPPING_LIST_UPDATED)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_ADD_ITEM,
+        {ATTR_NAME: "beer"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_ADD_ITEM,
+        {ATTR_NAME: "cheese"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert len(hass.data[DOMAIN].items) == 2
+    assert len(events) == 2
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_REMOVE_ITEM,
+        {ATTR_NAME: "beer"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert len(hass.data[DOMAIN].items) == 1
+    assert hass.data[DOMAIN].items[0]["name"] == "cheese"
+    assert len(events) == 3
 
 
 async def test_clear_completed_items_service(hass, sl_setup):

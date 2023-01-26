@@ -1,5 +1,12 @@
 """Tests for Shelly switch platform."""
+from unittest.mock import AsyncMock
+
+from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
+import pytest
+
+from homeassistant.components.shelly.const import DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -7,6 +14,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.exceptions import HomeAssistantError
 
 from . import init_integration
 
@@ -32,6 +40,56 @@ async def test_block_device_services(hass, mock_block_device):
         blocking=True,
     )
     assert hass.states.get("switch.test_name_channel_1").state == STATE_OFF
+
+
+async def test_block_set_state_connection_error(hass, mock_block_device, monkeypatch):
+    """Test block device set state connection error."""
+    monkeypatch.setattr(
+        mock_block_device.blocks[RELAY_BLOCK_ID],
+        "set_state",
+        AsyncMock(side_effect=DeviceConnectionError),
+    )
+    await init_integration(hass, 1)
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "switch.test_name_channel_1"},
+            blocking=True,
+        )
+
+
+async def test_block_set_state_auth_error(hass, mock_block_device, monkeypatch):
+    """Test block device set state authentication error."""
+    monkeypatch.setattr(
+        mock_block_device.blocks[RELAY_BLOCK_ID],
+        "set_state",
+        AsyncMock(side_effect=InvalidAuthError),
+    )
+    entry = await init_integration(hass, 1)
+
+    assert entry.state == ConfigEntryState.LOADED
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.test_name_channel_1"},
+        blocking=True,
+    )
+
+    assert entry.state == ConfigEntryState.LOADED
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    flow = flows[0]
+    assert flow.get("step_id") == "reauth_confirm"
+    assert flow.get("handler") == DOMAIN
+
+    assert "context" in flow
+    assert flow["context"].get("source") == SOURCE_REAUTH
+    assert flow["context"].get("entry_id") == entry.entry_id
 
 
 async def test_block_device_update(hass, mock_block_device, monkeypatch):
@@ -98,3 +156,50 @@ async def test_rpc_device_switch_type_lights_mode(hass, mock_rpc_device, monkeyp
     )
     await init_integration(hass, 2)
     assert hass.states.get("switch.test_switch_0") is None
+
+
+@pytest.mark.parametrize("exc", [DeviceConnectionError, RpcCallError(-1, "error")])
+async def test_rpc_set_state_errors(hass, exc, mock_rpc_device, monkeypatch):
+    """Test RPC device set state connection/call errors."""
+    monkeypatch.setattr(mock_rpc_device, "call_rpc", AsyncMock(side_effect=exc))
+    await init_integration(hass, 2)
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "switch.test_switch_0"},
+            blocking=True,
+        )
+
+
+async def test_rpc_auth_error(hass, mock_rpc_device, monkeypatch):
+    """Test RPC device set state authentication error."""
+    monkeypatch.setattr(
+        mock_rpc_device,
+        "call_rpc",
+        AsyncMock(side_effect=InvalidAuthError),
+    )
+    entry = await init_integration(hass, 2)
+
+    assert entry.state == ConfigEntryState.LOADED
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.test_switch_0"},
+        blocking=True,
+    )
+
+    assert entry.state == ConfigEntryState.LOADED
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    flow = flows[0]
+    assert flow.get("step_id") == "reauth_confirm"
+    assert flow.get("handler") == DOMAIN
+
+    assert "context" in flow
+    assert flow["context"].get("source") == SOURCE_REAUTH
+    assert flow["context"].get("entry_id") == entry.entry_id

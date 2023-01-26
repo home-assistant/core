@@ -153,7 +153,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         if agent_user_id is None:
             _LOGGER.warning(
-                "No agent_user_id supplied for request_sync. Call as a user or pass in user id as agent_user_id"
+                "No agent_user_id supplied for request_sync. Call as a user or pass in"
+                " user id as agent_user_id"
             )
             return
 
@@ -165,6 +166,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             DOMAIN, SERVICE_REQUEST_SYNC, request_sync_service_handler
         )
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True

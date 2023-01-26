@@ -5,6 +5,7 @@ import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import cast
+from homeassistant.components.cast.home_assistant_cast import CAST_USER_NAME
 
 from tests.common import MockConfigEntry
 
@@ -64,7 +65,7 @@ async def test_user_setup(hass):
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     users = await hass.auth.async_get_users()
-    assert len(users) == 1
+    assert next(user for user in users if user.name == CAST_USER_NAME)
     assert result["type"] == "create_entry"
     assert result["result"].data == {
         "ignore_cec": [],
@@ -86,7 +87,7 @@ async def test_user_setup_options(hass):
     )
 
     users = await hass.auth.async_get_users()
-    assert len(users) == 1
+    assert next(user for user in users if user.name == CAST_USER_NAME)
     assert result["type"] == "create_entry"
     assert result["result"].data == {
         "ignore_cec": [],
@@ -106,7 +107,7 @@ async def test_zeroconf_setup(hass):
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     users = await hass.auth.async_get_users()
-    assert len(users) == 1
+    assert next(user for user in users if user.name == CAST_USER_NAME)
     assert result["type"] == "create_entry"
     assert result["result"].data == {
         "ignore_cec": [],
@@ -126,7 +127,7 @@ async def test_zeroconf_setup_onboarding(hass):
         )
 
     users = await hass.auth.async_get_users()
-    assert len(users) == 1
+    assert next(user for user in users if user.name == CAST_USER_NAME)
     assert result["type"] == "create_entry"
     assert result["result"].data == {
         "ignore_cec": [],

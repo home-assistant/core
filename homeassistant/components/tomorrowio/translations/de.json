@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Der Dienst ist bereits konfiguriert"
+        },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
             "invalid_api_key": "Ung\u00fcltiger API-Schl\u00fcssel",
@@ -14,6 +17,39 @@
                     "name": "Name"
                 },
                 "description": "Um einen API-Schl\u00fcssel zu erhalten, melde dich bei [Tomorrow.io] (https://app.tomorrow.io/signup) an."
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "health_concern": {
+                "state": {
+                    "good": "Gut",
+                    "hazardous": "Gef\u00e4hrlich",
+                    "moderate": "M\u00e4\u00dfig",
+                    "unhealthy": "Ungesund",
+                    "unhealthy_for_sensitive_groups": "Ungesund f\u00fcr sensible Gruppen",
+                    "very_unhealthy": "Sehr ungesund"
+                }
+            },
+            "pollen_index": {
+                "state": {
+                    "high": "Hoch",
+                    "low": "Niedrig",
+                    "medium": "Mittel",
+                    "none": "Keine",
+                    "very_high": "Sehr hoch",
+                    "very_low": "Sehr niedrig"
+                }
+            },
+            "precipitation_type": {
+                "state": {
+                    "freezing_rain": "Gefrierender Regen",
+                    "ice_pellets": "Graupel",
+                    "none": "Keine",
+                    "rain": "Regen",
+                    "snow": "Schnee"
+                }
             }
         }
     },

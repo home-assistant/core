@@ -68,7 +68,7 @@ async def test_options(mock_hc, hass, mock_write_config):
     # assert we have all options
     state = hass.states.get(ENTITY_SELECT)
     assert state.attributes.get("options") == [
-        "PowerOff",
+        "power_off",
         "Nile-TV",
         "Play Music",
         "Watch TV",
@@ -94,10 +94,10 @@ async def test_select_option(mock_hc, hass, mock_write_config):
     assert hass.states.is_state(ENTITY_REMOTE, STATE_ON)
     assert hass.states.is_state(ENTITY_SELECT, "Play Music")
 
-    # turn off harmony by selecting PowerOff activity
-    await _select_option_and_wait(hass, ENTITY_SELECT, "PowerOff")
+    # turn off harmony by selecting power_off activity
+    await _select_option_and_wait(hass, ENTITY_SELECT, "power_off")
     assert hass.states.is_state(ENTITY_REMOTE, STATE_OFF)
-    assert hass.states.is_state(ENTITY_SELECT, "PowerOff")
+    assert hass.states.is_state(ENTITY_SELECT, "power_off")
 
 
 async def _select_option_and_wait(hass, entity, option):

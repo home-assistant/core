@@ -30,8 +30,7 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 from homeassistant.core import State
 
@@ -227,6 +226,18 @@ def test_type_media_player(type_name, entity_id, state, attrs, config):
             {ATTR_DEVICE_CLASS: "pm25"},
         ),
         (
+            "NitrogenDioxideSensor",
+            "sensor.air_quality_nitrogen_dioxide",
+            "50",
+            {ATTR_DEVICE_CLASS: SensorDeviceClass.NITROGEN_DIOXIDE},
+        ),
+        (
+            "VolatileOrganicCompoundsSensor",
+            "sensor.air_quality_volatile_organic_compounds",
+            "55",
+            {ATTR_DEVICE_CLASS: SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS},
+        ),
+        (
             "CarbonMonoxideSensor",
             "sensor.co",
             "2",
@@ -246,7 +257,6 @@ def test_type_media_player(type_name, entity_id, state, attrs, config):
             {ATTR_DEVICE_CLASS: "humidity", ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE},
         ),
         ("LightSensor", "sensor.light", "900", {ATTR_DEVICE_CLASS: "illuminance"}),
-        ("LightSensor", "sensor.light", "900", {ATTR_UNIT_OF_MEASUREMENT: "lm"}),
         ("LightSensor", "sensor.light", "900", {ATTR_UNIT_OF_MEASUREMENT: LIGHT_LUX}),
         (
             "TemperatureSensor",
@@ -258,13 +268,13 @@ def test_type_media_player(type_name, entity_id, state, attrs, config):
             "TemperatureSensor",
             "sensor.temperature",
             "23",
-            {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
         ),
         (
             "TemperatureSensor",
             "sensor.temperature",
             "74",
-            {ATTR_UNIT_OF_MEASUREMENT: TEMP_FAHRENHEIT},
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT},
         ),
     ],
 )

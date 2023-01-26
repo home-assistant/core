@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "Enheten er allerede konfigurert",
             "cannot_connect": "Tilkobling mislyktes",
-            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
+            "reauth_successful": "Re-autentisering var vellykket"
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
@@ -14,7 +14,7 @@
         "flow_title": "{name} ( {ip_address} )",
         "step": {
             "confirm_discovery": {
-                "description": "Vil du konfigurere {name} ( {ip_address} )?",
+                "description": "Vil du sette opp {name} ( {ip_address} )?",
                 "title": "Koble til powerwall"
             },
             "reauth_confim": {
