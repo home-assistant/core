@@ -525,7 +525,6 @@ def sort_interleaved_packets(packets: PeekIterator) -> Iterator[av.Packet]:
     This assumes there is one video and one audio stream and each stream already yields
     its packets in order.
     """
-
     audio_deque: deque[av.Packet] = deque()
     video_deque: deque[av.Packet] = deque()
     for packet in packets:
