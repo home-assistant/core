@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "wrong_ip_address": "The IP address is incorrect or the SHC cannot be reached locally.",
+            "wrong_password": "The password is incorrect."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "IP Address",
+                    "password": "Password"
+                },
+                "description": "Enter the IP address and the (local) password of the SHC."
+            },
+            "reauth_confirm": {
+                "description": "The LIVISI integration needs to re-authenticate your account",
+                "title": "Reauthenticate Integration"
+            }
+        }
+    }
+}
