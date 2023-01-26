@@ -67,6 +67,7 @@ async def async_setup_entry(
 class NukiDeviceEntity(NukiEntity, LockEntity, ABC):
     """Representation of a Nuki device."""
 
+    _attr_has_entity_name = True
     _attr_supported_features = LockEntityFeature.OPEN
 
     @property
