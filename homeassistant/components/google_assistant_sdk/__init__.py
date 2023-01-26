@@ -98,6 +98,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         for service_name in hass.services.async_services()[DOMAIN]:
             hass.services.async_remove(DOMAIN, service_name)
 
+    if entry.options.get(CONF_ENABLE_CONVERSATION_AGENT, False):
+        conversation.async_unset_agent(hass, entry)
+
     return True
 
 
