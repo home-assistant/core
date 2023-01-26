@@ -285,7 +285,7 @@ class BaseNotificationService:
 
     async def async_register_services(self) -> None:
         """Create or update the notify services."""
-        if self.targets:
+        if self.targets is not None:
             stale_targets = set(self.registered_targets)
 
             for name, target in self.targets.items():
