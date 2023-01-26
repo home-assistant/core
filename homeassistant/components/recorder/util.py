@@ -172,7 +172,8 @@ def execute(
                 raise
             time.sleep(QUERY_RETRY_WAIT)
 
-    assert False  # unreachable # pragma: no cover
+    # Unreachable
+    raise RuntimeError  # pragma: no cover
 
 
 def execute_stmt_lambda_element(
@@ -206,7 +207,8 @@ def execute_stmt_lambda_element(
                 raise
             time.sleep(QUERY_RETRY_WAIT)
 
-    assert False  # unreachable # pragma: no cover
+    # Unreachable
+    raise RuntimeError  # pragma: no cover
 
 
 def validate_or_move_away_sqlite_database(dburl: str) -> bool:

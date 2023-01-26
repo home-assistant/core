@@ -13,7 +13,7 @@ def mock_bluetooth(enable_bluetooth):
     """Auto mock bluetooth."""
 
 
-@pytest.fixture()
+@pytest.fixture
 async def mock_connected_snooz(hass: HomeAssistant):
     """Mock a Snooz configuration entry and device."""
 

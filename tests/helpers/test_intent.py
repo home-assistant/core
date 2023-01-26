@@ -9,6 +9,7 @@ from homeassistant.core import State
 from homeassistant.helpers import (
     area_registry,
     config_validation as cv,
+    device_registry,
     entity_registry,
     intent,
 )
@@ -41,7 +42,7 @@ async def test_async_match_states(hass):
     entities.async_update_entity(state1.entity_id, area_id=area_kitchen.id)
 
     entities.async_get_or_create(
-        "switch", "demo", "1234", suggested_object_id="bedroom"
+        "switch", "demo", "5678", suggested_object_id="bedroom"
     )
     entities.async_update_entity(
         state2.entity_id,
@@ -88,6 +89,45 @@ async def test_async_match_states(hass):
             device_classes={SwitchDeviceClass.OUTLET},
             area_name="bedroom",
             states=[state1, state2],
+        )
+    )
+
+
+async def test_match_device_area(hass):
+    """Test async_match_state with a device in an area."""
+    areas = area_registry.async_get(hass)
+    area_kitchen = areas.async_get_or_create("kitchen")
+    area_bedroom = areas.async_get_or_create("bedroom")
+
+    devices = device_registry.async_get(hass)
+    kitchen_device = devices.async_get_or_create(
+        config_entry_id="1234", connections=set(), identifiers={("demo", "id-1234")}
+    )
+    devices.async_update_device(kitchen_device.id, area_id=area_kitchen.id)
+
+    state1 = State(
+        "light.kitchen", "on", attributes={ATTR_FRIENDLY_NAME: "kitchen light"}
+    )
+    state2 = State(
+        "light.bedroom", "on", attributes={ATTR_FRIENDLY_NAME: "bedroom light"}
+    )
+    state3 = State(
+        "light.living_room", "on", attributes={ATTR_FRIENDLY_NAME: "living room light"}
+    )
+    entities = entity_registry.async_get(hass)
+    entities.async_get_or_create("light", "demo", "1234", suggested_object_id="kitchen")
+    entities.async_update_entity(state1.entity_id, device_id=kitchen_device.id)
+
+    entities.async_get_or_create("light", "demo", "5678", suggested_object_id="bedroom")
+    entities.async_update_entity(state2.entity_id, area_id=area_bedroom.id)
+
+    # Match on area/domain
+    assert [state1] == list(
+        intent.async_match_states(
+            hass,
+            domains={"light"},
+            area_name="kitchen",
+            states=[state1, state2, state3],
         )
     )
 
