@@ -916,7 +916,7 @@ def _migrate_columns_to_timestamp(
             )
         )
     elif engine.dialect.name == SupportedDialect.MYSQL:
-        # With MySQL we do this in chunks to avoid locking the table for too long.
+        # With MySQL we do this in chunks to avoid hitting the `innodb_buffer_pool_size` limit
         # We also need to do this in a loop since we can't be sure that we have
         # updated all rows in the table.
         result: CursorResult | None = None
