@@ -56,7 +56,7 @@ SENSOR_TYPES: tuple[HoneywellSensorEntityDescription, ...] = (
     ),
     HoneywellSensorEntityDescription(
         key=HUMIDITY_STATUS_KEY,
-        name="Outdoor Humidity",
+        name="Outdoor humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.outdoor_humidity,
