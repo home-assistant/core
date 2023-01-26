@@ -120,7 +120,6 @@ class MyUplinkSensor(SensorEntity):
         self._attr_name = name
         self._attr_unique_id = f"{device_id}-{u_id}"
         self._attr_device_info = {"identifiers": {(DOMAIN, device_id)}}
-        self._attr_state_class = SensorStateClass.MEASUREMENT
 
         # Set unit of measurement and device class for device points
         if self.mu_data_group == MU_DATAGROUP_POINTS:
@@ -132,6 +131,7 @@ class MyUplinkSensor(SensorEntity):
 
             if device_point.parameter_unit == "°C":
                 self._attr_device_class = SensorDeviceClass.TEMPERATURE
+                self._attr_state_class = SensorStateClass.MEASUREMENT
 
         # Is this DIAGNOSTIC sensor?
         if diag:
