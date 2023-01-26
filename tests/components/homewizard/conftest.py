@@ -65,6 +65,7 @@ def mock_homewizardenergy():
                 json.loads(load_fixture("homewizard/system.json"))
             )
         )
+        client.close = AsyncMock()
         yield device
 
 

@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 from homewizard_energy.errors import DisabledError, RequestError
 from homewizard_energy.models import Data
 
+from homeassistant.components.homewizard import DOMAIN
 from homeassistant.components.sensor import (
     ATTR_OPTIONS,
     ATTR_STATE_CLASS,
@@ -17,6 +18,7 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
+    Platform,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -1776,3 +1778,30 @@ async def test_external_inlet_heat_meter_loads(
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfVolume.CUBIC_METERS
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL_INCREASING
+
+
+async def test_external_sensor_migrates_gas_value(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+):
+    """Test original gas sensor migrates unique id."""
+
+    entity_registry = er.async_get(hass)
+
+    entry = entity_registry.async_get("sensor.homewizard_aabbccddeeff_total_gas_m3")
+    assert not entry
+
+    entity_registry.async_get_or_create(
+        Platform.SENSOR,
+        DOMAIN,
+        f"{init_integration.unique_id}_total_gas_m3",
+    )
+
+    await hass.config_entries.async_reload(init_integration.entry_id)
+    await hass.async_block_till_done()
+
+    entity_registry = er.async_get(hass)
+
+    entry = entity_registry.async_get("sensor.homewizard_aabbccddeeff_total_gas_m3")
+    assert entry
+    assert entry.unique_id == "homewizard_01FFEEDDCCBBAA99887766554433221100"
