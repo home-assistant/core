@@ -108,7 +108,9 @@ async def test_brightness_level_set(hass, mock_config_entry_data, mock_config_en
             number.DOMAIN,
             SERVICE_SET_VALUE,
             {
-                ATTR_ENTITY_ID: "number.product_name_aabbccddeeff_status_light_brightness",
+                ATTR_ENTITY_ID: (
+                    "number.product_name_aabbccddeeff_status_light_brightness"
+                ),
                 ATTR_VALUE: 50,
             },
             blocking=True,
@@ -128,7 +130,9 @@ async def test_brightness_level_set(hass, mock_config_entry_data, mock_config_en
             number.DOMAIN,
             SERVICE_SET_VALUE,
             {
-                ATTR_ENTITY_ID: "number.product_name_aabbccddeeff_status_light_brightness",
+                ATTR_ENTITY_ID: (
+                    "number.product_name_aabbccddeeff_status_light_brightness"
+                ),
                 ATTR_VALUE: 0,
             },
             blocking=True,
@@ -171,7 +175,9 @@ async def test_brightness_level_set_catches_requesterror(
                 number.DOMAIN,
                 SERVICE_SET_VALUE,
                 {
-                    ATTR_ENTITY_ID: "number.product_name_aabbccddeeff_status_light_brightness",
+                    ATTR_ENTITY_ID: (
+                        "number.product_name_aabbccddeeff_status_light_brightness"
+                    ),
                     ATTR_VALUE: 50,
                 },
                 blocking=True,
@@ -205,7 +211,9 @@ async def test_brightness_level_set_catches_disablederror(
                 number.DOMAIN,
                 SERVICE_SET_VALUE,
                 {
-                    ATTR_ENTITY_ID: "number.product_name_aabbccddeeff_status_light_brightness",
+                    ATTR_ENTITY_ID: (
+                        "number.product_name_aabbccddeeff_status_light_brightness"
+                    ),
                     ATTR_VALUE: 50,
                 },
                 blocking=True,
@@ -241,7 +249,9 @@ async def test_brightness_level_set_catches_invalid_value(
                 number.DOMAIN,
                 SERVICE_SET_VALUE,
                 {
-                    ATTR_ENTITY_ID: "number.product_name_aabbccddeeff_status_light_brightness",
+                    ATTR_ENTITY_ID: (
+                        "number.product_name_aabbccddeeff_status_light_brightness"
+                    ),
                     ATTR_VALUE: -1,
                 },
                 blocking=True,
@@ -252,7 +262,9 @@ async def test_brightness_level_set_catches_invalid_value(
                 number.DOMAIN,
                 SERVICE_SET_VALUE,
                 {
-                    ATTR_ENTITY_ID: "number.product_name_aabbccddeeff_status_light_brightness",
+                    ATTR_ENTITY_ID: (
+                        "number.product_name_aabbccddeeff_status_light_brightness"
+                    ),
                     ATTR_VALUE: 101,
                 },
                 blocking=True,

@@ -38,5 +38,10 @@
                 "description": "Kies een apparaat om in te stellen"
             }
         }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "motion_detected": "Beweging gedetecteerd"
+        }
     }
 }
