@@ -6,7 +6,14 @@
   "requirements": ["bluetooth-data-tools==0.3.1", "ld2410-ble==0.1.1"],
   "dependencies": ["bluetooth_adapters"],
   "codeowners": ["@930913"],
-  "bluetooth": [{ "local_name": "HLK-LD2410B_*" }],
+  "bluetooth": [
+    { "local_name": "HLK-LD2410B_*" },
+    {
+      "manufacturer_id": 256,
+      "manufacturer_data_start": [7, 1],
+      "service_uuid": "0000af30-0000-1000-8000-00805f9b34fb"
+    }
+  ],
   "integration_type": "device",
   "iot_class": "local_push"
 }
