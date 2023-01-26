@@ -34,7 +34,7 @@ from .services import async_load_screenlogic_services, async_unload_screenlogic_
 _LOGGER = logging.getLogger(__name__)
 
 
-REQUEST_REFRESH_DELAY = 2
+REQUEST_REFRESH_DELAY = 0.5
 HEATER_COOLDOWN_DELAY = 6
 
 # These seem to be constant across all controller models
@@ -271,7 +271,7 @@ class ScreenLogicCircuitEntity(ScreenlogicEntity):
     async def _async_set_circuit(self, circuit_value) -> None:
         if await self.gateway.async_set_circuit(self._data_key, circuit_value):
             _LOGGER.debug("Turn %s %s", self._data_key, circuit_value)
-            await self._async_refresh()
+            await self._async_refresh_timed(False)
         else:
             _LOGGER.warning(
                 "Failed to set_circuit %s %s", self._data_key, circuit_value
