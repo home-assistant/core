@@ -92,7 +92,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     info: dict[str, str | None]
-    host: str | None = None
+    host: str
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
@@ -107,8 +107,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="reauth_confirm",
                 data_schema=HOST_SCHEMA,
             )
-        self.host = host = user_input[CONF_HOST]
-        self.info = await self._get_info(host)
+        self.host = user_input[CONF_HOST]
+        self.info = await self._get_info(self.host)
         return await self.async_step_credentials()
 
     async def async_step_user(
@@ -117,18 +117,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            host = user_input[CONF_HOST]
+            self.host = user_input[CONF_HOST]
             try:
-                self.info = info = await self._get_info(host)
+                self.info = await self._get_info(self.host)
             except SHCConnectionError:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(info["unique_id"])
-                self._abort_if_unique_id_configured({CONF_HOST: host})
-                self.host = host
+                await self.async_set_unique_id(self.info["unique_id"])
+                self._abort_if_unique_id_configured({CONF_HOST: self.host})
                 return await self.async_step_credentials()
 
         return self.async_show_form(
