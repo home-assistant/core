@@ -22,17 +22,7 @@ async def async_setup_entry(
     """Set up a ONVIF switch platform."""
     device = hass.data[DOMAIN][config_entry.unique_id]
 
-    entities = []
-    for profile in device.profiles:
-        entities.extend(
-            [
-                ONVIFWiperSwitch("_wiper", profile, device),
-                ONVIFAutoFocusSwitch("_autofocus", profile, device),
-            ]
-        )
-        # only add controls for the first media profile, since controlling
-        # settings for other resolutions would be redundant
-        break
+    entities = [ONVIFWiperSwitch(device), ONVIFAutoFocusSwitch(device)]
     async_add_entities(entities)
 
 
@@ -42,22 +32,17 @@ class ONVIFImagingSettingSwitch(ONVIFBaseEntity, SwitchEntity):
     _on_settings: dict[str, Any] = {}
     _off_settings: dict[str, Any] = {}
 
-    def __init__(self, uid: str, profile: Profile, device: ONVIFDevice) -> None:
-        """Initialize the switch."""
-        self._profile = profile
-        super().__init__(device)
-        unique_root = "_".join([str(self.device_info["name"]), profile.name])
-        self._attr_unique_id = unique_root + uid
-
     async def async_turn_on(self, **kwargs) -> None:
         """Turn on switch."""
         self._attr_is_on = True
-        await self.device.async_set_imaging_settings(self._profile, self._on_settings)
+        profile = self.device.profiles[0]
+        await self.device.async_set_imaging_settings(profile, self._on_settings)
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn off switch."""
         self._attr_is_on = False
-        await self.device.async_set_imaging_settings(self._profile, self._off_settings)
+        profile = self.device.profiles[0]
+        await self.device.async_set_imaging_settings(profile, self._off_settings)
 
 
 class ONVIFAuxSwitch(ONVIFBaseEntity, SwitchEntity):
@@ -66,22 +51,17 @@ class ONVIFAuxSwitch(ONVIFBaseEntity, SwitchEntity):
     _on_cmd = ""
     _off_cmd = ""
 
-    def __init__(self, uid: str, profile: Profile, device: ONVIFDevice) -> None:
-        """Initialize the switch."""
-        self._profile = profile
-        super().__init__(device)
-        unique_root = "_".join([str(self.device_info["name"]), profile.name])
-        self._attr_unique_id = unique_root + uid
-
     async def async_turn_on(self, **kwargs) -> None:
         """Turn on switch."""
         self._attr_is_on = True
-        await self.device.async_run_aux_command(self._profile, self._on_cmd)
+        profile = self.device.profiles[0]
+        await self.device.async_run_aux_command(profile, self._on_cmd)
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn off switch."""
         self._attr_is_on = False
-        await self.device.async_run_aux_command(self._profile, self._off_cmd)
+        profile = self.device.profiles[0]
+        await self.device.async_run_aux_command(profile, self._off_cmd)
 
 
 class ONVIFAutoFocusSwitch(ONVIFImagingSettingSwitch):
@@ -90,9 +70,21 @@ class ONVIFAutoFocusSwitch(ONVIFImagingSettingSwitch):
     _on_settings = {"Focus": {"AutoFocusMode": "AUTO"}}
     _off_settings = {"Focus": {"AutoFocusMode": "MANUAL"}}
 
+    def __init__(self, device: ONVIFDevice) -> None:
+        """Initialize the switch."""
+        super().__init__(device)
+        self._attr_name = f"{self.device.name} Autofocus"
+        self._attr_unique_id = f"{self.mac_or_serial}_autofocus"
+
 
 class ONVIFWiperSwitch(ONVIFAuxSwitch):
     """Turn wiper on or off."""
+
+    def __init__(self, device: ONVIFDevice) -> None:
+        """Initialize the switch."""
+        super().__init__(device)
+        self._attr_name = f"{self.device.name} Wiper"
+        self._attr_unique_id = f"{self.mac_or_serial}_wiper"
 
     _on_cmd = "tt:Wiper|On"
     _off_cmd = "tt:Wiper|Off"

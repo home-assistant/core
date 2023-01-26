@@ -52,8 +52,17 @@ async def test_diagnostics(hass, hass_client):
                 "snapshot": False,
                 "events": False,
                 "ptz": False,
-                "imaging": False,
+                "imaging": True,
             },
-            "profiles": [],
+            "profiles": [
+                {
+                    "index": 0,
+                    "token": "dummy",
+                    "name": "profile1",
+                    "video": None,
+                    "ptz": None,
+                    "video_source_token": None,
+                }
+            ],
         },
     }
