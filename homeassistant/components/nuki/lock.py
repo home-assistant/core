@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, TypeVar
 
 from pynuki import NukiLock, NukiOpener
 from pynuki.constants import MODE_OPENER_CONTINUOUS
+from pynuki.device import NukiDevice
 from requests.exceptions import RequestException
 import voluptuous as vol
 
@@ -28,6 +29,8 @@ from .const import (
     ERROR_STATES,
 )
 from .helpers import CannotConnect
+
+_NukiDeviceT = TypeVar("_NukiDeviceT", bound=NukiDevice)
 
 
 async def async_setup_entry(
@@ -63,7 +66,7 @@ async def async_setup_entry(
     )
 
 
-class NukiDeviceEntity(NukiEntity, LockEntity, ABC):
+class NukiDeviceEntity(NukiEntity[_NukiDeviceT], LockEntity, ABC):
     """Representation of a Nuki device."""
 
     _attr_has_entity_name = True
@@ -100,10 +103,8 @@ class NukiDeviceEntity(NukiEntity, LockEntity, ABC):
         """Open the door latch."""
 
 
-class NukiLockEntity(NukiDeviceEntity):
+class NukiLockEntity(NukiDeviceEntity[NukiLock]):
     """Representation of a Nuki lock."""
-
-    _nuki_device: NukiLock
 
     @property
     def is_locked(self) -> bool:
@@ -143,10 +144,8 @@ class NukiLockEntity(NukiDeviceEntity):
             raise CannotConnect from err
 
 
-class NukiOpenerEntity(NukiDeviceEntity):
+class NukiOpenerEntity(NukiDeviceEntity[NukiOpener]):
     """Representation of a Nuki opener."""
-
-    _nuki_device: NukiOpener
 
     @property
     def is_locked(self) -> bool:

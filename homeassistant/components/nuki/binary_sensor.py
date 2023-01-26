@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from pynuki.constants import STATE_DOORSENSOR_OPENED
+from pynuki.device import NukiDevice
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -31,7 +32,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class NukiDoorsensorEntity(NukiEntity, BinarySensorEntity):
+class NukiDoorsensorEntity(NukiEntity[NukiDevice], BinarySensorEntity):
     """Representation of a Nuki Lock Doorsensor."""
 
     _attr_has_entity_name = True

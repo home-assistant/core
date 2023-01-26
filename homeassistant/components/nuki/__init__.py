@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections import defaultdict
 from datetime import timedelta
 import logging
+from typing import Generic, TypeVar
 
 import async_timeout
 from pynuki import NukiBridge, NukiLock, NukiOpener
@@ -32,6 +33,8 @@ from .const import (
     ERROR_STATES,
 )
 from .helpers import parse_id
+
+_NukiDeviceT = TypeVar("_NukiDeviceT", bound=NukiDevice)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -190,7 +193,7 @@ class NukiCoordinator(DataUpdateCoordinator[None]):
         return events
 
 
-class NukiEntity(CoordinatorEntity[NukiCoordinator]):
+class NukiEntity(CoordinatorEntity[NukiCoordinator], Generic[_NukiDeviceT]):
     """An entity using CoordinatorEntity.
 
     The CoordinatorEntity class provides:
@@ -201,7 +204,7 @@ class NukiEntity(CoordinatorEntity[NukiCoordinator]):
 
     """
 
-    def __init__(self, coordinator: NukiCoordinator, nuki_device: NukiDevice) -> None:
+    def __init__(self, coordinator: NukiCoordinator, nuki_device: _NukiDeviceT) -> None:
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator)
         self._nuki_device = nuki_device
