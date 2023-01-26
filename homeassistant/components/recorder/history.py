@@ -65,7 +65,7 @@ _BASE_STATES = (
     States.last_changed_ts,
     States.last_updated_ts,
 )
-_BASE_STATES_NO_LAST_CHANGED = (
+_BASE_STATES_NO_LAST_CHANGED = (  # type: ignore[var-annotated]
     States.entity_id,
     States.state,
     literal(value=None).label("last_changed_ts"),
@@ -886,11 +886,11 @@ def _sorted_states_to_dict(
         _LOGGER.debug("getting %d first datapoints took %fs", len(result), elapsed)
 
     if entity_ids and len(entity_ids) == 1:
-        states_iter: Iterable[tuple[str | Column, Iterator[Row]]] = (
+        states_iter: Iterable[tuple[str, Iterator[Row]]] = (
             (entity_ids[0], iter(states)),
         )
     else:
-        states_iter = groupby(states, lambda state: state.entity_id)
+        states_iter = groupby(states, lambda state: state.entity_id)  # type: ignore[no-any-return]
 
     # Append all changes to it
     for ent_id, group in states_iter:

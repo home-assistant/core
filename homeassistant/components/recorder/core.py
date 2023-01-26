@@ -190,7 +190,7 @@ class Recorder(threading.Thread):
 
         self.schema_version = 0
         self._commits_without_expire = 0
-        self._old_states: dict[str, States] = {}
+        self._old_states: dict[str | None, States] = {}
         self._state_attributes_ids: LRU = LRU(STATE_ATTRIBUTES_ID_CACHE_SIZE)
         self._event_data_ids: LRU = LRU(EVENT_DATA_ID_CACHE_SIZE)
         self._pending_state_attributes: dict[str, StateAttributes] = {}

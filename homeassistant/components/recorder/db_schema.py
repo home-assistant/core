@@ -347,7 +347,8 @@ class States(Base):
     origin_idx: Mapped[int | None] = mapped_column(
         SmallInteger
     )  # 0 is local, 1 is remote
-    old_state: Mapped[States | None] = relationship("States", remote_side=[state_id])
+    # https://github.com/sqlalchemy/sqlalchemy/issues/9150
+    old_state: Mapped[States | None] = relationship("States", remote_side=[state_id])  # type: ignore[list-item]
     state_attributes: Mapped[StateAttributes | None] = relationship("StateAttributes")
 
     def __repr__(self) -> str:
