@@ -1,6 +1,7 @@
 """Tests for ZHA config flow."""
 
 import copy
+from datetime import timedelta
 import json
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, create_autospec, patch
 import uuid
@@ -71,10 +72,11 @@ def make_backup():
     """Zigpy network backup factory that creates unique backups with each call."""
     num_calls = 0
 
-    def inner():
+    def inner(*, backup_time_offset=0):
         nonlocal num_calls
 
         backup = zigpy.backups.NetworkBackup()
+        backup.backup_time += timedelta(seconds=backup_time_offset)
         backup.node_info.ieee = zigpy.types.EUI64.convert(f"AABBCCDDEE{num_calls:06X}")
         num_calls += 1
 
@@ -1415,9 +1417,9 @@ async def test_formation_strategy_restore_automatic_backup_non_ezsp(
 ):
     """Test restoring an automatic backup (non-EZSP radio)."""
     mock_app.backups.backups = [
-        make_backup(),
-        make_backup(),
-        make_backup(),
+        make_backup(backup_time_offset=5),
+        make_backup(backup_time_offset=-3),
+        make_backup(backup_time_offset=2),
     ]
     backup = mock_app.backups.backups[1]  # pick the second one
     backup.is_compatible_with = MagicMock(return_value=False)
@@ -1439,13 +1441,20 @@ async def test_formation_strategy_restore_automatic_backup_non_ezsp(
     assert result2["type"] == FlowResultType.FORM
     assert result2["step_id"] == "choose_automatic_backup"
 
-    # We must prompt for overwriting the IEEE address
+    # We don't prompt for overwriting the IEEE address, since only EZSP needs this
     assert config_flow.OVERWRITE_COORDINATOR_IEEE not in result2["data_schema"].schema
+
+    # The backup choices are ordered by date
+    assert result2["data_schema"].schema["choose_automatic_backup"].container == [
+        f"choice:{mock_app.backups.backups[0]!r}",
+        f"choice:{mock_app.backups.backups[2]!r}",
+        f"choice:{mock_app.backups.backups[1]!r}",
+    ]
 
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
         user_input={
-            config_flow.CHOOSE_AUTOMATIC_BACKUP: "choice:" + repr(backup),
+            config_flow.CHOOSE_AUTOMATIC_BACKUP: f"choice:{backup!r}",
         },
     )
 
