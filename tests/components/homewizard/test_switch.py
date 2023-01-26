@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from homewizard_energy.errors import DisabledError, RequestError
 from homewizard_energy.models import State, System
-from pytest import raises
+import pytest
 
 from homeassistant.components import switch
 from homeassistant.components.switch import SwitchDeviceClass
@@ -352,7 +352,7 @@ async def test_cloud_connection_on_off(hass, mock_config_entry_data, mock_config
 async def test_switch_handles_requesterror(
     hass, mock_config_entry_data, mock_config_entry
 ):
-    """Test entity raises HomeAssistantError when RequestError was raised."""
+    """Test entity pytest.raises HomeAssistantError when RequestError was raised."""
 
     api = get_mock_device(product_type="HWE-SKT", firmware_version="3.02")
     api.state = AsyncMock(
@@ -375,7 +375,7 @@ async def test_switch_handles_requesterror(
         await hass.async_block_till_done()
 
         # Power on toggle
-        with raises(HomeAssistantError):
+        with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 switch.DOMAIN,
                 SERVICE_TURN_ON,
@@ -383,7 +383,7 @@ async def test_switch_handles_requesterror(
                 blocking=True,
             )
 
-        with raises(HomeAssistantError):
+        with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 switch.DOMAIN,
                 SERVICE_TURN_OFF,
@@ -392,7 +392,7 @@ async def test_switch_handles_requesterror(
             )
 
         # Switch Lock toggle
-        with raises(HomeAssistantError):
+        with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 switch.DOMAIN,
                 SERVICE_TURN_ON,
@@ -400,7 +400,7 @@ async def test_switch_handles_requesterror(
                 blocking=True,
             )
 
-        with raises(HomeAssistantError):
+        with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 switch.DOMAIN,
                 SERVICE_TURN_OFF,
@@ -409,7 +409,7 @@ async def test_switch_handles_requesterror(
             )
 
         # Disable Cloud toggle
-        with raises(HomeAssistantError):
+        with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 switch.DOMAIN,
                 SERVICE_TURN_ON,
@@ -417,7 +417,7 @@ async def test_switch_handles_requesterror(
                 blocking=True,
             )
 
-        with raises(HomeAssistantError):
+        with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 switch.DOMAIN,
                 SERVICE_TURN_OFF,
@@ -429,7 +429,7 @@ async def test_switch_handles_requesterror(
 async def test_switch_handles_disablederror(
     hass, mock_config_entry_data, mock_config_entry
 ):
-    """Test entity raises HomeAssistantError when Disabled was raised."""
+    """Test entity pytest.raises HomeAssistantError when Disabled was raised."""
 
     api = get_mock_device(product_type="HWE-SKT", firmware_version="3.02")
     api.state = AsyncMock(
@@ -452,7 +452,7 @@ async def test_switch_handles_disablederror(
         await hass.async_block_till_done()
 
         # Power on toggle
-        with raises(HomeAssistantError):
+        with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 switch.DOMAIN,
                 SERVICE_TURN_ON,
@@ -460,7 +460,7 @@ async def test_switch_handles_disablederror(
                 blocking=True,
             )
 
-        with raises(HomeAssistantError):
+        with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 switch.DOMAIN,
                 SERVICE_TURN_OFF,
@@ -469,7 +469,7 @@ async def test_switch_handles_disablederror(
             )
 
         # Switch Lock toggle
-        with raises(HomeAssistantError):
+        with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 switch.DOMAIN,
                 SERVICE_TURN_ON,
@@ -477,7 +477,7 @@ async def test_switch_handles_disablederror(
                 blocking=True,
             )
 
-        with raises(HomeAssistantError):
+        with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 switch.DOMAIN,
                 SERVICE_TURN_OFF,
@@ -486,7 +486,7 @@ async def test_switch_handles_disablederror(
             )
 
         # Disable Cloud toggle
-        with raises(HomeAssistantError):
+        with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 switch.DOMAIN,
                 SERVICE_TURN_ON,
@@ -494,7 +494,7 @@ async def test_switch_handles_disablederror(
                 blocking=True,
             )
 
-        with raises(HomeAssistantError):
+        with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 switch.DOMAIN,
                 SERVICE_TURN_OFF,
