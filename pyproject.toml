@@ -246,10 +246,11 @@ select = [
     "D",  # docstrings
     "E",  # pycodestyle
     "F",  # pyflakes/autoflake
-    "T20",  # flake8-print
-    "W",  # pycodestyle
-    "UP",  # pyupgrade
     "PGH004",  # Use specific rule codes when using noqa
+    "PT001", # Use @pytest.fixture without parentheses
+    "T20",  # flake8-print
+    "UP",  # pyupgrade
+    "W",  # pycodestyle
 ]
 
 ignore = [
@@ -267,6 +268,9 @@ ignore = [
     "E731",  # do not assign a lambda expression, use a def
     "UP024", # Replace aliased errors with `OSError`
 ]
+
+[tool.ruff.flake8-pytest-style]
+fixture-parentheses = false
 
 [tool.ruff.per-file-ignores]
 

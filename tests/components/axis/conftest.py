@@ -157,7 +157,7 @@ def default_request_fixture(respx_mock):
     yield __mock_default_requests
 
 
-@pytest.fixture()
+@pytest.fixture
 def api_discovery_items():
     """Additional Apidiscovery items."""
     return {}

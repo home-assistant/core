@@ -25,13 +25,13 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 
 
-@pytest.fixture()
+@pytest.fixture
 def extra_os_info():
     """Extra os/info."""
     return {}
 
 
-@pytest.fixture()
+@pytest.fixture
 def os_info(extra_os_info):
     """Mock os/info."""
     return {
