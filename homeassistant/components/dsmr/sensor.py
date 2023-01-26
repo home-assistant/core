@@ -393,7 +393,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         dsmr_versions={"2.2"},
         is_gas=True,
         force_update=True,
-        device_class=SensorDeviceClass.GAS
+        device_class=SensorDeviceClass.GAS,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
 )
