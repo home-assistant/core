@@ -50,7 +50,6 @@ if TYPE_CHECKING:
     from . import Recorder
 
 LIVE_MIGRATION_MIN_SCHEMA_VERSION = 0
-UPDATE_CHUNK_SIZE = 5000
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -924,7 +923,7 @@ def _migrate_columns_to_timestamp(
             result = connection.execute(
                 text(
                     "UPDATE events set time_fired_ts=UNIX_TIMESTAMP(time_fired) "
-                    "where time_fired_ts is NULL LIMIT {UPDATE_CHUNK_SIZE};"
+                    "where time_fired_ts is NULL LIMIT 5000;"
                 )
             )
         result = None
@@ -934,7 +933,7 @@ def _migrate_columns_to_timestamp(
                     "UPDATE states set last_updated_ts=UNIX_TIMESTAMP(last_updated), "
                     "last_changed_ts=UNIX_TIMESTAMP(last_changed) "
                     " where last_updated_ts is NULL "
-                    " LIMIT {UPDATE_CHUNK_SIZE};"
+                    " LIMIT 5000;"
                 )
             )
     elif engine.dialect.name == SupportedDialect.POSTGRESQL:
