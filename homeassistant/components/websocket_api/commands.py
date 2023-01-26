@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from contextlib import suppress
 import datetime as dt
 import json
 from typing import Any, cast
@@ -262,11 +263,9 @@ def handle_get_states(
     # If we can't serialize, we'll filter out unserializable states
     serialized = []
     for state in states:
-        try:
+        # Error is already logged above
+        with suppress(ValueError, TypeError):
             serialized.append(JSON_DUMP(state))
-        except (ValueError, TypeError):
-            # Error is already logged above
-            pass
 
     # We now have partially serialized states. Craft some JSON.
     response2 = JSON_DUMP(messages.result_message(msg["id"], ["TO_REPLACE"]))
