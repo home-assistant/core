@@ -219,7 +219,11 @@ class BaseNotificationService:
 
     # Name => target
     registered_targets: dict[str, str]
-    targets: dict[str, str]
+
+    @property
+    def targets(self) -> dict[str, str] | None:
+        """Return a dictionary of registered targets."""
+        return None
 
     def send_message(self, message: str, **kwargs: Any) -> None:
         """Send a message.
@@ -281,7 +285,7 @@ class BaseNotificationService:
 
     async def async_register_services(self) -> None:
         """Create or update the notify services."""
-        if hasattr(self, "targets"):
+        if self.targets:
             stale_targets = set(self.registered_targets)
 
             for name, target in self.targets.items():
