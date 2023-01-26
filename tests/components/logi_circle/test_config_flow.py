@@ -38,9 +38,7 @@ def init_config_flow(hass):
         sensors=None,
     )
     flow = config_flow.LogiCircleFlowHandler()
-    flow._get_authorization_url = Mock(  # pylint: disable=protected-access
-        return_value="http://example.com"
-    )
+    flow._get_authorization_url = Mock(return_value="http://example.com")
     flow.hass = hass
     return flow
 
@@ -59,20 +57,16 @@ def mock_logi_circle():
         yield LogiCircle
 
 
-async def test_step_import(
-    hass, mock_logi_circle  # pylint: disable=redefined-outer-name
-):
+async def test_step_import(hass, mock_logi_circle):
     """Test that we trigger import when configuring with client."""
     flow = init_config_flow(hass)
 
     result = await flow.async_step_import()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "auth"
 
 
-async def test_full_flow_implementation(
-    hass, mock_logi_circle  # pylint: disable=redefined-outer-name
-):
+async def test_full_flow_implementation(hass, mock_logi_circle):
     """Test registering an implementation and finishing flow works."""
     config_flow.register_flow_implementation(
         hass,
@@ -86,18 +80,18 @@ async def test_full_flow_implementation(
     flow = init_config_flow(hass)
 
     result = await flow.async_step_user()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await flow.async_step_user({"flow_impl": "test-other"})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "auth"
     assert result["description_placeholders"] == {
         "authorization_url": "http://example.com"
     }
 
     result = await flow.async_step_code("123ABC")
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "Logi Circle ({})".format("testId")
 
 
@@ -115,7 +109,7 @@ async def test_abort_if_no_implementation_registered(hass):
     flow.hass = hass
 
     result = await flow.async_step_user()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "missing_configuration"
 
 
@@ -128,21 +122,21 @@ async def test_abort_if_already_setup(hass):
         config_flow.DOMAIN,
         context={"source": config_entries.SOURCE_USER},
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
         context={"source": config_entries.SOURCE_IMPORT},
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     with pytest.raises(data_entry_flow.AbortFlow):
         result = await flow.async_step_code()
 
     result = await flow.async_step_auth()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "external_setup"
 
 
@@ -153,15 +147,13 @@ async def test_abort_if_already_setup(hass):
         (AuthorizationFailed, "invalid_auth"),
     ],
 )
-async def test_abort_if_authorize_fails(
-    hass, mock_logi_circle, side_effect, error
-):  # pylint: disable=redefined-outer-name
+async def test_abort_if_authorize_fails(hass, mock_logi_circle, side_effect, error):
     """Test we abort if authorizing fails."""
     flow = init_config_flow(hass)
     mock_logi_circle.authorize.side_effect = side_effect
 
     result = await flow.async_step_code("123ABC")
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "external_error"
 
     result = await flow.async_step_auth()
@@ -173,13 +165,11 @@ async def test_not_pick_implementation_if_only_one(hass):
     flow = init_config_flow(hass)
 
     result = await flow.async_step_user()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "auth"
 
 
-async def test_gen_auth_url(
-    hass, mock_logi_circle
-):  # pylint: disable=redefined-outer-name
+async def test_gen_auth_url(hass, mock_logi_circle):
     """Test generating authorize URL from Logi Circle API."""
     config_flow.register_flow_implementation(
         hass,
@@ -195,7 +185,7 @@ async def test_gen_auth_url(
     flow.flow_impl = "test-auth-url"
     await async_setup_component(hass, "http", {})
 
-    result = flow._get_authorization_url()  # pylint: disable=protected-access
+    result = flow._get_authorization_url()
     assert result == "http://authorize.url"
 
 
@@ -207,9 +197,7 @@ async def test_callback_view_rejects_missing_code(hass):
     assert resp.status == HTTPStatus.BAD_REQUEST
 
 
-async def test_callback_view_accepts_code(
-    hass, mock_logi_circle
-):  # pylint: disable=redefined-outer-name
+async def test_callback_view_accepts_code(hass, mock_logi_circle):
     """Test the auth callback view handles requests with auth code."""
     init_config_flow(hass)
     view = LogiCircleAuthCallbackView()

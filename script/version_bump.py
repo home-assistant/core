@@ -116,7 +116,7 @@ def write_version(version):
         "PATCH_VERSION: Final = .*\n", f'PATCH_VERSION: Final = "{patch}"\n', content
     )
 
-    with open("homeassistant/const.py", "wt") as fil:
+    with open("homeassistant/const.py", "w") as fil:
         fil.write(content)
 
 

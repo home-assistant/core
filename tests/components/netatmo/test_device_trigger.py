@@ -7,11 +7,6 @@ from homeassistant.components.netatmo import DOMAIN as NETATMO_DOMAIN
 from homeassistant.components.netatmo.const import (
     CLIMATE_TRIGGERS,
     INDOOR_CAMERA_TRIGGERS,
-    MODEL_NACAMERA,
-    MODEL_NAPLUG,
-    MODEL_NATHERM1,
-    MODEL_NOC,
-    MODEL_NRV,
     NETATMO_EVENT,
     OUTDOOR_CAMERA_TRIGGERS,
 )
@@ -52,10 +47,10 @@ def calls(hass):
 @pytest.mark.parametrize(
     "platform,device_type,event_types",
     [
-        ("camera", MODEL_NOC, OUTDOOR_CAMERA_TRIGGERS),
-        ("camera", MODEL_NACAMERA, INDOOR_CAMERA_TRIGGERS),
-        ("climate", MODEL_NRV, CLIMATE_TRIGGERS),
-        ("climate", MODEL_NATHERM1, CLIMATE_TRIGGERS),
+        ("camera", "Smart Outdoor Camera", OUTDOOR_CAMERA_TRIGGERS),
+        ("camera", "Smart Indoor Camera", INDOOR_CAMERA_TRIGGERS),
+        ("climate", "Smart Valve", CLIMATE_TRIGGERS),
+        ("climate", "Smart Thermostat", CLIMATE_TRIGGERS),
     ],
 )
 async def test_get_triggers(
@@ -110,15 +105,15 @@ async def test_get_triggers(
 
 @pytest.mark.parametrize(
     "platform,camera_type,event_type",
-    [("camera", MODEL_NOC, trigger) for trigger in OUTDOOR_CAMERA_TRIGGERS]
-    + [("camera", MODEL_NACAMERA, trigger) for trigger in INDOOR_CAMERA_TRIGGERS]
+    [("camera", "Smart Outdoor Camera", trigger) for trigger in OUTDOOR_CAMERA_TRIGGERS]
+    + [("camera", "Smart Indoor Camera", trigger) for trigger in INDOOR_CAMERA_TRIGGERS]
     + [
-        ("climate", MODEL_NRV, trigger)
+        ("climate", "Smart Valve", trigger)
         for trigger in CLIMATE_TRIGGERS
         if trigger not in SUBTYPES
     ]
     + [
-        ("climate", MODEL_NATHERM1, trigger)
+        ("climate", "Smart Thermostat", trigger)
         for trigger in CLIMATE_TRIGGERS
         if trigger not in SUBTYPES
     ],
@@ -188,12 +183,12 @@ async def test_if_fires_on_event(
 @pytest.mark.parametrize(
     "platform,camera_type,event_type,sub_type",
     [
-        ("climate", MODEL_NRV, trigger, subtype)
+        ("climate", "Smart Valve", trigger, subtype)
         for trigger in SUBTYPES
         for subtype in SUBTYPES[trigger]
     ]
     + [
-        ("climate", MODEL_NATHERM1, trigger, subtype)
+        ("climate", "Smart Thermostat", trigger, subtype)
         for trigger in SUBTYPES
         for subtype in SUBTYPES[trigger]
     ],
@@ -267,7 +262,7 @@ async def test_if_fires_on_event_with_subtype(
 
 @pytest.mark.parametrize(
     "platform,device_type,event_type",
-    [("climate", MODEL_NAPLUG, trigger) for trigger in CLIMATE_TRIGGERS],
+    [("climate", "NAPlug", trigger) for trigger in CLIMATE_TRIGGERS],
 )
 async def test_if_invalid_device(
     hass, device_reg, entity_reg, platform, device_type, event_type

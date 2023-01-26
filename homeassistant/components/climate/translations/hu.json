@@ -25,5 +25,106 @@
             "off": "Ki"
         }
     },
+    "state_attributes": {
+        "_": {
+            "aux_heat": {
+                "name": "K\u00fcls\u0151 h\u0151forr\u00e1s"
+            },
+            "current_humidity": {
+                "name": "Aktu\u00e1lis p\u00e1ratartalom"
+            },
+            "current_temperature": {
+                "name": "Aktu\u00e1lis h\u0151m\u00e9rs\u00e9klet"
+            },
+            "fan_mode": {
+                "name": "Ventil\u00e1tor m\u00f3d",
+                "state": {
+                    "auto": "Automatikus",
+                    "diffuse": "Diff\u00faz",
+                    "focus": "F\u00f3kusz",
+                    "high": "Magas",
+                    "low": "Alacsony",
+                    "medium": "K\u00f6zepes",
+                    "middle": "K\u00f6zepes",
+                    "off": "Ki",
+                    "on": "Be",
+                    "top": "Fels\u0151"
+                }
+            },
+            "fan_modes": {
+                "name": "Ventil\u00e1tor m\u00f3dok"
+            },
+            "humidity": {
+                "name": "K\u00edv\u00e1nt p\u00e1ratartalom"
+            },
+            "hvac_action": {
+                "name": "Aktu\u00e1lis m\u0171velet",
+                "state": {
+                    "cooling": "H\u0171t\u00e9s",
+                    "drying": "P\u00e1r\u00e1tlan\u00edt\u00e1s",
+                    "fan": "Ventil\u00e1tor",
+                    "heating": "F\u0171t\u00e9s",
+                    "idle": "T\u00e9tlen",
+                    "off": "Ki"
+                }
+            },
+            "hvac_modes": {
+                "name": "HVAC m\u00f3dok"
+            },
+            "max_humidity": {
+                "name": "Maxim\u00e1lis c\u00e9l p\u00e1ratartalom"
+            },
+            "max_temp": {
+                "name": "Maxim\u00e1lis c\u00e9lh\u0151m\u00e9rs\u00e9klet"
+            },
+            "min_humidity": {
+                "name": "Minim\u00e1lis c\u00e9l p\u00e1ratartalom"
+            },
+            "min_temp": {
+                "name": "Minim\u00e1lis c\u00e9lh\u0151m\u00e9rs\u00e9klet"
+            },
+            "preset_mode": {
+                "name": "\u00dczemm\u00f3d",
+                "state": {
+                    "activity": "Tev\u00e9kenys\u00e9g",
+                    "away": "T\u00e1vol",
+                    "boost": "Turb\u00f3",
+                    "comfort": "Komfort",
+                    "eco": "Takar\u00e9kos",
+                    "home": "Otthon",
+                    "none": "Nincs",
+                    "sleep": "Alv\u00e1s"
+                }
+            },
+            "preset_modes": {
+                "name": "El\u0151be\u00e1ll\u00edt\u00e1sok"
+            },
+            "swing_mode": {
+                "name": "Legyez\u00e9s",
+                "state": {
+                    "both": "Mindkett\u0151",
+                    "horizontal": "V\u00edzszintes",
+                    "off": "Ki",
+                    "on": "Be",
+                    "vertical": "F\u00fcgg\u0151leges"
+                }
+            },
+            "swing_modes": {
+                "name": "Legyez\u00e9s"
+            },
+            "target_temp_high": {
+                "name": "Fels\u0151 c\u00e9lh\u0151m\u00e9rs\u00e9klet"
+            },
+            "target_temp_low": {
+                "name": "Als\u00f3 c\u00e9lh\u0151m\u00e9rs\u00e9klet"
+            },
+            "target_temp_step": {
+                "name": "C\u00e9lh\u0151m\u00e9rs\u00e9klet l\u00e9pt\u00e9k"
+            },
+            "temperature": {
+                "name": "K\u00edv\u00e1nt h\u0151m\u00e9rs\u00e9klet"
+            }
+        }
+    },
     "title": "H\u0171t\u00e9s/f\u0171t\u00e9s"
 }

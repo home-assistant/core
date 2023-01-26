@@ -12,6 +12,9 @@
             "user": {
                 "data": {
                     "host": "Amfitri\u00f3"
+                },
+                "data_description": {
+                    "host": "Adre\u00e7a IP o nom d'amfitri\u00f3 del teu mesurador Pure Energie Meter."
                 }
             },
             "zeroconf_confirm": {

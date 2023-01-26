@@ -1,6 +1,7 @@
 """Discord platform for notify component."""
 from __future__ import annotations
 
+from io import BytesIO
 import logging
 import os.path
 from typing import Any, cast
@@ -15,6 +16,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,6 +32,10 @@ ATTR_EMBED_THUMBNAIL = "thumbnail"
 ATTR_EMBED_IMAGE = "image"
 ATTR_EMBED_URL = "url"
 ATTR_IMAGES = "images"
+ATTR_URLS = "urls"
+ATTR_VERIFY_SSL = "verify_ssl"
+
+MAX_ALLOWED_DOWNLOAD_SIZE_BYTES = 8000000
 
 
 async def async_get_service(
@@ -61,11 +67,57 @@ class DiscordNotificationService(BaseNotificationService):
             return False
         return True
 
+    async def async_get_file_from_url(
+        self, url: str, verify_ssl: bool, max_file_size: int
+    ) -> bytearray | None:
+        """Retrieve file bytes from URL."""
+        if not self.hass.config.is_allowed_external_url(url):
+            _LOGGER.error("URL not allowed: %s", url)
+            return None
+
+        session = async_get_clientsession(self.hass)
+
+        async with session.get(
+            url,
+            ssl=verify_ssl,
+            timeout=30,
+            raise_for_status=True,
+        ) as resp:
+            content_length = resp.headers.get("Content-Length")
+
+            if content_length is not None and int(content_length) > max_file_size:
+                _LOGGER.error(
+                    (
+                        "Attachment too large (Content-Length reports %s). Max size: %s"
+                        " bytes"
+                    ),
+                    int(content_length),
+                    max_file_size,
+                )
+                return None
+
+            file_size = 0
+            byte_chunks = bytearray()
+
+            async for byte_chunk, _ in resp.content.iter_chunks():
+                file_size += len(byte_chunk)
+                if file_size > max_file_size:
+                    _LOGGER.error(
+                        "Attachment too large (Stream reports %s). Max size: %s bytes",
+                        file_size,
+                        max_file_size,
+                    )
+                    return None
+
+                byte_chunks.extend(byte_chunk)
+
+            return byte_chunks
+
     async def async_send_message(self, message: str, **kwargs: Any) -> None:
         """Login to Discord, send message to channel(s) and log out."""
         nextcord.VoiceClient.warn_nacl = False
         discord_bot = nextcord.Client()
-        images = None
+        images = []
         embedding = None
 
         if ATTR_TARGET not in kwargs:
@@ -100,15 +152,28 @@ class DiscordNotificationService(BaseNotificationService):
                 embeds.append(embed)
 
         if ATTR_IMAGES in data:
-            images = []
-
             for image in data.get(ATTR_IMAGES, []):
                 image_exists = await self.hass.async_add_executor_job(
                     self.file_exists, image
                 )
 
+                filename = os.path.basename(image)
+
                 if image_exists:
-                    images.append(image)
+                    images.append((image, filename))
+
+        if ATTR_URLS in data:
+            for url in data.get(ATTR_URLS, []):
+                file = await self.async_get_file_from_url(
+                    url,
+                    data.get(ATTR_VERIFY_SSL, True),
+                    MAX_ALLOWED_DOWNLOAD_SIZE_BYTES,
+                )
+
+                if file is not None:
+                    filename = os.path.basename(url)
+
+                    images.append((BytesIO(file), filename))
 
         await discord_bot.login(self.token)
 
@@ -116,7 +181,7 @@ class DiscordNotificationService(BaseNotificationService):
             for channelid in kwargs[ATTR_TARGET]:
                 channelid = int(channelid)
                 # Must create new instances of File for each channel.
-                files = [nextcord.File(image) for image in images] if images else []
+                files = [nextcord.File(image, filename) for image, filename in images]
                 try:
                     channel = cast(
                         Messageable, await discord_bot.fetch_channel(channelid)

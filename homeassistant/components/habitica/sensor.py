@@ -114,8 +114,10 @@ class HabitipyData:
         except ClientResponseError as error:
             if error.status == HTTPStatus.TOO_MANY_REQUESTS:
                 _LOGGER.warning(
-                    "Sensor data update for %s has too many API requests;"
-                    " Skipping the update",
+                    (
+                        "Sensor data update for %s has too many API requests;"
+                        " Skipping the update"
+                    ),
                     DOMAIN,
                 )
             else:
@@ -131,8 +133,10 @@ class HabitipyData:
             except ClientResponseError as error:
                 if error.status == HTTPStatus.TOO_MANY_REQUESTS:
                     _LOGGER.warning(
-                        "Sensor data update for %s has too many API requests;"
-                        " Skipping the update",
+                        (
+                            "Sensor data update for %s has too many API requests;"
+                            " Skipping the update"
+                        ),
                         DOMAIN,
                     )
                 else:
@@ -154,7 +158,7 @@ class HabitipySensor(SensorEntity):
         self._state = None
         self._updater = updater
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update Condition and Forecast."""
         await self._updater.update()
         data = self._updater.data
@@ -194,7 +198,7 @@ class HabitipyTaskSensor(SensorEntity):
         self._state = None
         self._updater = updater
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update Condition and Forecast."""
         await self._updater.update()
         all_tasks = self._updater.tasks

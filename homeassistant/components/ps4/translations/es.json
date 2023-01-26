@@ -3,19 +3,19 @@
         "abort": {
             "already_configured": "El dispositivo ya est\u00e1 configurado",
             "credential_error": "Error al obtener las credenciales.",
-            "no_devices_found": "No se encuentran dispositivos PlayStation 4 en la red.",
-            "port_987_bind_error": "No se ha podido unir al puerto 987. Consulta la [documentaci\u00f3n](https://www.home-assistant.io/components/ps4/) para m\u00e1s informaci\u00f3n.",
-            "port_997_bind_error": "No se ha podido unir al puerto 997. Consulta la [documentaci\u00f3n](https://www.home-assistant.io/components/ps4/) para m\u00e1s informaci\u00f3n."
+            "no_devices_found": "No se encontraron dispositivos en la red",
+            "port_987_bind_error": "No se pudo vincular al puerto 987. Consulta la [documentaci\u00f3n](https://www.home-assistant.io/components/ps4/) para obtener informaci\u00f3n adicional.",
+            "port_997_bind_error": "No se pudo vincular al puerto 997. Consulta la [documentaci\u00f3n](https://www.home-assistant.io/components/ps4/) para obtener informaci\u00f3n adicional."
         },
         "error": {
             "cannot_connect": "No se pudo conectar",
-            "credential_timeout": "Se agot\u00f3 el tiempo para el servicio de credenciales. Pulsa enviar para reiniciar.",
-            "login_failed": "No se ha podido vincular con PlayStation 4. Verifica que el PIN sea correcto.",
-            "no_ipaddress": "Introduce la direcci\u00f3n IP de la PlayStation 4 que quieres configurar."
+            "credential_timeout": "Se agot\u00f3 el tiempo de espera del servicio de credenciales. Pulsa enviar para reiniciar.",
+            "login_failed": "No se pudo emparejar con PlayStation 4. Verifica que el C\u00f3digo PIN sea correcto.",
+            "no_ipaddress": "Introduce la Direcci\u00f3n IP de la PlayStation 4 que deseas configurar."
         },
         "step": {
             "creds": {
-                "description": "Credenciales necesarias. Pulsa 'Enviar' y, a continuaci\u00f3n, en la app de segunda pantalla de PS4, actualiza la lista de dispositivos y selecciona el dispositivo 'Home-Assistant' para continuar."
+                "description": "Credenciales necesarias. Pulsa 'Enviar' y luego en la aplicaci\u00f3n PS4 Second Screen, actualiza los dispositivos y selecciona el dispositivo 'Home-Assistant' para continuar."
             },
             "link": {
                 "data": {
@@ -25,16 +25,16 @@
                     "region": "Regi\u00f3n"
                 },
                 "data_description": {
-                    "code": "Vaya a 'Configuraci\u00f3n' en su consola PlayStation 4. Luego navegue hasta 'Configuraci\u00f3n de conexi\u00f3n de la aplicaci\u00f3n m\u00f3vil' y seleccione 'Agregar dispositivo' para obtener el pin."
+                    "code": "Navega a 'Configuraci\u00f3n' en tu consola PlayStation 4. Luego navega hasta 'Configuraci\u00f3n de conexi\u00f3n de la aplicaci\u00f3n m\u00f3vil' y selecciona 'Agregar dispositivo' para obtener el PIN."
                 }
             },
             "mode": {
                 "data": {
-                    "ip_address": "Direcci\u00f3n IP (d\u00e9jalo en blanco si usas la detecci\u00f3n autom\u00e1tica).",
+                    "ip_address": "Direcci\u00f3n IP (D\u00e9jalo en blanco si usas la detecci\u00f3n autom\u00e1tica).",
                     "mode": "Modo configuraci\u00f3n"
                 },
                 "data_description": {
-                    "ip_address": "D\u00e9jelo en blanco si selecciona la detecci\u00f3n autom\u00e1tica."
+                    "ip_address": "D\u00e9jalo en blanco si seleccionas la detecci\u00f3n autom\u00e1tica."
                 }
             }
         }

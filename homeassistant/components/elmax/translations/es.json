@@ -6,8 +6,8 @@
         "error": {
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
             "invalid_pin": "El pin proporcionado no es v\u00e1lido",
-            "network_error": "Se ha producido un error de red",
-            "no_panel_online": "No se encontr\u00f3 ning\u00fan panel de control de Elmax en l\u00ednea.",
+            "network_error": "Ocurri\u00f3 un error de red",
+            "no_panel_online": "No se encontr\u00f3 ning\u00fan panel de control Elmax en l\u00ednea.",
             "unknown": "Error inesperado"
         },
         "step": {
@@ -17,14 +17,14 @@
                     "panel_name": "Nombre del panel",
                     "panel_pin": "C\u00f3digo PIN"
                 },
-                "description": "Seleccione el panel que desea controlar con esta integraci\u00f3n. Tenga en cuenta que el panel debe estar activado para poder configurarlo."
+                "description": "Selecciona qu\u00e9 panel te gustar\u00eda controlar con esta integraci\u00f3n. Por favor, ten en cuenta que el panel debe estar ENCENDIDO para poder configurarlo."
             },
             "user": {
                 "data": {
                     "password": "Contrase\u00f1a",
                     "username": "Nombre de usuario"
                 },
-                "description": "Inicie sesi\u00f3n en Elmax Cloud con sus credenciales"
+                "description": "Por favor, inicia sesi\u00f3n en la nube de Elmax con tus credenciales"
             }
         }
     }

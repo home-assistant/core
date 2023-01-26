@@ -144,7 +144,6 @@ async def test_unsuccessful_discovery_user_form_and_auth(hass):
         "host": "1.1.1.1",
         "api_key": "good_token",
         "port": 9331,
-        "api_key": "good_token",
         "roon_server_id": "core_id",
         "roon_server_name": "Roon Core",
     }
@@ -185,7 +184,7 @@ async def test_duplicate_config(hass):
         )
         await hass.async_block_till_done()
 
-        assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result2["type"] == data_entry_flow.FlowResultType.ABORT
         assert result2["reason"] == "already_configured"
 
 

@@ -80,6 +80,30 @@ def test_is_ipv6_address():
     assert network_util.is_ipv6_address("8.8.8.8") is False
 
 
+def test_is_valid_host():
+    """Test if strings are IPv6 addresses."""
+    assert network_util.is_host_valid("::1")
+    assert network_util.is_host_valid("::ffff:127.0.0.0")
+    assert network_util.is_host_valid("2001:0db8:85a3:0000:0000:8a2e:0370:7334")
+    assert network_util.is_host_valid("8.8.8.8")
+    assert network_util.is_host_valid("local")
+    assert network_util.is_host_valid("host-host")
+    assert network_util.is_host_valid("example.com")
+    assert network_util.is_host_valid("example.com.")
+    assert network_util.is_host_valid("Example123.com")
+    assert not network_util.is_host_valid("")
+    assert not network_util.is_host_valid("192.168.0.1:8080")
+    assert not network_util.is_host_valid("192.168.0.999")
+    assert not network_util.is_host_valid("2001:hb8::1:0:0:1")
+    assert not network_util.is_host_valid("-host-host")
+    assert not network_util.is_host_valid("host-host-")
+    assert not network_util.is_host_valid("host_host")
+    assert not network_util.is_host_valid("example.com/path")
+    assert not network_util.is_host_valid("example.com:8080")
+    assert not network_util.is_host_valid("verylonghostname" * 4)
+    assert not network_util.is_host_valid("verydeepdomain." * 18)
+
+
 def test_normalize_url():
     """Test the normalizing of URLs."""
     assert network_util.normalize_url("http://example.com") == "http://example.com"

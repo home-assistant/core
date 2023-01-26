@@ -15,9 +15,13 @@ from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import CONF_MODEL, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
-
-DEVICE_TIMEOUT_SECONDS = 4.0
+from .const import (
+    CONF_MODEL,
+    DEFAULT_NAME,
+    DEFAULT_PORT,
+    DEVICE_TIMEOUT_SECONDS,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,9 +92,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
-
-    async def async_step_import(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Import a config entry from configuration.yaml."""
-        return await self.async_step_user(user_input)

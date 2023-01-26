@@ -24,6 +24,12 @@
             }
         }
     },
+    "issues": {
+        "removed_yaml": {
+            "description": "\u4f7f\u7528 YAML \u8a2d\u5b9a Steam \u7684\u529f\u80fd\u5373\u5c07\u79fb\u9664\u3002\n\nHome Assistant \u5c07\u4e0d\u518d\u4f7f\u7528\u73fe\u6709\u7684 YAML \u8a2d\u5b9a\u3002\n\n\u7531 configuration.yaml \u6a94\u6848\u4e2d\u79fb\u9664 YAML \u8a2d\u5b9a\u4e26\u91cd\u555f Home Assistant \u4ee5\u4fee\u6b63\u6b64\u554f\u984c\u3002",
+            "title": "Steam YAML \u8a2d\u5b9a\u5373\u5c07\u79fb\u9664"
+        }
+    },
     "options": {
         "error": {
             "unauthorized": "\u597d\u53cb\u5217\u8868\u53d7\u9650\uff1a\u8acb\u53c3\u8003\u6587\u4ef6\u8cc7\u6599\u4ee5\u4e86\u89e3\u5982\u4f55\u986f\u793a\u6240\u6709\u597d\u53cb\u3002"

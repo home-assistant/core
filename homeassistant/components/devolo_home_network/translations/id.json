@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Perangkat sudah dikonfigurasi",
-            "home_control": "Unit Central devolo Home Control tidak berfungsi dengan integrasi ini."
+            "home_control": "Unit Central devolo Home Control tidak berfungsi dengan integrasi ini.",
+            "reauth_successful": "Autentikasi ulang berhasil"
         },
         "error": {
             "cannot_connect": "Gagal terhubung",
@@ -10,6 +11,11 @@
         },
         "flow_title": "{product} ({name})",
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Kata Sandi"
+                }
+            },
             "user": {
                 "data": {
                     "ip_address": "Alamat IP"

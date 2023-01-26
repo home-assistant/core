@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Enheten er allerede konfigurert",
-            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket",
+            "no_mac_address": "MAC-adressen mangler fra zeroconf-posten",
+            "reauth_successful": "Re-autentisering var vellykket",
             "reconfigure_successful": "Omkonfigurasjonen var vellykket"
         },
         "error": {
@@ -28,7 +29,7 @@
                     "username": "Brukernavn",
                     "verify_ssl": "Verifisere SSL-sertifikat"
                 },
-                "description": "Vil du konfigurere {name} ({host})?"
+                "description": "Vil du sette opp {name} ( {host} )?"
             },
             "reauth_confirm": {
                 "data": {

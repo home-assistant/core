@@ -1,11 +1,15 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd"
+        },
         "error": {
             "cannot_connect": "Kan geen verbinding maken"
         },
         "step": {
             "user": {
                 "data": {
+                    "device_key": "De apparaatsleutel van uw apparaat",
                     "name": "Naam"
                 }
             }

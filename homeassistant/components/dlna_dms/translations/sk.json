@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
+            "already_in_progress": "Konfigur\u00e1cia u\u017e prebieha",
+            "bad_ssdp": "V \u00fadajoch SSDP ch\u00fdba po\u017eadovan\u00e1 hodnota",
+            "no_devices_found": "V sieti sa nena\u0161li \u017eiadne zariadenia",
+            "not_dms": "Zariadenie nie je podporovan\u00fdm serverom m\u00e9di\u00ed"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "description": "Chcete za\u010da\u0165 nastavova\u0165?"
+            },
+            "user": {
+                "data": {
+                    "host": "Hostite\u013e"
+                },
+                "description": "Vyberte zariadenie, ktor\u00e9 chcete nakonfigurova\u0165",
+                "title": "Objaven\u00e9 zariadenia DLNA DMA"
+            }
+        }
+    }
+}

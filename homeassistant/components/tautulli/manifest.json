@@ -6,5 +6,6 @@
   "config_flow": true,
   "codeowners": ["@ludeeus", "@tkdrob"],
   "iot_class": "local_polling",
-  "loggers": ["pytautulli"]
+  "loggers": ["pytautulli"],
+  "integration_type": "hub"
 }

@@ -8,7 +8,7 @@ from homeassistant.components.recorder.models import process_timestamp
 from homeassistant.util import dt as dt_util
 
 
-async def test_run_history(hass, recorder_mock):
+async def test_run_history(recorder_mock, hass):
     """Test the run history gives the correct run."""
     instance = recorder.get_instance(hass)
     now = dt_util.utcnow()

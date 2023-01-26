@@ -12,15 +12,11 @@ from homeassistant.components.bmw_connected_drive.const import (
 )
 from homeassistant.const import CONF_USERNAME
 
-from . import FIXTURE_CONFIG_ENTRY, FIXTURE_USER_INPUT
+from . import FIXTURE_CONFIG_ENTRY, FIXTURE_REFRESH_TOKEN, FIXTURE_USER_INPUT
 
 from tests.common import MockConfigEntry
 
-FIXTURE_REFRESH_TOKEN = "SOME_REFRESH_TOKEN"
-FIXTURE_COMPLETE_ENTRY = {
-    **FIXTURE_USER_INPUT,
-    CONF_REFRESH_TOKEN: FIXTURE_REFRESH_TOKEN,
-}
+FIXTURE_COMPLETE_ENTRY = FIXTURE_CONFIG_ENTRY["data"]
 FIXTURE_IMPORT_ENTRY = {**FIXTURE_USER_INPUT, CONF_REFRESH_TOKEN: None}
 
 
@@ -35,7 +31,7 @@ async def test_show_form(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -55,7 +51,7 @@ async def test_connection_error(hass):
             data=FIXTURE_USER_INPUT,
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
@@ -75,7 +71,7 @@ async def test_full_user_flow_implementation(hass):
             context={"source": config_entries.SOURCE_USER},
             data=FIXTURE_USER_INPUT,
         )
-        assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result2["title"] == FIXTURE_COMPLETE_ENTRY[CONF_USERNAME]
         assert result2["data"] == FIXTURE_COMPLETE_ENTRY
 
@@ -98,7 +94,7 @@ async def test_options_flow_implementation(hass):
         await hass.async_block_till_done()
 
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "account_options"
 
         result = await hass.config_entries.options.async_configure(
@@ -107,7 +103,7 @@ async def test_options_flow_implementation(hass):
         )
         await hass.async_block_till_done()
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["data"] == {
             CONF_READ_ONLY: True,
         }

@@ -14,10 +14,10 @@ async def test_config_flow_registers_webhook(hass, hass_client_no_auth):
     result = await hass.config_entries.flow.async_init(
         "twilio", context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM, result
+    assert result["type"] == data_entry_flow.FlowResultType.FORM, result
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     webhook_id = result["result"].data["webhook_id"]
 
     twilio_events = []

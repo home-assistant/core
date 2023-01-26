@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Termostat je \u017ee konfiguriran"
+            "already_configured": "Naprava je \u017ee konfigurirana"
         },
         "error": {
             "cannot_connect": "Povezava ni uspela, poskusite znova",

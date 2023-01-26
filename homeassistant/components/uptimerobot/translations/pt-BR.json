@@ -28,5 +28,18 @@
                 "description": "Voc\u00ea precisa fornecer a chave de API 'principal' do UptimeRobot"
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "monitor_status": {
+                "state": {
+                    "down": "Baixo",
+                    "not_checked_yet": "Ainda n\u00e3o verificado",
+                    "pause": "Pausa",
+                    "seems_down": "Parece estar para baixo",
+                    "up": "Para cima"
+                }
+            }
+        }
     }
 }

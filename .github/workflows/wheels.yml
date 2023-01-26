@@ -22,7 +22,7 @@ jobs:
       architectures: ${{ steps.info.outputs.architectures }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v3.0.2
+        uses: actions/checkout@v3.3.0
 
       - name: Get information
         id: info
@@ -57,13 +57,13 @@ jobs:
           ) > .env_file
 
       - name: Upload env_file
-        uses: actions/upload-artifact@v3.1.0
+        uses: actions/upload-artifact@v3.1.2
         with:
           name: env_file
           path: ./.env_file
 
       - name: Upload requirements_diff
-        uses: actions/upload-artifact@v3.1.0
+        uses: actions/upload-artifact@v3.1.2
         with:
           name: requirements_diff
           path: ./requirements_diff.txt
@@ -79,7 +79,7 @@ jobs:
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v3.0.2
+        uses: actions/checkout@v3.3.0
 
       - name: Download env_file
         uses: actions/download-artifact@v3
@@ -92,7 +92,7 @@ jobs:
           name: requirements_diff
 
       - name: Build wheels
-        uses: home-assistant/wheels@2022.06.7
+        uses: home-assistant/wheels@2022.10.1
         with:
           abi: cp310
           tag: musllinux_1_2
@@ -116,7 +116,7 @@ jobs:
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v3.0.2
+        uses: actions/checkout@v3.3.0
 
       - name: Download env_file
         uses: actions/download-artifact@v3
@@ -140,10 +140,17 @@ jobs:
             sed -i "s|# pycups|pycups|g" ${requirement_file}
             sed -i "s|# homekit|homekit|g" ${requirement_file}
             sed -i "s|# decora_wifi|decora_wifi|g" ${requirement_file}
-            sed -i "s|# face_recognition|face_recognition|g" ${requirement_file}
             sed -i "s|# python-gammu|python-gammu|g" ${requirement_file}
             sed -i "s|# opencv-python-headless|opencv-python-headless|g" ${requirement_file}
           done
+
+      - name: Split requirements all
+        run: |
+          # We split requirements all into two different files.
+          # This is to prevent the build from running out of memory when
+          # resolving packages on 32-bits systems (like armhf, armv7).
+
+          split -l $(expr $(expr $(cat requirements_all.txt | wc -l) + 1) / 2) requirements_all.txt requirements_all.txt
 
       - name: Adjust build env
         run: |
@@ -160,8 +167,8 @@ jobs:
           # Do not pin numpy in wheels building
           sed -i "/numpy/d" homeassistant/package_constraints.txt
 
-      - name: Build wheels
-        uses: home-assistant/wheels@2022.06.7
+      - name: Build wheels (part 1)
+        uses: home-assistant/wheels@2022.10.1
         with:
           abi: cp310
           tag: musllinux_1_2
@@ -173,4 +180,19 @@ jobs:
           legacy: true
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
-          requirements: "requirements_all.txt"
+          requirements: "requirements_all.txtaa"
+
+      - name: Build wheels (part 2)
+        uses: home-assistant/wheels@2022.10.1
+        with:
+          abi: cp310
+          tag: musllinux_1_2
+          arch: ${{ matrix.arch }}
+          wheels-key: ${{ secrets.WHEELS_KEY }}
+          env-file: true
+          apk: "libexecinfo-dev;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev"
+          skip-binary: aiohttp;grpcio
+          legacy: true
+          constraints: "homeassistant/package_constraints.txt"
+          requirements-diff: "requirements_diff.txt"
+          requirements: "requirements_all.txtab"

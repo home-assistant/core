@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 from functools import wraps
 from typing import Any, cast
 
@@ -20,7 +20,7 @@ from .coordinator import TradfriDeviceDataUpdateCoordinator
 
 def handle_error(
     func: Callable[[Command | list[Command]], Any]
-) -> Callable[[str], Any]:
+) -> Callable[[Command | list[Command]], Coroutine[Any, Any, None]]:
     """Handle tradfri api call error."""
 
     @wraps(func)

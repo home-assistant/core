@@ -1,7 +1,10 @@
 {
     "config": {
         "abort": {
-            "not_huawei_lte": "Not a Huawei LTE device"
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "reauth_successful": "Re-authentication was successful",
+            "unsupported_device": "Unsupported device"
         },
         "error": {
             "connection_timeout": "Connection timeout",
@@ -15,6 +18,14 @@
         },
         "flow_title": "{name}",
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "Enter device access credentials.",
+                "title": "Reauthenticate Integration"
+            },
             "user": {
                 "data": {
                     "password": "Password",

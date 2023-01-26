@@ -12,6 +12,8 @@ from homeassistant.components.rfxtrx import DOMAIN
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.setup import async_setup_component
 
+from .conftest import create_rfx_test_cfg
+
 from tests.common import (
     MockConfigEntry,
     assert_lists_same,
@@ -19,7 +21,6 @@ from tests.common import (
     mock_device_registry,
     mock_registry,
 )
-from tests.components.rfxtrx.conftest import create_rfx_test_cfg
 
 
 @pytest.fixture(name="device_reg")
@@ -168,7 +169,7 @@ async def test_action(
     rfxtrx.transport.send.assert_called_once_with(bytearray.fromhex(expected))
 
 
-async def test_invalid_action(hass, device_reg: DeviceRegistry):
+async def test_invalid_action(hass, device_reg: DeviceRegistry, caplog):
     """Test for invalid actions."""
     device = DEVICE_LIGHTING_1
 
@@ -200,8 +201,4 @@ async def test_invalid_action(hass, device_reg: DeviceRegistry):
     )
     await hass.async_block_till_done()
 
-    assert len(notifications := hass.states.async_all("persistent_notification")) == 1
-    assert (
-        "The following integrations and platforms could not be set up"
-        in notifications[0].attributes["message"]
-    )
+    assert "Subtype invalid not found in device commands" in caplog.text

@@ -6,11 +6,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.group import DOMAIN, async_setup_entry
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-    RESULT_TYPE_MENU,
-)
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
@@ -26,6 +22,15 @@ from tests.common import MockConfigEntry
         ("light", "on", "on", {}, {}, {}, {}),
         ("lock", "locked", "locked", {}, {}, {}, {}),
         ("media_player", "on", "on", {}, {}, {}, {}),
+        (
+            "sensor",
+            "20.0",
+            "10",
+            {},
+            {"type": "sum"},
+            {"type": "sum"},
+            {},
+        ),
         ("switch", "on", "on", {}, {}, {}, {}),
     ),
 )
@@ -47,14 +52,14 @@ async def test_config_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_MENU
+    assert result["type"] == FlowResultType.MENU
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {"next_step_id": group_type},
     )
     await hass.async_block_till_done()
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == group_type
 
     with patch(
@@ -70,7 +75,7 @@ async def test_config_flow(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "Living Room"
     assert result["data"] == {}
     assert result["options"] == {
@@ -136,14 +141,14 @@ async def test_config_flow_hides_members(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_MENU
+    assert result["type"] == FlowResultType.MENU
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {"next_step_id": group_type},
     )
     await hass.async_block_till_done()
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == group_type
 
     result = await hass.config_entries.flow.async_configure(
@@ -157,7 +162,7 @@ async def test_config_flow_hides_members(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
 
     assert registry.async_get(f"{group_type}.one").hidden_by == hidden_by
     assert registry.async_get(f"{group_type}.three").hidden_by == hidden_by
@@ -175,19 +180,25 @@ def get_suggested(schema, key):
 
 
 @pytest.mark.parametrize(
-    "group_type,member_state,extra_options",
+    "group_type,member_state,extra_options,options_options",
     (
-        ("binary_sensor", "on", {"all": False}),
-        ("cover", "open", {}),
-        ("fan", "on", {}),
-        ("light", "on", {"all": False}),
-        ("lock", "locked", {}),
-        ("media_player", "on", {}),
-        ("switch", "on", {"all": False}),
+        ("binary_sensor", "on", {"all": False}, {}),
+        ("cover", "open", {}, {}),
+        ("fan", "on", {}, {}),
+        ("light", "on", {"all": False}, {}),
+        ("lock", "locked", {}, {}),
+        ("media_player", "on", {}, {}),
+        (
+            "sensor",
+            "10",
+            {"ignore_non_numeric": False, "type": "sum"},
+            {"ignore_non_numeric": False, "type": "sum"},
+        ),
+        ("switch", "on", {"all": False}, {}),
     ),
 )
 async def test_options(
-    hass: HomeAssistant, group_type, member_state, extra_options
+    hass: HomeAssistant, group_type, member_state, extra_options, options_options
 ) -> None:
     """Test reconfiguring."""
     members1 = [f"{group_type}.one", f"{group_type}.two"]
@@ -220,7 +231,7 @@ async def test_options(
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == group_type
     assert get_suggested(result["data_schema"].schema, "entities") == members1
     assert "name" not in result["data_schema"].schema
@@ -230,11 +241,9 @@ async def test_options(
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={
-            "entities": members2,
-        },
+        user_input={"entities": members2, **options_options},
     )
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "entities": members2,
         "group_type": group_type,
@@ -261,14 +270,14 @@ async def test_options(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_MENU
+    assert result["type"] == FlowResultType.MENU
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {"next_step_id": group_type},
     )
     await hass.async_block_till_done()
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == group_type
 
     assert get_suggested(result["data_schema"].schema, "entities") is None
@@ -318,7 +327,7 @@ async def test_all_options(
     result = await hass.config_entries.options.async_init(
         config_entry.entry_id, context={"show_advanced_options": advanced}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == group_type
 
     result = await hass.config_entries.options.async_configure(
@@ -327,7 +336,7 @@ async def test_all_options(
             "entities": members2,
         },
     )
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "entities": members2,
         "group_type": group_type,
@@ -414,7 +423,7 @@ async def test_options_flow_hides_members(
     await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(group_config_entry.entry_id)
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -425,7 +434,7 @@ async def test_options_flow_hides_members(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
 
     assert registry.async_get(f"{group_type}.one").hidden_by == hidden_by
     assert registry.async_get(f"{group_type}.three").hidden_by == hidden_by

@@ -37,7 +37,7 @@ async def test_abort_if_no_configuration(hass):
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "missing_configuration"
 
 
@@ -51,10 +51,9 @@ async def test_full_flow_implementation(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "pick_implementation"
 
-    # pylint: disable=protected-access
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -67,7 +66,7 @@ async def test_full_flow_implementation(
         result["flow_id"], {"implementation": "eneco"}
     )
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
+    assert result2["type"] == data_entry_flow.FlowResultType.EXTERNAL_STEP
     assert result2["url"] == (
         "https://api.toon.eu/authorize"
         "?response_type=code&client_id=client"
@@ -114,7 +113,6 @@ async def test_no_agreements(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    # pylint: disable=protected-access
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -141,7 +139,7 @@ async def test_no_agreements(
     with patch("toonapi.Toon.agreements", return_value=[]):
         result3 = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result3["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result3["type"] == data_entry_flow.FlowResultType.ABORT
     assert result3["reason"] == "no_agreements"
 
 
@@ -154,7 +152,6 @@ async def test_multiple_agreements(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    # pylint: disable=protected-access
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -185,7 +182,7 @@ async def test_multiple_agreements(
     ):
         result3 = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-        assert result3["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result3["type"] == data_entry_flow.FlowResultType.FORM
         assert result3["step_id"] == "agreement"
 
         result4 = await hass.config_entries.flow.async_configure(
@@ -205,7 +202,6 @@ async def test_agreement_already_set_up(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    # pylint: disable=protected-access
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -232,7 +228,7 @@ async def test_agreement_already_set_up(
     with patch("toonapi.Toon.agreements", return_value=[Agreement(agreement_id=123)]):
         result3 = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-        assert result3["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result3["type"] == data_entry_flow.FlowResultType.ABORT
         assert result3["reason"] == "already_configured"
 
 
@@ -244,7 +240,7 @@ async def test_toon_abort(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    # pylint: disable=protected-access
+
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -271,7 +267,7 @@ async def test_toon_abort(
     with patch("toonapi.Toon.agreements", side_effect=ToonError):
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-        assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result2["type"] == data_entry_flow.FlowResultType.ABORT
         assert result2["reason"] == "connection_error"
 
 
@@ -285,7 +281,7 @@ async def test_import(hass, current_request_with_host):
         DOMAIN, context={"source": SOURCE_IMPORT}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_in_progress"
 
 
@@ -306,7 +302,6 @@ async def test_import_migration(
     assert len(flows) == 1
     assert flows[0]["context"][CONF_MIGRATE] == old_entry.entry_id
 
-    # pylint: disable=protected-access
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -333,7 +328,7 @@ async def test_import_migration(
     with patch("toonapi.Toon.agreements", return_value=[Agreement(agreement_id=123)]):
         result = await hass.config_entries.flow.async_configure(flows[0]["flow_id"])
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1

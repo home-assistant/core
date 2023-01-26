@@ -10,18 +10,16 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
     CONF_NAME,
-    CONF_PATH,
     CONF_PORT,
     CONF_SSL,
     CONF_URL,
 )
-from homeassistant.data_entry_flow import RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import FlowResultType
 
 VALID_CONFIG = {
     CONF_NAME: "Sabnzbd",
     CONF_API_KEY: "edc3eee7330e4fdda04489e3fbc283d0",
     CONF_URL: "http://localhost:8080",
-    CONF_PATH: "",
 }
 
 VALID_CONFIG_OLD = {
@@ -29,7 +27,6 @@ VALID_CONFIG_OLD = {
     CONF_API_KEY: "edc3eee7330e4fdda04489e3fbc283d0",
     CONF_HOST: "localhost",
     CONF_PORT: 8080,
-    CONF_PATH: "",
     CONF_SSL: False,
 }
 
@@ -39,7 +36,7 @@ async def test_create_entry(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -55,12 +52,11 @@ async def test_create_entry(hass):
         )
         await hass.async_block_till_done()
 
-        assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result2["title"] == "edc3eee7330e"
         assert result2["data"] == {
             CONF_API_KEY: "edc3eee7330e4fdda04489e3fbc283d0",
             CONF_NAME: "Sabnzbd",
-            CONF_PATH: "",
             CONF_URL: "http://localhost:8080",
         }
         assert len(mock_setup_entry.mock_calls) == 1
@@ -93,11 +89,10 @@ async def test_import_flow(hass) -> None:
             data=VALID_CONFIG_OLD,
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["title"] == "edc3eee7330e"
         assert result["data"][CONF_NAME] == "Sabnzbd"
         assert result["data"][CONF_API_KEY] == "edc3eee7330e4fdda04489e3fbc283d0"
         assert result["data"][CONF_HOST] == "localhost"
         assert result["data"][CONF_PORT] == 8080
-        assert result["data"][CONF_PATH] == ""
         assert result["data"][CONF_SSL] is False

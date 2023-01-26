@@ -6,7 +6,7 @@
         "error": {
             "missing_data": "Manjkajo\u010di podatki: poskusite pozneje ali v drugi konfiguraciji",
             "otp_failed": "Dvostopenjska avtentikacija ni uspela. Poskusite z novim geslom",
-            "unknown": "Neznana napaka: za ve\u010d podrobnosti preverite dnevnike"
+            "unknown": "Nepri\u010dakovana napaka"
         },
         "flow_title": "Synology DSM {name} ({host})",
         "step": {

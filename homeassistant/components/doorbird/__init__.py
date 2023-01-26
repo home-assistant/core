@@ -146,7 +146,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         UNDO_UPDATE_LISTENER: undo_listener,
     }
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -175,10 +175,12 @@ async def _async_register_events(
     except requests.exceptions.HTTPError:
         persistent_notification.async_create(
             hass,
-            "Doorbird configuration failed.  Please verify that API "
-            "Operator permission is enabled for the Doorbird user. "
-            "A restart will be required once permissions have been "
-            "verified.",
+            (
+                "Doorbird configuration failed.  Please verify that API "
+                "Operator permission is enabled for the Doorbird user. "
+                "A restart will be required once permissions have been "
+                "verified."
+            ),
             title="Doorbird Configuration Failure",
             notification_id="doorbird_schedule_error",
         )

@@ -50,7 +50,7 @@ async def test_show_authenticate_form(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -68,7 +68,7 @@ async def test_incorrect_login(hass):
             result["flow_id"], FIXTURE_USER_INPUT
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_auth"}
 
@@ -110,7 +110,7 @@ async def test_multiple_plant_ids(hass):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "plant"
 
         user_input = {CONF_PLANT_ID: "123456"}
@@ -119,7 +119,7 @@ async def test_multiple_plant_ids(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_USERNAME] == FIXTURE_USER_INPUT[CONF_USERNAME]
     assert result["data"][CONF_PASSWORD] == FIXTURE_USER_INPUT[CONF_PASSWORD]
     assert result["data"][CONF_PLANT_ID] == "123456"
@@ -144,7 +144,7 @@ async def test_one_plant_on_account(hass):
             result["flow_id"], user_input
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_USERNAME] == FIXTURE_USER_INPUT[CONF_USERNAME]
     assert result["data"][CONF_PASSWORD] == FIXTURE_USER_INPUT[CONF_PASSWORD]
     assert result["data"][CONF_PLANT_ID] == "123456"

@@ -1,0 +1,12 @@
+{
+    "config": {
+        "create_entry": {
+            "default": "For \u00e5 fullf\u00f8re konfigureringen av integrasjonen, bruk Ecowitt-appen (p\u00e5 telefonen) eller g\u00e5 til Ecowitt WebUI i en nettleser p\u00e5 stasjonens IP-adresse. \n\n Velg stasjonen din - > Meny Andre - > DIY-opplastingsservere. Trykk neste og velg \"Tilpasset\" \n\n - Server IP: ` {server} `\n - Bane: ` {path} `\n - Port: ` {port} ` \n\n Klikk p\u00e5 'Lagre'."
+        },
+        "step": {
+            "user": {
+                "description": "Er du sikker p\u00e5 at du vil sette opp Ecowitt?"
+            }
+        }
+    }
+}

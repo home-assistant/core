@@ -22,9 +22,20 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "pressure_tendency": {
+                "state": {
+                    "falling": "\u4e0b\u964d",
+                    "rising": "\u4e0a\u5347",
+                    "steady": "\u7a69\u5b9a"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
-            "user": {
+            "init": {
                 "data": {
                     "forecast": "\u5929\u6c23\u9810\u5831"
                 },

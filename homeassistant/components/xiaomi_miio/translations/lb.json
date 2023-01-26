@@ -7,6 +7,13 @@
         "error": {
             "cannot_connect": "Feeler beim verbannen"
         },
-        "flow_title": "Xiaomi Miio: {name}"
+        "flow_title": "Xiaomi Miio: {name}",
+        "step": {
+            "cloud": {
+                "data": {
+                    "cloud_username": "Cloud-Benotzernumm"
+                }
+            }
+        }
     }
 }

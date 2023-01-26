@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "El dispositivo ya est\u00e1 configurado",
-            "already_in_progress": "El flujo de configuraci\u00f3n ya est\u00e1 en proceso",
+            "already_in_progress": "El flujo de configuraci\u00f3n ya est\u00e1 en curso",
             "no_devices_found": "No se encontraron dispositivos en la red"
         },
         "error": {
@@ -11,13 +11,13 @@
         "flow_title": "{model} {id} ({ipaddr})",
         "step": {
             "discovery_confirm": {
-                "description": "\u00bfQuieres configurar {model} {id} ( {ipaddr} )?"
+                "description": "\u00bfQuieres configurar {model} {id} ({ipaddr})?"
             },
             "user": {
                 "data": {
                     "host": "Host"
                 },
-                "description": "Si deja el host vac\u00edo, la detecci\u00f3n se utilizar\u00e1 para buscar dispositivos."
+                "description": "Si dejas el host vac\u00edo, se usar\u00e1 el descubrimiento para encontrar dispositivos."
             }
         }
     },
@@ -25,10 +25,10 @@
         "step": {
             "init": {
                 "data": {
-                    "custom_effect_colors": "Efecto personalizado: Lista de 1 a 16 colores [R, G, B]. Ejemplo: [255,0,255],[60,128,0]",
+                    "custom_effect_colors": "Efecto personalizado: Lista de 1 a 16 colores [R,G,B]. Ejemplo: [255,0,255],[60,128,0]",
                     "custom_effect_speed_pct": "Efecto personalizado: Velocidad en porcentajes para el efecto que cambia de color.",
-                    "custom_effect_transition": "Efecto personalizado: Tipo de transici\u00f3n entre colores.",
-                    "mode": "Modo de brillo elegido."
+                    "custom_effect_transition": "Efecto personalizado: Tipo de transici\u00f3n entre los colores.",
+                    "mode": "El modo de brillo elegido."
                 }
             }
         }

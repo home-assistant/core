@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad",
+            "already_in_progress": "Konfigurationsfl\u00f6det p\u00e5g\u00e5r redan",
+            "cannot_connect": "Det gick inte att ansluta."
+        },
+        "step": {
+            "discovery_confirm": {
+                "description": "Vill du konfigurera denna Guardian-enhet?"
+            },
+            "user": {
+                "data": {
+                    "ip_address": "IP-adress",
+                    "port": "Port"
+                },
+                "description": "Konfigurera en lokal Elexa Guardian-enhet."
+            }
+        }
+    },
+    "issues": {
+        "deprecated_service": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Uppdatera alla automatiseringar eller skript som anv\u00e4nder den h\u00e4r tj\u00e4nsten f\u00f6r att ist\u00e4llet anv\u00e4nda tj\u00e4nsten ` {alternate_service} ` med ett m\u00e5lenhets-ID p\u00e5 ` {alternate_target} `. Klicka sedan p\u00e5 SKICKA nedan f\u00f6r att markera problemet som l\u00f6st.",
+                        "title": "Tj\u00e4nsten {deprecated_service} tas bort"
+                    }
+                }
+            },
+            "title": "Tj\u00e4nsten {deprecated_service} tas bort"
+        }
+    }
+}

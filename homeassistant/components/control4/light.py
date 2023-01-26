@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 import logging
+from typing import Any
 
 from pyControl4.error_handling import C4Exception
 from pyControl4.light import C4Light
@@ -114,7 +115,10 @@ async def async_setup_entry(
             director = entry_data[CONF_DIRECTOR]
             item_variables = await director.getItemVariables(item_id)
             _LOGGER.warning(
-                "Couldn't get light state data for %s, skipping setup. Available variables from Control4: %s",
+                (
+                    "Couldn't get light state data for %s, skipping setup. Available"
+                    " variables from Control4: %s"
+                ),
                 item_name,
                 item_variables,
             )
@@ -191,13 +195,13 @@ class Control4Light(Control4Entity, LightEntity):
         return None
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> LightEntityFeature:
         """Flag supported features."""
         if self._is_dimmer:
             return LightEntityFeature.TRANSITION
-        return 0
+        return LightEntityFeature(0)
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         c4_light = self.create_api_object()
         if self._is_dimmer:
@@ -220,7 +224,7 @@ class Control4Light(Control4Entity, LightEntity):
         await asyncio.sleep(delay_time)
         await self.coordinator.async_request_refresh()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         c4_light = self.create_api_object()
         if self._is_dimmer:

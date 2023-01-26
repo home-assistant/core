@@ -15,6 +15,9 @@
         }
     },
     "options": {
+        "error": {
+            "invalid_api_key": "Clau API inv\u00e0lida"
+        },
         "step": {
             "init": {
                 "data": {
@@ -25,7 +28,7 @@
                     "inverter_size": "Pot\u00e8ncia de l'inversor (Watts)",
                     "modules power": "Pot\u00e8ncia m\u00e0xima total dels panells solars"
                 },
-                "description": "Aquests valors permeten ajustar els resultats de Solar.Forecast. Consulta la documentaci\u00f3 si tens dubtes sobre algun camp."
+                "description": "Aquests valors permeten ajustar els resultats de Forecast.Solar. Consulta la documentaci\u00f3 si tens dubtes sobre algun camp."
             }
         }
     }

@@ -1,0 +1,12 @@
+{
+    "config": {
+        "create_entry": {
+            "default": "Per acabar de configurar la integraci\u00f3, utilitza l'aplicaci\u00f3 Ecowitt (al m\u00f2bil) o v\u00e9s a Ecowitt WebUI a trav\u00e9s d'un navegador anant a l'adre\u00e7a IP de l'estaci\u00f3.\n\nTria la teva estaci\u00f3 -> Men\u00fa Altres -> Servidors de pujada DIY. Prem seg\u00fcent (next) i selecciona 'Personalitzat' ('Customized')\n\n- IP del servidor: `{server}`\n- Ruta: `{path}`\n- Port: `{port}`\n\nFes clic a 'Desa' ('Save')."
+        },
+        "step": {
+            "user": {
+                "description": "Est\u00e0s segur que vols configurar Ecowitt?"
+            }
+        }
+    }
+}

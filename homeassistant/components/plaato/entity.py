@@ -19,6 +19,8 @@ from .const import (
 class PlaatoEntity(entity.Entity):
     """Representation of a Plaato Entity."""
 
+    _attr_should_poll = False
+
     def __init__(self, data, sensor_type, coordinator=None):
         """Initialize the sensor."""
         self._coordinator = coordinator
@@ -82,11 +84,6 @@ class PlaatoEntity(entity.Entity):
         if self._coordinator is not None:
             return self._coordinator.last_update_success
         return True
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
 
     async def async_added_to_hass(self):
         """When entity is added to hass."""

@@ -23,6 +23,7 @@ async def async_setup_entry(
     )
     wrapped_switch = registry.async_get(entity_id)
     device_id = wrapped_switch.device_id if wrapped_switch else None
+    entity_category = wrapped_switch.entity_category if wrapped_switch else None
 
     async_add_entities(
         [
@@ -31,6 +32,7 @@ async def async_setup_entry(
                 entity_id,
                 config_entry.entry_id,
                 device_id,
+                entity_category,
             )
         ]
     )

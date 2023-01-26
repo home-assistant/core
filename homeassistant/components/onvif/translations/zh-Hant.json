@@ -48,7 +48,8 @@
             "onvif_devices": {
                 "data": {
                     "extra_arguments": "\u984d\u5916 FFMPEG \u53c3\u6578",
-                    "rtsp_transport": "RTSP \u50b3\u8f38\u5354\u5b9a"
+                    "rtsp_transport": "RTSP \u50b3\u8f38\u5354\u5b9a",
+                    "use_wallclock_as_timestamps": "\u4f7f\u7528\u6642\u9418\u4f5c\u70ba\u6642\u9593\u6233"
                 },
                 "title": "ONVIF \u88dd\u7f6e\u9078\u9805"
             }

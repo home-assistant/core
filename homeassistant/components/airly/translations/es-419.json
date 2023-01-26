@@ -20,6 +20,7 @@
     },
     "system_health": {
         "info": {
+            "can_reach_server": "Llegar al servidor de Airly",
             "requests_per_day": "Solicitudes permitidas por d\u00eda",
             "requests_remaining": "Solicitudes permitidas restantes"
         }

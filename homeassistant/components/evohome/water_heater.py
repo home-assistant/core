@@ -7,7 +7,13 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
 )
-from homeassistant.const import PRECISION_TENTHS, PRECISION_WHOLE, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    PRECISION_TENTHS,
+    PRECISION_WHOLE,
+    STATE_OFF,
+    STATE_ON,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -51,15 +57,20 @@ async def async_setup_platform(
 class EvoDHW(EvoChild, WaterHeaterEntity):
     """Base for a Honeywell TCC DHW controller (aka boiler)."""
 
+    _attr_name = "DHW controller"
+    _attr_icon = "mdi:thermometer-lines"
+    _attr_operation_list = list(HA_STATE_TO_EVO)
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+
     def __init__(self, evo_broker, evo_device) -> None:
         """Initialize an evohome DHW controller."""
         super().__init__(evo_broker, evo_device)
 
-        self._unique_id = evo_device.dhwId
-        self._name = "DHW controller"
-        self._icon = "mdi:thermometer-lines"
+        self._attr_unique_id = evo_device.dhwId
 
-        self._precision = PRECISION_TENTHS if evo_broker.client_v1 else PRECISION_WHOLE
+        self._attr_precision = (
+            PRECISION_TENTHS if evo_broker.client_v1 else PRECISION_WHOLE
+        )
         self._attr_supported_features = (
             WaterHeaterEntityFeature.AWAY_MODE | WaterHeaterEntityFeature.OPERATION_MODE
         )
@@ -70,11 +81,6 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
         if self._evo_device.stateStatus["mode"] == EVO_FOLLOW:
             return STATE_AUTO
         return EVO_STATE_TO_HA[self._evo_device.stateStatus["state"]]
-
-    @property
-    def operation_list(self) -> list[str]:
-        """Return the list of available operations."""
-        return list(HA_STATE_TO_EVO)
 
     @property
     def is_away_mode_on(self):
@@ -104,11 +110,11 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
                     self._evo_device.set_dhw_off(until=until)
                 )
 
-    async def async_turn_away_mode_on(self):
+    async def async_turn_away_mode_on(self) -> None:
         """Turn away mode on."""
         await self._evo_broker.call_client_api(self._evo_device.set_dhw_off())
 
-    async def async_turn_away_mode_off(self):
+    async def async_turn_away_mode_off(self) -> None:
         """Turn away mode off."""
         await self._evo_broker.call_client_api(self._evo_device.set_dhw_auto())
 

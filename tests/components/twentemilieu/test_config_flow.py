@@ -14,11 +14,7 @@ from homeassistant.components.twentemilieu.const import (
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -33,9 +29,8 @@ async def test_full_user_flow(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == SOURCE_USER
-    assert "flow_id" in result
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -46,7 +41,7 @@ async def test_full_user_flow(
         },
     )
 
-    assert result2.get("type") == RESULT_TYPE_CREATE_ENTRY
+    assert result2.get("type") == FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "12345"
     assert result2.get("data") == {
         CONF_ID: 12345,
@@ -70,9 +65,8 @@ async def test_invalid_address(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == SOURCE_USER
-    assert "flow_id" in result
 
     mock_twentemilieu_config_flow.unique_id.side_effect = TwenteMilieuAddressError
     result2 = await hass.config_entries.flow.async_configure(
@@ -83,10 +77,9 @@ async def test_invalid_address(
         },
     )
 
-    assert result2.get("type") == RESULT_TYPE_FORM
+    assert result2.get("type") == FlowResultType.FORM
     assert result2.get("step_id") == SOURCE_USER
     assert result2.get("errors") == {"base": "invalid_address"}
-    assert "flow_id" in result2
 
     mock_twentemilieu_config_flow.unique_id.side_effect = None
     result3 = await hass.config_entries.flow.async_configure(
@@ -97,7 +90,7 @@ async def test_invalid_address(
         },
     )
 
-    assert result3.get("type") == RESULT_TYPE_CREATE_ENTRY
+    assert result3.get("type") == FlowResultType.CREATE_ENTRY
     assert result3.get("title") == "12345"
     assert result3.get("data") == {
         CONF_ID: 12345,
@@ -124,7 +117,7 @@ async def test_connection_error(
         },
     )
 
-    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == SOURCE_USER
     assert result.get("errors") == {"base": "cannot_connect"}
 
@@ -146,5 +139,5 @@ async def test_address_already_set_up(
         },
     )
 
-    assert result.get("type") == RESULT_TYPE_ABORT
+    assert result.get("type") == FlowResultType.ABORT
     assert result.get("reason") == "already_configured"

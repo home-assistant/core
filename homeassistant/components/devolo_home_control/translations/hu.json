@@ -6,7 +6,7 @@
         },
         "error": {
             "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
-            "reauth_failed": "K\u00e9rj\u00fck, ugyanazt a mydevolo felhaszn\u00e1l\u00f3t haszn\u00e1lja, mint kor\u00e1bban."
+            "reauth_failed": "K\u00e9rem, ugyanazt a mydevolo felhaszn\u00e1l\u00f3t haszn\u00e1lja, mint kor\u00e1bban."
         },
         "step": {
             "user": {

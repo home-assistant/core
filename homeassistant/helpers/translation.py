@@ -2,20 +2,17 @@
 from __future__ import annotations
 
 import asyncio
-from collections import ChainMap
 from collections.abc import Iterable, Mapping
 import logging
 from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.loader import (
-    MAX_LOAD_CONCURRENTLY,
     Integration,
     async_get_config_flows,
-    async_get_integration,
+    async_get_integrations,
     bind_hass,
 )
-from homeassistant.util.async_ import gather_with_concurrency
 from homeassistant.util.json import load_json
 
 _LOGGER = logging.getLogger(__name__)
@@ -99,10 +96,7 @@ def _merge_resources(
     # Build response
     resources: dict[str, dict[str, Any]] = {}
     for component in components:
-        if "." not in component:
-            domain = component
-        else:
-            domain = component.split(".", 1)[0]
+        domain = component.partition(".")[0]
 
         domain_resources = resources.setdefault(domain, {})
 
@@ -123,7 +117,10 @@ def _merge_resources(
             domain_resources.update(new_value)
         else:
             _LOGGER.error(
-                "An integration providing translations for %s provided invalid data: %s",
+                (
+                    "An integration providing translations for %s provided invalid"
+                    " data: %s"
+                ),
                 domain,
                 new_value,
             )
@@ -150,17 +147,14 @@ async def async_get_component_strings(
     hass: HomeAssistant, language: str, components: set[str]
 ) -> dict[str, Any]:
     """Load translations."""
-    domains = list({loaded.split(".")[-1] for loaded in components})
-    integrations = dict(
-        zip(
-            domains,
-            await gather_with_concurrency(
-                MAX_LOAD_CONCURRENTLY,
-                *(async_get_integration(hass, domain) for domain in domains),
-            ),
-        )
-    )
+    domains = list({loaded.rpartition(".")[-1] for loaded in components})
 
+    integrations: dict[str, Integration] = {}
+    ints_or_excs = await async_get_integrations(hass, domains)
+    for domain, int_or_exc in ints_or_excs.items():
+        if isinstance(int_or_exc, Exception):
+            raise int_or_exc
+        integrations[domain] = int_or_exc
     translations: dict[str, Any] = {}
 
     # Determine paths of missing components/platforms
@@ -263,7 +257,9 @@ class _TranslationCache:
                 _merge_resources if category == "state" else _build_resources
             )
             new_resources: Mapping[str, dict[str, Any] | str]
-            new_resources = resource_func(translation_strings, components, category)  # type: ignore[assignment]
+            new_resources = resource_func(  # type: ignore[assignment]
+                translation_strings, components, category
+            )
 
             for component, resource in new_resources.items():
                 category_cache: dict[str, Any] = cached.setdefault(
@@ -316,4 +312,7 @@ async def async_get_translations(
             cache = hass.data[TRANSLATION_FLATTEN_CACHE] = _TranslationCache(hass)
         cached = await cache.async_fetch(language, category, components)
 
-    return dict(ChainMap(*cached))
+    result = {}
+    for entry in cached:
+        result.update(entry)
+    return result

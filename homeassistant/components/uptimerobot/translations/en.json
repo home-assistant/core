@@ -28,5 +28,18 @@
                 "description": "You need to supply the 'main' API key from UptimeRobot"
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "monitor_status": {
+                "state": {
+                    "down": "Down",
+                    "not_checked_yet": "Not checked yet",
+                    "pause": "Pause",
+                    "seems_down": "Seems down",
+                    "up": "Up"
+                }
+            }
+        }
     }
 }

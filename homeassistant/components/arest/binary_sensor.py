@@ -86,7 +86,7 @@ class ArestBinarySensor(BinarySensorEntity):
             if request.status_code != HTTPStatus.OK:
                 _LOGGER.error("Can't set mode of %s", resource)
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from aREST API."""
         self.arest.update()
         self._attr_is_on = bool(self.arest.data.get("state"))
@@ -102,7 +102,7 @@ class ArestData:
         self.data = {}
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from aREST device."""
         try:
             response = requests.get(f"{self._resource}/digital/{self._pin}", timeout=10)

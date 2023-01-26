@@ -2,7 +2,12 @@
     "device_automation": {
         "action_type": {
             "close": "St\u00e4ng {entity_name}",
-            "open": "\u00d6ppna {entity_name}"
+            "close_tilt": "St\u00e4ng {entity_name} lutning",
+            "open": "\u00d6ppna {entity_name}",
+            "open_tilt": "\u00d6ppna {entity_name} lutning",
+            "set_position": "S\u00e4tt {entity_name} position",
+            "set_tilt_position": "S\u00e4tt {entity_name} lutningsposition",
+            "stop": "Stoppa {entity_name}"
         },
         "condition_type": {
             "is_closed": "{entity_name} \u00e4r st\u00e4ngd",

@@ -10,7 +10,8 @@
             "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
             "cannot_connect": "Ha fallat la connexi\u00f3",
             "discovery_requires_supervisor": "El descobriment requereix el supervisor.",
-            "not_zwave_device": "El dispositiu descobert no \u00e9s un dispositiu Z-Wave."
+            "not_zwave_device": "El dispositiu descobert no \u00e9s un dispositiu Z-Wave.",
+            "not_zwave_js_addon": "El complement descobert no \u00e9s el complement oficial Z-Wave JS."
         },
         "error": {
             "addon_start_failed": "No s'ha pogut iniciar el complement Z-Wave JS. Comprova la configuraci\u00f3.",
@@ -89,6 +90,12 @@
             "state.node_status": "L'estat del node ha canviat",
             "zwave_js.value_updated.config_parameter": "Canvi del valor del par\u00e0metre de configuraci\u00f3 {subtype}",
             "zwave_js.value_updated.value": "Canvi del valor en un valor Z-Wave JS"
+        }
+    },
+    "issues": {
+        "invalid_server_version": {
+            "description": "La versi\u00f3 del servidor Z-Wave JS que est\u00e0s executant actualment \u00e9s massa antiga per a aquesta versi\u00f3 de Home Assistant. Actualitza a l'\u00faltima versi\u00f3 per resoldre aquest problema.",
+            "title": "Es necessita una versi\u00f3 m\u00e9s nova del servidor Z-Wave JS"
         }
     },
     "options": {

@@ -1,12 +1,8 @@
 {
   "domain": "torque",
-  "name": "Torque - OBD2 Reader",
-  "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/torque2",
-  "requirements": [],
-  "codeowners": [
-    "@skyborgff"
-  ],
-  "version": "1.0.1",
+  "name": "Torque",
+  "documentation": "https://www.home-assistant.io/integrations/torque",
+  "dependencies": ["http"],
+  "codeowners": [],
   "iot_class": "local_push"
 }

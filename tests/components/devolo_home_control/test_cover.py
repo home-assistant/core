@@ -4,6 +4,7 @@ from unittest.mock import patch
 from homeassistant.components.cover import ATTR_CURRENT_POSITION, ATTR_POSITION, DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_FRIENDLY_NAME,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_SET_COVER_POSITION,
@@ -32,6 +33,7 @@ async def test_cover(hass: HomeAssistant):
     state = hass.states.get(f"{DOMAIN}.test")
     assert state is not None
     assert state.state == STATE_OPEN
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "Test"
     assert (
         state.attributes[ATTR_CURRENT_POSITION]
         == test_gateway.devices["Test"]

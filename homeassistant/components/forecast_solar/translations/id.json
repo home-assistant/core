@@ -15,6 +15,9 @@
         }
     },
     "options": {
+        "error": {
+            "invalid_api_key": "Kunci API tidak valid"
+        },
         "step": {
             "init": {
                 "data": {
@@ -25,7 +28,7 @@
                     "inverter_size": "Ukuran inverter (Watt)",
                     "modules power": "Total daya puncak modul surya Anda dalam Watt"
                 },
-                "description": "Nilai-nilai ini memungkinkan penyesuaian hasil Solar.Forecast. Rujuk ke dokumentasi jika bidang isian tidak jelas."
+                "description": "Nilai-nilai ini memungkinkan penyesuaian hasil Forecast.Solar. Rujuk ke dokumentasi jika bidang isian tidak jelas."
             }
         }
     }

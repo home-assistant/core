@@ -1,0 +1,11 @@
+{
+    "state": {
+        "nam__caqi_level": {
+            "high": "Hoog",
+            "low": "Laag",
+            "medium": "Medium",
+            "very high": "Heel hoog",
+            "very low": "Heel laag"
+        }
+    }
+}

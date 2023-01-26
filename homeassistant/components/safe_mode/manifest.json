@@ -5,5 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/safe_mode",
   "dependencies": ["frontend", "persistent_notification", "cloud"],
   "codeowners": ["@home-assistant/core"],
-  "quality_scale": "internal"
+  "quality_scale": "internal",
+  "integration_type": "system"
 }

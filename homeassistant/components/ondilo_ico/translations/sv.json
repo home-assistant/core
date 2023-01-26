@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "Timeout vid generering av en auktoriserings-URL.",
+            "missing_configuration": "Komponenten har inte konfigurerats. F\u00f6lj dokumentationen."
+        },
+        "create_entry": {
+            "default": "Autentiserats"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "V\u00e4lj autentiseringsmetod"
+            }
+        }
+    }
+}

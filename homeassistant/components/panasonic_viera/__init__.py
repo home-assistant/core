@@ -99,7 +99,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         unique_id = config_entry.unique_id
         if device_info is None:
             _LOGGER.error(
-                "Couldn't gather device info; Please restart Home Assistant with your TV turned on and connected to your network"
+                "Couldn't gather device info; Please restart Home Assistant with your"
+                " TV turned on and connected to your network"
             )
         else:
             unique_id = device_info[ATTR_UDN]
@@ -109,7 +110,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             data={**config, ATTR_DEVICE_INFO: device_info},
         )
 
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
 

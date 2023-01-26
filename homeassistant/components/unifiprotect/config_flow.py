@@ -34,8 +34,11 @@ from homeassistant.util.network import is_ip_address
 
 from .const import (
     CONF_ALL_UPDATES,
+    CONF_ALLOW_EA,
     CONF_DISABLE_RTSP,
+    CONF_MAX_MEDIA,
     CONF_OVERRIDE_CHOST,
+    DEFAULT_MAX_MEDIA,
     DEFAULT_PORT,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
@@ -221,6 +224,8 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_DISABLE_RTSP: False,
                 CONF_ALL_UPDATES: False,
                 CONF_OVERRIDE_CHOST: False,
+                CONF_MAX_MEDIA: DEFAULT_MAX_MEDIA,
+                CONF_ALLOW_EA: False,
             },
         )
 
@@ -382,6 +387,16 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         default=self.config_entry.options.get(
                             CONF_OVERRIDE_CHOST, False
                         ),
+                    ): bool,
+                    vol.Optional(
+                        CONF_MAX_MEDIA,
+                        default=self.config_entry.options.get(
+                            CONF_MAX_MEDIA, DEFAULT_MAX_MEDIA
+                        ),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=100, max=10000)),
+                    vol.Optional(
+                        CONF_ALLOW_EA,
+                        default=self.config_entry.options.get(CONF_ALLOW_EA, False),
                     ): bool,
                 }
             ),

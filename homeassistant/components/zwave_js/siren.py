@@ -8,11 +8,12 @@ from zwave_js_server.const.command_class.sound_switch import ToneID
 from zwave_js_server.model.driver import Driver
 
 from homeassistant.components.siren import (
+    ATTR_TONE,
+    ATTR_VOLUME_LEVEL,
     DOMAIN as SIREN_DOMAIN,
     SirenEntity,
     SirenEntityFeature,
 )
-from homeassistant.components.siren.const import ATTR_TONE, ATTR_VOLUME_LEVEL
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect

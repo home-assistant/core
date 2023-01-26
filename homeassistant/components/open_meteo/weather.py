@@ -5,11 +5,7 @@ from open_meteo import Forecast as OpenMeteoForecast
 
 from homeassistant.components.weather import Forecast, WeatherEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    LENGTH_MILLIMETERS,
-    SPEED_KILOMETERS_PER_HOUR,
-    TEMP_CELSIUS,
-)
+from homeassistant.const import UnitOfPrecipitationDepth, UnitOfSpeed, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
@@ -37,9 +33,10 @@ class OpenMeteoWeatherEntity(
 ):
     """Defines an Open-Meteo weather entity."""
 
-    _attr_native_precipitation_unit = LENGTH_MILLIMETERS
-    _attr_native_temperature_unit = TEMP_CELSIUS
-    _attr_native_wind_speed_unit = SPEED_KILOMETERS_PER_HOUR
+    _attr_has_entity_name = True
+    _attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_wind_speed_unit = UnitOfSpeed.KILOMETERS_PER_HOUR
 
     def __init__(
         self,
@@ -50,7 +47,6 @@ class OpenMeteoWeatherEntity(
         """Initialize Open-Meteo weather entity."""
         super().__init__(coordinator=coordinator)
         self._attr_unique_id = entry.entry_id
-        self._attr_name = entry.title
 
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,

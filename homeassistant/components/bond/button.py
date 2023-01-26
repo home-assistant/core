@@ -89,6 +89,13 @@ BUTTONS: tuple[BondButtonEntityDescription, ...] = (
         argument=None,
     ),
     BondButtonEntityDescription(
+        key=Action.START_DIMMER,
+        name="Start Dimmer",
+        icon="mdi:brightness-percent",
+        mutually_exclusive=Action.SET_BRIGHTNESS,
+        argument=None,
+    ),
+    BondButtonEntityDescription(
         key=Action.START_UP_LIGHT_DIMMER,
         name="Start Up Light Dimmer",
         icon="mdi:brightness-percent",
@@ -267,8 +274,7 @@ async def async_setup_entry(
             )
         entities.extend(device_entities)
 
-    if entities:
-        async_add_entities(entities)
+    async_add_entities(entities)
 
 
 class BondButtonEntity(BondEntity, ButtonEntity):

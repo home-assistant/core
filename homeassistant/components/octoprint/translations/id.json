@@ -4,6 +4,7 @@
             "already_configured": "Perangkat sudah dikonfigurasi",
             "auth_failed": "Gagal mengambil kunci API aplikasi",
             "cannot_connect": "Gagal terhubung",
+            "reauth_successful": "Autentikasi ulang berhasil",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
         "error": {
@@ -15,6 +16,11 @@
             "get_api_key": "Buka antarmuka OctoPrint dan klik 'Izinkan' pada Permintaan Akses untuk 'Home Assistant'."
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "username": "Nama Pengguna"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Host",

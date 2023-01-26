@@ -25,14 +25,13 @@ from homeassistant.const import (
     CONF_RESOURCES,
     CONF_SCAN_INTERVAL,
     CONF_TYPE,
-    DATA_GIBIBYTES,
-    DATA_MEBIBYTES,
-    DATA_RATE_MEGABYTES_PER_SECOND,
     EVENT_HOMEASSISTANT_STOP,
     PERCENTAGE,
     STATE_OFF,
     STATE_ON,
-    TEMP_CELSIUS,
+    UnitOfDataRate,
+    UnitOfInformation,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
@@ -76,14 +75,16 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
     "disk_free": SysMonitorSensorEntityDescription(
         key="disk_free",
         name="Disk free",
-        native_unit_of_measurement=DATA_GIBIBYTES,
+        native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:harddisk",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "disk_use": SysMonitorSensorEntityDescription(
         key="disk_use",
         name="Disk use",
-        native_unit_of_measurement=DATA_GIBIBYTES,
+        native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:harddisk",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -97,13 +98,13 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
     "ipv4_address": SysMonitorSensorEntityDescription(
         key="ipv4_address",
         name="IPv4 address",
-        icon="mdi:server-network",
+        icon="mdi:ip-network",
         mandatory_arg=True,
     ),
     "ipv6_address": SysMonitorSensorEntityDescription(
         key="ipv6_address",
         name="IPv6 address",
-        icon="mdi:server-network",
+        icon="mdi:ip-network",
         mandatory_arg=True,
     ),
     "last_boot": SysMonitorSensorEntityDescription(
@@ -132,14 +133,16 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
     "memory_free": SysMonitorSensorEntityDescription(
         key="memory_free",
         name="Memory free",
-        native_unit_of_measurement=DATA_MEBIBYTES,
+        native_unit_of_measurement=UnitOfInformation.MEBIBYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:memory",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "memory_use": SysMonitorSensorEntityDescription(
         key="memory_use",
         name="Memory use",
-        native_unit_of_measurement=DATA_MEBIBYTES,
+        native_unit_of_measurement=UnitOfInformation.MEBIBYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:memory",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -153,7 +156,8 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
     "network_in": SysMonitorSensorEntityDescription(
         key="network_in",
         name="Network in",
-        native_unit_of_measurement=DATA_MEBIBYTES,
+        native_unit_of_measurement=UnitOfInformation.MEBIBYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:server-network",
         state_class=SensorStateClass.TOTAL_INCREASING,
         mandatory_arg=True,
@@ -161,7 +165,8 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
     "network_out": SysMonitorSensorEntityDescription(
         key="network_out",
         name="Network out",
-        native_unit_of_measurement=DATA_MEBIBYTES,
+        native_unit_of_measurement=UnitOfInformation.MEBIBYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:server-network",
         state_class=SensorStateClass.TOTAL_INCREASING,
         mandatory_arg=True,
@@ -183,16 +188,16 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
     "throughput_network_in": SysMonitorSensorEntityDescription(
         key="throughput_network_in",
         name="Network throughput in",
-        native_unit_of_measurement=DATA_RATE_MEGABYTES_PER_SECOND,
-        icon="mdi:server-network",
+        native_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
         state_class=SensorStateClass.MEASUREMENT,
         mandatory_arg=True,
     ),
     "throughput_network_out": SysMonitorSensorEntityDescription(
         key="throughput_network_out",
         name="Network throughput out",
-        native_unit_of_measurement=DATA_RATE_MEGABYTES_PER_SECOND,
-        icon="mdi:server-network",
+        native_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
         state_class=SensorStateClass.MEASUREMENT,
         mandatory_arg=True,
     ),
@@ -213,21 +218,23 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
     "processor_temperature": SysMonitorSensorEntityDescription(
         key="processor_temperature",
         name="Processor temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "swap_free": SysMonitorSensorEntityDescription(
         key="swap_free",
         name="Swap free",
-        native_unit_of_measurement=DATA_MEBIBYTES,
+        native_unit_of_measurement=UnitOfInformation.MEBIBYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:harddisk",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "swap_use": SysMonitorSensorEntityDescription(
         key="swap_use",
         name="Swap use",
-        native_unit_of_measurement=DATA_MEBIBYTES,
+        native_unit_of_measurement=UnitOfInformation.MEBIBYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:harddisk",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -306,6 +313,7 @@ CPU_SENSOR_PREFIXES = [
     "Tctl",
     "cpu0-thermal",
     "cpu0_thermal",
+    "k10temp 1",
 ]
 
 
@@ -399,7 +407,10 @@ async def async_setup_sensor_registry_updates(
         """Update all sensors in one executor jump."""
         if _update_lock.locked():
             _LOGGER.warning(
-                "Updating systemmonitor took longer than the scheduled update interval %s",
+                (
+                    "Updating systemmonitor took longer than the scheduled update"
+                    " interval %s"
+                ),
                 scan_interval,
             )
             return

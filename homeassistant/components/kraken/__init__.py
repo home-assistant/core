@@ -38,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await kraken_data.async_setup()
     hass.data[DOMAIN] = kraken_data
     entry.async_on_unload(entry.add_update_listener(async_options_updated))
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
@@ -78,7 +78,8 @@ class KrakenData:
         except pykrakenapi.pykrakenapi.KrakenAPIError as error:
             if "Unknown asset pair" in str(error):
                 _LOGGER.info(
-                    "Kraken.com reported an unknown asset pair. Refreshing list of tradable asset pairs"
+                    "Kraken.com reported an unknown asset pair. Refreshing list of"
+                    " tradable asset pairs"
                 )
                 await self._async_refresh_tradable_asset_pairs()
             else:
@@ -87,7 +88,8 @@ class KrakenData:
                 ) from error
         except pykrakenapi.pykrakenapi.CallRateLimitError:
             _LOGGER.warning(
-                "Exceeded the Kraken.com call rate limit. Increase the update interval to prevent this error"
+                "Exceeded the Kraken.com call rate limit. Increase the update interval"
+                " to prevent this error"
             )
         return None
 

@@ -15,7 +15,7 @@ async def test_create_entry(hass):
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == data_entry_flow.RESULT_TYPE_FORM
+    assert result.get("type") == data_entry_flow.FlowResultType.FORM
     assert result.get("step_id") == SOURCE_USER
 
     with patch(
@@ -27,7 +27,7 @@ async def test_create_entry(hass):
             {},
         )
 
-        assert result.get("type") == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result.get("result").data == {}
 
 
@@ -43,5 +43,5 @@ async def test_integration_already_exists(hass):
         DOMAIN, context={"source": SOURCE_USER}, data={}
     )
 
-    assert result.get("type") == data_entry_flow.RESULT_TYPE_ABORT
+    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
     assert result.get("reason") == "single_instance_allowed"

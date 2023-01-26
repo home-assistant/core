@@ -38,6 +38,7 @@ base_platforms: &base_platforms
   - homeassistant/components/siren/**
   - homeassistant/components/stt/**
   - homeassistant/components/switch/**
+  - homeassistant/components/text/**
   - homeassistant/components/tts/**
   - homeassistant/components/update/**
   - homeassistant/components/vacuum/**
@@ -46,12 +47,12 @@ base_platforms: &base_platforms
 
 # Extra components that trigger the full suite
 components: &components
-  - homeassistant/components/alert/**
   - homeassistant/components/alexa/**
   - homeassistant/components/application_credentials/**
   - homeassistant/components/auth/**
   - homeassistant/components/automation/**
   - homeassistant/components/backup/**
+  - homeassistant/components/bluetooth/**
   - homeassistant/components/cloud/**
   - homeassistant/components/config/**
   - homeassistant/components/configurator/**
@@ -87,6 +88,7 @@ components: &components
   - homeassistant/components/persistent_notification/**
   - homeassistant/components/person/**
   - homeassistant/components/recorder/**
+  - homeassistant/components/repairs/**
   - homeassistant/components/safe_mode/**
   - homeassistant/components/script/**
   - homeassistant/components/shopping_list/**

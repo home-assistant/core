@@ -10,7 +10,7 @@
         "flow_title": "{name}",
         "step": {
             "confirm": {
-                "description": "Do you want to start set up?"
+                "description": "Do you want to start setup?"
             },
             "user": {
                 "data": {

@@ -1,17 +1,13 @@
 """Test the Vallox integration config flow."""
 from unittest.mock import patch
 
-from vallox_websocket_api.exceptions import ValloxApiException
+from vallox_websocket_api import ValloxApiException, ValloxWebsocketException
 
 from homeassistant.components.vallox.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -23,7 +19,7 @@ async def test_form_no_input(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
 
@@ -33,7 +29,7 @@ async def test_form_create_entry(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert init["type"] == RESULT_TYPE_FORM
+    assert init["type"] == FlowResultType.FORM
     assert init["errors"] is None
 
     with patch(
@@ -49,7 +45,7 @@ async def test_form_create_entry(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "Vallox"
     assert result["data"] == {"host": "1.2.3.4", "name": "Vallox"}
     assert len(mock_setup_entry.mock_calls) == 1
@@ -67,7 +63,7 @@ async def test_form_invalid_ip(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"host": "invalid_host"}
 
 
@@ -87,7 +83,7 @@ async def test_form_vallox_api_exception_cannot_connect(hass: HomeAssistant) -> 
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"host": "cannot_connect"}
 
 
@@ -99,7 +95,7 @@ async def test_form_os_error_cannot_connect(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.vallox.config_flow.Vallox.get_info",
-        side_effect=OSError,
+        side_effect=ValloxWebsocketException,
     ):
         result = await hass.config_entries.flow.async_configure(
             init["flow_id"],
@@ -107,7 +103,7 @@ async def test_form_os_error_cannot_connect(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"host": "cannot_connect"}
 
 
@@ -127,7 +123,7 @@ async def test_form_unknown_exception(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"host": "unknown"}
 
 
@@ -152,7 +148,7 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -174,7 +170,7 @@ async def test_import_with_custom_name(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == name
     assert result["data"] == {"host": "1.2.3.4", "name": "Vallox 90 MV"}
     assert len(mock_setup_entry.mock_calls) == 1
@@ -196,7 +192,7 @@ async def test_import_without_custom_name(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "Vallox"
     assert result["data"] == {"host": "1.2.3.4", "name": "Vallox"}
     assert len(mock_setup_entry.mock_calls) == 1
@@ -213,7 +209,7 @@ async def test_import_invalid_ip(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "invalid_host"
 
 
@@ -237,7 +233,7 @@ async def test_import_already_configured(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -247,7 +243,7 @@ async def test_import_cannot_connect_os_error(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.vallox.config_flow.Vallox.get_info",
-        side_effect=OSError,
+        side_effect=ValloxWebsocketException,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -256,7 +252,7 @@ async def test_import_cannot_connect_os_error(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
@@ -275,7 +271,7 @@ async def test_import_cannot_connect_vallox_api_exception(hass: HomeAssistant) -
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
@@ -294,5 +290,5 @@ async def test_import_unknown_exception(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "unknown"

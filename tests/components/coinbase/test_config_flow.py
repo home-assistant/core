@@ -10,7 +10,6 @@ from homeassistant.components.coinbase.const import (
     CONF_CURRENCIES,
     CONF_EXCHANGE_PRECISION,
     CONF_EXCHANGE_RATES,
-    CONF_YAML_API_TOKEN,
     DOMAIN,
 )
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN
@@ -22,8 +21,6 @@ from .common import (
     mocked_get_accounts,
 )
 from .const import BAD_CURRENCY, BAD_EXCHANGE_RATE, GOOD_CURRENCY, GOOD_EXCHANGE_RATE
-
-from tests.common import MockConfigEntry
 
 
 async def test_form(hass):
@@ -44,8 +41,6 @@ async def test_form(hass):
         "coinbase.wallet.client.Client.get_exchange_rates",
         return_value=mock_get_exchange_rates(),
     ), patch(
-        "homeassistant.components.coinbase.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.coinbase.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -61,7 +56,6 @@ async def test_form(hass):
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Test User"
     assert result2["data"] == {CONF_API_KEY: "123456", CONF_API_TOKEN: "AbCDeF"}
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -303,62 +297,3 @@ async def test_option_catch_all_exception(hass):
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "unknown"}
-
-
-async def test_yaml_import(hass):
-    """Test YAML import works."""
-    conf = {
-        CONF_API_KEY: "123456",
-        CONF_YAML_API_TOKEN: "AbCDeF",
-        CONF_CURRENCIES: ["BTC", "USD"],
-        CONF_EXCHANGE_RATES: ["ATOM", "BTC"],
-    }
-    with patch(
-        "coinbase.wallet.client.Client.get_current_user",
-        return_value=mock_get_current_user(),
-    ), patch(
-        "coinbase.wallet.client.Client.get_accounts", new=mocked_get_accounts
-    ), patch(
-        "coinbase.wallet.client.Client.get_exchange_rates",
-        return_value=mock_get_exchange_rates(),
-    ), patch(
-        "homeassistant.components.coinbase.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.coinbase.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=conf
-        )
-    assert result["type"] == "create_entry"
-    assert result["title"] == "Test User"
-    assert result["data"] == {CONF_API_KEY: "123456", CONF_API_TOKEN: "AbCDeF"}
-    assert result["options"] == {
-        CONF_CURRENCIES: ["BTC", "USD"],
-        CONF_EXCHANGE_RATES: ["ATOM", "BTC"],
-    }
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_yaml_existing(hass):
-    """Test YAML ignored when already processed."""
-    MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_API_KEY: "123456",
-            CONF_API_TOKEN: "AbCDeF",
-        },
-    ).add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={
-            CONF_API_KEY: "123456",
-            CONF_YAML_API_TOKEN: "AbCDeF",
-        },
-    )
-
-    assert result["type"] == "abort"
-    assert result["reason"] == "already_configured"

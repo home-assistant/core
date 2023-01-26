@@ -1,12 +1,7 @@
 """Models to represent various Plex objects used in the integration."""
 import logging
 
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_MOVIE,
-    MEDIA_TYPE_MUSIC,
-    MEDIA_TYPE_TVSHOW,
-    MEDIA_TYPE_VIDEO,
-)
+from homeassistant.components.media_player import MediaType
 from homeassistant.helpers.template import result_as_boolean
 from homeassistant.util import dt as dt_util
 
@@ -82,7 +77,10 @@ class PlexSession:
         elif media.librarySectionID and media.librarySectionID < 1:
             self.media_library_title = UNKNOWN_SECTION
             _LOGGER.warning(
-                "Unknown library section ID (%s) for title '%s', please create an issue",
+                (
+                    "Unknown library section ID (%s) for title '%s',"
+                    " please create an issue"
+                ),
                 media.librarySectionID,
                 media.title,
             )
@@ -92,19 +90,23 @@ class PlexSession:
             )
 
         if media.type == "episode":
-            self.media_content_type = MEDIA_TYPE_TVSHOW
+            self.media_content_type = MediaType.TVSHOW
             self.media_season = media.seasonNumber
             self.media_series_title = media.grandparentTitle
             if media.index is not None:
                 self.media_episode = media.index
-            self.sensor_title = f"{self.media_series_title} - {media.seasonEpisode} - {self.media_title}"
+            self.sensor_title = (
+                f"{self.media_series_title} -"
+                f" {media.seasonEpisode} -"
+                f" {self.media_title}"
+            )
         elif media.type == "movie":
-            self.media_content_type = MEDIA_TYPE_MOVIE
+            self.media_content_type = MediaType.MOVIE
             if media.year is not None and media.title is not None:
                 self.media_title += f" ({media.year!s})"
             self.sensor_title = self.media_title
         elif media.type == "track":
-            self.media_content_type = MEDIA_TYPE_MUSIC
+            self.media_content_type = MediaType.MUSIC
             self.media_album_name = media.parentTitle
             self.media_album_artist = media.grandparentTitle
             self.media_track = media.index
@@ -113,7 +115,7 @@ class PlexSession:
                 f"{self.media_artist} - {self.media_album_name} - {self.media_title}"
             )
         elif media.type == "clip":
-            self.media_content_type = MEDIA_TYPE_VIDEO
+            self.media_content_type = MediaType.VIDEO
             self.sensor_title = media.title
         else:
             self.sensor_title = "Unknown"
@@ -157,7 +159,7 @@ class PlexMediaSearchResult:
 
     @property
     def offset(self) -> int:
-        """Provide the appropriate offset based on payload contents."""
+        """Provide the appropriate offset in ms based on payload contents."""
         if offset := self._params.get("offset", 0):
             return offset * 1000
         resume = self._params.get("resume", False)

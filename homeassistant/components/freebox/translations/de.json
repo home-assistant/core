@@ -10,7 +10,7 @@
         },
         "step": {
             "link": {
-                "description": "Klicke auf \"Senden\" und ber\u00fchre dann den Pfeil nach rechts auf dem Router, um Freebox bei Home Assistant zu registrieren. \n\n ![Position der Schaltfl\u00e4che am Router](/static/images/config_freebox.png)",
+                "description": "Dr\u00fccke auf \"Senden\" und ber\u00fchre dann den Pfeil nach rechts auf dem Router, um Freebox bei Home Assistant zu registrieren. \n\n ![Position der Schaltfl\u00e4che am Router](/static/images/config_freebox.png)",
                 "title": "Link Freebox Router"
             },
             "user": {

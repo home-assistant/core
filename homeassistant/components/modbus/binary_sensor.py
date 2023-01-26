@@ -10,6 +10,7 @@ from homeassistant.const import (
     CONF_BINARY_SENSORS,
     CONF_DEVICE_CLASS,
     CONF_NAME,
+    CONF_UNIQUE_ID,
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -23,7 +24,7 @@ from homeassistant.helpers.update_coordinator import (
 
 from . import get_hub
 from .base_platform import BasePlatform
-from .const import CONF_SLAVE_COUNT
+from .const import CALL_TYPE_COIL, CALL_TYPE_DISCRETE, CONF_SLAVE_COUNT
 from .modbus import ModbusHub
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,8 +60,8 @@ class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
     def __init__(self, hub: ModbusHub, entry: dict[str, Any], slave_count: int) -> None:
         """Initialize the Modbus binary sensor."""
         self._count = slave_count + 1
-        self._coordinator: DataUpdateCoordinator[Any] | None = None
-        self._result = None
+        self._coordinator: DataUpdateCoordinator[list[int] | None] | None = None
+        self._result: list[int] = []
         super().__init__(hub, entry)
 
     async def async_setup_slaves(
@@ -106,31 +107,43 @@ class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
                 return
             self._lazy_errors = self._lazy_error_count
             self._attr_available = False
-            self._result = None
+            self._result = []
         else:
             self._lazy_errors = self._lazy_error_count
-            self._attr_is_on = result.bits[0] & 1
             self._attr_available = True
-            self._result = result
+            if self._input_type in (CALL_TYPE_COIL, CALL_TYPE_DISCRETE):
+                self._result = result.bits
+            else:
+                self._result = result.registers
+            self._attr_is_on = bool(self._result[0] & 1)
 
         self.async_write_ha_state()
         if self._coordinator:
             self._coordinator.async_set_updated_data(self._result)
 
 
-class SlaveSensor(CoordinatorEntity, RestoreEntity, BinarySensorEntity):
+class SlaveSensor(
+    CoordinatorEntity[DataUpdateCoordinator[list[int] | None]],
+    RestoreEntity,
+    BinarySensorEntity,
+):
     """Modbus slave binary sensor."""
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator[Any], idx: int, entry: dict[str, Any]
+        self,
+        coordinator: DataUpdateCoordinator[list[int] | None],
+        idx: int,
+        entry: dict[str, Any],
     ) -> None:
         """Initialize the Modbus binary sensor."""
         idx += 1
         self._attr_name = f"{entry[CONF_NAME]} {idx}"
         self._attr_device_class = entry.get(CONF_DEVICE_CLASS)
+        self._attr_unique_id = entry.get(CONF_UNIQUE_ID)
+        if self._attr_unique_id:
+            self._attr_unique_id = f"{self._attr_unique_id}_{idx}"
         self._attr_available = False
-        self._result_inx = int(idx / 8)
-        self._result_bit = 2 ** (idx % 8)
+        self._result_inx = idx
         super().__init__(coordinator)
 
     async def async_added_to_hass(self) -> None:
@@ -144,6 +157,5 @@ class SlaveSensor(CoordinatorEntity, RestoreEntity, BinarySensorEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         result = self.coordinator.data
-        if result:
-            self._attr_is_on = result.bits[self._result_inx] & self._result_bit
+        self._attr_is_on = bool(result[self._result_inx] & 1) if result else None
         super()._handle_coordinator_update()

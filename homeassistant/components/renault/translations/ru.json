@@ -31,5 +31,38 @@
                 "title": "\u0423\u0447\u0435\u0442\u043d\u044b\u0435 \u0434\u0430\u043d\u043d\u044b\u0435 Renault"
             }
         }
+    },
+    "entity": {
+        "select": {
+            "charge_mode": {
+                "state": {
+                    "always": "\u041c\u0433\u043d\u043e\u0432\u0435\u043d\u043d\u043e",
+                    "always_charging": "\u041c\u0433\u043d\u043e\u0432\u0435\u043d\u043d\u043e",
+                    "schedule_mode": "\u041f\u043b\u0430\u043d\u0438\u0440\u043e\u0432\u0449\u0438\u043a"
+                }
+            }
+        },
+        "sensor": {
+            "charge_state": {
+                "state": {
+                    "charge_ended": "\u0417\u0430\u0440\u044f\u0436\u0435\u043d\u043e",
+                    "charge_error": "\u041d\u0435 \u0437\u0430\u0440\u044f\u0436\u0430\u0435\u0442\u0441\u044f \u0438\u043b\u0438 \u043d\u0435 \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u043e",
+                    "charge_in_progress": "\u0417\u0430\u0440\u044f\u0436\u0430\u0435\u0442\u0441\u044f",
+                    "energy_flap_opened": "\u041e\u0442\u043a\u0440\u044b\u0442\u0430 \u043a\u0440\u044b\u0448\u043a\u0430 \u0440\u0430\u0437\u044a\u0435\u043c\u0430 \u0434\u043b\u044f \u0437\u0430\u0440\u044f\u0434\u043a\u0438",
+                    "not_in_charge": "\u041d\u0435 \u0437\u0430\u0440\u044f\u0436\u0430\u0435\u0442\u0441\u044f",
+                    "unavailable": "\u041d\u0435\u0434\u043e\u0441\u0442\u0443\u043f\u043d\u043e",
+                    "waiting_for_a_planned_charge": "\u041e\u0436\u0438\u0434\u0430\u043d\u0438\u0435 \u0437\u0430\u043f\u043b\u0430\u043d\u0438\u0440\u043e\u0432\u0430\u043d\u043d\u043e\u0439 \u0437\u0430\u0440\u044f\u0434\u043a\u0438",
+                    "waiting_for_current_charge": "\u041e\u0436\u0438\u0434\u0430\u043d\u0438\u0435 \u0442\u0435\u043a\u0443\u0449\u0435\u0439 \u0437\u0430\u0440\u044f\u0434\u043a\u0438"
+                }
+            },
+            "plug_state": {
+                "state": {
+                    "plug_error": "\u041e\u0448\u0438\u0431\u043a\u0430 \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u044f",
+                    "plug_unknown": "\u0412\u0438\u043b\u043a\u0430 \u043d\u0435 \u043e\u043f\u0440\u0435\u0434\u0435\u043b\u0435\u043d\u0430",
+                    "plugged": "\u041f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u043e",
+                    "unplugged": "\u041e\u0442\u043a\u043b\u044e\u0447\u0435\u043d\u043e"
+                }
+            }
+        }
     }
 }

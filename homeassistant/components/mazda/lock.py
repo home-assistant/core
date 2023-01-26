@@ -32,11 +32,12 @@ async def async_setup_entry(
 class MazdaLock(MazdaEntity, LockEntity):
     """Class for the lock."""
 
+    _attr_name = "Lock"
+
     def __init__(self, client, coordinator, index) -> None:
         """Initialize Mazda lock."""
         super().__init__(client, coordinator, index)
 
-        self._attr_name = f"{self.vehicle_name} Lock"
         self._attr_unique_id = self.vin
 
     @property

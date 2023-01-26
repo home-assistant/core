@@ -33,6 +33,7 @@ DEVICE_CONFIG_OPEN = {
     "name": "home",
     "status": "open",
     "link_status": "Connected",
+    "serial": "12345",
 }
 
 DEVICE_CONFIG_OPENING = {
@@ -41,6 +42,7 @@ DEVICE_CONFIG_OPENING = {
     "name": "home",
     "status": "opening",
     "link_status": "Connected",
+    "serial": "12345",
 }
 
 DEVICE_CONFIG_CLOSED = {
@@ -49,6 +51,7 @@ DEVICE_CONFIG_CLOSED = {
     "name": "home",
     "status": "closed",
     "link_status": "Connected",
+    "serial": "12345",
 }
 
 DEVICE_CONFIG_CLOSING = {
@@ -57,6 +60,7 @@ DEVICE_CONFIG_CLOSING = {
     "name": "home",
     "status": "closing",
     "link_status": "Connected",
+    "serial": "12345",
 }
 
 DEVICE_CONFIG_DISCONNECTED = {
@@ -65,6 +69,7 @@ DEVICE_CONFIG_DISCONNECTED = {
     "name": "home",
     "status": "open",
     "link_status": "Disconnected",
+    "serial": "12345",
 }
 
 DEVICE_CONFIG_BAD = {
@@ -226,37 +231,3 @@ async def test_yaml_import(
     config_data = hass.config_entries.async_entries(DOMAIN)[0].data
     assert config_data[CONF_USERNAME] == "test-user"
     assert config_data[CONF_PASSWORD] == "test-password"
-
-
-async def test_callback(
-    hass: HomeAssistant,
-    mock_aladdinconnect_api: MagicMock,
-):
-    """Test callback from Aladdin Connect API."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=YAML_CONFIG,
-        unique_id="test-id",
-    )
-    config_entry.add_to_hass(hass)
-    await hass.async_block_till_done()
-
-    with patch(
-        "homeassistant.components.aladdin_connect.AladdinConnectClient",
-        return_value=mock_aladdinconnect_api,
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    mock_aladdinconnect_api.async_get_door_status.return_value = STATE_CLOSING
-    mock_aladdinconnect_api.get_door_status.return_value = STATE_CLOSING
-    with patch(
-        "homeassistant.components.aladdin_connect.AladdinConnectClient",
-        return_value=mock_aladdinconnect_api,
-    ), patch(
-        "homeassistant.components.aladdin_connect.AladdinConnectClient._call_back",
-        AsyncMock(),
-    ):
-        callback = mock_aladdinconnect_api.register_callback.call_args[0][0]
-        await callback()
-    assert hass.states.get("cover.home").state == STATE_CLOSING

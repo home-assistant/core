@@ -1,12 +1,15 @@
 """OpenEnergyMonitor Thermostat Support."""
 from __future__ import annotations
 
+from typing import Any
+
 from oemthermostat import Thermostat
 import requests
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
+    PLATFORM_SCHEMA,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -18,7 +21,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -64,6 +67,7 @@ class ThermostatDevice(ClimateEntity):
 
     _attr_hvac_modes = SUPPORT_HVAC
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, thermostat, name):
         """Initialize the device."""
@@ -94,11 +98,6 @@ class ThermostatDevice(ClimateEntity):
         return self._name
 
     @property
-    def temperature_unit(self):
-        """Return the unit of measurement used by the platform."""
-        return TEMP_CELSIUS
-
-    @property
     def hvac_action(self) -> HVACAction:
         """Return current hvac i.e. heat, cool, idle."""
         if not self._mode:
@@ -126,12 +125,12 @@ class ThermostatDevice(ClimateEntity):
         elif hvac_mode == HVACMode.OFF:
             self.thermostat.mode = 0
 
-    def set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set the temperature."""
         temp = kwargs.get(ATTR_TEMPERATURE)
         self.thermostat.setpoint = temp
 
-    def update(self):
+    def update(self) -> None:
         """Update local state."""
         self._setpoint = self.thermostat.setpoint
         self._temperature = self.thermostat.temperature

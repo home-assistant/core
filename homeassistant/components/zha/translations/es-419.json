@@ -5,11 +5,6 @@
         },
         "error": {
             "cannot_connect": "No se puede conectar al dispositivo ZHA."
-        },
-        "step": {
-            "user": {
-                "title": "ZHA"
-            }
         }
     },
     "device_automation": {

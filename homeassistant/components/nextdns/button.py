@@ -1,8 +1,6 @@
 """Support for the NextDNS service."""
 from __future__ import annotations
 
-from typing import cast
-
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -17,7 +15,7 @@ PARALLEL_UPDATES = 1
 
 CLEAR_LOGS_BUTTON = ButtonEntityDescription(
     key="clear_logs",
-    name="{profile_name} Clear Logs",
+    name="Clear logs",
     entity_category=EntityCategory.CONFIG,
 )
 
@@ -39,6 +37,8 @@ async def async_setup_entry(
 class NextDnsButton(CoordinatorEntity[NextDnsStatusUpdateCoordinator], ButtonEntity):
     """Define an NextDNS button."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: NextDnsStatusUpdateCoordinator,
@@ -48,9 +48,6 @@ class NextDnsButton(CoordinatorEntity[NextDnsStatusUpdateCoordinator], ButtonEnt
         super().__init__(coordinator)
         self._attr_device_info = coordinator.device_info
         self._attr_unique_id = f"{coordinator.profile_id}_{description.key}"
-        self._attr_name = cast(str, description.name).format(
-            profile_name=coordinator.profile_name
-        )
         self.entity_description = description
 
     async def async_press(self) -> None:

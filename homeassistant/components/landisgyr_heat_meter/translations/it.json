@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
+        },
+        "step": {
+            "setup_serial_manual_path": {
+                "data": {
+                    "device": "Percorso del dispositivo USB"
+                }
+            },
+            "user": {
+                "data": {
+                    "device": "Seleziona il dispositivo"
+                }
+            }
+        }
+    }
+}

@@ -44,6 +44,8 @@
             "button_2": "Deuxi\u00e8me bouton",
             "button_3": "Troisi\u00e8me bouton",
             "button_4": "Quatri\u00e8me bouton",
+            "clock_wise": "Rotation horaire",
+            "counter_clock_wise": "Rotation anti-horaire",
             "dim_down": "Assombrir",
             "dim_up": "\u00c9claircir",
             "double_buttons_1_3": "Premier et troisi\u00e8me boutons",
@@ -53,15 +55,16 @@
         },
         "trigger_type": {
             "double_short_release": "Les deux \u00ab\u00a0{subtype}\u00a0\u00bb sont rel\u00e2ch\u00e9s",
-            "initial_press": "D\u00e9but de l'appui du bouton \u00ab\u00a0{subtype}\u00a0\u00bb",
-            "long_release": "Bouton \u00ab\u00a0{subtype}\u00a0\u00bb rel\u00e2ch\u00e9 apr\u00e8s un appui long",
-            "remote_button_long_release": "Bouton \" {subtype} \" rel\u00e2ch\u00e9 apr\u00e8s un appui long",
-            "remote_button_short_press": "bouton \"{subtype}\" est press\u00e9",
-            "remote_button_short_release": "Bouton \" {subtype} \" est rel\u00e2ch\u00e9",
+            "initial_press": "D\u00e9but de l'appui sur \u00ab\u00a0{subtype}\u00a0\u00bb",
+            "long_release": "\u00ab\u00a0{subtype}\u00a0\u00bb rel\u00e2ch\u00e9 apr\u00e8s un appui long",
+            "remote_button_long_release": "\u00ab\u00a0{subtype}\u00a0\u00bb rel\u00e2ch\u00e9 apr\u00e8s un appui long",
+            "remote_button_short_press": "\u00ab\u00a0{subtype}\u00a0\u00bb appuy\u00e9",
+            "remote_button_short_release": "\u00ab\u00a0{subtype}\u00a0\u00bb rel\u00e2ch\u00e9",
             "remote_double_button_long_press": "Les deux \"{sous-type}\" ont \u00e9t\u00e9 rel\u00e2ch\u00e9s apr\u00e8s un appui long",
             "remote_double_button_short_press": "Les deux \" {subtype} \" ont \u00e9t\u00e9 rel\u00e2ch\u00e9s",
-            "repeat": "Bouton \u00ab\u00a0{subtype}\u00a0\u00bb maintenu enfonc\u00e9",
-            "short_release": "Bouton \u00ab\u00a0{subtype}\u00a0\u00bb rel\u00e2ch\u00e9 apr\u00e8s un appui court"
+            "repeat": "\u00ab\u00a0{subtype}\u00a0\u00bb maintenu appuy\u00e9",
+            "short_release": "\u00ab\u00a0{subtype}\u00a0\u00bb rel\u00e2ch\u00e9 apr\u00e8s un appui court",
+            "start": "D\u00e9but de l'appui sur \u00ab\u00a0{subtype}\u00a0\u00bb"
         }
     },
     "options": {

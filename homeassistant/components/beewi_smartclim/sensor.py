@@ -9,7 +9,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
 )
-from homeassistant.const import CONF_MAC, CONF_NAME, PERCENTAGE, TEMP_CELSIUS
+from homeassistant.const import CONF_MAC, CONF_NAME, PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -20,7 +20,7 @@ DEFAULT_NAME = "BeeWi SmartClim"
 
 # Sensor config
 SENSOR_TYPES = [
-    [SensorDeviceClass.TEMPERATURE, "Temperature", TEMP_CELSIUS],
+    [SensorDeviceClass.TEMPERATURE, "Temperature", UnitOfTemperature.CELSIUS],
     [SensorDeviceClass.HUMIDITY, "Humidity", PERCENTAGE],
     [SensorDeviceClass.BATTERY, "Battery", PERCENTAGE],
 ]
@@ -73,7 +73,7 @@ class BeewiSmartclimSensor(SensorEntity):
         self._attr_device_class = self._device
         self._attr_unique_id = f"{mac}_{device}"
 
-    def update(self):
+    def update(self) -> None:
         """Fetch new state data from the poller."""
         self._poller.update_sensor()
         self._attr_native_value = None

@@ -1,5 +1,6 @@
 """Tests for the Arcam FMJ config flow module."""
 
+from dataclasses import replace
 from unittest.mock import AsyncMock, patch
 
 from arcam.fmj.client import ConnectionFailed
@@ -65,11 +66,11 @@ async def test_ssdp(hass, dummy_client):
         context={CONF_SOURCE: SOURCE_SSDP},
         data=MOCK_DISCOVER,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == f"Arcam FMJ ({MOCK_HOST})"
     assert result["data"] == MOCK_CONFIG_ENTRY
 
@@ -86,7 +87,7 @@ async def test_ssdp_abort(hass):
         context={CONF_SOURCE: SOURCE_SSDP},
         data=MOCK_DISCOVER,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -99,11 +100,26 @@ async def test_ssdp_unable_to_connect(hass, dummy_client):
         context={CONF_SOURCE: SOURCE_SSDP},
         data=MOCK_DISCOVER,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
+async def test_ssdp_invalid_id(hass, dummy_client):
+    """Test a ssdp with invalid  UDN."""
+    discover = replace(
+        MOCK_DISCOVER, upnp=MOCK_DISCOVER.upnp | {ssdp.ATTR_UPNP_UDN: "invalid"}
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_SSDP},
+        data=discover,
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
@@ -122,7 +138,7 @@ async def test_ssdp_update(hass):
         context={CONF_SOURCE: SOURCE_SSDP},
         data=MOCK_DISCOVER,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     assert entry.data[CONF_HOST] == MOCK_HOST
@@ -137,7 +153,7 @@ async def test_user(hass, aioclient_mock):
         data=None,
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
     user_input = {
@@ -149,7 +165,7 @@ async def test_user(hass, aioclient_mock):
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == f"Arcam FMJ ({MOCK_HOST})"
     assert result["data"] == MOCK_CONFIG_ENTRY
     assert result["result"].unique_id == MOCK_UUID
@@ -168,7 +184,7 @@ async def test_invalid_ssdp(hass, aioclient_mock):
         context={CONF_SOURCE: SOURCE_USER},
         data=user_input,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == f"Arcam FMJ ({MOCK_HOST})"
     assert result["data"] == MOCK_CONFIG_ENTRY
     assert result["result"].unique_id is None
@@ -187,7 +203,7 @@ async def test_user_wrong(hass, aioclient_mock):
         context={CONF_SOURCE: SOURCE_USER},
         data=user_input,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == f"Arcam FMJ ({MOCK_HOST})"
     assert result["result"].unique_id is None
 

@@ -21,7 +21,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     STATE_OFF,
     STATE_ON,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -133,16 +133,16 @@ class MfiSensor(SensorEntity):
         try:
             tag = self._port.tag
         except ValueError:
-            return "State"
+            return None
 
         if tag == "temperature":
-            return TEMP_CELSIUS
+            return UnitOfTemperature.CELSIUS
         if tag == "active_pwr":
             return "Watts"
         if self._port.model == "Input Digital":
-            return "State"
+            return None
         return tag
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data."""
         self._port.refresh()

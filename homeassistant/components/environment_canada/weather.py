@@ -25,16 +25,17 @@ from homeassistant.components.weather import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    LENGTH_KILOMETERS,
-    PRESSURE_KPA,
-    SPEED_KILOMETERS_PER_HOUR,
-    TEMP_CELSIUS,
+    UnitOfLength,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt
 
+from . import device_info
 from .const import DOMAIN
 
 # Icon codes from http://dd.weatheroffice.ec.gc.ca/citypage_weather/
@@ -68,24 +69,24 @@ async def async_setup_entry(
 class ECWeather(CoordinatorEntity, WeatherEntity):
     """Representation of a weather condition."""
 
-    _attr_native_pressure_unit = PRESSURE_KPA
-    _attr_native_temperature_unit = TEMP_CELSIUS
-    _attr_native_visibility_unit = LENGTH_KILOMETERS
-    _attr_native_wind_speed_unit = SPEED_KILOMETERS_PER_HOUR
+    _attr_has_entity_name = True
+    _attr_native_pressure_unit = UnitOfPressure.KPA
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_visibility_unit = UnitOfLength.KILOMETERS
+    _attr_native_wind_speed_unit = UnitOfSpeed.KILOMETERS_PER_HOUR
 
     def __init__(self, coordinator, hourly):
         """Initialize Environment Canada weather."""
         super().__init__(coordinator)
         self.ec_data = coordinator.ec_data
         self._attr_attribution = self.ec_data.metadata["attribution"]
-        self._attr_name = (
-            f"{coordinator.config_entry.title}{' Hourly' if hourly else ''}"
-        )
+        self._attr_name = "Hourly forecast" if hourly else "Forecast"
         self._attr_unique_id = (
             f"{coordinator.config_entry.unique_id}{'-hourly' if hourly else '-daily'}"
         )
         self._attr_entity_registry_enabled_default = not hourly
         self._hourly = hourly
+        self._attr_device_info = device_info(coordinator.config_entry)
 
     @property
     def native_temperature(self):

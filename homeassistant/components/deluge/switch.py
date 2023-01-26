@@ -29,7 +29,6 @@ class DelugeSwitch(DelugeEntity, SwitchEntity):
     def __init__(self, coordinator: DelugeDataUpdateCoordinator) -> None:
         """Initialize the Deluge switch."""
         super().__init__(coordinator)
-        self._attr_name = coordinator.config_entry.title
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_enabled"
 
     def turn_on(self, **kwargs: Any) -> None:
@@ -46,7 +45,7 @@ class DelugeSwitch(DelugeEntity, SwitchEntity):
     def is_on(self) -> bool:
         """Return state of the switch."""
         if self.coordinator.data:
-            data: dict = self.coordinator.data[Platform.SWITCH]
+            data = self.coordinator.data[Platform.SWITCH]
             for torrent in data.values():
                 item = torrent.popitem()
                 if not item[1]:

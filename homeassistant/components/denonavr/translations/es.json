@@ -2,18 +2,18 @@
     "config": {
         "abort": {
             "already_configured": "El dispositivo ya est\u00e1 configurado",
-            "already_in_progress": "El flujo de configuraci\u00f3n ya est\u00e1 en proceso",
-            "cannot_connect": "No se pudo conectar, int\u00e9ntelo de nuevo, desconectar los cables de alimentaci\u00f3n y Ethernet y volver a conectarlos puede ayudar",
-            "not_denonavr_manufacturer": "No es un Receptor AVR Denon AVR en Red, el fabricante detectado no concuerda",
-            "not_denonavr_missing": "No es un Receptor AVR Denon AVR en Red, la informaci\u00f3n detectada no est\u00e1 completa"
+            "already_in_progress": "El flujo de configuraci\u00f3n ya est\u00e1 en curso",
+            "cannot_connect": "No se pudo conectar, por favor, int\u00e9ntalo de nuevo. Desconectar los cables de la alimentaci\u00f3n el\u00e9ctrica y ethernet y volvi\u00e9ndolos a conectar puede ayudar",
+            "not_denonavr_manufacturer": "No es un Denon AVR Network Receiver, el fabricante descubierto no coincide",
+            "not_denonavr_missing": "No es un Denon AVR Network Receiver, la informaci\u00f3n de descubrimiento no est\u00e1 completa"
         },
         "error": {
-            "discovery_error": "Error detectando un Receptor AVR Denon en Red"
+            "discovery_error": "No se pudo detectar ning\u00fan Denon AVR Network Receiver"
         },
         "flow_title": "{name}",
         "step": {
             "confirm": {
-                "description": "Por favor confirma la adici\u00f3n del receptor"
+                "description": "Por favor, confirma la adici\u00f3n del receptor"
             },
             "select": {
                 "data": {
@@ -27,7 +27,7 @@
                     "host": "Direcci\u00f3n IP"
                 },
                 "data_description": {
-                    "host": "D\u00e9jelo en blanco para usar el descubrimiento autom\u00e1tico"
+                    "host": "D\u00e9jalo en blanco para usar el descubrimiento autom\u00e1tico"
                 }
             }
         }

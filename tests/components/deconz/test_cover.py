@@ -213,3 +213,111 @@ async def test_tilt_cover(hass, aioclient_mock):
         blocking=True,
     )
     assert aioclient_mock.mock_calls[4][2] == {"stop": True}
+
+
+async def test_level_controllable_output_cover(hass, aioclient_mock):
+    """Test that tilting a cover works."""
+    data = {
+        "lights": {
+            "0": {
+                "etag": "4cefc909134c8e99086b55273c2bde67",
+                "hascolor": False,
+                "lastannounced": "2022-08-08T12:06:18Z",
+                "lastseen": "2022-08-14T14:22Z",
+                "manufacturername": "Keen Home Inc",
+                "modelid": "SV01-410-MP-1.0",
+                "name": "Vent",
+                "state": {
+                    "alert": "none",
+                    "bri": 242,
+                    "on": False,
+                    "reachable": True,
+                    "sat": 10,
+                },
+                "swversion": "0x00000012",
+                "type": "Level controllable output",
+                "uniqueid": "00:22:a3:00:00:00:00:00-01",
+            }
+        }
+    }
+    with patch.dict(DECONZ_WEB_REQUEST, data):
+        config_entry = await setup_deconz_integration(hass, aioclient_mock)
+
+    assert len(hass.states.async_all()) == 1
+    covering_device = hass.states.get("cover.vent")
+    assert covering_device.state == STATE_OPEN
+    assert covering_device.attributes[ATTR_CURRENT_TILT_POSITION] == 97
+
+    # Verify service calls for tilting cover
+
+    mock_deconz_put_request(aioclient_mock, config_entry.data, "/lights/0/state")
+
+    # Service open cover
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: "cover.vent"},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[1][2] == {"on": False}
+
+    # Service close cover
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: "cover.vent"},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[2][2] == {"on": True}
+
+    # Service set cover position
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_POSITION,
+        {ATTR_ENTITY_ID: "cover.vent", ATTR_POSITION: 40},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[3][2] == {"bri": 152}
+
+    # Service set tilt cover
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_TILT_POSITION,
+        {ATTR_ENTITY_ID: "cover.vent", ATTR_TILT_POSITION: 40},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[4][2] == {"sat": 152}
+
+    # Service open tilt cover
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER_TILT,
+        {ATTR_ENTITY_ID: "cover.vent"},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[5][2] == {"sat": 0}
+
+    # Service close tilt cover
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER_TILT,
+        {ATTR_ENTITY_ID: "cover.vent"},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[6][2] == {"sat": 254}
+
+    # Service stop cover movement
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_STOP_COVER_TILT,
+        {ATTR_ENTITY_ID: "cover.vent"},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[7][2] == {"bri_inc": 0}

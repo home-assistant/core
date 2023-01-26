@@ -2,15 +2,15 @@
     "config": {
         "abort": {
             "already_configured": "Device is already configured",
-            "not_forked_daapd": "Device is not a forked-daapd server."
+            "not_forked_daapd": "Device is not an Owntone server."
         },
         "error": {
-            "forbidden": "Unable to connect. Please check your forked-daapd network permissions.",
+            "forbidden": "Unable to connect. Please check your Owntone network permissions.",
             "unknown_error": "Unexpected error",
-            "websocket_not_enabled": "forked-daapd server websocket not enabled.",
+            "websocket_not_enabled": "Owntone server websocket not enabled.",
             "wrong_host_or_port": "Unable to connect. Please check host and port.",
             "wrong_password": "Incorrect password.",
-            "wrong_server_type": "The forked-daapd integration requires a forked-daapd server with version >= 27.0."
+            "wrong_server_type": "The Owntone integration requires an Owntone server with version >= 27.0."
         },
         "flow_title": "{name} ({host})",
         "step": {
@@ -21,7 +21,7 @@
                     "password": "API password (leave blank if no password)",
                     "port": "API port"
                 },
-                "title": "Set up forked-daapd device"
+                "title": "Set up Owntone device"
             }
         }
     },
@@ -34,8 +34,8 @@
                     "tts_pause_time": "Seconds to pause before and after TTS",
                     "tts_volume": "TTS volume (float in range [0,1])"
                 },
-                "description": "Set various options for the forked-daapd integration.",
-                "title": "Configure forked-daapd options"
+                "description": "Set various options for the Owntone integration.",
+                "title": "Configure Owntone options"
             }
         }
     }

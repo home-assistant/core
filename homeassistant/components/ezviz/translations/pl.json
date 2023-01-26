@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured_account": "Konto jest ju\u017c skonfigurowane",
-            "ezviz_cloud_account_missing": "Brak konta Ezviz. Skonfiguruj ponownie konto Ezviz.",
+            "ezviz_cloud_account_missing": "Brak konta EZVIZ. Skonfiguruj ponownie konto EZVIZ.",
             "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
         "error": {
@@ -17,8 +17,8 @@
                     "password": "Has\u0142o",
                     "username": "Nazwa u\u017cytkownika"
                 },
-                "description": "Wpisz dane logowania RTSP dla kamery Ezviz {serial} z IP {ip_address}",
-                "title": "Wykryto kamer\u0119 Ezviz"
+                "description": "Wpisz dane logowania RTSP dla kamery EZVIZ {serial} z IP {ip_address}",
+                "title": "Wykryto kamer\u0119 EZVIZ"
             },
             "user": {
                 "data": {
@@ -26,7 +26,7 @@
                     "url": "URL",
                     "username": "Nazwa u\u017cytkownika"
                 },
-                "title": "Po\u0142\u0105czenie z chmur\u0105 Ezviz"
+                "title": "Po\u0142\u0105czenie z chmur\u0105 EZVIZ"
             },
             "user_custom_url": {
                 "data": {
@@ -35,7 +35,7 @@
                     "username": "Nazwa u\u017cytkownika"
                 },
                 "description": "R\u0119cznie okre\u015bl adres URL dla swojego regionu",
-                "title": "Po\u0142\u0105czenie z niestandardowym adresem URL Ezviz"
+                "title": "Po\u0142\u0105czenie z niestandardowym adresem URL EZVIZ"
             }
         }
     },

@@ -40,15 +40,7 @@
   },
   "OfflineKeys": {
     "created": [],
-    "loaded": [
-      {
-        "UserID": "cccca94e-373e-aaaa-bbbb-333396827777",
-        "slot": 1,
-        "key": "kkk01d4300c1dcxxx1c330f794941111",
-        "created": "2017-12-10T03:12:09.215Z",
-        "loaded": "2017-12-10T03:12:54.391Z"
-      }
-    ],
+    "loaded": [],
     "deleted": [],
     "loadedhk": [
       {

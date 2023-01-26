@@ -12,7 +12,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.entity_component import async_update_entity
 
-from tests.components.dexcom import GLUCOSE_READING, init_integration
+from . import GLUCOSE_READING, init_integration
 
 
 async def test_sensors(hass):

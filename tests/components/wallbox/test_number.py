@@ -9,8 +9,13 @@ from homeassistant.components.wallbox import CHARGER_MAX_CHARGING_CURRENT_KEY
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
-from tests.components.wallbox import authorisation_response, entry, setup_integration
-from tests.components.wallbox.const import MOCK_NUMBER_ENTITY_ID
+from . import (
+    authorisation_response,
+    entry,
+    setup_integration,
+    setup_integration_platform_not_ready,
+)
+from .const import MOCK_NUMBER_ENTITY_ID
 
 
 async def test_wallbox_number_class(hass: HomeAssistant) -> None:
@@ -70,4 +75,16 @@ async def test_wallbox_number_class_connection_error(hass: HomeAssistant) -> Non
                 },
                 blocking=True,
             )
+    await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_wallbox_number_class_platform_not_ready(hass: HomeAssistant) -> None:
+    """Test wallbox lock not loaded on authentication error."""
+
+    await setup_integration_platform_not_ready(hass)
+
+    state = hass.states.get(MOCK_NUMBER_ENTITY_ID)
+
+    assert state is None
+
     await hass.config_entries.async_unload(entry.entry_id)

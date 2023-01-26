@@ -79,7 +79,10 @@ def _setup_androidtv(
     else:
         # Use "pure-python-adb" (communicate with ADB server)
         signer = None
-        adb_log = f"using ADB server at {config[CONF_ADB_SERVER_IP]}:{config[CONF_ADB_SERVER_PORT]}"
+        adb_log = (
+            "using ADB server at"
+            f" {config[CONF_ADB_SERVER_IP]}:{config[CONF_ADB_SERVER_PORT]}"
+        )
 
     return adbkey, signer, adb_log
 
@@ -149,7 +152,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ANDROID_DEV_OPT: entry.options.copy(),
     }
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

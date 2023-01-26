@@ -1,0 +1,23 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Do you want to set up iBeacon Tracker?"
+      }
+    },
+    "abort": {
+      "bluetooth_not_available": "At least one Bluetooth adapter or remote must be configured to use iBeacon Tracker.",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "iBeacons with an RSSI value lower than the Minimum RSSI will be ignored. If the integration is seeing neighboring iBeacons, increasing this value may help.",
+        "data": {
+          "min_rssi": "Minimum RSSI"
+        }
+      }
+    }
+  }
+}

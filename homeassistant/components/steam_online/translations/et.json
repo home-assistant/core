@@ -24,6 +24,12 @@
             }
         }
     },
+    "issues": {
+        "removed_yaml": {
+            "description": "Steami seadistamine YAML-i abil on eemaldatud.\n\nHome Assistant ei kasuta teie olemasolevat YAML-i konfiguratsiooni.\n\nEemaldage FAILIST CONFIGURATION.yaml YAML-konfiguratsioon ja taask\u00e4ivitage selle probleemi lahendamiseks Home Assistant.",
+            "title": "Steam YAML konfiguratsioon on eemaldatud"
+        }
+    },
     "options": {
         "error": {
             "unauthorized": "S\u00f5prade nimekiri on piiratud: vaata dokumentatsiooni kuidas n\u00e4ha k\u00f5iki teisi s\u00f5pru"

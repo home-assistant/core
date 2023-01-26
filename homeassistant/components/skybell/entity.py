@@ -16,6 +16,7 @@ class SkybellEntity(CoordinatorEntity[SkybellDataUpdateCoordinator]):
     """An HA implementation for Skybell entity."""
 
     _attr_attribution = "Data provided by Skybell.com"
+    _attr_has_entity_name = True
 
     def __init__(
         self, coordinator: SkybellDataUpdateCoordinator, description: EntityDescription
@@ -23,14 +24,12 @@ class SkybellEntity(CoordinatorEntity[SkybellDataUpdateCoordinator]):
         """Initialize a SkyBell entity."""
         super().__init__(coordinator)
         self.entity_description = description
-        if description.name != coordinator.device.name:
-            self._attr_name = f"{self._device.name} {description.name}"
         self._attr_unique_id = f"{self._device.device_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device.device_id)},
             manufacturer=DEFAULT_NAME,
             model=self._device.type,
-            name=self._device.name,
+            name=self._device.name.capitalize(),
             sw_version=self._device.firmware_ver,
         )
         if self._device.mac:

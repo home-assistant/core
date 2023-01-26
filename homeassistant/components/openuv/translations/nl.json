@@ -1,12 +1,19 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Locatie is al geconfigureerd"
+            "already_configured": "Locatie is al geconfigureerd",
+            "reauth_successful": "Herauthenticatie geslaagd"
         },
         "error": {
             "invalid_api_key": "Ongeldige API-sleutel"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API-sleutel"
+                },
+                "title": "Integratie herauthenticeren"
+            },
             "user": {
                 "data": {
                     "api_key": "API-sleutel",
@@ -16,6 +23,14 @@
                 },
                 "title": "Vul uw gegevens in"
             }
+        }
+    },
+    "issues": {
+        "deprecated_service_multiple_alternate_targets": {
+            "title": "De {deprecated_service} service wordt verwijderd"
+        },
+        "deprecated_service_single_alternate_target": {
+            "title": "De {deprecated_service} service wordt verwijderd"
         }
     },
     "options": {

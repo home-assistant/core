@@ -7,7 +7,8 @@
         "error": {
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
             "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
-            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
+            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba",
+            "unsupported_hardware": "V\u00e1\u0161 hardware {unsupported_device} nen\u00ed touto integrac\u00ed podporov\u00e1n."
         },
         "step": {
             "user": {

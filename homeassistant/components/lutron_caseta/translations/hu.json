@@ -11,7 +11,7 @@
         "flow_title": "{name} ({host})",
         "step": {
             "import_failed": {
-                "description": "Nem siker\u00fclt be\u00e1ll\u00edtani a bridge-t ({host}) a configuration.yaml f\u00e1jlb\u00f3l import\u00e1lva.",
+                "description": "Nem siker\u00fclt be\u00e1ll\u00edtani a configuration.yaml f\u00e1jlb\u00f3l import\u00e1lt bridge-t ({host} c\u00edmen).",
                 "title": "Nem siker\u00fclt import\u00e1lni a Cas\u00e9ta h\u00edd konfigur\u00e1ci\u00f3j\u00e1t."
             },
             "link": {
@@ -33,6 +33,9 @@
             "button_2": "M\u00e1sodik gomb",
             "button_3": "Harmadik gomb",
             "button_4": "Negyedik gomb",
+            "button_5": "\u00d6t\u00f6dik gomb",
+            "button_6": "Hatodik gomb",
+            "button_7": "Hetedik gomb",
             "close_1": "Bez\u00e1r\u00e1s 1.",
             "close_2": "Bez\u00e1r\u00e1s 2.",
             "close_3": "Bez\u00e1r\u00e1s 3.",

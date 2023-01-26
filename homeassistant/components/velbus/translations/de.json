@@ -10,10 +10,10 @@
         "step": {
             "user": {
                 "data": {
-                    "name": "Der Name f\u00fcr diese Velbus-Verbindung",
+                    "name": "Der Name f\u00fcr diese Velbus Verbindung",
                     "port": "Verbindungsdetails"
                 },
-                "title": "Definieren des Velbus-Verbindungstyps"
+                "title": "Definieren des Velbus Verbindungstyps"
             }
         }
     }

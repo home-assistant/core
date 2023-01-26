@@ -1,4 +1,5 @@
 """KMtronic Switch integration."""
+from typing import Any
 import urllib.parse
 
 from homeassistant.components.switch import SwitchEntity
@@ -54,7 +55,7 @@ class KMtronicSwitch(CoordinatorEntity, SwitchEntity):
             return not self._relay.is_energised
         return self._relay.is_energised
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         if self._reverse:
             await self._relay.de_energise()
@@ -62,7 +63,7 @@ class KMtronicSwitch(CoordinatorEntity, SwitchEntity):
             await self._relay.energise()
         self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         if self._reverse:
             await self._relay.energise()
@@ -70,7 +71,7 @@ class KMtronicSwitch(CoordinatorEntity, SwitchEntity):
             await self._relay.de_energise()
         self.async_write_ha_state()
 
-    async def async_toggle(self, **kwargs) -> None:
+    async def async_toggle(self, **kwargs: Any) -> None:
         """Toggle the switch."""
         await self._relay.toggle()
         self.async_write_ha_state()

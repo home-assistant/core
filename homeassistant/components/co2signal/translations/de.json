@@ -2,11 +2,11 @@
     "config": {
         "abort": {
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
-            "api_ratelimit": "API Ratelimit \u00fcberschritten",
+            "api_ratelimit": "API Ratenlimit \u00fcberschritten",
             "unknown": "Unerwarteter Fehler"
         },
         "error": {
-            "api_ratelimit": "API Ratelimit \u00fcberschritten",
+            "api_ratelimit": "API Ratenlimit \u00fcberschritten",
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
             "unknown": "Unerwarteter Fehler"
         },

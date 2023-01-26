@@ -1,7 +1,8 @@
 """Support for WebDav Calendar."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
+from functools import partial
 import logging
 import re
 
@@ -135,11 +136,13 @@ class WebDavCalendarEntity(CalendarEntity):
         """Return the next upcoming event."""
         return self._event
 
-    async def async_get_events(self, hass, start_date, end_date):
+    async def async_get_events(
+        self, hass: HomeAssistant, start_date: datetime, end_date: datetime
+    ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
         return await self.data.async_get_events(hass, start_date, end_date)
 
-    def update(self):
+    def update(self) -> None:
         """Update event data."""
         self.data.update()
         self._event = self.data.event
@@ -170,7 +173,13 @@ class WebDavCalendarData:
         """Get all events in a specific time frame."""
         # Get event list from the current calendar
         vevent_list = await hass.async_add_executor_job(
-            self.calendar.date_search, start_date, end_date
+            partial(
+                self.calendar.search,
+                start=start_date,
+                end=end_date,
+                event=True,
+                expand=True,
+            )
         )
         event_list = []
         for event in vevent_list:
@@ -182,9 +191,9 @@ class WebDavCalendarData:
                 continue
             event_list.append(
                 CalendarEvent(
-                    summary=vevent.summary.value,
-                    start=vevent.dtstart.value,
-                    end=self.get_end_date(vevent),
+                    summary=self.get_attr_value(vevent, "summary") or "",
+                    start=self.to_local(vevent.dtstart.value),
+                    end=self.to_local(self.get_end_date(vevent)),
                     location=self.get_attr_value(vevent, "location"),
                     description=self.get_attr_value(vevent, "description"),
                 )
@@ -200,7 +209,12 @@ class WebDavCalendarData:
 
         # We have to retrieve the results for the whole day as the server
         # won't return events that have already started
-        results = self.calendar.date_search(start_of_today, start_of_tomorrow)
+        results = self.calendar.search(
+            start=start_of_today,
+            end=start_of_tomorrow,
+            event=True,
+            expand=True,
+        )
 
         # Create new events for each recurrence of an event that happens today.
         # For recurring events, some servers return the original event with recurrence rules
@@ -262,11 +276,13 @@ class WebDavCalendarData:
             return
 
         # Populate the entity attributes with the event values
-        (summary, offset) = extract_offset(vevent.summary.value, OFFSET)
+        (summary, offset) = extract_offset(
+            self.get_attr_value(vevent, "summary") or "", OFFSET
+        )
         self.event = CalendarEvent(
             summary=summary,
-            start=vevent.dtstart.value,
-            end=self.get_end_date(vevent),
+            start=self.to_local(vevent.dtstart.value),
+            end=self.to_local(self.get_end_date(vevent)),
             location=self.get_attr_value(vevent, "location"),
             description=self.get_attr_value(vevent, "description"),
         )
@@ -304,14 +320,22 @@ class WebDavCalendarData:
     def to_datetime(obj):
         """Return a datetime."""
         if isinstance(obj, datetime):
-            if obj.tzinfo is None:
-                # floating value, not bound to any time zone in particular
-                # represent same time regardless of which time zone is currently being observed
-                return obj.replace(tzinfo=dt.DEFAULT_TIME_ZONE)
-            return obj
+            return WebDavCalendarData.to_local(obj)
         return dt.dt.datetime.combine(obj, dt.dt.time.min).replace(
             tzinfo=dt.DEFAULT_TIME_ZONE
         )
+
+    @staticmethod
+    def to_local(obj: datetime | date) -> datetime | date:
+        """Return a datetime as a local datetime, leaving dates unchanged.
+
+        This handles giving floating times a timezone for comparison
+        with all day events and dropping the custom timezone object
+        used by the caldav client and dateutil so the datetime can be copied.
+        """
+        if isinstance(obj, datetime):
+            return dt.as_local(obj)
+        return obj
 
     @staticmethod
     def get_attr_value(obj, attribute):

@@ -1,0 +1,29 @@
+{
+    "config": {
+        "error": {
+            "invalid_hostname": "Ogiltigt v\u00e4rdnamn"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "hostname": "V\u00e4rdnamnet f\u00f6r vilket DNS-fr\u00e5gan ska utf\u00f6ras",
+                    "resolver": "Resolver f\u00f6r IPV4-s\u00f6kning",
+                    "resolver_ipv6": "Resolver f\u00f6r IPV6-s\u00f6kning"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_resolver": "Ogiltig IP-adress f\u00f6r resolver"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "resolver": "Resolver f\u00f6r IPV4-s\u00f6kning",
+                    "resolver_ipv6": "Resolver f\u00f6r IPV6-s\u00f6kning"
+                }
+            }
+        }
+    }
+}

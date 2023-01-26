@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "cannot_connect": "Impossibile connettersi",
-            "not_insteon_device": "Dispositivo rilevato non \u00e8 un dispositivo Insteon",
+            "not_insteon_device": "Il dispositivo rilevato non \u00e8 un dispositivo Insteon",
             "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
         },
         "error": {
@@ -66,7 +66,7 @@
                 "data": {
                     "housecode": "Codice casa (a - p)",
                     "platform": "Piattaforma",
-                    "steps": "Livelli del dimmer (solo per dispositivi luminosi, predefiniti 22)",
+                    "steps": "Livelli di attenuazione (solo per dispositivi luminosi, predefiniti 22)",
                     "unitcode": "Codice unit\u00e0 (1 - 16)"
                 },
                 "description": "Cambia la password di Insteon Hub."

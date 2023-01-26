@@ -127,7 +127,7 @@ class PlaatoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def _show_api_method_form(
-        self, device_type: PlaatoDeviceType, errors: dict = None
+        self, device_type: PlaatoDeviceType, errors: dict | None = None
     ):
         data_schema = vol.Schema({vol.Optional(CONF_TOKEN, default=""): str})
 

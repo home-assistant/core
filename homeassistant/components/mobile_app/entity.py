@@ -43,10 +43,9 @@ class MobileAppEntity(RestoreEntity):
         if (state := await self.async_get_last_state()) is None:
             return
 
-        self.async_restore_last_state(state)
+        await self.async_restore_last_state(state)
 
-    @callback
-    def async_restore_last_state(self, last_state):
+    async def async_restore_last_state(self, last_state):
         """Restore previous state."""
         self._config[ATTR_SENSOR_STATE] = last_state.state
         self._config[ATTR_SENSOR_ATTRIBUTES] = {

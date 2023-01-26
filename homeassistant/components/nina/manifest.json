@@ -3,7 +3,7 @@
   "name": "NINA",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/nina",
-  "requirements": ["pynina==0.1.8"],
+  "requirements": ["pynina==0.2.0"],
   "dependencies": [],
   "codeowners": ["@DeerMaximum"],
   "iot_class": "cloud_polling",

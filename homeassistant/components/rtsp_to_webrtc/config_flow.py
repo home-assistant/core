@@ -11,10 +11,11 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from . import DATA_SERVER_URL, DOMAIN
+from . import CONF_STUN_SERVER, DATA_SERVER_URL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,7 +73,7 @@ class RTSPToWebRTCConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return None
 
     async def async_step_hassio(self, discovery_info: HassioServiceInfo) -> FlowResult:
-        """Prepare confiugration for the RTSPtoWebRTC server add-on discovery."""
+        """Prepare configuration for the RTSPtoWebRTC server add-on discovery."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
@@ -103,4 +104,43 @@ class RTSPToWebRTCConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=self._hassio_discovery["addon"],
             data={DATA_SERVER_URL: url},
+        )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> config_entries.OptionsFlow:
+        """Create an options flow."""
+        return OptionsFlowHandler(config_entry)
+
+
+class OptionsFlowHandler(config_entries.OptionsFlow):
+    """RTSPtoWeb Options flow."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_STUN_SERVER,
+                        description={
+                            "suggested_value": self.config_entry.options.get(
+                                CONF_STUN_SERVER
+                            ),
+                        },
+                    ): str,
+                }
+            ),
         )

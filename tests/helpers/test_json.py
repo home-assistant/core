@@ -2,6 +2,7 @@
 import datetime
 import json
 import time
+from typing import NamedTuple
 
 import pytest
 
@@ -9,10 +10,12 @@ from homeassistant import core
 from homeassistant.helpers.json import (
     ExtendedJSONEncoder,
     JSONEncoder,
+    json_bytes_strip_null,
     json_dumps,
     json_dumps_sorted,
 )
 from homeassistant.util import dt as dt_util
+from homeassistant.util.color import RGBColor
 
 
 @pytest.mark.parametrize("encoder", (JSONEncoder, ExtendedJSONEncoder))
@@ -96,3 +99,39 @@ def test_json_dumps_tuple_subclass():
     tt = time.struct_time((1999, 3, 17, 32, 44, 55, 2, 76, 0))
 
     assert json_dumps(tt) == "[1999,3,17,32,44,55,2,76,0]"
+
+
+def test_json_dumps_named_tuple_subclass():
+    """Test the json dumps a tuple subclass."""
+
+    class NamedTupleSubclass(NamedTuple):
+        """A NamedTuple subclass."""
+
+        name: str
+
+    nts = NamedTupleSubclass("a")
+
+    assert json_dumps(nts) == '["a"]'
+
+
+def test_json_dumps_rgb_color_subclass():
+    """Test the json dumps of RGBColor."""
+    rgb = RGBColor(4, 2, 1)
+
+    assert json_dumps(rgb) == "[4,2,1]"
+
+
+def test_json_bytes_strip_null():
+    """Test stripping nul from strings."""
+
+    assert json_bytes_strip_null("\0") == b'""'
+    assert json_bytes_strip_null("silly\0stuff") == b'"silly"'
+    assert json_bytes_strip_null(["one", "two\0", "three"]) == b'["one","two","three"]'
+    assert (
+        json_bytes_strip_null({"k1": "one", "k2": "two\0", "k3": "three"})
+        == b'{"k1":"one","k2":"two","k3":"three"}'
+    )
+    assert (
+        json_bytes_strip_null([[{"k1": {"k2": ["silly\0stuff"]}}]])
+        == b'[[{"k1":{"k2":["silly"]}}]]'
+    )

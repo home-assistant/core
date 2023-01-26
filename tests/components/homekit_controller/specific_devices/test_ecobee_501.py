@@ -1,7 +1,7 @@
 """Tests for Ecobee 501."""
 
 
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     SUPPORT_FAN_MODE,
     SUPPORT_TARGET_HUMIDITY,
     SUPPORT_TARGET_TEMPERATURE,
@@ -9,7 +9,7 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import STATE_ON
 
-from tests.components.homekit_controller.common import (
+from ..common import (
     HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     EntityTestInfo,
@@ -39,7 +39,7 @@ async def test_ecobee501_setup(hass):
                 EntityTestInfo(
                     entity_id="climate.my_ecobee",
                     friendly_name="My ecobee",
-                    unique_id="homekit-123456789016-16",
+                    unique_id="00:00:00:00:00:00_1_16",
                     supported_features=(
                         SUPPORT_TARGET_TEMPERATURE
                         | SUPPORT_TARGET_TEMPERATURE_RANGE
@@ -59,7 +59,7 @@ async def test_ecobee501_setup(hass):
                 EntityTestInfo(
                     entity_id="binary_sensor.my_ecobee_occupancy",
                     friendly_name="My ecobee Occupancy",
-                    unique_id="homekit-123456789016-57",
+                    unique_id="00:00:00:00:00:00_1_57",
                     unit_of_measurement=None,
                     state=STATE_ON,
                 ),

@@ -44,7 +44,7 @@ async def test_turn_on_with_timer_service(hass, mock_bridge, mock_api, monkeypat
     assert state.state == STATE_OFF
 
     with patch(
-        "homeassistant.components.switcher_kis.switch.SwitcherApi.control_device"
+        "homeassistant.components.switcher_kis.switch.SwitcherType1Api.control_device"
     ) as mock_control_device:
         await hass.services.async_call(
             DOMAIN,
@@ -74,7 +74,7 @@ async def test_set_auto_off_service(hass, mock_bridge, mock_api):
     entity_id = f"{SWITCH_DOMAIN}.{slugify(device.name)}"
 
     with patch(
-        "homeassistant.components.switcher_kis.switch.SwitcherApi.set_auto_shutdown"
+        "homeassistant.components.switcher_kis.switch.SwitcherType1Api.set_auto_shutdown"
     ) as mock_set_auto_shutdown:
         await hass.services.async_call(
             DOMAIN,
@@ -99,7 +99,7 @@ async def test_set_auto_off_service_fail(hass, mock_bridge, mock_api, caplog):
     entity_id = f"{SWITCH_DOMAIN}.{slugify(device.name)}"
 
     with patch(
-        "homeassistant.components.switcher_kis.switch.SwitcherApi.set_auto_shutdown",
+        "homeassistant.components.switcher_kis.switch.SwitcherType1Api.set_auto_shutdown",
         return_value=None,
     ) as mock_set_auto_shutdown:
         await hass.services.async_call(

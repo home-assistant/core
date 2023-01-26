@@ -1,6 +1,8 @@
 """Support for the Elgato Avea lights."""
 from __future__ import annotations
 
+from typing import Any
+
 import avea  # pylint: disable=import-error
 
 from homeassistant.components.light import (
@@ -46,7 +48,7 @@ class AveaLight(LightEntity):
         self._attr_name = light.name
         self._attr_brightness = light.brightness
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         if not kwargs:
             self._light.set_brightness(4095)
@@ -58,11 +60,11 @@ class AveaLight(LightEntity):
                 rgb = color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
                 self._light.set_rgb(rgb[0], rgb[1], rgb[2])
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         self._light.set_brightness(0)
 
-    def update(self):
+    def update(self) -> None:
         """Fetch new state data for this light.
 
         This is the only method that should fetch new data for Home Assistant.

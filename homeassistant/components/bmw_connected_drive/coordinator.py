@@ -21,7 +21,7 @@ SCAN_INTERVAL = timedelta(seconds=DEFAULT_SCAN_INTERVAL_SECONDS)
 _LOGGER = logging.getLogger(__name__)
 
 
-class BMWDataUpdateCoordinator(DataUpdateCoordinator):
+class BMWDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Class to manage fetching BMW data."""
 
     account: MyBMWAccount
@@ -33,7 +33,8 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator):
             entry.data[CONF_PASSWORD],
             get_region_from_name(entry.data[CONF_REGION]),
             observer_position=GPSPosition(hass.config.latitude, hass.config.longitude),
-            use_metric_units=hass.config.units.is_metric,
+            # Force metric system as BMW API apparently only returns metric values now
+            use_metric_units=True,
         )
         self.read_only = entry.options[CONF_READ_ONLY]
         self._entry = entry

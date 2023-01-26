@@ -1,7 +1,7 @@
 """Constants for the ezviz integration."""
 
 DOMAIN = "ezviz"
-MANUFACTURER = "Ezviz"
+MANUFACTURER = "EZVIZ"
 
 # Configuration
 ATTR_SERIAL = "serial"

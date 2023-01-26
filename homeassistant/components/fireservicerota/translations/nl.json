@@ -11,11 +11,10 @@
             "invalid_auth": "Ongeldige authenticatie"
         },
         "step": {
-            "reauth": {
+            "reauth_confirm": {
                 "data": {
                     "password": "Wachtwoord"
-                },
-                "description": "Authenticatietokens zijn ongeldig geworden, log in om ze opnieuw te maken."
+                }
             },
             "user": {
                 "data": {

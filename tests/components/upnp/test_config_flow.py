@@ -8,6 +8,7 @@ import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import ssdp
 from homeassistant.components.upnp.const import (
+    CONFIG_ENTRY_HOST,
     CONFIG_ENTRY_LOCATION,
     CONFIG_ENTRY_MAC_ADDRESS,
     CONFIG_ENTRY_ORIGINAL_UDN,
@@ -21,6 +22,7 @@ from homeassistant.core import HomeAssistant
 from .conftest import (
     TEST_DISCOVERY,
     TEST_FRIENDLY_NAME,
+    TEST_HOST,
     TEST_LOCATION,
     TEST_MAC_ADDRESS,
     TEST_ST,
@@ -45,7 +47,7 @@ async def test_flow_ssdp(hass: HomeAssistant):
         context={"source": config_entries.SOURCE_SSDP},
         data=TEST_DISCOVERY,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "ssdp_confirm"
 
     # Confirm via step ssdp_confirm.
@@ -53,7 +55,7 @@ async def test_flow_ssdp(hass: HomeAssistant):
         result["flow_id"],
         user_input={},
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_FRIENDLY_NAME
     assert result["data"] == {
         CONFIG_ENTRY_ST: TEST_ST,
@@ -61,6 +63,42 @@ async def test_flow_ssdp(hass: HomeAssistant):
         CONFIG_ENTRY_ORIGINAL_UDN: TEST_UDN,
         CONFIG_ENTRY_LOCATION: TEST_LOCATION,
         CONFIG_ENTRY_MAC_ADDRESS: TEST_MAC_ADDRESS,
+        CONFIG_ENTRY_HOST: TEST_HOST,
+    }
+
+
+@pytest.mark.usefixtures(
+    "ssdp_instant_discovery",
+    "mock_setup_entry",
+    "mock_get_source_ip",
+    "mock_mac_address_from_host",
+)
+async def test_flow_ssdp_ignore(hass: HomeAssistant):
+    """Test config flow: discovered + ignore through ssdp."""
+    # Discovered via step ssdp.
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=TEST_DISCOVERY,
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "ssdp_confirm"
+
+    # Ignore entry.
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IGNORE},
+        data={"unique_id": TEST_USN, "title": TEST_FRIENDLY_NAME},
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["title"] == TEST_FRIENDLY_NAME
+    assert result["data"] == {
+        CONFIG_ENTRY_ST: TEST_ST,
+        CONFIG_ENTRY_UDN: TEST_UDN,
+        CONFIG_ENTRY_ORIGINAL_UDN: TEST_UDN,
+        CONFIG_ENTRY_LOCATION: TEST_LOCATION,
+        CONFIG_ENTRY_MAC_ADDRESS: TEST_MAC_ADDRESS,
+        CONFIG_ENTRY_HOST: TEST_HOST,
     }
 
 
@@ -81,7 +119,7 @@ async def test_flow_ssdp_incomplete_discovery(hass: HomeAssistant):
             },
         ),
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "incomplete_discovery"
 
 
@@ -102,7 +140,7 @@ async def test_flow_ssdp_non_igd_device(hass: HomeAssistant):
             },
         ),
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "non_igd_device"
 
 
@@ -120,7 +158,7 @@ async def test_flow_ssdp_no_mac_address(hass: HomeAssistant):
         context={"source": config_entries.SOURCE_SSDP},
         data=TEST_DISCOVERY,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "ssdp_confirm"
 
     # Confirm via step ssdp_confirm.
@@ -128,7 +166,7 @@ async def test_flow_ssdp_no_mac_address(hass: HomeAssistant):
         result["flow_id"],
         user_input={},
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_FRIENDLY_NAME
     assert result["data"] == {
         CONFIG_ENTRY_ST: TEST_ST,
@@ -136,11 +174,12 @@ async def test_flow_ssdp_no_mac_address(hass: HomeAssistant):
         CONFIG_ENTRY_ORIGINAL_UDN: TEST_UDN,
         CONFIG_ENTRY_LOCATION: TEST_LOCATION,
         CONFIG_ENTRY_MAC_ADDRESS: None,
+        CONFIG_ENTRY_HOST: TEST_HOST,
     }
 
 
 @pytest.mark.usefixtures("mock_mac_address_from_host")
-async def test_flow_ssdp_discovery_changed_udn(hass: HomeAssistant):
+async def test_flow_ssdp_discovery_changed_udn_match_mac(hass: HomeAssistant):
     """Test config flow: discovery through ssdp, same device, but new UDN, matched on mac address."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -167,7 +206,39 @@ async def test_flow_ssdp_discovery_changed_udn(hass: HomeAssistant):
         context={"source": config_entries.SOURCE_SSDP},
         data=new_discovery,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "config_entry_updated"
+
+
+@pytest.mark.usefixtures("mock_mac_address_from_host")
+async def test_flow_ssdp_discovery_changed_udn_match_host(hass: HomeAssistant):
+    """Test config flow: discovery through ssdp, same device, but new UDN, matched on mac address."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_USN,
+        data={
+            CONFIG_ENTRY_ST: TEST_ST,
+            CONFIG_ENTRY_UDN: TEST_UDN,
+            CONFIG_ENTRY_ORIGINAL_UDN: TEST_UDN,
+            CONFIG_ENTRY_LOCATION: TEST_LOCATION,
+            CONFIG_ENTRY_HOST: TEST_HOST,
+        },
+        source=config_entries.SOURCE_SSDP,
+        state=config_entries.ConfigEntryState.LOADED,
+    )
+    entry.add_to_hass(hass)
+
+    # New discovery via step ssdp.
+    new_udn = TEST_UDN + "2"
+    new_discovery = deepcopy(TEST_DISCOVERY)
+    new_discovery.ssdp_usn = f"{new_udn}::{TEST_ST}"
+    new_discovery.upnp["_udn"] = new_udn
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=new_discovery,
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "config_entry_updated"
 
 
@@ -207,7 +278,7 @@ async def test_flow_ssdp_discovery_changed_udn_but_st_differs(hass: HomeAssistan
             context={"source": config_entries.SOURCE_SSDP},
             data=new_discovery,
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "ssdp_confirm"
 
     # UDN + ST different: New discovery via step ssdp.
@@ -225,7 +296,7 @@ async def test_flow_ssdp_discovery_changed_udn_but_st_differs(hass: HomeAssistan
             context={"source": config_entries.SOURCE_SSDP},
             data=new_discovery,
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "ssdp_confirm"
 
 
@@ -256,7 +327,7 @@ async def test_flow_ssdp_discovery_changed_location(hass: HomeAssistant):
         context={"source": config_entries.SOURCE_SSDP},
         data=new_discovery,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     # Test if location is updated.
@@ -285,7 +356,7 @@ async def test_flow_ssdp_discovery_ignored_entry(hass: HomeAssistant):
         context={"source": config_entries.SOURCE_SSDP},
         data=TEST_DISCOVERY,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -316,7 +387,7 @@ async def test_flow_ssdp_discovery_changed_udn_ignored_entry(hass: HomeAssistant
         context={"source": config_entries.SOURCE_SSDP},
         data=new_discovery,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "discovery_ignored"
 
 
@@ -332,7 +403,7 @@ async def test_flow_user(hass: HomeAssistant):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
     # Confirmed via step user.
@@ -340,7 +411,7 @@ async def test_flow_user(hass: HomeAssistant):
         result["flow_id"],
         user_input={"unique_id": TEST_USN},
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_FRIENDLY_NAME
     assert result["data"] == {
         CONFIG_ENTRY_ST: TEST_ST,
@@ -348,6 +419,7 @@ async def test_flow_user(hass: HomeAssistant):
         CONFIG_ENTRY_ORIGINAL_UDN: TEST_UDN,
         CONFIG_ENTRY_LOCATION: TEST_LOCATION,
         CONFIG_ENTRY_MAC_ADDRESS: TEST_MAC_ADDRESS,
+        CONFIG_ENTRY_HOST: TEST_HOST,
     }
 
 
@@ -362,5 +434,5 @@ async def test_flow_user_no_discovery(hass: HomeAssistant):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"

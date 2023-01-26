@@ -1,0 +1,10 @@
+{
+    "state": {
+        "tractive__tracker_state": {
+            "not_reporting": "Nehl\u00e1si sa",
+            "operational": "Prev\u00e1dzka",
+            "system_shutdown_user": "Vypnutie syst\u00e9mu pou\u017e\u00edvate\u013eom",
+            "system_startup": "Spustenie syst\u00e9mu"
+        }
+    }
+}

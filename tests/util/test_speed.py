@@ -11,10 +11,17 @@ from homeassistant.const import (
     SPEED_MILES_PER_HOUR,
     SPEED_MILLIMETERS_PER_DAY,
 )
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.speed as speed_util
 
 INVALID_SYMBOL = "bob"
 VALID_SYMBOL = SPEED_KILOMETERS_PER_HOUR
+
+
+def test_raise_deprecation_warning(caplog: pytest.LogCaptureFixture) -> None:
+    """Ensure that a warning is raised on use of convert."""
+    assert speed_util.convert(2, SPEED_INCHES_PER_DAY, SPEED_INCHES_PER_DAY) == 2
+    assert "use unit_conversion.SpeedConverter instead" in caplog.text
 
 
 def test_convert_same_unit():
@@ -33,10 +40,10 @@ def test_convert_same_unit():
 
 def test_convert_invalid_unit():
     """Test exception is thrown for invalid units."""
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         speed_util.convert(5, INVALID_SYMBOL, VALID_SYMBOL)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         speed_util.convert(5, VALID_SYMBOL, INVALID_SYMBOL)
 
 

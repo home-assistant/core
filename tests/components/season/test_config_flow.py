@@ -11,11 +11,7 @@ from homeassistant.components.season.const import (
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -29,16 +25,15 @@ async def test_full_user_flow(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == SOURCE_USER
-    assert "flow_id" in result
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_TYPE: TYPE_ASTRONOMICAL},
     )
 
-    assert result2.get("type") == RESULT_TYPE_CREATE_ENTRY
+    assert result2.get("type") == FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "Season"
     assert result2.get("data") == {CONF_TYPE: TYPE_ASTRONOMICAL}
 
@@ -56,7 +51,7 @@ async def test_single_instance_allowed(
         DOMAIN, context={"source": source}, data={CONF_TYPE: TYPE_ASTRONOMICAL}
     )
 
-    assert result.get("type") == RESULT_TYPE_ABORT
+    assert result.get("type") == FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
 
 
@@ -71,6 +66,6 @@ async def test_import_flow(
         data={CONF_NAME: "My Seasons", CONF_TYPE: TYPE_METEOROLOGICAL},
     )
 
-    assert result.get("type") == RESULT_TYPE_CREATE_ENTRY
+    assert result.get("type") == FlowResultType.CREATE_ENTRY
     assert result.get("title") == "My Seasons"
     assert result.get("data") == {CONF_TYPE: TYPE_METEOROLOGICAL}

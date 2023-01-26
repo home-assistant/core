@@ -179,7 +179,11 @@ class AmbientStation:
             # attempt forward setup of the config entry (because it will have
             # already been done):
             if not self._entry_setup_complete:
-                self._hass.config_entries.async_setup_platforms(self._entry, PLATFORMS)
+                self._hass.async_create_task(
+                    self._hass.config_entries.async_forward_entry_setups(
+                        self._entry, PLATFORMS
+                    )
+                )
                 self._entry_setup_complete = True
             self._ws_reconnect_delay = DEFAULT_SOCKET_MIN_RETRY
 
@@ -198,6 +202,7 @@ class AmbientStation:
 class AmbientWeatherEntity(Entity):
     """Define a base Ambient PWS entity."""
 
+    _attr_has_entity_name = True
     _attr_should_poll = False
 
     def __init__(
@@ -212,13 +217,14 @@ class AmbientWeatherEntity(Entity):
 
         public_device_id = get_public_device_id(mac_address)
         self._attr_device_info = DeviceInfo(
-            configuration_url=f"https://ambientweather.net/dashboard/{public_device_id}",
+            configuration_url=(
+                f"https://ambientweather.net/dashboard/{public_device_id}"
+            ),
             identifiers={(DOMAIN, mac_address)},
             manufacturer="Ambient Weather",
-            name=station_name,
+            name=station_name.capitalize(),
         )
 
-        self._attr_name = f"{station_name}_{description.name}"
         self._attr_unique_id = f"{mac_address}_{description.key}"
         self._mac_address = mac_address
         self.entity_description = description

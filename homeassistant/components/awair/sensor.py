@@ -1,12 +1,14 @@
 """Support for Awair sensors."""
 from __future__ import annotations
 
+from typing import cast
+
 from python_awair.air_data import AirData
-from python_awair.devices import AwairDevice
+from python_awair.devices import AwairBaseDevice, AwairLocalDevice
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION, ATTR_CONNECTIONS, ATTR_NAME
+from homeassistant.const import ATTR_CONNECTIONS, ATTR_SW_VERSION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
@@ -73,10 +75,12 @@ class AwairSensor(CoordinatorEntity[AwairDataUpdateCoordinator], SensorEntity):
     """Defines an Awair sensor entity."""
 
     entity_description: AwairSensorEntityDescription
+    _attr_has_entity_name = True
+    _attr_attribution = ATTRIBUTION
 
     def __init__(
         self,
-        device: AwairDevice,
+        device: AwairBaseDevice,
         coordinator: AwairDataUpdateCoordinator,
         description: AwairSensorEntityDescription,
     ) -> None:
@@ -84,14 +88,6 @@ class AwairSensor(CoordinatorEntity[AwairDataUpdateCoordinator], SensorEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self._device = device
-
-    @property
-    def name(self) -> str | None:
-        """Return the name of the sensor."""
-        if self._device.name:
-            return f"{self._device.name} {self.entity_description.name}"
-
-        return self.entity_description.name
 
     @property
     def unique_id(self) -> str:
@@ -182,7 +178,7 @@ class AwairSensor(CoordinatorEntity[AwairDataUpdateCoordinator], SensorEntity):
         https://docs.developer.getawair.com/?version=latest#awair-score-and-index
         """
         sensor_type = self.entity_description.key
-        attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
+        attrs: dict = {}
         if not self._air_data:
             return attrs
         if sensor_type in self._air_data.indices:
@@ -199,23 +195,27 @@ class AwairSensor(CoordinatorEntity[AwairDataUpdateCoordinator], SensorEntity):
             identifiers={(DOMAIN, self._device.uuid)},
             manufacturer="Awair",
             model=self._device.model,
+            name=(
+                self._device.name
+                or cast(ConfigEntry, self.coordinator.config_entry).title
+                or f"{self._device.model} ({self._device.device_id})"
+            ),
         )
-
-        if self._device.name:
-            info[ATTR_NAME] = self._device.name
 
         if self._device.mac_address:
             info[ATTR_CONNECTIONS] = {
                 (dr.CONNECTION_NETWORK_MAC, self._device.mac_address)
             }
 
+        if isinstance(self._device, AwairLocalDevice):
+            info[ATTR_SW_VERSION] = self._device.fw_version
+
         return info
 
     @property
     def _air_data(self) -> AirData | None:
         """Return the latest data for our device, or None."""
-        result: AwairResult | None = self.coordinator.data.get(self._device.uuid)
-        if result:
+        if result := self.coordinator.data.get(self._device.uuid):
             return result.air_data
 
         return None

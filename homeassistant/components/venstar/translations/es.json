@@ -14,9 +14,22 @@
                     "password": "Contrase\u00f1a",
                     "pin": "C\u00f3digo PIN",
                     "ssl": "Utiliza un certificado SSL",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 },
                 "title": "Conectar con el termostato Venstar"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "schedule_part": {
+                "state": {
+                    "day": "D\u00eda",
+                    "evening": "Anochecer",
+                    "inactive": "Inactivo",
+                    "morning": "Ma\u00f1ana",
+                    "night": "Noche"
+                }
             }
         }
     }

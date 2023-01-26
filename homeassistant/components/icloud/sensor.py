@@ -6,7 +6,7 @@ from typing import Any
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -20,8 +20,8 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up device tracker for iCloud component."""
-    account = hass.data[DOMAIN][entry.unique_id]
-    tracked = set()
+    account: IcloudAccount = hass.data[DOMAIN][entry.unique_id]
+    tracked = set[str]()
 
     @callback
     def update_account():
@@ -47,8 +47,7 @@ def add_entities(account, async_add_entities, tracked):
         new_tracked.append(IcloudDeviceBatterySensor(account, device))
         tracked.add(dev_id)
 
-    if new_tracked:
-        async_add_entities(new_tracked, True)
+    async_add_entities(new_tracked, True)
 
 
 class IcloudDeviceBatterySensor(SensorEntity):
@@ -56,12 +55,13 @@ class IcloudDeviceBatterySensor(SensorEntity):
 
     _attr_device_class = SensorDeviceClass.BATTERY
     _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_should_poll = False
 
     def __init__(self, account: IcloudAccount, device: IcloudDevice) -> None:
         """Initialize the battery sensor."""
         self._account = account
         self._device = device
-        self._unsub_dispatcher = None
+        self._unsub_dispatcher: CALLBACK_TYPE | None = None
 
     @property
     def unique_id(self) -> str:
@@ -74,7 +74,7 @@ class IcloudDeviceBatterySensor(SensorEntity):
         return f"{self._device.name} battery state"
 
     @property
-    def native_value(self) -> int:
+    def native_value(self) -> int | None:
         """Battery state percentage."""
         return self._device.battery_level
 
@@ -102,17 +102,13 @@ class IcloudDeviceBatterySensor(SensorEntity):
             name=self._device.name,
         )
 
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
-
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register state update callback."""
         self._unsub_dispatcher = async_dispatcher_connect(
             self.hass, self._account.signal_device_update, self.async_write_ha_state
         )
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Clean up after entity before removal."""
-        self._unsub_dispatcher()
+        if self._unsub_dispatcher:
+            self._unsub_dispatcher()

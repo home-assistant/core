@@ -6,11 +6,7 @@ from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.components.baf.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import MOCK_NAME, MOCK_UUID, MockBAFDevice
 
@@ -45,7 +41,7 @@ async def test_form_user(hass):
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == MOCK_NAME
     assert result2["data"] == {CONF_IP_ADDRESS: "127.0.0.1"}
     assert len(mock_setup_entry.mock_calls) == 1
@@ -63,7 +59,7 @@ async def test_form_cannot_connect(hass):
             {CONF_IP_ADDRESS: "127.0.0.1"},
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {CONF_IP_ADDRESS: "cannot_connect"}
 
 
@@ -79,7 +75,7 @@ async def test_form_unknown_exception(hass):
             {CONF_IP_ADDRESS: "127.0.0.1"},
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -99,7 +95,7 @@ async def test_zeroconf_discovery(hass):
             type="mock_type",
         ),
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
     with patch(
@@ -137,7 +133,7 @@ async def test_zeroconf_updates_existing_ip(hass):
             type="mock_type",
         ),
     )
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_IP_ADDRESS] == "127.0.0.1"
 
@@ -157,7 +153,7 @@ async def test_zeroconf_rejects_ipv6(hass):
             type="mock_type",
         ),
     )
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "ipv6_not_supported"
 
 
@@ -176,7 +172,7 @@ async def test_user_flow_is_not_blocked_by_discovery(hass):
             type="mock_type",
         ),
     )
-    assert discovery_result["type"] == RESULT_TYPE_FORM
+    assert discovery_result["type"] == FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -194,7 +190,7 @@ async def test_user_flow_is_not_blocked_by_discovery(hass):
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == MOCK_NAME
     assert result2["data"] == {CONF_IP_ADDRESS: "127.0.0.1"}
     assert len(mock_setup_entry.mock_calls) == 1

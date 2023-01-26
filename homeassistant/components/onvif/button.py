@@ -30,9 +30,7 @@ class RebootButton(ONVIFBaseEntity, ButtonEntity):
         """Initialize the button entity."""
         super().__init__(device)
         self._attr_name = f"{self.device.name} Reboot"
-        self._attr_unique_id = (
-            f"{self.device.info.mac or self.device.info.serial_number}_reboot"
-        )
+        self._attr_unique_id = f"{self.mac_or_serial}_reboot"
 
     async def async_press(self) -> None:
         """Send out a SystemReboot command."""
@@ -49,7 +47,7 @@ class SetSystemDateAndTimeButton(ONVIFBaseEntity, ButtonEntity):
         """Initialize the button entity."""
         super().__init__(device)
         self._attr_name = f"{self.device.name} Set System Date and Time"
-        self._attr_unique_id = f"{self.device.info.mac or self.device.info.serial_number}_setsystemdatetime"
+        self._attr_unique_id = f"{self.mac_or_serial}_setsystemdatetime"
 
     async def async_press(self) -> None:
         """Send out a SetSystemDateAndTime command."""

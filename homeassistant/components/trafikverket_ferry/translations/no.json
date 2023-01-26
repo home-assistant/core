@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Kontoen er allerede konfigurert",
-            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
+            "reauth_successful": "Re-autentisering var vellykket"
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
@@ -24,6 +24,19 @@
                     "to": "Til havn",
                     "weekday": "Hverdager"
                 }
+            }
+        }
+    },
+    "selector": {
+        "weekday": {
+            "options": {
+                "fri": "Fredag",
+                "mon": "Mandag",
+                "sat": "L\u00f8rdag",
+                "sun": "S\u00f8ndag",
+                "thu": "Torsdag",
+                "tue": "Tirsdag",
+                "wed": "Onsdag"
             }
         }
     }

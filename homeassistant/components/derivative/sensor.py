@@ -1,9 +1,10 @@
 """Numeric derivative of data coming from a source sensor over time."""
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from decimal import Decimal, DecimalException
 import logging
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
@@ -15,12 +16,9 @@ from homeassistant.const import (
     CONF_SOURCE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    TIME_DAYS,
-    TIME_HOURS,
-    TIME_MINUTES,
-    TIME_SECONDS,
+    UnitOfTime,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
@@ -34,8 +32,6 @@ from .const import (
     CONF_UNIT_PREFIX,
     CONF_UNIT_TIME,
 )
-
-# mypy: allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,10 +51,10 @@ UNIT_PREFIXES = {
 
 # SI Time prefixes
 UNIT_TIME = {
-    TIME_SECONDS: 1,
-    TIME_MINUTES: 60,
-    TIME_HOURS: 60 * 60,
-    TIME_DAYS: 24 * 60 * 60,
+    UnitOfTime.SECONDS: 1,
+    UnitOfTime.MINUTES: 60,
+    UnitOfTime.HOURS: 60 * 60,
+    UnitOfTime.DAYS: 24 * 60 * 60,
 }
 
 ICON = "mdi:chart-line"
@@ -72,7 +68,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_SOURCE): cv.entity_id,
         vol.Optional(CONF_ROUND_DIGITS, default=DEFAULT_ROUND): vol.Coerce(int),
         vol.Optional(CONF_UNIT_PREFIX, default=None): vol.In(UNIT_PREFIXES),
-        vol.Optional(CONF_UNIT_TIME, default=TIME_HOURS): vol.In(UNIT_TIME),
+        vol.Optional(CONF_UNIT_TIME, default=UnitOfTime.HOURS): vol.In(UNIT_TIME),
         vol.Optional(CONF_UNIT): cv.string,
         vol.Optional(CONF_TIME_WINDOW, default=DEFAULT_TIME_WINDOW): cv.time_period,
     }
@@ -133,42 +129,45 @@ async def async_setup_platform(
 class DerivativeSensor(RestoreEntity, SensorEntity):
     """Representation of an derivative sensor."""
 
+    _attr_icon = ICON
+    _attr_should_poll = False
+
     def __init__(
         self,
         *,
-        name,
-        round_digits,
-        source_entity,
-        time_window,
-        unit_of_measurement,
-        unit_prefix,
-        unit_time,
-        unique_id,
-    ):
+        name: str | None,
+        round_digits: int,
+        source_entity: str,
+        time_window: timedelta,
+        unit_of_measurement: str | None,
+        unit_prefix: str | None,
+        unit_time: UnitOfTime,
+        unique_id: str | None,
+    ) -> None:
         """Initialize the derivative sensor."""
         self._attr_unique_id = unique_id
         self._sensor_source_id = source_entity
         self._round_digits = round_digits
-        self._state = 0
-        self._state_list = (
-            []
-        )  # List of tuples with (timestamp_start, timestamp_end, derivative)
+        self._state: float | int | Decimal = 0
+        # List of tuples with (timestamp_start, timestamp_end, derivative)
+        self._state_list: list[tuple[datetime, datetime, Decimal]] = []
 
-        self._name = name if name is not None else f"{source_entity} derivative"
+        self._attr_name = name if name is not None else f"{source_entity} derivative"
+        self._attr_extra_state_attributes = {ATTR_SOURCE_ID: source_entity}
 
         if unit_of_measurement is None:
             final_unit_prefix = "" if unit_prefix is None else unit_prefix
             self._unit_template = f"{final_unit_prefix}{{}}/{unit_time}"
             # we postpone the definition of unit_of_measurement to later
-            self._unit_of_measurement = None
+            self._attr_native_unit_of_measurement = None
         else:
-            self._unit_of_measurement = unit_of_measurement
+            self._attr_native_unit_of_measurement = unit_of_measurement
 
         self._unit_prefix = UNIT_PREFIXES[unit_prefix]
         self._unit_time = UNIT_TIME[unit_time]
         self._time_window = time_window.total_seconds()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         if (state := await self.async_get_last_state()) is not None:
@@ -178,20 +177,21 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
                 _LOGGER.warning("Could not restore last state: %s", err)
 
         @callback
-        def calc_derivative(event):
+        def calc_derivative(event: Event) -> None:
             """Handle the sensor state changes."""
-            old_state = event.data.get("old_state")
-            new_state = event.data.get("new_state")
+            old_state: State | None
+            new_state: State | None
             if (
-                old_state is None
+                (old_state := event.data.get("old_state")) is None
                 or old_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+                or (new_state := event.data.get("new_state")) is None
                 or new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
             ):
                 return
 
-            if self._unit_of_measurement is None:
+            if self.native_unit_of_measurement is None:
                 unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-                self._unit_of_measurement = self._unit_template.format(
+                self._attr_native_unit_of_measurement = self._unit_template.format(
                     "" if unit is None else unit
                 )
 
@@ -229,7 +229,9 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
                 (old_state.last_updated, new_state.last_updated, new_derivative)
             )
 
-            def calculate_weight(start, end, now):
+            def calculate_weight(
+                start: datetime, end: datetime, now: datetime
+            ) -> float:
                 window_start = now - timedelta(seconds=self._time_window)
                 if start < window_start:
                     weight = (end - window_start).total_seconds() / self._time_window
@@ -242,7 +244,7 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
             if elapsed_time > self._time_window:
                 derivative = new_derivative
             else:
-                derivative = 0
+                derivative = Decimal(0)
                 for (start, end, value) in self._state_list:
                     weight = calculate_weight(start, end, new_state.last_updated)
                     derivative = derivative + (value * Decimal(weight))
@@ -257,31 +259,9 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
         )
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def native_value(self):
+    def native_value(self) -> float | int | Decimal:
         """Return the state of the sensor."""
-        return round(self._state, self._round_digits)
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit_of_measurement
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes of the sensor."""
-        return {ATTR_SOURCE_ID: self._sensor_source_id}
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return ICON
+        value = round(self._state, self._round_digits)
+        if TYPE_CHECKING:
+            assert isinstance(value, (float, int, Decimal))
+        return value

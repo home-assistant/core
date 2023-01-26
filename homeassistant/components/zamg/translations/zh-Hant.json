@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "station_not_found": "\u65bc zamg \u627e\u4e0d\u5230\u7ad9\u9ede ID"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "station_not_found": "\u65bc zamg \u627e\u4e0d\u5230\u7ad9\u9ede ID"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "station_id": "\u76e3\u6e2c\u7ad9 ID\uff08\u9810\u8a2d\u70ba\u6700\u8fd1\u7684\u76e3\u6e2c\u7ad9\uff09"
+                },
+                "description": "\u8a2d\u5b9a ZAMG \u4ee5\u6574\u5408\u81f3 Home Assistant\u3002"
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "\u4f7f\u7528 YAML \u8a2d\u5b9a\u7684 ZAMG \u5373\u5c07\u9032\u884c\u79fb\u9664\u3002\n\n\u65e2\u6709\u7684 YAML \u8a2d\u5b9a\u5c07\u81ea\u52d5\u532f\u5165\u81f3 UI \u5167\u3002\n\n\u8acb\u65bc configuration.yaml \u6a94\u6848\u4e2d\u79fb\u9664 ZAMG YAML \u8a2d\u5b9a\u4e26\u91cd\u65b0\u555f\u52d5 Home Assistant \u4ee5\u4fee\u6b63\u6b64\u554f\u984c\u3002",
+            "title": "ZAMG YAML \u8a2d\u5b9a\u5373\u5c07\u79fb\u9664"
+        }
+    }
+}

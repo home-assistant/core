@@ -85,7 +85,6 @@ SENSORS = (
     "nextcloud_server_php_upload_max_filesize",
     "nextcloud_database_type",
     "nextcloud_database_version",
-    "nextcloud_database_version",
     "nextcloud_activeUsers_last5minutes",
     "nextcloud_activeUsers_last1hour",
     "nextcloud_activeUsers_last24hours",
@@ -101,6 +100,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ncm = NextcloudMonitor(conf[CONF_URL], conf[CONF_USERNAME], conf[CONF_PASSWORD])
     except NextcloudMonitorError:
         _LOGGER.error("Nextcloud setup failed - Check configuration")
+        return False
 
     hass.data[DOMAIN] = get_data_points(ncm.data)
     hass.data[DOMAIN]["instance"] = conf[CONF_URL]

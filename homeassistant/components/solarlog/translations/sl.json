@@ -10,7 +10,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Ime gostitelja ali ip naslov va\u0161e naprave Solar-Log",
+                    "host": "Gostitelj",
                     "name": "Predpona, ki jo \u017eelite uporabiti za senzorje Solar-log"
                 },
                 "title": "Dolo\u010dite povezavo Solar-Log"

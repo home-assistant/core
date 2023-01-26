@@ -9,6 +9,7 @@ from homeassistant.const import CONF_MAC, CONF_PASSWORD, CONF_UNIQUE_ID, CONF_US
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN as AXIS_DOMAIN
+from .device import AxisNetworkDevice
 
 REDACT_CONFIG = {CONF_MAC, CONF_PASSWORD, CONF_UNIQUE_ID, CONF_USERNAME}
 REDACT_BASIC_DEVICE_INFO = {"SerialNumber", "SocSerialNumber"}
@@ -19,7 +20,7 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
+    device: AxisNetworkDevice = hass.data[AXIS_DOMAIN][config_entry.entry_id]
     diag: dict[str, Any] = {}
 
     diag["config"] = async_redact_data(config_entry.as_dict(), REDACT_CONFIG)

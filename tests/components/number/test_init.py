@@ -14,17 +14,24 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
+from homeassistant.components.number.const import (
+    DEVICE_CLASS_UNITS as NUMBER_DEVICE_CLASS_UNITS,
+)
+from homeassistant.components.sensor import (
+    DEVICE_CLASS_UNITS as SENSOR_DEVICE_CLASS_UNITS,
+    SensorDeviceClass,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_PLATFORM,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.setup import async_setup_component
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
+from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from tests.common import mock_restore_cache_with_extra_data
 
@@ -434,9 +441,9 @@ async def test_deprecated_methods(
     "native_min_value, state_min_value, native_step, state_step",
     [
         (
-            IMPERIAL_SYSTEM,
-            TEMP_FAHRENHEIT,
-            TEMP_FAHRENHEIT,
+            US_CUSTOMARY_SYSTEM,
+            UnitOfTemperature.FAHRENHEIT,
+            UnitOfTemperature.FAHRENHEIT,
             100,
             100,
             50,
@@ -449,9 +456,9 @@ async def test_deprecated_methods(
             3,
         ),
         (
-            IMPERIAL_SYSTEM,
-            TEMP_CELSIUS,
-            TEMP_FAHRENHEIT,
+            US_CUSTOMARY_SYSTEM,
+            UnitOfTemperature.CELSIUS,
+            UnitOfTemperature.FAHRENHEIT,
             38,
             100,
             10,
@@ -465,8 +472,8 @@ async def test_deprecated_methods(
         ),
         (
             METRIC_SYSTEM,
-            TEMP_FAHRENHEIT,
-            TEMP_CELSIUS,
+            UnitOfTemperature.FAHRENHEIT,
+            UnitOfTemperature.CELSIUS,
             100,
             38,
             50,
@@ -480,8 +487,8 @@ async def test_deprecated_methods(
         ),
         (
             METRIC_SYSTEM,
-            TEMP_CELSIUS,
-            TEMP_CELSIUS,
+            UnitOfTemperature.CELSIUS,
+            UnitOfTemperature.CELSIUS,
             38,
             38,
             10,
@@ -602,7 +609,7 @@ async def test_restore_number_save_state(
             native_max_value=200.0,
             native_min_value=-10.0,
             native_step=2.0,
-            native_unit_of_measurement=TEMP_FAHRENHEIT,
+            native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
             native_value=123.0,
             device_class=NumberDeviceClass.TEMPERATURE,
         )
@@ -689,3 +696,195 @@ async def test_restore_number_restore_state(
     assert entity0.native_value == native_value
     assert type(entity0.native_value) == native_value_type
     assert entity0.native_unit_of_measurement == uom
+
+
+@pytest.mark.parametrize(
+    "device_class,native_unit,custom_unit,state_unit,native_value,custom_value",
+    [
+        # Not a supported temperature unit
+        (
+            NumberDeviceClass.TEMPERATURE,
+            UnitOfTemperature.CELSIUS,
+            "my_temperature_unit",
+            UnitOfTemperature.CELSIUS,
+            1000,
+            1000,
+        ),
+        (
+            NumberDeviceClass.TEMPERATURE,
+            UnitOfTemperature.CELSIUS,
+            UnitOfTemperature.FAHRENHEIT,
+            UnitOfTemperature.FAHRENHEIT,
+            37.5,
+            99.5,
+        ),
+        (
+            NumberDeviceClass.TEMPERATURE,
+            UnitOfTemperature.FAHRENHEIT,
+            UnitOfTemperature.CELSIUS,
+            UnitOfTemperature.CELSIUS,
+            100,
+            38.0,
+        ),
+    ],
+)
+async def test_custom_unit(
+    hass,
+    enable_custom_integrations,
+    device_class,
+    native_unit,
+    custom_unit,
+    state_unit,
+    native_value,
+    custom_value,
+):
+    """Test custom unit."""
+    entity_registry = er.async_get(hass)
+
+    entry = entity_registry.async_get_or_create("number", "test", "very_unique")
+    entity_registry.async_update_entity_options(
+        entry.entity_id, "number", {"unit_of_measurement": custom_unit}
+    )
+    await hass.async_block_till_done()
+
+    platform = getattr(hass.components, "test.number")
+    platform.init(empty=True)
+    platform.ENTITIES.append(
+        platform.MockNumberEntity(
+            name="Test",
+            native_value=native_value,
+            native_unit_of_measurement=native_unit,
+            device_class=device_class,
+            unique_id="very_unique",
+        )
+    )
+
+    entity0 = platform.ENTITIES[0]
+    assert await async_setup_component(hass, "number", {"number": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity0.entity_id)
+    assert float(state.state) == pytest.approx(float(custom_value))
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == state_unit
+
+
+@pytest.mark.parametrize(
+    "native_unit, custom_unit, used_custom_unit, default_unit, native_value, custom_value, default_value",
+    [
+        (
+            UnitOfTemperature.CELSIUS,
+            UnitOfTemperature.FAHRENHEIT,
+            UnitOfTemperature.FAHRENHEIT,
+            UnitOfTemperature.CELSIUS,
+            37.5,
+            99.5,
+            37.5,
+        ),
+        (
+            UnitOfTemperature.FAHRENHEIT,
+            UnitOfTemperature.FAHRENHEIT,
+            UnitOfTemperature.FAHRENHEIT,
+            UnitOfTemperature.CELSIUS,
+            100,
+            100,
+            38.0,
+        ),
+        # Not a supported temperature unit
+        (
+            UnitOfTemperature.CELSIUS,
+            "no_unit",
+            UnitOfTemperature.CELSIUS,
+            UnitOfTemperature.CELSIUS,
+            1000,
+            1000,
+            1000,
+        ),
+    ],
+)
+async def test_custom_unit_change(
+    hass,
+    enable_custom_integrations,
+    native_unit,
+    custom_unit,
+    used_custom_unit,
+    default_unit,
+    native_value,
+    custom_value,
+    default_value,
+):
+    """Test custom unit changes are picked up."""
+    entity_registry = er.async_get(hass)
+    platform = getattr(hass.components, "test.number")
+    platform.init(empty=True)
+    platform.ENTITIES.append(
+        platform.MockNumberEntity(
+            name="Test",
+            native_value=native_value,
+            native_unit_of_measurement=native_unit,
+            device_class=NumberDeviceClass.TEMPERATURE,
+            unique_id="very_unique",
+        )
+    )
+
+    entity0 = platform.ENTITIES[0]
+    assert await async_setup_component(hass, "number", {"number": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    # Default unit conversion according to unit system
+    state = hass.states.get(entity0.entity_id)
+    assert float(state.state) == pytest.approx(float(default_value))
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == default_unit
+
+    entity_registry.async_update_entity_options(
+        "number.test", "number", {"unit_of_measurement": custom_unit}
+    )
+    await hass.async_block_till_done()
+
+    # Unit conversion to the custom unit
+    state = hass.states.get(entity0.entity_id)
+    assert float(state.state) == pytest.approx(float(custom_value))
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == used_custom_unit
+
+    entity_registry.async_update_entity_options(
+        "number.test", "number", {"unit_of_measurement": native_unit}
+    )
+    await hass.async_block_till_done()
+
+    # Unit conversion to another custom unit
+    state = hass.states.get(entity0.entity_id)
+    assert float(state.state) == pytest.approx(float(native_value))
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == native_unit
+
+    entity_registry.async_update_entity_options("number.test", "number", None)
+    await hass.async_block_till_done()
+
+    # Default unit conversion according to unit system
+    state = hass.states.get(entity0.entity_id)
+    assert float(state.state) == pytest.approx(float(default_value))
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == default_unit
+
+
+def test_device_classes_aligned():
+    """Make sure all sensor device classes are also available in NumberDeviceClass."""
+
+    non_numeric_device_classes = {
+        SensorDeviceClass.DATE,
+        SensorDeviceClass.DURATION,
+        SensorDeviceClass.ENUM,
+        SensorDeviceClass.TIMESTAMP,
+    }
+
+    for device_class in SensorDeviceClass:
+        if device_class in non_numeric_device_classes:
+            continue
+
+        assert hasattr(NumberDeviceClass, device_class.name)
+        assert getattr(NumberDeviceClass, device_class.name).value == device_class.value
+
+    for device_class in SENSOR_DEVICE_CLASS_UNITS:
+        if device_class in non_numeric_device_classes:
+            continue
+        assert (
+            SENSOR_DEVICE_CLASS_UNITS[device_class]
+            == NUMBER_DEVICE_CLASS_UNITS[device_class]
+        )

@@ -4,6 +4,7 @@
             "already_configured": "Device is already configured",
             "auth_failed": "Failed to retrieve application api key",
             "cannot_connect": "Failed to connect",
+            "reauth_successful": "Re-authentication was successful",
             "unknown": "Unexpected error"
         },
         "error": {
@@ -15,6 +16,11 @@
             "get_api_key": "Open the OctoPrint UI and click 'Allow' on the Access Request for 'Home Assistant'."
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "username": "Username"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Host",

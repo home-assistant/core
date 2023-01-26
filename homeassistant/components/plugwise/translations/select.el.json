@@ -1,0 +1,17 @@
+{
+    "state": {
+        "plugwise__dhw_mode": {
+            "auto": "\u0391\u03c5\u03c4\u03cc\u03bc\u03b1\u03c4\u03bf",
+            "boost": "\u0395\u03bd\u03af\u03c3\u03c7\u03c5\u03c3\u03b7",
+            "comfort": "\u0386\u03bd\u03b5\u03c3\u03b7",
+            "off": "\u0391\u03bd\u03b5\u03bd\u03b5\u03c1\u03b3\u03cc"
+        },
+        "plugwise__regulation_mode": {
+            "bleeding_cold": "\u0391\u03b9\u03bc\u03bf\u03c1\u03c1\u03b1\u03b3\u03af\u03b1 \u03ba\u03c1\u03cd\u03b1",
+            "bleeding_hot": "\u0391\u03b9\u03bc\u03bf\u03c1\u03c1\u03b1\u03b3\u03af\u03b1 \u03ba\u03b1\u03c5\u03c4\u03ae",
+            "cooling": "\u03a8\u03cd\u03be\u03b7",
+            "heating": "\u0398\u03ad\u03c1\u03bc\u03b1\u03bd\u03c3\u03b7",
+            "off": "\u0391\u03bd\u03b5\u03bd\u03b5\u03c1\u03b3\u03cc"
+        }
+    }
+}

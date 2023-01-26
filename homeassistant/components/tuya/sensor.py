@@ -14,11 +14,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ELECTRIC_CURRENT_AMPERE,
-    ELECTRIC_POTENTIAL_VOLT,
     PERCENTAGE,
-    POWER_KILO_WATT,
-    TIME_MINUTES,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfPower,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -34,7 +34,6 @@ from .const import (
     TUYA_DISCOVERY_NEW,
     DPCode,
     DPType,
-    TuyaDeviceClass,
     UnitOfMeasurement,
 )
 
@@ -58,7 +57,7 @@ BATTERY_SENSORS: tuple[TuyaSensorEntityDescription, ...] = (
     ),
     TuyaSensorEntityDescription(
         key=DPCode.BATTERY_STATE,
-        name="Battery State",
+        name="Battery state",
         icon="mdi:battery",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -90,7 +89,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             key=DPCode.GAS_SENSOR_VALUE,
             name="Gas",
             icon="mdi:gas-cylinder",
-            device_class=SensorStateClass.MEASUREMENT,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CH4_SENSOR_VALUE,
@@ -99,26 +98,26 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.VOC_VALUE,
-            name="Volatile Organic Compound",
+            name="Volatile organic compound",
             device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PM25_VALUE,
-            name="Particulate Matter 2.5 µm",
+            name="Particulate matter 2.5 µm",
             device_class=SensorDeviceClass.PM25,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CO_VALUE,
-            name="Carbon Monoxide",
+            name="Carbon monoxide",
             icon="mdi:molecule-co",
             device_class=SensorDeviceClass.CO,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CO2_VALUE,
-            name="Carbon Dioxide",
+            name="Carbon dioxide",
             icon="mdi:molecule-co2",
             device_class=SensorDeviceClass.CO2,
             state_class=SensorStateClass.MEASUREMENT,
@@ -154,10 +153,10 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.SMOKE_SENSOR_VALUE,
-            name="Smoke Amount",
+            name="Smoke amount",
             icon="mdi:smoke-detector",
             entity_category=EntityCategory.DIAGNOSTIC,
-            device_class=SensorStateClass.MEASUREMENT,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         *BATTERY_SENSORS,
     ),
@@ -166,20 +165,19 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
     "bh": (
         TuyaSensorEntityDescription(
             key=DPCode.TEMP_CURRENT,
-            name="Current Temperature",
+            name="Current temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.TEMP_CURRENT_F,
-            name="Current Temperature",
+            name="Current temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.STATUS,
             name="Status",
-            device_class=TuyaDeviceClass.STATUS,
         ),
     ),
     # CO2 Detector
@@ -199,18 +197,35 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CO2_VALUE,
-            name="Carbon Dioxide",
+            name="Carbon dioxide",
             device_class=SensorDeviceClass.CO2,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         *BATTERY_SENSORS,
+    ),
+    # Two-way temperature and humidity switch
+    # "MOES Temperature and Humidity Smart Switch Module MS-103"
+    # Documentation not found
+    "wkcz": (
+        TuyaSensorEntityDescription(
+            key=DPCode.HUMIDITY_VALUE,
+            name="Humidity",
+            device_class=SensorDeviceClass.HUMIDITY,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.TEMP_CURRENT,
+            name="Temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
     ),
     # CO Detector
     # https://developer.tuya.com/en/docs/iot/categorycobj?id=Kaiuz3u1j6q1v
     "cobj": (
         TuyaSensorEntityDescription(
             key=DPCode.CO_VALUE,
-            name="Carbon Monoxide",
+            name="Carbon monoxide",
             device_class=SensorDeviceClass.CO,
             state_class=SensorStateClass.MEASUREMENT,
         ),
@@ -221,7 +236,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
     "cwwsq": (
         TuyaSensorEntityDescription(
             key=DPCode.FEED_REPORT,
-            name="Last Amount",
+            name="Last amount",
             icon="mdi:counter",
             state_class=SensorStateClass.MEASUREMENT,
         ),
@@ -243,7 +258,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CO2_VALUE,
-            name="Carbon Dioxide",
+            name="Carbon dioxide",
             device_class=SensorDeviceClass.CO2,
             state_class=SensorStateClass.MEASUREMENT,
         ),
@@ -254,13 +269,13 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.VOC_VALUE,
-            name="Volatile Organic Compound",
+            name="Volatile organic compound",
             device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PM25_VALUE,
-            name="Particulate Matter 2.5 µm",
+            name="Particulate matter 2.5 µm",
             device_class=SensorDeviceClass.PM25,
             state_class=SensorStateClass.MEASUREMENT,
         ),
@@ -270,19 +285,19 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
     "jqbj": (
         TuyaSensorEntityDescription(
             key=DPCode.CO2_VALUE,
-            name="Carbon Dioxide",
+            name="Carbon dioxide",
             device_class=SensorDeviceClass.CO2,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.VOC_VALUE,
-            name="Volatile Organic Compound",
+            name="Volatile organic compound",
             device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PM25_VALUE,
-            name="Particulate Matter 2.5 µm",
+            name="Particulate matter 2.5 µm",
             device_class=SensorDeviceClass.PM25,
             state_class=SensorStateClass.MEASUREMENT,
         ),
@@ -340,6 +355,31 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             entity_registry_enabled_default=False,
         ),
     ),
+    # IoT Switch
+    # Note: Undocumented
+    "tdq": (
+        TuyaSensorEntityDescription(
+            key=DPCode.CUR_CURRENT,
+            name="Current",
+            device_class=SensorDeviceClass.CURRENT,
+            state_class=SensorStateClass.MEASUREMENT,
+            entity_registry_enabled_default=False,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.CUR_POWER,
+            name="Power",
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+            entity_registry_enabled_default=False,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.CUR_VOLTAGE,
+            name="Voltage",
+            device_class=SensorDeviceClass.VOLTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            entity_registry_enabled_default=False,
+        ),
+    ),
     # Luminance Sensor
     # https://developer.tuya.com/en/docs/iot/categoryldcg?id=Kaiuz3n7u69l8
     "ldcg": (
@@ -368,7 +408,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CO2_VALUE,
-            name="Carbon Dioxide",
+            name="Carbon dioxide",
             device_class=SensorDeviceClass.CO2,
             state_class=SensorStateClass.MEASUREMENT,
         ),
@@ -385,19 +425,19 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
     "mzj": (
         TuyaSensorEntityDescription(
             key=DPCode.TEMP_CURRENT,
-            name="Current Temperature",
+            name="Current temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.STATUS,
             name="Status",
-            device_class=TuyaDeviceClass.STATUS,
+            translation_key="status",
         ),
         TuyaSensorEntityDescription(
             key=DPCode.REMAIN_TIME,
-            name="Remaining Time",
-            native_unit_of_measurement=TIME_MINUTES,
+            name="Remaining time",
+            native_unit_of_measurement=UnitOfTime.MINUTES,
             icon="mdi:timer",
         ),
     ),
@@ -409,7 +449,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
     "pm2.5": (
         TuyaSensorEntityDescription(
             key=DPCode.PM25_VALUE,
-            name="Particulate Matter 2.5 µm",
+            name="Particulate matter 2.5 µm",
             device_class=SensorDeviceClass.PM25,
             state_class=SensorStateClass.MEASUREMENT,
         ),
@@ -420,7 +460,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.VOC_VALUE,
-            name="Volatile Organic Compound",
+            name="Volatile organic compound",
             device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
             state_class=SensorStateClass.MEASUREMENT,
         ),
@@ -432,7 +472,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CO2_VALUE,
-            name="Carbon Dioxide",
+            name="Carbon dioxide",
             device_class=SensorDeviceClass.CO2,
             state_class=SensorStateClass.MEASUREMENT,
         ),
@@ -444,13 +484,13 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PM1,
-            name="Particulate Matter 1.0 µm",
+            name="Particulate matter 1.0 µm",
             device_class=SensorDeviceClass.PM1,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PM10,
-            name="Particulate Matter 10.0 µm",
+            name="Particulate matter 10.0 µm",
             device_class=SensorDeviceClass.PM10,
             state_class=SensorStateClass.MEASUREMENT,
         ),
@@ -472,7 +512,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         TuyaSensorEntityDescription(
             key=DPCode.GAS_SENSOR_VALUE,
             icon="mdi:gas-cylinder",
-            device_class=SensorStateClass.MEASUREMENT,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         *BATTERY_SENSORS,
     ),
@@ -515,13 +555,13 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
     "voc": (
         TuyaSensorEntityDescription(
             key=DPCode.CO2_VALUE,
-            name="Carbon Dioxide",
+            name="Carbon dioxide",
             device_class=SensorDeviceClass.CO2,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PM25_VALUE,
-            name="Particulate Matter 2.5 µm",
+            name="Particulate matter 2.5 µm",
             device_class=SensorDeviceClass.PM25,
             state_class=SensorStateClass.MEASUREMENT,
         ),
@@ -544,7 +584,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.VOC_VALUE,
-            name="Volatile Organic Compound",
+            name="Volatile organic compound",
             device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
             state_class=SensorStateClass.MEASUREMENT,
         ),
@@ -603,10 +643,10 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
     "ywbj": (
         TuyaSensorEntityDescription(
             key=DPCode.SMOKE_SENSOR_VALUE,
-            name="Smoke Amount",
+            name="Smoke amount",
             icon="mdi:smoke-detector",
             entity_category=EntityCategory.DIAGNOSTIC,
-            device_class=SensorStateClass.MEASUREMENT,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         *BATTERY_SENSORS,
     ),
@@ -618,80 +658,80 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
     "zndb": (
         TuyaSensorEntityDescription(
             key=DPCode.FORWARD_ENERGY_TOTAL,
-            name="Total Energy",
+            name="Total energy",
             device_class=SensorDeviceClass.ENERGY,
             state_class=SensorStateClass.TOTAL_INCREASING,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PHASE_A,
-            name="Phase A Current",
+            name="Phase A current",
             device_class=SensorDeviceClass.CURRENT,
-            native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
             state_class=SensorStateClass.MEASUREMENT,
             subkey="electriccurrent",
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PHASE_A,
-            name="Phase A Power",
+            name="Phase A power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=POWER_KILO_WATT,
+            native_unit_of_measurement=UnitOfPower.KILO_WATT,
             subkey="power",
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PHASE_A,
-            name="Phase A Voltage",
+            name="Phase A voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
             subkey="voltage",
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PHASE_B,
-            name="Phase B Current",
+            name="Phase B current",
             device_class=SensorDeviceClass.CURRENT,
-            native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
             state_class=SensorStateClass.MEASUREMENT,
             subkey="electriccurrent",
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PHASE_B,
-            name="Phase B Power",
+            name="Phase B power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=POWER_KILO_WATT,
+            native_unit_of_measurement=UnitOfPower.KILO_WATT,
             subkey="power",
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PHASE_B,
-            name="Phase B Voltage",
+            name="Phase B voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
             subkey="voltage",
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PHASE_C,
-            name="Phase C Current",
+            name="Phase C current",
             device_class=SensorDeviceClass.CURRENT,
-            native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
             state_class=SensorStateClass.MEASUREMENT,
             subkey="electriccurrent",
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PHASE_C,
-            name="Phase C Power",
+            name="Phase C power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=POWER_KILO_WATT,
+            native_unit_of_measurement=UnitOfPower.KILO_WATT,
             subkey="power",
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PHASE_C,
-            name="Phase C Voltage",
+            name="Phase C voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
             subkey="voltage",
         ),
     ),
@@ -700,80 +740,80 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
     "dlq": (
         TuyaSensorEntityDescription(
             key=DPCode.TOTAL_FORWARD_ENERGY,
-            name="Total Energy",
+            name="Total energy",
             device_class=SensorDeviceClass.ENERGY,
             state_class=SensorStateClass.TOTAL_INCREASING,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PHASE_A,
-            name="Phase A Current",
+            name="Phase A current",
             device_class=SensorDeviceClass.CURRENT,
-            native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
             state_class=SensorStateClass.MEASUREMENT,
             subkey="electriccurrent",
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PHASE_A,
-            name="Phase A Power",
+            name="Phase A power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=POWER_KILO_WATT,
+            native_unit_of_measurement=UnitOfPower.KILO_WATT,
             subkey="power",
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PHASE_A,
-            name="Phase A Voltage",
+            name="Phase A voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
             subkey="voltage",
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PHASE_B,
-            name="Phase B Current",
+            name="Phase B current",
             device_class=SensorDeviceClass.CURRENT,
-            native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
             state_class=SensorStateClass.MEASUREMENT,
             subkey="electriccurrent",
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PHASE_B,
-            name="Phase B Power",
+            name="Phase B power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=POWER_KILO_WATT,
+            native_unit_of_measurement=UnitOfPower.KILO_WATT,
             subkey="power",
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PHASE_B,
-            name="Phase B Voltage",
+            name="Phase B voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
             subkey="voltage",
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PHASE_C,
-            name="Phase C Current",
+            name="Phase C current",
             device_class=SensorDeviceClass.CURRENT,
-            native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
             state_class=SensorStateClass.MEASUREMENT,
             subkey="electriccurrent",
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PHASE_C,
-            name="Phase C Power",
+            name="Phase C power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=POWER_KILO_WATT,
+            native_unit_of_measurement=UnitOfPower.KILO_WATT,
             subkey="power",
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PHASE_C,
-            name="Phase C Voltage",
+            name="Phase C voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
             subkey="voltage",
         ),
     ),
@@ -782,13 +822,13 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
     "sd": (
         TuyaSensorEntityDescription(
             key=DPCode.CLEAN_AREA,
-            name="Cleaning Area",
+            name="Cleaning area",
             icon="mdi:texture-box",
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CLEAN_TIME,
-            name="Cleaning Time",
+            name="Cleaning time",
             icon="mdi:progress-clock",
             state_class=SensorStateClass.MEASUREMENT,
         ),
@@ -800,37 +840,37 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.TOTAL_CLEAN_TIME,
-            name="Total Cleaning Time",
+            name="Total cleaning time",
             icon="mdi:history",
             state_class=SensorStateClass.TOTAL_INCREASING,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.TOTAL_CLEAN_COUNT,
-            name="Total Cleaning Times",
+            name="Total cleaning times",
             icon="mdi:counter",
             state_class=SensorStateClass.TOTAL_INCREASING,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.DUSTER_CLOTH,
-            name="Duster Cloth Life",
+            name="Duster cloth life",
             icon="mdi:ticket-percent-outline",
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.EDGE_BRUSH,
-            name="Side Brush Life",
+            name="Side brush life",
             icon="mdi:ticket-percent-outline",
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.FILTER_LIFE,
-            name="Filter Life",
+            name="Filter life",
             icon="mdi:ticket-percent-outline",
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.ROLL_BRUSH,
-            name="Rolling Brush Life",
+            name="Rolling brush life",
             icon="mdi:ticket-percent-outline",
             state_class=SensorStateClass.MEASUREMENT,
         ),
@@ -840,7 +880,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
     "cl": (
         TuyaSensorEntityDescription(
             key=DPCode.TIME_TOTAL,
-            name="Last Operation Duration",
+            name="Last operation duration",
             entity_category=EntityCategory.DIAGNOSTIC,
             icon="mdi:progress-clock",
         ),
@@ -868,7 +908,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.LEVEL_CURRENT,
-            name="Water Level",
+            name="Water level",
             entity_category=EntityCategory.DIAGNOSTIC,
             icon="mdi:waves-arrow-up",
         ),
@@ -878,13 +918,13 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
     "kj": (
         TuyaSensorEntityDescription(
             key=DPCode.FILTER,
-            name="Filter Utilization",
+            name="Filter utilization",
             entity_category=EntityCategory.DIAGNOSTIC,
             icon="mdi:ticket-percent-outline",
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PM25,
-            name="Particulate Matter 2.5 µm",
+            name="Particulate matter 2.5 µm",
             device_class=SensorDeviceClass.PM25,
             state_class=SensorStateClass.MEASUREMENT,
             icon="mdi:molecule",
@@ -903,26 +943,26 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.TVOC,
-            name="Total Volatile Organic Compound",
+            name="Total volatile organic compound",
             device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.ECO2,
-            name="Concentration of Carbon Dioxide",
+            name="Concentration of carbon dioxide",
             device_class=SensorDeviceClass.CO2,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.TOTAL_TIME,
-            name="Total Operating Time",
+            name="Total operating time",
             icon="mdi:history",
             state_class=SensorStateClass.TOTAL_INCREASING,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.TOTAL_PM,
-            name="Total Absorption of Particles",
+            name="Total absorption of particles",
             icon="mdi:texture-box",
             state_class=SensorStateClass.TOTAL_INCREASING,
             entity_category=EntityCategory.DIAGNOSTIC,
@@ -931,7 +971,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             key=DPCode.AIR_QUALITY,
             name="Air quality",
             icon="mdi:air-filter",
-            device_class=TuyaDeviceClass.AIR_QUALITY,
+            translation_key="air_quality",
         ),
     ),
     # Fan
@@ -941,6 +981,37 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             key=DPCode.TEMP_CURRENT,
             name="Temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+    ),
+    # eMylo Smart WiFi IR Remote
+    "wnykq": (
+        TuyaSensorEntityDescription(
+            key=DPCode.VA_TEMPERATURE,
+            name="Temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.VA_HUMIDITY,
+            name="Humidity",
+            device_class=SensorDeviceClass.HUMIDITY,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+    ),
+    # Dehumidifier
+    # https://developer.tuya.com/en/docs/iot/s?id=K9gf48r6jke8e
+    "cs": (
+        TuyaSensorEntityDescription(
+            key=DPCode.TEMP_INDOOR,
+            name="Temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.HUMIDITY_INDOOR,
+            name="Humidity",
+            device_class=SensorDeviceClass.HUMIDITY,
             state_class=SensorStateClass.MEASUREMENT,
         ),
     ),

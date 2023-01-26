@@ -4,7 +4,8 @@
             "already_configured": "Locatie is al geconfigureerd"
         },
         "error": {
-            "cannot_connect": "Kan geen verbinding maken"
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_auth": "Ongeldige authenticatie"
         },
         "step": {
             "user": {
@@ -27,6 +28,7 @@
                     "mode": "Reiswijze",
                     "time": "Tijd",
                     "time_type": "Tijd Type",
+                    "traffic_mode": "Verkeersmodus",
                     "transit_mode": "Vervoersmodus",
                     "transit_routing_preference": "Voorkeur vervoer route",
                     "units": "Eenheden"

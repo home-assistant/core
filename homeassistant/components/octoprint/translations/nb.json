@@ -1,6 +1,17 @@
 {
     "config": {
+        "abort": {
+            "unknown": "Uventet feil"
+        },
+        "error": {
+            "unknown": "Uventet feil"
+        },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "username": "Brukernavn"
+                }
+            },
             "user": {
                 "data": {
                     "username": "Brukernavn"

@@ -1,5 +1,11 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Slu\u017eba u\u017e je nakonfigurovan\u00e1"
+        },
+        "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165"
+        },
         "step": {
             "user": {
                 "data": {
@@ -9,5 +15,15 @@
                 }
             }
         }
-    }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "threshold": "Prahov\u00e1 hodnota (%)"
+                }
+            }
+        }
+    },
+    "title": "Sn\u00edma\u010d NOAA Aurora"
 }

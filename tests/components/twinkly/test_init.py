@@ -13,13 +13,9 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant
 
+from . import TEST_HOST, TEST_MODEL, TEST_NAME_ORIGINAL, ClientMock
+
 from tests.common import MockConfigEntry
-from tests.components.twinkly import (
-    TEST_HOST,
-    TEST_MODEL,
-    TEST_NAME_ORIGINAL,
-    ClientMock,
-)
 
 
 async def test_load_unload_entry(hass: HomeAssistant):

@@ -22,7 +22,7 @@
             "fan_only": "Samo ventilator",
             "heat": "Toplo",
             "heat_cool": "Gretje/Hlajenje",
-            "off": "Izklju\u010den"
+            "off": "Izklopljen"
         }
     },
     "title": "Klimat"

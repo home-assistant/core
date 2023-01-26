@@ -1,0 +1,63 @@
+{
+  "config": {
+    "step": {
+      "choice_enter_manual_or_fetch_cloud": {
+        "description": "A LaMetric device can be set up in Home Assistant in two different ways.\n\nYou can enter all device information and API tokens yourself, or Home Asssistant can import them from your LaMetric.com account.",
+        "menu_options": {
+          "pick_implementation": "Import from LaMetric.com (recommended)",
+          "manual_entry": "Enter manually"
+        }
+      },
+      "pick_implementation": {
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "manual_entry": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "host": "The IP address or hostname of your LaMetric TIME on your network.",
+          "api_key": "You can find this API key in [devices page in your LaMetric developer account](https://developer.lametric.com/user/devices)."
+        }
+      },
+      "user_cloud_select_device": {
+        "data": {
+          "device": "Select the LaMetric device to add"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "invalid_discovery_info": "Invalid discovery information received",
+      "link_local_address": "Link local addresses are not supported",
+      "missing_configuration": "The LaMetric integration is not configured. Please follow the documentation.",
+      "no_devices": "The authorized user has no LaMetric devices",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "reauth_device_not_found": "The device you are trying to re-authenticate is not found in this LaMetric account",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "issues": {
+    "manual_migration": {
+      "title": "Manual migration required for LaMetric",
+      "description": "The LaMetric integration has been modernized: It is now configured and set up via the user interface and the communcations are now local.\n\nUnfortunately, there is no automatic migration path possible and thus requires you to re-set up your LaMetric with Home Assistant. Please consult the Home Assistant LaMetric integration documentation on how to set it up.\n\nRemove the old LaMetric YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+    }
+  },
+  "entity": {
+    "select": {
+      "brightness_mode": {
+        "state": {
+          "auto": "Automatic",
+          "manual": "Manual"
+        }
+      }
+    }
+  }
+}

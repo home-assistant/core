@@ -11,11 +11,10 @@
             "invalid_auth": "Authentification non valide"
         },
         "step": {
-            "reauth": {
+            "reauth_confirm": {
                 "data": {
                     "password": "Mot de passe"
-                },
-                "description": "Les jetons d'authentification ne sont plus valides, connectez-vous pour les recr\u00e9er."
+                }
             },
             "user": {
                 "data": {

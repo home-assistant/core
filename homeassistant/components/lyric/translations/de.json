@@ -13,9 +13,15 @@
                 "title": "W\u00e4hle die Authentifizierungsmethode"
             },
             "reauth_confirm": {
-                "description": "Die Lyric-Integration muss dein Konto neu authentifizieren.",
+                "description": "Die Lyric Integration muss dein Konto neu authentifizieren.",
                 "title": "Integration erneut authentifizieren"
             }
+        }
+    },
+    "issues": {
+        "removed_yaml": {
+            "description": "Die Konfiguration von Honeywell Lyric mit YAML wurde entfernt. \n\nDeine vorhandene YAML-Konfiguration wird von Home Assistant nicht verwendet. \n\nEntferne die YAML-Konfiguration aus deiner configuration.yaml-Datei und starte Home Assistant neu, um dieses Problem zu beheben.",
+            "title": "Die Honeywell Lyric YAML-Konfiguration wurde entfernt"
         }
     }
 }

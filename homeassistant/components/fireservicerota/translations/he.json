@@ -11,7 +11,7 @@
             "invalid_auth": "\u05d0\u05d9\u05de\u05d5\u05ea \u05dc\u05d0 \u05d7\u05d5\u05e7\u05d9"
         },
         "step": {
-            "reauth": {
+            "reauth_confirm": {
                 "data": {
                     "password": "\u05e1\u05d9\u05e1\u05de\u05d4"
                 }

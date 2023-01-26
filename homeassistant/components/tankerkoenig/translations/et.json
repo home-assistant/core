@@ -37,7 +37,6 @@
         "step": {
             "init": {
                 "data": {
-                    "scan_interval": "V\u00e4rskendamise intervall",
                     "show_on_map": "N\u00e4ita jaamu kaardil",
                     "stations": "Tanklad"
                 },

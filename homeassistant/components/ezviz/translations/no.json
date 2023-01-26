@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured_account": "Kontoen er allerede konfigurert",
-            "ezviz_cloud_account_missing": "Ezviz sky-konto mangler. Vennligst konfigurer Ezviz sky-konto p\u00e5 nytt",
+            "ezviz_cloud_account_missing": "EZVIZ skykonto mangler. Vennligst rekonfigurer EZVIZ skykonto",
             "unknown": "Uventet feil"
         },
         "error": {
@@ -17,8 +17,8 @@
                     "password": "Passord",
                     "username": "Brukernavn"
                 },
-                "description": "Angi RTSP-legitimasjon for Ezviz-kameraet {serial} med IP {ip_address}",
-                "title": "Oppdaget Ezviz Kamera"
+                "description": "Skriv inn RTSP-legitimasjon for EZVIZ-kamera {serial} med IP {ip_address}",
+                "title": "Oppdaget EZVIZ-kamera"
             },
             "user": {
                 "data": {
@@ -26,7 +26,7 @@
                     "url": "URL",
                     "username": "Brukernavn"
                 },
-                "title": "Koble til Ezviz Cloud"
+                "title": "Koble til EZVIZ Cloud"
             },
             "user_custom_url": {
                 "data": {
@@ -35,7 +35,7 @@
                     "username": "Brukernavn"
                 },
                 "description": "Angi url-adressen for omr\u00e5det manuelt",
-                "title": "Koble til tilpasset Ezviz URL"
+                "title": "Koble til egendefinert EZVIZ URL"
             }
         }
     },

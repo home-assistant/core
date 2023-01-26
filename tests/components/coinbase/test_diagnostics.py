@@ -10,11 +10,8 @@ from .common import (
     mock_get_exchange_rates,
     mocked_get_accounts,
 )
+from .const import MOCK_ACCOUNTS_RESPONSE_REDACTED, MOCK_ENTRY_REDACTED
 
-from tests.components.coinbase.const import (
-    MOCK_ACCOUNTS_RESPONSE_REDACTED,
-    MOCK_ENTRY_REDACTED,
-)
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 
 

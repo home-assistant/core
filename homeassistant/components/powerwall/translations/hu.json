@@ -9,7 +9,7 @@
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
             "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt",
-            "wrong_version": "Az powerwall nem t\u00e1mogatott szoftververzi\u00f3t haszn\u00e1l. K\u00e9rj\u00fck, fontolja meg a probl\u00e9ma friss\u00edt\u00e9s\u00e9t vagy jelent\u00e9s\u00e9t, hogy megoldhat\u00f3 legyen."
+            "wrong_version": "Az powerwall nem t\u00e1mogatott szoftververzi\u00f3t haszn\u00e1l. K\u00e9rem, fontolja meg a probl\u00e9ma friss\u00edt\u00e9s\u00e9t vagy jelent\u00e9s\u00e9t, hogy megoldhat\u00f3 legyen."
         },
         "flow_title": "{name} ({ip_address})",
         "step": {

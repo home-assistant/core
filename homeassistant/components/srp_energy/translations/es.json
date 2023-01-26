@@ -13,9 +13,9 @@
             "user": {
                 "data": {
                     "id": "ID de la cuenta",
-                    "is_tou": "Es el plan de tiempo de uso",
+                    "is_tou": "Es un plan por Tiempo de uso",
                     "password": "Contrase\u00f1a",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 }
             }
         }

@@ -18,7 +18,7 @@ async def test_flow_aborts_already_setup(hass, config_entry):
     flow = HeosFlowHandler()
     flow.hass = hass
     result = await flow.async_step_user()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 
 
@@ -27,7 +27,7 @@ async def test_no_host_shows_form(hass):
     flow = HeosFlowHandler()
     flow.hass = hass
     result = await flow.async_step_user()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -38,7 +38,7 @@ async def test_cannot_connect_shows_error_form(hass, controller):
     result = await hass.config_entries.flow.async_init(
         heos.DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: "127.0.0.1"}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"][CONF_HOST] == "cannot_connect"
     assert controller.connect.call_count == 1
@@ -54,7 +54,7 @@ async def test_create_entry_when_host_valid(hass, controller):
         result = await hass.config_entries.flow.async_init(
             heos.DOMAIN, context={"source": SOURCE_USER}, data=data
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["result"].unique_id == DOMAIN
         assert result["title"] == "Controller (127.0.0.1)"
         assert result["data"] == data
@@ -70,7 +70,7 @@ async def test_create_entry_when_friendly_name_valid(hass, controller):
         result = await hass.config_entries.flow.async_init(
             heos.DOMAIN, context={"source": SOURCE_USER}, data=data
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["result"].unique_id == DOMAIN
         assert result["title"] == "Controller (127.0.0.1)"
         assert result["data"] == {CONF_HOST: "127.0.0.1"}
@@ -118,7 +118,7 @@ async def test_discovery_flow_aborts_already_setup(
     flow = HeosFlowHandler()
     flow.hass = hass
     result = await flow.async_step_ssdp(discovery_data)
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 
 
@@ -151,5 +151,5 @@ async def test_import_sets_the_unique_id(hass, controller):
             data={CONF_HOST: "127.0.0.2"},
         )
     await hass.async_block_till_done()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == DOMAIN

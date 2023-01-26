@@ -30,12 +30,12 @@
         "step": {
             "init": {
                 "data": {
-                    "account_balance_currencies": "Zu meldende Wallet-Guthaben.",
+                    "account_balance_currencies": "Zu meldendes Wallet-Guthaben.",
                     "exchange_base": "Basisw\u00e4hrung f\u00fcr Wechselkurssensoren.",
                     "exchange_rate_currencies": "Zu meldende Wechselkurse.",
                     "exchnage_rate_precision": "Anzahl der Dezimalstellen f\u00fcr Wechselkurse."
                 },
-                "description": "Coinbase-Optionen anpassen"
+                "description": "Coinbase Optionen anpassen"
             }
         }
     }

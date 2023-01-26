@@ -1,4 +1,4 @@
-"""Test zha device discovery."""
+"""Test ZHA device discovery."""
 
 import re
 from unittest import mock
@@ -137,10 +137,12 @@ async def test_devices(
         if called:
             assert cluster_identify.request.call_args == mock.call(
                 False,
-                64,
+                cluster_identify.commands_by_name["trigger_effect"].id,
                 cluster_identify.commands_by_name["trigger_effect"].schema,
-                2,
-                0,
+                effect_id=zigpy.zcl.clusters.general.Identify.EffectIdentifier.Okay,
+                effect_variant=(
+                    zigpy.zcl.clusters.general.Identify.EffectVariant.Default
+                ),
                 expect_reply=True,
                 manufacturer=None,
                 tries=1,
@@ -373,8 +375,10 @@ def _ch_mock(cluster):
 
 
 @mock.patch(
-    "homeassistant.components.zha.core.discovery.ProbeEndpoint"
-    ".handle_on_off_output_cluster_exception",
+    (
+        "homeassistant.components.zha.core.discovery.ProbeEndpoint"
+        ".handle_on_off_output_cluster_exception"
+    ),
     new=mock.MagicMock(),
 )
 @mock.patch(
@@ -439,8 +443,8 @@ def test_single_input_cluster_device_class_by_cluster_class():
 @pytest.mark.parametrize(
     "override, entity_id",
     [
-        (None, "light.manufacturer_model_77665544_level_light_color_on_off"),
-        ("switch", "switch.manufacturer_model_77665544_on_off"),
+        (None, "light.manufacturer_model_light"),
+        ("switch", "switch.manufacturer_model_switch"),
     ],
 )
 async def test_device_override(
@@ -478,7 +482,7 @@ async def test_device_override(
 async def test_group_probe_cleanup_called(
     hass_disable_services, setup_zha, config_entry
 ):
-    """Test cleanup happens when zha is unloaded."""
+    """Test cleanup happens when ZHA is unloaded."""
     await setup_zha()
     disc.GROUP_PROBE.cleanup = mock.Mock(wraps=disc.GROUP_PROBE.cleanup)
     await config_entry.async_unload(hass_disable_services)

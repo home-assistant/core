@@ -90,6 +90,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(
             discovery_info.properties[zeroconf.ATTR_PROPERTIES_ID]
         )
+        self._abort_if_unique_id_configured()
         return await self.async_step_user()
 
     @staticmethod

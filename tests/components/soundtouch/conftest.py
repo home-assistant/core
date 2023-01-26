@@ -2,7 +2,7 @@
 import pytest
 from requests_mock import Mocker
 
-from homeassistant.components.media_player.const import DOMAIN as MEDIA_PLAYER_DOMAIN
+from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.components.soundtouch.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME
 
@@ -18,9 +18,6 @@ DEVICE_1_NAME = "My SoundTouch 1"
 DEVICE_2_NAME = "My SoundTouch 2"
 DEVICE_1_ENTITY_ID = f"{MEDIA_PLAYER_DOMAIN}.my_soundtouch_1"
 DEVICE_2_ENTITY_ID = f"{MEDIA_PLAYER_DOMAIN}.my_soundtouch_2"
-
-
-# pylint: disable=redefined-outer-name
 
 
 @pytest.fixture

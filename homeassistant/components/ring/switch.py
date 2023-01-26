@@ -1,6 +1,7 @@
 """This component provides HA switch support for Ring Door Bell/Chimes."""
 from datetime import timedelta
 import logging
+from typing import Any
 
 import requests
 
@@ -97,11 +98,11 @@ class SirenSwitch(BaseRingSwitch):
         """If the switch is currently on or off."""
         return self._siren_on
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the siren on for 30 seconds."""
         self._set_switch(1)
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the siren off."""
         self._set_switch(0)
 

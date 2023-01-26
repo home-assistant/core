@@ -18,5 +18,15 @@
                 "description": "Adja meg a TOLO Sauna eszk\u00f6z\u00e9nek hostnev\u00e9t vagy IP-c\u00edm\u00e9t."
             }
         }
+    },
+    "entity": {
+        "select": {
+            "lamp_mode": {
+                "state": {
+                    "automatic": "Automatikus",
+                    "manual": "Manu\u00e1lis"
+                }
+            }
+        }
     }
 }

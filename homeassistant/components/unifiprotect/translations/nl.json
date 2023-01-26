@@ -41,11 +41,32 @@
             }
         }
     },
+    "issues": {
+        "ea_setup_failed": {
+            "description": "Je gebruikt v{version} van UniFi Protect wat een Early Access versie is. Een onherstelbare fout is opgetreden terwijl de integratie aan het laden was. Ga [terug naar een stabiele versie](https://www.home-assistant.io/integrations/unifiprotect#downgrading-unifi-protect) van UniFi Protect om de integratie binnen Home Assistant te kunnen gebruiken.\n\nFout: {error}",
+            "title": "Installatiefout bij het gebruik van een Early Access versie"
+        },
+        "ea_warning": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Weet je zeker dat je een niet ondersteunde versie van Unify Protect wilt gebruiken? Dit kan veroorzaken dat je Home Assistant integratie vastloopt.",
+                        "title": "v{version} is een Early Access versie"
+                    },
+                    "start": {
+                        "description": "Je gebruikt v{version} van UniFi Protect wat een Early Access versie is. [Early Access versies zijn niet ondersteund door Home Assistant](https://www.home-assistant.io/integrations/unifiprotect#about-unifi-early-access) en het is aanbevolen om zo gauw mogelijk terug te gaan naar een stabiele versie.\n\nMet het verzenden van dit formulier beveistig je dat je [UniFi Protect hebt gedowngraded](https://www.home-assistant.io/integrations/unifiprotect#downgrading-unifi-protect) of je stemt in met het gebruik van een niet ondersteunde versie van UniFi Protect.",
+                        "title": "v{version} is een Early Access versie"
+                    }
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {
                 "data": {
                     "all_updates": "Realtime metrieken (WAARSCHUWING: Verhoogt CPU gebruik)",
+                    "allow_ea": "Toestaan van `Allow Early Access` versies van Protect (WAARSCHUWING: Dit zal je integratie als niet ondersteund markeren)",
                     "disable_rtsp": "De RTSP-stream uitschakelen",
                     "override_connection_host": "Verbindingshost overschrijven"
                 },

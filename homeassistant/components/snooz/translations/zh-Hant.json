@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_in_progress": "\u8a2d\u5b9a\u5df2\u7d93\u9032\u884c\u4e2d",
+            "no_devices_found": "\u7db2\u8def\u4e0a\u627e\u4e0d\u5230\u88dd\u7f6e"
+        },
+        "flow_title": "{name}",
+        "progress": {
+            "wait_for_pairing_mode": "\u6b32\u5b8c\u6210\u8a2d\u5b9a\u3001\u5148\u8b93\u88dd\u7f6e\u9032\u5165\u914d\u5c0d\u6a21\u5f0f\u3002\n\n### \u5982\u4f55\u9032\u5165\u914d\u5c0d\u6a21\u5f0f\n1. \u5f37\u5236\u9000\u51fa SNOOZ \u624b\u6a5f App\u3002\n2. \u6309\u4f4f\u88dd\u7f6e\u4e0a\u7684\u96fb\u6e90\u9375\u4e0d\u653e\u3001\u7576\u71c8\u865f\u958b\u59cb\u9583\u8000\u6642\u653e\u958b\uff08\u5927\u7d04 5 \u79d2\uff09\u3002"
+        },
+        "step": {
+            "bluetooth_confirm": {
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a {name}\uff1f"
+            },
+            "pairing_timeout": {
+                "description": "\u88dd\u7f6e\u4e26\u672a\u9032\u5165\u914d\u5c0d\u6a21\u5f0f\u3001\u9ede\u9078\u50b3\u9001\u518d\u8a66\u4e00\u6b21\u3002\n\n### \u554f\u984c\u6392\u9664\n1. \u6aa2\u67e5\u88dd\u7f6e\u4e26\u672a\u8207\u624b\u6a5f App \u9023\u7dda\u3002\n2. \u62d4\u4e0b\u88dd\u7f6e\u7b49\u5019 5 \u79d2\u3001\u7136\u5f8c\u518d\u63d2\u4e0a\u3002"
+            },
+            "user": {
+                "data": {
+                    "address": "\u88dd\u7f6e"
+                },
+                "description": "\u9078\u64c7\u6240\u8981\u8a2d\u5b9a\u7684\u88dd\u7f6e"
+            }
+        }
+    }
+}

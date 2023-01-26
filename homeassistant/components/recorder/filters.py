@@ -1,7 +1,7 @@
 """Provide pre-made queries on top of the recorder component."""
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Collection, Iterable
 import json
 from typing import Any
 
@@ -81,21 +81,25 @@ class Filters:
 
     def __init__(self) -> None:
         """Initialise the include and exclude filters."""
-        self.excluded_entities: Iterable[str] = []
-        self.excluded_domains: Iterable[str] = []
-        self.excluded_entity_globs: Iterable[str] = []
+        self.excluded_entities: Collection[str] = []
+        self.excluded_domains: Collection[str] = []
+        self.excluded_entity_globs: Collection[str] = []
 
-        self.included_entities: Iterable[str] = []
-        self.included_domains: Iterable[str] = []
-        self.included_entity_globs: Iterable[str] = []
+        self.included_entities: Collection[str] = []
+        self.included_domains: Collection[str] = []
+        self.included_entity_globs: Collection[str] = []
 
     def __repr__(self) -> str:
         """Return human readable excludes/includes."""
         return (
-            f"<Filters excluded_entities={self.excluded_entities} excluded_domains={self.excluded_domains} "
-            f"excluded_entity_globs={self.excluded_entity_globs} "
-            f"included_entities={self.included_entities} included_domains={self.included_domains} "
-            f"included_entity_globs={self.included_entity_globs}>"
+            "<Filters"
+            f" excluded_entities={self.excluded_entities}"
+            f" excluded_domains={self.excluded_domains}"
+            f" excluded_entity_globs={self.excluded_entity_globs}"
+            f" included_entities={self.included_entities}"
+            f" included_domains={self.included_domains}"
+            f" included_entity_globs={self.included_entity_globs}"
+            ">"
         )
 
     @property

@@ -1,0 +1,22 @@
+{
+    "entity": {
+        "sensor": {
+            "sign": {
+                "state": {
+                    "aquarius": "\u03a5\u03b4\u03c1\u03bf\u03c7\u03cc\u03bf\u03c2",
+                    "aries": "\u039a\u03c1\u03b9\u03cc\u03c2",
+                    "cancer": "\u039a\u03b1\u03c1\u03ba\u03af\u03bd\u03bf\u03c2",
+                    "capricorn": "\u0391\u03b9\u03b3\u03cc\u03ba\u03b5\u03c1\u03c9\u03c2",
+                    "gemini": "\u0394\u03af\u03b4\u03c5\u03bc\u03bf\u03c2",
+                    "leo": "\u039b\u03ad\u03c9\u03bd",
+                    "libra": "\u0396\u03c5\u03b3\u03cc\u03c2",
+                    "pisces": "\u0399\u03c7\u03b8\u03cd\u03c2",
+                    "sagittarius": "\u03a4\u03bf\u03be\u03cc\u03c4\u03b7\u03c2",
+                    "scorpio": "\u03a3\u03ba\u03bf\u03c1\u03c0\u03b9\u03cc\u03c2",
+                    "taurus": "\u03a4\u03b1\u03cd\u03c1\u03bf\u03c2",
+                    "virgo": "\u03a0\u03b1\u03c1\u03b8\u03ad\u03bd\u03bf\u03c2"
+                }
+            }
+        }
+    }
+}

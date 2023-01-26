@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "wrong_ip_address": "Alamat IP salah atau SHC tidak dapat dihubungi secara lokal.",
+            "wrong_password": "Kata sandi salah."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Alamat IP",
+                    "password": "Kata Sandi"
+                },
+                "description": "Masukkan alamat IP dan kata sandi (lokal) SHC."
+            }
+        }
+    }
+}

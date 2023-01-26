@@ -18,5 +18,15 @@
                 "description": "Skriv inn vertsnavnet eller IP-adressen til TOLO Sauna-enheten."
             }
         }
+    },
+    "entity": {
+        "select": {
+            "lamp_mode": {
+                "state": {
+                    "automatic": "Automatisk",
+                    "manual": "Manuell"
+                }
+            }
+        }
     }
 }

@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
-            "home_control": "A devolo Home Control k\u00f6zponti egys\u00e9g nem m\u0171k\u00f6dik ezzel az integr\u00e1ci\u00f3val."
+            "home_control": "A devolo Home Control k\u00f6zponti egys\u00e9g nem m\u0171k\u00f6dik ezzel az integr\u00e1ci\u00f3val.",
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt."
         },
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
@@ -10,6 +11,11 @@
         },
         "flow_title": "{product} ({name})",
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Jelsz\u00f3"
+                }
+            },
             "user": {
                 "data": {
                     "ip_address": "IP c\u00edm"

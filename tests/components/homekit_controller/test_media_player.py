@@ -6,7 +6,9 @@ from aiohomekit.model.characteristics import (
 from aiohomekit.model.services import ServicesTypes
 import pytest
 
-from tests.components.homekit_controller.common import setup_test_component
+from homeassistant.helpers import entity_registry as er
+
+from .common import get_next_aid, setup_test_component
 
 
 def create_tv_service(accessory):
@@ -364,3 +366,20 @@ async def test_tv_set_source_fail(hass, utcnow):
 
     state = await helper.poll_and_get_state()
     assert state.attributes["source"] == "HDMI 1"
+
+
+async def test_migrate_unique_id(hass, utcnow):
+    """Test a we can migrate a media_player unique id."""
+    entity_registry = er.async_get(hass)
+    aid = get_next_aid()
+    media_player_entry = entity_registry.async_get_or_create(
+        "media_player",
+        "homekit_controller",
+        f"homekit-00:00:00:00:00:00-{aid}-8",
+    )
+    await setup_test_component(hass, create_tv_service_with_target_media_state)
+
+    assert (
+        entity_registry.async_get(media_player_entry.entity_id).unique_id
+        == f"00:00:00:00:00:00_{aid}_8"
+    )

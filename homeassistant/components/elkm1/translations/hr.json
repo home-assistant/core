@@ -1,0 +1,8 @@
+{
+    "config": {
+        "abort": {
+            "invalid_auth": "Neva\u017ee\u0107a provjera autenti\u010dnosti",
+            "unknown": "Neo\u010dekivana gre\u0161ka"
+        }
+    }
+}

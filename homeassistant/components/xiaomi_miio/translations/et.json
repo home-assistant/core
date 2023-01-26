@@ -5,7 +5,8 @@
             "already_in_progress": "Seadistamine on juba k\u00e4imas",
             "incomplete_info": "Puudulik seadistusteave, hosti v\u00f5i p\u00e4\u00e4suluba pole esitatud.",
             "not_xiaomi_miio": "Seade ei ole (veel) Xiaomi Miio poolt toetatud.",
-            "reauth_successful": "Taastuvastamine \u00f5nnestus"
+            "reauth_successful": "Taastuvastamine \u00f5nnestus",
+            "unknown": "Ootamatu t\u00f5rge"
         },
         "error": {
             "cannot_connect": "\u00dchendus nurjus",
@@ -47,6 +48,31 @@
                     "select_device": "Miio seade"
                 },
                 "description": "Vali seadistamiseks Xiaomi Miio seade."
+            }
+        }
+    },
+    "entity": {
+        "select": {
+            "display_orientation": {
+                "state": {
+                    "forward": "Edaspidi",
+                    "left": "Vasakule",
+                    "right": "Paremale"
+                }
+            },
+            "led_brightness": {
+                "state": {
+                    "bright": "Hele",
+                    "dim": "Tuhm",
+                    "off": "V\u00e4ljas"
+                }
+            },
+            "ptc_level": {
+                "state": {
+                    "high": "K\u00f5rge",
+                    "low": "Madal",
+                    "medium": "Keskmine"
+                }
             }
         }
     },

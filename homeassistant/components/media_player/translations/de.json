@@ -2,7 +2,7 @@
     "device_automation": {
         "condition_type": {
             "is_buffering": "{entity_name} puffert",
-            "is_idle": "{entity_name} ist unt\u00e4tig",
+            "is_idle": "{entity_name} ist inaktiv",
             "is_off": "{entity_name} ist ausgeschaltet",
             "is_on": "{entity_name} ist eingeschaltet",
             "is_paused": "{entity_name} ist pausiert",
@@ -21,7 +21,7 @@
     "state": {
         "_": {
             "buffering": "Puffern",
-            "idle": "Unt\u00e4tig",
+            "idle": "Inaktiv",
             "off": "Aus",
             "on": "An",
             "paused": "Pausiert",

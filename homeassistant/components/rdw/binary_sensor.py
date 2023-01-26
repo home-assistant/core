@@ -41,13 +41,13 @@ class RDWBinarySensorEntityDescription(
 BINARY_SENSORS: tuple[RDWBinarySensorEntityDescription, ...] = (
     RDWBinarySensorEntityDescription(
         key="liability_insured",
-        name="Liability Insured",
+        name="Liability insured",
         icon="mdi:shield-car",
         is_on_fn=lambda vehicle: vehicle.liability_insured,
     ),
     RDWBinarySensorEntityDescription(
         key="pending_recall",
-        name="Pending Recall",
+        name="Pending recall",
         device_class=BinarySensorDeviceClass.PROBLEM,
         is_on_fn=lambda vehicle: vehicle.pending_recall,
     ),
@@ -71,15 +71,18 @@ async def async_setup_entry(
     )
 
 
-class RDWBinarySensorEntity(CoordinatorEntity, BinarySensorEntity):
+class RDWBinarySensorEntity(
+    CoordinatorEntity[DataUpdateCoordinator[Vehicle]], BinarySensorEntity
+):
     """Defines an RDW binary sensor."""
 
     entity_description: RDWBinarySensorEntityDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self,
         *,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[Vehicle],
         description: RDWBinarySensorEntityDescription,
     ) -> None:
         """Initialize RDW binary sensor."""
@@ -91,7 +94,7 @@ class RDWBinarySensorEntity(CoordinatorEntity, BinarySensorEntity):
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, coordinator.data.license_plate)},
             manufacturer=coordinator.data.brand,
-            name=f"{coordinator.data.brand}: {coordinator.data.license_plate}",
+            name=f"{coordinator.data.brand} {coordinator.data.license_plate}",
             model=coordinator.data.model,
             configuration_url=f"https://ovi.rdw.nl/default.aspx?kenteken={coordinator.data.license_plate}",
         )

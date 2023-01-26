@@ -5,7 +5,6 @@ import asyncio
 from typing import Any
 
 from pyopenuv import Client
-from pyopenuv.errors import OpenUvError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -17,15 +16,10 @@ from homeassistant.const import (
     CONF_SENSORS,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
-from homeassistant.helpers.entity import Entity, EntityDescription
-from homeassistant.helpers.service import verify_domain_control
+from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     CONF_FROM_WINDOW,
@@ -37,78 +31,54 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
-
-DEFAULT_ATTRIBUTION = "Data provided by OpenUV"
-
-NOTIFICATION_ID = "openuv_notification"
-NOTIFICATION_TITLE = "OpenUV Component Setup"
-
-TOPIC_UPDATE = f"{DOMAIN}_data_update"
+from .coordinator import OpenUvCoordinator
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up OpenUV as config entry."""
-    _verify_domain_control = verify_domain_control(hass, DOMAIN)
-
     websession = aiohttp_client.async_get_clientsession(hass)
-    openuv = OpenUV(
-        entry,
-        Client(
-            entry.data[CONF_API_KEY],
-            entry.data.get(CONF_LATITUDE, hass.config.latitude),
-            entry.data.get(CONF_LONGITUDE, hass.config.longitude),
-            altitude=entry.data.get(CONF_ELEVATION, hass.config.elevation),
-            session=websession,
-        ),
+    client = Client(
+        entry.data[CONF_API_KEY],
+        entry.data.get(CONF_LATITUDE, hass.config.latitude),
+        entry.data.get(CONF_LONGITUDE, hass.config.longitude),
+        altitude=entry.data.get(CONF_ELEVATION, hass.config.elevation),
+        session=websession,
+        check_status_before_request=True,
     )
 
-    # We disable the client's request retry abilities here to avoid a lengthy (and
-    # blocking) startup:
-    openuv.client.disable_request_retries()
+    async def async_update_protection_data() -> dict[str, Any]:
+        """Update binary sensor (protection window) data."""
+        low = entry.options.get(CONF_FROM_WINDOW, DEFAULT_FROM_WINDOW)
+        high = entry.options.get(CONF_TO_WINDOW, DEFAULT_TO_WINDOW)
+        return await client.uv_protection_window(low=low, high=high)
 
-    try:
-        await openuv.async_update()
-    except HomeAssistantError as err:
-        LOGGER.error("Config entry failed: %s", err)
-        raise ConfigEntryNotReady from err
+    coordinators: dict[str, OpenUvCoordinator] = {
+        coordinator_name: OpenUvCoordinator(
+            hass,
+            entry=entry,
+            name=coordinator_name,
+            latitude=client.latitude,
+            longitude=client.longitude,
+            update_method=update_method,
+        )
+        for coordinator_name, update_method in (
+            (DATA_UV, client.uv_index),
+            (DATA_PROTECTION_WINDOW, async_update_protection_data),
+        )
+    }
 
-    # Once we've successfully authenticated, we re-enable client request retries:
-    openuv.client.enable_request_retries()
+    init_tasks = [
+        coordinator.async_config_entry_first_refresh()
+        for coordinator in coordinators.values()
+    ]
+    await asyncio.gather(*init_tasks)
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = openuv
+    hass.data[DOMAIN][entry.entry_id] = coordinators
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
-
-    @_verify_domain_control
-    async def update_data(_: ServiceCall) -> None:
-        """Refresh all OpenUV data."""
-        LOGGER.debug("Refreshing all OpenUV data")
-        await openuv.async_update()
-        async_dispatcher_send(hass, TOPIC_UPDATE)
-
-    @_verify_domain_control
-    async def update_uv_index_data(_: ServiceCall) -> None:
-        """Refresh OpenUV UV index data."""
-        LOGGER.debug("Refreshing OpenUV UV index data")
-        await openuv.async_update_uv_index_data()
-        async_dispatcher_send(hass, TOPIC_UPDATE)
-
-    @_verify_domain_control
-    async def update_protection_data(_: ServiceCall) -> None:
-        """Refresh OpenUV protection window data."""
-        LOGGER.debug("Refreshing OpenUV protection window data")
-        await openuv.async_update_protection_data()
-        async_dispatcher_send(hass, TOPIC_UPDATE)
-
-    for service, method in (
-        ("update_data", update_data),
-        ("update_uv_index_data", update_uv_index_data),
-        ("update_protection_data", update_protection_data),
-    ):
-        hass.services.async_register(DOMAIN, service, method)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -140,72 +110,35 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-class OpenUV:
-    """Define a generic OpenUV object."""
-
-    def __init__(self, entry: ConfigEntry, client: Client) -> None:
-        """Initialize."""
-        self._entry = entry
-        self.client = client
-        self.data: dict[str, Any] = {DATA_PROTECTION_WINDOW: {}, DATA_UV: {}}
-
-    async def async_update_protection_data(self) -> None:
-        """Update binary sensor (protection window) data."""
-        low = self._entry.options.get(CONF_FROM_WINDOW, DEFAULT_FROM_WINDOW)
-        high = self._entry.options.get(CONF_TO_WINDOW, DEFAULT_TO_WINDOW)
-
-        try:
-            data = await self.client.uv_protection_window(low=low, high=high)
-        except OpenUvError as err:
-            raise HomeAssistantError(
-                f"Error during protection data update: {err}"
-            ) from err
-
-        self.data[DATA_PROTECTION_WINDOW] = data.get("result")
-
-    async def async_update_uv_index_data(self) -> None:
-        """Update sensor (uv index, etc) data."""
-        try:
-            data = await self.client.uv_index()
-        except OpenUvError as err:
-            raise HomeAssistantError(
-                f"Error during UV index data update: {err}"
-            ) from err
-
-        self.data[DATA_UV] = data.get("result")
-
-    async def async_update(self) -> None:
-        """Update sensor/binary sensor data."""
-        tasks = [self.async_update_protection_data(), self.async_update_uv_index_data()]
-        await asyncio.gather(*tasks)
-
-
-class OpenUvEntity(Entity):
+class OpenUvEntity(CoordinatorEntity):
     """Define a generic OpenUV entity."""
 
-    def __init__(self, openuv: OpenUV, description: EntityDescription) -> None:
+    _attr_has_entity_name = True
+
+    def __init__(
+        self, coordinator: OpenUvCoordinator, description: EntityDescription
+    ) -> None:
         """Initialize."""
+        super().__init__(coordinator)
+
         self._attr_extra_state_attributes = {}
-        self._attr_should_poll = False
         self._attr_unique_id = (
-            f"{openuv.client.latitude}_{openuv.client.longitude}_{description.key}"
+            f"{coordinator.latitude}_{coordinator.longitude}_{description.key}"
         )
         self.entity_description = description
-        self.openuv = openuv
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Respond to a DataUpdateCoordinator update."""
+        self._update_from_latest_data()
+        self.async_write_ha_state()
+
+    @callback
+    def _update_from_latest_data(self) -> None:
+        """Update the entity from the latest data."""
+        raise NotImplementedError
 
     async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-
-        @callback
-        def update() -> None:
-            """Update the state."""
-            self.update_from_latest_data()
-            self.async_write_ha_state()
-
-        self.async_on_remove(async_dispatcher_connect(self.hass, TOPIC_UPDATE, update))
-
-        self.update_from_latest_data()
-
-    def update_from_latest_data(self) -> None:
-        """Update the sensor using the latest data."""
-        raise NotImplementedError
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        self._update_from_latest_data()

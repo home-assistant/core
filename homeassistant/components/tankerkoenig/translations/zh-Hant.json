@@ -37,7 +37,6 @@
         "step": {
             "init": {
                 "data": {
-                    "scan_interval": "\u66f4\u65b0\u983b\u7387",
                     "show_on_map": "\u65bc\u5730\u5716\u986f\u793a\u52a0\u6cb9\u7ad9",
                     "stations": "\u52a0\u6cb9\u7ad9"
                 },

@@ -14,6 +14,9 @@
         }
     },
     "options": {
+        "abort": {
+            "already_configured": "Teenus on juba seadistatud"
+        },
         "error": {
             "invalid_resolver": "Lahendaja IP-aadress on vale"
         },

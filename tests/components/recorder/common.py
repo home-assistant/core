@@ -3,9 +3,9 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 import time
-from typing import Any, cast
+from typing import Any, Literal, cast
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm.session import Session
@@ -19,8 +19,7 @@ from homeassistant.components.recorder.tasks import RecorderTask, StatisticsTask
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed, fire_time_changed
-from tests.components.recorder import db_schema_0
+from . import db_schema_0
 
 DEFAULT_PURGE_TASKS = 3
 
@@ -54,7 +53,7 @@ def do_adhoc_statistics(hass: HomeAssistant, **kwargs: Any) -> None:
     """Trigger an adhoc statistics run."""
     if not (start := kwargs.get("start")):
         start = statistics.get_start_time()
-    get_instance(hass).queue_task(StatisticsTask(start))
+    get_instance(hass).queue_task(StatisticsTask(start, False))
 
 
 def wait_recording_done(hass: HomeAssistant) -> None:
@@ -62,15 +61,13 @@ def wait_recording_done(hass: HomeAssistant) -> None:
     hass.block_till_done()
     trigger_db_commit(hass)
     hass.block_till_done()
-    hass.data[recorder.DATA_INSTANCE].block_till_done()
+    recorder.get_instance(hass).block_till_done()
     hass.block_till_done()
 
 
 def trigger_db_commit(hass: HomeAssistant) -> None:
     """Force the recorder to commit."""
-    for _ in range(recorder.DEFAULT_COMMIT_INTERVAL):
-        # We only commit on time change
-        fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
+    recorder.get_instance(hass)._async_commit(dt_util.utcnow())
 
 
 async def async_wait_recording_done(hass: HomeAssistant) -> None:
@@ -99,14 +96,12 @@ async def async_wait_purge_done(hass: HomeAssistant, max: int = None) -> None:
 @ha.callback
 def async_trigger_db_commit(hass: HomeAssistant) -> None:
     """Force the recorder to commit. Async friendly."""
-    for _ in range(recorder.DEFAULT_COMMIT_INTERVAL):
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
+    recorder.get_instance(hass)._async_commit(dt_util.utcnow())
 
 
 async def async_recorder_block_till_done(hass: HomeAssistant) -> None:
     """Non blocking version of recorder.block_till_done()."""
-    instance: recorder.Recorder = hass.data[recorder.DATA_INSTANCE]
-    await hass.async_add_executor_job(instance.block_till_done)
+    await hass.async_add_executor_job(recorder.get_instance(hass).block_till_done)
 
 
 def corrupt_db_file(test_db_file):
@@ -142,3 +137,21 @@ def run_information_with_session(
         session.expunge(res)
         return cast(RecorderRuns, res)
     return res
+
+
+def statistics_during_period(
+    hass: HomeAssistant,
+    start_time: datetime,
+    end_time: datetime | None = None,
+    statistic_ids: list[str] | None = None,
+    period: Literal["5minute", "day", "hour", "week", "month"] = "hour",
+    units: dict[str, str] | None = None,
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]]
+    | None = None,
+) -> dict[str, list[dict[str, Any]]]:
+    """Call statistics_during_period with defaults for simpler tests."""
+    if types is None:
+        types = {"last_reset", "max", "mean", "min", "state", "sum"}
+    return statistics.statistics_during_period(
+        hass, start_time, end_time, statistic_ids, period, units, types
+    )

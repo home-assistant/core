@@ -12,6 +12,9 @@
             "user": {
                 "data": {
                     "host": "Host"
+                },
+                "data_description": {
+                    "host": "Pure Energie Meteri IP-aadress v\u00f5i hostinimi."
                 }
             },
             "zeroconf_confirm": {

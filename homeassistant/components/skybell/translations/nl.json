@@ -10,6 +10,13 @@
             "unknown": "Onverwachte fout"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Wachtwoord"
+                },
+                "description": "Werk je wachtwoord bij voor {email}",
+                "title": "Integratie herauthenticeren"
+            },
             "user": {
                 "data": {
                     "email": "Email",

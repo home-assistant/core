@@ -22,6 +22,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 import logging
 import os
+from typing import Any
 
 from google_nest_sdm.camera_traits import CameraClipPreviewTrait, CameraEventImageTrait
 from google_nest_sdm.device import Device
@@ -35,14 +36,7 @@ from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 from google_nest_sdm.transcoder import Transcoder
 
 from homeassistant.components.ffmpeg import get_ffmpeg_manager
-from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_DIRECTORY,
-    MEDIA_CLASS_IMAGE,
-    MEDIA_CLASS_VIDEO,
-    MEDIA_TYPE_IMAGE,
-    MEDIA_TYPE_VIDEO,
-)
-from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.components.media_player import BrowseError, MediaClass, MediaType
 from homeassistant.components.media_source.error import Unresolvable
 from homeassistant.components.media_source.models import (
     BrowseMediaSource,
@@ -89,7 +83,7 @@ async def async_get_media_event_store(
         os.makedirs(media_path, exist_ok=True)
 
     await hass.async_add_executor_job(mkdir)
-    store = Store(hass, STORAGE_VERSION, STORAGE_KEY, private=True)
+    store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY, private=True)
     return NestEventMediaStore(hass, subscriber, store, media_path)
 
 
@@ -119,7 +113,7 @@ class NestEventMediaStore(EventMediaStore):
         self,
         hass: HomeAssistant,
         subscriber: GoogleNestSubscriber,
-        store: Store,
+        store: Store[dict[str, Any]],
         media_path: str,
     ) -> None:
         """Initialize NestEventMediaStore."""
@@ -127,7 +121,7 @@ class NestEventMediaStore(EventMediaStore):
         self._subscriber = subscriber
         self._store = store
         self._media_path = media_path
-        self._data: dict | None = None
+        self._data: dict[str, Any] | None = None
         self._devices: Mapping[str, str] | None = {}
 
     async def async_load(self) -> dict | None:
@@ -137,15 +131,9 @@ class NestEventMediaStore(EventMediaStore):
             if (data := await self._store.async_load()) is None:
                 _LOGGER.debug("Loaded empty event store")
                 self._data = {}
-            elif isinstance(data, dict):
+            else:
                 _LOGGER.debug("Loaded event store with %d records", len(data))
                 self._data = data
-            else:
-                raise ValueError(
-                    "Unexpected data in storage version={}, key={}".format(
-                        STORAGE_VERSION, STORAGE_KEY
-                    )
-                )
         return self._data
 
     async def async_save(self, data: dict) -> None:
@@ -455,9 +443,9 @@ def _browse_root() -> BrowseMediaSource:
     return BrowseMediaSource(
         domain=DOMAIN,
         identifier="",
-        media_class=MEDIA_CLASS_DIRECTORY,
-        media_content_type=MEDIA_TYPE_VIDEO,
-        children_media_class=MEDIA_CLASS_VIDEO,
+        media_class=MediaClass.DIRECTORY,
+        media_content_type=MediaType.VIDEO,
+        children_media_class=MediaClass.VIDEO,
         title=MEDIA_SOURCE_TITLE,
         can_play=False,
         can_expand=True,
@@ -487,9 +475,9 @@ def _browse_device(device_id: MediaId, device: Device) -> BrowseMediaSource:
     return BrowseMediaSource(
         domain=DOMAIN,
         identifier=device_id.identifier,
-        media_class=MEDIA_CLASS_DIRECTORY,
-        media_content_type=MEDIA_TYPE_VIDEO,
-        children_media_class=MEDIA_CLASS_VIDEO,
+        media_class=MediaClass.DIRECTORY,
+        media_content_type=MediaType.VIDEO,
+        children_media_class=MediaClass.VIDEO,
         title=DEVICE_TITLE_FORMAT.format(device_name=device_info.device_name),
         can_play=False,
         can_expand=True,
@@ -508,8 +496,8 @@ def _browse_clip_preview(
     return BrowseMediaSource(
         domain=DOMAIN,
         identifier=event_id.identifier,
-        media_class=MEDIA_CLASS_IMAGE,
-        media_content_type=MEDIA_TYPE_IMAGE,
+        media_class=MediaClass.IMAGE,
+        media_content_type=MediaType.IMAGE,
         title=CLIP_TITLE_FORMAT.format(
             event_name=", ".join(types),
             event_time=dt_util.as_local(event.timestamp).strftime(DATE_STR_FORMAT),
@@ -530,8 +518,8 @@ def _browse_image_event(
     return BrowseMediaSource(
         domain=DOMAIN,
         identifier=event_id.identifier,
-        media_class=MEDIA_CLASS_IMAGE,
-        media_content_type=MEDIA_TYPE_IMAGE,
+        media_class=MediaClass.IMAGE,
+        media_content_type=MediaType.IMAGE,
         title=CLIP_TITLE_FORMAT.format(
             event_name=MEDIA_SOURCE_EVENT_TITLE_MAP.get(event.event_type, "Event"),
             event_time=dt_util.as_local(event.timestamp).strftime(DATE_STR_FORMAT),

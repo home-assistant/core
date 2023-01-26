@@ -9,8 +9,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .axis_base import AxisEntityBase
 from .const import DEFAULT_STREAM_PROFILE, DEFAULT_VIDEO_SOURCE, DOMAIN as AXIS_DOMAIN
+from .device import AxisNetworkDevice
+from .entity import AxisEntity
 
 
 async def async_setup_entry(
@@ -21,7 +22,7 @@ async def async_setup_entry(
     """Set up the Axis camera video stream."""
     filter_urllib3_logging()
 
-    device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
+    device: AxisNetworkDevice = hass.data[AXIS_DOMAIN][config_entry.entry_id]
 
     if not device.api.vapix.params.image_format:
         return
@@ -29,18 +30,17 @@ async def async_setup_entry(
     async_add_entities([AxisCamera(device)])
 
 
-class AxisCamera(AxisEntityBase, MjpegCamera):
+class AxisCamera(AxisEntity, MjpegCamera):
     """Representation of a Axis camera."""
 
     _attr_supported_features = CameraEntityFeature.STREAM
 
-    def __init__(self, device):
+    def __init__(self, device: AxisNetworkDevice) -> None:
         """Initialize Axis Communications camera component."""
-        AxisEntityBase.__init__(self, device)
+        AxisEntity.__init__(self, device)
 
         MjpegCamera.__init__(
             self,
-            name=device.name,
             username=device.username,
             password=device.password,
             mjpeg_url=self.mjpeg_source,
@@ -50,7 +50,7 @@ class AxisCamera(AxisEntityBase, MjpegCamera):
 
         self._attr_unique_id = f"{device.unique_id}-camera"
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Subscribe camera events."""
         self.async_on_remove(
             async_dispatcher_connect(

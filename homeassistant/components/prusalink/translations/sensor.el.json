@@ -1,0 +1,11 @@
+{
+    "state": {
+        "prusalink__printer_state": {
+            "cancelling": "\u0391\u03ba\u03cd\u03c1\u03c9\u03c3\u03b7",
+            "idle": "\u0391\u03b4\u03c1\u03b1\u03bd\u03ae\u03c2",
+            "paused": "\u03a3\u03b5 \u03c0\u03b1\u03cd\u03c3\u03b7",
+            "pausing": "\u03a0\u03b1\u03cd\u03c3\u03b7",
+            "printing": "\u0395\u03ba\u03c4\u03cd\u03c0\u03c9\u03c3\u03b7"
+        }
+    }
+}

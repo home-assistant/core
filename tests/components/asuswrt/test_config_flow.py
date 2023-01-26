@@ -12,8 +12,9 @@ from homeassistant.components.asuswrt.const import (
     CONF_SSH_KEY,
     CONF_TRACK_UNKNOWN,
     DOMAIN,
+    PROTOCOL_TELNET,
 )
-from homeassistant.components.device_tracker.const import CONF_CONSIDER_HOME
+from homeassistant.components.device_tracker import CONF_CONSIDER_HOME
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
@@ -23,6 +24,7 @@ from homeassistant.const import (
     CONF_PROTOCOL,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -33,8 +35,8 @@ SSH_KEY = "1234"
 
 CONFIG_DATA = {
     CONF_HOST: HOST,
-    CONF_PORT: 22,
-    CONF_PROTOCOL: "telnet",
+    CONF_PORT: 23,
+    CONF_PROTOCOL: PROTOCOL_TELNET,
     CONF_USERNAME: "user",
     CONF_PASSWORD: "pwd",
     CONF_MODE: "ap",
@@ -81,7 +83,7 @@ async def test_user(hass, mock_unique_id, unique_id):
     flow_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER, "show_advanced_options": True}
     )
-    assert flow_result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert flow_result["type"] == data_entry_flow.FlowResultType.FORM
     assert flow_result["step_id"] == "user"
 
     # test with all provided
@@ -92,7 +94,7 @@ async def test_user(hass, mock_unique_id, unique_id):
         )
         await hass.async_block_till_done()
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["title"] == HOST
         assert result["data"] == CONFIG_DATA
 
@@ -116,7 +118,7 @@ async def test_error_wrong_password_ssh(hass, config, error):
         data=config_data,
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
 
@@ -136,7 +138,7 @@ async def test_error_invalid_ssh(hass):
             data=config_data,
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["errors"] == {"base": "ssh_not_file"}
 
 
@@ -152,7 +154,7 @@ async def test_error_invalid_host(hass):
             data=CONFIG_DATA,
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["errors"] == {"base": "invalid_host"}
 
 
@@ -168,7 +170,7 @@ async def test_abort_if_not_unique_id_setup(hass):
         context={"source": SOURCE_USER},
         data=CONFIG_DATA,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "no_unique_id"
 
 
@@ -192,7 +194,7 @@ async def test_update_uniqueid_exist(hass, mock_unique_id):
         )
         await hass.async_block_till_done()
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["title"] == HOST
         assert result["data"] == CONFIG_DATA
         prev_entry = hass.config_entries.async_get_entry(existing_entry.entry_id)
@@ -214,7 +216,7 @@ async def test_abort_invalid_unique_id(hass):
             context={"source": SOURCE_USER},
             data=CONFIG_DATA,
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "invalid_unique_id"
 
 
@@ -244,12 +246,12 @@ async def test_on_connect_failed(hass, side_effect, error):
         result = await hass.config_entries.flow.async_configure(
             flow_result["flow_id"], user_input=CONFIG_DATA
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["errors"] == {"base": error}
 
 
-async def test_options_flow(hass):
-    """Test config flow options."""
+async def test_options_flow_ap(hass: HomeAssistant) -> None:
+    """Test config flow options for ap mode."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data=CONFIG_DATA,
@@ -262,8 +264,9 @@ async def test_options_flow(hass):
         await hass.async_block_till_done()
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "init"
+        assert CONF_REQUIRE_IP in result["data_schema"].schema
 
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
@@ -276,9 +279,43 @@ async def test_options_flow(hass):
             },
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert config_entry.options[CONF_CONSIDER_HOME] == 20
         assert config_entry.options[CONF_TRACK_UNKNOWN] is True
         assert config_entry.options[CONF_INTERFACE] == "aaa"
         assert config_entry.options[CONF_DNSMASQ] == "bbb"
         assert config_entry.options[CONF_REQUIRE_IP] is False
+
+
+async def test_options_flow_router(hass: HomeAssistant) -> None:
+    """Test config flow options for router mode."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={**CONFIG_DATA, CONF_MODE: "router"},
+    )
+    config_entry.add_to_hass(hass)
+
+    with PATCH_SETUP_ENTRY:
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "init"
+        assert CONF_REQUIRE_IP not in result["data_schema"].schema
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_CONSIDER_HOME: 20,
+                CONF_TRACK_UNKNOWN: True,
+                CONF_INTERFACE: "aaa",
+                CONF_DNSMASQ: "bbb",
+            },
+        )
+
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert config_entry.options[CONF_CONSIDER_HOME] == 20
+        assert config_entry.options[CONF_TRACK_UNKNOWN] is True
+        assert config_entry.options[CONF_INTERFACE] == "aaa"
+        assert config_entry.options[CONF_DNSMASQ] == "bbb"

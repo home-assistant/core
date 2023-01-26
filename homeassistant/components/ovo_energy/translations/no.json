@@ -16,6 +16,7 @@
             },
             "user": {
                 "data": {
+                    "account": "OVO-konto-ID (bare legg til hvis du har flere kontoer)",
                     "password": "Passord",
                     "username": "Brukernavn"
                 },

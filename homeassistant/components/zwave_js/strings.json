@@ -8,7 +8,7 @@
         }
       },
       "usb_confirm": {
-        "description": "Do you want to setup {name} with the Z-Wave JS add-on?"
+        "description": "Do you want to set up {name} with the Z-Wave JS add-on?"
       },
       "on_supervisor": {
         "title": "Select connection method",
@@ -58,7 +58,8 @@
       "addon_get_discovery_info_failed": "Failed to get Z-Wave JS add-on discovery info.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "discovery_requires_supervisor": "Discovery requires the supervisor.",
-      "not_zwave_device": "Discovered device is not a Z-Wave device."
+      "not_zwave_device": "Discovered device is not a Z-Wave device.",
+      "not_zwave_js_addon": "Discovered add-on is not the official Z-Wave JS add-on."
     },
     "progress": {
       "install_addon": "Please wait while the Z-Wave JS add-on installation finishes. This can take several minutes.",
@@ -143,6 +144,12 @@
       "refresh_value": "Refresh the value(s) for {entity_name}",
       "ping": "Ping device",
       "reset_meter": "Reset meters on {subtype}"
+    }
+  },
+  "issues": {
+    "invalid_server_version": {
+      "title": "Newer version of Z-Wave JS Server needed",
+      "description": "The version of Z-Wave JS Server you are currently running is too old for this version of Home Assistant. Please update the Z-Wave JS Server to the latest version to fix this issue."
     }
   }
 }

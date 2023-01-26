@@ -24,21 +24,13 @@ async def test_component_dependencies(hass):
     mock_integration(hass, MockModule("mod1", ["mod3"]))
 
     with pytest.raises(loader.CircularDependency):
-        print(
-            await loader._async_component_dependencies(
-                hass, "mod_3", mod_3, set(), set()
-            )
-        )
+        await loader._async_component_dependencies(hass, "mod_3", mod_3, set(), set())
 
     # Depend on non-existing component
     mod_1 = mock_integration(hass, MockModule("mod1", ["nonexisting"]))
 
     with pytest.raises(loader.IntegrationNotFound):
-        print(
-            await loader._async_component_dependencies(
-                hass, "mod_1", mod_1, set(), set()
-            )
-        )
+        await loader._async_component_dependencies(hass, "mod_1", mod_1, set(), set())
 
     # Having an after dependency 2 deps down that is circular
     mod_1 = mock_integration(
@@ -46,11 +38,7 @@ async def test_component_dependencies(hass):
     )
 
     with pytest.raises(loader.CircularDependency):
-        print(
-            await loader._async_component_dependencies(
-                hass, "mod_3", mod_3, set(), set()
-            )
-        )
+        await loader._async_component_dependencies(hass, "mod_3", mod_3, set(), set())
 
 
 def test_component_loader(hass):
@@ -138,16 +126,16 @@ async def test_custom_integration_version_not_valid(
         await loader.async_get_integration(hass, "test_no_version")
 
     assert (
-        "The custom integration 'test_no_version' does not have a version key in the manifest file and was blocked from loading."
-        in caplog.text
-    )
+        "The custom integration 'test_no_version' does not have a version key in the"
+        " manifest file and was blocked from loading."
+    ) in caplog.text
 
     with pytest.raises(loader.IntegrationNotFound):
         await loader.async_get_integration(hass, "test2")
     assert (
-        "The custom integration 'test_bad_version' does not have a valid version key (bad) in the manifest file and was blocked from loading."
-        in caplog.text
-    )
+        "The custom integration 'test_bad_version' does not have a valid version key"
+        " (bad) in the manifest file and was blocked from loading."
+    ) in caplog.text
 
 
 async def test_get_integration(hass):
@@ -205,6 +193,7 @@ def test_integration_properties(hass):
                 {"hostname": "tesla_*", "macaddress": "98ED5C*"},
                 {"registered_devices": True},
             ],
+            "bluetooth": [{"manufacturer_id": 76, "manufacturer_data_start": [0x06]}],
             "usb": [
                 {"vid": "10C4", "pid": "EA60"},
                 {"vid": "1CF1", "pid": "0030"},
@@ -242,6 +231,9 @@ def test_integration_properties(hass):
         {"vid": "1A86", "pid": "7523"},
         {"vid": "10C4", "pid": "8A2A"},
     ]
+    assert integration.bluetooth == [
+        {"manufacturer_id": 76, "manufacturer_data_start": [0x06]}
+    ]
     assert integration.ssdp == [
         {
             "manufacturer": "Royal Philips Electronics",
@@ -274,6 +266,7 @@ def test_integration_properties(hass):
     assert integration.homekit is None
     assert integration.zeroconf is None
     assert integration.dhcp is None
+    assert integration.bluetooth is None
     assert integration.usb is None
     assert integration.ssdp is None
     assert integration.mqtt is None
@@ -296,6 +289,7 @@ def test_integration_properties(hass):
     assert integration.zeroconf == [{"type": "_hue._tcp.local.", "name": "hue*"}]
     assert integration.dhcp is None
     assert integration.usb is None
+    assert integration.bluetooth is None
     assert integration.ssdp is None
 
 
@@ -413,6 +407,25 @@ def _get_test_integration_with_dhcp_matcher(hass, name, config_flow):
             ],
             "homekit": {"models": [name]},
             "ssdp": [{"manufacturer": name, "modelName": name}],
+        },
+    )
+
+
+def _get_test_integration_with_bluetooth_matcher(hass, name, config_flow):
+    """Return a generated test integration with a bluetooth matcher."""
+    return loader.Integration(
+        hass,
+        f"homeassistant.components.{name}",
+        None,
+        {
+            "name": name,
+            "domain": name,
+            "config_flow": config_flow,
+            "bluetooth": [
+                {
+                    "local_name": "Prodigio_*",
+                },
+            ],
         },
     )
 
@@ -540,6 +553,26 @@ async def test_get_zeroconf_back_compat(hass):
                     "manufacturer": "legacy*",
                 },
             }
+        ]
+
+
+async def test_get_bluetooth(hass):
+    """Verify that custom components with bluetooth are found."""
+    test_1_integration = _get_test_integration_with_bluetooth_matcher(
+        hass, "test_1", True
+    )
+    test_2_integration = _get_test_integration_with_dhcp_matcher(hass, "test_2", True)
+    with patch("homeassistant.loader.async_get_custom_components") as mock_get:
+        mock_get.return_value = {
+            "test_1": test_1_integration,
+            "test_2": test_2_integration,
+        }
+        bluetooth = await loader.async_get_bluetooth(hass)
+        bluetooth_for_domain = [
+            entry for entry in bluetooth if entry["domain"] == "test_1"
+        ]
+        assert bluetooth_for_domain == [
+            {"domain": "test_1", "local_name": "Prodigio_*"},
         ]
 
 

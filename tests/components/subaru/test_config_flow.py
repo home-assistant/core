@@ -1,5 +1,4 @@
 """Tests for the Subaru component config flow."""
-# pylint: disable=redefined-outer-name
 from copy import deepcopy
 from unittest import mock
 from unittest.mock import PropertyMock, patch
@@ -117,6 +116,7 @@ async def test_user_form_pin_not_required(hass, two_factor_verify_form):
     assert len(mock_setup_entry.mock_calls) == 1
 
     expected = {
+        "context": {"source": "user"},
         "title": TEST_USERNAME,
         "description": None,
         "description_placeholders": None,
@@ -286,6 +286,7 @@ async def test_pin_form_success(hass, pin_form):
     assert len(mock_update_saved_pin.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
     expected = {
+        "context": {"source": "user"},
         "title": TEST_USERNAME,
         "description": None,
         "description_placeholders": None,

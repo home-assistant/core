@@ -48,7 +48,8 @@
             "onvif_devices": {
                 "data": {
                     "extra_arguments": "T\u00e4iendavad FFMPEG argumendid",
-                    "rtsp_transport": "RTSP edastusviis"
+                    "rtsp_transport": "RTSP edastusviis",
+                    "use_wallclock_as_timestamps": "Seinakella kasutamine ajatemplitena"
                 },
                 "title": "ONVIF-seadme suvandid"
             }

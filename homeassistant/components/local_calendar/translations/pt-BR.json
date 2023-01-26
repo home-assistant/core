@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "calendar_name": "Nome do calend\u00e1rio"
+                },
+                "description": "Escolha um nome para o seu novo calend\u00e1rio"
+            }
+        }
+    }
+}

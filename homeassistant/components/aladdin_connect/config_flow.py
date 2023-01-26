@@ -7,8 +7,8 @@ import logging
 from typing import Any
 
 from AIOAladdinConnect import AladdinConnectClient
-from aiohttp import ClientError
-from aiohttp.client_exceptions import ClientConnectionError
+import AIOAladdinConnect.session_manager as Aladdin
+from aiohttp.client_exceptions import ClientError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -18,7 +18,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
+from .const import CLIENT_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,12 +38,18 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
     acc = AladdinConnectClient(
-        data[CONF_USERNAME], data[CONF_PASSWORD], async_get_clientsession(hass)
+        data[CONF_USERNAME],
+        data[CONF_PASSWORD],
+        async_get_clientsession(hass),
+        CLIENT_ID,
     )
-    login = await acc.login()
-    await acc.close()
-    if not login:
-        raise InvalidAuth
+    try:
+        await acc.login()
+    except (ClientError, asyncio.TimeoutError, Aladdin.ConnectionError) as ex:
+        raise ex
+
+    except Aladdin.InvalidPasswordError as ex:
+        raise InvalidAuth from ex
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -78,7 +84,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
 
-            except (ClientConnectionError, asyncio.TimeoutError, ClientError):
+            except (ClientError, asyncio.TimeoutError, Aladdin.ConnectionError):
                 errors["base"] = "cannot_connect"
 
             else:
@@ -115,7 +121,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except InvalidAuth:
             errors["base"] = "invalid_auth"
 
-        except (ClientConnectionError, asyncio.TimeoutError, ClientError):
+        except (ClientError, asyncio.TimeoutError, Aladdin.ConnectionError):
             errors["base"] = "cannot_connect"
 
         else:

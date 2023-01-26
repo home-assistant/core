@@ -1,8 +1,8 @@
 """Support for Abode Security System covers."""
 from typing import Any
 
-from abodepy.devices.cover import AbodeCover as AbodeCV
-import abodepy.helpers.constants as CONST
+from jaraco.abode.devices.cover import Cover as AbodeCV
+from jaraco.abode.helpers import constants as CONST
 
 from homeassistant.components.cover import CoverEntity
 from homeassistant.config_entries import ConfigEntry
@@ -19,12 +19,10 @@ async def async_setup_entry(
     """Set up Abode cover devices."""
     data: AbodeSystem = hass.data[DOMAIN]
 
-    entities = []
-
-    for device in data.abode.get_devices(generic_type=CONST.TYPE_COVER):
-        entities.append(AbodeCover(data, device))
-
-    async_add_entities(entities)
+    async_add_entities(
+        AbodeCover(data, device)
+        for device in data.abode.get_devices(generic_type=CONST.TYPE_COVER)
+    )
 
 
 class AbodeCover(AbodeDevice, CoverEntity):

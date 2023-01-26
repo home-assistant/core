@@ -1,6 +1,8 @@
 """Provides the NZBGet DataUpdateCoordinator."""
+from collections.abc import Mapping
 from datetime import timedelta
 import logging
+from typing import Any
 
 from async_timeout import timeout
 from pynzbgetapi import NZBGetAPI, NZBGetAPIException
@@ -25,7 +27,13 @@ _LOGGER = logging.getLogger(__name__)
 class NZBGetDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching NZBGet data."""
 
-    def __init__(self, hass: HomeAssistant, *, config: dict, options: dict) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        *,
+        config: Mapping[str, Any],
+        options: Mapping[str, Any],
+    ) -> None:
         """Initialize global NZBGet data updater."""
         self.nzbget = NZBGetAPI(
             config[CONF_HOST],
@@ -37,7 +45,7 @@ class NZBGetDataUpdateCoordinator(DataUpdateCoordinator):
         )
 
         self._completed_downloads_init = False
-        self._completed_downloads = {}
+        self._completed_downloads = set[tuple]()
 
         update_interval = timedelta(seconds=options[CONF_SCAN_INTERVAL])
 

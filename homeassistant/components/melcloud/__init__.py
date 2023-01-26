@@ -69,7 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     conf = entry.data
     mel_devices = await mel_devices_setup(hass, conf[CONF_TOKEN])
     hass.data.setdefault(DOMAIN, {}).update({entry.entry_id: mel_devices})
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
@@ -140,6 +140,11 @@ class MelCloudDevice:
             model=model,
             name=self.name,
         )
+
+    @property
+    def daily_energy_consumed(self) -> float | None:
+        """Return energy consumed during the current day in kWh."""
+        return self.device.daily_energy_consumed
 
 
 async def mel_devices_setup(hass, token) -> dict[str, list[MelCloudDevice]]:

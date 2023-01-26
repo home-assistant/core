@@ -1,6 +1,8 @@
 """Support for ADS switch platform."""
 from __future__ import annotations
 
+from typing import Any
+
 import pyads
 import voluptuous as vol
 
@@ -41,7 +43,7 @@ def setup_platform(
 class AdsSwitch(AdsEntity, SwitchEntity):
     """Representation of an ADS switch device."""
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register device notification."""
         await self.async_initialize_device(self._ads_var, pyads.PLCTYPE_BOOL)
 
@@ -50,10 +52,10 @@ class AdsSwitch(AdsEntity, SwitchEntity):
         """Return True if the entity is on."""
         return self._state_dict[STATE_KEY_STATE]
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         self._ads_hub.write_by_name(self._ads_var, True, pyads.PLCTYPE_BOOL)
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         self._ads_hub.write_by_name(self._ads_var, False, pyads.PLCTYPE_BOOL)

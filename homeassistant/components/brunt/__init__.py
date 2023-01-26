@@ -5,7 +5,7 @@ import logging
 
 from aiohttp.client_exceptions import ClientResponseError, ServerDisconnectedError
 import async_timeout
-from brunt import BruntClientAsync
+from brunt import BruntClientAsync, Thing
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -36,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f"Brunt could not connect with username: {entry.data[CONF_USERNAME]}."
         ) from exc
 
-    async def async_update_data():
+    async def async_update_data() -> dict[str | None, Thing]:
         """Fetch data from the Brunt endpoint for all Things.
 
         Error 403 is the API response for any kind of authentication error (failed password or email)
@@ -54,6 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             if err.status == 401:
                 _LOGGER.warning("Device not found, will reload Brunt integration")
                 await hass.config_entries.async_reload(entry.entry_id)
+            raise UpdateFailed from err
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -66,7 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {DATA_BAPI: bapi, DATA_COOR: coordinator}
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 

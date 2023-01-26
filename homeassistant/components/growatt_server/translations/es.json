@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
             "no_plants": "No se han encontrado plantas en esta cuenta."
         },
         "error": {
@@ -18,7 +19,7 @@
                     "name": "Nombre",
                     "password": "Contrase\u00f1a",
                     "url": "URL",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 },
                 "title": "Introduce tu informaci\u00f3n de Growatt."
             }

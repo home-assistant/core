@@ -6,5 +6,6 @@
   "codeowners": ["@frenck"],
   "requirements": ["pvo==0.2.2"],
   "iot_class": "cloud_polling",
-  "quality_scale": "platinum"
+  "quality_scale": "platinum",
+  "integration_type": "device"
 }

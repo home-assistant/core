@@ -1,0 +1,14 @@
+{
+    "state": {
+        "moon__phase": {
+            "first_quarter": "Prv\u00e1 \u0161tvrtina",
+            "full_moon": "Spln",
+            "last_quarter": "Posledn\u00e1 \u0161tvrtina",
+            "new_moon": "Nov mesiac",
+            "waning_crescent": "Ub\u00fadaj\u00faci polmesiac",
+            "waning_gibbous": "Ub\u00fadaj\u00faci mesiac",
+            "waxing_crescent": "Dorastaj\u00faci polmesiac",
+            "waxing_gibbous": "Dorastaj\u00faci mesiac"
+        }
+    }
+}

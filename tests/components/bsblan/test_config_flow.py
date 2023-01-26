@@ -1,23 +1,63 @@
 """Tests for the BSBLan device config flow."""
-import aiohttp
+from unittest.mock import AsyncMock, MagicMock
+
+from bsblan import BSBLANConnectionError
 
 from homeassistant import data_entry_flow
 from homeassistant.components.bsblan import config_flow
-from homeassistant.components.bsblan.const import CONF_DEVICE_IDENT, CONF_PASSKEY
+from homeassistant.components.bsblan.const import CONF_PASSKEY, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-    CONTENT_TYPE_JSON,
-)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import (
+    RESULT_TYPE_ABORT,
+    RESULT_TYPE_CREATE_ENTRY,
+    RESULT_TYPE_FORM,
+)
+from homeassistant.helpers.device_registry import format_mac
 
-from . import init_integration
+from tests.common import MockConfigEntry
 
-from tests.common import load_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
+
+async def test_full_user_flow_implementation(
+    hass: HomeAssistant,
+    mock_bsblan_config_flow: MagicMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test the full manual user flow from start to finish."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+
+    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("step_id") == SOURCE_USER
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 80,
+            CONF_PASSKEY: "1234",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin1234",
+        },
+    )
+
+    assert result2.get("type") == RESULT_TYPE_CREATE_ENTRY
+    assert result2.get("title") == format_mac("00:80:41:19:69:90")
+    assert result2.get("data") == {
+        CONF_HOST: "127.0.0.1",
+        CONF_PORT: 80,
+        CONF_PASSKEY: "1234",
+        CONF_USERNAME: "admin",
+        CONF_PASSWORD: "admin1234",
+    }
+    assert "result" in result2
+    assert result2["result"].unique_id == format_mac("00:80:41:19:69:90")
+
+    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_bsblan_config_flow.device.mock_calls) == 1
 
 
 async def test_show_user_form(hass: HomeAssistant) -> None:
@@ -32,128 +72,47 @@ async def test_show_user_form(hass: HomeAssistant) -> None:
 
 
 async def test_connection_error(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    mock_bsblan_config_flow: MagicMock,
 ) -> None:
     """Test we show user form on BSBLan connection error."""
-    aioclient_mock.post(
-        "http://example.local:80/1234/JQ?Parameter=6224,6225,6226",
-        exc=aiohttp.ClientError,
-    )
+    mock_bsblan_config_flow.device.side_effect = BSBLANConnectionError
 
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN,
+        DOMAIN,
         context={"source": SOURCE_USER},
         data={
-            CONF_HOST: "example.local",
-            CONF_USERNAME: "nobody",
-            CONF_PASSWORD: "qwerty",
-            CONF_PASSKEY: "1234",
+            CONF_HOST: "127.0.0.1",
             CONF_PORT: 80,
+            CONF_PASSKEY: "1234",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin1234",
         },
     )
 
-    assert result["errors"] == {"base": "cannot_connect"}
-    assert result["step_id"] == "user"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("errors") == {"base": "cannot_connect"}
+    assert result.get("step_id") == "user"
 
 
 async def test_user_device_exists_abort(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    mock_bsblan_config_flow: MagicMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test we abort zeroconf flow if BSBLan device already configured."""
-    await init_integration(hass, aioclient_mock)
-
+    """Test we abort flow if BSBLAN device already configured."""
+    mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN,
+        DOMAIN,
         context={"source": SOURCE_USER},
         data={
-            CONF_HOST: "example.local",
-            CONF_USERNAME: "nobody",
-            CONF_PASSWORD: "qwerty",
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 80,
             CONF_PASSKEY: "1234",
-            CONF_PORT: 80,
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin1234",
         },
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-
-
-async def test_full_user_flow_implementation(
-    hass: HomeAssistant, aioclient_mock
-) -> None:
-    """Test the full manual user flow from start to finish."""
-    aioclient_mock.post(
-        "http://example.local:80/1234/JQ?Parameter=6224,6225,6226",
-        text=load_fixture("bsblan/info.json"),
-        headers={"Content-Type": CONTENT_TYPE_JSON},
-    )
-
-    result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN,
-        context={"source": SOURCE_USER},
-    )
-
-    assert result["step_id"] == "user"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_HOST: "example.local",
-            CONF_USERNAME: "nobody",
-            CONF_PASSWORD: "qwerty",
-            CONF_PASSKEY: "1234",
-            CONF_PORT: 80,
-        },
-    )
-
-    assert result["data"][CONF_HOST] == "example.local"
-    assert result["data"][CONF_USERNAME] == "nobody"
-    assert result["data"][CONF_PASSWORD] == "qwerty"
-    assert result["data"][CONF_PASSKEY] == "1234"
-    assert result["data"][CONF_PORT] == 80
-    assert result["data"][CONF_DEVICE_IDENT] == "RVS21.831F/127"
-    assert result["title"] == "RVS21.831F/127"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-
-    entries = hass.config_entries.async_entries(config_flow.DOMAIN)
-    assert entries[0].unique_id == "RVS21.831F/127"
-
-
-async def test_full_user_flow_implementation_without_auth(
-    hass: HomeAssistant, aioclient_mock
-) -> None:
-    """Test the full manual user flow from start to finish."""
-    aioclient_mock.post(
-        "http://example2.local:80/JQ?Parameter=6224,6225,6226",
-        text=load_fixture("bsblan/info.json"),
-        headers={"Content-Type": CONTENT_TYPE_JSON},
-    )
-
-    result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN,
-        context={"source": SOURCE_USER},
-    )
-
-    assert result["step_id"] == "user"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_HOST: "example2.local",
-            CONF_PORT: 80,
-        },
-    )
-
-    assert result["data"][CONF_HOST] == "example2.local"
-    assert result["data"][CONF_USERNAME] is None
-    assert result["data"][CONF_PASSWORD] is None
-    assert result["data"][CONF_PASSKEY] is None
-    assert result["data"][CONF_PORT] == 80
-    assert result["data"][CONF_DEVICE_IDENT] == "RVS21.831F/127"
-    assert result["title"] == "RVS21.831F/127"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-
-    entries = hass.config_entries.async_entries(config_flow.DOMAIN)
-    assert entries[0].unique_id == "RVS21.831F/127"
+    assert result.get("type") == RESULT_TYPE_ABORT
+    assert result.get("reason") == "already_configured"

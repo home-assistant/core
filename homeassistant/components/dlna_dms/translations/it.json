@@ -10,14 +10,14 @@
         "flow_title": "{name}",
         "step": {
             "confirm": {
-                "description": "Vuoi iniziare la configurazione?"
+                "description": "Vuoi avviare la configurazione?"
             },
             "user": {
                 "data": {
                     "host": "Host"
                 },
                 "description": "Seleziona un dispositivo da configurare",
-                "title": "Dispositivi DLNA DMA rilevati"
+                "title": "Rilevati dispositivi DLNA DMA"
             }
         }
     }

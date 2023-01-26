@@ -12,13 +12,7 @@ Media identifiers can look like:
 
 from __future__ import annotations
 
-from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_CHANNEL,
-    MEDIA_CLASS_DIRECTORY,
-    MEDIA_TYPE_CHANNEL,
-    MEDIA_TYPE_CHANNELS,
-)
-from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.components.media_player import BrowseError, MediaClass, MediaType
 from homeassistant.components.media_source.error import Unresolvable
 from homeassistant.components.media_source.models import (
     BrowseMediaSource,
@@ -82,20 +76,20 @@ class DmsMediaSource(MediaSource):
             base = BrowseMediaSource(
                 domain=DOMAIN,
                 identifier="",
-                media_class=MEDIA_CLASS_DIRECTORY,
-                media_content_type=MEDIA_TYPE_CHANNELS,
+                media_class=MediaClass.DIRECTORY,
+                media_content_type=MediaType.CHANNELS,
                 title=self.name,
                 can_play=False,
                 can_expand=True,
-                children_media_class=MEDIA_CLASS_CHANNEL,
+                children_media_class=MediaClass.CHANNEL,
             )
 
             base.children = [
                 BrowseMediaSource(
                     domain=DOMAIN,
                     identifier=f"{source_id}/{PATH_OBJECT_ID_FLAG}{ROOT_OBJECT_ID}",
-                    media_class=MEDIA_CLASS_CHANNEL,
-                    media_content_type=MEDIA_TYPE_CHANNEL,
+                    media_class=MediaClass.CHANNEL,
+                    media_content_type=MediaType.CHANNEL,
                     title=source.name,
                     can_play=False,
                     can_expand=True,

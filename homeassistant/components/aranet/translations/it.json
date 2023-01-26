@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "integrations_diabled": "Questo dispositivo non ha integrazioni abilitate. Si prega di abilitare le integrazioni di smart home utilizzando l'app e riprovare.",
+            "no_devices_found": "Non sono stati trovati dispositivi Aranet non configurati.",
+            "outdated_version": "Questo dispositivo utilizza un firmware obsoleto. Aggiornalo almeno alla v1.2.0 e riprova."
+        },
+        "error": {
+            "unknown": "Errore imprevisto"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "bluetooth_confirm": {
+                "description": "Vuoi configurare {name}?"
+            },
+            "user": {
+                "data": {
+                    "address": "Dispositivo"
+                },
+                "description": "Scegli un dispositivo da configurare"
+            }
+        }
+    }
+}

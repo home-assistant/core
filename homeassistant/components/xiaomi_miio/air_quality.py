@@ -1,4 +1,5 @@
 """Support for Xiaomi Mi Air Quality Monitor (PM2.5)."""
+from collections.abc import Callable
 import logging
 
 from miio import AirQualityMonitor, AirQualityMonitorCGDN1, DeviceException
@@ -218,7 +219,7 @@ class AirMonitorCGDN1(XiaomiMiioEntity, AirQualityEntity):
         return self._particulate_matter_10
 
 
-DEVICE_MAP = {
+DEVICE_MAP: dict[str, dict[str, Callable]] = {
     MODEL_AIRQUALITYMONITOR_S1: {
         "device_class": AirQualityMonitor,
         "entity_class": AirMonitorS1,

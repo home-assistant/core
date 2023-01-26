@@ -3,14 +3,14 @@
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.number import NumberMode
-from homeassistant.components.number.const import (
+from homeassistant.components.number import (
     ATTR_MAX,
     ATTR_MIN,
     ATTR_STEP,
     ATTR_VALUE,
     DOMAIN,
     SERVICE_SET_VALUE,
+    NumberMode,
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE
 from homeassistant.setup import async_setup_component

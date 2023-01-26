@@ -1,4 +1,10 @@
-"""Constants for the Whirlpool Sixth Sense integration."""
+"""Constants for the Whirlpool Appliances integration."""
+
+from whirlpool.backendselector import Region
 
 DOMAIN = "whirlpool"
-AUTH_INSTANCE_KEY = "auth"
+
+CONF_REGIONS_MAP = {
+    "EU": Region.EU,
+    "US": Region.US,
+}

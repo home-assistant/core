@@ -5,11 +5,13 @@ from aiohomekit.model.characteristics import Characteristic, CharacteristicsType
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import KNOWN_DEVICES, CharacteristicEntity
-from .const import DEVICE_CLASS_ECOBEE_MODE
+from . import KNOWN_DEVICES
+from .connection import HKDevice
+from .entity import CharacteristicEntity
 
 _ECOBEE_MODE_TO_TEXT = {
     0: "home",
@@ -23,7 +25,7 @@ class EcobeeModeSelect(CharacteristicEntity, SelectEntity):
     """Represents a ecobee mode select entity."""
 
     _attr_options = ["home", "sleep", "away"]
-    _attr_device_class = DEVICE_CLASS_ECOBEE_MODE
+    _attr_translation_key = "ecobee_mode"
 
     @property
     def name(self) -> str:
@@ -57,14 +59,18 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Homekit select entities."""
-    hkid = config_entry.data["AccessoryPairingID"]
-    conn = hass.data[KNOWN_DEVICES][hkid]
+    hkid: str = config_entry.data["AccessoryPairingID"]
+    conn: HKDevice = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
     def async_add_characteristic(char: Characteristic) -> bool:
         if char.type == CharacteristicsTypes.VENDOR_ECOBEE_CURRENT_MODE:
             info = {"aid": char.service.accessory.aid, "iid": char.service.iid}
-            async_add_entities([EcobeeModeSelect(conn, info, char)])
+            entity = EcobeeModeSelect(conn, info, char)
+            conn.async_migrate_unique_id(
+                entity.old_unique_id, entity.unique_id, Platform.SELECT
+            )
+            async_add_entities([entity])
             return True
         return False
 

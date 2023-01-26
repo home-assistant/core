@@ -74,7 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -240,10 +240,12 @@ class ScreenlogicEntity(CoordinatorEntity[ScreenlogicDataUpdateCoordinator]):
 class ScreenLogicCircuitEntity(ScreenlogicEntity):
     """ScreenLogic circuit entity."""
 
+    _attr_has_entity_name = True
+
     @property
     def name(self):
         """Get the name of the switch."""
-        return f"{self.gateway_name} {self.circuit['name']}"
+        return self.circuit["name"]
 
     @property
     def is_on(self) -> bool:

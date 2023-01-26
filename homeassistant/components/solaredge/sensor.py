@@ -9,7 +9,10 @@ from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import CONF_SITE_ID, DATA_API_CLIENT, DOMAIN, SENSOR_TYPES
 from .coordinator import (
@@ -101,14 +104,16 @@ class SolarEdgeSensorFactory:
 
     def create_sensor(
         self, sensor_type: SolarEdgeSensorEntityDescription
-    ) -> SolarEdgeSensorEntityDescription:
+    ) -> SolarEdgeSensorEntity:
         """Create and return a sensor based on the sensor_key."""
         sensor_class, service = self.services[sensor_type.key]
 
         return sensor_class(self.platform_name, sensor_type, service)
 
 
-class SolarEdgeSensorEntity(CoordinatorEntity, SensorEntity):
+class SolarEdgeSensorEntity(
+    CoordinatorEntity[DataUpdateCoordinator[None]], SensorEntity
+):
     """Abstract class for a solaredge sensor."""
 
     entity_description: SolarEdgeSensorEntityDescription
@@ -155,7 +160,7 @@ class SolarEdgeDetailsSensor(SolarEdgeSensorEntity):
     @property
     def native_value(self) -> str | None:
         """Return the state of the sensor."""
-        return self.data_service.data
+        return self.data_service.data.get(self.entity_description.json_key)
 
     @property
     def unique_id(self) -> str | None:
@@ -169,7 +174,7 @@ class SolarEdgeInventorySensor(SolarEdgeSensorEntity):
     """Representation of an SolarEdge Monitoring API inventory sensor."""
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         return self.data_service.attributes.get(self.entity_description.json_key)
 
@@ -182,14 +187,19 @@ class SolarEdgeInventorySensor(SolarEdgeSensorEntity):
 class SolarEdgeEnergyDetailsSensor(SolarEdgeSensorEntity):
     """Representation of an SolarEdge Monitoring API power flow sensor."""
 
-    def __init__(self, platform_name, sensor_type, data_service):
+    def __init__(
+        self,
+        platform_name: str,
+        sensor_type: SolarEdgeSensorEntityDescription,
+        data_service: SolarEdgeEnergyDetailsService,
+    ) -> None:
         """Initialize the power flow sensor."""
         super().__init__(platform_name, sensor_type, data_service)
 
         self._attr_native_unit_of_measurement = data_service.unit
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         return self.data_service.attributes.get(self.entity_description.json_key)
 
@@ -208,7 +218,7 @@ class SolarEdgePowerFlowSensor(SolarEdgeSensorEntity):
         self,
         platform_name: str,
         description: SolarEdgeSensorEntityDescription,
-        data_service: SolarEdgeDataService,
+        data_service: SolarEdgePowerFlowDataService,
     ) -> None:
         """Initialize the power flow sensor."""
         super().__init__(platform_name, description, data_service)
@@ -216,7 +226,7 @@ class SolarEdgePowerFlowSensor(SolarEdgeSensorEntity):
         self._attr_native_unit_of_measurement = data_service.unit
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         return self.data_service.attributes.get(self.entity_description.json_key)
 

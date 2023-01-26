@@ -59,6 +59,8 @@ def setup_platform(
 class SCSGateCover(CoverEntity):
     """Representation of SCSGate cover."""
 
+    _attr_should_poll = False
+
     def __init__(self, scs_id, name, logger, scsgate):
         """Initialize the cover."""
         self._scs_id = scs_id
@@ -70,11 +72,6 @@ class SCSGateCover(CoverEntity):
     def scs_id(self):
         """Return the SCSGate ID."""
         return self._scs_id
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
 
     @property
     def name(self) -> str:

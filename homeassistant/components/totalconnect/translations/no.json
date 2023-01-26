@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "Kontoen er allerede konfigurert",
             "no_locations": "Ingen plasseringer er tilgjengelige for denne brukeren, sjekk TotalConnect-innstillingene",
-            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
+            "reauth_successful": "Re-autentisering var vellykket"
         },
         "error": {
             "invalid_auth": "Ugyldig godkjenning",

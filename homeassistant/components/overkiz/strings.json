@@ -18,12 +18,86 @@
       "server_in_maintenance": "Server is down for maintenance",
       "too_many_attempts": "Too many attempts with an invalid token, temporarily banned",
       "too_many_requests": "Too many requests, try again later",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unsupported_hardware": "Your {unsupported_device} hardware is not supported by this integration."
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reauth_wrong_account": "You can only reauthenticate this entry with the same Overkiz account and hub"
+    }
+  },
+  "entity": {
+    "select": {
+      "open_closed_pedestrian": {
+        "state": {
+          "open": "Open",
+          "pedestrian": "Pedestrian",
+          "closed": "Closed"
+        }
+      },
+      "memorized_simple_volume": {
+        "state": {
+          "highest": "Highest",
+          "standard": "Standard"
+        }
+      }
+    },
+    "sensor": {
+      "battery": {
+        "state": {
+          "full": "Full",
+          "low": "Low",
+          "normal": "Normal",
+          "verylow": "Very low"
+        }
+      },
+      "discrete_rssi_level": {
+        "state": {
+          "good": "Good",
+          "low": "Low",
+          "normal": "Normal",
+          "verylow": "Very low"
+        }
+      },
+      "priority_lock_originator": {
+        "state": {
+          "lsc": "LSC",
+          "saac": "SAAC",
+          "sfc": "SFC",
+          "ups": "UPS",
+          "external_gateway": "External gateway",
+          "local_user": "Local user",
+          "myself": "Myself",
+          "rain": "Rain",
+          "security": "Security",
+          "temperature": "Temperature",
+          "timer": "Timer",
+          "user": "User",
+          "wind": "Wind"
+        }
+      },
+      "sensor_room": {
+        "state": {
+          "clean": "Clean",
+          "dirty": "Dirty"
+        }
+      },
+      "sensor_defect": {
+        "state": {
+          "dead": "Dead",
+          "low_battery": "Low battery",
+          "maintenance_required": "Maintenance required",
+          "no_defect": "No defect"
+        }
+      },
+      "three_way_handle_direction": {
+        "state": {
+          "closed": "Closed",
+          "open": "Open",
+          "tilt": "Tilt"
+        }
+      }
     }
   }
 }

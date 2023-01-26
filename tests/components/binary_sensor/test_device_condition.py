@@ -49,6 +49,8 @@ async def test_get_conditions(hass, device_reg, entity_reg, enable_custom_integr
     """Test we get the expected conditions from a binary_sensor."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -63,9 +65,6 @@ async def test_get_conditions(hass, device_reg, entity_reg, enable_custom_integr
             platform.ENTITIES[device_class].unique_id,
             device_id=device_entry.id,
         )
-
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
-    await hass.async_block_till_done()
 
     expected_conditions = [
         {

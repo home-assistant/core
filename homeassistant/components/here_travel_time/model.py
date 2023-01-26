@@ -6,18 +6,17 @@ from datetime import time
 from typing import TypedDict
 
 
-class HERERoutingData(TypedDict):
-    """Routing information calculated from a herepy.RoutingResponse."""
+class HERETravelTimeData(TypedDict):
+    """Routing information."""
 
-    ATTR_ATTRIBUTION: str | None
-    ATTR_DURATION: float
-    ATTR_DURATION_IN_TRAFFIC: float
-    ATTR_DISTANCE: float
-    ATTR_ROUTE: str
-    ATTR_ORIGIN: str
-    ATTR_DESTINATION: str
-    ATTR_ORIGIN_NAME: str
-    ATTR_DESTINATION_NAME: str
+    attribution: str | None
+    duration: float
+    duration_in_traffic: float
+    distance: float
+    origin: str
+    destination: str
+    origin_name: str | None
+    destination_name: str | None
 
 
 @dataclass
@@ -32,6 +31,5 @@ class HERETravelTimeConfig:
     origin_entity_id: str | None
     travel_mode: str
     route_mode: str
-    units: str
     arrival: time | None
     departure: time | None

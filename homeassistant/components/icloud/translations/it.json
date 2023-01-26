@@ -11,11 +11,11 @@
             "validate_verification_code": "Impossibile verificare il codice di verifica, riprova"
         },
         "step": {
-            "reauth": {
+            "reauth_confirm": {
                 "data": {
                     "password": "Password"
                 },
-                "description": "La password inserita in precedenza per {username} non funziona pi\u00f9. Aggiorna la tua password per continuare a utilizzare questa integrazione.",
+                "description": "La password precedentemente inserita per {username} non funziona pi\u00f9. Aggiorna la tua password per continuare a utilizzare questa integrazione.",
                 "title": "Autentica nuovamente l'integrazione"
             },
             "trusted_device": {

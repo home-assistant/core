@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
+            "no_devices_found": "No s'han trobat dispositius a la xarxa",
+            "no_unconfigured_devices": "No s'han trobat dispositius no configurats."
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "invalid_key_format": "La clau fora de l\u00ednia ha de ser una cadena hexadecimal de 32 bytes.",
+            "invalid_key_index": "L'slot de clau fora de l\u00ednia ha de ser un nombre enter entre 0 i 255.",
+            "unknown": "Error inesperat"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "integration_discovery_confirm": {
+                "description": "Vols configurar {name} per Bluetooth amb l'adre\u00e7a {address}?"
+            },
+            "user": {
+                "data": {
+                    "address": "Adre\u00e7a Bluetooth",
+                    "key": "Clau fora de l\u00ednia (cadena hexadecimal de 32 bytes)",
+                    "slot": "'Slot' de clau fora de l\u00ednia (nombre enter entre 0 i 255)"
+                },
+                "description": "Consulta la documentaci\u00f3 per saber com trobar la clau de fora de l\u00ednia."
+            }
+        }
+    }
+}

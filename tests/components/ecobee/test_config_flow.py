@@ -25,7 +25,7 @@ async def test_abort_if_already_setup(hass):
 
     result = await flow.async_step_user()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 
 
@@ -36,7 +36,7 @@ async def test_user_step_without_user_input(hass):
     flow.hass.data[DATA_ECOBEE_CONFIG] = {}
 
     result = await flow.async_step_user()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -53,7 +53,7 @@ async def test_pin_request_succeeds(hass):
 
         result = await flow.async_step_user(user_input={CONF_API_KEY: "api-key"})
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "authorize"
         assert result["description_placeholders"] == {"pin": "test-pin"}
 
@@ -70,7 +70,7 @@ async def test_pin_request_fails(hass):
 
         result = await flow.async_step_user(user_input={CONF_API_KEY: "api-key"})
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"]["base"] == "pin_request_failed"
 
@@ -86,13 +86,12 @@ async def test_token_request_succeeds(hass):
         mock_ecobee.request_tokens.return_value = True
         mock_ecobee.api_key = "test-api-key"
         mock_ecobee.refresh_token = "test-token"
-        # pylint: disable=protected-access
+
         flow._ecobee = mock_ecobee
-        # pylint: enable=protected-access
 
         result = await flow.async_step_authorize(user_input={})
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["title"] == DOMAIN
         assert result["data"] == {
             CONF_API_KEY: "test-api-key",
@@ -110,13 +109,12 @@ async def test_token_request_fails(hass):
         mock_ecobee = mock_ecobee.return_value
         mock_ecobee.request_tokens.return_value = False
         mock_ecobee.pin = "test-pin"
-        # pylint: disable=protected-access
+
         flow._ecobee = mock_ecobee
-        # pylint: enable=protected-access
 
         result = await flow.async_step_authorize(user_input={})
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "authorize"
         assert result["errors"]["base"] == "token_request_failed"
         assert result["description_placeholders"] == {"pin": "test-pin"}
@@ -131,7 +129,7 @@ async def test_import_flow_triggered_but_no_ecobee_conf(hass):
 
     result = await flow.async_step_import(import_data=None)
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -155,7 +153,7 @@ async def test_import_flow_triggered_with_ecobee_conf_and_valid_data_and_valid_t
 
         result = await flow.async_step_import(import_data=None)
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["title"] == DOMAIN
         assert result["data"] == {
             CONF_API_KEY: "test-api-key",

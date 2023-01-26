@@ -3,7 +3,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from homeassistant import config as hass_config, setup
-from homeassistant.components.trend import DOMAIN
+from homeassistant.components.trend.const import DOMAIN
 from homeassistant.const import SERVICE_RELOAD, STATE_UNKNOWN
 import homeassistant.util.dt as dt_util
 

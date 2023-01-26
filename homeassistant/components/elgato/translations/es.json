@@ -14,11 +14,11 @@
                     "host": "Host",
                     "port": "Puerto"
                 },
-                "description": "Configura la integraci\u00f3n de Elgato Light con Home Assistant."
+                "description": "Configura tu Elgato Light para que se integre con Home Assistant."
             },
             "zeroconf_confirm": {
-                "description": "\u00bfDesea a\u00f1adir Elgato Key Light con el n\u00famero de serie `{serial_number}` a Home Assistant?",
-                "title": "Descubierto dispositivo Elgato Key Light"
+                "description": "\u00bfQuieres a\u00f1adir el Light de Elgato con n\u00famero de serie `{serial_number}` a Home Assistant?",
+                "title": "Dispositivo Elgato Light descubierto"
             }
         }
     }

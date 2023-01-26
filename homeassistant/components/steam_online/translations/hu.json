@@ -24,9 +24,15 @@
             }
         }
     },
+    "issues": {
+        "removed_yaml": {
+            "description": "A Steam YAML-ben megadott konfigur\u00e1ci\u00f3ja elt\u00e1vol\u00edt\u00e1sra ker\u00fclt.\n\nA megl\u00e9v\u0151 YAML konfigur\u00e1ci\u00f3j\u00e1t a Home Assistant nem haszn\u00e1lja.\n\nK\u00e9rem, t\u00e1vol\u00edtsa el a YAML konfigur\u00e1ci\u00f3t a configuration.yaml f\u00e1jlb\u00f3l, \u00e9s ind\u00edtsa \u00fajra a Home Assistantot.",
+            "title": "A Steam YAML konfigur\u00e1ci\u00f3 elt\u00e1vol\u00edt\u00e1sra ker\u00fcl"
+        }
+    },
     "options": {
         "error": {
-            "unauthorized": "Bar\u00e1ti lista korl\u00e1tozott: K\u00e9rj\u00fck, olvassa el a dokument\u00e1ci\u00f3t arr\u00f3l, hogyan l\u00e1thatja az \u00f6sszes t\u00f6bbi bar\u00e1tot."
+            "unauthorized": "A bar\u00e1t-lista korl\u00e1tozva van: K\u00e9rem, olvassa el a dokument\u00e1ci\u00f3t arr\u00f3l, hogyan l\u00e1thatja az \u00f6sszes t\u00f6bbi bar\u00e1tj\u00e1t."
         },
         "step": {
             "init": {

@@ -18,7 +18,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
-from tests.components.ruckus_unleashed import (
+from . import (
     DEFAULT_AP_INFO,
     DEFAULT_SYSTEM_INFO,
     DEFAULT_TITLE,
@@ -31,7 +31,7 @@ async def test_setup_entry_login_error(hass):
     """Test entry setup failed due to login error."""
     entry = mock_config_entry()
     with patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus",
+        "homeassistant.components.ruckus_unleashed.Ruckus.connect",
         side_effect=AuthenticationError,
     ):
         entry.add_to_hass(hass)
@@ -45,7 +45,7 @@ async def test_setup_entry_connection_error(hass):
     """Test entry setup failed due to connection error."""
     entry = mock_config_entry()
     with patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus",
+        "homeassistant.components.ruckus_unleashed.Ruckus.connect",
         side_effect=ConnectionError,
     ):
         entry.add_to_hass(hass)

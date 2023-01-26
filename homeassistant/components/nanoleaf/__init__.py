@@ -41,7 +41,7 @@ class NanoleafEntryData:
     """Class for sharing data within the Nanoleaf integration."""
 
     device: Nanoleaf
-    coordinator: DataUpdateCoordinator
+    coordinator: DataUpdateCoordinator[None]
     event_listener: asyncio.Task
 
 
@@ -107,7 +107,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         nanoleaf, coordinator, event_listener
     )
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

@@ -8,5 +8,10 @@
                 "description": "Chcete nastavit Tasmota?"
             }
         }
+    },
+    "issues": {
+        "topic_duplicated": {
+            "description": "N\u011bkolik za\u0159\u00edzen\u00ed Tasmota sd\u00edl\u00ed t\u00e9ma {topic} . \n\n Za\u0159\u00edzen\u00ed Tasmota s t\u00edmto probl\u00e9mem: {offenders} ."
+        }
     }
 }

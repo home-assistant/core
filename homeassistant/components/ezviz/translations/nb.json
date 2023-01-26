@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "unknown": "Uventet feil"
+        },
         "step": {
             "confirm": {
                 "data": {

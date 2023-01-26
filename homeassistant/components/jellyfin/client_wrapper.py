@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import socket
 from typing import Any
-import uuid
 
 from jellyfin_apiclient_python import Jellyfin, JellyfinClient
 from jellyfin_apiclient_python.api import API
@@ -16,55 +15,61 @@ from homeassistant import exceptions
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from .const import CLIENT_VERSION, USER_AGENT, USER_APP_NAME
+from .const import CLIENT_VERSION, ITEM_KEY_IMAGE_TAGS, USER_AGENT, USER_APP_NAME
 
 
 async def validate_input(
     hass: HomeAssistant, user_input: dict[str, Any], client: JellyfinClient
-) -> str:
+) -> tuple[str, dict[str, Any]]:
     """Validate that the provided url and credentials can be used to connect."""
     url = user_input[CONF_URL]
     username = user_input[CONF_USERNAME]
     password = user_input[CONF_PASSWORD]
 
-    userid = await hass.async_add_executor_job(
+    user_id, connect_result = await hass.async_add_executor_job(
         _connect, client, url, username, password
     )
 
-    return userid
+    return (user_id, connect_result)
 
 
-def create_client() -> JellyfinClient:
+def create_client(device_id: str, device_name: str | None = None) -> JellyfinClient:
     """Create a new Jellyfin client."""
+    if device_name is None:
+        device_name = socket.gethostname()
+
     jellyfin = Jellyfin()
+
     client = jellyfin.get_client()
-    _setup_client(client)
+    client.config.app(USER_APP_NAME, CLIENT_VERSION, device_name, device_id)
+    client.config.http(USER_AGENT)
+
     return client
 
 
-def _setup_client(client: JellyfinClient) -> None:
-    """Configure the Jellyfin client with a number of required properties."""
-    player_name = socket.gethostname()
-    client_uuid = str(uuid.uuid4())
-
-    client.config.app(USER_APP_NAME, CLIENT_VERSION, player_name, client_uuid)
-    client.config.http(USER_AGENT)
-
-
-def _connect(client: JellyfinClient, url: str, username: str, password: str) -> str:
+def _connect(
+    client: JellyfinClient, url: str, username: str, password: str
+) -> tuple[str, dict[str, Any]]:
     """Connect to the Jellyfin server and assert that the user can login."""
     client.config.data["auth.ssl"] = url.startswith("https")
 
-    _connect_to_address(client.auth, url)
+    connect_result = _connect_to_address(client.auth, url)
+
     _login(client.auth, url, username, password)
-    return _get_id(client.jellyfin)
+
+    return (_get_user_id(client.jellyfin), connect_result)
 
 
-def _connect_to_address(connection_manager: ConnectionManager, url: str) -> None:
+def _connect_to_address(
+    connection_manager: ConnectionManager, url: str
+) -> dict[str, Any]:
     """Connect to the Jellyfin server."""
-    state = connection_manager.connect_to_address(url)
-    if state["State"] != CONNECTION_STATE["ServerSignIn"]:
+    result: dict[str, Any] = connection_manager.connect_to_address(url)
+
+    if result["State"] != CONNECTION_STATE["ServerSignIn"]:
         raise CannotConnect
+
+    return result
 
 
 def _login(
@@ -75,15 +80,35 @@ def _login(
 ) -> None:
     """Assert that the user can log in to the Jellyfin server."""
     response = connection_manager.login(url, username, password)
+
     if "AccessToken" not in response:
         raise InvalidAuth
 
 
-def _get_id(api: API) -> str:
+def _get_user_id(api: API) -> str:
     """Set the unique userid from a Jellyfin server."""
     settings: dict[str, Any] = api.get_user_settings()
     userid: str = settings["Id"]
     return userid
+
+
+def get_artwork_url(
+    client: JellyfinClient, item: dict[str, Any], max_width: int = 600
+) -> str | None:
+    """Find a suitable thumbnail for an item."""
+    artwork_id: str = item["Id"]
+    artwork_type = "Primary"
+    parent_backdrop_id: str | None = item.get("ParentBackdropItemId")
+
+    if "Backdrop" in item[ITEM_KEY_IMAGE_TAGS]:
+        artwork_type = "Backdrop"
+    elif parent_backdrop_id:
+        artwork_type = "Backdrop"
+        artwork_id = parent_backdrop_id
+    elif "Primary" not in item[ITEM_KEY_IMAGE_TAGS]:
+        return None
+
+    return str(client.jellyfin.artwork(artwork_id, artwork_type, max_width))
 
 
 class CannotConnect(exceptions.HomeAssistantError):

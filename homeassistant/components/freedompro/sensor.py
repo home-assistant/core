@@ -1,16 +1,19 @@
 """Support for Freedompro sensor."""
+from typing import Any
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import LIGHT_LUX, PERCENTAGE, TEMP_CELSIUS
+from homeassistant.const import LIGHT_LUX, PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import FreedomproDataUpdateCoordinator
 from .const import DOMAIN
 
 DEVICE_CLASS_MAP = {
@@ -24,7 +27,7 @@ STATE_CLASS_MAP = {
     "lightSensor": None,
 }
 UNIT_MAP = {
-    "temperatureSensor": TEMP_CELSIUS,
+    "temperatureSensor": UnitOfTemperature.CELSIUS,
     "humiditySensor": PERCENTAGE,
     "lightSensor": LIGHT_LUX,
 }
@@ -40,7 +43,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Freedompro sensor."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: FreedomproDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         Device(device, coordinator)
         for device in coordinator.data
@@ -48,10 +51,12 @@ async def async_setup_entry(
     )
 
 
-class Device(CoordinatorEntity, SensorEntity):
+class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], SensorEntity):
     """Representation of an Freedompro sensor."""
 
-    def __init__(self, device, coordinator):
+    def __init__(
+        self, device: dict[str, Any], coordinator: FreedomproDataUpdateCoordinator
+    ) -> None:
         """Initialize the Freedompro sensor."""
         super().__init__(coordinator)
         self._attr_name = device["name"]
@@ -59,7 +64,7 @@ class Device(CoordinatorEntity, SensorEntity):
         self._type = device["type"]
         self._attr_device_info = DeviceInfo(
             identifiers={
-                (DOMAIN, self.unique_id),
+                (DOMAIN, device["uid"]),
             },
             manufacturer="Freedompro",
             model=device["type"],

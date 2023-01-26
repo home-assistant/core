@@ -23,5 +23,14 @@
                 "title": "RTSPtoWebRTC"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "stun_server": "\u0410\u0434\u0440\u0435\u0441 \u0441\u0435\u0440\u0432\u0435\u0440\u0430 Stun (\u0445\u043e\u0441\u0442:\u043f\u043e\u0440\u0442)"
+                }
+            }
+        }
     }
 }

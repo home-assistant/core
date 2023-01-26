@@ -15,11 +15,56 @@
             "reauth_confirm": {
                 "data": {
                     "api_key": "API-Schl\u00fcssel"
+                },
+                "data_description": {
+                    "api_key": "Folge der Dokumentation, um deinen API-Schl\u00fcssel zu erhalten."
                 }
             },
             "user": {
                 "data": {
                     "api_key": "API-Schl\u00fcssel"
+                },
+                "data_description": {
+                    "api_key": "Folge der Dokumentation, um deinen API-Schl\u00fcssel zu erhalten."
+                }
+            }
+        }
+    },
+    "entity": {
+        "select": {
+            "horizontalswing": {
+                "state": {
+                    "fixedcenter": "Mittig fixiert",
+                    "fixedcenterleft": "Mitte links fixiert",
+                    "fixedcenterright": "Mitte rechts fixiert",
+                    "fixedleft": "Links fixiert",
+                    "fixedleftright": "Links rechts fixiert",
+                    "fixedright": "Rechts fixiert",
+                    "rangecenter": "Bereich Mitte",
+                    "rangefull": "Bereich voll",
+                    "stopped": "Angehalten"
+                }
+            },
+            "light": {
+                "state": {
+                    "dim": "Abgeblendet",
+                    "off": "Aus",
+                    "on": "An"
+                }
+            }
+        },
+        "sensor": {
+            "sensitivity": {
+                "state": {
+                    "n": "Normal",
+                    "s": "Empfindlich"
+                }
+            },
+            "smart_type": {
+                "state": {
+                    "feelslike": "F\u00fchlt sich an wie",
+                    "humidity": "Luftfeuchtigkeit",
+                    "temperature": "Temperatur"
                 }
             }
         }

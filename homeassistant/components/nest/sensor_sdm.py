@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
+from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -53,6 +53,7 @@ class SensorBase(SensorEntity):
 
     _attr_should_poll = False
     _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_has_entity_name = True
 
     def __init__(self, device: Device) -> None:
         """Initialize the sensor."""
@@ -60,6 +61,11 @@ class SensorBase(SensorEntity):
         self._device_info = NestDeviceInfo(device)
         self._attr_unique_id = f"{device.name}-{self.device_class}"
         self._attr_device_info = self._device_info.device_info
+
+    @property
+    def available(self) -> bool:
+        """Return the device availability."""
+        return self._device_info.available
 
     async def async_added_to_hass(self) -> None:
         """Run when entity is added to register update signal handler."""
@@ -72,12 +78,8 @@ class TemperatureSensor(SensorBase):
     """Representation of a Temperature Sensor."""
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
-    _attr_native_unit_of_measurement = TEMP_CELSIUS
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return f"{self._device_info.device_name} Temperature"
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
+    _attr_name = "Temperature"
 
     @property
     def native_value(self) -> float:
@@ -94,11 +96,7 @@ class HumiditySensor(SensorBase):
 
     _attr_device_class = SensorDeviceClass.HUMIDITY
     _attr_native_unit_of_measurement = PERCENTAGE
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return f"{self._device_info.device_name} Humidity"
+    _attr_name = "Humidity"
 
     @property
     def native_value(self) -> int:

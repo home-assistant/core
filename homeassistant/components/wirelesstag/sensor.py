@@ -47,7 +47,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     ),
     SENSOR_MOISTURE: SensorEntityDescription(
         key=SENSOR_MOISTURE,
-        device_class=SENSOR_MOISTURE,
+        device_class=SensorDeviceClass.MOISTURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SENSOR_LIGHT: SensorEntityDescription(
@@ -109,7 +109,7 @@ class WirelessTagSensor(WirelessTagBaseSensor, SensorEntity):
             f"sensor.{WIRELESSTAG_DOMAIN}_{self.underscored_name}_{self._sensor_type}"
         )
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
             async_dispatcher_connect(

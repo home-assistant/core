@@ -12,7 +12,7 @@
         "flow_title": "{name}",
         "step": {
             "reauth_confirm": {
-                "description": "Die Sonarr-Integration muss manuell erneut mit der Sonarr-API authentifiziert werden, die unter folgender Adresse gehostet wird: {url}",
+                "description": "Die Sonarr Integration muss manuell erneut mit der Sonarr-API authentifiziert werden, die unter folgender Adresse gehostet wird: {url}",
                 "title": "Integration erneut authentifizieren"
             },
             "user": {

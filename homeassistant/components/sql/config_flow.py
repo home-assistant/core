@@ -80,12 +80,6 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return SQLOptionsFlowHandler(config_entry)
 
-    async def async_step_import(self, config: dict[str, Any] | None) -> FlowResult:
-        """Import a configuration from config.yaml."""
-
-        self._async_abort_entries_match(config)
-        return await self.async_step_user(user_input=config)
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -147,11 +141,15 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlow):
     ) -> FlowResult:
         """Manage SQL options."""
         errors = {}
+        db_url_default = DEFAULT_URL.format(
+            hass_config_path=self.hass.config.path(DEFAULT_DB_FILE)
+        )
 
         if user_input is not None:
-            db_url = user_input[CONF_DB_URL]
+            db_url = user_input.get(CONF_DB_URL, db_url_default)
             query = user_input[CONF_QUERY]
             column = user_input[CONF_COLUMN_NAME]
+            name = self.entry.options.get(CONF_NAME, self.entry.title)
 
             try:
                 validate_sql_select(query)
@@ -166,8 +164,8 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlow):
                 return self.async_create_entry(
                     title="",
                     data={
-                        CONF_NAME: self.entry.title,
-                        **self.entry.options,
+                        CONF_NAME: name,
+                        CONF_DB_URL: db_url,
                         **user_input,
                     },
                 )
@@ -176,7 +174,7 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlow):
             step_id="init",
             data_schema=vol.Schema(
                 {
-                    vol.Required(
+                    vol.Optional(
                         CONF_DB_URL,
                         description={
                             "suggested_value": self.entry.options[CONF_DB_URL]

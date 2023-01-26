@@ -35,15 +35,15 @@ class StookalertBinarySensor(BinarySensorEntity):
 
     _attr_attribution = "Data provided by rivm.nl"
     _attr_device_class = BinarySensorDeviceClass.SAFETY
+    _attr_has_entity_name = True
 
     def __init__(self, client: stookalert.stookalert, entry: ConfigEntry) -> None:
         """Initialize a Stookalert device."""
         self._client = client
-        self._attr_name = f"Stookalert {entry.data[CONF_PROVINCE]}"
         self._attr_unique_id = entry.unique_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{entry.entry_id}")},
-            name=entry.data[CONF_PROVINCE],
+            name=f"Stookalert {entry.data[CONF_PROVINCE]}",
             manufacturer="RIVM",
             model="Stookalert",
             entry_type=DeviceEntryType.SERVICE,

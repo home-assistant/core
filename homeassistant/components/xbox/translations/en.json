@@ -13,5 +13,11 @@
                 "title": "Pick Authentication Method"
             }
         }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Configuring the Xbox in configuration.yaml is being removed in Home Assistant 2022.9.\n\nYour existing OAuth Application Credentials and access settings have been imported into the UI automatically. Remove the YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue.",
+            "title": "The Xbox YAML configuration is being removed"
+        }
     }
 }

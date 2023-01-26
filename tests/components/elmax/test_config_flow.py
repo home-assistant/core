@@ -14,14 +14,15 @@ from homeassistant.components.elmax.const import (
 )
 from homeassistant.config_entries import SOURCE_REAUTH
 
-from tests.common import MockConfigEntry
-from tests.components.elmax import (
+from . import (
     MOCK_PANEL_ID,
     MOCK_PANEL_NAME,
     MOCK_PANEL_PIN,
     MOCK_PASSWORD,
     MOCK_USERNAME,
 )
+
+from tests.common import MockConfigEntry
 
 CONF_POLLING = "polling"
 
@@ -31,7 +32,7 @@ async def test_show_form(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -60,7 +61,7 @@ async def test_standard_setup(hass):
             },
         )
         await hass.async_block_till_done()
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
 async def test_one_config_allowed(hass):
@@ -94,7 +95,7 @@ async def test_one_config_allowed(hass):
             CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
         },
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -115,7 +116,7 @@ async def test_invalid_credentials(hass):
             },
         )
         assert login_result["step_id"] == "user"
-        assert login_result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert login_result["type"] == data_entry_flow.FlowResultType.FORM
         assert login_result["errors"] == {"base": "invalid_auth"}
 
 
@@ -136,7 +137,7 @@ async def test_connection_error(hass):
             },
         )
         assert login_result["step_id"] == "user"
-        assert login_result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert login_result["type"] == data_entry_flow.FlowResultType.FORM
         assert login_result["errors"] == {"base": "network_error"}
 
 
@@ -164,7 +165,7 @@ async def test_unhandled_error(hass):
             },
         )
         assert result["step_id"] == "panels"
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["errors"] == {"base": "unknown"}
 
 
@@ -193,7 +194,7 @@ async def test_invalid_pin(hass):
             },
         )
         assert result["step_id"] == "panels"
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["errors"] == {"base": "invalid_pin"}
 
 
@@ -215,7 +216,7 @@ async def test_no_online_panel(hass):
             },
         )
         assert login_result["step_id"] == "user"
-        assert login_result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert login_result["type"] == data_entry_flow.FlowResultType.FORM
         assert login_result["errors"] == {"base": "no_panel_online"}
 
 
@@ -231,7 +232,7 @@ async def test_show_reauth(hass):
             CONF_ELMAX_PASSWORD: MOCK_PASSWORD,
         },
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
 
@@ -272,7 +273,7 @@ async def test_reauth_flow(hass):
                 CONF_ELMAX_PASSWORD: MOCK_PASSWORD,
             },
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
         await hass.async_block_till_done()
         assert result["reason"] == "reauth_successful"
 
@@ -316,7 +317,7 @@ async def test_reauth_panel_disappeared(hass):
             },
         )
         assert result["step_id"] == "reauth_confirm"
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["errors"] == {"base": "reauth_panel_disappeared"}
 
 
@@ -358,7 +359,7 @@ async def test_reauth_invalid_pin(hass):
             },
         )
         assert result["step_id"] == "reauth_confirm"
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["errors"] == {"base": "invalid_pin"}
 
 
@@ -400,5 +401,5 @@ async def test_reauth_bad_login(hass):
             },
         )
         assert result["step_id"] == "reauth_confirm"
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["errors"] == {"base": "invalid_auth"}

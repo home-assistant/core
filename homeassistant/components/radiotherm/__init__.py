@@ -32,11 +32,11 @@ async def _async_call_or_raise_not_ready(
     except RadiothermTstatError as ex:
         msg = f"{host} was busy (invalid value returned): {ex}"
         raise ConfigEntryNotReady(msg) from ex
-    except (OSError, URLError) as ex:
-        msg = f"{host} connection error: {ex}"
-        raise ConfigEntryNotReady(msg) from ex
     except timeout as ex:
         msg = f"{host} timed out waiting for a response: {ex}"
+        raise ConfigEntryNotReady(msg) from ex
+    except (OSError, URLError) as ex:
+        msg = f"{host} connection error: {ex}"
         raise ConfigEntryNotReady(msg) from ex
 
 
@@ -57,7 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await _async_call_or_raise_not_ready(time_coro, host)
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     return True

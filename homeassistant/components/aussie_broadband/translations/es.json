@@ -2,11 +2,11 @@
     "config": {
         "abort": {
             "already_configured": "La cuenta ya est\u00e1 configurada",
-            "no_services_found": "No se han encontrado servicios para esta cuenta",
-            "reauth_successful": "Re-autenticaci\u00f3n realizada correctamente"
+            "no_services_found": "No se encontraron servicios para esta cuenta",
+            "reauth_successful": "La autenticaci\u00f3n se volvi\u00f3 a realizar correctamente"
         },
         "error": {
-            "cannot_connect": "Fall\u00f3 la conexi\u00f3n",
+            "cannot_connect": "No se pudo conectar",
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
             "unknown": "Error inesperado"
         },
@@ -15,26 +15,26 @@
                 "data": {
                     "password": "Contrase\u00f1a"
                 },
-                "description": "Actualice la contrase\u00f1a para {username}",
-                "title": "Reautenticar Integraci\u00f3n"
+                "description": "Actualizar contrase\u00f1a para {username}",
+                "title": "Volver a autenticar la integraci\u00f3n"
             },
             "service": {
                 "data": {
                     "services": "Servicios"
                 },
-                "title": "Seleccionar Servicios"
+                "title": "Seleccionar servicios"
             },
             "user": {
                 "data": {
                     "password": "Contrase\u00f1a",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 }
             }
         }
     },
     "options": {
         "abort": {
-            "cannot_connect": "Fallo en la conexi\u00f3n",
+            "cannot_connect": "No se pudo conectar",
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
             "unknown": "Error inesperado"
         },
@@ -43,7 +43,7 @@
                 "data": {
                     "services": "Servicios"
                 },
-                "title": "Selecciona servicios"
+                "title": "Seleccionar servicios"
             }
         }
     }

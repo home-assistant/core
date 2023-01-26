@@ -11,7 +11,7 @@
         "flow_title": "{name} ({host})",
         "step": {
             "import_failed": {
-                "description": "Couldn\u2019t setup bridge (host: {host}) imported from configuration.yaml.",
+                "description": "Couldn\u2019t set up bridge (host: {host}) imported from configuration.yaml.",
                 "title": "Failed to import Cas\u00e9ta bridge configuration."
             },
             "link": {
@@ -33,6 +33,9 @@
             "button_2": "Second button",
             "button_3": "Third button",
             "button_4": "Fourth button",
+            "button_5": "Fifth button",
+            "button_6": "Sixth button",
+            "button_7": "Seventh button",
             "close_1": "Close 1",
             "close_2": "Close 2",
             "close_3": "Close 3",

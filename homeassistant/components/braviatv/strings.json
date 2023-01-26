@@ -9,30 +9,40 @@
       },
       "authorize": {
         "title": "Authorize Sony Bravia TV",
-        "description": "Enter the PIN code shown on the Sony Bravia TV. \n\nIf the PIN code is not shown, you have to unregister Home Assistant on your TV, go to: Settings -> Network -> Remote device settings -> Unregister remote device.",
+        "description": "Make sure that «Control remotely» is enabled on your TV, go to: \nSettings -> Network -> Remote device settings -> Control remotely. \n\nThere are two authorization methods: PIN code or PSK (Pre-Shared Key). \nAuthorization via PSK is recommended as more stable.",
+        "data": {
+          "use_psk": "Use PSK authentication"
+        }
+      },
+      "pin": {
+        "title": "Authorize Sony Bravia TV",
+        "description": "Enter the PIN code shown on the Sony Bravia TV. \n\nIf the PIN code is not shown, you have to unregister Home Assistant on your TV, go to: Settings -> Network -> Remote device settings -> Deregister remote device.",
         "data": {
           "pin": "[%key:common::config_flow::data::pin%]"
         }
+      },
+      "psk": {
+        "title": "Authorize Sony Bravia TV",
+        "description": "To set up PSK on your TV, go to: Settings -> Network -> Home Network Setup -> IP Control. Set «Authentication» to «Normal and Pre-Shared Key» or «Pre-Shared Key» and define your Pre-Shared-Key string (e.g. sony). \n\nThen enter your PSK here.",
+        "data": {
+          "pin": "PSK"
+        }
+      },
+      "confirm": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
       }
     },
     "error": {
       "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unsupported_model": "Your TV model is not supported."
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_ip_control": "IP Control is disabled on your TV or the TV is not supported."
-    }
-  },
-  "options": {
-    "step": {
-      "user": {
-        "title": "Options for Sony Bravia TV",
-        "data": {
-          "ignored_sources": "List of ignored sources"
-        }
-      }
+      "no_ip_control": "IP Control is disabled on your TV or the TV is not supported.",
+      "not_bravia_device": "The device is not a Bravia TV.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   }
 }

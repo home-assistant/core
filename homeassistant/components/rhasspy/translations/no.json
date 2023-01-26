@@ -1,0 +1,12 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Allerede konfigurert. Kun \u00e9n konfigurert instans i gangen."
+        },
+        "step": {
+            "user": {
+                "description": "Vil du aktivere Rhasspy-st\u00f8tte?"
+            }
+        }
+    }
+}

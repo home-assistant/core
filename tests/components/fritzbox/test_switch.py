@@ -16,15 +16,15 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_DEVICES,
-    ELECTRIC_CURRENT_AMPERE,
-    ELECTRIC_POTENTIAL_VOLT,
-    ENERGY_KILO_WATT_HOUR,
-    POWER_WATT,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_ON,
     STATE_UNAVAILABLE,
-    TEMP_CELSIUS,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
@@ -58,35 +58,35 @@ async def test_setup(hass: HomeAssistant, fritz: Mock):
             f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_temperature",
             "1.23",
             f"{CONF_FAKE_NAME} Temperature",
-            TEMP_CELSIUS,
+            UnitOfTemperature.CELSIUS,
             SensorStateClass.MEASUREMENT,
         ],
         [
             f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_power_consumption",
             "5.678",
             f"{CONF_FAKE_NAME} Power Consumption",
-            POWER_WATT,
+            UnitOfPower.WATT,
             SensorStateClass.MEASUREMENT,
         ],
         [
             f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_total_energy",
             "1.234",
             f"{CONF_FAKE_NAME} Total Energy",
-            ENERGY_KILO_WATT_HOUR,
+            UnitOfEnergy.KILO_WATT_HOUR,
             SensorStateClass.TOTAL_INCREASING,
         ],
         [
             f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_voltage",
-            "230",
+            "230.0",
             f"{CONF_FAKE_NAME} Voltage",
-            ELECTRIC_POTENTIAL_VOLT,
+            UnitOfElectricPotential.VOLT,
             SensorStateClass.MEASUREMENT,
         ],
         [
             f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_electric_current",
-            "0.0246869565217391",
+            "0.025",
             f"{CONF_FAKE_NAME} Electric Current",
-            ELECTRIC_CURRENT_AMPERE,
+            UnitOfElectricCurrent.AMPERE,
             SensorStateClass.MEASUREMENT,
         ],
     )
@@ -174,3 +174,21 @@ async def test_assume_device_unavailable(hass: HomeAssistant, fritz: Mock):
     state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_device_current_unavailable(hass: HomeAssistant, fritz: Mock):
+    """Test current in case voltage and power are not available."""
+    device = FritzDeviceSwitchMock()
+    device.voltage = None
+    device.power = None
+    assert await setup_config_entry(
+        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+    )
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_ON
+
+    state = hass.states.get(f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_electric_current")
+    assert state
+    assert state.state == "0.0"

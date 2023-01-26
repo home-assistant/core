@@ -60,20 +60,9 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 39
     assert args["valueId"] == {
-        "commandClassName": "Multilevel Switch",
         "commandClass": 38,
         "endpoint": 0,
         "property": "targetValue",
-        "propertyName": "targetValue",
-        "metadata": {
-            "label": "Target value",
-            "max": 99,
-            "min": 0,
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "valueChangeOptions": ["transitionDuration"],
-        },
     }
     assert args["value"] == 255
 
@@ -92,20 +81,9 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 39
     assert args["valueId"] == {
-        "commandClassName": "Multilevel Switch",
         "commandClass": 38,
         "endpoint": 0,
         "property": "targetValue",
-        "propertyName": "targetValue",
-        "metadata": {
-            "label": "Target value",
-            "max": 99,
-            "min": 0,
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "valueChangeOptions": ["transitionDuration"],
-        },
     }
     assert args["value"] == 255
     assert args["options"]["transitionDuration"] == "10s"
@@ -164,20 +142,9 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 39
     assert args["valueId"] == {
-        "commandClassName": "Multilevel Switch",
         "commandClass": 38,
         "endpoint": 0,
         "property": "targetValue",
-        "propertyName": "targetValue",
-        "metadata": {
-            "label": "Target value",
-            "max": 99,
-            "min": 0,
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "valueChangeOptions": ["transitionDuration"],
-        },
     }
     assert args["value"] == 50
     assert args["options"]["transitionDuration"] == "default"
@@ -201,20 +168,9 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 39
     assert args["valueId"] == {
-        "commandClassName": "Multilevel Switch",
         "commandClass": 38,
         "endpoint": 0,
         "property": "targetValue",
-        "propertyName": "targetValue",
-        "metadata": {
-            "label": "Target value",
-            "max": 99,
-            "min": 0,
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "valueChangeOptions": ["transitionDuration"],
-        },
     }
     assert args["value"] == 50
     assert args["options"]["transitionDuration"] == "20s"
@@ -233,12 +189,9 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
     args = client.async_send_command.call_args_list[0][0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 39
-    assert args["valueId"]["commandClassName"] == "Color Switch"
     assert args["valueId"]["commandClass"] == 51
     assert args["valueId"]["endpoint"] == 0
-    assert args["valueId"]["metadata"]["label"] == "Target Color"
     assert args["valueId"]["property"] == "targetColor"
-    assert args["valueId"]["propertyName"] == "targetColor"
     assert args["value"] == {
         "blue": 255,
         "coldWhite": 0,
@@ -332,12 +285,9 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
     args = client.async_send_command.call_args_list[0][0][0]  # red 0
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 39
-    assert args["valueId"]["commandClassName"] == "Color Switch"
     assert args["valueId"]["commandClass"] == 51
     assert args["valueId"]["endpoint"] == 0
-    assert args["valueId"]["metadata"]["label"] == "Target Color"
     assert args["valueId"]["property"] == "targetColor"
-    assert args["valueId"]["propertyName"] == "targetColor"
     assert args["value"] == {
         "blue": 0,
         "coldWhite": 235,
@@ -438,20 +388,9 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 39
     assert args["valueId"] == {
-        "commandClassName": "Multilevel Switch",
         "commandClass": 38,
         "endpoint": 0,
         "property": "targetValue",
-        "propertyName": "targetValue",
-        "metadata": {
-            "label": "Target value",
-            "max": 99,
-            "min": 0,
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "valueChangeOptions": ["transitionDuration"],
-        },
     }
     assert args["value"] == 0
 
@@ -493,20 +432,9 @@ async def test_rgbw_light(hass, client, zen_31, integration):
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 94
     assert args["valueId"] == {
-        "commandClassName": "Color Switch",
         "commandClass": 51,
         "endpoint": 1,
         "property": "targetColor",
-        "propertyName": "targetColor",
-        "ccVersion": 0,
-        "metadata": {
-            "label": "Target Color",
-            "type": "any",
-            "readable": True,
-            "writeable": True,
-            "valueChangeOptions": ["transitionDuration"],
-        },
-        "value": {"blue": 70, "green": 159, "red": 255, "warmWhite": 141},
     }
     assert args["value"] == {"blue": 0, "green": 0, "red": 0, "warmWhite": 128}
 
@@ -514,22 +442,9 @@ async def test_rgbw_light(hass, client, zen_31, integration):
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 94
     assert args["valueId"] == {
-        "commandClassName": "Multilevel Switch",
         "commandClass": 38,
         "endpoint": 1,
         "property": "targetValue",
-        "propertyName": "targetValue",
-        "ccVersion": 0,
-        "metadata": {
-            "label": "Target value",
-            "max": 99,
-            "min": 0,
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "valueChangeOptions": ["transitionDuration"],
-        },
-        "value": 59,
     }
     assert args["value"] == 255
 
@@ -565,19 +480,9 @@ async def test_black_is_off(hass, client, express_controls_ezmultipli, integrati
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == node.node_id
     assert args["valueId"] == {
-        "commandClassName": "Color Switch",
         "commandClass": 51,
         "endpoint": 0,
         "property": "targetColor",
-        "propertyName": "targetColor",
-        "ccVersion": 1,
-        "metadata": {
-            "label": "Target Color",
-            "type": "any",
-            "readable": True,
-            "writeable": True,
-            "valueChangeOptions": ["transitionDuration"],
-        },
     }
     assert args["value"] == {"red": 255, "green": 255, "blue": 255}
 
@@ -656,19 +561,9 @@ async def test_black_is_off(hass, client, express_controls_ezmultipli, integrati
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == node.node_id
     assert args["valueId"] == {
-        "commandClassName": "Color Switch",
         "commandClass": 51,
         "endpoint": 0,
         "property": "targetColor",
-        "propertyName": "targetColor",
-        "ccVersion": 1,
-        "metadata": {
-            "label": "Target Color",
-            "type": "any",
-            "readable": True,
-            "writeable": True,
-            "valueChangeOptions": ["transitionDuration"],
-        },
     }
     assert args["value"] == {"red": 0, "green": 0, "blue": 0}
 
@@ -686,19 +581,9 @@ async def test_black_is_off(hass, client, express_controls_ezmultipli, integrati
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == node.node_id
     assert args["valueId"] == {
-        "commandClassName": "Color Switch",
         "commandClass": 51,
         "endpoint": 0,
         "property": "targetColor",
-        "propertyName": "targetColor",
-        "ccVersion": 1,
-        "metadata": {
-            "label": "Target Color",
-            "type": "any",
-            "readable": True,
-            "writeable": True,
-            "valueChangeOptions": ["transitionDuration"],
-        },
     }
     assert args["value"] == {"red": 0, "green": 255, "blue": 0}
 

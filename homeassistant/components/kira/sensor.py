@@ -13,8 +13,6 @@ from . import CONF_SENSOR, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-ICON = "mdi:remote"
-
 
 def setup_platform(
     hass: HomeAssistant,
@@ -34,47 +32,20 @@ def setup_platform(
 class KiraReceiver(SensorEntity):
     """Implementation of a Kira Receiver."""
 
+    _attr_force_update = True  # repeated states have meaning in Kira
+    _attr_icon = "mdi:remote"
+    _attr_should_poll = False
+
     def __init__(self, name, kira):
         """Initialize the sensor."""
-        self._name = name
-        self._state = None
-        self._device = STATE_UNKNOWN
+        self._attr_name = name
+        self._attr_extra_state_attributes = {CONF_DEVICE: STATE_UNKNOWN}
 
         kira.registerCallback(self._update_callback)
 
     def _update_callback(self, code):
         code_name, device = code
         _LOGGER.debug("Kira Code: %s", code_name)
-        self._state = code_name
-        self._device = device
+        self._attr_native_value = code_name
+        self._attr_extra_state_attributes[CONF_DEVICE] = device
         self.schedule_update_ha_state()
-
-    @property
-    def name(self):
-        """Return the name of the receiver."""
-        return self._name
-
-    @property
-    def icon(self):
-        """Return icon."""
-        return ICON
-
-    @property
-    def native_value(self):
-        """Return the state of the receiver."""
-        return self._state
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes of the device."""
-        return {CONF_DEVICE: self._device}
-
-    @property
-    def should_poll(self) -> bool:
-        """Entity should not be polled."""
-        return False
-
-    @property
-    def force_update(self) -> bool:
-        """Kira should force updates. Repeated states have meaning."""
-        return True

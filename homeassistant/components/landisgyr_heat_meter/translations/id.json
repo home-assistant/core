@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi"
+        },
+        "step": {
+            "setup_serial_manual_path": {
+                "data": {
+                    "device": "Jalur Perangkat USB"
+                }
+            },
+            "user": {
+                "data": {
+                    "device": "Pilih perangkat"
+                }
+            }
+        }
+    }
+}

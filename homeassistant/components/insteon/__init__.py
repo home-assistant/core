@@ -51,7 +51,7 @@ async def async_get_device_config(hass, config_entry):
 
     load_aldb = 2 if devices.modem.aldb.read_write_mode == ReadWriteMode.UNKNOWN else 1
     await devices.async_load(id_devices=1, load_modem_aldb=load_aldb)
-    for addr in devices:
+    for addr in list(devices):
         device = devices[addr]
         flags = True
         for name in device.operating_flags:
@@ -154,10 +154,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         device = devices.add_x10_device(housecode, unitcode, x10_type, steps)
 
-    for platform in INSTEON_PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    await hass.config_entries.async_forward_entry_setups(entry, INSTEON_PLATFORMS)
 
     for address in devices:
         device = devices[address]

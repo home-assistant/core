@@ -1,7 +1,5 @@
 """The tests for the Home Assistant HTTP component."""
 from http import HTTPStatus
-
-# pylint: disable=protected-access
 from ipaddress import ip_address
 import os
 from unittest.mock import Mock, mock_open, patch
@@ -198,7 +196,17 @@ async def test_access_from_supervisor_ip(
 
     manager: IpBanManager = app[KEY_BAN_MANAGER]
 
-    assert await async_setup_component(hass, "hassio", {"hassio": {}})
+    with patch(
+        "homeassistant.components.hassio.HassIO.get_resolution_info",
+        return_value={
+            "unsupported": [],
+            "unhealthy": [],
+            "suggestions": [],
+            "issues": [],
+            "checks": [],
+        },
+    ):
+        assert await async_setup_component(hass, "hassio", {"hassio": {}})
 
     m_open = mock_open()
 
@@ -234,7 +242,7 @@ async def test_ban_middleware_loaded_by_default(hass):
     assert len(mock_setup.mock_calls) == 1
 
 
-async def test_ip_bans_file_creation(hass, aiohttp_client):
+async def test_ip_bans_file_creation(hass, aiohttp_client, caplog):
     """Testing if banned IP file created."""
     app = web.Application()
     app["hass"] = hass
@@ -243,7 +251,7 @@ async def test_ip_bans_file_creation(hass, aiohttp_client):
         """Return a mock web response."""
         raise HTTPUnauthorized
 
-    app.router.add_get("/", unauth_handler)
+    app.router.add_get("/example", unauth_handler)
     setup_bans(hass, app, 2)
     mock_real_ip(app)("200.201.202.204")
 
@@ -259,19 +267,19 @@ async def test_ip_bans_file_creation(hass, aiohttp_client):
     m_open = mock_open()
 
     with patch("homeassistant.components.http.ban.open", m_open, create=True):
-        resp = await client.get("/")
+        resp = await client.get("/example")
         assert resp.status == HTTPStatus.UNAUTHORIZED
         assert len(manager.ip_bans_lookup) == len(BANNED_IPS)
         assert m_open.call_count == 0
 
-        resp = await client.get("/")
+        resp = await client.get("/example")
         assert resp.status == HTTPStatus.UNAUTHORIZED
         assert len(manager.ip_bans_lookup) == len(BANNED_IPS) + 1
         m_open.assert_called_once_with(
             hass.config.path(IP_BANS_FILE), "a", encoding="utf8"
         )
 
-        resp = await client.get("/")
+        resp = await client.get("/example")
         assert resp.status == HTTPStatus.FORBIDDEN
         assert m_open.call_count == 1
 
@@ -281,6 +289,11 @@ async def test_ip_bans_file_creation(hass, aiohttp_client):
         assert (
             notifications[0].attributes["message"]
             == "Login attempt or request with invalid authentication from example.com (200.201.202.204). See the log for details."
+        )
+
+        assert (
+            "Login attempt or request with invalid authentication from example.com (200.201.202.204). Requested URL: '/example'."
+            in caplog.text
         )
 
 

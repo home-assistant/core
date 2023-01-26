@@ -4,11 +4,11 @@ from __future__ import annotations
 from collections import OrderedDict
 from collections.abc import Iterator
 import fnmatch
-from io import StringIO
+from io import StringIO, TextIOWrapper
 import logging
 import os
 from pathlib import Path
-from typing import Any, TextIO, TypeVar, Union, overload
+from typing import Any, TextIO, TypeVar, overload
 
 import yaml
 
@@ -18,7 +18,9 @@ try:
     HAS_C_LOADER = True
 except ImportError:
     HAS_C_LOADER = False
-    from yaml import SafeLoader as FastestAvailableSafeLoader  # type: ignore[misc]
+    from yaml import (  # type: ignore[assignment]
+        SafeLoader as FastestAvailableSafeLoader,
+    )
 
 from homeassistant.exceptions import HomeAssistantError
 
@@ -27,7 +29,7 @@ from .objects import Input, NodeListClass, NodeStrClass
 
 # mypy: allow-untyped-calls, no-warn-return-any
 
-JSON_TYPE = Union[list, dict, str]  # pylint: disable=invalid-name
+JSON_TYPE = list | dict | str  # pylint: disable=invalid-name
 _DictT = TypeVar("_DictT", bound=dict)
 
 _LOGGER = logging.getLogger(__name__)
@@ -85,7 +87,10 @@ class Secrets:
                     _LOGGER.setLevel(logging.DEBUG)
                 else:
                     _LOGGER.error(
-                        "Error in secrets.yaml: 'logger: debug' expected, but 'logger: %s' found",
+                        (
+                            "Error in secrets.yaml: 'logger: debug' expected, but"
+                            " 'logger: %s' found"
+                        ),
                         logger,
                     )
                 del secrets["logger"]
@@ -129,10 +134,14 @@ class SafeLineLoader(yaml.SafeLoader):
         super().__init__(stream)
         self.secrets = secrets
 
-    def compose_node(self, parent: yaml.nodes.Node, index: int) -> yaml.nodes.Node:  # type: ignore[override]
+    def compose_node(  # type: ignore[override]
+        self, parent: yaml.nodes.Node, index: int
+    ) -> yaml.nodes.Node:
         """Annotate a node with the first line it was seen."""
         last_line: int = self.line
-        node: yaml.nodes.Node = super().compose_node(parent, index)  # type: ignore[assignment]
+        node: yaml.nodes.Node = super().compose_node(  # type: ignore[assignment]
+            parent, index
+        )
         node.__line__ = last_line + 1  # type: ignore[attr-defined]
         return node
 
@@ -142,10 +151,10 @@ class SafeLineLoader(yaml.SafeLoader):
 
     def get_stream_name(self) -> str:
         """Get the name of the stream."""
-        return self.stream.name or ""
+        return getattr(self.stream, "name", "")
 
 
-LoaderType = Union[SafeLineLoader, SafeLoader]
+LoaderType = SafeLineLoader | SafeLoader
 
 
 def load_yaml(fname: str, secrets: Secrets | None = None) -> JSON_TYPE:
@@ -169,7 +178,7 @@ def parse_yaml(
     except yaml.YAMLError:
         # Loading failed, so we now load with the slow line loader
         # since the C one will not give us line numbers
-        if isinstance(content, (StringIO, TextIO)):
+        if isinstance(content, (StringIO, TextIO, TextIOWrapper)):
             # Rewind the stream so we can try again
             content.seek(0, 0)
         return _parse_yaml_pure_python(content, secrets)
@@ -223,7 +232,9 @@ def _add_reference(obj: _DictT, loader: LoaderType, node: yaml.nodes.Node) -> _D
     ...
 
 
-def _add_reference(obj, loader: LoaderType, node: yaml.nodes.Node):  # type: ignore[no-untyped-def]
+def _add_reference(  # type: ignore[no-untyped-def]
+    obj, loader: LoaderType, node: yaml.nodes.Node
+):
     """Add file reference information to an object."""
     if isinstance(obj, list):
         obj = NodeListClass(obj)
@@ -334,7 +345,9 @@ def _ordered_dict(loader: LoaderType, node: yaml.nodes.MappingNode) -> OrderedDi
             fname = loader.get_stream_name()
             raise yaml.MarkedYAMLError(
                 context=f'invalid key: "{key}"',
-                context_mark=yaml.Mark(fname, 0, line, -1, None, None),  # type: ignore[arg-type]
+                context_mark=yaml.Mark(
+                    fname, 0, line, -1, None, None  # type: ignore[arg-type]
+                ),
             ) from exc
 
         if key in seen:

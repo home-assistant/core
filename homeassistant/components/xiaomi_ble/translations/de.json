@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
+            "no_devices_found": "Keine Ger\u00e4te im Netzwerk gefunden",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
+        },
+        "error": {
+            "decryption_failed": "Der bereitgestellte Bindkey funktionierte nicht, Sensordaten konnten nicht entschl\u00fcsselt werden. Bitte \u00fcberpr\u00fcfe es und versuche es erneut.",
+            "expected_24_characters": "Erwartet wird ein 24-stelliger hexadezimaler Bindkey.",
+            "expected_32_characters": "Erwartet wird ein 32-stelliger hexadezimaler Bindkey."
+        },
+        "flow_title": "{name}",
+        "step": {
+            "bluetooth_confirm": {
+                "description": "M\u00f6chtest du {name} einrichten?"
+            },
+            "confirm_slow": {
+                "description": "Von diesem Ger\u00e4t wurde in der letzten Minute kein Broadcast gesendet, sodass wir nicht sicher sind, ob dieses Ger\u00e4t Verschl\u00fcsselung verwendet oder nicht. Dies kann daran liegen, dass das Ger\u00e4t ein langsames Sendeintervall verwendet. Best\u00e4tige, dass du das Ger\u00e4t trotzdem hinzuf\u00fcgen m\u00f6chtest. Wenn das n\u00e4chste Mal ein Broadcast empfangen wird, wirst du aufgefordert, den Bindkey einzugeben, falls er ben\u00f6tigt wird."
+            },
+            "get_encryption_key_4_5": {
+                "data": {
+                    "bindkey": "Bindkey"
+                },
+                "description": "Die vom Sensor \u00fcbertragenen Sensordaten sind verschl\u00fcsselt. Um sie zu entschl\u00fcsseln, ben\u00f6tigen wir einen 32-stelligen hexadezimalen Bindkey."
+            },
+            "get_encryption_key_legacy": {
+                "data": {
+                    "bindkey": "Bindkey"
+                },
+                "description": "Die vom Sensor \u00fcbertragenen Sensordaten sind verschl\u00fcsselt. Um sie zu entschl\u00fcsseln, ben\u00f6tigen wir einen 24-stelligen hexadezimalen Bindkey."
+            },
+            "user": {
+                "data": {
+                    "address": "Ger\u00e4t"
+                },
+                "description": "W\u00e4hle ein Ger\u00e4t zum Einrichten aus"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "motion_detected": "Bewegung erkannt"
+        }
+    }
+}

@@ -1,0 +1,21 @@
+{
+    "state": {
+        "homekit_controller__thread_node_capabilities": {
+            "border_router_capable": "\u5883\u754c(Border)\u30eb\u30fc\u30bf\u30fc\u5bfe\u5fdc",
+            "full": "\u30d5\u30eb\u30a8\u30f3\u30c9\u30c7\u30d0\u30a4\u30b9",
+            "minimal": "\u6700\u5c0f\u9650\u306e\u30a8\u30f3\u30c9 \u30c7\u30d0\u30a4\u30b9",
+            "none": "\u306a\u3057",
+            "router_eligible": "\u30eb\u30fc\u30bf\u30fc\u306e\u9069\u683c\u306a\u30a8\u30f3\u30c9 \u30c7\u30d0\u30a4\u30b9",
+            "sleepy": "\u30b9\u30ea\u30fc\u30d4\u30fc \u30a8\u30f3\u30c9 \u30c7\u30d0\u30a4\u30b9"
+        },
+        "homekit_controller__thread_status": {
+            "border_router": "\u5883\u754c(Border)\u30eb\u30fc\u30bf\u30fc",
+            "child": "\u5b50(Child)",
+            "detached": "\u5207\u308a\u96e2\u3055\u308c\u305f",
+            "disabled": "\u7121\u52b9",
+            "joining": "\u63a5\u5408(Joining)",
+            "leader": "\u30ea\u30fc\u30c0\u30fc",
+            "router": "\u30eb\u30fc\u30bf\u30fc"
+        }
+    }
+}

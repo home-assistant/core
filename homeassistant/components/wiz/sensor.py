@@ -8,7 +8,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import POWER_WATT, SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT, UnitOfPower
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -20,7 +20,7 @@ from .models import WizData
 SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="rssi",
-        name="Signal Strength",
+        name="Signal strength",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
@@ -33,10 +33,10 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
 POWER_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="power",
-        name="Current Power",
+        name="Current power",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
     ),
 )
 
@@ -73,7 +73,6 @@ class WizSensor(WizEntity, SensorEntity):
         super().__init__(wiz_data, name)
         self.entity_description = description
         self._attr_unique_id = f"{self._device.mac}_{description.key}"
-        self._attr_name = f"{name} {description.name}"
         self._async_update_attrs()
 
     @callback

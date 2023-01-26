@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "already_in_progress": "Alur konfigurasi sedang berlangsung",
+            "no_devices_found": "Tidak ada perangkat yang ditemukan di jaringan",
+            "reauth_successful": "Autentikasi ulang berhasil"
+        },
+        "error": {
+            "decryption_failed": "Bindkey yang disediakan tidak berfungsi, data sensor tidak dapat didekripsi. Silakan periksa dan coba lagi.",
+            "expected_24_characters": "Diharapkan bindkey berupa 24 karakter heksadesimal.",
+            "expected_32_characters": "Diharapkan bindkey berupa 32 karakter heksadesimal."
+        },
+        "flow_title": "{name}",
+        "step": {
+            "bluetooth_confirm": {
+                "description": "Ingin menyiapkan {name}?"
+            },
+            "confirm_slow": {
+                "description": "Belum ada siaran dari perangkat ini dalam menit terakhir jadi kami tidak yakin apakah perangkat ini menggunakan enkripsi atau tidak. Ini mungkin terjadi karena perangkat menggunakan interval siaran yang lambat. Konfirmasikan sekarang untuk menambahkan perangkat ini, dan ketika siaran diterima nanti, Anda akan diminta untuk memasukkan kunci bind jika diperlukan."
+            },
+            "get_encryption_key_4_5": {
+                "data": {
+                    "bindkey": "Bindkey"
+                },
+                "description": "Data sensor yang disiarkan oleh sensor telah dienkripsi. Untuk mendekripsinya, diperlukan 32 karakter bindkey heksadesimal ."
+            },
+            "get_encryption_key_legacy": {
+                "data": {
+                    "bindkey": "Bindkey"
+                },
+                "description": "Data sensor yang disiarkan oleh sensor telah dienkripsi. Untuk mendekripsinya, diperlukan 24 karakter bindkey heksadesimal ."
+            },
+            "user": {
+                "data": {
+                    "address": "Perangkat"
+                },
+                "description": "Pilih perangkat untuk disiapkan"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "motion_detected": "Gerakan terdeteksi"
+        }
+    }
+}

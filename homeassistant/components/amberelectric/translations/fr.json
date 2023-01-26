@@ -1,5 +1,10 @@
 {
     "config": {
+        "error": {
+            "invalid_api_token": "Cl\u00e9 d'API non valide",
+            "no_site": "Aucun site fourni",
+            "unknown_error": "Erreur inattendue"
+        },
         "step": {
             "site": {
                 "data": {

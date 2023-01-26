@@ -6,7 +6,7 @@
         "error": {
             "cannot_connect": "No se pudo conectar",
             "invalid_pin": "PIN no v\u00e1lido",
-            "pairing_failure": "No se ha podido emparejar: {error_id}",
+            "pairing_failure": "No se puede emparejar: {error_id}",
             "unknown": "Error inesperado"
         },
         "step": {
@@ -14,12 +14,12 @@
                 "data": {
                     "pin": "C\u00f3digo PIN"
                 },
-                "description": "Introduzca el PIN que se muestra en el televisor",
+                "description": "Introduce el PIN que se muestra en tu TV",
                 "title": "Par"
             },
             "user": {
                 "data": {
-                    "api_version": "Versi\u00f3n del API",
+                    "api_version": "Versi\u00f3n de la API",
                     "host": "Host"
                 }
             }
@@ -27,7 +27,7 @@
     },
     "device_automation": {
         "trigger_type": {
-            "turn_on": "Se solicita al dispositivo que se encienda"
+            "turn_on": "Se solicita que el dispositivo se encienda"
         }
     },
     "options": {

@@ -7,7 +7,7 @@ import logging
 import os
 import ssl
 from tempfile import NamedTemporaryFile
-from typing import Any, Final, Optional, TypedDict, Union, cast
+from typing import Any, Final, TypedDict, cast
 
 from aiohttp import web
 from aiohttp.typedefs import StrOrURL
@@ -33,7 +33,12 @@ from homeassistant.util import ssl as ssl_util
 
 from .auth import async_setup_auth
 from .ban import setup_bans
-from .const import KEY_AUTHENTICATED, KEY_HASS, KEY_HASS_USER  # noqa: F401
+from .const import (  # noqa: F401
+    KEY_AUTHENTICATED,
+    KEY_HASS,
+    KEY_HASS_REFRESH_TOKEN_ID,
+    KEY_HASS_USER,
+)
 from .cors import setup_cors
 from .forwarded import async_setup_forwarded
 from .request_context import current_request, setup_request_context
@@ -69,6 +74,7 @@ DEFAULT_CORS: Final[list[str]] = ["https://cast.home-assistant.io"]
 NO_LOGIN_ATTEMPT_THRESHOLD: Final = -1
 
 MAX_CLIENT_SIZE: Final = 1024**2 * 16
+MAX_LINE_SIZE: Final = 24570
 
 STORAGE_KEY: Final = DOMAIN
 STORAGE_VERSION: Final = 1
@@ -125,10 +131,10 @@ class ConfData(TypedDict, total=False):
 
 
 @bind_hass
-async def async_get_last_config(hass: HomeAssistant) -> dict | None:
+async def async_get_last_config(hass: HomeAssistant) -> dict[str, Any] | None:
     """Return the last known working config."""
-    store = storage.Store(hass, STORAGE_VERSION, STORAGE_KEY)
-    return cast(Optional[dict], await store.async_load())
+    store = storage.Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
+    return await store.async_load()
 
 
 class ApiConfig:
@@ -229,7 +235,14 @@ class HomeAssistantHTTP:
         ssl_profile: str,
     ) -> None:
         """Initialize the HTTP Home Assistant server."""
-        self.app = web.Application(middlewares=[], client_max_size=MAX_CLIENT_SIZE)
+        self.app = web.Application(
+            middlewares=[],
+            client_max_size=MAX_CLIENT_SIZE,
+            handler_args={
+                "max_line_size": MAX_LINE_SIZE,
+                "max_field_size": MAX_LINE_SIZE,
+            },
+        )
         self.hass = hass
         self.ssl_certificate = ssl_certificate
         self.ssl_peer_certificate = ssl_peer_certificate
@@ -356,7 +369,8 @@ class HomeAssistantHTTP:
         except OSError as error:
             if not self.hass.config.safe_mode:
                 raise HomeAssistantError(
-                    f"Could not use SSL certificate from {self.ssl_certificate}: {error}"
+                    f"Could not use SSL certificate from {self.ssl_certificate}:"
+                    f" {error}"
                 ) from error
             _LOGGER.error(
                 "Could not read SSL certificate from %s: %s",
@@ -373,14 +387,17 @@ class HomeAssistantHTTP:
                 context = None
             else:
                 _LOGGER.critical(
-                    "Home Assistant is running in safe mode with an emergency self signed ssl certificate because the configured SSL certificate was not usable"
+                    "Home Assistant is running in safe mode with an emergency self"
+                    " signed ssl certificate because the configured SSL certificate was"
+                    " not usable"
                 )
                 return context
 
         if self.ssl_peer_certificate:
             if context is None:
                 raise HomeAssistantError(
-                    "Failed to create ssl context, no fallback available because a peer certificate is required."
+                    "Failed to create ssl context, no fallback available because a peer"
+                    " certificate is required."
                 )
 
             context.verify_mode = ssl.CERT_REQUIRED
@@ -442,7 +459,7 @@ class HomeAssistantHTTP:
         # However in Home Assistant components can be discovered after boot.
         # This will now raise a RunTimeError.
         # To work around this we now prevent the router from getting frozen
-        # pylint: disable=protected-access
+        # pylint: disable-next=protected-access
         self.app._router.freeze = lambda: None  # type: ignore[assignment]
 
         self.runner = web.AppRunner(self.app)
@@ -475,11 +492,13 @@ async def start_http_server_and_save_config(
     await server.start()
 
     # If we are set up successful, we store the HTTP settings for safe mode.
-    store = storage.Store(hass, STORAGE_VERSION, STORAGE_KEY)
+    store: storage.Store[dict[str, Any]] = storage.Store(
+        hass, STORAGE_VERSION, STORAGE_KEY
+    )
 
     if CONF_TRUSTED_PROXIES in conf:
         conf[CONF_TRUSTED_PROXIES] = [
-            str(cast(Union[IPv4Network, IPv6Network], ip).network_address)
+            str(cast(IPv4Network | IPv6Network, ip).network_address)
             for ip in conf[CONF_TRUSTED_PROXIES]
         ]
 

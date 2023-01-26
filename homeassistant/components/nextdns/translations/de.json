@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Dieses NextDNS-Profil ist bereits konfiguriert."
+            "already_configured": "Dieses NextDNS Profil ist bereits konfiguriert."
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
@@ -19,6 +19,11 @@
                     "api_key": "API-Schl\u00fcssel"
                 }
             }
+        }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "Server erreichen"
         }
     }
 }

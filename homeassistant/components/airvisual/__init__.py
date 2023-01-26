@@ -1,26 +1,27 @@
-"""The airvisual component."""
+"""The AirVisual component."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Mapping
 from datetime import timedelta
 from math import ceil
-from typing import Any, cast
+from typing import Any
 
-from pyairvisual import CloudAPI, NodeSamba
-from pyairvisual.errors import (
-    AirVisualError,
+from pyairvisual.cloud_api import (
+    CloudAPI,
     InvalidKeyError,
     KeyExpiredError,
-    NodeProError,
+    UnauthorizedError,
 )
+from pyairvisual.errors import AirVisualError
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components import automation
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_IP_ADDRESS,
     CONF_LATITUDE,
     CONF_LONGITUDE,
-    CONF_PASSWORD,
     CONF_SHOW_ON_MAP,
     CONF_STATE,
     Platform,
@@ -30,9 +31,11 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import (
     aiohttp_client,
     config_validation as cv,
-    entity_registry,
+    device_registry as dr,
+    entity_registry as er,
 )
 from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -51,28 +54,15 @@ from .const import (
     LOGGER,
 )
 
+# We use a raw string for the airvisual_pro domain (instead of importing the actual
+# constant) so that we can avoid listing it as a dependency:
+DOMAIN_AIRVISUAL_PRO = "airvisual_pro"
+
 PLATFORMS = [Platform.SENSOR]
 
 DEFAULT_ATTRIBUTION = "Data provided by AirVisual"
-DEFAULT_NODE_PRO_UPDATE_INTERVAL = timedelta(minutes=1)
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
-
-
-@callback
-def async_get_geography_id(geography_dict: Mapping[str, Any]) -> str:
-    """Generate a unique ID from a geography dict."""
-    if CONF_CITY in geography_dict:
-        return ", ".join(
-            (
-                geography_dict[CONF_CITY],
-                geography_dict[CONF_STATE],
-                geography_dict[CONF_COUNTRY],
-            )
-        )
-    return ", ".join(
-        (str(geography_dict[CONF_LATITUDE]), str(geography_dict[CONF_LONGITUDE]))
-    )
 
 
 @callback
@@ -109,6 +99,22 @@ def async_get_cloud_coordinators_by_api_key(
         if (entry := hass.config_entries.async_get_entry(entry_id))
         and entry.data.get(CONF_API_KEY) == api_key
     ]
+
+
+@callback
+def async_get_geography_id(geography_dict: Mapping[str, Any]) -> str:
+    """Generate a unique ID from a geography dict."""
+    if CONF_CITY in geography_dict:
+        return ", ".join(
+            (
+                geography_dict[CONF_CITY],
+                geography_dict[CONF_STATE],
+                geography_dict[CONF_COUNTRY],
+            )
+        )
+    return ", ".join(
+        (str(geography_dict[CONF_LATITUDE]), str(geography_dict[CONF_LONGITUDE]))
+    )
 
 
 @callback
@@ -169,112 +175,61 @@ def _standardize_geography_config_entry(
     hass.config_entries.async_update_entry(entry, **entry_updates)
 
 
-@callback
-def _standardize_node_pro_config_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Ensure that Node/Pro config entries have appropriate properties."""
-    entry_updates: dict[str, Any] = {}
-
-    if CONF_INTEGRATION_TYPE not in entry.data:
-        # If the config entry data doesn't contain the integration type, add it:
-        entry_updates["data"] = {
-            **entry.data,
-            CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_NODE_PRO,
-        }
-
-    if not entry_updates:
-        return
-
-    hass.config_entries.async_update_entry(entry, **entry_updates)
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up AirVisual as config entry."""
-    if CONF_API_KEY in entry.data:
-        _standardize_geography_config_entry(hass, entry)
+    if CONF_API_KEY not in entry.data:
+        # If this is a migrated AirVisual Pro entry, there's no actual setup to do;
+        # that will be handled by the `airvisual_pro` domain:
+        return False
 
-        websession = aiohttp_client.async_get_clientsession(hass)
-        cloud_api = CloudAPI(entry.data[CONF_API_KEY], session=websession)
+    _standardize_geography_config_entry(hass, entry)
 
-        async def async_update_data() -> dict[str, Any]:
-            """Get new data from the API."""
-            if CONF_CITY in entry.data:
-                api_coro = cloud_api.air_quality.city(
-                    entry.data[CONF_CITY],
-                    entry.data[CONF_STATE],
-                    entry.data[CONF_COUNTRY],
-                )
-            else:
-                api_coro = cloud_api.air_quality.nearest_city(
-                    entry.data[CONF_LATITUDE],
-                    entry.data[CONF_LONGITUDE],
-                )
+    websession = aiohttp_client.async_get_clientsession(hass)
+    cloud_api = CloudAPI(entry.data[CONF_API_KEY], session=websession)
 
-            try:
-                data = await api_coro
-                return cast(dict[str, Any], data)
-            except (InvalidKeyError, KeyExpiredError) as ex:
-                raise ConfigEntryAuthFailed from ex
-            except AirVisualError as err:
-                raise UpdateFailed(f"Error while retrieving data: {err}") from err
-
-        coordinator = DataUpdateCoordinator(
-            hass,
-            LOGGER,
-            name=async_get_geography_id(entry.data),
-            # We give a placeholder update interval in order to create the coordinator;
-            # then, below, we use the coordinator's presence (along with any other
-            # coordinators using the same API key) to calculate an actual, leveled
-            # update interval:
-            update_interval=timedelta(minutes=5),
-            update_method=async_update_data,
-        )
-
-        # Only geography-based entries have options:
-        entry.async_on_unload(entry.add_update_listener(async_reload_entry))
-    else:
-        # Remove outdated air_quality entities from the entity registry if they exist:
-        ent_reg = entity_registry.async_get(hass)
-        for entity_entry in [
-            e
-            for e in ent_reg.entities.values()
-            if e.config_entry_id == entry.entry_id
-            and e.entity_id.startswith("air_quality")
-        ]:
-            LOGGER.debug(
-                'Removing deprecated air_quality entity: "%s"', entity_entry.entity_id
+    async def async_update_data() -> dict[str, Any]:
+        """Get new data from the API."""
+        if CONF_CITY in entry.data:
+            api_coro = cloud_api.air_quality.city(
+                entry.data[CONF_CITY],
+                entry.data[CONF_STATE],
+                entry.data[CONF_COUNTRY],
             )
-            ent_reg.async_remove(entity_entry.entity_id)
+        else:
+            api_coro = cloud_api.air_quality.nearest_city(
+                entry.data[CONF_LATITUDE],
+                entry.data[CONF_LONGITUDE],
+            )
 
-        _standardize_node_pro_config_entry(hass, entry)
+        try:
+            return await api_coro
+        except (InvalidKeyError, KeyExpiredError, UnauthorizedError) as ex:
+            raise ConfigEntryAuthFailed from ex
+        except AirVisualError as err:
+            raise UpdateFailed(f"Error while retrieving data: {err}") from err
 
-        async def async_update_data() -> dict[str, Any]:
-            """Get new data from the API."""
-            try:
-                async with NodeSamba(
-                    entry.data[CONF_IP_ADDRESS], entry.data[CONF_PASSWORD]
-                ) as node:
-                    data = await node.async_get_latest_measurements()
-                    return cast(dict[str, Any], data)
-            except NodeProError as err:
-                raise UpdateFailed(f"Error while retrieving data: {err}") from err
+    coordinator = DataUpdateCoordinator(
+        hass,
+        LOGGER,
+        name=async_get_geography_id(entry.data),
+        # We give a placeholder update interval in order to create the coordinator;
+        # then, below, we use the coordinator's presence (along with any other
+        # coordinators using the same API key) to calculate an actual, leveled
+        # update interval:
+        update_interval=timedelta(minutes=5),
+        update_method=async_update_data,
+    )
 
-        coordinator = DataUpdateCoordinator(
-            hass,
-            LOGGER,
-            name="Node/Pro data",
-            update_interval=DEFAULT_NODE_PRO_UPDATE_INTERVAL,
-            update_method=async_update_data,
-        )
+    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
     await coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
     # Reassess the interval between 2 server requests
-    if CONF_API_KEY in entry.data:
-        async_sync_geo_coordinator_update_intervals(hass, entry.data[CONF_API_KEY])
+    async_sync_geo_coordinator_update_intervals(hass, entry.data[CONF_API_KEY])
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -311,10 +266,121 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
                     DOMAIN,
-                    context={"source": source},
-                    data={CONF_API_KEY: entry.data[CONF_API_KEY], **geography},
+                    context={"source": SOURCE_IMPORT},
+                    data={
+                        "import_source": source,
+                        CONF_API_KEY: entry.data[CONF_API_KEY],
+                        **geography,
+                    },
                 )
             )
+
+    # 2 -> 3: Moving AirVisual Pro to its own domain
+    elif version == 2:
+        version = 3
+
+        if entry.data[CONF_INTEGRATION_TYPE] == INTEGRATION_TYPE_NODE_PRO:
+            device_registry = dr.async_get(hass)
+            entity_registry = er.async_get(hass)
+            ip_address = entry.data[CONF_IP_ADDRESS]
+
+            # Store the existing Pro device before the migration removes it:
+            old_device_entry = next(
+                entry
+                for entry in dr.async_entries_for_config_entry(
+                    device_registry, entry.entry_id
+                )
+            )
+
+            # Store the existing Pro entity entries (mapped by unique ID) before the
+            # migration removes it:
+            old_entity_entries: dict[str, er.RegistryEntry] = {
+                entry.unique_id: entry
+                for entry in er.async_entries_for_device(
+                    entity_registry, old_device_entry.id, include_disabled_entities=True
+                )
+            }
+
+            # Remove this config entry and create a new one under the `airvisual_pro`
+            # domain:
+            new_entry_data = {**entry.data}
+            new_entry_data.pop(CONF_INTEGRATION_TYPE)
+            tasks = [
+                hass.config_entries.async_remove(entry.entry_id),
+                hass.config_entries.flow.async_init(
+                    DOMAIN_AIRVISUAL_PRO,
+                    context={"source": SOURCE_IMPORT},
+                    data=new_entry_data,
+                ),
+            ]
+            await asyncio.gather(*tasks)
+
+            # After the migration has occurred, grab the new config and device entries
+            # (now under the `airvisual_pro` domain):
+            new_config_entry = next(
+                entry
+                for entry in hass.config_entries.async_entries(DOMAIN_AIRVISUAL_PRO)
+                if entry.data[CONF_IP_ADDRESS] == ip_address
+            )
+            new_device_entry = next(
+                entry
+                for entry in dr.async_entries_for_config_entry(
+                    device_registry, new_config_entry.entry_id
+                )
+            )
+
+            # Update the new device entry with any customizations from the old one:
+            device_registry.async_update_device(
+                new_device_entry.id,
+                area_id=old_device_entry.area_id,
+                disabled_by=old_device_entry.disabled_by,
+                name_by_user=old_device_entry.name_by_user,
+            )
+
+            # Update the new entity entries with any customizations from the old ones:
+            for new_entity_entry in er.async_entries_for_device(
+                entity_registry, new_device_entry.id, include_disabled_entities=True
+            ):
+                if old_entity_entry := old_entity_entries.get(
+                    new_entity_entry.unique_id
+                ):
+                    entity_registry.async_update_entity(
+                        new_entity_entry.entity_id,
+                        area_id=old_entity_entry.area_id,
+                        device_class=old_entity_entry.device_class,
+                        disabled_by=old_entity_entry.disabled_by,
+                        hidden_by=old_entity_entry.hidden_by,
+                        icon=old_entity_entry.icon,
+                        name=old_entity_entry.name,
+                        new_entity_id=old_entity_entry.entity_id,
+                        unit_of_measurement=old_entity_entry.unit_of_measurement,
+                    )
+
+            # If any automations are using the old device ID, create a Repairs issues
+            # with instructions on how to update it:
+            if device_automations := automation.automations_with_device(
+                hass, old_device_entry.id
+            ):
+                async_create_issue(
+                    hass,
+                    DOMAIN,
+                    f"airvisual_pro_migration_{entry.entry_id}",
+                    is_fixable=False,
+                    is_persistent=True,
+                    severity=IssueSeverity.WARNING,
+                    translation_key="airvisual_pro_migration",
+                    translation_placeholders={
+                        "ip_address": ip_address,
+                        "old_device_id": old_device_entry.id,
+                        "new_device_id": new_device_entry.id,
+                        "device_automations_string": ", ".join(
+                            f"`{automation}`" for automation in device_automations
+                        ),
+                    },
+                )
+        else:
+            entry.version = version
+            hass.config_entries.async_update_entry(entry)
 
     LOGGER.info("Migration to version %s successful", version)
 

@@ -24,6 +24,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -46,8 +47,8 @@ async def async_setup_platform(
 ) -> None:
     """Set up Aladdin Connect devices yaml depreciated."""
     _LOGGER.warning(
-        "Configuring Aladdin Connect through yaml is deprecated"
-        "Please remove it from your configuration as it has already been imported to a config entry"
+        "Configuring Aladdin Connect through yaml is deprecated. Please remove it from"
+        " your configuration as it has already been imported to a config entry"
     )
     await hass.async_create_task(
         hass.config_entries.flow.async_init(
@@ -87,21 +88,30 @@ class AladdinDevice(CoverEntity):
 
         self._device_id = device["device_id"]
         self._number = device["door_number"]
-        self._attr_name = device["name"]
+        self._name = device["name"]
+        self._serial = device["serial"]
+        self._model = device["model"]
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{self._device_id}-{self._number}")},
+            name=self._name,
+            manufacturer="Overhead Door",
+            model=self._model,
+        )
+        self._attr_has_entity_name = True
         self._attr_unique_id = f"{self._device_id}-{self._number}"
 
     async def async_added_to_hass(self) -> None:
         """Connect Aladdin Connect to the cloud."""
 
-        async def update_callback() -> None:
-            """Schedule a state update."""
-            self.async_write_ha_state()
-
-        self._acc.register_callback(update_callback, self._number)
-        await self._acc.get_doors(self._number)
+        self._acc.register_callback(
+            self.async_write_ha_state, self._serial, self._number
+        )
+        await self._acc.get_doors(self._serial)
 
     async def async_will_remove_from_hass(self) -> None:
         """Close Aladdin Connect before removing."""
+        self._acc.unregister_callback(self._serial, self._number)
         await self._acc.close()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
@@ -114,7 +124,7 @@ class AladdinDevice(CoverEntity):
 
     async def async_update(self) -> None:
         """Update status of cover."""
-        await self._acc.get_doors(self._number)
+        await self._acc.get_doors(self._serial)
 
     @property
     def is_closed(self) -> bool | None:

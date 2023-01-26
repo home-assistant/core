@@ -6,15 +6,16 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.number import NumberEntity
-from homeassistant.components.number.const import (
+from homeassistant.components.number import (
     ATTR_MAX,
     ATTR_MIN,
     ATTR_STEP,
     ATTR_VALUE,
     DEFAULT_MAX_VALUE,
     DEFAULT_MIN_VALUE,
+    DEFAULT_STEP,
     DOMAIN as NUMBER_DOMAIN,
+    NumberEntity,
 )
 from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, CONF_STATE, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
@@ -119,10 +120,9 @@ class TemplateNumber(TemplateEntity, NumberEntity):
         self._min_value_template = config[ATTR_MIN]
         self._max_value_template = config[ATTR_MAX]
         self._attr_assumed_state = self._optimistic = config[CONF_OPTIMISTIC]
-        self._attr_native_value = None
-        self._attr_native_step = None
-        self._attr_native_min_value = None
-        self._attr_native_max_value = None
+        self._attr_native_step = DEFAULT_STEP
+        self._attr_native_min_value = DEFAULT_MIN_VALUE
+        self._attr_native_max_value = DEFAULT_MAX_VALUE
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""

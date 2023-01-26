@@ -108,7 +108,7 @@ async def test_change_password_invalid_user(hass, provider, capsys, hass_storage
         data.validate_login("invalid-user", "new-pass")
 
 
-def test_parsing_args(loop):
+def test_parsing_args(event_loop):
     """Test we parse args correctly."""
     called = False
 

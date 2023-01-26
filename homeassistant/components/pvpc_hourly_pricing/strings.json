@@ -18,9 +18,8 @@
     "step": {
       "init": {
         "data": {
-          "tariff": "Applicable tariff by geographic zone",
-          "power": "Contracted power (kW)",
-          "power_p3": "Contracted power for valley period P3 (kW)"
+          "power": "[%key:component::pvpc_hourly_pricing::config::step::user::data::power%]",
+          "power_p3": "[%key:component::pvpc_hourly_pricing::config::step::user::data::power_p3%]"
         }
       }
     }

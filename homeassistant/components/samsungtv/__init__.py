@@ -1,7 +1,7 @@
 """The Samsung TV integration."""
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Coroutine, Mapping
 from functools import partial
 import socket
 from typing import Any
@@ -131,7 +131,7 @@ class DebouncedEntryReloader:
         self.hass = hass
         self.entry = entry
         self.token = self.entry.data.get(CONF_TOKEN)
-        self._debounced_reload = Debouncer(
+        self._debounced_reload: Debouncer[Coroutine[Any, Any, None]] = Debouncer(
             hass,
             LOGGER,
             cooldown=ENTRY_RELOAD_COOLDOWN,
@@ -215,7 +215,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(entry.add_update_listener(debounced_reloader.async_call))
 
     hass.data[DOMAIN][entry.entry_id] = bridge
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -282,8 +282,10 @@ async def _async_create_bridge_with_updated_data(
 
     if model_requires_encryption(model) and method != METHOD_ENCRYPTED_WEBSOCKET:
         LOGGER.info(
-            "Detected model %s for %s. Some televisions from H and J series use "
-            "an encrypted protocol but you are using %s which may not be supported",
+            (
+                "Detected model %s for %s. Some televisions from H and J series use "
+                "an encrypted protocol but you are using %s which may not be supported"
+            ),
             model,
             host,
             method,

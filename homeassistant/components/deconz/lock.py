@@ -46,14 +46,14 @@ async def async_setup_entry(
     gateway.register_platform_add_device_callback(
         async_add_lock_from_sensor,
         gateway.api.sensors.door_lock,
+        always_ignore_clip_sensors=True,
     )
 
 
-class DeconzLock(DeconzDevice, LockEntity):
+class DeconzLock(DeconzDevice[DoorLock | Lock], LockEntity):
     """Representation of a deCONZ lock."""
 
     TYPE = DOMAIN
-    _device: DoorLock | Lock
 
     @property
     def is_locked(self) -> bool:

@@ -97,16 +97,20 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Exclusive(
             CONF_AREA,
             "station_collection",
-            "Can only configure one specific station or "
-            "stations in a specific area pr sensor. "
-            "Please only configure station or area.",
+            (
+                "Can only configure one specific station or "
+                "stations in a specific area pr sensor. "
+                "Please only configure station or area."
+            ),
         ): vol.All(cv.string, vol.In(CONF_ALLOWED_AREAS)),
         vol.Exclusive(
             CONF_STATION,
             "station_collection",
-            "Can only configure one specific station or "
-            "stations in a specific area pr sensor. "
-            "Please only configure station or area.",
+            (
+                "Can only configure one specific station or "
+                "stations in a specific area pr sensor. "
+                "Please only configure station or area."
+            ),
         ): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_SHOW_ON_MAP, default=False): cv.boolean,
@@ -121,21 +125,22 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the NILU air quality sensor."""
-    name = config.get(CONF_NAME)
-    area = config.get(CONF_AREA)
-    stations = config.get(CONF_STATION)
-    show_on_map = config.get(CONF_SHOW_ON_MAP)
+    name: str = config[CONF_NAME]
+    area: str | None = config.get(CONF_AREA)
+    stations: list[str] | None = config.get(CONF_STATION)
+    show_on_map: bool = config[CONF_SHOW_ON_MAP]
 
     sensors = []
 
     if area:
         stations = lookup_stations_in_area(area)
-    elif not area and not stations:
+    elif not stations:
         latitude = config.get(CONF_LATITUDE, hass.config.latitude)
         longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
         location_client = create_location_client(latitude, longitude)
         stations = location_client.station_names
 
+    assert stations is not None
     for station in stations:
         client = NiluData(create_station_client(station))
         client.update()
@@ -195,61 +200,61 @@ class NiluSensor(AirQualityEntity):
         return self._name
 
     @property
-    def air_quality_index(self) -> str:
+    def air_quality_index(self) -> str | None:
         """Return the Air Quality Index (AQI)."""
         return self._max_aqi
 
     @property
-    def carbon_monoxide(self) -> str:
+    def carbon_monoxide(self) -> str | None:
         """Return the CO (carbon monoxide) level."""
         return self.get_component_state(CO)
 
     @property
-    def carbon_dioxide(self) -> str:
+    def carbon_dioxide(self) -> str | None:
         """Return the CO2 (carbon dioxide) level."""
         return self.get_component_state(CO2)
 
     @property
-    def nitrogen_oxide(self) -> str:
+    def nitrogen_oxide(self) -> str | None:
         """Return the N2O (nitrogen oxide) level."""
         return self.get_component_state(NOX)
 
     @property
-    def nitrogen_monoxide(self) -> str:
+    def nitrogen_monoxide(self) -> str | None:
         """Return the NO (nitrogen monoxide) level."""
         return self.get_component_state(NO)
 
     @property
-    def nitrogen_dioxide(self) -> str:
+    def nitrogen_dioxide(self) -> str | None:
         """Return the NO2 (nitrogen dioxide) level."""
         return self.get_component_state(NO2)
 
     @property
-    def ozone(self) -> str:
+    def ozone(self) -> str | None:
         """Return the O3 (ozone) level."""
         return self.get_component_state(OZONE)
 
     @property
-    def particulate_matter_2_5(self) -> str:
+    def particulate_matter_2_5(self) -> str | None:
         """Return the particulate matter 2.5 level."""
         return self.get_component_state(PM25)
 
     @property
-    def particulate_matter_10(self) -> str:
+    def particulate_matter_10(self) -> str | None:
         """Return the particulate matter 10 level."""
         return self.get_component_state(PM10)
 
     @property
-    def particulate_matter_0_1(self) -> str:
+    def particulate_matter_0_1(self) -> str | None:
         """Return the particulate matter 0.1 level."""
         return self.get_component_state(PM1)
 
     @property
-    def sulphur_dioxide(self) -> str:
+    def sulphur_dioxide(self) -> str | None:
         """Return the SO2 (sulphur dioxide) level."""
         return self.get_component_state(SO2)
 
-    def get_component_state(self, component_name: str) -> str:
+    def get_component_state(self, component_name: str) -> str | None:
         """Return formatted value of specified component."""
         if component_name in self._api.data.sensors:
             sensor = self._api.data.sensors[component_name]

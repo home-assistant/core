@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components import persistent_notification
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_CURRENCY, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_CURRENCY, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -118,6 +118,8 @@ def setup_platform(
 class AlphaVantageSensor(SensorEntity):
     """Representation of a Alpha Vantage sensor."""
 
+    _attr_attribution = ATTRIBUTION
+
     def __init__(self, timeseries, symbol):
         """Initialize the sensor."""
         self._symbol = symbol[CONF_SYMBOL]
@@ -126,7 +128,7 @@ class AlphaVantageSensor(SensorEntity):
         self._attr_native_unit_of_measurement = symbol.get(CONF_CURRENCY, self._symbol)
         self._attr_icon = ICONS.get(symbol.get(CONF_CURRENCY, "USD"))
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data and updates the states."""
         _LOGGER.debug("Requesting new data for symbol %s", self._symbol)
         all_values, _ = self._timeseries.get_intraday(self._symbol)
@@ -137,19 +139,20 @@ class AlphaVantageSensor(SensorEntity):
             self._attr_native_value = None
         self._attr_extra_state_attributes = (
             {
-                ATTR_ATTRIBUTION: ATTRIBUTION,
                 ATTR_CLOSE: values["4. close"],
                 ATTR_HIGH: values["2. high"],
                 ATTR_LOW: values["3. low"],
             }
             if isinstance(values, dict)
-            else None
+            else {}
         )
         _LOGGER.debug("Received new values for symbol %s", self._symbol)
 
 
 class AlphaVantageForeignExchange(SensorEntity):
     """Sensor for foreign exchange rates."""
+
+    _attr_attribution = ATTRIBUTION
 
     def __init__(self, foreign_exchange, config):
         """Initialize the sensor."""
@@ -164,7 +167,7 @@ class AlphaVantageForeignExchange(SensorEntity):
         self._attr_icon = ICONS.get(self._from_currency, "USD")
         self._attr_native_unit_of_measurement = self._to_currency
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data and updates the states."""
         _LOGGER.debug(
             "Requesting new data for forex %s - %s",
@@ -180,12 +183,11 @@ class AlphaVantageForeignExchange(SensorEntity):
             self._attr_native_value = None
         self._attr_extra_state_attributes = (
             {
-                ATTR_ATTRIBUTION: ATTRIBUTION,
                 CONF_FROM: self._from_currency,
                 CONF_TO: self._to_currency,
             }
             if values is not None
-            else None
+            else {}
         )
 
         _LOGGER.debug(

@@ -1,5 +1,6 @@
 """Platform for Omnilogic switch integration."""
 import time
+from typing import Any
 
 from omnilogic import OmniLogicException
 import voluptuous as vol
@@ -22,7 +23,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up the light platform."""
 
-    coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR]
+    coordinator: OmniLogicUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
+        COORDINATOR
+    ]
     entities = []
 
     for item_id, item in coordinator.data.items():
@@ -34,7 +37,8 @@ async def async_setup_entry(
             continue
 
         for entity_setting in entity_settings:
-            for state_key, entity_class in entity_setting["entity_classes"].items():
+            entity_classes: dict[str, type] = entity_setting["entity_classes"]
+            for state_key, entity_class in entity_classes.items():
                 if check_guard(state_key, item, entity_setting):
                     continue
 
@@ -229,7 +233,7 @@ class OmniLogicPumpControl(OmniLogicSwitch):
             raise OmniLogicException("Cannot set speed on a non-variable speed pump.")
 
 
-SWITCH_TYPES = {
+SWITCH_TYPES: dict[tuple[int, str], list[dict[str, Any]]] = {
     (4, "Relays"): [
         {
             "entity_classes": {"switchState": OmniLogicRelayControl},

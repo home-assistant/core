@@ -1,5 +1,8 @@
 {
     "config": {
+        "error": {
+            "already_configured": "Slu\u017eba u\u017e je nakonfigurovan\u00e1"
+        },
         "step": {
             "user": {
                 "data": {
@@ -8,6 +11,7 @@
                     "longitude": "Zemepisn\u00e1 d\u013a\u017eka",
                     "name": "N\u00e1zov"
                 },
+                "description": "Ak chcete pou\u017ei\u0165 \u00fadaje o po\u010das\u00ed z rozhrania Met \u00c9ireann Public Weather Forecast API, zadajte svoju polohu",
                 "title": "Umiestnenie"
             }
         }

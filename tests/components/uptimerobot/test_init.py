@@ -220,6 +220,7 @@ async def test_device_management(hass: HomeAssistant):
     ):
         async_fire_time_changed(hass, dt.utcnow() + COORDINATOR_UPDATE_INTERVAL)
         await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     devices = dr.async_entries_for_config_entry(dev_reg, mock_entry.entry_id)
     assert len(devices) == 1

@@ -60,6 +60,8 @@ async def test_websocket_core_update(hass, client):
     assert hass.config.external_url != "https://www.example.com"
     assert hass.config.internal_url != "http://example.com"
     assert hass.config.currency == "EUR"
+    assert hass.config.country != "SE"
+    assert hass.config.language != "sv"
 
     with patch("homeassistant.util.dt.set_default_time_zone") as mock_set_tz:
         await client.send_json(
@@ -75,6 +77,8 @@ async def test_websocket_core_update(hass, client):
                 "external_url": "https://www.example.com",
                 "internal_url": "http://example.local",
                 "currency": "USD",
+                "country": "SE",
+                "language": "sv",
             }
         )
 

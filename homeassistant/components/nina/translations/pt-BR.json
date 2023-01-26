@@ -26,7 +26,7 @@
     },
     "options": {
         "error": {
-            "cannot_connect": "Falhou ao conectar",
+            "cannot_connect": "Falha ao conectar",
             "no_selection": "Selecione pelo menos uma cidade/munic\u00edpio",
             "unknown": "Erro inesperado"
         },

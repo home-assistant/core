@@ -135,8 +135,8 @@ async def test_get_translations_loads_config_flows(hass, mock_config_flows):
         "homeassistant.helpers.translation.load_translations_files",
         return_value={"component1": {"title": "world"}},
     ), patch(
-        "homeassistant.helpers.translation.async_get_integration",
-        return_value=integration,
+        "homeassistant.helpers.translation.async_get_integrations",
+        return_value={"component1": integration},
     ):
         translations = await translation.async_get_translations(
             hass, "en", "title", config_flow=True
@@ -164,8 +164,8 @@ async def test_get_translations_loads_config_flows(hass, mock_config_flows):
         "homeassistant.helpers.translation.load_translations_files",
         return_value={"component2": {"title": "world"}},
     ), patch(
-        "homeassistant.helpers.translation.async_get_integration",
-        return_value=integration,
+        "homeassistant.helpers.translation.async_get_integrations",
+        return_value={"component2": integration},
     ):
         translations = await translation.async_get_translations(
             hass, "en", "title", config_flow=True
@@ -212,8 +212,8 @@ async def test_get_translations_while_loading_components(hass):
         "homeassistant.helpers.translation.load_translations_files",
         mock_load_translation_files,
     ), patch(
-        "homeassistant.helpers.translation.async_get_integration",
-        return_value=integration,
+        "homeassistant.helpers.translation.async_get_integrations",
+        return_value={"component1": integration},
     ):
         tasks = [
             translation.async_get_translations(hass, "en", "title") for _ in range(5)
@@ -270,9 +270,9 @@ async def test_translation_merging(hass, caplog):
         assert "component.sensor.state.moon__phase.first_quarter" in translations
 
     assert (
-        "An integration providing translations for sensor provided invalid data: bad data"
-        in caplog.text
-    )
+        "An integration providing translations for sensor provided invalid data:"
+        " bad data"
+    ) in caplog.text
 
 
 async def test_translation_merging_loaded_apart(hass, caplog):

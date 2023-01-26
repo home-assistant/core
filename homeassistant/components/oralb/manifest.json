@@ -1,0 +1,15 @@
+{
+  "domain": "oralb",
+  "name": "Oral-B",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/oralb",
+  "bluetooth": [
+    {
+      "manufacturer_id": 220
+    }
+  ],
+  "requirements": ["oralb-ble==0.17.1"],
+  "dependencies": ["bluetooth_adapters"],
+  "codeowners": ["@bdraco", "@Lash-L"],
+  "iot_class": "local_push"
+}

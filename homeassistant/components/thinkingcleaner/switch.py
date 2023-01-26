@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import time
+from typing import Any
 
 from pythinkingcleaner import Discovery, ThinkingCleaner
 import voluptuous as vol
@@ -130,7 +131,7 @@ class ThinkingCleanerSwitch(SwitchEntity):
 
         return False
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         sensor_type = self.entity_description.key
         if sensor_type == "clean":
@@ -141,13 +142,13 @@ class ThinkingCleanerSwitch(SwitchEntity):
         elif sensor_type == "find":
             self._tc_object.find_me()
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         if self.entity_description.key == "clean":
             self.set_graceful_lock(False)
             self._tc_object.stop_cleaning()
 
-    def update(self):
+    def update(self) -> None:
         """Update the switch state (Only for clean)."""
         if self.entity_description.key == "clean" and not self.is_update_locked():
             self._tc_object.update()

@@ -12,14 +12,14 @@
         "flow_title": "{name} ({host})",
         "step": {
             "link": {
-                "description": "Cihaz bir ses \u00e7\u0131karana kadar (yakla\u015f\u0131k iki saniye) {name} \u00fczerindeki Ana Sayfa d\u00fc\u011fmesini bas\u0131l\u0131 tutun, ard\u0131ndan 30 saniye i\u00e7inde g\u00f6nderin.",
+                "description": "iRobot uygulamas\u0131n\u0131n hi\u00e7bir cihazda \u00e7al\u0131\u015fmad\u0131\u011f\u0131ndan emin olun. Cihaz bir ses \u00e7\u0131karana kadar (yakla\u015f\u0131k iki saniye) {name} \u00fczerindeki Ana Sayfa d\u00fc\u011fmesini bas\u0131l\u0131 tutun, ard\u0131ndan 30 saniye i\u00e7inde g\u00f6nderin.",
                 "title": "\u015eifre Al"
             },
             "link_manual": {
                 "data": {
                     "password": "\u015eifre"
                 },
-                "description": "Parola ayg\u0131ttan otomatik olarak al\u0131namad\u0131. L\u00fctfen belgelerde belirtilen ad\u0131mlar\u0131 izleyin: {auth_help_url}",
+                "description": "\u015eifre cihazdan otomatik olarak al\u0131namad\u0131. L\u00fctfen \u015fifreyi almaya \u00e7al\u0131\u015f\u0131rken iRobot uygulamas\u0131n\u0131n hi\u00e7bir cihazda a\u00e7\u0131k olmad\u0131\u011f\u0131ndan emin olun. L\u00fctfen \u015fu adresteki belgelerde belirtilen ad\u0131mlar\u0131 izleyin: {auth_help_url}",
                 "title": "\u015eifre Girin"
             },
             "manual": {

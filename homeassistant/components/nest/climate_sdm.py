@@ -15,8 +15,7 @@ from google_nest_sdm.thermostat_traits import (
     ThermostatTemperatureSetpointTrait,
 )
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -24,12 +23,13 @@ from homeassistant.components.climate.const import (
     FAN_ON,
     PRESET_ECO,
     PRESET_NONE,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo
@@ -97,17 +97,13 @@ class ThermostatEntity(ClimateEntity):
 
     _attr_min_temp = MIN_TEMP
     _attr_max_temp = MAX_TEMP
+    _attr_has_entity_name = True
+    _attr_should_poll = False
 
     def __init__(self, device: Device) -> None:
         """Initialize ThermostatEntity."""
         self._device = device
         self._device_info = NestDeviceInfo(device)
-        self._attr_supported_features = 0
-
-    @property
-    def should_poll(self) -> bool:
-        """Disable polling since entities have state pushed via pubsub."""
-        return False
 
     @property
     def unique_id(self) -> str | None:
@@ -116,14 +112,14 @@ class ThermostatEntity(ClimateEntity):
         return self._device.name
 
     @property
-    def name(self) -> str | None:
-        """Return the name of the entity."""
-        return self._device_info.device_name
-
-    @property
     def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
         return self._device_info.device_info
+
+    @property
+    def available(self) -> bool:
+        """Return device availability."""
+        return self._device_info.available
 
     async def async_added_to_hass(self) -> None:
         """Run when entity is added to register update signal handler."""
@@ -135,7 +131,7 @@ class ThermostatEntity(ClimateEntity):
     @property
     def temperature_unit(self) -> str:
         """Return the unit of temperature measurement for the system."""
-        return TEMP_CELSIUS
+        return UnitOfTemperature.CELSIUS
 
     @property
     def current_temperature(self) -> float | None:
@@ -269,9 +265,9 @@ class ThermostatEntity(ClimateEntity):
             return FAN_INV_MODES
         return []
 
-    def _get_supported_features(self) -> int:
+    def _get_supported_features(self) -> ClimateEntityFeature:
         """Compute the bitmap of supported features from the current state."""
-        features = 0
+        features = ClimateEntityFeature(0)
         if HVACMode.HEAT_COOL in self.hvac_modes:
             features |= ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         if HVACMode.HEAT in self.hvac_modes or HVACMode.COOL in self.hvac_modes:
@@ -323,6 +319,8 @@ class ThermostatEntity(ClimateEntity):
         """Set new target preset mode."""
         if preset_mode not in self.preset_modes:
             raise ValueError(f"Unsupported preset_mode '{preset_mode}'")
+        if self.preset_mode == preset_mode:  # API doesn't like duplicate preset modes
+            return
         trait = self._device.traits[ThermostatEcoTrait.NAME]
         try:
             await trait.set_mode(PRESET_INV_MODE_MAP[preset_mode])

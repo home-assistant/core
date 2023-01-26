@@ -31,6 +31,10 @@ def mock_tv():
     tv.notify_change_supported = False
     tv.pairing_type = None
     tv.powerstate = None
+    tv.source_id = None
+    tv.ambilight_current_configuration = None
+    tv.ambilight_styles = {}
+    tv.ambilight_cached = {}
 
     with patch(
         "homeassistant.components.philips_js.config_flow.PhilipsTV", return_value=tv
@@ -42,7 +46,7 @@ def mock_tv():
 async def mock_config_entry(hass):
     """Get standard player."""
     config_entry = MockConfigEntry(
-        domain=DOMAIN, data=MOCK_CONFIG, title=MOCK_NAME, unique_id="ABCDEFGHIJKLF"
+        domain=DOMAIN, data=MOCK_CONFIG, title=MOCK_NAME, unique_id=MOCK_SERIAL_NO
     )
     config_entry.add_to_hass(hass)
     return config_entry

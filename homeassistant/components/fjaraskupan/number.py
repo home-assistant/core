@@ -1,11 +1,9 @@
 """Support for sensors."""
 from __future__ import annotations
 
-from fjaraskupan import Device
-
 from homeassistant.components.number import NumberEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TIME_MINUTES
+from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -23,9 +21,7 @@ async def async_setup_entry(
 
     def _constructor(coordinator: Coordinator) -> list[Entity]:
         return [
-            PeriodicVentingTime(
-                coordinator, coordinator.device, coordinator.device_info
-            ),
+            PeriodicVentingTime(coordinator, coordinator.device_info),
         ]
 
     async_setup_entry_platform(hass, config_entry, async_add_entities, _constructor)
@@ -34,24 +30,24 @@ async def async_setup_entry(
 class PeriodicVentingTime(CoordinatorEntity[Coordinator], NumberEntity):
     """Periodic Venting."""
 
+    _attr_has_entity_name = True
+
     _attr_native_max_value: float = 59
     _attr_native_min_value: float = 0
     _attr_native_step: float = 1
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_native_unit_of_measurement = TIME_MINUTES
+    _attr_native_unit_of_measurement = UnitOfTime.MINUTES
 
     def __init__(
         self,
         coordinator: Coordinator,
-        device: Device,
         device_info: DeviceInfo,
     ) -> None:
         """Init number entities."""
         super().__init__(coordinator)
-        self._device = device
-        self._attr_unique_id = f"{device.address}-periodic-venting"
+        self._attr_unique_id = f"{coordinator.device.address}-periodic-venting"
         self._attr_device_info = device_info
-        self._attr_name = f"{device_info['name']} Periodic Venting"
+        self._attr_name = "Periodic venting"
 
     @property
     def native_value(self) -> float | None:
@@ -62,5 +58,5 @@ class PeriodicVentingTime(CoordinatorEntity[Coordinator], NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
-        await self._device.send_periodic_venting(int(value))
-        self.coordinator.async_set_updated_data(self._device.state)
+        async with self.coordinator.async_connect_and_update() as device:
+            await device.send_periodic_venting(int(value))

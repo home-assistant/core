@@ -1,8 +1,5 @@
 {
     "config": {
-        "error": {
-            "mqtt_required": "\u672a\u914d\u7f6e MQTT \u96c6\u6210"
-        },
         "step": {
             "gw_mqtt": {
                 "data": {

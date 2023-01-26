@@ -38,7 +38,7 @@
                 "data": {
                     "auto": "Automatisch suchen"
                 },
-                "description": "Wenn du auf Senden klickst, durchsuchen wir dein Netzwerk nach ONVIF-Ger\u00e4ten, die Profil S unterst\u00fctzen. \n\nEinige Hersteller haben begonnen, ONVIF standardm\u00e4\u00dfig zu deaktivieren. Stelle sicher, dass ONVIF in der Konfiguration deiner Kamera aktiviert ist.",
+                "description": "Wenn du auf Senden dr\u00fcckst, durchsuchen wir dein Netzwerk nach ONVIF-Ger\u00e4ten, die Profil S unterst\u00fctzen. \n\nEinige Hersteller haben begonnen, ONVIF standardm\u00e4\u00dfig zu deaktivieren. Stelle sicher, dass ONVIF in der Konfiguration deiner Kamera aktiviert ist.",
                 "title": "ONVIF-Ger\u00e4tekonfiguration"
             }
         }
@@ -48,7 +48,8 @@
             "onvif_devices": {
                 "data": {
                     "extra_arguments": "Zus\u00e4tzliche FFMPEG-Argumente",
-                    "rtsp_transport": "RTSP-Transportmechanismus"
+                    "rtsp_transport": "RTSP-Transportmechanismus",
+                    "use_wallclock_as_timestamps": "Wanduhr als Zeitstempel verwenden"
                 },
                 "title": "ONVIF-Ger\u00e4teoptionen"
             }

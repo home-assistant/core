@@ -1,10 +1,48 @@
 """The sql component."""
 from __future__ import annotations
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+import voluptuous as vol
 
-from .const import PLATFORMS
+from homeassistant.components.recorder import CONF_DB_URL
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_UNIQUE_ID,
+    CONF_UNIT_OF_MEASUREMENT,
+    CONF_VALUE_TEMPLATE,
+    Platform,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import discovery
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
+
+from .const import CONF_COLUMN_NAME, CONF_QUERY, DOMAIN, PLATFORMS
+
+
+def validate_sql_select(value: str) -> str:
+    """Validate that value is a SQL SELECT query."""
+    if not value.lstrip().lower().startswith("select"):
+        raise vol.Invalid("Only SELECT queries allowed")
+    return value
+
+
+QUERY_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_COLUMN_NAME): cv.string,
+        vol.Required(CONF_NAME): cv.string,
+        vol.Required(CONF_QUERY): vol.All(cv.string, validate_sql_select),
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
+        vol.Optional(CONF_DB_URL): cv.string,
+    }
+)
+
+CONFIG_SCHEMA = vol.Schema(
+    {vol.Optional(DOMAIN): vol.All(cv.ensure_list, [QUERY_SCHEMA])},
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -12,11 +50,24 @@ async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None
     await hass.config_entries.async_reload(entry.entry_id)
 
 
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up SQL from yaml config."""
+    if (conf := config.get(DOMAIN)) is None:
+        return True
+
+    for sensor_conf in conf:
+        await discovery.async_load_platform(
+            hass, Platform.SENSOR, DOMAIN, sensor_conf, config
+        )
+
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up SQL from a config entry."""
     entry.async_on_unload(entry.add_update_listener(async_update_listener))
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

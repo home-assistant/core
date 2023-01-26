@@ -1,12 +1,14 @@
 """Diagnostics support for Netatmo."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import DATA_HANDLER, DOMAIN
-from .data_handler import CLIMATE_TOPOLOGY_CLASS_NAME, NetatmoDataHandler
+from .data_handler import ACCOUNT, NetatmoDataHandler
 
 TO_REDACT = {
     "access_token",
@@ -30,7 +32,7 @@ TO_REDACT = {
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry
-) -> dict:
+) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     data_handler: NetatmoDataHandler = hass.data[DOMAIN][config_entry.entry_id][
         DATA_HANDLER
@@ -45,8 +47,8 @@ async def async_get_config_entry_diagnostics(
             TO_REDACT,
         ),
         "data": {
-            CLIMATE_TOPOLOGY_CLASS_NAME: async_redact_data(
-                getattr(data_handler.data[CLIMATE_TOPOLOGY_CLASS_NAME], "raw_data"),
+            ACCOUNT: async_redact_data(
+                getattr(data_handler.account, "raw_data"),
                 TO_REDACT,
             )
         },

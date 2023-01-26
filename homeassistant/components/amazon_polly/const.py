@@ -36,6 +36,8 @@ SUPPORTED_VOICES: Final[list[str]] = [
     "Aditi",  # Hindi
     "Amy",
     "Aria",
+    "Arlet",  # Catalan, Neural
+    "Arthur",  # English, Neural
     "Astrid",  # Swedish
     "Ayanda",
     "Bianca",  # Italian
@@ -47,7 +49,9 @@ SUPPORTED_VOICES: Final[list[str]] = [
     "Chantal",  # French Canadian
     "Conchita",
     "Cristiano",
+    "Daniel",  # German, Neural
     "Dora",  # Icelandic
+    "Elin",  # Swedish, Neural
     "Emma",  # English
     "Enrique",
     "Ewa",
@@ -56,7 +60,11 @@ SUPPORTED_VOICES: Final[list[str]] = [
     "Geraint",  # English Welsh
     "Giorgio",
     "Gwyneth",  # Welsh
+    "Hala",  # Arabic (Gulf), Neural
+    "Hannah",  # German (Austrian), Neural
     "Hans",
+    "Hiujin",  # Chinese (Cantonese), Neural
+    "Ida",  # Norwegian, Neural
     "Ines",  # Portuguese, European
     "Ivy",
     "Jacek",
@@ -64,11 +72,14 @@ SUPPORTED_VOICES: Final[list[str]] = [
     "Joanna",
     "Joey",
     "Justin",
+    "Kajal",  # English (Indian)/Hindi (Bilingual ), Neural
     "Karl",
     "Kendra",
     "Kevin",
     "Kimberly",
+    "Laura",  # Dutch, Neural
     "Lea",  # French
+    "Liam",  # Canadian French, Neural
     "Liv",  # Norwegian
     "Lotte",  # Dutch
     "Lucia",  # Spanish European
@@ -84,14 +95,17 @@ SUPPORTED_VOICES: Final[list[str]] = [
     "Mizuki",  # Japanese
     "Naja",  # Danish
     "Nicole",  # English Australian
+    "Ola",  # Polish, Neural
     "Olivia",  # Female, Australian, Neural
     "Penelope",  # Spanish US
+    "Pedro",  # Spanish US, Neural
     "Raveena",  # English, Indian
     "Ricardo",
     "Ruben",
     "Russell",
     "Salli",  # English
     "Seoyeon",  # Korean
+    "Suvi",  # Finnish
     "Takumi",
     "Tatyana",  # Russian
     "Vicki",  # German

@@ -40,7 +40,7 @@ class ZWaveMeNumber(ZWaveMeEntity, NumberEntity):
     """Representation of a ZWaveMe Multilevel Switch."""
 
     @property
-    def native_value(self):
+    def native_value(self) -> float:
         """Return the unit of measurement."""
         if self.device.level == 99:  # Scale max value
             return 100

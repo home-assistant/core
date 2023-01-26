@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "O servi\u00e7o j\u00e1 est\u00e1 configurado",
+            "reauth_successful": "Reautentica\u00e7\u00e3o bem sucedida"
+        },
+        "error": {
+            "cannot_connect": "A liga\u00e7\u00e3o falhou",
+            "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida",
+            "unknown": "Erro inesperado"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_token": "API Token"
+                },
+                "description": "Consulte a documenta\u00e7\u00e3o sobre como obter a sua chave de bot do Discord. \n\n{url}"
+            },
+            "user": {
+                "data": {
+                    "api_token": "API Token"
+                },
+                "description": "Consulte a documenta\u00e7\u00e3o sobre como obter a sua chave de bot do Discord. \n\n{url}"
+            }
+        }
+    }
+}

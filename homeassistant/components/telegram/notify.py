@@ -1,4 +1,6 @@
 """Telegram platform for notify component."""
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
@@ -13,11 +15,14 @@ from homeassistant.components.notify import (
 )
 from homeassistant.components.telegram_bot import (
     ATTR_DISABLE_NOTIF,
+    ATTR_DISABLE_WEB_PREV,
     ATTR_MESSAGE_TAG,
     ATTR_PARSER,
 )
 from homeassistant.const import ATTR_LOCATION
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.reload import setup_reload_service
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN as TELEGRAM_DOMAIN, PLATFORMS
 
@@ -36,7 +41,11 @@ CONF_CHAT_ID = "chat_id"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_CHAT_ID): vol.Coerce(int)})
 
 
-def get_service(hass, config, discovery_info=None):
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> TelegramNotificationService:
     """Get the Telegram notification service."""
 
     setup_reload_service(hass, TELEGRAM_DOMAIN, PLATFORMS)
@@ -75,6 +84,11 @@ class TelegramNotificationService(BaseNotificationService):
         if data is not None and ATTR_PARSER in data:
             parse_mode = data.get(ATTR_PARSER)
             service_data.update({ATTR_PARSER: parse_mode})
+
+        # Set disable_web_page_preview
+        if data is not None and ATTR_DISABLE_WEB_PREV in data:
+            disable_web_page_preview = data[ATTR_DISABLE_WEB_PREV]
+            service_data.update({ATTR_DISABLE_WEB_PREV: disable_web_page_preview})
 
         # Get keyboard info
         if data is not None and ATTR_KEYBOARD in data:

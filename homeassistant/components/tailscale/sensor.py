@@ -45,14 +45,14 @@ SENSORS: tuple[TailscaleSensorEntityDescription, ...] = (
     ),
     TailscaleSensorEntityDescription(
         key="ip",
-        name="IP Address",
+        name="IP address",
         icon="mdi:ip-network",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.addresses[0] if device.addresses else None,
     ),
     TailscaleSensorEntityDescription(
         key="last_seen",
-        name="Last Seen",
+        name="Last seen",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda device: device.last_seen,
     ),

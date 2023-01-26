@@ -1,7 +1,6 @@
 """Support for the Meraki CMX location service."""
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 import json
 import logging
@@ -10,7 +9,8 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
-    SOURCE_TYPE_ROUTER,
+    AsyncSeeCallback,
+    SourceType,
 )
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
@@ -34,7 +34,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 async def async_setup_scanner(
     hass: HomeAssistant,
     config: ConfigType,
-    async_see: Callable[..., Awaitable[None]],
+    async_see: AsyncSeeCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> bool:
     """Set up an endpoint for the Meraki tracker."""
@@ -50,7 +50,7 @@ class MerakiView(HomeAssistantView):
     name = "api:meraki"
     requires_auth = False
 
-    def __init__(self, config, async_see):
+    def __init__(self, config: ConfigType, async_see: AsyncSeeCallback) -> None:
         """Initialize Meraki URL endpoints."""
         self.async_see = async_see
         self.validator = config[CONF_VALIDATOR]
@@ -127,7 +127,7 @@ class MerakiView(HomeAssistantView):
                 self.async_see(
                     gps=gps_location,
                     mac=mac,
-                    source_type=SOURCE_TYPE_ROUTER,
+                    source_type=SourceType.ROUTER,
                     gps_accuracy=accuracy,
                     attributes=attrs,
                 )
