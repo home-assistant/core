@@ -239,7 +239,6 @@ log_date_format = "%Y-%m-%d %H:%M:%S"
 asyncio_mode = "auto"
 
 [tool.ruff]
-required-version = "0.0.231"
 target-version = "py310"
 
 select = [
