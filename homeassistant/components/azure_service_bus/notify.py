@@ -3,10 +3,9 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import cast
 
 from azure.servicebus import ServiceBusMessage
-from azure.servicebus.aio import ServiceBusClient
+from azure.servicebus.aio import ServiceBusClient, ServiceBusSender
 from azure.servicebus.exceptions import (
     MessagingEntityNotFoundError,
     ServiceBusConnectionError,
@@ -68,12 +67,12 @@ def get_service(
         connection_string, loop=hass.loop
     )
 
+    client: ServiceBusSender | None = None
     try:
         if queue_name:
             client = servicebus.get_queue_sender(queue_name)
-        else:
-            # cast because queue_name and topic_name are Exclusive
-            client = servicebus.get_topic_sender(cast(str, topic_name))
+        elif topic_name:
+            client = servicebus.get_topic_sender(topic_name)
     except (ServiceBusConnectionError, MessagingEntityNotFoundError) as err:
         _LOGGER.error(
             "Connection error while creating client for queue/topic '%s'. %s",
@@ -82,7 +81,7 @@ def get_service(
         )
         return None
 
-    return ServiceBusNotificationService(client)
+    return ServiceBusNotificationService(client) if client else None
 
 
 class ServiceBusNotificationService(BaseNotificationService):
