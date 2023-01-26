@@ -14,7 +14,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class RymProDataUpdateCoordinator(DataUpdateCoordinator):
+class RymProDataUpdateCoordinator(DataUpdateCoordinator[dict[int, dict]]):
     """Class to manage fetching RYM Pro data."""
 
     def __init__(self, hass: HomeAssistant, rympro: RymPro, scan_interval: int) -> None:
@@ -28,7 +28,7 @@ class RymProDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=interval,
         )
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> dict[int, dict]:
         """Fetch data from Rym Pro."""
         try:
             return await self.rympro.last_read()
