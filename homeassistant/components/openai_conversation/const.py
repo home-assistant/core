@@ -7,17 +7,17 @@ DEFAULT_PROMPT = """This smart home is controlled by Home Assistant.
 
 An overview of the areas and the devices in this smart home:
 {%- for area in areas %}
-{%- set area_info = namespace(printed=false) %}
-{%- for device in area_devices(area.name) -%}
-{%- if not device_attr(device, "disabled_by") and not device_attr(device, "entry_type") %}
-{%- if not area_info.printed %}
+  {%- set area_info = namespace(printed=false) %}
+  {%- for device in area_devices(area.name) -%}
+    {%- if not device_attr(device, "disabled_by") and not device_attr(device, "entry_type") %}
+      {%- if not area_info.printed %}
 
 {{ area.name }}:
-{%- set area_info.printed = true %}
-{%- endif %}
+        {%- set area_info.printed = true %}
+      {%- endif %}
 - {{ device_attr(device, "name") }}{% if device_attr(device, "model") not in device_attr(device, "name") %} ({{ device_attr(device, "model") }}){% endif %}
-{%- endif %}
-{%- endfor %}
+    {%- endif %}
+  {%- endfor %}
 {%- endfor %}
 
 Answer the users questions about the world truthfully.
