@@ -104,9 +104,8 @@ async def async_setup_entry(
     )
 
     device = hass.data[DOMAIN][config_entry.unique_id]
-    async_add_entities(
-        [ONVIFCameraEntity(device, profile) for profile in device.profiles]
-    )
+    entities = [ONVIFCameraEntity(device, profile) for profile in device.profiles]
+    async_add_entities(entities)
 
 
 class ONVIFCameraEntity(ONVIFBaseEntity, Camera):

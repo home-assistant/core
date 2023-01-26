@@ -11,7 +11,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .base import ONVIFBaseEntity
 from .const import DOMAIN
 from .device import ONVIFDevice
-from .models import Profile
 
 
 async def async_setup_entry(
@@ -22,7 +21,11 @@ async def async_setup_entry(
     """Set up a ONVIF switch platform."""
     device = hass.data[DOMAIN][config_entry.unique_id]
 
-    entities = [ONVIFWiperSwitch(device), ONVIFAutoFocusSwitch(device)]
+    entities = [
+        ONVIFWiperSwitch(device),
+        ONVIFAutoFocusSwitch(device),
+        ONVIFInfraredSwitch(device),
+    ]
     async_add_entities(entities)
 
 
@@ -77,14 +80,29 @@ class ONVIFAutoFocusSwitch(ONVIFImagingSettingSwitch):
         self._attr_unique_id = f"{self.mac_or_serial}_autofocus"
 
 
+class ONVIFInfraredSwitch(ONVIFImagingSettingSwitch):
+    """Turn IR lamp on or off."""
+
+    # turning cut filter off forces the IR lamp on
+    # note that there may also an auto setting
+    _on_settings = {"IrCutFilter": "OFF"}
+    _off_settings = {"IrCutFilter": "ON"}
+
+    def __init__(self, device: ONVIFDevice) -> None:
+        """Initialize the switch."""
+        super().__init__(device)
+        self._attr_name = f"{self.device.name} IR Lamp"
+        self._attr_unique_id = f"{self.mac_or_serial}_ir_lamp"
+
+
 class ONVIFWiperSwitch(ONVIFAuxSwitch):
     """Turn wiper on or off."""
+
+    _on_cmd = "tt:Wiper|On"
+    _off_cmd = "tt:Wiper|Off"
 
     def __init__(self, device: ONVIFDevice) -> None:
         """Initialize the switch."""
         super().__init__(device)
         self._attr_name = f"{self.device.name} Wiper"
         self._attr_unique_id = f"{self.mac_or_serial}_wiper"
-
-    _on_cmd = "tt:Wiper|On"
-    _off_cmd = "tt:Wiper|Off"
