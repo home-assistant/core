@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
         "error": {
             "invalid_account_format": "Konto ei ole HEX v\u00e4\u00e4rtus, lubatud on ainult 0\u20139 ja A-F.",
             "invalid_account_length": "Kontonimi ei ole \u00f5ige pikkusega, see peab olema 3\u201316 t\u00e4hem\u00e4rki.",

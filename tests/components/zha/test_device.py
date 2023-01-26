@@ -1,5 +1,6 @@
 """Test ZHA device switch."""
 from datetime import timedelta
+import logging
 import time
 from unittest import mock
 from unittest.mock import patch
@@ -224,6 +225,7 @@ async def test_check_available_no_basic_channel(
     hass, device_without_basic_channel, zha_device_restored, caplog
 ):
     """Check device availability for a device without basic cluster."""
+    caplog.set_level(logging.DEBUG, logger="homeassistant.components.zha")
 
     zha_device = await zha_device_restored(device_without_basic_channel)
     await async_enable_traffic(hass, [zha_device])

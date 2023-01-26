@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
         "error": {
             "invalid_account_format": "\u5e33\u865f\u70ba\u5341\u516d\u9032\u4f4d\u6578\u503c\u3001\u8acb\u4f7f\u7528 0-9 \u53ca A-F\u3002",
             "invalid_account_length": "\u5e33\u865f\u9577\u5ea6\u4e0d\u6b63\u78ba\u3001\u5fc5\u9808\u4ecb\u65bc 3 \u81f3 16 \u500b\u5b57\u5143\u4e4b\u9593\u3002",

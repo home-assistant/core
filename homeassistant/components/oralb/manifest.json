@@ -10,6 +10,6 @@
   ],
   "requirements": ["oralb-ble==0.17.1"],
   "dependencies": ["bluetooth_adapters"],
-  "codeowners": ["@bdraco", "@conway20"],
+  "codeowners": ["@bdraco", "@Lash-L"],
   "iot_class": "local_push"
 }

@@ -1,16 +1,32 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Enheten er allerede konfigurert"
+            "already_configured": "Enheten er allerede konfigurert",
+            "reauth_successful": "Re-autentisering var vellykket"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes"
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig godkjenning"
         },
         "step": {
+            "auth": {
+                "data": {
+                    "password": "Passord",
+                    "username": "Brukernavn"
+                }
+            },
+            "choose_auth": {
+                "description": "Innstilling av legitimasjon muliggj\u00f8r ekstra funksjonalitet.",
+                "menu_options": {
+                    "auth": "Angi legitimasjon (anbefalt)",
+                    "skip_auth": "Hopp over autentisering"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Vert"
-                }
+                },
+                "description": "Innstilling av legitimasjon er valgfritt, men muliggj\u00f8r tilleggsfunksjonalitet."
             }
         }
     },

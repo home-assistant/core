@@ -35,7 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 class YeelightScanner:
     """Scan for Yeelight devices."""
 
-    _scanner = None
+    _scanner: YeelightScanner | None = None
 
     @classmethod
     @callback

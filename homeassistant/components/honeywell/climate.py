@@ -24,6 +24,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HoneywellData
@@ -97,6 +98,8 @@ async def async_setup_entry(
 class HoneywellUSThermostat(ClimateEntity):
     """Representation of a Honeywell US Thermostat."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         data: HoneywellData,
@@ -112,7 +115,13 @@ class HoneywellUSThermostat(ClimateEntity):
         self._away = False
 
         self._attr_unique_id = device.deviceid
-        self._attr_name = device.name
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, device.deviceid)},
+            name=device.name,
+            manufacturer="Honeywell",
+        )
+
         self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
         if device.temperature_unit == "C":
             self._attr_temperature_unit = UnitOfTemperature.CELSIUS
@@ -320,11 +329,11 @@ class HoneywellUSThermostat(ClimateEntity):
             # Set permanent hold
             # and Set temperature
             if mode in COOLING_MODES:
-                self._device.set_hold_cool(True)
-                self._device.set_setpoint_cool(self._cool_away_temp)
+                await self._device.set_hold_cool(True)
+                await self._device.set_setpoint_cool(self._cool_away_temp)
             elif mode in HEATING_MODES:
-                self._device.set_hold_heat(True)
-                self._device.set_setpoint_heat(self._heat_away_temp)
+                await self._device.set_hold_heat(True)
+                await self._device.set_setpoint_heat(self._heat_away_temp)
 
         except AIOSomecomfort.SomeComfortError:
 
@@ -393,13 +402,13 @@ class HoneywellUSThermostat(ClimateEntity):
         try:
             await self._device.refresh()
         except (
-            AIOSomecomfort.device.SomeComfortError,
+            AIOSomecomfort.SomeComfortError,
             OSError,
         ):
             try:
                 await self._data.client.login()
 
-            except AIOSomecomfort.device.SomeComfortError:
+            except AIOSomecomfort.SomeComfortError:
                 self._attr_available = False
                 await self.hass.async_create_task(
                     self.hass.config_entries.async_reload(self._data.entry_id)

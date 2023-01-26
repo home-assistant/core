@@ -324,7 +324,7 @@ def load_yaml(fname, string, secrets=None):
 class TestSecrets(unittest.TestCase):
     """Test the secrets parameter in the yaml utility."""
 
-    # pylint: disable=protected-access,invalid-name
+    # pylint: disable=invalid-name
 
     def setUp(self):
         """Create & load secrets file."""
@@ -336,20 +336,24 @@ class TestSecrets(unittest.TestCase):
 
         load_yaml(
             self._secret_path,
-            "http_pw: pwhttp\n"
-            "comp1_un: un1\n"
-            "comp1_pw: pw1\n"
-            "stale_pw: not_used\n"
-            "logger: debug\n",
+            (
+                "http_pw: pwhttp\n"
+                "comp1_un: un1\n"
+                "comp1_pw: pw1\n"
+                "stale_pw: not_used\n"
+                "logger: debug\n"
+            ),
         )
         self._yaml = load_yaml(
             self._yaml_path,
-            "http:\n"
-            "  api_password: !secret http_pw\n"
-            "component:\n"
-            "  username: !secret comp1_un\n"
-            "  password: !secret comp1_pw\n"
-            "",
+            (
+                "http:\n"
+                "  api_password: !secret http_pw\n"
+                "component:\n"
+                "  username: !secret comp1_un\n"
+                "  password: !secret comp1_pw\n"
+                ""
+            ),
             yaml_loader.Secrets(config_dir),
         )
 
@@ -370,12 +374,14 @@ class TestSecrets(unittest.TestCase):
         expected = {"api_password": "pwhttp"}
         self._yaml = load_yaml(
             os.path.join(self._sub_folder_path, "sub.yaml"),
-            "http:\n"
-            "  api_password: !secret http_pw\n"
-            "component:\n"
-            "  username: !secret comp1_un\n"
-            "  password: !secret comp1_pw\n"
-            "",
+            (
+                "http:\n"
+                "  api_password: !secret http_pw\n"
+                "component:\n"
+                "  username: !secret comp1_un\n"
+                "  password: !secret comp1_pw\n"
+                ""
+            ),
             yaml_loader.Secrets(get_test_config_dir()),
         )
 
@@ -389,12 +395,14 @@ class TestSecrets(unittest.TestCase):
         )
         self._yaml = load_yaml(
             os.path.join(self._sub_folder_path, "sub.yaml"),
-            "http:\n"
-            "  api_password: !secret http_pw\n"
-            "component:\n"
-            "  username: !secret comp1_un\n"
-            "  password: !secret comp1_pw\n"
-            "",
+            (
+                "http:\n"
+                "  api_password: !secret http_pw\n"
+                "component:\n"
+                "  username: !secret comp1_un\n"
+                "  password: !secret comp1_pw\n"
+                ""
+            ),
             yaml_loader.Secrets(get_test_config_dir()),
         )
 
@@ -433,12 +441,14 @@ class TestSecrets(unittest.TestCase):
         with pytest.raises(HomeAssistantError):
             load_yaml(
                 self._yaml_path,
-                "http:\n"
-                "  api_password: !secret http_pw\n"
-                "component:\n"
-                "  username: !secret comp1_un\n"
-                "  password: !secret comp1_pw\n"
-                "",
+                (
+                    "http:\n"
+                    "  api_password: !secret http_pw\n"
+                    "component:\n"
+                    "  username: !secret comp1_un\n"
+                    "  password: !secret comp1_pw\n"
+                    ""
+                ),
             )
 
 

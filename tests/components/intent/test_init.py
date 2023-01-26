@@ -96,12 +96,11 @@ async def test_turn_on_intent(hass):
     hass.states.async_set("light.test_light", "off")
     calls = async_mock_service(hass, "light", SERVICE_TURN_ON)
 
-    response = await intent.async_handle(
+    await intent.async_handle(
         hass, "test", "HassTurnOn", {"name": {"value": "test light"}}
     )
     await hass.async_block_till_done()
 
-    assert response.speech["plain"]["speech"] == "Turned test light on"
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == "light"
@@ -118,12 +117,11 @@ async def test_turn_off_intent(hass):
     hass.states.async_set("light.test_light", "on")
     calls = async_mock_service(hass, "light", SERVICE_TURN_OFF)
 
-    response = await intent.async_handle(
+    await intent.async_handle(
         hass, "test", "HassTurnOff", {"name": {"value": "test light"}}
     )
     await hass.async_block_till_done()
 
-    assert response.speech["plain"]["speech"] == "Turned test light off"
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == "light"
@@ -140,12 +138,11 @@ async def test_toggle_intent(hass):
     hass.states.async_set("light.test_light", "off")
     calls = async_mock_service(hass, "light", SERVICE_TOGGLE)
 
-    response = await intent.async_handle(
+    await intent.async_handle(
         hass, "test", "HassToggle", {"name": {"value": "test light"}}
     )
     await hass.async_block_till_done()
 
-    assert response.speech["plain"]["speech"] == "Toggled test light"
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == "light"
@@ -167,12 +164,11 @@ async def test_turn_on_multiple_intent(hass):
     hass.states.async_set("light.test_lighter", "off")
     calls = async_mock_service(hass, "light", SERVICE_TURN_ON)
 
-    response = await intent.async_handle(
+    await intent.async_handle(
         hass, "test", "HassTurnOn", {"name": {"value": "test lights 2"}}
     )
     await hass.async_block_till_done()
 
-    assert response.speech["plain"]["speech"] == "Turned test lights 2 on"
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == "light"

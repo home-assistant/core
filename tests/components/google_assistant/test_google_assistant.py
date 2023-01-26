@@ -1,7 +1,5 @@
 """The tests for the Google Assistant component."""
 from http import HTTPStatus
-
-# pylint: disable=protected-access
 import json
 
 from aiohttp.hdrs import AUTHORIZATION
@@ -125,9 +123,6 @@ def hass_fixture(event_loop, hass):
     )
 
     return hass
-
-
-# pylint: disable=redefined-outer-name
 
 
 async def test_sync_request(hass_fixture, assistant_client, auth_header):

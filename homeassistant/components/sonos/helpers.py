@@ -3,12 +3,11 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import logging
-from typing import TYPE_CHECKING, Any, TypeVar, overload
+from typing import TYPE_CHECKING, Any, Concatenate, ParamSpec, TypeVar, overload
 
 from requests.exceptions import Timeout
 from soco import SoCo
 from soco.exceptions import SoCoException, SoCoUPnPException
-from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.helpers.dispatcher import dispatcher_send
 

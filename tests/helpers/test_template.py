@@ -200,7 +200,14 @@ def test_iterating_all_states_unavailable(hass: HomeAssistant) -> None:
     """Test iterating all states unavailable."""
     hass.states.async_set("test.object", "on")
 
-    tmpl_str = "{{ states | selectattr('state', 'in', ['unavailable', 'unknown', 'none']) | list | count }}"
+    tmpl_str = (
+        "{{"
+        "  states"
+        "  | selectattr('state', 'in', ['unavailable', 'unknown', 'none'])"
+        "  | list"
+        "  | count"
+        "}}"
+    )
 
     info = render_to_info(hass, tmpl_str)
 
@@ -1604,13 +1611,31 @@ def test_relative_time(mock_is_safe, hass):
         assert result == "1 hour"
 
         result = template.Template(
-            '{{relative_time(strptime("2000-01-01 09:00:00 +01:00", "%Y-%m-%d %H:%M:%S %z"))}}',
+            (
+                "{{"
+                "  relative_time("
+                "    strptime("
+                '        "2000-01-01 09:00:00 +01:00",'
+                '        "%Y-%m-%d %H:%M:%S %z"'
+                "    )"
+                "  )"
+                "}}"
+            ),
             hass,
         ).async_render()
         assert result == "2 hours"
 
         result = template.Template(
-            '{{relative_time(strptime("2000-01-01 03:00:00 -06:00", "%Y-%m-%d %H:%M:%S %z"))}}',
+            (
+                "{{"
+                "  relative_time("
+                "    strptime("
+                '       "2000-01-01 03:00:00 -06:00",'
+                '       "%Y-%m-%d %H:%M:%S %z"'
+                "    )"
+                "  )"
+                "}}"
+            ),
             hass,
         ).async_render()
         assert result == "1 hour"
@@ -1619,7 +1644,16 @@ def test_relative_time(mock_is_safe, hass):
             template.strptime("2000-01-01 11:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
         )
         result2 = template.Template(
-            '{{relative_time(strptime("2000-01-01 11:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z"))}}',
+            (
+                "{{"
+                "  relative_time("
+                "    strptime("
+                '       "2000-01-01 11:00:00 +00:00",'
+                '       "%Y-%m-%d %H:%M:%S %z"'
+                "    )"
+                "  )"
+                "}}"
+            ),
             hass,
         ).async_render()
         assert result1 == result2
@@ -1959,8 +1993,9 @@ def test_pack(hass, caplog):
     # "Template warning: 'pack' unable to pack object with type '%s' and format_string '%s' see https://docs.python.org/3/library/struct.html for more information"
     assert tpl.async_render(variables=variables) is None
     assert (
-        "Template warning: 'pack' unable to pack object 'None' with type 'NoneType' and format_string '>I' see https://docs.python.org/3/library/struct.html for more information"
-        in caplog.text
+        "Template warning: 'pack' unable to pack object 'None' with type 'NoneType' and"
+        " format_string '>I' see https://docs.python.org/3/library/struct.html for more"
+        " information" in caplog.text
     )
 
     # test with invalid filter
@@ -1976,7 +2011,9 @@ def test_pack(hass, caplog):
     # "Template warning: 'pack' unable to pack object with type '%s' and format_string '%s' see https://docs.python.org/3/library/struct.html for more information"
     assert tpl.async_render(variables=variables) is None
     assert (
-        "Template warning: 'pack' unable to pack object '3735928559' with type 'int' and format_string 'invalid filter' see https://docs.python.org/3/library/struct.html for more information"
+        "Template warning: 'pack' unable to pack object '3735928559' with type 'int'"
+        " and format_string 'invalid filter' see"
+        " https://docs.python.org/3/library/struct.html for more information"
         in caplog.text
     )
 
@@ -2032,8 +2069,9 @@ def test_unpack(hass, caplog):
     }
     assert tpl.async_render(variables=variables) is None
     assert (
-        "Template warning: 'unpack' unable to unpack object 'b''' with format_string '>I' and offset 0 see https://docs.python.org/3/library/struct.html for more information"
-        in caplog.text
+        "Template warning: 'unpack' unable to unpack object 'b''' with format_string"
+        " '>I' and offset 0 see https://docs.python.org/3/library/struct.html for more"
+        " information" in caplog.text
     )
 
     # test with invalid filter
@@ -2048,7 +2086,9 @@ def test_unpack(hass, caplog):
     }
     assert tpl.async_render(variables=variables) is None
     assert (
-        "Template warning: 'unpack' unable to unpack object 'b''' with format_string 'invalid filter' and offset 0 see https://docs.python.org/3/library/struct.html for more information"
+        "Template warning: 'unpack' unable to unpack object 'b''' with format_string"
+        " 'invalid filter' and offset 0 see"
+        " https://docs.python.org/3/library/struct.html for more information"
         in caplog.text
     )
 
@@ -2109,13 +2149,13 @@ def test_distance_function_with_1_state_1_coord(hass: HomeAssistant) -> None:
         {"latitude": hass.config.latitude, "longitude": hass.config.longitude},
     )
     tpl = template.Template(
-        '{{ distance("32.87336", "-117.22943", states.test.object_2) ' "| round }}",
+        '{{ distance("32.87336", "-117.22943", states.test.object_2) | round }}',
         hass,
     )
     assert tpl.async_render() == 187
 
     tpl2 = template.Template(
-        '{{ distance(states.test.object_2, "32.87336", "-117.22943") ' "| round }}",
+        '{{ distance(states.test.object_2, "32.87336", "-117.22943") | round }}',
         hass,
     )
     assert tpl2.async_render() == 187
@@ -2349,15 +2389,19 @@ async def test_expand(hass: HomeAssistant) -> None:
 
     info = render_to_info(
         hass,
-        "{{ expand('group.new_group', 'test.object')"
-        " | map(attribute='entity_id') | join(', ') }}",
+        (
+            "{{ expand('group.new_group', 'test.object')"
+            " | map(attribute='entity_id') | join(', ') }}"
+        ),
     )
     assert_result_info(info, "test.object", {"test.object", "group.new_group"})
 
     info = render_to_info(
         hass,
-        "{{ ['group.new_group', 'test.object'] | expand"
-        " | map(attribute='entity_id') | join(', ') }}",
+        (
+            "{{ ['group.new_group', 'test.object'] | expand"
+            " | map(attribute='entity_id') | join(', ') }}"
+        ),
     )
     assert_result_info(info, "test.object", {"test.object", "group.new_group"})
     assert info.rate_limit is None
@@ -2374,7 +2418,10 @@ async def test_expand(hass: HomeAssistant) -> None:
 
     info = render_to_info(
         hass,
-        "{{ states.group.power_sensors.attributes.entity_id | expand | map(attribute='state')|map('float')|sum  }}",
+        (
+            "{{ states.group.power_sensors.attributes.entity_id | expand "
+            "| map(attribute='state')|map('float')|sum  }}"
+        ),
     )
     assert_result_info(
         info,
@@ -2499,7 +2546,10 @@ async def test_device_entities(hass: HomeAssistant) -> None:
     assert info.rate_limit is None
     info = render_to_info(
         hass,
-        f"{{{{ device_entities('{device_entry.id}') | expand | map(attribute='entity_id') | join(', ') }}}}",
+        (
+            f"{{{{ device_entities('{device_entry.id}') | expand "
+            "| map(attribute='entity_id') | join(', ') }}"
+        ),
     )
     assert_result_info(info, "", ["light.hue_5678"])
     assert info.rate_limit is None
@@ -2508,7 +2558,10 @@ async def test_device_entities(hass: HomeAssistant) -> None:
     hass.states.async_set("light.hue_5678", "happy")
     info = render_to_info(
         hass,
-        f"{{{{ device_entities('{device_entry.id}') | expand | map(attribute='entity_id') | join(', ') }}}}",
+        (
+            f"{{{{ device_entities('{device_entry.id}') | expand "
+            "| map(attribute='entity_id') | join(', ') }}"
+        ),
     )
     assert_result_info(info, "light.hue_5678", ["light.hue_5678"])
     assert info.rate_limit is None
@@ -2527,7 +2580,10 @@ async def test_device_entities(hass: HomeAssistant) -> None:
     assert info.rate_limit is None
     info = render_to_info(
         hass,
-        f"{{{{ device_entities('{device_entry.id}') | expand | map(attribute='entity_id') | join(', ') }}}}",
+        (
+            f"{{{{ device_entities('{device_entry.id}') | expand "
+            "| map(attribute='entity_id') | join(', ') }}"
+        ),
     )
     assert_result_info(
         info, "light.hue_5678, light.hue_abcd", ["light.hue_5678", "light.hue_abcd"]
@@ -2756,7 +2812,10 @@ async def test_device_attr(hass: HomeAssistant) -> None:
     # Test test syntax (is_device_attr)
     info = render_to_info(
         hass,
-        f"{{{{ ['{device_entry.id}'] | select('is_device_attr', 'model', 'test') | list }}}}",
+        (
+            f"{{{{ ['{device_entry.id}'] | select('is_device_attr', 'model', 'test') "
+            "| list }}"
+        ),
     )
     assert_result_info(info, [device_entry.id])
     assert info.rate_limit is None
@@ -3309,8 +3368,10 @@ def test_closest_function_to_entity_id(hass: HomeAssistant) -> None:
 
     info = render_to_info(
         hass,
-        "{{ ([states.test_domain, 'test_domain.closest_zone'] "
-        "| closest(zone)).entity_id }}",
+        (
+            "{{ ([states.test_domain, 'test_domain.closest_zone'] "
+            "| closest(zone)).entity_id }}"
+        ),
         {"zone": "zone.far_away"},
     )
 
@@ -3608,12 +3669,12 @@ def test_render_complex_handling_non_template_values(hass: HomeAssistant) -> Non
 def test_urlencode(hass: HomeAssistant) -> None:
     """Test the urlencode method."""
     tpl = template.Template(
-        ("{% set dict = {'foo': 'x&y', 'bar': 42} %}{{ dict | urlencode }}"),
+        "{% set dict = {'foo': 'x&y', 'bar': 42} %}{{ dict | urlencode }}",
         hass,
     )
     assert tpl.async_render() == "foo=x%26y&bar=42"
     tpl = template.Template(
-        ("{% set string = 'the quick brown fox = true' %}{{ string | urlencode }}"),
+        "{% set string = 'the quick brown fox = true' %}{{ string | urlencode }}",
         hass,
     )
     assert tpl.async_render() == "the%20quick%20brown%20fox%20%3D%20true"
@@ -3672,26 +3733,18 @@ async def test_cache_garbage_collection() -> None:
         (template_string),
     )
     tpl.ensure_valid()
-    assert template._NO_HASS_ENV.template_cache.get(
-        template_string
-    )  # pylint: disable=protected-access
+    assert template._NO_HASS_ENV.template_cache.get(template_string)
 
     tpl2 = template.Template(
         (template_string),
     )
     tpl2.ensure_valid()
-    assert template._NO_HASS_ENV.template_cache.get(
-        template_string
-    )  # pylint: disable=protected-access
+    assert template._NO_HASS_ENV.template_cache.get(template_string)
 
     del tpl
-    assert template._NO_HASS_ENV.template_cache.get(
-        template_string
-    )  # pylint: disable=protected-access
+    assert template._NO_HASS_ENV.template_cache.get(template_string)
     del tpl2
-    assert not template._NO_HASS_ENV.template_cache.get(
-        template_string
-    )  # pylint: disable=protected-access
+    assert not template._NO_HASS_ENV.template_cache.get(template_string)
 
 
 def test_is_template_string() -> None:
@@ -3766,7 +3819,11 @@ async def test_slice_states(hass: HomeAssistant) -> None:
     hass.states.async_set("sensor.test", "23")
 
     tpl = template.Template(
-        "{% for states in states | slice(1) -%}{% set state = states | first %}{{ state.entity_id }}{%- endfor %}",
+        (
+            "{% for states in states | slice(1) -%}{% set state = states | first %}"
+            "{{ state.entity_id }}"
+            "{%- endfor %}"
+        ),
         hass,
     )
     assert tpl.async_render() == "sensor.test"
@@ -3945,13 +4002,21 @@ async def test_unavailable_states(hass: HomeAssistant) -> None:
     hass.states.async_set("light.none", "none")
 
     tpl = template.Template(
-        "{{ states | selectattr('state', 'in', ['unavailable','unknown','none']) | map(attribute='entity_id') | list | join(', ') }}",
+        (
+            "{{ states | selectattr('state', 'in', ['unavailable','unknown','none']) "
+            "| map(attribute='entity_id') | list | join(', ') }}"
+        ),
         hass,
     )
     assert tpl.async_render() == "light.none, light.unavailable, light.unknown"
 
     tpl = template.Template(
-        "{{ states.light | selectattr('state', 'in', ['unavailable','unknown','none']) | map(attribute='entity_id') | list | join(', ') }}",
+        (
+            "{{ states.light "
+            "| selectattr('state', 'in', ['unavailable','unknown','none']) "
+            "| map(attribute='entity_id') | list "
+            "| join(', ') }}"
+        ),
         hass,
     )
     assert tpl.async_render() == "light.none, light.unavailable, light.unknown"
@@ -4057,8 +4122,8 @@ async def test_undefined_variable(hass, caplog):
     tpl = template.Template("{{ no_such_variable }}", hass)
     assert tpl.async_render() == ""
     assert (
-        "Template variable warning: 'no_such_variable' is undefined when rendering '{{ no_such_variable }}'"
-        in caplog.text
+        "Template variable warning: 'no_such_variable' is undefined when rendering "
+        "'{{ no_such_variable }}'" in caplog.text
     )
 
 
@@ -4078,3 +4143,33 @@ async def test_template_states_can_serialize(hass: HomeAssistant) -> None:
     template_state = template.TemplateState(hass, state, True)
     assert template_state.as_dict() is template_state.as_dict()
     assert json_dumps(template_state) == json_dumps(template_state)
+
+
+@pytest.mark.parametrize(
+    "seq, value, expected",
+    [
+        ([0], 0, True),
+        ([1], 0, False),
+        ([False], 0, True),
+        ([True], 0, False),
+        ([0], [0], False),
+        (["toto", 1], "toto", True),
+        (["toto", 1], "tata", False),
+        ([], 0, False),
+        ([], None, False),
+    ],
+)
+def test_contains(hass, seq, value, expected):
+    """Test contains."""
+    assert (
+        template.Template("{{ seq | contains(value) }}", hass).async_render(
+            {"seq": seq, "value": value}
+        )
+        == expected
+    )
+    assert (
+        template.Template("{{ seq is contains(value) }}", hass).async_render(
+            {"seq": seq, "value": value}
+        )
+        == expected
+    )

@@ -1,7 +1,6 @@
 """Test to verify that Home Assistant core works."""
 from __future__ import annotations
 
-# pylint: disable=protected-access
 import array
 import asyncio
 from datetime import datetime, timedelta

@@ -107,6 +107,30 @@ def _async_check_firmware_version(
     )
 
 
+@callback
+def _async_check_using_api_password(
+    hass: HomeAssistant, device_info: EsphomeDeviceInfo, has_password: bool
+) -> None:
+    """Create or delete an the api_password_deprecated issue."""
+    # ESPHome device_info.mac_address is the unique_id
+    issue = f"api_password_deprecated-{device_info.mac_address}"
+    if not has_password:
+        async_delete_issue(hass, DOMAIN, issue)
+        return
+    async_create_issue(
+        hass,
+        DOMAIN,
+        issue,
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        learn_more_url="https://esphome.io/components/api.html",
+        translation_key="api_password_deprecated",
+        translation_placeholders={
+            "name": device_info.name,
+        },
+    )
+
+
 async def async_setup_entry(  # noqa: C901
     hass: HomeAssistant, entry: ConfigEntry
 ) -> bool:
@@ -309,6 +333,7 @@ async def async_setup_entry(  # noqa: C901
             await cli.disconnect()
         else:
             _async_check_firmware_version(hass, device_info)
+            _async_check_using_api_password(hass, device_info, bool(password))
 
     async def on_disconnect() -> None:
         """Run disconnect callbacks on API disconnect."""

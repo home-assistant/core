@@ -188,6 +188,12 @@ class BaseLight(LogMixin, light.LightEntity):
         xy_color = kwargs.get(light.ATTR_XY_COLOR)
         hs_color = kwargs.get(light.ATTR_HS_COLOR)
 
+        execute_if_off_supported = (
+            self._GROUP_SUPPORTS_EXECUTE_IF_OFF
+            if isinstance(self, LightGroup)
+            else self._color_channel and self._color_channel.execute_if_off_supported
+        )
+
         set_transition_flag = (
             brightness_supported(self._attr_supported_color_modes)
             or temperature is not None
@@ -254,6 +260,7 @@ class BaseLight(LogMixin, light.LightEntity):
                 )
             )
             and brightness_supported(self._attr_supported_color_modes)
+            and not execute_if_off_supported
         )
 
         if (
@@ -287,6 +294,23 @@ class BaseLight(LogMixin, light.LightEntity):
                 return
             # Currently only setting it to "on", as the correct level state will be set at the second move_to_level call
             self._attr_state = True
+
+        if execute_if_off_supported:
+            self.debug("handling color commands before turning on/level")
+            if not await self.async_handle_color_commands(
+                temperature,
+                duration,  # duration is ignored by lights when off
+                hs_color,
+                xy_color,
+                new_color_provided_while_off,
+                t_log,
+            ):
+                # Color calls before on/level calls failed,
+                # so if the transitioning delay isn't running from a previous call, the flag can be unset immediately
+                if set_transition_flag and not self._transition_listener:
+                    self.async_transition_complete()
+                self.debug("turned on: %s", t_log)
+                return
 
         if (
             (brightness is not None or transition)
@@ -326,18 +350,20 @@ class BaseLight(LogMixin, light.LightEntity):
                 return
             self._attr_state = True
 
-        if not await self.async_handle_color_commands(
-            temperature,
-            duration,
-            hs_color,
-            xy_color,
-            new_color_provided_while_off,
-            t_log,
-        ):
-            # Color calls failed, but as brightness may still transition, we start the timer to unset the flag
-            self.async_transition_start_timer(transition_time)
-            self.debug("turned on: %s", t_log)
-            return
+        if not execute_if_off_supported:
+            self.debug("handling color commands after turning on/level")
+            if not await self.async_handle_color_commands(
+                temperature,
+                duration,
+                hs_color,
+                xy_color,
+                new_color_provided_while_off,
+                t_log,
+            ):
+                # Color calls failed, but as brightness may still transition, we start the timer to unset the flag
+                self.async_transition_start_timer(transition_time)
+                self.debug("turned on: %s", t_log)
+                return
 
         if new_color_provided_while_off:
             # The light is has the correct color, so we can now transition it to the correct brightness level.
@@ -1023,6 +1049,20 @@ class LightGroup(BaseLight, ZhaGroupEntity):
         """Initialize a light group."""
         super().__init__(entity_ids, unique_id, group_id, zha_device, **kwargs)
         group = self.zha_device.gateway.get_group(self._group_id)
+
+        self._GROUP_SUPPORTS_EXECUTE_IF_OFF = True  # pylint: disable=invalid-name
+        # Check all group members to see if they support execute_if_off.
+        # If at least one member has a color cluster and doesn't support it, it's not used.
+        for member in group.members:
+            for pool in member.device.channels.pools:
+                for channel in pool.all_channels.values():
+                    if (
+                        channel.name == CHANNEL_COLOR
+                        and not channel.execute_if_off_supported
+                    ):
+                        self._GROUP_SUPPORTS_EXECUTE_IF_OFF = False
+                        break
+
         self._DEFAULT_MIN_TRANSITION_TIME = any(  # pylint: disable=invalid-name
             member.device.manufacturer in DEFAULT_MIN_TRANSITION_MANUFACTURERS
             for member in group.members

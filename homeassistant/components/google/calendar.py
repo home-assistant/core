@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Iterable
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Union, cast
+from typing import Any, cast
 
 from gcal_sync.api import (
     GoogleCalendarService,
@@ -19,9 +19,9 @@ from gcal_sync.model import AccessRole, DateOrDatetime, Event
 from gcal_sync.store import ScopedCalendarStore
 from gcal_sync.sync import CalendarEventSyncManager
 from gcal_sync.timeline import Timeline
-import voluptuous as vol
 
 from homeassistant.components.calendar import (
+    CREATE_EVENT_SCHEMA,
     ENTITY_ID_FORMAT,
     EVENT_DESCRIPTION,
     EVENT_END,
@@ -38,11 +38,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_ENTITIES, CONF_NAME, CONF_OFFSET
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
-from homeassistant.helpers import (
-    config_validation as cv,
-    entity_platform,
-    entity_registry as er,
-)
+from homeassistant.helpers import entity_platform, entity_registry as er
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
@@ -74,7 +70,6 @@ from .const import (
     EVENT_IN_WEEKS,
     EVENT_START_DATE,
     EVENT_START_DATETIME,
-    EVENT_TYPES_CONF,
     FeatureAccess,
 )
 
@@ -95,41 +90,7 @@ OPAQUE = "opaque"
 # we need to strip when working with the frontend recurrence rule values
 RRULE_PREFIX = "RRULE:"
 
-_EVENT_IN_TYPES = vol.Schema(
-    {
-        vol.Exclusive(EVENT_IN_DAYS, EVENT_TYPES_CONF): cv.positive_int,
-        vol.Exclusive(EVENT_IN_WEEKS, EVENT_TYPES_CONF): cv.positive_int,
-    }
-)
-
 SERVICE_CREATE_EVENT = "create_event"
-CREATE_EVENT_SCHEMA = vol.All(
-    cv.has_at_least_one_key(EVENT_START_DATE, EVENT_START_DATETIME, EVENT_IN),
-    cv.has_at_most_one_key(EVENT_START_DATE, EVENT_START_DATETIME, EVENT_IN),
-    cv.make_entity_service_schema(
-        {
-            vol.Required(EVENT_SUMMARY): cv.string,
-            vol.Optional(EVENT_DESCRIPTION, default=""): cv.string,
-            vol.Inclusive(
-                EVENT_START_DATE, "dates", "Start and end dates must both be specified"
-            ): cv.date,
-            vol.Inclusive(
-                EVENT_END_DATE, "dates", "Start and end dates must both be specified"
-            ): cv.date,
-            vol.Inclusive(
-                EVENT_START_DATETIME,
-                "datetimes",
-                "Start and end datetimes must both be specified",
-            ): cv.datetime,
-            vol.Inclusive(
-                EVENT_END_DATETIME,
-                "datetimes",
-                "Start and end datetimes must both be specified",
-            ): cv.datetime,
-            vol.Optional(EVENT_IN): _EVENT_IN_TYPES,
-        }
-    ),
-)
 
 
 async def async_setup_entry(
@@ -392,9 +353,7 @@ class CalendarQueryUpdateCoordinator(DataUpdateCoordinator[list[Event]]):
 
 
 class GoogleCalendarEntity(
-    CoordinatorEntity[
-        Union[CalendarSyncUpdateCoordinator, CalendarQueryUpdateCoordinator]
-    ],
+    CoordinatorEntity[CalendarSyncUpdateCoordinator | CalendarQueryUpdateCoordinator],
     CalendarEntity,
 ):
     """A calendar event entity."""
@@ -546,9 +505,12 @@ class GoogleCalendarEntity(
         if rrule := kwargs.get(EVENT_RRULE):
             event.recurrence = [f"{RRULE_PREFIX}{rrule}"]
 
-        await cast(
-            CalendarSyncUpdateCoordinator, self.coordinator
-        ).sync.store_service.async_add_event(event)
+        try:
+            await cast(
+                CalendarSyncUpdateCoordinator, self.coordinator
+            ).sync.store_service.async_add_event(event)
+        except ApiException as err:
+            raise HomeAssistantError(f"Error while creating event: {str(err)}") from err
         await self.coordinator.async_refresh()
 
     async def async_delete_event(

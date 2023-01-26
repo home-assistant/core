@@ -1,5 +1,5 @@
 """Test config utils."""
-# pylint: disable=protected-access
+
 from collections import OrderedDict
 import contextlib
 import copy
@@ -754,7 +754,6 @@ async def test_async_hass_config_yaml_merge(merge_log_err, hass):
     assert len(conf["light"]) == 1
 
 
-# pylint: disable=redefined-outer-name
 @pytest.fixture
 def merge_log_err(hass):
     """Patch _merge_log_error from packages."""

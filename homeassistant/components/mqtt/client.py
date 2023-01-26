@@ -1,11 +1,8 @@
 """Support for MQTT message handling."""
-# pylint: disable=deprecated-typing-alias
-#   In Python 3.9.0 and 3.9.1 collections.abc.Callable
-#   can't be used inside typing.Union or typing.Optional
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Coroutine, Iterable
+from collections.abc import Callable, Coroutine, Iterable
 from functools import lru_cache, partial, wraps
 import inspect
 from itertools import groupby
@@ -13,7 +10,7 @@ import logging
 from operator import attrgetter
 import ssl
 import time
-from typing import TYPE_CHECKING, Any, Callable, Union, cast
+from typing import TYPE_CHECKING, Any, Union, cast
 import uuid
 
 import attr
@@ -88,7 +85,7 @@ _LOGGER = logging.getLogger(__name__)
 DISCOVERY_COOLDOWN = 2
 TIMEOUT_ACK = 10
 
-SubscribePayloadType = Union[str, bytes]  # Only bytes if encoding is None
+SubscribePayloadType = str | bytes  # Only bytes if encoding is None
 
 
 def publish(

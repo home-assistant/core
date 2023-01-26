@@ -26,5 +26,18 @@
                 }
             }
         }
+    },
+    "selector": {
+        "weekday": {
+            "options": {
+                "fri": "Piatok",
+                "mon": "Pondelok",
+                "sat": "Sobota",
+                "sun": "Nede\u013ea",
+                "thu": "\u0160tvrtok",
+                "tue": "Utorok",
+                "wed": "Streda"
+            }
+        }
     }
 }

@@ -51,6 +51,21 @@
                 },
                 "title": "A\u00f1adir grupo"
             },
+            "sensor": {
+                "data": {
+                    "device_class": "Clase de dispositivo",
+                    "entities": "Miembros",
+                    "hide_members": "Ocultar miembros",
+                    "ignore_non_numeric": "Ignorar no num\u00e9rico",
+                    "name": "Nombre",
+                    "round_digits": "Redondear valor a n\u00famero de decimales",
+                    "state_class": "Clase de estado",
+                    "type": "Tipo",
+                    "unit_of_measurement": "Unidad de medida"
+                },
+                "description": "Si est\u00e1 habilitado \"ignorar no num\u00e9rico\", el estado del grupo se calcula si al menos un miembro tiene un valor num\u00e9rico. Si \"ignorar no num\u00e9rico\" est\u00e1 deshabilitado, el estado del grupo se calcula solo si todos los miembros del grupo tienen valores num\u00e9ricos.",
+                "title": "A\u00f1adir grupo"
+            },
             "switch": {
                 "data": {
                     "entities": "Miembros",
@@ -68,6 +83,7 @@
                     "light": "Grupo de luces",
                     "lock": "Grupo de cerraduras",
                     "media_player": "Grupo de reproductores multimedia",
+                    "sensor": "Grupo de sensores",
                     "switch": "Grupo de interruptores"
                 },
                 "title": "A\u00f1adir grupo"
@@ -115,6 +131,19 @@
                     "entities": "Miembros",
                     "hide_members": "Ocultar miembros"
                 }
+            },
+            "sensor": {
+                "data": {
+                    "device_class": "Clase de dispositivo",
+                    "entities": "Miembros",
+                    "hide_members": "Ocultar miembros",
+                    "ignore_non_numeric": "Ignorar no num\u00e9rico",
+                    "round_digits": "Redondear valor a n\u00famero de decimales",
+                    "state_class": "Clase de estado",
+                    "type": "Tipo",
+                    "unit_of_measurement": "Unidad de medida"
+                },
+                "description": "Si est\u00e1 habilitado \"ignorar no num\u00e9rico\", el estado del grupo se calcula si al menos un miembro tiene un valor num\u00e9rico. Si \"ignorar no num\u00e9rico\" est\u00e1 deshabilitado, el estado del grupo se calcula solo si todos los miembros del grupo tienen valores num\u00e9ricos."
             },
             "switch": {
                 "data": {

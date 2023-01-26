@@ -5,12 +5,11 @@ import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
 import functools
 import logging
-from typing import Any, TypeVar
+from typing import Any, Concatenate, ParamSpec, TypeVar
 
 import aiohttp
 from async_upnp_client.client import UpnpError
 from openhomedevice.device import Device
-from typing_extensions import Concatenate, ParamSpec
 import voluptuous as vol
 
 from homeassistant.components import media_source

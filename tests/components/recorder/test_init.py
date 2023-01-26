@@ -1,7 +1,6 @@
 """The tests for the Recorder component."""
 from __future__ import annotations
 
-# pylint: disable=protected-access
 import asyncio
 from datetime import datetime, timedelta
 import sqlite3
@@ -32,6 +31,7 @@ from homeassistant.components.recorder.const import (
     EVENT_RECORDER_5MIN_STATISTICS_GENERATED,
     EVENT_RECORDER_HOURLY_STATISTICS_GENERATED,
     KEEPALIVE_TIME,
+    SupportedDialect,
 )
 from homeassistant.components.recorder.db_schema import (
     SCHEMA_VERSION,
@@ -222,6 +222,42 @@ async def test_saving_state(recorder_mock, hass: HomeAssistant):
         assert db_states[0].event_id is None
 
     assert state == _state_with_context(hass, entity_id)
+
+
+@pytest.mark.parametrize(
+    "dialect_name, expected_attributes",
+    (
+        (SupportedDialect.MYSQL, {"test_attr": 5, "test_attr_10": "silly\0stuff"}),
+        (SupportedDialect.POSTGRESQL, {"test_attr": 5, "test_attr_10": "silly"}),
+        (SupportedDialect.SQLITE, {"test_attr": 5, "test_attr_10": "silly\0stuff"}),
+    ),
+)
+async def test_saving_state_with_nul(
+    recorder_mock, hass: HomeAssistant, dialect_name, expected_attributes
+):
+    """Test saving and restoring a state with nul in attributes."""
+    entity_id = "test.recorder"
+    state = "restoring_from_db"
+    attributes = {"test_attr": 5, "test_attr_10": "silly\0stuff"}
+
+    with patch(
+        "homeassistant.components.recorder.core.Recorder.dialect_name", dialect_name
+    ):
+        hass.states.async_set(entity_id, state, attributes)
+        await async_wait_recording_done(hass)
+
+    with session_scope(hass=hass) as session:
+        db_states = []
+        for db_state, db_state_attributes in session.query(States, StateAttributes):
+            db_states.append(db_state)
+            state = db_state.to_native()
+            state.attributes = db_state_attributes.to_native()
+        assert len(db_states) == 1
+        assert db_states[0].event_id is None
+
+    expected = _state_with_context(hass, entity_id)
+    expected.attributes = expected_attributes
+    assert state == expected
 
 
 async def test_saving_many_states(
@@ -505,7 +541,7 @@ def test_setup_without_migration(hass_recorder):
     assert recorder.get_instance(hass).schema_version == SCHEMA_VERSION
 
 
-# pylint: disable=redefined-outer-name,invalid-name
+# pylint: disable=invalid-name
 def test_saving_state_include_domains(hass_recorder):
     """Test saving and restoring a state."""
     hass = hass_recorder({"include": {"domains": "test2"}})

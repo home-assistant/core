@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Kontoen er allerede konfigurert"
+        },
         "error": {
             "invalid_credentials": "Ugyldig godkjenning",
             "unknown": "Uventet feil"

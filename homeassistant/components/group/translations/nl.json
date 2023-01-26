@@ -51,6 +51,21 @@
                 },
                 "title": "Groep toevoegen"
             },
+            "sensor": {
+                "data": {
+                    "device_class": "Apparaatklasse (device class)",
+                    "entities": "Leden",
+                    "hide_members": "Leden verbergen",
+                    "ignore_non_numeric": "Negeer niet-numeriek",
+                    "name": "Naam",
+                    "round_digits": "Waarde afronden op aantal decimalen",
+                    "state_class": "Statusklasse (state class)",
+                    "type": "Type",
+                    "unit_of_measurement": "Meeteenheid"
+                },
+                "description": "Als \"negeer niet-numeriek\" is ingeschakeld, wordt de status van de groep berekend als minstens \u00e9\u00e9n lid een numerieke waarde heeft. Als \"negeer niet-numeriek\" is uitgeschakeld, wordt de status van de groep alleen berekend als alle groepsleden numerieke waarden hebben.",
+                "title": "Groep toevoegen"
+            },
             "switch": {
                 "data": {
                     "entities": "Leden",
@@ -68,6 +83,7 @@
                     "light": "Lichtgroep",
                     "lock": "Slotgroep",
                     "media_player": "Mediaspelergroep",
+                    "sensor": "Sensor groep",
                     "switch": "Schakelaargroep"
                 },
                 "title": "Groep toevoegen"
@@ -116,13 +132,26 @@
                     "hide_members": "Verberg leden"
                 }
             },
+            "sensor": {
+                "data": {
+                    "device_class": "Apparaatklasse (device class)",
+                    "entities": "Leden",
+                    "hide_members": "Leden verbergen",
+                    "ignore_non_numeric": "Negeer niet-numeriek",
+                    "round_digits": "Waarde afronden op aantal decimalen",
+                    "state_class": "Statusklasse (state class)",
+                    "type": "Type",
+                    "unit_of_measurement": "Meeteenheid"
+                },
+                "description": "Als \"negeer niet-numeriek\" is ingeschakeld, wordt de status van de groep berekend als minstens \u00e9\u00e9n lid een numerieke waarde heeft. Als \"negeer niet-numeriek\" is uitgeschakeld, wordt de status van de groep alleen berekend als alle groepsleden numerieke waarden hebben."
+            },
             "switch": {
                 "data": {
                     "all": "Alle entiteiten",
                     "entities": "Leden",
                     "hide_members": "Verberg leden"
                 },
-                "description": "Als \"alle entitieiten\" is ingeschakeld, is de status van de groep alleen ingeschakeld als alle leden zijn ingeschakeld. Als \" alle entititeiten\" is uitgeschakeld, is de status van de groep ingeschakeld als een lid is ingeschakeld."
+                "description": "Als \"alle entitieiten\" is ingeschakeld, is de status van de groep alleen ingeschakeld als alle leden zijn ingeschakeld. Als \"alle entititeiten\" is uitgeschakeld, is de status van de groep ingeschakeld als een lid is ingeschakeld."
             }
         }
     },

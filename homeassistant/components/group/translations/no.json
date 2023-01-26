@@ -51,6 +51,21 @@
                 },
                 "title": "Legg til gruppe"
             },
+            "sensor": {
+                "data": {
+                    "device_class": "Enhetsklasse",
+                    "entities": "Medlemmer",
+                    "hide_members": "Skjul medlemmer",
+                    "ignore_non_numeric": "Ignorer ikke-numerisk",
+                    "name": "Navn",
+                    "round_digits": "Avrund verdi til antall desimaler",
+                    "state_class": "Tilstandsklasse",
+                    "type": "Type",
+                    "unit_of_measurement": "M\u00e5leenhet"
+                },
+                "description": "Hvis \"ignorer ikke-numerisk\" er aktivert, beregnes gruppens tilstand hvis minst ett medlem har en numerisk verdi. Hvis \"ignorer ikke-numerisk\" er deaktivert, beregnes gruppens tilstand bare hvis alle gruppemedlemmene har numeriske verdier.",
+                "title": "Legg til gruppe"
+            },
             "switch": {
                 "data": {
                     "entities": "Medlemmer",
@@ -68,6 +83,7 @@
                     "light": "Lys-gruppen",
                     "lock": "L\u00e5s gruppe",
                     "media_player": "Mediespillergruppe",
+                    "sensor": "Sensorgruppe",
                     "switch": "Bytt gruppe"
                 },
                 "title": "Legg til gruppe"
@@ -115,6 +131,19 @@
                     "entities": "Medlemmer",
                     "hide_members": "Skjul medlemmer"
                 }
+            },
+            "sensor": {
+                "data": {
+                    "device_class": "Enhetsklasse",
+                    "entities": "Medlemmer",
+                    "hide_members": "Skjul medlemmer",
+                    "ignore_non_numeric": "Ignorer ikke-numerisk",
+                    "round_digits": "Avrund verdi til antall desimaler",
+                    "state_class": "Tilstandsklasse",
+                    "type": "Type",
+                    "unit_of_measurement": "M\u00e5leenhet"
+                },
+                "description": "Hvis \"ignorer ikke-numerisk\" er aktivert, beregnes gruppens tilstand hvis minst ett medlem har en numerisk verdi. Hvis \"ignorer ikke-numerisk\" er deaktivert, beregnes gruppens tilstand bare hvis alle gruppemedlemmene har numeriske verdier."
             },
             "switch": {
                 "data": {

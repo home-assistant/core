@@ -93,9 +93,7 @@ async def test_robot_with_update_already_in_progress(
 ):
     """Tests the update entity was set up."""
     robot: LitterRobot4 = mock_account_with_litterrobot_4.robots[0]
-    robot._update_data(  # pylint:disable=protected-access
-        {"isFirmwareUpdateTriggered": True}, partial=True
-    )
+    robot._update_data({"isFirmwareUpdateTriggered": True}, partial=True)
 
     entry = await setup_integration(
         hass, mock_account_with_litterrobot_4, PLATFORM_DOMAIN

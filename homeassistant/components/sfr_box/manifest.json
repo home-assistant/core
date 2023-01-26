@@ -3,7 +3,7 @@
   "name": "SFR Box",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/sfr_box",
-  "requirements": ["sfrbox-api==0.0.4"],
+  "requirements": ["sfrbox-api==0.0.5"],
   "codeowners": ["@epenet"],
   "iot_class": "local_polling",
   "integration_type": "device"

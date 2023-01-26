@@ -86,7 +86,7 @@ async def test_token_request_succeeds(hass):
         mock_ecobee.request_tokens.return_value = True
         mock_ecobee.api_key = "test-api-key"
         mock_ecobee.refresh_token = "test-token"
-        # pylint: disable-next=protected-access
+
         flow._ecobee = mock_ecobee
 
         result = await flow.async_step_authorize(user_input={})
@@ -109,7 +109,7 @@ async def test_token_request_fails(hass):
         mock_ecobee = mock_ecobee.return_value
         mock_ecobee.request_tokens.return_value = False
         mock_ecobee.pin = "test-pin"
-        # pylint: disable-next=protected-access
+
         flow._ecobee = mock_ecobee
 
         result = await flow.async_step_authorize(user_input={})

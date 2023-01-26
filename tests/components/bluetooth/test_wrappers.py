@@ -1,8 +1,7 @@
 """Tests for the Bluetooth integration."""
-
+from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Union
 from unittest.mock import patch
 
 import bleak
@@ -66,7 +65,7 @@ class FakeScanner(BaseHaRemoteScanner):
 class BaseFakeBleakClient:
     """Base class for fake bleak clients."""
 
-    def __init__(self, address_or_ble_device: Union[BLEDevice, str], **kwargs):
+    def __init__(self, address_or_ble_device: BLEDevice | str, **kwargs):
         """Initialize the fake bleak client."""
         self._device_path = "/dev/test"
         self._device = address_or_ble_device

@@ -1,5 +1,5 @@
 """Test the UniFi Protect global services."""
-# pylint: disable=protected-access
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, Mock
