@@ -293,7 +293,7 @@ class ControllerDevice(ClimateEntity):
         for (key, value) in self._state_to_pizone.items():
             if value == mode:
                 return key
-        assert False, "Should be unreachable"
+        raise RuntimeError("Should be unreachable")
 
     @property
     @_return_on_connection_error([])
