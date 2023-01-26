@@ -50,6 +50,17 @@ async def test_default_prompt(hass, mock_init_component):
         model="Test Model 3A",
         suggested_area="Test Area 2",
     )
+    device = device_reg.async_get_or_create(
+        config_entry_id="1234",
+        connections={("test", "9876-disabled")},
+        name="Test Device 3",
+        manufacturer="Test Manufacturer 3",
+        model="Test Model 3A",
+        suggested_area="Test Area 2",
+    )
+    device_reg.async_update_device(
+        device.id, disabled_by=device_registry.DeviceEntryDisabler.USER
+    )
 
     with patch("openai.Completion.create") as mock_create:
         await conversation.async_converse(hass, "hello", None, Context())
