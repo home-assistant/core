@@ -218,10 +218,10 @@ class BaseNotificationService:
     hass: HomeAssistant = None  # type: ignore[assignment]
 
     # Name => target
-    registered_targets: dict[str, str]
+    registered_targets: dict[str, Any]
 
     @property
-    def targets(self) -> dict[str, str] | None:
+    def targets(self) -> dict[str, Any] | None:
         """Return a dictionary of registered targets."""
         return None
 
