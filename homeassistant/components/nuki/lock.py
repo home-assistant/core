@@ -14,9 +14,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import NukiEntity
+from . import NukiCoordinator, NukiEntity
 from .const import (
     ATTR_BATTERY_CRITICAL,
     ATTR_ENABLE,
@@ -36,7 +35,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Nuki lock platform."""
     data = hass.data[NUKI_DOMAIN][entry.entry_id]
-    coordinator: DataUpdateCoordinator[None] = data[DATA_COORDINATOR]
+    coordinator: NukiCoordinator = data[DATA_COORDINATOR]
 
     entities: list[NukiDeviceEntity] = [
         NukiLockEntity(coordinator, lock) for lock in data[DATA_LOCKS]

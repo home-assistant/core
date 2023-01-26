@@ -1,4 +1,6 @@
 """The nuki component."""
+from __future__ import annotations
+
 from collections import defaultdict
 from datetime import timedelta
 import logging
@@ -109,38 +111,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class NukiEntity(CoordinatorEntity[DataUpdateCoordinator[None]]):
-    """An entity using CoordinatorEntity.
-
-    The CoordinatorEntity class provides:
-      should_poll
-      async_update
-      async_added_to_hass
-      available
-
-    """
-
-    def __init__(
-        self, coordinator: DataUpdateCoordinator[None], nuki_device: NukiDevice
-    ) -> None:
-        """Pass coordinator to CoordinatorEntity."""
-        super().__init__(coordinator)
-        self._nuki_device = nuki_device
-
-    @property
-    def device_info(self):
-        """Device info for Nuki entities."""
-        return {
-            "identifiers": {(DOMAIN, parse_id(self._nuki_device.nuki_id))},
-            "name": self._nuki_device.name,
-            "manufacturer": "Nuki Home Solutions GmbH",
-            "model": self._nuki_device.device_type_str.capitalize(),
-            "sw_version": self._nuki_device.firmware_version,
-            "via_device": (DOMAIN, self.coordinator.bridge_id),
-        }
-
-
-class NukiCoordinator(DataUpdateCoordinator):
+class NukiCoordinator(DataUpdateCoordinator[None]):
     """Data Update Coordinator for the Nuki integration."""
 
     def __init__(self, hass, bridge, locks, openers):
@@ -217,3 +188,32 @@ class NukiCoordinator(DataUpdateCoordinator):
                     break
 
         return events
+
+
+class NukiEntity(CoordinatorEntity[NukiCoordinator]):
+    """An entity using CoordinatorEntity.
+
+    The CoordinatorEntity class provides:
+      should_poll
+      async_update
+      async_added_to_hass
+      available
+
+    """
+
+    def __init__(self, coordinator: NukiCoordinator, nuki_device: NukiDevice) -> None:
+        """Pass coordinator to CoordinatorEntity."""
+        super().__init__(coordinator)
+        self._nuki_device = nuki_device
+
+    @property
+    def device_info(self):
+        """Device info for Nuki entities."""
+        return {
+            "identifiers": {(DOMAIN, parse_id(self._nuki_device.nuki_id))},
+            "name": self._nuki_device.name,
+            "manufacturer": "Nuki Home Solutions GmbH",
+            "model": self._nuki_device.device_type_str.capitalize(),
+            "sw_version": self._nuki_device.firmware_version,
+            "via_device": (DOMAIN, self.coordinator.bridge_id),
+        }
