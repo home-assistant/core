@@ -359,14 +359,32 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     DSMRSensorEntityDescription(
-        key="belgium_5min_gas_meter_reading",
+        key="belgium_mbus1_meter_reading2",
         name="Gas consumption",
-        obis_reference=obis_references.BELGIUM_5MIN_GAS_METER_READING,
+        obis_reference=obis_references.BELGIUM_MBUS1_METER_READING2,
         dsmr_versions={"5B"},
         is_gas=True,
         force_update=True,
         device_class=SensorDeviceClass.GAS,
         state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    DSMRSensorEntityDescription(
+        key="belgium_maximum_demand_month",
+        name="Max power demand in current month",
+        obis_reference=obis_references.BELGIUM_MAXIMUM_DEMAND_MONTH,
+        dsmr_versions={"5B"},
+        device_class=SensorDeviceClass.POWER,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    DSMRSensorEntityDescription(
+        key="belgium_maximum_demand_13_months",
+        name="Max power demand in last 13 months",
+        obis_reference=obis_references.BELGIUM_MAXIMUM_DEMAND_13_MONTHS,
+        dsmr_versions={"5B"},
+        device_class=SensorDeviceClass.POWER,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRSensorEntityDescription(
         key="gas_meter_reading",
@@ -375,8 +393,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         dsmr_versions={"2.2"},
         is_gas=True,
         force_update=True,
-        device_class=SensorDeviceClass.GAS,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        device_class=SensorDeviceClass.GAS
     ),
 )
 
