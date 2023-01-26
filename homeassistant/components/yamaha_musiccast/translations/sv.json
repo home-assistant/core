@@ -24,7 +24,7 @@
         "select": {
             "zone_sleep": {
                 "state": {
-                    "60_min": "60 minuter"
+                    "60": "60 minuter"
                 }
             }
         }

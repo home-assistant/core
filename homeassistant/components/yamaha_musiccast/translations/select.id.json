@@ -25,11 +25,11 @@
             "standard": "Standar"
         },
         "yamaha_musiccast__zone_sleep": {
-            "120 min": "120 Menit",
-            "30 min": "30 Menit",
-            "60 min": "60 Menit",
-            "90 min": "90 Menit",
-            "off": "Mati"
+            "120": "120 Menit",
+            "30": "30 Menit",
+            "60": "60 Menit",
+            "90": "90 Menit",
+            "0": "Mati"
         },
         "yamaha_musiccast__zone_surr_decoder_type": {
             "auto": "Otomatis",

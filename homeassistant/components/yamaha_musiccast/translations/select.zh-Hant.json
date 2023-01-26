@@ -25,11 +25,11 @@
             "standard": "\u6a19\u6e96"
         },
         "yamaha_musiccast__zone_sleep": {
-            "120 min": "120 \u5206\u9418",
-            "30 min": "30 \u5206\u9418",
-            "60 min": "60 \u5206\u9418",
-            "90 min": "90 \u5206\u9418",
-            "off": "\u95dc\u9589"
+            "120": "120 \u5206\u9418",
+            "30": "30 \u5206\u9418",
+            "60": "60 \u5206\u9418",
+            "90": "90 \u5206\u9418",
+            "0": "\u95dc\u9589"
         },
         "yamaha_musiccast__zone_surr_decoder_type": {
             "auto": "\u81ea\u52d5",
