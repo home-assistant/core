@@ -846,8 +846,7 @@ def _apply_update(  # noqa: C901
         _create_index(session_maker, "events", "ix_events_event_type_time_fired_ts")
         _create_index(session_maker, "states", "ix_states_entity_id_last_updated_ts")
         _create_index(session_maker, "states", "ix_states_last_updated_ts")
-        with session_scope(session=session_maker()) as session:
-            _migrate_columns_to_timestamp(hass, session, engine)
+        _migrate_columns_to_timestamp(session_maker, engine)
     elif new_version == 32:
         # Migration is done in two steps to ensure we can start using
         # the new columns before we wipe the old ones.
@@ -892,61 +891,66 @@ def _wipe_old_string_time_columns(session: Session) -> None:
 
 
 def _migrate_columns_to_timestamp(
-    hass: HomeAssistant, session: Session, engine: Engine
+    session_maker: Callable[[], Session], engine: Engine
 ) -> None:
     """Migrate columns to use timestamp."""
     # Migrate all data in Events.time_fired to Events.time_fired_ts
     # Migrate all data in States.last_updated to States.last_updated_ts
     # Migrate all data in States.last_changed to States.last_changed_ts
-    connection = session.connection()
     if engine.dialect.name == SupportedDialect.SQLITE:
-        connection.execute(
-            text(
-                'UPDATE events set time_fired_ts=strftime("%s",time_fired) + '
-                "cast(substr(time_fired,-7) AS FLOAT);"
+        with session_scope(session=session_maker()) as session:
+            connection = session.connection()
+            connection.execute(
+                text(
+                    'UPDATE events set time_fired_ts=strftime("%s",time_fired) + '
+                    "cast(substr(time_fired,-7) AS FLOAT);"
+                )
             )
-        )
-        connection.execute(
-            text(
-                'UPDATE states set last_updated_ts=strftime("%s",last_updated) + '
-                "cast(substr(last_updated,-7) AS FLOAT), "
-                'last_changed_ts=strftime("%s",last_changed) + '
-                "cast(substr(last_changed,-7) AS FLOAT);"
+            connection.execute(
+                text(
+                    'UPDATE states set last_updated_ts=strftime("%s",last_updated) + '
+                    "cast(substr(last_updated,-7) AS FLOAT), "
+                    'last_changed_ts=strftime("%s",last_changed) + '
+                    "cast(substr(last_changed,-7) AS FLOAT);"
+                )
             )
-        )
     elif engine.dialect.name == SupportedDialect.MYSQL:
         # With MySQL we do this in chunks to avoid hitting the `innodb_buffer_pool_size` limit
         # We also need to do this in a loop since we can't be sure that we have
         # updated all rows in the table until the rowcount is 0
         result: CursorResult | None = None
         while result is None or result.rowcount > 0:
-            result = connection.execute(
-                text(
-                    "UPDATE events set time_fired_ts=UNIX_TIMESTAMP(time_fired) "
-                    "where time_fired_ts is NULL and time_fired is not NULL "
-                    " LIMIT 50000;"
+            with session_scope(session=session_maker()) as session:
+                result = session.connection().execute(
+                    text(
+                        "UPDATE events set time_fired_ts=UNIX_TIMESTAMP(time_fired) "
+                        "where time_fired_ts is NULL and time_fired is not NULL "
+                        " LIMIT 250000;"
+                    )
                 )
-            )
         result = None
         while result is None or result.rowcount > 0:
-            result = connection.execute(
+            with session_scope(session=session_maker()) as session:
+                result = session.connection().execute(
+                    text(
+                        "UPDATE states set last_updated_ts=UNIX_TIMESTAMP(last_updated), "
+                        "last_changed_ts=UNIX_TIMESTAMP(last_changed) "
+                        " where last_updated_ts is NULL and last_updated is not NULL "
+                        " LIMIT 250000;"
+                    )
+                )
+    elif engine.dialect.name == SupportedDialect.POSTGRESQL:
+        with session_scope(session=session_maker()) as session:
+            connection = session.connection()
+            connection.execute(
+                text("UPDATE events set time_fired_ts=EXTRACT(EPOCH FROM time_fired);")
+            )
+            connection.execute(
                 text(
-                    "UPDATE states set last_updated_ts=UNIX_TIMESTAMP(last_updated), "
-                    "last_changed_ts=UNIX_TIMESTAMP(last_changed) "
-                    " where last_updated_ts is NULL and last_updated is not NULL "
-                    " LIMIT 50000;"
+                    "UPDATE states set last_updated_ts=EXTRACT(EPOCH FROM last_updated), "
+                    "last_changed_ts=EXTRACT(EPOCH FROM last_changed);"
                 )
             )
-    elif engine.dialect.name == SupportedDialect.POSTGRESQL:
-        connection.execute(
-            text("UPDATE events set time_fired_ts=EXTRACT(EPOCH FROM time_fired);")
-        )
-        connection.execute(
-            text(
-                "UPDATE states set last_updated_ts=EXTRACT(EPOCH FROM last_updated), "
-                "last_changed_ts=EXTRACT(EPOCH FROM last_changed);"
-            )
-        )
 
 
 def _initialize_database(session: Session) -> bool:
