@@ -645,7 +645,8 @@ async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant):
     mocked_bulb.async_set_rgb.reset_mock()
     mocked_bulb.last_properties["flowing"] = "0"
 
-    mocked_bulb.model = "color"  # color model needs a workaround (see MODELS_WITH_DELAYED_ON_TRANSITION)
+    # color model needs a workaround (see MODELS_WITH_DELAYED_ON_TRANSITION)
+    mocked_bulb.model = "color"
     await hass.services.async_call(
         "light",
         SERVICE_TURN_ON,

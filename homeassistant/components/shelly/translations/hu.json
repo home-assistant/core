@@ -71,5 +71,14 @@
                 "description": "A Bluetooth-keres\u00e9s lehet akt\u00edv vagy passz\u00edv. Ha akt\u00edv, a Shelly adatokat k\u00e9r a k\u00f6zeli eszk\u00f6z\u00f6kr\u0151l; a passz\u00edv funkci\u00f3val a Shelly k\u00e9retlen adatokat is fogad a k\u00f6zeli eszk\u00f6z\u00f6kr\u0151l."
             }
         }
+    },
+    "selector": {
+        "ble_scanner_mode": {
+            "options": {
+                "active": "Akt\u00edv",
+                "disabled": "Letiltva",
+                "passive": "Passz\u00edv"
+            }
+        }
     }
 }

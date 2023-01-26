@@ -203,8 +203,9 @@ async def test_set_operation_bad_attr_and_state(
     with pytest.raises(vol.Invalid) as excinfo:
         await common.async_set_hvac_mode(hass, None, ENTITY_CLIMATE)
     assert (
-        "expected HVACMode or one of 'off', 'heat', 'cool', 'heat_cool', 'auto', 'dry', 'fan_only' for dictionary value @ data['hvac_mode']"
-    ) in str(excinfo.value)
+        "expected HVACMode or one of 'off', 'heat', 'cool', 'heat_cool', 'auto', 'dry',"
+        " 'fan_only' for dictionary value @ data['hvac_mode']" in str(excinfo.value)
+    )
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.state == "off"
 
@@ -915,8 +916,8 @@ async def test_set_preset_mode_pessimistic(
 
     async_fire_mqtt_message(hass, "preset-mode-state", "nonsense")
     assert (
-        "'nonsense' received on topic preset-mode-state. 'nonsense' is not a valid preset mode"
-        in caplog.text
+        "'nonsense' received on topic preset-mode-state."
+        " 'nonsense' is not a valid preset mode" in caplog.text
     )
 
     state = hass.states.get(ENTITY_CLIMATE)
