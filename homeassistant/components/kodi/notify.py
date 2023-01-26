@@ -58,7 +58,6 @@ async def async_get_service(
     host: str = config[CONF_HOST]
     port: int = config[CONF_PORT]
     encryption = config.get(CONF_PROXY_SSL)
-    url = f"{host}:{port}"
 
     if host.startswith("http://") or host.startswith("https://"):
         host = host[host.index("://") + 3 :]
