@@ -414,10 +414,13 @@ async def test_banning_ip_fires_event(hass, aiohttp_client):
     app.middlewares.append(mock_auth)
 
     mock_real_ip(app)("200.201.202.204")
+    m_open = mock_open()
 
-    client = await aiohttp_client(app)
-    await client.get("/unauth")
+    with patch("homeassistant.components.http.ban.open", m_open, create=True):
 
-    assert len(events) == 1
-    assert events[0].data["ip"] == "200.201.202.204"
-    assert events[0].data["host"] == "example.com"
+        client = await aiohttp_client(app)
+        await client.get("/unauth")
+
+        assert len(events) == 1
+        assert events[0].data["ip"] == "200.201.202.204"
+        assert events[0].data["host"] == "example.com"
