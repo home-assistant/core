@@ -687,7 +687,7 @@ async def test_init_ignores_tolerance(hass, setup_comp_3):
     calls = await _setup_switch(hass, True)
     _setup_sensor(hass, 39)
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
     call = calls[0]
     assert HASS_DOMAIN == call.domain
     assert SERVICE_TURN_OFF == call.service
