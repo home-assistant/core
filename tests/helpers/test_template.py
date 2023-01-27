@@ -20,10 +20,10 @@ from homeassistant.const import (
     LENGTH_METERS,
     LENGTH_MILLIMETERS,
     MASS_GRAMS,
-    PRESSURE_PA,
     STATE_ON,
     TEMP_CELSIUS,
     VOLUME_LITERS,
+    UnitOfPressure,
     UnitOfSpeed,
 )
 from homeassistant.core import HomeAssistant
@@ -52,7 +52,7 @@ def _set_up_units(hass: HomeAssistant) -> None:
         conversions={},
         length=LENGTH_METERS,
         mass=MASS_GRAMS,
-        pressure=PRESSURE_PA,
+        pressure=UnitOfPressure.PA,
         temperature=TEMP_CELSIUS,
         volume=VOLUME_LITERS,
         wind_speed=UnitOfSpeed.KILOMETERS_PER_HOUR,
