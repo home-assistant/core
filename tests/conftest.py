@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator, Callable, Coroutine, Generator
+from collections.abc import AsyncGenerator, Callable, Generator
 from contextlib import asynccontextmanager
 import datetime
 import functools
@@ -54,7 +54,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, location
 
 from .ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
-from .typing import TestClientGenerator
+from .typing import TestClientGenerator, TestWebSocketGenerator
 
 pytest.register_assert_rewrite("tests.common")
 
@@ -669,7 +669,7 @@ def hass_ws_client(
     hass_access_token: str | None,
     hass: HomeAssistant,
     socket_enabled: None,
-) -> Callable[..., Coroutine[Any, Any, ClientWebSocketResponse]]:
+) -> TestWebSocketGenerator:
     """Websocket client fixture connected to websocket server."""
 
     async def create_client(
