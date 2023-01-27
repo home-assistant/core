@@ -1,7 +1,7 @@
 """ONVIF switches for controlling cameras."""
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
@@ -19,8 +19,8 @@ from .device import ONVIFDevice
 class ONVIFSwitchEntityDescriptionMixin:
     """Mixin for required keys."""
 
-    turn_on_fn: Callable[[ONVIFDevice], Callable[[], Coroutine[Any, Any, None]]]
-    turn_off_fn: Callable[[ONVIFDevice], Callable[[], Coroutine[Any, Any, None]]]
+    turn_on_fn: Callable[[Any], Any]
+    turn_off_fn: Callable[[Any], Any]
     turn_on_data: Any
     turn_off_data: Any
 
