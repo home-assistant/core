@@ -6,7 +6,6 @@ import sys
 from unittest.mock import ANY, DEFAULT, MagicMock, patch, sentinel
 
 import pytest
-from pytest import approx
 from sqlalchemy import create_engine
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
@@ -82,9 +81,9 @@ def test_compile_hourly_statistics(hass_recorder):
     expected_1 = {
         "start": process_timestamp(zero),
         "end": process_timestamp(zero + timedelta(minutes=5)),
-        "mean": approx(14.915254237288135),
-        "min": approx(10.0),
-        "max": approx(20.0),
+        "mean": pytest.approx(14.915254237288135),
+        "min": pytest.approx(10.0),
+        "max": pytest.approx(20.0),
         "last_reset": None,
         "state": None,
         "sum": None,
@@ -92,9 +91,9 @@ def test_compile_hourly_statistics(hass_recorder):
     expected_2 = {
         "start": process_timestamp(four),
         "end": process_timestamp(four + timedelta(minutes=5)),
-        "mean": approx(20.0),
-        "min": approx(20.0),
-        "max": approx(20.0),
+        "mean": pytest.approx(20.0),
+        "min": pytest.approx(20.0),
+        "max": pytest.approx(20.0),
         "last_reset": None,
         "state": None,
         "sum": None,
@@ -336,9 +335,9 @@ def test_rename_entity(hass_recorder):
     expected_1 = {
         "start": process_timestamp(zero),
         "end": process_timestamp(zero + timedelta(minutes=5)),
-        "mean": approx(14.915254237288135),
-        "min": approx(10.0),
-        "max": approx(20.0),
+        "mean": pytest.approx(14.915254237288135),
+        "min": pytest.approx(10.0),
+        "max": pytest.approx(20.0),
         "last_reset": None,
         "state": None,
         "sum": None,
@@ -402,9 +401,9 @@ def test_rename_entity_collision(hass_recorder, caplog):
     expected_1 = {
         "start": process_timestamp(zero),
         "end": process_timestamp(zero + timedelta(minutes=5)),
-        "mean": approx(14.915254237288135),
-        "min": approx(10.0),
-        "max": approx(20.0),
+        "mean": pytest.approx(14.915254237288135),
+        "min": pytest.approx(10.0),
+        "max": pytest.approx(20.0),
         "last_reset": None,
         "state": None,
         "sum": None,
@@ -539,8 +538,8 @@ async def test_import_statistics(
                 "mean": None,
                 "min": None,
                 "last_reset": last_reset_utc,
-                "state": approx(0.0),
-                "sum": approx(2.0),
+                "state": pytest.approx(0.0),
+                "sum": pytest.approx(2.0),
             },
             {
                 "start": process_timestamp(period2),
@@ -549,8 +548,8 @@ async def test_import_statistics(
                 "mean": None,
                 "min": None,
                 "last_reset": last_reset_utc,
-                "state": approx(1.0),
-                "sum": approx(3.0),
+                "state": pytest.approx(1.0),
+                "sum": pytest.approx(3.0),
             },
         ]
     }
@@ -597,8 +596,8 @@ async def test_import_statistics(
                 "mean": None,
                 "min": None,
                 "last_reset": last_reset_utc,
-                "state": approx(1.0),
-                "sum": approx(3.0),
+                "state": pytest.approx(1.0),
+                "sum": pytest.approx(3.0),
             },
         ]
     }
@@ -622,8 +621,8 @@ async def test_import_statistics(
                 "mean": None,
                 "min": None,
                 "last_reset": None,
-                "state": approx(5.0),
-                "sum": approx(6.0),
+                "state": pytest.approx(5.0),
+                "sum": pytest.approx(6.0),
             },
             {
                 "start": process_timestamp(period2),
@@ -632,8 +631,8 @@ async def test_import_statistics(
                 "mean": None,
                 "min": None,
                 "last_reset": last_reset_utc,
-                "state": approx(1.0),
-                "sum": approx(3.0),
+                "state": pytest.approx(1.0),
+                "sum": pytest.approx(3.0),
             },
         ]
     }
@@ -684,12 +683,12 @@ async def test_import_statistics(
             {
                 "start": process_timestamp(period1),
                 "end": process_timestamp(period1 + timedelta(hours=1)),
-                "max": approx(1.0),
-                "mean": approx(2.0),
-                "min": approx(3.0),
+                "max": pytest.approx(1.0),
+                "mean": pytest.approx(2.0),
+                "min": pytest.approx(3.0),
                 "last_reset": last_reset_utc,
-                "state": approx(4.0),
-                "sum": approx(5.0),
+                "state": pytest.approx(4.0),
+                "sum": pytest.approx(5.0),
             },
             {
                 "start": process_timestamp(period2),
@@ -698,8 +697,8 @@ async def test_import_statistics(
                 "mean": None,
                 "min": None,
                 "last_reset": last_reset_utc,
-                "state": approx(1.0),
-                "sum": approx(3.0),
+                "state": pytest.approx(1.0),
+                "sum": pytest.approx(3.0),
             },
         ]
     }
@@ -725,12 +724,12 @@ async def test_import_statistics(
             {
                 "start": process_timestamp(period1),
                 "end": process_timestamp(period1 + timedelta(hours=1)),
-                "max": approx(1.0),
-                "mean": approx(2.0),
-                "min": approx(3.0),
+                "max": pytest.approx(1.0),
+                "mean": pytest.approx(2.0),
+                "min": pytest.approx(3.0),
                 "last_reset": last_reset_utc,
-                "state": approx(4.0),
-                "sum": approx(5.0),
+                "state": pytest.approx(4.0),
+                "sum": pytest.approx(5.0),
             },
             {
                 "start": process_timestamp(period2),
@@ -739,8 +738,8 @@ async def test_import_statistics(
                 "mean": None,
                 "min": None,
                 "last_reset": last_reset_utc,
-                "state": approx(1.0),
-                "sum": approx(1000 * 1000 + 3.0),
+                "state": pytest.approx(1.0),
+                "sum": pytest.approx(1000 * 1000 + 3.0),
             },
         ]
     }
@@ -1122,8 +1121,8 @@ def test_monthly_statistics(hass_recorder, caplog, timezone):
                 "mean": None,
                 "min": None,
                 "last_reset": None,
-                "state": approx(1.0),
-                "sum": approx(3.0),
+                "state": pytest.approx(1.0),
+                "sum": pytest.approx(3.0),
             },
             {
                 "start": oct_start,
@@ -1132,8 +1131,8 @@ def test_monthly_statistics(hass_recorder, caplog, timezone):
                 "mean": None,
                 "min": None,
                 "last_reset": None,
-                "state": approx(3.0),
-                "sum": approx(5.0),
+                "state": pytest.approx(3.0),
+                "sum": pytest.approx(5.0),
             },
         ]
     }
@@ -1157,8 +1156,8 @@ def test_monthly_statistics(hass_recorder, caplog, timezone):
                 "mean": None,
                 "min": None,
                 "last_reset": None,
-                "state": approx(1.0),
-                "sum": approx(3.0),
+                "state": pytest.approx(1.0),
+                "sum": pytest.approx(3.0),
             },
             {
                 "start": oct_start,
@@ -1167,8 +1166,8 @@ def test_monthly_statistics(hass_recorder, caplog, timezone):
                 "mean": None,
                 "min": None,
                 "last_reset": None,
-                "state": approx(3.0),
-                "sum": approx(5.0),
+                "state": pytest.approx(3.0),
+                "sum": pytest.approx(5.0),
             },
         ]
     }
