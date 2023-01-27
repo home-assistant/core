@@ -69,9 +69,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_id(sensorid, feedtag, feedname, feedid, feeduserid):
+def get_id(sensor: str, elem: dict[str, str]) -> str:
     """Return unique identifier for feed / sensor."""
-    return f"emoncms{sensorid}_{feedtag}_{feedname}_{feedid}_{feeduserid}"
+    return f"emoncms{sensor}_{elem['tag']}_{elem['name']}_{elem['id']}_{elem['userid']}"
 
 
 def setup_platform(
@@ -147,9 +147,7 @@ class EmonCmsSensor(SensorEntity):
             self._attr_name = f"EmonCMS{id_for_name} {feed_name}"
         else:
             self._attr_name = name
-        self._attr_unique_id = get_id(
-            sensorid, elem["tag"], elem["name"], elem["id"], elem["userid"]
-        )
+        self._attr_unique_id = get_id(sensorid, elem)
         self._data = data
         self._value_template = value_template
         self._attr_native_unit_of_measurement = unit_of_measurement
@@ -216,14 +214,7 @@ class EmonCmsSensor(SensorEntity):
             (
                 elem
                 for elem in self._data.data
-                if get_id(
-                    self._sensorid,
-                    elem["tag"],
-                    elem["name"],
-                    elem["id"],
-                    elem["userid"],
-                )
-                == self._attr_unique_id
+                if get_id(self._sensorid, elem) == self._attr_unique_id
             ),
             None,
         )
