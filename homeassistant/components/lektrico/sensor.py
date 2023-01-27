@@ -63,14 +63,14 @@ SENSORS: tuple[LektricoSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
-        value=lambda data: float(data.instant_power),
+        value=lambda data: float(data.instant_power) / 1000,
     ),
     LektricoSensorEntityDescription(
         key="session_energy",
         name="Session energy",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        value=lambda data: float(data.session_energy),
+        value=lambda data: float(data.session_energy) / 1000,
     ),
     LektricoSensorEntityDescription(
         key="temperature",
