@@ -14,12 +14,14 @@ from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCal
 from aioshelly.rpc_device import RpcDevice, UpdateType
 from awesomeversion import AwesomeVersion
 
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID, CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
-from homeassistant.helpers import device_registry
 from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    async_get as dr_async_get,
+)
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .bluetooth import async_connect_scanner
@@ -49,7 +51,7 @@ from .const import (
     UPDATE_PERIOD_MULTIPLIER,
     BLEScannerMode,
 )
-from .utils import device_update_info, get_device_name, get_rpc_device_wakeup_period
+from .utils import device_update_info, get_rpc_device_wakeup_period
 
 _DeviceT = TypeVar("_DeviceT", bound="BlockDevice|RpcDevice")
 
@@ -84,7 +86,7 @@ class ShellyCoordinatorBase(DataUpdateCoordinator[None], Generic[_DeviceT]):
         self.entry = entry
         self.device = device
         self.device_id: str | None = None
-        device_name = get_device_name(device) if device.initialized else entry.title
+        device_name = device.name if device.initialized else entry.title
         interval_td = timedelta(seconds=update_interval)
         super().__init__(hass, LOGGER, name=device_name, update_interval=interval_td)
 
@@ -119,11 +121,11 @@ class ShellyCoordinatorBase(DataUpdateCoordinator[None], Generic[_DeviceT]):
 
     def async_setup(self) -> None:
         """Set up the coordinator."""
-        dev_reg = device_registry.async_get(self.hass)
+        dev_reg = dr_async_get(self.hass)
         device_entry = dev_reg.async_get_or_create(
             config_entry_id=self.entry.entry_id,
             name=self.name,
-            connections={(device_registry.CONNECTION_NETWORK_MAC, self.mac)},
+            connections={(CONNECTION_NETWORK_MAC, self.mac)},
             manufacturer="Shelly",
             model=aioshelly.const.MODEL_NAMES.get(self.model, self.model),
             sw_version=self.sw_version,
@@ -508,6 +510,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         """Handle device update."""
         if update_type is UpdateType.INITIALIZED:
             self.hass.async_create_task(self._async_connected())
+            self.async_set_updated_data(None)
         elif update_type is UpdateType.DISCONNECTED:
             self.hass.async_create_task(self._async_disconnected())
         elif update_type is UpdateType.STATUS:
@@ -563,7 +566,7 @@ def get_block_coordinator_by_device_id(
     hass: HomeAssistant, device_id: str
 ) -> ShellyBlockCoordinator | None:
     """Get a Shelly block device coordinator for the given device id."""
-    dev_reg = device_registry.async_get(hass)
+    dev_reg = dr_async_get(hass)
     if device := dev_reg.async_get(device_id):
         for config_entry in device.config_entries:
             if not (entry_data := get_entry_data(hass).get(config_entry)):
@@ -579,7 +582,7 @@ def get_rpc_coordinator_by_device_id(
     hass: HomeAssistant, device_id: str
 ) -> ShellyRpcCoordinator | None:
     """Get a Shelly RPC device coordinator for the given device id."""
-    dev_reg = device_registry.async_get(hass)
+    dev_reg = dr_async_get(hass)
     if device := dev_reg.async_get(device_id):
         for config_entry in device.config_entries:
             if not (entry_data := get_entry_data(hass).get(config_entry)):
@@ -591,14 +594,12 @@ def get_rpc_coordinator_by_device_id(
     return None
 
 
-async def async_reconnect_soon(
-    hass: HomeAssistant, entry: config_entries.ConfigEntry
-) -> None:
+async def async_reconnect_soon(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Try to reconnect soon."""
     if (
         not entry.data.get(CONF_SLEEP_PERIOD)
         and not hass.is_stopping
-        and entry.state == config_entries.ConfigEntryState.LOADED
+        and entry.state == ConfigEntryState.LOADED
         and (entry_data := get_entry_data(hass).get(entry.entry_id))
         and (coordinator := entry_data.rpc)
     ):

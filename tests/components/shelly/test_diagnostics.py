@@ -103,13 +103,13 @@ async def test_rpc_config_entry_diagnostics(
                             None,
                             {
                                 "89": {
-                                    "__type": "<class " "'bytes'>",
+                                    "__type": "<class 'bytes'>",
                                     "repr": "b'\\xd1\\xfb;t\\xc8\\x90'",
                                 }
                             },
                             {
                                 "00000d00-0000-1000-8000-00805f9b34fb": {
-                                    "__type": "<class " "'bytes'>",
+                                    "__type": "<class 'bytes'>",
                                     "repr": "b'H\\x10a'",
                                 }
                             },

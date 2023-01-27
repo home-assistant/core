@@ -1,5 +1,5 @@
 """The tests for the Alexa component."""
-# pylint: disable=protected-access
+
 import datetime
 from http import HTTPStatus
 

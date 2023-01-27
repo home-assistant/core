@@ -13,7 +13,7 @@
                 },
                 "data_description": {
                     "delta_values": "W\u0142\u0105cz, je\u015bli warto\u015bci \u017ar\u00f3d\u0142owe s\u0105 warto\u015bciami delta od ostatniego odczytu, a nie warto\u015bciami bezwzgl\u0119dnymi.",
-                    "net_consumption": "W\u0142\u0105cz, je\u015bli \u017ar\u00f3d\u0142em jest licznik netto, co oznacza, \u017ce jego warto\u015bci mog\u0105 si\u0119 zar\u00f3wno zwi\u0119ksza\u0107 jak i zmniejsza\u0107.",
+                    "net_consumption": "W\u0142\u0105cz, je\u015bli \u017ar\u00f3d\u0142em jest licznik netto, co oznacza, \u017ce jego warto\u015bci mog\u0105 si\u0119 zar\u00f3wno zwi\u0119ksza\u0107, jak i zmniejsza\u0107.",
                     "offset": "Przesuni\u0119cie dnia miesi\u0119cznego zerowania licznika.",
                     "tariffs": "Lista obs\u0142ugiwanych taryf. Pozostaw puste, je\u015bli potrzebna jest tylko jedna taryfa."
                 },
@@ -28,6 +28,21 @@
                 "data": {
                     "source": "Sensor wej\u015bciowy"
                 }
+            }
+        }
+    },
+    "selector": {
+        "cycle": {
+            "options": {
+                "bimonthly": "dwumiesi\u0119czny",
+                "daily": "dzienny",
+                "hourly": "godzinowy",
+                "monthly": "miesi\u0119czny",
+                "none": "bez cyklu",
+                "quarter-hourly": "15 minut",
+                "quarterly": "kwartalny",
+                "weekly": "miesi\u0119czny",
+                "yearly": "roczny"
             }
         }
     },

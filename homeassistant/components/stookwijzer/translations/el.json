@@ -1,0 +1,23 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "location": "\u03a4\u03bf\u03c0\u03bf\u03b8\u03b5\u03c3\u03af\u03b1"
+                },
+                "description": "\u0395\u03c0\u03b9\u03bb\u03ad\u03be\u03c4\u03b5 \u03c4\u03b7\u03bd \u03c4\u03bf\u03c0\u03bf\u03b8\u03b5\u03c3\u03af\u03b1 \u03b3\u03b9\u03b1 \u03c4\u03b7\u03bd \u03bf\u03c0\u03bf\u03af\u03b1 \u03b8\u03ad\u03bb\u03b5\u03c4\u03b5 \u03bd\u03b1 \u03bb\u03ac\u03b2\u03b5\u03c4\u03b5 \u03c4\u03b9\u03c2 \u03c0\u03bb\u03b7\u03c1\u03bf\u03c6\u03bf\u03c1\u03af\u03b5\u03c2 Stookwijzer."
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "stookwijzer": {
+                "state": {
+                    "blauw": "\u039c\u03c0\u03bb\u03b5",
+                    "oranje": "\u03a0\u03bf\u03c1\u03c4\u03bf\u03ba\u03ac\u03bb\u03b9",
+                    "rood": "\u039a\u03cc\u03ba\u03ba\u03b9\u03bd\u03bf"
+                }
+            }
+        }
+    }
+}

@@ -9,6 +9,11 @@
             "invalid_auth": "Autenticazione non valida"
         },
         "step": {
+            "api_key": {
+                "data": {
+                    "api_key": "Chiave API"
+                }
+            },
             "reauth_confirm": {
                 "data": {
                     "api_key": "Chiave API"

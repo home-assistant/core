@@ -13,23 +13,32 @@ from functools import cache, lru_cache, partial, wraps
 import json
 import logging
 import math
-from operator import attrgetter
+from operator import attrgetter, contains
 import random
 import re
 import statistics
 from struct import error as StructError, pack, unpack_from
 import sys
 from types import CodeType
-from typing import Any, Literal, NoReturn, TypeVar, cast, overload
+from typing import (
+    Any,
+    Concatenate,
+    Literal,
+    NoReturn,
+    ParamSpec,
+    TypeVar,
+    cast,
+    overload,
+)
 from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
+import async_timeout
 from awesomeversion import AwesomeVersion
 import jinja2
 from jinja2 import pass_context, pass_environment, pass_eval_context
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
-from typing_extensions import Concatenate, ParamSpec
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -534,7 +543,8 @@ class Template:
         try:
             template_render_thread = ThreadWithException(target=_render_template)
             template_render_thread.start()
-            await asyncio.wait_for(finish_event.wait(), timeout=timeout)
+            async with async_timeout.timeout(timeout):
+                await finish_event.wait()
             if self._exc_info:
                 raise TemplateError(self._exc_info[1].with_traceback(self._exc_info[2]))
         except asyncio.TimeoutError:
@@ -2075,6 +2085,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["iif"] = iif
         self.filters["bool"] = forgiving_boolean
         self.filters["version"] = version
+        self.filters["contains"] = contains
         self.globals["log"] = logarithm
         self.globals["sin"] = sine
         self.globals["cos"] = cosine
@@ -2111,6 +2122,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.tests["is_number"] = is_number
         self.tests["match"] = regex_match
         self.tests["search"] = regex_search
+        self.tests["contains"] = contains
 
         if hass is None:
             return

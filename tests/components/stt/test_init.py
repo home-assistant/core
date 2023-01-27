@@ -115,7 +115,10 @@ async def test_stream_audio(hass, hass_client):
     response = await client.post(
         "/api/stt/test",
         headers={
-            "X-Speech-Content": "format=wav; codec=pcm; sample_rate=16000; bit_rate=16; channel=1; language=en"
+            "X-Speech-Content": (
+                "format=wav; codec=pcm; sample_rate=16000; bit_rate=16; channel=1;"
+                " language=en"
+            )
         },
     )
     assert response.status == HTTPStatus.OK
@@ -127,7 +130,10 @@ async def test_stream_audio(hass, hass_client):
     (
         (None, 400, "Missing X-Speech-Content header"),
         (
-            "format=wav; codec=pcm; sample_rate=16000; bit_rate=16; channel=100; language=en",
+            (
+                "format=wav; codec=pcm; sample_rate=16000; bit_rate=16; channel=100;"
+                " language=en"
+            ),
             400,
             "100 is not a valid AudioChannels",
         ),

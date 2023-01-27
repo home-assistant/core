@@ -54,11 +54,11 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, location
 
-from tests.ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
+from .ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
 
 pytest.register_assert_rewrite("tests.common")
 
-from tests.common import (  # noqa: E402, isort:skip
+from .common import (  # noqa: E402, isort:skip
     CLIENT_ID,
     INSTANCES,
     MockConfigEntry,
@@ -70,7 +70,7 @@ from tests.common import (  # noqa: E402, isort:skip
     init_recorder_component,
     mock_storage as mock_storage,
 )
-from tests.test_util.aiohttp import mock_aiohttp_client  # noqa: E402, isort:skip
+from .test_util.aiohttp import mock_aiohttp_client  # noqa: E402, isort:skip
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -99,7 +99,7 @@ def pytest_configure(config):
     config.addinivalue_line(
         "markers", "no_fail_on_log_exception: mark test to not fail on logged exception"
     )
-    if config.getoption("verbose"):
+    if config.getoption("verbose") > 0:
         logging.basicConfig(level=logging.DEBUG)
     else:
         logging.basicConfig(level=logging.INFO)
@@ -201,6 +201,13 @@ location.async_detect_location_info = check_real(location.async_detect_location_
 util.get_local_ip = lambda: "127.0.0.1"
 
 
+@pytest.fixture(name="caplog")
+def caplog_fixture(caplog):
+    """Set log level to debug for tests using the caplog fixture."""
+    caplog.set_level(logging.DEBUG)
+    return caplog
+
+
 @pytest.fixture(autouse=True, scope="module")
 def garbage_collection():
     """Run garbage collection at known locations.
@@ -238,7 +245,7 @@ def verify_cleanup(event_loop: asyncio.AbstractEventLoop):
     if tasks:
         event_loop.run_until_complete(asyncio.wait(tasks))
 
-    for handle in event_loop._scheduled:  # pylint: disable=protected-access
+    for handle in event_loop._scheduled:
         if not handle.cancelled():
             _LOGGER.warning("Lingering timer after test %r", handle)
             handle.cancel()
@@ -1055,7 +1062,7 @@ async def async_setup_recorder_instance(
     # testcase which does not use the recorder.
     from homeassistant.components import recorder
 
-    from tests.components.recorder.common import async_recorder_block_till_done
+    from .components.recorder.common import async_recorder_block_till_done
 
     nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
     stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None
@@ -1096,7 +1103,7 @@ async def async_setup_recorder_instance(
 @pytest.fixture
 async def recorder_mock(recorder_config, async_setup_recorder_instance, hass):
     """Fixture with in-memory recorder."""
-    yield await async_setup_recorder_instance(hass, recorder_config)
+    return await async_setup_recorder_instance(hass, recorder_config)
 
 
 @pytest.fixture

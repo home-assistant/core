@@ -46,6 +46,10 @@
         }
     },
     "issues": {
+        "api_password_deprecated": {
+            "description": "Het gebruik van een API wachtwoord voor ESPHome is verouderd en het gebruik van een API encryptiesleutel wordt aangeraden.\n\nVerwijder het API wachtwoord en voeg een encryptiesleutel aan je ESPHome apparaat toe om dit probleem op te lossen.",
+            "title": "Verouderd API wachtwoord in gebruik op {name}"
+        },
         "ble_firmware_outdated": {
             "description": "Om de Bluetooth betrouwbaarheid en performance te verbeteren, raden we sterk aan om {name} bij te werken met ESPHome 2022.11.0 of later.",
             "title": "Werk {name} bij naar ESPHome versie 2022.11.0 of later"

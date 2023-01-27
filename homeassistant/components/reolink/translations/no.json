@@ -11,6 +11,7 @@
             "not_admin": "Brukeren m\u00e5 v\u00e6re admin, brukeren '' {username} '' har autorisasjonsniv\u00e5 '' {userlevel} ''",
             "unknown": "Uventet feil"
         },
+        "flow_title": "{short_mac} ( {ip_address} )",
         "step": {
             "reauth_confirm": {
                 "description": "Reolink-integrasjonen m\u00e5 autentisere tilkoblingsdetaljene dine p\u00e5 nytt",

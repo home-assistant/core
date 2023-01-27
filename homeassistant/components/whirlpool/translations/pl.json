@@ -49,6 +49,9 @@
             },
             "whirlpool_tank": {
                 "state": {
+                    "100": "100%",
+                    "25": "25%",
+                    "50": "50%",
                     "active": "aktywny",
                     "empty": "pusty",
                     "unknown": "nieznany"

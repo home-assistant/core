@@ -1,5 +1,5 @@
 """The tests for the input_boolean component."""
-# pylint: disable=protected-access
+
 import logging
 from unittest.mock import patch
 

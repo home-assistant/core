@@ -14,8 +14,8 @@ from homeassistant.components.shelly.const import (
     EVENT_SHELLY_CLICK,
 )
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
-from homeassistant.helpers import device_registry
 from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
     async_entries_for_config_entry,
     async_get as async_get_dev_reg,
 )
@@ -151,7 +151,7 @@ async def test_get_triggers_for_invalid_device_id(hass, device_reg, mock_block_d
     config_entry.add_to_hass(hass)
     invalid_device = device_reg.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
 
     with pytest.raises(InvalidDeviceAutomationConfig):

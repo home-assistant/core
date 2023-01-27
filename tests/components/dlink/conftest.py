@@ -48,13 +48,13 @@ def create_entry(hass: HomeAssistant) -> MockConfigEntry:
     return entry
 
 
-@pytest.fixture()
+@pytest.fixture
 def config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Add config entry in Home Assistant."""
     return create_entry(hass)
 
 
-@pytest.fixture()
+@pytest.fixture
 def config_entry_with_uid(hass: HomeAssistant) -> MockConfigEntry:
     """Add config entry with unique ID in Home Assistant."""
     config_entry = create_entry(hass)
@@ -62,7 +62,7 @@ def config_entry_with_uid(hass: HomeAssistant) -> MockConfigEntry:
     return config_entry
 
 
-@pytest.fixture()
+@pytest.fixture
 def mocked_plug() -> MagicMock:
     """Create mocked plug device."""
     mocked_plug = MagicMock()
@@ -74,7 +74,7 @@ def mocked_plug() -> MagicMock:
     return mocked_plug
 
 
-@pytest.fixture()
+@pytest.fixture
 def mocked_plug_no_auth(mocked_plug: MagicMock) -> MagicMock:
     """Create mocked unauthenticated plug device."""
     mocked_plug = deepcopy(mocked_plug)

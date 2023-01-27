@@ -330,7 +330,7 @@ async def async_ensure_config_exists(hass: HomeAssistant) -> bool:
     if os.path.isfile(config_path):
         return True
 
-    print(
+    print(  # noqa: T201
         "Unable to find configuration. Creating default one in", hass.config.config_dir
     )
     return await async_create_default_config(hass)
@@ -384,7 +384,7 @@ def _write_default_config(config_dir: str) -> bool:
         return True
 
     except OSError:
-        print("Unable to create default configuration file", config_path)
+        print("Unable to create default configuration file", config_path)  # noqa: T201
         return False
 
 

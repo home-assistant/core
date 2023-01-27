@@ -126,7 +126,7 @@ SENSORS: Final = {
     ),
     ("sensor", "extInput"): BlockBinarySensorDescription(
         key="sensor|extInput",
-        name="External Input",
+        name="External input",
         device_class=BinarySensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
     ),

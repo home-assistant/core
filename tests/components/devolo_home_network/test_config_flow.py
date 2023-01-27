@@ -19,8 +19,16 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import configure_integration
-from .const import DISCOVERY_INFO, DISCOVERY_INFO_WRONG_DEVICE, IP
+from .const import (
+    DISCOVERY_INFO,
+    DISCOVERY_INFO_CHANGED,
+    DISCOVERY_INFO_WRONG_DEVICE,
+    IP,
+    IP_ALT,
+)
 from .mock import MockDevice
+
+from tests.common import MockConfigEntry
 
 
 async def test_form(hass: HomeAssistant, info: dict[str, Any]):
@@ -132,20 +140,11 @@ async def test_abort_zeroconf_wrong_device(hass: HomeAssistant):
 @pytest.mark.usefixtures("info")
 async def test_abort_if_configued(hass: HomeAssistant):
     """Test we abort config flow if already configured."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    serial_number = DISCOVERY_INFO.properties["SN"]
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=serial_number, data={CONF_IP_ADDRESS: IP}
     )
-    with patch(
-        "homeassistant.components.devolo_home_network.async_setup_entry",
-        return_value=True,
-    ):
-        await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_IP_ADDRESS: IP,
-            },
-        )
-        await hass.async_block_till_done()
+    entry.add_to_hass(hass)
 
     # Abort on concurrent user flow
     result = await hass.config_entries.flow.async_init(
@@ -165,10 +164,11 @@ async def test_abort_if_configued(hass: HomeAssistant):
     result3 = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=DISCOVERY_INFO,
+        data=DISCOVERY_INFO_CHANGED,
     )
     assert result3["type"] == FlowResultType.ABORT
     assert result3["reason"] == "already_configured"
+    assert entry.data[CONF_IP_ADDRESS] == IP_ALT
 
 
 @pytest.mark.usefixtures("mock_device")

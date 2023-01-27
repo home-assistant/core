@@ -9,6 +9,11 @@
             "invalid_auth": "Niepoprawne uwierzytelnienie"
         },
         "step": {
+            "api_key": {
+                "data": {
+                    "api_key": "Klucz API"
+                }
+            },
             "reauth_confirm": {
                 "data": {
                     "api_key": "Klucz API"
