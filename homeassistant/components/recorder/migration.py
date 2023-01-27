@@ -973,10 +973,12 @@ def _migrate_columns_to_timestamp(
             with session_scope(session=session_maker()) as session:
                 result = session.connection().execute(
                     text(
-                        "UPDATE events set time_fired_ts="
+                        "UPDATE events SET "
+                        "time_fired_ts= "
                         "(case when time_fired is NULL then 0 else EXTRACT(EPOCH FROM time_fired) end) "
-                        "where time_fired_ts is NULL "
-                        "LIMIT 250000;"
+                        "WHERE event_id IN ( "
+                        "SELECT event_id FROM events where time_fired_ts is NULL LIMIT 250000 "
+                        " );"
                     )
                 )
         result = None
@@ -987,8 +989,9 @@ def _migrate_columns_to_timestamp(
                         "UPDATE states set last_updated_ts="
                         "(case when last_updated is NULL then 0 else EXTRACT(EPOCH FROM last_updated) end), "
                         "last_changed_ts=EXTRACT(EPOCH FROM last_changed) "
-                        "where last_updated_ts is NULL "
-                        "LIMIT 250000;"
+                        "where state_id IN ( "
+                        "SELECT state_id FROM states where last_updated_ts is NULL LIMIT 250000 "
+                        " );"
                     )
                 )
 
