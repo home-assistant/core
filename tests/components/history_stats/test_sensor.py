@@ -629,30 +629,28 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_sin
     with patch(
         "homeassistant.components.recorder.history.state_changes_during_period",
         _fake_states,
-    ):
+    ), freeze_time(start_time):
+        await async_setup_component(
+            hass,
+            "sensor",
+            {
+                "sensor": [
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "binary_sensor.state",
+                        "name": "sensor1",
+                        "state": "on",
+                        "start": "{{ utcnow().replace(hour=0, minute=0, second=0) }}",
+                        "duration": {"hours": 2},
+                        "type": "time",
+                    }
+                ]
+            },
+        )
+        await hass.async_block_till_done()
 
-        with freeze_time(start_time):
-            await async_setup_component(
-                hass,
-                "sensor",
-                {
-                    "sensor": [
-                        {
-                            "platform": "history_stats",
-                            "entity_id": "binary_sensor.state",
-                            "name": "sensor1",
-                            "state": "on",
-                            "start": "{{ utcnow().replace(hour=0, minute=0, second=0) }}",
-                            "duration": {"hours": 2},
-                            "type": "time",
-                        }
-                    ]
-                },
-            )
-            await hass.async_block_till_done()
-
-            await async_update_entity(hass, "sensor.sensor1")
-            await hass.async_block_till_done()
+        await async_update_entity(hass, "sensor.sensor1")
+        await hass.async_block_till_done()
 
     assert hass.states.get("sensor.sensor1").state == "0.0"
 
@@ -729,30 +727,28 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_sin
     with patch(
         "homeassistant.components.recorder.history.state_changes_during_period",
         _fake_states,
-    ):
+    ), freeze_time(start_time):
+        await async_setup_component(
+            hass,
+            "sensor",
+            {
+                "sensor": [
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "binary_sensor.state",
+                        "name": "sensor1",
+                        "state": "on",
+                        "start": "{{ utcnow().replace(hour=0, minute=0, second=0) }}",
+                        "end": "{{ utcnow() }}",
+                        "type": "time",
+                    }
+                ]
+            },
+        )
+        await hass.async_block_till_done()
 
-        with freeze_time(start_time):
-            await async_setup_component(
-                hass,
-                "sensor",
-                {
-                    "sensor": [
-                        {
-                            "platform": "history_stats",
-                            "entity_id": "binary_sensor.state",
-                            "name": "sensor1",
-                            "state": "on",
-                            "start": "{{ utcnow().replace(hour=0, minute=0, second=0) }}",
-                            "end": "{{ utcnow() }}",
-                            "type": "time",
-                        }
-                    ]
-                },
-            )
-            await hass.async_block_till_done()
-
-            await async_update_entity(hass, "sensor.sensor1")
-            await hass.async_block_till_done()
+        await async_update_entity(hass, "sensor.sensor1")
+        await hass.async_block_till_done()
 
     assert hass.states.get("sensor.sensor1").state == "0.0"
 
@@ -828,58 +824,56 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_mul
     with patch(
         "homeassistant.components.recorder.history.state_changes_during_period",
         _fake_states,
-    ):
+    ), freeze_time(start_time):
+        await async_setup_component(
+            hass,
+            "sensor",
+            {
+                "sensor": [
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "binary_sensor.state",
+                        "name": "sensor1",
+                        "state": "on",
+                        "start": "{{ utcnow().replace(hour=0, minute=0, second=0) }}",
+                        "duration": {"hours": 2},
+                        "type": "time",
+                    },
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "binary_sensor.state",
+                        "name": "sensor2",
+                        "state": "on",
+                        "start": "{{ utcnow().replace(hour=0, minute=0, second=0) }}",
+                        "duration": {"hours": 2},
+                        "type": "time",
+                    },
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "binary_sensor.state",
+                        "name": "sensor3",
+                        "state": "on",
+                        "start": "{{ utcnow().replace(hour=0, minute=0, second=0) }}",
+                        "duration": {"hours": 2},
+                        "type": "count",
+                    },
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "binary_sensor.state",
+                        "name": "sensor4",
+                        "state": "on",
+                        "start": "{{ utcnow().replace(hour=0, minute=0, second=0) }}",
+                        "duration": {"hours": 2},
+                        "type": "ratio",
+                    },
+                ]
+            },
+        )
+        await hass.async_block_till_done()
 
-        with freeze_time(start_time):
-            await async_setup_component(
-                hass,
-                "sensor",
-                {
-                    "sensor": [
-                        {
-                            "platform": "history_stats",
-                            "entity_id": "binary_sensor.state",
-                            "name": "sensor1",
-                            "state": "on",
-                            "start": "{{ utcnow().replace(hour=0, minute=0, second=0) }}",
-                            "duration": {"hours": 2},
-                            "type": "time",
-                        },
-                        {
-                            "platform": "history_stats",
-                            "entity_id": "binary_sensor.state",
-                            "name": "sensor2",
-                            "state": "on",
-                            "start": "{{ utcnow().replace(hour=0, minute=0, second=0) }}",
-                            "duration": {"hours": 2},
-                            "type": "time",
-                        },
-                        {
-                            "platform": "history_stats",
-                            "entity_id": "binary_sensor.state",
-                            "name": "sensor3",
-                            "state": "on",
-                            "start": "{{ utcnow().replace(hour=0, minute=0, second=0) }}",
-                            "duration": {"hours": 2},
-                            "type": "count",
-                        },
-                        {
-                            "platform": "history_stats",
-                            "entity_id": "binary_sensor.state",
-                            "name": "sensor4",
-                            "state": "on",
-                            "start": "{{ utcnow().replace(hour=0, minute=0, second=0) }}",
-                            "duration": {"hours": 2},
-                            "type": "ratio",
-                        },
-                    ]
-                },
-            )
-            await hass.async_block_till_done()
-
-            for i in range(1, 5):
-                await async_update_entity(hass, f"sensor.sensor{i}")
-            await hass.async_block_till_done()
+        for i in range(1, 5):
+            await async_update_entity(hass, f"sensor.sensor{i}")
+        await hass.async_block_till_done()
 
     assert hass.states.get("sensor.sensor1").state == "0.0"
     assert hass.states.get("sensor.sensor2").state == "0.0"
