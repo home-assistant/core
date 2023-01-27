@@ -68,7 +68,7 @@ from .common import (  # noqa: E402, isort:skip
     async_test_home_assistant,
     get_test_home_assistant,
     init_recorder_component,
-    mock_storage as mock_storage,
+    mock_storage,
 )
 from .test_util.aiohttp import mock_aiohttp_client  # noqa: E402, isort:skip
 
