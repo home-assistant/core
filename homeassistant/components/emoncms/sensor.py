@@ -194,7 +194,7 @@ class EmonCmsSensor(SensorEntity):
             return None
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, str]:
         """Return the attributes of the sensor."""
         return {
             ATTR_FEEDID: self._elem["id"],
@@ -232,7 +232,7 @@ class EmonCmsSensor(SensorEntity):
 class EmonCmsData:
     """The class for handling the data retrieval."""
 
-    def __init__(self, url, apikey):
+    def __init__(self, url: str, apikey: str):
         """Initialize the data object."""
         self._sess = requests.Session()
         self._sess.params = {"apikey": apikey}
@@ -240,7 +240,7 @@ class EmonCmsData:
         self.data = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from Emoncms."""
         try:
             req = self._sess.get(self._url, allow_redirects=True, timeout=5)
