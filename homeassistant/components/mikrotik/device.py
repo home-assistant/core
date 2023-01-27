@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
-from .const import ATTR_DEVICE_TRACKER
+from .const import ATTR_DEVICE_TRACKER, ATTR_UPTIME, UPTIME_REGEX
 
 
 class Device:
@@ -49,6 +49,11 @@ class Device:
         for attr in ATTR_DEVICE_TRACKER:
             if attr in attr_data:
                 self._attrs[slugify(attr)] = attr_data[attr]
+        if ATTR_UPTIME in attr_data:
+            uptime = self._attrs.get(ATTR_UPTIME)
+            new_uptime = parse_uptime(attr_data[ATTR_UPTIME])
+            if not uptime or abs((uptime - new_uptime).total_seconds()) > 5:
+                self._attrs[ATTR_UPTIME] = new_uptime
         return self._attrs
 
     def update(
@@ -64,3 +69,10 @@ class Device:
             self._params = params
         if active:
             self._last_seen = dt_util.utcnow()
+
+
+def parse_uptime(uptime):
+    """Parse Mikrotik uptime into datetime"""
+    match = UPTIME_REGEX.search(uptime)
+    values = {key: int(value) for key, value in match.groupdict(default="0").items()}
+    return dt_util.utcnow().replace(microsecond=0) - timedelta(**values)

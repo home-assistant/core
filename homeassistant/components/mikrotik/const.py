@@ -1,4 +1,5 @@
 """Constants used in the Mikrotik components."""
+import re
 from typing import Final
 
 DOMAIN: Final = "mikrotik"
@@ -47,5 +48,13 @@ ATTR_DEVICE_TRACKER: Final = [
     "signal-to-noise",
     "rx-rate",
     "tx-rate",
-    "uptime",
 ]
+ATTR_UPTIME: Final = "uptime"
+
+UPTIME_REGEX: Final[re.Pattern[str]] = re.compile(
+    r"(?:(?P<weeks>\d+)w)?"
+    r"(?:(?P<days>\d+)d)?"
+    r"(?:(?P<hours>\d+)h)?"
+    r"(?:(?P<minutes>\d+)m)?"
+    r"(?:(?P<seconds>\d+)s)?"
+)

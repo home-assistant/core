@@ -1,7 +1,7 @@
 """The tests for the Mikrotik device tracker platform."""
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Any
 
 from freezegun import freeze_time
@@ -12,7 +12,7 @@ import homeassistant.components.device_tracker as device_tracker
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.util.dt import utcnow
+from homeassistant.util.dt import DEFAULT_TIME_ZONE, utcnow
 
 from . import (
     DEVICE_2_WIRELESS,
@@ -243,3 +243,18 @@ async def test_update_failed(hass: HomeAssistant, mock_device_registry_devices) 
     device_1 = hass.states.get("device_tracker.device_1")
     assert device_1
     assert device_1.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.freeze_time("2023-01-18 00:00:00+00:00")
+async def test_absolute_uptime(
+    hass: HomeAssistant, mock_device_registry_devices
+) -> None:
+    """Test absolute uptime value in device_tracker attributes."""
+
+    await setup_mikrotik_entry(hass)
+
+    device_1 = hass.states.get("device_tracker.device_1")
+    assert device_1
+    assert device_1.attributes["uptime"] == datetime(
+        2023, 1, 17, 18, 10, 24, tzinfo=DEFAULT_TIME_ZONE
+    )
