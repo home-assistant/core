@@ -1,9 +1,11 @@
 """ONVIF switches for controlling cameras."""
 from __future__ import annotations
 
+from collections.abc import Callable, Coroutine
+from dataclasses import dataclass
 from typing import Any
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -11,6 +13,54 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .base import ONVIFBaseEntity
 from .const import DOMAIN
 from .device import ONVIFDevice
+
+
+@dataclass
+class ONVIFSwitchEntityDescriptionMixin:
+    """Mixin for required keys."""
+
+    turn_on_fn: Callable[[ONVIFDevice], Callable[[], Coroutine[Any, Any, None]]]
+    turn_off_fn: Callable[[ONVIFDevice], Callable[[], Coroutine[Any, Any, None]]]
+    turn_on_data: Any
+    turn_off_data: Any
+
+
+@dataclass
+class ONVIFSwitchEntityDescription(
+    SwitchEntityDescription, ONVIFSwitchEntityDescriptionMixin
+):
+    """Describes ONVIF switch entity."""
+
+
+SWITCHES: tuple[ONVIFSwitchEntityDescription, ...] = (
+    ONVIFSwitchEntityDescription(
+        key="autofocus",
+        name="AutoFocus",
+        icon="mdi:focus-auto",
+        turn_on_data={"Focus": {"AutoFocusMode": "AUTO"}},
+        turn_off_data={"Focus": {"AutoFocusMode": "MANUAL"}},
+        turn_on_fn=lambda device: device.async_set_imaging_settings,
+        turn_off_fn=lambda device: device.async_set_imaging_settings,
+    ),
+    ONVIFSwitchEntityDescription(
+        key="ir_lamp",
+        name="IR Lamp",
+        icon="mdi:spotlight-beam",
+        turn_on_data={"IrCutFilter": "OFF"},
+        turn_off_data={"IrCutFilter": "ON"},
+        turn_on_fn=lambda device: device.async_set_imaging_settings,
+        turn_off_fn=lambda device: device.async_set_imaging_settings,
+    ),
+    ONVIFSwitchEntityDescription(
+        key="wiper",
+        name="Wiper",
+        icon="mdi:wiper",
+        turn_on_data="tt:Wiper|On",
+        turn_off_data="tt:Wiper|Off",
+        turn_on_fn=lambda device: device.async_run_aux_command,
+        turn_off_fn=lambda device: device.async_run_aux_command,
+    ),
+)
 
 
 async def async_setup_entry(
@@ -21,88 +71,33 @@ async def async_setup_entry(
     """Set up a ONVIF switch platform."""
     device = hass.data[DOMAIN][config_entry.unique_id]
 
-    entities = [
-        ONVIFWiperSwitch(device),
-        ONVIFAutoFocusSwitch(device),
-        ONVIFInfraredSwitch(device),
-    ]
-    async_add_entities(entities)
+    async_add_entities([ONVIFSwitch(device, description) for description in SWITCHES])
 
 
-class ONVIFImagingSettingSwitch(ONVIFBaseEntity, SwitchEntity):
-    """An ONVIF switch controlled via ImagingSettings."""
+class ONVIFSwitch(ONVIFBaseEntity, SwitchEntity):
+    """An ONVIF switch."""
 
-    _on_settings: dict[str, Any] = {}
-    _off_settings: dict[str, Any] = {}
+    def __init__(
+        self, device: ONVIFDevice, description: ONVIFSwitchEntityDescription
+    ) -> None:
+        """Initialize the switch."""
+        super().__init__(device)
+        self._attr_name = f"{self.device.name} {description.name}"
+        self._attr_unique_id = f"{self.mac_or_serial}_{description.key}"
+        self.entity_description = description
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
         self._attr_is_on = True
         profile = self.device.profiles[0]
-        await self.device.async_set_imaging_settings(profile, self._on_settings)
+        await self.entity_description.turn_on_fn(self.device)(
+            profile, self.entity_description.turn_on_data
+        )
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
         self._attr_is_on = False
         profile = self.device.profiles[0]
-        await self.device.async_set_imaging_settings(profile, self._off_settings)
-
-
-class ONVIFAuxSwitch(ONVIFBaseEntity, SwitchEntity):
-    """An ONVIF switch controlled via ONVIF Auxiliary Commands."""
-
-    _on_cmd = ""
-    _off_cmd = ""
-
-    async def async_turn_on(self, **kwargs) -> None:
-        """Turn on switch."""
-        self._attr_is_on = True
-        profile = self.device.profiles[0]
-        await self.device.async_run_aux_command(profile, self._on_cmd)
-
-    async def async_turn_off(self, **kwargs) -> None:
-        """Turn off switch."""
-        self._attr_is_on = False
-        profile = self.device.profiles[0]
-        await self.device.async_run_aux_command(profile, self._off_cmd)
-
-
-class ONVIFAutoFocusSwitch(ONVIFImagingSettingSwitch):
-    """Turn auto-focus on or off."""
-
-    _on_settings = {"Focus": {"AutoFocusMode": "AUTO"}}
-    _off_settings = {"Focus": {"AutoFocusMode": "MANUAL"}}
-
-    def __init__(self, device: ONVIFDevice) -> None:
-        """Initialize the switch."""
-        super().__init__(device)
-        self._attr_name = f"{self.device.name} Autofocus"
-        self._attr_unique_id = f"{self.mac_or_serial}_autofocus"
-
-
-class ONVIFInfraredSwitch(ONVIFImagingSettingSwitch):
-    """Turn IR lamp on or off."""
-
-    # turning cut filter off forces the IR lamp on
-    # note that there may also an auto setting
-    _on_settings = {"IrCutFilter": "OFF"}
-    _off_settings = {"IrCutFilter": "ON"}
-
-    def __init__(self, device: ONVIFDevice) -> None:
-        """Initialize the switch."""
-        super().__init__(device)
-        self._attr_name = f"{self.device.name} IR Lamp"
-        self._attr_unique_id = f"{self.mac_or_serial}_ir_lamp"
-
-
-class ONVIFWiperSwitch(ONVIFAuxSwitch):
-    """Turn wiper on or off."""
-
-    _on_cmd = "tt:Wiper|On"
-    _off_cmd = "tt:Wiper|Off"
-
-    def __init__(self, device: ONVIFDevice) -> None:
-        """Initialize the switch."""
-        super().__init__(device)
-        self._attr_name = f"{self.device.name} Wiper"
-        self._attr_unique_id = f"{self.mac_or_serial}_wiper"
+        await self.entity_description.turn_off_fn(self.device)(
+            profile, self.entity_description.turn_off_data
+        )
