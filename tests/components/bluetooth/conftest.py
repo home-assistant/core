@@ -199,5 +199,5 @@ def disable_new_discovery_flows_fixture():
     """
     with patch(
         "homeassistant.components.bluetooth.manager.discovery_flow.async_create_flow"
-    ):
-        yield
+    ) as mock_create_flow:
+        yield mock_create_flow

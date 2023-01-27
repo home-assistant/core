@@ -339,6 +339,7 @@ async def test_restore_history_from_dbus_and_remote_adapters(
     assert (
         bluetooth.async_ble_device_from_address(hass, "EB:0B:36:35:6F:A4") is not None
     )
+    assert disable_new_discovery_flows.call_count > 1
 
 
 async def test_restore_history_from_dbus_and_corrupted_remote_adapters(
@@ -373,6 +374,7 @@ async def test_restore_history_from_dbus_and_corrupted_remote_adapters(
 
     assert bluetooth.async_ble_device_from_address(hass, address) is not None
     assert bluetooth.async_ble_device_from_address(hass, "EB:0B:36:35:6F:A4") is None
+    assert disable_new_discovery_flows.call_count >= 1
 
 
 async def test_switching_adapters_based_on_rssi_connectable_to_non_connectable(
