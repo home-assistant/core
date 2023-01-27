@@ -248,6 +248,7 @@ select = [
     "F",  # pyflakes/autoflake
     "PGH004",  # Use specific rule codes when using noqa
     "SIM105", # Use contextlib.suppress({exception}) instead of try-except-pass
+    "SIM117", # Merge with-statements that use the same scope
     "T20",  # flake8-print
     "UP",  # pyupgrade
     "W",  # pycodestyle
