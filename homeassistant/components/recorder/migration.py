@@ -894,9 +894,17 @@ def _wipe_old_string_time_columns(session: Session) -> None:
     # or run out of innodb_buffer_pool_size on MySQL. The old data will eventually
     # be cleaned up by the recorder purge if we do not do it now.
     #
-    session.execute(text("UPDATE events set time_fired=NULL LIMIT 15000000;"))
     session.execute(
-        text("UPDATE states set last_updated=NULL, last_changed=NULL LIMIT 25000000;")
+        text(
+            "UPDATE events set time_fired=NULL where "
+            "time_fired is not NULL LIMIT 15000000;"
+        )
+    )
+    session.execute(
+        text(
+            "UPDATE states set last_updated=NULL, last_changed=NULL where "
+            "last_updated is not NULL LIMIT 25000000;"
+        )
     )
     session.commit()
 
