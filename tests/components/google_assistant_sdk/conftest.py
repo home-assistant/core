@@ -1,6 +1,7 @@
 """PyTest fixtures and test helpers."""
-from collections.abc import Awaitable, Callable, Generator
+from collections.abc import Awaitable, Callable, Coroutine
 import time
+from typing import Any
 
 from google.oauth2.credentials import Credentials
 import pytest
@@ -65,7 +66,7 @@ def mock_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
 @pytest.fixture(name="setup_integration")
 async def mock_setup_integration(
     hass: HomeAssistant, config_entry: MockConfigEntry
-) -> Generator[ComponentSetup, None, None]:
+) -> Callable[[], Coroutine[Any, Any, None]]:
     """Fixture for setting up the component."""
     config_entry.add_to_hass(hass)
 
@@ -81,7 +82,7 @@ async def mock_setup_integration(
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
 
-    yield func
+    return func
 
 
 class ExpectedCredentials:
