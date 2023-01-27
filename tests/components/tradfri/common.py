@@ -1,4 +1,5 @@
 """Common tools used for the Tradfri test suite."""
+from copy import deepcopy
 from typing import Any
 from unittest.mock import Mock
 
@@ -67,7 +68,7 @@ async def trigger_observe_callback(
     if new_device_state is not None:
         mock_gateway.mock_responses.append(new_device_state)
 
-    device_state = device.raw.dict(by_alias=True)
+    device_state = deepcopy(device.raw)
     new_state = mock_gateway.mock_responses[-1]
     device_state = modify_state(device_state, new_state)
     observe_command.process_result(device_state)
