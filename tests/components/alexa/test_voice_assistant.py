@@ -3,6 +3,7 @@
 import pytest
 from homeassistant.components.voice_assistant import process_voice_input
 from homeassistant.core import HomeAssistant
+from typing import ParamSpec
 
 
 def test_voice_assistant_integration(hass):
