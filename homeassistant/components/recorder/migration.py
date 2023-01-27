@@ -890,29 +890,26 @@ def _wipe_old_string_time_columns(engine: Engine, session: Session) -> None:
     # Wipe States.last_updated since its been replaced by States.last_updated_ts
     # Wipe States.last_changed since its been replaced by States.last_changed_ts
     #
-    if engine.dialect.name == SupportedDialect.SQLITE:
-        session.execute(text("UPDATE events set time_fired=NULL;"))
-        session.execute(text("UPDATE states set last_updated=NULL, last_changed=NULL;"))
-        session.commit()
-    else:
+    if engine.dialect.name == SupportedDialect.MYSQL:
         #
         # Since this is only to save space we limit the number of rows we update
         # to 40,000,000 since we do not want to block the database for too long
         # or run out of innodb_buffer_pool_size on MySQL. The old data will eventually
         # be cleaned up by the recorder purge if we do not do it now.
         #
+        session.execute(text("UPDATE events set time_fired=NULL LIMIT 15000000;"))
+        session.commit()
         session.execute(
             text(
-                "UPDATE events set time_fired=NULL where "
-                "time_fired is not NULL LIMIT 15000000;"
+                "UPDATE states set last_updated=NULL, last_changed=NULL "
+                " LIMIT 25000000;"
             )
         )
-        session.execute(
-            text(
-                "UPDATE states set last_updated=NULL, last_changed=NULL where "
-                "last_updated is not NULL LIMIT 25000000;"
-            )
-        )
+        session.commit()
+    else:
+        session.execute(text("UPDATE events set time_fired=NULL;"))
+        session.commit()
+        session.execute(text("UPDATE states set last_updated=NULL, last_changed=NULL;"))
         session.commit()
 
 
