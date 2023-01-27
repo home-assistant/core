@@ -291,7 +291,7 @@ async def test_setup_api_push_api_data_default(hass, aioclient_mock, hass_storag
         if token.token == refresh_token:
             break
     else:
-        assert False, "refresh token not found"
+        pytest.fail("refresh token not found")
 
 
 async def test_setup_adds_admin_group_to_user(hass, aioclient_mock, hass_storage):
