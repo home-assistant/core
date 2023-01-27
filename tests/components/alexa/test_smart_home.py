@@ -8,22 +8,7 @@ import pytest
 from homeassistant.components.alexa import messages, smart_home
 import homeassistant.components.camera as camera
 from homeassistant.components.cover import CoverDeviceClass
-from homeassistant.components.media_player import (
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SEEK,
-    SUPPORT_SELECT_SOUND_MODE,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
-)
+from homeassistant.components.media_player import MediaPlayerEntityFeature
 import homeassistant.components.vacuum as vacuum
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import STATE_UNKNOWN, UnitOfTemperature
@@ -1131,17 +1116,17 @@ async def test_media_player(hass):
         "off",
         {
             "friendly_name": "Test media player",
-            "supported_features": SUPPORT_NEXT_TRACK
-            | SUPPORT_PAUSE
-            | SUPPORT_PLAY
-            | SUPPORT_PLAY_MEDIA
-            | SUPPORT_PREVIOUS_TRACK
-            | SUPPORT_SELECT_SOURCE
-            | SUPPORT_STOP
-            | SUPPORT_TURN_OFF
-            | SUPPORT_TURN_ON
-            | SUPPORT_VOLUME_MUTE
-            | SUPPORT_VOLUME_SET,
+            "supported_features": MediaPlayerEntityFeature.NEXT_TRACK
+            | MediaPlayerEntityFeature.PAUSE
+            | MediaPlayerEntityFeature.PLAY
+            | MediaPlayerEntityFeature.PLAY_MEDIA
+            | MediaPlayerEntityFeature.PREVIOUS_TRACK
+            | MediaPlayerEntityFeature.SELECT_SOURCE
+            | MediaPlayerEntityFeature.STOP
+            | MediaPlayerEntityFeature.TURN_OFF
+            | MediaPlayerEntityFeature.TURN_ON
+            | MediaPlayerEntityFeature.VOLUME_MUTE
+            | MediaPlayerEntityFeature.VOLUME_SET,
             "volume_level": 0.75,
             "source_list": ["hdmi", "tv"],
         },
@@ -1339,7 +1324,7 @@ async def test_media_player_inputs(hass):
         "on",
         {
             "friendly_name": "Test media player",
-            "supported_features": SUPPORT_SELECT_SOURCE,
+            "supported_features": MediaPlayerEntityFeature.SELECT_SOURCE,
             "volume_level": 0.75,
             "source_list": [
                 "foo",
@@ -1443,7 +1428,7 @@ async def test_media_player_no_supported_inputs(hass):
         "off",
         {
             "friendly_name": "Test media player",
-            "supported_features": SUPPORT_SELECT_SOURCE,
+            "supported_features": MediaPlayerEntityFeature.SELECT_SOURCE,
             "volume_level": 0.75,
             "source_list": [
                 "foo",
@@ -1478,7 +1463,8 @@ async def test_media_player_speaker(hass):
         "off",
         {
             "friendly_name": "Test media player speaker",
-            "supported_features": SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET,
+            "supported_features": MediaPlayerEntityFeature.VOLUME_MUTE
+            | MediaPlayerEntityFeature.VOLUME_SET,
             "volume_level": 0.75,
             "device_class": "speaker",
         },
@@ -1551,7 +1537,8 @@ async def test_media_player_step_speaker(hass):
         "off",
         {
             "friendly_name": "Test media player step speaker",
-            "supported_features": SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_STEP,
+            "supported_features": MediaPlayerEntityFeature.VOLUME_MUTE
+            | MediaPlayerEntityFeature.VOLUME_STEP,
             "device_class": "speaker",
         },
     )
@@ -1616,7 +1603,7 @@ async def test_media_player_seek(hass):
         "playing",
         {
             "friendly_name": "Test media player seek",
-            "supported_features": SUPPORT_SEEK,
+            "supported_features": MediaPlayerEntityFeature.SEEK,
             "media_position": 300,  # 5min
             "media_duration": 600,  # 10min
         },
@@ -1701,7 +1688,10 @@ async def test_media_player_seek_error(hass):
     device = (
         "media_player.test_seek",
         "playing",
-        {"friendly_name": "Test media player seek", "supported_features": SUPPORT_SEEK},
+        {
+            "friendly_name": "Test media player seek",
+            "supported_features": MediaPlayerEntityFeature.SEEK,
+        },
     )
     await discovery_test(device, hass)
 
@@ -3529,7 +3519,7 @@ async def test_media_player_eq_modes(hass):
         "on",
         {
             "friendly_name": "Test media player",
-            "supported_features": SUPPORT_SELECT_SOUND_MODE,
+            "supported_features": MediaPlayerEntityFeature.SELECT_SOUND_MODE,
             "sound_mode": "tv",
             "sound_mode_list": ["movie", "music", "night", "sport", "tv", "rocknroll"],
         },
@@ -3577,7 +3567,7 @@ async def test_media_player_sound_mode_list_unsupported(hass):
         "on",
         {
             "friendly_name": "Test media player",
-            "supported_features": SUPPORT_SELECT_SOUND_MODE,
+            "supported_features": MediaPlayerEntityFeature.SELECT_SOUND_MODE,
             "sound_mode": "unknown",
             "sound_mode_list": ["unsupported", "non-existing"],
         },
@@ -3599,7 +3589,7 @@ async def test_media_player_eq_bands_not_supported(hass):
         "on",
         {
             "friendly_name": "Test media player",
-            "supported_features": SUPPORT_SELECT_SOUND_MODE,
+            "supported_features": MediaPlayerEntityFeature.SELECT_SOUND_MODE,
             "sound_mode": "tv",
             "sound_mode_list": ["movie", "music", "night", "sport", "tv", "rocknroll"],
         },
