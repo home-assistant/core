@@ -18,10 +18,9 @@ LOGGER = logging.getLogger(__name__)
 async def test_sensors(hass):
     """Test setting up creates the sensors."""
     await async_init_integration(hass)
-    assert len(hass.states.async_all("sensor")) == 9
+    assert len(hass.states.async_all("sensor")) == 8
     assert hass.states.get("sensor.cook_time_remaining").state == "0"
     assert hass.states.get("sensor.cook_time").state == "0"
-    assert hass.states.get("sensor.firmware_version").state == "2.2.0"
     assert hass.states.get("sensor.heater_temperature").state == "20.87"
     assert hass.states.get("sensor.mode").state == "Low water"
     assert hass.states.get("sensor.state").state == "No state"
@@ -35,7 +34,7 @@ async def test_no_config_entry_coordinator(hass):
     with patch(
         "homeassistant.components.anova_sous_vide.sensor._LOGGER.error"
     ) as logger_error:
-        AnovaCoordinator(hass, None)
+        AnovaCoordinator(hass, None, "")
         assert logger_error.called
 
 
@@ -44,7 +43,7 @@ async def test_update_failed(hass):
     with pytest.raises(UpdateFailed):
         entry = create_entry(hass)
         config_entries.current_entry.set(entry)
-        ac = AnovaCoordinator(hass, AnovaPrecisionCooker())
+        ac = AnovaCoordinator(hass, AnovaPrecisionCooker(), "firmware_num")
         with patch(
             "anova_wifi.AnovaPrecisionCooker.update", side_effect=AnovaOffline()
         ):

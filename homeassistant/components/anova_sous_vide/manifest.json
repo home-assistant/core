@@ -5,7 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/anova_sous_vide",
   "requirements": ["anova-wifi==0.2.5"],
   "homekit": {},
-  "dependencies": [],
   "codeowners": ["@Lash-L"],
   "iot_class": "cloud_polling"
 }

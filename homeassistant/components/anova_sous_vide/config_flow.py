@@ -1,16 +1,12 @@
 """Config flow for Anova."""
 from __future__ import annotations
 
-import logging
-
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class AnovaConfligFlow(config_entries.ConfigFlow, domain=DOMAIN):

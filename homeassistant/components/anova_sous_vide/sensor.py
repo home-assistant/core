@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from anova_wifi import AnovaOffline, AnovaPrecisionCookerSensor
+from anova_wifi import AnovaOffline, AnovaPrecisionCooker, AnovaPrecisionCookerSensor
 import async_timeout
 
 from homeassistant import config_entries
@@ -16,7 +16,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
@@ -25,7 +25,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import DOMAIN
+from .const import ANOVA_CLIENT, ANOVA_FIRMWARE_VERSION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,11 +56,6 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         native_unit_of_measurement=UnitOfTime.SECONDS,
         icon="mdi:clock-outline",
         name="Cook Time Remaining",
-    ),
-    AnovaPrecisionCookerSensor.FIRMWARE_VERSION: SensorEntityDescription(
-        key=AnovaPrecisionCookerSensor.FIRMWARE_VERSION,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        name="Firmware Version",
     ),
     AnovaPrecisionCookerSensor.HEATER_TEMPERATURE: SensorEntityDescription(
         key=AnovaPrecisionCookerSensor.HEATER_TEMPERATURE,
@@ -95,12 +90,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Anova Sous Vide device."""
-    anova_wifi = hass.data[DOMAIN][entry.entry_id]
-    coordinator = AnovaCoordinator(hass, anova_wifi)
+    anova_wifi = hass.data[DOMAIN][entry.entry_id][ANOVA_CLIENT]
+    firmware_version = hass.data[DOMAIN][entry.entry_id][ANOVA_FIRMWARE_VERSION]
+    coordinator = AnovaCoordinator(hass, anova_wifi, firmware_version)
     await coordinator.async_config_entry_first_refresh()
     sensors = [
-        AnovaEntity(coordinator, description[1], description[0])
-        for description in SENSOR_DESCRIPTIONS.items()
+        AnovaEntity(coordinator, description, sensor)
+        for sensor, description in SENSOR_DESCRIPTIONS.items()
     ]
     async_add_entities(sensors)
 
@@ -108,7 +104,12 @@ async def async_setup_entry(
 class AnovaCoordinator(DataUpdateCoordinator):
     """Anova custom coordinator."""
 
-    def __init__(self, hass: HomeAssistant, anova_api) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        anova_api: AnovaPrecisionCooker,
+        firmware_version: str,
+    ) -> None:
         """Set up Anova Coordinator."""
         super().__init__(
             hass,
@@ -123,6 +124,7 @@ class AnovaCoordinator(DataUpdateCoordinator):
                 name="Anova Precision Cooker",
                 manufacturer="Anova",
                 model="Precision Cooker",
+                sw_version=firmware_version,
             )
         else:
             _LOGGER.error("Anova Coordinator was setup without config entry")
