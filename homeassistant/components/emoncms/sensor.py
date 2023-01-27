@@ -261,7 +261,8 @@ class EmonCmsData:
 
     def __init__(self, url, apikey):
         """Initialize the data object."""
-        self._parameters = {"apikey": apikey}
+        self._sess = requests.Session()
+        self._sess.params = {"apikey": apikey}
         self._url = f"{url}/feed/list.json"
         self.data = None
 
@@ -269,9 +270,7 @@ class EmonCmsData:
     def update(self):
         """Get the latest data from Emoncms."""
         try:
-            req = requests.get(
-                self._url, params=self._parameters, allow_redirects=True, timeout=5
-            )
+            req = self._sess.get(self._url, allow_redirects=True, timeout=5)
             req.raise_for_status()
             self.data = req.json()
         except requests.exceptions.RequestException:
