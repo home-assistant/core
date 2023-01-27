@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant.components.media_player import DOMAIN, SUPPORT_TURN_ON
+from homeassistant.components.media_player import DOMAIN, MediaPlayerEntityFeature
 from homeassistant.components.samsungtv.const import (
     CONF_MANUFACTURER,
     CONF_ON_ACTION,
@@ -87,7 +87,8 @@ async def test_setup(hass: HomeAssistant) -> None:
     assert state
     assert state.name == "fake_name"
     assert (
-        state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORT_SAMSUNGTV | SUPPORT_TURN_ON
+        state.attributes[ATTR_SUPPORTED_FEATURES]
+        == SUPPORT_SAMSUNGTV | MediaPlayerEntityFeature.TURN_ON
     )
 
     # test host and port
