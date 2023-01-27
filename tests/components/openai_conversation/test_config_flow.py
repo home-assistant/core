@@ -5,7 +5,8 @@ from openai.error import APIConnectionError, AuthenticationError, InvalidRequest
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.openai_conversation.const import DEFAULT_OPTIONS, DOMAIN
+from homeassistant.components.openai_conversation.config_flow import DEFAULT_OPTIONS
+from homeassistant.components.openai_conversation.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
