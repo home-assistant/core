@@ -6,6 +6,7 @@ import os
 from typing import Any
 
 from adb_shell.auth.keygen import keygen
+from adb_shell.exceptions import TcpTimeoutException as AdbShellTimeoutException
 from androidtv.adb_manager.adb_manager_sync import ADBPythonSync, PythonRSASigner
 from androidtv.setup_async import (
     AndroidTVAsync,
@@ -132,9 +133,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Android TV platform."""
 
     state_det_rules = entry.options.get(CONF_STATE_DETECTION_RULES)
-    aftv, error_message = await async_connect_androidtv(
-        hass, entry.data, state_detection_rules=state_det_rules
-    )
+    try:
+        aftv, error_message = await async_connect_androidtv(
+            hass, entry.data, state_detection_rules=state_det_rules
+        )
+    except AdbShellTimeoutException as exc:
+        raise ConfigEntryNotReady(exc) from exc
+
     if not aftv:
         raise ConfigEntryNotReady(error_message)
 
