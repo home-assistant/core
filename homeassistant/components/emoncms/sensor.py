@@ -154,30 +154,24 @@ class EmonCmsSensor(SensorEntity):
         self._sensorid = sensorid
         self._elem = elem
 
+        self._attr_state_class = SensorStateClass.MEASUREMENT
         if unit_of_measurement in ("kWh", "Wh"):
             self._attr_device_class = SensorDeviceClass.ENERGY
             self._attr_state_class = SensorStateClass.TOTAL_INCREASING
         elif unit_of_measurement == "W":
             self._attr_device_class = SensorDeviceClass.POWER
-            self._attr_state_class = SensorStateClass.MEASUREMENT
         elif unit_of_measurement == "V":
             self._attr_device_class = SensorDeviceClass.VOLTAGE
-            self._attr_state_class = SensorStateClass.MEASUREMENT
         elif unit_of_measurement == "A":
             self._attr_device_class = SensorDeviceClass.CURRENT
-            self._attr_state_class = SensorStateClass.MEASUREMENT
         elif unit_of_measurement == "VA":
             self._attr_device_class = SensorDeviceClass.APPARENT_POWER
-            self._attr_state_class = SensorStateClass.MEASUREMENT
         elif unit_of_measurement in ("°C", "°F", "K"):
             self._attr_device_class = SensorDeviceClass.TEMPERATURE
-            self._attr_state_class = SensorStateClass.MEASUREMENT
         elif unit_of_measurement == "Hz":
             self._attr_device_class = SensorDeviceClass.FREQUENCY
-            self._attr_state_class = SensorStateClass.MEASUREMENT
         elif unit_of_measurement == "hPa":
             self._attr_device_class = SensorDeviceClass.PRESSURE
-            self._attr_state_class = SensorStateClass.MEASUREMENT
 
         self._state = elem["value"]
 
