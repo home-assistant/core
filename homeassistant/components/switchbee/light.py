@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from switchbee.api import SwitchBeeDeviceOfflineError, SwitchBeeError
+from switchbee.api.central_unit import SwitchBeeDeviceOfflineError, SwitchBeeError
 from switchbee.device import ApiStateCommand, DeviceType, SwitchBeeDimmer
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity

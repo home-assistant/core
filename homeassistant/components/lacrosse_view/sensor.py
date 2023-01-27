@@ -14,8 +14,10 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    DEGREE,
     PERCENTAGE,
     UnitOfPrecipitationDepth,
+    UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
 )
@@ -33,7 +35,7 @@ from .const import DOMAIN, LOGGER
 class LaCrosseSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[Sensor, str], float]
+    value_fn: Callable[[Sensor, str], float | int | str | None]
 
 
 @dataclass
@@ -43,9 +45,17 @@ class LaCrosseSensorEntityDescription(
     """Description for LaCrosse View sensor."""
 
 
-def get_value(sensor: Sensor, field: str) -> float:
+def get_value(sensor: Sensor, field: str) -> float | int | str | None:
     """Get the value of a sensor field."""
-    return float(sensor.data[field]["values"][-1]["s"])
+    field_data = sensor.data.get(field)
+    if field_data is None:
+        return None
+    value = field_data["values"][-1]["s"]
+    try:
+        value = float(value)
+    except ValueError:
+        return str(value)  # handle non-numericals
+    return int(value) if value.is_integer() else value
 
 
 PARALLEL_UPDATES = 0
@@ -90,6 +100,46 @@ SENSOR_DESCRIPTIONS = {
         native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
         device_class=SensorDeviceClass.PRECIPITATION,
     ),
+    "WindHeading": LaCrosseSensorEntityDescription(
+        key="WindHeading",
+        name="Wind heading",
+        value_fn=get_value,
+        native_unit_of_measurement=DEGREE,
+    ),
+    "WetDry": LaCrosseSensorEntityDescription(
+        key="WetDry",
+        name="Wet/Dry",
+        value_fn=get_value,
+    ),
+    "Flex": LaCrosseSensorEntityDescription(
+        key="Flex",
+        name="Flex",
+        value_fn=get_value,
+    ),
+    "BarometricPressure": LaCrosseSensorEntityDescription(
+        key="BarometricPressure",
+        name="Barometric pressure",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=get_value,
+        device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+        native_unit_of_measurement=UnitOfPressure.HPA,
+    ),
+    "FeelsLike": LaCrosseSensorEntityDescription(
+        key="FeelsLike",
+        name="Feels like",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=get_value,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    "WindChill": LaCrosseSensorEntityDescription(
+        key="WindChill",
+        name="Wind chill",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=get_value,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
 }
 
 
@@ -111,7 +161,8 @@ async def async_setup_entry(
             if description is None:
                 message = (
                     f"Unsupported sensor field: {field}\nPlease create an issue on "
-                    "GitHub. https://github.com/home-assistant/core/issues/new?assignees=&la"
+                    "GitHub."
+                    " https://github.com/home-assistant/core/issues/new?assignees=&la"
                     "bels=&template=bug_report.yml&integration_name=LaCrosse%20View&integrat"
                     "ion_link=https://www.home-assistant.io/integrations/lacrosse_view/&addi"
                     f"tional_information=Field:%20{field}%0ASensor%20Model:%20{sensor.model}&"
@@ -162,8 +213,16 @@ class LaCrosseViewSensor(
         self.index = index
 
     @property
-    def native_value(self) -> float | str:
+    def native_value(self) -> int | float | str | None:
         """Return the sensor value."""
         return self.entity_description.value_fn(
             self.coordinator.data[self.index], self.entity_description.key
+        )
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return (
+            super().available
+            and self.entity_description.key in self.coordinator.data[self.index].data
         )

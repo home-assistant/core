@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "Enheten er allerede konfigurert",
             "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
-            "incomplete_info": "Ufullstendig informasjon til installasjonsenheten, ingen vert eller token leveres.",
+            "incomplete_info": "Ufullstendig informasjon for \u00e5 konfigurere enheten, ingen vert eller token levert.",
             "not_xiaomi_miio": "Enheten st\u00f8ttes (enn\u00e5) ikke av Xiaomi Miio.",
             "reauth_successful": "Re-autentisering var vellykket",
             "unknown": "Uventet feil"
@@ -13,7 +13,7 @@
             "cloud_credentials_incomplete": "Utskriftsinformasjon for skyen er fullstendig. Fyll ut brukernavn, passord og land",
             "cloud_login_error": "Kunne ikke logge inn p\u00e5 Xiaomi Miio Cloud, sjekk legitimasjonen.",
             "cloud_no_devices": "Ingen enheter funnet i denne Xiaomi Miio-skykontoen.",
-            "unknown_device": "Enhetsmodellen er ikke kjent, kan ikke konfigurere enheten ved hjelp av konfigurasjonsflyt.",
+            "unknown_device": "Enhetsmodellen er ikke kjent, kan ikke sette opp enheten ved hjelp av konfigurasjonsflyt.",
             "wrong_token": "Kontrollsumfeil, feil token"
         },
         "flow_title": "{name}",
@@ -47,7 +47,32 @@
                 "data": {
                     "select_device": "Miio-enhet"
                 },
-                "description": "Velg Xiaomi Miio-enheten du vil installere."
+                "description": "Velg Xiaomi Miio-enheten du vil konfigurere."
+            }
+        }
+    },
+    "entity": {
+        "select": {
+            "display_orientation": {
+                "state": {
+                    "forward": "Framover",
+                    "left": "Venstre",
+                    "right": "H\u00f8yre"
+                }
+            },
+            "led_brightness": {
+                "state": {
+                    "bright": "Lys",
+                    "dim": "Dim",
+                    "off": "Av"
+                }
+            },
+            "ptc_level": {
+                "state": {
+                    "high": "H\u00f8y",
+                    "low": "Lav",
+                    "medium": "Medium"
+                }
             }
         }
     },

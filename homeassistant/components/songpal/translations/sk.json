@@ -11,6 +11,11 @@
         "step": {
             "init": {
                 "description": "Chcete nastavi\u0165 {name} ({host})?"
+            },
+            "user": {
+                "data": {
+                    "endpoint": "Koncov\u00fd bod"
+                }
             }
         }
     }

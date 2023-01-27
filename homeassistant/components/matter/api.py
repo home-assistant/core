@@ -13,7 +13,7 @@ from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.core import HomeAssistant, callback
 
 from .adapter import MatterAdapter
-from .const import DOMAIN
+from .helpers import get_matter
 
 ID = "id"
 TYPE = "type"
@@ -36,7 +36,7 @@ def async_get_matter_adapter(func: Callable) -> Callable:
         hass: HomeAssistant, connection: ActiveConnection, msg: dict
     ) -> None:
         """Provide the Matter client to the function."""
-        matter: MatterAdapter = next(iter(hass.data[DOMAIN].values()))
+        matter = get_matter(hass)
 
         await func(hass, connection, msg, matter)
 

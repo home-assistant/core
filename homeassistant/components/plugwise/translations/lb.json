@@ -10,6 +10,9 @@
         },
         "step": {
             "user": {
+                "data": {
+                    "username": "Smile-Benotzernumm"
+                },
                 "description": "Produkt:",
                 "title": "Typ vu Plugwise"
             }

@@ -1,14 +1,17 @@
 {
     "config": {
         "error": {
+            "error_auth_app": "Nespr\u00e1vne ID aplik\u00e1cie alebo Secret",
             "error_auth_mfa": "Nespr\u00e1vny k\u00f3d",
             "error_auth_user": "Nespr\u00e1vne u\u017e\u00edvate\u013esk\u00e9 meno alebo heslo"
         },
         "step": {
             "auth_app": {
                 "data": {
-                    "app_id": "ID aplik\u00e1cie"
+                    "app_id": "ID aplik\u00e1cie",
+                    "app_secret": "Secret"
                 },
+                "description": "ID aplik\u00e1cie a tajn\u00fd k\u00f3d z [\u00fa\u010dtu v\u00fdvoj\u00e1ra StarLine](https://my.starline.ru/developer)",
                 "title": "Prihlasovacie \u00fadaje aplik\u00e1cie"
             },
             "auth_captcha": {

@@ -44,7 +44,10 @@
         "step": {
             "init": {
                 "data": {
-                    "browse_unfiltered": "Zobrazi\u0165 nekompatibiln\u00e9 m\u00e9di\u00e1 pri prehliadan\u00ed"
+                    "browse_unfiltered": "Zobrazi\u0165 nekompatibiln\u00e9 m\u00e9di\u00e1 pri prehliadan\u00ed",
+                    "callback_url_override": "Adresa URL sp\u00e4tn\u00e9ho volania prij\u00edma\u010da udalost\u00ed",
+                    "listen_port": "Port prij\u00edma\u010da udalost\u00ed (n\u00e1hodn\u00fd, ak nie je nastaven\u00fd)",
+                    "poll_availability": "Dopytovanie sa na dostupnos\u0165 zariadenia"
                 },
                 "title": "Konfigur\u00e1cia DLNA Digital Media Renderer"
             }

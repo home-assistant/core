@@ -2,10 +2,12 @@
     "config": {
         "abort": {
             "already_configured": "El dispositivo ya est\u00e1 configurado",
-            "cannot_connect": "No se pudo conectar"
+            "cannot_connect": "No se pudo conectar",
+            "station_not_found": "ID de estaci\u00f3n no encontrado en zamg"
         },
         "error": {
-            "cannot_connect": "No se pudo conectar"
+            "cannot_connect": "No se pudo conectar",
+            "station_not_found": "ID de estaci\u00f3n no encontrado en zamg"
         },
         "flow_title": "{name}",
         "step": {

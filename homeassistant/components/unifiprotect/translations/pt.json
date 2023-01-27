@@ -15,7 +15,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Servidor",
+                    "host": "Endere\u00e7o",
                     "password": "Palavra-passe",
                     "port": "Porta",
                     "verify_ssl": "Verificar o certificado SSL"

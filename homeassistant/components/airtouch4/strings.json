@@ -9,7 +9,7 @@
     },
     "step": {
       "user": {
-        "title": "Setup your AirTouch 4 connection details.",
+        "title": "Set up your AirTouch 4 connection details.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         }

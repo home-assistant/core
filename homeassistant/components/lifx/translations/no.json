@@ -11,7 +11,7 @@
         "flow_title": "{label} ( {group} )",
         "step": {
             "discovery_confirm": {
-                "description": "Vil du konfigurere {label} ( {group} )?"
+                "description": "Vil du sette opp {label} ( {group} )?"
             },
             "pick_device": {
                 "data": {

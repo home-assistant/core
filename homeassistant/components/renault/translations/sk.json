@@ -24,10 +24,44 @@
             },
             "user": {
                 "data": {
+                    "locale": "Miestne nastavenie",
                     "password": "Heslo",
                     "username": "Email"
                 },
                 "title": "Nastavte prihlasovacie \u00fadaje Renault"
+            }
+        }
+    },
+    "entity": {
+        "select": {
+            "charge_mode": {
+                "state": {
+                    "always": "Okam\u017eit\u00e9",
+                    "always_charging": "Okam\u017eit\u00e9",
+                    "schedule_mode": "Pl\u00e1nova\u010d"
+                }
+            }
+        },
+        "sensor": {
+            "charge_state": {
+                "state": {
+                    "charge_ended": "Nab\u00edjanie skon\u010dilo",
+                    "charge_error": "Nenab\u00edja sa ani nie je zapojen\u00fd",
+                    "charge_in_progress": "Nab\u00edja sa",
+                    "energy_flap_opened": "Otvoren\u00e1 energetick\u00e1 klapka",
+                    "not_in_charge": "Nenab\u00edja sa",
+                    "unavailable": "Nedostupn\u00e9",
+                    "waiting_for_a_planned_charge": "\u010cakanie na pl\u00e1novan\u00e9 nab\u00edjanie",
+                    "waiting_for_current_charge": "\u010cakanie na aktu\u00e1lne nabitie"
+                }
+            },
+            "plug_state": {
+                "state": {
+                    "plug_error": "Chyba pripojenia",
+                    "plug_unknown": "Nezn\u00e1my zdroj",
+                    "plugged": "Zapojen\u00e9",
+                    "unplugged": "Odpojen\u00e9"
+                }
             }
         }
     }

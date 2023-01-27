@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 from async_timeout import timeout
 from pynina import ApiError, Nina
@@ -56,6 +57,7 @@ class NinaWarningData:
     description: str
     sender: str
     severity: str
+    recommended_actions: str
     sent: str
     start: str
     expires: str
@@ -89,12 +91,38 @@ class NINADataUpdateCoordinator(
                 raise UpdateFailed(err) from err
             return self._parse_data()
 
+    @staticmethod
+    def _remove_duplicate_warnings(
+        warnings: dict[str, list[Any]]
+    ) -> dict[str, list[Any]]:
+        """Remove warnings with the same title and expires timestamp in a region."""
+        all_filtered_warnings: dict[str, list[Any]] = {}
+
+        for region_id, raw_warnings in warnings.items():
+
+            filtered_warnings: list[Any] = []
+            processed_details: list[tuple[str, str]] = []
+
+            for raw_warn in raw_warnings:
+                if (raw_warn.headline, raw_warn.expires) in processed_details:
+                    continue
+
+                processed_details.append((raw_warn.headline, raw_warn.expires))
+
+                filtered_warnings.append(raw_warn)
+
+            all_filtered_warnings[region_id] = filtered_warnings
+
+        return all_filtered_warnings
+
     def _parse_data(self) -> dict[str, list[NinaWarningData]]:
         """Parse warning data."""
 
         return_data: dict[str, list[NinaWarningData]] = {}
 
-        for region_id, raw_warnings in self._nina.warnings.items():
+        for region_id, raw_warnings in self._remove_duplicate_warnings(
+            self._nina.warnings
+        ).items():
             warnings_for_regions: list[NinaWarningData] = []
 
             for raw_warn in raw_warnings:
@@ -107,6 +135,7 @@ class NINADataUpdateCoordinator(
                     raw_warn.description,
                     raw_warn.sender,
                     raw_warn.severity,
+                    " ".join([str(action) for action in raw_warn.recommended_actions]),
                     raw_warn.sent or "",
                     raw_warn.start or "",
                     raw_warn.expires or "",

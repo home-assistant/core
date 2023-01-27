@@ -19,8 +19,7 @@
             "init": {
                 "data": {
                     "power": "Kontrakterad effekt (kW)",
-                    "power_p3": "Kontrakterad effekt f\u00f6r dalperiod P3 (kW)",
-                    "tariff": "Till\u00e4mplig taxa per geografisk zon"
+                    "power_p3": "Kontrakterad effekt f\u00f6r dalperiod P3 (kW)"
                 }
             }
         }

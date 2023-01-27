@@ -1,0 +1,6 @@
+{
+  "temperature": 20,
+  "temperatureUnit": "C",
+  "frontDefroster": true,
+  "rearDefroster": false
+}

@@ -19,6 +19,9 @@
     "options": {
         "step": {
             "init": {
+                "data": {
+                    "default_transition": "Predvolen\u00fd prechod (sekundy)"
+                },
                 "title": "Nakonfigurujte LiteJet"
             }
         }

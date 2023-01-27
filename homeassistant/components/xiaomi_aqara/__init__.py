@@ -105,8 +105,10 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         gateway.write_to_hub(gateway.sid, join_permission="yes")
         persistent_notification.async_create(
             hass,
-            "Join permission enabled for 30 seconds! "
-            "Please press the pairing button of the new device once.",
+            (
+                "Join permission enabled for 30 seconds! "
+                "Please press the pairing button of the new device once."
+            ),
             title="Xiaomi Aqara Gateway",
         )
 

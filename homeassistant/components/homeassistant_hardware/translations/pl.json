@@ -6,6 +6,7 @@
                 "addon_install_failed": "Nie uda\u0142o si\u0119 zainstalowa\u0107 dodatku Silicon Labs Multiprotocol.",
                 "addon_set_config_failed": "Nie uda\u0142o si\u0119 ustawi\u0107 konfiguracji Silicon Labs Multiprotocol.",
                 "addon_start_failed": "Nie uda\u0142o si\u0119 uruchomi\u0107 dodatku Silicon Labs Multiprotocol.",
+                "disabled_due_to_bug": "Opcje sprz\u0119towe s\u0105 tymczasowo wy\u0142\u0105czone na czas naprawiania przez nas b\u0142\u0119du. [Dowiedz si\u0119 wi\u0119cej]({url})",
                 "not_hassio": "Opcje sprz\u0119towe mo\u017cna skonfigurowa\u0107 tylko w instalacjach HassOS.",
                 "zha_migration_failed": "Migracja ZHA nie powiod\u0142a si\u0119."
             },

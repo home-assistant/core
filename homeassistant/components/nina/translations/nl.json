@@ -32,10 +32,14 @@
         "step": {
             "init": {
                 "data": {
+                    "_a_to_d": "Stad/provincie (A-D)",
+                    "_e_to_h": "Stad/provincie (E-H)",
                     "_i_to_l": "Stad/provincie (I-L)",
                     "_m_to_q": "Stad/provincie (M-Q)",
                     "_r_to_u": "Stad/provincie (R-U)",
-                    "_v_to_z": "Stad/provincie (V-Z)"
+                    "_v_to_z": "Stad/provincie (V-Z)",
+                    "corona_filter": "Verwijder Corona waarschuwingen",
+                    "slots": "Maximale waarschuwingen per stad/provincie"
                 },
                 "title": "Opties"
             }

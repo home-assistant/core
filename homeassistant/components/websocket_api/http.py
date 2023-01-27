@@ -57,6 +57,8 @@ class WebSocketAdapter(logging.LoggerAdapter):
 
     def process(self, msg: str, kwargs: Any) -> tuple[str, Any]:
         """Add connid to websocket log messages."""
+        if not self.extra or "connid" not in self.extra:
+            return msg, kwargs
         return f'[{self.extra["connid"]}] {msg}', kwargs
 
 
@@ -155,8 +157,11 @@ class WebSocketHandler:
             return
 
         self._logger.error(
-            "Client unable to keep up with pending messages. Stayed over %s for %s seconds. "
-            "The system's load is too high or an integration is misbehaving",
+            (
+                "Client unable to keep up with pending messages. Stayed over %s for %s"
+                " seconds. The system's load is too high or an integration is"
+                " misbehaving"
+            ),
             PENDING_MSG_PEAK,
             PENDING_MSG_PEAK_TIME,
         )

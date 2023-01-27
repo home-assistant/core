@@ -18,11 +18,11 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
-    IRRADIATION_WATTS_PER_SQUARE_METER,
     LIGHT_LUX,
     PERCENTAGE,
     UV_INDEX,
     UnitOfElectricPotential,
+    UnitOfIrradiance,
     UnitOfLength,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
@@ -68,7 +68,8 @@ ECOWITT_SENSORS_MAPPING: Final = {
     ),
     EcoWittSensorTypes.WATT_METERS_SQUARED: SensorEntityDescription(
         key="WATT_METERS_SQUARED",
-        native_unit_of_measurement=IRRADIATION_WATTS_PER_SQUARE_METER,
+        device_class=SensorDeviceClass.IRRADIANCE,
+        native_unit_of_measurement=UnitOfIrradiance.WATTS_PER_SQUARE_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     EcoWittSensorTypes.UV_INDEX: SensorEntityDescription(

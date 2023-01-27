@@ -12,12 +12,14 @@
             "high": "Vysok\u00e1",
             "low": "N\u00edzke",
             "medium": "Stredn\u00e9",
+            "none": "\u017diadne",
             "very_high": "Ve\u013emi vysok\u00e9",
             "very_low": "Ve\u013emi n\u00edzke"
         },
         "climacell__precipitation_type": {
             "freezing_rain": "Mrzn\u00faci d\u00e1\u017e\u010f",
             "ice_pellets": "\u013dadovec",
+            "none": "\u017diadne",
             "rain": "D\u00e1\u017e\u010f",
             "snow": "Sneh"
         }

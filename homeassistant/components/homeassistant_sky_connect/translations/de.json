@@ -5,6 +5,7 @@
             "addon_install_failed": "Die Installation des Silicon Labs Multiprotokoll Add-Ons ist fehlgeschlagen.",
             "addon_set_config_failed": "Die Silicon Labs Multiprotokoll Konfiguration konnte nicht eingestellt werden.",
             "addon_start_failed": "Das Silicon Labs Multiprotokoll Add-on konnte nicht gestartet werden.",
+            "disabled_due_to_bug": "Die Hardwareoptionen sind vor\u00fcbergehend deaktiviert, w\u00e4hrend wir einen Fehler beheben. [Weitere Informationen]({url})",
             "not_hassio": "Die Hardwareoptionen k\u00f6nnen nur auf HassOS-Installationen konfiguriert werden.",
             "zha_migration_failed": "Die ZHA Migration war nicht erfolgreich."
         },

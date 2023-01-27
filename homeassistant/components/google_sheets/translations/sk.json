@@ -1,4 +1,7 @@
 {
+    "application_credentials": {
+        "description": "Pod\u013ea [pokynov]({more_info_url}) pre [obrazovka s\u00fahlasu s protokolom OAuth]({oauth_consent_url}) povo\u013ete Asistentovi dom\u00e1cnosti pr\u00edstup k svojim Tabu\u013ek\u00e1m Google. Mus\u00edte tie\u017e vytvori\u0165 poverenia aplik\u00e1cie prepojen\u00e9 s va\u0161\u00edm \u00fa\u010dtom:\n 1. Prejdite na [Poverenia]({oauth_creds_url}) a kliknite na **Vytvori\u0165 poverenia**.\n 1. Z rozba\u013eovacieho zoznamu vyberte **ID klienta OAuth**.\n 1. Ako Typ aplik\u00e1cie vyberte **Webov\u00e1 aplik\u00e1cia**. \n\n"
+    },
     "config": {
         "abort": {
             "already_configured": "\u00da\u010det je u\u017e nakonfigurovan\u00fd",

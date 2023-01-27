@@ -44,6 +44,16 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "electricity_tariff": {
+                "state": {
+                    "low": "Alacsony",
+                    "normal": "Norm\u00e1l"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {

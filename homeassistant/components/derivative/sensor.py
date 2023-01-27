@@ -16,10 +16,7 @@ from homeassistant.const import (
     CONF_SOURCE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    TIME_DAYS,
-    TIME_HOURS,
-    TIME_MINUTES,
-    TIME_SECONDS,
+    UnitOfTime,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -54,10 +51,10 @@ UNIT_PREFIXES = {
 
 # SI Time prefixes
 UNIT_TIME = {
-    TIME_SECONDS: 1,
-    TIME_MINUTES: 60,
-    TIME_HOURS: 60 * 60,
-    TIME_DAYS: 24 * 60 * 60,
+    UnitOfTime.SECONDS: 1,
+    UnitOfTime.MINUTES: 60,
+    UnitOfTime.HOURS: 60 * 60,
+    UnitOfTime.DAYS: 24 * 60 * 60,
 }
 
 ICON = "mdi:chart-line"
@@ -71,7 +68,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_SOURCE): cv.entity_id,
         vol.Optional(CONF_ROUND_DIGITS, default=DEFAULT_ROUND): vol.Coerce(int),
         vol.Optional(CONF_UNIT_PREFIX, default=None): vol.In(UNIT_PREFIXES),
-        vol.Optional(CONF_UNIT_TIME, default=TIME_HOURS): vol.In(UNIT_TIME),
+        vol.Optional(CONF_UNIT_TIME, default=UnitOfTime.HOURS): vol.In(UNIT_TIME),
         vol.Optional(CONF_UNIT): cv.string,
         vol.Optional(CONF_TIME_WINDOW, default=DEFAULT_TIME_WINDOW): cv.time_period,
     }
@@ -144,7 +141,7 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
         time_window: timedelta,
         unit_of_measurement: str | None,
         unit_prefix: str | None,
-        unit_time: str,
+        unit_time: UnitOfTime,
         unique_id: str | None,
     ) -> None:
         """Initialize the derivative sensor."""

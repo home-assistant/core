@@ -14,7 +14,7 @@
                 "data": {
                     "2fa": "Dvojfaktorov\u00fd k\u00f3d"
                 },
-                "description": "Zadajte PIN zaslan\u00fd na v\u00e1\u0161 e-mail",
+                "description": "Zadajte PIN zaslan\u00fd na e-mail alebo SMS",
                 "title": "Dvojfaktorov\u00e1 autentifik\u00e1cia"
             },
             "user": {

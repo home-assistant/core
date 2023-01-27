@@ -1,5 +1,28 @@
 {
     "entity": {
+        "climate": {
+            "ubercool": {
+                "state_attributes": {
+                    "fan_mode": {
+                        "state": {
+                            "auto_high": "Tinggi Otomatis",
+                            "auto_low": "Rendah Otomatis",
+                            "on_high": "Nyala Tinggi",
+                            "on_low": "Nyala Rendah"
+                        }
+                    },
+                    "swing_mode": {
+                        "state": {
+                            "1": "1",
+                            "2": "2",
+                            "3": "3",
+                            "auto": "Otomatis",
+                            "off": "Mati"
+                        }
+                    }
+                }
+            }
+        },
         "select": {
             "speed": {
                 "state": {
@@ -16,6 +39,15 @@
                     "comfort": "Nyaman",
                     "eco": "Eco",
                     "sleep": "Tidur"
+                }
+            }
+        },
+        "vacuum": {
+            "model_s": {
+                "state_attributes": {
+                    "cleaned_area": {
+                        "name": "Area yang Dibersihkan"
+                    }
                 }
             }
         }

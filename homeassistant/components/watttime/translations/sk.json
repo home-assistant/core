@@ -44,7 +44,8 @@
             "init": {
                 "data": {
                     "show_on_map": "Zobrazi\u0165 monitorovan\u00fa polohu na mape"
-                }
+                },
+                "title": "Konfigur\u00e1cia WattTime"
             }
         }
     }

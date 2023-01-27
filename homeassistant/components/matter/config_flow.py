@@ -20,6 +20,7 @@ from homeassistant.components.hassio import (
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import aiohttp_client
 
 from .addon import get_addon_manager
@@ -34,6 +35,7 @@ from .const import (
 ADDON_SETUP_TIMEOUT = 5
 ADDON_SETUP_TIMEOUT_ROUNDS = 40
 DEFAULT_URL = "ws://localhost:5580/ws"
+DEFAULT_TITLE = "Matter"
 ON_SUPERVISOR_SCHEMA = vol.Schema({vol.Optional(CONF_USE_ADDON, default=True): bool})
 
 
@@ -130,7 +132,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             await self.start_task
-        except (CannotConnect, AddonError, AbortFlow) as err:
+        except (FailedConnect, AddonError, AbortFlow) as err:
             self.start_task = None
             LOGGER.error(err)
             return self.async_show_progress_done(next_step_id="start_failed")
@@ -169,7 +171,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 else:
                     break
             else:
-                raise CannotConnect("Failed to start Matter Server add-on: timeout")
+                raise FailedConnect("Failed to start Matter Server add-on: timeout")
         finally:
             # Continue the flow after show progress when the task is done.
             self.hass.async_create_task(
@@ -306,7 +308,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_USE_ADDON: self.use_addon,
                     CONF_INTEGRATION_CREATED_ADDON: self.integration_created_addon,
                 },
-                title=self.ws_address,
+                title=DEFAULT_TITLE,
             )
             await self.hass.config_entries.async_reload(config_entry.entry_id)
             raise AbortFlow("reconfiguration_successful")
@@ -316,10 +318,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.hass.config_entries.flow.async_abort(progress["flow_id"])
 
         return self.async_create_entry(
-            title=self.ws_address,
+            title=DEFAULT_TITLE,
             data={
                 CONF_URL: self.ws_address,
                 CONF_USE_ADDON: self.use_addon,
                 CONF_INTEGRATION_CREATED_ADDON: self.integration_created_addon,
             },
         )
+
+
+class FailedConnect(HomeAssistantError):
+    """Failed to connect to the Matter Server."""

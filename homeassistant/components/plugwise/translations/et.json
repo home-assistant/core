@@ -26,6 +26,21 @@
         }
     },
     "entity": {
+        "climate": {
+            "plugwise": {
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "asleep": "\u00d6\u00f6",
+                            "away": "Eemal",
+                            "home": "Kodus",
+                            "no_frost": "K\u00fclmumiskaitse",
+                            "vacation": "Puhkus"
+                        }
+                    }
+                }
+            }
+        },
         "select": {
             "dhw_mode": {
                 "state": {

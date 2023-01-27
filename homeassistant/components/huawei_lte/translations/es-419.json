@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "not_huawei_lte": "No es un dispositivo Huawei LTE"
-        },
         "error": {
             "connection_timeout": "El tiempo de conexi\u00f3n expir\u00f3",
             "incorrect_password": "Contrase\u00f1a incorrecta",

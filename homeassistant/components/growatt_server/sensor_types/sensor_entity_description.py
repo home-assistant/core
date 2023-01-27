@@ -20,3 +20,4 @@ class GrowattSensorEntityDescription(SensorEntityDescription, GrowattRequiredKey
     precision: int | None = None
     currency: bool = False
     previous_value_drop_threshold: float | None = None
+    never_resets: bool = False

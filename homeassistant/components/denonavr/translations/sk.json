@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
             "already_in_progress": "Konfigur\u00e1cia u\u017e prebieha",
+            "cannot_connect": "Nepodarilo sa pripoji\u0165, sk\u00faste to znova, odpojenie nap\u00e1jacieho a ethernetov\u00e9ho k\u00e1bla a ich op\u00e4tovn\u00e9 pripojenie m\u00f4\u017ee pom\u00f4c\u0165",
             "not_denonavr_manufacturer": "Nejedn\u00e1 sa o sie\u0165ov\u00fd prij\u00edma\u010d Denon AVR, objaven\u00fd v\u00fdrobca sa nezhoduje",
             "not_denonavr_missing": "Nejedn\u00e1 sa o sie\u0165ov\u00fd prij\u00edma\u010d Denon AVR, inform\u00e1cie o zis\u0165ovan\u00ed nie s\u00fa \u00fapln\u00e9"
         },

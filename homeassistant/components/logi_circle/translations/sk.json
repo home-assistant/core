@@ -13,6 +13,7 @@
         },
         "step": {
             "auth": {
+                "description": "Kliknite na odkaz ni\u017e\u0161ie a **Prijmite** pr\u00edstup k svojmu \u00fa\u010dtu Logi Circle, potom sa vr\u00e1\u0165te a stla\u010dte ni\u017e\u0161ie **Odosla\u0165**. \n\n[Odkaz]({authorization_url})",
                 "title": "Overte sa pomocou Logi Circle"
             },
             "user": {

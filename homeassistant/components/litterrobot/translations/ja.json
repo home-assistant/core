@@ -24,5 +24,17 @@
                 }
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "status_code": {
+                "state": {
+                    "ec": "\u7a7a\u306e\u30b5\u30a4\u30af\u30eb",
+                    "hpf": "\u30db\u30fc\u30e0\u30dd\u30b8\u30b7\u30e7\u30f3\u30a8\u30e9\u30fc",
+                    "off": "\u30aa\u30d5",
+                    "offline": "\u30aa\u30d5\u30e9\u30a4\u30f3"
+                }
+            }
+        }
     }
 }

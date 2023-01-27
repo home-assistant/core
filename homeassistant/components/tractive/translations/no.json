@@ -17,5 +17,17 @@
                 }
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "tracker_state": {
+                "state": {
+                    "not_reporting": "Rapporterer ikke",
+                    "operational": "Operasjonell",
+                    "system_shutdown_user": "Bruker av systemavslutning",
+                    "system_startup": "Systemoppstart"
+                }
+            }
+        }
     }
 }

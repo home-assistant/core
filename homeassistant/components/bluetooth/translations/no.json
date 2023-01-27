@@ -7,7 +7,7 @@
         "flow_title": "{name}",
         "step": {
             "bluetooth_confirm": {
-                "description": "Vil du konfigurere {name}?"
+                "description": "Vil du sette opp {name} ?"
             },
             "multiple_adapters": {
                 "data": {
@@ -16,7 +16,7 @@
                 "description": "Velg en Bluetooth-adapter for \u00e5 konfigurere"
             },
             "single_adapter": {
-                "description": "Vil du konfigurere Bluetooth-adapteren {name} ?"
+                "description": "Vil du sette opp Bluetooth-adapteren {name} ?"
             },
             "user": {
                 "data": {

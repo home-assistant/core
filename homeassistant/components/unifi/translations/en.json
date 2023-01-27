@@ -27,7 +27,7 @@
     },
     "options": {
         "abort": {
-            "integration_not_setup": "UniFi integration is not setup"
+            "integration_not_setup": "UniFi integration is not set up"
         },
         "step": {
             "client_control": {

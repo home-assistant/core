@@ -12,7 +12,7 @@ from homeassistant.components.number import (
     NumberEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MODEL, DEGREE, REVOLUTIONS_PER_MINUTE, TIME_MINUTES
+from homeassistant.const import CONF_MODEL, DEGREE, REVOLUTIONS_PER_MINUTE, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
@@ -193,7 +193,7 @@ NUMBER_TYPES = {
         key=ATTR_DELAY_OFF_COUNTDOWN,
         name="Delay off countdown",
         icon="mdi:fan-off",
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         native_min_value=0,
         native_max_value=480,
         native_step=1,

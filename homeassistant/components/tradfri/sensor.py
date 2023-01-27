@@ -18,8 +18,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     PERCENTAGE,
-    TIME_HOURS,
     Platform,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry
@@ -78,6 +78,7 @@ SENSOR_DESCRIPTIONS_BATTERY: tuple[TradfriSensorEntityDescription, ...] = (
     TradfriSensorEntityDescription(
         key="battery_level",
         device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value=lambda device: cast(int, device.device_info.battery_level),
     ),
@@ -89,6 +90,7 @@ SENSOR_DESCRIPTIONS_FAN: tuple[TradfriSensorEntityDescription, ...] = (
         key="aqi",
         name="air quality",
         device_class=SensorDeviceClass.AQI,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         value=_get_air_quality,
     ),
@@ -96,7 +98,7 @@ SENSOR_DESCRIPTIONS_FAN: tuple[TradfriSensorEntityDescription, ...] = (
         key="filter_life_remaining",
         name="filter time left",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TIME_HOURS,
+        native_unit_of_measurement=UnitOfTime.HOURS,
         icon="mdi:clock-outline",
         value=_get_filter_time_left,
     ),

@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Diese Node/Pro ID oder Standort ist bereits konfiguriert.",
+            "already_configured": "Standort ist bereits konfiguriert",
             "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
         },
         "error": {
@@ -29,14 +29,6 @@
                 },
                 "description": "Verwende die AirVisual Cloud API, um ein(e) Stadt/Bundesland/Land zu \u00fcberwachen.",
                 "title": "Konfiguriere einen Standort"
-            },
-            "node_pro": {
-                "data": {
-                    "ip_address": "Host",
-                    "password": "Passwort"
-                },
-                "description": "\u00dcberwache eine pers\u00f6nliche AirVisual-Einheit. Das Passwort kann von der Benutzeroberfl\u00e4che des Ger\u00e4ts abgerufen werden.",
-                "title": "Konfiguriere einen AirVisual Node/Pro"
             },
             "reauth_confirm": {
                 "data": {
@@ -72,6 +64,12 @@
                     "very_unhealthy": "Sehr ungesund"
                 }
             }
+        }
+    },
+    "issues": {
+        "airvisual_pro_migration": {
+            "description": "AirVisual Pro-Ger\u00e4te sind jetzt eine eigene Home Assistant-Integration (im Gegensatz zur urspr\u00fcnglichen AirVisual-Integration, die die AirVisual Cloud API verwendet). Das Pro-Ger\u00e4t, das sich unter `{ip_address}` befindet, wurde automatisch migriert.\n\nAls Teil dieser Migration hat sich die Ger\u00e4te-ID des Pro-Ger\u00e4ts von `{old_device_id}` zu `{new_device_id}` ge\u00e4ndert. Bitte aktualisiere diese Automatisierungen, um die neue Ger\u00e4te-ID zu verwenden: {device_automations_string}.",
+            "title": "{ip_address} ist jetzt Teil der AirVisual Pro-Integration"
         }
     },
     "options": {

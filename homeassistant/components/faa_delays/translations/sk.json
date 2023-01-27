@@ -13,6 +13,7 @@
                 "data": {
                     "id": "Airport"
                 },
+                "description": "Zadajte k\u00f3d letiska v USA vo form\u00e1te IATA",
                 "title": "Oneskorenia FAA"
             }
         }

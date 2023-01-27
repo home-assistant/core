@@ -17,6 +17,7 @@
             "user": {
                 "data": {
                     "host": "Hostite\u013e",
+                    "name": "Priate\u013esk\u00e9 meno",
                     "password": "Heslo API (ak heslo nem\u00e1te, nechajte pr\u00e1zdne)",
                     "port": "API port"
                 },
@@ -28,6 +29,7 @@
         "step": {
             "init": {
                 "data": {
+                    "librespot_java_port": "Port pre librespot-java pipe control (ak sa pou\u017e\u00edva)",
                     "max_playlists": "Maxim\u00e1lny po\u010det zoznamov skladieb pou\u017eit\u00fdch ako zdroje",
                     "tts_pause_time": "Sekundy na pauzu pred a po TTS",
                     "tts_volume": "Objem TTS (pohybuje sa v rozsahu [0,1])"

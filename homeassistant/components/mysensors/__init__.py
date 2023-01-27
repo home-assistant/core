@@ -63,27 +63,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][MYSENSORS_GATEWAYS][entry.entry_id] = gateway
 
     # Connect notify discovery as that integration doesn't support entry forwarding.
-    # Allow loading device tracker platform via discovery
-    # until refactor to config entry is done.
 
-    for platform in (Platform.DEVICE_TRACKER, Platform.NOTIFY):
-        load_discovery_platform = partial(
-            async_load_platform,
-            hass,
-            platform,
-            DOMAIN,
-            hass_config=hass.data[DOMAIN][DATA_HASS_CONFIG],
-        )
+    load_discovery_platform = partial(
+        async_load_platform,
+        hass,
+        Platform.NOTIFY,
+        DOMAIN,
+        hass_config=hass.data[DOMAIN][DATA_HASS_CONFIG],
+    )
 
-        on_unload(
+    on_unload(
+        hass,
+        entry.entry_id,
+        async_dispatcher_connect(
             hass,
-            entry.entry_id,
-            async_dispatcher_connect(
-                hass,
-                MYSENSORS_DISCOVERY.format(entry.entry_id, platform),
-                load_discovery_platform,
-            ),
-        )
+            MYSENSORS_DISCOVERY.format(entry.entry_id, Platform.NOTIFY),
+            load_discovery_platform,
+        ),
+    )
 
     await hass.config_entries.async_forward_entry_setups(
         entry, PLATFORMS_WITH_ENTRY_SUPPORT
@@ -181,5 +178,5 @@ def setup_mysensors_platform(
     if new_devices:
         _LOGGER.info("Adding new devices: %s", new_devices)
         if async_add_entities is not None:
-            async_add_entities(new_devices, True)
+            async_add_entities(new_devices)
     return new_devices

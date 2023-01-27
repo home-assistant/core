@@ -270,7 +270,9 @@ async def async_import_config(hass: HomeAssistant, entry: ConfigEntry) -> None:
             severity=IssueSeverity.ERROR,
             translation_key="removed_app_auth",
             translation_placeholders={
-                "more_info_url": "https://www.home-assistant.io/more-info/nest-auth-deprecation",
+                "more_info_url": (
+                    "https://www.home-assistant.io/more-info/nest-auth-deprecation"
+                ),
                 "documentation_url": "https://www.home-assistant.io/integrations/nest/",
             },
         )
@@ -333,7 +335,10 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         await subscriber.delete_subscription()
     except (AuthException, SubscriberException) as err:
         _LOGGER.warning(
-            "Unable to delete subscription '%s'; Will be automatically cleaned up by cloud console: %s",
+            (
+                "Unable to delete subscription '%s'; Will be automatically cleaned up"
+                " by cloud console: %s"
+            ),
             subscriber.subscriber_id,
             err,
         )

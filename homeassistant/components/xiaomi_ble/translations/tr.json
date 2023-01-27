@@ -14,7 +14,7 @@
         "flow_title": "{name}",
         "step": {
             "bluetooth_confirm": {
-                "description": "{name} kurulumunu yapmak istiyor musunuz?"
+                "description": "{name} 'i kurmak istiyor musunuz?"
             },
             "confirm_slow": {
                 "description": "Son dakikada bu cihazdan bir yay\u0131n olmad\u0131\u011f\u0131 i\u00e7in bu cihaz\u0131n \u015fifreleme kullan\u0131p kullanmad\u0131\u011f\u0131ndan emin de\u011filiz. Bunun nedeni, cihaz\u0131n yava\u015f bir yay\u0131n aral\u0131\u011f\u0131 kullanmas\u0131 olabilir. Yine de bu cihaz\u0131 eklemeyi onaylay\u0131n, ard\u0131ndan bir sonraki yay\u0131n al\u0131nd\u0131\u011f\u0131nda gerekirse bindkey'i girmeniz istenecektir."
@@ -35,7 +35,7 @@
                 "data": {
                     "address": "Cihaz"
                 },
-                "description": "Kurulum i\u00e7in bir cihaz se\u00e7in"
+                "description": "Kurmak i\u00e7in bir cihaz se\u00e7in"
             }
         }
     }

@@ -17,5 +17,14 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "reverse": "Logika sp\u00e4tn\u00e9ho sp\u00edna\u010da (pou\u017eite NC)"
+                }
+            }
+        }
     }
 }

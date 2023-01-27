@@ -7,12 +7,12 @@
         },
         "error": {
             "cannot_connect": "Feeler beim verbannen",
-            "invalid_pin_code": "PIN Code ass ong\u00eblteg"
+            "invalid_pin_code": "De PIN-Code war ong\u00eblteg"
         },
         "step": {
             "pairing": {
                 "data": {
-                    "pin": "PIN Code"
+                    "pin": "PIN-Code"
                 },
                 "description": "PIN uginn deem um Fernseh ugewise g\u00ebtt",
                 "title": "Kopplung"

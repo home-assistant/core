@@ -20,7 +20,12 @@
                 },
                 "data_description": {
                     "attribute": "Z\u00edskajte hodnotu atrib\u00fatu na vybranom tagu",
-                    "unit_of_measurement": "Vyberte si meranie teploty alebo si vytvorte vlastn\u00e9"
+                    "device_class": "Typ/trieda sn\u00edma\u010da na nastavenie ikony na frontende",
+                    "index": "Definuje, ktor\u00e9 z prvkov vr\u00e1ten\u00fdch selektorom CSS sa maj\u00fa pou\u017ei\u0165",
+                    "select": "Definuje, ktor\u00e1 zna\u010dka sa m\u00e1 h\u013eada\u0165. Podrobnosti n\u00e1jdete v selektoroch CSS Beautifulsoup",
+                    "state_class": "State_class sn\u00edma\u010da",
+                    "unit_of_measurement": "Vyberte si meranie teploty alebo si vytvorte vlastn\u00e9",
+                    "value_template": "Definuje \u0161abl\u00f3nu na z\u00edskanie stavu senzora"
                 }
             },
             "user": {
@@ -35,6 +40,7 @@
                     "verify_ssl": "Overi\u0165 SSL certifik\u00e1t"
                 },
                 "data_description": {
+                    "authentication": "Typ overovania HTTP. Bu\u010f z\u00e1kladn\u00e9, alebo digest",
                     "headers": "Hlavi\u010dky, ktor\u00e9 sa maj\u00fa pou\u017ei\u0165 pre webov\u00fa po\u017eiadavku",
                     "resource": "Adresa URL webovej lokality, ktor\u00e1 obsahuje hodnotu",
                     "timeout": "\u010casov\u00fd limit pre pripojenie k webovej str\u00e1nke",
@@ -45,6 +51,7 @@
     },
     "issues": {
         "moved_yaml": {
+            "description": "Konfigur\u00e1cia Scrape pomocou YAML bola presunut\u00e1 do integra\u010dn\u00e9ho k\u013e\u00fa\u010da. \n\n Va\u0161a existuj\u00faca konfigur\u00e1cia YAML bude fungova\u0165 pre \u010fal\u0161ie 2 verzie. \n\n Migrujte svoju konfigur\u00e1ciu YAML na integra\u010dn\u00fd k\u013e\u00fa\u010d pod\u013ea dokument\u00e1cie.",
             "title": "Konfigur\u00e1cia Scrape YAML bola presunut\u00e1"
         }
     },
@@ -63,7 +70,12 @@
                 },
                 "data_description": {
                     "attribute": "Z\u00edskajte hodnotu atrib\u00fatu na vybranom tagu",
-                    "unit_of_measurement": "Vyberte si meranie teploty alebo si vytvorte vlastn\u00e9"
+                    "device_class": "Typ/trieda sn\u00edma\u010da na nastavenie ikony na frontende",
+                    "index": "Definuje, ktor\u00e9 z prvkov vr\u00e1ten\u00fdch selektorom CSS sa maj\u00fa pou\u017ei\u0165",
+                    "select": "Definuje, ktor\u00e1 zna\u010dka sa m\u00e1 h\u013eada\u0165. Podrobnosti n\u00e1jdete v selektoroch CSS Beautifulsoup",
+                    "state_class": "State_class sn\u00edma\u010da",
+                    "unit_of_measurement": "Vyberte si meranie teploty alebo si vytvorte vlastn\u00e9",
+                    "value_template": "Definuje \u0161abl\u00f3nu na z\u00edskanie stavu senzora"
                 }
             },
             "edit_sensor": {
@@ -79,7 +91,12 @@
                 },
                 "data_description": {
                     "attribute": "Z\u00edskajte hodnotu atrib\u00fatu na vybranom tagu",
-                    "unit_of_measurement": "Vyberte si meranie teploty alebo si vytvorte vlastn\u00e9"
+                    "device_class": "Typ/trieda sn\u00edma\u010da na nastavenie ikony na frontende",
+                    "index": "Definuje, ktor\u00e9 z prvkov vr\u00e1ten\u00fdch selektorom CSS sa maj\u00fa pou\u017ei\u0165",
+                    "select": "Definuje, ktor\u00e1 zna\u010dka sa m\u00e1 h\u013eada\u0165. Podrobnosti n\u00e1jdete v selektoroch CSS Beautifulsoup",
+                    "state_class": "State_class sn\u00edma\u010da",
+                    "unit_of_measurement": "Vyberte si meranie teploty alebo si vytvorte vlastn\u00e9",
+                    "value_template": "Definuje \u0161abl\u00f3nu na z\u00edskanie stavu senzora"
                 }
             },
             "init": {
@@ -102,6 +119,7 @@
                     "verify_ssl": "Overi\u0165 SSL certifik\u00e1t"
                 },
                 "data_description": {
+                    "authentication": "Typ overovania HTTP. Bu\u010f z\u00e1kladn\u00e9, alebo digest",
                     "headers": "Hlavi\u010dky, ktor\u00e9 sa maj\u00fa pou\u017ei\u0165 pre webov\u00fa po\u017eiadavku",
                     "resource": "Adresa URL webovej lokality, ktor\u00e1 obsahuje hodnotu",
                     "timeout": "\u010casov\u00fd limit pre pripojenie k webovej str\u00e1nke",

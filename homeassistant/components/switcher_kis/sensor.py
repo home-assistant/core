@@ -11,7 +11,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ELECTRIC_CURRENT_AMPERE, POWER_WATT
+from homeassistant.const import UnitOfElectricCurrent, UnitOfPower
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -38,13 +38,13 @@ class AttributeDescription:
 POWER_SENSORS = {
     "power_consumption": AttributeDescription(
         name="Power Consumption",
-        unit=POWER_WATT,
+        unit=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "electric_current": AttributeDescription(
         name="Electric Current",
-        unit=ELECTRIC_CURRENT_AMPERE,
+        unit=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
     ),

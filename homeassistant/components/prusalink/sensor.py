@@ -15,7 +15,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
+from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -66,7 +66,7 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
         PrusaLinkSensorEntityDescription[PrinterInfo](
             key="printer.telemetry.temp-bed",
             name="Heatbed",
-            native_unit_of_measurement=TEMP_CELSIUS,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
             value_fn=lambda data: cast(float, data["telemetry"]["temp-bed"]),
@@ -75,7 +75,7 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
         PrusaLinkSensorEntityDescription[PrinterInfo](
             key="printer.telemetry.temp-nozzle",
             name="Nozzle Temperature",
-            native_unit_of_measurement=TEMP_CELSIUS,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
             value_fn=lambda data: cast(float, data["telemetry"]["temp-nozzle"]),

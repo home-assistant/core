@@ -5,6 +5,7 @@
             "addon_install_failed": "Silicon Labs Multiprotocol add-on'i paigaldamine nurjus.",
             "addon_set_config_failed": "Silicon Labs Multiprotocol konfiguratsiooni seadistamine eba\u00f5nnestus.",
             "addon_start_failed": "Silicon Labsi mitmeprotokolli lisandmooduli k\u00e4ivitamine nurjus.",
+            "disabled_due_to_bug": "Riistvaravalikud on vea parandamise ajal ajutiselt keelatud. [Lisateave] ({url})",
             "not_hassio": "Riistvaravalikuid saab konfigureerida ainult HassOS-i paigaldustes.",
             "zha_migration_failed": "ZHA sidumise siirdamine nurjus."
         },

@@ -3,7 +3,7 @@
     "flow_title": "{name}",
     "step": {
       "init": {
-        "title": "Setup MicroBot device",
+        "title": "Set up MicroBot device",
         "data": {
           "address": "Device address",
           "name": "Name"

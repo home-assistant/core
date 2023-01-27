@@ -11,7 +11,7 @@
         "flow_title": "{name} ({host})",
         "step": {
             "import_failed": {
-                "description": "Impossibile impostare il bridge (host: {host}) importato da configuration.yaml.",
+                "description": "Impossibile configurare il bridge (host: {host}) importato da configuration.yaml.",
                 "title": "Impossibile importare la configurazione del bridge Cas\u00e9ta."
             },
             "link": {

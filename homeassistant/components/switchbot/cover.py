@@ -98,7 +98,7 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_current_cover_position = self.data["data"]["position"]
-        self._attr_is_closed = self.data["data"]["position"] <= 20
-        self._attr_is_opening = self.data["data"]["inMotion"]
+        self._attr_current_cover_position = self.parsed_data["position"]
+        self._attr_is_closed = self.parsed_data["position"] <= 20
+        self._attr_is_opening = self.parsed_data["inMotion"]
         self.async_write_ha_state()

@@ -1,39 +1,34 @@
 """ISY utils."""
 from __future__ import annotations
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+import homeassistant.helpers.entity_registry as er
 
-from .const import (
-    DOMAIN,
-    ISY994_ISY,
-    ISY994_NODES,
-    ISY994_PROGRAMS,
-    ISY994_VARIABLES,
-    PLATFORMS,
-    PROGRAM_PLATFORMS,
-)
+from .const import _LOGGER, DOMAIN
 
 
-def unique_ids_for_config_entry_id(
-    hass: HomeAssistant, config_entry_id: str
-) -> set[str]:
-    """Find all the unique ids for a config entry id."""
-    hass_isy_data = hass.data[DOMAIN][config_entry_id]
-    uuid = hass_isy_data[ISY994_ISY].configuration["uuid"]
-    current_unique_ids: set[str] = {uuid}
+@callback
+def _async_cleanup_registry_entries(hass: HomeAssistant, entry_id: str) -> None:
+    """Remove extra entities that are no longer part of the integration."""
+    entity_registry = er.async_get(hass)
+    isy_data = hass.data[DOMAIN][entry_id]
 
-    for platform in PLATFORMS:
-        for node in hass_isy_data[ISY994_NODES][platform]:
-            if hasattr(node, "address"):
-                current_unique_ids.add(f"{uuid}_{node.address}")
+    existing_entries = er.async_entries_for_config_entry(entity_registry, entry_id)
+    entities = {
+        (entity.domain, entity.unique_id): entity.entity_id
+        for entity in existing_entries
+    }
 
-    for platform in PROGRAM_PLATFORMS:
-        for _, node, _ in hass_isy_data[ISY994_PROGRAMS][platform]:
-            if hasattr(node, "address"):
-                current_unique_ids.add(f"{uuid}_{node.address}")
+    extra_entities = set(entities.keys()).difference(isy_data.unique_ids)
+    if not extra_entities:
+        return
 
-    for node in hass_isy_data[ISY994_VARIABLES]:
-        if hasattr(node, "address"):
-            current_unique_ids.add(f"{uuid}_{node.address}")
+    for entity in extra_entities:
+        if entity_registry.async_is_registered(entities[entity]):
+            entity_registry.async_remove(entities[entity])
 
-    return current_unique_ids
+    _LOGGER.debug(
+        ("Cleaning up ISY entities: removed %s extra entities for config entry %s"),
+        len(extra_entities),
+        entry_id,
+    )

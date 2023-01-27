@@ -1,8 +1,9 @@
 """Tests for Google Sheets."""
 
-from collections.abc import Awaitable, Callable, Generator
+from collections.abc import Awaitable, Callable, Coroutine
 import http
 import time
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -58,7 +59,7 @@ def mock_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
 @pytest.fixture(name="setup_integration")
 async def mock_setup_integration(
     hass: HomeAssistant, config_entry: MockConfigEntry
-) -> Generator[ComponentSetup, None, None]:
+) -> Callable[[], Coroutine[Any, Any, None]]:
     """Fixture for setting up the component."""
     config_entry.add_to_hass(hass)
 
@@ -74,7 +75,7 @@ async def mock_setup_integration(
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
 
-    yield func
+    return func
 
 
 async def test_setup_success(
@@ -92,7 +93,7 @@ async def test_setup_success(
 
     assert not hass.data.get(DOMAIN)
     assert entries[0].state is ConfigEntryState.NOT_LOADED
-    assert not len(hass.services.async_services().get(DOMAIN, {}))
+    assert not hass.services.async_services().get(DOMAIN, {})
 
 
 @pytest.mark.parametrize(
@@ -125,7 +126,6 @@ async def test_missing_required_scopes_requires_reauth(
 async def test_expired_token_refresh_success(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
-    scopes: list[str],
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test expired token is refreshed."""
@@ -168,7 +168,6 @@ async def test_expired_token_refresh_success(
 async def test_expired_token_refresh_failure(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
-    scopes: list[str],
     aioclient_mock: AiohttpClientMocker,
     status: http.HTTPStatus,
     expected_state: ConfigEntryState,

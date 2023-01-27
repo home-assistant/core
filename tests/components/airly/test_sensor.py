@@ -1,5 +1,8 @@
 """Test sensor of Airly integration."""
 from datetime import timedelta
+from http import HTTPStatus
+
+from airly.exceptions import AirlyError
 
 from homeassistant.components.airly.sensor import ATTRIBUTION
 from homeassistant.components.sensor import (
@@ -15,9 +18,9 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     PERCENTAGE,
-    PRESSURE_HPA,
     STATE_UNAVAILABLE,
-    TEMP_CELSIUS,
+    UnitOfPressure,
+    UnitOfTemperature,
 )
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -164,7 +167,7 @@ async def test_sensor(hass, aioclient_mock):
     assert state
     assert state.state == "1020"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PRESSURE_HPA
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPressure.HPA
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PRESSURE
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
@@ -176,7 +179,7 @@ async def test_sensor(hass, aioclient_mock):
     assert state
     assert state.state == "14.4"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TEMPERATURE
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
@@ -195,7 +198,9 @@ async def test_availability(hass, aioclient_mock):
     assert state.state == "68.3"
 
     aioclient_mock.clear_requests()
-    aioclient_mock.get(API_POINT_URL, exc=ConnectionError())
+    aioclient_mock.get(
+        API_POINT_URL, exc=AirlyError(HTTPStatus.NOT_FOUND, {"message": "Not found"})
+    )
     future = utcnow() + timedelta(minutes=60)
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()

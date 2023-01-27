@@ -47,10 +47,10 @@ async def async_setup_entry(
     @callback
     def async_add_entity(event_type: EventType, resource: HueScene) -> None:
         """Add entity from Hue resource."""
-        async_add_entities([HueSceneEntity(bridge, api.scenes, resource)])
+        async_add_entities([HueSceneEntity(bridge, api.scenes.scene, resource)])
 
     # add all current items in controller
-    for item in api.scenes:
+    for item in api.scenes.scene:
         async_add_entity(EventType.RESOURCE_ADDED, item)
 
     # register listener for new items only

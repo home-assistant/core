@@ -108,9 +108,12 @@ async def async_start(  # noqa: C901
         if not (match := TOPIC_MATCHER.match(topic_trimmed)):
             if topic_trimmed.endswith("config"):
                 _LOGGER.warning(
-                    "Received message on illegal discovery topic '%s'. The topic contains "
-                    "not allowed characters. For more information see "
-                    "https://www.home-assistant.io/docs/mqtt/discovery/#discovery-topic",
+                    (
+                        "Received message on illegal discovery topic '%s'. The topic"
+                        " contains "
+                        "not allowed characters. For more information see "
+                        "https://www.home-assistant.io/docs/mqtt/discovery/#discovery-topic"
+                    ),
                     topic,
                 )
             return
@@ -195,7 +198,7 @@ async def async_start(  # noqa: C901
         if discovery_hash in mqtt_data.discovery_pending_discovered:
             pending = mqtt_data.discovery_pending_discovered[discovery_hash]["pending"]
             pending.appendleft(discovery_payload)
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Component has already been discovered: %s %s, queuing update",
                 component,
                 discovery_id,

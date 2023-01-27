@@ -57,8 +57,10 @@ def setup_platform(
     response = api.api_get("profile")
     if not response.ok:
         _LOGGER.error(
-            "Can't setup X API connection. Check your account or "
-            "api key on xapi.us. Code: %s Description: %s ",
+            (
+                "Can't setup X API connection. Check your account or "
+                "api key on xapi.us. Code: %s Description: %s "
+            ),
             response.status_code,
             response.reason,
         )

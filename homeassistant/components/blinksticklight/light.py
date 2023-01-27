@@ -71,16 +71,14 @@ class BlinkStickLight(LightEntity):
         """Turn the device on."""
         if ATTR_HS_COLOR in kwargs:
             self._attr_hs_color = kwargs[ATTR_HS_COLOR]
-        if ATTR_BRIGHTNESS in kwargs:
-            self._attr_brightness = kwargs[ATTR_BRIGHTNESS]
-        else:
-            self._attr_brightness = 255
-        assert self.brightness is not None
-        self._attr_is_on = self.brightness > 0
+
+        brightness: int = kwargs.get(ATTR_BRIGHTNESS, 255)
+        self._attr_brightness = brightness
+        self._attr_is_on = bool(brightness)
 
         assert self.hs_color
         rgb_color = color_util.color_hsv_to_RGB(
-            self.hs_color[0], self.hs_color[1], self.brightness / 255 * 100
+            self.hs_color[0], self.hs_color[1], brightness / 255 * 100
         )
         self._stick.set_color(red=rgb_color[0], green=rgb_color[1], blue=rgb_color[2])
 

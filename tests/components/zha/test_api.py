@@ -60,7 +60,7 @@ IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
 
 @pytest.fixture(autouse=True)
 def required_platform_only():
-    """Only setup the required and required base platforms to speed up tests."""
+    """Only set up the required and required base platforms to speed up tests."""
     with patch(
         "homeassistant.components.zha.PLATFORMS",
         (
@@ -75,7 +75,7 @@ def required_platform_only():
 
 @pytest.fixture
 async def device_switch(hass, zigpy_device_mock, zha_device_joined):
-    """Test zha switch platform."""
+    """Test ZHA switch platform."""
 
     zigpy_device = zigpy_device_mock(
         {
@@ -114,7 +114,7 @@ async def device_ias_ace(hass, zigpy_device_mock, zha_device_joined):
 
 @pytest.fixture
 async def device_groupable(hass, zigpy_device_mock, zha_device_joined):
-    """Test zha light platform."""
+    """Test ZHA light platform."""
 
     zigpy_device = zigpy_device_mock(
         {
@@ -138,7 +138,7 @@ async def device_groupable(hass, zigpy_device_mock, zha_device_joined):
 
 @pytest.fixture
 async def zha_client(hass, hass_ws_client, device_switch, device_groupable):
-    """Test zha switch platform."""
+    """Get ZHA WebSocket client."""
 
     # load the ZHA API
     async_load_api(hass)
@@ -216,7 +216,7 @@ async def test_device_cluster_commands(zha_client):
 
 
 async def test_list_devices(zha_client):
-    """Test getting zha devices."""
+    """Test getting ZHA devices."""
     await zha_client.send_json({ID: 5, TYPE: "zha/devices"})
 
     msg = await zha_client.receive_json()
@@ -249,7 +249,7 @@ async def test_list_devices(zha_client):
 
 
 async def test_get_zha_config(zha_client):
-    """Test getting zha custom configuration."""
+    """Test getting ZHA custom configuration."""
     await zha_client.send_json({ID: 5, TYPE: "zha/configuration"})
 
     msg = await zha_client.receive_json()
@@ -259,7 +259,7 @@ async def test_get_zha_config(zha_client):
 
 
 async def test_get_zha_config_with_alarm(hass, zha_client, device_ias_ace):
-    """Test getting zha custom configuration."""
+    """Test getting ZHA custom configuration."""
     await zha_client.send_json({ID: 5, TYPE: "zha/configuration"})
 
     msg = await zha_client.receive_json()
@@ -279,7 +279,7 @@ async def test_get_zha_config_with_alarm(hass, zha_client, device_ias_ace):
 
 
 async def test_update_zha_config(zha_client, zigpy_app_controller):
-    """Test updating zha custom configuration."""
+    """Test updating ZHA custom configuration."""
 
     configuration = deepcopy(CONFIG_WITH_ALARM_OPTIONS)
     configuration["data"]["zha_options"]["default_light_transition"] = 10
@@ -313,7 +313,7 @@ async def test_device_not_found(zha_client):
 
 
 async def test_list_groups(zha_client):
-    """Test getting zha zigbee groups."""
+    """Test getting ZHA zigbee groups."""
     await zha_client.send_json({ID: 7, TYPE: "zha/groups"})
 
     msg = await zha_client.receive_json()
@@ -330,7 +330,7 @@ async def test_list_groups(zha_client):
 
 
 async def test_get_group(zha_client):
-    """Test getting a specific zha zigbee group."""
+    """Test getting a specific ZHA zigbee group."""
     await zha_client.send_json({ID: 8, TYPE: "zha/group", GROUP_ID: FIXTURE_GRP_ID})
 
     msg = await zha_client.receive_json()
@@ -357,7 +357,7 @@ async def test_get_group_not_found(zha_client):
 
 
 async def test_list_groupable_devices(zha_client, device_groupable):
-    """Test getting zha devices that have a group cluster."""
+    """Test getting ZHA devices that have a group cluster."""
 
     await zha_client.send_json({ID: 10, TYPE: "zha/devices/groupable"})
 
@@ -400,7 +400,7 @@ async def test_list_groupable_devices(zha_client, device_groupable):
 
 
 async def test_add_group(zha_client):
-    """Test adding and getting a new zha zigbee group."""
+    """Test adding and getting a new ZHA zigbee group."""
     await zha_client.send_json({ID: 12, TYPE: "zha/group/add", GROUP_NAME: "new_group"})
 
     msg = await zha_client.receive_json()
@@ -426,7 +426,7 @@ async def test_add_group(zha_client):
 
 
 async def test_remove_group(zha_client):
-    """Test removing a new zha zigbee group."""
+    """Test removing a new ZHA zigbee group."""
 
     await zha_client.send_json({ID: 14, TYPE: "zha/groups"})
 

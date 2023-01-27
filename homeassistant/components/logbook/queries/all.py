@@ -1,15 +1,13 @@
 """All queries for logbook."""
 from __future__ import annotations
 
-from datetime import datetime as dt
-
 from sqlalchemy import lambda_stmt
 from sqlalchemy.orm import Query
 from sqlalchemy.sql.elements import ClauseList
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 
 from homeassistant.components.recorder.db_schema import (
-    LAST_UPDATED_INDEX,
+    LAST_UPDATED_INDEX_TS,
     Events,
     States,
 )
@@ -23,8 +21,8 @@ from .common import (
 
 
 def all_stmt(
-    start_day: dt,
-    end_day: dt,
+    start_day: float,
+    end_day: float,
     event_types: tuple[str, ...],
     states_entity_filter: ClauseList | None = None,
     events_entity_filter: ClauseList | None = None,
@@ -53,22 +51,24 @@ def all_stmt(
         else:
             stmt += lambda s: s.union_all(_states_query_for_all(start_day, end_day))
 
-    stmt += lambda s: s.order_by(Events.time_fired)
+    stmt += lambda s: s.order_by(Events.time_fired_ts)
     return stmt
 
 
-def _states_query_for_all(start_day: dt, end_day: dt) -> Query:
+def _states_query_for_all(start_day: float, end_day: float) -> Query:
     return apply_states_filters(_apply_all_hints(select_states()), start_day, end_day)
 
 
 def _apply_all_hints(query: Query) -> Query:
     """Force mysql to use the right index on large selects."""
     return query.with_hint(
-        States, f"FORCE INDEX ({LAST_UPDATED_INDEX})", dialect_name="mysql"
+        States, f"FORCE INDEX ({LAST_UPDATED_INDEX_TS})", dialect_name="mysql"
     )
 
 
-def _states_query_for_context_id(start_day: dt, end_day: dt, context_id: str) -> Query:
+def _states_query_for_context_id(
+    start_day: float, end_day: float, context_id: str
+) -> Query:
     return apply_states_filters(select_states(), start_day, end_day).where(
         States.context_id == context_id
     )

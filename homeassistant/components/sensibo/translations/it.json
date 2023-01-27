@@ -29,5 +29,44 @@
                 }
             }
         }
+    },
+    "entity": {
+        "select": {
+            "horizontalswing": {
+                "state": {
+                    "fixedcenter": "Fisso al centro",
+                    "fixedcenterleft": "Fisso al centro sinistra",
+                    "fixedcenterright": "Fisso al centro destra",
+                    "fixedleft": "Fisso a sinistra",
+                    "fixedleftright": "Fisso a sinistra destra",
+                    "fixedright": "Fisso a destra",
+                    "rangecenter": "Intervallo centrale",
+                    "rangefull": "Intervallo completo",
+                    "stopped": "Fermata"
+                }
+            },
+            "light": {
+                "state": {
+                    "dim": "Attenuata",
+                    "off": "Spenta",
+                    "on": "Accesa"
+                }
+            }
+        },
+        "sensor": {
+            "sensitivity": {
+                "state": {
+                    "n": "Normale",
+                    "s": "Sensibile"
+                }
+            },
+            "smart_type": {
+                "state": {
+                    "feelslike": "Percepita",
+                    "humidity": "Umidit\u00e0",
+                    "temperature": "Temperatura"
+                }
+            }
+        }
     }
 }

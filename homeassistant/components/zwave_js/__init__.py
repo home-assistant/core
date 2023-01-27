@@ -157,9 +157,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(f"Invalid server version: {err}") from err
     except (asyncio.TimeoutError, BaseZwaveJSServerError) as err:
         raise ConfigEntryNotReady(f"Failed to connect: {err}") from err
-    else:
-        async_delete_issue(hass, DOMAIN, "invalid_server_version")
-        LOGGER.info("Connected to Zwave JS Server")
+
+    async_delete_issue(hass, DOMAIN, "invalid_server_version")
+    LOGGER.info("Connected to Zwave JS Server")
 
     dev_reg = device_registry.async_get(hass)
     ent_reg = entity_registry.async_get(hass)
@@ -377,7 +377,11 @@ class ControllerEvents:
 
             async_dispatcher_send(
                 self.hass,
-                f"{DOMAIN}_{get_valueless_base_unique_id(self.driver_events.driver, node)}_remove_entity",
+                (
+                    f"{DOMAIN}_"
+                    f"{get_valueless_base_unique_id(self.driver_events.driver, node)}_"
+                    "remove_entity"
+                ),
             )
         else:
             self.remove_device(device)

@@ -10,6 +10,7 @@ from homeassistant.const import (
     CONF_BINARY_SENSORS,
     CONF_DEVICE_CLASS,
     CONF_NAME,
+    CONF_UNIQUE_ID,
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -59,8 +60,8 @@ class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
     def __init__(self, hub: ModbusHub, entry: dict[str, Any], slave_count: int) -> None:
         """Initialize the Modbus binary sensor."""
         self._count = slave_count + 1
-        self._coordinator: DataUpdateCoordinator[Any] | None = None
-        self._result: list = []
+        self._coordinator: DataUpdateCoordinator[list[int] | None] | None = None
+        self._result: list[int] = []
         super().__init__(hub, entry)
 
     async def async_setup_slaves(
@@ -121,16 +122,26 @@ class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
             self._coordinator.async_set_updated_data(self._result)
 
 
-class SlaveSensor(CoordinatorEntity, RestoreEntity, BinarySensorEntity):
+class SlaveSensor(
+    CoordinatorEntity[DataUpdateCoordinator[list[int] | None]],
+    RestoreEntity,
+    BinarySensorEntity,
+):
     """Modbus slave binary sensor."""
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator[Any], idx: int, entry: dict[str, Any]
+        self,
+        coordinator: DataUpdateCoordinator[list[int] | None],
+        idx: int,
+        entry: dict[str, Any],
     ) -> None:
         """Initialize the Modbus binary sensor."""
         idx += 1
         self._attr_name = f"{entry[CONF_NAME]} {idx}"
         self._attr_device_class = entry.get(CONF_DEVICE_CLASS)
+        self._attr_unique_id = entry.get(CONF_UNIQUE_ID)
+        if self._attr_unique_id:
+            self._attr_unique_id = f"{self._attr_unique_id}_{idx}"
         self._attr_available = False
         self._result_inx = idx
         super().__init__(coordinator)
@@ -146,6 +157,5 @@ class SlaveSensor(CoordinatorEntity, RestoreEntity, BinarySensorEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         result = self.coordinator.data
-        if result:
-            self._attr_is_on = bool(result[self._result_inx] & 1)
+        self._attr_is_on = bool(result[self._result_inx] & 1) if result else None
         super()._handle_coordinator_update()

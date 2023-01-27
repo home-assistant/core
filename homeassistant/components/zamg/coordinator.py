@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from zamg import ZamgData as ZamgDevice
+from zamg.exceptions import ZamgError, ZamgNoDataError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -16,6 +17,7 @@ class ZamgDataUpdateCoordinator(DataUpdateCoordinator[ZamgDevice]):
 
     config_entry: ConfigEntry
     data: dict = {}
+    api_fields: list[str] | None = None
 
     def __init__(
         self,
@@ -36,9 +38,13 @@ class ZamgDataUpdateCoordinator(DataUpdateCoordinator[ZamgDevice]):
     async def _async_update_data(self) -> ZamgDevice:
         """Fetch data from ZAMG api."""
         try:
-            await self.zamg.zamg_stations()
+            if self.api_fields:
+                self.zamg.set_parameters(self.api_fields)
+            self.zamg.request_timeout = 60.0
             device = await self.zamg.update()
-        except ValueError as error:
+        except ZamgNoDataError as error:
+            raise UpdateFailed("No response from API") from error
+        except (ZamgError) as error:
             raise UpdateFailed(f"Invalid response from API: {error}") from error
         self.data = device
         self.data["last_update"] = self.zamg.last_update

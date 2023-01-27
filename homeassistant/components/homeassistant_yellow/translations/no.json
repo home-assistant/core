@@ -5,6 +5,7 @@
             "addon_install_failed": "Kunne ikke installere Silicon Labs Multiprotocol-tillegget.",
             "addon_set_config_failed": "Kunne ikke angi Silicon Labs Multiprotocol-konfigurasjon.",
             "addon_start_failed": "Kunne ikke starte Silicon Labs Multiprotocol-tillegget.",
+            "disabled_due_to_bug": "Maskinvarealternativene er midlertidig deaktivert mens vi fikser en feil. [Finn ut mer]( {url} )",
             "not_hassio": "Maskinvarealternativene kan bare konfigureres p\u00e5 HassOS-installasjoner.",
             "zha_migration_failed": "ZHA-migreringen lyktes ikke."
         },

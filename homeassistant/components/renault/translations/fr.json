@@ -31,5 +31,14 @@
                 "title": "D\u00e9finir les informations d'identification de Renault"
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "charge_state": {
+                "state": {
+                    "waiting_for_a_planned_charge": "En attente d'une charge planifi\u00e9e"
+                }
+            }
+        }
     }
 }

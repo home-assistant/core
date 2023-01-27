@@ -15,6 +15,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -23,8 +24,8 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_USERNAME,
-    DATA_KILOBITS,
-    TIME_MINUTES,
+    UnitOfInformation,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -59,19 +60,22 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="data_used",
         name="Data used",
-        native_unit_of_measurement=DATA_KILOBITS,
+        native_unit_of_measurement=UnitOfInformation.KILOBITS,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:download",
     ),
     SensorEntityDescription(
         key="data_limit",
         name="Data limit",
-        native_unit_of_measurement=DATA_KILOBITS,
+        native_unit_of_measurement=UnitOfInformation.KILOBITS,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:download",
     ),
     SensorEntityDescription(
         key="data_remaining",
         name="Data remaining",
-        native_unit_of_measurement=DATA_KILOBITS,
+        native_unit_of_measurement=UnitOfInformation.KILOBITS,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:download",
     ),
     SensorEntityDescription(
@@ -131,37 +135,37 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="talk_used",
         name="Talk used",
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:cellphone",
     ),
     SensorEntityDescription(
         key="talk_limit",
         name="Talk limit",
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:cellphone",
     ),
     SensorEntityDescription(
         key="talk_remaining",
         name="Talk remaining",
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:cellphone",
     ),
     SensorEntityDescription(
         key="other_talk_used",
         name="Other Talk used",
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:cellphone",
     ),
     SensorEntityDescription(
         key="other_talk_limit",
         name="Other Talk limit",
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:cellphone",
     ),
     SensorEntityDescription(
         key="other_talk_remaining",
         name="Other Talk remaining",
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:cellphone",
     ),
 )

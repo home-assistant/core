@@ -12,7 +12,7 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_NAME,
     CONF_SHOW_ON_MAP,
-    TIME_MINUTES,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -190,7 +190,7 @@ class EnturPublicTransportSensor(SensorEntity):
     @property
     def native_unit_of_measurement(self) -> str:
         """Return the unit this state is expressed in."""
-        return TIME_MINUTES
+        return UnitOfTime.MINUTES
 
     @property
     def icon(self) -> str:

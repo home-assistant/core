@@ -146,9 +146,13 @@ class CrownstoneEntryManager:
             # Show notification to ensure the user knows the cloud is now used
             persistent_notification.async_create(
                 self.hass,
-                f"Setup of Crownstone USB dongle was unsuccessful on port {serial_port}.\n \
-                Crownstone Cloud will be used to switch Crownstones.\n \
-                Please check if your port is correct and set up the USB again from integration options.",
+                (
+                    "Setup of Crownstone USB dongle was unsuccessful on port"
+                    f" {serial_port}.\n Crownstone Cloud will be used"
+                    " to switch Crownstones.\n Please check if your"
+                    " port is correct and set up the USB again from integration"
+                    " options."
+                ),
                 "Crownstone",
                 "crownstone_usb_dongle_setup",
             )

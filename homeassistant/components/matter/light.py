@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from functools import partial
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from chip.clusters import Objects as clusters
 from matter_server.common.models import device_types
@@ -19,12 +19,9 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
 from .entity import MatterEntity, MatterEntityDescriptionBaseClass
+from .helpers import get_matter
 from .util import renormalize
-
-if TYPE_CHECKING:
-    from .adapter import MatterAdapter
 
 
 async def async_setup_entry(
@@ -33,7 +30,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Matter Light from Config Entry."""
-    matter: MatterAdapter = hass.data[DOMAIN][config_entry.entry_id]
+    matter = get_matter(hass)
     matter.register_platform_handler(Platform.LIGHT, async_add_entities)
 
 
@@ -60,6 +57,9 @@ class MatterLight(MatterEntity, LightEntity):
             return
 
         level_control = self._device_type_instance.get_cluster(clusters.LevelControl)
+        # We check above that the device supports brightness, ie level control.
+        assert level_control is not None
+
         level = round(
             renormalize(
                 kwargs[ATTR_BRIGHTNESS],
@@ -89,20 +89,20 @@ class MatterLight(MatterEntity, LightEntity):
     @callback
     def _update_from_device(self) -> None:
         """Update from device."""
-        if self._attr_supported_color_modes is None:
-            if self._supports_brightness():
-                self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+        supports_brigthness = self._supports_brightness()
+
+        if self._attr_supported_color_modes is None and supports_brigthness:
+            self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
         if attr := self.get_matter_attribute(clusters.OnOff.Attributes.OnOff):
             self._attr_is_on = attr.value
 
-        if (
-            clusters.LevelControl.Attributes.CurrentLevel
-            in self.entity_description.subscribe_attributes
-        ):
+        if supports_brigthness:
             level_control = self._device_type_instance.get_cluster(
                 clusters.LevelControl
             )
+            # We check above that the device supports brightness, ie level control.
+            assert level_control is not None
 
             # Convert brightness to Home Assistant = 0..255
             self._attr_brightness = round(

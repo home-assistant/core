@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components import camera
 from homeassistant.components.axis.const import (
     CONF_STREAM_PROFILE,
@@ -11,7 +13,7 @@ from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.const import STATE_IDLE
 from homeassistant.setup import async_setup_component
 
-from .test_device import ENTRY_OPTIONS, NAME, setup_axis_integration
+from .const import NAME
 
 
 async def test_platform_manually_configured(hass):
@@ -26,10 +28,8 @@ async def test_platform_manually_configured(hass):
     assert AXIS_DOMAIN not in hass.data
 
 
-async def test_camera(hass):
+async def test_camera(hass, setup_config_entry):
     """Test that Axis camera platform is loaded properly."""
-    await setup_axis_integration(hass)
-
     assert len(hass.states.async_entity_ids(CAMERA_DOMAIN)) == 1
 
     entity_id = f"{CAMERA_DOMAIN}.{NAME}"
@@ -47,11 +47,9 @@ async def test_camera(hass):
     )
 
 
-async def test_camera_with_stream_profile(hass):
+@pytest.mark.parametrize("options", [{CONF_STREAM_PROFILE: "profile_1"}])
+async def test_camera_with_stream_profile(hass, setup_config_entry):
     """Test that Axis camera entity is using the correct path with stream profike."""
-    with patch.dict(ENTRY_OPTIONS, {CONF_STREAM_PROFILE: "profile_1"}):
-        await setup_axis_integration(hass)
-
     assert len(hass.states.async_entity_ids(CAMERA_DOMAIN)) == 1
 
     entity_id = f"{CAMERA_DOMAIN}.{NAME}"
@@ -72,9 +70,9 @@ async def test_camera_with_stream_profile(hass):
     )
 
 
-async def test_camera_disabled(hass):
+async def test_camera_disabled(hass, prepare_config_entry):
     """Test that Axis camera platform is loaded properly but does not create camera entity."""
-    with patch("axis.vapix.Params.image_format", new=None):
-        await setup_axis_integration(hass)
+    with patch("axis.vapix.vapix.Params.image_format", new=None):
+        await prepare_config_entry()
 
     assert len(hass.states.async_entity_ids(CAMERA_DOMAIN)) == 0

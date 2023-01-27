@@ -1,4 +1,14 @@
 {
+    "entity": {
+        "sensor": {
+            "thermostat_mode": {
+                "state": {
+                    "away": "Absent",
+                    "comfort": "Confort"
+                }
+            }
+        }
+    },
     "issues": {
         "bad_psu": {
             "fix_flow": {

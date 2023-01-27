@@ -10,15 +10,24 @@
         "flow_title": "{name}",
         "step": {
             "link": {
-                "description": "Vil du konfigurere {name} ({host})?",
-                "title": "Sett opp Logitech Harmony Hub"
+                "description": "Vil du sette opp {name} ( {host} )?",
+                "title": "Konfigurer Logitech Harmony Hub"
             },
             "user": {
                 "data": {
                     "host": "Vert",
                     "name": "Navn p\u00e5 hub"
                 },
-                "title": "Sett opp Logitech Harmony Hub"
+                "title": "Konfigurer Logitech Harmony Hub"
+            }
+        }
+    },
+    "entity": {
+        "select": {
+            "activities": {
+                "state": {
+                    "power_off": "Sl\u00e5 av"
+                }
             }
         }
     },

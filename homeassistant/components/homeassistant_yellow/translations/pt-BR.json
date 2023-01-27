@@ -5,6 +5,7 @@
             "addon_install_failed": "Falha ao instalar o add-on Silicon Labs Multiprotocol.",
             "addon_set_config_failed": "Falha ao definir a configura\u00e7\u00e3o multiprotocolo da Silicon Labs.",
             "addon_start_failed": "Falha ao iniciar o add-on Silicon Labs Multiprotocol.",
+            "disabled_due_to_bug": "As op\u00e7\u00f5es de hardware est\u00e3o temporariamente desativadas enquanto corrigimos um bug. [Saiba mais]({url})",
             "not_hassio": "As op\u00e7\u00f5es de hardware s\u00f3 podem ser configuradas em instala\u00e7\u00f5es HassOS.",
             "zha_migration_failed": "A migra\u00e7\u00e3o ZHA n\u00e3o foi bem-sucedida."
         },

@@ -14,7 +14,7 @@ from homeassistant.components.number import (
     NumberEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -106,7 +106,7 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
         device_class=NumberDeviceClass.TEMPERATURE,
         native_min_value=6,
         native_max_value=29,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         entity_category=EntityCategory.CONFIG,
     ),
     OverkizNumberDescription(
@@ -117,7 +117,7 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
         device_class=NumberDeviceClass.TEMPERATURE,
         native_min_value=7,
         native_max_value=30,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         entity_category=EntityCategory.CONFIG,
     ),
     OverkizNumberDescription(
@@ -128,7 +128,7 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
         device_class=NumberDeviceClass.TEMPERATURE,
         native_min_value=5,
         native_max_value=15,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         entity_category=EntityCategory.CONFIG,
     ),
     # DimmerExteriorHeating (Somfy Terrace Heater) (0 - 100)

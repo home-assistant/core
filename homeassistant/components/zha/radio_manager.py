@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+from contextlib import suppress
 import copy
 import logging
 import os
@@ -210,7 +211,7 @@ class ZhaRadioManager:
         return backup
 
     async def async_form_network(self) -> None:
-        """Form a brand new network."""
+        """Form a brand-new network."""
         async with self._connect_zigpy_app() as app:
             await app.form_network()
 
@@ -273,7 +274,7 @@ class ZhaMultiPANMigrationHelper:
     """Helper class for automatic migration when upgrading the firmware of a radio.
 
     This class is currently only intended to be used when changing the firmware on the
-    radio used in the Home Assistant Sky Connect USB stick and the Home Asssistant Yellow
+    radio used in the Home Assistant SkyConnect USB stick and the Home Assistant Yellow
     from Zigbee only firmware to firmware supporting both Zigbee and Thread.
     """
 
@@ -320,11 +321,9 @@ class ZhaMultiPANMigrationHelper:
             # ZHA is using another radio, do nothing
             return False
 
-        try:
+        # OperationNotAllowed: ZHA is not running
+        with suppress(config_entries.OperationNotAllowed):
             await self._hass.config_entries.async_unload(self._config_entry.entry_id)
-        except config_entries.OperationNotAllowed:
-            # ZHA is not running
-            pass
 
         # Temporarily connect to the old radio to read its settings
         config_entry_data = self._config_entry.data
@@ -381,8 +380,6 @@ class ZhaMultiPANMigrationHelper:
         _LOGGER.debug("Restored backup after %s retries", retry)
 
         # Launch ZHA again
-        try:
+        # OperationNotAllowed: ZHA is not unloaded
+        with suppress(config_entries.OperationNotAllowed):
             await self._hass.config_entries.async_setup(self._config_entry.entry_id)
-        except config_entries.OperationNotAllowed:
-            # ZHA is not unloaded
-            pass

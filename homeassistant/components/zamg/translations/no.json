@@ -2,10 +2,12 @@
     "config": {
         "abort": {
             "already_configured": "Enheten er allerede konfigurert",
-            "cannot_connect": "Tilkobling mislyktes"
+            "cannot_connect": "Tilkobling mislyktes",
+            "station_not_found": "Finner ikke stasjons-ID p\u00e5 zamg"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes"
+            "cannot_connect": "Tilkobling mislyktes",
+            "station_not_found": "Finner ikke stasjons-ID p\u00e5 zamg"
         },
         "flow_title": "{name}",
         "step": {

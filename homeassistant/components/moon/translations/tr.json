@@ -5,7 +5,23 @@
         },
         "step": {
             "user": {
-                "description": "Kuruluma ba\u015flamak ister misiniz?"
+                "description": "Kurulumu ba\u015flatmak istiyor musunuz?"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "phase": {
+                "state": {
+                    "first_quarter": "\u0130lk D\u00f6rd\u00fcn",
+                    "full_moon": "Dolunay",
+                    "last_quarter": "Son D\u00f6rd\u00fcn",
+                    "new_moon": "Yeni Ay",
+                    "waning_crescent": "Azalan Hilal",
+                    "waning_gibbous": "\u015ei\u015fkin Ay",
+                    "waxing_crescent": "Hilal",
+                    "waxing_gibbous": "\u015ei\u015fkin Ay"
+                }
             }
         }
     },

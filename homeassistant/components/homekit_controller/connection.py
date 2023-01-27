@@ -194,8 +194,10 @@ class HKDevice:
             await self.pairing.async_populate_accessories_state(force_update=True)
         except STARTUP_EXCEPTIONS as ex:
             _LOGGER.debug(
-                "Failed to populate BLE accessory state for %s, accessory may be sleeping"
-                " and will be retried the next time it advertises: %s",
+                (
+                    "Failed to populate BLE accessory state for %s, accessory may be"
+                    " sleeping and will be retried the next time it advertises: %s"
+                ),
                 self.config_entry.title,
                 ex,
             )
@@ -360,7 +362,10 @@ class HKDevice:
 
             if self.config_entry.entry_id not in device.config_entries:
                 _LOGGER.info(
-                    "Found candidate device for %s:aid:%s, but owned by a different config entry, skipping",
+                    (
+                        "Found candidate device for %s:aid:%s, but owned by a different"
+                        " config entry, skipping"
+                    ),
                     self.unique_id,
                     accessory.aid,
                 )
@@ -407,7 +412,10 @@ class HKDevice:
             platform, DOMAIN, new_unique_id
         ):
             _LOGGER.debug(
-                "Unique ID %s is already in use by %s (system may have been downgraded)",
+                (
+                    "Unique ID %s is already in use by %s (system may have been"
+                    " downgraded)"
+                ),
                 new_unique_id,
                 new_entity_id,
             )
@@ -429,7 +437,10 @@ class HKDevice:
         does not require them to be stable.
         """
         _LOGGER.debug(
-            "Removing legacy serial numbers from device registry entries for pairing %s",
+            (
+                "Removing legacy serial numbers from device registry entries for"
+                " pairing %s"
+            ),
             self.unique_id,
         )
 
@@ -491,14 +502,20 @@ class HKDevice:
         for accessory in self.entity_map.accessories:
             if not valid_serial_number(accessory.serial_number):
                 _LOGGER.debug(
-                    "Serial number %r is not valid, it cannot be used as a unique identifier",
+                    (
+                        "Serial number %r is not valid, it cannot be used as a unique"
+                        " identifier"
+                    ),
                     accessory.serial_number,
                 )
                 unreliable_serial_numbers = True
 
             elif accessory.serial_number in devices:
                 _LOGGER.debug(
-                    "Serial number %r is duplicated within this pairing, it cannot be used as a unique identifier",
+                    (
+                        "Serial number %r is duplicated within this pairing, it cannot"
+                        " be used as a unique identifier"
+                    ),
                     accessory.serial_number,
                 )
                 unreliable_serial_numbers = True
@@ -506,7 +523,10 @@ class HKDevice:
             elif accessory.serial_number == accessory.hardware_revision:
                 # This is a known bug with some devices (e.g. RYSE SmartShades)
                 _LOGGER.debug(
-                    "Serial number %r is actually the hardware revision, it cannot be used as a unique identifier",
+                    (
+                        "Serial number %r is actually the hardware revision, it cannot"
+                        " be used as a unique identifier"
+                    ),
                     accessory.serial_number,
                 )
                 unreliable_serial_numbers = True
@@ -670,7 +690,10 @@ class HKDevice:
         if self._polling_lock.locked():
             if not self._polling_lock_warned:
                 _LOGGER.warning(
-                    "HomeKit controller update skipped as previous poll still in flight: %s",
+                    (
+                        "HomeKit controller update skipped as previous poll still in"
+                        " flight: %s"
+                    ),
                     self.unique_id,
                 )
                 self._polling_lock_warned = True
@@ -678,7 +701,10 @@ class HKDevice:
 
         if self._polling_lock_warned:
             _LOGGER.info(
-                "HomeKit controller no longer detecting back pressure - not skipping poll: %s",
+                (
+                    "HomeKit controller no longer detecting back pressure - not"
+                    " skipping poll: %s"
+                ),
                 self.unique_id,
             )
             self._polling_lock_warned = False

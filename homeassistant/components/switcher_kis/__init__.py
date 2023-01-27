@@ -122,7 +122,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-class SwitcherDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
+class SwitcherDataUpdateCoordinator(
+    update_coordinator.DataUpdateCoordinator[SwitcherBase]
+):
     """Switcher device data update coordinator."""
 
     def __init__(
@@ -138,10 +140,11 @@ class SwitcherDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
         self.entry = entry
         self.data = device
 
-    async def _async_update_data(self) -> None:
+    async def _async_update_data(self) -> SwitcherBase:
         """Mark device offline if no data."""
         raise update_coordinator.UpdateFailed(
-            f"Device {self.name} did not send update for {MAX_UPDATE_INTERVAL_SEC} seconds"
+            f"Device {self.name} did not send update for"
+            f" {MAX_UPDATE_INTERVAL_SEC} seconds"
         )
 
     @property

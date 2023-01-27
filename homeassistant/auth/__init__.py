@@ -5,7 +5,7 @@ import asyncio
 from collections import OrderedDict
 from collections.abc import Mapping
 from datetime import timedelta
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 import jwt
 
@@ -24,7 +24,7 @@ EVENT_USER_UPDATED = "user_updated"
 EVENT_USER_REMOVED = "user_removed"
 
 _MfaModuleDict = dict[str, MultiFactorAuthModule]
-_ProviderKey = tuple[str, Optional[str]]
+_ProviderKey = tuple[str, str | None]
 _ProviderDict = dict[_ProviderKey, AuthProvider]
 
 
@@ -87,7 +87,7 @@ class AuthManagerFlowManager(data_entry_flow.FlowManager):
 
     async def async_create_flow(
         self,
-        handler_key: Any,
+        handler_key: str,
         *,
         context: dict[str, Any] | None = None,
         data: dict[str, Any] | None = None,
@@ -534,7 +534,8 @@ class AuthManager:
         )
         if provider is None:
             raise InvalidProvider(
-                f"Auth provider {refresh_token.credential.auth_provider_type}, {refresh_token.credential.auth_provider_id} not available"
+                f"Auth provider {refresh_token.credential.auth_provider_type},"
+                f" {refresh_token.credential.auth_provider_id} not available"
             )
         return provider
 
