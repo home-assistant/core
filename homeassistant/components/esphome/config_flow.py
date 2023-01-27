@@ -153,6 +153,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         if self._device_info.uses_password:
             return await self.async_step_authenticate()
 
+        self._password = ""
         return self._async_get_entry()
 
     async def async_step_discovery_confirm(
