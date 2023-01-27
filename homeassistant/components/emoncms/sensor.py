@@ -144,15 +144,15 @@ class EmonCmsSensor(SensorEntity):
             id_for_name = "" if str(sensorid) == "1" else sensorid
             # Use the feed name assigned in EmonCMS or fall back to the feed ID
             feed_name = elem.get("name") or f"Feed {elem['id']}"
-            self._name = f"EmonCMS{id_for_name} {feed_name}"
+            self._attr_name = f"EmonCMS{id_for_name} {feed_name}"
         else:
-            self._name = name
-        self._identifier = get_id(
+            self._attr_name = name
+        self._attr_unique_id = get_id(
             sensorid, elem["tag"], elem["name"], elem["id"], elem["userid"]
         )
         self._data = data
         self._value_template = value_template
-        self._unit_of_measurement = unit_of_measurement
+        self._attr_native_unit_of_measurement = unit_of_measurement
         self._sensorid = sensorid
         self._elem = elem
 
@@ -182,28 +182,15 @@ class EmonCmsSensor(SensorEntity):
             self._attr_state_class = SensorStateClass.MEASUREMENT
 
         if self._value_template is not None:
-            self._state = self._value_template.render_with_possible_json_value(
-                elem["value"], STATE_UNKNOWN
+            self._attr_native_value = (
+                self._value_template.render_with_possible_json_value(
+                    elem["value"], STATE_UNKNOWN
+                )
             )
         elif elem["value"] is not None:
-            self._state = round(float(elem["value"]), DECIMALS)
+            self._attr_native_value = round(float(elem["value"]), DECIMALS)
         else:
-            self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
-
-    @property
-    def native_value(self):
-        """Return the state of the device."""
-        return self._state
+            self._attr_native_value = None
 
     @property
     def extra_state_attributes(self):
@@ -236,7 +223,7 @@ class EmonCmsSensor(SensorEntity):
                     elem["id"],
                     elem["userid"],
                 )
-                == self._identifier
+                == self._attr_unique_id
             ),
             None,
         )
@@ -247,13 +234,15 @@ class EmonCmsSensor(SensorEntity):
         self._elem = elem
 
         if self._value_template is not None:
-            self._state = self._value_template.render_with_possible_json_value(
-                elem["value"], STATE_UNKNOWN
+            self._attr_native_value = (
+                self._value_template.render_with_possible_json_value(
+                    elem["value"], STATE_UNKNOWN
+                )
             )
         elif elem["value"] is not None:
-            self._state = round(float(elem["value"]), DECIMALS)
+            self._attr_native_value = round(float(elem["value"]), DECIMALS)
         else:
-            self._state = None
+            self._attr_native_value = None
 
 
 class EmonCmsData:
