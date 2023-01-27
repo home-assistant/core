@@ -57,7 +57,7 @@ async def setup_integration(recorder_mock):
 @freeze_time("2022-04-19 07:53:05")
 def frozen_time():
     """Freeze clock for tests."""
-    yield
+    return
 
 
 def get_statistics_for_entity(statistics_results, entity_id):
