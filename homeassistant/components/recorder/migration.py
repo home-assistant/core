@@ -901,7 +901,7 @@ def _wipe_old_string_time_columns(engine: Engine, session: Session) -> None:
             text(
                 "UPDATE events set time_fired=NULL "
                 "where event_id in "
-                "(select event_id from events where events.timed_fired_ts is NOT NULL LIMIT 15000000);"
+                "(select event_id from events where time_fired_ts is NOT NULL LIMIT 15000000);"
             )
         )
         session.commit()
@@ -909,7 +909,7 @@ def _wipe_old_string_time_columns(engine: Engine, session: Session) -> None:
             text(
                 "UPDATE states set last_updated=NULL, last_changed=NULL "
                 "where state_id in "
-                "(select state_id from states where states.last_updated_ts is NOT NULL LIMIT 25000000);"
+                "(select state_id from states where last_updated_ts is NOT NULL LIMIT 25000000);"
             )
         )
         session.commit()
