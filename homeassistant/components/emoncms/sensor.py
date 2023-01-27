@@ -179,16 +179,19 @@ class EmonCmsSensor(SensorEntity):
             self._attr_device_class = SensorDeviceClass.PRESSURE
             self._attr_state_class = SensorStateClass.MEASUREMENT
 
+        self._state = elem["value"]
+
+    @property
+    def native_value(self) -> str | float | None:
+        """Render the state of the feed."""
         if self._value_template is not None:
-            self._attr_native_value = (
-                self._value_template.render_with_possible_json_value(
-                    elem["value"], STATE_UNKNOWN
-                )
+            return self._value_template.render_with_possible_json_value(
+                self._state, STATE_UNKNOWN
             )
-        elif elem["value"] is not None:
-            self._attr_native_value = round(float(elem["value"]), DECIMALS)
+        elif self._state is not None:
+            return round(float(self._state), DECIMALS)
         else:
-            self._attr_native_value = None
+            return None
 
     @property
     def extra_state_attributes(self):
@@ -223,17 +226,7 @@ class EmonCmsSensor(SensorEntity):
             return
 
         self._elem = elem
-
-        if self._value_template is not None:
-            self._attr_native_value = (
-                self._value_template.render_with_possible_json_value(
-                    elem["value"], STATE_UNKNOWN
-                )
-            )
-        elif elem["value"] is not None:
-            self._attr_native_value = round(float(elem["value"]), DECIMALS)
-        else:
-            self._attr_native_value = None
+        self._state = elem["value"]
 
 
 class EmonCmsData:
