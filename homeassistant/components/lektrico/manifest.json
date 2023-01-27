@@ -3,7 +3,7 @@
   "name": "Lektrico Charging Station",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/lektrico",
-  "requirements": ["lektricowifi==0.0.20"],
+  "requirements": ["lektricowifi==0.0.21"],
   "dependencies": [],
   "codeowners": ["@mtarjoianu"],
   "iot_class": "local_polling"

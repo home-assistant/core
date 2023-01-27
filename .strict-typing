@@ -193,9 +193,9 @@ homeassistant.components.lametric.*
 homeassistant.components.laundrify.*
 homeassistant.components.lcn.*
 homeassistant.components.ld2410_ble.*
+homeassistant.components.lektrico.*
 homeassistant.components.lidarr.*
 homeassistant.components.lifx.*
-homeassistant.components.lektrico.*
 homeassistant.components.light.*
 homeassistant.components.litejet.*
 homeassistant.components.litterrobot.*

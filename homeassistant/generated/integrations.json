@@ -2901,6 +2901,12 @@
       "integration_type": "virtual",
       "supported_by": "netatmo"
     },
+    "lektrico": {
+      "name": "Lektrico Charging Station",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "leviton": {
       "name": "Leviton",
       "iot_standards": [
