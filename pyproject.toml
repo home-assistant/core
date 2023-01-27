@@ -267,7 +267,6 @@ ignore = [
     "E501",  # line too long
     "E713",  # Test for membership should be 'not in'
     "E731",  # do not assign a lambda expression, use a def
-    "UP024", # Replace aliased errors with `OSError`
 ]
 
 [tool.ruff.flake8-pytest-style]
