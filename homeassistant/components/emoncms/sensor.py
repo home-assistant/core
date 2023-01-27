@@ -17,7 +17,6 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_ID,
-    CONF_SCAN_INTERVAL,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_URL,
     CONF_VALUE_TEMPLATE,
@@ -91,12 +90,11 @@ def setup_platform(
     exclude_feeds = config.get(CONF_EXCLUDE_FEEDID)
     include_only_feeds = config.get(CONF_ONLY_INCLUDE_FEEDID)
     sensor_names = config.get(CONF_SENSOR_NAMES)
-    interval = config.get(CONF_SCAN_INTERVAL)
 
     if value_template is not None:
         value_template.hass = hass
 
-    data = EmonCmsData(url, apikey, interval)
+    data = EmonCmsData(url, apikey)
 
     data.update()
 
@@ -262,11 +260,10 @@ class EmonCmsSensor(SensorEntity):
 class EmonCmsData:
     """The class for handling the data retrieval."""
 
-    def __init__(self, url, apikey, interval):
+    def __init__(self, url, apikey):
         """Initialize the data object."""
         self._apikey = apikey
         self._url = f"{url}/feed/list.json"
-        self._interval = interval
         self.data = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
