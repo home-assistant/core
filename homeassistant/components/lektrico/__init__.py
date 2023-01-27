@@ -4,13 +4,14 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 import logging
 
-from lektricowifi import lektricowifi
+from lektricowifi import ChargerConnectionError, lektricowifi
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_FRIENDLY_NAME, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
 
@@ -37,10 +38,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         session=session,
     )
 
-    settings = await charger.charger_config()
-    coordinator = LektricoDeviceDataUpdateCoordinator(
-        charger, hass, entry.data[CONF_FRIENDLY_NAME], settings
-    )
+    try:
+        settings = await charger.charger_config()
+        coordinator = LektricoDeviceDataUpdateCoordinator(
+            charger, hass, entry.data[CONF_FRIENDLY_NAME], settings
+        )
+    except ChargerConnectionError as lek_ex:
+        raise ConfigEntryNotReady(lek_ex) from lek_ex
 
     await coordinator.async_config_entry_first_refresh()
 
@@ -87,4 +91,7 @@ class LektricoDeviceDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> lektricowifi.Info:
         """Async Update device state."""
-        return await self.device.charger_info()
+        try:
+            return await self.device.charger_info()
+        except ChargerConnectionError as lek_ex:
+            raise UpdateFailed(lek_ex) from lek_ex
