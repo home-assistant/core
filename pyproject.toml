@@ -252,6 +252,7 @@ select = [
     "PGH004",  # Use specific rule codes when using noqa
     "SIM105", # Use contextlib.suppress({exception}) instead of try-except-pass
     "SIM117", # Merge with-statements that use the same scope
+    "SIM401", # Use get from dict with default instead of an if block
     "T20",  # flake8-print
     "UP",  # pyupgrade
     "W",  # pycodestyle
