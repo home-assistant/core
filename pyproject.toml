@@ -224,7 +224,10 @@ runtime-typing = false
 max-line-length-suggestions = 72
 
 [tool.pylint-per-file-ignores]
-"/tests/"="protected-access,redefined-outer-name"
+# hass-component-root-import: Tests test non-public APIs
+# protected-access: Tests do often test internals a lot
+# redefined-outer-name: Tests reference fixtures in the test function
+"/tests/"="hass-component-root-import,protected-access,redefined-outer-name"
 
 [tool.pytest.ini_options]
 testpaths = [
