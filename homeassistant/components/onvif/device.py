@@ -496,8 +496,8 @@ class ONVIFDevice:
     async def async_run_aux_command(
         self,
         profile: Profile,
-        cmd,
-    ):
+        cmd: str,
+    ) -> None:
         """Execute a PTZ auxiliary command on the camera."""
         if not self.capabilities.ptz:
             LOGGER.warning("PTZ actions are not supported on device '%s'", self.name)
@@ -523,8 +523,8 @@ class ONVIFDevice:
     async def async_set_imaging_settings(
         self,
         profile: Profile,
-        settings,
-    ):
+        settings: dict,
+    ) -> None:
         """Set an imaging setting on the ONVIF imaging service."""
         # The Imaging Service is defined by ONVIF standard
         # https://www.onvif.org/specs/srv/img/ONVIF-Imaging-Service-Spec-v210.pdf

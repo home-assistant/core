@@ -104,8 +104,9 @@ async def async_setup_entry(
     )
 
     device = hass.data[DOMAIN][config_entry.unique_id]
-    entities = [ONVIFCameraEntity(device, profile) for profile in device.profiles]
-    async_add_entities(entities)
+    async_add_entities(
+        [ONVIFCameraEntity(device, profile) for profile in device.profiles]
+    )
 
 
 class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
@@ -243,7 +244,7 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
 
     async def async_run_aux_command(
         self,
-        cmd,
+        cmd: str,
     ) -> None:
         """Execute a PTZ auxiliary command on the camera."""
         await self.device.async_run_aux_command(
@@ -253,7 +254,7 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
 
     async def async_set_imaging_settings(
         self,
-        settings,
+        settings: dict,
     ) -> None:
         """Set imaging settings."""
         await self.device.async_set_imaging_settings(
