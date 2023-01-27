@@ -58,13 +58,9 @@
             },
             "zone_sleep": {
                 "state": {
-                    "120 min": "120 min\u00fat",
                     "120_min": "120 min\u00fat",
-                    "30 min": "30 min\u00fat",
                     "30_min": "30 min\u00fat",
-                    "60 min": "60 min\u00fat",
                     "60_min": "60 min\u00fat",
-                    "90 min": "90 min\u00fat",
                     "90_min": "90 min\u00fat",
                     "off": "Vypnut\u00e9"
                 }

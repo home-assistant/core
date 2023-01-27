@@ -11,7 +11,7 @@
         "step": {
             "api_key": {
                 "data": {
-                    "api_key": "Chave da API"
+                    "api_key": "Chave API"
                 }
             },
             "reauth_confirm": {
@@ -29,16 +29,9 @@
                     "name": "Nome",
                     "port": "Porta",
                     "ssl": "Usar um certificado SSL",
-                    "statistics_only": "Somente estat\u00edsticas",
                     "verify_ssl": "Verifique o certificado SSL"
                 }
             }
-        }
-    },
-    "issues": {
-        "deprecated_yaml": {
-            "description": "A configura\u00e7\u00e3o do PI-Hole usando YAML est\u00e1 sendo removida. \n\n Sua configura\u00e7\u00e3o YAML existente foi importada para a IU automaticamente. \n\n Remova a configura\u00e7\u00e3o YAML do PI-Hole do arquivo configuration.yaml e reinicie o Home Assistant para corrigir esse problema.",
-            "title": "A configura\u00e7\u00e3o YAML do PI-Hole est\u00e1 sendo removida"
         }
     }
 }

@@ -158,12 +158,6 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
-    "almond": {
-      "name": "Almond",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_polling"
-    },
     "alpha_vantage": {
       "name": "Alpha Vantage",
       "integration_type": "hub",
@@ -1492,7 +1486,7 @@
           "integration_type": "hub",
           "config_flow": false,
           "iot_class": "local_polling",
-          "name": "eufy"
+          "name": "EufyHome"
         },
         "eufylife_ble": {
           "integration_type": "device",
@@ -3395,6 +3389,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "mopeka": {
+      "name": "Mopeka",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "motion_blinds": {
       "name": "Motion Blinds",
       "integration_type": "hub",
@@ -3840,6 +3840,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "openai_conversation": {
+      "name": "OpenAI Conversation",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "openalpr_cloud": {
       "name": "OpenALPR Cloud",
       "integration_type": "hub",
@@ -3969,6 +3975,12 @@
       "name": "Osramlightify",
       "integration_type": "hub",
       "config_flow": false,
+      "iot_class": "local_polling"
+    },
+    "otbr": {
+      "name": "Open Thread Border Router",
+      "integration_type": "service",
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "otp": {
@@ -4637,6 +4649,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "rympro": {
+      "name": "Read Your Meter Pro",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "sabnzbd": {
       "name": "SABnzbd",
       "integration_type": "hub",
@@ -5243,6 +5261,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "stookwijzer": {
+      "name": "Stookwijzer",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "streamlabswater": {
       "name": "StreamLabs",
       "integration_type": "hub",
@@ -5563,6 +5587,12 @@
       "name": "Thomson",
       "integration_type": "hub",
       "config_flow": false,
+      "iot_class": "local_polling"
+    },
+    "thread": {
+      "name": "Thread",
+      "integration_type": "service",
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "tibber": {

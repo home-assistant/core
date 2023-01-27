@@ -23,6 +23,15 @@
                 }
             }
         },
+        "select": {
+            "speed": {
+                "state": {
+                    "light_speed": "Lichtsnelheid",
+                    "ludicrous_speed": "Bespottelijke snelheid",
+                    "ridiculous_speed": "Belachelijke snelheid"
+                }
+            }
+        },
         "vacuum": {
             "model_s": {
                 "state_attributes": {

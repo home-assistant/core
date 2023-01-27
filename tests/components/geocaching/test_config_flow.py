@@ -53,7 +53,6 @@ async def test_full_flow(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    # pylint: disable=protected-access
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -109,7 +108,7 @@ async def test_existing_entry(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    # pylint: disable=protected-access
+
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -150,7 +149,6 @@ async def test_oauth_error(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    # pylint: disable=protected-access
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -207,7 +205,6 @@ async def test_reauthentication(
 
     result = await hass.config_entries.flow.async_configure(flows[0]["flow_id"], {})
 
-    # pylint: disable=protected-access
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {

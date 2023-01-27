@@ -47,6 +47,10 @@
         }
     },
     "issues": {
+        "api_password_deprecated": {
+            "description": "The API password for ESPHome is deprecated and the use of an API encryption key is recommended instead.\n\nRemove the API password and add an encryption key to your ESPHome device to resolve this issue.",
+            "title": "API Password deprecated on {name}"
+        },
         "ble_firmware_outdated": {
             "description": "To improve Bluetooth reliability and performance, we highly recommend updating {name} with ESPHome {version} or later. When updating the device to ESPHome {version}, it is recommended to use a serial cable instead of an over-the-air update to take advantage of the new partition scheme.",
             "title": "Update {name} with ESPHome {version} or later"

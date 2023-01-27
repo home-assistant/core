@@ -26,5 +26,18 @@
                 }
             }
         }
+    },
+    "selector": {
+        "weekday": {
+            "options": {
+                "fri": "P\u00e9ntek",
+                "mon": "H\u00e9tf\u0151",
+                "sat": "Szombat",
+                "sun": "Vas\u00e1rnap",
+                "thu": "Cs\u00fct\u00f6rt\u00f6k",
+                "tue": "Kedd",
+                "wed": "Szerda"
+            }
+        }
     }
 }

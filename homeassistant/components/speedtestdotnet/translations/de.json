@@ -13,8 +13,6 @@
         "step": {
             "init": {
                 "data": {
-                    "manual": "Automatische Updates deaktivieren",
-                    "scan_interval": "Aktualisierungsfrequenz (Minuten)",
                     "server_name": "Testserver ausw\u00e4hlen"
                 }
             }

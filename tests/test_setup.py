@@ -1,5 +1,5 @@
 """Test component/platform setup."""
-# pylint: disable=protected-access
+
 import asyncio
 import datetime
 import threading
@@ -18,7 +18,7 @@ from homeassistant.helpers.config_validation import (
     PLATFORM_SCHEMA_BASE,
 )
 
-from tests.common import (
+from .common import (
     MockConfigEntry,
     MockModule,
     MockPlatform,

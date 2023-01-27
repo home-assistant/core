@@ -15,7 +15,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
         yield mock_setup
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_fireplace_finder_none() -> Generator[None, MagicMock, None]:
     """Mock fireplace finder."""
     mock_found_fireplaces = Mock()
@@ -26,7 +26,7 @@ def mock_fireplace_finder_none() -> Generator[None, MagicMock, None]:
         yield mock_found_fireplaces
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_fireplace_finder_single() -> Generator[None, MagicMock, None]:
     """Mock fireplace finder."""
     mock_found_fireplaces = Mock()

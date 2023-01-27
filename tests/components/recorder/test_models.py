@@ -79,6 +79,40 @@ def test_repr():
     assert "2016-07-09 11:00:00+00:00" in repr(Events.from_event(event))
 
 
+def test_states_repr_without_timestamp():
+    """Test repr for a state without last_updated_ts."""
+    fixed_time = datetime(2016, 7, 9, 11, 0, 0, tzinfo=dt.UTC, microsecond=432432)
+    states = States(
+        entity_id="sensor.temp",
+        attributes=None,
+        context_id=None,
+        context_user_id=None,
+        context_parent_id=None,
+        origin_idx=None,
+        last_updated=fixed_time,
+        last_changed=fixed_time,
+        last_updated_ts=None,
+        last_changed_ts=None,
+    )
+    assert "2016-07-09 11:00:00+00:00" in repr(states)
+
+
+def test_events_repr_without_timestamp():
+    """Test repr for an event without time_fired_ts."""
+    fixed_time = datetime(2016, 7, 9, 11, 0, 0, tzinfo=dt.UTC, microsecond=432432)
+    events = Events(
+        event_type="any",
+        event_data=None,
+        origin_idx=None,
+        time_fired=fixed_time,
+        time_fired_ts=None,
+        context_id=None,
+        context_user_id=None,
+        context_parent_id=None,
+    )
+    assert "2016-07-09 11:00:00+00:00" in repr(events)
+
+
 def test_handling_broken_json_state_attributes(caplog):
     """Test we handle broken json in state attributes."""
     state_attributes = StateAttributes(

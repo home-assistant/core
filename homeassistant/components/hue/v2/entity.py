@@ -1,7 +1,7 @@
 """Generic Hue Entity Model."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, TypeAlias
 
 from aiohue.v2.controllers.base import BaseResourcesController
 from aiohue.v2.controllers.events import EventType
@@ -23,7 +23,7 @@ if TYPE_CHECKING:
     from aiohue.v2.models.light_level import LightLevel
     from aiohue.v2.models.motion import Motion
 
-    HueResource = Union[Light, DevicePower, GroupedLight, LightLevel, Motion]
+    HueResource: TypeAlias = Light | DevicePower | GroupedLight | LightLevel | Motion
 
 
 RESOURCE_TYPE_NAMES = {

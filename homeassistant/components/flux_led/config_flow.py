@@ -155,16 +155,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 device = await self._async_try_connect(host, device)
             except FLUX_LED_EXCEPTIONS:
                 return self.async_abort(reason="cannot_connect")
-            else:
-                discovered_mac = device[ATTR_ID]
-                if device[ATTR_MODEL_DESCRIPTION] or (
-                    discovered_mac is not None
-                    and (formatted_discovered_mac := dr.format_mac(discovered_mac))
-                    and formatted_discovered_mac != mac
-                    and mac_matches_by_one(discovered_mac, mac)
-                ):
-                    self._discovered_device = device
-                    await self._async_set_discovered_mac(device, True)
+
+            discovered_mac = device[ATTR_ID]
+            if device[ATTR_MODEL_DESCRIPTION] or (
+                discovered_mac is not None
+                and (formatted_discovered_mac := dr.format_mac(discovered_mac))
+                and formatted_discovered_mac != mac
+                and mac_matches_by_one(discovered_mac, mac)
+            ):
+                self._discovered_device = device
+                await self._async_set_discovered_mac(device, True)
         return await self.async_step_discovery_confirm()
 
     async def async_step_discovery_confirm(

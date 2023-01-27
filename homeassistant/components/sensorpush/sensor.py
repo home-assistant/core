@@ -1,8 +1,6 @@
 """Support for sensorpush ble sensors."""
 from __future__ import annotations
 
-from typing import Optional, Union
-
 from sensorpush_ble import DeviceClass, DeviceKey, SensorUpdate, Units
 
 from homeassistant import config_entries
@@ -116,9 +114,7 @@ async def async_setup_entry(
 
 
 class SensorPushBluetoothSensorEntity(
-    PassiveBluetoothProcessorEntity[
-        PassiveBluetoothDataProcessor[Optional[Union[float, int]]]
-    ],
+    PassiveBluetoothProcessorEntity[PassiveBluetoothDataProcessor[float | int | None]],
     SensorEntity,
 ):
     """Representation of a sensorpush ble sensor."""

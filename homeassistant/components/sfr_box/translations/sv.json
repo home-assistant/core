@@ -3,13 +3,22 @@
         "abort": {
             "already_configured": "Tom"
         },
-        "error": {
-            "unknown": "Ov\u00e4ntat fel"
-        },
         "step": {
             "user": {
                 "data": {
                     "host": "V\u00e4rd"
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "net_infra": {
+                "state": {
+                    "adsl": "ADSL",
+                    "ftth": "FTTH",
+                    "gprs": "GPRS",
+                    "unknown": "Ok\u00e4nd"
                 }
             }
         }

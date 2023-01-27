@@ -37,9 +37,8 @@ def test_session_scope_not_setup(hass_recorder):
     hass = hass_recorder()
     with patch.object(
         util.get_instance(hass), "get_session", return_value=None
-    ), pytest.raises(RuntimeError):
-        with util.session_scope(hass=hass):
-            pass
+    ), pytest.raises(RuntimeError), util.session_scope(hass=hass):
+        pass
 
 
 def test_recorder_bad_commit(hass_recorder, recorder_db_url):
@@ -689,16 +688,15 @@ async def test_write_lock_db(
         with instance.engine.connect() as connection:
             connection.execute(text("DROP TABLE events;"))
 
-    with util.write_lock_db_sqlite(instance):
+    with util.write_lock_db_sqlite(instance), pytest.raises(OperationalError):
         # Database should be locked now, try writing SQL command
-        with pytest.raises(OperationalError):
-            # This needs to be called in another thread since
-            # the lock method is BEGIN IMMEDIATE and since we have
-            # a connection per thread with sqlite now, we cannot do it
-            # in the same thread as the one holding the lock since it
-            # would be allowed to proceed as the goal is to prevent
-            # all the other threads from accessing the database
-            await hass.async_add_executor_job(_drop_table)
+        # This needs to be called in another thread since
+        # the lock method is BEGIN IMMEDIATE and since we have
+        # a connection per thread with sqlite now, we cannot do it
+        # in the same thread as the one holding the lock since it
+        # would be allowed to proceed as the goal is to prevent
+        # all the other threads from accessing the database
+        await hass.async_add_executor_job(_drop_table)
 
 
 def test_is_second_sunday():

@@ -11,6 +11,7 @@
             "not_admin": "User needs to be admin, user ''{username}'' has authorisation level ''{userlevel}''",
             "unknown": "Unexpected error"
         },
+        "flow_title": "{short_mac} ({ip_address})",
         "step": {
             "reauth_confirm": {
                 "description": "The Reolink integration needs to re-authenticate your connection details",

@@ -19,8 +19,7 @@
             "init": {
                 "data": {
                     "power": "Contracted power (kW)",
-                    "power_p3": "Contracted power for valley period P3 (kW)",
-                    "tariff": "Applicable tariff by geographic zone"
+                    "power_p3": "Contracted power for valley period P3 (kW)"
                 }
             }
         }

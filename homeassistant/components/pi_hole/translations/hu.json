@@ -29,15 +29,9 @@
                     "name": "Elnevez\u00e9s",
                     "port": "Port",
                     "ssl": "SSL tan\u00fas\u00edtv\u00e1ny haszn\u00e1lata",
-                    "statistics_only": "Csak statisztik\u00e1k",
                     "verify_ssl": "SSL-tan\u00fas\u00edtv\u00e1ny ellen\u0151rz\u00e9se"
                 }
             }
-        }
-    },
-    "issues": {
-        "deprecated_yaml": {
-            "title": "A PI-Hole YAML konfigur\u00e1ci\u00f3 elt\u00e1vol\u00edt\u00e1sra ker\u00fcl"
         }
     }
 }

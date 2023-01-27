@@ -1,7 +1,8 @@
 """Axis switch platform tests."""
 
-from copy import deepcopy
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
+
+import pytest
 
 from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -14,12 +15,7 @@ from homeassistant.const import (
 )
 from homeassistant.setup import async_setup_component
 
-from .conftest import NAME
-from .test_device import (
-    API_DISCOVERY_PORT_MANAGEMENT,
-    API_DISCOVERY_RESPONSE,
-    setup_axis_integration,
-)
+from .const import API_DISCOVERY_PORT_MANAGEMENT, NAME
 
 
 async def test_platform_manually_configured(hass):
@@ -31,17 +27,14 @@ async def test_platform_manually_configured(hass):
     assert AXIS_DOMAIN not in hass.data
 
 
-async def test_no_switches(hass, config_entry):
+async def test_no_switches(hass, setup_config_entry):
     """Test that no output events in Axis results in no switch entities."""
-    await setup_axis_integration(hass, config_entry)
-
     assert not hass.states.async_entity_ids(SWITCH_DOMAIN)
 
 
-async def test_switches_with_port_cgi(hass, config_entry, mock_rtsp_event):
+async def test_switches_with_port_cgi(hass, setup_config_entry, mock_rtsp_event):
     """Test that switches are loaded properly using port.cgi."""
-    await setup_axis_integration(hass, config_entry)
-    device = hass.data[AXIS_DOMAIN][config_entry.entry_id]
+    device = hass.data[AXIS_DOMAIN][setup_config_entry.entry_id]
 
     device.api.vapix.ports = {"0": AsyncMock(), "1": AsyncMock()}
     device.api.vapix.ports["0"].name = "Doorbell"
@@ -94,14 +87,10 @@ async def test_switches_with_port_cgi(hass, config_entry, mock_rtsp_event):
     device.api.vapix.ports["0"].open.assert_called_once()
 
 
-async def test_switches_with_port_management(hass, config_entry, mock_rtsp_event):
+@pytest.mark.parametrize("api_discovery_items", [API_DISCOVERY_PORT_MANAGEMENT])
+async def test_switches_with_port_management(hass, setup_config_entry, mock_rtsp_event):
     """Test that switches are loaded properly using port management."""
-    api_discovery = deepcopy(API_DISCOVERY_RESPONSE)
-    api_discovery["data"]["apiList"].append(API_DISCOVERY_PORT_MANAGEMENT)
-
-    with patch.dict(API_DISCOVERY_RESPONSE, api_discovery):
-        await setup_axis_integration(hass, config_entry)
-        device = hass.data[AXIS_DOMAIN][config_entry.entry_id]
+    device = hass.data[AXIS_DOMAIN][setup_config_entry.entry_id]
 
     device.api.vapix.ports = {"0": AsyncMock(), "1": AsyncMock()}
     device.api.vapix.ports["0"].name = "Doorbell"
@@ -136,6 +125,19 @@ async def test_switches_with_port_management(hass, config_entry, mock_rtsp_event
     relay_0 = hass.states.get(entity_id)
     assert relay_0.state == STATE_OFF
     assert relay_0.name == f"{NAME} Doorbell"
+
+    # State update
+
+    mock_rtsp_event(
+        topic="tns1:Device/Trigger/Relay",
+        data_type="LogicalState",
+        data_value="active",
+        source_name="RelayToken",
+        source_idx="0",
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(f"{SWITCH_DOMAIN}.{NAME}_relay_1").state == STATE_ON
 
     await hass.services.async_call(
         SWITCH_DOMAIN,

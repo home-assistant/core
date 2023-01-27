@@ -39,5 +39,15 @@
             }
         }
     },
+    "selector": {
+        "time_unit": {
+            "options": {
+                "d": "dni",
+                "h": "godziny",
+                "min": "minuty",
+                "s": "sekundy"
+            }
+        }
+    },
     "title": "Sensor pochodnej"
 }

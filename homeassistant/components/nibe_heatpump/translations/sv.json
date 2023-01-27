@@ -7,6 +7,25 @@
             "read": "Fel p\u00e5 l\u00e4sf\u00f6rfr\u00e5gan fr\u00e5n pumpen. Verifiera din \"Fj\u00e4rrl\u00e4sningsport\" eller \"Fj\u00e4rr-IP-adress\".",
             "unknown": "Ov\u00e4ntat fel",
             "write": "Fel vid skrivbeg\u00e4ran till pumpen. Verifiera din `Fj\u00e4rrskrivport` eller `Fj\u00e4rr-IP-adress`."
+        },
+        "step": {
+            "modbus": {
+                "data": {
+                    "modbus_url": "Modbus URL",
+                    "model": "Modell av v\u00e4rmepump"
+                }
+            },
+            "nibegw": {
+                "data": {
+                    "model": "Modell av v\u00e4rmepump"
+                }
+            },
+            "user": {
+                "menu_options": {
+                    "modbus": "Modbus",
+                    "nibegw": "NibeGW"
+                }
+            }
         }
     }
 }

@@ -7,6 +7,8 @@ from homeassistant.components.esphome import CONF_NOISE_PSK
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 
+from . import DASHBOARD_SLUG
+
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 
@@ -16,6 +18,7 @@ async def test_diagnostics(
     hass_client: ClientSession,
     init_integration: MockConfigEntry,
     enable_bluetooth: pytest.fixture,
+    mock_dashboard,
 ):
     """Test diagnostics for config entry."""
     result = await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
@@ -28,3 +31,4 @@ async def test_diagnostics(
         CONF_NOISE_PSK: "**REDACTED**",
     }
     assert result["config"]["unique_id"] == "11:22:33:44:55:aa"
+    assert result["dashboard"] == DASHBOARD_SLUG

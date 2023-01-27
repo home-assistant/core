@@ -7,9 +7,11 @@ from aioesphomeapi import APIClient, DeviceInfo
 import pytest
 from zeroconf import Zeroconf
 
-from homeassistant.components.esphome import CONF_NOISE_PSK, DOMAIN
+from homeassistant.components.esphome import CONF_NOISE_PSK, DOMAIN, dashboard
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
+
+from . import DASHBOARD_HOST, DASHBOARD_PORT, DASHBOARD_SLUG
 
 from tests.common import MockConfigEntry
 
@@ -98,3 +100,17 @@ def mock_client(mock_device_info):
         "homeassistant.components.esphome.config_flow.APIClient", mock_client
     ):
         yield mock_client
+
+
+@pytest.fixture
+async def mock_dashboard(hass):
+    """Mock dashboard."""
+    data = {"configured": [], "importable": []}
+    with patch(
+        "esphome_dashboard_api.ESPHomeDashboardAPI.get_devices",
+        return_value=data,
+    ):
+        await dashboard.async_set_dashboard_info(
+            hass, DASHBOARD_SLUG, DASHBOARD_HOST, DASHBOARD_PORT
+        )
+        yield data

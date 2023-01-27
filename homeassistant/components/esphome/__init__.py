@@ -56,8 +56,9 @@ from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.template import Template
 
 from .bluetooth import async_connect_scanner
+from .const import DOMAIN
 from .dashboard import async_get_dashboard
-from .domain_data import DOMAIN, DomainData
+from .domain_data import DomainData
 
 # Import config flow so that it's added to the registry
 from .entry_data import RuntimeEntryData
@@ -67,7 +68,7 @@ CONF_NOISE_PSK = "noise_psk"
 _LOGGER = logging.getLogger(__name__)
 _R = TypeVar("_R")
 
-STABLE_BLE_VERSION_STR = "2022.12.0"
+STABLE_BLE_VERSION_STR = "2022.12.4"
 STABLE_BLE_VERSION = AwesomeVersion(STABLE_BLE_VERSION_STR)
 PROJECT_URLS = {
     "esphome.bluetooth-proxy": "https://esphome.github.io/bluetooth-proxies/",
@@ -102,6 +103,30 @@ def _async_check_firmware_version(
         translation_placeholders={
             "name": device_info.name,
             "version": STABLE_BLE_VERSION_STR,
+        },
+    )
+
+
+@callback
+def _async_check_using_api_password(
+    hass: HomeAssistant, device_info: EsphomeDeviceInfo, has_password: bool
+) -> None:
+    """Create or delete an the api_password_deprecated issue."""
+    # ESPHome device_info.mac_address is the unique_id
+    issue = f"api_password_deprecated-{device_info.mac_address}"
+    if not has_password:
+        async_delete_issue(hass, DOMAIN, issue)
+        return
+    async_create_issue(
+        hass,
+        DOMAIN,
+        issue,
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        learn_more_url="https://esphome.io/components/api.html",
+        translation_key="api_password_deprecated",
+        translation_placeholders={
+            "name": device_info.name,
         },
     )
 
@@ -141,7 +166,8 @@ async def async_setup_entry(  # noqa: C901
 
     # Use async_listen instead of async_listen_once so that we don't deregister
     # the callback twice when shutting down Home Assistant.
-    # "Unable to remove unknown listener <function EventBus.async_listen_once.<locals>.onetime_listener>"
+    # "Unable to remove unknown listener
+    # <function EventBus.async_listen_once.<locals>.onetime_listener>"
     entry_data.cleanup_callbacks.append(
         hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, on_stop)
     )
@@ -307,6 +333,7 @@ async def async_setup_entry(  # noqa: C901
             await cli.disconnect()
         else:
             _async_check_firmware_version(hass, device_info)
+            _async_check_using_api_password(hass, device_info, bool(password))
 
     async def on_disconnect() -> None:
         """Run disconnect callbacks on API disconnect."""
@@ -651,7 +678,9 @@ class EsphomeEnumMapper(Generic[_EnumT, _ValT]):
     def __init__(self, mapping: dict[_EnumT, _ValT]) -> None:
         """Construct a EsphomeEnumMapper."""
         # Add none mapping
-        augmented_mapping: dict[_EnumT | None, _ValT | None] = mapping  # type: ignore[assignment]
+        augmented_mapping: dict[
+            _EnumT | None, _ValT | None
+        ] = mapping  # type: ignore[assignment]
         augmented_mapping[None] = None
 
         self._mapping = augmented_mapping
@@ -823,7 +852,10 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
 
     @property
     def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
+        """Return if the entity should be enabled when first added.
+
+        This only applies when fist added to the entity registry.
+        """
         return not self._static_info.disabled_by_default
 
     @property
