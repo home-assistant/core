@@ -34,6 +34,8 @@ async def test_sensors(
     registry = er.async_get(hass)
     mock_config_entry.add_to_hass(hass)
 
+    assert False, "Pytest picked!"
+
     test_time = datetime(2019, 11, 11, 9, 10, 32, tzinfo=dt_util.UTC)
     with patch("homeassistant.components.wled.sensor.utcnow", return_value=test_time):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
