@@ -50,9 +50,28 @@ async def test_default_prompt(hass, mock_init_component):
         model="Test Model 3A",
         suggested_area="Test Area 2",
     )
+    device_reg.async_get_or_create(
+        config_entry_id="1234",
+        connections={("test", "qwer")},
+        name="Test Device 4",
+        suggested_area="Test Area 2",
+    )
+    device = device_reg.async_get_or_create(
+        config_entry_id="1234",
+        connections={("test", "9876-disabled")},
+        name="Test Device 3",
+        manufacturer="Test Manufacturer 3",
+        model="Test Model 3A",
+        suggested_area="Test Area 2",
+    )
+    device_reg.async_update_device(
+        device.id, disabled_by=device_registry.DeviceEntryDisabler.USER
+    )
 
     with patch("openai.Completion.create") as mock_create:
-        await conversation.async_converse(hass, "hello", None, Context())
+        result = await conversation.async_converse(hass, "hello", None, Context())
+
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
 
     assert (
         mock_create.mock_calls[0][2]["prompt"]
@@ -66,10 +85,11 @@ Test Area:
 Test Area 2:
 - Test Device 2
 - Test Device 3 (Test Model 3A)
+- Test Device 4
 
 Answer the users questions about the world truthfully.
 
-If the user wants to control a device, reject the request and suggest using the Home Assistant UI.
+If the user wants to control a device, reject the request and suggest using the Home Assistant app.
 
 Now finish this conversation:
 

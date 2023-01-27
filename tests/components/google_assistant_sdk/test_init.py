@@ -27,8 +27,13 @@ async def fetch_api_url(hass_client, url):
     return response.status, contents
 
 
+@pytest.mark.parametrize(
+    "enable_conversation_agent", [False, True], ids=["", "enable_conversation_agent"]
+)
 async def test_setup_success(
-    hass: HomeAssistant, setup_integration: ComponentSetup
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    enable_conversation_agent: bool,
 ) -> None:
     """Test successful setup and unload."""
     await setup_integration()
@@ -36,6 +41,12 @@ async def test_setup_success(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.LOADED
+
+    if enable_conversation_agent:
+        hass.config_entries.async_update_entry(
+            entries[0], options={"enable_conversation_agent": True}
+        )
+        await hass.async_block_till_done()
 
     await hass.config_entries.async_unload(entries[0].entry_id)
     await hass.async_block_till_done()

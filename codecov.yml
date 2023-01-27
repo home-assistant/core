@@ -19,6 +19,7 @@ coverage:
           - homeassistant/components/*/intent.py
           - homeassistant/components/*/logbook.py
           - homeassistant/components/*/media_source.py
+          - homeassistant/components/*/recorder.py
           - homeassistant/components/*/scene.py
     patch:
       default:
@@ -36,6 +37,7 @@ coverage:
           - homeassistant/components/*/intent.py
           - homeassistant/components/*/logbook.py
           - homeassistant/components/*/media_source.py
+          - homeassistant/components/*/recorder.py
           - homeassistant/components/*/scene.py
 comment: false
 

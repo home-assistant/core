@@ -160,16 +160,18 @@ class DefaultAgent(AbstractConversationAgent):
             ).get(response_key)
             if response_str:
                 response_template = template.Template(response_str, self.hass)
-                intent_response.async_set_speech(
-                    response_template.async_render(
-                        {
-                            "slots": {
-                                entity_name: entity_value.text or entity_value.value
-                                for entity_name, entity_value in result.entities.items()
-                            }
+                speech = response_template.async_render(
+                    {
+                        "slots": {
+                            entity_name: entity_value.text or entity_value.value
+                            for entity_name, entity_value in result.entities.items()
                         }
-                    )
+                    }
                 )
+
+                # Normalize whitespace
+                speech = " ".join(speech.strip().split())
+                intent_response.async_set_speech(speech)
 
         return ConversationResult(
             response=intent_response, conversation_id=conversation_id

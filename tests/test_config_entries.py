@@ -29,7 +29,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.setup import async_set_domains_to_be_loaded, async_setup_component
 from homeassistant.util import dt
 
-from tests.common import (
+from .common import (
     MockConfigEntry,
     MockEntity,
     MockModule,

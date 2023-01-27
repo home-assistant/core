@@ -54,11 +54,11 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, location
 
-from tests.ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
+from .ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
 
 pytest.register_assert_rewrite("tests.common")
 
-from tests.common import (  # noqa: E402, isort:skip
+from .common import (  # noqa: E402, isort:skip
     CLIENT_ID,
     INSTANCES,
     MockConfigEntry,
@@ -68,9 +68,9 @@ from tests.common import (  # noqa: E402, isort:skip
     async_test_home_assistant,
     get_test_home_assistant,
     init_recorder_component,
-    mock_storage as mock_storage,
+    mock_storage,
 )
-from tests.test_util.aiohttp import mock_aiohttp_client  # noqa: E402, isort:skip
+from .test_util.aiohttp import mock_aiohttp_client  # noqa: E402, isort:skip
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -205,7 +205,7 @@ util.get_local_ip = lambda: "127.0.0.1"
 def caplog_fixture(caplog):
     """Set log level to debug for tests using the caplog fixture."""
     caplog.set_level(logging.DEBUG)
-    yield caplog
+    return caplog
 
 
 @pytest.fixture(autouse=True, scope="module")
@@ -1062,7 +1062,7 @@ async def async_setup_recorder_instance(
     # testcase which does not use the recorder.
     from homeassistant.components import recorder
 
-    from tests.components.recorder.common import async_recorder_block_till_done
+    from .components.recorder.common import async_recorder_block_till_done
 
     nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
     stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None
@@ -1103,7 +1103,7 @@ async def async_setup_recorder_instance(
 @pytest.fixture
 async def recorder_mock(recorder_config, async_setup_recorder_instance, hass):
     """Fixture with in-memory recorder."""
-    yield await async_setup_recorder_instance(hass, recorder_config)
+    return await async_setup_recorder_instance(hass, recorder_config)
 
 
 @pytest.fixture

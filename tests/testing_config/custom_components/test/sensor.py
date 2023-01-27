@@ -17,9 +17,9 @@ from homeassistant.const import (
     PERCENTAGE,
     POWER_VOLT_AMPERE,
     POWER_VOLT_AMPERE_REACTIVE,
-    PRESSURE_HPA,
     SIGNAL_STRENGTH_DECIBELS,
     VOLUME_CUBIC_METERS,
+    UnitOfPressure,
 )
 
 from tests.common import MockEntity
@@ -44,7 +44,7 @@ UNITS_OF_MEASUREMENT = {
     SensorDeviceClass.SIGNAL_STRENGTH: SIGNAL_STRENGTH_DECIBELS,  # signal strength (dB/dBm)
     SensorDeviceClass.SULPHUR_DIOXIDE: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # µg/m³ of sulphur dioxide
     SensorDeviceClass.TEMPERATURE: "C",  # temperature (C/F)
-    SensorDeviceClass.PRESSURE: PRESSURE_HPA,  # pressure (hPa/mbar)
+    SensorDeviceClass.PRESSURE: UnitOfPressure.HPA,  # pressure (hPa/mbar)
     SensorDeviceClass.POWER: "kW",  # power (W/kW)
     SensorDeviceClass.CURRENT: "A",  # current (A)
     SensorDeviceClass.ENERGY: "kWh",  # energy (Wh/kWh/MWh)

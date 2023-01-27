@@ -224,7 +224,10 @@ runtime-typing = false
 max-line-length-suggestions = 72
 
 [tool.pylint-per-file-ignores]
-"/tests/"="protected-access,redefined-outer-name"
+# hass-component-root-import: Tests test non-public APIs
+# protected-access: Tests do often test internals a lot
+# redefined-outer-name: Tests reference fixtures in the test function
+"/tests/"="hass-component-root-import,protected-access,redefined-outer-name"
 
 [tool.pytest.ini_options]
 testpaths = [
@@ -240,7 +243,21 @@ asyncio_mode = "auto"
 
 [tool.ruff]
 target-version = "py310"
-exclude = []
+
+select = [
+    "C",  # complexity
+    "D",  # docstrings
+    "E",  # pycodestyle
+    "F",  # pyflakes/autoflake
+    "PGH004",  # Use specific rule codes when using noqa
+    "PLC0414", # Useless import alias. Import alias does not rename original package.
+    "SIM105", # Use contextlib.suppress({exception}) instead of try-except-pass
+    "SIM117", # Merge with-statements that use the same scope
+    "SIM401", # Use get from dict with default instead of an if block
+    "T20",  # flake8-print
+    "UP",  # pyupgrade
+    "W",  # pycodestyle
+]
 
 ignore = [
     "D202",  # No blank lines allowed after function docstring
@@ -255,18 +272,10 @@ ignore = [
     "E501",  # line too long
     "E713",  # Test for membership should be 'not in'
     "E731",  # do not assign a lambda expression, use a def
-    "UP024", # Replace aliased errors with `OSError`
 ]
-select = [
-    "C",  # complexity
-    "D",  # docstrings
-    "E",  # pycodestyle
-    "F",  # pyflakes/autoflake
-    "T20",  # flake8-print
-    "W",  # pycodestyle
-    "UP",  # pyupgrade
-    "PGH004",  # Use specific rule codes when using noqa
-]
+
+[tool.ruff.flake8-pytest-style]
+fixture-parentheses = false
 
 [tool.ruff.per-file-ignores]
 

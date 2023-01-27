@@ -47,7 +47,7 @@ from tests.components.recorder.common import (
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 def set_utc(hass):
     """Set timezone to UTC."""
     hass.config.set_time_zone("UTC")
