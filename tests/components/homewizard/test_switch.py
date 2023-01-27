@@ -352,7 +352,7 @@ async def test_cloud_connection_on_off(hass, mock_config_entry_data, mock_config
 async def test_switch_handles_requesterror(
     hass, mock_config_entry_data, mock_config_entry
 ):
-    """Test entity pytest.raises HomeAssistantError when RequestError was raised."""
+    """Test entity raises HomeAssistantError when RequestError was raised."""
 
     api = get_mock_device(product_type="HWE-SKT", firmware_version="3.02")
     api.state = AsyncMock(

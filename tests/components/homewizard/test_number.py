@@ -151,7 +151,7 @@ async def test_brightness_level_set(hass, mock_config_entry_data, mock_config_en
 async def test_brightness_level_set_catches_requesterror(
     hass, mock_config_entry_data, mock_config_entry
 ):
-    """Test entity pytest.raises HomeAssistantError when RequestError was raised."""
+    """Test entity raises HomeAssistantError when RequestError was raised."""
 
     api = get_mock_device()
     api.state = AsyncMock(return_value=State.from_dict({"brightness": 255}))
@@ -187,7 +187,7 @@ async def test_brightness_level_set_catches_requesterror(
 async def test_brightness_level_set_catches_disablederror(
     hass, mock_config_entry_data, mock_config_entry
 ):
-    """Test entity pytest.raises HomeAssistantError when DisabledError was raised."""
+    """Test entity raises HomeAssistantError when DisabledError was raised."""
 
     api = get_mock_device()
     api.state = AsyncMock(return_value=State.from_dict({"brightness": 255}))
@@ -223,7 +223,7 @@ async def test_brightness_level_set_catches_disablederror(
 async def test_brightness_level_set_catches_invalid_value(
     hass, mock_config_entry_data, mock_config_entry
 ):
-    """Test entity pytest.raises ValueError when value was invalid."""
+    """Test entity raises ValueError when value was invalid."""
 
     api = get_mock_device()
     api.state = AsyncMock(return_value=State.from_dict({"brightness": 255}))
