@@ -15,6 +15,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
     CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
     LIGHT_LUX,
@@ -669,7 +670,10 @@ class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
         if self.block is not None:
             return self.attribute_value
 
-        return self.last_state
+        if self.last_state is None:
+            return None
+
+        return self.last_state.state
 
     @property
     def native_unit_of_measurement(self) -> str | None:
@@ -677,7 +681,10 @@ class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
         if self.block is not None:
             return self.entity_description.native_unit_of_measurement
 
-        return self.last_unit
+        if self.last_state is None:
+            return None
+
+        return self.last_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
 
 class RpcSleepingSensor(ShellySleepingRpcAttributeEntity, SensorEntity):
@@ -691,12 +698,12 @@ class RpcSleepingSensor(ShellySleepingRpcAttributeEntity, SensorEntity):
         if self.coordinator.device.initialized:
             return self.attribute_value
 
-        return self.last_state
+        if self.last_state is None:
+            return None
+
+        return self.last_state.state
 
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the sensor, if any."""
-        if self.coordinator.device.initialized:
-            return self.entity_description.native_unit_of_measurement
-
-        return self.last_unit
+        return self.entity_description.native_unit_of_measurement
