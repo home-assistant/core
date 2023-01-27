@@ -42,7 +42,7 @@ async def async_setup_platform(
         [
             GeniusSwitch(broker, z)
             for z in broker.client.zone_objs
-            if z.data["type"] == GH_ON_OFF_ZONE
+            if 'type' in z.data and z.data["type"] == GH_ON_OFF_ZONE
         ]
     )
 
