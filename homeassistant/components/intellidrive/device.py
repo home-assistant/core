@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import logging
+from typing import Any, cast
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class ReisingerSlidingDoorDevice:
+class ReisingerSlidingDoorDeviceApi:
     """
     A `BaseDevice` is a generic representation of a Meross device.
 
@@ -15,6 +16,8 @@ class ReisingerSlidingDoorDevice:
     name, type (i.e. device specific model), firmware/hardware version, a Meross internal
     identifier, a library assigned internal identifier.
     """
+
+    _retrievedData: Any
 
     def __init__(self, host: str, token: str, **kwargs):
         """Initialize the slidingdoor device."""
@@ -43,7 +46,7 @@ class ReisingerSlidingDoorDevice:
 
         :return: None.
         """
-        await self._async_operate("stop", *args, **kwargs)
+        await self._async_operate("door/stop", *args, **kwargs)
 
     def get_is_open(self, *args, **kwargs) -> bool | None:
         """
@@ -68,3 +71,12 @@ class ReisingerSlidingDoorDevice:
         :return: None.
         """
         return None
+
+    async def async_update_state(self) -> dict[str, Any]:
+        """
+        Update the door: Retrieves the device vcalues.
+
+        :return: Datas from device.
+        """
+
+        return cast(dict[str, Any], self._retrievedData.dict())

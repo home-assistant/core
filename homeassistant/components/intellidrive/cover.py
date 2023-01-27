@@ -8,30 +8,47 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .device import ReisingerSlidingDoorDevice
+from .const import DOMAIN
+from .coordinator import ReisingerCoordinator
+from .device import ReisingerSlidingDoorDeviceApi
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class SlidingDoorEntityWrapper(CoverEntity):
-    """Wrapper class to adapt the Meross Garage Opener into the Homeassistant platform."""
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the OpenReisinger covers."""
+    coordinator = hass.data[DOMAIN]
 
-    _device: ReisingerSlidingDoorDevice
+    async_add_entities(
+        [
+            SlidingDoorCoverEntity(
+                coordinator, str(entry.data.get("host")), str(entry.data.get("token"))
+            )
+        ]
+    )
+
+
+class SlidingDoorCoverEntity(CoordinatorEntity[ReisingerCoordinator], CoverEntity):
+    """Wrapper class to adapt the Meross Garage Opener into the Homeassistant platform."""
 
     def __init__(
         self,
+        coordinator: ReisingerCoordinator,
         host: str,
         token: str,
-        device: ReisingerSlidingDoorDevice,
-        coordinator: DataUpdateCoordinator,
     ) -> None:
-        """Initialize entitywrapper."""
+        """Initialize slidingdoor entity."""
+        super().__init__(coordinator)
         self._host = host
         self._token = token
-        self._device = device
-        self._coordinator = coordinator
+        self._device = ReisingerSlidingDoorDeviceApi(host, token)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the door async."""

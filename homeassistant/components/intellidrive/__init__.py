@@ -1,12 +1,17 @@
 """The Intellidrive integration."""
 from __future__ import annotations
 
+import logging
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
-from .device import ReisingerSlidingDoorDevice
+from .coordinator import ReisingerCoordinator
+from .device import ReisingerSlidingDoorDeviceApi
+
+_LOGGER = logging.getLogger(__name__)
 
 #  List the platforms that you want to support.
 # For your initial PR, limit it to 1 platform.
@@ -20,14 +25,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     #  1. Create API instance
     #  2. Validate the API connection (and authentication)
     #  3. Store an API object for your platforms to access
-    hub = ReisingerSlidingDoorDevice(
+
+    device_api = ReisingerSlidingDoorDeviceApi(
         str(entry.data.get("host")), str(entry.data.get("token"))
     )
 
-    if not await hub.authenticate():
+    if not await device_api.authenticate():
         return False
 
-    hass.data[DOMAIN][entry.entry_id] = hub
+    coordinator = ReisingerCoordinator(hass, entry, device_api)
+    await coordinator.async_config_entry_first_refresh()
+
+    hass.data[DOMAIN] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
