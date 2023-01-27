@@ -8,7 +8,7 @@ from homeassistant.core import Context
 from homeassistant.helpers import area_registry, device_registry, intent
 
 
-async def test_default_prompt(hass, mock_init_component):
+async def test_default_prompt(hass, setup_complete):
     """Test that the default prompt works."""
     device_reg = device_registry.async_get(hass)
     area_reg = area_registry.async_get(hass)
@@ -56,6 +56,18 @@ async def test_default_prompt(hass, mock_init_component):
         name="Test Device 4",
         suggested_area="Test Area 2",
     )
+    device_reg.async_get_or_create(
+        config_entry_id="1234",
+        connections={("test", "davsd")},
+        name="Additional Device 5",
+        suggested_area="Additional Area 3",
+    )
+    device_reg.async_get_or_create(
+        config_entry_id="1234",
+        connections={("test", "6573")},
+        name="Additional Device 6",
+        suggested_area="Additional Area 3",
+    )
     device = device_reg.async_get_or_create(
         config_entry_id="1234",
         connections={("test", "9876-disabled")},
@@ -67,12 +79,12 @@ async def test_default_prompt(hass, mock_init_component):
     device_reg.async_update_device(
         device.id, disabled_by=device_registry.DeviceEntryDisabler.USER
     )
-
-    with patch("openai.Completion.create") as mock_create:
-        result = await conversation.async_converse(hass, "hello", None, Context())
+    with patch("openai.Completion.acreate") as mock_create:
+        result = await conversation.async_converse(
+            hass, "Tell me about my test devices", None, Context()
+        )
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
-
     assert (
         mock_create.mock_calls[0][2]["prompt"]
         == """This smart home is controlled by Home Assistant.
@@ -94,14 +106,14 @@ If the user wants to control a device, reject the request and suggest using the 
 Now finish this conversation:
 
 Smart home: How can I assist?
-User: hello
+User: Tell me about my test devices
 Smart home: """
     )
 
 
-async def test_error_handling(hass, mock_init_component):
+async def test_error_handling(hass, setup_complete):
     """Test that the default prompt works."""
-    with patch("openai.Completion.create", side_effect=error.ServiceUnavailableError):
+    with patch("openai.Completion.acreate", side_effect=error.ServiceUnavailableError):
         result = await conversation.async_converse(hass, "hello", None, Context())
 
     assert result.response.response_type == intent.IntentResponseType.ERROR, result

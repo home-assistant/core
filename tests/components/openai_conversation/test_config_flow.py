@@ -5,7 +5,7 @@ from openai.error import APIConnectionError, AuthenticationError, InvalidRequest
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.openai_conversation.const import DOMAIN
+from homeassistant.components.openai_conversation.const import DEFAULT_OPTIONS, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -47,6 +47,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["data"] == {
         "api_key": "bla",
     }
+    assert result2["options"] == DEFAULT_OPTIONS
     assert len(mock_setup_entry.mock_calls) == 1
 
 

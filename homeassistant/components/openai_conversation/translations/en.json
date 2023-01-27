@@ -15,5 +15,19 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "prompt": "OpenAI Prompt Template",
+                    "continued_prompt": "Prompt template for continued conversation",
+                    "engine": "GPT Engine/Model",
+                    "max_tokens": "Maximum tokens to return in response",
+                    "temperature": "Temperature",
+                    "top_p": "Top P"
+                }
+            }
+        }
     }
 }
