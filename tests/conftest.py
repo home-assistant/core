@@ -205,7 +205,7 @@ util.get_local_ip = lambda: "127.0.0.1"
 def caplog_fixture(caplog):
     """Set log level to debug for tests using the caplog fixture."""
     caplog.set_level(logging.DEBUG)
-    yield caplog
+    return caplog
 
 
 @pytest.fixture(autouse=True, scope="module")
@@ -1103,7 +1103,7 @@ async def async_setup_recorder_instance(
 @pytest.fixture
 async def recorder_mock(recorder_config, async_setup_recorder_instance, hass):
     """Fixture with in-memory recorder."""
-    yield await async_setup_recorder_instance(hass, recorder_config)
+    return await async_setup_recorder_instance(hass, recorder_config)
 
 
 @pytest.fixture
