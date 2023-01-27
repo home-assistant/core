@@ -6,7 +6,6 @@ from unittest.mock import patch
 
 from pysensibo.model import SensiboData
 import pytest
-from pytest import MonkeyPatch
 
 from homeassistant.components.select import (
     ATTR_OPTION,
@@ -25,7 +24,7 @@ from tests.common import async_fire_time_changed
 async def test_select(
     hass: HomeAssistant,
     load_int: ConfigEntry,
-    monkeypatch: MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch,
     get_data: SensiboData,
 ) -> None:
     """Test the Sensibo select."""
@@ -54,7 +53,7 @@ async def test_select(
 async def test_select_set_option(
     hass: HomeAssistant,
     load_int: ConfigEntry,
-    monkeypatch: MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch,
     get_data: SensiboData,
 ) -> None:
     """Test the Sensibo select service."""
