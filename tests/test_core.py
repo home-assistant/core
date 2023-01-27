@@ -43,7 +43,7 @@ import homeassistant.util.dt as dt_util
 from homeassistant.util.read_only_dict import ReadOnlyDict
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from tests.common import async_capture_events, async_mock_service
+from .common import async_capture_events, async_mock_service
 
 PST = dt_util.get_time_zone("America/Los_Angeles")
 

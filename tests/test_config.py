@@ -40,7 +40,7 @@ from homeassistant.util.unit_system import (
 )
 from homeassistant.util.yaml import SECRET_YAML
 
-from tests.common import MockUser, get_test_config_dir, patch_yaml_files
+from .common import MockUser, get_test_config_dir, patch_yaml_files
 
 CONFIG_DIR = get_test_config_dir()
 YAML_PATH = os.path.join(CONFIG_DIR, config_util.YAML_CONFIG_FILE)
