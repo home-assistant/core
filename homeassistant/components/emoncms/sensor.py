@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from http import HTTPStatus
 import logging
 
 import requests
@@ -262,7 +261,7 @@ class EmonCmsData:
 
     def __init__(self, url, apikey):
         """Initialize the data object."""
-        self._apikey = apikey
+        self._parameters = {"apikey": apikey}
         self._url = f"{url}/feed/list.json"
         self.data = None
 
@@ -270,22 +269,10 @@ class EmonCmsData:
     def update(self):
         """Get the latest data from Emoncms."""
         try:
-            parameters = {"apikey": self._apikey}
             req = requests.get(
-                self._url, params=parameters, allow_redirects=True, timeout=5
+                self._url, params=self._parameters, allow_redirects=True, timeout=5
             )
-        except requests.exceptions.RequestException as exception:
-            _LOGGER.error(exception)
-            return
-
-        if req.status_code == HTTPStatus.OK:
+            req.raise_for_status()
             self.data = req.json()
-        else:
-            _LOGGER.error(
-                (
-                    "Please verify if the specified configuration value "
-                    "'%s' is correct! (HTTP Status_code = %d)"
-                ),
-                CONF_URL,
-                req.status_code,
-            )
+        except requests.exceptions.RequestException:
+            _LOGGER.exception("Failed to get EmonCMS data")
