@@ -2,6 +2,7 @@
 
 from collections import OrderedDict
 from collections.abc import Callable, Sequence
+from copy import copy, deepcopy
 import functools
 import logging
 from typing import Any, TypedDict
@@ -266,7 +267,9 @@ class MQTTService(MqttDiscoveryDeviceUpdate):
                 self.service_name,
                 call.data,
             )
-            payload = self._command_template(None, call.data)
+            payload = self._command_template(
+                None, {key: call.data.get(key) for key in self.data_schema}
+            )
             await async_publish(
                 self.hass,
                 self._config[CONF_COMMAND_TOPIC],
@@ -295,8 +298,10 @@ class MQTTService(MqttDiscoveryDeviceUpdate):
             return None
 
         data_schema = OrderedDict[str, ServiceArgMetadata]({})
-        for arg in schema:
-            metadata = ARG_TYPE_METADATA[arg[CONF_TYPE]].copy()
+        schema_arg: dict[str, Any]
+        for schema_arg in schema:
+            arg = copy(schema_arg)
+            metadata = deepcopy(ARG_TYPE_METADATA[arg[CONF_TYPE]])
             metadata[CONF_NAME] = arg[CONF_NAME]
             if CONF_DESCRIPTION in arg:
                 metadata[CONF_DESCRIPTION] = arg[CONF_DESCRIPTION]
