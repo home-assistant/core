@@ -249,6 +249,7 @@ select = [
     "PGH004",  # Use specific rule codes when using noqa
     "PT001", # Use @pytest.fixture without parentheses
     "PT013", # Found incorrect pytest import, use simple import pytest instead
+    "SIM105", # Use contextlib.suppress({exception}) instead of try-except-pass
     "T20",  # flake8-print
     "UP",  # pyupgrade
     "W",  # pycodestyle

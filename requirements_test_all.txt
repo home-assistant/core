@@ -7,7 +7,7 @@
 AEMET-OpenData==0.2.1
 
 # homeassistant.components.aladdin_connect
-AIOAladdinConnect==0.1.53
+AIOAladdinConnect==0.1.54
 
 # homeassistant.components.adax
 Adax-local==0.1.5
@@ -245,7 +245,7 @@ aiosenseme==0.6.1
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==5.3.0
+aioshelly==5.3.1
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
