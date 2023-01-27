@@ -88,6 +88,7 @@
             "fix_flow": {
                 "step": {
                     "confirm": {
+                        "description": "Werk automatiseringen of scripts bij die deze dienst gebruiken en gebruik in plaats daarvan de `{alternate_service}` dienst met doel entiteit ID `{alternate_target}`.",
                         "title": "De {deprecated_service} service zal worden verwijderd"
                     }
                 }

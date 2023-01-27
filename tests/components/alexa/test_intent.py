@@ -1,5 +1,5 @@
 """The tests for the Alexa component."""
-# pylint: disable=protected-access
+
 from http import HTTPStatus
 import json
 

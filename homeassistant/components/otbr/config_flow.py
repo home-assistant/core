@@ -14,7 +14,7 @@ from .const import DOMAIN
 
 
 class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Home Assistant SkyConnect."""
+    """Handle a config flow for Open Thread Border Router."""
 
     VERSION = 1
 
@@ -37,7 +37,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 await self.async_set_unique_id(DOMAIN)
                 return self.async_create_entry(
-                    title="Thread",
+                    title="Open Thread Border Router",
                     data=user_input,
                 )
 
@@ -55,6 +55,6 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
         url = f"http://{config['host']}:{config['port']}"
         await self.async_set_unique_id(DOMAIN)
         return self.async_create_entry(
-            title="Thread",
+            title="Open Thread Border Router",
             data={"url": url},
         )

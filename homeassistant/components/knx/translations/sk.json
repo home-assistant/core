@@ -6,11 +6,9 @@
         },
         "error": {
             "cannot_connect": "Nepodarilo sa pripoji\u0165",
-            "file_not_found": "Zadan\u00fd s\u00fabor `.knxkeys` sa nena\u0161iel v ceste config/.storage/knx/",
             "invalid_backbone_key": "Neplatn\u00fd k\u013e\u00fa\u010d backbone. O\u010dak\u00e1va sa 32 hexadecim\u00e1lnych \u010d\u00edsel.",
             "invalid_individual_address": "Hodnota sa nezhoduje so vzorom pre individu\u00e1lnu adresu KNX.\n 'area.line.device'",
             "invalid_ip_address": "Neplatn\u00e1 adresa IPv4.",
-            "invalid_signature": "Heslo na de\u0161ifrovanie s\u00faboru `.knxkeys` je nespr\u00e1vne.",
             "keyfile_invalid_signature": "Heslo na de\u0161ifrovanie s\u00faboru `.knxkeys` je nespr\u00e1vne.",
             "keyfile_no_backbone_key": "S\u00fabor `.knxkeys` neobsahuje k\u013e\u00fa\u010d chrbtice pre bezpe\u010dn\u00e9 smerovanie.",
             "keyfile_no_tunnel_for_host": "S\u00fabor `.knxkeys` neobsahuje poverenia pre hostite\u013ea `{host}`.",
@@ -29,7 +27,7 @@
             },
             "knxkeys_tunnel_select": {
                 "data": {
-                    "user_id": "\u201eAutomaticky\u201c pou\u017eije prv\u00fd vo\u013en\u00fd koncov\u00fd bod tunela."
+                    "user_id": "`Automaticky` pou\u017eije prv\u00fd vo\u013en\u00fd koncov\u00fd bod tunela."
                 },
                 "description": "Vyberte tunel pou\u017eit\u00fd na pripojenie.",
                 "title": "Koncov\u00fd bod tunela"
@@ -93,7 +91,7 @@
                     "sync_latency_tolerance": "Tolerancia latencie siete"
                 },
                 "data_description": {
-                    "backbone_key": "Mo\u017eno ho vidie\u0165 v spr\u00e1ve \u201eBezpe\u010dnos\u0165\u201c projektu ETS. Napr. '00112233445566778899AABBCCDDEEFF'",
+                    "backbone_key": "Mo\u017eno ho vidie\u0165 v spr\u00e1ve `Bezpe\u010dnos\u0165` projektu ETS. Napr. '00112233445566778899AABBCCDDEEFF'",
                     "sync_latency_tolerance": "Predvolen\u00e1 hodnota je 1000."
                 },
                 "description": "Pros\u00edm, zadajte svoje IP zabezpe\u010den\u00e9 inform\u00e1cie.",
@@ -106,9 +104,9 @@
                     "user_password": "Pou\u017e\u00edvate\u013esk\u00e9 heslo"
                 },
                 "data_description": {
-                    "device_authentication": "Toto sa nastavuje na paneli \u201eIP\u201c rozhrania v ETS.",
-                    "user_id": "Toto je \u010dasto \u010d\u00edslo tunela +1. Tak\u017ee \u201eTunnel 2\u201c bude ma\u0165 User-ID \u201e3\u201c.",
-                    "user_password": "Heslo pre \u0161pecifick\u00e9 pripojenie tunela nastaven\u00e9 na paneli \u201eVlastnosti\u201c tunela v ETS."
+                    "device_authentication": "Toto sa nastavuje na paneli `IP` rozhrania v ETS.",
+                    "user_id": "Toto je \u010dasto \u010d\u00edslo tunela +1. Tak\u017ee 'Tunnel 2' bude ma\u0165 User-ID '3'.",
+                    "user_password": "Heslo pre \u0161pecifick\u00e9 pripojenie tunela nastaven\u00e9 na paneli 'Vlastnosti' tunela v ETS."
                 },
                 "description": "Pros\u00edm, zadajte svoje IP zabezpe\u010den\u00e9 inform\u00e1cie.",
                 "title": "Bezpe\u010dn\u00e9 tuneling"
@@ -125,11 +123,9 @@
     "options": {
         "error": {
             "cannot_connect": "Nepodarilo sa pripoji\u0165",
-            "file_not_found": "Zadan\u00fd s\u00fabor `.knxkeys` sa nena\u0161iel v ceste config/.storage/knx/",
             "invalid_backbone_key": "Neplatn\u00fd k\u013e\u00fa\u010d backbone. O\u010dak\u00e1va sa 32 hexadecim\u00e1lnych \u010d\u00edsel.",
             "invalid_individual_address": "Hodnota sa nezhoduje so vzorom pre individu\u00e1lnu adresu KNX.\n 'area.line.device'",
             "invalid_ip_address": "Neplatn\u00e1 adresa IPv4.",
-            "invalid_signature": "Heslo na de\u0161ifrovanie s\u00faboru `.knxkeys` je nespr\u00e1vne.",
             "keyfile_invalid_signature": "Heslo na de\u0161ifrovanie s\u00faboru `.knxkeys` je nespr\u00e1vne.",
             "keyfile_no_backbone_key": "S\u00fabor `.knxkeys` neobsahuje k\u013e\u00fa\u010d chrbtice pre bezpe\u010dn\u00e9 smerovanie.",
             "keyfile_no_tunnel_for_host": "S\u00fabor `.knxkeys` neobsahuje poverenia pre hostite\u013ea `{host}`.",
@@ -159,7 +155,7 @@
             },
             "knxkeys_tunnel_select": {
                 "data": {
-                    "user_id": "\u201eAutomaticky\u201c pou\u017eije prv\u00fd vo\u013en\u00fd koncov\u00fd bod tunela."
+                    "user_id": "`Automaticky` pou\u017eije prv\u00fd vo\u013en\u00fd koncov\u00fd bod tunela."
                 },
                 "description": "Vyberte tunel pou\u017eit\u00fd na pripojenie.",
                 "title": "Koncov\u00fd bod tunela"
@@ -230,7 +226,7 @@
                     "sync_latency_tolerance": "Tolerancia latencie siete"
                 },
                 "data_description": {
-                    "backbone_key": "Mo\u017eno ho vidie\u0165 v spr\u00e1ve \u201eBezpe\u010dnos\u0165\u201c projektu ETS. Napr. '00112233445566778899AABBCCDDEEFF'",
+                    "backbone_key": "Mo\u017eno ho vidie\u0165 v spr\u00e1ve `Bezpe\u010dnos\u0165` projektu ETS. Napr. '00112233445566778899AABBCCDDEEFF'",
                     "sync_latency_tolerance": "Predvolen\u00e1 hodnota je 1000."
                 },
                 "description": "Pros\u00edm, zadajte svoje IP zabezpe\u010den\u00e9 inform\u00e1cie.",
@@ -243,9 +239,9 @@
                     "user_password": "Pou\u017e\u00edvate\u013esk\u00e9 heslo"
                 },
                 "data_description": {
-                    "device_authentication": "Toto sa nastavuje na paneli \u201eIP\u201c rozhrania v ETS.",
-                    "user_id": "Toto je \u010dasto \u010d\u00edslo tunela +1. Tak\u017ee \u201eTunnel 2\u201c bude ma\u0165 User-ID \u201e3\u201c.",
-                    "user_password": "Heslo pre \u0161pecifick\u00e9 pripojenie tunela nastaven\u00e9 na paneli \u201eVlastnosti\u201c tunela v ETS."
+                    "device_authentication": "Toto sa nastavuje na paneli `IP` rozhrania v ETS.",
+                    "user_id": "Toto je \u010dasto \u010d\u00edslo tunela +1. Tak\u017ee 'Tunnel 2' bude ma\u0165 User-ID '3'.",
+                    "user_password": "Heslo pre \u0161pecifick\u00e9 pripojenie tunela nastaven\u00e9 na paneli 'Vlastnosti' tunela v ETS."
                 },
                 "description": "Pros\u00edm, zadajte svoje IP zabezpe\u010den\u00e9 inform\u00e1cie.",
                 "title": "Bezpe\u010dn\u00e9 tuneling"

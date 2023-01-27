@@ -21,7 +21,7 @@ async def websocket_client(hass, hass_ws_client):
 async def test_get_info(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    thread_config_entry,
+    otbr_config_entry,
     websocket_client,
 ):
     """Test async_get_info."""
@@ -73,7 +73,7 @@ async def test_get_info_no_entry(
 async def test_get_info_fetch_fails(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    thread_config_entry,
+    otbr_config_entry,
     websocket_client,
 ):
     """Test async_get_info."""

@@ -136,5 +136,14 @@
                 "title": "Opzioni MQTT"
             }
         }
+    },
+    "selector": {
+        "set_ca_cert": {
+            "options": {
+                "auto": "Automatico",
+                "custom": "Personalizzato",
+                "off": "Spento"
+            }
+        }
     }
 }

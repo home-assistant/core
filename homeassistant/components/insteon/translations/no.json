@@ -80,11 +80,18 @@
                 },
                 "description": "Endre Insteon Hub-tilkoblingsinformasjonen. Du m\u00e5 starte Home Assistant p\u00e5 nytt n\u00e5r du har gjort denne endringen. Dette endrer ikke konfigurasjonen av selve huben. For \u00e5 endre konfigurasjonen i huben bruker du hub-appen."
             },
+            "change_plm_config": {
+                "data": {
+                    "device": "USB enhetsbane"
+                },
+                "description": "Endre Insteon PLM-tilkoblingsinformasjonen. Du m\u00e5 starte Home Assistant p\u00e5 nytt etter \u00e5 ha gjort denne endringen. Dette endrer ikke konfigurasjonen av selve PLM."
+            },
             "init": {
                 "data": {
                     "add_override": "Legg til en enhetsoverstyring.",
                     "add_x10": "Legg til en X10-enhet.",
                     "change_hub_config": "Endre hub-konfigurasjonen.",
+                    "change_plm_config": "Endre PLM-konfigurasjonen.",
                     "remove_override": "Fjern en enhet overstyring.",
                     "remove_x10": "Fjern en X10-enhet."
                 }

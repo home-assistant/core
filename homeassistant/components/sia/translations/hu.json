@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
+        },
         "error": {
             "invalid_account_format": "A megadott fi\u00f3k nem hexa\u00e9rt\u00e9k, k\u00e9rem, csak a 0-9 \u00e9s az A-F \u00e9rt\u00e9keket haszn\u00e1ljon.",
             "invalid_account_length": "A fi\u00f3k nem megfelel\u0151 hossz\u00fas\u00e1g\u00fa, 3 \u00e9s 16 karakter k\u00f6z\u00f6tt kell lennie.",

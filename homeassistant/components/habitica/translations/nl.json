@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Account is al ingesteld"
+        },
         "error": {
             "invalid_credentials": "Ongeldige authenticatie",
             "unknown": "Onverwachte fout"

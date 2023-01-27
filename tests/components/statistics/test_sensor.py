@@ -1046,14 +1046,14 @@ async def test_state_characteristics(hass: HomeAssistant):
                 f"sensor.test_{characteristic['source_sensor_domain']}_{characteristic['name']}"
             )
             assert state is not None, (
-                f"no state object for characteristic "
+                "no state object for characteristic "
                 f"'{characteristic['source_sensor_domain']}/{characteristic['name']}' "
-                f"(buffer filled)"
+                "(buffer filled)"
             )
             assert state.state == str(characteristic["value_9"]), (
-                f"value mismatch for characteristic "
+                "value mismatch for characteristic "
                 f"'{characteristic['source_sensor_domain']}/{characteristic['name']}' "
-                f"(buffer filled) - "
+                "(buffer filled) - "
                 f"assert {state.state} == {str(characteristic['value_9'])}"
             )
             assert (
@@ -1071,14 +1071,14 @@ async def test_state_characteristics(hass: HomeAssistant):
                 f"sensor.test_{characteristic['source_sensor_domain']}_{characteristic['name']}"
             )
             assert state is not None, (
-                f"no state object for characteristic "
+                "no state object for characteristic "
                 f"'{characteristic['source_sensor_domain']}/{characteristic['name']}' "
-                f"(one stored value)"
+                "(one stored value)"
             )
             assert state.state == str(characteristic["value_1"]), (
-                f"value mismatch for characteristic "
+                "value mismatch for characteristic "
                 f"'{characteristic['source_sensor_domain']}/{characteristic['name']}' "
-                f"(one stored value) - "
+                "(one stored value) - "
                 f"assert {state.state} == {str(characteristic['value_1'])}"
             )
 
@@ -1093,14 +1093,14 @@ async def test_state_characteristics(hass: HomeAssistant):
                 f"sensor.test_{characteristic['source_sensor_domain']}_{characteristic['name']}"
             )
             assert state is not None, (
-                f"no state object for characteristic "
+                "no state object for characteristic "
                 f"'{characteristic['source_sensor_domain']}/{characteristic['name']}' "
-                f"(buffer empty)"
+                "(buffer empty)"
             )
             assert state.state == str(characteristic["value_0"]), (
-                f"value mismatch for characteristic "
+                "value mismatch for characteristic "
                 f"'{characteristic['source_sensor_domain']}/{characteristic['name']}' "
-                f"(buffer empty) - "
+                "(buffer empty) - "
                 f"assert {state.state} == {str(characteristic['value_0'])}"
             )
 

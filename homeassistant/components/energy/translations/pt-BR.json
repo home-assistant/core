@@ -37,7 +37,7 @@
             "title": "Unidade de medida inesperada"
         },
         "entity_unexpected_unit_gas": {
-            "description": "As seguintes entidades n\u00e3o t\u00eam uma unidade de medida esperada (seja {energy_units} para um sensor de energia ou {gas_units} para um sensor de g\u00e1s:)",
+            "description": "As seguintes entidades n\u00e3o t\u00eam uma unidade de medida esperada (seja {energy_units} para um sensor de energia ou {gas_units} para um sensor de g\u00e1s):",
             "title": "Unidade de medida inesperada"
         },
         "entity_unexpected_unit_gas_price": {

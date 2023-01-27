@@ -1,6 +1,6 @@
 """Fixtures for the Whirlpool Sixth Sense integration tests."""
 from unittest import mock
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 import whirlpool
@@ -63,7 +63,7 @@ def get_aircon_mock(said):
     mock_aircon = mock.Mock(said=said)
     mock_aircon.connect = AsyncMock()
     mock_aircon.disconnect = AsyncMock()
-    mock_aircon.register_attr_callback = AsyncMock()
+    mock_aircon.register_attr_callback = MagicMock()
     mock_aircon.get_online.return_value = True
     mock_aircon.get_power_on.return_value = True
     mock_aircon.get_mode.return_value = whirlpool.aircon.Mode.Cool
@@ -88,13 +88,13 @@ def get_aircon_mock(said):
 @pytest.fixture(name="mock_aircon1_api", autouse=False)
 def fixture_mock_aircon1_api(mock_auth_api, mock_appliances_manager_api):
     """Set up air conditioner API fixture."""
-    yield get_aircon_mock(MOCK_SAID1)
+    return get_aircon_mock(MOCK_SAID1)
 
 
 @pytest.fixture(name="mock_aircon2_api", autouse=False)
 def fixture_mock_aircon2_api(mock_auth_api, mock_appliances_manager_api):
     """Set up air conditioner API fixture."""
-    yield get_aircon_mock(MOCK_SAID2)
+    return get_aircon_mock(MOCK_SAID2)
 
 
 @pytest.fixture(name="mock_aircon_api_instances", autouse=False)
@@ -124,7 +124,7 @@ def get_sensor_mock(said):
     mock_sensor = mock.Mock(said=said)
     mock_sensor.connect = AsyncMock()
     mock_sensor.disconnect = AsyncMock()
-    mock_sensor.register_attr_callback = AsyncMock()
+    mock_sensor.register_attr_callback = MagicMock()
     mock_sensor.get_online.return_value = True
     mock_sensor.get_machine_state.return_value = (
         whirlpool.washerdryer.MachineState.Standby
@@ -143,13 +143,13 @@ def get_sensor_mock(said):
 @pytest.fixture(name="mock_sensor1_api", autouse=False)
 def fixture_mock_sensor1_api(mock_auth_api, mock_appliances_manager_api):
     """Set up sensor API fixture."""
-    yield get_sensor_mock(MOCK_SAID3)
+    return get_sensor_mock(MOCK_SAID3)
 
 
 @pytest.fixture(name="mock_sensor2_api", autouse=False)
 def fixture_mock_sensor2_api(mock_auth_api, mock_appliances_manager_api):
     """Set up sensor API fixture."""
-    yield get_sensor_mock(MOCK_SAID4)
+    return get_sensor_mock(MOCK_SAID4)
 
 
 @pytest.fixture(name="mock_sensor_api_instances", autouse=False)

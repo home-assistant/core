@@ -332,10 +332,7 @@ async def async_handle_waypoints_message(hass, context, message):
         if user not in context.waypoint_whitelist:
             return
 
-    if "waypoints" in message:
-        wayps = message["waypoints"]
-    else:
-        wayps = [message]
+    wayps = message.get("waypoints", [message])
 
     _LOGGER.info("Got %d waypoints from %s", len(wayps), message["topic"])
 

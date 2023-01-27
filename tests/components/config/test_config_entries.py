@@ -929,8 +929,10 @@ async def test_options_flow_with_invalid_data(hass, client):
         assert resp.status == HTTPStatus.BAD_REQUEST
         data = await resp.json()
         assert data == {
-            "message": "User input malformed: invalid is not a valid option for "
-            "dictionary value @ data['choices']"
+            "message": (
+                "User input malformed: invalid is not a valid option for "
+                "dictionary value @ data['choices']"
+            )
         }
 
 

@@ -14,7 +14,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_remove_entry(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, thread_config_entry
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, otbr_config_entry
 ):
     """Test async_get_thread_state."""
 
@@ -30,7 +30,7 @@ async def test_remove_entry(
 
 
 async def test_get_active_dataset_tlvs(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, thread_config_entry
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, otbr_config_entry
 ):
     """Test async_get_active_dataset_tlvs."""
 
@@ -48,7 +48,7 @@ async def test_get_active_dataset_tlvs(
 
 
 async def test_get_active_dataset_tlvs_empty(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, thread_config_entry
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, otbr_config_entry
 ):
     """Test async_get_active_dataset_tlvs."""
 
@@ -64,7 +64,7 @@ async def test_get_active_dataset_tlvs_addon_not_installed(hass: HomeAssistant):
 
 
 async def test_get_active_dataset_tlvs_404(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, thread_config_entry
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, otbr_config_entry
 ):
     """Test async_get_active_dataset_tlvs with error."""
 
@@ -74,7 +74,7 @@ async def test_get_active_dataset_tlvs_404(
 
 
 async def test_get_active_dataset_tlvs_201(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, thread_config_entry
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, otbr_config_entry
 ):
     """Test async_get_active_dataset_tlvs with error."""
 
@@ -84,7 +84,7 @@ async def test_get_active_dataset_tlvs_201(
 
 
 async def test_get_active_dataset_tlvs_invalid(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, thread_config_entry
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, otbr_config_entry
 ):
     """Test async_get_active_dataset_tlvs with error."""
 

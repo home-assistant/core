@@ -38,5 +38,10 @@
                 "description": "Choose a device to set up"
             }
         }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "motion_detected": "Motion detected"
+        }
     }
 }

@@ -661,18 +661,19 @@ def _apply_update(  # noqa: C901
                     ),
                     table,
                 )
-                with contextlib.suppress(SQLAlchemyError):
-                    with session_scope(session=session_maker()) as session:
-                        connection = session.connection()
-                        connection.execute(
-                            # Using LOCK=EXCLUSIVE to prevent
-                            # the database from corrupting
-                            # https://github.com/home-assistant/core/issues/56104
-                            text(
-                                f"ALTER TABLE {table} CONVERT TO CHARACTER SET utf8mb4"
-                                " COLLATE utf8mb4_unicode_ci, LOCK=EXCLUSIVE"
-                            )
+                with contextlib.suppress(SQLAlchemyError), session_scope(
+                    session=session_maker()
+                ) as session:
+                    connection = session.connection()
+                    connection.execute(
+                        # Using LOCK=EXCLUSIVE to prevent
+                        # the database from corrupting
+                        # https://github.com/home-assistant/core/issues/56104
+                        text(
+                            f"ALTER TABLE {table} CONVERT TO CHARACTER SET utf8mb4"
+                            " COLLATE utf8mb4_unicode_ci, LOCK=EXCLUSIVE"
                         )
+                    )
     elif new_version == 22:
         # Recreate the all statistics tables for Oracle DB with Identity columns
         #
@@ -804,14 +805,15 @@ def _apply_update(  # noqa: C901
         if engine.dialect.name == SupportedDialect.MYSQL:
             # Ensure the row format is dynamic or the index
             # unique will be too large
-            with contextlib.suppress(SQLAlchemyError):
-                with session_scope(session=session_maker()) as session:
-                    connection = session.connection()
-                    # This is safe to run multiple times and fast
-                    # since the table is small.
-                    connection.execute(
-                        text("ALTER TABLE statistics_meta ROW_FORMAT=DYNAMIC")
-                    )
+            with contextlib.suppress(SQLAlchemyError), session_scope(
+                session=session_maker()
+            ) as session:
+                connection = session.connection()
+                # This is safe to run multiple times and fast
+                # since the table is small.
+                connection.execute(
+                    text("ALTER TABLE statistics_meta ROW_FORMAT=DYNAMIC")
+                )
         try:
             _create_index(
                 session_maker, "statistics_meta", "ix_statistics_meta_statistic_id"

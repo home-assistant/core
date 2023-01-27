@@ -5,8 +5,6 @@ import pytest
 
 from . import GATEWAY_ID, TRADFRI_PATH
 
-# pylint: disable=protected-access
-
 
 @pytest.fixture
 def mock_gateway_info():

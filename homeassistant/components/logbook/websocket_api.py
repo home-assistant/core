@@ -392,6 +392,10 @@ async def ws_event_stream(
         force_send=True,
     )
 
+    if msg_id not in connection.subscriptions:
+        # Unsubscribe happened while sending historical events
+        return
+
     live_stream.task = asyncio.create_task(
         _async_events_consumer(
             subscriptions_setup_complete_time,
@@ -401,10 +405,6 @@ async def ws_event_stream(
             event_processor,
         )
     )
-
-    if msg_id not in connection.subscriptions:
-        # Unsubscribe happened while sending historical events
-        return
 
     live_stream.wait_sync_task = asyncio.create_task(
         get_instance(hass).async_block_till_done()

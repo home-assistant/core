@@ -228,7 +228,6 @@ async def test_sync_message(hass, registries):
     assert events[0].data == {"request_id": REQ_ID, "source": "cloud"}
 
 
-# pylint: disable=redefined-outer-name
 @pytest.mark.parametrize("area_on_device", [True, False])
 async def test_sync_in_area(area_on_device, hass, registries):
     """Test a sync message where room hint comes from area."""
@@ -897,7 +896,6 @@ async def test_raising_error_trait(hass):
 async def test_serialize_input_boolean(hass):
     """Test serializing an input boolean entity."""
     state = State("input_boolean.bla", "on")
-    # pylint: disable=protected-access
     entity = sh.GoogleEntity(hass, BASIC_CONFIG, state)
     result = entity.sync_serialize(None, "mock-uuid")
     assert result == {
@@ -922,7 +920,7 @@ async def test_unavailable_state_does_sync(hass):
     )
     light.hass = hass
     light.entity_id = "light.demo_light"
-    light._available = False  # pylint: disable=protected-access
+    light._available = False
     await light.async_update_ha_state()
 
     events = async_capture_events(hass, EVENT_SYNC_RECEIVED)

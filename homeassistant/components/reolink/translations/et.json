@@ -11,6 +11,7 @@
             "not_admin": "Kasutaja peab olema administraator, kasutajal ''{username}'' on volituste tase ''{userlevel}''.",
             "unknown": "Ootamatu t\u00f5rge"
         },
+        "flow_title": "{short_mac} ({ip_address})",
         "step": {
             "reauth_confirm": {
                 "description": "Reolinki sidumine peab \u00fchenduse andmed uuesti autentima.",

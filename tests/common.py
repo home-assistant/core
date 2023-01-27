@@ -140,7 +140,7 @@ def get_test_home_assistant():
 
     def run_loop():
         """Run event loop."""
-        # pylint: disable=protected-access
+
         loop._thread_ident = threading.get_ident()
         loop.run_forever()
         loop_stop_event.set()
@@ -166,7 +166,6 @@ def get_test_home_assistant():
     return hass
 
 
-# pylint: disable=protected-access
 async def async_test_home_assistant(event_loop, load_registries=True):
     """Return a Home Assistant object pointing at test config dir."""
     hass = HomeAssistant()
@@ -301,7 +300,10 @@ async def async_test_home_assistant(event_loop, load_registries=True):
     hass.config_entries = config_entries.ConfigEntries(
         hass,
         {
-            "_": "Not empty or else some bad checks for hass config in discovery.py breaks"
+            "_": (
+                "Not empty or else some bad checks for hass config in discovery.py"
+                " breaks"
+            )
         },
     )
 
