@@ -96,7 +96,7 @@ def setup_platform(
     if value_template is not None:
         value_template.hass = hass
 
-    data = EmonCmsData(hass, url, apikey, interval)
+    data = EmonCmsData(url, apikey, interval)
 
     data.update()
 
@@ -124,7 +124,6 @@ def setup_platform(
 
         sensors.append(
             EmonCmsSensor(
-                hass,
                 data,
                 name,
                 value_template,
@@ -139,9 +138,7 @@ def setup_platform(
 class EmonCmsSensor(SensorEntity):
     """Implementation of an Emoncms sensor."""
 
-    def __init__(
-        self, hass, data, name, value_template, unit_of_measurement, sensorid, elem
-    ):
+    def __init__(self, data, name, value_template, unit_of_measurement, sensorid, elem):
         """Initialize the sensor."""
         if name is None:
             # Suppress ID in sensor name if it's 1, since most people won't
@@ -156,7 +153,6 @@ class EmonCmsSensor(SensorEntity):
         self._identifier = get_id(
             sensorid, elem["tag"], elem["name"], elem["id"], elem["userid"]
         )
-        self._hass = hass
         self._data = data
         self._value_template = value_template
         self._unit_of_measurement = unit_of_measurement
@@ -266,12 +262,11 @@ class EmonCmsSensor(SensorEntity):
 class EmonCmsData:
     """The class for handling the data retrieval."""
 
-    def __init__(self, hass, url, apikey, interval):
+    def __init__(self, url, apikey, interval):
         """Initialize the data object."""
         self._apikey = apikey
         self._url = f"{url}/feed/list.json"
         self._interval = interval
-        self._hass = hass
         self.data = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
