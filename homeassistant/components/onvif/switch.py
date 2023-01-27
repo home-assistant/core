@@ -77,6 +77,8 @@ async def async_setup_entry(
 class ONVIFSwitch(ONVIFBaseEntity, SwitchEntity):
     """An ONVIF switch."""
 
+    entity_description: ONVIFSwitchEntityDescription
+
     def __init__(
         self, device: ONVIFDevice, description: ONVIFSwitchEntityDescription
     ) -> None:
