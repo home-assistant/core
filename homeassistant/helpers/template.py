@@ -1921,7 +1921,7 @@ def today_at(hass: HomeAssistant, time_str: str = "") -> datetime:
     return datetime.combine(today, time_today, today.tzinfo)
 
 
-def relative_time(hass: HomeAssistant, value: datetime):
+def relative_time(hass: HomeAssistant, value: Any) -> Any:
     """Take a datetime and return its "age" as a string.
 
     The age can be in second, minute, hour, day, month or year. Only the
