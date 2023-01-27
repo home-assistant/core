@@ -75,7 +75,7 @@ def mock_litejet():
         mock_lj.last_delta = timedelta(0)
         mock_lj.connected = True
 
-        def connected_changed(connected: bool, reason: str):
+        def connected_changed(connected: bool, reason: str) -> None:
             mock_lj.connected = connected
             for callback in mock_lj.connected_changed_callbacks:
                 callback(connected, reason)
