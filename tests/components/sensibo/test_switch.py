@@ -195,16 +195,17 @@ async def test_switch_command_failure(
     ), patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_timer",
         return_value={"status": "failure"},
+    ), pytest.raises(
+        HomeAssistantError
     ):
-        with pytest.raises(HomeAssistantError):
-            await hass.services.async_call(
-                SWITCH_DOMAIN,
-                SERVICE_TURN_ON,
-                {
-                    ATTR_ENTITY_ID: state1.entity_id,
-                },
-                blocking=True,
-            )
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {
+                ATTR_ENTITY_ID: state1.entity_id,
+            },
+            blocking=True,
+        )
 
     with patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
@@ -212,16 +213,17 @@ async def test_switch_command_failure(
     ), patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_del_timer",
         return_value={"status": "failure"},
+    ), pytest.raises(
+        HomeAssistantError
     ):
-        with pytest.raises(HomeAssistantError):
-            await hass.services.async_call(
-                SWITCH_DOMAIN,
-                SERVICE_TURN_OFF,
-                {
-                    ATTR_ENTITY_ID: state1.entity_id,
-                },
-                blocking=True,
-            )
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {
+                ATTR_ENTITY_ID: state1.entity_id,
+            },
+            blocking=True,
+        )
 
 
 async def test_switch_climate_react(
