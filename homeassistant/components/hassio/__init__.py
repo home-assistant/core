@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 from datetime import timedelta
 import logging
 import os
@@ -449,15 +450,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             payload = data
 
         # Call API
-        try:
+        # The exceptions are logged properly in hassio.send_command
+        with suppress(HassioAPIError):
             await hassio.send_command(
                 api_endpoint.command.format(addon=addon, slug=slug),
                 payload=payload,
                 timeout=api_endpoint.timeout,
             )
-        except HassioAPIError:
-            # The exceptions are logged properly in hassio.send_command
-            pass
 
     for service, settings in MAP_SERVICE_API.items():
         hass.services.async_register(

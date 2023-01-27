@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from contextlib import suppress
 import logging
 
 from synology_dsm import SynologyDSM
@@ -263,11 +264,9 @@ class SynoApi:
 
     async def async_unload(self) -> None:
         """Stop interacting with the NAS and prepare for removal from hass."""
-        try:
+        # ignore API errors during logout
+        with suppress(SynologyDSMException):
             await self._syno_api_executer(self.dsm.logout)
-        except SynologyDSMException:
-            # ignore API errors during logout
-            pass
 
     async def async_update(self) -> None:
         """Update function for updating API information."""
