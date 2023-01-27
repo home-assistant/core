@@ -39,12 +39,10 @@ class HasActiveErrorsBinarySensorEntityDescription(
     @classmethod
     def set_extra_state_att(cls, lektrico_binary_sensor: LektricoBinarySensor) -> None:
         """Get the has_active_errors."""
-        if hasattr(
-            lektrico_binary_sensor.coordinator.data, "state_machine_e_activated"
-        ):
+        if hasattr(lektrico_binary_sensor.coordinator.data, "state_e_activated"):
             # error types exist => set their values in _attr_extra_state_attributes
             lektrico_binary_sensor.set_attr_extra_state_attributes_for_errors(
-                lektrico_binary_sensor.coordinator.data.state_machine_e_activated,
+                lektrico_binary_sensor.coordinator.data.state_e_activated,
                 lektrico_binary_sensor.coordinator.data.overtemp,
                 lektrico_binary_sensor.coordinator.data.critical_temp,
                 lektrico_binary_sensor.coordinator.data.overcurrent,
