@@ -1389,6 +1389,71 @@ async def test_parse_qr_code_string(hass, integration, client, hass_ws_client):
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
+async def test_try_parse_dsk_from_qr_code_string(
+    hass, integration, client, hass_ws_client
+):
+    """Test try_parse_dsk_from_qr_code_string websocket command."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    client.async_send_command.return_value = {"dsk": "a"}
+
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "zwave_js/try_parse_dsk_from_qr_code_string",
+            ENTRY_ID: entry.entry_id,
+            QR_CODE_STRING: "90testtesttesttesttesttesttesttesttesttesttesttesttest",
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == "a"
+
+    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_args[0][0] == {
+        "command": "utils.try_parse_dsk_from_qr_code_string",
+        "qr": "90testtesttesttesttesttesttesttesttesttesttesttesttest",
+    }
+
+    # Test FailedZWaveCommand is caught
+    with patch(
+        "homeassistant.components.zwave_js.api.async_try_parse_dsk_from_qr_code_string",
+        side_effect=FailedZWaveCommand("failed_command", 1, "error message"),
+    ):
+        await ws_client.send_json(
+            {
+                ID: 6,
+                TYPE: "zwave_js/try_parse_dsk_from_qr_code_string",
+                ENTRY_ID: entry.entry_id,
+                QR_CODE_STRING: "90testtesttesttesttesttesttesttesttesttesttesttesttest",
+            }
+        )
+        msg = await ws_client.receive_json()
+
+        assert not msg["success"]
+        assert msg["error"]["code"] == "zwave_error"
+        assert msg["error"]["message"] == "Z-Wave error 1: error message"
+
+    # Test sending command with not loaded entry fails
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await ws_client.send_json(
+        {
+            ID: 7,
+            TYPE: "zwave_js/try_parse_dsk_from_qr_code_string",
+            ENTRY_ID: entry.entry_id,
+            QR_CODE_STRING: "90testtesttesttesttesttesttesttesttesttesttesttesttest",
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_LOADED
+
+
 async def test_supports_feature(hass, integration, client, hass_ws_client):
     """Test supports_feature websocket command."""
     entry = integration
@@ -2829,27 +2894,58 @@ async def test_get_config_parameters(hass, multisensor_6, integration, hass_ws_c
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
-async def test_firmware_upload_view(
+async def test_firmware_upload_view_node(
     hass, multisensor_6, integration, hass_client, firmware_file
 ):
-    """Test the HTTP firmware upload view."""
-    client = await hass_client()
+    """Test the HTTP firmware upload view for a node."""
+    hass_client = await hass_client()
     device = get_device(hass, multisensor_6)
     with patch(
         "homeassistant.components.zwave_js.api.update_firmware",
-    ) as mock_cmd, patch.dict(
+    ) as mock_node_cmd, patch(
+        "homeassistant.components.zwave_js.api.controller_firmware_update_otw",
+    ) as mock_controller_cmd, patch.dict(
         "homeassistant.components.zwave_js.api.USER_AGENT",
         {"HomeAssistant": "0.0.0"},
     ):
-        resp = await client.post(
+        resp = await hass_client.post(
             f"/api/zwave_js/firmware/upload/{device.id}",
             data={"file": firmware_file},
         )
-        assert mock_cmd.call_args[0][1:3] == (
+        mock_controller_cmd.assert_not_called()
+        assert mock_node_cmd.call_args[0][1:3] == (
             multisensor_6,
             [FirmwareUpdateData("file", bytes(10))],
         )
-        assert mock_cmd.call_args[1] == {
+        assert mock_node_cmd.call_args[1] == {
+            "additional_user_agent_components": {"HomeAssistant": "0.0.0"},
+        }
+        assert json.loads(await resp.text()) is None
+
+
+async def test_firmware_upload_view_controller(
+    hass, client, integration, hass_client, firmware_file
+):
+    """Test the HTTP firmware upload view for a controller."""
+    hass_client = await hass_client()
+    device = get_device(hass, client.driver.controller.nodes[1])
+    with patch(
+        "homeassistant.components.zwave_js.api.update_firmware",
+    ) as mock_node_cmd, patch(
+        "homeassistant.components.zwave_js.api.controller_firmware_update_otw",
+    ) as mock_controller_cmd, patch.dict(
+        "homeassistant.components.zwave_js.api.USER_AGENT",
+        {"HomeAssistant": "0.0.0"},
+    ):
+        resp = await hass_client.post(
+            f"/api/zwave_js/firmware/upload/{device.id}",
+            data={"file": firmware_file},
+        )
+        mock_node_cmd.assert_not_called()
+        assert mock_controller_cmd.call_args[0][1:2] == (
+            FirmwareUpdateData("file", bytes(10)),
+        )
+        assert mock_controller_cmd.call_args[1] == {
             "additional_user_agent_components": {"HomeAssistant": "0.0.0"},
         }
         assert json.loads(await resp.text()) is None
