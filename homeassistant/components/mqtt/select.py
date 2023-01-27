@@ -23,6 +23,7 @@ from .const import (
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
     CONF_ENCODING,
+    CONF_OPTIONS,
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
@@ -44,8 +45,6 @@ from .models import (
 from .util import get_mqtt_data
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_OPTIONS = "options"
 
 DEFAULT_NAME = "MQTT Select"
 

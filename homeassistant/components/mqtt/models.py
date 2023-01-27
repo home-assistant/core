@@ -25,6 +25,7 @@ if TYPE_CHECKING:
     from .debug_info import TimestampedPublishMessage
     from .device_trigger import Trigger
     from .discovery import MQTTDiscoveryPayload
+    from .service import MQTTService
     from .tag import MQTTTagScanner
 
 
@@ -301,6 +302,7 @@ class MqttData:
     )
     reload_needed: bool = False
     state_write_requests: EntityTopicState = field(default_factory=EntityTopicState)
+    services: dict[str, MQTTService] = field(default_factory=dict)
     subscriptions_to_restore: list[Subscription] = field(default_factory=list)
     tags: dict[str, dict[str, MQTTTagScanner]] = field(default_factory=dict)
     updated_config: ConfigType = field(default_factory=dict)

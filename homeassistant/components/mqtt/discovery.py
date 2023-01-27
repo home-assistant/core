@@ -61,6 +61,7 @@ SUPPORTED_COMPONENTS = [
     "siren",
     "select",
     "sensor",
+    "service",
     "switch",
     "tag",
     "text",

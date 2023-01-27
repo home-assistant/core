@@ -793,7 +793,7 @@ class MqttDiscoveryDeviceUpdate(ABC):
         # Cleanup platform resources
         await self.async_tear_down()
         # remove the service for auto discovery updates and clean up the device registry
-        if not self._skip_device_removal:
+        if self._device_id and not self._skip_device_removal:
             # Prevent a second cleanup round after the device is removed
             self._skip_device_removal = True
             await cleanup_device_registry(
