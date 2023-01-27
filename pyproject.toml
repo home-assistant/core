@@ -248,6 +248,7 @@ select = [
     "F",  # pyflakes/autoflake
     "PGH004",  # Use specific rule codes when using noqa
     "PT001", # Use @pytest.fixture without parentheses
+    "SIM105", # Use contextlib.suppress({exception}) instead of try-except-pass
     "T20",  # flake8-print
     "UP",  # pyupgrade
     "W",  # pycodestyle
