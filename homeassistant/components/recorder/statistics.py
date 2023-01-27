@@ -2422,17 +2422,18 @@ def correct_db_schema(
             ),
             "statistics_meta",
         )
-        with contextlib.suppress(SQLAlchemyError):
-            with session_scope(session=session_maker()) as session:
-                connection = session.connection()
-                connection.execute(
-                    # Using LOCK=EXCLUSIVE to prevent the database from corrupting
-                    # https://github.com/home-assistant/core/issues/56104
-                    text(
-                        "ALTER TABLE statistics_meta CONVERT TO CHARACTER SET utf8mb4"
-                        " COLLATE utf8mb4_unicode_ci, LOCK=EXCLUSIVE"
-                    )
+        with contextlib.suppress(SQLAlchemyError), session_scope(
+            session=session_maker()
+        ) as session:
+            connection = session.connection()
+            connection.execute(
+                # Using LOCK=EXCLUSIVE to prevent the database from corrupting
+                # https://github.com/home-assistant/core/issues/56104
+                text(
+                    "ALTER TABLE statistics_meta CONVERT TO CHARACTER SET utf8mb4"
+                    " COLLATE utf8mb4_unicode_ci, LOCK=EXCLUSIVE"
                 )
+            )
 
     tables: tuple[type[Statistics | StatisticsShortTerm], ...] = (
         Statistics,
