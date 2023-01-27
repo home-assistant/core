@@ -13,8 +13,7 @@ from homeassistant.const import (
     CONF_SENSORS,
     PERCENTAGE,
     STATE_OFF,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 
 from . import NestSensorDevice
@@ -222,9 +221,9 @@ class NestTempSensor(NestSensorDevice, SensorEntity):
     def update(self):
         """Retrieve latest state."""
         if self.device.temperature_scale == "C":
-            self._unit = TEMP_CELSIUS
+            self._unit = UnitOfTemperature.CELSIUS
         else:
-            self._unit = TEMP_FAHRENHEIT
+            self._unit = UnitOfTemperature.FAHRENHEIT
 
         if (temp := getattr(self.device, self.variable)) is None:
             self._state = None
