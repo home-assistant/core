@@ -12,8 +12,9 @@ from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
 
-from ...common import MockConfigEntry
 from .conftest import mock_config, mock_feature, mock_only_feature, setup_product_mock
+
+from tests.common import MockConfigEntry
 
 
 def create_valid_feature_mock(path="homeassistant.components.blebox.Products"):
