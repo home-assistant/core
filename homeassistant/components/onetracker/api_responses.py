@@ -78,10 +78,11 @@ class Parcel:
         """Convert dictionary to class structure."""
         if input_dict is not None:
             for key, value in input_dict.items():
-                if key.contains("time"):
+                if key.__contains__("time"):
                     setattr(self, key, parse_datetime(value))
                 elif key == "tracking_events":
-                    setattr(self, key, map(TrackingEvent, value))
+                    if value is not None:
+                        setattr(self, key, map(TrackingEvent, value))
                 else:
                     setattr(self, key, value)
 

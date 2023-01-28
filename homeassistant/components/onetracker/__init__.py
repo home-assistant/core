@@ -5,28 +5,62 @@ from typing import Any
 
 # import voluptuous as vol
 
-from homeassistant.config_entries import ConfigType
+from homeassistant.config_entries import ConfigType, ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_NAME, CONF_PASSWORD, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 
 from .const import DEFAULT_NAME, DEFAULT_SCAN_INTERVAL
 from .coordinator import OneTrackerDataUpdateCoordinator
 
+import logging
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Configure setup for OneTracker integration."""
-    if config is not None:
-        # options = {
-        #     vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
-        #     vol.Required(CONF_EMAIL): str,
-        #     vol.Required(CONF_PASSWORD): str,
-        #     vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): int,
-        # }
+_LOGGER = logging.getLogger(__name__)
 
-        hass.async_start()
+import json
+from .const import DOMAIN
 
+
+# async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+#     """Configure setup for OneTracker integration."""
+#     # if config is not None:
+#     #     options = {
+#     #         vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
+#     #         vol.Required(CONF_EMAIL): str,
+#     #         vol.Required(CONF_PASSWORD): str,
+#     #         vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): int,
+#     #     }
+#     #     _LOGGER.warning("Pre async_start")
+#     #     await hass.async_start()
+#     options = hass.data
+#     _LOGGER.warning("Config %s", json.dumps(config))
+#     _LOGGER.warning("Options %s", options)
+#     coordinator = OneTrackerDataUpdateCoordinator(hass, config=config)
+#     await coordinator.async_config_entry_first_refresh()
+#     _LOGGER.warning("Post async_config_entry_first_refresh")
+#     # Return boolean to indicate that initialization was successful.
+#     return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Config entry example."""
+    # assuming API object stored here by __init__.py
+    # config = hass.data[DOMAIN][entry.entry_id]
+
+    _LOGGER.warning("Entry %s", json.dumps(entry.as_dict()))
+    config = entry.data
+    _LOGGER.warning("Config %s", config)
+
+    # Fetch initial data so we have data when entities subscribe
+    #
+    # If the refresh fails, async_config_entry_first_refresh will
+    # raise ConfigEntryNotReady and setup will try again later
+    #
+    # If you do not want to retry setup on failure, use
+    # coordinator.async_refresh() instead
+    #
     coordinator = OneTrackerDataUpdateCoordinator(hass, config=config)
     await coordinator.async_config_entry_first_refresh()
+    _LOGGER.warning("Post async_config_entry_first_refresh")
     # Return boolean to indicate that initialization was successful.
     return True
 

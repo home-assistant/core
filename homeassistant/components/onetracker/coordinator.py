@@ -16,6 +16,7 @@ from .api import OneTrackerAPI, OneTrackerAPIException
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+import json
 
 
 class OneTrackerDataUpdateCoordinator(DataUpdateCoordinator):
@@ -29,14 +30,14 @@ class OneTrackerDataUpdateCoordinator(DataUpdateCoordinator):
         options: Mapping[str, Any] | None = None,
     ) -> None:
         """Initialize global OneTracker data updater."""
-
-        update_interval = timedelta(seconds=config[CONF_SCAN_INTERVAL])
+        # _LOGGER.warning("Scan interval: %s", json.dumps(config))
+        # update_interval = timedelta(seconds=config[CONF_SCAN_INTERVAL])
 
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=update_interval,
+            update_interval=30,
         )
 
         self.onetracker = OneTrackerAPI(
