@@ -23,7 +23,7 @@ PLATFORMS = [Platform.NOTIFY, Platform.SENSOR]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the LG WebOS TV platform."""
+    """Set up the Google Mail platform."""
     hass.data.setdefault(DOMAIN, {})[DATA_HASS_CONFIG] = config
 
     return True
