@@ -38,5 +38,10 @@
                 "description": "Velg en enhet du vil konfigurere"
             }
         }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "motion_detected": "Bevegelse oppdaget"
+        }
     }
 }

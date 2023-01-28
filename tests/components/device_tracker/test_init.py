@@ -75,7 +75,7 @@ async def test_reading_broken_yaml_config(hass):
         "badkey.yaml": "@:\n  name: Device",
         "noname.yaml": "my_device:\n",
         "allok.yaml": "My Device:\n  name: Device",
-        "oneok.yaml": ("My Device!:\n  name: Device\nbad_device:\n  nme: Device"),
+        "oneok.yaml": "My Device!:\n  name: Device\nbad_device:\n  nme: Device",
     }
     args = {"hass": hass, "consider_home": timedelta(seconds=60)}
     with patch_yaml_files(files):

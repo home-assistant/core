@@ -77,7 +77,7 @@ class PrusaLinkUpdateCoordinator(DataUpdateCoordinator, Generic[T], ABC):
     async def _async_update_data(self) -> T:
         """Update the data."""
         try:
-            with async_timeout.timeout(5):
+            async with async_timeout.timeout(5):
                 data = await self._fetch_data()
         except InvalidAuth:
             raise UpdateFailed("Invalid authentication") from None

@@ -36,7 +36,7 @@ def config_schema_assert_fail(withings_config) -> None:
     """Assert a schema config will fail."""
     try:
         config_schema_validate(withings_config)
-        assert False, "This line should not have run."
+        pytest.fail("This line should not have run.")
     except vol.error.MultipleInvalid:
         assert True
 

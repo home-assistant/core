@@ -20,7 +20,7 @@
             "internal_error": "Kesalahan internal saat memvalidasi kode",
             "invalid_pin": "Invalid Kode PIN",
             "subscriber_error": "Kesalahan pelanggan tidak diketahui, lihat log",
-            "timeout": "Tenggang waktu memvalidasi kode telah habis.",
+            "timeout": "Tenggang waktu validasi kode habis.",
             "unknown": "Kesalahan yang tidak diharapkan",
             "wrong_project_id": "Masukkan ID Proyek Cloud yang valid (sebelumnya sama dengan ID Proyek Akses Perangkat)"
         },

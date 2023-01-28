@@ -13,7 +13,8 @@
                     "heat": "Admite modo de calor",
                     "heat_cool": "Admite modo autom\u00e1tico de calor/fr\u00edo",
                     "host": "Host",
-                    "off": "Se puede apagar"
+                    "off": "Se puede apagar",
+                    "swing_support": "Modo de oscilaci\u00f3n de control"
                 },
                 "title": "Configura los detalles de tu conexi\u00f3n CoolMasterNet."
             }

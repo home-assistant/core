@@ -206,7 +206,7 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         name="Last Doorbell Ring",
         device_class=SensorDeviceClass.TIMESTAMP,
         icon="mdi:doorbell-video",
-        ufp_required_field="feature_flags.has_chime",
+        ufp_required_field="feature_flags.is_doorbell",
         ufp_value="last_ring",
         entity_registry_enabled_default=False,
     ),

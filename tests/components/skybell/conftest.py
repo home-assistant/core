@@ -26,7 +26,7 @@ CONF_DATA = {
 }
 
 
-@pytest.fixture()
+@pytest.fixture
 def invalid_auth(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     """Return invalid auth."""
     return aioclient_mock.post(
@@ -36,7 +36,7 @@ def invalid_auth(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> No
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def internal_server_error(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
@@ -47,7 +47,7 @@ def internal_server_error(
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def cannot_connect(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     """Return internal server error."""
     return aioclient_mock.post(
@@ -57,7 +57,7 @@ def cannot_connect(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> 
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def auth_exception(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     """Return invalid authorization error."""
     return aioclient_mock.get(
@@ -67,7 +67,7 @@ def auth_exception(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> 
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def not_ready(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     """Return internal server error."""
     return aioclient_mock.get(
@@ -84,7 +84,7 @@ def create_entry(hass: HomeAssistant) -> MockConfigEntry:
     return entry
 
 
-@pytest.fixture()
+@pytest.fixture
 def config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Add config entry in Home Assistant."""
     return create_entry(hass)

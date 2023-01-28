@@ -196,6 +196,7 @@ SENSOR_TYPES: tuple[GlancesSensorEntityDescription, ...] = (
         type="sensors",
         name_suffix="Charge",
         native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
         icon="mdi:battery",
         state_class=SensorStateClass.MEASUREMENT,
     ),

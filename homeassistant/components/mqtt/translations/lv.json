@@ -10,5 +10,14 @@
             "turn_off": "Iesl\u0113gt",
             "turn_on": "Iesl\u0113gt"
         }
+    },
+    "selector": {
+        "set_ca_cert": {
+            "options": {
+                "auto": "Autom\u0101tiski",
+                "custom": "Izv\u0113les",
+                "off": "Izsl\u0113gts"
+            }
+        }
     }
 }

@@ -43,7 +43,8 @@
                 "menu_options": {
                     "origin_coordinates": "Een kaartlocatie gebruiken",
                     "origin_entity": "Een entiteit gebruiken"
-                }
+                },
+                "title": "Kies vertrekpunt"
             },
             "user": {
                 "data": {

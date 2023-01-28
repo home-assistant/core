@@ -19,8 +19,7 @@
             "init": {
                 "data": {
                     "power": "Pot\u00e8ncia contractada (kW)",
-                    "power_p3": "Pot\u00e8ncia contractada del per\u00edode vall P3 (kW)",
-                    "tariff": "Tarifa aplicable per zona geogr\u00e0fica"
+                    "power_p3": "Pot\u00e8ncia contractada del per\u00edode vall P3 (kW)"
                 }
             }
         }

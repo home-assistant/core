@@ -1,7 +1,7 @@
 """Support for Brunt Blind Engine covers."""
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from aiohttp.client_exceptions import ClientResponseError
 from brunt import BruntClientAsync, Thing
@@ -53,7 +53,7 @@ async def async_setup_entry(
 
 
 class BruntDevice(
-    CoordinatorEntity[DataUpdateCoordinator[dict[Optional[str], Thing]]], CoverEntity
+    CoordinatorEntity[DataUpdateCoordinator[dict[str | None, Thing]]], CoverEntity
 ):
     """
     Representation of a Brunt cover device.

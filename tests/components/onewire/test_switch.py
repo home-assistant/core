@@ -1,4 +1,5 @@
 """Tests for 1-Wire switches."""
+from collections.abc import Generator
 import logging
 from unittest.mock import MagicMock, patch
 
@@ -29,7 +30,7 @@ from tests.common import mock_device_registry, mock_registry
 
 
 @pytest.fixture(autouse=True)
-def override_platforms():
+def override_platforms() -> Generator[None, None, None]:
     """Override PLATFORMS."""
     with patch("homeassistant.components.onewire.PLATFORMS", [Platform.SWITCH]):
         yield
@@ -41,7 +42,7 @@ async def test_switches(
     owproxy: MagicMock,
     device_id: str,
     caplog: pytest.LogCaptureFixture,
-):
+) -> None:
     """Test for 1-Wire switch.
 
     This test forces all entities to be enabled.

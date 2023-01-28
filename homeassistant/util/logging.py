@@ -11,7 +11,6 @@ import queue
 import traceback
 from typing import Any, TypeVar, cast, overload
 
-from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.core import HomeAssistant, callback, is_callback
 
 _T = TypeVar("_T")
@@ -34,6 +33,8 @@ class HideSensitiveDataFilter(logging.Filter):
 
 class HomeAssistantQueueHandler(logging.handlers.QueueHandler):
     """Process the log in another thread."""
+
+    listener: logging.handlers.QueueListener | None = None
 
     def prepare(self, record: logging.LogRecord) -> logging.LogRecord:
         """Prepare a record for queuing.
@@ -62,6 +63,18 @@ class HomeAssistantQueueHandler(logging.handlers.QueueHandler):
             self.emit(record)
         return return_value
 
+    def close(self) -> None:
+        """
+        Tidy up any resources used by the handler.
+
+        This adds shutdown of the QueueListener
+        """
+        super().close()
+        if not self.listener:
+            return
+        self.listener.stop()
+        self.listener = None
+
 
 @callback
 def async_activate_log_queue_handler(hass: HomeAssistant) -> None:
@@ -83,19 +96,9 @@ def async_activate_log_queue_handler(hass: HomeAssistant) -> None:
         migrated_handlers.append(handler)
 
     listener = logging.handlers.QueueListener(simple_queue, *migrated_handlers)
+    queue_handler.listener = listener
 
     listener.start()
-
-    @callback
-    def _async_stop_queue_handler(_: Any) -> None:
-        """Cleanup handler."""
-        # Ensure any messages that happen after close still get logged
-        for original_handler in migrated_handlers:
-            logging.root.addHandler(original_handler)
-        logging.root.removeHandler(queue_handler)
-        listener.stop()
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _async_stop_queue_handler)
 
 
 def log_exception(format_err: Callable[..., Any], *args: Any) -> None:

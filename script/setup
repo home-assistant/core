@@ -23,6 +23,11 @@ fi
 
 script/bootstrap
 
+# Avoid unsafe git error when running inside devcontainer
+if [ -n "$DEVCONTAINER" ];then
+  git config --global --add safe.directory "$PWD"
+fi
+
 pre-commit install
 python3 -m pip install -e . --constraint homeassistant/package_constraints.txt --use-deprecated=legacy-resolver
 

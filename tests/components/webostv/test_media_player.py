@@ -1,8 +1,10 @@
 """The tests for the LG webOS media player platform."""
 import asyncio
 from datetime import timedelta
+from http import HTTPStatus
 from unittest.mock import Mock
 
+from aiowebostv import WebOsTvPairError
 import pytest
 
 from homeassistant.components import automation
@@ -36,6 +38,7 @@ from homeassistant.components.webostv.media_player import (
     SUPPORT_WEBOSTV,
     SUPPORT_WEBOSTV_VOLUME,
 )
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     ATTR_COMMAND,
     ATTR_DEVICE_CLASS,
@@ -494,8 +497,8 @@ async def test_control_error_handling(hass, client, caplog, monkeypatch):
 
     assert client.play.call_count == 1
     assert (
-        f"Error calling async_media_play on entity {ENTITY_ID}, state:off, error: TimeoutError()"
-        in caplog.text
+        f"Error calling async_media_play on entity {ENTITY_ID}, state:off, error:"
+        " TimeoutError()" in caplog.text
     )
 
 
@@ -579,7 +582,7 @@ async def test_cached_supported_features(hass, client, monkeypatch):
     await client.mock_state_update()
 
     # TV off, restored state supports mute, step
-    # validate SUPPORT_TURN_ON is not cached
+    # validate MediaPlayerEntityFeature.TURN_ON is not cached
     attrs = hass.states.get(ENTITY_ID).attributes
 
     assert (
@@ -697,3 +700,93 @@ async def test_supported_features_ignore_cache(hass, client):
     attrs = hass.states.get(ENTITY_ID).attributes
 
     assert attrs[ATTR_SUPPORTED_FEATURES] == supported
+
+
+async def test_get_image_http(
+    hass, client, hass_client_no_auth, aioclient_mock, monkeypatch
+):
+    """Test get image via http."""
+    url = "http://something/valid_icon"
+    monkeypatch.setitem(client.apps[LIVE_TV_APP_ID], "icon", url)
+    await setup_webostv(hass)
+    await client.mock_state_update()
+
+    attrs = hass.states.get(ENTITY_ID).attributes
+    assert "entity_picture_local" not in attrs
+
+    aioclient_mock.get(url, text="image")
+    client = await hass_client_no_auth()
+
+    resp = await client.get(attrs["entity_picture"])
+    content = await resp.read()
+
+    assert content == b"image"
+
+
+async def test_get_image_http_error(
+    hass, client, hass_client_no_auth, aioclient_mock, caplog, monkeypatch
+):
+    """Test get image via http error."""
+    url = "http://something/icon_error"
+    monkeypatch.setitem(client.apps[LIVE_TV_APP_ID], "icon", url)
+    await setup_webostv(hass)
+    await client.mock_state_update()
+
+    attrs = hass.states.get(ENTITY_ID).attributes
+    assert "entity_picture_local" not in attrs
+
+    aioclient_mock.get(url, exc=asyncio.TimeoutError())
+    client = await hass_client_no_auth()
+
+    resp = await client.get(attrs["entity_picture"])
+    content = await resp.read()
+
+    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert f"Error retrieving proxied image from {url}" in caplog.text
+    assert content == b""
+
+
+async def test_get_image_https(
+    hass, client, hass_client_no_auth, aioclient_mock, monkeypatch
+):
+    """Test get image via http."""
+    url = "https://something/valid_icon_https"
+    monkeypatch.setitem(client.apps[LIVE_TV_APP_ID], "icon", url)
+    await setup_webostv(hass)
+    await client.mock_state_update()
+
+    attrs = hass.states.get(ENTITY_ID).attributes
+    assert "entity_picture_local" not in attrs
+
+    aioclient_mock.get(url, text="https_image")
+    client = await hass_client_no_auth()
+
+    resp = await client.get(attrs["entity_picture"])
+    content = await resp.read()
+
+    assert content == b"https_image"
+
+
+async def test_reauth_reconnect(hass, client, monkeypatch):
+    """Test reauth flow triggered by reconnect."""
+    entry = await setup_webostv(hass)
+    monkeypatch.setattr(client, "is_connected", Mock(return_value=False))
+    monkeypatch.setattr(client, "connect", Mock(side_effect=WebOsTvPairError))
+
+    assert entry.state == ConfigEntryState.LOADED
+
+    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=20))
+    await hass.async_block_till_done()
+
+    assert entry.state == ConfigEntryState.LOADED
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    flow = flows[0]
+    assert flow.get("step_id") == "reauth_confirm"
+    assert flow.get("handler") == DOMAIN
+
+    assert "context" in flow
+    assert flow["context"].get("source") == SOURCE_REAUTH
+    assert flow["context"].get("entry_id") == entry.entry_id

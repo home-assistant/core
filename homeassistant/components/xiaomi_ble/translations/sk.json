@@ -38,5 +38,10 @@
                 "description": "Vyberte zariadenie, ktor\u00e9 chcete nastavi\u0165"
             }
         }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "motion_detected": "Zisten\u00fd pohyb"
+        }
     }
 }

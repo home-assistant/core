@@ -69,14 +69,14 @@ EVENT_CHARGING = {
     "CHARGING": True,
     "NOT_CHARGING": False,
 }
-SUBSCRIPTION_SERVICES = [
+SUBSCRIPTION_SERVICES = {
     "alarmClock",
     "avTransport",
     "contentDirectory",
     "deviceProperties",
     "renderingControl",
     "zoneGroupTopology",
-]
+}
 SUPPORTED_VANISH_REASONS = ("sleeping", "switch to bluetooth", "upgrade")
 UNUSED_DEVICE_KEYS = ["SPID", "TargetRoomName"]
 
@@ -88,7 +88,11 @@ class SonosSpeaker:
     """Representation of a Sonos speaker."""
 
     def __init__(
-        self, hass: HomeAssistant, soco: SoCo, speaker_info: dict[str, Any]
+        self,
+        hass: HomeAssistant,
+        soco: SoCo,
+        speaker_info: dict[str, Any],
+        zone_group_state_sub: SubscriptionBase | None,
     ) -> None:
         """Initialize a SonosSpeaker."""
         self.hass = hass
@@ -112,6 +116,9 @@ class SonosSpeaker:
         # Subscriptions and events
         self.subscriptions_failed: bool = False
         self._subscriptions: list[SubscriptionBase] = []
+        if zone_group_state_sub:
+            zone_group_state_sub.callback = self.async_dispatch_event
+            self._subscriptions.append(zone_group_state_sub)
         self._subscription_lock: asyncio.Lock | None = None
         self._event_dispatchers: dict[str, Callable] = {}
         self._last_activity: float = NEVER_TIME
@@ -289,6 +296,12 @@ class SonosSpeaker:
         addr, port = self._subscriptions[0].event_listener.address
         return ":".join([addr, str(port)])
 
+    @property
+    def missing_subscriptions(self) -> set[str]:
+        """Return a list of missing service subscriptions."""
+        subscribed_services = {sub.service.service_type for sub in self._subscriptions}
+        return SUBSCRIPTION_SERVICES - subscribed_services
+
     #
     # Subscription handling and event dispatchers
     #
@@ -321,8 +334,6 @@ class SonosSpeaker:
             self._subscription_lock = asyncio.Lock()
 
         async with self._subscription_lock:
-            if self._subscriptions:
-                return
             try:
                 await self._async_subscribe()
             except SonosSubscriptionsFailed:
@@ -331,12 +342,14 @@ class SonosSpeaker:
 
     async def _async_subscribe(self) -> None:
         """Create event subscriptions."""
-        _LOGGER.debug("Creating subscriptions for %s", self.zone_name)
-
         subscriptions = [
             self._subscribe(getattr(self.soco, service), self.async_dispatch_event)
-            for service in SUBSCRIPTION_SERVICES
+            for service in self.missing_subscriptions
         ]
+        if not subscriptions:
+            return
+
+        _LOGGER.debug("Creating subscriptions for %s", self.zone_name)
         results = await asyncio.gather(*subscriptions, return_exceptions=True)
         for result in results:
             self.log_subscription_result(

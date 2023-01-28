@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "not_huawei_lte": "\ud654\uc6e8\uc774 LTE \uae30\uae30\uac00 \uc544\ub2d9\ub2c8\ub2e4",
             "reauth_successful": "\uc7ac\uc778\uc99d\uc5d0 \uc131\uacf5\ud588\uc2b5\ub2c8\ub2e4"
         },
         "error": {

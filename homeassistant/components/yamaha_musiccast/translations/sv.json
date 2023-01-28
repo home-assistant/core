@@ -19,5 +19,14 @@
                 "description": "Konfigurera MusicCast f\u00f6r att integrera med Home Assistant."
             }
         }
+    },
+    "entity": {
+        "select": {
+            "zone_sleep": {
+                "state": {
+                    "60_min": "60 minuter"
+                }
+            }
+        }
     }
 }

@@ -32,5 +32,22 @@
             }
         }
     },
+    "selector": {
+        "method": {
+            "options": {
+                "left": "Jumlah Riemann kiri",
+                "right": "Jumlah Riemann kanan",
+                "trapezoidal": "Aturan trapesium"
+            }
+        },
+        "unit_time": {
+            "options": {
+                "d": "Hari",
+                "h": "Jam",
+                "min": "Menit",
+                "s": "Detik"
+            }
+        }
+    },
     "title": "Integrasi - Sensor jumlah integral Riemann"
 }

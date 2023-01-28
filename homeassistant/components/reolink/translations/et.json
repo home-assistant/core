@@ -1,15 +1,22 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
         },
         "error": {
-            "api_error": "Ilmnes API t\u00f5rge: {error}",
+            "api_error": "Ilmnes API t\u00f5rge",
             "cannot_connect": "\u00dchendamine nurjus",
             "invalid_auth": "Tuvastamine nurjus",
-            "unknown": "Ootamatu t\u00f5rge: {error}"
+            "not_admin": "Kasutaja peab olema administraator, kasutajal ''{username}'' on volituste tase ''{userlevel}''.",
+            "unknown": "Ootamatu t\u00f5rge"
         },
+        "flow_title": "{short_mac} ({ip_address})",
         "step": {
+            "reauth_confirm": {
+                "description": "Reolinki sidumine peab \u00fchenduse andmed uuesti autentima.",
+                "title": "Taastuvasta sidumine"
+            },
             "user": {
                 "data": {
                     "host": "Host",
@@ -17,7 +24,8 @@
                     "port": "Port",
                     "use_https": "Luba HTTPS",
                     "username": "Kasutajanimi"
-                }
+                },
+                "description": "{error}"
             }
         }
     },
