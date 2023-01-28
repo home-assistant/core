@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections import ChainMap
 from collections.abc import Iterable, Mapping
 import logging
 from typing import Any
@@ -258,7 +257,9 @@ class _TranslationCache:
                 _merge_resources if category == "state" else _build_resources
             )
             new_resources: Mapping[str, dict[str, Any] | str]
-            new_resources = resource_func(translation_strings, components, category)  # type: ignore[assignment]
+            new_resources = resource_func(  # type: ignore[assignment]
+                translation_strings, components, category
+            )
 
             for component, resource in new_resources.items():
                 category_cache: dict[str, Any] = cached.setdefault(
@@ -311,4 +312,7 @@ async def async_get_translations(
             cache = hass.data[TRANSLATION_FLATTEN_CACHE] = _TranslationCache(hass)
         cached = await cache.async_fetch(language, category, components)
 
-    return dict(ChainMap(*cached))
+    result = {}
+    for entry in cached:
+        result.update(entry)
+    return result

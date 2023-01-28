@@ -5,7 +5,7 @@
         },
         "step": {
             "pairing": {
-                "description": "A p\u00e1ros\u00edt\u00e1s befejez\u00e9s\u00e9hez k\u00f6vesse a \u201eHomeKit p\u00e1ros\u00edt\u00e1s\u201d szakasz \u201e\u00c9rtes\u00edt\u00e9sek\u201d szakasz\u00e1ban tal\u00e1lhat\u00f3 utas\u00edt\u00e1sokat.",
+                "description": "A p\u00e1ros\u00edt\u00e1s befejez\u00e9s\u00e9hez k\u00f6vesse a \u201eHomeKit p\u00e1ros\u00edt\u00e1s\u201d utas\u00edt\u00e1sokat az \u00e9rtes\u00edt\u00e9sekben.",
                 "title": "HomeKit p\u00e1ros\u00edt\u00e1s"
             },
             "user": {

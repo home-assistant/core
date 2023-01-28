@@ -71,5 +71,14 @@
                 "description": "El escaneo de Bluetooth puede ser activo o pasivo. Con activo, Shelly solicita datos de dispositivos cercanos; con pasivo, Shelly recibe datos no solicitados de dispositivos cercanos."
             }
         }
+    },
+    "selector": {
+        "ble_scanner_mode": {
+            "options": {
+                "active": "Activo",
+                "disabled": "Deshabilitado",
+                "passive": "Pasivo"
+            }
+        }
     }
 }

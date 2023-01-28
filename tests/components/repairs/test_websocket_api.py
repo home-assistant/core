@@ -99,7 +99,7 @@ class MockFixFlow(RepairsFlow):
     ) -> data_entry_flow.FlowResult:
         """Handle a custom_step step of a fix flow."""
         if user_input is not None:
-            return self.async_create_entry(title="", data={})
+            return self.async_create_entry(data={})
 
         return self.async_show_form(step_id="custom_step", data_schema=vol.Schema({}))
 
@@ -334,7 +334,6 @@ async def test_fix_issue(
         "description_placeholders": None,
         "flow_id": flow_id,
         "handler": domain,
-        "title": "",
         "type": "create_entry",
         "version": 1,
     }

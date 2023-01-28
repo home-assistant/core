@@ -1,5 +1,5 @@
 """Test the frame helper."""
-# pylint: disable=protected-access
+
 from unittest.mock import Mock, patch
 
 import pytest

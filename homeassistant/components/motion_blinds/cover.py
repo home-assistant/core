@@ -352,6 +352,13 @@ class MotionTiltDevice(MotionPositionDevice):
             return None
         return self._blind.angle * 100 / 180
 
+    @property
+    def is_closed(self) -> bool | None:
+        """Return if the cover is closed or not."""
+        if self._blind.position is None:
+            return None
+        return self._blind.position >= 95
+
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
         async with self._api_lock:

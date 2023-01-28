@@ -66,7 +66,7 @@
                 "data": {
                     "housecode": "Codice casa (a - p)",
                     "platform": "Piattaforma",
-                    "steps": "Livelli del dimmer (solo per dispositivi luminosi, predefiniti 22)",
+                    "steps": "Livelli di attenuazione (solo per dispositivi luminosi, predefiniti 22)",
                     "unitcode": "Codice unit\u00e0 (1 - 16)"
                 },
                 "description": "Cambia la password di Insteon Hub."

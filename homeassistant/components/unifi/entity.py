@@ -7,22 +7,60 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Generic, TypeVar
 
 import aiounifi
-from aiounifi.interfaces.api_handlers import CallbackType, ItemEvent, UnsubscribeType
-from aiounifi.interfaces.devices import Devices
-from aiounifi.models.device import Device
-from aiounifi.models.event import EventKey
+from aiounifi.interfaces.api_handlers import (
+    APIHandler,
+    CallbackType,
+    ItemEvent,
+    UnsubscribeType,
+)
+from aiounifi.interfaces.outlets import Outlets
+from aiounifi.interfaces.ports import Ports
+from aiounifi.models.api import APIItem
+from aiounifi.models.event import Event, EventKey
+from aiounifi.models.outlet import Outlet
+from aiounifi.models.port import Port
 
 from homeassistant.core import callback
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
+
+from .const import ATTR_MANUFACTURER
 
 if TYPE_CHECKING:
     from .controller import UniFiController
 
-DataT = TypeVar("DataT", bound=Device)
-HandlerT = TypeVar("HandlerT", bound=Devices)
+DataT = TypeVar("DataT", bound=APIItem | Outlet | Port)
+HandlerT = TypeVar("HandlerT", bound=APIHandler | Outlets | Ports)
 SubscriptionT = Callable[[CallbackType, ItemEvent], UnsubscribeType]
+
+
+@callback
+def async_device_available_fn(controller: UniFiController, obj_id: str) -> bool:
+    """Check if device is available."""
+    if "_" in obj_id:  # Sub device (outlet or port)
+        obj_id = obj_id.partition("_")[0]
+
+    device = controller.api.devices[obj_id]
+    return controller.available and not device.disabled
+
+
+@callback
+def async_device_device_info_fn(api: aiounifi.Controller, obj_id: str) -> DeviceInfo:
+    """Create device registry entry for device."""
+    if "_" in obj_id:  # Sub device (outlet or port)
+        obj_id = obj_id.partition("_")[0]
+
+    device = api.devices[obj_id]
+    return DeviceInfo(
+        connections={(CONNECTION_NETWORK_MAC, device.mac)},
+        manufacturer=ATTR_MANUFACTURER,
+        model=device.model,
+        name=device.name or None,
+        sw_version=device.version,
+        hw_version=str(device.board_revision),
+    )
 
 
 @dataclass
@@ -106,6 +144,15 @@ class UnifiEntity(Entity, Generic[HandlerT, DataT]):
             )
         )
 
+        # Subscribe to events if defined
+        if description.event_to_subscribe is not None:
+            self.async_on_remove(
+                self.controller.api.events.subscribe(
+                    self.async_event_callback,
+                    description.event_to_subscribe,
+                )
+            )
+
     @callback
     def async_signalling_callback(self, event: ItemEvent, obj_id: str) -> None:
         """Update the entity state."""
@@ -143,12 +190,13 @@ class UnifiEntity(Entity, Generic[HandlerT, DataT]):
             await self.async_remove(force_remove=True)
 
     @callback
-    @abstractmethod
     def async_initiate_state(self) -> None:
         """Initiate entity state.
 
         Perform additional actions setting up platform entity child class state.
+        Defaults to using async_update_state to set initial state.
         """
+        self.async_update_state(ItemEvent.ADDED, self._obj_id)
 
     @callback
     @abstractmethod
@@ -157,3 +205,11 @@ class UnifiEntity(Entity, Generic[HandlerT, DataT]):
 
         Perform additional actions updating platform entity child class state.
         """
+
+    @callback
+    def async_event_callback(self, event: Event) -> None:
+        """Update entity state based on subscribed event.
+
+        Perform additional action updating platform entity child class state.
+        """
+        raise NotImplementedError()

@@ -8,7 +8,7 @@
         },
         "step": {
             "discovery_confirm": {
-                "description": "{name} - {model} ( {host} ) kurulumunu yapmak istiyor musunuz?"
+                "description": "{name} - {model} ( {host} ) kurmak istiyor musunuz?"
             },
             "user": {
                 "data": {

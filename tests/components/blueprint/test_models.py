@@ -256,10 +256,10 @@ async def test_domain_blueprints_add_blueprint(domain_bps, blueprint_1):
     with patch.object(domain_bps, "_create_file") as create_file_mock:
         # Should add extension when not present.
         await domain_bps.async_add_blueprint(blueprint_1, "something")
-        assert create_file_mock.call_args[0][1] == ("something.yaml")
+        assert create_file_mock.call_args[0][1] == "something.yaml"
 
         await domain_bps.async_add_blueprint(blueprint_1, "something2.yaml")
-        assert create_file_mock.call_args[0][1] == ("something2.yaml")
+        assert create_file_mock.call_args[0][1] == "something2.yaml"
 
     # Should be in cache.
     with patch.object(domain_bps, "_load_blueprint") as mock_load:

@@ -16,6 +16,7 @@ from homeassistant.const import CONF_API_KEY, CONF_MONITORED_CONDITIONS, CONF_NA
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
@@ -80,6 +81,20 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Magicseaweed sensor."""
+    create_issue(
+        hass,
+        "magicseaweed",
+        "pending_removal",
+        breaks_in_ha_version="2023.3.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="pending_removal",
+    )
+    _LOGGER.warning(
+        "The Magicseaweed integration is deprecated"
+        " and will be removed in Home Assistant 2023.3"
+    )
+
     name = config.get(CONF_NAME)
     spot_id = config[CONF_SPOT_ID]
     api_key = config[CONF_API_KEY]

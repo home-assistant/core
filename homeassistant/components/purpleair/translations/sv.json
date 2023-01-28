@@ -1,6 +1,12 @@
 {
     "config": {
         "step": {
+            "by_coordinates": {
+                "data": {
+                    "latitude": "Latitud",
+                    "longitude": "Longitud"
+                }
+            },
             "choose_sensor": {
                 "data": {
                     "sensor_index": "Sensor"
@@ -11,6 +17,9 @@
     "options": {
         "step": {
             "add_sensor": {
+                "data": {
+                    "longitude": "Longitud"
+                },
                 "title": "L\u00e4gg till sensor"
             },
             "choose_sensor": {

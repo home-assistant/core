@@ -1201,7 +1201,8 @@ async def websocket_browse_media(
     """
     Browse media available to the media_player entity.
 
-    To use, media_player integrations can implement MediaPlayerEntity.async_browse_media()
+    To use, media_player integrations can implement
+    MediaPlayerEntity.async_browse_media()
     """
     component: EntityComponent[MediaPlayerEntity] = hass.data[DOMAIN]
     player = component.get_entity(msg["entity_id"])

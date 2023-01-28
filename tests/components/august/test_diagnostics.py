@@ -75,7 +75,7 @@ async def test_diagnostics(hass, hass_client):
                     "doorbell_low_battery": False,
                     "ip_addr": "10.0.1.11",
                     "link_quality": 54,
-                    "load_average": "0.50 0.47 0.35 " "1/154 9345",
+                    "load_average": "0.50 0.47 0.35 1/154 9345",
                     "signal_level": -56,
                     "steady_ac_in": 22.196405,
                     "temperature": 28.25,

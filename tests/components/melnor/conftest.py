@@ -1,11 +1,11 @@
 """Tests for the melnor integration."""
-
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
 
 from bleak.backends.device import BLEDevice
 from melnor_bluetooth.device import Device
+import pytest
 
 from homeassistant.components.bluetooth.models import BluetoothServiceInfoBleak
 from homeassistant.components.melnor.const import DOMAIN
@@ -50,6 +50,11 @@ FAKE_SERVICE_INFO_2 = BluetoothServiceInfoBleak(
     time=0,
     connectable=True,
 )
+
+
+@pytest.fixture(autouse=True)
+def mock_bluetooth(enable_bluetooth):
+    """Auto mock bluetooth."""
 
 
 class MockedValve:

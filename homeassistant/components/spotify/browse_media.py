@@ -216,7 +216,7 @@ async def async_browse_media_internal(
 
     # Strip prefix
     if media_content_type:
-        media_content_type = media_content_type[len(MEDIA_PLAYER_PREFIX) :]
+        media_content_type = media_content_type.removeprefix(MEDIA_PLAYER_PREFIX)
 
     payload = {
         "media_content_type": media_content_type,

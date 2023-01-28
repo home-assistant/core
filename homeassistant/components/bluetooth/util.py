@@ -15,7 +15,10 @@ from .storage import BluetoothStorage
 def async_load_history_from_system(
     adapters: BluetoothAdapters, storage: BluetoothStorage
 ) -> tuple[dict[str, BluetoothServiceInfoBleak], dict[str, BluetoothServiceInfoBleak]]:
-    """Load the device and advertisement_data history if available on the current system."""
+    """Load the device and advertisement_data history.
+
+    Only loads if available on the current system.
+    """
     now_monotonic = monotonic_time_coarse()
     connectable_loaded_history: dict[str, BluetoothServiceInfoBleak] = {}
     all_loaded_history: dict[str, BluetoothServiceInfoBleak] = {}

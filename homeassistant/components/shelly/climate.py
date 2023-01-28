@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import asdict, dataclass
 from typing import Any, cast
 
 from aioshelly.block_device import Block
@@ -19,10 +20,15 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry, entity_registry
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.entity_registry import (
+    RegistryEntry,
+    async_entries_for_config_entry,
+    async_get as er_async_get,
+)
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.unit_conversion import TemperatureConverter
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
@@ -81,10 +87,8 @@ def async_restore_climate_entities(
 ) -> None:
     """Restore sleeping climate devices."""
 
-    ent_reg = entity_registry.async_get(hass)
-    entries = entity_registry.async_entries_for_config_entry(
-        ent_reg, config_entry.entry_id
-    )
+    ent_reg = er_async_get(hass)
+    entries = async_entries_for_config_entry(ent_reg, config_entry.entry_id)
 
     for entry in entries:
 
@@ -95,6 +99,17 @@ def async_restore_climate_entities(
         LOGGER.debug("Found entry %s [%s]", entry.original_name, entry.domain)
         async_add_entities([BlockSleepingClimate(coordinator, None, None, entry)])
         break
+
+
+@dataclass
+class ShellyClimateExtraStoredData(ExtraStoredData):
+    """Object to hold extra stored data."""
+
+    last_target_temp: float | None = None
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the text data."""
+        return asdict(self)
 
 
 class BlockSleepingClimate(
@@ -117,7 +132,7 @@ class BlockSleepingClimate(
         coordinator: ShellyBlockCoordinator,
         sensor_block: Block | None,
         device_block: Block | None,
-        entry: entity_registry.RegistryEntry | None = None,
+        entry: RegistryEntry | None = None,
     ) -> None:
         """Initialize climate."""
         super().__init__(coordinator)
@@ -128,14 +143,7 @@ class BlockSleepingClimate(
         self.last_state: State | None = None
         self.last_state_attributes: Mapping[str, Any]
         self._preset_modes: list[str] = []
-        if coordinator.hass.config.units is US_CUSTOMARY_SYSTEM:
-            self._last_target_temp = TemperatureConverter.convert(
-                SHTRV_01_TEMPERATURE_SETTINGS["default"],
-                UnitOfTemperature.CELSIUS,
-                UnitOfTemperature.FAHRENHEIT,
-            )
-        else:
-            self._last_target_temp = SHTRV_01_TEMPERATURE_SETTINGS["default"]
+        self._last_target_temp = SHTRV_01_TEMPERATURE_SETTINGS["default"]
 
         if self.block is not None and self.device_block is not None:
             self._unique_id = f"{self.coordinator.mac}-{self.block.description}"
@@ -150,6 +158,11 @@ class BlockSleepingClimate(
             self._unique_id = entry.unique_id
 
         self._channel = cast(int, self._unique_id.split("_")[1])
+
+    @property
+    def extra_restore_state_data(self) -> ShellyClimateExtraStoredData:
+        """Return text specific state data to be restored."""
+        return ShellyClimateExtraStoredData(self._last_target_temp)
 
     @property
     def unique_id(self) -> str:
@@ -242,11 +255,7 @@ class BlockSleepingClimate(
     @property
     def device_info(self) -> DeviceInfo:
         """Device info."""
-        return {
-            "connections": {
-                (device_registry.CONNECTION_NETWORK_MAC, self.coordinator.mac)
-            }
-        }
+        return {"connections": {(CONNECTION_NETWORK_MAC, self.coordinator.mac)}}
 
     def _check_is_off(self) -> bool:
         """Return if valve is off or on."""
@@ -309,13 +318,16 @@ class BlockSleepingClimate(
         LOGGER.info("Restoring entity %s", self.name)
 
         last_state = await self.async_get_last_state()
-
         if last_state is not None:
             self.last_state = last_state
             self.last_state_attributes = self.last_state.attributes
             self._preset_modes = cast(
                 list, self.last_state.attributes.get("preset_modes")
             )
+
+        last_extra_data = await self.async_get_last_extra_data()
+        if last_extra_data is not None:
+            self._last_target_temp = last_extra_data.as_dict()["last_target_temp"]
 
         await super().async_added_to_hass()
 

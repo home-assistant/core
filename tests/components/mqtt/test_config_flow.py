@@ -148,7 +148,7 @@ def mock_process_uploaded_file(tmp_path):
                 keyfile.write(b"## mock key file ##")
             return tmp_path / "client.key"
         else:
-            assert False
+            pytest.fail(f"Unexpected file_id: {file_id}")
 
     with patch(
         "homeassistant.components.mqtt.config_flow.process_uploaded_file",

@@ -15,7 +15,7 @@
                 "data": {
                     "usb_path": "Cesta k zariadeniu USB"
                 },
-                "description": "Vyberte s\u00e9riov\u00fd port Crownstone USB dongle alebo zvo\u013ete \u201eNepou\u017e\u00edva\u0165 USB\u201c, ak nechcete nastavova\u0165 USB dongle. \n\n H\u013eadajte zariadenie s VID 10C4 a PID EA60.",
+                "description": "Vyberte s\u00e9riov\u00fd port Crownstone USB dongle alebo zvo\u013ete `Nepou\u017e\u00edva\u0165 USB`, ak nechcete nastavova\u0165 USB dongle. \n\n H\u013eadajte zariadenie s VID 10C4 a PID EA60.",
                 "title": "Konfigur\u00e1cia hardv\u00e9rov\u00e9ho k\u013e\u00fa\u010da Crownstone USB"
             },
             "usb_manual_config": {

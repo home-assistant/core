@@ -6,11 +6,9 @@
         },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
-            "file_not_found": "M\u00e4\u00e4ratud faili \".knxkeys\" ei leitud asukohas config/.storage/knx/",
             "invalid_backbone_key": "Kehtetu magistraalv\u00f5ti. Eeldatakse 32 kuueteistk\u00fcmnendarvu.",
             "invalid_individual_address": "V\u00e4\u00e4rtus ei \u00fchti KNX-i individuaalse aadressi mustriga.\n 'area.line.device'",
             "invalid_ip_address": "Kehtetu IPv4 aadress.",
-            "invalid_signature": "Parool faili `.knxkeys` dekr\u00fcpteerimiseks on vale.",
             "keyfile_invalid_signature": "Parool faili `.knxkeys` dekr\u00fcpteerimiseks on vale.",
             "keyfile_no_backbone_key": "Fail '.knxkeys' ei sisalda turvalise marsruutimise magistraalv\u00f5tit.",
             "keyfile_no_tunnel_for_host": "Fail '.knxkeys' ei sisalda hosti  '{host}' mandaati.",
@@ -125,11 +123,9 @@
     "options": {
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
-            "file_not_found": "M\u00e4\u00e4ratud kirjet '.knxkeys' ei leitud asukohast config/.storage/knx/",
             "invalid_backbone_key": "Kehtetu magistraalv\u00f5ti. Eeldatakse 32 kuueteistk\u00fcmnendarvu.",
             "invalid_individual_address": "V\u00e4\u00e4rtuse mall ei vasta KNX seadme \u00fcksuse aadressile.\n'area.line.device'",
             "invalid_ip_address": "Vigane IPv4 aadress",
-            "invalid_signature": "'.knxkeys' kirje dekr\u00fcptimisv\u00f5ti on vale.",
             "keyfile_invalid_signature": "Parool faili `.knxkeys` dekr\u00fcpteerimiseks on vale.",
             "keyfile_no_backbone_key": "Fail '.knxkeys' ei sisalda turvalise marsruutimise magistraalv\u00f5tit.",
             "keyfile_no_tunnel_for_host": "Fail '.knxkeys' ei sisalda hosti '{host}' mandaati.",

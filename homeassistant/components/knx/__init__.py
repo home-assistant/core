@@ -580,8 +580,8 @@ class KNXModule:
                 raise HomeAssistantError(
                     f"Could not find exposure for '{group_address}' to remove."
                 ) from err
-            else:
-                removed_exposure.shutdown()
+
+            removed_exposure.shutdown()
             return
 
         if group_address in self.service_exposures:

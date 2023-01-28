@@ -12,7 +12,7 @@
             "missing_configuration": "Komponen tidak dikonfigurasi. Ikuti petunjuk dalam dokumentasi.",
             "oauth_error": "Menerima respons token yang tidak valid.",
             "reauth_successful": "Autentikasi ulang berhasil",
-            "timeout_connect": "Tenggang waktu membuat koneksi habis"
+            "timeout_connect": "Tenggang waktu pembuatan koneksi habis"
         },
         "create_entry": {
             "default": "Berhasil diautentikasi"
