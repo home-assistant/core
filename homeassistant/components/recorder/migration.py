@@ -974,7 +974,7 @@ def _migrate_columns_to_timestamp(
                     text(
                         "UPDATE events set time_fired_ts="
                         "IF(time_fired is NULL,0,"
-                        "UNIX_TIMESTAMP(CONVERT_TZ(time_fired,'+00:00', @@global.time_zone))"
+                        "UNIX_TIMESTAMP(CONVERT_TZ(time_fired,'+00:00',@@global.time_zone))"
                         ") "
                         "where time_fired_ts is NULL "
                         "LIMIT 250000;"
@@ -987,10 +987,10 @@ def _migrate_columns_to_timestamp(
                     text(
                         "UPDATE states set last_updated_ts="
                         "IF(last_updated is NULL,0,"
-                        "UNIX_TIMESTAMP(CONVERT_TZ(last_updated,'+00:00', @@global.time_zone)) "
+                        "UNIX_TIMESTAMP(CONVERT_TZ(last_updated,'+00:00',@@global.time_zone)) "
                         "), "
                         "last_changed_ts="
-                        "UNIX_TIMESTAMP(CONVERT_TZ(last_changed,'+00:00', @@global.time_zone)) "
+                        "UNIX_TIMESTAMP(CONVERT_TZ(last_changed,'+00:00',@@global.time_zone)) "
                         "where last_updated_ts is NULL "
                         "LIMIT 250000;"
                     )
