@@ -1,13 +1,31 @@
 """Tests for Tradfri diagnostics."""
-from unittest.mock import MagicMock, Mock
+from unittest.mock import MagicMock, Mock, PropertyMock, patch
+
+import pytest
 
 from homeassistant.core import HomeAssistant
 
 from .common import setup_integration
-from .test_fan import mock_fan
+from .test_sensor import mock_fan
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
+
+
+@pytest.fixture(autouse=True)
+def setup(request):
+    """Set up patches for pytradfri methods for the fan platform.
+
+    This is used in test_fan as well as in test_sensor.
+    """
+    with patch(
+        "pytradfri.device.AirPurifierControl.raw",
+        new_callable=PropertyMock,
+        return_value=[{"mock": "mock"}],
+    ), patch(
+        "pytradfri.device.AirPurifierControl.air_purifiers",
+    ):
+        yield
 
 
 async def test_diagnostics(
@@ -34,4 +52,4 @@ async def test_diagnostics(
 
     assert isinstance(result, dict)
     assert result["gateway_version"] == "1.2.1234"
-    assert len(result["device_data"]) == 1
+    assert result["device_data"] == ["model"]
