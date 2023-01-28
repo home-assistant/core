@@ -181,6 +181,7 @@ def test_get_significant_states_with_initial(hass_history):
         for state in states[entity_id]:
             if state.last_changed == one:
                 state.last_changed = one_and_half
+                state.last_updated = one_and_half
 
     hist = get_significant_states(
         hass,
