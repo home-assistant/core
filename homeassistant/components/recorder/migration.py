@@ -892,7 +892,28 @@ def _wipe_old_string_time_columns(engine: Engine, session: Session) -> None:
     # Wipe States.last_updated since its been replaced by States.last_updated_ts
     # Wipe States.last_changed since its been replaced by States.last_changed_ts
     #
-    if engine.dialect.name == SupportedDialect.POSTGRESQL:
+    if engine.dialect.name == SupportedDialect.SQLITE:
+        session.execute(text("UPDATE events set time_fired=NULL;"))
+        session.commit()
+        session.execute(text("UPDATE states set last_updated=NULL, last_changed=NULL;"))
+        session.commit()
+    elif engine.dialect.name == SupportedDialect.MYSQL:
+        #
+        # Since this is only to save space we limit the number of rows we update
+        # to 10,000,000 per table since we do not want to block the database for too long
+        # or run out of innodb_buffer_pool_size on MySQL. The old data will eventually
+        # be cleaned up by the recorder purge if we do not do it now.
+        #
+        session.execute(text("UPDATE events set time_fired=NULL LIMIT 10000000;"))
+        session.commit()
+        session.execute(
+            text(
+                "UPDATE states set last_updated=NULL, last_changed=NULL "
+                " LIMIT 10000000;"
+            )
+        )
+        session.commit()
+    elif engine.dialect.name == SupportedDialect.POSTGRESQL:
         #
         # Since this is only to save space we limit the number of rows we update
         # to 250,000 per table since we do not want to block the database for too long
@@ -914,27 +935,6 @@ def _wipe_old_string_time_columns(engine: Engine, session: Session) -> None:
                 "(select state_id from states where last_updated_ts is NOT NULL LIMIT 250000);"
             )
         )
-        session.commit()
-    elif engine.dialect.name == SupportedDialect.MYSQL:
-        #
-        # Since this is only to save space we limit the number of rows we update
-        # to 10,000,000 per table since we do not want to block the database for too long
-        # or run out of innodb_buffer_pool_size on MySQL. The old data will eventually
-        # be cleaned up by the recorder purge if we do not do it now.
-        #
-        session.execute(text("UPDATE events set time_fired=NULL LIMIT 10000000;"))
-        session.commit()
-        session.execute(
-            text(
-                "UPDATE states set last_updated=NULL, last_changed=NULL "
-                " LIMIT 10000000;"
-            )
-        )
-        session.commit()
-    else:
-        session.execute(text("UPDATE events set time_fired=NULL;"))
-        session.commit()
-        session.execute(text("UPDATE states set last_updated=NULL, last_changed=NULL;"))
         session.commit()
 
 
