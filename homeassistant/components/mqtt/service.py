@@ -5,7 +5,7 @@ from collections.abc import Callable, Sequence
 from copy import copy, deepcopy
 import functools
 import logging
-from typing import Any, TypedDict
+from typing import Any, TypedDict, cast
 
 import voluptuous as vol
 
@@ -14,7 +14,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_MODE, CONF_DESCRIPTION, CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.selector import SelectOptionDict
+from homeassistant.helpers.selector import SelectOptionDict, SelectSelectorMode
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, TemplateVarsType
 from homeassistant.util import slugify
@@ -59,9 +59,12 @@ class UserServiceArgType(StrEnum):
     """Selectors to be used for the user service schema."""
 
     BOOL = "bool"
+    DROPDOWN = "dropdown"
     INT = "int"
     FLOAT = "float"
     STRING = "string"
+    MULTILINE = "multiline"
+    PASSWORD = "password"
     SELECT = "select"
 
 
@@ -71,6 +74,7 @@ class SelectSelectorArgs(TypedDict, total=False):
     options: Sequence[str] | Sequence[SelectOptionDict]
     custom_value: bool
     multiple: bool
+    mode: str
 
 
 class ServiceArgMetadata(TypedDict, total=False):
@@ -93,6 +97,11 @@ ARG_TYPE_METADATA = {
         example="False",
         selector={"boolean": None},
     ),
+    UserServiceArgType.DROPDOWN: ServiceArgMetadata(
+        validator=cv.ensure_list,
+        example="",
+        selector={"select": SelectSelectorArgs(mode=SelectSelectorMode.DROPDOWN.value)},
+    ),
     UserServiceArgType.INT: ServiceArgMetadata(
         validator=vol.Coerce(int),
         example="42",
@@ -103,17 +112,29 @@ ARG_TYPE_METADATA = {
         example="12.3",
         selector={"number": {ATTR_MODE: "box", "step": 1e-3}},
     ),
+    UserServiceArgType.MULTILINE: ServiceArgMetadata(
+        validator=cv.string,
+        example="Abc",
+        selector={"text": {"multiline": True}},
+    ),
+    UserServiceArgType.PASSWORD: ServiceArgMetadata(
+        validator=cv.string,
+        example="s3cretp@assw0rd",
+        selector={"text": {"type": "password"}},
+    ),
     UserServiceArgType.STRING: ServiceArgMetadata(
         validator=cv.string,
-        example="Example text",
+        example="Abc",
         selector={"text": None},
     ),
     UserServiceArgType.SELECT: ServiceArgMetadata(
         validator=cv.ensure_list,
-        example="Example text",
+        example="",
         selector={"select": SelectSelectorArgs()},
     ),
 }
+
+SELECT_SELECTORS = [UserServiceArgType.DROPDOWN, UserServiceArgType.SELECT]
 
 
 def validate_options(
@@ -167,15 +188,10 @@ PLATFORM_SCHEMA = MQTT_BASE_SCHEMA.extend(
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
-    """Set up MQTT tag dynamically through MQTT discovery."""
+    """Set up MQTT service dynamically through MQTT discovery."""
 
     setup = functools.partial(_async_setup_service, hass, config_entry=config_entry)
     await async_setup_entry_helper(hass, SERVICE, setup, PLATFORM_SCHEMA)
-
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload MQTT dump and publish service when the config entry is unloaded."""
-    return True
 
 
 async def _async_setup_service(
@@ -307,9 +323,10 @@ class MQTTService(MqttDiscoveryDeviceUpdate):
                 metadata[CONF_DESCRIPTION] = arg[CONF_DESCRIPTION]
             if CONF_EXAMPLE in arg:
                 metadata["example"] = arg[CONF_EXAMPLE]
-            if arg[CONF_TYPE] == UserServiceArgType.SELECT and CONF_OPTIONS in arg:
+            if arg[CONF_TYPE] in SELECT_SELECTORS and CONF_OPTIONS in arg:
                 assert isinstance(arg, dict)
-                selector_args = SelectSelectorArgs(options=arg.pop(CONF_OPTIONS))
+                selector_args = cast(SelectSelectorArgs, metadata["selector"]["select"])
+                selector_args["options"] = arg.pop(CONF_OPTIONS)
                 if CONF_MULTIPLE in arg:
                     selector_args["multiple"] = arg.pop(CONF_MULTIPLE)
                 if CONF_CUSTOM_VALUE in arg:
