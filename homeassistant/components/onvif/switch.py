@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Coroutine
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -13,14 +13,19 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .base import ONVIFBaseEntity
 from .const import DOMAIN
 from .device import ONVIFDevice
+from .models import Profile
 
 
 @dataclass
 class ONVIFSwitchEntityDescriptionMixin:
     """Mixin for required keys."""
 
-    turn_on_fn: Callable[[Any], Any]
-    turn_off_fn: Callable[[Any], Any]
+    turn_on_fn: Callable[
+        [ONVIFDevice], Callable[[Profile, Any], Coroutine[Any, Any, None]]
+    ]
+    turn_off_fn: Callable[
+        [ONVIFDevice], Callable[[Profile, Any], Coroutine[Any, Any, None]]
+    ]
     turn_on_data: Any
     turn_off_data: Any
 
@@ -35,7 +40,7 @@ class ONVIFSwitchEntityDescription(
 SWITCHES: tuple[ONVIFSwitchEntityDescription, ...] = (
     ONVIFSwitchEntityDescription(
         key="autofocus",
-        name="AutoFocus",
+        name="Autofocus",
         icon="mdi:focus-auto",
         turn_on_data={"Focus": {"AutoFocusMode": "AUTO"}},
         turn_off_data={"Focus": {"AutoFocusMode": "MANUAL"}},
@@ -44,7 +49,7 @@ SWITCHES: tuple[ONVIFSwitchEntityDescription, ...] = (
     ),
     ONVIFSwitchEntityDescription(
         key="ir_lamp",
-        name="IR Lamp",
+        name="IR lamp",
         icon="mdi:spotlight-beam",
         turn_on_data={"IrCutFilter": "OFF"},
         turn_off_data={"IrCutFilter": "ON"},
@@ -71,20 +76,20 @@ async def async_setup_entry(
     """Set up a ONVIF switch platform."""
     device = hass.data[DOMAIN][config_entry.unique_id]
 
-    async_add_entities([ONVIFSwitch(device, description) for description in SWITCHES])
+    async_add_entities(ONVIFSwitch(device, description) for description in SWITCHES)
 
 
 class ONVIFSwitch(ONVIFBaseEntity, SwitchEntity):
     """An ONVIF switch."""
 
     entity_description: ONVIFSwitchEntityDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self, device: ONVIFDevice, description: ONVIFSwitchEntityDescription
     ) -> None:
         """Initialize the switch."""
         super().__init__(device)
-        self._attr_name = f"{self.device.name} {description.name}"
         self._attr_unique_id = f"{self.mac_or_serial}_{description.key}"
         self.entity_description = description
 

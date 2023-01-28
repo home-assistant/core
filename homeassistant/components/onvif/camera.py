@@ -24,10 +24,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .base import ONVIFBaseEntity
 from .const import (
     ABSOLUTE_MOVE,
-    ATTR_CMD,
     ATTR_CONTINUOUS_DURATION,
     ATTR_DISTANCE,
-    ATTR_IMAGING_SETTINGS,
     ATTR_MOVE_MODE,
     ATTR_PAN,
     ATTR_PRESET,
@@ -44,9 +42,7 @@ from .const import (
     GOTOPRESET_MOVE,
     LOGGER,
     RELATIVE_MOVE,
-    SERVICE_AUX,
     SERVICE_PTZ,
-    SERVICE_SET_IMAGING_SETTINGS,
     STOP_MOVE,
     ZOOM_IN,
     ZOOM_OUT,
@@ -85,22 +81,6 @@ async def async_setup_entry(
             vol.Optional(ATTR_PRESET, default="0"): cv.string,
         },
         "async_perform_ptz",
-    )
-    # Create aux cmd service
-    platform.async_register_entity_service(
-        SERVICE_AUX,
-        {
-            ATTR_CMD: cv.string,
-        },
-        "async_run_aux_command",
-    )
-    # Create image setting service
-    platform.async_register_entity_service(
-        SERVICE_SET_IMAGING_SETTINGS,
-        {
-            ATTR_IMAGING_SETTINGS: dict,
-        },
-        "async_set_imaging_settings",
     )
 
     device = hass.data[DOMAIN][config_entry.unique_id]
