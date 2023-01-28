@@ -21,7 +21,7 @@ from homeassistant.core import State
 from homeassistant.helpers.json import JSONEncoder
 import homeassistant.util.dt as dt_util
 
-from .common import wait_recording_done
+from .common import assert_multiple_states_equal_without_context, wait_recording_done
 
 CREATE_ENGINE_TARGET = "homeassistant.components.recorder.core.create_engine"
 SCHEMA_MODULE = "tests.components.recorder.db_schema_30"
@@ -175,7 +175,7 @@ def test_state_changes_during_period(hass_recorder, attributes, no_attributes, l
         hass, start, end, entity_id, no_attributes, limit=limit
     )
 
-    assert states[:limit] == hist[entity_id]
+    assert_multiple_states_equal_without_context(states[:limit], hist[entity_id])
 
 
 def test_state_changes_during_period_descending(hass_recorder):
@@ -228,12 +228,14 @@ def test_state_changes_during_period_descending(hass_recorder):
     hist = history.state_changes_during_period(
         hass, start, end, entity_id, no_attributes=False, descending=False
     )
-    assert states == hist[entity_id]
+    assert_multiple_states_equal_without_context(states, hist[entity_id])
 
     hist = history.state_changes_during_period(
         hass, start, end, entity_id, no_attributes=False, descending=True
     )
-    assert states == list(reversed(list(hist[entity_id])))
+    assert_multiple_states_equal_without_context(
+        states, list(reversed(list(hist[entity_id])))
+    )
 
 
 def test_get_last_state_changes(hass_recorder):

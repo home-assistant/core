@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
 import time
@@ -16,7 +17,7 @@ from homeassistant.components.recorder import get_instance, statistics
 from homeassistant.components.recorder.core import Recorder
 from homeassistant.components.recorder.db_schema import RecorderRuns
 from homeassistant.components.recorder.tasks import RecorderTask, StatisticsTask
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant, State
 from homeassistant.util import dt as dt_util
 
 from . import db_schema_0
@@ -155,3 +156,28 @@ def statistics_during_period(
     return statistics.statistics_during_period(
         hass, start_time, end_time, statistic_ids, period, units, types
     )
+
+
+def assert_states_equal_without_context(state: State, other: State) -> None:
+    """Assert that two states are equal, ignoring context."""
+    assert state.state == other.state
+    assert state.attributes == other.attributes
+    assert state.last_changed == other.last_changed
+    assert state.last_updated == other.last_updated
+
+
+def assert_multiple_states_equal_without_context(
+    states: Sequence[State], others: Sequence[State]
+) -> None:
+    """Assert that multiple states are equal, ignoring context."""
+    assert len(states) == len(others)
+    for i, state in enumerate(states):
+        assert_states_equal_without_context(state, others[i])
+
+
+def assert_events_equal_without_context(event: Event, other: Event) -> None:
+    """Assert that two events are equal, ignoring context."""
+    assert event.data == other.data
+    assert event.event_type == other.event_type
+    assert event.origin == other.origin
+    assert event.time_fired == other.time_fired
