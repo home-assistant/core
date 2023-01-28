@@ -1,6 +1,7 @@
 """Config flow for TP-Link Omada integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from types import MappingProxyType
 from typing import Any, NamedTuple
@@ -83,41 +84,26 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
-        if user_input is None:
+
+        errors: dict[str, str] = {}
+        info = None
+        if user_input is not None:
+            info = await self._test_login(user_input, errors)
+
+        if info is None or user_input is None:
             return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
+                step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
             )
 
-        errors = {}
+        await self.async_set_unique_id(info.controller_id)
+        self._abort_if_unique_id_configured()
 
-        try:
-            info = await _validate_input(self.hass, user_input)
-        except ConnectionFailed:
-            errors["base"] = "cannot_connect"
-        except LoginFailed:
-            errors["base"] = "invalid_auth"
-        except UnsupportedControllerVersion:
-            errors["base"] = "unsupported_controller"
-        except OmadaClientException as ex:
-            _LOGGER.exception("Unexpected API error: %s", ex)
-            errors["base"] = "unknown"
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
-        else:
-            self._omada_opts.update(user_input)
-            self._display_name = f"{info.name} ({info.sites[0].name})"
-            if len(info.sites) < 1:
-                errors["base"] = "no_sites_found"
-            else:
-                self._sites = info.sites
-                if len(self._sites) > 1:
-                    return await self.async_step_site()
-                return await self.async_step_site({CONF_SITE: self._sites[0].id})
-
-        return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
-        )
+        self._omada_opts.update(user_input)
+        self._display_name = f"{info.name} ({info.sites[0].name})"
+        self._sites = info.sites
+        if len(self._sites) > 1:
+            return await self.async_step_site()
+        return await self.async_step_site({CONF_SITE: self._sites[0].id})
 
     async def async_step_site(
         self, user_input: dict[str, Any] | None = None
@@ -144,3 +130,65 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._omada_opts.update(user_input)
         return self.async_create_entry(title=self._display_name, data=self._omada_opts)
+
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+        """Perform reauth upon an API authentication error."""
+        self._omada_opts = dict(entry_data)
+        return await self.async_step_reauth_confirm(dict(entry_data))
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Dialog that informs the user that reauth is required."""
+
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            self._omada_opts.update(user_input)
+            info = await self._test_login(self._omada_opts, errors)
+
+            if info is not None:
+                # Auth successful - update the config entry with the new credentials
+                entry = self.hass.config_entries.async_get_entry(
+                    self.context["entry_id"]
+                )
+                if entry is not None:
+                    self.hass.config_entries.async_update_entry(
+                        entry, data=self._omada_opts
+                    )
+                    await self.hass.config_entries.async_reload(entry.entry_id)
+                    return self.async_abort(reason="reauth_successful")
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_USERNAME): str,
+                    vol.Required(CONF_PASSWORD): str,
+                }
+            ),
+            errors=errors,
+        )
+
+    async def _test_login(
+        self, data: dict[str, Any], errors: dict[str, str]
+    ) -> HubInfo | None:
+        try:
+            info = await _validate_input(self.hass, data)
+            if len(info.sites) > 0:
+                return info
+            errors["base"] = "no_sites_found"
+
+        except ConnectionFailed:
+            errors["base"] = "cannot_connect"
+        except LoginFailed:
+            errors["base"] = "invalid_auth"
+        except UnsupportedControllerVersion:
+            errors["base"] = "unsupported_controller"
+        except OmadaClientException as ex:
+            _LOGGER.exception("Unexpected API error: %s", ex)
+            errors["base"] = "unknown"
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
+        return None

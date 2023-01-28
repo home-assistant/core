@@ -26,6 +26,14 @@
                     "site": "Site"
                 },
                 "title": "Choose which site(s) to manage"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "title": "Update TP-Link Omada Credentials",
+                "description": "The provided username and password have stopped working. Please update them."
             }
         }
     }

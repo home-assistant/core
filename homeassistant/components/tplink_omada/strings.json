@@ -16,6 +16,14 @@
           "site": "Site"
         },
         "title": "Choose which site(s) to manage"
+      },
+      "reauth_confirm": {
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "title": "Update TP-Link Omada Credentials",
+        "description": "The provided credentials have stopped working. Please update them."
       }
     },
     "error": {
@@ -26,7 +34,8 @@
       "no_sites_found": "No sites found which the user can manage."
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   }
 }
