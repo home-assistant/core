@@ -856,53 +856,6 @@ async def test_entity_picture_template(hass: HomeAssistant, setup_light) -> None
     assert state.attributes["entity_picture"] == "/local/light.png"
 
 
-# TODO Cleanup or implement
-# @pytest.mark.parametrize("count", [1])
-# @pytest.mark.parametrize(
-#     "light_config",
-#     [
-#         {
-#             "test_template_light": {
-#                 **OPTIMISTIC_ON_OFF_LIGHT_CONFIG,
-#                 "value_template": "{{1 == 1}}",
-#                 "set_hs": {
-#                     "service": "test.automation",
-#                     "data_template": {
-#                         "entity_id": "test.test_state",
-#                         "h": "{{h}}",
-#                         "s": "{{s}}",
-#                     },
-#                 },
-#                 "set_color": {
-#                     "service": "test.automation",
-#                     "data_template": {
-#                         "caller": "{{ this.entity_id }}",
-#                         "s": "{{s}}",
-#                         "h": "{{h}}",
-#                     },
-#                 },
-#             }
-#         },
-#         {
-#             "test_template_light": {
-#                 **OPTIMISTIC_ON_OFF_LIGHT_CONFIG,
-#                 "value_template": "{{ 1 == 1 }}",
-#                 "hs_template": "{{(360, 100)}}",
-#                 "color_template": "{{(360, 100)}}",
-#             }
-#         },
-#     ],
-# )
-# async def test_exclusion_legacy_color_and_hs_colors(
-#     hass,
-#     setup_light,
-#     calls,
-# ):
-#     """Test that Invalid config is rejected"""
-#     with pytest.raises(Exception):
-#         hass.states.get("light.test_template_light")
-
-
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
     "light_config",
