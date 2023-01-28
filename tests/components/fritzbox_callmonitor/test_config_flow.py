@@ -1,8 +1,15 @@
 """Tests for fritzbox_callmonitor config flow."""
+from __future__ import annotations
+
 from unittest.mock import PropertyMock
 
-from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
+from fritzconnection.core.exceptions import (
+    FritzAuthorizationError,
+    FritzConnectionException,
+    FritzSecurityError,
+)
 from fritzconnection.lib.fritztools import ArgumentNamespace
+import pytest
 from requests.exceptions import ConnectionError as RequestsConnectionError
 
 from homeassistant.components.fritzbox_callmonitor.config_flow import ConnectResult
@@ -210,7 +217,10 @@ async def test_setup_insufficient_permissions(hass: HomeAssistant) -> None:
     assert result["reason"] == ConnectResult.INSUFFICIENT_PERMISSIONS
 
 
-async def test_setup_invalid_auth(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("error", [FritzAuthorizationError, FritzConnectionException])
+async def test_setup_invalid_auth(
+    hass: HomeAssistant, error: FritzConnectionException
+) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -219,7 +229,7 @@ async def test_setup_invalid_auth(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.fritzbox_callmonitor.base.FritzPhonebook.__init__",
-        side_effect=FritzConnectionException,
+        side_effect=error,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MOCK_USER_DATA
