@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Konto jest ju\u017c skonfigurowane",
             "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
         },
         "error": {
@@ -12,18 +11,7 @@
         "step": {
             "user": {
                 "data": {
-                    "password": "Has\u0142o",
-                    "username": "Nazwa u\u017cytkownika"
-                }
-            }
-        }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "ph_offset": "przesuni\u0119cie pH (dodatnie lub ujemne)",
-                    "polling_interval": "Cz\u0119stotliwo\u015b\u0107 aktualizacji (w sekundach)"
+                    "api_key": "Klucz API"
                 }
             }
         }
