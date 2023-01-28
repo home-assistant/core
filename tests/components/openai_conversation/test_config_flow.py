@@ -54,7 +54,9 @@ async def test_form(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_options(hass: HomeAssistant, mock_config_entry) -> None:
+async def test_options(
+    hass: HomeAssistant, mock_config_entry, mock_init_component
+) -> None:
     """Test the options form."""
     options_flow = await hass.config_entries.options.async_init(
         mock_config_entry.entry_id
