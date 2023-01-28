@@ -32,6 +32,7 @@ from .const import (
 )
 from .error import Disconnect
 from .messages import message_to_json
+from .util import describe_request
 
 if TYPE_CHECKING:
     from .connection import ActiveConnection
@@ -73,9 +74,16 @@ class WebSocketHandler:
         self._to_write: asyncio.Queue = asyncio.Queue(maxsize=MAX_PENDING_MSG)
         self._handle_task: asyncio.Task | None = None
         self._writer_task: asyncio.Task | None = None
+        self._closing: bool = False
         self._logger = WebSocketAdapter(_WS_LOGGER, {"connid": id(self)})
         self._peak_checker_unsub: Callable[[], None] | None = None
         self.connection: ActiveConnection | None = None
+
+    @property
+    def description(self) -> str:
+        """Return a description of the connection."""
+        connection = self.connection
+        return connection.description if connection else describe_request(self.request)
 
     async def _writer(self) -> None:
         """Write outgoing messages."""
@@ -125,6 +133,11 @@ class WebSocketHandler:
 
         Async friendly.
         """
+        if self._closing:
+            # Connection is cancelled, don't flood logs about exceeding
+            # max pending messages.
+            return
+
         if isinstance(message, dict):
             message = message_to_json(message)
 
@@ -132,7 +145,13 @@ class WebSocketHandler:
             self._to_write.put_nowait(message)
         except asyncio.QueueFull:
             self._logger.error(
-                "Client exceeded max pending messages [2]: %s", MAX_PENDING_MSG
+                (
+                    "%s: Client unable to keep up with pending messages. Reached %s pending"
+                    " messages. The system's load is too high or an integration is"
+                    " misbehaving"
+                ),
+                self.description,
+                MAX_PENDING_MSG,
             )
 
             self._cancel()
@@ -158,10 +177,11 @@ class WebSocketHandler:
 
         self._logger.error(
             (
-                "Client unable to keep up with pending messages. Stayed over %s for %s"
+                "%s: Client unable to keep up with pending messages. Stayed over %s for %s"
                 " seconds. The system's load is too high or an integration is"
                 " misbehaving"
             ),
+            self.description,
             PENDING_MSG_PEAK,
             PENDING_MSG_PEAK_TIME,
         )
@@ -170,6 +190,7 @@ class WebSocketHandler:
     @callback
     def _cancel(self) -> None:
         """Cancel the connection."""
+        self._closing = True
         if self._handle_task is not None:
             self._handle_task.cancel()
         if self._writer_task is not None:
@@ -282,6 +303,8 @@ class WebSocketHandler:
 
             if connection is not None:
                 connection.async_handle_close()
+
+            self._closing = True
 
             try:
                 self._to_write.put_nowait(None)

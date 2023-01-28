@@ -21,9 +21,9 @@ AsyncWebSocketCommandHandler = Callable[
 
 DOMAIN: Final = "websocket_api"
 URL: Final = "/api/websocket"
-PENDING_MSG_PEAK: Final = 512
+PENDING_MSG_PEAK: Final = 1024
 PENDING_MSG_PEAK_TIME: Final = 5
-MAX_PENDING_MSG: Final = 2048
+MAX_PENDING_MSG: Final = 16384
 
 ERR_ID_REUSE: Final = "id_reuse"
 ERR_INVALID_FORMAT: Final = "invalid_format"
