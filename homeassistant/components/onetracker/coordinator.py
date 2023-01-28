@@ -50,7 +50,16 @@ class OneTrackerDataUpdateCoordinator(DataUpdateCoordinator):
 
         def _update_data() -> dict:
             """Fetch data from OneTracker via sync functions."""
-            return self.onetracker.get_parcels()
+
+            parcels = self.onetracker.get_parcels()
+
+            for parcel in parcels:
+                self.hass.states.set(
+                    f"{DOMAIN}.{parcel.id}",
+                    "parcel",
+                    parcel.serialize(),
+                )
+            return parcels
 
         try:
             async with timeout(4):

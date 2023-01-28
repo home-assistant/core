@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigType, ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_NAME, CONF_PASSWORD, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 
-from .const import DEFAULT_NAME, DEFAULT_SCAN_INTERVAL
+from .const import DEFAULT_NAME, DEFAULT_SCAN_INTERVAL, DOMAIN
 from .coordinator import OneTrackerDataUpdateCoordinator
 
 import logging
@@ -17,7 +17,12 @@ import logging
 _LOGGER = logging.getLogger(__name__)
 
 import json
-from .const import DOMAIN
+
+
+@property
+def extra_state_attributes(self):
+    """Return entity specific state attributes."""
+    return self._attributes
 
 
 # async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

@@ -64,13 +64,13 @@ class OneTrackerAPI:
 
         return response
 
-    def get_parcels(self) -> dict[int, Parcel]:
+    def get_parcels(self) -> list[Parcel]:
         """Get all parcels from OneTracker."""
         dict_response = self.__get("parcels")
 
         response = ParcelListResponse(dict_response)
 
-        return convert_parcels_to_dict(parcels=response.parcels)
+        return response.parcels
 
     def get_parcel(self, parcel_id: int) -> Parcel:
         """Get data for specific parcel."""
