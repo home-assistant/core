@@ -8,6 +8,7 @@ from homeassistant.components.scene import Scene
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -37,11 +38,14 @@ async def async_setup_entry(
 class LiteJetScene(Scene):
     """Representation of a single LiteJet scene."""
 
-    def __init__(
-        self, entry_id, lj: LiteJet, i, name  # pylint: disable=invalid-name
-    ) -> None:
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_entity_registry_enabled_default = False
+
+    def __init__(self, entry_id: str, system: LiteJet, i: int, name: str) -> None:
         """Initialize the scene."""
-        self._lj = lj
+        self._entry_id = entry_id
+        self._lj = system
         self._index = i
         self._attr_unique_id = f"{entry_id}_{i}"
         self._attr_name = name
@@ -59,7 +63,17 @@ class LiteJetScene(Scene):
         self.async_write_ha_state()
 
     @property
-    def extra_state_attributes(self):
+    def device_info(self) -> DeviceInfo:
+        """Return the device info."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, f"{self._entry_id}_mcp")},
+            name="LiteJet",
+            manufacturer="Centralite",
+            model="CL24",
+        )
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device-specific state attributes."""
         return {ATTR_NUMBER: self._index}
 
@@ -69,8 +83,3 @@ class LiteJetScene(Scene):
             await self._lj.activate_scene(self._index)
         except LiteJetError as exc:
             raise HomeAssistantError() from exc
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Scenes are only enabled by explicit user choice."""
-        return False
