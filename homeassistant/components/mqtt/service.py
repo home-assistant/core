@@ -51,6 +51,7 @@ SERVICE = "service"
 CONF_EXAMPLE = "example"
 CONF_REQUIRED = "required"
 CONF_EXCLUSIVE = "exclusive"
+CONF_INCLUSIVE = "inclusive"
 CONF_MULTIPLE = "multiple"
 CONF_CUSTOM_VALUE = "custom_value"
 
@@ -158,7 +159,9 @@ def validate_options(
 
 SERVICE_ARG_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME): vol.All(cv.string, vol.NotIn(["dump", "publish"])),
+        vol.Required(CONF_NAME): vol.All(
+            cv.string, vol.NotIn(["dump", "publish", "reload"])
+        ),
         vol.Required(CONF_TYPE): vol.In(
             [arg_type.value for arg_type in UserServiceArgType]
         ),
@@ -169,6 +172,7 @@ SERVICE_ARG_SCHEMA = vol.Schema(
         vol.Optional(CONF_CUSTOM_VALUE): cv.boolean,
         vol.Optional(CONF_REQUIRED): cv.boolean,
         vol.Optional(CONF_EXCLUSIVE): cv.string,
+        vol.Optional(CONF_INCLUSIVE): cv.string,
     }
 )
 PLATFORM_SCHEMA = MQTT_BASE_SCHEMA.extend(
@@ -255,7 +259,7 @@ class MQTTService(MqttDiscoveryDeviceUpdate):
         service_name = slugify(self._config.get(CONF_NAME, f"service_{discovery_id}"))
         services = self.hass.services.async_services().get(DOMAIN)
         if services and services.get(service_name):
-            _LOGGER.error("Service '%s' is already registered")
+            _LOGGER.error("Service '%s' is already registered", service_name)
             self.service_name = None
             return
         self.service_name = service_name
@@ -269,6 +273,8 @@ class MQTTService(MqttDiscoveryDeviceUpdate):
             validator = self.data_schema[key]["validator"]
             if CONF_EXCLUSIVE in arg:
                 data_schema[vol.Exclusive(key, arg[CONF_EXCLUSIVE])] = validator
+            elif CONF_INCLUSIVE in arg:
+                data_schema[vol.Inclusive(key, arg[CONF_INCLUSIVE])] = validator
             elif CONF_REQUIRED in arg:
                 data_schema[vol.Required(key)] = validator
             else:

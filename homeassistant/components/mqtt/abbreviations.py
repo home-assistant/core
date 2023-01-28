@@ -89,6 +89,7 @@ ABBREVIATIONS = {
     "hs_val_tpl": "hs_value_template",
     "ic": "icon",
     "img_e": "image_encoding",
+    "incl": "inclusive",
     "init": "initial",
     "hum_cmd_t": "target_humidity_command_topic",
     "hum_cmd_tpl": "target_humidity_command_template",
