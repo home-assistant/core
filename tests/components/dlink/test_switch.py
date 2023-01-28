@@ -1,5 +1,5 @@
 """Switch tests for the D-Link Smart Plug integration."""
-from typing import Awaitable, Callable
+from collections.abc import Awaitable, Callable
 
 from homeassistant.components.dlink import DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN

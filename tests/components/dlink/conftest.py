@@ -1,7 +1,7 @@
 """Configure pytest for D-Link tests."""
 
+from collections.abc import Awaitable, Callable, Generator
 from copy import deepcopy
-from typing import Awaitable, Callable, Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
