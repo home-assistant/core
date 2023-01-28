@@ -1,12 +1,14 @@
 """The TP-Link Omada integration."""
 from __future__ import annotations
 
+from tplink_omada_client.omadaclient import OmadaSite
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .config_flow import OmadaHub
+from .config_flow import CONF_SITE, create_omada_client
 from .const import DOMAIN
 
 PLATFORMS: list[Platform] = [Platform.SWITCH]
@@ -18,14 +20,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
 
     try:
-        hub = OmadaHub(hass, entry.data)
-        await hub.authenticate()
+        client = await create_omada_client(hass, entry.data)
+        await client.login()
+
     except Exception as ex:
         raise ConfigEntryNotReady(
             f"Omada controller could not be reached: {ex}"
         ) from ex
 
-    hass.data[DOMAIN][entry.entry_id] = hub.get_client()
+    site_client = await client.get_site_client(OmadaSite(None, entry.data[CONF_SITE]))
+
+    hass.data[DOMAIN][entry.entry_id] = site_client
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

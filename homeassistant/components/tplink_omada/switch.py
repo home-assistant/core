@@ -6,7 +6,7 @@ from typing import Any
 
 from tplink_omada_client.definitions import PoEMode
 from tplink_omada_client.devices import OmadaSwitch, OmadaSwitchPortDetails
-from tplink_omada_client.omadaclient import OmadaClient, SwitchPortOverrides
+from tplink_omada_client.omadasiteclient import OmadaSiteClient, SwitchPortOverrides
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -27,7 +27,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switches."""
-    omada_client: OmadaClient = hass.data[DOMAIN][config_entry.entry_id]
+    omada_client: OmadaSiteClient = hass.data[DOMAIN][config_entry.entry_id]
 
     # Naming fun. Omada switches, as in the network hardware
     network_switches = await omada_client.get_switches()
@@ -39,9 +39,9 @@ async def async_setup_entry(
 
         def make_update_func(
             network_switch: OmadaSwitch,
-        ) -> Callable[[OmadaClient], Awaitable[dict[str, OmadaSwitchPortDetails]]]:
+        ) -> Callable[[OmadaSiteClient], Awaitable[dict[str, OmadaSwitchPortDetails]]]:
             async def update_func(
-                client: OmadaClient,
+                client: OmadaSiteClient,
             ) -> dict[str, OmadaSwitchPortDetails]:
                 ports = await client.get_switch_ports(network_switch)
                 return {p.port_id: p for p in ports}
@@ -80,7 +80,7 @@ class OmadaNetworkSwitchPortPoEControl(OmadaSwitchDeviceEntity, SwitchEntity):
         self,
         coordinator: OmadaCoordinator[OmadaSwitchPortDetails],
         device: OmadaSwitch,
-        omada_client: OmadaClient,
+        omada_client: OmadaSiteClient,
         port_id: str,
     ) -> None:
         """Initialize the PoE switch."""
