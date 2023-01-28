@@ -330,7 +330,7 @@ class ThermostatEntity(ClimateEntity):
             await trait.set_mode(PRESET_INV_MODE_MAP[preset_mode])
         except ApiException as err:
             raise HomeAssistantError(
-                f"Error setting preset mode {preset_mode}: {err}"
+                f"Error setting preset mode {self.entity_id} {preset_mode}: {err}"
             ) from err
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
