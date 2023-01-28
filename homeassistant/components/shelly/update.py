@@ -221,7 +221,6 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
     @property
     def installed_version(self) -> str | None:
         """Version currently in use."""
-        assert self.coordinator.device.shelly
         return cast(str, self.coordinator.device.shelly["ver"])
 
     @property

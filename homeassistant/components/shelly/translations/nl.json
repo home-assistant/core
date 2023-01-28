@@ -7,6 +7,7 @@
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
+            "firmware_not_fully_provisioned": "Apparaat kon niet ingesteld worden. Neem contact op met de Shelly klantenservice",
             "invalid_auth": "Ongeldige authenticatie",
             "unknown": "Onverwachte fout"
         },
