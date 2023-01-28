@@ -1,5 +1,28 @@
 {
     "entity": {
+        "climate": {
+            "ubercool": {
+                "state_attributes": {
+                    "fan_mode": {
+                        "state": {
+                            "auto_high": "Auto \u00e9lev\u00e9e",
+                            "auto_low": "Auto faible",
+                            "on_high": "Sur \u00e9lev\u00e9e",
+                            "on_low": "Sur faible"
+                        }
+                    },
+                    "swing_mode": {
+                        "state": {
+                            "1": "1",
+                            "2": "2",
+                            "3": "3",
+                            "auto": "Auto",
+                            "off": "D\u00e9sactiv\u00e9e"
+                        }
+                    }
+                }
+            }
+        },
         "sensor": {
             "thermostat_mode": {
                 "state": {

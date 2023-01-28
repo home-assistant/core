@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Konto jest ju\u017c skonfigurowane",
-            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
@@ -12,9 +11,8 @@
         "step": {
             "user": {
                 "data": {
-                    "password": "Has\u0142o",
-                    "url": "URL",
-                    "username": "Nazwa u\u017cytkownika"
+                    "email": "Adres e-mail",
+                    "password": "Has\u0142o"
                 }
             }
         }

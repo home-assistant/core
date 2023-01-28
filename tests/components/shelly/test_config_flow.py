@@ -26,10 +26,6 @@ from . import init_integration
 
 from tests.common import MockConfigEntry
 
-MOCK_SETTINGS = {
-    "name": "Test name",
-    "device": {"mac": "test-mac", "hostname": "test-host", "type": "SHSW-1"},
-}
 DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
     host="1.1.1.1",
     addresses=["1.1.1.1"],
@@ -48,11 +44,6 @@ DISCOVERY_INFO_WITH_MAC = zeroconf.ZeroconfServiceInfo(
     properties={zeroconf.ATTR_PROPERTIES_ID: "shelly1pm-AABBCCDDEEFF"},
     type="mock_type",
 )
-MOCK_CONFIG = {
-    "sys": {
-        "device": {"name": "Test name"},
-    },
-}
 
 
 @pytest.mark.parametrize(
@@ -62,9 +53,8 @@ MOCK_CONFIG = {
         (2, "SNSW-002P16EU"),
     ],
 )
-async def test_form(hass, mock_block_device, mock_rpc_device, gen, model):
+async def test_form(hass, gen, model, mock_block_device, mock_rpc_device):
     """Test we get the form."""
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -99,7 +89,7 @@ async def test_form(hass, mock_block_device, mock_rpc_device, gen, model):
 
 
 @pytest.mark.parametrize(
-    "test_data",
+    "gen, model, user_input, username",
     [
         (
             1,
@@ -115,9 +105,10 @@ async def test_form(hass, mock_block_device, mock_rpc_device, gen, model):
         ),
     ],
 )
-async def test_form_auth(hass, test_data, mock_block_device, mock_rpc_device):
+async def test_form_auth(
+    hass, gen, model, user_input, username, mock_block_device, mock_rpc_device
+):
     """Test manual configuration if auth is required."""
-    gen, model, user_input, username = test_data
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -162,11 +153,14 @@ async def test_form_auth(hass, test_data, mock_block_device, mock_rpc_device):
 
 
 @pytest.mark.parametrize(
-    "error", [(DeviceConnectionError, "cannot_connect"), (ValueError, "unknown")]
+    "exc, base_error",
+    [
+        (DeviceConnectionError, "cannot_connect"),
+        (ValueError, "unknown"),
+    ],
 )
-async def test_form_errors_get_info(hass, error):
+async def test_form_errors_get_info(hass, exc, base_error):
     """Test we handle errors."""
-    exc, base_error = error
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -254,11 +248,14 @@ async def test_form_missing_model_key_zeroconf(
 
 
 @pytest.mark.parametrize(
-    "error", [(DeviceConnectionError, "cannot_connect"), (ValueError, "unknown")]
+    "exc, base_error",
+    [
+        (DeviceConnectionError, "cannot_connect"),
+        (ValueError, "unknown"),
+    ],
 )
-async def test_form_errors_test_connection(hass, error):
+async def test_form_errors_test_connection(hass, exc, base_error):
     """Test we handle errors."""
-    exc, base_error = error
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -364,16 +361,15 @@ async def test_form_firmware_unsupported(hass):
 
 
 @pytest.mark.parametrize(
-    "error",
+    "exc, base_error",
     [
         (InvalidAuthError, "invalid_auth"),
         (DeviceConnectionError, "cannot_connect"),
         (ValueError, "unknown"),
     ],
 )
-async def test_form_auth_errors_test_connection_gen1(hass, error):
+async def test_form_auth_errors_test_connection_gen1(hass, exc, base_error):
     """Test we handle errors in Gen1 authenticated devices."""
-    exc, base_error = error
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -400,16 +396,15 @@ async def test_form_auth_errors_test_connection_gen1(hass, error):
 
 
 @pytest.mark.parametrize(
-    "error",
+    "exc, base_error",
     [
         (DeviceConnectionError, "cannot_connect"),
         (InvalidAuthError, "invalid_auth"),
         (ValueError, "unknown"),
     ],
 )
-async def test_form_auth_errors_test_connection_gen2(hass, error):
+async def test_form_auth_errors_test_connection_gen2(hass, exc, base_error):
     """Test we handle errors in Gen2 authenticated devices."""
-    exc, base_error = error
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -714,15 +709,16 @@ async def test_zeroconf_require_auth(hass, mock_block_device):
 
 
 @pytest.mark.parametrize(
-    "test_data",
+    "gen, user_input",
     [
         (1, {"username": "test user", "password": "test1 password"}),
         (2, {"password": "test2 password"}),
     ],
 )
-async def test_reauth_successful(hass, test_data, mock_block_device, mock_rpc_device):
+async def test_reauth_successful(
+    hass, gen, user_input, mock_block_device, mock_rpc_device
+):
     """Test starting a reauthentication flow."""
-    gen, user_input = test_data
     entry = MockConfigEntry(
         domain="shelly", unique_id="test-mac", data={"host": "0.0.0.0", "gen": gen}
     )
@@ -751,15 +747,14 @@ async def test_reauth_successful(hass, test_data, mock_block_device, mock_rpc_de
 
 
 @pytest.mark.parametrize(
-    "test_data",
+    "gen, user_input",
     [
         (1, {"username": "test user", "password": "test1 password"}),
         (2, {"password": "test2 password"}),
     ],
 )
-async def test_reauth_unsuccessful(hass, test_data):
+async def test_reauth_unsuccessful(hass, gen, user_input):
     """Test reauthentication flow failed."""
-    gen, user_input = test_data
     entry = MockConfigEntry(
         domain="shelly", unique_id="test-mac", data={"host": "0.0.0.0", "gen": gen}
     )
