@@ -17,8 +17,8 @@
       "service_data_uuid": "0000fcd2-0000-1000-8000-00805f9b34fb"
     }
   ],
-  "requirements": ["bthome-ble==2.5.0"],
-  "dependencies": ["bluetooth"],
+  "requirements": ["bthome-ble==2.5.1"],
+  "dependencies": ["bluetooth_adapters"],
   "codeowners": ["@Ernst79"],
   "iot_class": "local_push"
 }

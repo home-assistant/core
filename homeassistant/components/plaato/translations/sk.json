@@ -20,7 +20,7 @@
                     "token": "Sem vlo\u017ete autoriza\u010dn\u00fd token",
                     "use_webhook": "Pou\u017eite webhook"
                 },
-                "description": "Aby ste mohli vyh\u013ead\u00e1va\u0165 API, je potrebn\u00fd \u201eauth_token\u201c, ktor\u00fd mo\u017eno z\u00edska\u0165 pod\u013ea [t\u00fdchto](https://plaato.zendesk.com/hc/en-us/articles/360003234717-Auth-token) pokynov \n\nVybran\u00e9 zariadenie: **{device_type}** \n\nAk rad\u0161ej pou\u017e\u00edvate vstavan\u00fa met\u00f3du webhooku (iba Airlock), za\u010diarknite pol\u00ed\u010dko ni\u017e\u0161ie a ponechajte Auth Token pr\u00e1zdne",
+                "description": "Aby ste mohli vyh\u013ead\u00e1va\u0165 API, je potrebn\u00fd `auth_token`, ktor\u00fd mo\u017eno z\u00edska\u0165 pod\u013ea [t\u00fdchto](https://plaato.zendesk.com/hc/en-us/articles/360003234717-Auth-token) pokynov \n\nVybran\u00e9 zariadenie: **{device_type}** \n\nAk rad\u0161ej pou\u017e\u00edvate vstavan\u00fa met\u00f3du webhooku (iba Airlock), za\u010diarknite pol\u00ed\u010dko ni\u017e\u0161ie a ponechajte Auth Token pr\u00e1zdne",
                 "title": "Vyberte met\u00f3du API"
             },
             "user": {

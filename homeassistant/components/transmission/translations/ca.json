@@ -29,19 +29,6 @@
             }
         }
     },
-    "issues": {
-        "deprecated_key": {
-            "fix_flow": {
-                "step": {
-                    "confirm": {
-                        "description": "Actualitza totes les automatitzacions o 'scripts' que utilitzin aquest servei. S'han de substituir totes les claus o entrades 'name' per 'entry_id'.",
-                        "title": "S'est\u00e0 eliminant la clau 'name' del servei Transmission"
-                    }
-                }
-            },
-            "title": "S'est\u00e0 eliminant la clau 'name' del servei Transmission"
-        }
-    },
     "options": {
         "step": {
             "init": {

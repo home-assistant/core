@@ -11,7 +11,6 @@
             "auth_failed": "Overenie zlyhalo: {error_detail}",
             "encryption_key_invalid": "ID k\u013e\u00fa\u010da alebo \u0161ifrovac\u00ed k\u013e\u00fa\u010d je neplatn\u00fd",
             "few": "Pr\u00e1zdnych",
-            "key_id_invalid": "ID k\u013e\u00fa\u010da alebo \u0161ifrovac\u00ed k\u013e\u00fa\u010d je neplatn\u00fd",
             "many": "Pr\u00e1zdnych",
             "one": "Pr\u00e1zdny",
             "other": "Pr\u00e1zdny"
@@ -33,13 +32,6 @@
                 "menu_options": {
                     "lock_auth": "\u00da\u010det SwitchBot (odpor\u00fa\u010dan\u00e9)",
                     "lock_key": "Zadanie \u0161ifrovacieho k\u013e\u00fa\u010da z\u00e1mku manu\u00e1lne"
-                }
-            },
-            "lock_chose_method": {
-                "description": "Vyberte sp\u00f4sob konfigur\u00e1cie, podrobnosti n\u00e1jdete v dokument\u00e1cii.",
-                "menu_options": {
-                    "lock_auth": "Prihlasovacie meno a heslo aplik\u00e1cie SwitchBot",
-                    "lock_key": "\u0160ifrovac\u00ed k\u013e\u00fa\u010d z\u00e1mku"
                 }
             },
             "lock_key": {

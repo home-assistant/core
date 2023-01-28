@@ -8,6 +8,13 @@
             "unknown": "Ootamatu t\u00f5rge"
         },
         "step": {
+            "confirm_discovery": {
+                "data": {
+                    "password": "Parool (vaikimisi: PIN-kood tagak\u00fcljel)",
+                    "use_legacy_protocol": "Kasuta p\u00e4randprotokolli",
+                    "username": "Kasutajanimi"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Host",

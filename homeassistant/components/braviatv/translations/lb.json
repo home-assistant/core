@@ -11,9 +11,6 @@
         },
         "step": {
             "authorize": {
-                "data": {
-                    "pin": "PIN-Code"
-                },
                 "description": "G\u00ebff de PIN code an deen op der Sony Bravia TV ugewise g\u00ebtt.\n\nFalls kee PIN code ugewise g\u00ebtt muss den Home Assistant um Fernseh ofgemellt ginn, um TV: Settings -> Network -> Remote device settings -> Unregister remote device.",
                 "title": "Sony Bravia TV erlaaben"
             },

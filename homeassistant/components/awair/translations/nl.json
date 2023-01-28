@@ -33,7 +33,8 @@
                 "data": {
                     "access_token": "Toegangstoken",
                     "email": "E-mail"
-                }
+                },
+                "description": "Voer uw Awair ontwikkelaarstoegangstoken opnieuw in."
             },
             "user": {
                 "description": "U moet zich registreren voor een Awair-toegangstoken voor ontwikkelaars op: https://developer.getawair.com/onboard/login",

@@ -17,9 +17,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util.dt import now
 
 from .const import DOMAIN
-from .coordinator import StarlinkData, StarlinkUpdateCoordinator
+from .coordinator import StarlinkData
 from .entity import StarlinkEntity
 
 
@@ -52,16 +53,6 @@ class StarlinkSensorEntity(StarlinkEntity, SensorEntity):
     """A SensorEntity for Starlink devices. Handles creating unique IDs."""
 
     entity_description: StarlinkSensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: StarlinkUpdateCoordinator,
-        description: StarlinkSensorEntityDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        self._attr_unique_id = f"{self.coordinator.data.status['id']}_{description.key}"
 
     @property
     def native_value(self) -> StateType | datetime:
@@ -118,7 +109,6 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         icon="mdi:clock",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: datetime.now().astimezone()
-        - timedelta(seconds=data.status["uptime"]),
+        value_fn=lambda data: now() - timedelta(seconds=data.status["uptime"]),
     ),
 )

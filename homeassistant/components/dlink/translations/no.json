@@ -8,6 +8,13 @@
             "unknown": "Uventet feil"
         },
         "step": {
+            "confirm_discovery": {
+                "data": {
+                    "password": "Passord (standard: PIN-kode p\u00e5 baksiden)",
+                    "use_legacy_protocol": "Bruk eldre protokoll",
+                    "username": "Brukernavn"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Vert",

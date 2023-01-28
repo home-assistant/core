@@ -8,16 +8,16 @@
             "unknown": "Unexpected error"
         },
         "step": {
-            "user": {
+            "confirm_discovery": {
                 "data": {
-                    "host": "Host",
                     "password": "Password (default: PIN code on the back)",
                     "use_legacy_protocol": "Use legacy protocol",
                     "username": "Username"
                 }
             },
-            "confirm_discovery": {
+            "user": {
                 "data": {
+                    "host": "Host",
                     "password": "Password (default: PIN code on the back)",
                     "use_legacy_protocol": "Use legacy protocol",
                     "username": "Username"

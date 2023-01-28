@@ -211,6 +211,7 @@ class NestFlowHandler(
 
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> FlowResult:
         """Complete OAuth setup and finish pubsub or finish."""
+        _LOGGER.debug("Finishing post-oauth configuration")
         assert self.config_mode != ConfigMode.LEGACY, "Step only supported for SDM API"
         self._data.update(data)
         if self.source == SOURCE_REAUTH:
@@ -459,6 +460,7 @@ class NestFlowHandler(
 
     async def async_step_finish(self, data: dict[str, Any] | None = None) -> FlowResult:
         """Create an entry for the SDM flow."""
+        _LOGGER.debug("Creating/updating configuration entry")
         assert self.config_mode != ConfigMode.LEGACY, "Step only supported for SDM API"
         # Update existing config entry when in the reauth flow.
         if entry := self._async_reauth_entry():

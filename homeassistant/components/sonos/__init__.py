@@ -8,7 +8,7 @@ import datetime
 from functools import partial
 import logging
 import socket
-from typing import TYPE_CHECKING, Any, Optional, cast
+from typing import TYPE_CHECKING, Any, cast
 from urllib.parse import urlparse
 
 from requests.exceptions import Timeout
@@ -483,7 +483,7 @@ class SonosDiscoveryManager:
                 uid,
                 discovered_ip,
                 "discovery",
-                boot_seqnum=cast(Optional[int], boot_seqnum),
+                boot_seqnum=cast(int | None, boot_seqnum),
             )
         )
 

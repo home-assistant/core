@@ -39,6 +39,10 @@
                     "confirm": {
                         "description": "Friss\u00edtse a szolg\u00e1ltat\u00e1st haszn\u00e1l\u00f3 automatizmusokat vagy szkripteket, hogy helyette az `{alternate_service}` szolg\u00e1ltat\u00e1st haszn\u00e1lhassa `{alternate_target}` c\u00e9lentit\u00e1s-azonos\u00edt\u00f3val.",
                         "title": "A(z) {deprecated_service} szolg\u00e1ltat\u00e1s elt\u00e1vol\u00edt\u00e1sra ker\u00fcl"
+                    },
+                    "deprecated_yaml": {
+                        "description": "Az Univerz\u00e1lis eszk\u00f6z\u00f6k ISY/IoX konfigur\u00e1l\u00e1sa YAML haszn\u00e1lat\u00e1val elt\u00e1vol\u00edt\u00e1sra ker\u00fcl.\n\nA megl\u00e9v\u0151 YAML konfigur\u00e1ci\u00f3 automatikusan import\u00e1l\u00e1sra ker\u00fclt a felhaszn\u00e1l\u00f3i fel\u00fcletre.\n\nA probl\u00e9ma megold\u00e1s\u00e1hoz t\u00e1vol\u00edtsa el a `isy994` YAML konfigur\u00e1ci\u00f3t a configuration.yaml f\u00e1jlb\u00f3l, \u00e9s ind\u00edtsa \u00fajra a Home Assistantot.",
+                        "title": "Az ISY/IoX YAML konfigur\u00e1ci\u00f3 elt\u00e1vol\u00edt\u00e1sra ker\u00fcl"
                     }
                 }
             },

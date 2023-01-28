@@ -34,6 +34,14 @@
         "select": {
             "horizontalswing": {
                 "state": {
+                    "fixedcenter": "Tetap tengah",
+                    "fixedcenterleft": "Tetap kiri tengah",
+                    "fixedcenterright": "Tetap kanan tengah",
+                    "fixedleft": "Tetap kiri",
+                    "fixedleftright": "Tetap kiri kanan",
+                    "fixedright": "Tetap kanan",
+                    "rangecenter": "Kisaran tengah",
+                    "rangefull": "Kisaran penuh",
                     "stopped": "Terhenti"
                 }
             },

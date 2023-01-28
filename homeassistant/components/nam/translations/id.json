@@ -45,8 +45,6 @@
                     "high": "Tinggi",
                     "low": "Rendah",
                     "medium": "Sedang",
-                    "very high": "Sangat tinggi",
-                    "very low": "Sangat rendah",
                     "very_high": "Sangat tinggi",
                     "very_low": "Sangat rendah"
                 }

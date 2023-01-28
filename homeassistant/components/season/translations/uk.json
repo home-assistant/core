@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "\u041f\u043e\u0441\u043b\u0443\u0433\u0430 \u0432\u0436\u0435 \u043d\u0430\u043b\u0430\u0448\u0442\u043e\u0432\u0430\u043d\u0430"
+        },
         "step": {
             "user": {
                 "data": {

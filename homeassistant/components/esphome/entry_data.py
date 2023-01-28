@@ -100,6 +100,13 @@ class RuntimeEntryData:
         """Return the name of the device."""
         return self.device_info.name if self.device_info else self.entry_id
 
+    @property
+    def friendly_name(self) -> str:
+        """Return the friendly name of the device."""
+        if self.device_info and self.device_info.friendly_name:
+            return self.device_info.friendly_name
+        return self.name
+
     @callback
     def async_update_ble_connection_limits(self, free: int, limit: int) -> None:
         """Update the BLE connection limits."""

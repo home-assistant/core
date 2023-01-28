@@ -8,6 +8,13 @@
             "unknown": "Unerwarteter Fehler"
         },
         "step": {
+            "confirm_discovery": {
+                "data": {
+                    "password": "Passwort (Standard: PIN-Code auf der R\u00fcckseite)",
+                    "use_legacy_protocol": "Legacy-Protokoll verwenden",
+                    "username": "Benutzername"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Host",

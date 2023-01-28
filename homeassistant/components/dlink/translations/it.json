@@ -8,6 +8,13 @@
             "unknown": "Errore imprevisto"
         },
         "step": {
+            "confirm_discovery": {
+                "data": {
+                    "password": "Password (predefinita: codice PIN sul retro)",
+                    "use_legacy_protocol": "Utilizza il vecchio protocollo",
+                    "username": "Nome utente"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Host",

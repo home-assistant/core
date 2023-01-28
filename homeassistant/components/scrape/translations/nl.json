@@ -49,6 +49,11 @@
             }
         }
     },
+    "issues": {
+        "moved_yaml": {
+            "title": "De Scrape YAML-configuratie is verplaatst"
+        }
+    },
     "options": {
         "step": {
             "add_sensor": {

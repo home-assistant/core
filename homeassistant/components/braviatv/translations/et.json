@@ -4,8 +4,7 @@
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
             "no_ip_control": "Teleris on IP-juhtimine keelatud v\u00f5i telerit ei toetata.",
             "not_bravia_device": "Seade ei ole Bravia teler.",
-            "reauth_successful": "Taastuvastamine \u00f5nnestus",
-            "reauth_unsuccessful": "Taasautentimine eba\u00f5nnestus, eemalda sidumine ja seadista see uuesti."
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
         },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
@@ -16,7 +15,6 @@
         "step": {
             "authorize": {
                 "data": {
-                    "pin": "PIN kood",
                     "use_psk": "PSK autentimise kasutamine"
                 },
                 "description": "Veendu, et \"Kaugjuhtimine\" on  teleril lubatud, mine aadressil: \nSeaded -> Network -> Remote device settings -> Control remotely. \n\nOn kaks autoriseerimismeetodit: PIN-kood v\u00f5i PSK (Pre-Shared Key). \nAutoriseerimine PSK kaudu on soovitatav kui stabiilsem.",
@@ -38,13 +36,6 @@
                 },
                 "description": "PSK seadistamiseks teleris ava: Seaded - > V\u00f5rk - > Koduv\u00f5rgu h\u00e4\u00e4lestus - > IP-juhtimine. M\u00e4\u00e4ra \"Authentication\" v\u00e4\u00e4rtuseks \"Tavaline ja eeljagatud v\u00f5ti\" v\u00f5i \"Eeljagatud v\u00f5ti\" ja m\u00e4\u00e4ra oma eeljagatud v\u00f5tme string (nt sony). \n\n Seej\u00e4rel sisesta siia oma PSK.",
                 "title": "Sony Bravia TV autoriseerimine"
-            },
-            "reauth_confirm": {
-                "data": {
-                    "pin": "PIN kood",
-                    "use_psk": "PSK autentimise kasutamine"
-                },
-                "description": "Sisesta Sony Bravia teleril n\u00e4idatud PIN-kood. \n\nKui PIN-koodi ei kuvata, peadeleril Home Assistant'i registreerimise t\u00fchistama, mine aadressile: Seaded -> Network -> Remote device settings -> Deregister remote device. \n\nPIN-koodi asemel v\u00f5id kasutada PSK (Pre-Shared-Key). PSK on kasutaja m\u00e4\u00e4ratud salajane v\u00f5ti, mida kasutatakse juurdep\u00e4\u00e4su kontrollimiseks. See autentimismeetod on soovitatav kui stabiilsem. PSK lubamiseks teleril mine aadressil: Settings -> Network -> Home Network Setup -> IP Control. Seej\u00e4rel m\u00e4rgista ruut \"Kasutage PSK autentimist\" ja sisesta PIN-koodi asemel PSK."
             },
             "user": {
                 "data": {

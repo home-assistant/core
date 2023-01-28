@@ -22,5 +22,10 @@
                 }
             }
         }
+    },
+    "issues": {
+        "removed_yaml": {
+            "title": "De Season YAML-configuratie is verwijderd"
+        }
     }
 }

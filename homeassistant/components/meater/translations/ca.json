@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "El compte ja est\u00e0 configurat"
+        },
         "error": {
             "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
             "service_unavailable_error": "L'API no est\u00e0 disponible actualment, torna-ho a provar m\u00e9s tard.",

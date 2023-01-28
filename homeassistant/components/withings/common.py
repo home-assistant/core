@@ -10,7 +10,7 @@ from enum import IntEnum
 from http import HTTPStatus
 import logging
 import re
-from typing import Any, Union
+from typing import Any
 
 from aiohttp.web import Response
 import requests
@@ -241,7 +241,7 @@ class DataManager:
             update_method=self.async_subscribe_webhook,
         )
         self.poll_data_update_coordinator = DataUpdateCoordinator[
-            Union[dict[MeasureType, Any], None]
+            dict[MeasureType, Any] | None
         ](
             hass,
             _LOGGER,

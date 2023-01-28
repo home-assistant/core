@@ -8,6 +8,13 @@
             "unknown": "Onverwachte fout"
         },
         "step": {
+            "confirm_discovery": {
+                "data": {
+                    "password": "Wachtwoord (standaard: PIN code op de achterkant)",
+                    "use_legacy_protocol": "Gebruik het oude protocol",
+                    "username": "Gebruikersnaam"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Hostnaam",

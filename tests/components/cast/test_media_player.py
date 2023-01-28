@@ -1,5 +1,5 @@
 """The tests for the Cast Media player platform."""
-# pylint: disable=protected-access
+
 from __future__ import annotations
 
 import asyncio
@@ -2249,7 +2249,7 @@ async def test_cast_platform_play_media_local_media(
             ATTR_ENTITY_ID: entity_id,
             media_player.ATTR_MEDIA_CONTENT_TYPE: "application/vnd.apple.mpegurl",
             media_player.ATTR_MEDIA_CONTENT_ID: (
-                f"{network.get_url(hass)}" "/api/hls/bla/master_playlist.m3u8?token=bla"
+                f"{network.get_url(hass)}/api/hls/bla/master_playlist.m3u8?token=bla"
             ),
         },
         blocking=True,

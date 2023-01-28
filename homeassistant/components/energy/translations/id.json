@@ -37,7 +37,7 @@
             "title": "Satuan pengukuran yang tidak diharapkan"
         },
         "entity_unexpected_unit_gas": {
-            "description": "Entitas berikut tidak memiliki satuan pengukuran yang diharapkan (salah satu dari {energy_units}) untuk sensor energi atau salah satu dari {gas_units} untuk sensor gas:",
+            "description": "Entitas berikut tidak memiliki satuan pengukuran yang diharapkan (salah satu dari {energy_units}) untuk sensor energi atau salah satu dari {gas_units} untuk sensor gas):",
             "title": "Satuan pengukuran yang tidak diharapkan"
         },
         "entity_unexpected_unit_gas_price": {

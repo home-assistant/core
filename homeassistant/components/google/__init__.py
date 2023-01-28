@@ -191,8 +191,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             raise ConfigEntryAuthFailed from err
         except ApiException as err:
             raise ConfigEntryNotReady from err
-        else:
-            hass.config_entries.async_update_entry(entry, unique_id=primary_calendar.id)
+
+        hass.config_entries.async_update_entry(entry, unique_id=primary_calendar.id)
 
     # Only expose the add event service if we have the correct permissions
     if get_feature_access(hass, entry) is FeatureAccess.read_write:

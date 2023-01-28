@@ -63,7 +63,8 @@
             "remote_double_button_long_press": "Beide \"{subtype}\" losgelaten na lang indrukken",
             "remote_double_button_short_press": "Beide \"{subtype}\" losgelaten",
             "repeat": "Knop \" {subtype} \" ingedrukt gehouden",
-            "short_release": "Knop \"{subtype}\" losgelaten na kort indrukken"
+            "short_release": "Knop \"{subtype}\" losgelaten na kort indrukken",
+            "start": "\"{subtype}\" aanvankelijk ingedrukt"
         }
     },
     "options": {
