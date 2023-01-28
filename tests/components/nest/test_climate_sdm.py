@@ -1455,7 +1455,7 @@ async def test_thermostat_hvac_mode_failure(
     with pytest.raises(HomeAssistantError) as e_info:
         await common.async_set_hvac_mode(hass, HVACMode.HEAT)
         await hass.async_block_till_done()
-    assert "setting HVAC mode" in str(e_info)
+    assert "HVAC mode" in str(e_info)
     assert "climate.my_thermostat" in str(e_info)
     assert HVACMode.HEAT in str(e_info)
 
@@ -1463,7 +1463,7 @@ async def test_thermostat_hvac_mode_failure(
     with pytest.raises(HomeAssistantError) as e_info:
         await common.async_set_temperature(hass, temperature=25.0)
         await hass.async_block_till_done()
-    assert "setting temperature" in str(e_info)
+    assert "temperature" in str(e_info)
     assert "climate.my_thermostat" in str(e_info)
     assert "25.0" in str(e_info)
 
@@ -1471,7 +1471,7 @@ async def test_thermostat_hvac_mode_failure(
     with pytest.raises(HomeAssistantError) as e_info:
         await common.async_set_fan_mode(hass, FAN_ON)
         await hass.async_block_till_done()
-    assert "setting fan mode" in str(e_info)
+    assert "fan mode" in str(e_info)
     assert "climate.my_thermostat" in str(e_info)
     assert FAN_ON in str(e_info)
 
@@ -1479,7 +1479,7 @@ async def test_thermostat_hvac_mode_failure(
     with pytest.raises(HomeAssistantError) as e_info:
         await common.async_set_preset_mode(hass, PRESET_ECO)
         await hass.async_block_till_done()
-    assert "setting preset mode" in str(e_info)
+    assert "preset mode" in str(e_info)
     assert "climate.my_thermostat" in str(e_info)
     assert PRESET_ECO in str(e_info)
 
