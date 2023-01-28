@@ -62,8 +62,8 @@ class YoLinkCoverEntity(YoLinkEntity, CoverEntity):
 
     async def toggle_garage_state(self) -> None:
         """Toggle Garage door state."""
-        # garage door state will not be change by device call
-        # it's depends on paired device state, such as door sensor or contact sensor
+        # garage door state will not be changed by device call
+        # it depends on paired device state, such as door sensor or contact sensor
         await self.call_device(ClientRequest("toggle", {}))
 
     async def async_open_cover(self, **kwargs: Any) -> None:
