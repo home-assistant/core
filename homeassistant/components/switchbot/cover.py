@@ -183,8 +183,7 @@ class SwitchBotBlindTiltEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         _moving_down = (
             self.parsed_data["motionDirection"]["down"] and self.parsed_data["inMotion"]
         )
-        # NOTE: when motion is down, motion up is also set to true. Checking
-        #   motion down first works around this peculiarity
+        # NOTE: when motion is down, motion up is also set to true for some reason
         if _moving_up:
             _opening = bool(_tilt > 50)
             _closing = not _opening
