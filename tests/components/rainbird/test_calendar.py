@@ -6,9 +6,11 @@ import datetime
 from http import HTTPStatus
 from typing import Any
 import urllib
+from zoneinfo import ZoneInfo
 
 from aiohttp import ClientSession
 from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.const import Platform
@@ -23,10 +25,10 @@ GetEventsFn = Callable[[str, str], Awaitable[dict[str, Any]]]
 
 MODEL_VERSION_RESPONSE = "820005090C"
 SCHEDULE_RESPONSES = [
-    # Current running program
-    "A0000000000400",
+    # Current controller status
+    "A0000000000000",
     # Per-program information
-    "A00010060602006400",  # CYCLIC every 6 days, starting in 2 days
+    "A00010060602006400",  # CUSTOM: Monday & Tuesday
     "A00011110602006400",
     "A00012000300006400",
     # Start times per program
@@ -100,16 +102,25 @@ async def test_get_events(
 
     events = await get_events("2023-01-20T00:00:00Z", "2023-02-05T00:00:00Z")
     assert events == [
+        # Monday
+        {
+            "summary": "PGM A",
+            "start": {"dateTime": "2023-01-23T04:00:00-06:00"},
+            "end": {"dateTime": "2023-01-23T05:22:00-06:00"},
+        },
+        # Tuesday
         {
             "summary": "PGM A",
             "start": {"dateTime": "2023-01-24T04:00:00-06:00"},
             "end": {"dateTime": "2023-01-24T05:22:00-06:00"},
         },
+        # Monday
         {
             "summary": "PGM A",
             "start": {"dateTime": "2023-01-30T04:00:00-06:00"},
             "end": {"dateTime": "2023-01-30T05:22:00-06:00"},
         },
+        # Tuesday
         {
             "summary": "PGM A",
             "start": {"dateTime": "2023-01-31T04:00:00-06:00"},
@@ -118,16 +129,29 @@ async def test_get_events(
     ]
 
 
-async def test_event_state_off(
+@pytest.mark.parametrize(
+    "freeze_time,expected_state",
+    [
+        (
+            datetime.datetime(2023, 1, 23, 3, 50, tzinfo=ZoneInfo("America/Regina")),
+            "off",
+        ),
+        (
+            datetime.datetime(2023, 1, 23, 4, 30, tzinfo=ZoneInfo("America/Regina")),
+            "on",
+        ),
+    ],
+)
+async def test_event_state(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
     get_events: GetEventsFn,
-    freezer,
-    responses: list[AiohttpClientMockResponse],
+    freezer: FrozenDateTimeFactory,
+    freeze_time: datetime.datetime,
+    expected_state: str,
 ) -> None:
     """Test calendar upcoming event state."""
-
-    freezer.move_to(datetime.datetime(2023, 1, 21, 9, 32))
+    freezer.move_to(freeze_time)
 
     assert await setup_integration()
 
@@ -135,12 +159,12 @@ async def test_event_state_off(
     assert state is not None
     assert state.attributes == {
         "message": "PGM A",
-        "start_time": "2023-01-24 04:00:00",
-        "end_time": "2023-01-24 05:22:00",
+        "start_time": "2023-01-23 04:00:00",
+        "end_time": "2023-01-23 05:22:00",
         "all_day": False,
         "description": "",
         "location": "",
         "friendly_name": "Rain Bird Controller",
         "icon": "mdi:sprinkler",
     }
-    assert state.state == "off"
+    assert state.state == expected_state

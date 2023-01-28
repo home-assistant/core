@@ -97,9 +97,10 @@ class RainBirdCalendarEntity(
         )
         return [
             CalendarEvent(
-                summary=program_event.name,
-                start=program_event.start,
-                end=program_event.end,
+                summary=program_event.program_id.name,
+                start=dt_util.as_local(program_event.start),
+                end=dt_util.as_local(program_event.end),
+                rrule=program_event.rrule_str,
             )
             for program_event in cursor
         ]
@@ -119,10 +120,12 @@ class RainBirdCalendarEntity(
             _LOGGER.debug("No program event")
             self._event = None
             return
+        _LOGGER.debug("Event=%s", program_event.start)
         self._event = CalendarEvent(
-            summary=program_event.name,
-            start=program_event.start,
-            end=program_event.end,
+            summary=program_event.program_id.name,
+            start=dt_util.as_local(program_event.start),
+            end=dt_util.as_local(program_event.end),
+            rrule=program_event.rrule_str,
         )
 
     @callback
