@@ -22,13 +22,13 @@ def create_entry(hass: HomeAssistant) -> MockConfigEntry:
     return entry
 
 
-@pytest.fixture()
+@pytest.fixture
 def config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Add config entry in Home Assistant."""
     return create_entry(hass)
 
 
-@pytest.fixture()
+@pytest.fixture
 def connection() -> None:
     """Mock Dremel 3D Printer connection."""
     mock = requests_mock.Mocker()
