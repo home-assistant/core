@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Sequence
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import datetime
 import time
@@ -160,19 +160,39 @@ def statistics_during_period(
 
 def assert_states_equal_without_context(state: State, other: State) -> None:
     """Assert that two states are equal, ignoring context."""
+    assert_states_equal_without_context_and_last_changed(state, other)
+    assert state.last_changed == other.last_changed
+
+
+def assert_states_equal_without_context_and_last_changed(
+    state: State, other: State
+) -> None:
+    """Assert that two states are equal, ignoring context and last_changed."""
     assert state.state == other.state
     assert state.attributes == other.attributes
-    assert state.last_changed == other.last_changed
     assert state.last_updated == other.last_updated
 
 
+def assert_multiple_states_equal_without_context_and_last_changed(
+    states: Iterable[State], others: Iterable[State]
+) -> None:
+    """Assert that multiple states are equal, ignoring context and last_changed."""
+    states_list = list(states)
+    others_list = list(others)
+    assert len(states_list) == len(others_list)
+    for i, state in enumerate(states_list):
+        assert_states_equal_without_context_and_last_changed(state, others_list[i])
+
+
 def assert_multiple_states_equal_without_context(
-    states: Sequence[State], others: Sequence[State]
+    states: Iterable[State], others: Iterable[State]
 ) -> None:
     """Assert that multiple states are equal, ignoring context."""
-    assert len(states) == len(others)
-    for i, state in enumerate(states):
-        assert_states_equal_without_context(state, others[i])
+    states_list = list(states)
+    others_list = list(others)
+    assert len(states_list) == len(others_list)
+    for i, state in enumerate(states_list):
+        assert_states_equal_without_context(state, others_list[i])
 
 
 def assert_events_equal_without_context(event: Event, other: Event) -> None:
@@ -181,3 +201,23 @@ def assert_events_equal_without_context(event: Event, other: Event) -> None:
     assert event.event_type == other.event_type
     assert event.origin == other.origin
     assert event.time_fired == other.time_fired
+
+
+def assert_dict_of_states_equal_without_context(
+    states: dict[str, list[State]], others: dict[str, list[State]]
+) -> None:
+    """Assert that two dicts of states are equal, ignoring context."""
+    assert len(states) == len(others)
+    for entity_id, state in states.items():
+        assert_multiple_states_equal_without_context(state, others[entity_id])
+
+
+def assert_dict_of_states_equal_without_context_and_last_changed(
+    states: dict[str, list[State]], others: dict[str, list[State]]
+) -> None:
+    """Assert that two dicts of states are equal, ignoring context and last_changed."""
+    assert len(states) == len(others)
+    for entity_id, state in states.items():
+        assert_multiple_states_equal_without_context_and_last_changed(
+            state, others[entity_id]
+        )
