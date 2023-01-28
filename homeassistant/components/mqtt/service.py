@@ -317,6 +317,7 @@ class MQTTService(MqttDiscoveryDeviceUpdate):
         """Build a service schema based on the config supplied."""
         schema: list[dict[str, Any]] | None
         if not (schema := self._config.get(CONF_SCHEMA)):
+            self.data_schema = OrderedDict()
             return None
 
         data_schema = OrderedDict[str, ServiceArgMetadata]({})

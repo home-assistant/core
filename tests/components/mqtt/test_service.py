@@ -30,6 +30,11 @@ DEFAULT_PARAMETER_SCHEMA = [
         "exclusive": "happyness",
     },
     {
+        "name": "password",
+        "description": "Type your password",
+        "type": "password",
+    },
+    {
         "name": "letter",
         "description": "Select one or more letters",
         "type": "select",
@@ -93,6 +98,32 @@ async def async_call_service(
         data,
         blocking=True,
     )
+
+
+async def test_service_without_schema(
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config
+) -> None:
+    """Test a discovered MQTT service without schema."""
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    publish_mock: AsyncMock = mqtt_mock.async_publish
+
+    config = deepcopy(DEFAULT_CONFIG_PAYLOAD)
+    config.pop("schema")
+    config["command_template"] = "SERVICE_CALLED"
+    async_fire_mqtt_message(hass, DEFAULT_DISCOVERY_TOPIC, json_dumps(config))
+    await hass.async_block_till_done()
+
+    assert DEFAULT_SERVICE_NAME in hass.services.async_services()[mqtt.DOMAIN].keys()
+
+    await async_call_service(hass, DEFAULT_SERVICE_NAME, {})
+    await hass.async_block_till_done()
+    publish_mock.assert_called_once_with(
+        "test/cmdservice",
+        "SERVICE_CALLED",
+        0,
+        False,
+    )
+    publish_mock.reset_mock()
 
 
 async def test_custom_service(
