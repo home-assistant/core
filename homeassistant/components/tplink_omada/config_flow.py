@@ -78,7 +78,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Create the config flow for a new integration."""
         self._omada_opts: dict[str, Any] = {}
         self._sites: list[OmadaSite] = []
-        self._display_name: str = ""
+        self._controller_name = ""
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -99,8 +99,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         self._omada_opts.update(user_input)
-        self._display_name = f"{info.name} ({info.sites[0].name})"
         self._sites = info.sites
+        self._controller_name = info.name
         if len(self._sites) > 1:
             return await self.async_step_site()
         return await self.async_step_site({CONF_SITE: self._sites[0].id})
@@ -129,7 +129,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(step_id="site", data_schema=schema)
 
         self._omada_opts.update(user_input)
-        return self.async_create_entry(title=self._display_name, data=self._omada_opts)
+        site_name = next(
+            site for site in self._sites if site.id == user_input["site"]
+        ).name
+        display_name = f"{self._controller_name} ({site_name})"
+
+        return self.async_create_entry(title=display_name, data=self._omada_opts)
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""

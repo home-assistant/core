@@ -7,27 +7,28 @@ from tplink_omada_client.exceptions import (
     OmadaClientException,
     UnsupportedControllerVersion,
 )
+from tplink_omada_client.omadaclient import OmadaSite
 
 from homeassistant import config_entries
 from homeassistant.components.tplink_omada.const import DOMAIN
+from homeassistant.components.tplink_omada.config_flow import HubInfo
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 
-async def test_form(hass: HomeAssistant) -> None:
+async def test_form_single_site(hass: HomeAssistant) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.tplink_omada.config_flow.OmadaHub.authenticate",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.tplink_omada.config_flow.OmadaHub.get_controller_name",
-        return_value="OC200",
+        "homeassistant.components.tplink_omada.config_flow._validate_input",
+        return_value=HubInfo(
+            "omada_id", "OC200", [OmadaSite("Display Name", "SiteId")]
+        ),
     ), patch(
         "homeassistant.components.tplink_omada.async_setup_entry",
         return_value=True,
@@ -37,7 +38,6 @@ async def test_form(hass: HomeAssistant) -> None:
             {
                 "host": "1.1.1.1",
                 "verify_ssl": True,
-                "site": "Test",
                 "username": "test-username",
                 "password": "test-password",
             },
@@ -45,11 +45,69 @@ async def test_form(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "TP-Link Omada OC200 (Test)"
+    assert result2["title"] == "OC200 (Display Name)"
     assert result2["data"] == {
         "host": "1.1.1.1",
         "verify_ssl": True,
-        "site": "Test",
+        "site": "SiteId",
+        "username": "test-username",
+        "password": "test-password",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_multiple_sites(hass: HomeAssistant) -> None:
+    """Test we get the form."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.tplink_omada.config_flow._validate_input",
+        return_value=HubInfo(
+            "omada_id",
+            "OC200",
+            [OmadaSite("Site 1", "first"), OmadaSite("Site 2", "second")],
+        ),
+    ), patch(
+        "homeassistant.components.tplink_omada.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "verify_ssl": True,
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["step_id"] == "site"
+
+    with patch(
+        "homeassistant.components.tplink_omada.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "site": "second",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["title"] == "OC200 (Site 2)"
+    assert result3["data"] == {
+        "host": "1.1.1.1",
+        "verify_ssl": True,
+        "site": "second",
         "username": "test-username",
         "password": "test-password",
     }
@@ -63,14 +121,13 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.tplink_omada.config_flow.OmadaHub.authenticate",
+        "homeassistant.components.tplink_omada.config_flow._validate_input",
         side_effect=LoginFailed(-1000, "Invalid username/password"),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 "host": "1.1.1.1",
-                "site": "Test",
                 "verify_ssl": False,
                 "username": "test-username",
                 "password": "test-password",
@@ -88,14 +145,13 @@ async def test_form_api_error(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.tplink_omada.config_flow.OmadaHub.authenticate",
+        "homeassistant.components.tplink_omada.config_flow._validate_input",
         side_effect=OmadaClientException,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 "host": "1.1.1.1",
-                "site": "Test",
                 "verify_ssl": False,
                 "username": "test-username",
                 "password": "test-password",
@@ -113,14 +169,13 @@ async def test_form_unsupported_controller(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.tplink_omada.config_flow.OmadaHub.authenticate",
+        "homeassistant.components.tplink_omada.config_flow._validate_input",
         side_effect=UnsupportedControllerVersion("4.0.0"),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 "host": "1.1.1.1",
-                "site": "Test",
                 "verify_ssl": False,
                 "username": "test-username",
                 "password": "test-password",
@@ -138,14 +193,13 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.tplink_omada.config_flow.OmadaHub.authenticate",
+        "homeassistant.components.tplink_omada.config_flow._validate_input",
         side_effect=ConnectionFailed,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 "host": "1.1.1.1",
-                "site": "Test",
                 "verify_ssl": True,
                 "username": "test-username",
                 "password": "test-password",
