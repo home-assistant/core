@@ -14,6 +14,7 @@ from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 
 from . import const, messages
+from .util import describe_request
 
 if TYPE_CHECKING:
     from .http import WebSocketAdapter
@@ -45,6 +46,14 @@ class ActiveConnection:
         self.last_id = 0
         self.supported_features: dict[str, float] = {}
         current_connection.set(self)
+
+    @property
+    def description(self) -> str:
+        """Return a description of the connection."""
+        description = f"{self.user.name} ({self.user.id})"
+        if request := current_request.get():
+            description += describe_request(request)
+        return description
 
     def context(self, msg: dict[str, Any]) -> Context:
         """Return a context."""
@@ -142,9 +151,6 @@ class ActiveConnection:
 
         if code:
             err_message += f" ({code})"
-        if request := current_request.get():
-            err_message += f" from {request.remote}"
-            if user_agent := request.headers.get("user-agent"):
-                err_message += f" ({user_agent})"
+        err_message += self.description
 
         log_handler("Error handling message: %s", err_message)
