@@ -69,7 +69,19 @@ async def test_full_flow(
     )
 
 
-@pytest.mark.parametrize("fixture", ["get_profile", "get_profile_2"])
+@pytest.mark.parametrize(
+    "fixture,abort_reason,placeholders,calls,access_token",
+    [
+        ("get_profile", "reauth_successful", None, 1, "updated-access-token"),
+        (
+            "get_profile_2",
+            "wrong_account",
+            {"email": "example@gmail.com"},
+            0,
+            "mock-access-token",
+        ),
+    ],
+)
 async def test_reauth(
     hass: HomeAssistant,
     hass_client_no_auth,
@@ -77,6 +89,10 @@ async def test_reauth(
     current_request_with_host,
     config_entry: MockConfigEntry,
     fixture: str,
+    abort_reason: str,
+    placeholders: dict[str, str],
+    calls: int,
+    access_token: str,
 ) -> None:
     """Test the reauthentication case updates the correct config entry. Make sure we abort if the user selects the wrong account on the consent screen."""
     config_entry.add_to_hass(hass)
@@ -133,17 +149,14 @@ async def test_reauth(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
     assert result.get("type") == "abort"
-    if fixture == "get_profile_2":
-        assert result["reason"] == "wrong_account"
-        assert result["description_placeholders"] == {"email": "example@gmail.com"}
-        return
-    assert len(mock_setup.mock_calls) == 1
-    assert result["reason"] == "reauth_successful"
+    assert result["reason"] == abort_reason
+    assert result["description_placeholders"] == placeholders
+    assert len(mock_setup.mock_calls) == calls
 
     assert config_entry.unique_id == TITLE
     assert "token" in config_entry.data
     # Verify access token is refreshed
-    assert config_entry.data["token"].get("access_token") == "updated-access-token"
+    assert config_entry.data["token"].get("access_token") == access_token
     assert config_entry.data["token"].get("refresh_token") == "mock-refresh-token"
 
 
