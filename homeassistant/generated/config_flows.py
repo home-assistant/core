@@ -295,6 +295,7 @@ FLOWS = {
         "omnilogic",
         "oncue",
         "ondilo_ico",
+        "onetracker",
         "onewire",
         "onvif",
         "open_meteo",

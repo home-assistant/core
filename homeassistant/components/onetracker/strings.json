@@ -4,6 +4,7 @@
     "step": {
       "user": {
         "title": "Connect to OneTracker",
+        "description": "Setup your connection to OneTracker API.",
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
           "username": "[%key:common::config_flow::data::username%]",

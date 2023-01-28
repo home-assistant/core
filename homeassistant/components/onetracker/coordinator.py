@@ -1,4 +1,6 @@
 """Provides the OneTracker DataUpdateCoordinator."""
+from __future__ import annotations
+
 from collections.abc import Mapping
 from datetime import timedelta
 import logging
@@ -24,11 +26,11 @@ class OneTrackerDataUpdateCoordinator(DataUpdateCoordinator):
         hass: HomeAssistant,
         *,
         config: Mapping[str, Any],
-        options: Mapping[str, Any],
+        options: Mapping[str, Any] | None = None,
     ) -> None:
         """Initialize global OneTracker data updater."""
 
-        update_interval = timedelta(seconds=options[CONF_SCAN_INTERVAL])
+        update_interval = timedelta(seconds=config[CONF_SCAN_INTERVAL])
 
         super().__init__(
             hass,

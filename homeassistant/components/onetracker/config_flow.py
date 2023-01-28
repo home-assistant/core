@@ -1,5 +1,6 @@
 """Config flow for OneTracker."""
 from __future__ import annotations
+import json
 
 import logging
 from typing import Any
@@ -30,25 +31,30 @@ class OneTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    # def __init__(self, config_entry: ConfigEntry) -> None:
+    #     """Initialize options flow."""
+    #     _LOGGER.debug(json.dumps(config_entry))
+    #     self.config_entry = config_entry
+
     @staticmethod
     @callback
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> OneTrackerOptionsFlowHandler:
         """Get the options flow for this handler."""
+        _LOGGER.debug(json.dumps(config_entry))
         return OneTrackerOptionsFlowHandler(config_entry)
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> FlowResult:
         """Handle a flow initiated by the user."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
+        # if self._async_current_entries():
+        #     return self.async_abort(reason="single_instance_allowed")
 
         errors = {}
 
         if user_input is not None:
-
             try:
                 await self.hass.async_add_executor_job(_validate_input, user_input)
             except OneTrackerAPIException:
@@ -65,13 +71,13 @@ class OneTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
         data_schema = {
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
             vol.Required(CONF_EMAIL): str,
-            vol.Required(CONF_PASSWORD): SyntaxError,
+            vol.Required(CONF_PASSWORD): str,
         }
 
         if self.show_advanced_options:
             data_schema[
                 vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL)
-            ] = bool
+            ] = int
 
         return self.async_show_form(
             step_id="user",
@@ -95,6 +101,9 @@ class OneTrackerOptionsFlowHandler(OptionsFlow):
             return self.async_create_entry(title="", data=user_input)
 
         options = {
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
+            vol.Required(CONF_EMAIL): str,
+            vol.Required(CONF_PASSWORD): str,
             vol.Optional(
                 CONF_SCAN_INTERVAL,
                 default=self.config_entry.options.get(

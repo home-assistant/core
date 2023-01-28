@@ -1,6 +1,5 @@
 """Constants for OneTracker."""
 
-
 DOMAIN = "onetracker"
 
 # Attributes
