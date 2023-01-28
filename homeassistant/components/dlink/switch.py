@@ -98,12 +98,12 @@ class SmartPlugSwitch(DLinkEntity, SwitchEntity):
             temperature = self.hass.config.units.temperature(
                 int(self.data.temperature), UnitOfTemperature.CELSIUS
             )
-        except (ValueError, TypeError):
+        except ValueError:
             temperature = None
 
         try:
             total_consumption = float(self.data.total_consumption)
-        except (ValueError, TypeError):
+        except ValueError:
             total_consumption = None
 
         attrs = {

@@ -19,9 +19,9 @@ class SmartPlugData:
         """Initialize the data object."""
         self.smartplug = smartplug
         self.state: str | None = None
-        self.temperature: str = self.smartplug.temperature
-        self.current_consumption: str = self.smartplug.current_consumption
-        self.total_consumption: str = self.smartplug.total_consumption
+        self.temperature: str = ""
+        self.current_consumption: str = ""
+        self.total_consumption: str = ""
         self.available = False
         self._n_tried = 0
         self._last_tried: datetime | None = None
