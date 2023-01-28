@@ -313,7 +313,11 @@ def _generate_device_info(node: Node) -> DeviceInfo:
         model += f" ({node.type})"
 
     # Get extra information for Z-Wave Devices
-    if node.protocol == PROTO_ZWAVE and node.zwave_props.mfr_id != "0":
+    if (
+        node.protocol == PROTO_ZWAVE
+        and node.zwave_props
+        and node.zwave_props.mfr_id != "0"
+    ):
         device_info[
             ATTR_MANUFACTURER
         ] = f"Z-Wave MfrID:{int(node.zwave_props.mfr_id):#0{6}x}"
