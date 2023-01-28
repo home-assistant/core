@@ -1,9 +1,7 @@
 """Support for the Airly sensor service."""
 from __future__ import annotations
 
-from collections.abc import Callable
-from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -19,11 +17,10 @@ from homeassistant.const import (
     UnitOfPressure,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import AirlyDataUpdateCoordinator
@@ -58,88 +55,90 @@ from .const import (
 PARALLEL_UPDATES = 1
 
 
-@dataclass
-class AirlySensorEntityDescription(SensorEntityDescription):
-    """Class describing Airly sensor entities."""
-
-    value: Callable = round
-
-
-SENSOR_TYPES: tuple[AirlySensorEntityDescription, ...] = (
-    AirlySensorEntityDescription(
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
         key=ATTR_API_CAQI,
         icon="mdi:air-filter",
         name=ATTR_API_CAQI,
+        native_precision=0,
         native_unit_of_measurement="CAQI",
     ),
-    AirlySensorEntityDescription(
+    SensorEntityDescription(
         key=ATTR_API_PM1,
         device_class=SensorDeviceClass.PM1,
         name=ATTR_API_PM1,
+        native_precision=0,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    AirlySensorEntityDescription(
+    SensorEntityDescription(
         key=ATTR_API_PM25,
         device_class=SensorDeviceClass.PM25,
         name="PM2.5",
+        native_precision=0,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    AirlySensorEntityDescription(
+    SensorEntityDescription(
         key=ATTR_API_PM10,
         device_class=SensorDeviceClass.PM10,
         name=ATTR_API_PM10,
+        native_precision=0,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    AirlySensorEntityDescription(
+    SensorEntityDescription(
         key=ATTR_API_HUMIDITY,
         device_class=SensorDeviceClass.HUMIDITY,
         name=ATTR_API_HUMIDITY.capitalize(),
+        native_precision=1,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        value=lambda value: round(value, 1),
     ),
-    AirlySensorEntityDescription(
+    SensorEntityDescription(
         key=ATTR_API_PRESSURE,
         device_class=SensorDeviceClass.PRESSURE,
         name=ATTR_API_PRESSURE.capitalize(),
+        native_precision=0,
         native_unit_of_measurement=UnitOfPressure.HPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    AirlySensorEntityDescription(
+    SensorEntityDescription(
         key=ATTR_API_TEMPERATURE,
         device_class=SensorDeviceClass.TEMPERATURE,
         name=ATTR_API_TEMPERATURE.capitalize(),
+        native_precision=1,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
-        value=lambda value: round(value, 1),
     ),
-    AirlySensorEntityDescription(
+    SensorEntityDescription(
         key=ATTR_API_CO,
         name=ATTR_API_CO,
+        native_precision=0,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    AirlySensorEntityDescription(
+    SensorEntityDescription(
         key=ATTR_API_NO2,
         device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
         name=ATTR_API_NO2,
+        native_precision=0,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    AirlySensorEntityDescription(
+    SensorEntityDescription(
         key=ATTR_API_SO2,
         device_class=SensorDeviceClass.SULPHUR_DIOXIDE,
         name=ATTR_API_SO2,
+        native_precision=0,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    AirlySensorEntityDescription(
+    SensorEntityDescription(
         key=ATTR_API_O3,
         device_class=SensorDeviceClass.OZONE,
         name=ATTR_API_O3,
+        native_precision=0,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -168,13 +167,12 @@ class AirlySensor(CoordinatorEntity[AirlyDataUpdateCoordinator], SensorEntity):
 
     _attr_attribution = ATTRIBUTION
     _attr_has_entity_name = True
-    entity_description: AirlySensorEntityDescription
 
     def __init__(
         self,
         coordinator: AirlyDataUpdateCoordinator,
         name: str,
-        description: AirlySensorEntityDescription,
+        description: SensorEntityDescription,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
@@ -190,14 +188,9 @@ class AirlySensor(CoordinatorEntity[AirlyDataUpdateCoordinator], SensorEntity):
         self._attr_unique_id = (
             f"{coordinator.latitude}-{coordinator.longitude}-{description.key}".lower()
         )
+        self._attr_native_value = coordinator.data[description.key]
         self._attrs: dict[str, Any] = {}
         self.entity_description = description
-
-    @property
-    def native_value(self) -> StateType:
-        """Return the state."""
-        state = self.coordinator.data[self.entity_description.key]
-        return cast(StateType, self.entity_description.value(state))
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -251,3 +244,9 @@ class AirlySensor(CoordinatorEntity[AirlyDataUpdateCoordinator], SensorEntity):
                 self.coordinator.data[f"{ATTR_API_O3}_{SUFFIX_PERCENT}"]
             )
         return self._attrs
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._attr_native_value = self.coordinator.data[self.entity_description.key]
+        self.async_write_ha_state()
