@@ -8,7 +8,7 @@ from homeassistant.core import Context
 from homeassistant.helpers import area_registry, device_registry, intent
 
 
-async def test_default_prompt(hass, setup_complete):
+async def test_default_prompt(hass, mock_init_component):
     """Test that the default prompt works."""
     device_reg = device_registry.async_get(hass)
     area_reg = area_registry.async_get(hass)
@@ -56,18 +56,6 @@ async def test_default_prompt(hass, setup_complete):
         name="Test Device 4",
         suggested_area="Test Area 2",
     )
-    device_reg.async_get_or_create(
-        config_entry_id="1234",
-        connections={("test", "davsd")},
-        name="Additional Device 5",
-        suggested_area="Additional Area 3",
-    )
-    device_reg.async_get_or_create(
-        config_entry_id="1234",
-        connections={("test", "6573")},
-        name="Additional Device 6",
-        suggested_area="Additional Area 3",
-    )
     device = device_reg.async_get_or_create(
         config_entry_id="1234",
         connections={("test", "9876-disabled")},
@@ -79,10 +67,9 @@ async def test_default_prompt(hass, setup_complete):
     device_reg.async_update_device(
         device.id, disabled_by=device_registry.DeviceEntryDisabler.USER
     )
+
     with patch("openai.Completion.acreate") as mock_create:
-        result = await conversation.async_converse(
-            hass, "Tell me about my test devices", None, Context()
-        )
+        result = await conversation.async_converse(hass, "hello", None, Context())
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert (
@@ -106,14 +93,33 @@ If the user wants to control a device, reject the request and suggest using the 
 Now finish this conversation:
 
 Smart home: How can I assist?
-User: Tell me about my test devices
+User: hello
 Smart home: """
     )
 
 
-async def test_error_handling(hass, setup_complete):
+async def test_error_handling(hass, mock_init_component):
     """Test that the default prompt works."""
     with patch("openai.Completion.acreate", side_effect=error.ServiceUnavailableError):
+        result = await conversation.async_converse(hass, "hello", None, Context())
+
+    assert result.response.response_type == intent.IntentResponseType.ERROR, result
+    assert result.response.error_code == "unknown", result
+
+
+async def test_template_error(hass, mock_config_entry, mock_init_component):
+    """Test that template error handling works."""
+    options_flow = await hass.config_entries.options.async_init(
+        mock_config_entry.entry_id
+    )
+    await hass.config_entries.options.async_configure(
+        options_flow["flow_id"],
+        {
+            "prompt": "talk like a {% if True %}smarthome{% else %}pirate please.",
+        },
+    )
+    await hass.async_block_till_done()
+    with patch("openai.Completion.acreate"):
         result = await conversation.async_converse(hass, "hello", None, Context())
 
     assert result.response.response_type == intent.IntentResponseType.ERROR, result

@@ -23,15 +23,13 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
-    CONF_CONTINUED_PROMPT,
-    CONF_ENGINE,
     CONF_MAX_TOKENS,
+    CONF_MODEL,
     CONF_PROMPT,
     CONF_TEMPERATURE,
     CONF_TOP_P,
-    DEFAULT_CONTINUED_PROMPT,
-    DEFAULT_ENGINE,
     DEFAULT_MAX_TOKENS,
+    DEFAULT_MODEL,
     DEFAULT_PROMPT,
     DEFAULT_TEMPERATURE,
     DEFAULT_TOP_P,
@@ -49,8 +47,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 DEFAULT_OPTIONS = types.MappingProxyType(
     {
         CONF_PROMPT: DEFAULT_PROMPT,
-        CONF_CONTINUED_PROMPT: DEFAULT_CONTINUED_PROMPT,
-        CONF_ENGINE: DEFAULT_ENGINE,
+        CONF_MODEL: DEFAULT_MODEL,
         CONF_MAX_TOKENS: DEFAULT_MAX_TOKENS,
         CONF_TOP_P: DEFAULT_TOP_P,
         CONF_TEMPERATURE: DEFAULT_TEMPERATURE,
@@ -96,9 +93,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            return self.async_create_entry(
-                title="OpenAI Conversation", data=user_input, options=DEFAULT_OPTIONS
-            )
+            return self.async_create_entry(title="OpenAI Conversation", data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
@@ -119,7 +114,7 @@ class OptionsFlow(config_entries.OptionsFlow):
         """Initialize options flow."""
         self.config_entry = config_entry
 
-    async def async_step_user(
+    async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Manage the options."""
@@ -127,7 +122,7 @@ class OptionsFlow(config_entries.OptionsFlow):
             return self.async_create_entry(title="OpenAI Conversation", data=user_input)
         schema = openai_config_option_schema(self.config_entry.options)
         return self.async_show_form(
-            step_id="user",
+            step_id="init",
             data_schema=vol.Schema(schema),
         )
 
@@ -140,10 +135,7 @@ def openai_config_option_schema(options: MappingProxyType[str, Any]) -> dict:
         vol.Required(CONF_PROMPT, default=options.get(CONF_PROMPT)): TextSelector(
             TextSelectorConfig(multiline=True)
         ),
-        vol.Required(
-            CONF_CONTINUED_PROMPT, default=options.get(CONF_CONTINUED_PROMPT)
-        ): TextSelector(TextSelectorConfig(multiline=True)),
-        vol.Required(CONF_ENGINE, default=options.get(CONF_ENGINE)): str,
+        vol.Required(CONF_MODEL, default=options.get(CONF_MODEL)): str,
         vol.Required(CONF_MAX_TOKENS, default=options.get(CONF_MAX_TOKENS)): int,
         vol.Required(CONF_TOP_P, default=options.get(CONF_TOP_P)): NumberSelector(
             NumberSelectorConfig(min=0, max=1, step=0.05)
