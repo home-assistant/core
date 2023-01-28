@@ -82,8 +82,9 @@ class WebSocketHandler:
     @property
     def description(self) -> str:
         """Return a description of the connection."""
-        connection = self.connection
-        return connection.description if connection else describe_request(self.request)
+        if self.connection is not None:
+            return self.connection.get_description(self.request)
+        return describe_request(self.request)
 
     async def _writer(self) -> None:
         """Write outgoing messages."""
@@ -117,13 +118,18 @@ class WebSocketHandler:
                         )
 
                     coalesced_messages = "[" + ",".join(messages) + "]"
-                    self._logger.debug("Sending %s", coalesced_messages)
-                    await self.wsock.send_str(coalesced_messages)
+                    logger.debug("Sending %s", coalesced_messages)
+                    await wsock.send_str(coalesced_messages)
         finally:
             # Clean up the peaker checker when we shut down the writer
-            if self._peak_checker_unsub is not None:
-                self._peak_checker_unsub()
-                self._peak_checker_unsub = None
+            self._cancel_peak_checker()
+
+    @callback
+    def _cancel_peak_checker(self) -> None:
+        """Cancel the peak checker."""
+        if self._peak_checker_unsub is not None:
+            self._peak_checker_unsub()
+            self._peak_checker_unsub = None
 
     @callback
     def _send_message(self, message: str | dict[str, Any] | Callable[[], str]) -> None:
@@ -148,18 +154,17 @@ class WebSocketHandler:
                 (
                     "%s: Client unable to keep up with pending messages. Reached %s pending"
                     " messages. The system's load is too high or an integration is"
-                    " misbehaving"
+                    " misbehaving. Last message was: %s"
                 ),
                 self.description,
                 MAX_PENDING_MSG,
+                message,
             )
 
             self._cancel()
 
         if self._to_write.qsize() < PENDING_MSG_PEAK:
-            if self._peak_checker_unsub:
-                self._peak_checker_unsub()
-                self._peak_checker_unsub = None
+            self._cancel_peak_checker()
             return
 
         if self._peak_checker_unsub is None:

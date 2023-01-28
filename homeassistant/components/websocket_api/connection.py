@@ -6,6 +6,7 @@ from collections.abc import Callable, Hashable
 from contextvars import ContextVar
 from typing import TYPE_CHECKING, Any
 
+from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.auth.models import RefreshToken, User
@@ -47,11 +48,10 @@ class ActiveConnection:
         self.supported_features: dict[str, float] = {}
         current_connection.set(self)
 
-    @property
-    def description(self) -> str:
+    def get_description(self, request: web.Request | None) -> str:
         """Return a description of the connection."""
         description = f"{self.user.name} ({self.user.id})"
-        if request := current_request.get():
+        if request:
             description += describe_request(request)
         return description
 
@@ -151,6 +151,6 @@ class ActiveConnection:
 
         if code:
             err_message += f" ({code})"
-        err_message += self.description
+        err_message += self.get_description(current_request.get())
 
         log_handler("Error handling message: %s", err_message)
