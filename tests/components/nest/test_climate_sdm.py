@@ -8,10 +8,17 @@ pubsub subscriber.
 from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 from typing import Any
+from unittest.mock import patch
 
 import aiohttp
 from google_nest_sdm.auth import AbstractAuth
 from google_nest_sdm.event import EventMessage
+from google_nest_sdm.exceptions import ApiException
+from google_nest_sdm.device_traits import FanTrait
+from google_nest_sdm.thermostat_traits import (
+    ThermostatModeTrait,
+    ThermostatTemperatureSetpointTrait,
+)
 import pytest
 
 from homeassistant.components.climate import (
@@ -428,7 +435,7 @@ async def test_thermostat_set_hvac_mode(
     create_event: CreateEvent,
 ) -> None:
     """Test a thermostat changing hvac modes."""
-    create_device.create(
+    device = create_device.create(
         {
             "sdm.devices.traits.ThermostatHvac": {"status": "OFF"},
             "sdm.devices.traits.ThermostatMode": {
@@ -489,6 +496,20 @@ async def test_thermostat_set_hvac_mode(
     assert thermostat is not None
     assert thermostat.state == HVACMode.HEAT
     assert thermostat.attributes[ATTR_HVAC_ACTION] == HVACAction.HEATING
+
+    trait = device.traits[ThermostatModeTrait.NAME]
+    with patch.object(trait, "set_mode") as set_mode:
+        set_mode.side_effect = ApiException("This is an API exception")
+        ex: HomeAssistantError = None
+        try:
+            await common.async_set_hvac_mode(hass, HVACMode.OFF)
+            await hass.async_block_till_done()
+        except HomeAssistantError as hae:
+            ex = hae
+        assert ex is not None
+        assert "This is an API exception" in str(ex)
+        assert HVACMode.OFF in str(ex)
+        assert "climate.my_thermostat" in str(ex)
 
 
 async def test_thermostat_invalid_hvac_mode(
@@ -799,6 +820,47 @@ async def test_thermostat_set_heat_cool(
     }
 
 
+async def test_thermostat_set_temperature_api_exception(
+    hass: HomeAssistant,
+    setup_platform: PlatformSetup,
+    auth: FakeAuth,
+    create_device: CreateDevice,
+) -> None:
+    """Test a thermostat heating mode with a temperature change."""
+    device = create_device.create(
+        {
+            "sdm.devices.traits.ThermostatHvac": {"status": "OFF"},
+            "sdm.devices.traits.ThermostatMode": {
+                "availableModes": ["HEAT", "COOL", "HEATCOOL", "OFF"],
+                "mode": "HEAT",
+            },
+            "sdm.devices.traits.ThermostatTemperatureSetpoint": {
+                "heatCelsius": 19.0,
+            },
+        }
+    )
+    await setup_platform()
+
+    assert len(hass.states.async_all()) == 1
+    thermostat = hass.states.get("climate.my_thermostat")
+    assert thermostat is not None
+    assert thermostat.state == HVACMode.HEAT
+
+    trait = device.traits[ThermostatTemperatureSetpointTrait.NAME]
+    with patch.object(trait, "set_heat") as set_heat:
+        set_heat.side_effect = ApiException("This is an API exception")
+        ex: HomeAssistantError = None
+        try:
+            await common.async_set_temperature(hass, temperature=20.0)
+            await hass.async_block_till_done()
+        except HomeAssistantError as hae:
+            ex = hae
+        assert ex is not None
+        assert "This is an API exception" in str(ex)
+        assert "20.0" in str(ex)
+        assert "climate.my_thermostat" in str(ex)
+
+
 async def test_thermostat_fan_off(
     hass: HomeAssistant,
     setup_platform: PlatformSetup,
@@ -941,7 +1003,7 @@ async def test_thermostat_set_fan(
     create_device: CreateDevice,
 ) -> None:
     """Test a thermostat enabling the fan."""
-    create_device.create(
+    device = create_device.create(
         {
             "sdm.devices.traits.Fan": {
                 "timerMode": "ON",
@@ -994,6 +1056,20 @@ async def test_thermostat_set_fan(
             "timerMode": "ON",
         },
     }
+
+    trait = device.traits[FanTrait.NAME]
+    with patch.object(trait, "set_timer") as set_timer:
+        set_timer.side_effect = ApiException("This is an API exception")
+        ex: HomeAssistantError = None
+        try:
+            await common.async_set_fan_mode(hass, FAN_ON)
+            await hass.async_block_till_done()
+        except HomeAssistantError as hae:
+            ex = hae
+        assert ex is not None
+        assert "This is an API exception" in str(ex)
+        assert FAN_ON in str(ex)
+        assert "climate.my_thermostat" in str(ex)
 
 
 async def test_thermostat_set_fan_when_off(

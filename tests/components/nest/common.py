@@ -222,9 +222,10 @@ class CreateDevice:
 
     def create(
         self, raw_traits: dict[str, Any] = None, raw_data: dict[str, Any] = None
-    ) -> None:
+    ) -> Device:
         """Create a new device with the specifeid traits."""
         data = copy.deepcopy(self.data)
         data.update(raw_data if raw_data else {})
         data["traits"].update(raw_traits if raw_traits else {})
-        self.device_manager.add_device(Device.MakeDevice(data, auth=self.auth))
+        self.device_manager.add_device(dev := Device.MakeDevice(data, auth=self.auth))
+        return dev
