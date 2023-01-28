@@ -9,7 +9,9 @@
         },
         "error": {
             "auth_failed": "Authenticatie mislukt",
-            "encryption_key_invalid": "Sleutel ID of encryptiesleutel is ongeldig"
+            "encryption_key_invalid": "Sleutel ID of encryptiesleutel is ongeldig",
+            "one": "een",
+            "other": "overige"
         },
         "flow_title": "{name}",
         "step": {
