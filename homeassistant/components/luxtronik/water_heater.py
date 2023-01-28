@@ -174,14 +174,14 @@ class LuxtronikWaterHeater(LuxtronikEntity, WaterHeaterEntity):
 
     async def _async_set_lux_mode(self, lux_mode: str) -> None:
         lux_key = self.entity_description.luxtronik_key.value
-        data = await self.coordinator.write(lux_key.split(".")[1], lux_mode)
+        data = await self.coordinator.async_write(lux_key.split(".")[1], lux_mode)
         self._handle_coordinator_update(data)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         value = kwargs.get(ATTR_TEMPERATURE)
         lux_key = self.entity_description.luxtronik_key_target_temperature.value
-        data: LuxtronikCoordinatorData | None = await self.coordinator.write(
+        data: LuxtronikCoordinatorData | None = await self.coordinator.async_write(
             lux_key.split(".")[1], value
         )
         self._handle_coordinator_update(data)

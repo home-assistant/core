@@ -6,6 +6,8 @@ from collections.abc import Awaitable, Callable, Coroutine, Mapping
 from dataclasses import dataclass
 from datetime import timedelta
 from functools import wraps
+import json
+import os.path
 import re
 import threading
 from types import MappingProxyType
@@ -27,6 +29,7 @@ from .const import (
     DOMAIN,
     LOGGER,
     LUX_PARAMETER_MK_SENSORS,
+    PLATFORMS,
     DeviceKey,
     LuxCalculation,
     LuxMkTypes,
@@ -100,17 +103,19 @@ class LuxtronikCoordinator(DataUpdateCoordinator[LuxtronikCoordinatorData]):
 
     async def _async_update_data(self) -> LuxtronikCoordinatorData:
         """Connect and fetch data."""
-        self.data = await self._read_data()
+        self.data = await self._async_read_data()
         return self.data
 
-    async def _read_data(self) -> LuxtronikCoordinatorData:
-        return await self._read_or_write(False, None, None)
+    async def _async_read_data(self) -> LuxtronikCoordinatorData:
+        return await self._async_read_or_write(False, None, None)
 
-    async def write(self, parameter, value) -> LuxtronikCoordinatorData:
+    async def async_write(self, parameter, value) -> LuxtronikCoordinatorData:
         """Write a parameter to the Luxtronik heatpump."""
-        return await self._read_or_write(True, parameter, value)
+        return await self._async_read_or_write(True, parameter, value)
 
-    async def _read_or_write(self, write, parameter, value) -> LuxtronikCoordinatorData:
+    async def _async_read_or_write(
+        self, write, parameter, value
+    ) -> LuxtronikCoordinatorData:
         if write:
             data = self._write(parameter, value)
         else:
@@ -256,7 +261,7 @@ class LuxtronikCoordinator(DataUpdateCoordinator[LuxtronikCoordinatorData]):
 
     def entity_visible(self, description: LuxtronikEntityDescription) -> bool:
         """Is description visible."""
-        if description.visibility is None:
+        if description.visibility is None or description.visibility.value is None:
             return True
         # Detecting some options based on visibilities doesn't work reliably.
         # Use special functions
@@ -266,7 +271,11 @@ class LuxtronikCoordinator(DataUpdateCoordinator[LuxtronikCoordinatorData]):
             LuxVisibility.V0250_SOLAR,
         ]:
             return self.detect_solar_present()
-        return self.get_value(description.visibility) > 0
+        visibility_result = self.get_value(description.visibility)
+        if visibility_result is None:
+            LOGGER.warning("Could not load visibility %s", description.visibility)
+            return True
+        return visibility_result > 0
 
     def entity_active(self, description: LuxtronikEntityDescription) -> bool:
         """Is description activated."""
@@ -278,8 +287,8 @@ class LuxtronikCoordinator(DataUpdateCoordinator[LuxtronikCoordinatorData]):
             return False
         if not self.device_key_active(description.device_key):
             return False
-        if description.invisibly_if_value is not None:
-            return description.invisibly_if_value != self.get_value(
+        if description.invisible_if_value is not None:
+            return description.invisible_if_value != self.get_value(
                 description.luxtronik_key
             )
         return True

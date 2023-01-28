@@ -1,15 +1,21 @@
-"""Constants for the Luxtronik integration."""
+"""Constants for the Luxtronik heatpump integration."""
 # region Imports
+from datetime import timedelta
 from enum import Enum
 import logging
 from typing import Final
 
+from homeassistant.const import Platform
+
 # endregion Imports
 
 # region Constants Main
-DOMAIN = "luxtronik"
+DOMAIN: Final = "luxtronik"
 
 LOGGER: Final[logging.Logger] = logging.getLogger(__package__)
+PLATFORMS: list[str] = [
+    Platform.WATER_HEATER,
+]
 
 ATTR_EXTRA_STATE_ATTRIBUTE_LUXTRONIK_KEY: Final = "luxtronik_Key"
 # endregion Constants Main

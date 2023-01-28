@@ -2,7 +2,8 @@
 # region Imports
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import Any
 
 from homeassistant.components.water_heater import (
     WaterHeaterEntityEntityDescription,
@@ -33,7 +34,7 @@ class LuxtronikEntityDescription(EntityDescription):
     luxtronik_key: LuxParameter | LuxCalculation = LuxParameter.UNSET
     translation_key_name: str | None = None
     visibility: LuxVisibility = LuxVisibility.UNSET
-    invisibly_if_value = None
+    invisible_if_value: Any | None = None
     min_firmware_version_minor: FirmwareVersionMinor | None = None
 
 
@@ -44,7 +45,7 @@ class LuxtronikWaterHeaterDescription(
 ):
     """Class describing Luxtronik water heater entities."""
 
-    operation_list: list[str] = []
+    operation_list: list[str] = field(default_factory=list)
     supported_features: WaterHeaterEntityFeature = WaterHeaterEntityFeature(0)
     luxtronik_key_current_temperature: LuxCalculation = LuxCalculation.UNSET
     luxtronik_key_current_action: LuxCalculation = LuxCalculation.UNSET
