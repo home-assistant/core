@@ -4,20 +4,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/hue",
   "requirements": ["aiohue==4.6.1"],
-  "ssdp": [
-    {
-      "manufacturer": "Royal Philips Electronics",
-      "modelName": "Philips hue bridge 2012"
-    },
-    {
-      "manufacturer": "Royal Philips Electronics",
-      "modelName": "Philips hue bridge 2015"
-    },
-    {
-      "manufacturer": "Signify",
-      "modelName": "Philips hue bridge 2015"
-    }
-  ],
   "homekit": {
     "models": ["BSB002"]
   },

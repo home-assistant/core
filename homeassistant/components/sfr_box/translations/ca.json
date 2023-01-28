@@ -1,17 +1,32 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El dispositiu ja est\u00e0 configurat"
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
         },
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",
-            "unknown": "Error inesperat"
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
         },
         "step": {
+            "auth": {
+                "data": {
+                    "password": "Contrasenya",
+                    "username": "Nom d'usuari"
+                }
+            },
+            "choose_auth": {
+                "description": "La configuraci\u00f3 de credencials permet funcionalitats addicionals.",
+                "menu_options": {
+                    "auth": "Estableix les credencials (recomanat)",
+                    "skip_auth": "Omet l'autenticaci\u00f3"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Amfitri\u00f3"
-                }
+                },
+                "description": "La configuraci\u00f3 de les credencials \u00e9s opcional, per\u00f2 permet funcionalitats addicionals."
             }
         }
     },
@@ -23,6 +38,14 @@
                     "loss_of_signal": "P\u00e8rdua de senyal",
                     "loss_of_signal_quality": "P\u00e8rdua de qualitat de senyal",
                     "no_defect": "Sense defectes",
+                    "unknown": "Desconegut"
+                }
+            },
+            "net_infra": {
+                "state": {
+                    "adsl": "ADSL",
+                    "ftth": "FTTH",
+                    "gprs": "GPRS",
                     "unknown": "Desconegut"
                 }
             },

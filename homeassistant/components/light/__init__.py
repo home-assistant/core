@@ -434,7 +434,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         ):
             profiles.apply_default(light.entity_id, light.is_on, params)
 
-        # pylint: disable=protected-access
+        # pylint: disable-next=protected-access
         legacy_supported_color_modes = light._light_internal_supported_color_modes
         supported_color_modes = light.supported_color_modes
 

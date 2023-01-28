@@ -9,8 +9,7 @@
         },
         "error": {
             "auth_failed": "Authentication failed: {error_detail}",
-            "encryption_key_invalid": "Key ID or Encryption key is invalid",
-            "key_id_invalid": "Key ID or Encryption key is invalid"
+            "encryption_key_invalid": "Key ID or Encryption key is invalid"
         },
         "flow_title": "{name} ({address})",
         "step": {
@@ -29,13 +28,6 @@
                 "menu_options": {
                     "lock_auth": "SwitchBot account (recommended)",
                     "lock_key": "Enter lock encryption key manually"
-                }
-            },
-            "lock_chose_method": {
-                "description": "Choose configuration method, details can be found in the documentation.",
-                "menu_options": {
-                    "lock_auth": "SwitchBot app login and password",
-                    "lock_key": "Lock encryption key"
                 }
             },
             "lock_key": {

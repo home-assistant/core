@@ -4,8 +4,7 @@
             "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado"
         },
         "error": {
-            "cannot_connect": "Falhou ao conectar",
-            "unknown": "Erro inesperado"
+            "cannot_connect": "Falhou ao conectar"
         },
         "step": {
             "user": {
@@ -24,6 +23,14 @@
                     "loss_of_signal_quality": "Perda de qualidade do sinal",
                     "no_defect": "Sem defeito",
                     "of_frame": "Da moldura",
+                    "unknown": "Desconhecido"
+                }
+            },
+            "net_infra": {
+                "state": {
+                    "adsl": "ADSL",
+                    "ftth": "FTTH",
+                    "gprs": "GPRS",
                     "unknown": "Desconhecido"
                 }
             },

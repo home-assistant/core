@@ -1,5 +1,5 @@
 """The tests for the Entity component helper."""
-# pylint: disable=protected-access
+
 from collections import OrderedDict
 from datetime import timedelta
 import logging

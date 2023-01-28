@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import collections
+from contextlib import suppress
 import json
 from typing import Any
 
@@ -518,7 +519,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
         else:
             self._radio_mgr.radio_type = RadioType.znp
 
-        node_name = local_name[: -len(".local")]
+        node_name = local_name.removesuffix(".local")
         device_path = f"socket://{discovery_info.host}:{port}"
 
         await self._set_unique_id_or_update_path(
@@ -583,11 +584,9 @@ class ZhaOptionsFlowHandler(BaseZhaFlow, config_entries.OptionsFlow):
     ) -> FlowResult:
         """Launch the options flow."""
         if user_input is not None:
-            try:
+            # OperationNotAllowed: ZHA is not running
+            with suppress(config_entries.OperationNotAllowed):
                 await self.hass.config_entries.async_unload(self.config_entry.entry_id)
-            except config_entries.OperationNotAllowed:
-                # ZHA is not running
-                pass
 
             return await self.async_step_prompt_migrate_or_reconfigure()
 

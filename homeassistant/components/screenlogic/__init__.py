@@ -240,10 +240,12 @@ class ScreenlogicEntity(CoordinatorEntity[ScreenlogicDataUpdateCoordinator]):
 class ScreenLogicCircuitEntity(ScreenlogicEntity):
     """ScreenLogic circuit entity."""
 
+    _attr_has_entity_name = True
+
     @property
     def name(self):
         """Get the name of the switch."""
-        return f"{self.gateway_name} {self.circuit['name']}"
+        return self.circuit["name"]
 
     @property
     def is_on(self) -> bool:

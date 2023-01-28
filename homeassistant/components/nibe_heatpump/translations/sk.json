@@ -4,10 +4,10 @@
             "address": "Bola zadan\u00e1 neplatn\u00e1 vzdialen\u00e1 adresa. Adresa mus\u00ed by\u0165 IP adresa alebo rozl\u00ed\u0161ite\u013en\u00fd n\u00e1zov hostite\u013ea.",
             "address_in_use": "Vybran\u00fd port po\u010d\u00favania sa u\u017e v tomto syst\u00e9me pou\u017e\u00edva.",
             "model": "Zd\u00e1 sa, \u017ee vybran\u00fd model nepodporuje MODBUS40",
-            "read": "Chyba pri po\u017eiadavke na \u010d\u00edtanie z pumpy. Overte svoj \u201ePort na \u010d\u00edtanie\u201c alebo \u201eVzdialen\u00e1 adresa\u201c.",
+            "read": "Chyba pri po\u017eiadavke na \u010d\u00edtanie z pumpy. Overte svoj `Port na \u010d\u00edtanie` alebo `Vzdialen\u00e1 adresa`.",
             "unknown": "Neo\u010dak\u00e1van\u00e1 chyba",
             "url": "Zadan\u00e1 adresa URL nie je spr\u00e1vne vytvoren\u00e1 ani podporovan\u00e1",
-            "write": "Chyba pri \u017eiadosti o z\u00e1pis do pumpy. Overte svoj \u201ePort pre vzdialen\u00fd z\u00e1pis\u201c alebo \u201eVzdialen\u00e1 adresa\u201c."
+            "write": "Chyba pri \u017eiadosti o z\u00e1pis do pumpy. Overte svoj `Port pre vzdialen\u00fd z\u00e1pis` alebo `Vzdialen\u00e1 adresa`."
         },
         "step": {
             "modbus": {

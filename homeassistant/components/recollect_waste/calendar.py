@@ -57,7 +57,7 @@ class ReCollectWasteCalendar(ReCollectWasteEntity, CalendarEntity):
         """Initialize the ReCollect Waste entity."""
         super().__init__(coordinator, entry)
 
-        self._attr_unique_id = f"{self._identifier}_calendar"
+        self._attr_unique_id = self._identifier
         self._event: CalendarEvent | None = None
 
     @property

@@ -80,11 +80,18 @@
                 },
                 "description": "Altere as informa\u00e7\u00f5es de conex\u00e3o do Hub Insteon. Voc\u00ea deve reiniciar o Home Assistant depois de fazer essa altera\u00e7\u00e3o. Isso n\u00e3o altera a configura\u00e7\u00e3o do pr\u00f3prio Hub. Para alterar a configura\u00e7\u00e3o no Hub, use o aplicativo Hub."
             },
+            "change_plm_config": {
+                "data": {
+                    "device": "Caminho do Dispositivo USB"
+                },
+                "description": "Altere as informa\u00e7\u00f5es de conex\u00e3o do Insteon PLM. Voc\u00ea deve reiniciar o Home Assistant depois de fazer essa altera\u00e7\u00e3o. Isso n\u00e3o altera a configura\u00e7\u00e3o do pr\u00f3prio PLM."
+            },
             "init": {
                 "data": {
                     "add_override": "Adicione uma substitui\u00e7\u00e3o de dispositivo.",
                     "add_x10": "Adicionar um dispositivo X10",
                     "change_hub_config": "Altere a configura\u00e7\u00e3o do Hub.",
+                    "change_plm_config": "Altere a configura\u00e7\u00e3o do PLM.",
                     "remove_override": "Remova uma substitui\u00e7\u00e3o de dispositivo.",
                     "remove_x10": "Remova um dispositivo X10."
                 }

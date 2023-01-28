@@ -113,7 +113,8 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
             state_class == EsphomeSensorStateClass.MEASUREMENT
             and reset_type == LastResetType.AUTO
         ):
-            # Legacy, last_reset_type auto was the equivalent to the TOTAL_INCREASING state class
+            # Legacy, last_reset_type auto was the equivalent to the
+            # TOTAL_INCREASING state class
             return SensorStateClass.TOTAL_INCREASING
         return _STATE_CLASSES.from_esphome(self._static_info.state_class)
 

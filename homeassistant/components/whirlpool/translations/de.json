@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Konto wurde bereits konfiguriert"
+        },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
@@ -49,9 +52,9 @@
             },
             "whirlpool_tank": {
                 "state": {
-                    "100%": "100%",
-                    "25%": "25%",
-                    "50%": "50%",
+                    "100": "100%",
+                    "25": "25%",
+                    "50": "50%",
                     "active": "Aktiv",
                     "empty": "Leer",
                     "unknown": "Unbekannt"

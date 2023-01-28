@@ -375,7 +375,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
             tts_base_url = None
             url_description = ""
             if "tts" in self.hass.config.components:
-                # pylint: disable=[import-outside-toplevel]
+                # pylint: disable-next=[import-outside-toplevel]
                 from homeassistant.components import tts
 
                 with suppress(KeyError):  # base_url not configured

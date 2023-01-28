@@ -58,7 +58,7 @@
                 "title": "Z-Wave JS eklentisi ba\u015fl\u0131yor."
             },
             "usb_confirm": {
-                "description": "{name} Z-Wave JS eklentisiyle kurmak istiyor musunuz?"
+                "description": "{name} i\u00e7in Z-Wave JS eklentisini kurmak istiyor musunuz?"
             },
             "zeroconf_confirm": {
                 "description": "{url} adresinde bulunan {home_id} ev kimli\u011fine sahip Z-Wave JS Sunucusunu Home Assistant'a eklemek istiyor musunuz?",

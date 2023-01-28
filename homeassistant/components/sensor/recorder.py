@@ -183,10 +183,7 @@ def _normalize_states(
         # We have seen this sensor before, use the unit from metadata
         statistics_unit = old_metadata["unit_of_measurement"]
 
-    if (
-        not statistics_unit
-        or statistics_unit not in statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER
-    ):
+    if statistics_unit not in statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER:
         # The unit used by this sensor doesn't support unit conversion
 
         all_units = _get_units(fstates)
@@ -721,7 +718,8 @@ def validate_statistics(
                     )
             elif state_unit not in converter.VALID_UNITS:
                 # The state unit can't be converted to the unit in metadata
-                valid_units = ", ".join(sorted(converter.VALID_UNITS))
+                valid_units = (unit or "<None>" for unit in converter.VALID_UNITS)
+                valid_units_str = ", ".join(sorted(valid_units))
                 validation_result[entity_id].append(
                     statistics.ValidationIssue(
                         "units_changed",
@@ -729,7 +727,7 @@ def validate_statistics(
                             "statistic_id": entity_id,
                             "state_unit": state_unit,
                             "metadata_unit": metadata_unit,
-                            "supported_unit": valid_units,
+                            "supported_unit": valid_units_str,
                         },
                     )
                 )

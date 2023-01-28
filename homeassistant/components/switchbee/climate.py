@@ -178,5 +178,5 @@ class SwitchBeeClimateEntity(SwitchBeeDeviceEntity[SwitchBeeThermostat], Climate
             raise HomeAssistantError(
                 f"Failed to set {self.name} state {state}, error: {str(exp)}"
             ) from exp
-        else:
-            await self.coordinator.async_refresh()
+
+        await self.coordinator.async_refresh()

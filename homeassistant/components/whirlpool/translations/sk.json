@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "\u00da\u010det je u\u017e nakonfigurovan\u00fd"
+        },
         "error": {
             "cannot_connect": "Nepodarilo sa pripoji\u0165",
             "invalid_auth": "Neplatn\u00e9 overenie",
@@ -49,9 +52,9 @@
             },
             "whirlpool_tank": {
                 "state": {
-                    "100%": "100%",
-                    "25%": "25%",
-                    "50%": "50%",
+                    "100": "100%",
+                    "25": "25%",
+                    "50": "50%",
                     "active": "akt\u00edvny",
                     "empty": "Pr\u00e1zdny",
                     "unknown": "Nezn\u00e1my"

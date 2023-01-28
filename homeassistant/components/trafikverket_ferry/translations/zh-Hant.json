@@ -26,5 +26,18 @@
                 }
             }
         }
+    },
+    "selector": {
+        "weekday": {
+            "options": {
+                "fri": "\u661f\u671f\u4e94",
+                "mon": "\u661f\u671f\u4e00",
+                "sat": "\u661f\u671f\u516d",
+                "sun": "\u661f\u671f\u5929",
+                "thu": "\u661f\u671f\u56db",
+                "tue": "\u661f\u671f\u4e8c",
+                "wed": "\u661f\u671f\u4e09"
+            }
+        }
     }
 }

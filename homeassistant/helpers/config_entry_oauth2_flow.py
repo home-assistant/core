@@ -13,7 +13,7 @@ from collections.abc import Awaitable, Callable
 import logging
 import secrets
 import time
-from typing import Any, cast
+from typing import Any, Optional, cast
 
 from aiohttp import client, web
 import async_timeout
@@ -40,6 +40,9 @@ HEADER_FRONTEND_BASE = "HA-Frontend-Base"
 MY_AUTH_CALLBACK_PATH = "https://my.home-assistant.io/redirect/oauth"
 
 CLOCK_OUT_OF_SYNC_MAX_SEC = 20
+
+OAUTH_AUTHORIZE_URL_TIMEOUT_SEC = 30
+OAUTH_TOKEN_TIMEOUT_SEC = 30
 
 
 class AbstractOAuth2Implementation(ABC):
@@ -194,6 +197,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
         if self.client_secret is not None:
             data["client_secret"] = self.client_secret
 
+        _LOGGER.debug("Sending token request to %s", self.token_url)
         resp = await session.post(self.token_url, data=data)
         if resp.status >= 400 and _LOGGER.isEnabledFor(logging.DEBUG):
             body = await resp.text()
@@ -283,9 +287,10 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
             return self.async_external_step_done(next_step_id=next_step)
 
         try:
-            async with async_timeout.timeout(10):
+            async with async_timeout.timeout(OAUTH_AUTHORIZE_URL_TIMEOUT_SEC):
                 url = await self.async_generate_authorize_url()
-        except asyncio.TimeoutError:
+        except asyncio.TimeoutError as err:
+            _LOGGER.error("Timeout generating authorize url: %s", err)
             return self.async_abort(reason="authorize_url_timeout")
         except NoURLAvailableError:
             return self.async_abort(
@@ -303,7 +308,17 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Create config entry from external data."""
-        token = await self.flow_impl.async_resolve_external_data(self.external_data)
+        _LOGGER.debug("Creating config entry from external data")
+
+        try:
+            async with async_timeout.timeout(OAUTH_TOKEN_TIMEOUT_SEC):
+                token = await self.flow_impl.async_resolve_external_data(
+                    self.external_data
+                )
+        except asyncio.TimeoutError as err:
+            _LOGGER.error("Timeout resolving OAuth token: %s", err)
+            return self.async_abort(reason="oauth2_timeout")
+
         # Force int for non-compliant oauth2 providers
         try:
             token["expires_in"] = int(token["expires_in"])
@@ -422,7 +437,10 @@ class OAuth2AuthorizeCallbackView(http.HomeAssistantView):
         state = _decode_jwt(hass, request.query["state"])
 
         if state is None:
-            return web.Response(text="Invalid state")
+            return web.Response(
+                text="Invalid state. Is My Home Assistant configured to go to the right instance?",
+                status=400,
+            )
 
         user_input: dict[str, Any] = {"state": state}
 
@@ -436,7 +454,7 @@ class OAuth2AuthorizeCallbackView(http.HomeAssistantView):
         await hass.config_entries.flow.async_configure(
             flow_id=state["flow_id"], user_input=user_input
         )
-
+        _LOGGER.debug("Resumed OAuth configuration flow")
         return web.Response(
             headers={"content-type": "text/html"},
             text="<script>window.close()</script>",
@@ -523,7 +541,10 @@ def _encode_jwt(hass: HomeAssistant, data: dict) -> str:
 @callback
 def _decode_jwt(hass: HomeAssistant, encoded: str) -> dict | None:
     """JWT encode data."""
-    secret = cast(str, hass.data.get(DATA_JWT_SECRET))
+    secret = cast(Optional[str], hass.data.get(DATA_JWT_SECRET))
+
+    if secret is None:
+        return None
 
     try:
         return jwt.decode(encoded, secret, algorithms=["HS256"])

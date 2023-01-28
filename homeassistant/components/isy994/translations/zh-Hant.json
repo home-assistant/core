@@ -39,6 +39,10 @@
                     "confirm": {
                         "description": "\u4f7f\u7528\u6b64\u670d\u52d9\u4ee5\u66f4\u65b0\u4efb\u4f55\u81ea\u52d5\u5316\u6216\u8173\u672c\u3001\u4ee5\u53d6\u4ee3\u4f7f\u7528\u76ee\u6a19\u5be6\u9ad4 ID \u70ba `{alternate_target}` \u4e4b `{alternate_service}` \u670d\u52d9\u3002",
                         "title": "{deprecated_service} \u670d\u52d9\u5c07\u79fb\u9664"
+                    },
+                    "deprecated_yaml": {
+                        "description": "\u4f7f\u7528 YAML \u8a2d\u5b9a\u7684\u901a\u7528\u88dd\u7f6e ISY/IoX \u5373\u5c07\u9032\u884c\u79fb\u9664\u3002\n\n\u65e2\u6709\u7684 YAML \u8a2d\u5b9a\u5c07\u81ea\u52d5\u532f\u5165\u81f3 UI \u5167\u3002\n\n\u8acb\u65bc configuration.yaml \u6a94\u6848\u4e2d\u79fb\u9664 `isy994` YAML \u8a2d\u5b9a\u4e26\u91cd\u65b0\u555f\u52d5 Home Assistant \u4ee5\u4fee\u6b63\u6b64\u554f\u984c\u3002",
+                        "title": "ISY/IoX YAML \u8a2d\u5b9a\u5373\u5c07\u79fb\u9664"
                     }
                 }
             },

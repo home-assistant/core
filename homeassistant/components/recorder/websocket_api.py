@@ -242,7 +242,10 @@ def _ws_get_list_statistic_ids(
     msg_id: int,
     statistic_type: Literal["mean"] | Literal["sum"] | None = None,
 ) -> str:
-    """Fetch a list of available statistic_id and convert them to json in the executor."""
+    """Fetch a list of available statistic_id and convert them to JSON.
+
+    Runs in the executor.
+    """
     return JSON_DUMP(
         messages.result_message(msg_id, list_statistic_ids(hass, None, statistic_type))
     )

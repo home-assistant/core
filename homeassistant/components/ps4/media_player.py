@@ -41,7 +41,6 @@ _LOGGER = logging.getLogger(__name__)
 
 
 ICON = "mdi:sony-playstation"
-MEDIA_IMAGE_DEFAULT = None
 
 DEFAULT_RETRIES = 2
 
@@ -374,13 +373,13 @@ class PS4Device(MediaPlayerEntity):
                 f"/api/media_player_proxy/{self.entity_id}?"
                 f"token={self.access_token}&cache={image_hash}"
             )
-        return MEDIA_IMAGE_DEFAULT
+        return None
 
     @property
     def media_image_url(self):
         """Image url of current playing media."""
         if self.media_content_id is None:
-            return MEDIA_IMAGE_DEFAULT
+            return None
         return self._media_image
 
     async def async_turn_off(self) -> None:

@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia/uwierzytelni\u0107",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "step": {
+            "confirm_discovery": {
+                "data": {
+                    "password": "Has\u0142o (domy\u015blnie: kod PIN z ty\u0142u urz\u0105dzenia)",
+                    "use_legacy_protocol": "U\u017cyj starszego protoko\u0142u",
+                    "username": "Nazwa u\u017cytkownika"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP",
+                    "password": "Has\u0142o (domy\u015blnie: kod PIN z ty\u0142u urz\u0105dzenia)",
+                    "use_legacy_protocol": "U\u017cyj starszego protoko\u0142u",
+                    "username": "Nazwa u\u017cytkownika"
+                }
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Konfiguracja D-Link Smart Plug przy u\u017cyciu YAML zostanie usuni\u0119ta. \n\nTwoja istniej\u0105ca konfiguracja YAML zosta\u0142a automatycznie zaimportowana do interfejsu u\u017cytkownika. \n\nUsu\u0144 konfiguracj\u0119 YAML z pliku configuration.yaml i uruchom ponownie Home Assistanta, aby rozwi\u0105za\u0107 ten problem.",
+            "title": "Konfiguracja YAML dla D-Link Smart Plug zostanie usuni\u0119ta"
+        }
+    }
+}

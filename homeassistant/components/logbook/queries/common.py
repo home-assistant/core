@@ -1,6 +1,8 @@
 """Queries for logbook."""
 from __future__ import annotations
 
+from typing import Final
+
 import sqlalchemy
 from sqlalchemy import select
 from sqlalchemy.orm import Query
@@ -33,7 +35,7 @@ ALWAYS_CONTINUOUS_ENTITY_ID_LIKE = like_domain_matchers(ALWAYS_CONTINUOUS_DOMAIN
 UNIT_OF_MEASUREMENT_JSON = '"unit_of_measurement":'
 UNIT_OF_MEASUREMENT_JSON_LIKE = f"%{UNIT_OF_MEASUREMENT_JSON}%"
 
-PSUEDO_EVENT_STATE_CHANGED = None
+PSEUDO_EVENT_STATE_CHANGED: Final = None
 # Since we don't store event_types and None
 # and we don't store state_changed in events
 # we use a NULL for state_changed events
@@ -69,11 +71,11 @@ STATE_CONTEXT_ONLY_COLUMNS = (
 
 EVENT_COLUMNS_FOR_STATE_SELECT = [
     literal(value=None, type_=sqlalchemy.Text).label("event_id"),
-    # We use PSUEDO_EVENT_STATE_CHANGED aka None for
+    # We use PSEUDO_EVENT_STATE_CHANGED aka None for
     # state_changed events since it takes up less
     # space in the response and every row has to be
     # marked with the event_type
-    literal(value=PSUEDO_EVENT_STATE_CHANGED, type_=sqlalchemy.String).label(
+    literal(value=PSEUDO_EVENT_STATE_CHANGED, type_=sqlalchemy.String).label(
         "event_type"
     ),
     literal(value=None, type_=sqlalchemy.Text).label("event_data"),

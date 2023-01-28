@@ -100,6 +100,7 @@
         },
         "trigger_subtype": {
             "both_buttons": "\u4e21\u65b9\u306e\u30dc\u30bf\u30f3",
+            "button": "\u30dc\u30bf\u30f3",
             "button_1": "1\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
             "button_2": "2\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
             "button_3": "3\u756a\u76ee\u306e\u30dc\u30bf\u30f3",

@@ -22,6 +22,12 @@
                     "pin": "Pincode",
                     "port": "Poort"
                 }
+            },
+            "user": {
+                "menu_options": {
+                    "cloud": "Risco Cloud (aanbevolen)",
+                    "local": "Lokaal Risco paneel (geavanceerd)"
+                }
             }
         }
     },

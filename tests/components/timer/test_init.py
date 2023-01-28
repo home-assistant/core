@@ -1,5 +1,5 @@
 """The tests for the timer component."""
-# pylint: disable=protected-access
+
 from datetime import timedelta
 import logging
 from unittest.mock import patch

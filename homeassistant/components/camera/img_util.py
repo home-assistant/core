@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Literal, cast
 
 SUPPORTED_SCALING_FACTORS = [(7, 8), (3, 4), (5, 8), (1, 2), (3, 8), (1, 4), (1, 8)]
 
@@ -78,10 +78,10 @@ class TurboJPEGSingleton:
     seconds.
     """
 
-    __instance = None
+    __instance: TurboJPEG | Literal[False] | None = None
 
     @staticmethod
-    def instance() -> TurboJPEG:
+    def instance() -> TurboJPEG | Literal[False] | None:
         """Singleton for TurboJPEG."""
         if TurboJPEGSingleton.__instance is None:
             TurboJPEGSingleton()

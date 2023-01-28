@@ -80,7 +80,7 @@ INPUT_ENTITY_ID = re.compile(
     r"^input_(?:select|text|number|boolean|datetime)\.(?!.+__)(?!_)[\da-z_]+(?<!_)$"
 )
 
-ConditionCheckerType = Callable[[HomeAssistant, TemplateVarsType], bool]
+ConditionCheckerType = Callable[[HomeAssistant, TemplateVarsType], bool | None]
 
 
 def condition_trace_append(variables: TemplateVarsType, path: str) -> TraceElement:
@@ -139,7 +139,7 @@ def trace_condition_function(condition: ConditionCheckerType) -> ConditionChecke
     """Wrap a condition function to enable basic tracing."""
 
     @ft.wraps(condition)
-    def wrapper(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
+    def wrapper(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool | None:
         """Trace condition."""
         with trace_condition(variables):
             result = condition(hass, variables)
@@ -173,9 +173,9 @@ async def async_from_config(
         @trace_condition_function
         def disabled_condition(
             hass: HomeAssistant, variables: TemplateVarsType = None
-        ) -> bool:
-            """Condition not enabled, will always pass."""
-            return True
+        ) -> bool | None:
+            """Condition not enabled, will act as if it didn't exist."""
+            return None
 
         return disabled_condition
 
@@ -204,7 +204,7 @@ async def async_and_from_config(
         for index, check in enumerate(checks):
             try:
                 with trace_path(["conditions", str(index)]):
-                    if not check(hass, variables):
+                    if check(hass, variables) is False:
                         return False
             except ConditionError as ex:
                 errors.append(
@@ -235,7 +235,7 @@ async def async_or_from_config(
         for index, check in enumerate(checks):
             try:
                 with trace_path(["conditions", str(index)]):
-                    if check(hass, variables):
+                    if check(hass, variables) is True:
                         return True
             except ConditionError as ex:
                 errors.append(
