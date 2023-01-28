@@ -313,7 +313,7 @@ class ThermostatEntity(ClimateEntity):
             elif hvac_mode == HVACMode.HEAT and temp:
                 await trait.set_heat(temp)
         except ApiException as err:
-            raise HomeAssistantError(f"Error setting HVAC mode: {err}") from err
+            raise HomeAssistantError(f"Error setting temperature: {err}") from err
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
