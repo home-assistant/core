@@ -3,7 +3,7 @@ from typing import Any
 
 from pylitejet import LiteJet, LiteJetError
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -38,6 +38,7 @@ class LiteJetSwitch(SwitchEntity):
     _attr_should_poll = False
     _attr_has_entity_name = True
     _attr_entity_registry_enabled_default = False
+    _attr_device_class = SwitchDeviceClass.SWITCH
 
     def __init__(self, entry_id: str, system: LiteJet, i: int, name: str) -> None:
         """Initialize a LiteJet switch."""
