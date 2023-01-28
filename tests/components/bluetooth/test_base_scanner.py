@@ -345,7 +345,9 @@ async def test_base_scanner_connecting_behavior(hass, enable_bluetooth):
     unsetup()
 
 
-async def test_restore_history_remote_adapter(hass, hass_storage):
+async def test_restore_history_remote_adapter(
+    hass, hass_storage, disable_new_discovery_flows
+):
     """Test we can restore history for a remote adapter."""
 
     data = hass_storage[storage.REMOTE_SCANNER_STORAGE_KEY] = json_loads(

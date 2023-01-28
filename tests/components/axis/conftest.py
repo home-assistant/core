@@ -154,7 +154,7 @@ def default_request_fixture(respx_mock):
         )
         respx.post(f"{path}/local/vmd/control.cgi").respond(json=VMD4_RESPONSE)
 
-    yield __mock_default_requests
+    return __mock_default_requests
 
 
 @pytest.fixture
@@ -187,7 +187,7 @@ async def prep_config_entry_fixture(hass, config_entry, setup_default_vapix_requ
         await hass.async_block_till_done()
         return config_entry
 
-    yield __mock_setup_config_entry
+    return __mock_setup_config_entry
 
 
 @pytest.fixture(name="setup_config_entry")
@@ -195,7 +195,7 @@ async def setup_config_entry_fixture(hass, config_entry, setup_default_vapix_req
     """Define a fixture to set up Axis network device."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    yield config_entry
+    return config_entry
 
 
 # RTSP fixtures
@@ -283,7 +283,7 @@ def mock_rtsp_event(mock_axis_rtspclient):
 
         mock_axis_rtspclient(data=event.encode("utf-8"))
 
-    yield send_event
+    return send_event
 
 
 @pytest.fixture(autouse=True)
@@ -295,4 +295,4 @@ def mock_rtsp_signal_state(mock_axis_rtspclient):
         signal = Signal.PLAYING if connected else Signal.FAILED
         mock_axis_rtspclient(state=signal)
 
-    yield send_signal
+    return send_signal

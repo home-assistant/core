@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from homewizard_energy.errors import DisabledError, RequestError
 from homewizard_energy.models import State
-from pytest import raises
+import pytest
 
 from homeassistant.components import number
 from homeassistant.components.number import ATTR_VALUE, SERVICE_SET_VALUE
@@ -170,7 +170,7 @@ async def test_brightness_level_set_catches_requesterror(
         await hass.async_block_till_done()
 
         # Set level halfway
-        with raises(HomeAssistantError):
+        with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 number.DOMAIN,
                 SERVICE_SET_VALUE,
@@ -206,7 +206,7 @@ async def test_brightness_level_set_catches_disablederror(
         await hass.async_block_till_done()
 
         # Set level halfway
-        with raises(HomeAssistantError):
+        with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 number.DOMAIN,
                 SERVICE_SET_VALUE,
@@ -244,7 +244,7 @@ async def test_brightness_level_set_catches_invalid_value(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        with raises(ValueError):
+        with pytest.raises(ValueError):
             await hass.services.async_call(
                 number.DOMAIN,
                 SERVICE_SET_VALUE,
@@ -257,7 +257,7 @@ async def test_brightness_level_set_catches_invalid_value(
                 blocking=True,
             )
 
-        with raises(ValueError):
+        with pytest.raises(ValueError):
             await hass.services.async_call(
                 number.DOMAIN,
                 SERVICE_SET_VALUE,

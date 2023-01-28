@@ -205,10 +205,7 @@ omit =
     homeassistant/components/discord/notify.py
     homeassistant/components/dlib_face_detect/image_processing.py
     homeassistant/components/dlib_face_identify/image_processing.py
-    homeassistant/components/dlink/__init__.py
     homeassistant/components/dlink/data.py
-    homeassistant/components/dlink/entity.py
-    homeassistant/components/dlink/switch.py
     homeassistant/components/dominos/*
     homeassistant/components/doods/*
     homeassistant/components/doorbird/__init__.py

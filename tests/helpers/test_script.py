@@ -4404,7 +4404,7 @@ async def test_validate_action_config(hass):
                 hass, validated_config[action_type]
             )
         except vol.Invalid as err:
-            assert False, f"{action_type} config invalid: {err}"
+            pytest.fail(f"{action_type} config invalid: {err}")
 
     # Verify non-static actions have validated
     for action_type, paths_to_templates in expected_templates.items():

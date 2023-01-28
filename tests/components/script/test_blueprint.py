@@ -5,6 +5,8 @@ import contextlib
 import pathlib
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components import script
 from homeassistant.components.blueprint.models import Blueprint, DomainBlueprints
 from homeassistant.core import Context, HomeAssistant, callback
@@ -25,7 +27,7 @@ def patch_blueprint(blueprint_path: str, data_path: str) -> Iterator[None]:
     @callback
     def mock_load_blueprint(self, path: str) -> Blueprint:
         if path != blueprint_path:
-            assert False, f"Unexpected blueprint {path}"
+            pytest.fail(f"Unexpected blueprint {path}")
             return orig_load(self, path)
 
         return Blueprint(

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import collections
+from contextlib import suppress
 import json
 from typing import Any
 
@@ -583,11 +584,9 @@ class ZhaOptionsFlowHandler(BaseZhaFlow, config_entries.OptionsFlow):
     ) -> FlowResult:
         """Launch the options flow."""
         if user_input is not None:
-            try:
+            # OperationNotAllowed: ZHA is not running
+            with suppress(config_entries.OperationNotAllowed):
                 await self.hass.config_entries.async_unload(self.config_entry.entry_id)
-            except config_entries.OperationNotAllowed:
-                # ZHA is not running
-                pass
 
             return await self.async_step_prompt_migrate_or_reconfigure()
 

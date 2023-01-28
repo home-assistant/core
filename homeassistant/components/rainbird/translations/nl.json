@@ -17,6 +17,19 @@
             }
         }
     },
+    "issues": {
+        "deprecated_raindelay": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "De Rain Bird service `rainbird.set_rain_delay` wordt vervangen door een Numerieke entiteit voor het instellen van de regenvertraging. Huidige automatiseringen of scripts moeten worden ge\u00fcpdatet om `number.set_value` met een doel van `{alternate_target}` te gebruiken.",
+                        "title": "De Rain Bird Rain Delay Service wordt verwijderd"
+                    }
+                }
+            },
+            "title": "De Rain Bird Rain Delay Service wordt verwijderd"
+        }
+    },
     "options": {
         "step": {
             "init": {
