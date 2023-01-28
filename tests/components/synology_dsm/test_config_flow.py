@@ -412,7 +412,7 @@ async def test_login_failed(hass: HomeAssistant, service: MagicMock):
 async def test_connection_failed(hass: HomeAssistant, service: MagicMock):
     """Test when we have errors during connection."""
     service.return_value.login = Mock(
-        side_effect=SynologyDSMRequestException(IOError("arg"))
+        side_effect=SynologyDSMRequestException(OSError("arg"))
     )
 
     result = await hass.config_entries.flow.async_init(

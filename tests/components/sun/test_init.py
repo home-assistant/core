@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from unittest.mock import patch
 
 from freezegun import freeze_time
-from pytest import mark
+import pytest
 
 import homeassistant.components.sun as sun
 from homeassistant.const import EVENT_STATE_CHANGED
@@ -178,7 +178,7 @@ async def test_norway_in_june(hass):
     assert state.state == sun.STATE_ABOVE_HORIZON
 
 
-@mark.skip
+@pytest.mark.skip
 async def test_state_change_count(hass):
     """Count the number of state change events in a location."""
     # Skipped because it's a bit slow. Has been validated with

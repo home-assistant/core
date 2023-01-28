@@ -14,7 +14,7 @@ from homeassistant.requirements import (
     async_process_requirements,
 )
 
-from tests.common import MockModule, mock_integration
+from .common import MockModule, mock_integration
 
 
 def env_without_wheel_links():

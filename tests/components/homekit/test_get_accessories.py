@@ -179,8 +179,8 @@ def test_type_covers(type_name, entity_id, state, attrs):
             "media_player.test",
             "on",
             {
-                ATTR_SUPPORTED_FEATURES: media_player_c.SUPPORT_TURN_ON
-                | media_player_c.SUPPORT_TURN_OFF
+                ATTR_SUPPORTED_FEATURES: media_player_c.MediaPlayerEntityFeature.TURN_ON
+                | media_player_c.MediaPlayerEntityFeature.TURN_OFF
             },
             {CONF_FEATURE_LIST: {FEATURE_ON_OFF: None}},
         ),

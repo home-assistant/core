@@ -2,7 +2,7 @@
 from unittest.mock import patch
 import uuid
 
-import pytest as pytest
+import pytest
 from zwave_me_ws import ZWaveMeData
 
 from homeassistant.components.zwave_me import ZWaveMePlatform

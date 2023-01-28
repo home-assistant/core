@@ -115,7 +115,7 @@ async def mock_modbus_with_pymodbus_fixture(hass, caplog, do_config, mock_pymodb
     await hass.async_block_till_done()
     assert DOMAIN in hass.config.components
     assert caplog.text == ""
-    yield mock_pymodbus
+    return mock_pymodbus
 
 
 async def test_number_validator():
@@ -582,7 +582,7 @@ async def mock_modbus_read_pymodbus_fixture(
     freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL + 60))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    yield mock_pymodbus
+    return mock_pymodbus
 
 
 @pytest.mark.parametrize(

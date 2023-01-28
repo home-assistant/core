@@ -95,6 +95,29 @@ async def test_block_restored_sleeping_sensor(
     assert hass.states.get(entity_id).state == "22.1"
 
 
+async def test_block_restored_sleeping_sensor_no_last_state(
+    hass, mock_block_device, device_reg, monkeypatch
+):
+    """Test block restored sleeping sensor missing last state."""
+    entry = await init_integration(hass, 1, sleep_period=1000, skip_setup=True)
+    register_device(device_reg, entry)
+    entity_id = register_entity(
+        hass, SENSOR_DOMAIN, "test_name_temperature", "sensor_0-temp", entry
+    )
+    monkeypatch.setattr(mock_block_device, "initialized", False)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+
+    # Make device online
+    monkeypatch.setattr(mock_block_device, "initialized", True)
+    mock_block_device.mock_update()
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "22.1"
+
+
 async def test_block_sensor_error(hass, mock_block_device, monkeypatch):
     """Test block sensor unavailable on sensor error."""
     entity_id = f"{SENSOR_DOMAIN}.test_name_battery"
@@ -263,6 +286,35 @@ async def test_rpc_restored_sleeping_sensor(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == "21.0"
+
+    # Make device online
+    monkeypatch.setattr(mock_rpc_device, "initialized", True)
+    mock_rpc_device.mock_update()
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "22.9"
+
+
+async def test_rpc_restored_sleeping_sensor_no_last_state(
+    hass, mock_rpc_device, device_reg, monkeypatch
+):
+    """Test RPC restored sensor missing last state."""
+    entry = await init_integration(hass, 2, sleep_period=1000, skip_setup=True)
+    register_device(device_reg, entry)
+    entity_id = register_entity(
+        hass,
+        SENSOR_DOMAIN,
+        "test_name_temperature",
+        "temperature:0-temperature_0",
+        entry,
+    )
+
+    monkeypatch.setattr(mock_rpc_device, "initialized", False)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
     # Make device online
     monkeypatch.setattr(mock_rpc_device, "initialized", True)

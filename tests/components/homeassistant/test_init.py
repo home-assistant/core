@@ -330,7 +330,7 @@ async def test_require_admin(hass, hass_read_only_user):
                 context=ha.Context(user_id=hass_read_only_user.id),
                 blocking=True,
             )
-            assert False, f"Should have raises for {service}"
+            pytest.fail(f"Should have raises for {service}")
 
     with pytest.raises(Unauthorized):
         await hass.services.async_call(

@@ -97,7 +97,7 @@ aio_geojson_nsw_rfs_incidents==0.6
 aio_geojson_usgs_earthquakes==0.2
 
 # homeassistant.components.gdacs
-aio_georss_gdacs==0.7
+aio_georss_gdacs==0.8
 
 # homeassistant.components.airq
 aioairq==0.2.4
@@ -1003,7 +1003,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.13
 
 # homeassistant.components.plugwise
-plugwise==0.27.1
+plugwise==0.27.4
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
