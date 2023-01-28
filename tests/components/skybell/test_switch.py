@@ -3,7 +3,7 @@ from datetime import timedelta
 
 from aioskybell.helpers.const import BASE_URL
 
-from homeassistant.components.switch import DOMAIN as DOMAIN
+from homeassistant.components.switch import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,

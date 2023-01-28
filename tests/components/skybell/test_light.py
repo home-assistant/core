@@ -7,7 +7,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_RGB_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
-    DOMAIN as DOMAIN,
+    DOMAIN,
     ColorMode,
 )
 from homeassistant.const import (
