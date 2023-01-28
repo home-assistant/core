@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import asdict
 import logging
-from typing import Any
+from typing import Any, cast
 
 import attr
 
@@ -80,7 +80,9 @@ def _async_device_as_dict(hass: HomeAssistant, device: DeviceEntry) -> dict[str,
     # Gather information how this device is represented in Home Assistant
     entity_registry = er.async_get(hass)
 
-    data = async_redact_data(attr.asdict(device), REDACT_CONFIG)
+    data = async_redact_data(
+        attr.asdict(cast(attr.AttrsInstance, device)), REDACT_CONFIG
+    )
     data["entities"] = []
     entities: list[dict[str, Any]] = data["entities"]
 
@@ -97,7 +99,7 @@ def _async_device_as_dict(hass: HomeAssistant, device: DeviceEntry) -> dict[str,
             state_dict = dict(state.as_dict())
             state_dict.pop("context", None)
 
-        entity = attr.asdict(entity_entry)
+        entity = attr.asdict(cast(attr.AttrsInstance, entity_entry))
         entity["state"] = state_dict
         entities.append(entity)
 
