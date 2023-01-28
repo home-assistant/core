@@ -3,6 +3,7 @@
 from datetime import datetime
 import json
 
+import logging
 import httpx
 
 from .api_responses import (
@@ -16,6 +17,8 @@ from .api_responses import (
 API_URL_BASE = "https://api.onetracker.app"
 API_AUTH_HEADER_KEY = "x-api-token"
 
+_LOGGER = logging.getLogger(__name__)
+
 
 class OneTrackerAPI:
     """Wrapper for OneTracker API connections."""
@@ -24,13 +27,14 @@ class OneTrackerAPI:
 
     def __init__(self, email, password):
         """Initialize wrapper for OneTracker API connections."""
+        _LOGGER.debug("Hit __init__")
         self.credentials = {"email": email, "password": password}
 
         self.refresh_token()
 
     def refresh_token(self) -> None:
         """Refresh token session using stored credentials."""
-
+        _LOGGER.debug("Hit refresh_token")
         response = httpx.post(
             f"{API_URL_BASE}/auth/token", json=self.credentials
         ).json()

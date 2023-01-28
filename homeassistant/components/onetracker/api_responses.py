@@ -3,12 +3,21 @@ from __future__ import annotations
 
 from datetime import datetime
 
+import logging
+
+_LOGGER = logging.getLogger(__name__)
+
 
 def parse_datetime(value: str) -> datetime | None:
     """Parse JSON datetime string to datetime or None."""
     if value == "1001-01-01T00:00:00Z":
         return None
-    return datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%fZ%z")
+
+    value = "2023-03-29T18:32:41.648465157Z"
+    value = value[:-4]
+    value += "Z"
+
+    return datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%fZ")
 
 
 class TrackingEvent:

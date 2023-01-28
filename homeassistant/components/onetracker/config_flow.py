@@ -56,6 +56,7 @@ class OneTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
+                _LOGGER.info("Input %s", json.dumps(user_input))
                 await self.hass.async_add_executor_job(_validate_input, user_input)
             except OneTrackerAPIException:
                 errors["base"] = "cannot_connect"
@@ -102,7 +103,7 @@ class OneTrackerOptionsFlowHandler(OptionsFlow):
 
         options = {
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
-            vol.Required(CONF_EMAIL): str,
+            vol.Required(CONF_EMAIL, msg="Username"): str,
             vol.Required(CONF_PASSWORD): str,
             vol.Optional(
                 CONF_SCAN_INTERVAL,
