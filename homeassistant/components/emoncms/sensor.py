@@ -172,6 +172,8 @@ class EmonCmsSensor(SensorEntity):
             self._attr_device_class = SensorDeviceClass.FREQUENCY
         elif unit_of_measurement == "hPa":
             self._attr_device_class = SensorDeviceClass.PRESSURE
+        elif unit_of_measurement == "dB":
+            self._attr_device_class = SensorDeviceClass.SIGNAL_STRENGTH
 
         self._state = elem["value"]
 
