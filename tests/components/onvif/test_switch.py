@@ -2,7 +2,7 @@
 from unittest.mock import AsyncMock
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, STATE_OFF, STATE_ON
 from homeassistant.helpers import entity_registry as er
 
 from . import MAC, setup_onvif_integration
@@ -37,6 +37,8 @@ async def test_turn_wiper_switch_on(hass):
     await hass.async_block_till_done()
 
     device.async_run_aux_command.assert_called_once()
+    state = hass.states.get("switch.testcamera_wiper")
+    assert state.state == STATE_ON
 
 
 async def test_turn_wiper_switch_off(hass):
@@ -53,6 +55,8 @@ async def test_turn_wiper_switch_off(hass):
     await hass.async_block_till_done()
 
     device.async_run_aux_command.assert_called_once()
+    state = hass.states.get("switch.testcamera_wiper")
+    assert state.state == STATE_OFF
 
 
 async def test_autofocus_switch(hass):
@@ -84,6 +88,8 @@ async def test_turn_autofocus_switch_on(hass):
     await hass.async_block_till_done()
 
     device.async_set_imaging_settings.assert_called_once()
+    state = hass.states.get("switch.testcamera_autofocus")
+    assert state.state == STATE_ON
 
 
 async def test_turn_autofocus_switch_off(hass):
@@ -100,6 +106,8 @@ async def test_turn_autofocus_switch_off(hass):
     await hass.async_block_till_done()
 
     device.async_set_imaging_settings.assert_called_once()
+    state = hass.states.get("switch.testcamera_autofocus")
+    assert state.state == STATE_OFF
 
 
 async def test_infrared_switch(hass):
@@ -131,6 +139,8 @@ async def test_turn_infrared_switch_on(hass):
     await hass.async_block_till_done()
 
     device.async_set_imaging_settings.assert_called_once()
+    state = hass.states.get("switch.testcamera_ir_lamp")
+    assert state.state == STATE_ON
 
 
 async def test_turn_infrared_switch_off(hass):
@@ -147,3 +157,5 @@ async def test_turn_infrared_switch_off(hass):
     await hass.async_block_till_done()
 
     device.async_set_imaging_settings.assert_called_once()
+    state = hass.states.get("switch.testcamera_ir_lamp")
+    assert state.state == STATE_OFF
