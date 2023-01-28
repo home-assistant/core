@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 from httplib2 import Response
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.google_mail.const import DOMAIN
@@ -68,14 +69,16 @@ async def test_full_flow(
     )
 
 
+@pytest.mark.parametrize("fixture", ["get_profile", "get_profile_2"])
 async def test_reauth(
     hass: HomeAssistant,
     hass_client_no_auth,
     aioclient_mock: AiohttpClientMocker,
     current_request_with_host,
     config_entry: MockConfigEntry,
+    fixture: str,
 ) -> None:
-    """Test the reauthentication case updates the existing config entry."""
+    """Test the reauthentication case updates the correct config entry. Make sure we abort if the user selects the wrong account on the consent screen."""
     config_entry.add_to_hass(hass)
 
     config_entry.async_start_reauth(hass)
@@ -118,14 +121,24 @@ async def test_reauth(
 
     with patch(
         "homeassistant.components.google_mail.async_setup_entry", return_value=True
-    ) as mock_setup:
+    ) as mock_setup, patch(
+        "httplib2.Http.request",
+        return_value=(
+            Response({}),
+            bytes(load_fixture(f"google_mail/{fixture}.json"), encoding="UTF-8"),
+        ),
+    ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert len(mock_setup.mock_calls) == 1
 
     assert result.get("type") == "abort"
-    assert result.get("reason") == "reauth_successful"
+    if fixture == "get_profile_2":
+        assert result["reason"] == "wrong_account"
+        assert result["description_placeholders"] == {"email": "example@gmail.com"}
+        return
+    assert len(mock_setup.mock_calls) == 1
+    assert result["reason"] == "reauth_successful"
 
     assert config_entry.unique_id == TITLE
     assert "token" in config_entry.data
