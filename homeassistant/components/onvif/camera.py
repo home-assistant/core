@@ -221,23 +221,3 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
             tilt,
             zoom,
         )
-
-    async def async_run_aux_command(
-        self,
-        cmd: str,
-    ) -> None:
-        """Execute a PTZ auxiliary command on the camera."""
-        await self.device.async_run_aux_command(
-            self.profile,
-            cmd,
-        )
-
-    async def async_set_imaging_settings(
-        self,
-        settings: dict,
-    ) -> None:
-        """Set imaging settings."""
-        await self.device.async_set_imaging_settings(
-            self.profile,
-            settings,
-        )
