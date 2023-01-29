@@ -297,3 +297,18 @@ async def test_race_condition_in_data_loading(hass):
         assert isinstance(results[0], hass_auth.InvalidAuth)
         # results[1] will be a TypeError if race condition occurred
         assert isinstance(results[1], hass_auth.InvalidAuth)
+
+async def test_validate_password(hass):
+    """Test validate password."""
+    assert hass_auth.Data(hass).validate_password("1") is False
+    assert hass_auth.Data(hass).validate_password("senha123") is False
+    assert hass_auth.Data(hass).validate_password("senha1234") is False
+    assert hass_auth.Data(hass).validate_password("sEnh12345") is False
+    assert hass_auth.Data(hass).validate_password(
+        "senha0123456789senha0123456789senha0123456789senha0123456789senha0123456789senha0123456789senha0123456789senha0123456789senha0123456789senha0123456789senha0123456789senha0123456789senha0123456789senha0123456789senha0123456789senha0123456789senha01234567890"
+        ) is False
+    assert hass_auth.Data(hass).validate_password(
+        "sE#ha0123456789senha0123456789senha0123456789senha0123456789senha0123456789senha0123456789senha0123456789senha0123456789senha0123456789senha0123456789senha0123456789senha0123456789senha0123456789senha0123456789senha0123456789senha0123456789senha0123456789"
+        ) is True
+    assert hass_auth.Data(hass).validate_password("aBcdpqrst") is False
+    assert hass_auth.Data(hass).validate_password("aBc#@pqrst") is True
