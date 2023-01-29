@@ -47,10 +47,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-SWITCH_TYPE = SwitchEntityDescription(
-    key="switch",
-    name="Switch",
-)
+SWITCH_TYPE = SwitchEntityDescription(key="")
 
 
 def setup_platform(
