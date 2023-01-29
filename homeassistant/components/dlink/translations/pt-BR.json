@@ -12,7 +12,7 @@
                 "data": {
                     "password": "Senha (padr\u00e3o: c\u00f3digo PIN no verso)",
                     "use_legacy_protocol": "Usar protocolo legado",
-                    "username": "Nome de usu\u00e1rio"
+                    "username": "Usu\u00e1rio"
                 }
             },
             "user": {
