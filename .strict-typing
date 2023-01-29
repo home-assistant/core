@@ -221,6 +221,7 @@ homeassistant.components.notion.*
 homeassistant.components.number.*
 homeassistant.components.nut.*
 homeassistant.components.oncue.*
+homeassistant.components.onetracker.*
 homeassistant.components.onewire.*
 homeassistant.components.open_meteo.*
 homeassistant.components.openexchangerates.*
