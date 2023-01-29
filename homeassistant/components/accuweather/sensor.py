@@ -303,11 +303,7 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         icon="mdi:gauge",
         name="Pressure tendency",
-        options=[
-            "falling",
-            "rising",
-            "steady",
-        ],
+        options=["falling", "rising", "steady"],
         translation_key="pressure_tendency",
         value_fn=lambda data, _: cast(str, data["LocalizedText"]).lower(),
     ),
