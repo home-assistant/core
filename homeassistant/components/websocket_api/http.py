@@ -98,7 +98,6 @@ class WebSocketHandler:
                     if (process := await to_write.get()) is None:
                         return
                     message = process if isinstance(process, str) else process()
-
                     if (
                         to_write.empty()
                         or not self.connection
