@@ -161,12 +161,14 @@ def _state_diff(
             additions[COMPRESSED_STATE_CONTEXT]["id"] = new_state.context.id
         else:
             additions[COMPRESSED_STATE_CONTEXT] = new_state.context.id
-    old_attributes = old_state.attributes
-    for key, value in new_state.attributes.items():
-        if old_attributes.get(key) != value:
-            additions.setdefault(COMPRESSED_STATE_ATTRIBUTES, {})[key] = value
-    if removed := set(old_attributes).difference(new_state.attributes):
-        diff[STATE_DIFF_REMOVALS] = {COMPRESSED_STATE_ATTRIBUTES: removed}
+    if (old_attributes := old_state.attributes) != (
+        new_attributes := new_state.attributes
+    ):
+        for key, value in new_attributes.items():
+            if old_attributes.get(key) != value:
+                additions.setdefault(COMPRESSED_STATE_ATTRIBUTES, {})[key] = value
+        if removed := set(old_attributes).difference(new_attributes):
+            diff[STATE_DIFF_REMOVALS] = {COMPRESSED_STATE_ATTRIBUTES: removed}
     return {ENTITY_EVENT_CHANGE: {new_state.entity_id: diff}}
 
 
