@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "La cuenta ya est\u00e1 configurada"
+        },
         "error": {
             "cannot_connect": "No se pudo conectar",
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
@@ -49,9 +52,9 @@
             },
             "whirlpool_tank": {
                 "state": {
-                    "100%": "100%",
-                    "25%": "25%",
-                    "50%": "50%",
+                    "100": "100%",
+                    "25": "25%",
+                    "50": "50%",
                     "active": "Activo",
                     "empty": "Vac\u00eda",
                     "unknown": "Desconocido"

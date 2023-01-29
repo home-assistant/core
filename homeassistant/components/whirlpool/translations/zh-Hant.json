@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
@@ -49,9 +52,9 @@
             },
             "whirlpool_tank": {
                 "state": {
-                    "100%": "100%",
-                    "25%": "25%",
-                    "50%": "50%",
+                    "100": "100%",
+                    "25": "25%",
+                    "50": "50%",
                     "active": "\u555f\u7528",
                     "empty": "\u7a7a\u767d",
                     "unknown": "\u672a\u77e5"

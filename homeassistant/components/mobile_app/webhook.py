@@ -15,7 +15,13 @@ from nacl.exceptions import CryptoError
 from nacl.secret import SecretBox
 import voluptuous as vol
 
-from homeassistant.components import camera, cloud, notify as hass_notify, tag
+from homeassistant.components import (
+    camera,
+    cloud,
+    conversation,
+    notify as hass_notify,
+    tag,
+)
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES as BINARY_SENSOR_CLASSES,
 )
@@ -299,6 +305,28 @@ async def webhook_fire_event(
         context=registration_context(config_entry.data),
     )
     return empty_okay_response()
+
+
+@WEBHOOK_COMMANDS.register("conversation_process")
+@validate_schema(
+    {
+        vol.Required("text"): cv.string,
+        vol.Optional("language"): cv.string,
+        vol.Optional("conversation_id"): cv.string,
+    }
+)
+async def webhook_conversation_process(
+    hass: HomeAssistant, config_entry: ConfigEntry, data: dict[str, Any]
+) -> Response:
+    """Handle a conversation process webhook."""
+    result = await conversation.async_converse(
+        hass,
+        text=data["text"],
+        language=data.get("language"),
+        conversation_id=data.get("conversation_id"),
+        context=registration_context(config_entry.data),
+    )
+    return webhook_response(result.as_dict(), registration=config_entry.data)
 
 
 @WEBHOOK_COMMANDS.register("stream_camera")

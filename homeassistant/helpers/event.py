@@ -10,10 +10,9 @@ import functools as ft
 import logging
 from random import randint
 import time
-from typing import Any, Union, cast
+from typing import Any, Concatenate, ParamSpec, cast
 
 import attr
-from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -1129,7 +1128,7 @@ class TrackTemplateResultInfo:
 
 TrackTemplateResultListener = Callable[
     [
-        Union[Event, None],
+        Event | None,
         list[TrackTemplateResult],
     ],
     None,

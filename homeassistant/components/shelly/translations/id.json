@@ -71,5 +71,14 @@
                 "description": "Mode pemindaian Bluetooth bisa berupa mode aktif atau pasif. Pada mode aktif, Shelly akan meminta data dari perangkat di dekatnya; pada mode pasif, Shelly akan menerima data yang tidak diminta dari perangkat di dekatnya."
             }
         }
+    },
+    "selector": {
+        "ble_scanner_mode": {
+            "options": {
+                "active": "Aktif",
+                "disabled": "Nonaktif",
+                "passive": "Pasif"
+            }
+        }
     }
 }

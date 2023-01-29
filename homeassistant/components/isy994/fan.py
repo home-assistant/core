@@ -10,6 +10,7 @@ from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
     int_states_in_range,
@@ -17,7 +18,7 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from .const import _LOGGER, DOMAIN as ISY994_DOMAIN, ISY994_NODES, ISY994_PROGRAMS
+from .const import _LOGGER, DOMAIN
 from .entity import ISYNodeEntity, ISYProgramEntity
 
 SPEED_RANGE = (1, 255)  # off is not included
@@ -27,13 +28,14 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the ISY fan platform."""
-    hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
+    isy_data = hass.data[DOMAIN][entry.entry_id]
+    devices: dict[str, DeviceInfo] = isy_data.devices
     entities: list[ISYFanEntity | ISYFanProgramEntity] = []
 
-    for node in hass_isy_data[ISY994_NODES][Platform.FAN]:
-        entities.append(ISYFanEntity(node))
+    for node in isy_data.nodes[Platform.FAN]:
+        entities.append(ISYFanEntity(node, devices.get(node.primary_node)))
 
-    for name, status, actions in hass_isy_data[ISY994_PROGRAMS][Platform.FAN]:
+    for name, status, actions in isy_data.programs[Platform.FAN]:
         entities.append(ISYFanProgramEntity(name, status, actions))
 
     async_add_entities(entities)

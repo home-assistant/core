@@ -30,5 +30,18 @@
             }
         }
     },
+    "selector": {
+        "type": {
+            "options": {
+                "last": "Legut\u00f3bb friss\u00edtve",
+                "max": "Maximum",
+                "mean": "Sz\u00e1mtani \u00e1tlag",
+                "median": "Medi\u00e1n",
+                "min": "Minimum",
+                "range": "Statisztikai tartom\u00e1ny",
+                "sum": "Szumma"
+            }
+        }
+    },
     "title": "T\u00f6bb \u00e9rz\u00e9kel\u0151 \u00e1llapot\u00e1nak kombin\u00e1l\u00e1sa"
 }

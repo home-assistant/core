@@ -28,6 +28,7 @@
             },
             "basic_nightvision": {
                 "state": {
+                    "0": "Automatisch",
                     "1": "Uit",
                     "2": "Aan"
                 }
@@ -39,12 +40,18 @@
                     "3h": "3 uur",
                     "4h": "4 uur",
                     "5h": "5 uur",
-                    "6h": "6 uur"
+                    "6h": "6 uur",
+                    "cancel": "Annuleren"
                 }
             },
             "curtain_mode": {
                 "state": {
                     "night": "Nacht"
+                }
+            },
+            "curtain_motor_mode": {
+                "state": {
+                    "back": "Terug"
                 }
             },
             "fan_angle": {
@@ -80,7 +87,21 @@
                 "state": {
                     "off": "Uit",
                     "on": "Aan",
-                    "power_off": "Uit"
+                    "power_off": "Uit",
+                    "power_on": "Aan"
+                }
+            },
+            "vacuum_cistern": {
+                "state": {
+                    "closed": "Gesloten",
+                    "high": "Hoog",
+                    "low": "Laag"
+                }
+            },
+            "vacuum_collection": {
+                "state": {
+                    "large": "Groot",
+                    "small": "Klein"
                 }
             }
         },

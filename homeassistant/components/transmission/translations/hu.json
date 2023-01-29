@@ -29,19 +29,6 @@
             }
         }
     },
-    "issues": {
-        "deprecated_key": {
-            "fix_flow": {
-                "step": {
-                    "confirm": {
-                        "description": "Friss\u00edtsen minden olyan automatiz\u00e1l\u00e1st vagy szkriptet, amely ezt a szolg\u00e1ltat\u00e1st haszn\u00e1lja, \u00e9s cser\u00e9lje ki a name kulcsot a entry_id kulcsra.",
-                        "title": "A n\u00e9vkulcs a Transmission szolg\u00e1ltat\u00e1sokban elt\u00e1vol\u00edt\u00e1sra ker\u00fcl"
-                    }
-                }
-            },
-            "title": "A n\u00e9vkulcs a Transmission szolg\u00e1ltat\u00e1sokban elt\u00e1vol\u00edt\u00e1sra ker\u00fcl"
-        }
-    },
     "options": {
         "step": {
             "init": {

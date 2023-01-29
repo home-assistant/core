@@ -203,8 +203,9 @@ async def test_set_operation_bad_attr_and_state(
     with pytest.raises(vol.Invalid) as excinfo:
         await common.async_set_hvac_mode(hass, None, ENTITY_CLIMATE)
     assert (
-        "expected HVACMode or one of 'off', 'heat', 'cool', 'heat_cool', 'auto', 'dry', 'fan_only' for dictionary value @ data['hvac_mode']"
-    ) in str(excinfo.value)
+        "expected HVACMode or one of 'off', 'heat', 'cool', 'heat_cool', 'auto', 'dry',"
+        " 'fan_only' for dictionary value @ data['hvac_mode']" in str(excinfo.value)
+    )
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.state == "off"
 
@@ -273,6 +274,9 @@ async def test_set_operation_optimistic(hass, mqtt_mock_entry_with_yaml_config):
     assert state.state == "heat"
 
 
+# CONF_POWER_COMMAND_TOPIC, CONF_POWER_STATE_TOPIC and CONF_POWER_STATE_TEMPLATE are deprecated,
+# support for CONF_POWER_STATE_TOPIC and CONF_POWER_STATE_TEMPLATE was already removed or never added
+# support was deprecated with release 2023.2 and will be removed with release 2023.8
 async def test_set_operation_with_power_command(hass, mqtt_mock_entry_with_yaml_config):
     """Test setting of new operation mode with power command enabled."""
     config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
@@ -912,8 +916,8 @@ async def test_set_preset_mode_pessimistic(
 
     async_fire_mqtt_message(hass, "preset-mode-state", "nonsense")
     assert (
-        "'nonsense' received on topic preset-mode-state. 'nonsense' is not a valid preset mode"
-        in caplog.text
+        "'nonsense' received on topic preset-mode-state."
+        " 'nonsense' is not a valid preset mode" in caplog.text
     )
 
     state = hass.states.get(ENTITY_CLIMATE)
@@ -1410,14 +1414,14 @@ async def test_unique_id(hass, mqtt_mock_entry_with_yaml_config):
             climate.DOMAIN: [
                 {
                     "name": "Test 1",
-                    "power_state_topic": "test-topic",
-                    "power_command_topic": "test_topic",
+                    "mode_state_topic": "test_topic1/state",
+                    "mode_command_topic": "test_topic1/command",
                     "unique_id": "TOTALLY_UNIQUE",
                 },
                 {
                     "name": "Test 2",
-                    "power_state_topic": "test-topic",
-                    "power_command_topic": "test_topic",
+                    "mode_state_topic": "test_topic2/state",
+                    "mode_command_topic": "test_topic2/command",
                     "unique_id": "TOTALLY_UNIQUE",
                 },
             ]

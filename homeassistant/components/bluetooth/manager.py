@@ -28,7 +28,10 @@ from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.dt import monotonic_time_coarse
 
-from .advertisement_tracker import AdvertisementTracker
+from .advertisement_tracker import (
+    TRACKER_BUFFERING_WOBBLE_SECONDS,
+    AdvertisementTracker,
+)
 from .base_scanner import BaseHaScanner, BluetoothScannerDevice
 from .const import (
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
@@ -82,7 +85,7 @@ def _dispatch_bleak_callback(
     """Dispatch the callback."""
     if not callback:
         # Callback destroyed right before being called, ignore
-        return  # pragma: no cover
+        return
 
     if (uuids := filters.get(FILTER_UUIDS)) and not uuids.intersection(
         advertisement_data.service_uuids
@@ -206,6 +209,20 @@ class BluetoothManager:
             self._bluetooth_adapters, self.storage
         )
         self.async_setup_unavailable_tracking()
+        seen: set[str] = set()
+        for address, service_info in itertools.chain(
+            self._connectable_history.items(), self._all_history.items()
+        ):
+            if address in seen:
+                continue
+            seen.add(address)
+            for domain in self._integration_matcher.match_domains(service_info):
+                discovery_flow.async_create_flow(
+                    self.hass,
+                    domain,
+                    {"source": config_entries.SOURCE_BLUETOOTH},
+                    service_info,
+                )
 
     @hass_callback
     def async_stop(self, event: Event) -> None:
@@ -291,9 +308,14 @@ class BluetoothManager:
                     # connection to it we can only determine its availability
                     # by the lack of advertisements
                     if advertising_interval := intervals.get(address):
-                        time_since_seen = monotonic_now - all_history[address].time
-                        if time_since_seen <= advertising_interval:
-                            continue
+                        advertising_interval += TRACKER_BUFFERING_WOBBLE_SECONDS
+                    else:
+                        advertising_interval = (
+                            FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
+                        )
+                    time_since_seen = monotonic_now - all_history[address].time
+                    if time_since_seen <= advertising_interval:
+                        continue
 
                     # The second loop (connectable=False) is responsible for removing
                     # the device from all the interval tracking since it is no longer

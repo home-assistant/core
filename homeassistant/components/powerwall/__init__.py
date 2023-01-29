@@ -35,7 +35,7 @@ from .models import PowerwallBaseInfo, PowerwallData, PowerwallRuntimeData
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -156,6 +156,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         base_info=base_info,
         http_session=http_session,
         coordinator=None,
+        api_instance=power_wall,
     )
 
     manager = PowerwallDataManager(hass, power_wall, ip_address, password, runtime_data)

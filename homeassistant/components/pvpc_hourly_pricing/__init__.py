@@ -1,21 +1,15 @@
 """The pvpc_hourly_pricing integration to collect Spain official electric prices."""
-from collections.abc import Mapping
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 
-from aiopvpc import DEFAULT_POWER_KW, TARIFFS, PVPCData
+from aiopvpc import DEFAULT_POWER_KW, TARIFFS, EsiosApiData, PVPCData
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity_registry import (
-    EntityRegistry,
-    async_get,
-    async_migrate_entries,
-)
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -45,53 +39,6 @@ CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up pvpc hourly pricing from a config entry."""
-    if len(entry.data) == 2:
-        defaults = {
-            ATTR_TARIFF: _DEFAULT_TARIFF,
-            ATTR_POWER: DEFAULT_POWER_KW,
-            ATTR_POWER_P3: DEFAULT_POWER_KW,
-        }
-        data = {**entry.data, **defaults}
-        hass.config_entries.async_update_entry(
-            entry, unique_id=_DEFAULT_TARIFF, data=data, options=defaults
-        )
-
-        @callback
-        def update_unique_id(reg_entry):
-            """Change unique id for sensor entity, pointing to new tariff."""
-            return {"new_unique_id": _DEFAULT_TARIFF}
-
-        try:
-            await async_migrate_entries(hass, entry.entry_id, update_unique_id)
-            _LOGGER.warning(
-                (
-                    "Migrating PVPC sensor from old tariff '%s' to new '%s'. "
-                    "Configure the integration to set your contracted power, "
-                    "and select prices for Ceuta/Melilla, "
-                    "if that is your case"
-                ),
-                entry.data[ATTR_TARIFF],
-                _DEFAULT_TARIFF,
-            )
-        except ValueError:
-            # there were multiple sensors (with different old tariffs, up to 3),
-            # so we leave just one and remove the others
-            ent_reg: EntityRegistry = async_get(hass)
-            for entity_id, reg_entry in ent_reg.entities.items():
-                if reg_entry.config_entry_id == entry.entry_id:
-                    ent_reg.async_remove(entity_id)
-                    _LOGGER.warning(
-                        (
-                            "Old PVPC Sensor %s is removed "
-                            "(another one already exists, using the same tariff)"
-                        ),
-                        entity_id,
-                    )
-                    break
-
-            await hass.config_entries.async_remove(entry.entry_id)
-            return False
-
     coordinator = ElecPricesDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
 
@@ -105,7 +52,7 @@ async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     if any(
         entry.data.get(attrib) != entry.options.get(attrib)
-        for attrib in (ATTR_TARIFF, ATTR_POWER, ATTR_POWER_P3)
+        for attrib in (ATTR_POWER, ATTR_POWER_P3)
     ):
         # update entry replacing data with new options
         hass.config_entries.async_update_entry(
@@ -122,7 +69,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class ElecPricesDataUpdateCoordinator(DataUpdateCoordinator[Mapping[datetime, float]]):
+class ElecPricesDataUpdateCoordinator(DataUpdateCoordinator[EsiosApiData]):
     """Class to manage fetching Electricity prices data from API."""
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -144,11 +91,13 @@ class ElecPricesDataUpdateCoordinator(DataUpdateCoordinator[Mapping[datetime, fl
         """Return entry ID."""
         return self._entry.entry_id
 
-    async def _async_update_data(self) -> Mapping[datetime, float]:
+    async def _async_update_data(self) -> EsiosApiData:
         """Update electricity prices from the ESIOS API."""
-        prices = await self.api.async_update_prices(dt_util.utcnow())
-        self.api.process_state_and_attributes(dt_util.utcnow())
-        if not prices:
+        api_data = await self.api.async_update_all(self.data, dt_util.utcnow())
+        if (
+            not api_data
+            or not api_data.sensors
+            or not all(api_data.availability.values())
+        ):
             raise UpdateFailed
-
-        return prices
+        return api_data

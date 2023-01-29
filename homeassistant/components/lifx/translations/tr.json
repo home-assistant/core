@@ -8,10 +8,10 @@
         "error": {
             "cannot_connect": "Ba\u011flanma hatas\u0131"
         },
-        "flow_title": "{label} ({host}) {serial}",
+        "flow_title": "{label} ( {group} )",
         "step": {
             "discovery_confirm": {
-                "description": "{label} ( {host} ) {serial} kurmak istiyor musunuz?"
+                "description": "{label} ( {group} ) kurmak istiyor musunuz?"
             },
             "pick_device": {
                 "data": {

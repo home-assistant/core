@@ -31,9 +31,12 @@ async def async_setup_entry(
             streams.append("ext")
 
         for stream in streams:
-            cameras.append(ReolinkCamera(reolink_data, config_entry, channel, stream))
+            stream_url = await host.api.get_stream_source(channel, stream)
+            if stream_url is None and stream != "snapshots":
+                continue
+            cameras.append(ReolinkCamera(reolink_data, channel, stream))
 
-    async_add_entities(cameras, update_before_add=True)
+    async_add_entities(cameras)
 
 
 class ReolinkCamera(ReolinkCoordinatorEntity, Camera):
@@ -45,12 +48,11 @@ class ReolinkCamera(ReolinkCoordinatorEntity, Camera):
     def __init__(
         self,
         reolink_data: ReolinkData,
-        config_entry: ConfigEntry,
         channel: int,
         stream: str,
     ) -> None:
         """Initialize Reolink camera stream."""
-        ReolinkCoordinatorEntity.__init__(self, reolink_data, config_entry, channel)
+        ReolinkCoordinatorEntity.__init__(self, reolink_data, channel)
         Camera.__init__(self)
 
         self._stream = stream

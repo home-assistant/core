@@ -18,9 +18,9 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_PLATFORM,
-    ENERGY_KILO_WATT_HOUR,
     EVENT_HOMEASSISTANT_START,
     Platform,
+    UnitOfEnergy,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
@@ -90,7 +90,7 @@ async def test_services(hass, meter):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     entity_id = config[DOMAIN]["energy_bill"]["source"]
     hass.states.async_set(
-        entity_id, 1, {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR}
+        entity_id, 1, {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR}
     )
     await hass.async_block_till_done()
 
@@ -99,7 +99,7 @@ async def test_services(hass, meter):
         hass.states.async_set(
             entity_id,
             3,
-            {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR},
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR},
             force_update=True,
         )
         await hass.async_block_till_done()
@@ -120,7 +120,7 @@ async def test_services(hass, meter):
         hass.states.async_set(
             entity_id,
             4,
-            {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR},
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR},
             force_update=True,
         )
         await hass.async_block_till_done()
@@ -148,7 +148,7 @@ async def test_services(hass, meter):
         hass.states.async_set(
             entity_id,
             5,
-            {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR},
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR},
             force_update=True,
         )
         await hass.async_block_till_done()
@@ -214,7 +214,7 @@ async def test_services_config_entry(hass):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     entity_id = "sensor.energy"
     hass.states.async_set(
-        entity_id, 1, {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR}
+        entity_id, 1, {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR}
     )
     await hass.async_block_till_done()
 
@@ -223,7 +223,7 @@ async def test_services_config_entry(hass):
         hass.states.async_set(
             entity_id,
             3,
-            {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR},
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR},
             force_update=True,
         )
         await hass.async_block_till_done()
@@ -244,7 +244,7 @@ async def test_services_config_entry(hass):
         hass.states.async_set(
             entity_id,
             4,
-            {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR},
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR},
             force_update=True,
         )
         await hass.async_block_till_done()
@@ -272,7 +272,7 @@ async def test_services_config_entry(hass):
         hass.states.async_set(
             entity_id,
             5,
-            {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR},
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR},
             force_update=True,
         )
         await hass.async_block_till_done()

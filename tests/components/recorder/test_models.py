@@ -32,7 +32,7 @@ def test_from_event_to_db_event():
     event = ha.Event("test_event", {"some_data": 15})
     db_event = Events.from_event(event)
     db_event.event_data = EventData.from_event(event).shared_data
-    assert event == db_event.to_native()
+    assert event.as_dict() == db_event.to_native().as_dict()
 
 
 def test_from_event_to_db_state():
@@ -43,7 +43,7 @@ def test_from_event_to_db_state():
         {"entity_id": "sensor.temperature", "old_state": None, "new_state": state},
         context=state.context,
     )
-    assert state == States.from_event(event).to_native()
+    assert state.as_dict() == States.from_event(event).to_native().as_dict()
 
 
 def test_from_event_to_db_state_attributes():
@@ -77,6 +77,40 @@ def test_repr():
     )
     assert "2016-07-09 11:00:00+00:00" in repr(States.from_event(event))
     assert "2016-07-09 11:00:00+00:00" in repr(Events.from_event(event))
+
+
+def test_states_repr_without_timestamp():
+    """Test repr for a state without last_updated_ts."""
+    fixed_time = datetime(2016, 7, 9, 11, 0, 0, tzinfo=dt.UTC, microsecond=432432)
+    states = States(
+        entity_id="sensor.temp",
+        attributes=None,
+        context_id=None,
+        context_user_id=None,
+        context_parent_id=None,
+        origin_idx=None,
+        last_updated=fixed_time,
+        last_changed=fixed_time,
+        last_updated_ts=None,
+        last_changed_ts=None,
+    )
+    assert "2016-07-09 11:00:00+00:00" in repr(states)
+
+
+def test_events_repr_without_timestamp():
+    """Test repr for an event without time_fired_ts."""
+    fixed_time = datetime(2016, 7, 9, 11, 0, 0, tzinfo=dt.UTC, microsecond=432432)
+    events = Events(
+        event_type="any",
+        event_data=None,
+        origin_idx=None,
+        time_fired=fixed_time,
+        time_fired_ts=None,
+        context_id=None,
+        context_user_id=None,
+        context_parent_id=None,
+    )
+    assert "2016-07-09 11:00:00+00:00" in repr(events)
 
 
 def test_handling_broken_json_state_attributes(caplog):
@@ -259,11 +293,11 @@ async def test_event_to_db_model():
     db_event = Events.from_event(event)
     db_event.event_data = EventData.from_event(event).shared_data
     native = db_event.to_native()
-    assert native == event
+    assert native.as_dict() == event.as_dict()
 
     native = Events.from_event(event).to_native()
     event.data = {}
-    assert native == event
+    assert native.as_dict() == event.as_dict()
 
 
 async def test_lazy_state_handles_include_json(caplog):

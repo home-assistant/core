@@ -33,7 +33,6 @@ from .const import (
     DEFAULT_USERNAME,
     DOMAIN,
 )
-from .data import SmartPlugData
 from .entity import DLinkEntity
 
 SCAN_INTERVAL = timedelta(minutes=2)
@@ -65,7 +64,7 @@ def setup_platform(
         hass,
         DOMAIN,
         "deprecated_yaml",
-        breaks_in_ha_version="2023.3.0",
+        breaks_in_ha_version="2023.4.0",
         is_fixable=False,
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_yaml",
@@ -84,14 +83,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the D-Link Power Plug switch."""
     async_add_entities(
-        [
-            SmartPlugSwitch(
-                hass,
-                entry,
-                hass.data[DOMAIN][entry.entry_id],
-                SWITCH_TYPE,
-            ),
-        ],
+        [SmartPlugSwitch(entry, hass.data[DOMAIN][entry.entry_id], SWITCH_TYPE)],
         True,
     )
 
@@ -99,31 +91,19 @@ async def async_setup_entry(
 class SmartPlugSwitch(DLinkEntity, SwitchEntity):
     """Representation of a D-Link Smart Plug switch."""
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        entry: ConfigEntry,
-        data: SmartPlugData,
-        description: SwitchEntityDescription,
-    ) -> None:
-        """Initialize the switch."""
-        super().__init__(data, entry, description)
-        self.units = hass.config.units
-
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the device."""
         try:
-            ui_temp = self.units.temperature(
-                int(self.data.temperature or 0), UnitOfTemperature.CELSIUS
+            temperature = self.hass.config.units.temperature(
+                int(self.data.temperature), UnitOfTemperature.CELSIUS
             )
-            temperature = ui_temp
-        except (ValueError, TypeError):
+        except ValueError:
             temperature = None
 
         try:
-            total_consumption = float(self.data.total_consumption or "0")
-        except (ValueError, TypeError):
+            total_consumption = float(self.data.total_consumption)
+        except ValueError:
             total_consumption = None
 
         attrs = {

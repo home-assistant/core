@@ -39,6 +39,10 @@
                     "confirm": {
                         "description": "Oppdater eventuelle automatiseringer eller skript som bruker denne tjenesten for i stedet \u00e5 bruke ` {alternate_service} `-tjenesten med en m\u00e5lenhets-ID p\u00e5 ` {alternate_target} `.",
                         "title": "{deprecated_service} -tjenesten vil bli fjernet"
+                    },
+                    "deprecated_yaml": {
+                        "description": "Konfigurering av universelle enheter ISY/IoX ved hjelp av YAML blir fjernet. \n\n Din eksisterende YAML-konfigurasjon har blitt importert til brukergrensesnittet automatisk. \n\n Fjern `isy994` YAML-konfigurasjonen fra filen configuration.yaml og start Home Assistant p\u00e5 nytt for \u00e5 fikse dette problemet.",
+                        "title": "ISY/IoX YAML-konfigurasjonen blir fjernet"
                     }
                 }
             },

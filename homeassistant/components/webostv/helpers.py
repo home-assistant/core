@@ -1,11 +1,13 @@
 """Helper functions for webOS Smart TV."""
 from __future__ import annotations
 
+from aiowebostv import WebOsClient
+
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 
-from . import WebOsClientWrapper, async_control_connect
+from . import async_control_connect
 from .const import DATA_CONFIG_ENTRY, DOMAIN, LIVE_TV_APP_ID, WEBOSTV_EXCEPTIONS
 
 
@@ -46,25 +48,24 @@ def async_get_device_id_from_entity_id(hass: HomeAssistant, entity_id: str) -> s
 
 
 @callback
-def async_get_client_wrapper_by_device_entry(
+def async_get_client_by_device_entry(
     hass: HomeAssistant, device: DeviceEntry
-) -> WebOsClientWrapper:
+) -> WebOsClient:
     """
-    Get WebOsClientWrapper from Device Registry by device entry.
+    Get WebOsClient from Device Registry by device entry.
 
-    Raises ValueError if client wrapper is not found.
+    Raises ValueError if client is not found.
     """
     for config_entry_id in device.config_entries:
-        wrapper: WebOsClientWrapper | None
-        if wrapper := hass.data[DOMAIN][DATA_CONFIG_ENTRY].get(config_entry_id):
+        if client := hass.data[DOMAIN][DATA_CONFIG_ENTRY].get(config_entry_id):
             break
 
-    if not wrapper:
+    if not client:
         raise ValueError(
             f"Device {device.id} is not from an existing {DOMAIN} config entry"
         )
 
-    return wrapper
+    return client
 
 
 async def async_get_sources(host: str, key: str) -> list[str]:

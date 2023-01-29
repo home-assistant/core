@@ -855,7 +855,7 @@ class MqttDiscoveryUpdate(Entity):
 
         async def discovery_callback(payload: MQTTDiscoveryPayload) -> None:
             """Handle discovery update."""
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Got update for entity with hash: %s '%s'",
                 discovery_hash,
                 payload,
@@ -876,7 +876,7 @@ class MqttDiscoveryUpdate(Entity):
                     await self._discovery_update(payload)
                 else:
                     # Non-empty, unchanged payload: Ignore to avoid changing states
-                    _LOGGER.info("Ignoring unchanged update for: %s", self.entity_id)
+                    _LOGGER.debug("Ignoring unchanged update for: %s", self.entity_id)
             send_discovery_done(self.hass, self._discovery_data)
 
         if discovery_hash:

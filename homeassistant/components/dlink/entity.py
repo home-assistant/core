@@ -17,8 +17,8 @@ class DLinkEntity(Entity):
 
     def __init__(
         self,
-        data: SmartPlugData,
         config_entry: ConfigEntry,
+        data: SmartPlugData,
         description: EntityDescription,
     ) -> None:
         """Initialize a D-Link Power Plug entity."""
@@ -27,7 +27,7 @@ class DLinkEntity(Entity):
         if config_entry.source == SOURCE_IMPORT:
             self._attr_name = config_entry.title
         else:
-            self._attr_name = f"{config_entry.title} {description.key}"
+            self._attr_has_entity_name = True
         self._attr_unique_id = f"{config_entry.entry_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, config_entry.entry_id)},

@@ -398,7 +398,11 @@ def get_full_significant_states_with_session(
     significant_changes_only: bool = True,
     no_attributes: bool = False,
 ) -> MutableMapping[str, list[State]]:
-    """Variant of get_significant_states_with_session that does not return minimal responses."""
+    """Variant of get_significant_states_with_session.
+
+    Difference with get_significant_states_with_session is that it does not
+    return minimal responses.
+    """
     return cast(
         MutableMapping[str, list[State]],
         get_significant_states_with_session(
@@ -586,7 +590,7 @@ def _get_states_for_entites_stmt(
     # We got an include-list of entities, accelerate the query by filtering already
     # in the inner query.
     if schema_version >= 31:
-        run_start_ts = run_start.timestamp()
+        run_start_ts = process_timestamp(run_start).timestamp()
         utc_point_in_time_ts = dt_util.utc_to_timestamp(utc_point_in_time)
         stmt += lambda q: q.where(
             States.state_id
@@ -629,7 +633,7 @@ def _generate_most_recent_states_by_date(
 ) -> Subquery:
     """Generate the sub query for the most recent states by data."""
     if schema_version >= 31:
-        run_start_ts = run_start.timestamp()
+        run_start_ts = process_timestamp(run_start).timestamp()
         utc_point_in_time_ts = dt_util.utc_to_timestamp(utc_point_in_time)
         return (
             select(

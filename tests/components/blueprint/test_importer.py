@@ -36,7 +36,10 @@ COMMUNITY_POST_INPUTS = {
     },
     "force_brightness": {
         "name": "Force turn on brightness",
-        "description": 'Force the brightness to the set level below, when the "on" button on the remote is pushed and lights turn on.\n',
+        "description": (
+            'Force the brightness to the set level below, when the "on" button on the'
+            " remote is pushed and lights turn on.\n"
+        ),
         "default": False,
         "selector": {"boolean": {}},
     },
