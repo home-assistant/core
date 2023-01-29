@@ -25,7 +25,7 @@
                 "description": "The bosch_shc integration needs to re-authenticate your account",
                 "title": "Reauthenticate Integration",
                 "data": {
-                    "host": "[%key:common::config_flow::data::host%]"
+                    "host": "Host"
                 }
             },
             "user": {
