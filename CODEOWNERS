@@ -835,7 +835,6 @@ build.json @home-assistant/supervisor
 /homeassistant/components/ondilo_ico/ @JeromeHXP
 /tests/components/ondilo_ico/ @JeromeHXP
 /homeassistant/components/onetracker/ @packruler
-/tests/components/onetracker/ @packruler
 /homeassistant/components/onewire/ @garbled1 @epenet
 /tests/components/onewire/ @garbled1 @epenet
 /homeassistant/components/onvif/ @hunterjm
