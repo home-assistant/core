@@ -51,7 +51,7 @@ async def create_omada_client(
 
 
 class HubInfo(NamedTuple):
-    """Basic controller information."""
+    """Discovered controller information."""
 
     controller_id: str
     name: str

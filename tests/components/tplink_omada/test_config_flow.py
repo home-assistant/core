@@ -1,4 +1,4 @@
-"""Test the TP-Link Omada config flow."""
+"""Test the TP-Link Omada config flows."""
 from unittest.mock import patch
 
 from tplink_omada_client.exceptions import (
@@ -10,8 +10,8 @@ from tplink_omada_client.exceptions import (
 from tplink_omada_client.omadaclient import OmadaSite
 
 from homeassistant import config_entries
-from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.components.tplink_omada.config_flow import HubInfo
+from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
