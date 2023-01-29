@@ -71,7 +71,7 @@ class OneTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(data_schema),
-            errors=errors or {},
+            errors=errors,
         )
 
 
@@ -95,5 +95,8 @@ class OneTrackerOptionsFlowHandler(OptionsFlow):
                 CONF_PASSWORD, default=self.config_entry.data[CONF_PASSWORD]
             ): str,
         }
-
-        return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
+        _LOGGER.warning("TEST")
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(options),
+        )

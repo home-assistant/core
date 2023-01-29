@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Already configured. Only a single configuration possible.",
+            "unknown": "Unexpected error"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "flow_title": "OneTracker",
+        "step": {
+            "user": {
+                "data": {
+                    "email": "Email",
+                    "password": "Password"
+                },
+                "description": "Provide your login credentials for OneTracker.",
+                "title": "OneTracker"
+            }
+        }
+    },
+    "options": {
+        "flow_title": "OneTracker",
+        "step": {
+            "init": {
+                "data": {
+                    "email": "Email",
+                    "password": "Password"
+                },
+                "description": "Update your login credentials for OneTracker.",
+                "title": "OneTracker"
+            }
+        }
+    }
+}

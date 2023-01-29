@@ -3,8 +3,8 @@
     "flow_title": "OneTracker",
     "step": {
       "user": {
-        "title": "Connect to OneTracker",
-        "description": "Setup your connection to OneTracker API.",
+        "title": "OneTracker",
+        "description": "Provide your login credentials for OneTracker.",
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
@@ -20,8 +20,11 @@
     }
   },
   "options": {
+    "flow_title": "OneTracker",
     "step": {
-      "user": {
+      "init": {
+        "title": "OneTracker",
+        "description": "Update your login credentials for OneTracker.",
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
