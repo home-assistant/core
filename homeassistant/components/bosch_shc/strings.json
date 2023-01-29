@@ -14,11 +14,14 @@
         }
       },
       "confirm_discovery": {
-        "description": "Please press the Bosch Smart Home Controller's front-side button until LED starts flashing.\nReady to continue to set up {model} @ {host} with Home Assistant?"
+        "description": "Smart Home Controller I: Please press the front-side button until LED starts flashing.\nSmart Home Controller II: Press the function button shortly. Cloud and network lights start blinking orange.\nDevice is now ready to be paired.\n\nReady to continue to set up {model} @ {host} with Home Assistant?"
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "The bosch_shc integration needs to re-authenticate your account"
+        "description": "The bosch_shc integration needs to re-authenticate your account",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        }
       }
     },
     "error": {

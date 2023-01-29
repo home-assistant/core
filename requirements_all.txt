@@ -907,7 +907,7 @@ hole==0.8.0
 holidays==0.18.0
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230125.0
+home-assistant-frontend==20230128.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.1.25
@@ -1899,7 +1899,7 @@ pyqwikswitch==0.93
 pyrail==0.0.3
 
 # homeassistant.components.rainbird
-pyrainbird==1.1.0
+pyrainbird==2.0.0
 
 # homeassistant.components.recswitch
 pyrecswitch==1.0.2
@@ -2006,7 +2006,7 @@ pysyncthru==0.7.10
 pytankerkoenig==0.0.6
 
 # homeassistant.components.tautulli
-pytautulli==21.11.0
+pytautulli==23.1.1
 
 # homeassistant.components.tfiac
 pytfiac==0.4

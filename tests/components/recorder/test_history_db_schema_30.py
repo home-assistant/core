@@ -21,7 +21,13 @@ from homeassistant.core import State
 from homeassistant.helpers.json import JSONEncoder
 import homeassistant.util.dt as dt_util
 
-from .common import wait_recording_done
+from .common import (
+    assert_dict_of_states_equal_without_context_and_last_changed,
+    assert_multiple_states_equal_without_context,
+    assert_multiple_states_equal_without_context_and_last_changed,
+    assert_states_equal_without_context,
+    wait_recording_done,
+)
 
 CREATE_ENGINE_TARGET = "homeassistant.components.recorder.core.create_engine"
 SCHEMA_MODULE = "tests.components.recorder.db_schema_30"
@@ -175,7 +181,7 @@ def test_state_changes_during_period(hass_recorder, attributes, no_attributes, l
         hass, start, end, entity_id, no_attributes, limit=limit
     )
 
-    assert states[:limit] == hist[entity_id]
+    assert_multiple_states_equal_without_context(states[:limit], hist[entity_id])
 
 
 def test_state_changes_during_period_descending(hass_recorder):
@@ -228,12 +234,14 @@ def test_state_changes_during_period_descending(hass_recorder):
     hist = history.state_changes_during_period(
         hass, start, end, entity_id, no_attributes=False, descending=False
     )
-    assert states == hist[entity_id]
+    assert_multiple_states_equal_without_context(states, hist[entity_id])
 
     hist = history.state_changes_during_period(
         hass, start, end, entity_id, no_attributes=False, descending=True
     )
-    assert states == list(reversed(list(hist[entity_id])))
+    assert_multiple_states_equal_without_context(
+        states, list(reversed(list(hist[entity_id])))
+    )
 
 
 def test_get_last_state_changes(hass_recorder):
@@ -269,7 +277,7 @@ def test_get_last_state_changes(hass_recorder):
 
     hist = history.get_last_state_changes(hass, 2, entity_id)
 
-    assert states == hist[entity_id]
+    assert_multiple_states_equal_without_context(states, hist[entity_id])
 
 
 def test_ensure_state_can_be_copied(hass_recorder):
@@ -302,8 +310,8 @@ def test_ensure_state_can_be_copied(hass_recorder):
 
     hist = history.get_last_state_changes(hass, 2, entity_id)
 
-    assert copy(hist[entity_id][0]) == hist[entity_id][0]
-    assert copy(hist[entity_id][1]) == hist[entity_id][1]
+    assert_states_equal_without_context(copy(hist[entity_id][0]), hist[entity_id][0])
+    assert_states_equal_without_context(copy(hist[entity_id][1]), hist[entity_id][1])
 
 
 def test_get_significant_states(hass_recorder):
@@ -316,7 +324,7 @@ def test_get_significant_states(hass_recorder):
     hass = hass_recorder()
     zero, four, states = record_states(hass)
     hist = history.get_significant_states(hass, zero, four)
-    assert states == hist
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
 
 def test_get_significant_states_minimal_response(hass_recorder):
@@ -355,7 +363,31 @@ def test_get_significant_states_minimal_response(hass_recorder):
                 "last_changed": orig_last_changed,
                 "state": orig_state,
             }
-    assert states == hist
+
+    assert len(hist) == len(states)
+    assert_states_equal_without_context(
+        states["media_player.test"][0], hist["media_player.test"][0]
+    )
+    assert states["media_player.test"][1] == hist["media_player.test"][1]
+    assert states["media_player.test"][2] == hist["media_player.test"][2]
+
+    assert_multiple_states_equal_without_context(
+        states["media_player.test2"], hist["media_player.test2"]
+    )
+    assert_states_equal_without_context(
+        states["media_player.test3"][0], hist["media_player.test3"][0]
+    )
+    assert states["media_player.test3"][1] == hist["media_player.test3"][1]
+
+    assert_multiple_states_equal_without_context(
+        states["script.can_cancel_this_one"], hist["script.can_cancel_this_one"]
+    )
+    assert_multiple_states_equal_without_context_and_last_changed(
+        states["thermostat.test"], hist["thermostat.test"]
+    )
+    assert_multiple_states_equal_without_context_and_last_changed(
+        states["thermostat.test2"], hist["thermostat.test2"]
+    )
 
 
 def test_get_significant_states_with_initial(hass_recorder):
@@ -375,6 +407,7 @@ def test_get_significant_states_with_initial(hass_recorder):
         for state in states[entity_id]:
             if state.last_changed == one:
                 state.last_changed = one_and_half
+                state.last_updated = one_and_half
 
     hist = history.get_significant_states(
         hass,
@@ -382,7 +415,7 @@ def test_get_significant_states_with_initial(hass_recorder):
         four,
         include_start_time_state=True,
     )
-    assert states == hist
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
 
 def test_get_significant_states_without_initial(hass_recorder):
@@ -408,7 +441,7 @@ def test_get_significant_states_without_initial(hass_recorder):
         four,
         include_start_time_state=False,
     )
-    assert states == hist
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
 
 def test_get_significant_states_entity_id(hass_recorder):
@@ -422,7 +455,7 @@ def test_get_significant_states_entity_id(hass_recorder):
     del states["script.can_cancel_this_one"]
 
     hist = history.get_significant_states(hass, zero, four, ["media_player.test"])
-    assert states == hist
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
 
 def test_get_significant_states_multiple_entity_ids(hass_recorder):
@@ -440,7 +473,12 @@ def test_get_significant_states_multiple_entity_ids(hass_recorder):
         four,
         ["media_player.test", "thermostat.test"],
     )
-    assert states == hist
+    assert_multiple_states_equal_without_context_and_last_changed(
+        states["media_player.test"], hist["media_player.test"]
+    )
+    assert_multiple_states_equal_without_context_and_last_changed(
+        states["thermostat.test"], hist["thermostat.test"]
+    )
 
 
 def test_get_significant_states_are_ordered(hass_recorder):
@@ -505,14 +543,22 @@ def test_get_significant_states_only(hass_recorder):
     hist = history.get_significant_states(hass, start, significant_changes_only=True)
 
     assert len(hist[entity_id]) == 2
-    assert states[0] not in hist[entity_id]
-    assert states[1] in hist[entity_id]
-    assert states[2] in hist[entity_id]
+    assert not any(
+        state.last_updated == states[0].last_updated for state in hist[entity_id]
+    )
+    assert any(
+        state.last_updated == states[1].last_updated for state in hist[entity_id]
+    )
+    assert any(
+        state.last_updated == states[2].last_updated for state in hist[entity_id]
+    )
 
     hist = history.get_significant_states(hass, start, significant_changes_only=False)
 
     assert len(hist[entity_id]) == 3
-    assert states == hist[entity_id]
+    assert_multiple_states_equal_without_context_and_last_changed(
+        states, hist[entity_id]
+    )
 
 
 def record_states(hass) -> tuple[datetime, datetime, dict[str, list[State]]]:
