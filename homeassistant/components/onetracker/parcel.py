@@ -1,16 +1,23 @@
 """Class definitions for OneTracker Parcel Entity."""
 from __future__ import annotations
 
-import logging
-
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import callback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .api_responses import Parcel
+from .const import (
+    ATTR_CARRIER,
+    ATTR_CARRIER_NAME,
+    ATTR_TIME_UPDATED,
+    ATTR_TRACKING_ID,
+    ATTR_TRACKING_LOCATION,
+    ATTR_TRACKING_STATUS_DESCRIPTION,
+    ATTR_TRACKING_STATUS_READABLE,
+    ATTR_TRACKING_TIME_DELIVERED,
+    ATTR_TRACKING_TIME_ESTIMATED,
+)
 from .coordinator import OneTrackerDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class ParcelEntity(CoordinatorEntity, SensorEntity):
@@ -42,15 +49,15 @@ class ParcelEntity(CoordinatorEntity, SensorEntity):
     def extra_state_attributes(self):
         """Return entity specific state attributes."""
         return {
-            "tracking_id": self.parcel.tracking_id,
-            "tracking_status_readable": self.parcel.tracking_status_readable,
-            "tracking_status_description": self.parcel.tracking_status_description,
-            "tracking_location": self.parcel.tracking_location,
-            "tracking_time_estimated": self.parcel.tracking_time_estimated,
-            "tracking_time_delivered": self.parcel.tracking_time_delivered,
-            "time_updated": self.parcel.time_updated,
-            "carrier": self.parcel.carrier,
-            "carrier_name": self.parcel.carrier_name,
+            ATTR_CARRIER: self.parcel.carrier,
+            ATTR_CARRIER_NAME: self.parcel.carrier_name,
+            ATTR_TIME_UPDATED: self.parcel.time_updated,
+            ATTR_TRACKING_ID: self.parcel.tracking_id,
+            ATTR_TRACKING_STATUS_READABLE: self.parcel.tracking_status_readable,
+            ATTR_TRACKING_STATUS_DESCRIPTION: self.parcel.tracking_status_description,
+            ATTR_TRACKING_LOCATION: self.parcel.tracking_location,
+            ATTR_TRACKING_TIME_ESTIMATED: self.parcel.tracking_time_estimated,
+            ATTR_TRACKING_TIME_DELIVERED: self.parcel.tracking_time_delivered,
         }
 
     @property
@@ -59,7 +66,3 @@ class ParcelEntity(CoordinatorEntity, SensorEntity):
         if not (name := self.parcel.description):
             name = self.parcel.tracking_id
         return name
-
-    async def async_update(self) -> None:
-        _LOGGER.warning("Async update: %s", self.unique_id)
-        self.parcel = await self.coordinator.api.get_parcel(self.parcel.id)
