@@ -1115,3 +1115,21 @@ async def test_event_user_updated_fires(hass):
 
     await hass.async_block_till_done()
     assert len(events) == 1
+
+
+async def test_async_validate_name(hass):
+    """Testing name validator"""
+
+    manager = await auth.auth_manager_from_config(hass, [], [])
+
+    assert await manager.async_validate_name("Au") is False
+    assert await manager.async_validate_name("Barnaby Marmaduke Aloysius Benjy Cobweb Dartagnan Egbert Felix Gaspar Humbert Ignatius Jayden Kasper Leroy Maximilian Neddy Obiajulu Pepin Quilliam Rosencrantz Sexton Teddy Upwood Vivatma Wayland Xylon Yardley Zachary Usansky") is False
+    assert await manager.async_validate_name("Jefferson") is True
+    assert await manager.async_validate_name("123456") is False
+    assert await manager.async_validate_name("Jefferson 23") is False
+    assert await manager.async_validate_name("!@#!@#!@#") is False
+    assert await manager.async_validate_name("Jefferson @#! França") is False
+    assert await manager.async_validate_name("Ana$$") is False
+    assert await manager.async_validate_name("") is False
+    assert await manager.async_validate_name("lorena") is False
+    assert await manager.async_validate_name("heitor") is False

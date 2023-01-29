@@ -235,6 +235,23 @@ class AuthManager:
 
         return user
 
+    async def async_validate_name(self, name:str) -> bool:
+        """Name validator"""
+
+        if len(name) <= 2 or len(name) > 100:
+            return False
+
+        if any(char.isnumeric() for char in name):
+            return False
+
+        if not all(char.isalpha() for char in name):
+            return False
+
+        if  not name[0].isupper():
+            return False
+
+        return True
+
     async def async_create_user(
         self,
         name: str,
@@ -243,6 +260,9 @@ class AuthManager:
         local_only: bool | None = None,
     ) -> models.User:
         """Create a user."""
+
+        await self.async_validate_name(name)
+
         kwargs: dict[str, Any] = {
             "name": name,
             "is_active": True,
