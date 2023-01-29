@@ -6,20 +6,17 @@ from pathlib import Path
 import tempfile
 
 from aiohttp import web
+from synology_dsm.api.photos import SynoPhotosAlbum, SynoPhotosItem
 from synology_dsm.exceptions import SynologyDSMException
 
 from homeassistant.components import http
-from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_DIRECTORY,
-    MEDIA_CLASS_IMAGE,
-    MEDIA_TYPE_IMAGE,
-)
-from homeassistant.components.media_source.error import Unresolvable
-from homeassistant.components.media_source.models import (
+from homeassistant.components.media_player import MediaClass
+from homeassistant.components.media_source import (
     BrowseMediaSource,
     MediaSource,
     MediaSourceItem,
     PlayMedia,
+    Unresolvable,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -67,12 +64,12 @@ class SynologyPhotosMediaSource(MediaSource):
         return BrowseMediaSource(
             domain=DOMAIN,
             identifier=None,
-            media_class=MEDIA_CLASS_DIRECTORY,
-            media_content_type=MEDIA_TYPE_IMAGE,
+            media_class=MediaClass.DIRECTORY,
+            media_content_type=MediaClass.IMAGE,
             title="Synology Photos",
             can_play=False,
             can_expand=True,
-            children_media_class=MEDIA_CLASS_DIRECTORY,
+            children_media_class=MediaClass.DIRECTORY,
             children=[
                 *await self._async_build_diskstations(item),
             ],
@@ -90,8 +87,8 @@ class SynologyPhotosMediaSource(MediaSource):
                     BrowseMediaSource(
                         domain=DOMAIN,
                         identifier=entry.unique_id,
-                        media_class=MEDIA_CLASS_DIRECTORY,
-                        media_content_type=MEDIA_TYPE_IMAGE,
+                        media_class=MediaClass.DIRECTORY,
+                        media_content_type=MediaClass.IMAGE,
                         title=f"{entry.title} - {entry.unique_id}",
                         can_play=False,
                         can_expand=True,
@@ -105,9 +102,7 @@ class SynologyPhotosMediaSource(MediaSource):
             # Get Albums
             # The library works sync, and this expects async calls
             try:
-                albums = await self.hass.loop.run_in_executor(
-                    None, diskstation.api.photos.get_albums
-                )
+                albums = await diskstation.api.photos.get_albums()
             except SynologyDSMException:
                 return []
 
@@ -116,8 +111,8 @@ class SynologyPhotosMediaSource(MediaSource):
                 BrowseMediaSource(
                     domain=DOMAIN,
                     identifier=f"{item.identifier}/0",
-                    media_class=MEDIA_CLASS_DIRECTORY,
-                    media_content_type=MEDIA_TYPE_IMAGE,
+                    media_class=MediaClass.DIRECTORY,
+                    media_content_type=MediaClass.IMAGE,
                     title="All images",
                     can_play=False,
                     can_expand=True,
@@ -127,10 +122,10 @@ class SynologyPhotosMediaSource(MediaSource):
                 ret.append(
                     BrowseMediaSource(
                         domain=DOMAIN,
-                        identifier=f'{item.identifier}/{album["id"]}',
-                        media_class=MEDIA_CLASS_DIRECTORY,
-                        media_content_type=MEDIA_TYPE_IMAGE,
-                        title=album["name"],
+                        identifier=f"{item.identifier}/{album.album_id}",
+                        media_class=MediaClass.DIRECTORY,
+                        media_content_type=MediaClass.IMAGE,
+                        title=album.name,
                         can_play=False,
                         can_expand=True,
                     )
@@ -141,36 +136,31 @@ class SynologyPhotosMediaSource(MediaSource):
         # Request items of album
         # Get Items
         # The library works sync, and this expects async calls
+        album = SynoPhotosAlbum
+        album.album_id = int(identifier_parts[1])
         try:
-            items = await self.hass.loop.run_in_executor(
-                None,
-                diskstation.api.photos.get_items,
-                identifier_parts[1],
-                0,
-                1000,
-                '["thumbnail"]',
-            )
+            items = await diskstation.api.photos.get_items_from_album(album, 0, 1000)
         except SynologyDSMException:
             return []
 
         ret = []
         for items_item in items:
-            mime_type, _ = mimetypes.guess_type(items_item["filename"])
+            mime_type, _ = mimetypes.guess_type(items_item.file_name)
             assert isinstance(mime_type, str)
             parts = mime_type.split("/")
             if parts[0] == "image":
                 ret.append(
                     BrowseMediaSource(
                         domain=DOMAIN,
-                        identifier=f'{identifier_parts[0]}/{identifier_parts[1]}/{items_item["additional"]["thumbnail"]["cache_key"]}/{items_item["filename"]}',
-                        media_class=MEDIA_CLASS_IMAGE,
+                        identifier=f"{identifier_parts[0]}/{identifier_parts[1]}/{items_item.thumbnail_cache_key}/{items_item.file_name}",
+                        media_class=MediaClass.IMAGE,
                         media_content_type=mime_type,
-                        title=items_item["filename"],
+                        title=items_item.file_name,
                         can_play=True,
                         can_expand=False,
                         thumbnail=await self.async_get_thumbnail(
-                            items_item["additional"]["thumbnail"]["cache_key"],
-                            items_item["id"],
+                            items_item.thumbnail_cache_key,
+                            items_item.item_id,
                             "sm",
                             identifier_parts[0],
                         ),
@@ -194,14 +184,12 @@ class SynologyPhotosMediaSource(MediaSource):
             raise Unresolvable("Diskstation not initialized")
 
         diskstation: SynologyDSMData = self.hass.data[DOMAIN][diskstation_unique_id]
+        item = SynoPhotosItem
+        item.thumbnail_cache_key = cache_key
+        item.item_id = image_id
+        item.thumbnail_size = size
         try:
-            thumbnail = await self.hass.loop.run_in_executor(
-                None,
-                diskstation.api.photos.get_thumbnail_url,
-                image_id,
-                cache_key,
-                size,
-            )
+            thumbnail = await diskstation.api.photos.get_item_thumbnail_url(item)
         except SynologyDSMException:
             return ""
         return str(thumbnail)
@@ -239,14 +227,11 @@ class SynologyDsmMediaView(http.HomeAssistantView):
             temp.seek(0)
             temp.truncate()
 
+            item = SynoPhotosItem
+            item.thumbnail_cache_key = cache_key
+            item.item_id = image_id
             try:
-                image = await self.hass.loop.run_in_executor(
-                    None,
-                    diskstation.api.photos.get_thumbnail,
-                    image_id,
-                    cache_key,
-                    "xl",
-                )
+                image = await diskstation.api.photos.download_item(item)
             except SynologyDSMException as exc:
                 raise web.HTTPNotFound() from exc
             fname = temp.name
