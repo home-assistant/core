@@ -80,6 +80,7 @@ class Parcel:
     tracking_url: str | None = None
     tracking_status: str
     tracking_status_description: str
+    tracking_status_readable: str
     tracking_status_text: str
     tracking_extra_info: str
     tracking_location: str

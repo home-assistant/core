@@ -22,6 +22,8 @@ _LOGGER = logging.getLogger(__name__)
 class OneTrackerDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching OneTracker data."""
 
+    api: OneTrackerAPI
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -38,7 +40,7 @@ class OneTrackerDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=30),
         )
 
-        self.onetracker = OneTrackerAPI(config)
+        self.api = OneTrackerAPI(config)
 
     async def _async_update_data(self) -> list[Parcel]:
         """Fetch data from OneTracker."""
@@ -46,16 +48,16 @@ class OneTrackerDataUpdateCoordinator(DataUpdateCoordinator):
         def _update_data() -> list[Parcel]:
             """Fetch data from OneTracker via sync functions."""
 
-            parcels = self.onetracker.get_parcels()
+            parcels = self.api.get_parcels()
 
-            for parcel in parcels:
-                self.hass.states.set(
-                    f"{DOMAIN}.{parcel.id}",
-                    "parcel",
-                    parcel.serialize(),
-                )
-            self.data = {"parcels": map(lambda p: p.serialize(), parcels)}
-            return self.data
+            # for parcel in parcels:
+            #     self.hass.states.set(
+            #         f"{DOMAIN}.{parcel.id}",
+            #         "parcel",
+            #         parcel.serialize(),
+            #     )
+            # self.data = {"parcels": map(lambda p: p.serialize(), parcels)}
+            return parcels
 
         try:
             async with timeout(4):

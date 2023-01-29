@@ -1,14 +1,13 @@
 """Class definitions for OneTracker Parcel Entity."""
 from __future__ import annotations
 
-from datetime import datetime
 
 from homeassistant.core import callback
-from homeassistant.components.sensor import RestoreEntity, SensorEntity
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import OneTrackerDataUpdateCoordinator
-from .api_responses import Parcel, TrackingEvent
+from .api_responses import Parcel
 
 import logging
 
@@ -19,55 +18,48 @@ class ParcelEntity(CoordinatorEntity, SensorEntity):
     """A class definition for OneTracker parcel data."""
 
     _attr_icon = "mdi:package"
-
-    id: int
-    user_id: int
-    email_id: int
-    email_sender: str
-    retailer_name: str
-    _description: str
-    notification_level: int
-    is_archived: bool
-    carrier: str
-    carrier_name: str
-    carrier_redirection_available: bool
-    tracker_cached: bool
-    _tracking_id: str
-    tracking_url: str | None = None
-    tracking_status: str
-    tracking_status_description: str
-    tracking_status_text: str
-    tracking_extra_info: str
-    tracking_location: str
-    tracking_time_estimated: datetime | None = None
-    tracking_time_delivered: datetime | None = None
-    tracking_lock: bool
-    tracking_events: list[TrackingEvent] | None = None
-    time_added: datetime
-    time_updated: datetime
+    coordinator: OneTrackerDataUpdateCoordinator
+    parcel: Parcel
 
     def __init__(
         self, coordinator: OneTrackerDataUpdateCoordinator, parcel: Parcel
     ) -> None:
         """Pass coordinator to CoordinatorEntity."""
-        _LOGGER.warning("Setup parcel entity: %s", parcel.id)
         super().__init__(coordinator, context=parcel.id)
+
+        self._attr_unique_id = f"{parcel.id}-onetracker"
         self.id = parcel.id
+        self.parcel = parcel
+        self._attr_native_value = parcel.tracking_status
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        _LOGGER.warning("Handle Coordinator Update")
+        # _LOGGER.warning("Handle Coordinator Update")
         self.async_write_ha_state()
 
-    # @property
-    # def extra_state_attributes(self):
-    #     """Return entity specific state attributes."""
-    #     return self._attributes
+    @property
+    def extra_state_attributes(self):
+        """Return entity specific state attributes."""
+        return {
+            "tracking_id": self.parcel.tracking_id,
+            "tracking_status_readable": self.parcel.tracking_status_readable,
+            "tracking_status_description": self.parcel.tracking_status_description,
+            "tracking_location": self.parcel.tracking_location,
+            "tracking_time_estimated": self.parcel.tracking_time_estimated,
+            "tracking_time_delivered": self.parcel.tracking_time_delivered,
+            "time_updated": self.parcel.time_updated,
+            "carrier": self.parcel.carrier,
+            "carrier_name": self.parcel.carrier_name,
+        }
 
     @property
     def name(self):
         """Return the name."""
-        if not (name := self._description):
-            name = self._tracking_id
+        if not (name := self.parcel.description):
+            name = self.parcel.tracking_id
         return name
+
+    async def async_update(self) -> None:
+        _LOGGER.warning("Async update: %s", self.unique_id)
+        self.parcel = await self.coordinator.api.get_parcel(self.parcel.id)

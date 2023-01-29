@@ -23,7 +23,7 @@ def _validate_input(data: dict[str, Any]) -> None:
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-    OneTrackerAPI(data[CONF_EMAIL], data[CONF_PASSWORD])
+    OneTrackerAPI(data)
 
 
 class OneTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -49,9 +49,6 @@ class OneTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, str] | None = None
     ) -> FlowResult:
         """Handle a flow initiated by the user."""
-        # if self._async_current_entries():
-        #     return self.async_abort(reason="single_instance_allowed")
-
         errors = {}
 
         if user_input is not None:
@@ -65,12 +62,11 @@ class OneTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="unknown")
             else:
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME],
+                    title=DEFAULT_NAME,
                     data=user_input,
                 )
 
         data_schema = {
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
             vol.Required(CONF_EMAIL): str,
             vol.Required(CONF_PASSWORD): str,
         }
@@ -102,7 +98,6 @@ class OneTrackerOptionsFlowHandler(OptionsFlow):
             return self.async_create_entry(title="", data=user_input)
 
         options = {
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
             vol.Required(CONF_EMAIL, msg="Username"): str,
             vol.Required(CONF_PASSWORD): str,
             vol.Optional(

@@ -22,7 +22,6 @@ async def async_setup_entry(
     # assuming API object stored here by __init__.py
     # config = hass.data[DOMAIN][entry.entry_id]
 
-    _LOGGER.warning("Entry %s", json.dumps(entry.as_dict()))
     config = entry.data
     _LOGGER.warning("Config %s", config)
 
@@ -37,8 +36,10 @@ async def async_setup_entry(
     coordinator = OneTrackerDataUpdateCoordinator(hass, config=config)
     await coordinator.async_config_entry_first_refresh()
     _LOGGER.warning("Post async_config_entry_first_refresh")
-    _LOGGER.warning("Data %s", coordinator.data["parcels"])
+    # _LOGGER.warning("Data %s", list(map(lambda p: p.serialize(), coordinator.data)))
 
-    async_add_entities(
-        ParcelEntity(coordinator, parcel) for parcel in enumerate(coordinator.data)
+    entities = list(
+        map(lambda parcel: ParcelEntity(coordinator, parcel), coordinator.data)
     )
+
+    async_add_entities(entities)
