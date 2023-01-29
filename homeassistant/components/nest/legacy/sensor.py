@@ -3,7 +3,11 @@
 
 import logging
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_SENSORS,
@@ -47,6 +51,8 @@ _VALID_SENSOR_TYPES = (
 SENSOR_UNITS = {"humidity": PERCENTAGE}
 
 SENSOR_DEVICE_CLASSES = {"humidity": SensorDeviceClass.HUMIDITY}
+
+SENSOR_STATE_CLASSES = {"humidity": SensorStateClass.MEASUREMENT}
 
 VARIABLE_NAME_MAPPING = {"eta": "eta_begin", "operation_mode": "mode"}
 
@@ -167,6 +173,11 @@ class NestBasicSensor(NestSensorDevice, SensorEntity):
         """Return the device class of the sensor."""
         return SENSOR_DEVICE_CLASSES.get(self.variable)
 
+    @property
+    def state_class(self):
+        """Return the state class of the sensor."""
+        return SENSOR_STATE_CLASSES.get(self.variable)
+
     def update(self):
         """Retrieve latest state."""
         self._unit = SENSOR_UNITS.get(self.variable)
@@ -201,6 +212,11 @@ class NestTempSensor(NestSensorDevice, SensorEntity):
     def device_class(self):
         """Return the device class of the sensor."""
         return SensorDeviceClass.TEMPERATURE
+
+    @property
+    def state_class(self):
+        """Return the state class of the sensor."""
+        return SensorStateClass.MEASUREMENT
 
     def update(self):
         """Retrieve latest state."""
