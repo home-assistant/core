@@ -1,4 +1,4 @@
-"""Configure the platform for OneTracker."""
+"""Configure onetracker coordinator."""
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry

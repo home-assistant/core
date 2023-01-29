@@ -1,4 +1,4 @@
-"""Config flow for OneTracker."""
+"""ConfigFlow setup for OneTracker configuration."""
 from __future__ import annotations
 
 import json

@@ -5,7 +5,6 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import callback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .api_responses import Parcel
 from .const import (
     ATTR_CARRIER,
     ATTR_CARRIER_NAME,
@@ -18,6 +17,7 @@ from .const import (
     ATTR_TRACKING_TIME_ESTIMATED,
 )
 from .coordinator import OneTrackerDataUpdateCoordinator
+from .models import Parcel
 
 
 class ParcelEntity(CoordinatorEntity, SensorEntity):

@@ -13,8 +13,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import OneTrackerAPI, OneTrackerAPIException
-from .api_responses import Parcel
 from .const import DOMAIN
+from .models import Parcel
 
 _LOGGER = logging.getLogger(__name__)
 

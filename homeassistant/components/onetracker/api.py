@@ -2,25 +2,15 @@
 
 from datetime import datetime
 import json
-import logging
 
 import httpx
 
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-from homeassistant.core import HomeAssistant
 
-from .api_responses import (
-    Parcel,
-    ParcelListResponse,
-    ParcelResponse,
-    Session,
-    TokenResponse,
-)
+from .models import Parcel, ParcelListResponse, ParcelResponse, Session, TokenResponse
 
 API_URL_BASE = "https://api.onetracker.app"
 API_AUTH_HEADER_KEY = "x-api-token"
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class OneTrackerAPI:

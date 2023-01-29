@@ -1,4 +1,4 @@
-# """The onetracker component."""
+# """Initialize onetracker sensor platform."""
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 

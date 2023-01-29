@@ -40,22 +40,6 @@ class TrackingEvent:
                 else:
                     setattr(self, key, value)
 
-    def serialize(self) -> dict:
-        """Serialize class data to dictionary."""
-        return {
-            "id": self.id,
-            "parcel_id": self.parcel_id,
-            "carrier_id": self.carrier_id,
-            "carrier_name": self.carrier_name,
-            "status": self.status,
-            "text": self.text,
-            "location": self.location,
-            "latitude": self.latitude,
-            "longitude": self.longitude,
-            "time": self.time,
-            "time_added": self.time_added,
-        }
-
 
 class Parcel:
     """A class definition for OneTracker parcel data."""
@@ -100,39 +84,6 @@ class Parcel:
                         setattr(self, key, list)
                 else:
                     setattr(self, key, value)
-
-    def serialize(self) -> dict:
-        """Serialize class data to dictionary."""
-        return {
-            "id": self.id,
-            "user_id": self.user_id,
-            "email_id": self.email_id,
-            "email_sender": self.email_sender,
-            "retailer_name": self.retailer_name,
-            "description": self.description,
-            "notification_level": self.notification_level,
-            "is_archived": self.is_archived,
-            "carrier": self.carrier,
-            "carrier_name": self.carrier_name,
-            "carrier_redirection_available": self.carrier_redirection_available,
-            "tracker_cached": self.tracker_cached,
-            "tracking_id": self.tracking_id,
-            "tracking_url": self.tracking_url,
-            "tracking_status": self.tracking_status,
-            "tracking_status_description": self.tracking_status_description,
-            "tracking_status_text": self.tracking_status_text,
-            "tracking_extra_info": self.tracking_extra_info,
-            "tracking_location": self.tracking_location,
-            "tracking_time_estimated": self.tracking_time_estimated,
-            "tracking_time_delivered": self.tracking_time_delivered,
-            "tracking_lock": self.tracking_lock,
-            "tracking_events": (
-                lambda: map(lambda x: x.serialize(), self.tracking_events),
-                lambda: None,
-            )[self.tracking_events is not None](),
-            "time_added": self.time_added,
-            "time_updated": self.time_updated,
-        }
 
 
 class Session:
