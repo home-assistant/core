@@ -705,10 +705,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
     await hass.async_block_till_done()
-    # Stop services
-    await asyncio.gather(
-        *(service.async_tear_down() for _, service in mqtt_data.services.items())
-    )
     # Unsubscribe reload dispatchers
     while reload_dispatchers := mqtt_data.reload_dispatchers:
         reload_dispatchers.pop()()
