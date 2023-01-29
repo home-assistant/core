@@ -13,6 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import json_dumps
 
 from tests.common import async_fire_mqtt_message
+from tests.components.mqtt.test_common import help_test_unload_config_entry
 
 SERVICE_DOMAIN = "service"
 
@@ -299,3 +300,23 @@ async def test_discovery_update_service(
         async_fire_mqtt_message(hass, DEFAULT_DISCOVERY_TOPIC, json_dumps(config2))
         await hass.async_block_till_done()
         assert discovery_update.call_count == 1
+
+
+async def test_unload_entry(
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config, tmp_path
+) -> None:
+    """Test unloading the MQTT entry."""
+
+    await mqtt_mock_entry_no_yaml_config()
+    config = DEFAULT_CONFIG_PAYLOAD
+
+    async_fire_mqtt_message(hass, DEFAULT_DISCOVERY_TOPIC, json_dumps(config))
+    await hass.async_block_till_done()
+    assert DEFAULT_SERVICE_NAME in hass.services.async_services()[mqtt.DOMAIN].keys()
+
+    await help_test_unload_config_entry(hass, tmp_path, {})
+    await hass.async_block_till_done()
+
+    assert (
+        DEFAULT_SERVICE_NAME not in hass.services.async_services()[mqtt.DOMAIN].keys()
+    )
