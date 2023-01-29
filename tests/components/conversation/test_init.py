@@ -190,6 +190,32 @@ async def test_http_processing_intent_entity_added(
         "conversation_id": None,
     }
 
+    # Now delete the entity
+    er.async_remove("light.late")
+
+    client = await hass_client()
+    resp = await client.post(
+        "/api/conversation/process", json={"text": "turn on late added light"}
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+    assert data == {
+        "conversation_id": None,
+        "response": {
+            "card": {},
+            "data": {"code": "no_intent_match"},
+            "language": hass.config.language,
+            "response_type": "error",
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "Sorry, I couldn't understand " "that",
+                }
+            },
+        },
+    }
+
 
 @pytest.mark.parametrize("sentence", ("turn on kitchen", "turn kitchen on"))
 async def test_turn_on_intent(hass, init_components, sentence):
