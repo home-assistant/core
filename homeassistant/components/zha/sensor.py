@@ -968,14 +968,10 @@ class AqaraPetFeederWeightDispensed(Sensor, id_suffix="weight_dispensed"):
     _attr_icon: str = "mdi:weight-gram"
 
 
-@MULTI_MATCH(channel_names=CHANNEL_THERMOSTAT, models={
-    "eTRV0100", 
-    "eTRV0101", 
-    "eTRV0103", 
-    "eT093WRO", 
-    "TRV001", 
-    "TRV003"
-    })
+@MULTI_MATCH(
+    channel_names=CHANNEL_THERMOSTAT,
+    models={"eTRV0100", "eTRV0101", "eTRV0103", "eT093WRO", "TRV001", "TRV003"},
+)
 class PiHeatingDemand(ThermostatChannelSensor, id_suffix="pi_heating_demand"):
     """Sensor that displays the percentage of heating power used"""
 
@@ -987,13 +983,15 @@ class PiHeatingDemand(ThermostatChannelSensor, id_suffix="pi_heating_demand"):
 
 
 class DanfossOpenWindowDetectionEnum(types.enum8):
-    """ Danfoss Open Window Detection judgments """
+    """Danfoss Open Window Detection judgments"""
 
     Quarantine = 0x00
     Closed = 0x01
     Maybe = 0x02
     Open = 0x03
     External = 0x04
+
+
 @MULTI_MATCH(channel_names="danfoss_trv_cluster")
 class DanfossOpenWindowDetection(Sensor, id_suffix="open_window_detection"):
     """
@@ -1012,7 +1010,7 @@ class DanfossOpenWindowDetection(Sensor, id_suffix="open_window_detection"):
 
 @MULTI_MATCH(channel_names="danfoss_trv_cluster")
 class DanfossLoadEstimate(Sensor, id_suffix="load_estimate"):
-    """ Danfoss Proprietary attribute for communicating its estimate of the radiator load """
+    """Danfoss Proprietary attribute for communicating its estimate of the radiator load"""
 
     SENSOR_ATTR = "load_estimate"
     _attr_name: str = "Load Estimate"
@@ -1021,10 +1019,10 @@ class DanfossLoadEstimate(Sensor, id_suffix="load_estimate"):
 
 @MULTI_MATCH(channel_names="danfoss_trv_cluster")
 class DanfossAdaptationRunStatus(Sensor, id_suffix="adaptation_run_status"):
-    """ Danfoss Propietary attribute for showing the status of the adaptation run """
+    """Danfoss Propietary attribute for showing the status of the adaptation run"""
 
     def formatter(self, value: int) -> str:
-        """ Bitmap """
+        """Bitmap"""
         error_code_list = []
 
         if value & 0x0001:
@@ -1043,8 +1041,8 @@ class DanfossAdaptationRunStatus(Sensor, id_suffix="adaptation_run_status"):
 
 @MULTI_MATCH(channel_names="danfoss_trv_cluster")
 class DanfossPreheatTime(Sensor, id_suffix="preheat_time"):
-    """ Danfoss Propietary attribute for communicating the 
-        time when it starts pre-heating """
+    """Danfoss Propietary attribute for communicating the
+    time when it starts pre-heating"""
 
     SENSOR_ATTR = "preheat_time"
     _attr_name: str = "Preheat Time"
@@ -1053,10 +1051,10 @@ class DanfossPreheatTime(Sensor, id_suffix="preheat_time"):
 
 @MULTI_MATCH(channel_names="danfoss_trv_diagnostic_cluster")
 class DanfossSoftwareErrorCode(Sensor, id_suffix="sw_error_code"):
-    """ Danfoss Propietary attribute for communicating the error code """
+    """Danfoss Propietary attribute for communicating the error code"""
 
     def formatter(self, value: int) -> str:
-        """ Bitmap """
+        """Bitmap"""
         error_code_list = []
 
         if value & 0x0001:
@@ -1099,7 +1097,7 @@ class DanfossSoftwareErrorCode(Sensor, id_suffix="sw_error_code"):
 
 @MULTI_MATCH(channel_names="danfoss_trv_diagnostic_cluster")
 class DanfossMotorStepCounter(Sensor, id_suffix="motor_step_counter"):
-    """ Danfoss Propietary attribute for communicating the motor step counter """
+    """Danfoss Propietary attribute for communicating the motor step counter"""
 
     SENSOR_ATTR = "motor_step_counter"
     _attr_name: str = "Motor step counter"

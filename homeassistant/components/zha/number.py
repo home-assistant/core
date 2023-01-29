@@ -871,7 +871,7 @@ class AqaraPetFeederPortionWeight(
 class DanfossExerciseTriggerTime(
     ZHANumberConfigurationEntity, id_suffix="exercise_trigger_time"
 ):
-    """ Danfoss Proprietary Attribute to set the time to exercise the valve """
+    """Danfoss Proprietary Attribute to set the time to exercise the valve"""
 
     _zcl_attribute: str = "exercise_trigger_time"
     _attr_name: str = "Exercise Trigger Time"
@@ -886,23 +886,21 @@ class DanfossExerciseTriggerTime(
 class DanfossExternalMeasuredRoomSensor(
     ZHANumberConfigurationEntity, id_suffix="external_measured_room_sensor"
 ):
-    """ Danfoss Proprietary Attribute to communicate the value of the 
-    external temperature sensor """
+    """Danfoss Proprietary Attribute to communicate the value of the
+    external temperature sensor"""
 
     _zcl_attribute: str = "external_measured_room_sensor"
     _attr_name: str = "External Measured Room Sensor"
     _attr_native_min_value: int = -8000
     _attr_native_max_value: int = 3500
     _attr_mode: NumberMode = NumberMode.BOX
-    _attr_native_unit_of_measurement: str = "centi-°C" # 100th of a Celsius
+    _attr_native_unit_of_measurement: str = "centi-°C"  # 100th of a Celsius
     _attr_icon: str = "mdi:thermometer"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names="danfoss_trv_cluster")
-class DanfossLoadRoomMean(
-    ZHANumberConfigurationEntity, id_suffix="load_room_mean"
-):
-    """ Danfoss Proprietary Attribute to set a value for the load """
+class DanfossLoadRoomMean(ZHANumberConfigurationEntity, id_suffix="load_room_mean"):
+    """Danfoss Proprietary Attribute to set a value for the load"""
 
     _zcl_attribute: str = "load_room_mean"
     _attr_name: str = "Load Room Mean"
@@ -916,8 +914,8 @@ class DanfossLoadRoomMean(
 class DanfossControlAlgorithmScaleFactor(
     ZHANumberConfigurationEntity, id_suffix="control_algorithm_scale_factor"
 ):
-    """ Danfoss Proprietary Attribute to configure the 
-    aggressiveness of the control algorithm """
+    """Danfoss Proprietary Attribute to configure the
+    aggressiveness of the control algorithm"""
 
     _zcl_attribute: str = "control_algorithm_scale_factor"
     _attr_name: str = "Control Algorithm Scale Factor"
@@ -931,7 +929,7 @@ class DanfossControlAlgorithmScaleFactor(
 class DanfossRegulationSetpointOffset(
     ZHANumberConfigurationEntity, id_suffix="regulation_setpoint_offset"
 ):
-    """ Danfoss Proprietary Attribute to set the regulation setpoint offset """
+    """Danfoss Proprietary Attribute to set the regulation setpoint offset"""
 
     _zcl_attribute: str = "regulation_setpoint_offset"
     _attr_name: str = "Regulation Setpoint Offset"
