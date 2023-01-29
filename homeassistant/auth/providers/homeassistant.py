@@ -153,8 +153,35 @@ class Data:
         if not bcrypt.checkpw(password.encode(), user_hash):
             raise InvalidAuth
 
+    def validate_password(self, password: str) -> bool:
+        """Validate a password."""
+
+        # check if password is too short
+        if len(password) <= 8:
+            return False
+
+        # check if password is too long
+        if len(password) > 255:
+            return False
+
+        # check if password has no uppercase
+        if not any(char.isupper() for char in password):
+            return False
+
+        # check if password is numeric or alphabetic
+        if password.isnumeric() or password.isalpha():
+            return False
+
+        # check if password has no special characters
+        if password.isalnum():
+            return False
+
+
+        return True
+
     def hash_password(self, password: str, for_storage: bool = False) -> bytes:
         """Encode a password."""
+        self.validate_password(password)
         hashed: bytes = bcrypt.hashpw(password.encode(), bcrypt.gensalt(rounds=12))
 
         if for_storage:
