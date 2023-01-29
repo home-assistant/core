@@ -546,9 +546,9 @@ class DanfossAdaptationRunControl(ZCLEnumSelectEntity, id_suffix="adaptation_run
     _enum = DanfossAdaptationRunControlEnum
 
 
-class DanfossViewingDirectionEnum(types.bitmap8):
-    """ Default (button below screen when looking at it) or 
-        Inverted (button above screen when looking at it) """
+class DanfossViewingDirectionEnum(types.enum8):
+    """ Default (button above screen when looking at it) or 
+        Inverted (button below screen when looking at it) """
 
     Default = 0x00
     Inverted = 0x01
