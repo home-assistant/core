@@ -485,9 +485,9 @@ class TuyaChildLockSwitch(ZHASwitchConfigurationEntity, id_suffix="child_lock"):
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names="thermostat_ui")
 class KeypadLockout(ZHASwitchConfigurationEntity, id_suffix="keypad_lockout"):
-    """
-    Mandatory Attribute for this cluster
-    often just a switch, but can be a select if need be
+    """Mandatory Attribute for this cluster.
+
+    often just a switch, but can be a select if need be.
     """
 
     _zcl_attribute: str = "keypad_lockout"
@@ -499,7 +499,7 @@ class KeypadLockout(ZHASwitchConfigurationEntity, id_suffix="keypad_lockout"):
 class DanfossExternalOpenWindowDetected(
     ZHASwitchConfigurationEntity, id_suffix="external_open_window_detected"
 ):
-    """Danfoss Proprietary attribute for communicating an open window"""
+    """Danfoss Proprietary attribute for communicating an open window."""
 
     _zcl_attribute: str = "external_open_window_detected"
     _attr_name: str = "External Open Window Detected"
@@ -510,7 +510,7 @@ class DanfossExternalOpenWindowDetected(
 class DanfossWindowOpenFeature(
     ZHASwitchConfigurationEntity, id_suffix="window_open_feature"
 ):
-    """Danfoss Proprietary attribute enabling open window detection"""
+    """Danfoss Proprietary attribute enabling open window detection."""
 
     _zcl_attribute: str = "window_open_feature"
     _attr_name: str = "Window Open Feature"
@@ -521,7 +521,7 @@ class DanfossWindowOpenFeature(
 class DanfossMountingModeControl(
     ZHASwitchConfigurationEntity, id_suffix="mounting_mode_control"
 ):
-    """Danfoss Proprietary attribute for switching to mounting mode"""
+    """Danfoss Proprietary attribute for switching to mounting mode."""
 
     _zcl_attribute: str = "mounting_mode_control"
     _attr_name: str = "Mounting Mode Control"
@@ -531,8 +531,7 @@ class DanfossMountingModeControl(
 class DanfossRadiatorCovered(
     ZHASwitchConfigurationEntity, id_suffix="radiator_covered"
 ):
-    """Danfoss Proprietary attribute for communicating full usage of the
-    external temperature sensor"""
+    """Danfoss Proprietary attribute for communicating full usage of the external temperature sensor."""
 
     _zcl_attribute: str = "radiator_covered"
     _attr_name: str = "Radiator Covered"
@@ -541,7 +540,7 @@ class DanfossRadiatorCovered(
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names="danfoss_trv_cluster")
 class DanfossHeatAvailable(ZHASwitchConfigurationEntity, id_suffix="heat_available"):
-    """Danfoss Proprietary attribute for communicating available heat"""
+    """Danfoss Proprietary attribute for communicating available heat."""
 
     _zcl_attribute: str = "heat_available"
     _attr_name: str = "Heat Available"
@@ -552,7 +551,7 @@ class DanfossHeatAvailable(ZHASwitchConfigurationEntity, id_suffix="heat_availab
 class DanfossLoadBalancingEnable(
     ZHASwitchConfigurationEntity, id_suffix="load_balancing_enable"
 ):
-    """Danfoss Proprietary attribute for enabling load balancing"""
+    """Danfoss Proprietary attribute for enabling load balancing."""
 
     _zcl_attribute: str = "load_balancing_enable"
     _attr_name: str = "Load Balancing Enable"
@@ -563,10 +562,10 @@ class DanfossLoadBalancingEnable(
 class DanfossAdaptationRunSettings(
     ZHASwitchConfigurationEntity, id_suffix="adaptation_run_settings"
 ):
-    """
-    Danfoss Proprietary attribute for enabling daily adaptation run
-    Actually a bitmap, but only the first bit is used
+    """Danfoss Proprietary attribute for enabling daily adaptation run.
+
+    Actually a bitmap, but only the first bit is used.
     """
 
     _zcl_attribute: str = "adaptation_run_settings"
-    _attr_name: str = "Adapation Run Settings"
+    _attr_name: str = "Adaptation Run Settings"

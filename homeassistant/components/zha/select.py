@@ -497,7 +497,7 @@ class AqaraPetFeederMode(ZCLEnumSelectEntity, id_suffix="feeding_mode"):
 
 
 class DanfossExerciseDayOfTheWeekEnum(types.enum8):
-    """Day of the Week"""
+    """Day of the Week."""
 
     Sunday = 0
     Monday = 1
@@ -512,7 +512,7 @@ class DanfossExerciseDayOfTheWeekEnum(types.enum8):
 class DanfossExerciseDayOfTheWeek(
     ZCLEnumSelectEntity, id_suffix="exercise_day_of_week"
 ):
-    """Danfoss Proprietary attribute for setting the day of the week for exercising"""
+    """Danfoss Proprietary attribute for setting the day of the week for exercising."""
 
     _select_attr = "exercise_day_of_week"
     _attr_name: str = "Exercise Day of the Week"
@@ -521,7 +521,7 @@ class DanfossExerciseDayOfTheWeek(
 
 
 class DanfossOrientationEnum(types.enum8):
-    """Vertical or horizontal"""
+    """Vertical or horizontal."""
 
     Horizontal = 0x00
     Vertical = 0x01
@@ -529,8 +529,10 @@ class DanfossOrientationEnum(types.enum8):
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names="danfoss_trv_cluster")
 class DanfossOrientation(ZCLEnumSelectEntity, id_suffix="orientation"):
-    """Danfoss Proprietary attribute for setting the orientation of the valve
-    (needed for biasing the internal temperature sensor)"""
+    """Danfoss Proprietary attribute for setting the orientation of the valve.
+
+    needed for biasing the internal temperature sensor.
+    """
 
     _select_attr = "orientation"
     _attr_name: str = "Valve Orientation"
@@ -538,7 +540,7 @@ class DanfossOrientation(ZCLEnumSelectEntity, id_suffix="orientation"):
 
 
 class DanfossAdaptationRunControlEnum(types.enum8):
-    """Initiate or Cancel Adaptation Run"""
+    """Initiate or Cancel Adaptation Run."""
 
     Nothing = 0x00
     Initiate = 0x01
@@ -549,7 +551,7 @@ class DanfossAdaptationRunControlEnum(types.enum8):
 class DanfossAdaptationRunControl(
     ZCLEnumSelectEntity, id_suffix="adaptation_run_control"
 ):
-    """Danfoss Proprietary attribute for controlling the current adaptation run"""
+    """Danfoss Proprietary attribute for controlling the current adaptation run."""
 
     _select_attr = "adaptation_run_control"
     _attr_name: str = "Adaptation Run Control"
@@ -557,8 +559,7 @@ class DanfossAdaptationRunControl(
 
 
 class DanfossViewingDirectionEnum(types.enum8):
-    """Default (button above screen when looking at it) or
-    Inverted (button below screen when looking at it)"""
+    """Default (button above screen when looking at it) or Inverted (button below screen when looking at it)."""
 
     Default = 0x00
     Inverted = 0x01
@@ -566,7 +567,7 @@ class DanfossViewingDirectionEnum(types.enum8):
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names="danfoss_trv_interface_cluster")
 class DanfossViewingDirection(ZCLEnumSelectEntity, id_suffix="viewing_direction"):
-    """Danfoss Proprietary attribute for setting the viewing direction of the screen"""
+    """Danfoss Proprietary attribute for setting the viewing direction of the screen."""
 
     _select_attr = "viewing_direction"
     _attr_name: str = "Viewing Direction"
