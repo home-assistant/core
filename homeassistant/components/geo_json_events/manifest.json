@@ -5,5 +5,6 @@
   "requirements": ["aio_geojson_generic_client==0.1"],
   "codeowners": ["@exxamalte"],
   "iot_class": "cloud_polling",
-  "loggers": ["aio_geojson_generic_client"]
+  "loggers": ["aio_geojson_generic_client"],
+  "integration_type": "service"
 }
