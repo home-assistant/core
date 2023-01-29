@@ -203,3 +203,28 @@ class AqaraPetFeederErrorDetected(BinarySensor, id_suffix="error_detected"):
     SENSOR_ATTR = "error_detected"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.PROBLEM
     _attr_name: str = "Error detected"
+
+
+@MULTI_MATCH(channel_names="danfoss_trv_cluster")
+class DanfossMountingModeActive(BinarySensor, id_suffix="mounting_mode_active"):
+    """ Danfoss TRV Proprietary attribute exposing whether in mounting mode """
+    
+    _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.OPENING
+    SENSOR_ATTR = "mounting_mode_active"
+    _attr_name: str = "Mounting Mode Active"
+
+
+@MULTI_MATCH(channel_names="danfoss_trv_cluster")
+class DanfossHeatRequired(BinarySensor, id_suffix="heat_required"):
+    """ Danfoss TRV Proprietary attribute exposing whether heat is required """
+
+    SENSOR_ATTR = "heat_required"
+    _attr_name: str = "Heat Required"
+
+
+@MULTI_MATCH(channel_names="danfoss_trv_cluster")
+class DanfossPreheatStatus(BinarySensor, id_suffix="preheat_status"):
+    """ Danfoss TRV Proprietary attribute exposing whether in pre-heating mode """
+
+    SENSOR_ATTR = "preheat_status"
+    _attr_name: str = "Pre-heat Status"
