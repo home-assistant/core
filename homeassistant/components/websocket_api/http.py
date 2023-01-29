@@ -147,8 +147,10 @@ class WebSocketHandler:
         if isinstance(message, dict):
             message = message_to_json(message)
 
+        to_write = self._to_write
+
         try:
-            self._to_write.put_nowait(message)
+            to_write.put_nowait(message)
         except asyncio.QueueFull:
             self._logger.error(
                 (
@@ -160,14 +162,16 @@ class WebSocketHandler:
                 MAX_PENDING_MSG,
                 message,
             )
-
             self._cancel()
 
-        if self._to_write.qsize() < PENDING_MSG_PEAK:
-            self._cancel_peak_checker()
+        peak_checker_active = self._peak_checker_unsub is not None
+
+        if to_write.qsize() < PENDING_MSG_PEAK:
+            if peak_checker_active:
+                self._cancel_peak_checker()
             return
 
-        if self._peak_checker_unsub is None:
+        if not peak_checker_active:
             self._peak_checker_unsub = async_call_later(
                 self.hass, PENDING_MSG_PEAK_TIME, self._check_write_peak
             )
