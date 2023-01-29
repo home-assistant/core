@@ -69,5 +69,39 @@
             "single_press": "\"{subtype}\" pressionado"
         }
     },
+    "entity": {
+        "select": {
+            "ecobee_mode": {
+                "state": {
+                    "away": "Fora",
+                    "home": "Casa",
+                    "sleep": "Dorme"
+                }
+            }
+        },
+        "sensor": {
+            "thread_node_capabilities": {
+                "state": {
+                    "border_router_capable": "Compat\u00edvel com roteador de borda",
+                    "full": "Dispositivo final completo",
+                    "minimal": "Dispositivo final m\u00ednimo",
+                    "none": "Nenhum",
+                    "router_eligible": "Dispositivo final eleg\u00edvel como roteador",
+                    "sleepy": "Dispositivo final inativo"
+                }
+            },
+            "thread_status": {
+                "state": {
+                    "border_router": "Roteador de borda",
+                    "child": "Filho",
+                    "detached": "Independente",
+                    "disabled": "Desabilitado",
+                    "joining": "Juntando-se",
+                    "leader": "L\u00edder",
+                    "router": "Roteador"
+                }
+            }
+        }
+    },
     "title": ""
 }

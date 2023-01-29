@@ -16,7 +16,7 @@
                     "address": "Endere\u00e7o do dispositivo",
                     "name": "Nome"
                 },
-                "title": "Configurar dispositivo MicroBot"
+                "title": "Configurar o dispositivo MicroBot"
             },
             "link": {
                 "description": "Pressione o bot\u00e3o no MicroBot Push quando o LED estiver rosa ou verde s\u00f3lido para se registrar no Home Assistant.",

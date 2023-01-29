@@ -19,8 +19,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     PRECISION_HALVES,
     PRECISION_WHOLE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -82,10 +81,10 @@ class BalboaSpaClimate(BalboaEntity, ClimateEntity):
             self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
         self._attr_min_temp = self._client.tmin[self._client.TEMPRANGE_LOW][scale]
         self._attr_max_temp = self._client.tmax[self._client.TEMPRANGE_HIGH][scale]
-        self._attr_temperature_unit = TEMP_FAHRENHEIT
+        self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
         self._attr_precision = PRECISION_WHOLE
         if self._client.get_tempscale() == self._client.TSCALE_C:
-            self._attr_temperature_unit = TEMP_CELSIUS
+            self._attr_temperature_unit = UnitOfTemperature.CELSIUS
             self._attr_precision = PRECISION_HALVES
 
     @property

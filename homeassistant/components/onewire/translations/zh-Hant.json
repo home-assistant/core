@@ -25,7 +25,7 @@
                 "data": {
                     "precision": "\u611f\u6e2c\u5668\u7cbe\u6e96\u5ea6"
                 },
-                "description": "\u8a2d\u5b9a {sensor_id} \u50b3\u611f\u5668\u7cbe\u6e96\u5ea6",
+                "description": "\u8a2d\u5b9a {sensor_id} \u611f\u6e2c\u5668\u7cbe\u6e96\u5ea6",
                 "title": "OneWire \u611f\u6e2c\u5668\u7cbe\u6e96\u5ea6"
             },
             "device_selection": {

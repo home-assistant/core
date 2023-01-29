@@ -7,6 +7,7 @@
             "already_exists": "Een camera met deze URL instellingen bestaat al.",
             "invalid_still_image": "URL heeft geen geldig stilstaand beeld geretourneerd",
             "no_still_image_or_stream_url": "U moet ten minste een stilstaand beeld of stream-URL specificeren",
+            "relative_url": "Relatieve URL's zijn niet toegestaan",
             "stream_io_error": "Input/Output fout bij het proberen te verbinden met stream. Verkeerde RTSP transport protocol?",
             "stream_no_route_to_host": "Kan de host niet vinden terwijl u verbinding probeert te maken met de stream",
             "stream_not_permitted": "Operatie niet toegestaan bij poging om verbinding te maken met stream. Verkeerd RTSP transport protocol?",
@@ -29,6 +30,12 @@
                     "verify_ssl": "SSL-certificaat verifi\u00ebren"
                 },
                 "description": "Voer de instellingen in om verbinding te maken met de camera."
+            },
+            "user_confirm_still": {
+                "data": {
+                    "confirmed_ok": "Dit beeld ziet er goed uit."
+                },
+                "title": "Voorbeeld"
             }
         }
     },
@@ -37,6 +44,7 @@
             "already_exists": "Een camera met deze URL instellingen bestaat al.",
             "invalid_still_image": "URL heeft geen geldig stilstaand beeld geretourneerd",
             "no_still_image_or_stream_url": "U moet ten minste een stilstaand beeld of stream-URL specificeren",
+            "relative_url": "Relatieve URL's zijn niet toegestaan",
             "stream_io_error": "Input/Output fout bij het proberen te verbinden met stream. Verkeerde RTSP transport protocol?",
             "stream_no_route_to_host": "Kan de host niet vinden terwijl u verbinding probeert te maken met de stream",
             "stream_not_permitted": "Operatie niet toegestaan bij poging om verbinding te maken met stream. Verkeerd RTSP transport protocol?",
@@ -46,6 +54,12 @@
             "unknown": "Onverwachte fout"
         },
         "step": {
+            "confirm_still": {
+                "data": {
+                    "confirmed_ok": "Dit beeld ziet er goed uit."
+                },
+                "title": "Voorbeeld"
+            },
             "init": {
                 "data": {
                     "authentication": "Authenticatie",

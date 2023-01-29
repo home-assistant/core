@@ -20,8 +20,8 @@
                     "password": "Password",
                     "username": "Nome utente"
                 },
-                "description": "FRITZ! Box rilevato: {name} \n\nConfigura gli strumenti del FRITZ! Box per controllare il tuo {name}",
-                "title": "Configura gli strumenti del FRITZ!Box"
+                "description": "FRITZ!Box rilevato: {name} \n\nConfigura gli strumenti di FRITZ!Box per controllare il tuo {name}",
+                "title": "Configura gli strumenti di FRITZ!Box"
             },
             "reauth_confirm": {
                 "data": {
@@ -38,8 +38,8 @@
                     "port": "Porta",
                     "username": "Nome utente"
                 },
-                "description": "Configura gli strumenti FRITZ!Box per controllare il tuo FRITZ! Box.\nMinimo necessario: nome utente, password.",
-                "title": "Configura gli strumenti del FRITZ!Box"
+                "description": "Configura gli strumenti di FRITZ!Box per controllare il tuo FRITZ!Box.\nMinimo necessario: nome utente, password.",
+                "title": "Configura gli strumenti di FRITZ!Box"
             }
         }
     },

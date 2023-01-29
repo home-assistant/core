@@ -179,19 +179,19 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class BinarySensorEntityDescription(EntityDescription):
     """A class that describes binary sensor entities."""
 
-    device_class: BinarySensorDeviceClass | str | None = None
+    device_class: BinarySensorDeviceClass | None = None
 
 
 class BinarySensorEntity(Entity):
     """Represent a binary sensor."""
 
     entity_description: BinarySensorEntityDescription
-    _attr_device_class: BinarySensorDeviceClass | str | None
+    _attr_device_class: BinarySensorDeviceClass | None
     _attr_is_on: bool | None = None
     _attr_state: None = None
 
     @property
-    def device_class(self) -> BinarySensorDeviceClass | str | None:
+    def device_class(self) -> BinarySensorDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
             return self._attr_device_class

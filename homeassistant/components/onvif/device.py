@@ -11,7 +11,7 @@ from httpx import RequestError
 import onvif
 from onvif import ONVIFCamera
 from onvif.exceptions import ONVIFError
-from zeep.exceptions import Fault
+from zeep.exceptions import Fault, XMLParseError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -135,8 +135,10 @@ class ONVIFDevice:
             await self.device.close()
         except Fault as err:
             LOGGER.error(
-                "Couldn't connect to camera '%s', please verify "
-                "that the credentials are correct. Error: %s",
+                (
+                    "Couldn't connect to camera '%s', please verify "
+                    "that the credentials are correct. Error: %s"
+                ),
                 self.name,
                 err,
             )
@@ -230,9 +232,11 @@ class ONVIFDevice:
 
                 if self._dt_diff_seconds > 5:
                     LOGGER.warning(
-                        "The date/time on %s (UTC) is '%s', "
-                        "which is different from the system '%s', "
-                        "this could lead to authentication issues",
+                        (
+                            "The date/time on %s (UTC) is '%s', "
+                            "which is different from the system '%s', "
+                            "this could lead to authentication issues"
+                        ),
                         self.name,
                         cam_date_utc,
                         system_date,
@@ -284,7 +288,7 @@ class ONVIFDevice:
             snapshot = media_capabilities and media_capabilities.SnapshotUri
 
         pullpoint = False
-        with suppress(ONVIFError, Fault, RequestError):
+        with suppress(ONVIFError, Fault, RequestError, XMLParseError):
             pullpoint = await self.events.async_start()
 
         ptz = False
@@ -384,7 +388,10 @@ class ONVIFDevice:
         speed_val = speed
         preset_val = preset
         LOGGER.debug(
-            "Calling %s PTZ | Pan = %4.2f | Tilt = %4.2f | Zoom = %4.2f | Speed = %4.2f | Preset = %s",
+            (
+                "Calling %s PTZ | Pan = %4.2f | Tilt = %4.2f | Zoom = %4.2f | Speed ="
+                " %4.2f | Preset = %s"
+            ),
             move_mode,
             pan_val,
             tilt_val,
@@ -461,7 +468,10 @@ class ONVIFDevice:
                     return
                 if preset_val not in profile.ptz.presets:
                     LOGGER.warning(
-                        "PTZ preset '%s' does not exist on device '%s'. Available Presets: %s",
+                        (
+                            "PTZ preset '%s' does not exist on device '%s'. Available"
+                            " Presets: %s"
+                        ),
                         preset_val,
                         self.name,
                         ", ".join(profile.ptz.presets),

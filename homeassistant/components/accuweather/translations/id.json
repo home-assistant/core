@@ -22,15 +22,20 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "pressure_tendency": {
+                "state": {
+                    "falling": "Turun",
+                    "rising": "Naik",
+                    "steady": "Tetap"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {
-                "data": {
-                    "forecast": "Prakiraan cuaca"
-                },
-                "description": "Karena keterbatasan versi gratis kunci API AccuWeather, ketika Anda mengaktifkan prakiraan cuaca, pembaruan data akan dilakukan setiap 80 menit, bukan setiap 40 menit."
-            },
-            "user": {
                 "data": {
                     "forecast": "Prakiraan cuaca"
                 },

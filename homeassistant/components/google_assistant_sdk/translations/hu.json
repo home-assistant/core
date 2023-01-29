@@ -1,0 +1,44 @@
+{
+    "application_credentials": {
+        "description": "K\u00f6vesse az [utas\u00edt\u00e1sokat]({more_info_url}) az [OAuth hozz\u00e1j\u00e1rul\u00e1si k\u00e9perny\u0151n]({oauth_consent_url}), hogy hozz\u00e1f\u00e9r\u00e9st adjon Home Assistantnak a Google Assistant SDK-hoz. A fi\u00f3kj\u00e1hoz kapcsol\u00f3d\u00f3 Alkalmaz\u00e1si hiteles\u00edt\u0151 adatokat is l\u00e9tre kell hoznia:\n1. Menjen a [Hiteles\u00edt\u00e9si adatok]({oauth_creds_url}) men\u00fcpontra, \u00e9s kattintson a **Hiteles\u00edt\u00e9si adatok l\u00e9trehoz\u00e1sa** gombra.\n1. A leg\u00f6rd\u00fcl\u0151 list\u00e1b\u00f3l v\u00e1lassza ki az **OAuth \u00fcgyf\u00e9l azonos\u00edt\u00f3t**.\n1. Az Alkalmaz\u00e1s t\u00edpus\u00e1hoz v\u00e1lassza a **Webalkalmaz\u00e1s** lehet\u0151s\u00e9get.\n"
+    },
+    "config": {
+        "abort": {
+            "already_configured": "A fi\u00f3k m\u00e1r konfigur\u00e1lva van",
+            "already_in_progress": "A be\u00e1ll\u00edt\u00e1si folyamat m\u00e1r el lett kezdve",
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_access_token": "\u00c9rv\u00e9nytelen hozz\u00e1f\u00e9r\u00e9si token",
+            "missing_configuration": "A komponens nincs konfigur\u00e1lva. K\u00e9rem, k\u00f6vesse a dokument\u00e1ci\u00f3t.",
+            "oauth_error": "\u00c9rv\u00e9nytelen token adatok \u00e9rkeztek.",
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt.",
+            "timeout_connect": "Id\u0151t\u00fall\u00e9p\u00e9s a kapcsolat l\u00e9trehoz\u00e1sa sor\u00e1n",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "create_entry": {
+            "default": "Sikeres hiteles\u00edt\u00e9s"
+        },
+        "step": {
+            "auth": {
+                "title": "Google-fi\u00f3k \u00f6sszekapcsol\u00e1sa"
+            },
+            "pick_implementation": {
+                "title": "V\u00e1lasszon egy hiteles\u00edt\u00e9si m\u00f3dszert"
+            },
+            "reauth_confirm": {
+                "description": "A Google Assistant SDK integr\u00e1ci\u00f3nak \u00fajra kell hiteles\u00edtenie fi\u00f3kj\u00e1t",
+                "title": "Integr\u00e1ci\u00f3 \u00fajrahiteles\u00edt\u00e9se"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "enable_conversation_agent": "A besz\u00e9lget\u00e9si \u00fcgyn\u00f6k enged\u00e9lyez\u00e9se",
+                    "language_code": "Nyelvi k\u00f3d"
+                },
+                "description": "\u00c1ll\u00edtsa be a Google Asszisztenssel folytatott interakci\u00f3k nyelv\u00e9t, \u00e9s azt, hogy szeretn\u00e9-e enged\u00e9lyezni a besz\u00e9lget\u00e9si \u00fcgyn\u00f6k\u00f6t."
+            }
+        }
+    }
+}

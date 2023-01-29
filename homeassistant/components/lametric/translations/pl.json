@@ -44,6 +44,16 @@
             }
         }
     },
+    "entity": {
+        "select": {
+            "brightness_mode": {
+                "state": {
+                    "auto": "automatyczny",
+                    "manual": "r\u0119czny"
+                }
+            }
+        }
+    },
     "issues": {
         "manual_migration": {
             "description": "Integracja LaMetric zosta\u0142a zmodernizowana: jest teraz konfigurowana za pomoc\u0105 interfejsu u\u017cytkownika, a komunikacja odbywa si\u0119 lokalnie. \n\nNiestety nie ma mo\u017cliwo\u015bci automatycznej migracji i dlatego wymaga si\u0119 ponownej konfiguracji LaMetric za pomoc\u0105 Home Assistanta. Zapoznaj si\u0119 z dokumentacj\u0105 integracji Home Assistant LaMetric, aby dowiedzie\u0107 si\u0119, jak to skonfigurowa\u0107. \n\nUsu\u0144 konfiguracj\u0119 LaMetric YAML z pliku configuration.yaml i uruchom ponownie Home Assistanta, aby rozwi\u0105za\u0107 ten problem.",

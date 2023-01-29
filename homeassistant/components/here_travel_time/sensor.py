@@ -6,8 +6,8 @@ from datetime import timedelta
 from typing import Any
 
 from homeassistant.components.sensor import (
+    RestoreSensor,
     SensorDeviceClass,
-    SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
@@ -18,14 +18,14 @@ from homeassistant.const import (
     ATTR_LONGITUDE,
     CONF_MODE,
     CONF_NAME,
-    TIME_MINUTES,
     UnitOfLength,
+    UnitOfTime,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.start import async_at_start
+from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -40,7 +40,10 @@ from .const import (
     ICON_CAR,
     ICONS,
 )
-from .coordinator import HERERoutingDataUpdateCoordinator
+from .coordinator import (
+    HERERoutingDataUpdateCoordinator,
+    HERETransitDataUpdateCoordinator,
+)
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
@@ -53,14 +56,14 @@ def sensor_descriptions(travel_mode: str) -> tuple[SensorEntityDescription, ...]
             icon=ICONS.get(travel_mode, ICON_CAR),
             key=ATTR_DURATION,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=TIME_MINUTES,
+            native_unit_of_measurement=UnitOfTime.MINUTES,
         ),
         SensorEntityDescription(
             name="Duration in traffic",
             icon=ICONS.get(travel_mode, ICON_CAR),
             key=ATTR_DURATION_IN_TRAFFIC,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=TIME_MINUTES,
+            native_unit_of_measurement=UnitOfTime.MINUTES,
         ),
         SensorEntityDescription(
             name="Distance",
@@ -99,7 +102,12 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class HERETravelTimeSensor(SensorEntity, CoordinatorEntity):
+class HERETravelTimeSensor(
+    CoordinatorEntity[
+        HERERoutingDataUpdateCoordinator | HERETransitDataUpdateCoordinator
+    ],
+    RestoreSensor,
+):
     """Representation of a HERE travel time sensor."""
 
     def __init__(
@@ -107,7 +115,8 @@ class HERETravelTimeSensor(SensorEntity, CoordinatorEntity):
         unique_id_prefix: str,
         name: str,
         sensor_description: SensorEntityDescription,
-        coordinator: HERERoutingDataUpdateCoordinator,
+        coordinator: HERERoutingDataUpdateCoordinator
+        | HERETransitDataUpdateCoordinator,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -121,27 +130,36 @@ class HERETravelTimeSensor(SensorEntity, CoordinatorEntity):
         )
         self._attr_has_entity_name = True
 
+    async def _async_restore_state(self) -> None:
+        """Restore state."""
+        if restored_data := await self.async_get_last_sensor_data():
+            self._attr_native_value = restored_data.native_value
+
     async def async_added_to_hass(self) -> None:
         """Wait for start so origin and destination entities can be resolved."""
+        await self._async_restore_state()
         await super().async_added_to_hass()
 
-        async def _update_at_start(_):
+        async def _update_at_start(_: HomeAssistant) -> None:
             await self.async_update()
 
-        self.async_on_remove(async_at_start(self.hass, _update_at_start))
+        self.async_on_remove(async_at_started(self.hass, _update_at_start))
 
-    @property
-    def native_value(self) -> str | float | None:
-        """Return the state of the sensor."""
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
         if self.coordinator.data is not None:
-            return self.coordinator.data.get(self.entity_description.key)
-        return None
+            self._attr_native_value = self.coordinator.data.get(  # type: ignore[assignment]
+                self.entity_description.key
+            )
+            self.async_write_ha_state()
 
     @property
     def attribution(self) -> str | None:
         """Return the attribution."""
         if self.coordinator.data is not None:
-            return self.coordinator.data.get(ATTR_ATTRIBUTION)
+            if (attribution := self.coordinator.data.get(ATTR_ATTRIBUTION)) is not None:
+                return str(attribution)
         return None
 
 

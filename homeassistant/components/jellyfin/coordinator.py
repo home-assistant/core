@@ -1,9 +1,9 @@
 """Data update coordinator for the Jellyfin integration."""
 from __future__ import annotations
 
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from datetime import timedelta
-from typing import Any, TypeVar, Union
+from typing import Any, TypeVar
 
 from jellyfin_apiclient_python import JellyfinClient
 
@@ -15,14 +15,11 @@ from .const import DOMAIN, LOGGER
 
 JellyfinDataT = TypeVar(
     "JellyfinDataT",
-    bound=Union[
-        dict[str, dict[str, Any]],
-        dict[str, Any],
-    ],
+    bound=dict[str, dict[str, Any]] | dict[str, Any],
 )
 
 
-class JellyfinDataUpdateCoordinator(DataUpdateCoordinator[JellyfinDataT]):
+class JellyfinDataUpdateCoordinator(DataUpdateCoordinator[JellyfinDataT], ABC):
     """Data update coordinator for the Jellyfin integration."""
 
     config_entry: ConfigEntry

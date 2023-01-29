@@ -9,7 +9,7 @@
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
-            "invalid_key_format": "Der Offline-Schl\u00fcssel muss eine 32-Byte-Hex-Zeichenfolge sein.",
+            "invalid_key_format": "Der Offline-Schl\u00fcssel muss eine 32 Byte Hex-Zeichenfolge sein.",
             "invalid_key_index": "Der Offline-Schl\u00fcssel-Slot muss eine ganze Zahl zwischen 0 und 255 sein.",
             "unknown": "Unerwarteter Fehler"
         },
@@ -21,7 +21,7 @@
             "user": {
                 "data": {
                     "address": "Bluetooth-Adresse",
-                    "key": "Offline-Schl\u00fcssel (32-Byte-Hex-String)",
+                    "key": "Offline-Schl\u00fcssel (32 Byte Hex-Zeichenfolge)",
                     "slot": "Offline-Schl\u00fcssel-Slot (Ganzzahl zwischen 0 und 255)"
                 },
                 "description": "Lies in der Dokumentation nach, wie du den Offline-Schl\u00fcssel finden kannst."

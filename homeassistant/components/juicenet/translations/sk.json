@@ -13,7 +13,8 @@
                 "data": {
                     "api_token": "API token"
                 },
-                "description": "Budete potrebova\u0165 API Token z https://home.juice.net/Manage."
+                "description": "Budete potrebova\u0165 API Token z https://home.juice.net/Manage.",
+                "title": "Pripojte sa k JuiceNet"
             }
         }
     }

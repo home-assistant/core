@@ -8,25 +8,10 @@ import pytest
 from homeassistant.components.alexa import messages, smart_home
 import homeassistant.components.camera as camera
 from homeassistant.components.cover import CoverDeviceClass
-from homeassistant.components.media_player import (
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SEEK,
-    SUPPORT_SELECT_SOUND_MODE,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
-)
+from homeassistant.components.media_player import MediaPlayerEntityFeature
 import homeassistant.components.vacuum as vacuum
 from homeassistant.config import async_process_ha_core_config
-from homeassistant.const import STATE_UNKNOWN, TEMP_FAHRENHEIT
+from homeassistant.const import STATE_UNKNOWN, UnitOfTemperature
 from homeassistant.core import Context
 from homeassistant.helpers import entityfilter
 from homeassistant.setup import async_setup_component
@@ -410,7 +395,8 @@ async def test_fan(hass):
     assert appliance["endpointId"] == "fan#test_1"
     assert appliance["displayCategories"][0] == "FAN"
     assert appliance["friendlyName"] == "Test fan 1"
-    # Alexa.RangeController is added to make a fan controllable when no other controllers are available
+    # Alexa.RangeController is added to make a fan controllable when
+    # no other controllers are available.
     capabilities = assert_endpoint_capabilities(
         appliance,
         "Alexa.RangeController",
@@ -466,7 +452,8 @@ async def test_fan2(hass):
     assert appliance["endpointId"] == "fan#test_2"
     assert appliance["displayCategories"][0] == "FAN"
     assert appliance["friendlyName"] == "Test fan 2"
-    # Alexa.RangeController is added to make a fan controllable when no other controllers are available
+    # Alexa.RangeController is added to make a fan controllable
+    # when no other controllers are available
     capabilities = assert_endpoint_capabilities(
         appliance,
         "Alexa.RangeController",
@@ -597,7 +584,8 @@ async def test_variable_fan_no_current_speed(hass, caplog):
     assert appliance["endpointId"] == "fan#test_3"
     assert appliance["displayCategories"][0] == "FAN"
     assert appliance["friendlyName"] == "Test fan 3"
-    # Alexa.RangeController is added to make a van controllable when no other controllers are available
+    # Alexa.RangeController is added to make a van controllable
+    # when no other controllers are available
     capabilities = assert_endpoint_capabilities(
         appliance,
         "Alexa.RangeController",
@@ -625,9 +613,9 @@ async def test_variable_fan_no_current_speed(hass, caplog):
             "fan.percentage",
         )
     assert (
-        "Request Alexa.RangeController/AdjustRangeValue error INVALID_VALUE: Unable to determine fan.test_3 current fan speed"
-        in caplog.text
-    )
+        "Request Alexa.RangeController/AdjustRangeValue error "
+        "INVALID_VALUE: Unable to determine fan.test_3 current fan speed"
+    ) in caplog.text
     caplog.clear()
 
 
@@ -950,6 +938,145 @@ async def test_single_preset_mode_fan(hass, caplog):
     caplog.clear()
 
 
+@freeze_time("2022-04-19 07:53:05")
+async def test_humidifier(hass, caplog):
+    """Test humidifier controller."""
+    device = (
+        "humidifier.test_1",
+        "on",
+        {
+            "friendly_name": "Humidifier test 1",
+            "humidity": 66,
+            "supported_features": 1,
+            "mode": "Auto",
+            "available_modes": ["Auto", "Low", "Medium", "High"],
+            "min_humidity": 20,
+            "max_humidity": 90,
+        },
+    )
+    await discovery_test(device, hass)
+
+    await assert_power_controller_works(
+        "humidifier#test_1",
+        "humidifier.turn_on",
+        "humidifier.turn_off",
+        hass,
+        "2022-04-19T07:53:05Z",
+    )
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.ModeController",
+        "SetMode",
+        "humidifier#test_1",
+        "humidifier.set_mode",
+        hass,
+        payload={"mode": "mode.Auto"},
+        instance="humidifier.mode",
+    )
+    assert call.data["mode"] == "Auto"
+
+    with pytest.raises(AssertionError):
+        await assert_request_calls_service(
+            "Alexa.ModeController",
+            "SetMode",
+            "humidifier#test_1",
+            "humidifier.set_mode",
+            hass,
+            payload={"mode": "mode.-"},
+            instance="humidifier.mode",
+        )
+    assert "Entity 'humidifier.test_1' does not support Mode '-'" in caplog.text
+    caplog.clear()
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.RangeController",
+        "SetRangeValue",
+        "humidifier#test_1",
+        "humidifier.set_humidity",
+        hass,
+        payload={"rangeValue": "67"},
+        instance="humidifier.humidity",
+    )
+    assert call.data["humidity"] == 67
+    call, _ = await assert_request_calls_service(
+        "Alexa.RangeController",
+        "SetRangeValue",
+        "humidifier#test_1",
+        "humidifier.set_humidity",
+        hass,
+        payload={"rangeValue": "33"},
+        instance="humidifier.humidity",
+    )
+    assert call.data["humidity"] == 33
+
+
+async def test_humidifier_without_modes(hass):
+    """Test humidifier discovery without modes."""
+
+    device = (
+        "humidifier.test_2",
+        "on",
+        {
+            "friendly_name": "Humidifier test 2",
+            "humidity": 33,
+            "supported_features": 0,
+            "min_humidity": 20,
+            "max_humidity": 90,
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "humidifier#test_2"
+    assert appliance["displayCategories"][0] == "OTHER"
+    assert appliance["friendlyName"] == "Humidifier test 2"
+    capabilities = assert_endpoint_capabilities(
+        appliance,
+        "Alexa.RangeController",
+        "Alexa.PowerController",
+        "Alexa.EndpointHealth",
+        "Alexa",
+    )
+
+    power_capability = get_capability(capabilities, "Alexa.PowerController")
+    assert "capabilityResources" not in power_capability
+    assert "configuration" not in power_capability
+
+
+async def test_humidifier_with_modes(hass):
+    """Test humidifier discovery with modes."""
+
+    device = (
+        "humidifier.test_1",
+        "on",
+        {
+            "friendly_name": "Humidifier test 1",
+            "humidity": 66,
+            "supported_features": 1,
+            "mode": "Auto",
+            "available_modes": ["Auto", "Low", "Medium", "High"],
+            "min_humidity": 20,
+            "max_humidity": 90,
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "humidifier#test_1"
+    assert appliance["displayCategories"][0] == "OTHER"
+    assert appliance["friendlyName"] == "Humidifier test 1"
+    capabilities = assert_endpoint_capabilities(
+        appliance,
+        "Alexa.ModeController",
+        "Alexa.RangeController",
+        "Alexa.PowerController",
+        "Alexa.EndpointHealth",
+        "Alexa",
+    )
+
+    power_capability = get_capability(capabilities, "Alexa.PowerController")
+    assert "capabilityResources" not in power_capability
+    assert "configuration" not in power_capability
+
+
 async def test_lock(hass):
     """Test lock discovery."""
     device = ("lock.test", "off", {"friendly_name": "Test lock"})
@@ -989,17 +1116,17 @@ async def test_media_player(hass):
         "off",
         {
             "friendly_name": "Test media player",
-            "supported_features": SUPPORT_NEXT_TRACK
-            | SUPPORT_PAUSE
-            | SUPPORT_PLAY
-            | SUPPORT_PLAY_MEDIA
-            | SUPPORT_PREVIOUS_TRACK
-            | SUPPORT_SELECT_SOURCE
-            | SUPPORT_STOP
-            | SUPPORT_TURN_OFF
-            | SUPPORT_TURN_ON
-            | SUPPORT_VOLUME_MUTE
-            | SUPPORT_VOLUME_SET,
+            "supported_features": MediaPlayerEntityFeature.NEXT_TRACK
+            | MediaPlayerEntityFeature.PAUSE
+            | MediaPlayerEntityFeature.PLAY
+            | MediaPlayerEntityFeature.PLAY_MEDIA
+            | MediaPlayerEntityFeature.PREVIOUS_TRACK
+            | MediaPlayerEntityFeature.SELECT_SOURCE
+            | MediaPlayerEntityFeature.STOP
+            | MediaPlayerEntityFeature.TURN_OFF
+            | MediaPlayerEntityFeature.TURN_ON
+            | MediaPlayerEntityFeature.VOLUME_MUTE
+            | MediaPlayerEntityFeature.VOLUME_SET,
             "volume_level": 0.75,
             "source_list": ["hdmi", "tv"],
         },
@@ -1197,7 +1324,7 @@ async def test_media_player_inputs(hass):
         "on",
         {
             "friendly_name": "Test media player",
-            "supported_features": SUPPORT_SELECT_SOURCE,
+            "supported_features": MediaPlayerEntityFeature.SELECT_SOURCE,
             "volume_level": 0.75,
             "source_list": [
                 "foo",
@@ -1301,7 +1428,7 @@ async def test_media_player_no_supported_inputs(hass):
         "off",
         {
             "friendly_name": "Test media player",
-            "supported_features": SUPPORT_SELECT_SOURCE,
+            "supported_features": MediaPlayerEntityFeature.SELECT_SOURCE,
             "volume_level": 0.75,
             "source_list": [
                 "foo",
@@ -1336,7 +1463,8 @@ async def test_media_player_speaker(hass):
         "off",
         {
             "friendly_name": "Test media player speaker",
-            "supported_features": SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET,
+            "supported_features": MediaPlayerEntityFeature.VOLUME_MUTE
+            | MediaPlayerEntityFeature.VOLUME_SET,
             "volume_level": 0.75,
             "device_class": "speaker",
         },
@@ -1409,7 +1537,8 @@ async def test_media_player_step_speaker(hass):
         "off",
         {
             "friendly_name": "Test media player step speaker",
-            "supported_features": SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_STEP,
+            "supported_features": MediaPlayerEntityFeature.VOLUME_MUTE
+            | MediaPlayerEntityFeature.VOLUME_STEP,
             "device_class": "speaker",
         },
     )
@@ -1474,7 +1603,7 @@ async def test_media_player_seek(hass):
         "playing",
         {
             "friendly_name": "Test media player seek",
-            "supported_features": SUPPORT_SEEK,
+            "supported_features": MediaPlayerEntityFeature.SEEK,
             "media_position": 300,  # 5min
             "media_duration": 600,  # 10min
         },
@@ -1559,7 +1688,10 @@ async def test_media_player_seek_error(hass):
     device = (
         "media_player.test_seek",
         "playing",
-        {"friendly_name": "Test media player seek", "supported_features": SUPPORT_SEEK},
+        {
+            "friendly_name": "Test media player seek",
+            "supported_features": MediaPlayerEntityFeature.SEEK,
+        },
     )
     await discovery_test(device, hass)
 
@@ -1848,7 +1980,10 @@ async def test_temp_sensor(hass):
     device = (
         "sensor.test_temp",
         "42",
-        {"friendly_name": "Test Temp Sensor", "unit_of_measurement": TEMP_FAHRENHEIT},
+        {
+            "friendly_name": "Test Temp Sensor",
+            "unit_of_measurement": UnitOfTemperature.FAHRENHEIT,
+        },
     )
     appliance = await discovery_test(device, hass)
 
@@ -3199,10 +3334,11 @@ async def test_cover_semantics_position_and_tilt(hass):
     } in tilt_state_mappings
 
 
-async def test_input_number(hass):
-    """Test input_number discovery."""
+@pytest.mark.parametrize("domain", ["input_number", "number"])
+async def test_input_number(hass, domain: str):
+    """Test input_number and number discovery."""
     device = (
-        "input_number.test_slider",
+        f"{domain}.test_slider",
         30,
         {
             "initial": 30,
@@ -3215,7 +3351,7 @@ async def test_input_number(hass):
     )
     appliance = await discovery_test(device, hass)
 
-    assert appliance["endpointId"] == "input_number#test_slider"
+    assert appliance["endpointId"] == f"{domain}#test_slider"
     assert appliance["displayCategories"][0] == "OTHER"
     assert appliance["friendlyName"] == "Test Slider"
 
@@ -3224,7 +3360,7 @@ async def test_input_number(hass):
     )
 
     range_capability = get_capability(
-        capabilities, "Alexa.RangeController", "input_number.value"
+        capabilities, "Alexa.RangeController", f"{domain}.value"
     )
 
     capability_resources = range_capability["capabilityResources"]
@@ -3264,11 +3400,11 @@ async def test_input_number(hass):
     call, _ = await assert_request_calls_service(
         "Alexa.RangeController",
         "SetRangeValue",
-        "input_number#test_slider",
-        "input_number.set_value",
+        f"{domain}#test_slider",
+        f"{domain}.set_value",
         hass,
         payload={"rangeValue": 10},
-        instance="input_number.value",
+        instance=f"{domain}.value",
     )
     assert call.data["value"] == 10
 
@@ -3277,17 +3413,18 @@ async def test_input_number(hass):
         [(25, -5, False), (35, 5, False), (-20, -100, False), (35, 100, False)],
         "Alexa.RangeController",
         "AdjustRangeValue",
-        "input_number#test_slider",
-        "input_number.set_value",
+        f"{domain}#test_slider",
+        f"{domain}.set_value",
         "value",
-        instance="input_number.value",
+        instance=f"{domain}.value",
     )
 
 
-async def test_input_number_float(hass):
-    """Test input_number discovery."""
+@pytest.mark.parametrize("domain", ["input_number", "number"])
+async def test_input_number_float(hass, domain: str):
+    """Test input_number and number discovery."""
     device = (
-        "input_number.test_slider_float",
+        f"{domain}.test_slider_float",
         0.5,
         {
             "initial": 0.5,
@@ -3300,7 +3437,7 @@ async def test_input_number_float(hass):
     )
     appliance = await discovery_test(device, hass)
 
-    assert appliance["endpointId"] == "input_number#test_slider_float"
+    assert appliance["endpointId"] == f"{domain}#test_slider_float"
     assert appliance["displayCategories"][0] == "OTHER"
     assert appliance["friendlyName"] == "Test Slider Float"
 
@@ -3309,7 +3446,7 @@ async def test_input_number_float(hass):
     )
 
     range_capability = get_capability(
-        capabilities, "Alexa.RangeController", "input_number.value"
+        capabilities, "Alexa.RangeController", f"{domain}.value"
     )
 
     capability_resources = range_capability["capabilityResources"]
@@ -3349,11 +3486,11 @@ async def test_input_number_float(hass):
     call, _ = await assert_request_calls_service(
         "Alexa.RangeController",
         "SetRangeValue",
-        "input_number#test_slider_float",
-        "input_number.set_value",
+        f"{domain}#test_slider_float",
+        f"{domain}.set_value",
         hass,
         payload={"rangeValue": 0.333},
-        instance="input_number.value",
+        instance=f"{domain}.value",
     )
     assert call.data["value"] == 0.333
 
@@ -3368,10 +3505,10 @@ async def test_input_number_float(hass):
         ],
         "Alexa.RangeController",
         "AdjustRangeValue",
-        "input_number#test_slider_float",
-        "input_number.set_value",
+        f"{domain}#test_slider_float",
+        f"{domain}.set_value",
         "value",
-        instance="input_number.value",
+        instance=f"{domain}.value",
     )
 
 
@@ -3382,7 +3519,7 @@ async def test_media_player_eq_modes(hass):
         "on",
         {
             "friendly_name": "Test media player",
-            "supported_features": SUPPORT_SELECT_SOUND_MODE,
+            "supported_features": MediaPlayerEntityFeature.SELECT_SOUND_MODE,
             "sound_mode": "tv",
             "sound_mode_list": ["movie", "music", "night", "sport", "tv", "rocknroll"],
         },
@@ -3430,7 +3567,7 @@ async def test_media_player_sound_mode_list_unsupported(hass):
         "on",
         {
             "friendly_name": "Test media player",
-            "supported_features": SUPPORT_SELECT_SOUND_MODE,
+            "supported_features": MediaPlayerEntityFeature.SELECT_SOUND_MODE,
             "sound_mode": "unknown",
             "sound_mode_list": ["unsupported", "non-existing"],
         },
@@ -3452,7 +3589,7 @@ async def test_media_player_eq_bands_not_supported(hass):
         "on",
         {
             "friendly_name": "Test media player",
-            "supported_features": SUPPORT_SELECT_SOUND_MODE,
+            "supported_features": MediaPlayerEntityFeature.SELECT_SOUND_MODE,
             "sound_mode": "tv",
             "sound_mode_list": ["movie", "music", "night", "sport", "tv", "rocknroll"],
         },

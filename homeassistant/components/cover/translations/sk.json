@@ -2,8 +2,11 @@
     "device_automation": {
         "action_type": {
             "close": "Zavrie\u0165 {entity_name}",
+            "close_tilt": "Zn\u00ed\u017ei\u0165 n\u00e1klon {entity_name}",
             "open": "Otvori\u0165 {entity_name}",
+            "open_tilt": "Zv\u00fd\u0161i\u0165 n\u00e1klon {entity_name}",
             "set_position": "Nastavi\u0165 poz\u00edciu {entity_name}",
+            "set_tilt_position": "Nastavi\u0165 n\u00e1klon {entity_name}",
             "stop": "Zastavi\u0165 {entity_name}"
         },
         "condition_type": {
@@ -18,7 +21,9 @@
             "closed": "{entity_name} zatvoren\u00e9",
             "closing": "zatv\u00e1renie {entity_name}",
             "opened": "{entity_name} otvoren\u00e9",
-            "position": "zmeny poz\u00edcie {entity_name}"
+            "opening": "{entity_name} sa otv\u00e1ra",
+            "position": "zmeny poz\u00edcie {entity_name}",
+            "tilt_position": "Pri zmene n\u00e1klonu {entity_name}"
         }
     },
     "state": {

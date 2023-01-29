@@ -278,7 +278,9 @@ _LOGGER = logging.getLogger(__name__)
             None,
             [
                 {
-                    "sensor_entity": "sensor.test_device_18b2_volatile_organic_compounds",
+                    "sensor_entity": (
+                        "sensor.test_device_18b2_volatile_organic_compounds"
+                    ),
                     "friendly_name": "Test Device 18B2 Volatile Organic Compounds",
                     "unit_of_measurement": "µg/m³",
                     "state_class": "measurement",
@@ -630,7 +632,9 @@ async def test_v1_sensors(
             None,
             [
                 {
-                    "sensor_entity": "sensor.test_device_18b2_volatile_organic_compounds",
+                    "sensor_entity": (
+                        "sensor.test_device_18b2_volatile_organic_compounds"
+                    ),
                     "friendly_name": "Test Device 18B2 Volatile Organic Compounds",
                     "unit_of_measurement": "µg/m³",
                     "state_class": "measurement",
@@ -787,6 +791,57 @@ async def test_v1_sensors(
                     "friendly_name": "Test Device 18B2 Uv Index",
                     "state_class": "measurement",
                     "expected_state": "5.0",
+                },
+            ],
+        ),
+        (
+            "A4:C1:38:8D:18:B2",
+            make_bthome_v2_adv(
+                "A4:C1:38:8D:18:B2",
+                b"\x40\x47\x87\x56",
+            ),
+            None,
+            [
+                {
+                    "sensor_entity": "sensor.test_device_18b2_volume",
+                    "friendly_name": "Test Device 18B2 Volume",
+                    "unit_of_measurement": "L",
+                    "state_class": "measurement",
+                    "expected_state": "2215.1",
+                },
+            ],
+        ),
+        (
+            "A4:C1:38:8D:18:B2",
+            make_bthome_v2_adv(
+                "A4:C1:38:8D:18:B2",
+                b"\x40\x48\xDC\x87",
+            ),
+            None,
+            [
+                {
+                    "sensor_entity": "sensor.test_device_18b2_volume",
+                    "friendly_name": "Test Device 18B2 Volume",
+                    "unit_of_measurement": "mL",
+                    "state_class": "measurement",
+                    "expected_state": "34780",
+                },
+            ],
+        ),
+        (
+            "A4:C1:38:8D:18:B2",
+            make_bthome_v2_adv(
+                "A4:C1:38:8D:18:B2",
+                b"\x40\x49\xDC\x87",
+            ),
+            None,
+            [
+                {
+                    "sensor_entity": "sensor.test_device_18b2_volume_flow_rate",
+                    "friendly_name": "Test Device 18B2 Volume Flow Rate",
+                    "unit_of_measurement": "m³/h",
+                    "state_class": "measurement",
+                    "expected_state": "34.78",
                 },
             ],
         ),

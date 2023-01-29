@@ -15,5 +15,16 @@
                 }
             }
         }
+    },
+    "entity": {
+        "select": {
+            "live_override": {
+                "state": {
+                    "0": "\u05db\u05d1\u05d5\u05d9",
+                    "1": "\u05de\u05d5\u05e4\u05e2\u05dc",
+                    "2": "\u05e2\u05d3 \u05dc\u05d4\u05e4\u05e2\u05dc\u05d4 \u05de\u05d7\u05d3\u05e9 \u05e9\u05dc \u05d4\u05de\u05db\u05e9\u05d9\u05e8"
+                }
+            }
+        }
     }
 }

@@ -503,9 +503,11 @@ class SamsungTVWSBridge(
                     return RESULT_SUCCESS
             except ConnectionClosedError as err:
                 LOGGER.info(
-                    "Working but unsupported config: %s, error: '%s'; this may "
-                    "be an indication that access to the TV has been denied. Please "
-                    "check the Device Connection Manager on your TV",
+                    (
+                        "Working but unsupported config: %s, error: '%s'; this may be"
+                        " an indication that access to the TV has been denied. Please"
+                        " check the Device Connection Manager on your TV"
+                    ),
                     config,
                     err,
                 )
@@ -520,7 +522,7 @@ class SamsungTVWSBridge(
                 return RESULT_AUTH_MISSING
             except (ConnectionFailure, OSError, AsyncioTimeoutError) as err:
                 LOGGER.debug("Failing config: %s, %s error: %s", config, type(err), err)
-        # pylint: disable=useless-else-on-loop
+        # pylint: disable-next=useless-else-on-loop
         else:
             if result:
                 return result
@@ -590,8 +592,10 @@ class SamsungTVWSBridge(
                 self._remote = None
             except ConnectionFailure as err:
                 LOGGER.warning(
-                    "Unexpected ConnectionFailure trying to get remote for %s, "
-                    "please report this issue: %s",
+                    (
+                        "Unexpected ConnectionFailure trying to get remote for %s, "
+                        "please report this issue: %s"
+                    ),
                     self.host,
                     repr(err),
                 )
@@ -633,8 +637,10 @@ class SamsungTVWSBridge(
                 message := data.get("message")
             ) == "unrecognized method value : ms.remote.control":
                 LOGGER.error(
-                    "Your TV seems to be unsupported by SamsungTVWSBridge"
-                    " and needs a PIN: '%s'. Updating config entry",
+                    (
+                        "Your TV seems to be unsupported by SamsungTVWSBridge"
+                        " and needs a PIN: '%s'. Updating config entry"
+                    ),
                     message,
                 )
                 self._notify_update_config_entry(
@@ -780,7 +786,10 @@ class SamsungTVEncryptedBridge(
         else:
             if self._model and not self._power_off_warning_logged:
                 LOGGER.warning(
-                    "Unknown power_off command for %s (%s): sending KEY_POWEROFF and KEY_POWER",
+                    (
+                        "Unknown power_off command for %s (%s): sending KEY_POWEROFF"
+                        " and KEY_POWER"
+                    ),
                     self._model,
                     self.host,
                 )

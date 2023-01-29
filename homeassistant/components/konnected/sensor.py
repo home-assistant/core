@@ -14,7 +14,7 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_ZONE,
     PERCENTAGE,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -27,7 +27,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     "temperature": SensorEntityDescription(
         key="temperature",
         name="Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     "humidity": SensorEntityDescription(

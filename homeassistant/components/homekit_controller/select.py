@@ -11,7 +11,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import KNOWN_DEVICES
 from .connection import HKDevice
-from .const import DEVICE_CLASS_ECOBEE_MODE
 from .entity import CharacteristicEntity
 
 _ECOBEE_MODE_TO_TEXT = {
@@ -26,7 +25,7 @@ class EcobeeModeSelect(CharacteristicEntity, SelectEntity):
     """Represents a ecobee mode select entity."""
 
     _attr_options = ["home", "sleep", "away"]
-    _attr_device_class = DEVICE_CLASS_ECOBEE_MODE
+    _attr_translation_key = "ecobee_mode"
 
     @property
     def name(self) -> str:

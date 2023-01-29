@@ -10,7 +10,7 @@ from tololib.message_info import SettingsInfo
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TIME_MINUTES
+from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -43,7 +43,7 @@ NUMBERS = (
         key="power_timer",
         icon="mdi:power-settings",
         name="Power Timer",
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         native_max_value=POWER_TIMER_MAX,
         getter=lambda settings: settings.power_timer,
         setter=lambda client, value: client.set_power_timer(value),
@@ -52,7 +52,7 @@ NUMBERS = (
         key="salt_bath_timer",
         icon="mdi:shaker-outline",
         name="Salt Bath Timer",
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         native_max_value=SALT_BATH_TIMER_MAX,
         getter=lambda settings: settings.salt_bath_timer,
         setter=lambda client, value: client.set_salt_bath_timer(value),
@@ -61,7 +61,7 @@ NUMBERS = (
         key="fan_timer",
         icon="mdi:fan-auto",
         name="Fan Timer",
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         native_max_value=FAN_TIMER_MAX,
         getter=lambda settings: settings.fan_timer,
         setter=lambda client, value: client.set_fan_timer(value),

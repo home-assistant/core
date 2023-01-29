@@ -51,6 +51,31 @@
             }
         }
     },
+    "entity": {
+        "select": {
+            "display_orientation": {
+                "state": {
+                    "forward": "Edaspidi",
+                    "left": "Vasakule",
+                    "right": "Paremale"
+                }
+            },
+            "led_brightness": {
+                "state": {
+                    "bright": "Hele",
+                    "dim": "Tuhm",
+                    "off": "V\u00e4ljas"
+                }
+            },
+            "ptc_level": {
+                "state": {
+                    "high": "K\u00f5rge",
+                    "low": "Madal",
+                    "medium": "Keskmine"
+                }
+            }
+        }
+    },
     "options": {
         "error": {
             "cloud_credentials_incomplete": "Pilve mandaat on poolik, palun t\u00e4ida kasutajanimi, salas\u00f5na ja riik"

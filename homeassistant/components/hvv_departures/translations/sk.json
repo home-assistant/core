@@ -24,8 +24,10 @@
             "user": {
                 "data": {
                     "host": "Hostite\u013e",
-                    "password": "Heslo"
-                }
+                    "password": "Heslo",
+                    "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
+                },
+                "title": "Pripojte sa k HVV API"
             }
         }
     },
@@ -33,8 +35,12 @@
         "step": {
             "init": {
                 "data": {
-                    "offset": "Posun (v min\u00fatach)"
-                }
+                    "filter": "Vyberte riadky",
+                    "offset": "Posun (v min\u00fatach)",
+                    "real_time": "Pou\u017e\u00edvanie \u00fadajov v re\u00e1lnom \u010dase"
+                },
+                "description": "Mo\u017enosti zmeny tohto sn\u00edma\u010da odchodu",
+                "title": "Mo\u017enosti"
             }
         }
     }

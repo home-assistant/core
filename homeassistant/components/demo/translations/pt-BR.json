@@ -1,4 +1,57 @@
 {
+    "entity": {
+        "climate": {
+            "ubercool": {
+                "state_attributes": {
+                    "fan_mode": {
+                        "state": {
+                            "auto_high": "Auto Alto",
+                            "auto_low": "Auto Baixo",
+                            "on_high": "No alto",
+                            "on_low": "Em baixo"
+                        }
+                    },
+                    "swing_mode": {
+                        "state": {
+                            "1": "1",
+                            "2": "2",
+                            "3": "3",
+                            "auto": "Auto",
+                            "off": "Desligado"
+                        }
+                    }
+                }
+            }
+        },
+        "select": {
+            "speed": {
+                "state": {
+                    "light_speed": "Velocidade da luz",
+                    "ludicrous_speed": "Velocidade absurda",
+                    "ridiculous_speed": "Velocidade rid\u00edcula"
+                }
+            }
+        },
+        "sensor": {
+            "thermostat_mode": {
+                "state": {
+                    "away": "Fora",
+                    "comfort": "Conforto",
+                    "eco": "Eco",
+                    "sleep": "Sono"
+                }
+            }
+        },
+        "vacuum": {
+            "model_s": {
+                "state_attributes": {
+                    "cleaned_area": {
+                        "name": "\u00c1rea limpa"
+                    }
+                }
+            }
+        }
+    },
     "issues": {
         "bad_psu": {
             "fix_flow": {

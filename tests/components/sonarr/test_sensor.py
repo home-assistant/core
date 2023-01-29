@@ -9,8 +9,8 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
-    DATA_GIGABYTES,
     STATE_UNAVAILABLE,
+    UnitOfInformation,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -56,7 +56,7 @@ async def test_sensors(
     state = hass.states.get("sensor.sonarr_disk_space")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:harddisk"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == DATA_GIGABYTES
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfInformation.GIGABYTES
     assert state.attributes.get("C:\\") == "263.10/465.42GB (56.53%)"
     assert state.state == "263.10"
 

@@ -152,6 +152,11 @@ ZEROCONF = {
             },
         },
     ],
+    "_bbxsrv._tcp.local.": [
+        {
+            "domain": "blebox",
+        },
+    ],
     "_bond._tcp.local.": [
         {
             "domain": "bond",
@@ -276,6 +281,12 @@ ZEROCONF = {
         {
             "domain": "shelly",
             "name": "shelly*",
+        },
+        {
+            "domain": "synology_dsm",
+            "properties": {
+                "vendor": "synology*",
+            },
         },
     ],
     "_hue._tcp.local.": [
@@ -424,6 +435,12 @@ ZEROCONF = {
     "_sleep-proxy._udp.local.": [
         {
             "domain": "apple_tv",
+        },
+    ],
+    "_slzb-06._tcp.local.": [
+        {
+            "domain": "zha",
+            "name": "slzb-06*",
         },
     ],
     "_sonos._tcp.local.": [

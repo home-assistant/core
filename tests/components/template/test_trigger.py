@@ -30,7 +30,9 @@ def setup_comp(hass, calls):
             automation.DOMAIN: {
                 "trigger": {
                     "platform": "template",
-                    "value_template": '{{ states.test.entity.state == "world" and true }}',
+                    "value_template": (
+                        '{{ states.test.entity.state == "world" and true }}'
+                    ),
                 },
                 "action": {
                     "service": "test.automation",
@@ -69,7 +71,9 @@ async def test_if_fires_on_change_bool(hass, start_ha, calls):
                 automation.DOMAIN: {
                     "trigger": {
                         "platform": "template",
-                        "value_template": '{{ states.test.entity.state == "world" and "true" }}',
+                        "value_template": (
+                            '{{ states.test.entity.state == "world" and "true" }}'
+                        ),
                     },
                     "action": {"service": "test.automation"},
                 }
@@ -81,7 +85,9 @@ async def test_if_fires_on_change_bool(hass, start_ha, calls):
                 automation.DOMAIN: {
                     "trigger": {
                         "platform": "template",
-                        "value_template": '{{ states.test.entity.state == "world" and "TrUE" }}',
+                        "value_template": (
+                            '{{ states.test.entity.state == "world" and "TrUE" }}'
+                        ),
                     },
                     "action": {"service": "test.automation"},
                 }
@@ -93,7 +99,9 @@ async def test_if_fires_on_change_bool(hass, start_ha, calls):
                 automation.DOMAIN: {
                     "trigger": {
                         "platform": "template",
-                        "value_template": '{{ states.test.entity.state == "world" and false }}',
+                        "value_template": (
+                            '{{ states.test.entity.state == "world" and false }}'
+                        ),
                     },
                     "action": {"service": "test.automation"},
                 }
@@ -175,7 +183,9 @@ async def test_if_fires_on_change_bool(hass, start_ha, calls):
                     "trigger_variables": {"entity": "test.entity"},
                     "trigger": {
                         "platform": "template",
-                        "value_template": '{{ is_state(entity|default("test.entity2"), "hello") }}',
+                        "value_template": (
+                            '{{ is_state(entity|default("test.entity2"), "hello") }}'
+                        ),
                     },
                     "action": {"service": "test.automation"},
                 },
@@ -272,7 +282,9 @@ async def test_general(hass, call_setup, start_ha, calls):
                 automation.DOMAIN: {
                     "trigger": {
                         "platform": "template",
-                        "value_template": "{{ 84 / states.test.number.state|int == 42 }}",
+                        "value_template": (
+                            "{{ 84 / states.test.number.state|int == 42 }}"
+                        ),
                     },
                     "action": {"service": "test.automation"},
                 }

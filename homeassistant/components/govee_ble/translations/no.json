@@ -8,7 +8,7 @@
         "flow_title": "{name}",
         "step": {
             "bluetooth_confirm": {
-                "description": "Vil du konfigurere {name}?"
+                "description": "Vil du sette opp {name} ?"
             },
             "user": {
                 "data": {

@@ -9,7 +9,7 @@ from typing import Any
 import aiohttp
 import async_timeout
 import attr
-from hass_nabucasa import Cloud, auth, cloud_api, thingtalk
+from hass_nabucasa import Cloud, auth, thingtalk
 from hass_nabucasa.const import STATE_DISCONNECTED
 from hass_nabucasa.voice import MAP_VOICE
 import voluptuous as vol
@@ -38,6 +38,8 @@ from .const import (
     PREF_TTS_DEFAULT_VOICE,
     REQUEST_TIMEOUT,
 )
+from .repairs import async_manage_legacy_subscription_issue
+from .subscription import async_subscription_info
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -224,14 +226,16 @@ class CloudRegisterView(HomeAssistantView):
 
         client_metadata = None
 
-        if location_info := await async_detect_location_info(
-            async_get_clientsession(hass)
-        ):
-            client_metadata = {
-                "NC_COUNTRY_CODE": location_info.country_code,
-                "NC_REGION_CODE": location_info.region_code,
-                "NC_ZIP_CODE": location_info.zip_code,
-            }
+        if (
+            location_info := await async_detect_location_info(
+                async_get_clientsession(hass)
+            )
+        ) and location_info.country_code is not None:
+            client_metadata = {"NC_COUNTRY_CODE": location_info.country_code}
+            if location_info.region_code is not None:
+                client_metadata["NC_REGION_CODE"] = location_info.region_code
+            if location_info.zip_code is not None:
+                client_metadata["NC_ZIP_CODE"] = location_info.zip_code
 
         async with async_timeout.timeout(REQUEST_TIMEOUT):
             await cloud.auth.async_register(
@@ -328,15 +332,14 @@ async def websocket_subscription(
 ) -> None:
     """Handle request for account info."""
     cloud = hass.data[DOMAIN]
-    try:
-        async with async_timeout.timeout(REQUEST_TIMEOUT):
-            data = await cloud_api.async_subscription_info(cloud)
-    except aiohttp.ClientError:
+    if (data := await async_subscription_info(cloud)) is None:
         connection.send_error(
             msg["id"], "request_failed", "Failed to request subscription"
         )
-    else:
-        connection.send_result(msg["id"], data)
+        return
+
+    connection.send_result(msg["id"], data)
+    async_manage_legacy_subscription_issue(hass, data)
 
 
 @_require_cloud_login
@@ -383,8 +386,10 @@ async def websocket_update_prefs(
             connection.send_error(
                 msg["id"],
                 "alexa_relink",
-                "Please go to the Alexa app and re-link the Home Assistant "
-                "skill and then try to enable state reporting.",
+                (
+                    "Please go to the Alexa app and re-link the Home Assistant "
+                    "skill and then try to enable state reporting."
+                ),
             )
             await alexa_config.set_authorized(False)
             return

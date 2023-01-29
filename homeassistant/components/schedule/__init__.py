@@ -69,7 +69,8 @@ def valid_schedule(schedule: list[dict[str, str]]) -> list[dict[str, str]]:
     for time_range in schedule:
         if time_range[CONF_FROM] >= time_range[CONF_TO]:
             raise vol.Invalid(
-                f"Invalid time range, from {time_range[CONF_FROM]} is after {time_range[CONF_TO]}"
+                f"Invalid time range, from {time_range[CONF_FROM]} is after"
+                f" {time_range[CONF_TO]}"
             )
 
         # Check if the from time of the event is after the to time of the previous event

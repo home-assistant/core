@@ -22,7 +22,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import Event, HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -101,8 +101,10 @@ def get_from_conf(config: dict[str, str], config_key: str, length: int) -> str |
     string = config[config_key]
     if len(string) != length:
         _LOGGER.error(
-            "Error in configuration parameter %s: Must be exactly %d "
-            "bytes. Device will not be added",
+            (
+                "Error in configuration parameter %s: Must be exactly %d "
+                "bytes. Device will not be added"
+            ),
             config_key,
             length / 2,
         )
@@ -114,7 +116,7 @@ class EddystoneTemp(SensorEntity):
     """Representation of a temperature sensor."""
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
-    _attr_native_unit_of_measurement = TEMP_CELSIUS
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
     _attr_should_poll = False
 
     def __init__(self, name: str, namespace: str, instance: str) -> None:

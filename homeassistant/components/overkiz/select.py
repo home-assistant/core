@@ -14,7 +14,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantOverkizData
 from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES
-from .entity import OverkizDescriptiveEntity, OverkizDeviceClass
+from .entity import OverkizDescriptiveEntity
 
 
 @dataclass
@@ -71,7 +71,7 @@ SELECT_DESCRIPTIONS: list[OverkizSelectDescription] = [
             OverkizCommandParam.CLOSED,
         ],
         select_option=_select_option_open_closed_pedestrian,
-        device_class=OverkizDeviceClass.OPEN_CLOSED_PEDESTRIAN,
+        translation_key="open_closed_pedestrian",
     ),
     OverkizSelectDescription(
         key=OverkizState.IO_MEMORIZED_SIMPLE_VOLUME,
@@ -80,7 +80,7 @@ SELECT_DESCRIPTIONS: list[OverkizSelectDescription] = [
         options=[OverkizCommandParam.STANDARD, OverkizCommandParam.HIGHEST],
         select_option=_select_option_memorized_simple_volume,
         entity_category=EntityCategory.CONFIG,
-        device_class=OverkizDeviceClass.MEMORIZED_SIMPLE_VOLUME,
+        translation_key="memorized_simple_volume",
     ),
     # SomfyHeatingTemperatureInterface
     OverkizSelectDescription(

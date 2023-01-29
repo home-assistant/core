@@ -11,7 +11,7 @@
         "flow_title": "{name} \u2013 {model} ( {ip_address} )",
         "step": {
             "discovery_confirm": {
-                "description": "Vil du konfigurere {name} - {model} ( {ip_address} )?"
+                "description": "Vil du sette opp {name} - {model} ( {ip_address} )?"
             },
             "user": {
                 "data": {

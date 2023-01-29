@@ -1,14 +1,14 @@
 """Tests prosegur setup."""
 from unittest.mock import MagicMock, patch
 
-from pytest import mark
+import pytest
 
 from homeassistant.components.prosegur import DOMAIN
 
 from tests.common import MockConfigEntry
 
 
-@mark.parametrize(
+@pytest.mark.parametrize(
     "error",
     [
         ConnectionRefusedError,

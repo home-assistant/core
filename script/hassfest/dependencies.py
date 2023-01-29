@@ -163,6 +163,12 @@ def calc_allowed_references(integration: Integration) -> set[str]:
         | set(manifest.get("dependencies", []))
         | set(manifest.get("after_dependencies", []))
     )
+    # bluetooth_adapters is a wrapper to ensure
+    # that all the integrations that provide bluetooth
+    # adapters are setup before loading integrations
+    # that use them.
+    if "bluetooth_adapters" in allowed_references:
+        allowed_references.add("bluetooth")
 
     # Discovery requirements are ok if referenced in manifest
     for check_domain, to_check in DISCOVERY_INTEGRATIONS.items():
@@ -177,7 +183,7 @@ def find_non_referenced_integrations(
     integration: Integration,
     references: dict[Path, set[str]],
 ) -> set[str]:
-    """Find intergrations that are not allowed to be referenced."""
+    """Find integrations that are not allowed to be referenced."""
     allowed_references = calc_allowed_references(integration)
     referenced = set()
     for path, refs in references.items():
@@ -249,9 +255,6 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Handle dependencies for integrations."""
     # check for non-existing dependencies
     for integration in integrations.values():
-        if not integration.manifest:
-            continue
-
         validate_dependencies(integrations, integration)
 
         if config.specific_integrations:

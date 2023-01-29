@@ -51,6 +51,31 @@
             }
         }
     },
+    "entity": {
+        "select": {
+            "display_orientation": {
+                "state": {
+                    "forward": "Avan\u00e7ar",
+                    "left": "Esquerda",
+                    "right": "Direita"
+                }
+            },
+            "led_brightness": {
+                "state": {
+                    "bright": "Brilhante",
+                    "dim": "Ofuscar",
+                    "off": "Desligado"
+                }
+            },
+            "ptc_level": {
+                "state": {
+                    "high": "Alto",
+                    "low": "Baixo",
+                    "medium": "M\u00e9dio"
+                }
+            }
+        }
+    },
     "options": {
         "error": {
             "cloud_credentials_incomplete": "Credenciais da cloud incompletas, preencha o nome de usu\u00e1rio, a senha e o pa\u00eds"

@@ -467,7 +467,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self._async_get_and_check_device_info()
 
         # The UDN provided by the ssdp discovery doesn't always match the UDN
-        # from the device_info, used by the the other methods so we need to
+        # from the device_info, used by the other methods so we need to
         # ensure the device_info is loaded before setting the unique_id
         await self._async_set_unique_id_from_udn()
         self._async_update_and_abort_for_matching_unique_id()

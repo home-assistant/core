@@ -85,7 +85,10 @@ def warn_if_topic_duplicated(
             for _, cfg in offenders
         ]
         _LOGGER.warning(
-            "Multiple Tasmota devices are sharing the same topic '%s'. Offending devices: %s",
+            (
+                "Multiple Tasmota devices are sharing the same topic '%s'. Offending"
+                " devices: %s"
+            ),
             command_topic,
             ", ".join(offender_strings),
         )

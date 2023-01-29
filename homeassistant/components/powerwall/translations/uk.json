@@ -17,7 +17,8 @@
             },
             "user": {
                 "data": {
-                    "ip_address": "IP-\u0430\u0434\u0440\u0435\u0441\u0430"
+                    "ip_address": "IP-\u0430\u0434\u0440\u0435\u0441\u0430",
+                    "password": "\u041f\u0430\u0440\u043e\u043b\u044c"
                 },
                 "title": "Tesla Powerwall"
             }

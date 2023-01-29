@@ -19,7 +19,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PROTOCOL,
     PERCENTAGE,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -37,7 +37,7 @@ CONF_ONLY_NAMED = "only_named"
 CONF_TEMPERATURE_SCALE = "temperature_scale"
 
 DEFAULT_DATATYPE_MASK = 127
-DEFAULT_TEMPERATURE_SCALE = TEMP_CELSIUS
+DEFAULT_TEMPERATURE_SCALE = UnitOfTemperature.CELSIUS
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {

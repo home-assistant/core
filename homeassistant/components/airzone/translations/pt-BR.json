@@ -10,7 +10,7 @@
         "step": {
             "discovered_connection": {
                 "data": {
-                    "host": "Host",
+                    "host": "Nome do host",
                     "id": "ID do sistema",
                     "port": "Porta"
                 }
@@ -20,8 +20,7 @@
                     "host": "Nome do host",
                     "id": "ID do sistema",
                     "port": "Porta"
-                },
-                "description": "Configure a integra\u00e7\u00e3o Airzone."
+                }
             }
         }
     }

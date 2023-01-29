@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
             "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
-            "backoff": "Das Ger\u00e4t akzeptiert zur Zeit keine Kopplungsanfragen (Du hast m\u00f6glicherweise zu oft einen ung\u00fcltigen PIN-Code eingegeben), versuche es sp\u00e4ter erneut.",
+            "backoff": "Das Ger\u00e4t akzeptiert zurzeit keine Kopplungsanfragen (Du hast m\u00f6glicherweise zu oft einen ung\u00fcltigen PIN-Code eingegeben), versuche es sp\u00e4ter erneut.",
             "device_did_not_pair": "Es wurde kein Versuch unternommen, den Kopplungsvorgang vom Ger\u00e4t aus abzuschlie\u00dfen.",
             "device_not_found": "Das Ger\u00e4t wurde bei der Erkennung nicht gefunden. Bitte versuche es erneut hinzuzuf\u00fcgen.",
             "inconsistent_device": "Die erwarteten Protokolle wurden bei der Erkennung nicht gefunden. Dies deutet normalerweise auf ein Problem mit Multicast-DNS (Zeroconf) hin. Bitte versuche das Ger\u00e4t erneut hinzuzuf\u00fcgen.",
@@ -41,7 +41,7 @@
                 "title": "Passwort erforderlich"
             },
             "protocol_disabled": {
-                "description": "Die Kopplung ist f\u00fcr `{protocol}` erforderlich, aber auf dem Ger\u00e4t deaktiviert. Bitte \u00fcberpr\u00fcfe m\u00f6gliche Zugriffsbeschr\u00e4nkungen (z. B. Verbindung aller Ger\u00e4te im lokalen Netzwerk zulassen) auf dem Ger\u00e4t. \n\nDu kannst fortfahren, ohne dieses Protokoll zu koppeln, aber einige Funktionen sind eingeschr\u00e4nkt.",
+                "description": "Die Kopplung ist f\u00fcr `{protocol}` erforderlich, aber auf dem Ger\u00e4t deaktiviert. Bitte \u00fcberpr\u00fcfe m\u00f6gliche Zugriffsbeschr\u00e4nkungen (z.B. Verbindung aller Ger\u00e4te im lokalen Netzwerk zulassen) auf dem Ger\u00e4t. \n\nDu kannst fortfahren, ohne dieses Protokoll zu koppeln, aber einige Funktionen sind eingeschr\u00e4nkt.",
                 "title": "Kopplung nicht m\u00f6glich"
             },
             "reconfigure": {
@@ -56,7 +56,7 @@
                 "data": {
                     "device_input": "Ger\u00e4t"
                 },
-                "description": "Gib zun\u00e4chst den Ger\u00e4tenamen (z. B. K\u00fcche oder Schlafzimmer) oder die IP-Adresse des Apple TV ein, den du hinzuf\u00fcgen m\u00f6chtest.\n\nWenn du dein Ger\u00e4t nicht sehen kannst oder Probleme auftreten, versuche die IP-Adresse des Ger\u00e4ts einzugeben.",
+                "description": "Gib zun\u00e4chst den Ger\u00e4tenamen (z.B. K\u00fcche oder Schlafzimmer) oder die IP-Adresse des Apple TV ein, den du hinzuf\u00fcgen m\u00f6chtest.\n\nWenn du dein Ger\u00e4t nicht sehen kannst oder Probleme auftreten, versuche die IP-Adresse des Ger\u00e4ts einzugeben.",
                 "title": "Neuen Apple TV einrichten"
             }
         }

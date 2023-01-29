@@ -24,5 +24,41 @@
                 "title": "Conecte-se ao Smile"
             }
         }
+    },
+    "entity": {
+        "climate": {
+            "plugwise": {
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "asleep": "Noite",
+                            "away": "Fora",
+                            "home": "Casa",
+                            "no_frost": "Anti-geada",
+                            "vacation": "F\u00e9rias"
+                        }
+                    }
+                }
+            }
+        },
+        "select": {
+            "dhw_mode": {
+                "state": {
+                    "auto": "Auto",
+                    "boost": "Impulso",
+                    "comfort": "Conforto",
+                    "off": "Desligado"
+                }
+            },
+            "regulation_mode": {
+                "state": {
+                    "bleeding_cold": "Sangramento frio",
+                    "bleeding_hot": "Sangramento quente",
+                    "cooling": "Resfriamento",
+                    "heating": "Aquecimento",
+                    "off": "Desligado"
+                }
+            }
+        }
     }
 }

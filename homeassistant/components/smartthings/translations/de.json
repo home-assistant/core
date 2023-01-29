@@ -5,7 +5,7 @@
             "no_available_locations": "In Home Assistant sind keine SmartThings-Standorte zum Einrichten verf\u00fcgbar."
         },
         "error": {
-            "app_setup_error": "SmartApp kann nicht eingerichtet werden. Bitte versuche es erneut.",
+            "app_setup_error": "Smart App kann nicht eingerichtet werden. Bitte versuche es erneut.",
             "token_forbidden": "Das Token verf\u00fcgt nicht \u00fcber die erforderlichen OAuth-Bereiche.",
             "token_invalid_format": "Das Token muss im UID/GUID-Format vorliegen.",
             "token_unauthorized": "Das Token ist ung\u00fcltig oder nicht mehr autorisiert.",

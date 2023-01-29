@@ -6,6 +6,14 @@
         "error": {
             "not_allowed": "Cesta nie je povolen\u00e1",
             "not_valid": "Cesta nie je platn\u00e1"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "file_path": "Cesta k s\u00faboru"
+                }
+            }
         }
-    }
+    },
+    "title": "Ve\u013ekos\u0165 s\u00faboru"
 }

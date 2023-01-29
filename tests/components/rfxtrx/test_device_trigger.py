@@ -155,7 +155,7 @@ async def test_firing_event(hass, device_reg: DeviceRegistry, rfxtrx, event):
     assert calls[0].data["some"] == "device"
 
 
-async def test_invalid_trigger(hass, device_reg: DeviceRegistry):
+async def test_invalid_trigger(hass, device_reg: DeviceRegistry, caplog):
     """Test for invalid actions."""
     event = EVENT_LIGHTING_1
 
@@ -188,8 +188,4 @@ async def test_invalid_trigger(hass, device_reg: DeviceRegistry):
     )
     await hass.async_block_till_done()
 
-    assert len(notifications := hass.states.async_all("persistent_notification")) == 1
-    assert (
-        "The following integrations and platforms could not be set up"
-        in notifications[0].attributes["message"]
-    )
+    assert "Subtype invalid not found in device triggers" in caplog.text

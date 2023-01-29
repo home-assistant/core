@@ -9,7 +9,7 @@ from homeassistant.components.number import (
     NumberEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TIME_MINUTES
+from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
@@ -146,7 +146,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             key=DPCode.COOK_TIME,
             name="Cook time",
             icon="mdi:timer",
-            native_unit_of_measurement=TIME_MINUTES,
+            native_unit_of_measurement=UnitOfTime.MINUTES,
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
@@ -410,7 +410,7 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
             return None
 
         # Raw value
-        if not (value := self.device.status.get(self.entity_description.key)):
+        if (value := self.device.status.get(self.entity_description.key)) is None:
             return None
 
         return self._number.scale_value(value)

@@ -54,7 +54,57 @@
     },
     "options": {
         "step": {
+            "add_sensor": {
+                "data": {
+                    "attribute": "Atribut",
+                    "device_class": "Kelas Perangkat",
+                    "index": "Indeks",
+                    "name": "Nama",
+                    "select": "Pilih",
+                    "state_class": "Kelas Status",
+                    "unit_of_measurement": "Satuan Pengukuran",
+                    "value_template": "Nilai Templat"
+                },
+                "data_description": {
+                    "attribute": "Dapatkan nilai atribut pada tag yang dipilih",
+                    "device_class": "Jenis/kelas sensor untuk mengatur ikon di antarmuka",
+                    "index": "Menentukan elemen mana yang dikembalikan oleh selektor CSS untuk digunakan",
+                    "select": "Menentukan tag yang harus dicari. Periksa selektor CSS Beautifulsoup untuk melihat detailnya",
+                    "state_class": "Nilai state_class dari sensor",
+                    "unit_of_measurement": "Pilih pengukuran suhu atau buat sendiri",
+                    "value_template": "Mendefinisikan templat untuk mendapatkan status sensor"
+                }
+            },
+            "edit_sensor": {
+                "data": {
+                    "attribute": "Atribut",
+                    "device_class": "Kelas Perangkat",
+                    "index": "Indeks",
+                    "name": "Nama",
+                    "select": "Pilih",
+                    "state_class": "Kelas Status",
+                    "unit_of_measurement": "Satuan Pengukuran",
+                    "value_template": "Nilai Templat"
+                },
+                "data_description": {
+                    "attribute": "Dapatkan nilai atribut pada tag yang dipilih",
+                    "device_class": "Jenis/kelas sensor untuk mengatur ikon di antarmuka",
+                    "index": "Menentukan elemen mana yang dikembalikan oleh selektor CSS untuk digunakan",
+                    "select": "Menentukan tag yang harus dicari. Periksa selektor CSS Beautifulsoup untuk melihat detailnya",
+                    "state_class": "Nilai state_class dari sensor",
+                    "unit_of_measurement": "Pilih pengukuran suhu atau buat sendiri",
+                    "value_template": "Mendefinisikan templat untuk mendapatkan status sensor"
+                }
+            },
             "init": {
+                "menu_options": {
+                    "add_sensor": "Tambahkan sensor",
+                    "remove_sensor": "Hapus sensor",
+                    "resource": "Konfigurasikan sumber daya",
+                    "select_edit_sensor": "Konfigurasikan Sensor"
+                }
+            },
+            "resource": {
                 "data": {
                     "authentication": "Pilih metode autentikasi",
                     "headers": "Header",

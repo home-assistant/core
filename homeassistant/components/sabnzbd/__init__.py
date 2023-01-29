@@ -12,7 +12,6 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
     CONF_NAME,
-    CONF_PATH,
     CONF_PORT,
     CONF_SENSORS,
     CONF_SSL,
@@ -80,7 +79,6 @@ CONFIG_SCHEMA = vol.Schema(
                 {
                     vol.Required(CONF_API_KEY): str,
                     vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
-                    vol.Optional(CONF_PATH): str,
                     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
                     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
                     vol.Optional(CONF_SENSORS): vol.All(

@@ -29,19 +29,6 @@
             }
         }
     },
-    "issues": {
-        "deprecated_key": {
-            "fix_flow": {
-                "step": {
-                    "confirm": {
-                        "description": "\u4f7f\u7528\u6b64\u670d\u52d9\u4ee5\u66f4\u65b0\u4efb\u4f55\u81ea\u52d5\u5316\u6216\u8173\u672c\u3001\u4ee5\u53d6\u4ee3 name key \u70ba entry_id key\u3002",
-                        "title": "Transmission \u4e2d\u7684 name key \u670d\u52d9\u5373\u5c07\u79fb\u9664"
-                    }
-                }
-            },
-            "title": "Transmission \u4e2d\u7684 name key \u670d\u52d9\u5373\u5c07\u79fb\u9664"
-        }
-    },
     "options": {
         "step": {
             "init": {

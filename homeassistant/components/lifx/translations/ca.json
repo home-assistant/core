@@ -8,10 +8,10 @@
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3"
         },
-        "flow_title": "{label} ({host}) {serial}",
+        "flow_title": "{label} ({group})",
         "step": {
             "discovery_confirm": {
-                "description": "Vols configurar {label} ({host}) {serial}?"
+                "description": "Vols configurar {label} ({group})?"
             },
             "pick_device": {
                 "data": {

@@ -16,7 +16,7 @@
         "flow_title": "{name}",
         "step": {
             "integration_discovery_confirm": {
-                "description": "Vil du konfigurere {name} over Bluetooth med adressen {address} ?"
+                "description": "Vil du sette opp {name} over Bluetooth med adressen {address} ?"
             },
             "user": {
                 "data": {

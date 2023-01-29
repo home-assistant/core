@@ -19,8 +19,7 @@ from homeassistant.const import (
     CONF_ID,
     CONF_NAME,
     CONF_PORT,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -120,9 +119,9 @@ class HeatmiserV3Thermostat(ClimateEntity):
             return
         self.dcb = self.therm.read_dcb()
         self._attr_temperature_unit = (
-            TEMP_CELSIUS
+            UnitOfTemperature.CELSIUS
             if (self.therm.get_temperature_format() == "C")
-            else TEMP_FAHRENHEIT
+            else UnitOfTemperature.FAHRENHEIT
         )
         self._current_temperature = int(self.therm.get_floor_temp())
         self._target_temperature = int(self.therm.get_target_temp())

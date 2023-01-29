@@ -12,7 +12,7 @@
       "webhook_not_internet_accessible": "[%key:common::config_flow::abort::webhook_not_internet_accessible%]"
     },
     "create_entry": {
-      "default": "To send events to Home Assistant, you will need to setup the webhook feature in Geofency.\n\nFill in the following info:\n\n- URL: `{webhook_url}`\n- Method: POST\n\nSee [the documentation]({docs_url}) for further details."
+      "default": "To send events to Home Assistant, you will need to set up the webhook feature in Geofency.\n\nFill in the following info:\n\n- URL: `{webhook_url}`\n- Method: POST\n\nSee [the documentation]({docs_url}) for further details."
     }
   }
 }

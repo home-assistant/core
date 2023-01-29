@@ -20,8 +20,7 @@
                     "host": "Host",
                     "id": "ID Sistem",
                     "port": "Port"
-                },
-                "description": "Siapkan integrasi Airzone"
+                }
             }
         }
     }

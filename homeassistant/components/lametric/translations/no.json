@@ -44,9 +44,19 @@
             }
         }
     },
+    "entity": {
+        "select": {
+            "brightness_mode": {
+                "state": {
+                    "auto": "Automatisk",
+                    "manual": "Manuell"
+                }
+            }
+        }
+    },
     "issues": {
         "manual_migration": {
-            "description": "LaMetric-integrasjonen er modernisert: Den er n\u00e5 konfigurert og satt opp via brukergrensesnittet og kommunikasjonen er n\u00e5 lokal. \n\n Dessverre er det ingen automatisk migreringsbane mulig og krever derfor at du konfigurerer LaMetric p\u00e5 nytt med Home Assistant. Se integreringsdokumentasjonen for Home Assistant LaMetric for hvordan du setter den opp. \n\n Fjern den gamle LaMetric YAML-konfigurasjonen fra configuration.yaml-filen og start Home Assistant p\u00e5 nytt for \u00e5 fikse dette problemet.",
+            "description": "LaMetric-integrasjonen er modernisert: Den er n\u00e5 konfigurert og satt opp via brukergrensesnittet og kommunikasjonen er n\u00e5 lokal. \n\n Dessverre er det ingen automatisk migreringsbane mulig og krever derfor at du konfigurerer LaMetric p\u00e5 nytt med Home Assistant. Se integrasjonsdokumentasjonen for Home Assistant LaMetric for hvordan du setter den opp. \n\n Fjern den gamle LaMetric YAML-konfigurasjonen fra configuration.yaml-filen og start Home Assistant p\u00e5 nytt for \u00e5 fikse dette problemet.",
             "title": "Manuell migrering kreves for LaMetric"
         }
     }

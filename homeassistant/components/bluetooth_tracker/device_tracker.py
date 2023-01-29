@@ -187,7 +187,10 @@ async def async_setup_scanner(
         # If an update is in progress, we don't do anything
         if update_bluetooth_lock.locked():
             _LOGGER.debug(
-                "Previous execution of update_bluetooth is taking longer than the scheduled update of interval %s",
+                (
+                    "Previous execution of update_bluetooth is taking longer than the"
+                    " scheduled update of interval %s"
+                ),
                 interval,
             )
             return

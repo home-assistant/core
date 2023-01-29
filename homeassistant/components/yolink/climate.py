@@ -16,7 +16,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -67,7 +67,7 @@ class YoLinkClimateEntity(YoLinkEntity, ClimateEntity):
         super().__init__(config_entry, coordinator)
         self._attr_unique_id = f"{coordinator.device.device_id}_climate"
         self._attr_name = f"{coordinator.device.device_name} (Thermostat)"
-        self._attr_temperature_unit = TEMP_CELSIUS
+        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_fan_modes = [FAN_ON, FAN_AUTO]
         self._attr_min_temp = -10
         self._attr_max_temp = 50

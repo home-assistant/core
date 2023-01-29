@@ -13,8 +13,6 @@
         "step": {
             "init": {
                 "data": {
-                    "manual": "Keela automaatne v\u00e4rskendamine",
-                    "scan_interval": "Uuendamise sagedus (minutites)",
                     "server_name": "Testiserveri valimine"
                 }
             }

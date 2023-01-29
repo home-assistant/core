@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "no_mac_address": "W rekordzie zeroconf brakuje adresu MAC",
             "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119",
             "reconfigure_successful": "Ponowna konfiguracja powiod\u0142a si\u0119"
         },

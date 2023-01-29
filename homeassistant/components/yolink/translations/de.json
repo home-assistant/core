@@ -17,7 +17,7 @@
                 "title": "W\u00e4hle die Authentifizierungsmethode"
             },
             "reauth_confirm": {
-                "description": "Die yolink-Integration muss dein Konto neu authentifizieren",
+                "description": "Die yolink Integration muss dein Konto neu authentifizieren",
                 "title": "Integration erneut authentifizieren"
             }
         }

@@ -8,10 +8,10 @@
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557"
         },
-        "flow_title": "{label} ({host}) {serial}",
+        "flow_title": "{label} ({group})",
         "step": {
             "discovery_confirm": {
-                "description": "\u662f\u5426\u8981\u8a2d\u5b9a {label} ({host}) {serial}\uff1f"
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a{label} ({group})\uff1f"
             },
             "pick_device": {
                 "data": {

@@ -19,7 +19,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
 from .const import CONF_HYSTERESIS, CONF_LOWER, CONF_UPPER, DEFAULT_HYSTERESIS, DOMAIN
 
 
-def _validate_mode(
+async def _validate_mode(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
     """Validate the threshold mode, and set limits to None if not set."""

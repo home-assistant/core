@@ -3,11 +3,11 @@
         "error": {
             "address": "\u00c9rv\u00e9nytelen t\u00e1voli c\u00edm van megadva. A c\u00edmnek IP-c\u00edmnek vagy feloldhat\u00f3 g\u00e9pn\u00e9vnek kell lennie.",
             "address_in_use": "A kiv\u00e1lasztott port m\u00e1r haszn\u00e1latban van ezen a rendszeren.",
-            "model": "\u00dagy t\u0171nik, hogy a kiv\u00e1lasztott modell nem t\u00e1mogatja a modbus40-et",
+            "model": "\u00dagy t\u0171nik, hogy a kiv\u00e1lasztott modell nem t\u00e1mogatja a MODBUS40 szabv\u00e1nyt.",
             "read": "Hiba a szivatty\u00fa olvas\u00e1si k\u00e9r\u00e9s\u00e9n\u00e9l. Ellen\u0151rizze a \"T\u00e1voli olvas\u00e1si portot\" vagy a \"T\u00e1voli IP-c\u00edmet\".",
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt",
-            "url": "A megadott URL-c\u00edm nem j\u00f3l form\u00e1zott \u00e9s t\u00e1mogatott URL-c\u00edm",
-            "write": "Hiba a h\u0151szivatty\u00fa \u00edr\u00e1si k\u00e9relm\u00e9ben. Ellen\u0151rizze a portot, c\u00edmet."
+            "url": "A megadott URL nem j\u00f3l form\u00e1zott \u00e9s nem t\u00e1mogatott",
+            "write": "Hiba a szivatty\u00faba t\u00f6rt\u00e9n\u0151 \u00edr\u00e1si k\u00e9r\u00e9sn\u00e9l. Ellen\u0151rizze a \"T\u00e1voli \u00edr\u00f3portot\" vagy a \"T\u00e1voli c\u00edmet\"."
         },
         "step": {
             "modbus": {

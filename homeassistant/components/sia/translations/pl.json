@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
+        },
         "error": {
             "invalid_account_format": "Konto nie jest warto\u015bci\u0105 szesnastkow\u0105, u\u017cyj tylko 0-9 i A-F.",
             "invalid_account_length": "Konto ma niew\u0142a\u015bciw\u0105 d\u0142ugo\u015b\u0107, musi mie\u0107 od 3 do 16 znak\u00f3w.",

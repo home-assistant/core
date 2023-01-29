@@ -11,6 +11,11 @@
             "invalid_auth": "\uc778\uc99d\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "\ube44\ubc00\ubc88\ud638"
+                }
+            },
             "user": {
                 "data": {
                     "password": "\ube44\ubc00\ubc88\ud638",

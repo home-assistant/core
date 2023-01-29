@@ -83,6 +83,7 @@ from .schema import (
     SelectSchema,
     SensorSchema,
     SwitchSchema,
+    TextSchema,
     WeatherSchema,
     ga_validator,
     sensor_type_validator,
@@ -133,6 +134,7 @@ CONFIG_SCHEMA = vol.Schema(
                     **SelectSchema.platform_node(),
                     **SensorSchema.platform_node(),
                     **SwitchSchema.platform_node(),
+                    **TextSchema.platform_node(),
                     **WeatherSchema.platform_node(),
                 }
             ),
@@ -493,7 +495,10 @@ class KNXModule:
                         value = transcoder.from_knx(data)
                     except ConversionError as err:
                         _LOGGER.warning(
-                            "Error in `knx_event` at decoding type '%s' from telegram %s\n%s",
+                            (
+                                "Error in `knx_event` at decoding type '%s' from"
+                                " telegram %s\n%s"
+                            ),
                             transcoder.__name__,
                             telegram,
                             err,
@@ -575,14 +580,17 @@ class KNXModule:
                 raise HomeAssistantError(
                     f"Could not find exposure for '{group_address}' to remove."
                 ) from err
-            else:
-                removed_exposure.shutdown()
+
+            removed_exposure.shutdown()
             return
 
         if group_address in self.service_exposures:
             replaced_exposure = self.service_exposures.pop(group_address)
             _LOGGER.warning(
-                "Service exposure_register replacing already registered exposure for '%s' - %s",
+                (
+                    "Service exposure_register replacing already registered exposure"
+                    " for '%s' - %s"
+                ),
                 group_address,
                 replaced_exposure.device.name,
             )

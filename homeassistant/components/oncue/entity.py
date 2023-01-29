@@ -14,12 +14,14 @@ from homeassistant.helpers.update_coordinator import (
 from .const import CONNECTION_ESTABLISHED_KEY, DOMAIN, VALUE_UNAVAILABLE
 
 
-class OncueEntity(CoordinatorEntity, Entity):
+class OncueEntity(
+    CoordinatorEntity[DataUpdateCoordinator[dict[str, OncueDevice]]], Entity
+):
     """Representation of an Oncue entity."""
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[dict[str, OncueDevice]],
         device_id: str,
         device: OncueDevice,
         sensor: OncueSensor,

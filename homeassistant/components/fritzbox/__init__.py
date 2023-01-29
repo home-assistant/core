@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from xml.etree.ElementTree import ParseError
 
 from pyfritzhome import Fritzhome, FritzhomeDevice, LoginError
 from pyfritzhome.devicetypes.fritzhomeentitybase import FritzhomeEntityBase
@@ -13,7 +14,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -43,7 +44,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         CONF_CONNECTIONS: fritz,
     }
 
-    coordinator = FritzboxDataUpdateCoordinator(hass, entry)
+    try:
+        await hass.async_add_executor_job(fritz.update_templates)
+    except ParseError:
+        LOGGER.debug("Disable smarthome templates")
+        has_templates = False
+    else:
+        LOGGER.debug("Enable smarthome templates")
+        has_templates = True
+
+    coordinator = FritzboxDataUpdateCoordinator(hass, entry, has_templates)
 
     await coordinator.async_config_entry_first_refresh()
 
@@ -52,7 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     def _update_unique_id(entry: RegistryEntry) -> dict[str, str] | None:
         """Update unique ID of entity entry."""
         if (
-            entry.unit_of_measurement == TEMP_CELSIUS
+            entry.unit_of_measurement == UnitOfTemperature.CELSIUS
             and "_temperature" not in entry.unique_id
         ):
             new_unique_id = f"{entry.unique_id}_temperature"

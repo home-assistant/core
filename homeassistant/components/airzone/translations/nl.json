@@ -10,6 +10,7 @@
         "step": {
             "discovered_connection": {
                 "data": {
+                    "host": "Host",
                     "id": "Systeem ID",
                     "port": "Poort"
                 }
@@ -19,8 +20,7 @@
                     "host": "Host",
                     "id": "Systeem ID",
                     "port": "Poort"
-                },
-                "description": "Airzone integratie instellen."
+                }
             }
         }
     }

@@ -28,5 +28,18 @@
                 "description": "Meg kell adnia a \u201ef\u0151\u201d API-kulcsot az UptimeRobott\u00f3l"
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "monitor_status": {
+                "state": {
+                    "down": "Nem el\u00e9rhet\u0151",
+                    "not_checked_yet": "M\u00e9g nincs ellen\u0151rizve",
+                    "pause": "Sz\u00fcnet",
+                    "seems_down": "Nem el\u00e9rhet\u0151nek t\u0171nik",
+                    "up": "El\u00e9rhet\u0151"
+                }
+            }
+        }
     }
 }

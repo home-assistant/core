@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any, TypeVar, Union
+from typing import Any, TypeVar
 
-from switchbee.api import SwitchBeeDeviceOfflineError, SwitchBeeError
+from switchbee.api.central_unit import SwitchBeeDeviceOfflineError, SwitchBeeError
 from switchbee.device import (
     ApiStateCommand,
     SwitchBeeGroupSwitch,
@@ -25,12 +25,12 @@ from .entity import SwitchBeeDeviceEntity
 
 _DeviceTypeT = TypeVar(
     "_DeviceTypeT",
-    bound=Union[
-        SwitchBeeTimedSwitch,
-        SwitchBeeGroupSwitch,
-        SwitchBeeSwitch,
-        SwitchBeeTimerSwitch,
-    ],
+    bound=(
+        SwitchBeeTimedSwitch
+        | SwitchBeeGroupSwitch
+        | SwitchBeeSwitch
+        | SwitchBeeTimerSwitch
+    ),
 )
 
 

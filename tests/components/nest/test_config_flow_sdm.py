@@ -654,7 +654,7 @@ async def test_pubsub_subscriber_config_entry_reauth(
     result = await oauth.async_reauth(config_entry)
     await oauth.async_oauth_web_flow(result)
 
-    # Entering an updated access token refreshs the config entry.
+    # Entering an updated access token refreshes the config entry.
     entry = await oauth.async_finish_setup(result, {"code": "1234"})
     entry.data["token"].pop("expires_at")
     assert entry.unique_id == PROJECT_ID

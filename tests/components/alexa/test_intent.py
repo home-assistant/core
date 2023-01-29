@@ -1,5 +1,5 @@
 """The tests for the Alexa component."""
-# pylint: disable=protected-access
+
 from http import HTTPStatus
 import json
 
@@ -27,8 +27,9 @@ NPR_NEWS_MP3_URL = "https://pd.npr.org/anon.npr-mp3/npr/news/newscast.mp3"
 
 
 @pytest.fixture
-def alexa_client(loop, hass, hass_client):
+def alexa_client(event_loop, hass, hass_client):
     """Initialize a Home Assistant server for testing this module."""
+    loop = event_loop
 
     @callback
     def mock_service(call):
@@ -192,7 +193,9 @@ async def test_intent_launch_request_not_configured(alexa_client):
             "new": True,
             "sessionId": SESSION_ID,
             "application": {
-                "applicationId": "amzn1.echo-sdk-ams.app.000000-d0ed-0000-ad00-000000d00000"
+                "applicationId": (
+                    "amzn1.echo-sdk-ams.app.000000-d0ed-0000-ad00-000000d00000"
+                ),
             },
             "attributes": {},
             "user": {"userId": "amzn1.account.AM3B00000000000000000000000"},

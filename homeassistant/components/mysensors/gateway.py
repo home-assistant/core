@@ -329,6 +329,6 @@ def _gw_callback_factory(
         if msg_handler is None:
             return
 
-        hass.async_create_task(msg_handler(hass, gateway_id, msg))
+        msg_handler(hass, gateway_id, msg)
 
     return mysensors_callback

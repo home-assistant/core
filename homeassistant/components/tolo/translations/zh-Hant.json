@@ -18,5 +18,15 @@
                 "description": "\u8f38\u5165 TOLO Sauna \u8a2d\u5099\u4e4b\u4e3b\u6a5f\u540d\u7a31\u6216 IP \u4f4d\u5740\u3002"
             }
         }
+    },
+    "entity": {
+        "select": {
+            "lamp_mode": {
+                "state": {
+                    "automatic": "\u81ea\u52d5",
+                    "manual": "\u624b\u52d5"
+                }
+            }
+        }
     }
 }

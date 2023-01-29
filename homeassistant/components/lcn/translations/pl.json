@@ -3,7 +3,7 @@
         "trigger_type": {
             "codelock": "otrzymano kod blokady",
             "fingerprint": "otrzymano kod odcisku palca",
-            "send_keys": "otrzymano klucze wysy\u0142ania",
+            "send_keys": "otrzymano klucze",
             "transmitter": "otrzymano kod nadajnika",
             "transponder": "otrzymano kod transpondera"
         }

@@ -12,7 +12,8 @@
             "user": {
                 "data": {
                     "host": "IP adresa",
-                    "password": "Heslo"
+                    "password": "Heslo",
+                    "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
                 },
                 "description": "Zadajte \u00fadaje o svojom \u00fa\u010dte Control4 a IP adresu miestneho kontrol\u00e9ra."
             }

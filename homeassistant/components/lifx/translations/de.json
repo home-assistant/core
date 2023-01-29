@@ -8,10 +8,10 @@
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen"
         },
-        "flow_title": "{label} ({host}) {serial}",
+        "flow_title": "{label} ({group})",
         "step": {
             "discovery_confirm": {
-                "description": "M\u00f6chtest du {label} ({host}) {serial} einrichten?"
+                "description": "M\u00f6chtest du {label} ({group}) einrichten?"
             },
             "pick_device": {
                 "data": {

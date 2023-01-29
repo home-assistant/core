@@ -2,10 +2,12 @@
     "config": {
         "abort": {
             "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
-            "cannot_connect": "\u9023\u7dda\u5931\u6557"
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "station_not_found": "\u65bc zamg \u627e\u4e0d\u5230\u7ad9\u9ede ID"
         },
         "error": {
-            "cannot_connect": "\u9023\u7dda\u5931\u6557"
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "station_not_found": "\u65bc zamg \u627e\u4e0d\u5230\u7ad9\u9ede ID"
         },
         "flow_title": "{name}",
         "step": {

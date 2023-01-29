@@ -31,5 +31,38 @@
                 "title": "M\u00e4\u00e4ra Renault sidumise parameetrid"
             }
         }
+    },
+    "entity": {
+        "select": {
+            "charge_mode": {
+                "state": {
+                    "always": "Kohe",
+                    "always_charging": "Kohe",
+                    "schedule_mode": "Planeerija"
+                }
+            }
+        },
+        "sensor": {
+            "charge_state": {
+                "state": {
+                    "charge_ended": "Laadimine l\u00f5ppes",
+                    "charge_error": "Ei lae ega ole \u00fchendatud",
+                    "charge_in_progress": "Laeb",
+                    "energy_flap_opened": "Laadimisklapp avatud",
+                    "not_in_charge": "Ei lae",
+                    "unavailable": "Kadunud",
+                    "waiting_for_a_planned_charge": "Oodates planeeritud laadimist",
+                    "waiting_for_current_charge": "Ootab praegust laadimist"
+                }
+            },
+            "plug_state": {
+                "state": {
+                    "plug_error": "Pistiku viga",
+                    "plug_unknown": "\u00dchendus teadmata",
+                    "plugged": "\u00dchendatud",
+                    "unplugged": "Lahti \u00fchendatud"
+                }
+            }
+        }
     }
 }

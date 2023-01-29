@@ -3,7 +3,7 @@
         "abort": {
             "already_configured_device": "Enheten er allerede konfigurert",
             "cannot_connect": "Tilkobling mislyktes",
-            "updated_entry": "Dette innlegget har allerede v\u00e6rt oppsett, men navnet, apps, og/eller alternativer som er definert i konfigurasjon som ikke stemmer med det som tidligere er importert konfigurasjon, s\u00e5 konfigurasjonen innlegget har blitt oppdatert i henhold til dette."
+            "updated_entry": "Denne oppf\u00f8ringen er allerede satt opp, men navnet, appene og/eller alternativene som er definert i konfigurasjonen samsvarer ikke med den tidligere importerte konfigurasjonen, s\u00e5 konfigurasjonsoppf\u00f8ringen har blitt oppdatert tilsvarende."
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes",

@@ -28,5 +28,18 @@
                 "description": "Du m\u00e5 oppgi \"hoved\" API-n\u00f8kkelen fra UptimeRobot"
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "monitor_status": {
+                "state": {
+                    "down": "Ned",
+                    "not_checked_yet": "Ikke sjekket enn\u00e5",
+                    "pause": "Pause",
+                    "seems_down": "Virker nede",
+                    "up": "Opp"
+                }
+            }
+        }
     }
 }

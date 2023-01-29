@@ -125,7 +125,7 @@ async def test_media_view(hass, hass_client):
 async def test_upload_view(hass, hass_client, temp_dir, hass_admin_user):
     """Allow uploading media."""
 
-    img = (Path(__file__).parent.parent / "image/logo.png").read_bytes()
+    img = (Path(__file__).parent.parent / "image_upload/logo.png").read_bytes()
 
     def get_file(name):
         pic = io.BytesIO(img)

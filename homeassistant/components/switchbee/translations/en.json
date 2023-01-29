@@ -15,7 +15,7 @@
                     "password": "Password",
                     "username": "Username"
                 },
-                "description": "Setup SwitchBee integration with Home Assistant."
+                "description": "Set up SwitchBee integration with Home Assistant."
             }
         }
     }

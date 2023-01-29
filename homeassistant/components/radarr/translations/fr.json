@@ -25,11 +25,6 @@
             }
         }
     },
-    "issues": {
-        "deprecated_yaml": {
-            "title": "La configuration YAML pour Radarr sera bient\u00f4t supprim\u00e9e"
-        }
-    },
     "options": {
         "step": {
             "init": {

@@ -1,8 +1,0 @@
-{
-    "issues": {
-        "pending_removal": {
-            "description": "Deutsche Bahn-integrationen v\u00e4ntar p\u00e5 borttagning fr\u00e5n Home Assistant och kommer inte l\u00e4ngre att vara tillg\u00e4nglig fr\u00e5n och med Home Assistant 2022.11. \n\n Integrationen tas bort, eftersom den f\u00f6rlitar sig p\u00e5 webbskrapning, vilket inte \u00e4r till\u00e5tet. \n\n Ta bort Deutsche Bahn YAML-konfigurationen fr\u00e5n filen configuration.yaml och starta om Home Assistant f\u00f6r att \u00e5tg\u00e4rda problemet.",
-            "title": "Deutsche Bahn-integrationen tas bort"
-        }
-    }
-}

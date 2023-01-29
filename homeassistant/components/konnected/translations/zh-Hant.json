@@ -40,19 +40,19 @@
                 "data": {
                     "inverse": "\u53cd\u8f49\u958b\u555f/\u95dc\u9589\u72c0\u614b",
                     "name": "\u540d\u7a31",
-                    "type": "\u4e8c\u9032\u4f4d\u611f\u61c9\u5668\u985e\u5225"
+                    "type": "\u4e8c\u9032\u4f4d\u611f\u6e2c\u5668\u985e\u5225"
                 },
                 "description": "{zone}\u9078\u9805",
-                "title": "\u8a2d\u5b9a\u4e8c\u9032\u4f4d\u611f\u61c9\u5668"
+                "title": "\u8a2d\u5b9a\u4e8c\u9032\u4f4d\u611f\u6e2c\u5668"
             },
             "options_digital": {
                 "data": {
                     "name": "\u540d\u7a31",
                     "poll_interval": "\u66f4\u65b0\u9593\u8ddd\uff08\u5206\u9418\uff09",
-                    "type": "\u611f\u61c9\u5668\u985e\u5225"
+                    "type": "\u611f\u6e2c\u5668\u985e\u5225"
                 },
                 "description": "{zone}\u9078\u9805",
-                "title": "\u8a2d\u5b9a\u6578\u4f4d\u611f\u61c9\u5668"
+                "title": "\u8a2d\u5b9a\u6578\u4f4d\u611f\u6e2c\u5668"
             },
             "options_io": {
                 "data": {
@@ -65,7 +65,7 @@
                     "7": "\u5340\u57df 7",
                     "out": "OUT"
                 },
-                "description": "\u65bc {host} \u767c\u73fe {model}\u3002\u8acb\u65bc\u4e0b\u65b9\u6bcf\u4e00\u500b I/O \u9078\u64c7\u57fa\u672c\u8a2d\u5b9a - \u96a8\u8457 I/O \u4e0d\u540c\uff0c\u53ef\u5141\u8a31\u4e8c\u9032\u4f4d\u611f\u61c9\u5668\uff08\u958b\u555f/\u95dc\u9589\u72c0\u614b\uff09\u3001\u6578\u4f4d\u611f\u61c9\u5668\uff08DHT \u53ca ds18b20\uff09\uff0c\u6216\u8005\u53ef\u5207\u63db\u8f38\u51fa\u3002\u53ef\u4ee5\u65bc\u4e0b\u4e00\u6b65\u8a2d\u5b9a\u8a73\u7d30\u9078\u9805\u3002",
+                "description": "\u65bc {host} \u767c\u73fe {model}\u3002\u8acb\u65bc\u4e0b\u65b9\u6bcf\u4e00\u500b I/O \u9078\u64c7\u57fa\u672c\u8a2d\u5b9a - \u96a8\u8457 I/O \u4e0d\u540c\uff0c\u53ef\u5141\u8a31\u4e8c\u9032\u4f4d\u611f\u6e2c\u5668\uff08\u958b\u555f/\u95dc\u9589\u72c0\u614b\uff09\u3001\u6578\u4f4d\u611f\u6e2c\u5668\uff08DHT \u53ca ds18b20\uff09\uff0c\u6216\u8005\u53ef\u5207\u63db\u8f38\u51fa\u3002\u53ef\u4ee5\u65bc\u4e0b\u4e00\u6b65\u8a2d\u5b9a\u8a73\u7d30\u9078\u9805\u3002",
                 "title": "\u8a2d\u5b9a I/O"
             },
             "options_io_ext": {

@@ -34,8 +34,8 @@
                     "tls_insecure": "Validierung des Broker-Zertifikats ignorieren",
                     "transport": "MQTT-Transport",
                     "username": "Benutzername",
-                    "ws_headers": "WebSocket-Header im JSON-Format",
-                    "ws_path": "WebSocket-Pfad"
+                    "ws_headers": "WebSocket Header im JSON-Format",
+                    "ws_path": "WebSocket Pfad"
                 },
                 "description": "Bitte gib die Verbindungsinformationen deines MQTT-Brokers ein."
             },
@@ -44,7 +44,7 @@
                     "discovery": "Suche aktivieren"
                 },
                 "description": "M\u00f6chtest du Home Assistant so konfigurieren, dass er eine Verbindung mit dem MQTT-Broker herstellt, der vom Supervisor Add-on {addon} bereitgestellt wird?",
-                "title": "MQTT Broker per Supervisor add-on"
+                "title": "MQTT Broker per Supervisor Add-on"
             }
         }
     },
@@ -76,7 +76,7 @@
             "title": "Deine manuell konfigurierte(n) MQTT-{platform}(en) erfordert Aufmerksamkeit"
         },
         "deprecated_yaml_broker_settings": {
-            "description": "Die folgenden Einstellungen in \u201econfiguration.yaml\u201c wurden in den MQTT-Konfigurationseintrag migriert und \u00fcberschreiben nun die Einstellungen in \u201econfiguration.yaml\u201c:\n\u201e{deprecated_settings}\u201c \n\nBitte entferne diese Einstellungen aus \u201econfiguration.yaml\u201c und starte Home Assistant neu, um dieses Problem zu beheben. Weitere Informationen findest du in der [Dokumentation]( {more_info_url} ).",
+            "description": "Die folgenden Einstellungen in \u201econfiguration.yaml\u201c wurden in den MQTT-Konfigurationseintrag migriert und \u00fcberschreiben nun die Einstellungen in \u201econfiguration.yaml\u201c:\n\u201e{deprecated_settings}\u201c \n\nBitte entferne diese Einstellungen aus \u201econfiguration.yaml\u201c und starte Home Assistant neu, um dieses Problem zu beheben. Weitere Informationen findest du in der [Dokumentation]({more_info_url}).",
             "title": "Veraltete MQTT-Einstellungen in \u201econfiguration.yaml\u201c gefunden"
         }
     },
@@ -111,8 +111,8 @@
                     "tls_insecure": "Validierung des Broker-Zertifikats ignorieren",
                     "transport": "MQTT-Transport",
                     "username": "Benutzername",
-                    "ws_headers": "WebSocket-Header im JSON-Format",
-                    "ws_path": "WebSocket-Pfad"
+                    "ws_headers": "WebSocket Header im JSON-Format",
+                    "ws_path": "WebSocket Pfad"
                 },
                 "description": "Bitte gib die Verbindungsinformationen deines MQTT-Brokers ein.",
                 "title": "Broker-Optionen"
@@ -134,6 +134,15 @@
                 },
                 "description": "Erkennung - Wenn die Erkennung aktiviert ist (empfohlen), erkennt Home Assistant automatisch Ger\u00e4te und Einheiten, die ihre Konfiguration auf dem MQTT-Broker ver\u00f6ffentlichen. Wenn die Erkennung deaktiviert ist, muss die gesamte Konfiguration manuell vorgenommen werden.\nErkennungspr\u00e4fix - Das Pr\u00e4fix, mit dem ein Konfigurationsthema f\u00fcr die automatische Erkennung beginnen muss.\nBirth-Nachricht - Die Birth-Nachricht wird jedes Mal gesendet, wenn sich Home Assistant (erneut) mit dem MQTT-Broker verbindet.\nWill-Nachricht - Die Will-Nachricht wird jedes Mal gesendet, wenn Home Assistant die Verbindung zum Broker verliert, sowohl im Falle einer sauberen (z.B. Home Assistant wird heruntergefahren) als auch im Falle einer unsauberen (z.B. Home Assistant st\u00fcrzt ab oder verliert die Netzwerkverbindung) Trennung der Verbindung.",
                 "title": "MQTT-Optionen"
+            }
+        }
+    },
+    "selector": {
+        "set_ca_cert": {
+            "options": {
+                "auto": "Auto",
+                "custom": "Benutzerdefiniert",
+                "off": "Aus"
             }
         }
     }

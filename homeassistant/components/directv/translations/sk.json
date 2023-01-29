@@ -10,6 +10,12 @@
         "flow_title": "{name}",
         "step": {
             "ssdp_confirm": {
+                "data": {
+                    "few": "Pr\u00e1zdnych",
+                    "many": "Pr\u00e1zdnych",
+                    "one": "Pr\u00e1zdny",
+                    "other": "Pr\u00e1zdny"
+                },
                 "description": "Chcete nastavi\u0165 {name}?"
             },
             "user": {

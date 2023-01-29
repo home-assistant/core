@@ -20,7 +20,7 @@
                 "data": {
                     "ip_address": "IP Address"
                 },
-                "description": "Do you want to start set up?"
+                "description": "Do you want to start setup?"
             },
             "zeroconf_confirm": {
                 "description": "Do you want to add the devolo home network device with the hostname `{host_name}` to Home Assistant?",

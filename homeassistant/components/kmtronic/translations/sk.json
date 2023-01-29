@@ -12,7 +12,17 @@
             "user": {
                 "data": {
                     "host": "Hostite\u013e",
-                    "password": "Heslo"
+                    "password": "Heslo",
+                    "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "reverse": "Logika sp\u00e4tn\u00e9ho sp\u00edna\u010da (pou\u017eite NC)"
                 }
             }
         }

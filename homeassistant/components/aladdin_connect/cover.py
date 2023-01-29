@@ -47,8 +47,8 @@ async def async_setup_platform(
 ) -> None:
     """Set up Aladdin Connect devices yaml depreciated."""
     _LOGGER.warning(
-        "Configuring Aladdin Connect through yaml is deprecated"
-        "Please remove it from your configuration as it has already been imported to a config entry"
+        "Configuring Aladdin Connect through yaml is deprecated. Please remove it from"
+        " your configuration as it has already been imported to a config entry"
     )
     await hass.async_create_task(
         hass.config_entries.flow.async_init(
@@ -91,31 +91,27 @@ class AladdinDevice(CoverEntity):
         self._name = device["name"]
         self._serial = device["serial"]
         self._model = device["model"]
-        self._attr_unique_id = f"{self._device_id}-{self._number}"
-        self._attr_has_entity_name = True
 
-    @property
-    def device_info(self) -> DeviceInfo | None:
-        """Device information for Aladdin Connect cover."""
-        return DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{self._device_id}-{self._number}")},
             name=self._name,
             manufacturer="Overhead Door",
             model=self._model,
         )
+        self._attr_has_entity_name = True
+        self._attr_unique_id = f"{self._device_id}-{self._number}"
 
     async def async_added_to_hass(self) -> None:
         """Connect Aladdin Connect to the cloud."""
 
-        async def update_callback() -> None:
-            """Schedule a state update."""
-            self.async_write_ha_state()
-
-        self._acc.register_callback(update_callback, self._serial, self._number)
+        self._acc.register_callback(
+            self.async_write_ha_state, self._serial, self._number
+        )
         await self._acc.get_doors(self._serial)
 
     async def async_will_remove_from_hass(self) -> None:
         """Close Aladdin Connect before removing."""
+        self._acc.unregister_callback(self._serial, self._number)
         await self._acc.close()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
