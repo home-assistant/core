@@ -1,13 +1,12 @@
 {
   "config": {
-    "flow_title": "{name}",
+    "flow_title": "OneTracker",
     "step": {
       "user": {
         "title": "Connect to OneTracker",
         "description": "Setup your connection to OneTracker API.",
         "data": {
-          "name": "[%key:common::config_flow::data::name%]",
-          "username": "[%key:common::config_flow::data::username%]",
+          "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
       }
@@ -22,9 +21,10 @@
   },
   "options": {
     "step": {
-      "init": {
+      "user": {
         "data": {
-          "scan_interval": "Update frequency (seconds)"
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     }

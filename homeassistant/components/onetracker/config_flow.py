@@ -8,12 +8,12 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
 from .api import OneTrackerAPI, OneTrackerAPIException
-from .const import DEFAULT_NAME, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,6 +43,9 @@ class OneTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, str] | None = None
     ) -> FlowResult:
         """Handle a flow initiated by the user."""
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
+
         errors = {}
 
         if user_input is not None:
@@ -65,11 +68,6 @@ class OneTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_PASSWORD): str,
         }
 
-        if self.show_advanced_options:
-            data_schema[
-                vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL)
-            ] = int
-
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(data_schema),
@@ -89,17 +87,13 @@ class OneTrackerOptionsFlowHandler(OptionsFlow):
     ) -> FlowResult:
         """Manage OneTracker options."""
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            return self.async_create_entry(title=DEFAULT_NAME, data=user_input)
 
         options = {
-            vol.Required(CONF_EMAIL, msg="Username"): str,
-            vol.Required(CONF_PASSWORD): str,
-            vol.Optional(
-                CONF_SCAN_INTERVAL,
-                default=self.config_entry.options.get(
-                    CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                ),
-            ): int,
+            vol.Required(CONF_EMAIL, default=self.config_entry.data[CONF_EMAIL]): str,
+            vol.Required(
+                CONF_PASSWORD, default=self.config_entry.data[CONF_PASSWORD]
+            ): str,
         }
 
         return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
