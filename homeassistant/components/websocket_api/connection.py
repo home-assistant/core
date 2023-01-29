@@ -50,9 +50,9 @@ class ActiveConnection:
 
     def get_description(self, request: web.Request | None) -> str:
         """Return a description of the connection."""
-        description = f"{self.user.name} ({self.user.id})"
+        description = self.user.name or ""
         if request:
-            description += describe_request(request)
+            description += " " + describe_request(request)
         return description
 
     def context(self, msg: dict[str, Any]) -> Context:
@@ -151,6 +151,6 @@ class ActiveConnection:
 
         if code:
             err_message += f" ({code})"
-        err_message += self.get_description(current_request.get())
+        err_message += " " + self.get_description(current_request.get())
 
         log_handler("Error handling message: %s", err_message)
