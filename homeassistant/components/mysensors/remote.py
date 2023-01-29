@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 from homeassistant.components.remote import (
     ATTR_COMMAND,
@@ -59,7 +59,7 @@ class MySensorsRemote(MySensorsEntity, RemoteEntity):
     def is_on(self) -> bool | None:
         """Return True if remote is on."""
         set_req = self.gateway.const.SetReq
-        value = cast(Optional[str], self._child.values.get(set_req.V_LIGHT))
+        value = cast(str | None, self._child.values.get(set_req.V_LIGHT))
         if value is None:
             return None
         return value == "1"
@@ -120,5 +120,5 @@ class MySensorsRemote(MySensorsEntity, RemoteEntity):
         """Update the controller with the latest value from a device."""
         super()._async_update()
         self._current_command = cast(
-            Optional[str], self._child.values.get(self.value_type)
+            str | None, self._child.values.get(self.value_type)
         )

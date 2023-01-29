@@ -31,8 +31,10 @@ async def test_diagnostics(
                 },
                 "device_type": {
                     "__type": "<enum 'DeviceType'>",
-                    "repr": "<DeviceType.V4: ('Switcher V4', '0317', "
-                    "1, <DeviceCategory.WATER_HEATER: 1>)>",
+                    "repr": (
+                        "<DeviceType.V4: ('Switcher V4', '0317', "
+                        "1, <DeviceCategory.WATER_HEATER: 1>)>"
+                    ),
                 },
                 "electric_current": 12.8,
                 "ip_address": REDACTED,

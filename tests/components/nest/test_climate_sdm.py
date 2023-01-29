@@ -1428,6 +1428,9 @@ async def test_thermostat_hvac_mode_failure(
                 "availableModes": ["HEAT", "COOL", "HEATCOOL", "OFF"],
                 "mode": "COOL",
             },
+            "sdm.devices.traits.ThermostatTemperatureSetpoint": {
+                "coolCelsius": 25.0,
+            },
             "sdm.devices.traits.Fan": {
                 "timerMode": "OFF",
                 "timerTimeout": "2019-05-10T03:22:54Z",
@@ -1449,26 +1452,36 @@ async def test_thermostat_hvac_mode_failure(
     assert thermostat.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
 
     auth.responses = [aiohttp.web.Response(status=HTTPStatus.BAD_REQUEST)]
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as e_info:
         await common.async_set_hvac_mode(hass, HVACMode.HEAT)
         await hass.async_block_till_done()
+    assert "HVAC mode" in str(e_info)
+    assert "climate.my_thermostat" in str(e_info)
+    assert HVACMode.HEAT in str(e_info)
 
     auth.responses = [aiohttp.web.Response(status=HTTPStatus.BAD_REQUEST)]
-    with pytest.raises(HomeAssistantError):
-        await common.async_set_temperature(
-            hass, hvac_mode=HVACMode.HEAT, temperature=25.0
-        )
+    with pytest.raises(HomeAssistantError) as e_info:
+        await common.async_set_temperature(hass, temperature=25.0)
         await hass.async_block_till_done()
+    assert "temperature" in str(e_info)
+    assert "climate.my_thermostat" in str(e_info)
+    assert "25.0" in str(e_info)
 
     auth.responses = [aiohttp.web.Response(status=HTTPStatus.BAD_REQUEST)]
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as e_info:
         await common.async_set_fan_mode(hass, FAN_ON)
         await hass.async_block_till_done()
+    assert "fan mode" in str(e_info)
+    assert "climate.my_thermostat" in str(e_info)
+    assert FAN_ON in str(e_info)
 
     auth.responses = [aiohttp.web.Response(status=HTTPStatus.BAD_REQUEST)]
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as e_info:
         await common.async_set_preset_mode(hass, PRESET_ECO)
         await hass.async_block_till_done()
+    assert "preset mode" in str(e_info)
+    assert "climate.my_thermostat" in str(e_info)
+    assert PRESET_ECO in str(e_info)
 
 
 async def test_thermostat_available(

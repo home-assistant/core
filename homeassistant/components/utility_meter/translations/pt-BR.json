@@ -31,5 +31,20 @@
             }
         }
     },
+    "selector": {
+        "cycle": {
+            "options": {
+                "bimonthly": "A cada dois meses",
+                "daily": "Diariamente",
+                "hourly": "De hora em hora",
+                "monthly": "Mensalmente",
+                "none": "Sem ciclo",
+                "quarter-hourly": "A cada 15 minutos",
+                "quarterly": "Trimestralmente",
+                "weekly": "Semanalmente",
+                "yearly": "Anualmente"
+            }
+        }
+    },
     "title": "Medidor de utilidade"
 }

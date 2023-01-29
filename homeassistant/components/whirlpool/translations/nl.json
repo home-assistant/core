@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Account is al ingesteld"
+        },
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
             "invalid_auth": "Ongeldige authenticatie",

@@ -30,5 +30,18 @@
             }
         }
     },
+    "selector": {
+        "type": {
+            "options": {
+                "last": "Sist oppdatert",
+                "max": "Maksimum",
+                "mean": "Aritmetisk gjennomsnitt",
+                "median": "Median",
+                "min": "Minimum",
+                "range": "Statistisk rekkevidde",
+                "sum": "Sum"
+            }
+        }
+    },
     "title": "Kombiner tilstanden til flere sensorer"
 }

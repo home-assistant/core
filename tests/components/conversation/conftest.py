@@ -11,5 +11,5 @@ from . import MockAgent
 def mock_agent(hass):
     """Mock agent."""
     agent = MockAgent()
-    conversation.async_set_agent(hass, agent)
+    conversation.async_set_agent(hass, None, agent)
     return agent

@@ -31,21 +31,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     intent.async_register(
         hass,
-        OnOffIntentHandler(
-            intent.INTENT_TURN_ON, HA_DOMAIN, SERVICE_TURN_ON, "Turned {} on"
-        ),
+        OnOffIntentHandler(intent.INTENT_TURN_ON, HA_DOMAIN, SERVICE_TURN_ON),
     )
     intent.async_register(
         hass,
-        OnOffIntentHandler(
-            intent.INTENT_TURN_OFF, HA_DOMAIN, SERVICE_TURN_OFF, "Turned {} off"
-        ),
+        OnOffIntentHandler(intent.INTENT_TURN_OFF, HA_DOMAIN, SERVICE_TURN_OFF),
     )
     intent.async_register(
         hass,
-        intent.ServiceIntentHandler(
-            intent.INTENT_TOGGLE, HA_DOMAIN, SERVICE_TOGGLE, "Toggled {}"
-        ),
+        intent.ServiceIntentHandler(intent.INTENT_TOGGLE, HA_DOMAIN, SERVICE_TOGGLE),
     )
 
     return True

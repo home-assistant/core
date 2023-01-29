@@ -34,4 +34,4 @@ def fixture_dsm():
         dsm.surveillance_station.update = AsyncMock(return_value=True)
         dsm.upgrade.update = AsyncMock(return_value=True)
 
-    yield dsm
+    return dsm

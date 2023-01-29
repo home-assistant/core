@@ -157,9 +157,9 @@ def request_handler_factory(
         elif result is None:
             bresult = b""
         else:
-            assert (
-                False
-            ), f"Result should be None, string, bytes or StreamResponse. Got: {result}"
+            raise TypeError(
+                f"Result should be None, string, bytes or StreamResponse. Got: {result}"
+            )
 
         return web.Response(body=bresult, status=status_code)
 

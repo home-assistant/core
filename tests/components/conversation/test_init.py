@@ -1,12 +1,13 @@
 """The tests for the Conversation component."""
 from http import HTTPStatus
-from unittest.mock import ANY, patch
+from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components import conversation
-from homeassistant.core import DOMAIN as HASS_DOMAIN
-from homeassistant.helpers import intent
+from homeassistant.components.cover import SERVICE_OPEN_COVER
+from homeassistant.core import DOMAIN as HASS_DOMAIN, Context
+from homeassistant.helpers import entity_registry, intent
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
@@ -37,10 +38,15 @@ async def test_http_processing_intent(
     hass, init_components, hass_client, hass_admin_user
 ):
     """Test processing intent via HTTP API."""
-    hass.states.async_set("light.kitchen", "on")
+    # Add an alias
+    entities = entity_registry.async_get(hass)
+    entities.async_get_or_create("light", "demo", "1234", suggested_object_id="kitchen")
+    entities.async_update_entity("light.kitchen", aliases={"my cool light"})
+    hass.states.async_set("light.kitchen", "off")
+
     client = await hass_client()
     resp = await client.post(
-        "/api/conversation/process", json={"text": "turn on kitchen"}
+        "/api/conversation/process", json={"text": "turn on my cool light"}
     )
 
     assert resp.status == HTTPStatus.OK
@@ -53,7 +59,7 @@ async def test_http_processing_intent(
             "speech": {
                 "plain": {
                     "extra_data": None,
-                    "speech": "Turned kitchen on",
+                    "speech": "Turned on my cool light",
                 }
             },
             "language": hass.config.language,
@@ -120,7 +126,7 @@ async def test_http_api(hass, init_components, hass_client):
     assert data == {
         "response": {
             "card": {},
-            "speech": {"plain": {"extra_data": None, "speech": "Turned kitchen on"}},
+            "speech": {"plain": {"extra_data": None, "speech": "Turned on kitchen"}},
             "language": hass.config.language,
             "response_type": "action_done",
             "data": {
@@ -161,7 +167,7 @@ async def test_http_api_no_match(hass, init_components, hass_client):
             "card": {},
             "speech": {
                 "plain": {
-                    "speech": "Sorry, I didn't understand that",
+                    "speech": "Sorry, I couldn't understand that",
                     "extra_data": None,
                 },
             },
@@ -178,11 +184,9 @@ async def test_http_api_handle_failure(hass, init_components, hass_client):
 
     hass.states.async_set("light.kitchen", "off")
 
-    # Raise an "unexpected" error during intent handling
+    # Raise an error during intent handling
     def async_handle_error(*args, **kwargs):
-        raise intent.IntentUnexpectedError(
-            "Unexpected error turning on the kitchen light"
-        )
+        raise intent.IntentHandleError()
 
     with patch("homeassistant.helpers.intent.async_handle", new=async_handle_error):
         resp = await client.post(
@@ -199,12 +203,49 @@ async def test_http_api_handle_failure(hass, init_components, hass_client):
             "speech": {
                 "plain": {
                     "extra_data": None,
-                    "speech": "Unexpected error turning on the kitchen light",
+                    "speech": "An unexpected error occurred while handling the intent",
                 }
             },
             "language": hass.config.language,
             "data": {
                 "code": "failed_to_handle",
+            },
+        },
+        "conversation_id": None,
+    }
+
+
+async def test_http_api_unexpected_failure(hass, init_components, hass_client):
+    """Test the HTTP conversation API with an unexpected error during handling."""
+    client = await hass_client()
+
+    hass.states.async_set("light.kitchen", "off")
+
+    # Raise an "unexpected" error during intent handling
+    def async_handle_error(*args, **kwargs):
+        raise intent.IntentUnexpectedError()
+
+    with patch("homeassistant.helpers.intent.async_handle", new=async_handle_error):
+        resp = await client.post(
+            "/api/conversation/process", json={"text": "turn on the kitchen"}
+        )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    assert data == {
+        "response": {
+            "response_type": "error",
+            "card": {},
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "An unexpected error occurred while handling the intent",
+                }
+            },
+            "language": hass.config.language,
+            "data": {
+                "code": "unknown",
             },
         },
         "conversation_id": None,
@@ -254,10 +295,10 @@ async def test_custom_agent(hass, hass_client, hass_admin_user, mock_agent):
     }
 
     assert len(mock_agent.calls) == 1
-    assert mock_agent.calls[0][0] == "Test Text"
-    assert mock_agent.calls[0][1].user_id == hass_admin_user.id
-    assert mock_agent.calls[0][2] == "test-conv-id"
-    assert mock_agent.calls[0][3] == "test-language"
+    assert mock_agent.calls[0].text == "Test Text"
+    assert mock_agent.calls[0].context.user_id == hass_admin_user.id
+    assert mock_agent.calls[0].conversation_id == "test-conv-id"
+    assert mock_agent.calls[0].language == "test-language"
 
 
 @pytest.mark.parametrize(
@@ -302,13 +343,13 @@ async def test_ws_api(hass, hass_ws_client, payload):
             "speech": {
                 "plain": {
                     "extra_data": None,
-                    "speech": "Sorry, I didn't understand that",
+                    "speech": "Sorry, I couldn't understand that",
                 }
             },
             "language": payload.get("language", hass.config.language),
             "data": {"code": "no_intent_match"},
         },
-        "conversation_id": payload.get("conversation_id") or ANY,
+        "conversation_id": None,
     }
 
 
@@ -484,3 +525,47 @@ async def test_language_region(hass, init_components):
     assert call.domain == HASS_DOMAIN
     assert call.service == "turn_on"
     assert call.data == {"entity_id": "light.kitchen"}
+
+
+async def test_reload_on_new_component(hass):
+    """Test intents being reloaded when a new component is loaded."""
+    language = hass.config.language
+    assert await async_setup_component(hass, "conversation", {})
+
+    # Load intents
+    agent = await conversation._get_agent(hass)
+    assert isinstance(agent, conversation.DefaultAgent)
+    await agent.async_prepare()
+
+    lang_intents = agent._lang_intents.get(language)
+    assert lang_intents is not None
+    loaded_components = set(lang_intents.loaded_components)
+
+    # Load another component
+    assert await async_setup_component(hass, "light", {})
+
+    # Intents should reload
+    await agent.async_prepare()
+    lang_intents = agent._lang_intents.get(language)
+    assert lang_intents is not None
+
+    assert {"light"} == (lang_intents.loaded_components - loaded_components)
+
+
+async def test_non_default_response(hass, init_components):
+    """Test intent response that is not the default."""
+    hass.states.async_set("cover.front_door", "closed")
+    async_mock_service(hass, "cover", SERVICE_OPEN_COVER)
+
+    agent = await conversation._get_agent(hass)
+    assert isinstance(agent, conversation.DefaultAgent)
+
+    result = await agent.async_process(
+        conversation.ConversationInput(
+            text="open the front door",
+            context=Context(),
+            conversation_id=None,
+            language=hass.config.language,
+        )
+    )
+    assert result.response.speech["plain"]["speech"] == "Opened front door"

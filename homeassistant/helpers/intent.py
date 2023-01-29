@@ -20,7 +20,7 @@ from homeassistant.core import Context, HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
 
-from . import area_registry, config_validation as cv, entity_registry
+from . import area_registry, config_validation as cv, device_registry, entity_registry
 
 _LOGGER = logging.getLogger(__name__)
 _SlotsType = dict[str, Any]
@@ -159,6 +159,7 @@ def async_match_states(
     states: Iterable[State] | None = None,
     entities: entity_registry.EntityRegistry | None = None,
     areas: area_registry.AreaRegistry | None = None,
+    devices: device_registry.DeviceRegistry | None = None,
 ) -> Iterable[State]:
     """Find states that match the constraints."""
     if states is None:
@@ -206,11 +207,28 @@ def async_match_states(
         assert area is not None, f"No area named {area_name}"
 
     if area is not None:
+        if devices is None:
+            devices = device_registry.async_get(hass)
+
+        entity_area_ids: dict[str, str | None] = {}
+        for _state, entity in states_and_entities:
+            if entity is None:
+                continue
+
+            if entity.area_id:
+                # Use entity's area id first
+                entity_area_ids[entity.id] = entity.area_id
+            elif entity.device_id:
+                # Fall back to device area if not set on entity
+                device = devices.async_get(entity.device_id)
+                if device is not None:
+                    entity_area_ids[entity.id] = device.area_id
+
         # Filter by area
         states_and_entities = [
             (state, entity)
             for state, entity in states_and_entities
-            if (entity is not None) and (entity.area_id == area.id)
+            if (entity is not None) and (entity_area_ids.get(entity.id) == area.id)
         ]
 
     if name is not None:
@@ -286,7 +304,7 @@ class ServiceIntentHandler(IntentHandler):
     }
 
     def __init__(
-        self, intent_type: str, domain: str, service: str, speech: str
+        self, intent_type: str, domain: str, service: str, speech: str | None = None
     ) -> None:
         """Create Service Intent Handler."""
         self.intent_type = intent_type
@@ -382,7 +400,9 @@ class ServiceIntentHandler(IntentHandler):
         response.async_set_results(
             success_results=success_results,
         )
-        response.async_set_speech(self.speech.format(speech_name))
+
+        if self.speech is not None:
+            response.async_set_speech(self.speech.format(speech_name))
 
         return response
 

@@ -44,7 +44,9 @@ async def test_broadcast_no_targets(
             {notify.ATTR_MESSAGE: message},
         )
         await hass.async_block_till_done()
-    mock_text_assistant.assert_called_once_with(ExpectedCredentials(), language_code)
+    mock_text_assistant.assert_called_once_with(
+        ExpectedCredentials(), language_code, audio_out=False
+    )
     mock_text_assistant.assert_has_calls([call().__enter__().assist(expected_command)])
 
 
@@ -84,7 +86,7 @@ async def test_broadcast_one_target(
 
     with patch(
         "homeassistant.components.google_assistant_sdk.helpers.TextAssistant.assist",
-        return_value=["text_response", None],
+        return_value=("text_response", None, b""),
     ) as mock_assist_call:
         await hass.services.async_call(
             notify.DOMAIN,
@@ -108,7 +110,7 @@ async def test_broadcast_two_targets(
     expected_command2 = "broadcast to master bedroom time for dinner"
     with patch(
         "homeassistant.components.google_assistant_sdk.helpers.TextAssistant.assist",
-        return_value=["text_response", None],
+        return_value=("text_response", None, b""),
     ) as mock_assist_call:
         await hass.services.async_call(
             notify.DOMAIN,
@@ -129,7 +131,7 @@ async def test_broadcast_empty_message(
 
     with patch(
         "homeassistant.components.google_assistant_sdk.helpers.TextAssistant.assist",
-        return_value=["text_response", None],
+        return_value=("text_response", None, b""),
     ) as mock_assist_call:
         await hass.services.async_call(
             notify.DOMAIN,

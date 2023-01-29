@@ -5,7 +5,7 @@ from collections.abc import Awaitable, Callable, Coroutine
 from datetime import datetime
 import functools
 import logging
-from typing import Any, TypeVar
+from typing import Any, Concatenate, ParamSpec, TypeVar
 
 from adb_shell.exceptions import (
     AdbTimeoutError,
@@ -16,7 +16,6 @@ from adb_shell.exceptions import (
 )
 from androidtv.constants import APPS, KEYS
 from androidtv.exceptions import LockNotAcquiredException
-from typing_extensions import Concatenate, ParamSpec
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification

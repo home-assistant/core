@@ -9,11 +9,10 @@ from functools import wraps
 from http import HTTPStatus
 import logging
 from ssl import SSLContext
-from typing import Any, TypeVar, cast
+from typing import Any, Concatenate, ParamSpec, TypeVar, cast
 
 from aiowebostv import WebOsClient, WebOsTvPairError
 import async_timeout
-from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant import util
 from homeassistant.components.media_player import (

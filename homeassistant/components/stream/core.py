@@ -374,7 +374,6 @@ class StreamView(HomeAssistantView):
     """
 
     requires_auth = False
-    platform = None
 
     async def get(
         self, request: web.Request, token: str, sequence: str = "", part_num: str = ""

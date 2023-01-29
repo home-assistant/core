@@ -1,0 +1,23 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "location": "Plassering"
+                },
+                "description": "Velg stedet du vil motta Stookwijzer-informasjonen for."
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "stookwijzer": {
+                "state": {
+                    "blauw": "Bl\u00e5",
+                    "oranje": "Oransje",
+                    "rood": "R\u00f8d"
+                }
+            }
+        }
+    }
+}

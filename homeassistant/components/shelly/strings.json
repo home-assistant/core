@@ -71,5 +71,14 @@
     "abort": {
       "ble_unsupported": "Bluetooth support requires firmware version {ble_min_version} or newer."
     }
+  },
+  "selector": {
+    "ble_scanner_mode": {
+      "options": {
+        "disabled": "Disabled",
+        "active": "Active",
+        "passive": "Passive"
+      }
+    }
   }
 }

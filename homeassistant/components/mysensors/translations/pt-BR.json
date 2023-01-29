@@ -85,6 +85,17 @@
         }
     },
     "issues": {
+        "deprecated_entity": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Atualize todas as automa\u00e7\u00f5es ou scripts que usam essa entidade em chamadas de servi\u00e7o usando o servi\u00e7o `{deprecated_service}` para, em vez disso, usar o servi\u00e7o `{alternate_service}` com um ID de entidade de destino de `{alternate_target}`.",
+                        "title": "A entidade {deprecated_entity} ser\u00e1 removida"
+                    }
+                }
+            },
+            "title": "A entidade {deprecated_entity} ser\u00e1 removida"
+        },
         "deprecated_service": {
             "fix_flow": {
                 "step": {

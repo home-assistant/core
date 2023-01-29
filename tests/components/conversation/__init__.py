@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from homeassistant.components import conversation
-from homeassistant.core import Context
 from homeassistant.helpers import intent
 
 
@@ -15,16 +14,12 @@ class MockAgent(conversation.AbstractConversationAgent):
         self.response = "Test response"
 
     async def async_process(
-        self,
-        text: str,
-        context: Context,
-        conversation_id: str | None = None,
-        language: str | None = None,
-    ) -> conversation.ConversationResult | None:
+        self, user_input: conversation.ConversationInput
+    ) -> conversation.ConversationResult:
         """Process some text."""
-        self.calls.append((text, context, conversation_id, language))
-        response = intent.IntentResponse(language=language)
+        self.calls.append(user_input)
+        response = intent.IntentResponse(language=user_input.language)
         response.async_set_speech(self.response)
         return conversation.ConversationResult(
-            response=response, conversation_id=conversation_id
+            response=response, conversation_id=user_input.conversation_id
         )

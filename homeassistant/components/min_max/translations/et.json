@@ -30,5 +30,18 @@
             }
         }
     },
+    "selector": {
+        "type": {
+            "options": {
+                "last": "Viimati uuendatud",
+                "max": "Maksimaalne",
+                "mean": "Aritmeetiline keskmine",
+                "median": "Mediaan",
+                "min": "Minimaalne",
+                "range": "Statistiline vahemik",
+                "sum": "Summa"
+            }
+        }
+    },
     "title": "\u00dchenda mitme anduri olek"
 }

@@ -10,12 +10,13 @@ import voluptuous as vol
 from homeassistant import core
 from homeassistant.components import http, websocket_api
 from homeassistant.components.http.data_validator import RequestDataValidator
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, intent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
-from .agent import AbstractConversationAgent, ConversationResult
+from .agent import AbstractConversationAgent, ConversationInput, ConversationResult
 from .default_agent import DefaultAgent
 
 _LOGGER = logging.getLogger(__name__)
@@ -62,9 +63,23 @@ CONFIG_SCHEMA = vol.Schema(
 
 @core.callback
 @bind_hass
-def async_set_agent(hass: core.HomeAssistant, agent: AbstractConversationAgent | None):
+def async_set_agent(
+    hass: core.HomeAssistant,
+    config_entry: ConfigEntry,
+    agent: AbstractConversationAgent,
+):
     """Set the agent to handle the conversations."""
     hass.data[DATA_AGENT] = agent
+
+
+@core.callback
+@bind_hass
+def async_unset_agent(
+    hass: core.HomeAssistant,
+    config_entry: ConfigEntry,
+):
+    """Set the agent to handle the conversations."""
+    hass.data[DATA_AGENT] = None
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -79,7 +94,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         agent = await _get_agent(hass)
         try:
             await agent.async_process(
-                text, service.context, language=service.data.get(ATTR_LANGUAGE)
+                ConversationInput(
+                    text=text,
+                    context=service.context,
+                    conversation_id=None,
+                    language=service.data.get(ATTR_LANGUAGE, hass.config.language),
+                )
             )
         except intent.IntentHandleError as err:
             _LOGGER.error("Error processing %s: %s", text, err)
@@ -99,7 +119,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, websocket_process)
     websocket_api.async_register_command(hass, websocket_prepare)
     websocket_api.async_register_command(hass, websocket_get_agent_info)
-    websocket_api.async_register_command(hass, websocket_set_onboarding)
 
     return True
 
@@ -158,39 +177,15 @@ async def websocket_get_agent_info(
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
-    """Do we need onboarding."""
+    """Info about the agent in use."""
     agent = await _get_agent(hass)
 
     connection.send_result(
         msg["id"],
         {
-            "onboarding": await agent.async_get_onboarding(),
             "attribution": agent.attribution,
         },
     )
-
-
-@websocket_api.websocket_command(
-    {
-        vol.Required("type"): "conversation/onboarding/set",
-        vol.Required("shown"): bool,
-    }
-)
-@websocket_api.async_response
-async def websocket_set_onboarding(
-    hass: HomeAssistant,
-    connection: websocket_api.ActiveConnection,
-    msg: dict[str, Any],
-) -> None:
-    """Set onboarding status."""
-    agent = await _get_agent(hass)
-
-    success = await agent.async_set_onboarding(msg["shown"])
-
-    if success:
-        connection.send_result(msg["id"])
-    else:
-        connection.send_error(msg["id"], "error", "Failed to set onboarding")
 
 
 class ConversationProcessView(http.HomeAssistantView):
@@ -242,44 +237,12 @@ async def async_converse(
     if language is None:
         language = hass.config.language
 
-    result: ConversationResult | None = None
-    intent_response: intent.IntentResponse | None = None
-
-    try:
-        result = await agent.async_process(text, context, conversation_id, language)
-    except intent.IntentHandleError as err:
-        # Match was successful, but target(s) were invalid
-        intent_response = intent.IntentResponse(language=language)
-        intent_response.async_set_error(
-            intent.IntentResponseErrorCode.NO_VALID_TARGETS,
-            str(err),
+    result = await agent.async_process(
+        ConversationInput(
+            text=text,
+            context=context,
+            conversation_id=conversation_id,
+            language=language,
         )
-    except intent.IntentUnexpectedError as err:
-        # Match was successful, but an error occurred while handling intent
-        intent_response = intent.IntentResponse(language=language)
-        intent_response.async_set_error(
-            intent.IntentResponseErrorCode.FAILED_TO_HANDLE,
-            str(err),
-        )
-    except intent.IntentError as err:
-        # Unknown error
-        intent_response = intent.IntentResponse(language=language)
-        intent_response.async_set_error(
-            intent.IntentResponseErrorCode.UNKNOWN,
-            str(err),
-        )
-
-    if result is None:
-        if intent_response is None:
-            # Match was not successful
-            intent_response = intent.IntentResponse(language=language)
-            intent_response.async_set_error(
-                intent.IntentResponseErrorCode.NO_INTENT_MATCH,
-                "Sorry, I didn't understand that",
-            )
-
-        result = ConversationResult(
-            response=intent_response, conversation_id=conversation_id
-        )
-
+    )
     return result

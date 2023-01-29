@@ -33,7 +33,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-TEMPER_SENSORS = []
+TEMPER_SENSORS: list[TemperSensor] = []
 
 
 def get_temper_devices():

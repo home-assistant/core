@@ -47,6 +47,10 @@
         }
     },
     "issues": {
+        "api_password_deprecated": {
+            "description": "Heslo API pre ESPHome je zastaran\u00e9 a namiesto neho sa odpor\u00fa\u010da pou\u017ei\u0165 \u0161ifrovac\u00ed k\u013e\u00fa\u010d API. \n\n Ak chcete vyrie\u0161i\u0165 tento probl\u00e9m, odstr\u00e1\u0148te heslo rozhrania API a pridajte \u0161ifrovac\u00ed k\u013e\u00fa\u010d do zariadenia ESPHome.",
+            "title": "Heslo rozhrania API zastaran\u00e9 na {name}"
+        },
         "ble_firmware_outdated": {
             "description": "Ak chcete zlep\u0161i\u0165 spo\u013eahlivos\u0165 a v\u00fdkon Bluetooth, d\u00f4razne odpor\u00fa\u010dame aktualizova\u0165 {name} na ESPHome {version} alebo nov\u0161\u00ed. Pri aktualiz\u00e1cii zariadenia na ESPHome {version} sa odpor\u00fa\u010da pou\u017ei\u0165 namiesto bezdr\u00f4tovej aktualiz\u00e1cie s\u00e9riov\u00fd k\u00e1bel, aby ste mohli vyu\u017ei\u0165 nov\u00fa sch\u00e9mu oddielov.",
             "title": "Aktualizujte {name} pomocou ESPHome {version} alebo nov\u0161ieho"
