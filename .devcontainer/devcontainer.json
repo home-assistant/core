@@ -1,10 +1,9 @@
 {
-  "name": "Home Assistant Dev",
+  "name": "Home Assistant Core",
   "context": "..",
   "dockerFile": "../Dockerfile.dev",
   "containerUser": "vscode",
-  "updateContentCommand": "pre-commit install --install-hooks",
-  "postCreateCommand": "script/setup",
+  "postCreateCommand": "script/setup && pre-commit install",
   "postStartCommand": "script/bootstrap",
   "containerEnv": {
     "DEVCONTAINER": "1",
@@ -13,8 +12,7 @@
   "forwardPorts": [8123],
   "portsAttributes": {
     "8123": {
-      "label": "Home Assistant",
-      "onAutoForward": "notify"
+      "label": "Home Assistant"
     }
   },
   "extensions": [
@@ -27,6 +25,7 @@
   // Please keep this file in sync with settings in home-assistant/.vscode/settings.default.json
   "settings": {
     "remote.autoForwardPorts": false,
+    "terminal.integrated.defaultProfile.linux": "zsh",
     "python.pythonPath": "/usr/local/bin/python",
     "python.linting.enabled": true,
     "python.linting.pylintEnabled": true,
@@ -42,12 +41,6 @@
     "editor.formatOnSave": true,
     "editor.formatOnType": true,
     "files.trimTrailingWhitespace": true,
-    "terminal.integrated.profiles.linux": {
-      "zsh": {
-        "path": "/usr/bin/zsh"
-      }
-    },
-    "terminal.integrated.defaultProfile.linux": "zsh",
     "yaml.customTags": [
       "!input scalar",
       "!secret scalar",

@@ -1,13 +1,21 @@
 FROM mcr.microsoft.com/devcontainers/python:0-3.10
 
-# Ensure RUN fails if any command fails
-SHELL ["/bin/bash", "-euxo", "pipefail", "-c"]
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-# Install apt-get dependencies
-RUN export DEBIAN_FRONTEND=noninteractive; \
-    apt-get update; \
-    apt-get install -y --no-install-recommends \
-        # Additional library needed by some tests and accordingly by VScode Tests Discovery \
+# Uninstall pre-installed formatting and linting tools
+# They would conflict with our pinned versions
+RUN pipx uninstall black
+RUN pipx uninstall flake8
+RUN pipx uninstall pydocstyle
+RUN pipx uninstall pycodestyle
+RUN pipx uninstall mypy
+RUN pipx uninstall pylint
+
+RUN \
+    export DEBIAN_FRONTEND=noninteractive \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+        # Additional library needed by some tests and accordingly by VScode Tests Discovery
         bluez \
         libudev-dev \
         libavformat-dev \
@@ -24,20 +32,23 @@ RUN export DEBIAN_FRONTEND=noninteractive; \
         git \
         cmake \
         # Needed by the stream component \
-        ffmpeg; \
-    rm -rf /var/lib/apt/lists/*
+        ffmpeg \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /usr/src
 
 # Disable pip version check as we pin its version in requirements.txt
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 
 # Setup hass-release
-WORKDIR /usr/src/hass-release
-RUN git clone --depth 1 https://github.com/home-assistant/hass-release . \
-    && pip3 install -e .
+RUN git clone --depth 1 https://github.com/home-assistant/hass-release \
+    && pip3 install -e hass-release/
+
+WORKDIR /workspaces
 
 # Install Python dependencies from requirements
-WORKDIR /usr/src/homeassistant
-COPY requirements.txt .
+COPY requirements.txt ./
 COPY homeassistant/package_constraints.txt homeassistant/package_constraints.txt
 RUN pip3 install -r requirements.txt --use-deprecated=legacy-resolver
 COPY requirements_test.txt requirements_test_pre_commit.txt ./
