@@ -5,14 +5,14 @@
         },
         "error": {
             "cannot_connect": "Falha ao conectar",
+            "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida",
             "unknown": "Erro inesperado"
         },
         "step": {
             "user": {
                 "data": {
-                    "ip_address": "Endere\u00e7o IP",
-                    "password": "Senha",
-                    "port": "Porta"
+                    "email": "Email",
+                    "password": "Senha"
                 }
             }
         }
