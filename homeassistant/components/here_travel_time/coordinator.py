@@ -117,25 +117,43 @@ class HERERoutingDataUpdateCoordinator(DataUpdateCoordinator[HERETravelTimeData]
 
     def _parse_routing_response(self, response: dict[str, Any]) -> HERETravelTimeData:
         """Parse the routing response dict to a HERETravelTimeData."""
-        section: dict[str, Any] = response["routes"][0]["sections"][0]
-        summary: dict[str, int] = section["summary"]
-        mapped_origin_lat: float = section["departure"]["place"]["location"]["lat"]
-        mapped_origin_lon: float = section["departure"]["place"]["location"]["lng"]
-        mapped_destination_lat: float = section["arrival"]["place"]["location"]["lat"]
-        mapped_destination_lon: float = section["arrival"]["place"]["location"]["lng"]
-        distance: float = DistanceConverter.convert(
-            summary["length"], UnitOfLength.METERS, UnitOfLength.KILOMETERS
-        )
+        distance: float = 0.0
+        duration: float = 0.0
+        duration_in_traffic: float = 0.0
+
+        for section in response["routes"][0]["sections"]:
+            distance += DistanceConverter.convert(
+                section["summary"]["length"],
+                UnitOfLength.METERS,
+                UnitOfLength.KILOMETERS,
+            )
+            duration += section["summary"]["baseDuration"]
+            duration_in_traffic += section["summary"]["duration"]
+
+        first_section = response["routes"][0]["sections"][0]
+        last_section = response["routes"][0]["sections"][-1]
+        mapped_origin_lat: float = first_section["departure"]["place"]["location"][
+            "lat"
+        ]
+        mapped_origin_lon: float = first_section["departure"]["place"]["location"][
+            "lng"
+        ]
+        mapped_destination_lat: float = last_section["arrival"]["place"]["location"][
+            "lat"
+        ]
+        mapped_destination_lon: float = last_section["arrival"]["place"]["location"][
+            "lng"
+        ]
         origin_name: str | None = None
-        if (names := section["spans"][0].get("names")) is not None:
+        if (names := first_section["spans"][0].get("names")) is not None:
             origin_name = names[0]["value"]
         destination_name: str | None = None
-        if (names := section["spans"][-1].get("names")) is not None:
+        if (names := last_section["spans"][-1].get("names")) is not None:
             destination_name = names[0]["value"]
         return HERETravelTimeData(
             attribution=None,
-            duration=round(summary["baseDuration"] / 60),
-            duration_in_traffic=round(summary["duration"] / 60),
+            duration=round(duration / 60),
+            duration_in_traffic=round(duration_in_traffic / 60),
             distance=distance,
             origin=f"{mapped_origin_lat},{mapped_origin_lon}",
             destination=f"{mapped_destination_lat},{mapped_destination_lon}",

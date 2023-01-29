@@ -1327,10 +1327,10 @@ class ConfigEntries:
         report(
             (
                 "called async_setup_platforms instead of awaiting"
-                " async_forward_entry_setups; this will fail in version 2022.12"
+                " async_forward_entry_setups; this will fail in version 2023.3"
             ),
             # Raise this to warning once all core integrations have been migrated
-            level=logging.DEBUG,
+            level=logging.WARNING,
             error_if_core=False,
         )
         for platform in platforms:

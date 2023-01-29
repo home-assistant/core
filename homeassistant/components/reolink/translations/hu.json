@@ -11,6 +11,7 @@
             "not_admin": "A felhaszn\u00e1l\u00f3nak adminisztr\u00e1tornak kell lennie, \"{username}\" felhaszn\u00e1l\u00f3 jogosults\u00e1gi szintje pedig \"{userlevel}\".",
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
+        "flow_title": "{short_mac} ({ip_address})",
         "step": {
             "reauth_confirm": {
                 "description": "A Reolink integr\u00e1ci\u00f3nak \u00fajra kell hiteles\u00edtenie a kapcsolaot.",

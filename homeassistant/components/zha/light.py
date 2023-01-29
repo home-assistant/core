@@ -189,9 +189,9 @@ class BaseLight(LogMixin, light.LightEntity):
         hs_color = kwargs.get(light.ATTR_HS_COLOR)
 
         execute_if_off_supported = (
-            not isinstance(self, LightGroup)
-            and self._color_channel
-            and self._color_channel.execute_if_off_supported
+            self._GROUP_SUPPORTS_EXECUTE_IF_OFF
+            if isinstance(self, LightGroup)
+            else self._color_channel and self._color_channel.execute_if_off_supported
         )
 
         set_transition_flag = (
@@ -1049,6 +1049,20 @@ class LightGroup(BaseLight, ZhaGroupEntity):
         """Initialize a light group."""
         super().__init__(entity_ids, unique_id, group_id, zha_device, **kwargs)
         group = self.zha_device.gateway.get_group(self._group_id)
+
+        self._GROUP_SUPPORTS_EXECUTE_IF_OFF = True  # pylint: disable=invalid-name
+        # Check all group members to see if they support execute_if_off.
+        # If at least one member has a color cluster and doesn't support it, it's not used.
+        for member in group.members:
+            for pool in member.device.channels.pools:
+                for channel in pool.all_channels.values():
+                    if (
+                        channel.name == CHANNEL_COLOR
+                        and not channel.execute_if_off_supported
+                    ):
+                        self._GROUP_SUPPORTS_EXECUTE_IF_OFF = False
+                        break
+
         self._DEFAULT_MIN_TRANSITION_TIME = any(  # pylint: disable=invalid-name
             member.device.manufacturer in DEFAULT_MIN_TRANSITION_MANUFACTURERS
             for member in group.members

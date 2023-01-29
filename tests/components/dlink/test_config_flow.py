@@ -53,10 +53,12 @@ async def test_flow_user_already_configured(
 
 
 async def test_flow_user_cannot_connect(
-    hass: HomeAssistant, mocked_plug: MagicMock, mocked_plug_no_auth: MagicMock
+    hass: HomeAssistant,
+    mocked_plug_legacy: MagicMock,
+    mocked_plug_legacy_no_auth: MagicMock,
 ) -> None:
     """Test user initialized flow with unreachable server."""
-    with patch_config_flow(mocked_plug_no_auth):
+    with patch_config_flow(mocked_plug_legacy_no_auth):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
         )
@@ -64,7 +66,7 @@ async def test_flow_user_cannot_connect(
     assert result["step_id"] == "user"
     assert result["errors"]["base"] == "cannot_connect"
 
-    with patch_config_flow(mocked_plug), _patch_setup_entry():
+    with patch_config_flow(mocked_plug_legacy), _patch_setup_entry():
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=CONF_DATA,
@@ -127,16 +129,16 @@ async def test_dhcp(hass: HomeAssistant, mocked_plug: MagicMock) -> None:
     assert result["data"] == CONF_DATA
 
 
-async def test_dhcp_failed_auth(
-    hass: HomeAssistant, mocked_plug: MagicMock, mocked_plug_no_auth: MagicMock
+async def test_dhcp_failed_legacy_auth(
+    hass: HomeAssistant, mocked_plug: MagicMock, mocked_plug_legacy_no_auth: MagicMock
 ) -> None:
-    """Test we can recovery from failed authentication during dhcp flow."""
+    """Test we can recover from failed legacy authentication during dhcp flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_DHCP}, data=CONF_DHCP_FLOW
     )
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "confirm_discovery"
-    with patch_config_flow(mocked_plug_no_auth):
+    with patch_config_flow(mocked_plug_legacy_no_auth):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=CONF_DHCP_DATA,

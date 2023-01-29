@@ -32,7 +32,7 @@ def test_from_event_to_db_event():
     event = ha.Event("test_event", {"some_data": 15})
     db_event = Events.from_event(event)
     db_event.event_data = EventData.from_event(event).shared_data
-    assert event == db_event.to_native()
+    assert event.as_dict() == db_event.to_native().as_dict()
 
 
 def test_from_event_to_db_state():
@@ -43,7 +43,7 @@ def test_from_event_to_db_state():
         {"entity_id": "sensor.temperature", "old_state": None, "new_state": state},
         context=state.context,
     )
-    assert state == States.from_event(event).to_native()
+    assert state.as_dict() == States.from_event(event).to_native().as_dict()
 
 
 def test_from_event_to_db_state_attributes():
@@ -293,11 +293,11 @@ async def test_event_to_db_model():
     db_event = Events.from_event(event)
     db_event.event_data = EventData.from_event(event).shared_data
     native = db_event.to_native()
-    assert native == event
+    assert native.as_dict() == event.as_dict()
 
     native = Events.from_event(event).to_native()
     event.data = {}
-    assert native == event
+    assert native.as_dict() == event.as_dict()
 
 
 async def test_lazy_state_handles_include_json(caplog):

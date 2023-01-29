@@ -31,5 +31,20 @@
             }
         }
     },
+    "selector": {
+        "cycle": {
+            "options": {
+                "bimonthly": "Ka\u017ed\u00e9 dva mesiace",
+                "daily": "Denne",
+                "hourly": "Hodinovo",
+                "monthly": "Mesa\u010dne",
+                "none": "\u017diadny cyklus",
+                "quarter-hourly": "Ka\u017ed\u00fdch 15 min\u00fat",
+                "quarterly": "\u0160tvr\u0165ro\u010dne",
+                "weekly": "T\u00fd\u017edenne",
+                "yearly": "Ro\u010dne"
+            }
+        }
+    },
     "title": "Mera\u010d spotreby"
 }

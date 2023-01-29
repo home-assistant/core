@@ -2,7 +2,7 @@
 import statistics
 from unittest.mock import patch
 
-from pytest import LogCaptureFixture
+import pytest
 
 from homeassistant import config as hass_config
 from homeassistant.components.min_max.const import DOMAIN
@@ -442,7 +442,7 @@ async def test_reload(hass: HomeAssistant) -> None:
 
 
 async def test_sensor_incorrect_state(
-    hass: HomeAssistant, caplog: LogCaptureFixture
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test the min sensor."""
     config = {
