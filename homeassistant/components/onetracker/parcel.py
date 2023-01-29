@@ -1,15 +1,14 @@
 """Class definitions for OneTracker Parcel Entity."""
 from __future__ import annotations
 
+import logging
 
-from homeassistant.core import callback
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.core import callback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .coordinator import OneTrackerDataUpdateCoordinator
 from .api_responses import Parcel
-
-import logging
+from .coordinator import OneTrackerDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 

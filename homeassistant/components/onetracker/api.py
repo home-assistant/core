@@ -1,13 +1,12 @@
 """Setup OneTrackerAPI for handling API connections."""
 
 from datetime import datetime
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-
 import json
-
 import logging
+
 import httpx
 
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
 from .api_responses import (

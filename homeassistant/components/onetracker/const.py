@@ -2,7 +2,6 @@
 
 from datetime import timedelta
 
-
 DOMAIN = "onetracker"
 
 # Attributes
