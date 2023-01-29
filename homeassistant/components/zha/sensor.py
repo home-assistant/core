@@ -702,8 +702,19 @@ class FormaldehydeConcentration(Sensor):
     _attr_native_unit_of_measurement = CONCENTRATION_PARTS_PER_MILLION
 
 
+class ThermostatChannelSensor(Sensor):
+    @callback
+    def async_set_state(self, *args, **kwargs) -> None:
+        """
+        Override from sensor
+        Sensor doesn't care about the arguments,
+        However async_attribute_updated from Thermostat from climate.py expects a single argument
+        """
+        self.async_write_ha_state()
+
+
 @MULTI_MATCH(channel_names=CHANNEL_THERMOSTAT, stop_on_match_group=CHANNEL_THERMOSTAT)
-class ThermostatHVACAction(Sensor, id_suffix="hvac_action"):
+class ThermostatHVACAction(ThermostatChannelSensor, id_suffix="hvac_action"):
     """Thermostat HVAC action sensor."""
 
     _attr_name: str = "HVAC action"
