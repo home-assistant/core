@@ -93,7 +93,6 @@ def convert_parcels_to_dict(parcels: list[Parcel]) -> dict[int, Parcel]:
     """Convert lists with dict containing id to dict using ids as the key to reference each dict."""
     result = {}
 
-    # _LOGGER.warning("Parcels: %s", json.dumps(parcels))
     for parcel in parcels:
         result[parcel.id] = parcel
 

@@ -3,10 +3,6 @@ from __future__ import annotations
 
 from datetime import datetime
 
-import logging
-
-_LOGGER = logging.getLogger(__name__)
-
 
 def parse_datetime(value: str) -> datetime | None:
     """Parse JSON datetime string to datetime or None."""

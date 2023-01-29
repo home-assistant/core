@@ -8,7 +8,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
-from homeassistant.const import CONF_EMAIL, CONF_NAME, CONF_PASSWORD, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_SCAN_INTERVAL
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
@@ -31,18 +31,12 @@ class OneTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    # def __init__(self, config_entry: ConfigEntry) -> None:
-    #     """Initialize options flow."""
-    #     _LOGGER.debug(json.dumps(config_entry))
-    #     self.config_entry = config_entry
-
     @staticmethod
     @callback
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> OneTrackerOptionsFlowHandler:
         """Get the options flow for this handler."""
-        _LOGGER.debug(json.dumps(config_entry))
         return OneTrackerOptionsFlowHandler(config_entry)
 
     async def async_step_user(
