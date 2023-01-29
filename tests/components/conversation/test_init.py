@@ -7,10 +7,15 @@ import pytest
 from homeassistant.components import conversation
 from homeassistant.components.cover import SERVICE_OPEN_COVER
 from homeassistant.core import DOMAIN as HASS_DOMAIN, Context
-from homeassistant.helpers import entity_registry, intent
+from homeassistant.helpers import (
+    area_registry,
+    device_registry,
+    entity_registry,
+    intent,
+)
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_mock_service
+from tests.common import MockConfigEntry, async_mock_service
 
 
 class OrderBeerIntentHandler(intent.IntentHandler):
@@ -78,11 +83,14 @@ async def test_http_processing_intent(
 async def test_http_processing_intent_entity_added(
     hass, init_components, hass_client, hass_admin_user
 ):
-    """Test processing intent via HTTP API."""
-    # Add an alias
-    entities = entity_registry.async_get(hass)
-    entities.async_get_or_create("light", "demo", "1234", suggested_object_id="kitchen")
-    entities.async_update_entity("light.kitchen", aliases={"my cool light"})
+    """Test processing intent via HTTP API with entities added later.
+
+    We want to ensure that adding an entity later busts the cache
+    so that the new entity is available as well as any aliases.
+    """
+    er = entity_registry.async_get(hass)
+    er.async_get_or_create("light", "demo", "1234", suggested_object_id="kitchen")
+    er.async_update_entity("light.kitchen", aliases={"my cool light"})
     hass.states.async_set("light.kitchen", "off")
 
     client = await hass_client()
@@ -116,8 +124,7 @@ async def test_http_processing_intent_entity_added(
     }
 
     # Add an alias
-    entities = entity_registry.async_get(hass)
-    entities.async_get_or_create("light", "demo", "5678", suggested_object_id="late")
+    er.async_get_or_create("light", "demo", "5678", suggested_object_id="late")
     hass.states.async_set("light.late", "off", {"friendly_name": "friendly light"})
 
     client = await hass_client()
@@ -151,7 +158,7 @@ async def test_http_processing_intent_entity_added(
     }
 
     # Now add an alias
-    entities.async_update_entity("light.late", aliases={"late added light"})
+    er.async_update_entity("light.late", aliases={"late added light"})
 
     client = await hass_client()
     resp = await client.post(
@@ -678,3 +685,69 @@ async def test_non_default_response(hass, init_components):
         )
     )
     assert result.response.speech["plain"]["speech"] == "Opened front door"
+
+
+async def test_turn_on_area(hass, init_components):
+    """Test turning on an area."""
+    er = entity_registry.async_get(hass)
+    dr = device_registry.async_get(hass)
+    ar = area_registry.async_get(hass)
+    entry = MockConfigEntry(domain="test")
+
+    device = dr.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+
+    kitchen_area = ar.async_create("kitchen")
+    dr.async_update_device(device.id, area_id=kitchen_area.id)
+
+    er.async_get_or_create("light", "demo", "1234", suggested_object_id="stove")
+    er.async_update_entity(
+        "light.stove", aliases={"my stove light"}, area_id=kitchen_area.id
+    )
+    hass.states.async_set("light.stove", "off")
+
+    calls = async_mock_service(hass, HASS_DOMAIN, "turn_on")
+
+    await hass.services.async_call(
+        "conversation",
+        "process",
+        {conversation.ATTR_TEXT: "turn on lights in the kitchen"},
+    )
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    call = calls[0]
+    assert call.domain == HASS_DOMAIN
+    assert call.service == "turn_on"
+    assert call.data == {"entity_id": "light.stove"}
+
+    basement_area = ar.async_create("basement")
+    dr.async_update_device(device.id, area_id=basement_area.id)
+    er.async_update_entity("light.stove", area_id=basement_area.id)
+    calls.clear()
+
+    # Test that the area is updated
+    await hass.services.async_call(
+        "conversation",
+        "process",
+        {conversation.ATTR_TEXT: "turn on lights in the kitchen"},
+    )
+    await hass.async_block_till_done()
+
+    assert len(calls) == 0
+
+    # Test the new area works
+    await hass.services.async_call(
+        "conversation",
+        "process",
+        {conversation.ATTR_TEXT: "turn on lights in the basement"},
+    )
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    call = calls[0]
+    assert call.domain == HASS_DOMAIN
+    assert call.service == "turn_on"
+    assert call.data == {"entity_id": "light.stove"}
