@@ -3,20 +3,20 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import timedelta
+import json
 import logging
 from typing import Any
 
 from async_timeout import timeout
 
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import OneTrackerAPI, OneTrackerAPIException
+from .api_responses import Parcel
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-import json
 
 
 class OneTrackerDataUpdateCoordinator(DataUpdateCoordinator):
@@ -27,28 +27,23 @@ class OneTrackerDataUpdateCoordinator(DataUpdateCoordinator):
         hass: HomeAssistant,
         *,
         config: Mapping[str, Any],
-        options: Mapping[str, Any] | None = None,
+        _options: Mapping[str, Any] | None = None,
     ) -> None:
         """Initialize global OneTracker data updater."""
-        # _LOGGER.warning("Scan interval: %s", json.dumps(config))
-        # update_interval = timedelta(seconds=config[CONF_SCAN_INTERVAL])
 
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=30,
+            update_interval=timedelta(seconds=30),
         )
 
-        self.onetracker = OneTrackerAPI(
-            config[CONF_EMAIL],
-            config[CONF_PASSWORD],
-        )
+        self.onetracker = OneTrackerAPI(config)
 
-    async def _async_update_data(self) -> dict:
+    async def _async_update_data(self) -> list[Parcel]:
         """Fetch data from OneTracker."""
 
-        def _update_data() -> dict:
+        def _update_data() -> list[Parcel]:
             """Fetch data from OneTracker via sync functions."""
 
             parcels = self.onetracker.get_parcels()
@@ -59,7 +54,8 @@ class OneTrackerDataUpdateCoordinator(DataUpdateCoordinator):
                     "parcel",
                     parcel.serialize(),
                 )
-            return parcels
+            self.data = {"parcels": map(lambda p: p.serialize(), parcels)}
+            return self.data
 
         try:
             async with timeout(4):

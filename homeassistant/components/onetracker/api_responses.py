@@ -5,10 +5,6 @@ from datetime import datetime
 
 import logging
 
-from homeassistant.core import StateMachine
-
-from .const import DOMAIN
-
 _LOGGER = logging.getLogger(__name__)
 
 

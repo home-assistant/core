@@ -1,10 +1,14 @@
 """Setup OneTrackerAPI for handling API connections."""
 
 from datetime import datetime
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+
 import json
 
 import logging
 import httpx
+
+from homeassistant.core import HomeAssistant
 
 from .api_responses import (
     Parcel,
@@ -25,10 +29,13 @@ class OneTrackerAPI:
 
     session: Session
 
-    def __init__(self, email, password):
+    def __init__(self, config: dict) -> None:
         """Initialize wrapper for OneTracker API connections."""
         _LOGGER.debug("Hit __init__")
-        self.credentials = {"email": email, "password": password}
+        self.credentials = {
+            "email": config[CONF_EMAIL],
+            "password": config[CONF_PASSWORD],
+        }
 
         self.refresh_token()
 

@@ -3,6 +3,9 @@
   "name": "OneTracker",
   "documentation": "https://www.home-assistant.io/integrations/onetracker",
   "requirements": [],
+  "after_dependencies": [
+    "http"
+  ],
   "codeowners": [
     "@packruler"
   ],
@@ -10,5 +13,6 @@
   "loggers": [
     "onetracker"
   ],
+  "integration_type": "service",
   "config_flow": true
 }
