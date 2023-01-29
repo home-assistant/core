@@ -1,6 +1,5 @@
 # """The onetracker component."""
 # from __future__ import annotations
-# import json
 
 # from typing import Any
 # from .parcel import ParcelEntity
@@ -14,12 +13,9 @@
 # from .const import DEFAULT_NAME, DEFAULT_SCAN_INTERVAL, DOMAIN
 # from .coordinator import OneTrackerDataUpdateCoordinator
 
-# import logging
-
-# _LOGGER = logging.getLogger(__name__)
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Hello World from a config entry."""

@@ -49,14 +49,6 @@ class OneTrackerDataUpdateCoordinator(DataUpdateCoordinator):
             """Fetch data from OneTracker via sync functions."""
 
             parcels = self.api.get_parcels()
-
-            # for parcel in parcels:
-            #     self.hass.states.set(
-            #         f"{DOMAIN}.{parcel.id}",
-            #         "parcel",
-            #         parcel.serialize(),
-            #     )
-            # self.data = {"parcels": map(lambda p: p.serialize(), parcels)}
             return parcels
 
         try:

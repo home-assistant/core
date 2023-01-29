@@ -31,7 +31,6 @@ class OneTrackerAPI:
 
     def __init__(self, config: dict) -> None:
         """Initialize wrapper for OneTracker API connections."""
-        _LOGGER.debug("Hit __init__")
         self.credentials = {
             "email": config[CONF_EMAIL],
             "password": config[CONF_PASSWORD],
@@ -41,7 +40,6 @@ class OneTrackerAPI:
 
     def refresh_token(self) -> None:
         """Refresh token session using stored credentials."""
-        _LOGGER.debug("Hit refresh_token")
         response = httpx.post(
             f"{API_URL_BASE}/auth/token", json=self.credentials
         ).json()
@@ -53,7 +51,6 @@ class OneTrackerAPI:
         self.session = response.session
 
     def __get_token(self) -> str:
-        _LOGGER.warning("Token: %s", self.session.token)
         if self.session.expiration <= datetime.utcnow():
             self.refresh_token()
 

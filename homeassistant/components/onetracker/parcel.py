@@ -31,6 +31,7 @@ class ParcelEntity(CoordinatorEntity, SensorEntity):
         self.id = parcel.id
         self.parcel = parcel
         self._attr_native_value = parcel.tracking_status
+        self._attr_should_poll = True
 
     @callback
     def _handle_coordinator_update(self) -> None:
