@@ -44,7 +44,7 @@ async def test_switch_state(
 
     await setup_integration()
 
-    entity_id = "switch.mock_title_switch"
+    entity_id = "switch.mock_title"
     state = hass.states.get(entity_id)
     assert state.state == STATE_OFF
     assert state.attributes["total_consumption"] == 1040.0
@@ -71,7 +71,7 @@ async def test_switch_no_value(
     """Test we handle 'N/A' being passed by the pypi package."""
     await setup_integration_legacy()
 
-    state = hass.states.get("switch.mock_title_switch")
+    state = hass.states.get("switch.mock_title")
     assert state.state == STATE_OFF
     assert state.attributes["total_consumption"] is None
     assert state.attributes["temperature"] is None
