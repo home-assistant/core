@@ -59,7 +59,9 @@ def test_from_event_to_db_state_attributes():
     )
     db_attrs = StateAttributes()
     dialect = SupportedDialect.MYSQL
-    db_attrs.shared_attrs = StateAttributes.shared_attrs_bytes_from_event(event, {}, dialect)
+    db_attrs.shared_attrs = StateAttributes.shared_attrs_bytes_from_event(
+        event, {}, dialect
+    )
     assert db_attrs.to_native() == attrs
 
 
