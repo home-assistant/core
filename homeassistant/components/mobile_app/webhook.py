@@ -35,7 +35,7 @@ from homeassistant.components.device_tracker import (
 from homeassistant.components.frontend import MANIFEST_JSON
 from homeassistant.components.sensor import (
     DEVICE_CLASSES as SENSOR_CLASSES,
-    STATE_CLASSES as SENSOSR_STATE_CLASSES,
+    STATE_CLASSES as SENSOR_STATE_CLASSES,
 )
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -507,19 +507,25 @@ def _extract_sensor_unique_id(webhook_id: str, unique_id: str) -> str:
     vol.All(
         {
             vol.Optional(ATTR_SENSOR_ATTRIBUTES, default={}): dict,
-            vol.Optional(ATTR_SENSOR_DEVICE_CLASS): vol.All(
-                vol.Lower, vol.In(COMBINED_CLASSES)
+            vol.Optional(ATTR_SENSOR_DEVICE_CLASS): vol.Any(
+                None, vol.All(vol.Lower, vol.In(COMBINED_CLASSES))
             ),
             vol.Required(ATTR_SENSOR_NAME): cv.string,
             vol.Required(ATTR_SENSOR_TYPE): vol.In(SENSOR_TYPES),
             vol.Required(ATTR_SENSOR_UNIQUE_ID): cv.string,
-            vol.Optional(ATTR_SENSOR_UOM): cv.string,
+            vol.Optional(ATTR_SENSOR_UOM): vol.Any(None, cv.string),
             vol.Optional(ATTR_SENSOR_STATE, default=None): vol.Any(
-                None, bool, str, int, float
+                None, bool, int, float, str
             ),
-            vol.Optional(ATTR_SENSOR_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
-            vol.Optional(ATTR_SENSOR_ICON, default="mdi:cellphone"): cv.icon,
-            vol.Optional(ATTR_SENSOR_STATE_CLASS): vol.In(SENSOSR_STATE_CLASSES),
+            vol.Optional(ATTR_SENSOR_ENTITY_CATEGORY): vol.Any(
+                None, ENTITY_CATEGORIES_SCHEMA
+            ),
+            vol.Optional(ATTR_SENSOR_ICON, default="mdi:cellphone"): vol.Any(
+                None, cv.icon
+            ),
+            vol.Optional(ATTR_SENSOR_STATE_CLASS): vol.Any(
+                None, vol.In(SENSOR_STATE_CLASSES)
+            ),
             vol.Optional(ATTR_SENSOR_DISABLED): bool,
         },
         _validate_state_class_sensor,
@@ -619,8 +625,10 @@ async def webhook_update_sensor_states(
     sensor_schema_full = vol.Schema(
         {
             vol.Optional(ATTR_SENSOR_ATTRIBUTES, default={}): dict,
-            vol.Optional(ATTR_SENSOR_ICON, default="mdi:cellphone"): cv.icon,
-            vol.Required(ATTR_SENSOR_STATE): vol.Any(None, bool, str, int, float),
+            vol.Optional(ATTR_SENSOR_ICON, default="mdi:cellphone"): vol.Any(
+                None, cv.icon
+            ),
+            vol.Required(ATTR_SENSOR_STATE): vol.Any(None, bool, int, float, str),
             vol.Required(ATTR_SENSOR_TYPE): vol.In(SENSOR_TYPES),
             vol.Required(ATTR_SENSOR_UNIQUE_ID): cv.string,
         }
