@@ -2,10 +2,10 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 import logging
 import socket
 from typing import cast
-from contextlib import suppress
 
 from aiohttp import web
 
