@@ -518,7 +518,7 @@ async def test_reauth_fixed_via_dashboard(
     assert len(mock_get_encryption_key.mock_calls) == 1
 
 
-async def test_reauth_fixed_via_dashboard_remove_password(
+async def test_reauth_fixed_via_dashboard_remove_password_add_encryption(
     hass, mock_client, mock_zeroconf, mock_dashboard
 ):
     """Test reauth fixed automatically via dashboard with password removed."""

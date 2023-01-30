@@ -100,10 +100,11 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle reauthorization flow."""
         errors = {}
 
-        if await self._retrieve_encryption_key_from_dashboard():
-            error = await self.fetch_device_info()
-            if error is None:
-                return await self._async_authenticate_or_add()
+        await self._retrieve_encryption_key_from_dashboard()
+
+        error = await self.fetch_device_info()
+        if error not in (ERROR_INVALID_ENCRYPTION_KEY, ERROR_REQUIRES_ENCRYPTION_KEY):
+            return await self._async_authenticate_or_add()
 
         if user_input is not None:
             self._noise_psk = user_input[CONF_NOISE_PSK]
