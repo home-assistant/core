@@ -7,6 +7,6 @@ DATA_CONFIG_ENTRY: Final = "config_entry"
 
 DOMAIN: Final = "brother"
 
-PRINTER_TYPES: Final = ["laser", "ink"]
+PRINTER_TYPES: Final = ["laser", "ink", "toner"]
 
 SNMP: Final = "snmp"
