@@ -147,8 +147,7 @@ class SynologyPhotosMediaSource(MediaSource):
         for items_item in items:
             mime_type, _ = mimetypes.guess_type(items_item.file_name)
             assert isinstance(mime_type, str)
-            parts = mime_type.split("/")
-            if parts[0] == "image":
+            if mime_type.startswith("image/"):
                 ret.append(
                     BrowseMediaSource(
                         domain=DOMAIN,
@@ -171,10 +170,14 @@ class SynologyPhotosMediaSource(MediaSource):
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
         parts = item.identifier.split("/")
+        unique_id = parts[0]
         cache_key = parts[2]
+        file_name = parts[3]
         mime_type, _ = mimetypes.guess_type(parts[3])
         assert isinstance(mime_type, str)
-        return PlayMedia(f"/synology_dsm/{parts[0]}/{cache_key}/{parts[3]}", mime_type)
+        return PlayMedia(
+            f"/synology_dsm/{unique_id}/{cache_key}/{file_name}", mime_type
+        )
 
     async def async_get_thumbnail(
         self, cache_key: str, image_id: str, size: str, diskstation_unique_id: str
