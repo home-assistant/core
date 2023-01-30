@@ -53,6 +53,7 @@ class Profile:
     name: str
     video: Video
     ptz: PTZ | None = None
+    video_source_token: str | None = None
 
 
 @dataclass
@@ -62,6 +63,7 @@ class Capabilities:
     snapshot: bool = False
     events: bool = False
     ptz: bool = False
+    imaging: bool = False
 
 
 @dataclass
