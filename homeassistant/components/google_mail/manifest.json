@@ -7,5 +7,5 @@
   "requirements": ["google-api-python-client==2.71.0"],
   "codeowners": ["@tkdrob"],
   "iot_class": "cloud_polling",
-  "integration_type": "device"
+  "integration_type": "service"
 }
