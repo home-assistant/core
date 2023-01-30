@@ -367,7 +367,7 @@ def aiohttp_client(
         elif isinstance(__param, BaseTestServer):
             client = TestClient(__param, loop=loop, **kwargs)
         else:
-            raise ValueError("Unknown argument type: %r" % type(__param))
+            raise TypeError("Unknown argument type: %r" % type(__param))
 
         await client.start_server()
         clients.append(client)

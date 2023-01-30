@@ -68,11 +68,10 @@ async def test_default_prompt(hass, mock_init_component):
         device.id, disabled_by=device_registry.DeviceEntryDisabler.USER
     )
 
-    with patch("openai.Completion.create") as mock_create:
+    with patch("openai.Completion.acreate") as mock_create:
         result = await conversation.async_converse(hass, "hello", None, Context())
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
-
     assert (
         mock_create.mock_calls[0][2]["prompt"]
         == """This smart home is controlled by Home Assistant.
@@ -101,7 +100,26 @@ Smart home: """
 
 async def test_error_handling(hass, mock_init_component):
     """Test that the default prompt works."""
-    with patch("openai.Completion.create", side_effect=error.ServiceUnavailableError):
+    with patch("openai.Completion.acreate", side_effect=error.ServiceUnavailableError):
+        result = await conversation.async_converse(hass, "hello", None, Context())
+
+    assert result.response.response_type == intent.IntentResponseType.ERROR, result
+    assert result.response.error_code == "unknown", result
+
+
+async def test_template_error(hass, mock_config_entry, mock_init_component):
+    """Test that template error handling works."""
+    options_flow = await hass.config_entries.options.async_init(
+        mock_config_entry.entry_id
+    )
+    await hass.config_entries.options.async_configure(
+        options_flow["flow_id"],
+        {
+            "prompt": "talk like a {% if True %}smarthome{% else %}pirate please.",
+        },
+    )
+    await hass.async_block_till_done()
+    with patch("openai.Completion.acreate"):
         result = await conversation.async_converse(hass, "hello", None, Context())
 
     assert result.response.response_type == intent.IntentResponseType.ERROR, result

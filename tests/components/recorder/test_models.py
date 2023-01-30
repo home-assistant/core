@@ -7,6 +7,7 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
+from homeassistant.components.recorder.const import SupportedDialect
 from homeassistant.components.recorder.db_schema import (
     Base,
     EventData,
@@ -31,7 +32,8 @@ def test_from_event_to_db_event():
     """Test converting event to db event."""
     event = ha.Event("test_event", {"some_data": 15})
     db_event = Events.from_event(event)
-    db_event.event_data = EventData.from_event(event).shared_data
+    dialect = SupportedDialect.MYSQL
+    db_event.event_data = EventData.shared_data_bytes_from_event(event, dialect)
     assert event.as_dict() == db_event.to_native().as_dict()
 
 
@@ -55,7 +57,12 @@ def test_from_event_to_db_state_attributes():
         {"entity_id": "sensor.temperature", "old_state": None, "new_state": state},
         context=state.context,
     )
-    assert StateAttributes.from_event(event).to_native() == attrs
+    db_attrs = StateAttributes()
+    dialect = SupportedDialect.MYSQL
+    db_attrs.shared_attrs = StateAttributes.shared_attrs_bytes_from_event(
+        event, {}, dialect
+    )
+    assert db_attrs.to_native() == attrs
 
 
 def test_repr():
@@ -291,7 +298,8 @@ async def test_event_to_db_model():
         "state_changed", {"some": "attr"}, ha.EventOrigin.local, dt_util.utcnow()
     )
     db_event = Events.from_event(event)
-    db_event.event_data = EventData.from_event(event).shared_data
+    dialect = SupportedDialect.MYSQL
+    db_event.event_data = EventData.shared_data_bytes_from_event(event, dialect)
     native = db_event.to_native()
     assert native.as_dict() == event.as_dict()
 
