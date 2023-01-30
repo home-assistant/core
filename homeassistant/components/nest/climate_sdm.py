@@ -305,7 +305,7 @@ class ThermostatEntity(ClimateEntity):
         temp = kwargs.get(ATTR_TEMPERATURE)
         if ThermostatTemperatureSetpointTrait.NAME not in self._device.traits:
             raise HomeAssistantError(
-                f"Error setting {self.entity_id} temperature to {kwargs}: Unable to find ThermostatTemperatureSetpointTrait in device traits {self._device.traits.keys()}"
+                f"Error setting {self.entity_id} temperature to {kwargs}: Unable to find setpoint trait."
             )
         trait = self._device.traits[ThermostatTemperatureSetpointTrait.NAME]
         try:

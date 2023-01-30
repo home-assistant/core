@@ -1265,8 +1265,6 @@ async def test_thermostat_missing_temperature_trait(
     assert "temperature" in str(e_info)
     assert "climate.my_thermostat" in str(e_info)
     assert "24.0" in str(e_info)
-    assert "ThermostatHvac" in str(e_info)
-    assert "ThermostatMode" in str(e_info)
     assert thermostat.attributes[ATTR_TEMPERATURE] is None
 
 
