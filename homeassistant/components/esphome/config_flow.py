@@ -92,11 +92,6 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         self._name = entry.title
         self._device_name = entry.data.get(CONF_DEVICE_NAME)
 
-        if await self._retrieve_encryption_key_from_dashboard():
-            error = await self.fetch_device_info()
-            if error is None:
-                return await self._async_authenticate_or_add()
-
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -104,6 +99,11 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle reauthorization flow."""
         errors = {}
+
+        if await self._retrieve_encryption_key_from_dashboard():
+            error = await self.fetch_device_info()
+            if error is None:
+                return await self._async_authenticate_or_add()
 
         if user_input is not None:
             self._noise_psk = user_input[CONF_NOISE_PSK]
