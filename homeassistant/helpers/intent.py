@@ -138,11 +138,15 @@ def _has_name(
     if name in (state.entity_id, state.name.casefold()):
         return True
 
-    # Check aliases
-    if (entity is not None) and entity.aliases:
-        for alias in entity.aliases:
-            if name == alias.casefold():
-                return True
+    # Check name/aliases
+    if entity is not None:
+        if (entity.name is not None) and (name == entity.name.casefold()):
+            return True
+
+        if entity.aliases:
+            for alias in entity.aliases:
+                if name == alias.casefold():
+                    return True
 
     return False
 
