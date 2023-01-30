@@ -54,7 +54,7 @@ def test_sensor(hass: HomeAssistant):
 
         # Test pre update
         if device.subscription == "576965":
-            assert vultr.DEFAULT_NAME == device.name
+            assert device.name == vultr.DEFAULT_NAME
 
         device.update()
 

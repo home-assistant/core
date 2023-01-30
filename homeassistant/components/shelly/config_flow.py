@@ -33,13 +33,11 @@ from .const import (
 )
 from .coordinator import async_reconnect_soon, get_entry_data
 from .utils import (
-    get_block_device_name,
     get_block_device_sleep_period,
     get_coap_context,
     get_info_auth,
     get_info_gen,
     get_model_name,
-    get_rpc_device_name,
     get_rpc_device_sleep_period,
     get_ws_context,
     mac_address_from_name,
@@ -77,10 +75,9 @@ async def validate_input(
             options,
         )
         await rpc_device.shutdown()
-        assert rpc_device.shelly
 
         return {
-            "title": get_rpc_device_name(rpc_device),
+            "title": rpc_device.name,
             CONF_SLEEP_PERIOD: get_rpc_device_sleep_period(rpc_device.config),
             "model": rpc_device.shelly.get("model"),
             "gen": 2,
@@ -95,7 +92,7 @@ async def validate_input(
     )
     block_device.shutdown()
     return {
-        "title": get_block_device_name(block_device),
+        "title": block_device.name,
         CONF_SLEEP_PERIOD: get_block_device_sleep_period(block_device.settings),
         "model": block_device.model,
         "gen": 1,

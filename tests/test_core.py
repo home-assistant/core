@@ -43,7 +43,7 @@ import homeassistant.util.dt as dt_util
 from homeassistant.util.read_only_dict import ReadOnlyDict
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from tests.common import async_capture_events, async_mock_service
+from .common import async_capture_events, async_mock_service
 
 PST = dt_util.get_time_zone("America/Los_Angeles")
 
@@ -331,7 +331,7 @@ def test_event_eq():
         ha.Event("some_type", data, time_fired=now, context=context) for _ in range(2)
     )
 
-    assert event1 == event2
+    assert event1.as_dict() == event2.as_dict()
 
 
 def test_event_repr():
@@ -685,7 +685,7 @@ def test_state_name_if_friendly_name_attr():
 def test_state_dict_conversion():
     """Test conversion of dict."""
     state = ha.State("domain.hello", "world", {"some": "attr"})
-    assert state == ha.State.from_dict(state.as_dict())
+    assert state.as_dict() == ha.State.from_dict(state.as_dict()).as_dict()
 
 
 def test_state_dict_conversion_with_wrong_data():

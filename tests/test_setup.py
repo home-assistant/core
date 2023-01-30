@@ -18,7 +18,7 @@ from homeassistant.helpers.config_validation import (
     PLATFORM_SCHEMA_BASE,
 )
 
-from tests.common import (
+from .common import (
     MockConfigEntry,
     MockModule,
     MockPlatform,
