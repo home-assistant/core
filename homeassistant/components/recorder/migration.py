@@ -274,9 +274,13 @@ def _drop_index(
             "Finished dropping index %s from table %s", index_name, table_name
         )
     else:
-        if index_name == "ix_states_context_parent_id":
-            # Was only there on nightly so we do not want
+        if index_name in ("ix_states_entity_id", "ix_states_context_parent_id"):
+            # ix_states_context_parent_id was only there on nightly so we do not want
             # to generate log noise or issues about it.
+            #
+            # ix_states_entity_id was only there for users who upgraded from schema
+            # version 8 or earlier. Newer installs will not have it so we do not
+            # want to generate log noise or issues about it.
             return
 
         _LOGGER.warning(
@@ -505,12 +509,12 @@ def _apply_update(  # noqa: C901
         timestamp_type = "FLOAT"
 
     if new_version == 1:
-        _create_index(session_maker, "events", "ix_events_time_fired")
+        # This used to create ix_events_time_fired, but it was removed in version 32
+        pass
     elif new_version == 2:
         # Create compound start/end index for recorder_runs
         _create_index(session_maker, "recorder_runs", "ix_recorder_runs_start_end")
-        # Create indexes for states
-        _create_index(session_maker, "states", "ix_states_last_updated")
+        # This used to create ix_states_last_updated bit it was removed in version 32
     elif new_version == 3:
         # There used to be a new index here, but it was removed in version 4.
         pass
@@ -529,8 +533,7 @@ def _apply_update(  # noqa: C901
         _drop_index(session_maker, "states", "states__state_changes")
         _drop_index(session_maker, "states", "states__significant_changes")
         _drop_index(session_maker, "states", "ix_states_entity_id_created")
-
-        _create_index(session_maker, "states", "ix_states_entity_id_last_updated")
+        # This used to create ix_states_entity_id_last_updated, but it was removed in version 32
     elif new_version == 5:
         # Create supporting index for States.event_id foreign key
         _create_index(session_maker, "states", "ix_states_event_id")
@@ -541,20 +544,21 @@ def _apply_update(  # noqa: C901
             ["context_id CHARACTER(36)", "context_user_id CHARACTER(36)"],
         )
         _create_index(session_maker, "events", "ix_events_context_id")
-        _create_index(session_maker, "events", "ix_events_context_user_id")
+        # This used to create ix_events_context_user_id, but it was removed in version 28
         _add_columns(
             session_maker,
             "states",
             ["context_id CHARACTER(36)", "context_user_id CHARACTER(36)"],
         )
         _create_index(session_maker, "states", "ix_states_context_id")
-        _create_index(session_maker, "states", "ix_states_context_user_id")
+        # This used to create ix_states_context_user_id, but it was removed in version 28
     elif new_version == 7:
-        _create_index(session_maker, "states", "ix_states_entity_id")
+        # There used to be a ix_states_entity_id index here, but it was removed in later schema
+        pass
     elif new_version == 8:
         _add_columns(session_maker, "events", ["context_parent_id CHARACTER(36)"])
         _add_columns(session_maker, "states", ["old_state_id INTEGER"])
-        _create_index(session_maker, "events", "ix_events_context_parent_id")
+        # This used to create ix_events_context_parent_id, but it was removed in version 28
     elif new_version == 9:
         # We now get the context from events with a join
         # since its always there on state_changed events
@@ -572,7 +576,7 @@ def _apply_update(  # noqa: C901
         # Redundant keys on composite index:
         # We already have ix_states_entity_id_last_updated
         _drop_index(session_maker, "states", "ix_states_entity_id")
-        _create_index(session_maker, "events", "ix_events_event_type_time_fired")
+        # This used to create ix_events_event_type_time_fired, but it was removed in version 32
         _drop_index(session_maker, "events", "ix_events_event_type")
     elif new_version == 10:
         # Now done in step 11
@@ -859,6 +863,11 @@ def _apply_update(  # noqa: C901
         _drop_index(session_maker, "events", "ix_events_event_type_time_fired")
         _drop_index(session_maker, "states", "ix_states_last_updated")
         _drop_index(session_maker, "events", "ix_events_time_fired")
+    elif new_version == 33:
+        # This index is no longer used and can cause MySQL to use the wrong index
+        # when querying the states table.
+        # https://github.com/home-assistant/core/issues/83787
+        _drop_index(session_maker, "states", "ix_states_entity_id")
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 
