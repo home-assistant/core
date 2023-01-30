@@ -5,6 +5,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from sqlalchemy import text as sql_text
 from sqlalchemy.exc import SQLAlchemyError
 
 from homeassistant.components.sql.const import DOMAIN
@@ -114,7 +115,7 @@ async def test_query_mssql_no_result(
     }
     with patch("homeassistant.components.sql.sensor.sqlalchemy"), patch(
         "homeassistant.components.sql.sensor.sqlalchemy.text",
-        return_value="SELECT TOP 1 5 as value where 1=2",
+        return_value=sql_text("SELECT TOP 1 5 as value where 1=2"),
     ):
         await init_integration(hass, config)
 
