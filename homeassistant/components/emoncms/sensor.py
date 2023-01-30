@@ -135,7 +135,7 @@ def setup_platform(
 class EmonCmsSensor(SensorEntity):
     """Implementation of an Emoncms sensor."""
 
-    def __init__(self, data, name, value_template, unit_of_measurement, sensorid, elem):
+    def __init__(self, data, name, value_template, unit_of_measurement, sensorid, elem) -> None:
         """Initialize the sensor."""
         if name is None:
             # Suppress ID in sensor name if it's 1, since most people won't
@@ -184,10 +184,9 @@ class EmonCmsSensor(SensorEntity):
             return self._value_template.render_with_possible_json_value(
                 self._state, STATE_UNKNOWN
             )
-        elif self._state is not None:
+        if self._state is not None:
             return round(float(self._state), DECIMALS)
-        else:
-            return None
+        return None
 
     @property
     def extra_state_attributes(self) -> dict[str, str]:
@@ -228,7 +227,7 @@ class EmonCmsSensor(SensorEntity):
 class EmonCmsData:
     """The class for handling the data retrieval."""
 
-    def __init__(self, url: str, apikey: str):
+    def __init__(self, url: str, apikey: str) -> None:
         """Initialize the data object."""
         self._sess = requests.Session()
         self._sess.params = {"apikey": apikey}
