@@ -11,7 +11,7 @@ import re
 from typing import IO, Any
 
 from hassil.intents import Intents, ResponseType, SlotList, TextSlotList
-from hassil.recognize import recognize
+from hassil.recognize import RecognizeResult, recognize_all
 from hassil.util import merge_dict
 from home_assistant_intents import get_intents
 import yaml
@@ -122,13 +122,10 @@ class DefaultAgent(AbstractConversationAgent):
                 conversation_id,
             )
 
-        slot_lists: dict[str, SlotList] = {
-            "area": self._make_areas_list(),
-            "name": self._make_names_list(),
-        }
-
         result = await self.hass.async_add_executor_job(
-            recognize, user_input.text, lang_intents.intents, slot_lists
+            self._recognize,
+            user_input,
+            lang_intents,
         )
         if result is None:
             _LOGGER.debug("No intent was matched for '%s'", user_input.text)
@@ -196,6 +193,29 @@ class DefaultAgent(AbstractConversationAgent):
         return ConversationResult(
             response=intent_response, conversation_id=conversation_id
         )
+
+    def _recognize(
+        self, user_input: ConversationInput, lang_intents: LanguageIntents
+    ) -> RecognizeResult | None:
+        """Search intents for a match to user input."""
+        slot_lists: dict[str, SlotList] = {
+            "area": self._make_areas_list(),
+            "name": self._make_names_list(),
+        }
+
+        # Prioritize matches with entity names above area names
+        area_result: RecognizeResult | None = None
+        for result in recognize_all(
+            user_input.text, lang_intents.intents, slot_lists=slot_lists
+        ):
+            if "name" in result.entities:
+                return result
+
+            if "area" in result.entities:
+                # Keep looking in case an entity has the same name
+                area_result = result
+
+        return area_result
 
     async def async_reload(self, language: str | None = None):
         """Clear cached intents for a language."""
@@ -383,6 +403,9 @@ class DefaultAgent(AbstractConversationAgent):
                 if entry.entity_category:
                     # Skip configuration/diagnostic entities
                     continue
+
+                if entry.name:
+                    names.append((entry.name, state.entity_id, context))
 
                 if entry.aliases:
                     for alias in entry.aliases:

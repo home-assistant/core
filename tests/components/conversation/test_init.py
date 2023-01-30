@@ -777,3 +777,47 @@ async def test_turn_on_area(hass, init_components):
     assert call.domain == HASS_DOMAIN
     assert call.service == "turn_on"
     assert call.data == {"entity_id": "light.stove"}
+
+
+async def test_light_area_same_name(hass, init_components):
+    """Test turning on a light with the same name as an area."""
+    entities = entity_registry.async_get(hass)
+    devices = device_registry.async_get(hass)
+    areas = area_registry.async_get(hass)
+    entry = MockConfigEntry(domain="test")
+
+    device = devices.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+
+    kitchen_area = areas.async_create("kitchen")
+    devices.async_update_device(device.id, area_id=kitchen_area.id)
+
+    entities.async_get_or_create("light", "demo", "1234", suggested_object_id="kitchen")
+    entities.async_update_entity(
+        "light.kitchen", name="kitchen light", area_id=kitchen_area.id
+    )
+    hass.states.async_set("light.kitchen", "off")
+
+    entities.async_get_or_create("light", "demo", "5678", suggested_object_id="ceiling")
+    entities.async_update_entity(
+        "light.ceiling", name="ceiling light", area_id=kitchen_area.id
+    )
+    hass.states.async_set("light.ceiling", "off")
+
+    calls = async_mock_service(hass, HASS_DOMAIN, "turn_on")
+
+    await hass.services.async_call(
+        "conversation",
+        "process",
+        {conversation.ATTR_TEXT: "turn on kitchen light"},
+    )
+    await hass.async_block_till_done()
+
+    # Should only turn on one light instead of all lights in the kitchen
+    assert len(calls) == 1
+    call = calls[0]
+    assert call.domain == HASS_DOMAIN
+    assert call.service == "turn_on"
+    assert call.data == {"entity_id": "light.kitchen"}
