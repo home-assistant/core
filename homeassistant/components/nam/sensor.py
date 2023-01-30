@@ -75,6 +75,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_BME280_HUMIDITY,
         name="BME280 humidity",
+        native_precision=1,
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -82,6 +83,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_BME280_PRESSURE,
         name="BME280 pressure",
+        native_precision=0,
         native_unit_of_measurement=UnitOfPressure.HPA,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -89,6 +91,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_BME280_TEMPERATURE,
         name="BME280 temperature",
+        native_precision=1,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -96,6 +99,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_BMP180_PRESSURE,
         name="BMP180 pressure",
+        native_precision=0,
         native_unit_of_measurement=UnitOfPressure.HPA,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -103,6 +107,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_BMP180_TEMPERATURE,
         name="BMP180 temperature",
+        native_precision=1,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -110,6 +115,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_BMP280_PRESSURE,
         name="BMP280 pressure",
+        native_precision=0,
         native_unit_of_measurement=UnitOfPressure.HPA,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -117,6 +123,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_BMP280_TEMPERATURE,
         name="BMP280 temperature",
+        native_precision=1,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -124,6 +131,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_HECA_HUMIDITY,
         name="HECA humidity",
+        native_precision=1,
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -131,6 +139,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_HECA_TEMPERATURE,
         name="HECA temperature",
+        native_precision=1,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -138,6 +147,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_MHZ14A_CARBON_DIOXIDE,
         name="MH-Z14A carbon dioxide",
+        native_precision=0,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         device_class=SensorDeviceClass.CO2,
         state_class=SensorStateClass.MEASUREMENT,
@@ -158,6 +168,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_PMSX003_P0,
         name="PMSx003 particulate matter 1.0",
+        native_precision=0,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM1,
         state_class=SensorStateClass.MEASUREMENT,
@@ -165,6 +176,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_PMSX003_P1,
         name="PMSx003 particulate matter 10",
+        native_precision=0,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM10,
         state_class=SensorStateClass.MEASUREMENT,
@@ -172,6 +184,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_PMSX003_P2,
         name="PMSx003 particulate matter 2.5",
+        native_precision=0,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM25,
         state_class=SensorStateClass.MEASUREMENT,
@@ -192,6 +205,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_SDS011_P1,
         name="SDS011 particulate matter 10",
+        native_precision=0,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM10,
         state_class=SensorStateClass.MEASUREMENT,
@@ -199,6 +213,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_SDS011_P2,
         name="SDS011 particulate matter 2.5",
+        native_precision=0,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM25,
         state_class=SensorStateClass.MEASUREMENT,
@@ -206,6 +221,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_SHT3X_HUMIDITY,
         name="SHT3X humidity",
+        native_precision=1,
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -213,6 +229,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_SHT3X_TEMPERATURE,
         name="SHT3X temperature",
+        native_precision=1,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -233,6 +250,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_SPS30_P0,
         name="SPS30 particulate matter 1.0",
+        native_precision=0,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM1,
         state_class=SensorStateClass.MEASUREMENT,
@@ -240,6 +258,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_SPS30_P1,
         name="SPS30 particulate matter 10",
+        native_precision=0,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM10,
         state_class=SensorStateClass.MEASUREMENT,
@@ -247,6 +266,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_SPS30_P2,
         name="SPS30 particulate matter 2.5",
+        native_precision=0,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM25,
         state_class=SensorStateClass.MEASUREMENT,
@@ -254,6 +274,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_SPS30_P4,
         name="SPS30 particulate matter 4.0",
+        native_precision=0,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         icon="mdi:molecule",
         state_class=SensorStateClass.MEASUREMENT,
@@ -261,6 +282,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_DHT22_HUMIDITY,
         name="DHT22 humidity",
+        native_precision=1,
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -268,6 +290,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_DHT22_TEMPERATURE,
         name="DHT22 temperature",
+        native_precision=1,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -275,6 +298,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_SIGNAL_STRENGTH,
         name="Signal strength",
+        native_precision=0,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_registry_enabled_default=False,
