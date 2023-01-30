@@ -438,7 +438,7 @@ def _create_auth_code_store() -> tuple[StoreResultType, RetrieveResultType]:
     def store_result(client_id: str, result: Credentials) -> str:
         """Store flow result and return a code to retrieve it."""
         if not isinstance(result, Credentials):
-            raise ValueError("result has to be a Credentials instance")
+            raise TypeError("result has to be a Credentials instance")
 
         code = uuid.uuid4().hex
         temp_results[(client_id, code)] = (
