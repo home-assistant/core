@@ -218,13 +218,15 @@ class DefaultAgent(AbstractConversationAgent):
 
     async def async_get_or_load_intents(self, language: str) -> LanguageIntents | None:
         """Load all intents of a language with lock."""
+        hass_components = set(self.hass.config.components)
         async with self._lang_lock[language]:
             return await self.hass.async_add_executor_job(
-                self._get_or_load_intents,
-                language,
+                self._get_or_load_intents, language, hass_components
             )
 
-    def _get_or_load_intents(self, language: str) -> LanguageIntents | None:
+    def _get_or_load_intents(
+        self, language: str, hass_components: set[str]
+    ) -> LanguageIntents | None:
         """Load all intents for language (run inside executor)."""
         lang_intents = self._lang_intents.get(language)
 
@@ -237,7 +239,7 @@ class DefaultAgent(AbstractConversationAgent):
 
         # Check if any new components have been loaded
         intents_changed = False
-        for component in self.hass.config.components:
+        for component in hass_components:
             if component in loaded_components:
                 continue
 
