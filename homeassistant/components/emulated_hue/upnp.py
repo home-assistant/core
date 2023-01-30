@@ -5,6 +5,7 @@ import asyncio
 import logging
 import socket
 from typing import cast
+from contextlib import suppress
 
 from aiohttp import web
 
@@ -150,12 +151,11 @@ async def async_create_upnp_datagram_endpoint(
     ssdp_socket.setblocking(False)
 
     # Required for receiving multicast
-    # TODO: some code duplication from async_upnp_client/ssdp.py here.
+    # Note: some code duplication from async_upnp_client/ssdp.py here.
     ssdp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    try:
+    with suppress(AttributeError):
         ssdp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-    except AttributeError:
-        pass
+
     ssdp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 
     ssdp_socket.setsockopt(
