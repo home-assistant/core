@@ -37,6 +37,7 @@ from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 
 from .common import (
+    assert_dict_of_states_equal_without_context_and_last_changed,
     async_wait_recording_done,
     do_adhoc_statistics,
     statistics_during_period,
@@ -55,7 +56,7 @@ def test_compile_hourly_statistics(hass_recorder):
     setup_component(hass, "sensor", {})
     zero, four, states = record_states(hass)
     hist = history.get_significant_states(hass, zero, four)
-    assert dict(states) == dict(hist)
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     # Should not fail if there is nothing there yet
     stats = get_latest_short_term_statistics(
@@ -316,7 +317,7 @@ def test_rename_entity(hass_recorder):
 
     zero, four, states = record_states(hass)
     hist = history.get_significant_states(hass, zero, four)
-    assert dict(states) == dict(hist)
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     for kwargs in ({}, {"statistic_ids": ["sensor.test1"]}):
         stats = statistics_during_period(hass, zero, period="5minute", **kwargs)
@@ -382,7 +383,7 @@ def test_rename_entity_collision(hass_recorder, caplog):
 
     zero, four, states = record_states(hass)
     hist = history.get_significant_states(hass, zero, four)
-    assert dict(states) == dict(hist)
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     for kwargs in ({}, {"statistic_ids": ["sensor.test1"]}):
         stats = statistics_during_period(hass, zero, period="5minute", **kwargs)
@@ -447,7 +448,7 @@ def test_statistics_duplicated(hass_recorder, caplog):
     setup_component(hass, "sensor", {})
     zero, four, states = record_states(hass)
     hist = history.get_significant_states(hass, zero, four)
-    assert dict(states) == dict(hist)
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     wait_recording_done(hass)
     assert "Compiling statistics for" not in caplog.text

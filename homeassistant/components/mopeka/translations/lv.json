@@ -1,5 +1,9 @@
 {
     "config": {
+        "abort": {
+            "no_devices_found": "T\u012bkl\u0101 nav atrasta neviena ier\u012bce",
+            "not_supported": "Ier\u012bce netiek atbalst\u012bta"
+        },
         "flow_title": "{name}",
         "step": {
             "bluetooth_confirm": {
