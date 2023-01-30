@@ -171,7 +171,9 @@ class OAuthFixture:
 
 @pytest.fixture
 async def oauth_fixture(
-    hass: HomeAssistant, hass_client_no_auth: Any, aioclient_mock: Any
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: Any,
 ) -> OAuthFixture:
     """Fixture for testing the OAuth flow."""
     return OAuthFixture(hass, hass_client_no_auth, aioclient_mock)
