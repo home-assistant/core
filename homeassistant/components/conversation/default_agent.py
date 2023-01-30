@@ -127,7 +127,9 @@ class DefaultAgent(AbstractConversationAgent):
             "name": self._make_names_list(),
         }
 
-        result = recognize(user_input.text, lang_intents.intents, slot_lists=slot_lists)
+        result = await self.hass.async_add_executor_job(
+            recognize, user_input.text, lang_intents.intents, slot_lists
+        )
         if result is None:
             _LOGGER.debug("No intent was matched for '%s'", user_input.text)
             return _make_error_result(
