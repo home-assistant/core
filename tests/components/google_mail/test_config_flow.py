@@ -94,7 +94,11 @@ async def test_reauth(
     calls: int,
     access_token: str,
 ) -> None:
-    """Test the reauthentication case updates the correct config entry. Make sure we abort if the user selects the wrong account on the consent screen."""
+    """Test the re-authentication case updates the correct config entry.
+
+    Make sure we abort if the user selects the
+    wrong account on the consent screen.
+    """
     config_entry.add_to_hass(hass)
 
     config_entry.async_start_reauth(hass)
