@@ -274,9 +274,13 @@ def _drop_index(
             "Finished dropping index %s from table %s", index_name, table_name
         )
     else:
-        if index_name == "ix_states_context_parent_id":
-            # Was only there on nightly so we do not want
+        if index_name in ("ix_states_entity_id", "ix_states_context_parent_id"):
+            # ix_states_context_parent_id was only there on nightly so we do not want
             # to generate log noise or issues about it.
+            #
+            # ix_states_entity_id was only there for users who upgraded from schema
+            # version 8 or earlier. Newer installs will not have it so we do not
+            # want to generate log noise or issues about it.
             return
 
         _LOGGER.warning(
