@@ -204,18 +204,17 @@ class DefaultAgent(AbstractConversationAgent):
         }
 
         # Prioritize matches with entity names above area names
-        area_result: RecognizeResult | None = None
+        maybe_result: RecognizeResult | None = None
         for result in recognize_all(
             user_input.text, lang_intents.intents, slot_lists=slot_lists
         ):
             if "name" in result.entities:
                 return result
 
-            if "area" in result.entities:
-                # Keep looking in case an entity has the same name
-                area_result = result
+            # Keep looking in case an entity has the same name
+            maybe_result = result
 
-        return area_result
+        return maybe_result
 
     async def async_reload(self, language: str | None = None):
         """Clear cached intents for a language."""
