@@ -28,7 +28,6 @@ JsonValueType = Union[
     list["JsonValueType"],
     dict[str, "JsonValueType"],
 ]
-JsonObjectType = dict[str, JsonValueType]
 
 
 class UndefinedType(Enum):
