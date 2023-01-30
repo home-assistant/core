@@ -659,7 +659,7 @@ async def test_reauth_fixed_via_dashboard_remove_password(
             },
         )
 
-    assert result["type"] == FlowResultType.ABORT, result
+    assert result["type"] == FlowResultType.FORM, result
     assert result["reason"] == "reauth_successful"
     assert entry.data[CONF_NOISE_PSK] == ""
     assert entry.data[CONF_PASSWORD] == ""
