@@ -247,6 +247,7 @@ class MQTTService(MqttDiscoveryDeviceUpdate):
             hass=self.hass,
         ).async_render
 
+        self._build_data_schema(config)
         self._async_register_service()
 
         MqttDiscoveryDeviceUpdate.__init__(
@@ -265,8 +266,6 @@ class MQTTService(MqttDiscoveryDeviceUpdate):
             self.service_name = None
             return
         self.service_name = service_name
-
-        self.build_data_schema()
 
         data_schema = {}
         fields = {}
@@ -315,10 +314,10 @@ class MQTTService(MqttDiscoveryDeviceUpdate):
 
         async_set_service_schema(self.hass, DOMAIN, service_name, service_desc)
 
-    def build_data_schema(self) -> None:
+    def _build_data_schema(self, config: ConfigType) -> None:
         """Build a service schema based on the config supplied."""
         schema: list[dict[str, Any]] | None
-        if not (schema := self._config.get(CONF_SCHEMA)):
+        if not (schema := config.get(CONF_SCHEMA)):
             self.data_schema = OrderedDict()
             return None
 
@@ -349,6 +348,7 @@ class MQTTService(MqttDiscoveryDeviceUpdate):
         """Handle MQTT service discovery updates."""
         # Update service
         config: DiscoveryInfoType = PLATFORM_SCHEMA(discovery_data)
+        self._build_data_schema(config)
         self._config = config
         self._command_template = MqttCommandTemplate(
             config.get(CONF_COMMAND_TEMPLATE),
