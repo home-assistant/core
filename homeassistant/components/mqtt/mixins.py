@@ -881,7 +881,6 @@ class MqttDiscoveryUpdate(Entity):
                         await self._discovery_update(payload)
                     finally:
                         send_discovery_done(self.hass, self._discovery_data)
-
                 else:
                     # Non-empty, unchanged payload: Ignore to avoid changing states
                     _LOGGER.debug("Ignoring unchanged update for: %s", self.entity_id)
