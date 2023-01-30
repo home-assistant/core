@@ -84,7 +84,13 @@ class HassAqualinkThermostat(AqualinkEntity, ClimateEntity):
     @property
     def target_temperature(self) -> float:
         """Return the current target temperature."""
-        return float(self.dev.state)
+        if not isinstance(self.dev.state, str) or self.dev.state == "":
+            return 0.0
+
+        try:
+            return float(self.dev.state)
+        except ValueError:
+            return 0.0
 
     @refresh_system
     async def async_set_temperature(self, **kwargs: Any) -> None:
