@@ -14,7 +14,7 @@
         "flow_title": "Bosch SHC: {name}",
         "step": {
             "confirm_discovery": {
-                "description": "Smart Home Controller I: Bitte dr\u00fccke die frontseitige Taste, bis die LED zu blinken beginnt.\nSmart Home Controller II: Dr\u00fccke kurz die Funktionstaste. Die Cloud- und Netzwerkleuchten beginnen orange zu blinken.\nDas Ger\u00e4t ist nun f\u00fcr die Kopplung bereit.\n\nBist du bereit, mit der Einrichtung von {model} @ {host} in Home Assistant fortzufahren?"
+                "description": "Smart Home Controller I: Bitte dr\u00fccke die Taste auf der Vorderseite, bis die LED zu blinken beginnt.\nSmart Home Controller II: Dr\u00fccke kurz die Funktionstaste. Cloud- und Netzwerk-Lampen beginnen orange zu blinken.\nDas Ger\u00e4t ist nun bereit f\u00fcr das Pairing.\n\nBist du bereit, mit der Einrichtung von {model} @ {host} mit Home Assistant fortzufahren?"
             },
             "credentials": {
                 "data": {
@@ -22,11 +22,11 @@
                 }
             },
             "reauth_confirm": {
-                "description": "Die bosch_shc Integration muss dein Konto neu authentifizieren",
-                "title": "Integration erneut authentifizieren",
                 "data": {
                     "host": "Host"
-                }
+                },
+                "description": "Die bosch_shc Integration muss dein Konto neu authentifizieren",
+                "title": "Integration erneut authentifizieren"
             },
             "user": {
                 "data": {
