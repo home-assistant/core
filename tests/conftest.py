@@ -989,7 +989,7 @@ def recorder_db_url(pytestconfig):
                 dialect = sqlalchemy_utils.functions.orm.get_bind(mixed).dialect
             return dialect.preparer(dialect).quote(ident)
 
-        sqlalchemy_utils.functions.orm.quote = _ha_orm_quote
+        sqlalchemy_utils.functions.database.quote = _ha_orm_quote
 
         charset = "utf8mb4' COLLATE = 'utf8mb4_unicode_ci"
         assert not sqlalchemy_utils.database_exists(db_url)
