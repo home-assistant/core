@@ -22,11 +22,11 @@
                 }
             },
             "reauth_confirm": {
-                "description": "The bosch_shc integration needs to re-authenticate your account",
-                "title": "Reauthenticate Integration",
                 "data": {
                     "host": "Host"
-                }
+                },
+                "description": "The bosch_shc integration needs to re-authenticate your account",
+                "title": "Reauthenticate Integration"
             },
             "user": {
                 "data": {
