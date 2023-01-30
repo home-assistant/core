@@ -127,7 +127,9 @@ class DefaultAgent(AbstractConversationAgent):
             "name": self._make_names_list(),
         }
 
-        result = recognize(user_input.text, lang_intents.intents, slot_lists=slot_lists)
+        result = await self.hass.async_add_executor_job(
+            recognize, user_input.text, lang_intents.intents, slot_lists
+        )
         if result is None:
             _LOGGER.debug("No intent was matched for '%s'", user_input.text)
             return _make_error_result(
@@ -214,13 +216,15 @@ class DefaultAgent(AbstractConversationAgent):
 
     async def async_get_or_load_intents(self, language: str) -> LanguageIntents | None:
         """Load all intents of a language with lock."""
+        hass_components = set(self.hass.config.components)
         async with self._lang_lock[language]:
             return await self.hass.async_add_executor_job(
-                self._get_or_load_intents,
-                language,
+                self._get_or_load_intents, language, hass_components
             )
 
-    def _get_or_load_intents(self, language: str) -> LanguageIntents | None:
+    def _get_or_load_intents(
+        self, language: str, hass_components: set[str]
+    ) -> LanguageIntents | None:
         """Load all intents for language (run inside executor)."""
         lang_intents = self._lang_intents.get(language)
 
@@ -233,7 +237,7 @@ class DefaultAgent(AbstractConversationAgent):
 
         # Check if any new components have been loaded
         intents_changed = False
-        for component in self.hass.config.components:
+        for component in hass_components:
             if component in loaded_components:
                 continue
 
@@ -359,7 +363,7 @@ class DefaultAgent(AbstractConversationAgent):
                 for alias in entry.aliases:
                     areas.append((alias, entry.id))
 
-        self._areas_list = TextSlotList.from_tuples(areas)
+        self._areas_list = TextSlotList.from_tuples(areas, allow_template=False)
         return self._areas_list
 
     def _make_names_list(self) -> TextSlotList:
@@ -385,7 +389,7 @@ class DefaultAgent(AbstractConversationAgent):
             # Default name
             names.append((state.name, state.entity_id, context))
 
-        self._names_list = TextSlotList.from_tuples(names)
+        self._names_list = TextSlotList.from_tuples(names, allow_template=False)
         return self._names_list
 
     def _get_error_text(
