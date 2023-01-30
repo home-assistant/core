@@ -27,7 +27,7 @@ def outlet() -> dict[str, Any]:
 
 
 @pytest.fixture
-def socket(outlet) -> Socket:
+def socket(outlet: dict[str, Any]) -> Socket:
     """Return socket."""
     device = Device(outlet)
     socket_control = device.socket_control
