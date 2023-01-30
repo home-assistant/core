@@ -55,7 +55,7 @@ from .models import StatisticData, StatisticMetaData, process_timestamp
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 32
+SCHEMA_VERSION = 33
 
 _StatisticsBaseSelfT = TypeVar("_StatisticsBaseSelfT", bound="StatisticsBase")
 
@@ -243,15 +243,6 @@ class EventData(Base):  # type: ignore[misc,valid-type]
         )
 
     @staticmethod
-    def from_event(event: Event) -> EventData:
-        """Create object from an event."""
-        shared_data = json_bytes(event.data)
-        return EventData(
-            shared_data=shared_data.decode("utf-8"),
-            hash=EventData.hash_shared_data_bytes(shared_data),
-        )
-
-    @staticmethod
     def shared_data_bytes_from_event(
         event: Event, dialect: SupportedDialect | None
     ) -> bytes:
@@ -408,16 +399,6 @@ class StateAttributes(Base):  # type: ignore[misc,valid-type]
             f"<recorder.StateAttributes(id={self.attributes_id}, hash='{self.hash}',"
             f" attributes='{self.shared_attrs}')>"
         )
-
-    @staticmethod
-    def from_event(event: Event) -> StateAttributes:
-        """Create object from a state_changed event."""
-        state: State | None = event.data.get("new_state")
-        # None state means the state was removed from the state machine
-        attr_bytes = b"{}" if state is None else json_bytes(state.attributes)
-        dbstate = StateAttributes(shared_attrs=attr_bytes.decode("utf-8"))
-        dbstate.hash = StateAttributes.hash_shared_attrs_bytes(attr_bytes)
-        return dbstate
 
     @staticmethod
     def shared_attrs_bytes_from_event(

@@ -95,7 +95,7 @@ afsapi==0.2.7
 agent-py==0.0.23
 
 # homeassistant.components.geo_json_events
-aio_geojson_generic_client==0.1
+aio_geojson_generic_client==0.3
 
 # homeassistant.components.geonetnz_quakes
 aio_geojson_geonetnz_quakes==0.15
@@ -874,7 +874,7 @@ hass-nabucasa==0.61.0
 hass_splunk==0.1.1
 
 # homeassistant.components.conversation
-hassil==0.2.5
+hassil==0.2.6
 
 # homeassistant.components.tasmota
 hatasmota==0.6.3
@@ -1896,7 +1896,7 @@ pyqwikswitch==0.93
 pyrail==0.0.3
 
 # homeassistant.components.rainbird
-pyrainbird==1.1.0
+pyrainbird==2.0.0
 
 # homeassistant.components.recswitch
 pyrecswitch==1.0.2
@@ -2003,7 +2003,7 @@ pysyncthru==0.7.10
 pytankerkoenig==0.0.6
 
 # homeassistant.components.tautulli
-pytautulli==21.11.0
+pytautulli==23.1.1
 
 # homeassistant.components.tfiac
 pytfiac==0.4

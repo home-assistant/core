@@ -14,7 +14,7 @@
         "flow_title": "Bosch SHC: {name}",
         "step": {
             "confirm_discovery": {
-                "description": "Prem el bot\u00f3 de la part frontal/lateral del controlador Bosh Smart Home fins que el LED parpellegi.\nPreparat per continuar la configuraci\u00f3 de {model} @ {host} amb Home Assistant?"
+                "description": "Smart Home Controller I: Prem el bot\u00f3 de la part frontal/lateral fins que el LED parpellegi.\nSmart Home Controller II: Prem el bot\u00f3 de funci\u00f3 breument. Els LEDs d'acc\u00e9s al n\u00favol i de connexi\u00f3 comen\u00e7aran a parpellejar.\nEl dispositiu est\u00e0 llest per a la vinculaci\u00f3.\n\nPreparat per continuar la configuraci\u00f3 de {model} @ {host} amb Home Assistant?"
             },
             "credentials": {
                 "data": {
@@ -22,6 +22,9 @@
                 }
             },
             "reauth_confirm": {
+                "data": {
+                    "host": "Amfitri\u00f3"
+                },
                 "description": "La integraci\u00f3 bosch_shc ha de tornar a autenticar el teu compte",
                 "title": "Reautenticaci\u00f3 de la integraci\u00f3"
             },

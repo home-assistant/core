@@ -1005,12 +1005,12 @@ async def test_script_restore_last_triggered(hass: HomeAssistant) -> None:
 async def test_recursive_script(hass, script_mode, warning_msg, caplog):
     """Test recursive script calls does not deadlock."""
     # Make sure we cover all script modes
-    assert SCRIPT_MODE_CHOICES == [
+    assert [
         SCRIPT_MODE_PARALLEL,
         SCRIPT_MODE_QUEUED,
         SCRIPT_MODE_RESTART,
         SCRIPT_MODE_SINGLE,
-    ]
+    ] == SCRIPT_MODE_CHOICES
 
     assert await async_setup_component(
         hass,
@@ -1053,12 +1053,12 @@ async def test_recursive_script(hass, script_mode, warning_msg, caplog):
 async def test_recursive_script_indirect(hass, script_mode, warning_msg, caplog):
     """Test recursive script calls does not deadlock."""
     # Make sure we cover all script modes
-    assert SCRIPT_MODE_CHOICES == [
+    assert [
         SCRIPT_MODE_PARALLEL,
         SCRIPT_MODE_QUEUED,
         SCRIPT_MODE_RESTART,
         SCRIPT_MODE_SINGLE,
-    ]
+    ] == SCRIPT_MODE_CHOICES
 
     assert await async_setup_component(
         hass,
@@ -1118,12 +1118,12 @@ async def test_recursive_script_turn_on(hass: HomeAssistant, script_mode, caplog
     - SCRIPT_MODE_SINGLE is not relevant because suca script can't turn itself on
     """
     # Make sure we cover all script modes
-    assert SCRIPT_MODE_CHOICES == [
+    assert [
         SCRIPT_MODE_PARALLEL,
         SCRIPT_MODE_QUEUED,
         SCRIPT_MODE_RESTART,
         SCRIPT_MODE_SINGLE,
-    ]
+    ] == SCRIPT_MODE_CHOICES
     stop_scripts_at_shutdown_called = asyncio.Event()
     real_stop_scripts_at_shutdown = _async_stop_scripts_at_shutdown
 
