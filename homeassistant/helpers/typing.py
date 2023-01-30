@@ -1,7 +1,7 @@
 """Typing Helpers for Home Assistant."""
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from enum import Enum
 from typing import Any
 
@@ -25,10 +25,10 @@ JsonValueType = Union[
     int,
     float,
     bool,
-    Sequence["JsonValueType"],
-    Mapping[str, "JsonValueType"],
+    list["JsonValueType"],
+    dict[str, "JsonValueType"],
 ]
-JsonObjectType = Mapping[str, JsonValueType]
+JsonObjectType = dict[str, JsonValueType]
 
 
 class UndefinedType(Enum):
