@@ -22,9 +22,7 @@ from homeassistant.components import (
     notify as hass_notify,
     tag,
 )
-from homeassistant.components.binary_sensor import (
-    DEVICE_CLASSES as BINARY_SENSOR_CLASSES,
-)
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.device_tracker import (
     ATTR_BATTERY,
@@ -33,10 +31,7 @@ from homeassistant.components.device_tracker import (
     ATTR_LOCATION_NAME,
 )
 from homeassistant.components.frontend import MANIFEST_JSON
-from homeassistant.components.sensor import (
-    DEVICE_CLASSES as SENSOR_CLASSES,
-    STATE_CLASSES as SENSOR_STATE_CLASSES,
-)
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -58,7 +53,7 @@ from homeassistant.helpers import (
     template,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.util.decorator import Registry
 
 from .const import (
@@ -131,8 +126,7 @@ WEBHOOK_COMMANDS: Registry[
     str, Callable[[HomeAssistant, ConfigEntry, Any], Coroutine[Any, Any, Response]]
 ] = Registry()
 
-COMBINED_CLASSES = set(BINARY_SENSOR_CLASSES + SENSOR_CLASSES)
-SENSOR_TYPES = [ATTR_SENSOR_TYPE_BINARY_SENSOR, ATTR_SENSOR_TYPE_SENSOR]
+SENSOR_TYPES = (ATTR_SENSOR_TYPE_BINARY_SENSOR, ATTR_SENSOR_TYPE_SENSOR)
 
 WEBHOOK_PAYLOAD_SCHEMA = vol.Schema(
     {
@@ -508,7 +502,9 @@ def _extract_sensor_unique_id(webhook_id: str, unique_id: str) -> str:
         {
             vol.Optional(ATTR_SENSOR_ATTRIBUTES, default={}): dict,
             vol.Optional(ATTR_SENSOR_DEVICE_CLASS): vol.Any(
-                None, vol.All(vol.Lower, vol. Coerce(BinarySensorDeviceClass)), vol.All(vol.Lower, vol. Coerce(SensorDeviceClass))
+                None,
+                vol.All(vol.Lower, vol.Coerce(BinarySensorDeviceClass)),
+                vol.All(vol.Lower, vol.Coerce(SensorDeviceClass)),
             ),
             vol.Required(ATTR_SENSOR_NAME): cv.string,
             vol.Required(ATTR_SENSOR_TYPE): vol.In(SENSOR_TYPES),
