@@ -1044,6 +1044,8 @@ class Recorder(threading.Thread):
 
     async def async_block_till_done(self) -> None:
         """Async version of block_till_done."""
+        if self._queue.empty() and not self._event_session_has_pending_writes():
+            return
         event = asyncio.Event()
         self.queue_task(SynchronizeTask(event))
         await event.wait()
