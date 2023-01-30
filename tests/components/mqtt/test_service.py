@@ -284,7 +284,7 @@ async def test_discovery_update_unchanged_update(
 
 
 async def test_discovery_update_service(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config, caplog
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config
 ) -> None:
     """Test update of discovered service."""
     config1 = DEFAULT_CONFIG_PAYLOAD
@@ -300,6 +300,33 @@ async def test_discovery_update_service(
         async_fire_mqtt_message(hass, DEFAULT_DISCOVERY_TOPIC, json_dumps(config2))
         await hass.async_block_till_done()
         assert discovery_update.call_count == 1
+
+
+@pytest.mark.xfail(raises=MultipleInvalid)
+async def test_update_with_bad_config_not_breaks_discovery(
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config
+) -> None:
+    """Test a bad update does not break discovery."""
+    config1 = DEFAULT_CONFIG_PAYLOAD
+    config2 = deepcopy(DEFAULT_CONFIG_PAYLOAD)
+    config2["schema"] = "Bad schema, should be list, not a string"
+    config3 = deepcopy(DEFAULT_CONFIG_PAYLOAD)
+    config3["name"] = "Service name update"
+
+    await mqtt_mock_entry_no_yaml_config()
+    async_fire_mqtt_message(hass, DEFAULT_DISCOVERY_TOPIC, json_dumps(config1))
+    await hass.async_block_till_done()
+    assert DEFAULT_SERVICE_NAME in hass.services.async_services()[mqtt.DOMAIN].keys()
+
+    # Bad schema, raises MultipleInvalid
+    async_fire_mqtt_message(hass, DEFAULT_DISCOVERY_TOPIC, json_dumps(config2))
+    await hass.async_block_till_done()
+    assert DEFAULT_SERVICE_NAME in hass.services.async_services()[mqtt.DOMAIN].keys()
+
+    # Updated changes name
+    async_fire_mqtt_message(hass, DEFAULT_DISCOVERY_TOPIC, json_dumps(config3))
+    await hass.async_block_till_done()
+    assert "service_name_update" in hass.services.async_services()[mqtt.DOMAIN].keys()
 
 
 async def test_unload_entry(
