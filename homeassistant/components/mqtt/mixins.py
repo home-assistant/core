@@ -290,24 +290,6 @@ class SetupEntity(Protocol):
         """Define setup_entities type."""
 
 
-async def async_get_platform_config_from_yaml(
-    hass: HomeAssistant,
-    platform_domain: str,
-    config_yaml: ConfigType | None = None,
-) -> list[ConfigType]:
-    """Return a list of validated configurations for the domain."""
-    platform_configs: Any | None
-    mqtt_data = get_mqtt_data(hass)
-    if config_yaml is None:
-        config_yaml = mqtt_data.config
-    if not config_yaml:
-        return []
-    if not (platform_configs := config_yaml.get(platform_domain)):
-        return []
-    assert isinstance(platform_configs, list)
-    return platform_configs
-
-
 async def async_setup_entry_helper(
     hass: HomeAssistant,
     domain: str,
@@ -360,12 +342,7 @@ async def async_setup_entry_helper(
         if domain not in config_yaml:
             return
         await asyncio.gather(
-            *[
-                async_setup(config)
-                for config in await async_get_platform_config_from_yaml(
-                    hass, domain, config_yaml
-                )
-            ]
+            *[async_setup(config) for config in config_yaml.get(domain, [])]
         )
 
     # discover manual configured MQTT items
