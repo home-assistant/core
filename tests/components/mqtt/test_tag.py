@@ -821,7 +821,7 @@ async def test_update_with_bad_config_not_breaks_discovery(
     }
     config2 = {
         "topic": "test-topic",
-        "device": {"identifiers": "bad identifier"},
+        "device": {"bad_key": "some bad value"},
     }
 
     config3 = {
