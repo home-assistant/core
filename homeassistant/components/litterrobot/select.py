@@ -20,14 +20,11 @@ from .hub import LitterRobotHub
 
 _CastTypeT = TypeVar("_CastTypeT", int, float, str)
 
-BRIGHTNESS_LEVEL_MAPPER: dict[BrightnessLevel | None, tuple[str | None, str]] = {
-    BrightnessLevel.LOW: ("Low", "mdi:lightbulb-on-30"),
-    BrightnessLevel.MEDIUM: ("Medium", "mdi:lightbulb-on-50"),
-    BrightnessLevel.HIGH: ("High", "mdi:lightbulb-on"),
-    None: (None, "mdi:lightbulb-question"),
-}
-BRIGHTNESS_LEVEL_OPTIONS = {
-    v[0]: k for k, v in BRIGHTNESS_LEVEL_MAPPER.items() if k and v[0]
+BRIGHTNESS_LEVEL_ICON_MAP: dict[BrightnessLevel | None, str] = {
+    BrightnessLevel.LOW: "mdi:lightbulb-on-30",
+    BrightnessLevel.MEDIUM: "mdi:lightbulb-on-50",
+    BrightnessLevel.HIGH: "mdi:lightbulb-on",
+    None: "mdi:lightbulb-question",
 }
 
 
@@ -58,17 +55,20 @@ ROBOT_SELECT_MAP: dict[type[Robot], RobotSelectEntityDescription] = {
         unit_of_measurement=UnitOfTime.MINUTES,
         current_fn=lambda robot: robot.clean_cycle_wait_time_minutes,
         options_fn=lambda robot: robot.VALID_WAIT_TIMES,
-        select_fn=lambda robot, option: robot.set_wait_time(int(option)),
+        select_fn=lambda robot, opt: robot.set_wait_time(int(opt)),
     ),
     LitterRobot4: RobotSelectEntityDescription[LitterRobot4, str](
         key="panel_brightness",
         name="Panel brightness",
-        current_fn=lambda robot: BRIGHTNESS_LEVEL_MAPPER[robot.panel_brightness][0],
-        options_fn=lambda _: list(BRIGHTNESS_LEVEL_OPTIONS.keys()),
-        select_fn=lambda robot, option: robot.set_panel_brightness(
-            BRIGHTNESS_LEVEL_OPTIONS[option]
+        translation_key="brightness_level",
+        current_fn=lambda robot: bri.name.lower()
+        if (bri := robot.panel_brightness) is not None
+        else None,
+        options_fn=lambda _: [level.name.lower() for level in BrightnessLevel],
+        select_fn=lambda robot, opt: robot.set_panel_brightness(
+            BrightnessLevel[opt.upper()]
         ),
-        icon_fn=lambda robot: BRIGHTNESS_LEVEL_MAPPER[robot.panel_brightness][1],
+        icon_fn=lambda robot: BRIGHTNESS_LEVEL_ICON_MAP[robot.panel_brightness],
     ),
     FeederRobot: RobotSelectEntityDescription[FeederRobot, float](
         key="meal_insert_size",
@@ -77,7 +77,7 @@ ROBOT_SELECT_MAP: dict[type[Robot], RobotSelectEntityDescription] = {
         unit_of_measurement="cups",
         current_fn=lambda robot: robot.meal_insert_size,
         options_fn=lambda robot: robot.VALID_MEAL_INSERT_SIZES,
-        select_fn=lambda robot, option: robot.set_meal_insert_size(float(option)),
+        select_fn=lambda robot, opt: robot.set_meal_insert_size(float(opt)),
     ),
 }
 
