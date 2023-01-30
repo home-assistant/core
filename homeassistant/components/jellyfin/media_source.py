@@ -158,7 +158,10 @@ class JellyfinSource(MediaSource):
         if collection_type == COLLECTION_TYPE_TVSHOWS:
             return await self._build_tv_library(library, include_children)
 
-        raise BrowseError(f"Unsupported collection type {collection_type}")
+        # Unsupported collection types have already been filtered out in library retrieval
+        raise BrowseError(
+            f"Unsupported collection type {collection_type}"
+        )  # pragma: no cover
 
     async def _build_music_library(
         self, library: dict[str, Any], include_children: bool
