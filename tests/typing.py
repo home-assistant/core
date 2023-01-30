@@ -1,11 +1,16 @@
 """Typing helpers for Home Assistant tests."""
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
-from typing import Any
+from typing import TYPE_CHECKING, TypeAlias
 
-from aiohttp import ClientWebSocketResponse
-from aiohttp.test_utils import TestClient
+if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine
+    from typing import Any
 
-TestClientGenerator = Callable[..., Coroutine[Any, Any, TestClient]]
-TestWebSocketGenerator = Callable[..., Coroutine[Any, Any, ClientWebSocketResponse]]
+    from aiohttp import ClientWebSocketResponse
+    from aiohttp.test_utils import TestClient
+
+TestClientGenerator: TypeAlias = "Callable[..., Coroutine[Any, Any, TestClient]]"
+TestWebSocketGenerator: TypeAlias = (
+    "Callable[..., Coroutine[Any, Any, ClientWebSocketResponse]]"
+)
