@@ -87,7 +87,7 @@
       },
       "intent_migrate": {
         "title": "Migrate to a new radio",
-        "description": "Before plugging in your new radio, your old radio needs to be reset.  An automatic backup will be performed.  If you are using a combined Z-Wave and Zigbee adapter like the HUSBZB-1, this will only reset the Zigbee portion.\n\nDo you wish to continue?\n\n*Note: if you are migrating from a Conbee/Raspbee, make sure it is running firmware `0x26720700`! Otherwise, the some devices may not be controllable after migrating until they are power cycled.*"
+        "description": "Before plugging in your new radio, your old radio needs to be reset.  An automatic backup will be performed.  If you are using a combined Z-Wave and Zigbee adapter like the HUSBZB-1, this will only reset the Zigbee portion.\n\n*Note: if you are migrating from a **ConBee/RaspBee**, make sure it is running firmware `0x26720700` or newer! Otherwise, some devices may not be controllable after migrating until they are power cycled.*\n\nDo you wish to continue?"
       },
       "instruct_unplug": {
         "title": "Unplug your old radio",
