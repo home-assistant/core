@@ -744,8 +744,12 @@ class MqttDiscoveryDeviceUpdate(ABC):
                 self.log_name,
                 discovery_hash,
             )
-            await self.async_update(discovery_payload)
-        if not discovery_payload:
+            try:
+                await self.async_update(discovery_payload)
+            finally:
+                send_discovery_done(self.hass, self._discovery_data)
+            self._discovery_data[ATTR_DISCOVERY_PAYLOAD] = discovery_payload
+        elif not discovery_payload:
             # Unregister and clean up the current discovery instance
             stop_discovery_updates(
                 self.hass, self._discovery_data, self._remove_discovery_updated
@@ -869,15 +873,19 @@ class MqttDiscoveryUpdate(Entity):
                 _LOGGER.info("Removing component: %s", self.entity_id)
                 self._cleanup_discovery_on_remove()
                 await _async_remove_state_and_registry_entry(self)
+                send_discovery_done(self.hass, self._discovery_data)
             elif self._discovery_update:
                 if old_payload != self._discovery_data[ATTR_DISCOVERY_PAYLOAD]:
                     # Non-empty, changed payload: Notify component
                     _LOGGER.info("Updating component: %s", self.entity_id)
-                    await self._discovery_update(payload)
+                    try:
+                        await self._discovery_update(payload)
+                    finally:
+                        send_discovery_done(self.hass, self._discovery_data)
                 else:
                     # Non-empty, unchanged payload: Ignore to avoid changing states
                     _LOGGER.debug("Ignoring unchanged update for: %s", self.entity_id)
-            send_discovery_done(self.hass, self._discovery_data)
+                    send_discovery_done(self.hass, self._discovery_data)
 
         if discovery_hash:
             assert self._discovery_data is not None
