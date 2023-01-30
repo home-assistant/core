@@ -1875,6 +1875,16 @@ def base64_decode(value):
     return base64.b64decode(value).decode("utf-8")
 
 
+def base64_encode_bytes(value):
+    """Perform base64 decode to bytes."""
+    return base64.b64encode(value.encode("utf-8"))
+
+
+def base64_decode_bytes(value):
+    """Perform base64 decode to bytes."""
+    return base64.b64decode(value)
+
+
 def ordinal(value):
     """Perform ordinal conversion."""
     return str(value) + (
@@ -2066,6 +2076,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["random"] = random_every_time
         self.filters["base64_encode"] = base64_encode
         self.filters["base64_decode"] = base64_decode
+        self.filters["base64_encode_bytes"] = base64_encode_bytes
+        self.filters["base64_decode_bytes"] = base64_decode_bytes
         self.filters["ordinal"] = ordinal
         self.filters["regex_match"] = regex_match
         self.filters["regex_replace"] = regex_replace
