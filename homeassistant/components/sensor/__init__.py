@@ -9,6 +9,7 @@ from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation as DecimalInvalidOperation
 import logging
 from math import ceil, floor, log10
+import re
 from typing import Any, Final, cast, final
 
 from homeassistant.config_entries import ConfigEntry
@@ -83,6 +84,8 @@ from .websocket_api import async_setup as async_setup_ws_api
 _LOGGER: Final = logging.getLogger(__name__)
 
 ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
+
+NEGATIVE_ZERO_PATTERN = re.compile(r"^-(0\.?0*)$")
 
 SCAN_INTERVAL: Final = timedelta(seconds=30)
 
@@ -647,8 +650,14 @@ class SensorEntity(Entity):
                 unit_of_measurement,
             )
             value = f"{converted_numerical_value:.{precision}f}"
+            # This can be replaced with adding the z option when we drop support for
+            # Python 3.10
+            value = NEGATIVE_ZERO_PATTERN.sub(r"\1", value)
         elif precision is not None:
             value = f"{numerical_value:.{precision}f}"
+            # This can be replaced with adding the z option when we drop support for
+            # Python 3.10
+            value = NEGATIVE_ZERO_PATTERN.sub(r"\1", value)
 
         # Validate unit of measurement used for sensors with a device class
         if (
