@@ -773,6 +773,7 @@ class MqttDiscoveryDeviceUpdate(ABC):
                 self.hass, self._device_id, self._config_entry_id
             )
 
+    @abstractmethod
     async def async_update(self, discovery_data: MQTTDiscoveryPayload) -> None:
         """Handle the update of platform specific parts, extend to the platform."""
 
