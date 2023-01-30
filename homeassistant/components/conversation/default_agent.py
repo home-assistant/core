@@ -363,7 +363,7 @@ class DefaultAgent(AbstractConversationAgent):
                 for alias in entry.aliases:
                     areas.append((alias, entry.id))
 
-        self._areas_list = TextSlotList.from_tuples(areas)
+        self._areas_list = TextSlotList.from_tuples(areas, allow_template=False)
         return self._areas_list
 
     def _make_names_list(self) -> TextSlotList:
@@ -389,7 +389,7 @@ class DefaultAgent(AbstractConversationAgent):
             # Default name
             names.append((state.name, state.entity_id, context))
 
-        self._names_list = TextSlotList.from_tuples(names)
+        self._names_list = TextSlotList.from_tuples(names, allow_template=False)
         return self._names_list
 
     def _get_error_text(
