@@ -27,6 +27,7 @@ async def test_async_match_states(hass):
     """Test async_match_state helper."""
     areas = area_registry.async_get(hass)
     area_kitchen = areas.async_get_or_create("kitchen")
+    areas.async_update(area_kitchen.id, aliases={"food room"})
     area_bedroom = areas.async_get_or_create("bedroom")
 
     state1 = State(
@@ -56,7 +57,7 @@ async def test_async_match_states(hass):
         intent.async_match_states(hass, name="kitchen light", states=[state1, state2])
     )
 
-    # Test alias
+    # Test entity alias
     assert [state2] == list(
         intent.async_match_states(hass, name="kill switch", states=[state1, state2])
     )
@@ -65,6 +66,13 @@ async def test_async_match_states(hass):
     assert [state1] == list(
         intent.async_match_states(
             hass, name="kitchen light", area_name="kitchen", states=[state1, state2]
+        )
+    )
+
+    # Test area alias
+    assert [state1] == list(
+        intent.async_match_states(
+            hass, name="kitchen light", area_name="food room", states=[state1, state2]
         )
     )
 
