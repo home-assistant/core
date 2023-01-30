@@ -746,8 +746,6 @@ class MqttDiscoveryDeviceUpdate(ABC):
             )
             try:
                 await self.async_update(discovery_payload)
-            except vol.Error as schema_exception:
-                raise schema_exception
             finally:
                 send_discovery_done(self.hass, self._discovery_data)
             self._discovery_data[ATTR_DISCOVERY_PAYLOAD] = discovery_payload
@@ -874,19 +872,20 @@ class MqttDiscoveryUpdate(Entity):
                 _LOGGER.info("Removing component: %s", self.entity_id)
                 self._cleanup_discovery_on_remove()
                 await _async_remove_state_and_registry_entry(self)
+                send_discovery_done(self.hass, self._discovery_data)
             elif self._discovery_update:
                 if old_payload != self._discovery_data[ATTR_DISCOVERY_PAYLOAD]:
                     # Non-empty, changed payload: Notify component
                     _LOGGER.info("Updating component: %s", self.entity_id)
                     try:
                         await self._discovery_update(payload)
-                    except vol.Error as schema_exception:
+                    finally:
                         send_discovery_done(self.hass, self._discovery_data)
-                        raise schema_exception
+
                 else:
                     # Non-empty, unchanged payload: Ignore to avoid changing states
                     _LOGGER.debug("Ignoring unchanged update for: %s", self.entity_id)
-            send_discovery_done(self.hass, self._discovery_data)
+                    send_discovery_done(self.hass, self._discovery_data)
 
         if discovery_hash:
             assert self._discovery_data is not None
