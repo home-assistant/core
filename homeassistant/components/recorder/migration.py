@@ -279,7 +279,7 @@ def _drop_index(
             # to generate log noise or issues about it.
             #
             # ix_states_entity_id was only there for users who upgraded from schema
-            # version 8 or earlier as newer installs will not have it so we do not
+            # version 8 or earlier. Newer installs will not have it so we do not
             # want to generate log noise or issues about it.
             return
 
