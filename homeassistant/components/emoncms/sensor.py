@@ -135,7 +135,9 @@ def setup_platform(
 class EmonCmsSensor(SensorEntity):
     """Implementation of an Emoncms sensor."""
 
-    def __init__(self, data, name, value_template, unit_of_measurement, sensorid, elem) -> None:
+    def __init__(
+        self, data, name, value_template, unit_of_measurement, sensorid, elem
+    ) -> None:
         """Initialize the sensor."""
         if name is None:
             # Suppress ID in sensor name if it's 1, since most people won't
