@@ -256,6 +256,7 @@ select = [
     "SIM300", # Yoda conditions. Use 'age == 42' instead of '42 == age'.
     "SIM401", # Use get from dict with default instead of an if block
     "T20",  # flake8-print
+    "TRY004", # Prefer TypeError exception for invalid type
     "UP",  # pyupgrade
     "W",  # pycodestyle
 ]
