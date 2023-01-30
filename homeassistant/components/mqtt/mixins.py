@@ -749,7 +749,7 @@ class MqttDiscoveryDeviceUpdate(ABC):
             finally:
                 send_discovery_done(self.hass, self._discovery_data)
             self._discovery_data[ATTR_DISCOVERY_PAYLOAD] = discovery_payload
-        if not discovery_payload:
+        elif not discovery_payload:
             # Unregister and clean up the current discovery instance
             stop_discovery_updates(
                 self.hass, self._discovery_data, self._remove_discovery_updated
@@ -763,6 +763,7 @@ class MqttDiscoveryDeviceUpdate(ABC):
             )
         else:
             # Normal update without change
+            send_discovery_done(self.hass, self._discovery_data)
             _LOGGER.info(
                 "%s %s no changes",
                 self.log_name,
