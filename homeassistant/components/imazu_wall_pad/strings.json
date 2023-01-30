@@ -1,0 +1,22 @@
+{
+  "config": {
+    "step": {
+      "confirm": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      },
+      "user": {
+        "description": "Please enter the host and port.",
+        "data": {
+          "host": "Host : Socket IP(192.168.x.x).",
+          "port": "Port : Port. (default:8899)"
+        }
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    }
+  }
+}

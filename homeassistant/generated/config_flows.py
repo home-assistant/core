@@ -193,6 +193,7 @@ FLOWS = {
         "icloud",
         "ifttt",
         "imap",
+        "imazu_wall_pad",
         "inkbird",
         "insteon",
         "intellifire",
