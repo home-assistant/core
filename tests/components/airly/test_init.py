@@ -25,7 +25,7 @@ async def test_async_setup_entry(hass, aioclient_mock):
     """Test a successful setup entry."""
     await init_integration(hass, aioclient_mock)
 
-    state = hass.states.get("sensor.home_particulate_matter_2_5")
+    state = hass.states.get("sensor.home_pm2_5")
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
     assert state.state == "4"
