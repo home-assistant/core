@@ -508,7 +508,7 @@ def _extract_sensor_unique_id(webhook_id: str, unique_id: str) -> str:
         {
             vol.Optional(ATTR_SENSOR_ATTRIBUTES, default={}): dict,
             vol.Optional(ATTR_SENSOR_DEVICE_CLASS): vol.Any(
-                None, vol.All(vol.Lower, vol.In(COMBINED_CLASSES))
+                None, vol.All(vol.Lower, vol. Coerce(BinarySensorDeviceClass)), vol.All(vol.Lower, vol. Coerce(SensorDeviceClass))
             ),
             vol.Required(ATTR_SENSOR_NAME): cv.string,
             vol.Required(ATTR_SENSOR_TYPE): vol.In(SENSOR_TYPES),
@@ -518,13 +518,13 @@ def _extract_sensor_unique_id(webhook_id: str, unique_id: str) -> str:
                 None, bool, int, float, str
             ),
             vol.Optional(ATTR_SENSOR_ENTITY_CATEGORY): vol.Any(
-                None, ENTITY_CATEGORIES_SCHEMA
+                None, vol.Coerce(EntityCategory)
             ),
             vol.Optional(ATTR_SENSOR_ICON, default="mdi:cellphone"): vol.Any(
                 None, cv.icon
             ),
             vol.Optional(ATTR_SENSOR_STATE_CLASS): vol.Any(
-                None, vol.In(SENSOR_STATE_CLASSES)
+                None, vol.Coerce(SensorStateClass)
             ),
             vol.Optional(ATTR_SENSOR_DISABLED): bool,
         },
