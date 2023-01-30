@@ -299,16 +299,15 @@ class HoneywellUSThermostat(ClimateEntity):
                     )
 
             # Set temperature if not in auto
-            else:
-                if mode == "cool":
+            elif mode == "cool":
+                await self._device.set_setpoint_cool(temperature)
+            elif mode == "heat":
+                await self._device.set_setpoint_heat(temperature)
+            elif mode == "auto":
+                if temperature := kwargs.get(ATTR_TARGET_TEMP_HIGH):
                     await self._device.set_setpoint_cool(temperature)
-                elif mode == "heat":
+                if temperature := kwargs.get(ATTR_TARGET_TEMP_LOW):
                     await self._device.set_setpoint_heat(temperature)
-                elif mode == "auto":
-                    if temperature := kwargs.get(ATTR_TARGET_TEMP_HIGH):
-                        await self._device.set_setpoint_cool(temperature)
-                    if temperature := kwargs.get(ATTR_TARGET_TEMP_LOW):
-                        await self._device.set_setpoint_heat(temperature)
 
         except AIOSomecomfort.SomeComfortError as err:
             _LOGGER.error("Invalid temperature %.1f: %s", temperature, err)
