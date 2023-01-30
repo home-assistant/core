@@ -248,7 +248,8 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         metric_unit=UnitOfLength.METERS,
         us_customary_unit=UnitOfLength.FEET,
-        value_fn=lambda data, unit: round(cast(float, data[unit][ATTR_VALUE])),
+        value_fn=lambda data, unit: cast(float, data[unit][ATTR_VALUE]),
+        native_precision=0,
     ),
     AccuWeatherSensorDescription(
         key="CloudCover",
