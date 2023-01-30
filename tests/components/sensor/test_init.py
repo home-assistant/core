@@ -537,6 +537,15 @@ async def test_custom_unit(
             "29.921",  # Native precision is 3
             "1013.24",  # One digit of precision removed when converting
         ),
+        (
+            SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+            UnitOfPressure.INHG,
+            UnitOfPressure.HPA,
+            -0.0001,
+            3,
+            "0.000",  # Native precision is 3
+            "0.00",  # One digit of precision removed when converting
+        ),
     ],
 )
 async def test_native_precision_scaling(
@@ -593,6 +602,14 @@ async def test_native_precision_scaling(
             1000.0,
             "1000.000",
             "1000.0000",
+        ),
+        (
+            SensorDeviceClass.DISTANCE,
+            UnitOfLength.KILOMETERS,
+            1,
+            -0.04,
+            "-0.040",
+            "0.0",  # Make sure minus is dropped
         ),
     ],
 )
