@@ -749,6 +749,7 @@ class MqttDiscoveryDeviceUpdate(ABC):
             except vol.MultipleInvalid as schema_exception:
                 send_discovery_done(self.hass, self._discovery_data)
                 raise schema_exception
+            self._discovery_data[ATTR_DISCOVERY_PAYLOAD] = discovery_payload
         if not discovery_payload:
             # Unregister and clean up the current discovery instance
             stop_discovery_updates(
@@ -882,6 +883,7 @@ class MqttDiscoveryUpdate(Entity):
                     except vol.MultipleInvalid as schema_exception:
                         send_discovery_done(self.hass, self._discovery_data)
                         raise schema_exception
+                    self._discovery_data[ATTR_DISCOVERY_PAYLOAD] = payload
                 else:
                     # Non-empty, unchanged payload: Ignore to avoid changing states
                     _LOGGER.debug("Ignoring unchanged update for: %s", self.entity_id)

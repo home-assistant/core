@@ -826,7 +826,7 @@ async def test_update_with_bad_config_not_breaks_discovery(
 
     config3 = {
         "topic": "test-topic-update",
-        "device": {"identifiers": "bad identifier"},
+        "device": {"identifiers": ["helloworld"]},
     }
 
     data1 = json.dumps(config1)
