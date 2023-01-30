@@ -186,7 +186,7 @@ class SynoApi:
 
         if not self._with_photos:
             LOGGER.debug(
-                "Disable photos api from being updatedf or '%s'", self._entry.unique_id
+                "Disable photos api from being updated or '%s'", self._entry.unique_id
             )
             self.dsm.reset(self.photos)
             self.photos = None
