@@ -1689,9 +1689,6 @@ sqlalchemy==1.4.45
 # homeassistant.components.recorder
 sqlalchemy==2.0.0
 
-# homeassistant.components.recorder
-sqlalchemy[mypy]==2.0.0
-
 # homeassistant.components.srp_energy
 srpenergy==1.3.6
 
