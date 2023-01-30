@@ -157,6 +157,8 @@ def validate_options(
     ]
 
 
+VALIDATOR_MSG = "Only one of the options 'required', 'inclusive', 'required' allowed"
+
 SERVICE_ARG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): vol.All(
@@ -170,9 +172,9 @@ SERVICE_ARG_SCHEMA = vol.Schema(
         vol.Optional(CONF_OPTIONS): vol.All(cv.ensure_list, validate_options),
         vol.Optional(CONF_MULTIPLE): cv.boolean,
         vol.Optional(CONF_CUSTOM_VALUE): cv.boolean,
-        vol.Optional(CONF_REQUIRED): cv.boolean,
-        vol.Optional(CONF_EXCLUSIVE): cv.string,
-        vol.Optional(CONF_INCLUSIVE): cv.string,
+        vol.Exclusive(CONF_REQUIRED, "validator", VALIDATOR_MSG): cv.boolean,
+        vol.Exclusive(CONF_EXCLUSIVE, "validator", VALIDATOR_MSG): cv.string,
+        vol.Exclusive(CONF_INCLUSIVE, "validator", VALIDATOR_MSG): cv.string,
     }
 )
 PLATFORM_SCHEMA = MQTT_BASE_SCHEMA.extend(
