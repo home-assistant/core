@@ -993,7 +993,7 @@ def _migrate_columns_to_timestamp(
                     )
                 )
         result = None
-        while result is None or result.rowcount > 0:
+        while result is None or result.rowcount > 0:  # type: ignore[unreachable]
             with session_scope(session=session_maker()) as session:
                 result = session.connection().execute(
                     text(
@@ -1024,7 +1024,7 @@ def _migrate_columns_to_timestamp(
                     )
                 )
         result = None
-        while result is None or result.rowcount > 0:
+        while result is None or result.rowcount > 0:  # type: ignore[unreachable]
             with session_scope(session=session_maker()) as session:
                 result = session.connection().execute(
                     text(

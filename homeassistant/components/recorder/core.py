@@ -1027,6 +1027,7 @@ class Recorder(threading.Thread):
 
     def _post_schema_migration(self, old_version: int, new_version: int) -> None:
         """Run post schema migration tasks."""
+        assert self.engine is not None
         assert self.event_session is not None
         migration.post_schema_migration(
             self.engine, self.event_session, old_version, new_version
