@@ -132,6 +132,31 @@ async def test_match_device_area(hass):
     )
 
 
+async def test_match_device_name(hass):
+    """Test async_match_state with a device name."""
+    devices = device_registry.async_get(hass)
+    kitchen_device = devices.async_get_or_create(
+        name="kitchen lights",
+        config_entry_id="1234",
+        connections=set(),
+        identifiers={("demo", "id-1234")},
+    )
+
+    entities = entity_registry.async_get(hass)
+    entity1 = entities.async_get_or_create("light", "demo", "1234")
+    state1 = State(entity1.entity_id, "on")
+    entities.async_update_entity(entity1.entity_id, device_id=kitchen_device.id)
+
+    # Match on area/domain
+    assert [state1] == list(
+        intent.async_match_states(
+            hass,
+            name="kitchen lights",
+            states=[state1],
+        )
+    )
+
+
 def test_async_validate_slots():
     """Test async_validate_slots of IntentHandler."""
     handler1 = MockIntentHandler({vol.Required("name"): cv.string})

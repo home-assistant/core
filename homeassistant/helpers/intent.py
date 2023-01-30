@@ -232,13 +232,29 @@ def async_match_states(
         ]
 
     if name is not None:
+        if devices is None:
+            devices = device_registry.async_get(hass)
+
         # Filter by name
         name = name.casefold()
 
+        # Check states
         for state, entity in states_and_entities:
             if _has_name(state, entity, name):
                 yield state
                 break
+
+            if (
+                (entity is not None)
+                and (entity.device_id is not None)
+                and (device := devices.async_get(entity.device_id))
+            ):
+                # Check device name
+                if (device.name and (name == device.name.casefold())) or (
+                    device.name_by_user and (name == device.name_by_user.casefold())
+                ):
+                    yield state
+                    break
     else:
         # Not filtered by name
         for state, _entity in states_and_entities:
