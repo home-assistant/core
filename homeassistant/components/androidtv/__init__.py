@@ -50,7 +50,7 @@ from .const import (
     SIGNAL_CONFIG_ENTITY,
 )
 
-ADB_PYTHON_EXCEPTIONS = (
+ADB_PYTHON_EXCEPTIONS: tuple = (
     AdbTimeoutError,
     BrokenPipeError,
     ConnectionResetError,
@@ -60,7 +60,7 @@ ADB_PYTHON_EXCEPTIONS = (
     InvalidResponseError,
     TcpTimeoutException,
 )
-ADB_TCP_EXCEPTIONS = (ConnectionResetError, RuntimeError)
+ADB_TCP_EXCEPTIONS: tuple = (ConnectionResetError, RuntimeError)
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 RELOAD_OPTIONS = [CONF_STATE_DETECTION_RULES]
@@ -151,11 +151,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Android TV platform."""
 
     state_det_rules = entry.options.get(CONF_STATE_DETECTION_RULES)
-    exceptions = (
-        ADB_PYTHON_EXCEPTIONS
-        if CONF_ADB_SERVER_IP not in entry.data
-        else ADB_TCP_EXCEPTIONS
-    )
+    if CONF_ADB_SERVER_IP not in entry.data:
+        exceptions = ADB_PYTHON_EXCEPTIONS
+    else:
+        exceptions = ADB_TCP_EXCEPTIONS
 
     try:
         aftv, error_message = await async_connect_androidtv(
