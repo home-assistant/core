@@ -302,9 +302,9 @@ class HoneywellUSThermostat(ClimateEntity):
             else:
                 if mode == "cool":
                     await self._device.set_setpoint_cool(temperature)
-                if mode == "heat":
+                elif mode == "heat":
                     await self._device.set_setpoint_heat(temperature)
-                if mode == "auto":
+                elif mode == "auto":
                     if temperature := kwargs.get(ATTR_TARGET_TEMP_HIGH):
                         await self._device.set_setpoint_cool(temperature)
                     if temperature := kwargs.get(ATTR_TARGET_TEMP_LOW):
