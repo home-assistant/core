@@ -279,7 +279,7 @@ async def test_send(hass):
         thermostat._cur_settings = None
         await thermostat.async_send({"fan": api.FAN_LOW})
         await hass.async_block_till_done()
-        assert FAN_LOW != thermostat.fan_mode
+        assert thermostat.fan_mode != FAN_LOW
         assert thermostat._cur_settings is None
 
 

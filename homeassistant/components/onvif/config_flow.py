@@ -109,7 +109,7 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """
         if user_input:
 
-            if CONF_MANUAL_INPUT == user_input[CONF_HOST]:
+            if user_input[CONF_HOST] == CONF_MANUAL_INPUT:
                 return await self.async_step_configure()
 
             for device in self.devices:

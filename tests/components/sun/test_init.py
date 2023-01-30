@@ -119,21 +119,21 @@ async def test_state_change(hass, caplog):
     )
     assert test_time is not None
 
-    assert sun.STATE_BELOW_HORIZON == hass.states.get(sun.ENTITY_ID).state
+    assert hass.states.get(sun.ENTITY_ID).state == sun.STATE_BELOW_HORIZON
 
     patched_time = test_time + timedelta(seconds=5)
     with freeze_time(patched_time):
         async_fire_time_changed(hass, patched_time)
         await hass.async_block_till_done()
 
-    assert sun.STATE_ABOVE_HORIZON == hass.states.get(sun.ENTITY_ID).state
+    assert hass.states.get(sun.ENTITY_ID).state == sun.STATE_ABOVE_HORIZON
 
     # Update core configuration
     with patch("homeassistant.helpers.condition.dt_util.utcnow", return_value=now):
         await hass.config.async_update(longitude=hass.config.longitude + 90)
         await hass.async_block_till_done()
 
-    assert sun.STATE_ABOVE_HORIZON == hass.states.get(sun.ENTITY_ID).state
+    assert hass.states.get(sun.ENTITY_ID).state == sun.STATE_ABOVE_HORIZON
 
     # Test listeners are not duplicated after a core configuration change
     test_time = dt_util.parse_datetime(
@@ -152,7 +152,7 @@ async def test_state_change(hass, caplog):
     # Called once by time listener, once from Sun.update_events
     assert caplog.text.count("sun position_update") == 2
 
-    assert sun.STATE_BELOW_HORIZON == hass.states.get(sun.ENTITY_ID).state
+    assert hass.states.get(sun.ENTITY_ID).state == sun.STATE_BELOW_HORIZON
 
 
 async def test_norway_in_june(hass):
@@ -227,7 +227,7 @@ async def test_setup_and_remove_config_entry(hass: ha.HomeAssistant) -> None:
         hass.states.get(sun.ENTITY_ID).attributes[sun.STATE_ATTR_NEXT_RISING]
     )
     assert test_time is not None
-    assert sun.STATE_BELOW_HORIZON == hass.states.get(sun.ENTITY_ID).state
+    assert hass.states.get(sun.ENTITY_ID).state == sun.STATE_BELOW_HORIZON
 
     # Remove the config entry
     assert await hass.config_entries.async_remove(config_entry.entry_id)
