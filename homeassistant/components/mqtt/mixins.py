@@ -341,9 +341,7 @@ async def async_setup_entry_helper(
             return
         if domain not in config_yaml:
             return
-        await asyncio.gather(
-            *[async_setup(config) for config in config_yaml.get(domain, [])]
-        )
+        await asyncio.gather(*[async_setup(config) for config in config_yaml[domain]])
 
     # discover manual configured MQTT items
     mqtt_data.reload_handlers[domain] = _async_setup_entities
