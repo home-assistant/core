@@ -102,7 +102,7 @@ async def test_template_render(mock_call, hass):
     cmd = mock_call.mock_calls[0][1]
 
     assert mock_call.call_count == 1
-    assert ("ls", "/bin", "Works") == cmd
+    assert cmd == ("ls", "/bin", "Works")
 
 
 @patch("homeassistant.components.shell_command.asyncio.create_subprocess_shell")

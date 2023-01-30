@@ -1986,7 +1986,7 @@ async def test_entry_setup_single_config(hass: HomeAssistant):
     assert config_entry.data["uuid"] == ["bla"]
     assert config_entry.data["ignore_cec"] == ["cast1"]
 
-    assert pychromecast.IGNORE_CEC == ["cast1"]
+    assert ["cast1"] == pychromecast.IGNORE_CEC
 
 
 async def test_entry_setup_list_config(hass: HomeAssistant):
