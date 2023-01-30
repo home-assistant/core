@@ -744,7 +744,11 @@ class MqttDiscoveryDeviceUpdate(ABC):
                 self.log_name,
                 discovery_hash,
             )
-            await self.async_update(discovery_payload)
+            try:
+                await self.async_update(discovery_payload)
+            except vol.MultipleInvalid as schema_exception:
+                send_discovery_done(self.hass, self._discovery_data)
+                raise schema_exception
         if not discovery_payload:
             # Unregister and clean up the current discovery instance
             stop_discovery_updates(
@@ -873,7 +877,11 @@ class MqttDiscoveryUpdate(Entity):
                 if old_payload != self._discovery_data[ATTR_DISCOVERY_PAYLOAD]:
                     # Non-empty, changed payload: Notify component
                     _LOGGER.info("Updating component: %s", self.entity_id)
-                    await self._discovery_update(payload)
+                    try:
+                        await self._discovery_update(payload)
+                    except vol.MultipleInvalid as schema_exception:
+                        send_discovery_done(self.hass, self._discovery_data)
+                        raise schema_exception
                 else:
                     # Non-empty, unchanged payload: Ignore to avoid changing states
                     _LOGGER.debug("Ignoring unchanged update for: %s", self.entity_id)
