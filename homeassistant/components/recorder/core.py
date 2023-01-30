@@ -804,8 +804,7 @@ class Recorder(threading.Thread):
         #
         assert self.event_session is not None
         with self.event_session.no_autoflush:
-            # https://github.com/sqlalchemy/sqlalchemy/issues/9120
-            if attributes_id := self.event_session.execute(  # type: ignore[call-overload]
+            if attributes_id := self.event_session.execute(
                 find_shared_attributes_id(attr_hash, shared_attrs)
             ).first():
                 return cast(int, attributes_id[0])
@@ -823,8 +822,7 @@ class Recorder(threading.Thread):
         #
         assert self.event_session is not None
         with self.event_session.no_autoflush:
-            # https://github.com/sqlalchemy/sqlalchemy/issues/9120
-            if data_id := self.event_session.execute(  # type: ignore[call-overload]
+            if data_id := self.event_session.execute(
                 find_shared_data_id(data_hash, shared_data)
             ).first():
                 return cast(int, data_id[0])
@@ -1200,6 +1198,8 @@ class Recorder(threading.Thread):
         start = start.replace(minute=0, second=0, microsecond=0)
 
         # Find the newest statistics run, if any
+        # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+        # pylint: disable-next=not-callable
         if last_run := session.query(func.max(StatisticsRuns.start)).scalar():
             start = max(start, process_timestamp(last_run) + timedelta(minutes=5))
 

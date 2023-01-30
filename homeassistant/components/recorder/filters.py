@@ -174,6 +174,8 @@ class Filters:
         if self.included_domains or self.included_entity_globs:
             return or_(
                 i_entities,
+                # https://github.com/sqlalchemy/sqlalchemy/issues/9190
+                # pylint: disable-next=invalid-unary-operand-type
                 (~e_entities & (i_entity_globs | (~e_entity_globs & i_domains))),
             ).self_group()
 
@@ -237,8 +239,7 @@ def _globs_to_like(
         for glob_str in glob_strs
         for column in columns
     ]
-    # https://github.com/sqlalchemy/sqlalchemy/issues/9123
-    return or_(*matchers) if matchers else or_(False)  # type: ignore[arg-type]
+    return or_(*matchers) if matchers else or_(False)
 
 
 def _entity_matcher(
@@ -251,8 +252,7 @@ def _entity_matcher(
         )
         for column in columns
     ]
-    # https://github.com/sqlalchemy/sqlalchemy/issues/9123
-    return or_(*matchers) if matchers else or_(False)  # type: ignore[arg-type]
+    return or_(*matchers) if matchers else or_(False)
 
 
 def _domain_matcher(
@@ -263,8 +263,7 @@ def _domain_matcher(
         for domain_matcher in like_domain_matchers(domains)
         for column in columns
     ]
-    # https://github.com/sqlalchemy/sqlalchemy/issues/9123
-    return or_(*matchers) if matchers else or_(False)  # type: ignore[arg-type]
+    return or_(*matchers) if matchers else or_(False)
 
 
 def like_domain_matchers(domains: Iterable[str]) -> list[str]:

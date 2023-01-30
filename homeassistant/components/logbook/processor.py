@@ -161,8 +161,7 @@ class EventProcessor:
             self.context_id,
         )
         with session_scope(hass=self.hass) as session:
-            # https://github.com/sqlalchemy/sqlalchemy/issues/9120
-            return self.humanify(yield_rows(session.execute(stmt)))  # type: ignore[call-overload]
+            return self.humanify(yield_rows(session.execute(stmt)))
 
     def humanify(
         self, rows: Generator[EventAsRow, None, None] | Sequence[Row] | Result

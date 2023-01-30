@@ -98,7 +98,11 @@ QUERY_STATISTICS_SHORT_TERM = (
 QUERY_STATISTICS_SUMMARY_MEAN = (
     StatisticsShortTerm.metadata_id,
     func.avg(StatisticsShortTerm.mean),
+    # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+    # pylint: disable-next=not-callable
     func.min(StatisticsShortTerm.min),
+    # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+    # pylint: disable-next=not-callable
     func.max(StatisticsShortTerm.max),
 )
 
@@ -400,6 +404,8 @@ def _find_duplicates(
             literal_column("1").label("is_duplicate"),
         )
         .group_by(table.metadata_id, table.start)
+        # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+        # pylint: disable-next=not-callable
         .having(func.count() > 1)
         .subquery()
     )
@@ -531,6 +537,8 @@ def _find_statistics_meta_duplicates(session: Session) -> list[int]:
             literal_column("1").label("is_duplicate"),
         )
         .group_by(StatisticsMeta.statistic_id)
+        # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+        # pylint: disable-next=not-callable
         .having(func.count() > 1)
         .subquery()
     )
@@ -594,8 +602,7 @@ def _compile_hourly_statistics_summary_mean_stmt(
 ) -> StatementLambdaElement:
     """Generate the summary mean statement for hourly statistics."""
     return lambda_stmt(
-        # https://github.com/sqlalchemy/sqlalchemy/issues/9120
-        lambda: select(*QUERY_STATISTICS_SUMMARY_MEAN)  # type: ignore[arg-type]
+        lambda: select(*QUERY_STATISTICS_SUMMARY_MEAN)
         .filter(StatisticsShortTerm.start >= start_time)
         .filter(StatisticsShortTerm.start < end_time)
         .group_by(StatisticsShortTerm.metadata_id)
@@ -805,10 +812,12 @@ def _generate_get_metadata_stmt(
     statistic_source: str | None = None,
 ) -> StatementLambdaElement:
     """Generate a statement to fetch metadata."""
-    stmt = lambda_stmt(lambda: select(*QUERY_STATISTIC_META))  # type: ignore[arg-type]
+    stmt = lambda_stmt(lambda: select(*QUERY_STATISTIC_META))
     if statistic_ids:
-        # https://github.com/python/mypy/issues/2608
-        stmt += lambda q: q.where(StatisticsMeta.statistic_id.in_(statistic_ids))
+        stmt += lambda q: q.where(
+            # https://github.com/python/mypy/issues/2608
+            StatisticsMeta.statistic_id.in_(statistic_ids)  # type:ignore[arg-type]
+        )
     if statistic_source is not None:
         stmt += lambda q: q.where(StatisticsMeta.source == statistic_source)
     if statistic_type == "mean":
@@ -1145,13 +1154,14 @@ def _statistics_during_period_stmt(
     if "sum" in types:
         columns = columns.add_columns(table.sum)
 
-    # https://github.com/sqlalchemy/sqlalchemy/issues/9120
-    stmt = lambda_stmt(lambda: columns.filter(table.start >= start_time))  # type: ignore[arg-type]
+    stmt = lambda_stmt(lambda: columns.filter(table.start >= start_time))
     if end_time is not None:
         stmt += lambda q: q.filter(table.start < end_time)
     if metadata_ids:
-        # https://github.com/python/mypy/issues/2608
-        stmt += lambda q: q.filter(table.metadata_id.in_(metadata_ids))
+        stmt += lambda q: q.filter(
+            # https://github.com/python/mypy/issues/2608
+            table.metadata_id.in_(metadata_ids)  # type:ignore[arg-type]
+        )
     stmt += lambda q: q.order_by(table.metadata_id, table.start)
     return stmt
 
@@ -1169,16 +1179,19 @@ def _get_max_mean_min_statistic_in_sub_period(
     # Calculate max, mean, min
     columns = select()
     if "max" in types:
+        # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+        # pylint: disable-next=not-callable
         columns = columns.add_columns(func.max(table.max))
     if "mean" in types:
         columns = columns.add_columns(func.avg(table.mean))
+        # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+        # pylint: disable-next=not-callable
         columns = columns.add_columns(func.count(table.mean))
     if "min" in types:
+        # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+        # pylint: disable-next=not-callable
         columns = columns.add_columns(func.min(table.min))
-    stmt = lambda_stmt(
-        # https://github.com/sqlalchemy/sqlalchemy/issues/9120
-        lambda: columns.filter(table.metadata_id == metadata_id)  # type: ignore[arg-type]
-    )
+    stmt = lambda_stmt(lambda: columns.filter(table.metadata_id == metadata_id))
     if start_time is not None:
         stmt += lambda q: q.filter(table.start >= start_time)
     if end_time is not None:
@@ -1272,8 +1285,7 @@ def _first_statistic(
 ) -> datetime | None:
     """Return the data of the oldest statistic row for a given metadata id."""
     stmt = lambda_stmt(
-        # https://github.com/sqlalchemy/sqlalchemy/issues/9120
-        lambda: select(table.start)  # type: ignore[arg-type]
+        lambda: select(table.start)
         .filter(table.metadata_id == metadata_id)
         .order_by(table.start.asc())
         .limit(1)
@@ -1301,8 +1313,7 @@ def _get_oldest_sum_statistic(
     ) -> float | None:
         """Return the oldest non-NULL sum during the period."""
         stmt = lambda_stmt(
-            # https://github.com/sqlalchemy/sqlalchemy/issues/9120
-            lambda: select(table.sum)  # type: ignore[arg-type]
+            lambda: select(table.sum)
             .filter(table.metadata_id == metadata_id)
             .filter(table.sum.is_not(None))
             .order_by(table.start.asc())
@@ -1385,8 +1396,7 @@ def _get_newest_sum_statistic(
     ) -> float | None:
         """Return the newest non-NULL sum during the period."""
         stmt = lambda_stmt(
-            # https://github.com/sqlalchemy/sqlalchemy/issues/9120
-            lambda: select(  # type: ignore[arg-type]
+            lambda: select(
                 table.sum,
             )
             .filter(table.metadata_id == metadata_id)
@@ -1673,8 +1683,7 @@ def _get_last_statistics_stmt(
 ) -> StatementLambdaElement:
     """Generate a statement for number_of_stats statistics for a given statistic_id."""
     return lambda_stmt(
-        # https://github.com/sqlalchemy/sqlalchemy/issues/9120
-        lambda: select(*QUERY_STATISTICS)  # type: ignore[arg-type]
+        lambda: select(*QUERY_STATISTICS)
         .filter_by(metadata_id=metadata_id)
         .order_by(Statistics.metadata_id, Statistics.start.desc())
         .limit(number_of_stats)
@@ -1690,8 +1699,7 @@ def _get_last_statistics_short_term_stmt(
     For a given statistic_id.
     """
     return lambda_stmt(
-        # https://github.com/sqlalchemy/sqlalchemy/issues/9120
-        lambda: select(*QUERY_STATISTICS_SHORT_TERM)  # type: ignore[arg-type]
+        lambda: select(*QUERY_STATISTICS_SHORT_TERM)
         .filter_by(metadata_id=metadata_id)
         .order_by(StatisticsShortTerm.metadata_id, StatisticsShortTerm.start.desc())
         .limit(number_of_stats)
@@ -1769,6 +1777,8 @@ def _generate_most_recent_statistic_row(metadata_ids: list[int]) -> Subquery:
     return (
         select(
             StatisticsShortTerm.metadata_id,
+            # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+            # pylint: disable-next=not-callable
             func.max(StatisticsShortTerm.start).label("start_max"),
         )
         .where(StatisticsShortTerm.metadata_id.in_(metadata_ids))
@@ -1780,8 +1790,7 @@ def _latest_short_term_statistics_stmt(
     metadata_ids: list[int],
 ) -> StatementLambdaElement:
     """Create the statement for finding the latest short term stat rows."""
-    # https://github.com/sqlalchemy/sqlalchemy/issues/9120
-    stmt = lambda_stmt(lambda: select(*QUERY_STATISTICS_SHORT_TERM))  # type: ignore[arg-type]
+    stmt = lambda_stmt(lambda: select(*QUERY_STATISTICS_SHORT_TERM))
     most_recent_statistic_row = _generate_most_recent_statistic_row(metadata_ids)
     stmt += lambda s: s.join(
         most_recent_statistic_row,
@@ -1854,15 +1863,14 @@ def _statistics_at_time(
     if "sum" in types:
         columns = columns.add_columns(table.sum)
 
-    # https://github.com/sqlalchemy/sqlalchemy/issues/9120
-    stmt = lambda_stmt(lambda: columns)  # type: ignore[arg-type]
+    stmt = lambda_stmt(lambda: columns)
 
     most_recent_statistic_ids = (
-        # https://github.com/sqlalchemy/sqlalchemy/issues/9120
-        lambda_stmt(lambda: select(func.max(table.id).label("max_id")))  # type: ignore[arg-type]
+        # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+        # pylint: disable-next=not-callable
+        lambda_stmt(lambda: select(func.max(table.id).label("max_id")))
         .filter(table.start < start_time)
-        # https://github.com/sqlalchemy/sqlalchemy/issues/9122
-        .filter(table.metadata_id.in_(metadata_ids))  # type: ignore[arg-type]
+        .filter(table.metadata_id.in_(metadata_ids))
         .group_by(table.metadata_id)
         .subquery()
     )

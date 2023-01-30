@@ -347,8 +347,7 @@ class States(Base):
     origin_idx: Mapped[int | None] = mapped_column(
         SmallInteger
     )  # 0 is local, 1 is remote
-    # https://github.com/sqlalchemy/sqlalchemy/issues/9150
-    old_state: Mapped[States | None] = relationship("States", remote_side=[state_id])  # type: ignore[list-item]
+    old_state: Mapped[States | None] = relationship("States", remote_side=[state_id])
     state_attributes: Mapped[StateAttributes | None] = relationship("StateAttributes")
 
     def __repr__(self) -> str:
@@ -633,8 +632,7 @@ class RecorderRuns(Base):
         elif self.end is not None:
             query = query.filter(States.last_updated < self.end)
 
-        # https://github.com/sqlalchemy/sqlalchemy/issues/9125
-        return [row[0] for row in query]  # type: ignore[attr-defined]
+        return [row[0] for row in query]
 
     def to_native(self, validate_entity_id: bool = True) -> RecorderRuns:
         """Return self, native format is this model."""

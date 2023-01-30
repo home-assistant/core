@@ -96,8 +96,7 @@ def entities_stmt(
 ) -> StatementLambdaElement:
     """Generate a logbook query for multiple entities."""
     return lambda_stmt(
-        # https://github.com/sqlalchemy/sqlalchemy/issues/9120
-        lambda: _apply_entities_context_union(  # type: ignore[arg-type]
+        lambda: _apply_entities_context_union(
             select_events_without_states(start_day, end_day, event_types).where(
                 apply_event_entity_id_matchers(json_quoted_entity_ids)
             ),
@@ -126,13 +125,11 @@ def apply_event_entity_id_matchers(
     return sqlalchemy.or_(
         ENTITY_ID_IN_EVENT.is_not(None)
         & sqlalchemy.cast(ENTITY_ID_IN_EVENT, sqlalchemy.Text()).in_(
-            # https://github.com/sqlalchemy/sqlalchemy/issues/9122
-            json_quoted_entity_ids  # type: ignore[arg-type]
+            json_quoted_entity_ids
         ),
         OLD_ENTITY_ID_IN_EVENT.is_not(None)
         & sqlalchemy.cast(OLD_ENTITY_ID_IN_EVENT, sqlalchemy.Text()).in_(
-            # https://github.com/sqlalchemy/sqlalchemy/issues/9122
-            json_quoted_entity_ids  # type: ignore[arg-type]
+            json_quoted_entity_ids
         ),
     )
 

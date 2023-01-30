@@ -75,8 +75,7 @@ def devices_stmt(
 ) -> StatementLambdaElement:
     """Generate a logbook query for multiple devices."""
     stmt = lambda_stmt(
-        # https://github.com/sqlalchemy/sqlalchemy/issues/9120
-        lambda: _apply_devices_context_union(  # type: ignore[arg-type]
+        lambda: _apply_devices_context_union(
             select_events_without_states(start_day, end_day, event_types).where(
                 apply_event_device_id_matchers(json_quotable_device_ids)
             ),
@@ -95,7 +94,4 @@ def apply_event_device_id_matchers(
     """Create matchers for the device_ids in the event_data."""
     return DEVICE_ID_IN_EVENT.is_not(None) & sqlalchemy.cast(
         DEVICE_ID_IN_EVENT, sqlalchemy.Text()
-    ).in_(
-        # https://github.com/sqlalchemy/sqlalchemy/issues/9122
-        json_quotable_device_ids  # type: ignore[arg-type]
-    )
+    ).in_(json_quotable_device_ids)

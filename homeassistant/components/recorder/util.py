@@ -143,8 +143,7 @@ def execute(
                     row
                     for row in (
                         row.to_native(validate_entity_id=validate_entity_ids)
-                        # https://github.com/sqlalchemy/sqlalchemy/issues/9125
-                        for row in qry  # type: ignore[attr-defined]
+                        for row in qry
                     )
                     if row is not None
                 ]
@@ -196,16 +195,13 @@ def execute_stmt_lambda_element(
     specific entities) since they are usually faster
     with .all().
     """
-    # https://github.com/sqlalchemy/sqlalchemy/issues/9120
-    executed = session.execute(stmt)  # type: ignore[call-overload]
+    executed = session.execute(stmt)
     use_all = not start_time or ((end_time or dt_util.utcnow()) - start_time).days <= 1
     for tryno in range(RETRIES):
         try:
             if use_all:
-                # https://github.com/sqlalchemy/sqlalchemy/issues/9120
-                return executed.all()  # type: ignore[no-any-return]
-            # https://github.com/sqlalchemy/sqlalchemy/issues/9120
-            return executed.yield_per(yield_per)  # type: ignore[no-any-return]
+                return executed.all()
+            return executed.yield_per(yield_per)
         except SQLAlchemyError as err:
             _LOGGER.error("Error executing query: %s", err)
             if tryno == RETRIES - 1:
@@ -496,8 +492,7 @@ def setup_connection_for_dialect(
 
 def end_incomplete_runs(session: Session, start_time: datetime) -> None:
     """End any incomplete recorder runs."""
-    # https://github.com/sqlalchemy/sqlalchemy/issues/9125
-    for run in session.query(RecorderRuns).filter_by(end=None):  # type: ignore[attr-defined]
+    for run in session.query(RecorderRuns).filter_by(end=None):
         run.closed_incorrect = True
         run.end = start_time
         _LOGGER.warning(

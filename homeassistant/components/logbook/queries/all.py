@@ -30,16 +30,25 @@ def all_stmt(
 ) -> StatementLambdaElement:
     """Generate a logbook query for all entities."""
     stmt = lambda_stmt(
-        # https://github.com/sqlalchemy/sqlalchemy/issues/9120
-        lambda: select_events_without_states(start_day, end_day, event_types)  # type: ignore[arg-type]
+        lambda: select_events_without_states(start_day, end_day, event_types)
     )
     if context_id is not None:
         # Once all the old `state_changed` events
         # are gone from the database remove the
         # _legacy_select_events_context_id()
         stmt += lambda s: s.where(Events.context_id == context_id).union_all(
-            _states_query_for_context_id(start_day, end_day, context_id),
-            legacy_select_events_context_id(start_day, end_day, context_id),
+            _states_query_for_context_id(
+                start_day,
+                end_day,
+                # https://github.com/python/mypy/issues/2608
+                context_id,  # type:ignore[arg-type]
+            ),
+            legacy_select_events_context_id(
+                start_day,
+                end_day,
+                # https://github.com/python/mypy/issues/2608
+                context_id,  # type:ignore[arg-type]
+            ),
         )
     else:
         if events_entity_filter is not None:
@@ -47,7 +56,10 @@ def all_stmt(
 
         if states_entity_filter is not None:
             stmt += lambda s: s.union_all(
-                _states_query_for_all(start_day, end_day).where(states_entity_filter)
+                _states_query_for_all(start_day, end_day).where(
+                    # https://github.com/python/mypy/issues/2608
+                    states_entity_filter  # type:ignore[arg-type]
+                )
             )
         else:
             stmt += lambda s: s.union_all(_states_query_for_all(start_day, end_day))

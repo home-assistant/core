@@ -161,25 +161,21 @@ def lambda_stmt_and_join_attributes(
         if schema_version >= 31:
             if include_last_changed:
                 return (
-                    # https://github.com/sqlalchemy/sqlalchemy/issues/9120
-                    lambda_stmt(lambda: select(*_QUERY_STATE_NO_ATTR)),  # type: ignore[arg-type]
+                    lambda_stmt(lambda: select(*_QUERY_STATE_NO_ATTR)),
                     False,
                 )
             return (
-                # https://github.com/sqlalchemy/sqlalchemy/issues/9120
-                lambda_stmt(lambda: select(*_QUERY_STATE_NO_ATTR_NO_LAST_CHANGED)),  # type: ignore[arg-type]
+                lambda_stmt(lambda: select(*_QUERY_STATE_NO_ATTR_NO_LAST_CHANGED)),
                 False,
             )
         if include_last_changed:
             return (
-                # https://github.com/sqlalchemy/sqlalchemy/issues/9120
-                lambda_stmt(lambda: select(*_QUERY_STATE_NO_ATTR_PRE_SCHEMA_31)),  # type: ignore[arg-type]
+                lambda_stmt(lambda: select(*_QUERY_STATE_NO_ATTR_PRE_SCHEMA_31)),
                 False,
             )
         return (
             lambda_stmt(
-                # https://github.com/sqlalchemy/sqlalchemy/issues/9120
-                lambda: select(*_QUERY_STATE_NO_ATTR_NO_LAST_CHANGED_PRE_SCHEMA_31)  # type: ignore[arg-type]
+                lambda: select(*_QUERY_STATE_NO_ATTR_NO_LAST_CHANGED_PRE_SCHEMA_31)
             ),
             False,
         )
@@ -189,31 +185,25 @@ def lambda_stmt_and_join_attributes(
     if schema_version < 25:
         if include_last_changed:
             return (
-                # https://github.com/sqlalchemy/sqlalchemy/issues/9120
-                lambda_stmt(lambda: select(*_QUERY_STATES_PRE_SCHEMA_25)),  # type: ignore[arg-type]
+                lambda_stmt(lambda: select(*_QUERY_STATES_PRE_SCHEMA_25)),
                 False,
             )
         return (
-            # https://github.com/sqlalchemy/sqlalchemy/issues/9120
-            lambda_stmt(lambda: select(*_QUERY_STATES_PRE_SCHEMA_25_NO_LAST_CHANGED)),  # type: ignore[arg-type]
+            lambda_stmt(lambda: select(*_QUERY_STATES_PRE_SCHEMA_25_NO_LAST_CHANGED)),
             False,
         )
 
     if schema_version >= 31:
         if include_last_changed:
-            # https://github.com/sqlalchemy/sqlalchemy/issues/9120
-            return lambda_stmt(lambda: select(*_QUERY_STATES)), True  # type: ignore[arg-type]
-        # https://github.com/sqlalchemy/sqlalchemy/issues/9120
-        return lambda_stmt(lambda: select(*_QUERY_STATES_NO_LAST_CHANGED)), True  # type: ignore[arg-type]
+            return lambda_stmt(lambda: select(*_QUERY_STATES)), True
+        return lambda_stmt(lambda: select(*_QUERY_STATES_NO_LAST_CHANGED)), True
     # Finally if no migration is in progress and no_attributes
     # was not requested, we query both attributes columns and
     # join state_attributes
     if include_last_changed:
-        # https://github.com/sqlalchemy/sqlalchemy/issues/9120
-        return lambda_stmt(lambda: select(*_QUERY_STATES_PRE_SCHEMA_31)), True  # type: ignore[arg-type]
+        return lambda_stmt(lambda: select(*_QUERY_STATES_PRE_SCHEMA_31)), True
     return (
-        # https://github.com/sqlalchemy/sqlalchemy/issues/9120
-        lambda_stmt(lambda: select(*_QUERY_STATES_NO_LAST_CHANGED_PRE_SCHEMA_31)),  # type: ignore[arg-type]
+        lambda_stmt(lambda: select(*_QUERY_STATES_NO_LAST_CHANGED_PRE_SCHEMA_31)),
         True,
     )
 
@@ -315,14 +305,15 @@ def _significant_states_stmt(
             )
 
     if entity_ids:
-        # https://github.com/python/mypy/issues/2608
-        stmt += lambda q: q.filter(States.entity_id.in_(entity_ids))
+        stmt += lambda q: q.filter(
+            # https://github.com/python/mypy/issues/2608
+            States.entity_id.in_(entity_ids)  # type:ignore[arg-type]
+        )
     else:
         stmt += _ignore_domains_filter
         if filters and filters.has_config:
             entity_filter = filters.states_entity_filter()
-            # https://github.com/sqlalchemy/sqlalchemy/issues/9120
-            stmt = stmt.add_criteria(  # type: ignore[no-untyped-call]
+            stmt = stmt.add_criteria(
                 lambda q: q.filter(entity_filter), track_on=[filters]
             )
 
@@ -607,6 +598,8 @@ def _get_states_for_entites_stmt(
         stmt += lambda q: q.where(
             States.state_id
             == (
+                # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+                # pylint: disable-next=not-callable
                 select(func.max(States.state_id).label("max_state_id"))
                 .filter(
                     (States.last_updated_ts >= run_start_ts)
@@ -621,6 +614,8 @@ def _get_states_for_entites_stmt(
         stmt += lambda q: q.where(
             States.state_id
             == (
+                # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+                # pylint: disable-next=not-callable
                 select(func.max(States.state_id).label("max_state_id"))
                 .filter(
                     (States.last_updated >= run_start)
@@ -650,6 +645,8 @@ def _generate_most_recent_states_by_date(
         return (
             select(
                 States.entity_id.label("max_entity_id"),
+                # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+                # pylint: disable-next=not-callable
                 func.max(States.last_updated_ts).label("max_last_updated"),
             )
             .filter(
@@ -662,6 +659,8 @@ def _generate_most_recent_states_by_date(
     return (
         select(
             States.entity_id.label("max_entity_id"),
+            # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+            # pylint: disable-next=not-callable
             func.max(States.last_updated).label("max_last_updated"),
         )
         .filter(
@@ -695,6 +694,8 @@ def _get_states_for_all_stmt(
         stmt += lambda q: q.where(
             States.state_id
             == (
+                # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+                # pylint: disable-next=not-callable
                 select(func.max(States.state_id).label("max_state_id"))
                 .join(
                     most_recent_states_by_date,
@@ -712,6 +713,8 @@ def _get_states_for_all_stmt(
         stmt += lambda q: q.where(
             States.state_id
             == (
+                # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+                # pylint: disable-next=not-callable
                 select(func.max(States.state_id).label("max_state_id"))
                 .join(
                     most_recent_states_by_date,
@@ -728,8 +731,7 @@ def _get_states_for_all_stmt(
     stmt += _ignore_domains_filter
     if filters and filters.has_config:
         entity_filter = filters.states_entity_filter()
-        # https://github.com/sqlalchemy/sqlalchemy/issues/9120
-        stmt = stmt.add_criteria(lambda q: q.filter(entity_filter), track_on=[filters])  # type: ignore[no-untyped-call]
+        stmt = stmt.add_criteria(lambda q: q.filter(entity_filter), track_on=[filters])
     if join_attributes:
         stmt += lambda q: q.outerjoin(
             StateAttributes, (States.attributes_id == StateAttributes.attributes_id)

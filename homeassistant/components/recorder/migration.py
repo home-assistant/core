@@ -710,6 +710,8 @@ def _apply_update(  # noqa: C901
         with session_scope(session=session_maker()) as session:
             if session.query(Statistics.id).count() and (
                 last_run_string := session.query(
+                    # https://github.com/sqlalchemy/sqlalchemy/issues/9189
+                    # pylint: disable-next=not-callable
                     func.max(StatisticsRuns.start)
                 ).scalar()
             ):
@@ -724,8 +726,7 @@ def _apply_update(  # noqa: C901
         # which were present in schema version 22. If querying the table, SQLAlchemy
         # will refer to future columns.
         with session_scope(session=session_maker()) as session:
-            # https://github.com/sqlalchemy/sqlalchemy/issues/9125
-            for sum_statistic in session.query(StatisticsMeta.id).filter_by(  # type: ignore[attr-defined]
+            for sum_statistic in session.query(StatisticsMeta.id).filter_by(
                 has_sum=true()
             ):
                 last_statistic = (
