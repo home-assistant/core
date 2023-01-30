@@ -1,4 +1,4 @@
-"""Test button of ONVIF integration."""
+"""Test switch platform of ONVIF integration."""
 from unittest.mock import AsyncMock
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
