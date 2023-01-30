@@ -283,10 +283,10 @@ class HoneywellUSThermostat(ClimateEntity):
             if self._device.hold_heat is False and self._device.hold_cool is False:
                 # Get next period time
                 hour_heat, minute_heat = divmod(
-                    self._device.raw_ui_data.get("HEATNextPeriod") * 15, 60
+                    self._device.raw_ui_data["HEATNextPeriod"] * 15, 60
                 )
                 hour_cool, minute_cool = divmod(
-                    self._device.raw_ui_data.get("COOLNextPeriod") * 15, 60
+                    self._device.raw_ui_data["COOLNextPeriod"] * 15, 60
                 )
                 # Set hold time
                 if mode in COOLING_MODES:
@@ -311,8 +311,6 @@ class HoneywellUSThermostat(ClimateEntity):
 
         except AIOSomecomfort.SomeComfortError as err:
             _LOGGER.error("Invalid temperature %.1f: %s", temperature, err)
-        except TypeError as err:
-            _LOGGER.error("Missing period key, cannot set temporary hold: %s", err)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
