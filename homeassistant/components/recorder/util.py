@@ -441,7 +441,7 @@ def build_mysqldb_conv() -> dict:
 def _async_create_mariadb_range_index_regression_issue(
     hass: HomeAssistant, version: AwesomeVersion
 ) -> None:
-    """Create an issue for the no index range regression in older MariaDB.
+    """Create an issue for the index range regression in older MariaDB.
 
     The range scan issue was fixed in MariaDB 10.5.17, 10.6.9, 10.7.5, 10.8.4 and later.
     """
