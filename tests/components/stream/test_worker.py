@@ -108,6 +108,7 @@ class FakeAvInputStream:
         self.name = name
         self.time_base = time_base
         self.profile = "ignored-profile"
+        self.start_time = 0
 
         class FakeCodec:
             name = "aac"
@@ -844,24 +845,26 @@ async def test_durations(hass, worker_finished_stream, source):
 
     # check that the Part duration metadata matches the durations in the media
     running_metadata_duration = 0
+    first_video_dts = None
     for segment in complete_segments:
-        av_segment = av.open(io.BytesIO(segment.init + segment.get_data()))
-        av_segment.close()
         for part_num, part in enumerate(segment.parts):
             av_part = av.open(io.BytesIO(segment.init + part.data))
             running_metadata_duration += part.duration
-            # av_part.duration actually returns the dts of the first packet of the next
-            # av_part. When we normalize this by av.time_base we get the running
-            # duration of the media.
-            # The metadata duration may differ slightly from the media duration.
-            # The worker has some flexibility of where to set each metadata boundary,
-            # and when the media's duration is slightly too long or too short, the
-            # metadata duration may be adjusted up or down.
-            # We check here that the divergence between the metadata duration and the
-            # media duration is not too large (2 frames seems reasonable here).
+            # av_part.duration and av_part.start_time are pts based, so there might be
+            # slight differences if we use those when comparing to our dts based metadata.
+            # Instead we calculate duration using dts values from the demuxed packets.
+            video_packets = [
+                packet for packet in av_part.demux(video=0) if packet.dts is not None
+            ]
+            if first_video_dts is None:
+                first_video_dts = video_packets[0].dts
             video_stream = av_part.streams[0]
             assert math.isclose(
-                (video_stream.duration - video_stream.start_time)
+                (
+                    video_packets[-1].dts
+                    + video_packets[-1].duration
+                    - video_packets[0].dts
+                )
                 * video_stream.time_base,
                 part.duration,
                 abs_tol=2 / video_stream.average_rate + 1e-6,
@@ -870,7 +873,8 @@ async def test_durations(hass, worker_finished_stream, source):
             # in the media.
             assert math.isclose(
                 running_metadata_duration,
-                video_stream.duration * video_stream.time_base,
+                (video_packets[-1].dts + video_packets[-1].duration - first_video_dts)
+                * video_stream.time_base,
                 abs_tol=1e-6,
             )
             # And check that the metadata duration is between 0.85x and 1.0x of

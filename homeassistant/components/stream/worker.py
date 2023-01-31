@@ -38,7 +38,7 @@ from .fmp4utils import read_init
 from .hls import HlsStreamOutput
 
 _LOGGER = logging.getLogger(__name__)
-NEGATIVE_INF = float("-inf")
+LARGE_NEGATIVE_TS = -(2**31)
 
 
 class StreamWorkerError(Exception):
@@ -176,7 +176,7 @@ class StreamMuxer:
                     # Sometimes the first segment begins with negative timestamps, and this setting just
                     # adjusts the timestamps in the output from that segment to start from 0. Helps from
                     # having to make some adjustments in test_durations
-                    "avoid_negative_ts": "make_non_negative",
+                    "avoid_negative_ts": "disabled",
                     "fragment_index": str(sequence + 1),
                     "video_track_timescale": str(int(1 / input_vstream.time_base)),
                 },
@@ -248,6 +248,17 @@ class StreamMuxer:
 
         # Check for end of segment
         if packet.stream == self._input_video_stream:
+
+            part_duration_ts = packet.dts - self._part_start_dts
+            if not self._max_frag_duration_exceeded:
+                # If the max frag duration is exceeded, adjust the packet back down
+                # to the max frag duration. We can only do this once per fragment,
+                # otherwise we will have duplicate dts values.
+                frag_end_adjustment = self._max_frag_duration_ts - part_duration_ts
+                if frag_end_adjustment <= 0:
+                    packet.dts += frag_end_adjustment
+                    self._max_frag_duration_exceeded = True
+
             if (
                 packet.is_keyframe
                 and (packet.dts - self._segment_start_dts) * packet.time_base
@@ -260,15 +271,6 @@ class StreamMuxer:
             packet.stream = self._output_video_stream
             # Mux the current video packet
             if self._input_audio_stream:
-                part_duration_ts = packet.dts - self._part_start_dts
-                if not self._max_frag_duration_exceeded:
-                    # If the max frag duration is exceeded, adjust the packet back down
-                    # to the max frag duration. We can only do this once per fragment,
-                    # otherwise we will have duplicate dts values.
-                    frag_end_adjustment = self._max_frag_duration_ts - part_duration_ts
-                    if frag_end_adjustment <= 0:
-                        packet.dts += frag_end_adjustment
-                        self._max_frag_duration_exceeded = True
 
                 self._av_output.mux(packet)
                 self._buffered_video_packets.append(packet)
@@ -449,20 +451,28 @@ class PeekIterator(Iterator):
 class TimestampValidator:
     """Validate ordering of timestamps for packets in a stream."""
 
-    def __init__(self, inv_video_time_base: int, inv_audio_time_base: int) -> None:
+    def __init__(
+        self,
+        video_stream: av.video.VideoStream,
+        audio_stream: av.audio.stream.AudioStream | None,
+    ) -> None:
         """Initialize the TimestampValidator."""
-        # Decompression timestamp of last packet in each stream
-        self._last_dts: dict[av.stream.Stream, int | float] = defaultdict(
-            lambda: NEGATIVE_INF
+        # Decode timestamp of last packet in each stream
+        self._last_dts: dict[av.stream.Stream, int] = defaultdict(
+            lambda: LARGE_NEGATIVE_TS
         )
-        # Number of consecutive missing decompression timestamps
+        # Last audio dts + duration
+        self._last_audio_dts_duration = LARGE_NEGATIVE_TS
+        self._audio_stream = audio_stream
+        # Number of consecutive missing decode timestamps
         self._missing_dts = 0
         # For the bounds, just use the larger of the two values. If the error is not flagged
         # by one stream, it should just get flagged by the other stream. Either value should
         # result in a value which is much less than a 32 bit INT_MAX, which helps avoid the
         # assertion error from FFmpeg.
-        self._max_dts_gap = MAX_TIMESTAMP_GAP * max(
-            inv_video_time_base, inv_audio_time_base
+        self._max_dts_gap = MAX_TIMESTAMP_GAP / min(
+            video_stream.time_base,
+            audio_stream.time_base if audio_stream else float("inf"),
         )
 
     def is_valid(self, packet: av.Packet) -> bool:
@@ -477,15 +487,27 @@ class TimestampValidator:
             return False
         self._missing_dts = 0
         # Discard when dts is not monotonic. Terminate if gap is too wide.
-        prev_dts = self._last_dts[packet.stream]
-        if abs(prev_dts - packet.dts) > self._max_dts_gap and prev_dts != NEGATIVE_INF:
-            raise StreamWorkerError(
-                f"Timestamp discontinuity detected: last dts = {prev_dts}, dts ="
-                f" {packet.dts}"
-            )
-        if packet.dts <= prev_dts:
+        if (last_dts := self._last_dts[packet.stream]) != LARGE_NEGATIVE_TS:
+            if abs(last_dts - packet.dts) > self._max_dts_gap:
+                raise StreamWorkerError(
+                    f"Timestamp discontinuity detected: last dts = {last_dts}, dts ="
+                    f" {packet.dts}"
+                )
+            if packet.stream == self._audio_stream:
+                ts_adjustment = self._last_audio_dts_duration - packet.dts
+                if ts_adjustment * packet.time_base > 0.2:
+                    # Don't let the adjustment drift too much forward
+                    return False
+                # adjust the packet if we are close
+                if ts_adjustment * packet.time_base > -0.2:
+                    packet.dts = packet.pts = packet.dts + ts_adjustment
+        if packet.dts <= last_dts:
             return False
         self._last_dts[packet.stream] = packet.dts
+        if packet.stream == self._audio_stream:
+            self._last_audio_dts_duration = packet.dts + packet.duration
+        packet.dts -= packet.stream.start_time
+        packet.pts -= packet.stream.start_time
         return True
 
 
@@ -518,7 +540,7 @@ def get_audio_bitstream_filter(
     return None
 
 
-def sort_interleaved_packets(packets: PeekIterator) -> Iterator[av.Packet]:
+def sort_packets(packets: PeekIterator) -> Iterator[av.Packet]:
     """
     Return an iterator which yields the interleaved audio and video packets in order.
 
@@ -594,10 +616,7 @@ def stream_worker(
     if audio_stream:
         stream_state.diagnostics.set_value("audio_codec", audio_stream.name)
 
-    dts_validator = TimestampValidator(
-        int(1 / video_stream.time_base),
-        1 / audio_stream.time_base if audio_stream else 1,
-    )
+    dts_validator = TimestampValidator(video_stream, audio_stream)
     container_packets = PeekIterator(
         filter(dts_validator.is_valid, container.demux((video_stream, audio_stream)))
     )
@@ -657,9 +676,7 @@ def stream_worker(
     muxer.mux_packet(first_keyframe)
 
     sorted_container_packets = (
-        sort_interleaved_packets(container_packets)
-        if audio_stream
-        else container_packets
+        sort_packets(container_packets) if audio_stream else container_packets
     )
 
     with contextlib.closing(container), contextlib.closing(muxer):
