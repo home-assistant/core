@@ -22,7 +22,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up YoLink lock from a config entry."""
-    device_coordinators = hass.data[DOMAIN][config_entry.entry_id].device_coordinartors
+    device_coordinators = hass.data[DOMAIN][config_entry.entry_id].device_coordinators
     entities = [
         YoLinkLockEntity(config_entry, device_coordinator)
         for device_coordinator in device_coordinators.values()
