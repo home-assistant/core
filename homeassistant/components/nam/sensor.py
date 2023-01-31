@@ -356,7 +356,8 @@ SENSORS: tuple[NAMSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value=lambda sensors: utcnow() - timedelta(seconds=sensors.uptime),
+        value=lambda sensors: utcnow()
+        - timedelta(seconds=getattr(sensors, "uptime", 0)),
     ),
 )
 
