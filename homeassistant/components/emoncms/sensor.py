@@ -81,8 +81,6 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Emoncms sensor."""
-    apikey = config.get(CONF_API_KEY)
-    url = config.get(CONF_URL)
     sensorid = config.get(CONF_ID)
     value_template = config.get(CONF_VALUE_TEMPLATE)
     config_unit = config.get(CONF_UNIT_OF_MEASUREMENT)
@@ -93,8 +91,7 @@ def setup_platform(
     if value_template is not None:
         value_template.hass = hass
 
-    assert url is not None and apikey is not None  # Keep mypy happy
-    data = EmonCmsData(url, apikey)
+    data = EmonCmsData(config[CONF_URL], config[CONF_API_KEY])
 
     data.update()
 
