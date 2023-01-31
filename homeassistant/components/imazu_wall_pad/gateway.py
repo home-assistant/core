@@ -139,7 +139,7 @@ class ImazuGateway:
 
         @callback
         def async_platform_packet_handler():
-            """platform packet handler."""
+            """Platform packet handler."""
             entity_data = self._get_entity_data(platform, packet)
             entity_data.packet = packet
 
