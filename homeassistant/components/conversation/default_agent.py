@@ -396,22 +396,19 @@ class DefaultAgent(AbstractConversationAgent):
         if self._names_list is not None:
             return self._names_list
         states = self.hass.states.async_all()
-        registry = entity_registry.async_get(self.hass)
+        entities = entity_registry.async_get(self.hass)
         names = []
         for state in states:
             context = {"domain": state.domain}
 
-            entry = registry.async_get(state.entity_id)
-            if entry is not None:
-                if entry.entity_category:
+            entity = entities.async_get(state.entity_id)
+            if entity is not None:
+                if entity.entity_category:
                     # Skip configuration/diagnostic entities
                     continue
 
-                if entry.name:
-                    names.append((entry.name, state.entity_id, context))
-
-                if entry.aliases:
-                    for alias in entry.aliases:
+                if entity.aliases:
+                    for alias in entity.aliases:
                         names.append((alias, state.entity_id, context))
 
             # Default name

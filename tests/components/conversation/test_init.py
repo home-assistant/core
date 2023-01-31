@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant.components import conversation
 from homeassistant.components.cover import SERVICE_OPEN_COVER
+from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import DOMAIN as HASS_DOMAIN, Context
 from homeassistant.helpers import (
     area_registry,
@@ -794,17 +795,21 @@ async def test_light_area_same_name(hass, init_components):
     kitchen_area = areas.async_create("kitchen")
     devices.async_update_device(device.id, area_id=kitchen_area.id)
 
-    entities.async_get_or_create("light", "demo", "1234", suggested_object_id="kitchen")
-    entities.async_update_entity(
-        "light.kitchen", name="kitchen light", area_id=kitchen_area.id
+    kitchen_light = entities.async_get_or_create(
+        "light", "demo", "1234", original_name="kitchen light"
     )
-    hass.states.async_set("light.kitchen", "off")
+    entities.async_update_entity(kitchen_light.entity_id, area_id=kitchen_area.id)
+    hass.states.async_set(
+        kitchen_light.entity_id, "off", attributes={ATTR_FRIENDLY_NAME: "kitchen light"}
+    )
 
-    entities.async_get_or_create("light", "demo", "5678", suggested_object_id="ceiling")
-    entities.async_update_entity(
-        "light.ceiling", name="ceiling light", area_id=kitchen_area.id
+    ceiling_light = entities.async_get_or_create(
+        "light", "demo", "5678", original_name="ceiling light"
     )
-    hass.states.async_set("light.ceiling", "off")
+    entities.async_update_entity(ceiling_light.entity_id, area_id=kitchen_area.id)
+    hass.states.async_set(
+        ceiling_light.entity_id, "off", attributes={ATTR_FRIENDLY_NAME: "ceiling light"}
+    )
 
     calls = async_mock_service(hass, HASS_DOMAIN, "turn_on")
 
@@ -820,4 +825,4 @@ async def test_light_area_same_name(hass, init_components):
     call = calls[0]
     assert call.domain == HASS_DOMAIN
     assert call.service == "turn_on"
-    assert call.data == {"entity_id": "light.kitchen"}
+    assert call.data == {"entity_id": kitchen_light.entity_id}
