@@ -459,7 +459,7 @@ def _async_create_mariadb_range_index_regression_issue(
         is_fixable=False,
         severity=ir.IssueSeverity.CRITICAL,
         learn_more_url="https://jira.mariadb.org/browse/MDEV-25020",
-        translation_key="recorder_issue_maria_db_range_index_regression",
+        translation_key="maria_db_range_index_regression",
         translation_placeholders={"min_version": str(min_version)},
     )
 
