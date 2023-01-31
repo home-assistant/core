@@ -57,13 +57,14 @@ def get_device_id(
     operational_instance_id = get_operational_instance_id(
         server_info, node_device.node()
     )
-    # Append nodedevice(type) to differentiate between a root node
-    # and bridge within Home Assistant devices.
+
+    device_id = operational_instance_id
+    # Append the endpoint if the node device is a bridged device.
     if isinstance(node_device, MatterBridgedNodeDevice):
         endpoint = node_device.bridged_device_type_instance.endpoint
         endpoint_hex = f"{endpoint:04X}"
-        return (
-            f"{operational_instance_id}-{endpoint_hex}-{node_device.__class__.__name__}"
-        )
+        return f"{device_id}-{endpoint_hex}"
 
-    return f"{operational_instance_id}-{node_device.__class__.__name__}"
+    # Append nodedevice(type) to differentiate between a root node
+    # and bridge within Home Assistant devices.
+    return f"{device_id}-{node_device.__class__.__name__}"
