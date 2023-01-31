@@ -299,7 +299,7 @@ class HoneywellUSThermostat(ClimateEntity):
                     )
 
             # Set temperature if not in auto
-            elif mode == "cool":
+            if mode == "cool":
                 await self._device.set_setpoint_cool(temperature)
             elif mode == "heat":
                 await self._device.set_setpoint_heat(temperature)
@@ -314,7 +314,9 @@ class HoneywellUSThermostat(ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if {HVACMode.COOL, HVACMode.HEAT} & set(self._hvac_mode_map):
+        if {HVACMode.COOL, HVACMode.HEAT, HVACMode.HEAT_COOL} & set(
+            self._hvac_mode_map
+        ):
             await self._set_temperature(**kwargs)
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
