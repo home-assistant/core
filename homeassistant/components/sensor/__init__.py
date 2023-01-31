@@ -90,8 +90,8 @@ NEGATIVE_ZERO_PATTERN = re.compile(r"^-(0\.?0*)$")
 SCAN_INTERVAL: Final = timedelta(seconds=30)
 
 _NON_NUMERIC_DEVICE_CLASSES = {
-    SensorDeviceClass.ENUM,
     SensorDeviceClass.DATE,
+    SensorDeviceClass.ENUM,
     SensorDeviceClass.TIMESTAMP,
 }
 
