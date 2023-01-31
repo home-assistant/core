@@ -574,7 +574,10 @@ def test_warn_unsupported_dialect(caplog, dialect, message):
 async def test_issue_for_mariadb_with_MDEV_25020(
     hass, caplog, mysql_version, min_version
 ):
-    """Test we create an issue for MariaDB version affected by https://jira.mariadb.org/browse/MDEV-25020."""
+    """Test we create an issue for MariaDB versions affected.
+
+    See https://jira.mariadb.org/browse/MDEV-25020.
+    """
     instance_mock = MagicMock()
     instance_mock.hass = hass
     execute_args = []
@@ -621,7 +624,10 @@ async def test_issue_for_mariadb_with_MDEV_25020(
     ],
 )
 async def test_no_issue_for_mariadb_with_MDEV_25020(hass, caplog, mysql_version):
-    """Test we do not create an issue for MariaDB version not affected by https://jira.mariadb.org/browse/MDEV-25020."""
+    """Test we do not create an issue for MariaDB versions not affected.
+
+    See https://jira.mariadb.org/browse/MDEV-25020.
+    """
     instance_mock = MagicMock()
     instance_mock.hass = hass
     execute_args = []
