@@ -15,5 +15,18 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "max_tokens": "Maxim\u00e1lny po\u010det tokenov, ktor\u00e9 sa maj\u00fa vr\u00e1ti\u0165 v odpovedi",
+                    "model": "Model dokon\u010denia",
+                    "prompt": "\u0160abl\u00f3na v\u00fdzvy",
+                    "temperature": "Teplota",
+                    "top_p": "Top P"
+                }
+            }
+        }
     }
 }

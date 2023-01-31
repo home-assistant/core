@@ -8,7 +8,7 @@ import logging
 import aiohttp
 from esphome_dashboard_api import ConfiguredDevice, ESPHomeDashboardAPI
 
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -52,8 +52,14 @@ async def async_set_dashboard_info(
         for entry in hass.config_entries.async_entries(DOMAIN)
         if entry.state == ConfigEntryState.LOADED
     ]
-    if reloads:
-        await asyncio.gather(*reloads)
+    # Re-auth flows will check the dashboard for encryption key when the form is requested
+    reauths = [
+        hass.config_entries.flow.async_configure(flow["flow_id"])
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["handler"] == DOMAIN and flow["context"]["source"] == SOURCE_REAUTH
+    ]
+    if reloads or reauths:
+        await asyncio.gather(*reloads, *reauths)
 
 
 class ESPHomeDashboard(DataUpdateCoordinator[dict[str, ConfiguredDevice]]):

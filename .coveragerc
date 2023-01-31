@@ -998,6 +998,7 @@ omit =
     homeassistant/components/russound_rio/media_player.py
     homeassistant/components/russound_rnet/media_player.py
     homeassistant/components/rympro/__init__.py
+    homeassistant/components/rympro/coordinator.py
     homeassistant/components/rympro/sensor.py
     homeassistant/components/sabnzbd/__init__.py
     homeassistant/components/sabnzbd/sensor.py
