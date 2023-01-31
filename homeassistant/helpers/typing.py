@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from enum import Enum
-from typing import Any
+from typing import Any, TypeAlias
 
 import homeassistant.core
 
@@ -19,15 +19,9 @@ TemplateVarsType = Mapping[str, Any] | None
 # Custom type for recorder Queries
 QueryType = Any
 
-JsonValueType = Union[
-    None,
-    str,
-    int,
-    float,
-    bool,
-    list["JsonValueType"],
-    dict[str, "JsonValueType"],
-]
+JsonValueType: TypeAlias = (
+    dict[str, "JsonValueType"] | list["JsonValueType"] | str | int | float | bool | None
+)
 
 
 class UndefinedType(Enum):
