@@ -2386,10 +2386,8 @@ spiderpy==1.6.1
 # homeassistant.components.spotify
 spotipy==2.22.1
 
-# homeassistant.components.sql
-sqlalchemy==1.4.45
-
 # homeassistant.components.recorder
+# homeassistant.components.sql
 sqlalchemy==2.0.0
 
 # homeassistant.components.srp_energy
