@@ -89,7 +89,7 @@ NEGATIVE_ZERO_PATTERN = re.compile(r"^-(0\.?0*)$")
 
 SCAN_INTERVAL: Final = timedelta(seconds=30)
 
-_NONE_NUMERIC_DEVICE_CLASSES = {
+_NON_NUMERIC_DEVICE_CLASSES = {
     SensorDeviceClass.ENUM,
     SensorDeviceClass.DATE,
     SensorDeviceClass.TIMESTAMP,
@@ -156,7 +156,6 @@ class SensorEntity(Entity):
 
     entity_description: SensorEntityDescription
     _attr_device_class: SensorDeviceClass | None
-    _attr_is_numeric: bool
     _attr_last_reset: datetime | None
     _attr_native_precision: int | None
     _attr_native_unit_of_measurement: str | None
@@ -253,26 +252,17 @@ class SensorEntity(Entity):
             return self.entity_description.device_class
         return None
 
+    @final
     @property
     def is_numeric(self) -> bool:
         """Return true if the sensor is numeric."""
         if (
             self.state_class is not None
-            or self._attr_unit_of_measurement is not None
+            or self.unit_of_measurement is not None
             or self.native_precision is not None
         ):
             return True
-
-        native_device_class: SensorDeviceClass | None = None
-        with suppress(ValueError):
-            # Custom device classes are not considered as numeric
-            native_device_class = SensorDeviceClass(str(self.device_class))
-        is_custom_device_class = native_device_class != self.device_class
-        if (
-            self.device_class
-            and self.device_class not in _NONE_NUMERIC_DEVICE_CLASSES
-            and not is_custom_device_class
-        ):
+        if self.device_class and self.device_class not in _NON_NUMERIC_DEVICE_CLASSES:
             return True
         return False
 
