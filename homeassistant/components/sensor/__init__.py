@@ -254,7 +254,7 @@ class SensorEntity(Entity):
 
     @final
     @property
-    def is_numeric(self) -> bool:
+    def numeric_state_expected(self) -> bool:
         """Return true if the sensor is numeric."""
         if (
             self.state_class is not None
@@ -594,7 +594,7 @@ class SensorEntity(Entity):
 
         # If the sensor has neither a device class, a state class, a unit of measurement
         # nor a precision then there are no further checks or conversions
-        if not self.is_numeric:
+        if not self.numeric_state_expected:
             return value
 
         # From here on a numerical value is expected

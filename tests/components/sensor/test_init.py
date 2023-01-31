@@ -1655,7 +1655,7 @@ async def test_device_classes_with_invalid_state_class(
         (None, None, None, None, False),
     ],
 )
-async def test_is_numeric_helper(
+async def test_numeric_state_expected_helper(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     enable_custom_integrations: None,
@@ -1665,7 +1665,7 @@ async def test_is_numeric_helper(
     native_precision: int | None,
     is_numeric: bool,
 ) -> None:
-    """Test is_numeric helper."""
+    """Test numeric_state_expected helper."""
     platform = getattr(hass.components, "test.sensor")
     platform.init(empty=True)
     platform.ENTITIES["0"] = platform.MockSensor(
@@ -1684,4 +1684,4 @@ async def test_is_numeric_helper(
     state = hass.states.get(entity0.entity_id)
     assert state is not None
 
-    assert entity0.is_numeric is is_numeric
+    assert entity0.numeric_state_expected == is_numeric
