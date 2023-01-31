@@ -177,25 +177,10 @@ class SwitchBotBlindTiltEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         _tilt = self.parsed_data["tilt"]
-        _moving_up = (
-            self.parsed_data["motionDirection"]["up"] and self.parsed_data["inMotion"]
-        )
-        _moving_down = (
-            self.parsed_data["motionDirection"]["down"] and self.parsed_data["inMotion"]
-        )
-        # NOTE: when motion is down, motion up is also set to true for some reason
-        if _moving_up:
-            _opening = bool(_tilt > 50)
-            _closing = not _opening
-        elif _moving_down:
-            _opening = bool(_tilt < 50)
-            _closing = not _opening
-        else:
-            _opening = _closing = False
         self._attr_current_cover_tilt_position = _tilt
         self._attr_is_closed = (_tilt < self.CLOSED_DOWN_THRESHOLD) or (
             _tilt > self.CLOSED_UP_THRESHOLD
         )
-        self._attr_is_opening = _opening
-        self._attr_is_closing = _closing
+        self._attr_is_opening = self.parsed_data["motionDirection"]["opening"]
+        self._attr_is_closing = self.parsed_data["motionDirection"]["closing"]
         self.async_write_ha_state()
