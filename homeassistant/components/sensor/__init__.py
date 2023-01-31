@@ -70,6 +70,7 @@ from .const import (  # noqa: F401
     DEVICE_CLASSES,
     DEVICE_CLASSES_SCHEMA,
     DOMAIN,
+    NON_NUMERIC_DEVICE_CLASSES,
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL,
     STATE_CLASS_TOTAL_INCREASING,
@@ -88,12 +89,6 @@ ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
 NEGATIVE_ZERO_PATTERN = re.compile(r"^-(0\.?0*)$")
 
 SCAN_INTERVAL: Final = timedelta(seconds=30)
-
-_NON_NUMERIC_DEVICE_CLASSES = {
-    SensorDeviceClass.DATE,
-    SensorDeviceClass.ENUM,
-    SensorDeviceClass.TIMESTAMP,
-}
 
 __all__ = [
     "ATTR_LAST_RESET",
@@ -266,7 +261,9 @@ class SensorEntity(Entity):
         with suppress(ValueError):
             # Custom device classes are not considered numeric
             device_class = SensorDeviceClass(str(self.device_class))
-        return device_class is None and device_class not in _NON_NUMERIC_DEVICE_CLASSES
+        if device_class and device_class not in NON_NUMERIC_DEVICE_CLASSES:
+            return True
+        return False
 
     @property
     def options(self) -> list[str] | None:
@@ -493,7 +490,7 @@ class SensorEntity(Entity):
 
         # Sensors with device classes indicating a non-numeric value
         # should not have a unit of measurement
-        if device_class in _NON_NUMERIC_DEVICE_CLASSES and unit_of_measurement:
+        if device_class in NON_NUMERIC_DEVICE_CLASSES and unit_of_measurement:
             raise ValueError(
                 f"Sensor {self.entity_id} has a unit of measurement and thus "
                 "indicating it has a numeric value; however, it has the "
