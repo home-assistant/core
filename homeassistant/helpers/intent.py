@@ -139,11 +139,12 @@ def _has_name(
         return True
 
     # Check name/aliases
-    if entity is not None:
-        if entity.aliases:
-            for alias in entity.aliases:
-                if name == alias.casefold():
-                    return True
+    if (entity is None) or (not entity.aliases):
+        return False
+
+    for alias in entity.aliases:
+        if name == alias.casefold():
+            return True
 
     return False
 
@@ -153,16 +154,19 @@ def _find_area(
 ) -> area_registry.AreaEntry | None:
     """Find an area by id or name, checking aliases too."""
     area = areas.async_get_area(id_or_name) or areas.async_get_area_by_name(id_or_name)
+    if area is not None:
+        return area
 
-    if area is None:
-        # Check area aliases
-        for maybe_area in areas.areas.values():
-            if maybe_area.aliases:
-                for area_alias in maybe_area.aliases:
-                    if id_or_name == area_alias.casefold():
-                        return maybe_area
+    # Check area aliases
+    for maybe_area in areas.areas.values():
+        if not maybe_area.aliases:
+            continue
 
-    return area
+        for area_alias in maybe_area.aliases:
+            if id_or_name == area_alias.casefold():
+                return maybe_area
+
+    return None
 
 
 def _filter_by_area(
