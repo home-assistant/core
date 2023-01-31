@@ -53,10 +53,9 @@ DEFAULT_YIELD_STATES_ROWS = 32768
 
 # Our minimum versions for each database
 #
-# MariaDB 10.6.9 or later is highly recommended
-# because it has a fix for a bug that can cause
-# history queries to not use the index and take
-# a long time (hours) to run.
+# Older MariaDB suffers https://jira.mariadb.org/browse/MDEV-25020
+# which is fixed in 10.5.17, 10.6.9, 10.7.5, 10.8.4
+#
 MIN_VERSION_MARIA_DB = AwesomeVersion(
     "10.3.0", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
 )
