@@ -122,10 +122,16 @@ class DefaultAgent(AbstractConversationAgent):
                 conversation_id,
             )
 
+        slot_lists: dict[str, SlotList] = {
+            "area": self._make_areas_list(),
+            "name": self._make_names_list(),
+        }
+
         result = await self.hass.async_add_executor_job(
             self._recognize,
             user_input,
             lang_intents,
+            slot_lists,
         )
         if result is None:
             _LOGGER.debug("No intent was matched for '%s'", user_input.text)
@@ -195,14 +201,12 @@ class DefaultAgent(AbstractConversationAgent):
         )
 
     def _recognize(
-        self, user_input: ConversationInput, lang_intents: LanguageIntents
+        self,
+        user_input: ConversationInput,
+        lang_intents: LanguageIntents,
+        slot_lists: dict[str, SlotList],
     ) -> RecognizeResult | None:
         """Search intents for a match to user input."""
-        slot_lists: dict[str, SlotList] = {
-            "area": self._make_areas_list(),
-            "name": self._make_names_list(),
-        }
-
         # Prioritize matches with entity names above area names
         maybe_result: RecognizeResult | None = None
         for result in recognize_all(
