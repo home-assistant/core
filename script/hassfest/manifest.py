@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from enum import IntEnum
+import json
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
@@ -362,8 +363,28 @@ def validate_manifest(integration: Integration, core_components_dir: Path) -> No
         validate_version(integration)
 
 
+def keyfn(val):
+    match val:  # noqa: E999
+        case "domain":
+            return ".domain"
+        case "name":
+            return ".name"
+        case _:
+            return val
+
+
+def sort_manifest(integration: Integration) -> None:
+    """Sort manifest."""
+    keys = list(integration.manifest.keys())
+    if (keys_sorted := sorted(keys, key=keyfn)) != keys:
+        manifest = {key: integration.manifest[key] for key in keys_sorted}
+        integration.manifest_path.write_text(json.dumps(manifest, indent=2))
+
+
 def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Handle all integrations manifests."""
     core_components_dir = config.root / "homeassistant/components"
     for integration in integrations.values():
         validate_manifest(integration, core_components_dir)
+        if not integration.errors:
+            sort_manifest(integration)
