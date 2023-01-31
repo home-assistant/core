@@ -266,9 +266,7 @@ class SensorEntity(Entity):
         with suppress(ValueError):
             # Custom device classes are not considered numeric
             device_class = SensorDeviceClass(str(self.device_class))
-        if device_class and device_class not in _NON_NUMERIC_DEVICE_CLASSES:
-            return True
-        return False
+        return device_class is None and device_class not in _NON_NUMERIC_DEVICE_CLASSES
 
     @property
     def options(self) -> list[str] | None:
