@@ -4,7 +4,7 @@
 -r requirements_test.txt
 
 # homeassistant.components.aemet
-AEMET-OpenData==0.2.1
+AEMET-OpenData==0.2.2
 
 # homeassistant.components.aladdin_connect
 AIOAladdinConnect==0.1.54
@@ -195,7 +195,7 @@ aiolyric==1.0.9
 aiomodernforms==0.1.8
 
 # homeassistant.components.yamaha_musiccast
-aiomusiccast==0.14.4
+aiomusiccast==0.14.7
 
 # homeassistant.components.nanoleaf
 aionanoleaf==0.2.1
@@ -352,7 +352,7 @@ base36==0.1.1
 beautifulsoup4==4.11.1
 
 # homeassistant.components.zha
-bellows==0.34.6
+bellows==0.34.7
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.12.0
@@ -511,7 +511,7 @@ energyzero==0.3.1
 enocean==0.50
 
 # homeassistant.components.environment_canada
-env_canada==0.5.22
+env_canada==0.5.27
 
 # homeassistant.components.enphase_envoy
 envoy_reader==0.20.1
@@ -523,7 +523,7 @@ ephem==4.1.2
 epson-projector==0.5.0
 
 # homeassistant.components.esphome
-esphome-dashboard-api==1.2.1
+esphome-dashboard-api==1.2.3
 
 # homeassistant.components.eufylife_ble
 eufylife_ble_client==0.1.7
@@ -690,10 +690,10 @@ hole==0.8.0
 holidays==0.18.0
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230128.0
+home-assistant-frontend==20230130.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2023.1.25
+home-assistant-intents==2023.1.31
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1003,7 +1003,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.13
 
 # homeassistant.components.plugwise
-plugwise==0.27.4
+plugwise==0.27.5
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1221,7 +1221,7 @@ pyiqvia==2022.04.0
 pyiss==1.0.1
 
 # homeassistant.components.isy994
-pyisy==3.1.9
+pyisy==3.1.11
 
 # homeassistant.components.kaleidescape
 pykaleidescape==1.0.1
@@ -1893,7 +1893,7 @@ yalexs_ble==1.12.8
 yeelight==0.7.10
 
 # homeassistant.components.yolink
-yolink-api==0.1.5
+yolink-api==0.2.8
 
 # homeassistant.components.youless
 youless-api==0.16

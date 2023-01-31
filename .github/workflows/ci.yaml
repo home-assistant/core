@@ -801,8 +801,9 @@ jobs:
       - gen-requirements-all
       - hassfest
       - lint-black
-      - lint-other
       - lint-isort
+      - lint-other
+      - lint-ruff
       - mypy
     strategy:
       fail-fast: false
@@ -922,8 +923,9 @@ jobs:
       - gen-requirements-all
       - hassfest
       - lint-black
-      - lint-other
       - lint-isort
+      - lint-other
+      - lint-ruff
       - mypy
     strategy:
       fail-fast: false
