@@ -30,7 +30,7 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, mock_platform
-from tests.typing import WebSocketGenerator
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 CLIENT_ID = "some-client-id"
 CLIENT_SECRET = "some-client-secret"
