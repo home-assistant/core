@@ -258,7 +258,7 @@ class SensorEntity(Entity):
         """Return true if the sensor is numeric."""
         if (
             self.state_class is not None
-            or self.unit_of_measurement is not None
+            or self.native_unit_of_measurement is not None
             or self.native_precision is not None
         ):
             return True
