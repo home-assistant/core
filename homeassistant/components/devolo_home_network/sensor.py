@@ -8,7 +8,6 @@ from typing import Any, Generic, TypeVar
 from devolo_plc_api.device import Device
 from devolo_plc_api.device_api import ConnectedStationInfo, NeighborAPInfo
 from devolo_plc_api.plcnet_api import REMOTE, DataRate, LogicalNetwork
-from devolo_plc_api.plcnet_api.getnetworkoverview_pb2 import GetNetworkOverview
 
 from homeassistant.backports.enum import StrEnum
 from homeassistant.components.sensor import (
@@ -50,7 +49,7 @@ class DataRateDirection(StrEnum):
 class DevoloSensorRequiredKeysMixin(Generic[_DataT]):
     """Mixin for required keys."""
 
-    value_func: Callable[[_DataT], int]
+    value_func: Callable[[_DataT], float]
 
 
 @dataclass
@@ -83,21 +82,23 @@ SENSOR_TYPES: dict[str, DevoloSensorEntityDescription[Any]] = {
         icon="mdi:wifi-marker",
         value_func=len,
     ),
-    PLC_RX_RATE: DevoloSensorEntityDescription[GetNetworkOverview.DataRate](
+    PLC_RX_RATE: DevoloSensorEntityDescription[DataRate](
         key=PLC_RX_RATE,
         entity_category=EntityCategory.DIAGNOSTIC,
         name="PLC downlink phyrate",
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
-        value_func=lambda data: round(getattr(data, DataRateDirection.RX)),
+        value_func=lambda data: getattr(data, DataRateDirection.RX, 0),
+        native_precision=0,
     ),
-    PLC_TX_RATE: DevoloSensorEntityDescription[GetNetworkOverview.DataRate](
+    PLC_TX_RATE: DevoloSensorEntityDescription[DataRate](
         key=PLC_TX_RATE,
         entity_category=EntityCategory.DIAGNOSTIC,
         name="PLC uplink phyrate",
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
-        value_func=lambda data: round(getattr(data, DataRateDirection.TX)),
+        value_func=lambda data: getattr(data, DataRateDirection.TX, 0),
+        native_precision=0,
     ),
 }
 
@@ -181,7 +182,7 @@ class DevoloSensorEntity(DevoloCoordinatorEntity[_DataT], SensorEntity):
         super().__init__(entry, coordinator, device)
 
     @property
-    def native_value(self) -> int:
+    def native_value(self) -> float:
         """State of the sensor."""
         return self.entity_description.value_func(self.coordinator.data)
 
@@ -189,13 +190,13 @@ class DevoloSensorEntity(DevoloCoordinatorEntity[_DataT], SensorEntity):
 class DevoloPlcDataRateSensorEntity(DevoloSensorEntity[LogicalNetwork]):
     """Representation of a devolo PLC data rate sensor."""
 
-    entity_description: DevoloSensorEntityDescription[GetNetworkOverview.DataRate]
+    entity_description: DevoloSensorEntityDescription[DataRate]
 
     def __init__(
         self,
         entry: ConfigEntry,
         coordinator: DataUpdateCoordinator[LogicalNetwork],
-        description: DevoloSensorEntityDescription[GetNetworkOverview.DataRate],
+        description: DevoloSensorEntityDescription[DataRate],
         device: Device,
         peer: str,
     ) -> None:
@@ -213,7 +214,7 @@ class DevoloPlcDataRateSensorEntity(DevoloSensorEntity[LogicalNetwork]):
         self._attr_entity_registry_enabled_default = peer_device.attached_to_router
 
     @property
-    def native_value(self) -> int:
+    def native_value(self) -> float:
         """State of the sensor."""
         return self.entity_description.value_func(
             next(
