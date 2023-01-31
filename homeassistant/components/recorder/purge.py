@@ -8,7 +8,6 @@ from itertools import islice, zip_longest
 import logging
 from typing import TYPE_CHECKING, Any
 
-from sqlalchemy.engine.row import Row
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.expression import distinct
 
@@ -316,7 +315,7 @@ def _select_unused_attributes_ids(
         # us by cached up to MAX_ROWS_TO_PURGE different statements which could be
         # up to 500MB for large database due to the complexity of the ORM objects.
         #
-        # We now break the query into groups of 100 to ensure
+        # We now break the query into groups of 100 and use a lambda_stmt to ensure
         # that the query is only cached once.
         #
         seen_ids = set()
@@ -616,9 +615,9 @@ def _purge_filtered_states(
     using_sqlite: bool,
 ) -> None:
     """Remove filtered states and linked events."""
-    state_ids: tuple[int, ...]
-    attributes_ids: tuple[int, ...]
-    event_ids: tuple[int, ...]
+    state_ids: list[int]
+    attributes_ids: list[int]
+    event_ids: list[int]
     state_ids, attributes_ids, event_ids = zip(
         *(
             session.query(States.state_id, States.attributes_id, States.event_id)
@@ -627,12 +626,12 @@ def _purge_filtered_states(
             .all()
         )
     )
-    filtered_event_ids = [id_ for id_ in event_ids if id_ is not None]
+    event_ids = [id_ for id_ in event_ids if id_ is not None]
     _LOGGER.debug(
         "Selected %s state_ids to remove that should be filtered", len(state_ids)
     )
     _purge_state_ids(instance, session, set(state_ids))
-    _purge_event_ids(session, filtered_event_ids)
+    _purge_event_ids(session, event_ids)
     unused_attribute_ids_set = _select_unused_attributes_ids(
         session, {id_ for id_ in attributes_ids if id_ is not None}, using_sqlite
     )
@@ -655,7 +654,7 @@ def _purge_filtered_events(
     _LOGGER.debug(
         "Selected %s event_ids to remove that should be filtered", len(event_ids)
     )
-    states: list[Row[tuple[int]]] = (
+    states: list[States] = (
         session.query(States.state_id).filter(States.event_id.in_(event_ids)).all()
     )
     state_ids: set[int] = {state.state_id for state in states}
