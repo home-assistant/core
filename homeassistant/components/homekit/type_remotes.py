@@ -153,9 +153,10 @@ class RemoteInputSelectAccessory(HomeAccessory, ABC):
         seen = set()
         sources: list[str] = []
         for source in state.attributes.get(self.source_list_key, []):
-            if source not in seen:
-                sources.append(source)
-            seen.add(source)
+            cleaned_up_source = cleanup_name_for_homekit(source)
+            if cleaned_up_source not in seen:
+                sources.append(cleaned_up_source)
+            seen.add(cleaned_up_source)
         return sources
 
     @abstractmethod
