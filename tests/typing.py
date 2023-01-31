@@ -7,5 +7,5 @@ from typing import Any
 from aiohttp import ClientWebSocketResponse
 from aiohttp.test_utils import TestClient
 
-TestClientGenerator = Callable[..., Coroutine[Any, Any, TestClient]]
-TestWebSocketGenerator = Callable[..., Coroutine[Any, Any, ClientWebSocketResponse]]
+ClientSessionGenerator = Callable[..., Coroutine[Any, Any, TestClient]]
+WebSocketGenerator = Callable[..., Coroutine[Any, Any, ClientWebSocketResponse]]

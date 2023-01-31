@@ -54,7 +54,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, location
 
 from .ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
-from .typing import TestClientGenerator, TestWebSocketGenerator
+from .typing import ClientSessionGenerator, WebSocketGenerator
 
 pytest.register_assert_rewrite("tests.common")
 
@@ -332,7 +332,7 @@ def aiohttp_client_cls():
 @pytest.fixture
 def aiohttp_client(
     event_loop: asyncio.AbstractEventLoop,
-) -> Generator[TestClientGenerator, None, None]:
+) -> Generator[ClientSessionGenerator, None, None]:
     """Override the default aiohttp_client since 3.x does not support aiohttp_client_cls.
 
     Remove this when upgrading to 4.x as aiohttp_client_cls
@@ -609,10 +609,10 @@ def local_auth(hass):
 @pytest.fixture
 def hass_client(
     hass: HomeAssistant,
-    aiohttp_client: TestClientGenerator,
+    aiohttp_client: ClientSessionGenerator,
     hass_access_token: str,
     socket_enabled: None,
-) -> TestClientGenerator:
+) -> ClientSessionGenerator:
     """Return an authenticated HTTP client."""
 
     async def auth_client() -> TestClient:
@@ -627,9 +627,9 @@ def hass_client(
 @pytest.fixture
 def hass_client_no_auth(
     hass: HomeAssistant,
-    aiohttp_client: TestClientGenerator,
+    aiohttp_client: ClientSessionGenerator,
     socket_enabled: None,
-) -> TestClientGenerator:
+) -> ClientSessionGenerator:
     """Return an unauthenticated HTTP client."""
 
     async def client() -> TestClient:
@@ -665,11 +665,11 @@ def current_request_with_host(current_request):
 
 @pytest.fixture
 def hass_ws_client(
-    aiohttp_client: TestClientGenerator,
+    aiohttp_client: ClientSessionGenerator,
     hass_access_token: str | None,
     hass: HomeAssistant,
     socket_enabled: None,
-) -> TestWebSocketGenerator:
+) -> WebSocketGenerator:
     """Websocket client fixture connected to websocket server."""
 
     async def create_client(
