@@ -218,6 +218,11 @@ async def test_setting_numeric_sensor_native_value_handling_via_mqtt_message(
     state = hass.states.get("sensor.test")
     assert state.state == "21"
 
+    # omitting value, causing it to be ignored, native sensor value should not change (template warning will be logged though)
+    async_fire_mqtt_message(hass, "test-topic", '{ "current": 5.34 }')
+    state = hass.states.get("sensor.test")
+    assert state.state == "21"
+
 
 async def test_setting_sensor_value_expires_availability_topic(
     hass, mqtt_mock_entry_with_yaml_config, caplog
