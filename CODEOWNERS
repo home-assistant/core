@@ -544,6 +544,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/imap/ @engrbm87
 /tests/components/imap/ @engrbm87
 /homeassistant/components/imazu_wall_pad/ @stkang90
+/tests/components/imazu_wall_pad/ @stkang90
 /homeassistant/components/incomfort/ @zxdavb
 /homeassistant/components/influxdb/ @mdegat01
 /tests/components/influxdb/ @mdegat01
