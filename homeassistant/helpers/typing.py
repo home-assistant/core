@@ -1,9 +1,7 @@
 """Typing Helpers for Home Assistant."""
-from __future__ import annotations
-
 from collections.abc import Mapping
 from enum import Enum
-from typing import Any, TypeAlias
+from typing import Any
 
 import homeassistant.core
 
@@ -19,7 +17,7 @@ TemplateVarsType = Mapping[str, Any] | None
 # Custom type for recorder Queries
 QueryType = Any
 
-JsonValueType: TypeAlias = (
+JsonValueType = (
     dict[str, "JsonValueType"] | list["JsonValueType"] | str | int | float | bool | None
 )
 
