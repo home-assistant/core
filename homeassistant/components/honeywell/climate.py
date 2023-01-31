@@ -299,9 +299,9 @@ class HoneywellUSThermostat(ClimateEntity):
                     )
 
             # Set temperature if not in auto
-            if mode in COOLING_MODES:
+            if mode == "cool":
                 await self._device.set_setpoint_cool(temperature)
-            if mode in HEATING_MODES:
+            if mode == "heat":
                 await self._device.set_setpoint_heat(temperature)
 
         except AIOSomecomfort.SomeComfortError as err:
@@ -309,9 +309,7 @@ class HoneywellUSThermostat(ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if {HVACMode.COOL, HVACMode.HEAT, HVACMode.HEAT_COOL} & set(
-            self._hvac_mode_map
-        ):
+        if {HVACMode.COOL, HVACMode.HEAT} & set(self._hvac_mode_map):
             await self._set_temperature(**kwargs)
             try:
                 if temperature := kwargs.get(ATTR_TARGET_TEMP_HIGH):
