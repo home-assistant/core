@@ -511,7 +511,7 @@ energyzero==0.3.1
 enocean==0.50
 
 # homeassistant.components.environment_canada
-env_canada==0.5.22
+env_canada==0.5.27
 
 # homeassistant.components.enphase_envoy
 envoy_reader==0.20.1
