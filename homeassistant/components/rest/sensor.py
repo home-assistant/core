@@ -126,7 +126,7 @@ class RestSensor(RestEntity, TemplateSensor):
         """Return the state attributes."""
         return self._attributes
 
-    def _update_from_rest_data(self):
+    def _update_from_rest_data(self) -> None:
         """Update state from the rest data."""
         value = self.rest.data
         _LOGGER.debug("Data fetched from resource: %s", value)
