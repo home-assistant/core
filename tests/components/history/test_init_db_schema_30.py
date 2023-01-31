@@ -822,7 +822,7 @@ async def test_fetch_period_api_with_entity_glob_exclude(
     assert response.status == HTTPStatus.OK
     response_json = await response.json()
     assert len(response_json) == 3
-    entities = {state["entity_id"] for state in response_json[0]}
+    entities = {state[0]["entity_id"] for state in response_json}
     assert entities == {"binary_sensor.sensor", "light.cow", "light.match"}
 
 
@@ -863,7 +863,7 @@ async def test_fetch_period_api_with_entity_glob_include_and_exclude(
     assert response.status == HTTPStatus.OK
     response_json = await response.json()
     assert len(response_json) == 4
-    entities = {state["entity_id"] for state in response_json[0]}
+    entities = {state[0]["entity_id"] for state in response_json}
     assert entities == {
         "light.many_state_changes",
         "light.match",
