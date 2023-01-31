@@ -25,11 +25,11 @@
             "standard": "Standard"
         },
         "yamaha_musiccast__zone_sleep": {
-            "120": "120 Minuten",
-            "30": "30 Minuten",
-            "60": "60 Minuten",
-            "90": "90 Minuten",
-            "0": "Aus"
+            "120 min": "120 Minuten",
+            "30 min": "30 Minuten",
+            "60 min": "60 Minuten",
+            "90 min": "90 Minuten",
+            "off": "Aus"
         },
         "yamaha_musiccast__zone_surr_decoder_type": {
             "auto": "Automatisch",

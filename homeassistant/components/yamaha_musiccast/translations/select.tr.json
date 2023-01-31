@@ -25,11 +25,11 @@
             "standard": "Standart"
         },
         "yamaha_musiccast__zone_sleep": {
-            "120": "120 Dakika",
-            "30": "30 Dakika",
-            "60": "60 Dakika",
-            "90": "90 Dakika",
-            "0": "Kapal\u0131"
+            "120 min": "120 Dakika",
+            "30 min": "30 Dakika",
+            "60 min": "60 Dakika",
+            "90 min": "90 Dakika",
+            "off": "Kapal\u0131"
         },
         "yamaha_musiccast__zone_surr_decoder_type": {
             "auto": "Otomatik",

@@ -58,11 +58,11 @@
             },
             "zone_sleep": {
                 "state": {
-                    "120": "120 minuts",
-                    "30": "30 minuts",
-                    "60": "60 minuts",
-                    "90": "90 minuts",
-                    "0": "Desactivat"
+                    "120_min": "120 minuts",
+                    "30_min": "30 minuts",
+                    "60_min": "60 minuts",
+                    "90_min": "90 minuts",
+                    "off": "Desactivat"
                 }
             },
             "zone_surr_decoder_type": {
