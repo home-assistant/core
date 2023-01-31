@@ -6,6 +6,7 @@ import re
 from unittest.mock import AsyncMock, call, patch
 
 import pytest
+from voluptuous import MultipleInvalid
 
 from homeassistant import config_entries
 from homeassistant.components import mqtt
@@ -1494,7 +1495,7 @@ async def test_clean_up_registry_monitoring(
 async def test_unique_id_collission_has_priority(
     hass, mqtt_mock_entry_no_yaml_config, entity_reg
 ):
-    """Test tehe unique_id collision detection has priority over registry disabled items."""
+    """Test the unique_id collision detection has priority over registry disabled items."""
     await mqtt_mock_entry_no_yaml_config()
     config = {
         "name": "sbfspot_12345",
@@ -1534,3 +1535,57 @@ async def test_unique_id_collission_has_priority(
     assert entity_reg.async_get("sensor.sbfspot_12345_1") is not None
     # Verify the second entity is not created because it is not unique
     assert entity_reg.async_get("sensor.sbfspot_12345_2") is None
+
+
+@pytest.mark.xfail(raises=MultipleInvalid)
+@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SENSOR])
+async def test_update_with_bad_config_not_breaks_discovery(
+    hass: ha.HomeAssistant, mqtt_mock_entry_no_yaml_config, entity_reg
+) -> None:
+    """Test a bad update does not break discovery."""
+    await mqtt_mock_entry_no_yaml_config()
+    # discover a sensor
+    config1 = {
+        "name": "sbfspot_12345",
+        "state_topic": "homeassistant_test/sensor/sbfspot_0/state",
+    }
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/sensor/sbfspot_0/config",
+        json.dumps(config1),
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.sbfspot_12345") is not None
+    # update with a breaking config
+    config2 = {
+        "name": "sbfspot_12345",
+        "availability": 1,
+        "state_topic": "homeassistant_test/sensor/sbfspot_0/state",
+    }
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/sensor/sbfspot_0/config",
+        json.dumps(config2),
+    )
+    await hass.async_block_till_done()
+    # update the state topic
+    config3 = {
+        "name": "sbfspot_12345",
+        "state_topic": "homeassistant_test/sensor/sbfspot_0/new_state_topic",
+    }
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/sensor/sbfspot_0/config",
+        json.dumps(config3),
+    )
+    await hass.async_block_till_done()
+
+    # Send an update for the state
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant_test/sensor/sbfspot_0/new_state_topic",
+        "new_value",
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.sbfspot_12345").state == "new_value"

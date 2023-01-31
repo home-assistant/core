@@ -1259,8 +1259,12 @@ async def test_thermostat_missing_temperature_trait(
     assert ATTR_FAN_MODE not in thermostat.attributes
     assert ATTR_FAN_MODES not in thermostat.attributes
 
-    await common.async_set_temperature(hass, temperature=24.0)
+    with pytest.raises(HomeAssistantError) as e_info:
+        await common.async_set_temperature(hass, temperature=24.0)
     await hass.async_block_till_done()
+    assert "temperature" in str(e_info)
+    assert "climate.my_thermostat" in str(e_info)
+    assert "24.0" in str(e_info)
     assert thermostat.attributes[ATTR_TEMPERATURE] is None
 
 

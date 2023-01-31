@@ -1,7 +1,9 @@
 """Tests for honeywell config flow."""
+import asyncio
 from unittest.mock import MagicMock, patch
 
 import AIOSomecomfort
+import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components.honeywell.const import (
@@ -9,8 +11,10 @@ from homeassistant.components.honeywell.const import (
     CONF_HEAT_AWAY_TEMPERATURE,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER, ConfigEntryState
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -35,8 +39,7 @@ async def test_show_authenticate_form(hass: HomeAssistant) -> None:
 
 async def test_connection_error(hass: HomeAssistant, client: MagicMock) -> None:
     """Test that an error message is shown on connection fail."""
-    client.login.side_effect = AIOSomecomfort.ConnectionError
-
+    client.login.side_effect = AIOSomecomfort.device.ConnectionError
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=FAKE_CONFIG
     )
@@ -45,7 +48,7 @@ async def test_connection_error(hass: HomeAssistant, client: MagicMock) -> None:
 
 async def test_auth_error(hass: HomeAssistant, client: MagicMock) -> None:
     """Test that an error message is shown on login fail."""
-    client.login.side_effect = AIOSomecomfort.AuthError
+    client.login.side_effect = AIOSomecomfort.device.AuthError
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=FAKE_CONFIG
@@ -116,3 +119,137 @@ async def test_create_option_entry(
         CONF_COOL_AWAY_TEMPERATURE: 1,
         CONF_HEAT_AWAY_TEMPERATURE: 2,
     }
+
+
+async def test_reauth_flow(hass: HomeAssistant) -> None:
+    """Test a successful reauth flow."""
+
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"},
+        unique_id="test-username",
+    )
+    mock_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.honeywell.async_setup_entry",
+        return_value=True,
+    ):
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": SOURCE_REAUTH,
+                "unique_id": mock_entry.unique_id,
+                "entry_id": mock_entry.entry_id,
+            },
+            data={CONF_USERNAME: "test-username", CONF_PASSWORD: "new-password"},
+        )
+
+    await hass.async_block_till_done()
+
+    assert result["step_id"] == "reauth_confirm"
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.honeywell.async_setup_entry",
+        return_value=True,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_PASSWORD: "new-password"},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.ABORT
+    assert result2["reason"] == "reauth_successful"
+    assert mock_entry.data == {
+        CONF_USERNAME: "test-username",
+        CONF_PASSWORD: "new-password",
+    }
+
+
+async def test_reauth_flow_auth_error(hass: HomeAssistant, client: MagicMock) -> None:
+    """Test an authorization error reauth flow."""
+
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"},
+        unique_id="test-username",
+    )
+    mock_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": SOURCE_REAUTH,
+            "unique_id": mock_entry.unique_id,
+            "entry_id": mock_entry.entry_id,
+        },
+        data={CONF_USERNAME: "test-username", CONF_PASSWORD: "new-password"},
+    )
+    await hass.async_block_till_done()
+
+    assert result["step_id"] == "reauth_confirm"
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {}
+
+    client.login.side_effect = AIOSomecomfort.device.AuthError
+    with patch(
+        "homeassistant.components.honeywell.async_setup_entry",
+        return_value=True,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_PASSWORD: "new-password"},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "invalid_auth"}
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        AIOSomecomfort.device.ConnectionError,
+        AIOSomecomfort.device.ConnectionTimeout,
+        asyncio.TimeoutError,
+    ],
+)
+async def test_reauth_flow_connnection_error(
+    hass: HomeAssistant, client: MagicMock, error
+) -> None:
+    """Test a connection error reauth flow."""
+
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"},
+        unique_id="test-username",
+    )
+    mock_entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": SOURCE_REAUTH,
+            "unique_id": mock_entry.unique_id,
+            "entry_id": mock_entry.entry_id,
+        },
+        data={CONF_USERNAME: "test-username", CONF_PASSWORD: "new-password"},
+    )
+    await hass.async_block_till_done()
+
+    assert result["step_id"] == "reauth_confirm"
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {}
+
+    client.login.side_effect = error
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PASSWORD: "new-password"},
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}

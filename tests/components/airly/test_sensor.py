@@ -59,7 +59,7 @@ async def test_sensor(hass, aioclient_mock):
     assert entry
     assert entry.unique_id == "123-456-humidity"
 
-    state = hass.states.get("sensor.home_pm1")
+    state = hass.states.get("sensor.home_pm1_0")
     assert state
     assert state.state == "3"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
@@ -70,7 +70,7 @@ async def test_sensor(hass, aioclient_mock):
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PM1
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
-    entry = registry.async_get("sensor.home_pm1")
+    entry = registry.async_get("sensor.home_pm1_0")
     assert entry
     assert entry.unique_id == "123-456-pm1"
 
@@ -104,7 +104,7 @@ async def test_sensor(hass, aioclient_mock):
     assert entry
     assert entry.unique_id == "123-456-pm10"
 
-    state = hass.states.get("sensor.home_co")
+    state = hass.states.get("sensor.home_carbon_monoxide")
     assert state
     assert state.state == "162"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
@@ -114,11 +114,11 @@ async def test_sensor(hass, aioclient_mock):
     )
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
-    entry = registry.async_get("sensor.home_co")
+    entry = registry.async_get("sensor.home_carbon_monoxide")
     assert entry
     assert entry.unique_id == "123-456-co"
 
-    state = hass.states.get("sensor.home_no2")
+    state = hass.states.get("sensor.home_nitrogen_dioxide")
     assert state
     assert state.state == "16"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
@@ -129,11 +129,11 @@ async def test_sensor(hass, aioclient_mock):
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.NITROGEN_DIOXIDE
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
-    entry = registry.async_get("sensor.home_no2")
+    entry = registry.async_get("sensor.home_nitrogen_dioxide")
     assert entry
     assert entry.unique_id == "123-456-no2"
 
-    state = hass.states.get("sensor.home_o3")
+    state = hass.states.get("sensor.home_ozone")
     assert state
     assert state.state == "42"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
@@ -144,11 +144,11 @@ async def test_sensor(hass, aioclient_mock):
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.OZONE
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
-    entry = registry.async_get("sensor.home_o3")
+    entry = registry.async_get("sensor.home_ozone")
     assert entry
     assert entry.unique_id == "123-456-o3"
 
-    state = hass.states.get("sensor.home_so2")
+    state = hass.states.get("sensor.home_sulphur_dioxide")
     assert state
     assert state.state == "14"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
@@ -159,7 +159,7 @@ async def test_sensor(hass, aioclient_mock):
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.SULPHUR_DIOXIDE
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
-    entry = registry.async_get("sensor.home_so2")
+    entry = registry.async_get("sensor.home_sulphur_dioxide")
     assert entry
     assert entry.unique_id == "123-456-so2"
 

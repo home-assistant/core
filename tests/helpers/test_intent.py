@@ -27,6 +27,7 @@ async def test_async_match_states(hass):
     """Test async_match_state helper."""
     areas = area_registry.async_get(hass)
     area_kitchen = areas.async_get_or_create("kitchen")
+    areas.async_update(area_kitchen.id, aliases={"food room"})
     area_bedroom = areas.async_get_or_create("bedroom")
 
     state1 = State(
@@ -52,21 +53,28 @@ async def test_async_match_states(hass):
     )
 
     # Match on name
-    assert [state1] == list(
+    assert list(
         intent.async_match_states(hass, name="kitchen light", states=[state1, state2])
-    )
+    ) == [state1]
 
     # Test alias
-    assert [state2] == list(
+    assert list(
         intent.async_match_states(hass, name="kill switch", states=[state1, state2])
-    )
+    ) == [state2]
 
     # Name + area
-    assert [state1] == list(
+    assert list(
         intent.async_match_states(
             hass, name="kitchen light", area_name="kitchen", states=[state1, state2]
         )
-    )
+    ) == [state1]
+
+    # Test area alias
+    assert list(
+        intent.async_match_states(
+            hass, name="kitchen light", area_name="food room", states=[state1, state2]
+        )
+    ) == [state1]
 
     # Wrong area
     assert not list(
@@ -76,21 +84,21 @@ async def test_async_match_states(hass):
     )
 
     # Domain + area
-    assert [state2] == list(
+    assert list(
         intent.async_match_states(
             hass, domains={"switch"}, area_name="bedroom", states=[state1, state2]
         )
-    )
+    ) == [state2]
 
     # Device class + area
-    assert [state2] == list(
+    assert list(
         intent.async_match_states(
             hass,
             device_classes={SwitchDeviceClass.OUTLET},
             area_name="bedroom",
             states=[state1, state2],
         )
-    )
+    ) == [state2]
 
 
 async def test_match_device_area(hass):
@@ -122,14 +130,14 @@ async def test_match_device_area(hass):
     entities.async_update_entity(state2.entity_id, area_id=area_bedroom.id)
 
     # Match on area/domain
-    assert [state1] == list(
+    assert list(
         intent.async_match_states(
             hass,
             domains={"light"},
             area_name="kitchen",
             states=[state1, state2, state3],
         )
-    )
+    ) == [state1]
 
 
 def test_async_validate_slots():
