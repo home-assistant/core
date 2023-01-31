@@ -274,10 +274,10 @@ class HoneywellUSThermostat(ClimateEntity):
             if self._device.hold_heat is False and self._device.hold_cool is False:
                 # Get next period time
                 hour_heat, minute_heat = divmod(
-                    self._device.raw_ui_data["HEATNextPeriod"] * 15, 60
+                    self._device.raw_ui_data["HeatNextPeriod"] * 15, 60
                 )
                 hour_cool, minute_cool = divmod(
-                    self._device.raw_ui_data["COOLNextPeriod"] * 15, 60
+                    self._device.raw_ui_data["CoolNextPeriod"] * 15, 60
                 )
                 # Set hold time
                 if mode in COOLING_MODES:
@@ -290,15 +290,10 @@ class HoneywellUSThermostat(ClimateEntity):
                     )
 
             # Set temperature if not in auto
-            elif mode == "cool":
+            if mode == "cool":
                 await self._device.set_setpoint_cool(temperature)
-            elif mode == "heat":
+            if mode == "heat":
                 await self._device.set_setpoint_heat(temperature)
-            elif mode == "auto":
-                if temperature := kwargs.get(ATTR_TARGET_TEMP_HIGH):
-                    await self._device.set_setpoint_cool(temperature)
-                if temperature := kwargs.get(ATTR_TARGET_TEMP_LOW):
-                    await self._device.set_setpoint_heat(temperature)
 
         except AIOSomecomfort.SomeComfortError as err:
             _LOGGER.error("Invalid temperature %.1f: %s", temperature, err)
@@ -307,6 +302,14 @@ class HoneywellUSThermostat(ClimateEntity):
         """Set new target temperature."""
         if {HVACMode.COOL, HVACMode.HEAT} & set(self._hvac_mode_map):
             await self._set_temperature(**kwargs)
+            try:
+                if temperature := kwargs.get(ATTR_TARGET_TEMP_HIGH):
+                    await self._device.set_setpoint_cool(temperature)
+                if temperature := kwargs.get(ATTR_TARGET_TEMP_LOW):
+                    await self._device.set_setpoint_heat(temperature)
+
+            except AIOSomecomfort.SomeComfortError as err:
+                _LOGGER.error("Invalid temperature %.1f: %s", temperature, err)
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
