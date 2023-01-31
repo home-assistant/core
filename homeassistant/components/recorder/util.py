@@ -445,14 +445,14 @@ def _async_create_mariadb_range_index_regression_issue(
 
     The range scan issue was fixed in MariaDB 10.5.17, 10.6.9, 10.7.5, 10.8.4 and later.
     """
-    if version < RECOMMENDED_MIN_VERSION_MARIA_DB:
-        min_version = RECOMMENDED_MIN_VERSION_MARIA_DB
-    elif RECOMMENDED_MIN_VERSION_MARIA_DB_106 < version >= MARIA_DB_106:
-        min_version = RECOMMENDED_MIN_VERSION_MARIA_DB_106
-    elif RECOMMENDED_MIN_VERSION_MARIA_DB_107 < version >= MARIA_DB_107:
-        min_version = RECOMMENDED_MIN_VERSION_MARIA_DB_107
-    else:
+    if version >= MARIA_DB_108:
         min_version = RECOMMENDED_MIN_VERSION_MARIA_DB_108
+    elif version >= MARIA_DB_107:
+        min_version = RECOMMENDED_MIN_VERSION_MARIA_DB_107
+    elif version >= MARIA_DB_106:
+        min_version = RECOMMENDED_MIN_VERSION_MARIA_DB_106
+    else:
+        min_version = RECOMMENDED_MIN_VERSION_MARIA_DB
     ir.async_create_issue(
         hass,
         DOMAIN,
