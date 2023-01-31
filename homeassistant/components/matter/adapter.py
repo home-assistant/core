@@ -8,6 +8,7 @@ from matter_server.common.models.events import EventType
 from matter_server.common.models.node_device import (
     AbstractMatterNodeDevice,
     MatterBridgedNodeDevice,
+    MatterNodeDevice,
 )
 from matter_server.common.models.server_information import ServerInfo
 
@@ -74,12 +75,12 @@ class MatterAdapter:
             node.root_device_type_instance.get_cluster(all_clusters.BasicInformation)
         ):
             # create virtual (parent) device for bridge node device
-            bridge_device = MatterBridgedNodeDevice(
-                node.aggregator_device_type_instance
-            )
+            bridge_device = MatterNodeDevice(node)
             self._create_device_registry(bridge_device)
             server_info = cast(ServerInfo, self.matter_client.server_info)
             bridge_unique_id = get_device_id(server_info, bridge_device)
+
+        LOGGER.info("Bridged unique id: %s", bridge_unique_id)
 
         for node_device in node.node_devices:
             self._setup_node_device(node_device, bridge_unique_id)
