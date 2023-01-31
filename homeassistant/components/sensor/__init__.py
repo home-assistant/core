@@ -599,21 +599,22 @@ class SensorEntity(Entity):
                         f"({type(value)})"
                     ) from err
                 # This should raise in Home Assistant Core 2023.4
-                self._invalid_numeric_value_reported = True
-                report_issue = self._suggest_report_issue()
-                _LOGGER.warning(
-                    "Sensor %s has device class %s, state class %s and unit %s "
-                    "thus indicating it has a numeric value; however, it has the "
-                    "non-numeric value: %s (%s); Please update your configuration "
-                    "if your entity is manually configured, otherwise %s",
-                    self.entity_id,
-                    device_class,
-                    state_class,
-                    unit_of_measurement,
-                    value,
-                    type(value),
-                    report_issue,
-                )
+                if not self._invalid_numeric_value_reported:
+                    self._invalid_numeric_value_reported = True
+                    report_issue = self._suggest_report_issue()
+                    _LOGGER.warning(
+                        "Sensor %s has device class %s, state class %s and unit %s "
+                        "thus indicating it has a numeric value; however, it has the "
+                        "non-numeric value: %s (%s); Please update your configuration "
+                        "if your entity is manually configured, otherwise %s",
+                        self.entity_id,
+                        device_class,
+                        state_class,
+                        unit_of_measurement,
+                        value,
+                        type(value),
+                        report_issue,
+                    )
                 return value
         else:
             numerical_value = value
