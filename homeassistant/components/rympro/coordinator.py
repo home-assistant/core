@@ -11,16 +11,18 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN
 
+SCAN_INTERVAL = 60 * 60
+
 _LOGGER = logging.getLogger(__name__)
 
 
 class RymProDataUpdateCoordinator(DataUpdateCoordinator[dict[int, dict]]):
     """Class to manage fetching RYM Pro data."""
 
-    def __init__(self, hass: HomeAssistant, rympro: RymPro, scan_interval: int) -> None:
+    def __init__(self, hass: HomeAssistant, rympro: RymPro) -> None:
         """Initialize global RymPro data updater."""
         self.rympro = rympro
-        interval = timedelta(seconds=scan_interval)
+        interval = timedelta(seconds=SCAN_INTERVAL)
         super().__init__(
             hass,
             _LOGGER,
