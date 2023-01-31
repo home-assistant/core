@@ -4,6 +4,7 @@ from __future__ import annotations
 from enum import IntEnum
 import json
 from pathlib import Path
+import subprocess
 from typing import Any
 from urllib.parse import urlparse
 
@@ -363,26 +364,39 @@ def validate_manifest(integration: Integration, core_components_dir: Path) -> No
         validate_version(integration)
 
 
+_SORT_KEYS = {"domain": ".domain", "name": ".name"}
+
+
 def _sort_manifest_keys(key: str) -> str:
-    return {"domain": ".domain", "name": ".name"}.get(key, key)
+    return _SORT_KEYS.get(key, key)
 
 
-def sort_manifest(integration: Integration) -> None:
+def sort_manifest(integration: Integration) -> bool:
     """Sort manifest."""
     keys = list(integration.manifest.keys())
     if (keys_sorted := sorted(keys, key=_sort_manifest_keys)) != keys:
         manifest = {key: integration.manifest[key] for key in keys_sorted}
         integration.manifest_path.write_text(json.dumps(manifest, indent=2))
+        integration.add_error(
+            "manifest",
+            "Manifest keys have been sorted: domain, name, then alphabetical order",
+        )
+        return True
+    return False
 
 
 def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Handle all integrations manifests."""
     core_components_dir = config.root / "homeassistant/components"
+    manifests_resorted = []
     for integration in integrations.values():
         validate_manifest(integration, core_components_dir)
         if not integration.errors:
-            sort_manifest(integration)
-            integration.add_error(
-                "manifest",
-                "Manifest keys have been sorted: domain, name, then alphabetical order",
-            )
+            if sort_manifest(integration):
+                manifests_resorted.append(integration.manifest_path)
+    if manifests_resorted:
+        print("\nManifests have been resorted, running prettier...", flush=True)
+        subprocess.run(
+            ["pre-commit", "run", "--hook-stage", "manual", "prettier", "--files"]
+            + manifests_resorted
+        )
