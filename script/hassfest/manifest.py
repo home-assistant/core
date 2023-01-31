@@ -382,4 +382,7 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
         validate_manifest(integration, core_components_dir)
         if not integration.errors:
             sort_manifest(integration)
-            integration.add_error("manifest", "Key in the manifest are unsorted")
+            integration.add_error(
+                "manifest",
+                "Manifest keys have been sorted: domain, name, then alphabetical order",
+            )
