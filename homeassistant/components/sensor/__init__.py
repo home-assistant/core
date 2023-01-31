@@ -495,15 +495,7 @@ class SensorEntity(Entity):
 
         # Sensors with device classes indicating a non-numeric value
         # should not have a unit of measurement
-        if (
-            device_class
-            in {
-                SensorDeviceClass.DATE,
-                SensorDeviceClass.ENUM,
-                SensorDeviceClass.TIMESTAMP,
-            }
-            and unit_of_measurement
-        ):
+        if device_class in _NON_NUMERIC_DEVICE_CLASSES and unit_of_measurement:
             raise ValueError(
                 f"Sensor {self.entity_id} has a unit of measurement and thus "
                 "indicating it has a numeric value; however, it has the "
