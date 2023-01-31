@@ -1648,7 +1648,7 @@ async def test_device_classes_with_invalid_state_class(
         (SensorDeviceClass.ENUM, None, None, None, False),
         (SensorDeviceClass.DATE, None, None, None, False),
         (SensorDeviceClass.TIMESTAMP, None, None, None, False),
-        ("custom", None, None, None, True),
+        ("custom", None, None, None, False),
         (SensorDeviceClass.POWER, None, "V", None, True),
         (None, SensorStateClass.MEASUREMENT, None, None, True),
         (None, None, PERCENTAGE, None, True),

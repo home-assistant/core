@@ -262,7 +262,11 @@ class SensorEntity(Entity):
             or self.native_precision is not None
         ):
             return True
-        if self.device_class and self.device_class not in _NON_NUMERIC_DEVICE_CLASSES:
+        device_class: SensorDeviceClass | None = None
+        with suppress(ValueError):
+            # Custom device classes are not considered numeric
+            device_class = SensorDeviceClass(str(self.device_class))
+        if device_class and device_class not in _NON_NUMERIC_DEVICE_CLASSES:
             return True
         return False
 
