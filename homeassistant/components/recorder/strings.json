@@ -11,7 +11,7 @@
   "issues": {
     "maria_db_range_index_regression": {
       "title": "Update MariaDB to {min_version} or later resolve a significant performance issue",
-      "description": "Older versions of MariaDB suffer from a significant performance regression when retrieving history data or purging the database. Update to version {min_version} or later."
+      "description": "Older versions of MariaDB suffer from a significant performance regression when retrieving history data or purging the database. Update to version {min_version} or later and restart Home Assistant."
     }
   }
 }
