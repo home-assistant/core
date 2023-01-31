@@ -363,20 +363,14 @@ def validate_manifest(integration: Integration, core_components_dir: Path) -> No
         validate_version(integration)
 
 
-def keyfn(val):
-    match val:  # noqa: E999
-        case "domain":
-            return ".domain"
-        case "name":
-            return ".name"
-        case _:
-            return val
+def _sort_manifest_keys(key: str) -> str:
+    return {"domain": ".domain", "name": ".name"}.get(key, key)
 
 
 def sort_manifest(integration: Integration) -> None:
     """Sort manifest."""
     keys = list(integration.manifest.keys())
-    if (keys_sorted := sorted(keys, key=keyfn)) != keys:
+    if (keys_sorted := sorted(keys, key=_sort_manifest_keys)) != keys:
         manifest = {key: integration.manifest[key] for key in keys_sorted}
         integration.manifest_path.write_text(json.dumps(manifest, indent=2))
 
