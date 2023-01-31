@@ -566,8 +566,8 @@ build.json @home-assistant/supervisor
 /tests/components/integration/ @dgomes
 /homeassistant/components/intellifire/ @jeeftor
 /tests/components/intellifire/ @jeeftor
-/homeassistant/components/intent/ @home-assistant/core
-/tests/components/intent/ @home-assistant/core
+/homeassistant/components/intent/ @home-assistant/core @synesthesiam
+/tests/components/intent/ @home-assistant/core @synesthesiam
 /homeassistant/components/intesishome/ @jnimmo
 /homeassistant/components/ios/ @robbiet480
 /tests/components/ios/ @robbiet480
