@@ -590,12 +590,7 @@ class SensorEntity(Entity):
 
         # If the sensor has neither a device class, a state class, a unit of measurement
         # nor a precision then there are no further checks or conversions
-        if (
-            not device_class
-            and not state_class
-            and not unit_of_measurement
-            and precision is None
-        ):
+        if not self.is_numeric:
             return value
 
         # From here on a numerical value is expected
