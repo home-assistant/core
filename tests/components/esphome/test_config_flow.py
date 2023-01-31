@@ -24,9 +24,10 @@ from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.data_entry_flow import FlowResultType
 
+from . import VALID_NOISE_PSK
+
 from tests.common import MockConfigEntry
 
-VALID_NOISE_PSK = "bOFFzzvfpg5DB94DuBGLXD/hMnhpDKgP9UQyBulwWVU="
 INVALID_NOISE_PSK = "lSYBYEjQI1bVL8s2Vask4YytGMj1f1epNtmoim2yuTM="
 
 
