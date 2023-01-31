@@ -115,7 +115,7 @@ class MatterAdapter:
             identifiers.add((DOMAIN, f"{ID_TYPE_SERIAL}_{basic_info.serialNumber}"))
 
         LOGGER.debug(
-            "Added device %s with name %s and ID %s",
+            "Adding device %s with name %s and ID %s",
             node_device,
             name,
             node_device_id,
