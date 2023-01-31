@@ -1,7 +1,7 @@
 """Test ESPHome dashboard features."""
 from unittest.mock import patch
 
-from aioesphomeapi import DeviceInfo
+from aioesphomeapi import DeviceInfo, InvalidAuthAPIError
 
 from homeassistant.components.esphome import CONF_NOISE_PSK, dashboard
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
@@ -31,7 +31,10 @@ async def test_new_dashboard_fix_reauth(
     hass, mock_client, mock_config_entry, mock_dashboard
 ):
     """Test config entries waiting for reauth are triggered."""
-    mock_client.device_info.return_value = DeviceInfo(uses_password=False, name="test")
+    mock_client.device_info.side_effect = (
+        InvalidAuthAPIError,
+        DeviceInfo(uses_password=False, name="test"),
+    )
 
     with patch(
         "homeassistant.components.esphome.dashboard.ESPHomeDashboardAPI.get_encryption_key",

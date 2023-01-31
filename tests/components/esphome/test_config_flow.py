@@ -519,23 +519,14 @@ async def test_reauth_fixed_via_dashboard(
     assert len(mock_get_encryption_key.mock_calls) == 1
 
 
-async def test_reauth_fixed_via_dashboard_remove_password(
-    hass, mock_client, mock_zeroconf, mock_dashboard
+async def test_reauth_fixed_via_dashboard_add_encryption_remove_password(
+    hass, mock_client, mock_zeroconf, mock_dashboard, mock_config_entry
 ):
     """Test reauth fixed automatically via dashboard with password removed."""
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_HOST: "127.0.0.1",
-            CONF_PORT: 6053,
-            CONF_PASSWORD: "hello",
-            CONF_DEVICE_NAME: "test",
-        },
+    mock_client.device_info.side_effect = (
+        InvalidAuthAPIError,
+        DeviceInfo(uses_password=False, name="test"),
     )
-    entry.add_to_hass(hass)
-
-    mock_client.device_info.return_value = DeviceInfo(uses_password=False, name="test")
 
     mock_dashboard["configured"].append(
         {
@@ -554,17 +545,35 @@ async def test_reauth_fixed_via_dashboard_remove_password(
             "esphome",
             context={
                 "source": config_entries.SOURCE_REAUTH,
-                "entry_id": entry.entry_id,
-                "unique_id": entry.unique_id,
+                "entry_id": mock_config_entry.entry_id,
+                "unique_id": mock_config_entry.unique_id,
             },
         )
 
     assert result["type"] == FlowResultType.ABORT, result
     assert result["reason"] == "reauth_successful"
-    assert entry.data[CONF_NOISE_PSK] == VALID_NOISE_PSK
-    assert entry.data[CONF_PASSWORD] == ""
+    assert mock_config_entry.data[CONF_NOISE_PSK] == VALID_NOISE_PSK
+    assert mock_config_entry.data[CONF_PASSWORD] == ""
 
     assert len(mock_get_encryption_key.mock_calls) == 1
+
+
+async def test_reauth_fixed_via_remove_password(hass, mock_client, mock_config_entry):
+    """Test reauth fixed automatically by seeing password removed."""
+    mock_client.device_info.return_value = DeviceInfo(uses_password=False, name="test")
+
+    result = await hass.config_entries.flow.async_init(
+        "esphome",
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": mock_config_entry.entry_id,
+            "unique_id": mock_config_entry.unique_id,
+        },
+    )
+
+    assert result["type"] == FlowResultType.ABORT, result
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_PASSWORD] == ""
 
 
 async def test_reauth_fixed_via_dashboard_at_confirm(
