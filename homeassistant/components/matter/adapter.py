@@ -114,6 +114,13 @@ class MatterAdapter:
             # prefix identifier with 'serial_' to be able to filter it
             identifiers.add((DOMAIN, f"{ID_TYPE_SERIAL}_{basic_info.serialNumber}"))
 
+        LOGGER.debug(
+            "Added device %s with name %s and ID %s",
+            node_device,
+            name,
+            node_device_id,
+        )
+
         dr.async_get(self.hass).async_get_or_create(
             name=name,
             config_entry_id=self.config_entry.entry_id,

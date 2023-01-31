@@ -5,6 +5,8 @@ import asyncio
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from matter_server.common.models.node_device import MatterBridgedNodeDevice
+
 from homeassistant.core import HomeAssistant, callback
 
 from .const import DOMAIN
@@ -57,4 +59,11 @@ def get_device_id(
     )
     # Append nodedevice(type) to differentiate between a root node
     # and bridge within Home Assistant devices.
+    if isinstance(node_device, MatterBridgedNodeDevice):
+        endpoint = node_device.bridged_device_type_instance.endpoint
+        endpoint_hex = f"{endpoint:04X}"
+        return (
+            f"{operational_instance_id}-{endpoint_hex}-{node_device.__class__.__name__}"
+        )
+
     return f"{operational_instance_id}-{node_device.__class__.__name__}"
