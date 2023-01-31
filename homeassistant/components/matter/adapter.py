@@ -80,7 +80,7 @@ class MatterAdapter:
             server_info = cast(ServerInfo, self.matter_client.server_info)
             bridge_unique_id = get_device_id(server_info, bridge_device)
 
-        LOGGER.info("Bridged unique id: %s", bridge_unique_id)
+        LOGGER.debug("Bridge unique_id: %s", bridge_unique_id)
 
         for node_device in node.node_devices:
             self._setup_node_device(node_device, bridge_unique_id)
