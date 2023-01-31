@@ -378,7 +378,7 @@ class NestFlowHandler(
         if not isinstance(
             self.flow_impl, config_entry_oauth2_flow.LocalOAuth2Implementation
         ):
-            raise ValueError(f"Unexpected OAuth implementation: {self.flow_impl}")
+            raise TypeError(f"Unexpected OAuth implementation: {self.flow_impl}")
         client_id = self.flow_impl.client_id
         return self.async_show_form(
             step_id="device_project_upgrade",
