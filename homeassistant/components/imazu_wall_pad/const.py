@@ -10,13 +10,7 @@ SW_VERSION = "1.0"
 
 DEFAULT_PORT = 8899
 
-PLATFORMS = [
-    Platform.BINARY_SENSOR,
-    Platform.CLIMATE,
-    Platform.FAN,
-    Platform.LIGHT,
-    Platform.SWITCH,
-]
+PLATFORMS = [Platform.LIGHT]
 PACKET = "packet"
 
 ATTR_DEVICE = "device"

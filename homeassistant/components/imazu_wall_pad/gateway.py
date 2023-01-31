@@ -1,6 +1,7 @@
 """Gateway of Wall Pad."""
 from __future__ import annotations
 
+from collections import defaultdict
 from dataclasses import dataclass
 import logging
 
@@ -22,7 +23,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.restore_state import RestoreStateData
 
-from .const import DOMAIN, PACKET, PLATFORMS
+from .const import DOMAIN, PACKET
 from .wall_pad import WallPadDevice
 
 _LOGGER = logging.getLogger(__name__)
@@ -53,8 +54,6 @@ def _parse_platform(packet: ImazuPacket) -> None | Platform:
         return Platform.CLIMATE
     if isinstance(packet, LightPacket):
         return Platform.LIGHT
-    # if isinstance(packet, AcPacket):
-    #    return Platform.FAN
     if isinstance(packet, FanPacket):
         return Platform.FAN
     return None
@@ -70,9 +69,9 @@ class ImazuGateway:
         self.host = self.entry.data.get(CONF_HOST)
         self.port = self.entry.data.get(CONF_PORT)
         self.client = ImazuClient(self.host, self.port, self.async_packet_handler)
-        self.platforms: dict[Platform, PlatformData] = {
-            platform: PlatformData({}) for platform in PLATFORMS
-        }
+        self.platforms: dict[Platform, PlatformData] = defaultdict(
+            lambda: PlatformData({})
+        )
 
     def entity_add_signal(self, platform: Platform) -> str:
         """Return a signal for the dispatch of a device update."""
@@ -84,10 +83,9 @@ class ImazuGateway:
         if entity_id not in data.last_states:
             return []
         state = data.last_states[entity_id]
-        if (
-            not state.extra_data
-            or (packet := state.extra_data.as_dict().get(PACKET, None)) is None
-        ):
+        if not state.extra_data:
+            return []
+        if (packet := state.extra_data.as_dict().get(PACKET, None)) is None:
             return []
         return parse_packet(packet)
 
@@ -100,7 +98,7 @@ class ImazuGateway:
             data.entities[packet.device_id] = entity
         return entity
 
-    async def async_load_entity_registry(self):
+    async def async_load_entity_registry(self) -> None:
         """Get entity registry and put packet data to platform entities."""
         entity_registry = self.hass.helpers.entity_registry.async_get(self.hass)
         entities = self.hass.helpers.entity_registry.async_entries_for_config_entry(
@@ -131,7 +129,7 @@ class ImazuGateway:
             entity_added = True
         return entity_added
 
-    async def async_packet_handler(self, packet: ImazuPacket):
+    async def async_packet_handler(self, packet: ImazuPacket) -> None:
         """Client packet handler."""
         if (platform := _parse_platform(packet)) is None:
             _LOGGER.warning("This device is not supported, %s", packet.description())
@@ -158,7 +156,7 @@ class ImazuGateway:
         """Connect."""
         return await self.client.async_connect()
 
-    async def async_close(self):
+    async def async_close(self) -> None:
         """Close Gateway."""
         self.client.disconnect()
         self.platforms.clear()
