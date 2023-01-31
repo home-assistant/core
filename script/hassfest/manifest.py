@@ -395,8 +395,8 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
             if sort_manifest(integration):
                 manifests_resorted.append(integration.manifest_path)
     if manifests_resorted:
-        print("\nManifests have been resorted, running prettier...", flush=True)
         subprocess.run(
             ["pre-commit", "run", "--hook-stage", "manual", "prettier", "--files"]
-            + manifests_resorted
+            + manifests_resorted,
+            stdout=subprocess.DEVNULL,
         )
