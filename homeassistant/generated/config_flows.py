@@ -398,6 +398,7 @@ FLOWS = {
         "songpal",
         "sonos",
         "soundtouch",
+        "southern_company",
         "speedtestdotnet",
         "spider",
         "spotify",

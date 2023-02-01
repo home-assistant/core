@@ -5124,6 +5124,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "southern_company": {
+      "name": "Southern Company",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "spaceapi": {
       "name": "Space API",
       "integration_type": "hub",
