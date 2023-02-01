@@ -124,6 +124,6 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id(discovery_info.uuid)
         return self.async_create_entry(
-            title="Open Thread Border Router",
+            title=discovery_info.name,
             data=config_entry_data,
         )
