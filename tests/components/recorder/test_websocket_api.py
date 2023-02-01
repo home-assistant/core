@@ -2032,7 +2032,7 @@ async def test_recorder_info(recorder_mock, hass, hass_ws_client):
     assert response["success"]
     assert response["result"] == {
         "backlog": 0,
-        "max_backlog": 40000,
+        "max_backlog": 65000,
         "migration_in_progress": False,
         "migration_is_live": False,
         "recording": True,
