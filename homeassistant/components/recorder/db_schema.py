@@ -76,6 +76,9 @@ TABLE_STATISTICS_META = "statistics_meta"
 TABLE_STATISTICS_RUNS = "statistics_runs"
 TABLE_STATISTICS_SHORT_TERM = "statistics_short_term"
 
+MAX_STATE_ATTRS_BYTES = 16384
+PSQL_DIALECT = SupportedDialect.POSTGRESQL
+
 ALL_TABLES = [
     TABLE_STATES,
     TABLE_STATE_ATTRIBUTES,
@@ -462,13 +465,21 @@ class StateAttributes(Base):
         exclude_attrs = (
             exclude_attrs_by_domain.get(domain, set()) | ALL_DOMAIN_EXCLUDE_ATTRS
         )
-        if dialect == SupportedDialect.POSTGRESQL:
-            return json_bytes_strip_null(
-                {k: v for k, v in state.attributes.items() if k not in exclude_attrs}
-            )
-        return json_bytes(
+        encoder = json_bytes_strip_null if dialect == PSQL_DIALECT else json_bytes
+        bytes_result = encoder(
             {k: v for k, v in state.attributes.items() if k not in exclude_attrs}
         )
+        if len(bytes_result) > MAX_STATE_ATTRS_BYTES:
+            _LOGGER.warning(
+                "State attributes for %s exceed maximum size of %s bytes. "
+                "This can cause database performance issues; Attributes "
+                "will not be stored: %s",
+                state.entity_id,
+                MAX_STATE_ATTRS_BYTES,
+                state.attributes,
+            )
+            return b"{}"
+        return bytes_result
 
     @staticmethod
     def hash_shared_attrs_bytes(shared_attrs_bytes: bytes) -> int:
