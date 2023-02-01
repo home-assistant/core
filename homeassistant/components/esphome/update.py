@@ -5,7 +5,7 @@ import asyncio
 import logging
 from typing import Any, cast
 
-from aioesphomeapi import DeviceInfo as ESPHomeDeviceInfo
+from aioesphomeapi import DeviceInfo as ESPHomeDeviceInfo, EntityInfo
 
 from homeassistant.components.update import (
     UpdateDeviceClass,
@@ -13,7 +13,7 @@ from homeassistant.components.update import (
     UpdateEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
@@ -114,6 +114,23 @@ class ESPHomeUpdateEntity(CoordinatorEntity[ESPHomeDashboard], UpdateEntity):
     def release_url(self) -> str | None:
         """URL to the full release notes of the latest version available."""
         return "https://esphome.io/changelog/"
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity added to Home Assistant."""
+        await super().async_added_to_hass()
+
+        @callback
+        def _static_info_updated(infos: list[EntityInfo]) -> None:
+            """Handle static info update."""
+            self.async_write_ha_state()
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                self._entry_data.signal_static_info_updated,
+                _static_info_updated,
+            )
+        )
 
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
