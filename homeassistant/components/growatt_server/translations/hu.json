@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
             "no_plants": "Ebben a fi\u00f3kban nem tal\u00e1lhat\u00f3 egy er\u0151m\u0171 sem"
         },
         "error": {

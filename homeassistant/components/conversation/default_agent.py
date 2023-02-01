@@ -20,7 +20,7 @@ from homeassistant import core, setup
 from homeassistant.helpers import area_registry, entity_registry, intent, template
 from homeassistant.helpers.json import json_loads
 
-from .agent import AbstractConversationAgent, ConversationResult
+from .agent import AbstractConversationAgent, ConversationInput, ConversationResult
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -81,16 +81,11 @@ class DefaultAgent(AbstractConversationAgent):
         if config_intents:
             self._config_intents = config_intents
 
-    async def async_process(
-        self,
-        text: str,
-        context: core.Context,
-        conversation_id: str | None = None,
-        language: str | None = None,
-    ) -> ConversationResult:
+    async def async_process(self, user_input: ConversationInput) -> ConversationResult:
         """Process a sentence."""
-        language = language or self.hass.config.language
+        language = user_input.language or self.hass.config.language
         lang_intents = self._lang_intents.get(language)
+        conversation_id = None  # Not supported
 
         # Reload intents if missing or new components
         if lang_intents is None or (
@@ -114,9 +109,9 @@ class DefaultAgent(AbstractConversationAgent):
             "name": self._make_names_list(),
         }
 
-        result = recognize(text, lang_intents.intents, slot_lists=slot_lists)
+        result = recognize(user_input.text, lang_intents.intents, slot_lists=slot_lists)
         if result is None:
-            _LOGGER.debug("No intent was matched for '%s'", text)
+            _LOGGER.debug("No intent was matched for '%s'", user_input.text)
             return _make_error_result(
                 language,
                 intent.IntentResponseErrorCode.NO_INTENT_MATCH,
@@ -133,8 +128,8 @@ class DefaultAgent(AbstractConversationAgent):
                     entity.name: {"value": entity.value}
                     for entity in result.entities_list
                 },
-                text,
-                context,
+                user_input.text,
+                user_input.context,
                 language,
             )
         except intent.IntentHandleError:

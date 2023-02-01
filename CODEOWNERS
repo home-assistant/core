@@ -67,8 +67,6 @@ build.json @home-assistant/supervisor
 /tests/components/alert/ @home-assistant/core @frenck
 /homeassistant/components/alexa/ @home-assistant/cloud @ochlocracy @jbouwh
 /tests/components/alexa/ @home-assistant/cloud @ochlocracy @jbouwh
-/homeassistant/components/almond/ @gcampax @balloob
-/tests/components/almond/ @gcampax @balloob
 /homeassistant/components/amberelectric/ @madpilot
 /tests/components/amberelectric/ @madpilot
 /homeassistant/components/ambiclimate/ @danielhiversen
@@ -740,6 +738,8 @@ build.json @home-assistant/supervisor
 /tests/components/monoprice/ @etsinko @OnFreund
 /homeassistant/components/moon/ @fabaff @frenck
 /tests/components/moon/ @fabaff @frenck
+/homeassistant/components/mopeka/ @bdraco
+/tests/components/mopeka/ @bdraco
 /homeassistant/components/motion_blinds/ @starkillerOG
 /tests/components/motion_blinds/ @starkillerOG
 /homeassistant/components/motioneye/ @dermotduffy
@@ -840,6 +840,8 @@ build.json @home-assistant/supervisor
 /tests/components/onvif/ @hunterjm
 /homeassistant/components/open_meteo/ @frenck
 /tests/components/open_meteo/ @frenck
+/homeassistant/components/openai_conversation/ @balloob
+/tests/components/openai_conversation/ @balloob
 /homeassistant/components/openerz/ @misialq
 /tests/components/openerz/ @misialq
 /homeassistant/components/openexchangerates/ @MartinHjelmare
@@ -1001,6 +1003,8 @@ build.json @home-assistant/supervisor
 /tests/components/ruuvi_gateway/ @akx
 /homeassistant/components/ruuvitag_ble/ @akx
 /tests/components/ruuvitag_ble/ @akx
+/homeassistant/components/rympro/ @OnFreund
+/tests/components/rympro/ @OnFreund
 /homeassistant/components/sabnzbd/ @shaiu
 /tests/components/sabnzbd/ @shaiu
 /homeassistant/components/safe_mode/ @home-assistant/core

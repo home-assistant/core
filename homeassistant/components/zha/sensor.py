@@ -187,12 +187,6 @@ class Sensor(ZhaEntity, SensorEntity):
 
 @MULTI_MATCH(
     channel_names=CHANNEL_ANALOG_INPUT,
-    manufacturers="LUMI",
-    models={"lumi.plug", "lumi.plug.maus01", "lumi.plug.mmeu01"},
-    stop_on_match_group=CHANNEL_ANALOG_INPUT,
-)
-@MULTI_MATCH(
-    channel_names=CHANNEL_ANALOG_INPUT,
     manufacturers="Digi",
     stop_on_match_group=CHANNEL_ANALOG_INPUT,
 )

@@ -75,8 +75,8 @@
     "selector": {
         "ble_scanner_mode": {
             "options": {
-                "disabled": "Disabled",
                 "active": "Active",
+                "disabled": "Disabled",
                 "passive": "Passive"
             }
         }

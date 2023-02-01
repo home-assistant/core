@@ -510,6 +510,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         """Handle device update."""
         if update_type is UpdateType.INITIALIZED:
             self.hass.async_create_task(self._async_connected())
+            self.async_set_updated_data(None)
         elif update_type is UpdateType.DISCONNECTED:
             self.hass.async_create_task(self._async_disconnected())
         elif update_type is UpdateType.STATUS:

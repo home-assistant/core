@@ -497,8 +497,8 @@ async def test_control_error_handling(hass, client, caplog, monkeypatch):
 
     assert client.play.call_count == 1
     assert (
-        f"Error calling async_media_play on entity {ENTITY_ID}, state:off, error: TimeoutError()"
-        in caplog.text
+        f"Error calling async_media_play on entity {ENTITY_ID}, state:off, error:"
+        " TimeoutError()" in caplog.text
     )
 
 

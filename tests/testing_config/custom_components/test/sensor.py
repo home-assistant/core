@@ -99,6 +99,11 @@ class MockSensor(MockEntity, SensorEntity):
         return self._handle("last_reset")
 
     @property
+    def native_precision(self):
+        """Return the number of digits after the decimal point."""
+        return self._handle("native_precision")
+
+    @property
     def native_unit_of_measurement(self):
         """Return the native unit_of_measurement of this sensor."""
         return self._handle("native_unit_of_measurement")

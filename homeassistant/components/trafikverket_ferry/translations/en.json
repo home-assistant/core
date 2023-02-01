@@ -30,13 +30,13 @@
     "selector": {
         "weekday": {
             "options": {
-                "mon": "Monday",
-                "tue": "Tuesday",
-                "wed": "Wednesday",
-                "thu": "Thursday",
                 "fri": "Friday",
+                "mon": "Monday",
                 "sat": "Saturday",
-                "sun": "Sunday"
+                "sun": "Sunday",
+                "thu": "Thursday",
+                "tue": "Tuesday",
+                "wed": "Wednesday"
             }
         }
     }

@@ -30,5 +30,18 @@
             }
         }
     },
+    "selector": {
+        "type": {
+            "options": {
+                "last": "Meest recent bijgewerkt",
+                "max": "Maximum",
+                "mean": "Rekenkundig gemiddelde",
+                "median": "Mediaan",
+                "min": "Minimum",
+                "range": "Statistisch bereik",
+                "sum": "Som"
+            }
+        }
+    },
     "title": "Min / max / gemiddelde / mediaan sensor"
 }

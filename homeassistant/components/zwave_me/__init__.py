@@ -1,5 +1,4 @@
 """The Z-Wave-Me WS integration."""
-import asyncio
 import logging
 
 from zwave_me_ws import ZWaveMe, ZWaveMeData
@@ -24,7 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     controller = hass.data[DOMAIN][entry.entry_id] = ZWaveMeController(hass, entry)
     if await controller.async_establish_connection():
-        hass.async_create_task(async_setup_platforms(hass, entry, controller))
+        await async_setup_platforms(hass, entry, controller)
         registry = device_registry.async_get(hass)
         controller.remove_stale_devices(registry)
         return True
@@ -98,12 +97,7 @@ async def async_setup_platforms(
     hass: HomeAssistant, entry: ConfigEntry, controller: ZWaveMeController
 ) -> None:
     """Set up platforms."""
-    await asyncio.gather(
-        *[
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-            for platform in PLATFORMS
-        ]
-    )
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     controller.platforms_inited = True
 
     await hass.async_add_executor_job(controller.zwave_api.get_devices)
