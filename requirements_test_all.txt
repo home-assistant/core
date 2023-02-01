@@ -1656,6 +1656,9 @@ slackclient==2.5.0
 # homeassistant.components.smart_meter_texas
 smart-meter-texas==0.4.7
 
+# homeassistant.components.smartenergy_goecharger
+smart-energy.goecharger-api==0.3.1
+
 # homeassistant.components.smhi
 smhi-pkg==1.0.16
 

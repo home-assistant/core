@@ -1,0 +1,9 @@
+{
+    "state": {
+        "smartenergy_goecharger__phase_switch_mode": {
+            "0": "Auto",
+            "1": "1-phase",
+            "2": "3-phase"
+        }
+    }
+}

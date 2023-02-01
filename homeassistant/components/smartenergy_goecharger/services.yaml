@@ -1,0 +1,65 @@
+start_charging:
+  name: Start charging
+  description: Turn charging on and start charging with a specified charging power (in A)
+  fields:
+    device_name:
+      name: Device name
+      description: Name of the charger
+      required: true
+      example: charger1
+    charging_power:
+      name: Charging power
+      description: Charging power (in A) that is used to charge the car
+      required: true
+      example: 10
+stop_charging:
+  name: Stop charging
+  description: Turn charging off and set charging power to 0A
+  fields:
+    device_name:
+      name: Device name
+      description: Name of the charger
+      required: true
+      example: charger1
+change_charging_power:
+  name: Change charging power
+  description: Change the charging power setting
+  fields:
+    device_name:
+      name: Device name
+      description: Name of the charger
+      required: true
+      example: charger1
+    charging_power:
+      name: Charging power
+      description: Charging power (in A) that is used to charge the car
+      required: true
+      example: 11
+set_phase:
+  name: Set 1 or 3 phased loading
+  description: Configure whether to load 1-phased or 3-phased
+  fields:
+    device_name:
+      name: Device name
+      description: Name of the charger
+      required: true
+      example: charger1
+    phase:
+      name: Phase for loading
+      description: 1-phased or 3-phased loading
+      required: true
+      example: 1
+set_transaction:
+  name: Wallbox transaction
+  description: Set the wallbox transaction (No transaction=None, Authenticate all users=0)
+  fields:
+    device_name:
+      name: Device name
+      description: Name of the charger
+      required: true
+      example: charger1
+    status:
+      name: Status
+      description: trx user setting (No transaction=None, Authenticate all users=0)
+      required: true
+      example: 0
