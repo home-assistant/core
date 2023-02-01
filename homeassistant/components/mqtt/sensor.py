@@ -272,12 +272,12 @@ class MqttSensor(MqttEntity, RestoreSensor):
             payload = self._template(msg.payload, PayloadSentinel.DEFAULT)
             if payload is PayloadSentinel.DEFAULT:
                 return
-            if (new_value := str(payload)) == PAYLOAD_NONE:
-                self._attr_native_value = None
-                return
+            new_value = str(payload)
             if self._numeric_state_expected:
                 if new_value == "":
                     _LOGGER.debug("Ignore empty state from '%s'", msg.topic)
+                elif new_value == PAYLOAD_NONE:
+                    self._attr_native_value = None
                 else:
                     self._attr_native_value = new_value
                 return
