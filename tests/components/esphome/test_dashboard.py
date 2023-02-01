@@ -73,3 +73,29 @@ async def test_new_dashboard_fix_reauth(
     assert len(mock_get_encryption_key.mock_calls) == 1
     assert len(mock_setup.mock_calls) == 1
     assert mock_config_entry.data[CONF_NOISE_PSK] == VALID_NOISE_PSK
+
+
+async def test_dashboard_supports_update(hass, mock_dashboard):
+    """Test dashboard supports update."""
+    dash = dashboard.async_get_dashboard(hass)
+
+    # No data
+    assert not dash.supports_update
+
+    # supported version
+    mock_dashboard["configured"].append(
+        {
+            "name": "test",
+            "configuration": "test.yaml",
+            "current_version": "2023.2.0-dev",
+        }
+    )
+    await dash.async_refresh()
+
+    assert dash.supports_update
+
+    # unsupported version
+    mock_dashboard["configured"][0]["current_version"] = "2023.1.0"
+    await dash.async_refresh()
+
+    assert not dash.supports_update

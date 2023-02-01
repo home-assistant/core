@@ -6,6 +6,7 @@ from datetime import timedelta
 import logging
 
 import aiohttp
+from awesomeversion import AwesomeVersion
 from esphome_dashboard_api import ConfiguredDevice, ESPHomeDashboardAPI
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
@@ -82,6 +83,20 @@ class ESPHomeDashboard(DataUpdateCoordinator[dict[str, ConfiguredDevice]]):
         self.addon_slug = addon_slug
         self.url = url
         self.api = ESPHomeDashboardAPI(url, session)
+
+    @property
+    def supports_update(self) -> bool:
+        """Return whether the dashboard supports updates."""
+        if self.data is None:
+            raise RuntimeError("Data needs to be loaded first")
+
+        if len(self.data) == 0:
+            return False
+
+        esphome_version: str = next(iter(self.data.values()))["current_version"]
+
+        # There is no January release
+        return AwesomeVersion(esphome_version) > AwesomeVersion("2023.1.0")
 
     async def _async_update_data(self) -> dict:
         """Fetch device data."""
