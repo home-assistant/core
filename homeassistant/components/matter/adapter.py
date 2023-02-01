@@ -97,8 +97,14 @@ class MatterAdapter:
         device_type_instances = node_device.device_type_instances()
 
         name = basic_info.nodeLabel
-        if not name and isinstance(node_device, MatterBridgedNodeDevice):
-            # fallback name for Bridge
+        # Add a better way to detect if a device is a bridge,
+        # for now we just check if the node has the aggregator_device_type_instance variable
+        if (
+            not name
+            and isinstance(node_device, MatterNodeDevice)
+            and node_device.node().aggregator_device_type_instance
+        ):
+            # fallback name for bridge node device
             name = "Hub device"
         elif not name and device_type_instances:
             # use the productName if no node label is present
@@ -121,6 +127,11 @@ class MatterAdapter:
             node_device_id,
         )
 
+        # if the device is a bridged device we add the bridge as a via_device
+        bridge_device = None
+        if isinstance(node_device, MatterBridgedNodeDevice) and bridge_unique_id:
+            bridge_device = (DOMAIN, bridge_unique_id)
+
         dr.async_get(self.hass).async_get_or_create(
             name=name,
             config_entry_id=self.config_entry.entry_id,
@@ -129,7 +140,7 @@ class MatterAdapter:
             sw_version=basic_info.softwareVersionString,
             manufacturer=basic_info.vendorName,
             model=basic_info.productName,
-            via_device=(DOMAIN, bridge_unique_id) if bridge_unique_id else None,
+            via_device=bridge_device,
         )
 
     def _setup_node_device(
