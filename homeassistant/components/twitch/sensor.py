@@ -16,6 +16,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -128,11 +129,13 @@ class TwitchSensor(SensorEntity):
             elif "status" in subs and subs["status"] == 404:
                 self._attr_extra_state_attributes[ATTR_SUBSCRIPTION] = False
             elif "error" in subs:
-                raise Exception(
+                raise HomeAssistantError(
                     f"Error response on check_user_subscription: {subs['error']}"
                 )
             else:
-                raise Exception("Unknown error response on check_user_subscription")
+                raise HomeAssistantError(
+                    "Unknown error response on check_user_subscription"
+                )
 
             follows = self._client.get_users_follows(
                 from_id=user, to_id=self.unique_id

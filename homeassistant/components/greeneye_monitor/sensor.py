@@ -15,6 +15,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -239,7 +240,7 @@ class PulseCounter(GEMSensor):
             return 3600
 
         # Config schema should have ensured it is one of the above values
-        raise Exception(
+        raise HomeAssistantError(
             f"Invalid value for time unit: {self._time_unit}. Expected one of"
             f" {UnitOfTime.SECONDS}, {UnitOfTime.MINUTES}, or {UnitOfTime.HOURS}"
         )

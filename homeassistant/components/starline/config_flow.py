@@ -6,6 +6,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import (
     _LOGGER,
@@ -212,7 +213,7 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 self._captcha_image = data["captchaImg"]
                 return self._async_form_auth_captcha(error)
 
-            raise Exception(data)
+            raise HomeAssistantError(data)
         except Exception as err:  # pylint: disable=broad-except
             _LOGGER.error("Error auth user: %s", err)
             return self._async_form_auth_user(ERROR_AUTH_USER)
