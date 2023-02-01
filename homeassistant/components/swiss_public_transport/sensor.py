@@ -19,6 +19,7 @@ import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_DEPARTURE_TIME0 = "departure"
 ATTR_DEPARTURE_TIME1 = "next_departure"
 ATTR_DEPARTURE_TIME2 = "next_on_departure"
 ATTR_DURATION = "duration"
@@ -117,6 +118,7 @@ class SwissPublicTransportSensor(SensorEntity):
             ATTR_PLATFORM: self._opendata.connections[0]["platform"],
             ATTR_TRANSFERS: self._opendata.connections[0]["transfers"],
             ATTR_DURATION: self._opendata.connections[0]["duration"],
+            ATTR_DEPARTURE_TIME0: self._opendata.connections[0]["departure"],
             ATTR_DEPARTURE_TIME1: self._opendata.connections[1]["departure"],
             ATTR_DEPARTURE_TIME2: self._opendata.connections[2]["departure"],
             ATTR_START: self._opendata.from_name,
