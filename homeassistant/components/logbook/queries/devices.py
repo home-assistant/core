@@ -37,7 +37,9 @@ def _select_device_id_context_ids_sub_query(
     inner = select_events_context_id_subquery(start_day, end_day, event_types).where(
         apply_event_device_id_matchers(json_quotable_device_ids)
     )
-    return select(inner.c.context_id).group_by(inner.c.context_id)
+    return select(inner.selected_columns.context_id).group_by(
+        inner.selected_columns.context_id
+    )
 
 
 def _apply_devices_context_union(
