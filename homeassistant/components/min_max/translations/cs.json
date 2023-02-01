@@ -30,5 +30,18 @@
             }
         }
     },
+    "selector": {
+        "type": {
+            "options": {
+                "last": "Naposledy aktualizov\u00e1no",
+                "max": "Maximum",
+                "mean": "Aritmetick\u00fd pr\u016fm\u011br",
+                "median": "Medi\u00e1n",
+                "min": "Minimum",
+                "range": "Statistick\u00fd rozsah",
+                "sum": "Sou\u010det"
+            }
+        }
+    },
     "title": "Skombinujte stav n\u011bkolika senzor\u016f"
 }

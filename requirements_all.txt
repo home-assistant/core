@@ -5,7 +5,7 @@
 AEMET-OpenData==0.2.2
 
 # homeassistant.components.aladdin_connect
-AIOAladdinConnect==0.1.54
+AIOAladdinConnect==0.1.55
 
 # homeassistant.components.adax
 Adax-local==0.1.5
@@ -748,7 +748,7 @@ freesms==0.2.0
 
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
-fritzconnection==1.10.3
+fritzconnection==1.11.0
 
 # homeassistant.components.google_translate
 gTTS==2.2.4

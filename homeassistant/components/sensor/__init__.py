@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
-from contextlib import suppress
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation as DecimalInvalidOperation
@@ -59,6 +58,7 @@ from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import UNDEFINED, ConfigType, StateType, UndefinedType
 from homeassistant.util import dt as dt_util
+from homeassistant.util.enum import try_parse_enum
 
 from .const import (  # noqa: F401
     ATTR_LAST_RESET,
@@ -464,11 +464,9 @@ class SensorEntity(Entity):
         native_unit_of_measurement = self.native_unit_of_measurement
         unit_of_measurement = self.unit_of_measurement
         value = self.native_value
-        device_class: SensorDeviceClass | None = None
-        with suppress(ValueError):
-            # For the sake of validation, we can ignore custom device classes
-            # (customization and legacy style translations)
-            device_class = SensorDeviceClass(str(self.device_class))
+        # For the sake of validation, we can ignore custom device classes
+        # (customization and legacy style translations)
+        device_class = try_parse_enum(SensorDeviceClass, self.device_class)
         state_class = self.state_class
 
         # Sensors with device classes indicating a non-numeric value
