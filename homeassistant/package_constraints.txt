@@ -4,7 +4,7 @@ aiodiscover==1.4.13
 aiohttp==3.8.1
 aiohttp_cors==0.7.0
 astral==2.2
-async-upnp-client==0.33.0
+async-upnp-client==0.33.1
 async_timeout==4.0.2
 atomicwrites-homeassistant==1.4.1
 attrs==22.2.0
@@ -21,10 +21,10 @@ cryptography==39.0.0
 dbus-fast==1.84.0
 fnvhash==0.1.0
 hass-nabucasa==0.61.0
-hassil==0.2.5
+hassil==0.2.6
 home-assistant-bluetooth==1.9.2
-home-assistant-frontend==20230128.0
-home-assistant-intents==2023.1.25
+home-assistant-frontend==20230201.0
+home-assistant-intents==2023.1.31
 httpx==0.23.3
 ifaddr==0.1.7
 janus==1.0.0

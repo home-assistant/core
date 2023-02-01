@@ -3,7 +3,7 @@
 from aiohttp import ClientSession
 import pytest
 
-from homeassistant.components.esphome import CONF_NOISE_PSK
+from homeassistant.components.esphome import CONF_DEVICE_NAME, CONF_NOISE_PSK
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 
@@ -25,6 +25,7 @@ async def test_diagnostics(
 
     assert isinstance(result, dict)
     assert result["config"]["data"] == {
+        CONF_DEVICE_NAME: "test",
         CONF_HOST: "192.168.1.2",
         CONF_PORT: 6053,
         CONF_PASSWORD: "**REDACTED**",

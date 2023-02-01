@@ -107,6 +107,11 @@ class RuntimeEntryData:
             return self.device_info.friendly_name
         return self.name
 
+    @property
+    def signal_static_info_updated(self) -> str:
+        """Return the signal to listen to for updates on static info."""
+        return f"esphome_{self.entry_id}_on_list"
+
     @callback
     def async_update_ble_connection_limits(self, free: int, limit: int) -> None:
         """Update the BLE connection limits."""
@@ -168,8 +173,7 @@ class RuntimeEntryData:
         await self._ensure_platforms_loaded(hass, entry, needed_platforms)
 
         # Then send dispatcher event
-        signal = f"esphome_{self.entry_id}_on_list"
-        async_dispatcher_send(hass, signal, infos)
+        async_dispatcher_send(hass, self.signal_static_info_updated, infos)
 
     @callback
     def async_subscribe_state_update(
