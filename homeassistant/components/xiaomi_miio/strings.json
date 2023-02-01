@@ -79,11 +79,11 @@
           "right": "Right"
         }
       },
-      "mode": {
+      "airpurifier_mode": {
         "state": {
-          "Silent": "Silent",
-          "Auto": "Auto",
-          "Favorite": "Favorite"
+          "silent": "Silent",
+          "auto": "Auto",
+          "favorite": "Favorite"
         }
       },
       "ptc_level": {
