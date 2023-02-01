@@ -214,7 +214,7 @@ expected-line-ending-format = "LF"
 overgeneral-exceptions = [
     "builtins.BaseException",
     "builtins.Exception",
-    "homeassistant.exceptions.HomeAssistantError",
+    # "homeassistant.exceptions.HomeAssistantError",  # to many issues
 ]
 
 [tool.pylint.TYPING]
