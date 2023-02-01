@@ -22,6 +22,7 @@
                 "description": "Trieu la configuraci\u00f3 de xarxa per a la vostra r\u00e0dio.",
                 "menu_options": {
                     "choose_automatic_backup": "Restaura una c\u00f2pia de seguretat autom\u00e0tica",
+                    "form_initial_network": "Crea una xarxa",
                     "form_new_network": "Esborra la configuraci\u00f3 de xarxa i crea una xarxa nova",
                     "reuse_settings": "Mant\u00e9 la configuraci\u00f3 de xarxa r\u00e0dio",
                     "upload_manual_backup": "Puja c\u00f2pia de seguretat manual"
@@ -174,6 +175,7 @@
                 "description": "Trieu la configuraci\u00f3 de xarxa per a la vostra r\u00e0dio.",
                 "menu_options": {
                     "choose_automatic_backup": "Restaura una c\u00f2pia de seguretat autom\u00e0tica",
+                    "form_initial_network": "Crea una xarxa",
                     "form_new_network": "Esborra la configuraci\u00f3 de xarxa i crea una xarxa nova",
                     "reuse_settings": "Mant\u00e9 la configuraci\u00f3 de xarxa r\u00e0dio",
                     "upload_manual_backup": "Puja c\u00f2pia de seguretat manual"
@@ -192,7 +194,7 @@
                 "title": "Reconfiguraci\u00f3 de ZHA"
             },
             "instruct_unplug": {
-                "description": "La r\u00e0dio antiga s'ha reiniciat. Si el maquinari ja no \u00e9s necessari, ara pots desconnectar-lo.",
+                "description": "La r\u00e0dio antiga s'ha reiniciat. Si el maquinari ja no \u00e9s necessari, pots desconnectar-lo.\n\nAra ja pots connectar la nova r\u00e0dio.",
                 "title": "Desconnecta la r\u00e0dio antiga"
             },
             "intent_migrate": {

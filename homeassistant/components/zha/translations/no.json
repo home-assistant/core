@@ -22,6 +22,7 @@
                 "description": "Velg nettverksinnstillingene for radioen.",
                 "menu_options": {
                     "choose_automatic_backup": "Gjenopprette en automatisk sikkerhetskopiering",
+                    "form_initial_network": "Lag et nettverk",
                     "form_new_network": "Slett nettverksinnstillinger og opprett et nytt nettverk",
                     "reuse_settings": "Behold innstillingene for radionettverk",
                     "upload_manual_backup": "Last opp en manuell sikkerhetskopiering"
@@ -174,6 +175,7 @@
                 "description": "Velg nettverksinnstillingene for radioen.",
                 "menu_options": {
                     "choose_automatic_backup": "Gjenopprette en automatisk sikkerhetskopiering",
+                    "form_initial_network": "Lag et nettverk",
                     "form_new_network": "Slett nettverksinnstillinger og opprett et nytt nettverk",
                     "reuse_settings": "Behold innstillingene for radionettverk",
                     "upload_manual_backup": "Last opp en manuell sikkerhetskopiering"
