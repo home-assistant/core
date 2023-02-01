@@ -7,6 +7,7 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.nsw_rural_fire_service_feed.const import (
     CONF_CATEGORIES,
     DOMAIN,
+    VALID_CATEGORIES,
 )
 from homeassistant.const import (
     CONF_LATITUDE,
@@ -53,7 +54,7 @@ async def test_step_import(hass):
         CONF_LATITUDE: -41.2,
         CONF_LONGITUDE: 174.7,
         CONF_RADIUS: 25,
-        CONF_SCAN_INTERVAL: 300.0,
+        CONF_SCAN_INTERVAL: 240.0,
     }
 
     result = await hass.config_entries.flow.async_init(
@@ -65,7 +66,8 @@ async def test_step_import(hass):
         CONF_LATITUDE: -41.2,
         CONF_LONGITUDE: 174.7,
         CONF_RADIUS: 25,
-        CONF_CATEGORIES: [],
+        CONF_CATEGORIES: VALID_CATEGORIES,
+        CONF_SCAN_INTERVAL: 240.0,
     }
 
 

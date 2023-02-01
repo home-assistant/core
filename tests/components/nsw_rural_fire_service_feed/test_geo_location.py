@@ -10,6 +10,7 @@ from homeassistant.components import geo_location, nsw_rural_fire_service_feed
 from homeassistant.components.geo_location import ATTR_SOURCE
 from homeassistant.components.nsw_rural_fire_service_feed.const import (
     DEFAULT_SCAN_INTERVAL,
+    VALID_CATEGORIES,
 )
 from homeassistant.components.nsw_rural_fire_service_feed.geo_location import (
     ATTR_CATEGORY,
@@ -33,6 +34,7 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_RADIUS,
+    CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     UnitOfLength,
@@ -54,7 +56,13 @@ CONFIG_WITH_CUSTOM_LOCATION = {
 }
 
 CONFIG_LEGACY = {
-    geo_location.DOMAIN: [{"platform": "nsw_rural_fire_service_feed", CONF_RADIUS: 190}]
+    geo_location.DOMAIN: [
+        {
+            "platform": "nsw_rural_fire_service_feed",
+            CONF_RADIUS: 190,
+            CONF_SCAN_INTERVAL: timedelta(minutes=2),
+        }
+    ]
 }
 
 
@@ -222,7 +230,7 @@ async def test_setup_with_custom_location(hass):
         assert len(hass.states.async_entity_ids("geo_location")) == 1
 
         assert mock_feed_manager.call_args == call(
-            ANY, (15.1, 25.2), filter_categories=[], filter_radius=200.0
+            ANY, (15.1, 25.2), filter_categories=VALID_CATEGORIES, filter_radius=200.0
         )
 
 

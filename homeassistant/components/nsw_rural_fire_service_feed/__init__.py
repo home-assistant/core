@@ -9,23 +9,27 @@ from aio_geojson_nsw_rfs_incidents import NswRuralFireServiceIncidentsFeedManage
 from aio_geojson_nsw_rfs_incidents.feed_entry import (
     NswRuralFireServiceIncidentsFeedEntry,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS, Platform
+from homeassistant.const import (
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_RADIUS,
+    CONF_SCAN_INTERVAL,
+    Platform,
+)
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_registry import (
     async_entries_for_config_entry,
-    async_get_registry,
+    async_get,
 )
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_CATEGORIES,
-    DEFAULT_RADIUS_IN_KM,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     FEED,
@@ -37,24 +41,6 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Inclusive(CONF_LATITUDE, "coordinates"): cv.latitude,
-                vol.Inclusive(CONF_LONGITUDE, "coordinates"): cv.longitude,
-                vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS_IN_KM): vol.Coerce(
-                    float
-                ),
-                vol.Optional(CONF_CATEGORIES, default=[]): vol.All(
-                    cv.ensure_list, [vol.In(VALID_CATEGORIES)]
-                ),
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the NSW Rural Fire Service Feeds integration."""
@@ -64,7 +50,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     conf = config[DOMAIN]
     latitude = conf.get(CONF_LATITUDE, hass.config.latitude)
     longitude = conf.get(CONF_LONGITUDE, hass.config.longitude)
-    categories = conf[CONF_CATEGORIES]
+    categories = conf.get(CONF_CATEGORIES, VALID_CATEGORIES)
+    scan_interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(
@@ -75,6 +62,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 CONF_LONGITUDE: longitude,
                 CONF_RADIUS: conf[CONF_RADIUS],
                 CONF_CATEGORIES: categories,
+                CONF_SCAN_INTERVAL: scan_interval,
             },
         )
     )
@@ -92,7 +80,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     feeds[config_entry.entry_id] = manager
     _LOGGER.debug("Feed entity manager added for %s", config_entry.entry_id)
     # Remove orphaned geo_location entities.
-    entity_registry = await async_get_registry(hass)
+    entity_registry = async_get(hass)
     orphaned_entries = async_entries_for_config_entry(
         entity_registry, config_entry.entry_id
     )

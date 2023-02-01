@@ -1,4 +1,5 @@
 """Config flow to configure the NSW Rural Fire Service Feeds integration."""
+from datetime import timedelta
 import logging
 
 import voluptuous as vol
@@ -12,7 +13,13 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv
 
-from .const import CONF_CATEGORIES, DEFAULT_RADIUS_IN_KM, DOMAIN, VALID_CATEGORIES
+from .const import (
+    CONF_CATEGORIES,
+    DEFAULT_RADIUS_IN_KM,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    VALID_CATEGORIES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,6 +45,9 @@ class NswRuralFireServiceFeedFlowHandler(config_entries.ConfigFlow, domain=DOMAI
                     vol.Optional(
                         CONF_CATEGORIES, default=VALID_CATEGORIES
                     ): cv.multi_select(VALID_CATEGORIES),
+                    vol.Optional(
+                        CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
+                    ): cv.positive_int,
                 }
             ),
             errors=errors or {},
@@ -45,7 +55,10 @@ class NswRuralFireServiceFeedFlowHandler(config_entries.ConfigFlow, domain=DOMAI
 
     async def async_step_import(self, import_config):
         """Import a config entry from configuration.yaml."""
-        import_config.pop(CONF_SCAN_INTERVAL, None)
+        legacy_scan_interval = import_config.get(CONF_SCAN_INTERVAL, None)
+        # Convert scan interval because it now has to be in seconds.
+        if legacy_scan_interval and isinstance(legacy_scan_interval, timedelta):
+            import_config[CONF_SCAN_INTERVAL] = legacy_scan_interval.total_seconds()
         return await self.async_step_user(import_config)
 
     async def async_step_user(self, user_input=None):
@@ -64,7 +77,7 @@ class NswRuralFireServiceFeedFlowHandler(config_entries.ConfigFlow, domain=DOMAI
         await self.async_set_unique_id(identifier)
         self._abort_if_unique_id_configured()
 
-        categories = user_input.get(CONF_CATEGORIES, [])
+        categories = user_input.get(CONF_CATEGORIES, VALID_CATEGORIES)
         user_input[CONF_CATEGORIES] = categories
 
         return self.async_create_entry(title=identifier, data=user_input)

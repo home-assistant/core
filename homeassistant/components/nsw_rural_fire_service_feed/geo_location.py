@@ -23,14 +23,19 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import (
+from . import NswRuralFireServiceFeedEntityManager
+from .const import (
+    CONF_CATEGORIES,
+    DEFAULT_RADIUS_IN_KM,
+    DOMAIN,
+    FEED,
     SIGNAL_DELETE_ENTITY,
     SIGNAL_UPDATE_ENTITY,
-    NswRuralFireServiceFeedEntityManager,
+    VALID_CATEGORIES,
 )
-from .const import CONF_CATEGORIES, DEFAULT_RADIUS_IN_KM, DOMAIN, FEED, VALID_CATEGORIES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -98,6 +103,15 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the NSW Rural Fire Service Feed platform."""
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2023.6.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+    )
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=config
