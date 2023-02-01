@@ -5,7 +5,7 @@ from typing import Any
 import pytest
 
 from homeassistant.backports.enum import StrEnum
-from homeassistant.helpers.enum import try_parse_enum
+from homeassistant.util.enum import try_parse_enum
 
 
 class _AStrEnum(StrEnum):
