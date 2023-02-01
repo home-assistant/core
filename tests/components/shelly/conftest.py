@@ -185,7 +185,7 @@ MOCK_STATUS_RPC = {
             "stable": {"version": "some_beta_version"},
         }
     },
-    "voltmeter": {"voltage": 4.3},
+    "voltmeter": {"voltage": 4.321},
     "wifi": {"rssi": -63},
 }
 

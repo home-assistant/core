@@ -228,7 +228,7 @@ async def test_rpc_sensor_error(
     entity_id = f"{SENSOR_DOMAIN}.test_name_voltmeter"
     await init_integration(hass, 2)
 
-    assert hass.states.get(entity_id).state == "4.3"
+    assert hass.states.get(entity_id).state == "4.32"
 
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "voltmeter", "voltage", None)
     mock_rpc_device.mock_update()
