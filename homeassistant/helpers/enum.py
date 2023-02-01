@@ -7,7 +7,10 @@ _EnumT = TypeVar("_EnumT", bound=Enum)
 
 
 def try_parse_enum(cls: type[_EnumT], value: Any) -> _EnumT | None:
-    """Create a new StrEnum instance."""
+    """Try to parse the value into an Enum.
+
+    Return None if parsing fails.
+    """
     with contextlib.suppress(ValueError):
         return cls(value)
     return None
