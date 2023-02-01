@@ -72,21 +72,25 @@ class ESPHomeUpdateEntity(CoordinatorEntity[ESPHomeDashboard], UpdateEntity):
     _attr_title = "ESPHome"
     _attr_name = "Firmware"
 
-    _device_info: ESPHomeDeviceInfo
-
     def __init__(
         self, entry_data: RuntimeEntryData, coordinator: ESPHomeDashboard
     ) -> None:
         """Initialize the update entity."""
         super().__init__(coordinator=coordinator)
         assert entry_data.device_info is not None
-        self._device_info = entry_data.device_info
+        self._entry_data = entry_data
         self._attr_unique_id = entry_data.device_info.mac_address
         self._attr_device_info = DeviceInfo(
             connections={
                 (dr.CONNECTION_NETWORK_MAC, entry_data.device_info.mac_address)
             }
         )
+
+    @property
+    def _device_info(self) -> ESPHomeDeviceInfo:
+        """Return the device info."""
+        assert self._entry_data.device_info is not None
+        return self._entry_data.device_info
 
     @property
     def available(self) -> bool:

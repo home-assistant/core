@@ -2,6 +2,7 @@
 import logging
 from unittest.mock import Mock, patch
 
+from adb_shell.exceptions import TcpTimeoutException as AdbShellTimeoutException
 from androidtv.constants import APPS as ANDROIDTV_APPS, KEYS
 from androidtv.exceptions import LockNotAcquiredException
 import pytest
@@ -538,25 +539,28 @@ async def test_select_source_firetv(hass, source, expected_arg, method_patch):
 
 
 @pytest.mark.parametrize(
-    "config",
+    ["config", "connect"],
     [
-        CONFIG_ANDROIDTV_DEFAULT,
-        CONFIG_FIRETV_DEFAULT,
+        (CONFIG_ANDROIDTV_DEFAULT, False),
+        (CONFIG_FIRETV_DEFAULT, False),
+        (CONFIG_ANDROIDTV_DEFAULT, True),
+        (CONFIG_FIRETV_DEFAULT, True),
     ],
 )
-async def test_setup_fail(hass, config):
+async def test_setup_fail(hass, config, connect):
     """Test that the entity is not created when the ADB connection is not established."""
     patch_key, entity_id, config_entry = _setup(config)
     config_entry.add_to_hass(hass)
 
-    with patchers.patch_connect(False)[patch_key], patchers.patch_shell(
-        SHELL_RESPONSE_OFF
+    with patchers.patch_connect(connect)[patch_key], patchers.patch_shell(
+        SHELL_RESPONSE_OFF, error=True, exc=AdbShellTimeoutException
     )[patch_key]:
         assert await hass.config_entries.async_setup(config_entry.entry_id) is False
         await hass.async_block_till_done()
 
         await async_update_entity(hass, entity_id)
         state = hass.states.get(entity_id)
+        assert config_entry.state == ConfigEntryState.SETUP_RETRY
         assert state is None
 
 

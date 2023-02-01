@@ -513,7 +513,7 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass | None]
     SensorDeviceClass.DATA_SIZE: set(SensorStateClass),
     SensorDeviceClass.DATE: set(),
     SensorDeviceClass.DISTANCE: set(SensorStateClass),
-    SensorDeviceClass.DURATION: set(),
+    SensorDeviceClass.DURATION: set(SensorStateClass),
     SensorDeviceClass.ENERGY: {
         SensorStateClass.TOTAL,
         SensorStateClass.TOTAL_INCREASING,
@@ -535,10 +535,7 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass | None]
     SensorDeviceClass.PM25: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.POWER_FACTOR: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.POWER: {SensorStateClass.MEASUREMENT},
-    SensorDeviceClass.PRECIPITATION: {
-        SensorStateClass.TOTAL,
-        SensorStateClass.TOTAL_INCREASING,
-    },
+    SensorDeviceClass.PRECIPITATION: set(SensorStateClass),
     SensorDeviceClass.PRECIPITATION_INTENSITY: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.PRESSURE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.REACTIVE_POWER: {SensorStateClass.MEASUREMENT},

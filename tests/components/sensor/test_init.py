@@ -6,7 +6,6 @@ from decimal import Decimal
 from typing import Any
 
 import pytest
-from pytest import approx
 
 from homeassistant.components.number import NumberDeviceClass
 from homeassistant.components.sensor import (
@@ -538,6 +537,15 @@ async def test_custom_unit(
             "29.921",  # Native precision is 3
             "1013.24",  # One digit of precision removed when converting
         ),
+        (
+            SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+            UnitOfPressure.INHG,
+            UnitOfPressure.HPA,
+            -0.0001,
+            3,
+            "0.000",  # Native precision is 3
+            "0.00",  # One digit of precision removed when converting
+        ),
     ],
 )
 async def test_native_precision_scaling(
@@ -594,6 +602,14 @@ async def test_native_precision_scaling(
             1000.0,
             "1000.000",
             "1000.0000",
+        ),
+        (
+            SensorDeviceClass.DISTANCE,
+            UnitOfLength.KILOMETERS,
+            1,
+            -0.04,
+            "-0.040",
+            "0.0",  # Make sure minus is dropped
         ),
     ],
 )
@@ -1161,12 +1177,12 @@ async def test_unit_conversion_priority_suggested_unit_change(
 
     # Registered entity -> Follow automatic unit conversion the first time the entity was seen
     state = hass.states.get(entity0.entity_id)
-    assert float(state.state) == approx(float(original_value))
+    assert float(state.state) == pytest.approx(float(original_value))
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == original_unit
 
     # Registered entity -> Follow suggested unit the first time the entity was seen
     state = hass.states.get(entity1.entity_id)
-    assert float(state.state) == approx(float(original_value))
+    assert float(state.state) == pytest.approx(float(original_value))
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == original_unit
 
 
@@ -1228,7 +1244,7 @@ async def test_unit_conversion_priority_legacy_conversion_removed(
     await hass.async_block_till_done()
 
     state = hass.states.get(entity0.entity_id)
-    assert float(state.state) == approx(float(original_value))
+    assert float(state.state) == pytest.approx(float(original_value))
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == original_unit
 
 

@@ -6,6 +6,7 @@ This is NOT a full CI/linting replacement, only a quick check during development
 """
 import asyncio
 from collections import namedtuple
+from contextlib import suppress
 import itertools
 import os
 import re
@@ -249,7 +250,5 @@ async def main():
 
 
 if __name__ == "__main__":
-    try:
+    with suppress(FileNotFoundError, KeyboardInterrupt):
         asyncio.run(main())
-    except (FileNotFoundError, KeyboardInterrupt):
-        pass

@@ -582,7 +582,7 @@ async def test_cached_supported_features(hass, client, monkeypatch):
     await client.mock_state_update()
 
     # TV off, restored state supports mute, step
-    # validate SUPPORT_TURN_ON is not cached
+    # validate MediaPlayerEntityFeature.TURN_ON is not cached
     attrs = hass.states.get(ENTITY_ID).attributes
 
     assert (

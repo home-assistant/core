@@ -26,6 +26,7 @@ pytest-test-groups==1.0.3
 pytest-sugar==0.9.5
 pytest-timeout==2.1.0
 pytest-unordered==0.5.2
+pytest-picked==0.4.6
 pytest-xdist==2.5.0
 pytest==7.2.1
 requests_mock==1.10.0

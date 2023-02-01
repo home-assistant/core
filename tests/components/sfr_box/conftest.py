@@ -48,7 +48,7 @@ def get_config_entry_with_auth(hass: HomeAssistant) -> ConfigEntry:
     return config_entry_with_auth
 
 
-@pytest.fixture()
+@pytest.fixture
 def system_get_info() -> Generator[SystemInfo, None, None]:
     """Fixture for SFRBox.system_get_info."""
     system_info = SystemInfo(**json.loads(load_fixture("system_getInfo.json", DOMAIN)))
@@ -59,7 +59,7 @@ def system_get_info() -> Generator[SystemInfo, None, None]:
         yield system_info
 
 
-@pytest.fixture()
+@pytest.fixture
 def dsl_get_info() -> Generator[DslInfo, None, None]:
     """Fixture for SFRBox.dsl_get_info."""
     dsl_info = DslInfo(**json.loads(load_fixture("dsl_getInfo.json", DOMAIN)))

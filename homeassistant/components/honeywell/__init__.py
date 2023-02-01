@@ -7,7 +7,7 @@ import AIOSomecomfort
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
@@ -57,15 +57,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         await client.login()
         await client.discover()
 
-    except AIOSomecomfort.AuthError as ex:
-        raise ConfigEntryNotReady(
-            "Failed to initialize the Honeywell client: "
-            "Check your configuration (username, password), "
-        ) from ex
+    except AIOSomecomfort.device.AuthError as ex:
+        raise ConfigEntryAuthFailed("Incorrect Password") from ex
 
     except (
-        AIOSomecomfort.ConnectionError,
-        AIOSomecomfort.ConnectionTimeout,
+        AIOSomecomfort.device.ConnectionError,
+        AIOSomecomfort.device.ConnectionTimeout,
         asyncio.TimeoutError,
     ) as ex:
         raise ConfigEntryNotReady(
