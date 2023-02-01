@@ -62,6 +62,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import (  # noqa: F401
     ATTR_LAST_RESET,
+    ATTR_NUMERICAL_VALUE,
     ATTR_OPTIONS,
     ATTR_STATE_CLASS,
     CONF_STATE_CLASS,
@@ -167,6 +168,7 @@ class SensorEntity(Entity):
     _last_reset_reported = False
     _sensor_option_precision: int | None = None
     _sensor_option_unit_of_measurement: str | None | UndefinedType = UNDEFINED
+    __numerical_value: int | float | None = None
 
     @callback
     def add_to_platform_start(
@@ -312,6 +314,7 @@ class SensorEntity(Entity):
     @property
     def state_attributes(self) -> dict[str, Any] | None:
         """Return state attributes."""
+        attrs: dict[str, Any] = {}
         if last_reset := self.last_reset:
             if (
                 self.state_class != SensorStateClass.TOTAL
@@ -334,9 +337,11 @@ class SensorEntity(Entity):
                 )
 
             if self.state_class == SensorStateClass.TOTAL:
-                return {ATTR_LAST_RESET: last_reset.isoformat()}
+                attrs[ATTR_LAST_RESET] = last_reset.isoformat()
+        if (numerical_value := self.__numerical_value) is not None:
+            attrs[ATTR_NUMERICAL_VALUE] = numerical_value
 
-        return None
+        return attrs
 
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
@@ -461,6 +466,7 @@ class SensorEntity(Entity):
     @property
     def state(self) -> Any:  # noqa: C901
         """Return the state of the sensor and perform unit conversions, if needed."""
+        self.__numerical_value = None
         native_unit_of_measurement = self.native_unit_of_measurement
         unit_of_measurement = self.unit_of_measurement
         value = self.native_value
@@ -581,8 +587,8 @@ class SensorEntity(Entity):
             return value
 
         # From here on a numerical value is expected
-        numerical_value: int | float | Decimal
-        if not isinstance(value, (int, float, Decimal)):
+        numerical_value: int | float
+        if not isinstance(value, (int, float)):
             try:
                 if isinstance(value, str) and "." not in value:
                     numerical_value = int(value)
@@ -645,12 +651,12 @@ class SensorEntity(Entity):
                 )
                 precision = precision + floor(ratio_log)
 
-            converted_numerical_value = converter.convert(
+            numerical_value = converter.convert(
                 float(numerical_value),
                 native_unit_of_measurement,
                 unit_of_measurement,
             )
-            value = f"{converted_numerical_value:.{precision}f}"
+            value = f"{numerical_value:.{precision}f}"
             # This can be replaced with adding the z option when we drop support for
             # Python 3.10
             value = NEGATIVE_ZERO_PATTERN.sub(r"\1", value)
@@ -659,6 +665,8 @@ class SensorEntity(Entity):
             # This can be replaced with adding the z option when we drop support for
             # Python 3.10
             value = NEGATIVE_ZERO_PATTERN.sub(r"\1", value)
+
+        self.__numerical_value = numerical_value
 
         # Validate unit of measurement used for sensors with a device class
         if (

@@ -55,6 +55,7 @@ DOMAIN: Final = "sensor"
 CONF_STATE_CLASS: Final = "state_class"
 
 ATTR_LAST_RESET: Final = "last_reset"
+ATTR_NUMERICAL_VALUE: Final = "numerical_value"
 ATTR_STATE_CLASS: Final = "state_class"
 ATTR_OPTIONS: Final = "options"
 
