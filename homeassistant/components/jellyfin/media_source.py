@@ -154,7 +154,6 @@ class JellyfinSource(MediaSource):
             return await self._build_music_library(library, include_children)
         if collection_type == COLLECTION_TYPE_MOVIES:
             return await self._build_movie_library(library, include_children)
-        # collection_type == COLLECTION_TYPE_TVSHOWS
         return await self._build_tv_library(library, include_children)
 
     async def _build_music_library(
