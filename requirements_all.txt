@@ -5,7 +5,7 @@
 AEMET-OpenData==0.2.2
 
 # homeassistant.components.aladdin_connect
-AIOAladdinConnect==0.1.54
+AIOAladdinConnect==0.1.55
 
 # homeassistant.components.adax
 Adax-local==0.1.5
@@ -748,7 +748,7 @@ freesms==0.2.0
 
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
-fritzconnection==1.10.3
+fritzconnection==1.11.0
 
 # homeassistant.components.google_translate
 gTTS==2.2.4
@@ -907,7 +907,7 @@ hole==0.8.0
 holidays==0.18.0
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230130.0
+home-assistant-frontend==20230201.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.1.31
@@ -1470,7 +1470,7 @@ pyRFXtrx==0.30.0
 pySwitchmate==0.5.1
 
 # homeassistant.components.tibber
-pyTibber==0.26.11
+pyTibber==0.26.12
 
 # homeassistant.components.dlink
 pyW215==0.7.0
