@@ -120,6 +120,12 @@ MOCK_BLOCKS = [
         description="device_0",
         type="device",
     ),
+    Mock(
+        sensor_ids={"powerFactor": 0.98},
+        powerFactor=0.98,
+        description="emeter_0",
+        type="emeter",
+    ),
 ]
 
 MOCK_CONFIG = {

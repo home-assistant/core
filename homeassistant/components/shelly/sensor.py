@@ -142,9 +142,7 @@ SENSORS: Final = {
     ("emeter", "powerFactor"): BlockSensorDescription(
         key="emeter|powerFactor",
         name="Power factor",
-        native_unit_of_measurement=PERCENTAGE,
-        value=lambda value: value * 100,
-        native_precision=1,
+        native_precision=2,
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
     ),

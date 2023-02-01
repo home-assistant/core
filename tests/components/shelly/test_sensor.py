@@ -1,6 +1,12 @@
 """Tests for Shelly sensor platform."""
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.components.shelly.const import DOMAIN
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    PERCENTAGE,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.entity_registry import async_get
 
@@ -33,6 +39,39 @@ async def test_block_sensor(
     mock_block_device.mock_update()
 
     assert hass.states.get(entity_id).state == "60.1"
+
+
+async def test_power_factory_unit_migration(
+    hass: HomeAssistant, mock_block_device
+) -> None:
+    """Test migration unit of the power factory sensor."""
+    registry = async_get(hass)
+    registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "123456789ABC-emeter_0-powerFactor",
+        suggested_object_id="test_name_power_factor",
+        unit_of_measurement="%",
+    )
+
+    entity_id = f"{SENSOR_DOMAIN}.test_name_power_factor"
+    await init_integration(hass, 1)
+
+    state = hass.states.get(entity_id)
+    assert state.state == "98"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
+
+
+async def test_power_factory_without_unit_migration(
+    hass: HomeAssistant, mock_block_device
+) -> None:
+    """Test unit and value of the power factory sensor without unit migration."""
+    entity_id = f"{SENSOR_DOMAIN}.test_name_power_factor"
+    await init_integration(hass, 1)
+
+    state = hass.states.get(entity_id)
+    assert state.state == "0.98"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
 
 
 async def test_block_rest_sensor(
