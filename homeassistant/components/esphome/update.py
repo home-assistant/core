@@ -68,7 +68,6 @@ class ESPHomeUpdateEntity(CoordinatorEntity[ESPHomeDashboard], UpdateEntity):
 
     _attr_has_entity_name = True
     _attr_device_class = UpdateDeviceClass.FIRMWARE
-    _attr_supported_features = UpdateEntityFeature.INSTALL
     _attr_title = "ESPHome"
     _attr_name = "Firmware"
 
@@ -85,6 +84,8 @@ class ESPHomeUpdateEntity(CoordinatorEntity[ESPHomeDashboard], UpdateEntity):
                 (dr.CONNECTION_NETWORK_MAC, entry_data.device_info.mac_address)
             }
         )
+        if coordinator.supports_update:
+            self._attr_supported_features = UpdateEntityFeature.INSTALL
 
     @property
     def _device_info(self) -> ESPHomeDeviceInfo:
