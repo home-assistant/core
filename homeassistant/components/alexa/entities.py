@@ -805,7 +805,7 @@ class BinarySensorCapabilities(AlexaEntity):
         yield AlexaEndpointHealth(self.hass, self.entity)
         yield Alexa(self.entity)
 
-    def get_type(self):
+    def get_type(self) -> str | None:
         """Return the type of binary sensor."""
         attrs = self.entity.attributes
         if attrs.get(ATTR_DEVICE_CLASS) in (
@@ -824,6 +824,8 @@ class BinarySensorCapabilities(AlexaEntity):
             == binary_sensor.BinarySensorDeviceClass.PRESENCE
         ):
             return self.TYPE_PRESENCE
+
+        return None
 
 
 @ENTITY_ADAPTERS.register(alarm_control_panel.DOMAIN)
