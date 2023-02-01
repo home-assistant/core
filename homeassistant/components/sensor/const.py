@@ -379,6 +379,12 @@ class SensorDeviceClass(StrEnum):
     """
 
 
+NON_NUMERIC_DEVICE_CLASSES = {
+    SensorDeviceClass.DATE,
+    SensorDeviceClass.ENUM,
+    SensorDeviceClass.TIMESTAMP,
+}
+
 DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(SensorDeviceClass))
 
 # DEVICE_CLASSES is deprecated as of 2021.12
