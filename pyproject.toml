@@ -161,9 +161,9 @@ good-names = [
 # wrong-import-order - isort guards this
 # consider-using-f-string - str.format sometimes more readable
 # ---
-# Enable once current issues are fixed:
-# consider-using-namedtuple-or-dataclass (Pylint CodeStyle extension)
-# consider-using-assignment-expr (Pylint CodeStyle extension)
+# Pylint CodeStyle plugin
+# consider-using-namedtuple-or-dataclass - too opinionated
+# consider-using-assignment-expr - decision to use := better left to devs
 # ---
 # Temporary for the Python 3.10 update
 # consider-alternative-union-syntax
