@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Iterable, MutableMapping
-import contextlib
 import datetime
 import itertools
 import logging
@@ -35,6 +34,7 @@ from homeassistant.core import HomeAssistant, State, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import entity_sources
 from homeassistant.util import dt as dt_util
+from homeassistant.util.enum import try_parse_enum
 
 from .const import (
     ATTR_LAST_RESET,
@@ -80,9 +80,7 @@ def _get_sensor_states(hass: HomeAssistant) -> list[State]:
     for state in all_sensors:
         if not is_entity_recorded(hass, state.entity_id):
             continue
-        try:
-            SensorStateClass(state.attributes.get(ATTR_STATE_CLASS))  # type: ignore[arg-type]
-        except ValueError:
+        if not try_parse_enum(SensorStateClass, state.attributes.get(ATTR_STATE_CLASS)):
             continue
         statistics_sensors.append(state)
 
@@ -678,9 +676,7 @@ def validate_statistics(
 
     for state in sensor_states:
         entity_id = state.entity_id
-        state_class: SensorStateClass | None = None
-        with contextlib.suppress(ValueError):
-            state_class = SensorStateClass(state.attributes.get(ATTR_STATE_CLASS))  # type: ignore[arg-type]
+        state_class = try_parse_enum(SensorStateClass, state.attributes.get(ATTR_STATE_CLASS))
         state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
         if metadata := metadatas.get(entity_id):
