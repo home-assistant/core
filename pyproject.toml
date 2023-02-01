@@ -165,7 +165,7 @@ good-names = [
 # consider-using-namedtuple-or-dataclass - too opinionated
 # consider-using-assignment-expr - decision to use := better left to devs
 # ---
-# Temporary for the Python 3.10 update
+# Temporary for the Python 3.10 update, remove with mypy v1.0
 # consider-alternative-union-syntax
 disable = [
     "format",
