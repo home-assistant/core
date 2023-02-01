@@ -417,14 +417,10 @@ class StateAttributes(Base):  # type: ignore[misc,valid-type]
         exclude_attrs = (
             exclude_attrs_by_domain.get(domain, set()) | ALL_DOMAIN_EXCLUDE_ATTRS
         )
-        if dialect == SupportedDialect.POSTGRESQL:
-            bytes_result = json_bytes_strip_null(
-                {k: v for k, v in state.attributes.items() if k not in exclude_attrs}
-            )
-        else:
-            bytes_result = json_bytes(
-                {k: v for k, v in state.attributes.items() if k not in exclude_attrs}
-            )
+        encoder = json_bytes_strip_null if dialect == SupportedDialect.POSTGRESQL else json_bytes
+        bytes_result = encoder(
+            {k: v for k, v in state.attributes.items() if k not in exclude_attrs}
+        )
         if len(bytes_result) > MAX_STATE_ATTRS_BYTES:
             _LOGGER.warning(
                 "State attributes for %s exceed maximum size of %s bytes. "
