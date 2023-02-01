@@ -22,6 +22,7 @@
                 "description": "Vyberte sie\u0165ov\u00e9 nastavenia pre va\u0161e r\u00e1dio.",
                 "menu_options": {
                     "choose_automatic_backup": "Obnovenie automatickej z\u00e1lohy",
+                    "form_initial_network": "Vytvorenie siete",
                     "form_new_network": "Vyma\u017ete nastavenia siete a vytvorte nov\u00fa sie\u0165",
                     "reuse_settings": "Ponechajte nastavenia siete r\u00e1dia",
                     "upload_manual_backup": "Nahratie manu\u00e1lnej z\u00e1lohy"
@@ -174,6 +175,7 @@
                 "description": "Vyberte sie\u0165ov\u00e9 nastavenia pre va\u0161e r\u00e1dio.",
                 "menu_options": {
                     "choose_automatic_backup": "Obnovenie automatickej z\u00e1lohy",
+                    "form_initial_network": "Vytvorenie siete",
                     "form_new_network": "Vyma\u017ete nastavenia siete a vytvorte nov\u00fa sie\u0165",
                     "reuse_settings": "Ponechajte nastavenia siete r\u00e1dia",
                     "upload_manual_backup": "Nahratie manu\u00e1lnej z\u00e1lohy"
@@ -192,11 +194,11 @@
                 "title": "Prekonfigurova\u0165 ZHA"
             },
             "instruct_unplug": {
-                "description": "Va\u0161e star\u00e9 r\u00e1dio bolo resetovan\u00e9. Ak u\u017e hardv\u00e9r nepotrebujete, m\u00f4\u017eete ho odpoji\u0165.",
+                "description": "Va\u0161e star\u00e9 r\u00e1dio bolo resetovan\u00e9. Ak u\u017e hardv\u00e9r nepotrebujete, m\u00f4\u017eete ho odpoji\u0165. \n\n Teraz m\u00f4\u017eete pripoji\u0165 svoje nov\u00e9 r\u00e1dio.",
                 "title": "Odpojte star\u00e9 r\u00e1dio"
             },
             "intent_migrate": {
-                "description": "Va\u0161e star\u00e9 r\u00e1dio bude obnoven\u00e9 na v\u00fdrobn\u00e9 nastavenia. Ak pou\u017e\u00edvate kombinovan\u00fd adapt\u00e9r Z-Wave a Zigbee, ako je HUSBZB-1, resetuje sa iba \u010das\u0165 Zigbee. \n\n Chcete pokra\u010dova\u0165?",
+                "description": "Pred pripojen\u00edm nov\u00e9ho r\u00e1dia je potrebn\u00e9 resetova\u0165 star\u00e9 r\u00e1dio. Vykon\u00e1 sa automatick\u00e9 z\u00e1lohovanie. Ak pou\u017e\u00edvate kombinovan\u00fd adapt\u00e9r Z-Wave a Zigbee, ako je HUSBZB-1, resetuje sa iba \u010das\u0165 Zigbee. \n\n *Pozn\u00e1mka: ak migrujete z **ConBee/RaspBee**, uistite sa, \u017ee pou\u017e\u00edva firmv\u00e9r `0x26720700` alebo nov\u0161\u00ed! V opa\u010dnom pr\u00edpade sa niektor\u00e9 zariadenia nemusia da\u0165 po migr\u00e1cii ovl\u00e1da\u0165, k\u00fdm sa nezapne a nezapne.* \n\n Chcete pokra\u010dova\u0165?",
                 "title": "Prejdite na nov\u00e9 r\u00e1dio"
             },
             "manual_pick_radio_type": {

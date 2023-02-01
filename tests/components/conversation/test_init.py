@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant.components import conversation
 from homeassistant.components.cover import SERVICE_OPEN_COVER
+from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import DOMAIN as HASS_DOMAIN, Context
 from homeassistant.helpers import (
     area_registry,
@@ -777,3 +778,51 @@ async def test_turn_on_area(hass, init_components):
     assert call.domain == HASS_DOMAIN
     assert call.service == "turn_on"
     assert call.data == {"entity_id": "light.stove"}
+
+
+async def test_light_area_same_name(hass, init_components):
+    """Test turning on a light with the same name as an area."""
+    entities = entity_registry.async_get(hass)
+    devices = device_registry.async_get(hass)
+    areas = area_registry.async_get(hass)
+    entry = MockConfigEntry(domain="test")
+
+    device = devices.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+
+    kitchen_area = areas.async_create("kitchen")
+    devices.async_update_device(device.id, area_id=kitchen_area.id)
+
+    kitchen_light = entities.async_get_or_create(
+        "light", "demo", "1234", original_name="kitchen light"
+    )
+    entities.async_update_entity(kitchen_light.entity_id, area_id=kitchen_area.id)
+    hass.states.async_set(
+        kitchen_light.entity_id, "off", attributes={ATTR_FRIENDLY_NAME: "kitchen light"}
+    )
+
+    ceiling_light = entities.async_get_or_create(
+        "light", "demo", "5678", original_name="ceiling light"
+    )
+    entities.async_update_entity(ceiling_light.entity_id, area_id=kitchen_area.id)
+    hass.states.async_set(
+        ceiling_light.entity_id, "off", attributes={ATTR_FRIENDLY_NAME: "ceiling light"}
+    )
+
+    calls = async_mock_service(hass, HASS_DOMAIN, "turn_on")
+
+    await hass.services.async_call(
+        "conversation",
+        "process",
+        {conversation.ATTR_TEXT: "turn on kitchen light"},
+    )
+    await hass.async_block_till_done()
+
+    # Should only turn on one light instead of all lights in the kitchen
+    assert len(calls) == 1
+    call = calls[0]
+    assert call.domain == HASS_DOMAIN
+    assert call.service == "turn_on"
+    assert call.data == {"entity_id": kitchen_light.entity_id}

@@ -2,10 +2,10 @@
 -r requirements.txt
 
 # homeassistant.components.aemet
-AEMET-OpenData==0.2.1
+AEMET-OpenData==0.2.2
 
 # homeassistant.components.aladdin_connect
-AIOAladdinConnect==0.1.54
+AIOAladdinConnect==0.1.55
 
 # homeassistant.components.adax
 Adax-local==0.1.5
@@ -214,7 +214,7 @@ aiolyric==1.0.9
 aiomodernforms==0.1.8
 
 # homeassistant.components.yamaha_musiccast
-aiomusiccast==0.14.4
+aiomusiccast==0.14.7
 
 # homeassistant.components.nanoleaf
 aionanoleaf==0.2.1
@@ -658,7 +658,7 @@ enocean==0.50
 enturclient==0.2.4
 
 # homeassistant.components.environment_canada
-env_canada==0.5.22
+env_canada==0.5.27
 
 # homeassistant.components.enphase_envoy
 envoy_reader==0.20.1
@@ -673,7 +673,7 @@ epson-projector==0.5.0
 epsonprinter==0.0.9
 
 # homeassistant.components.esphome
-esphome-dashboard-api==1.2.1
+esphome-dashboard-api==1.2.3
 
 # homeassistant.components.netgear_lte
 eternalegypt==0.0.12
@@ -748,7 +748,7 @@ freesms==0.2.0
 
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
-fritzconnection==1.10.3
+fritzconnection==1.11.0
 
 # homeassistant.components.google_translate
 gTTS==2.2.4
@@ -907,10 +907,10 @@ hole==0.8.0
 holidays==0.18.0
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230130.0
+home-assistant-frontend==20230201.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2023.1.25
+home-assistant-intents==2023.1.31
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1373,7 +1373,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.13
 
 # homeassistant.components.plugwise
-plugwise==0.27.4
+plugwise==0.27.5
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1470,7 +1470,7 @@ pyRFXtrx==0.30.0
 pySwitchmate==0.5.1
 
 # homeassistant.components.tibber
-pyTibber==0.26.11
+pyTibber==0.26.12
 
 # homeassistant.components.dlink
 pyW215==0.7.0
@@ -2672,7 +2672,7 @@ yeelight==0.7.10
 yeelightsunflower==0.0.10
 
 # homeassistant.components.yolink
-yolink-api==0.1.5
+yolink-api==0.2.8
 
 # homeassistant.components.youless
 youless-api==0.16
