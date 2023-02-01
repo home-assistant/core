@@ -35,7 +35,7 @@ SERVICE_DOWNLOAD_FILE_SCHEMA = vol.Schema(
         vol.Optional(ATTR_SUBDIR): cv.string,
         vol.Optional(ATTR_FILENAME): cv.string,
         vol.Optional(ATTR_OVERWRITE, default=False): cv.boolean,
-        vol.Optional(ATTR_TIMEOUT, default=10): cv.positive_int
+        vol.Optional(ATTR_TIMEOUT, default=10): cv.positive_int,
     }
 )
 
