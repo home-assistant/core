@@ -418,7 +418,7 @@ class StateAttributes(Base):  # type: ignore[misc,valid-type]
             exclude_attrs_by_domain.get(domain, set()) | ALL_DOMAIN_EXCLUDE_ATTRS
         )
         if dialect == SupportedDialect.POSTGRESQL:
-            bytes_result json_bytes_strip_null(
+            bytes_result = json_bytes_strip_null(
                 {k: v for k, v in state.attributes.items() if k not in exclude_attrs}
             )
         else:
