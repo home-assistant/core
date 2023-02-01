@@ -122,6 +122,7 @@ MOCK_BLOCKS = [
     ),
     Mock(
         sensor_ids={"powerFactor": 0.98},
+        channel="0",
         powerFactor=0.98,
         description="emeter_0",
         type="emeter",
