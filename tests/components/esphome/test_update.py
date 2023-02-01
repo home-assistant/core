@@ -5,6 +5,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from homeassistant.components.esphome.dashboard import async_get_dashboard
+from homeassistant.components.update import UpdateEntityFeature
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 
@@ -22,12 +23,16 @@ def stub_reconnect():
             [
                 {
                     "name": "test",
-                    "current_version": "1.2.3",
+                    "current_version": "2023.2.0-dev",
                     "configuration": "test.yaml",
                 }
             ],
             "on",
-            {"latest_version": "1.2.3", "installed_version": "1.0.0"},
+            {
+                "latest_version": "2023.2.0-dev",
+                "installed_version": "1.0.0",
+                "supported_features": UpdateEntityFeature.INSTALL,
+            },
         ),
         (
             [
@@ -37,12 +42,16 @@ def stub_reconnect():
                 },
             ],
             "off",
-            {"latest_version": "1.0.0", "installed_version": "1.0.0"},
+            {
+                "latest_version": "1.0.0",
+                "installed_version": "1.0.0",
+                "supported_features": 0,
+            },
         ),
         (
             [],
             "unavailable",
-            {},
+            {"supported_features": 0},
         ),
     ],
 )
