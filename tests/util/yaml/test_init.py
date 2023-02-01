@@ -324,7 +324,7 @@ def load_yaml(fname, string, secrets=None):
 class TestSecrets(unittest.TestCase):
     """Test the secrets parameter in the yaml utility."""
 
-    # pylint: disable=protected-access,invalid-name
+    # pylint: disable=invalid-name
 
     def setUp(self):
         """Create & load secrets file."""

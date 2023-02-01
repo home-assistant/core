@@ -136,5 +136,14 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_inclusion": "[%key:component::mqtt::config::error::invalid_inclusion%]"
     }
+  },
+  "selector": {
+    "set_ca_cert": {
+      "options": {
+        "off": "Off",
+        "auto": "Auto",
+        "custom": "Custom"
+      }
+    }
   }
 }

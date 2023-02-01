@@ -129,7 +129,7 @@ class ProbeEndpoint:
 
             self.probe_single_cluster(component, channel, channel_pool)
 
-        # until we can get rid off registries
+        # until we can get rid of registries
         self.handle_on_off_output_cluster_exception(channel_pool)
 
     @staticmethod
@@ -254,7 +254,7 @@ class GroupProbe:
         )
 
     def cleanup(self) -> None:
-        """Clean up on when zha shuts down."""
+        """Clean up on when ZHA shuts down."""
         for unsub in self._unsubs[:]:
             unsub()
             self._unsubs.remove(unsub)

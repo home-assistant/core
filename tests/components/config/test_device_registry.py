@@ -85,7 +85,10 @@ async def test_list_devices(hass, client, registry):
         },
     ]
 
-    registry.async_remove_device(device2.id)
+    class Unserializable:
+        """Good luck serializing me."""
+
+    registry.async_update_device(device2.id, name=Unserializable())
     await hass.async_block_till_done()
 
     await client.send_json({"id": 6, "type": "config/device_registry/list"})
@@ -110,6 +113,9 @@ async def test_list_devices(hass, client, registry):
             "via_device_id": None,
         }
     ]
+
+    # Remove the bad device to avoid errors when test is being torn down
+    registry.async_remove_device(device2.id)
 
 
 @pytest.mark.parametrize(

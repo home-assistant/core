@@ -29,19 +29,6 @@
             }
         }
     },
-    "issues": {
-        "deprecated_key": {
-            "fix_flow": {
-                "step": {
-                    "confirm": {
-                        "description": "Aggiorna eventuali automazioni o script che utilizzano questo servizio e sostituisci la chiave del nome con la chiave entry_id.",
-                        "title": "La chiave del nome nei servizi di trasmissione \u00e8 stata rimossa"
-                    }
-                }
-            },
-            "title": "La chiave del nome nei servizi di trasmissione \u00e8 stata rimossa"
-        }
-    },
     "options": {
         "step": {
             "init": {

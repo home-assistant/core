@@ -1,5 +1,5 @@
 """The tests for Core components."""
-# pylint: disable=protected-access
+
 import asyncio
 import unittest
 from unittest.mock import Mock, patch
@@ -114,7 +114,6 @@ def reload_core_config(hass):
 class TestComponentsCore(unittest.TestCase):
     """Test homeassistant.components module."""
 
-    # pylint: disable=invalid-name
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()

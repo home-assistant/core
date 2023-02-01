@@ -6,11 +6,9 @@
         },
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",
-            "file_not_found": "No s'ha trobat el fitxer `.knxkeys` especificat a la ruta config/.storage/knx/",
             "invalid_backbone_key": "Clau troncal inv\u00e0lida. S'esperen 32 nombres hexadecimals.",
             "invalid_individual_address": "El valor no coincideix amb el patr\u00f3 d'adre\u00e7a KNX individual.\n'area.line.device'",
             "invalid_ip_address": "Adre\u00e7a IPv4 inv\u00e0lida.",
-            "invalid_signature": "La contrasenya per desxifrar el fitxer `.knxkeys` \u00e9s incorrecta.",
             "keyfile_invalid_signature": "La contrasenya per desxifrar el fitxer `.knxkeys` \u00e9s incorrecta.",
             "keyfile_no_backbone_key": "El fitxer `.knxkeys` no cont\u00e9 una clau de 'backbone' per a l'encaminament segur.",
             "keyfile_no_tunnel_for_host": "El fitxer `.knxkeys` no cont\u00e9 credencials per a l'amfitri\u00f3 `{host}`.",
@@ -26,6 +24,13 @@
                 },
                 "description": "Introdueix el tipus de connexi\u00f3 a utilitzar per a la connexi\u00f3 KNX.\n AUTOM\u00c0TICA: la integraci\u00f3 s'encarrega de la connectivitat al bus KNX realitzant una exploraci\u00f3 de la passarel\u00b7la.\n T\u00daNEL: la integraci\u00f3 es connectar\u00e0 al bus KNX mitjan\u00e7ant un t\u00fanel.\n ENCAMINAMENT: la integraci\u00f3 es connectar\u00e0 al bus KNX mitjan\u00e7ant l'encaminament.",
                 "title": "Connexi\u00f3 KNX"
+            },
+            "knxkeys_tunnel_select": {
+                "data": {
+                    "user_id": "`Autom\u00e0tic` utilitzar\u00e0 el primer punt final ('endpoint') de t\u00fanel lliure."
+                },
+                "description": "Seleccioneu el t\u00fanel utilitzat per a la connexi\u00f3.",
+                "title": "Punt final ('endpoint') del t\u00fanel"
             },
             "manual_tunnel": {
                 "data": {
@@ -118,11 +123,9 @@
     "options": {
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",
-            "file_not_found": "No s'ha trobat el fitxer `.knxkeys` especificat a la ruta config/.storage/knx/",
             "invalid_backbone_key": "Clau troncal inv\u00e0lida. S'esperen 32 nombres hexadecimals.",
             "invalid_individual_address": "El valor no coincideix amb el patr\u00f3 d'adre\u00e7a KNX individual.\n'area.line.device'",
             "invalid_ip_address": "Adre\u00e7a IPv4 inv\u00e0lida.",
-            "invalid_signature": "La contrasenya per desxifrar el fitxer `.knxkeys` \u00e9s incorrecta.",
             "keyfile_invalid_signature": "La contrasenya per desxifrar el fitxer `.knxkeys` \u00e9s incorrecta.",
             "keyfile_no_backbone_key": "El fitxer `.knxkeys` no cont\u00e9 una clau de 'backbone' per a l'encaminament segur.",
             "keyfile_no_tunnel_for_host": "El fitxer `.knxkeys` no cont\u00e9 credencials per a l'amfitri\u00f3 `{host}`.",
@@ -149,6 +152,13 @@
                 },
                 "description": "Introdueix el tipus de connexi\u00f3 a utilitzar per a la connexi\u00f3 KNX.\n AUTOM\u00c0TICA: la integraci\u00f3 s'encarrega de la connectivitat al bus KNX realitzant una exploraci\u00f3 de la passarel\u00b7la.\n T\u00daNEL: la integraci\u00f3 es connectar\u00e0 al bus KNX mitjan\u00e7ant un t\u00fanel.\n ENCAMINAMENT: la integraci\u00f3 es connectar\u00e0 al bus KNX mitjan\u00e7ant l'encaminament.",
                 "title": "Connexi\u00f3 KNX"
+            },
+            "knxkeys_tunnel_select": {
+                "data": {
+                    "user_id": "`Autom\u00e0tic` utilitzar\u00e0 el primer punt final ('endpoint') de t\u00fanel lliure."
+                },
+                "description": "Seleccioneu el t\u00fanel utilitzat per a la connexi\u00f3.",
+                "title": "Punt final ('endpoint') del t\u00fanel"
             },
             "manual_tunnel": {
                 "data": {

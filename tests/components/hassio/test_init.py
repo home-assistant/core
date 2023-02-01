@@ -202,8 +202,9 @@ async def test_setup_api_ping(hass, aioclient_mock):
     """Test setup with API ping."""
     with patch.dict(os.environ, MOCK_ENVIRON):
         result = await async_setup_component(hass, "hassio", {})
-        assert result
+        await hass.async_block_till_done()
 
+    assert result
     assert aioclient_mock.call_count == 16
     assert hass.components.hassio.get_core_info()["version_latest"] == "1.0.0"
     assert hass.components.hassio.is_hassio()
@@ -241,8 +242,9 @@ async def test_setup_api_push_api_data(hass, aioclient_mock):
         result = await async_setup_component(
             hass, "hassio", {"http": {"server_port": 9999}, "hassio": {}}
         )
-        assert result
+        await hass.async_block_till_done()
 
+    assert result
     assert aioclient_mock.call_count == 16
     assert not aioclient_mock.mock_calls[1][2]["ssl"]
     assert aioclient_mock.mock_calls[1][2]["port"] == 9999
@@ -257,8 +259,9 @@ async def test_setup_api_push_api_data_server_host(hass, aioclient_mock):
             "hassio",
             {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
         )
-        assert result
+        await hass.async_block_till_done()
 
+    assert result
     assert aioclient_mock.call_count == 16
     assert not aioclient_mock.mock_calls[1][2]["ssl"]
     assert aioclient_mock.mock_calls[1][2]["port"] == 9999
@@ -269,8 +272,9 @@ async def test_setup_api_push_api_data_default(hass, aioclient_mock, hass_storag
     """Test setup with API push default data."""
     with patch.dict(os.environ, MOCK_ENVIRON):
         result = await async_setup_component(hass, "hassio", {"http": {}, "hassio": {}})
-        assert result
+        await hass.async_block_till_done()
 
+    assert result
     assert aioclient_mock.call_count == 16
     assert not aioclient_mock.mock_calls[1][2]["ssl"]
     assert aioclient_mock.mock_calls[1][2]["port"] == 8123
@@ -336,8 +340,9 @@ async def test_setup_api_existing_hassio_user(hass, aioclient_mock, hass_storage
     hass_storage[STORAGE_KEY] = {"version": 1, "data": {"hassio_user": user.id}}
     with patch.dict(os.environ, MOCK_ENVIRON):
         result = await async_setup_component(hass, "hassio", {"http": {}, "hassio": {}})
-        assert result
+        await hass.async_block_till_done()
 
+    assert result
     assert aioclient_mock.call_count == 16
     assert not aioclient_mock.mock_calls[1][2]["ssl"]
     assert aioclient_mock.mock_calls[1][2]["port"] == 8123
@@ -350,8 +355,9 @@ async def test_setup_core_push_timezone(hass, aioclient_mock):
 
     with patch.dict(os.environ, MOCK_ENVIRON):
         result = await async_setup_component(hass, "hassio", {"hassio": {}})
-        assert result
+        await hass.async_block_till_done()
 
+    assert result
     assert aioclient_mock.call_count == 16
     assert aioclient_mock.mock_calls[2][2]["timezone"] == "testzone"
 
@@ -367,8 +373,9 @@ async def test_setup_hassio_no_additional_data(hass, aioclient_mock):
         os.environ, {"SUPERVISOR_TOKEN": "123456"}
     ):
         result = await async_setup_component(hass, "hassio", {"hassio": {}})
-        assert result
+        await hass.async_block_till_done()
 
+    assert result
     assert aioclient_mock.call_count == 16
     assert aioclient_mock.mock_calls[-1][3]["Authorization"] == "Bearer 123456"
 
@@ -768,9 +775,9 @@ async def test_setup_hardware_integration(hass, aioclient_mock, integration):
         return_value=True,
     ) as mock_setup_entry:
         result = await async_setup_component(hass, "hassio", {"hassio": {}})
-        assert result
         await hass.async_block_till_done()
 
+    assert result
     assert aioclient_mock.call_count == 16
     assert len(mock_setup_entry.mock_calls) == 1
 

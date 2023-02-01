@@ -51,6 +51,8 @@ async def async_setup_entry(
 class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
     """Represents a ScreenLogic climate entity."""
 
+    _attr_has_entity_name = True
+
     _attr_hvac_modes = SUPPORTED_MODES
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
@@ -71,8 +73,7 @@ class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
     @property
     def name(self) -> str:
         """Name of the heater."""
-        ent_name = self.body["heat_status"]["name"]
-        return f"{self.gateway_name} {ent_name}"
+        return self.body["heat_status"]["name"]
 
     @property
     def min_temp(self) -> float:

@@ -2,11 +2,14 @@
 
 from unittest.mock import AsyncMock, patch
 
+from homewizard_energy.errors import DisabledError, RequestError
 from homewizard_energy.models import State
+from pytest import raises
 
 from homeassistant.components import number
 from homeassistant.components.number import ATTR_VALUE, SERVICE_SET_VALUE
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .generator import get_mock_device
@@ -139,3 +142,118 @@ async def test_brightness_level_set(hass, mock_config_entry_data, mock_config_en
             == "0"
         )
         assert len(api.state_set.mock_calls) == 2
+
+
+async def test_brightness_level_set_catches_requesterror(
+    hass, mock_config_entry_data, mock_config_entry
+):
+    """Test entity raises HomeAssistantError when RequestError was raised."""
+
+    api = get_mock_device()
+    api.state = AsyncMock(return_value=State.from_dict({"brightness": 255}))
+
+    api.state_set = AsyncMock(side_effect=RequestError())
+
+    with patch(
+        "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
+        return_value=api,
+    ):
+        entry = mock_config_entry
+        entry.data = mock_config_entry_data
+        entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        # Set level halfway
+        with raises(HomeAssistantError):
+            await hass.services.async_call(
+                number.DOMAIN,
+                SERVICE_SET_VALUE,
+                {
+                    ATTR_ENTITY_ID: "number.product_name_aabbccddeeff_status_light_brightness",
+                    ATTR_VALUE: 50,
+                },
+                blocking=True,
+            )
+
+
+async def test_brightness_level_set_catches_disablederror(
+    hass, mock_config_entry_data, mock_config_entry
+):
+    """Test entity raises HomeAssistantError when DisabledError was raised."""
+
+    api = get_mock_device()
+    api.state = AsyncMock(return_value=State.from_dict({"brightness": 255}))
+
+    api.state_set = AsyncMock(side_effect=DisabledError())
+
+    with patch(
+        "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
+        return_value=api,
+    ):
+        entry = mock_config_entry
+        entry.data = mock_config_entry_data
+        entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        # Set level halfway
+        with raises(HomeAssistantError):
+            await hass.services.async_call(
+                number.DOMAIN,
+                SERVICE_SET_VALUE,
+                {
+                    ATTR_ENTITY_ID: "number.product_name_aabbccddeeff_status_light_brightness",
+                    ATTR_VALUE: 50,
+                },
+                blocking=True,
+            )
+
+
+async def test_brightness_level_set_catches_invalid_value(
+    hass, mock_config_entry_data, mock_config_entry
+):
+    """Test entity raises ValueError when value was invalid."""
+
+    api = get_mock_device()
+    api.state = AsyncMock(return_value=State.from_dict({"brightness": 255}))
+
+    def state_set(brightness):
+        api.state = AsyncMock(return_value=State.from_dict({"brightness": brightness}))
+
+    api.state_set = AsyncMock(side_effect=state_set)
+
+    with patch(
+        "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
+        return_value=api,
+    ):
+        entry = mock_config_entry
+        entry.data = mock_config_entry_data
+        entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        with raises(ValueError):
+            await hass.services.async_call(
+                number.DOMAIN,
+                SERVICE_SET_VALUE,
+                {
+                    ATTR_ENTITY_ID: "number.product_name_aabbccddeeff_status_light_brightness",
+                    ATTR_VALUE: -1,
+                },
+                blocking=True,
+            )
+
+        with raises(ValueError):
+            await hass.services.async_call(
+                number.DOMAIN,
+                SERVICE_SET_VALUE,
+                {
+                    ATTR_ENTITY_ID: "number.product_name_aabbccddeeff_status_light_brightness",
+                    ATTR_VALUE: 101,
+                },
+                blocking=True,
+            )

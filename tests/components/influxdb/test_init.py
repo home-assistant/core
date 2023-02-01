@@ -72,7 +72,7 @@ def get_mock_call_fixture(request):
 
     if request.param == influxdb.API_VERSION_2:
         return lambda body, precision=None: v2_call(body, precision)
-    # pylint: disable=unnecessary-lambda
+    # pylint: disable-next=unnecessary-lambda
     return lambda body, precision=None: call(body, time_precision=precision)
 
 

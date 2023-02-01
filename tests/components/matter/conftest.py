@@ -27,7 +27,6 @@ async def matter_client_fixture() -> AsyncGenerator[MagicMock, None]:
         async def connect() -> None:
             """Mock connect."""
             await asyncio.sleep(0)
-            client.connected = True
 
         async def listen(init_ready: asyncio.Event | None) -> None:
             """Mock listen."""

@@ -26,7 +26,7 @@ from homeassistant.components.media_player import (
 )
 import homeassistant.components.vacuum as vacuum
 from homeassistant.config import async_process_ha_core_config
-from homeassistant.const import STATE_UNKNOWN, TEMP_FAHRENHEIT
+from homeassistant.const import STATE_UNKNOWN, UnitOfTemperature
 from homeassistant.core import Context
 from homeassistant.helpers import entityfilter
 from homeassistant.setup import async_setup_component
@@ -410,7 +410,8 @@ async def test_fan(hass):
     assert appliance["endpointId"] == "fan#test_1"
     assert appliance["displayCategories"][0] == "FAN"
     assert appliance["friendlyName"] == "Test fan 1"
-    # Alexa.RangeController is added to make a fan controllable when no other controllers are available
+    # Alexa.RangeController is added to make a fan controllable when
+    # no other controllers are available.
     capabilities = assert_endpoint_capabilities(
         appliance,
         "Alexa.RangeController",
@@ -466,7 +467,8 @@ async def test_fan2(hass):
     assert appliance["endpointId"] == "fan#test_2"
     assert appliance["displayCategories"][0] == "FAN"
     assert appliance["friendlyName"] == "Test fan 2"
-    # Alexa.RangeController is added to make a fan controllable when no other controllers are available
+    # Alexa.RangeController is added to make a fan controllable
+    # when no other controllers are available
     capabilities = assert_endpoint_capabilities(
         appliance,
         "Alexa.RangeController",
@@ -597,7 +599,8 @@ async def test_variable_fan_no_current_speed(hass, caplog):
     assert appliance["endpointId"] == "fan#test_3"
     assert appliance["displayCategories"][0] == "FAN"
     assert appliance["friendlyName"] == "Test fan 3"
-    # Alexa.RangeController is added to make a van controllable when no other controllers are available
+    # Alexa.RangeController is added to make a van controllable
+    # when no other controllers are available
     capabilities = assert_endpoint_capabilities(
         appliance,
         "Alexa.RangeController",
@@ -625,9 +628,9 @@ async def test_variable_fan_no_current_speed(hass, caplog):
             "fan.percentage",
         )
     assert (
-        "Request Alexa.RangeController/AdjustRangeValue error INVALID_VALUE: Unable to determine fan.test_3 current fan speed"
-        in caplog.text
-    )
+        "Request Alexa.RangeController/AdjustRangeValue error "
+        "INVALID_VALUE: Unable to determine fan.test_3 current fan speed"
+    ) in caplog.text
     caplog.clear()
 
 
@@ -1987,7 +1990,10 @@ async def test_temp_sensor(hass):
     device = (
         "sensor.test_temp",
         "42",
-        {"friendly_name": "Test Temp Sensor", "unit_of_measurement": TEMP_FAHRENHEIT},
+        {
+            "friendly_name": "Test Temp Sensor",
+            "unit_of_measurement": UnitOfTemperature.FAHRENHEIT,
+        },
     )
     appliance = await discovery_test(device, hass)
 
@@ -3338,10 +3344,11 @@ async def test_cover_semantics_position_and_tilt(hass):
     } in tilt_state_mappings
 
 
-async def test_input_number(hass):
-    """Test input_number discovery."""
+@pytest.mark.parametrize("domain", ["input_number", "number"])
+async def test_input_number(hass, domain: str):
+    """Test input_number and number discovery."""
     device = (
-        "input_number.test_slider",
+        f"{domain}.test_slider",
         30,
         {
             "initial": 30,
@@ -3354,7 +3361,7 @@ async def test_input_number(hass):
     )
     appliance = await discovery_test(device, hass)
 
-    assert appliance["endpointId"] == "input_number#test_slider"
+    assert appliance["endpointId"] == f"{domain}#test_slider"
     assert appliance["displayCategories"][0] == "OTHER"
     assert appliance["friendlyName"] == "Test Slider"
 
@@ -3363,7 +3370,7 @@ async def test_input_number(hass):
     )
 
     range_capability = get_capability(
-        capabilities, "Alexa.RangeController", "input_number.value"
+        capabilities, "Alexa.RangeController", f"{domain}.value"
     )
 
     capability_resources = range_capability["capabilityResources"]
@@ -3403,11 +3410,11 @@ async def test_input_number(hass):
     call, _ = await assert_request_calls_service(
         "Alexa.RangeController",
         "SetRangeValue",
-        "input_number#test_slider",
-        "input_number.set_value",
+        f"{domain}#test_slider",
+        f"{domain}.set_value",
         hass,
         payload={"rangeValue": 10},
-        instance="input_number.value",
+        instance=f"{domain}.value",
     )
     assert call.data["value"] == 10
 
@@ -3416,17 +3423,18 @@ async def test_input_number(hass):
         [(25, -5, False), (35, 5, False), (-20, -100, False), (35, 100, False)],
         "Alexa.RangeController",
         "AdjustRangeValue",
-        "input_number#test_slider",
-        "input_number.set_value",
+        f"{domain}#test_slider",
+        f"{domain}.set_value",
         "value",
-        instance="input_number.value",
+        instance=f"{domain}.value",
     )
 
 
-async def test_input_number_float(hass):
-    """Test input_number discovery."""
+@pytest.mark.parametrize("domain", ["input_number", "number"])
+async def test_input_number_float(hass, domain: str):
+    """Test input_number and number discovery."""
     device = (
-        "input_number.test_slider_float",
+        f"{domain}.test_slider_float",
         0.5,
         {
             "initial": 0.5,
@@ -3439,7 +3447,7 @@ async def test_input_number_float(hass):
     )
     appliance = await discovery_test(device, hass)
 
-    assert appliance["endpointId"] == "input_number#test_slider_float"
+    assert appliance["endpointId"] == f"{domain}#test_slider_float"
     assert appliance["displayCategories"][0] == "OTHER"
     assert appliance["friendlyName"] == "Test Slider Float"
 
@@ -3448,7 +3456,7 @@ async def test_input_number_float(hass):
     )
 
     range_capability = get_capability(
-        capabilities, "Alexa.RangeController", "input_number.value"
+        capabilities, "Alexa.RangeController", f"{domain}.value"
     )
 
     capability_resources = range_capability["capabilityResources"]
@@ -3488,11 +3496,11 @@ async def test_input_number_float(hass):
     call, _ = await assert_request_calls_service(
         "Alexa.RangeController",
         "SetRangeValue",
-        "input_number#test_slider_float",
-        "input_number.set_value",
+        f"{domain}#test_slider_float",
+        f"{domain}.set_value",
         hass,
         payload={"rangeValue": 0.333},
-        instance="input_number.value",
+        instance=f"{domain}.value",
     )
     assert call.data["value"] == 0.333
 
@@ -3507,10 +3515,10 @@ async def test_input_number_float(hass):
         ],
         "Alexa.RangeController",
         "AdjustRangeValue",
-        "input_number#test_slider_float",
-        "input_number.set_value",
+        f"{domain}#test_slider_float",
+        f"{domain}.set_value",
         "value",
-        instance="input_number.value",
+        instance=f"{domain}.value",
     )
 
 

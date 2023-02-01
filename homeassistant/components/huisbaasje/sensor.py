@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
+from typing import Any
 
 from energyflip.const import (
     SOURCE_TYPE_ELECTRICITY,
@@ -234,7 +235,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
+    coordinator: DataUpdateCoordinator[dict[str, dict[str, Any]]] = hass.data[DOMAIN][
+        config_entry.entry_id
+    ][DATA_COORDINATOR]
     user_id = config_entry.data[CONF_ID]
 
     async_add_entities(
@@ -243,14 +246,16 @@ async def async_setup_entry(
     )
 
 
-class HuisbaasjeSensor(CoordinatorEntity, SensorEntity):
+class HuisbaasjeSensor(
+    CoordinatorEntity[DataUpdateCoordinator[dict[str, dict[str, Any]]]], SensorEntity
+):
     """Defines a Huisbaasje sensor."""
 
     entity_description: HuisbaasjeSensorEntityDescription
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[dict[str, dict[str, Any]]],
         user_id: str,
         description: HuisbaasjeSensorEntityDescription,
     ) -> None:
@@ -278,7 +283,7 @@ class HuisbaasjeSensor(CoordinatorEntity, SensorEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return (
+        return bool(
             super().available
             and self.coordinator.data
             and self._source_type in self.coordinator.data

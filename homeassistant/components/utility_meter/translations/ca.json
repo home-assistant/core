@@ -31,5 +31,20 @@
             }
         }
     },
+    "selector": {
+        "cycle": {
+            "options": {
+                "bimonthly": "Cada dos mesos",
+                "daily": "Di\u00e0riament",
+                "hourly": "Cada hora",
+                "monthly": "Mensualment",
+                "none": "Sense cicle",
+                "quarter-hourly": "Cada 15 minuts",
+                "quarterly": "Trimestralment",
+                "weekly": "Setmanalment",
+                "yearly": "Anualment"
+            }
+        }
+    },
     "title": "Comptador"
 }

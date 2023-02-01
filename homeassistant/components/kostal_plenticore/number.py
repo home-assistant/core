@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
-from kostal.plenticore import SettingsData
+from pykoplenti import SettingsData
 
 from homeassistant.components.number import (
     NumberDeviceClass,

@@ -1,16 +1,25 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El servei ja est\u00e0 configurat"
+            "already_configured": "El servei ja est\u00e0 configurat",
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
         },
         "error": {
-            "cannot_connect": "Ha fallat la connexi\u00f3"
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
         },
         "step": {
             "api_key": {
                 "data": {
                     "api_key": "Clau API"
                 }
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "Clau API"
+                },
+                "description": "Introdueix una nova clau API per a PI-Hole a {host}/{location}",
+                "title": "Reautenticaci\u00f3 de la integraci\u00f3 PI-Hole"
             },
             "user": {
                 "data": {
@@ -20,7 +29,6 @@
                     "name": "Nom",
                     "port": "Port",
                     "ssl": "Utilitza un certificat SSL",
-                    "statistics_only": "Nom\u00e9s les estad\u00edstiques",
                     "verify_ssl": "Verifica el certificat SSL"
                 }
             }

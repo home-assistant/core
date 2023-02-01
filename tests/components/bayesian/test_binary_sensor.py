@@ -678,7 +678,10 @@ async def test_observed_entities(hass):
                 },
                 {
                     "platform": "template",
-                    "value_template": "{{is_state('sensor.test_monitored1','on') and is_state('sensor.test_monitored','off')}}",
+                    "value_template": (
+                        "{{is_state('sensor.test_monitored1','on') and"
+                        " is_state('sensor.test_monitored','off')}}"
+                    ),
                     "prob_given_true": 0.9,
                     "prob_given_false": 0.1,
                 },
@@ -734,7 +737,10 @@ async def test_state_attributes_are_serializable(hass):
                 },
                 {
                     "platform": "template",
-                    "value_template": "{{is_state('sensor.test_monitored1','on') and is_state('sensor.test_monitored','off')}}",
+                    "value_template": (
+                        "{{is_state('sensor.test_monitored1','on') and"
+                        " is_state('sensor.test_monitored','off')}}"
+                    ),
                     "prob_given_true": 0.9,
                     "prob_given_false": 0.1,
                 },

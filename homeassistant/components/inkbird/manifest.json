@@ -11,7 +11,7 @@
     { "local_name": "tps", "connectable": false }
   ],
   "requirements": ["inkbird-ble==0.5.5"],
-  "dependencies": ["bluetooth"],
+  "dependencies": ["bluetooth_adapters"],
   "codeowners": ["@bdraco"],
   "iot_class": "local_push"
 }

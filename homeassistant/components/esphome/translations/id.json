@@ -4,7 +4,8 @@
             "already_configured": "Perangkat sudah dikonfigurasi",
             "already_in_progress": "Alur konfigurasi sedang berlangsung",
             "mdns_missing_mac": "Alamat MAC tidak ada dalam properti MDNS.",
-            "reauth_successful": "Autentikasi ulang berhasil"
+            "reauth_successful": "Autentikasi ulang berhasil",
+            "service_received": "Layanan diterima"
         },
         "error": {
             "connection_error": "Tidak dapat terhubung ke ESP. Pastikan file YAML Anda mengandung baris 'api:'.",
@@ -28,13 +29,13 @@
                 "data": {
                     "noise_psk": "Kunci enkripsi"
                 },
-                "description": "Masukkan kunci enkripsi yang Anda atur dalam konfigurasi Anda untuk {name}."
+                "description": "Masukkan kunci enkripsi untuk {name}. Anda dapat menemukannya di Dasbor ESPHome atau di konfigurasi perangkat Anda."
             },
             "reauth_confirm": {
                 "data": {
                     "noise_psk": "Kunci enkripsi"
                 },
-                "description": "Perangkat ESPHome {name} mengaktifkan enkripsi transport atau telah mengubah kunci enkripsi. Masukkan kunci yang diperbarui."
+                "description": "Perangkat ESPHome {name} mengaktifkan enkripsi transport atau mengubah kunci enkripsi. Masukkan kunci yang diperbarui. Anda dapat menemukannya di Dasbor ESPHome atau di konfigurasi perangkat Anda."
             },
             "user": {
                 "data": {

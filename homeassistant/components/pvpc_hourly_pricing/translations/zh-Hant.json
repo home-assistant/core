@@ -19,8 +19,7 @@
             "init": {
                 "data": {
                     "power": "\u5408\u7d04\u529f\u7387\uff08kW\uff09",
-                    "power_p3": "\u4f4e\u5cf0\u671f P3 \u5408\u7d04\u529f\u7387\uff08kW\uff09",
-                    "tariff": "\u5206\u5340\u9069\u7528\u8cbb\u7387"
+                    "power_p3": "\u4f4e\u5cf0\u671f P3 \u5408\u7d04\u529f\u7387\uff08kW\uff09"
                 }
             }
         }

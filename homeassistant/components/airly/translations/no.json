@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Plasseringen er allerede konfigurert"
+            "already_configured": "Plasseringen er allerede konfigurert",
+            "wrong_location": "Ingen Airly m\u00e5lestasjoner i dette omr\u00e5det."
         },
         "error": {
             "invalid_api_key": "Ugyldig API-n\u00f8kkel",

@@ -48,7 +48,6 @@
             "carbon_monoxide": "La concentraci\u00f3n de mon\u00f3xido de carbono de {entity_name} cambia",
             "current": "La intensidad de corriente de {entity_name} cambia",
             "data_rate": "La velocidad de datos de {entity_name} cambia",
-            "data_size": "El tama\u00f1o de los datos de {entity_name} cambia",
             "distance": "La distancia de {entity_name} cambia",
             "energy": "La energ\u00eda de {entity_name} cambia",
             "frequency": "La frecuencia de {entity_name} cambia",

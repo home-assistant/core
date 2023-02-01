@@ -195,7 +195,9 @@ class UnitSystem:
             raise TypeError(f"{wind_speed!s} is not a numeric value.")
 
         # type ignore: https://github.com/python/mypy/issues/7207
-        return SpeedConverter.convert(wind_speed, from_unit, self.wind_speed_unit)  # type: ignore[unreachable]
+        return SpeedConverter.convert(  # type: ignore[unreachable]
+            wind_speed, from_unit, self.wind_speed_unit
+        )
 
     def volume(self, volume: float | None, from_unit: str) -> float:
         """Convert the given volume to this unit system."""
@@ -203,7 +205,9 @@ class UnitSystem:
             raise TypeError(f"{volume!s} is not a numeric value.")
 
         # type ignore: https://github.com/python/mypy/issues/7207
-        return VolumeConverter.convert(volume, from_unit, self.volume_unit)  # type: ignore[unreachable]
+        return VolumeConverter.convert(  # type: ignore[unreachable]
+            volume, from_unit, self.volume_unit
+        )
 
     def as_dict(self) -> dict[str, str]:
         """Convert the unit system to a dictionary."""

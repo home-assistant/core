@@ -31,8 +31,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 from homeassistant.core import CoreState
 from homeassistant.helpers import entity_registry as er
@@ -56,21 +55,25 @@ async def test_temperature(hass, hk_driver):
         assert acc.char_temp.properties[key] == value
 
     hass.states.async_set(
-        entity_id, STATE_UNKNOWN, {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+        entity_id, STATE_UNKNOWN, {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS}
     )
     await hass.async_block_till_done()
     assert acc.char_temp.value == 0.0
 
-    hass.states.async_set(entity_id, "20", {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
+    hass.states.async_set(
+        entity_id, "20", {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS}
+    )
     await hass.async_block_till_done()
     assert acc.char_temp.value == 20
 
-    hass.states.async_set(entity_id, "0", {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
+    hass.states.async_set(
+        entity_id, "0", {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS}
+    )
     await hass.async_block_till_done()
     assert acc.char_temp.value == 0
 
     hass.states.async_set(
-        entity_id, "75.2", {ATTR_UNIT_OF_MEASUREMENT: TEMP_FAHRENHEIT}
+        entity_id, "75.2", {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT}
     )
     await hass.async_block_till_done()
     assert acc.char_temp.value == 24

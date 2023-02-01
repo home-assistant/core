@@ -15,7 +15,7 @@ def is_spotify_media_type(media_content_type: str) -> bool:
 
 def resolve_spotify_media_type(media_content_type: str) -> str:
     """Return actual spotify media_content_type."""
-    return media_content_type[len(MEDIA_PLAYER_PREFIX) :]
+    return media_content_type.removeprefix(MEDIA_PLAYER_PREFIX)
 
 
 def fetch_image_url(item: dict[str, Any], key="images") -> str | None:

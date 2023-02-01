@@ -4,7 +4,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from hole.exceptions import HoleError
 
 from homeassistant.components.pi_hole.const import (
-    CONF_STATISTICS_ONLY,
     DEFAULT_LOCATION,
     DEFAULT_NAME,
     DEFAULT_SSL,
@@ -100,9 +99,6 @@ CONFIG_ENTRY_WITHOUT_API_KEY = {
     CONF_SSL: SSL,
     CONF_VERIFY_SSL: VERIFY_SSL,
 }
-
-CONFIG_ENTRY_IMPORTED = {**CONFIG_ENTRY_WITH_API_KEY, CONF_STATISTICS_ONLY: False}
-
 SWITCH_ENTITY_ID = "switch.pi_hole"
 
 

@@ -6,7 +6,7 @@
   "requirements": ["aiohomekit==2.4.4"],
   "zeroconf": ["_hap._tcp.local.", "_hap._udp.local."],
   "bluetooth": [{ "manufacturer_id": 76, "manufacturer_data_start": [6] }],
-  "dependencies": ["bluetooth", "zeroconf"],
+  "dependencies": ["bluetooth_adapters", "zeroconf"],
   "codeowners": ["@Jc2k", "@bdraco"],
   "iot_class": "local_push",
   "loggers": ["aiohomekit", "commentjson"]

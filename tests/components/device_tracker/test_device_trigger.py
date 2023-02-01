@@ -165,9 +165,13 @@ async def test_if_fires_on_zone_change(hass, calls):
                         "service": "test.automation",
                         "data_template": {
                             "some": (
-                                "enter - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.attributes.longitude|round(3)}} - "
-                                "{{ trigger.to_state.attributes.longitude|round(3)}}"
+                                "enter "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.entity_id }} "
+                                "- {{ "
+                                "    trigger.from_state.attributes.longitude|round(3) "
+                                "  }} "
+                                "- {{ trigger.to_state.attributes.longitude|round(3) }}"
                             )
                         },
                     },
@@ -185,9 +189,13 @@ async def test_if_fires_on_zone_change(hass, calls):
                         "service": "test.automation",
                         "data_template": {
                             "some": (
-                                "leave - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.attributes.longitude|round(3)}} - "
-                                "{{ trigger.to_state.attributes.longitude|round(3)}}"
+                                "leave "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.entity_id }} "
+                                "- {{ "
+                                "    trigger.from_state.attributes.longitude|round(3) "
+                                "  }} "
+                                "- {{ trigger.to_state.attributes.longitude|round(3)}}"
                             )
                         },
                     },

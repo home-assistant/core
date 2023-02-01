@@ -1,16 +1,13 @@
 """Test pi_hole config flow."""
-import logging
-
+from homeassistant.components import pi_hole
 from homeassistant.components.pi_hole.const import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
-    CONFIG_DATA,
     CONFIG_DATA_DEFAULTS,
-    CONFIG_ENTRY_IMPORTED,
     CONFIG_ENTRY_WITH_API_KEY,
     CONFIG_ENTRY_WITHOUT_API_KEY,
     CONFIG_FLOW_API_KEY,
@@ -24,37 +21,6 @@ from . import (
 )
 
 from tests.common import MockConfigEntry
-
-
-async def test_flow_import(hass: HomeAssistant, caplog):
-    """Test import flow."""
-    mocked_hole = _create_mocked_hole()
-    with _patch_config_flow_hole(mocked_hole), _patch_setup_hole():
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=CONFIG_DATA
-        )
-        assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["title"] == NAME
-        assert result["data"] == CONFIG_ENTRY_IMPORTED
-
-        # duplicated server
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=CONFIG_DATA
-        )
-        assert result["type"] == FlowResultType.ABORT
-        assert result["reason"] == "already_configured"
-
-
-async def test_flow_import_invalid(hass: HomeAssistant, caplog):
-    """Test import flow with invalid server."""
-    mocked_hole = _create_mocked_hole(True)
-    with _patch_config_flow_hole(mocked_hole), _patch_setup_hole():
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=CONFIG_DATA
-        )
-        assert result["type"] == FlowResultType.ABORT
-        assert result["reason"] == "cannot_connect"
-        assert len([x for x in caplog.records if x.levelno == logging.ERROR]) == 1
 
 
 async def test_flow_user_with_api_key(hass: HomeAssistant):
@@ -142,7 +108,7 @@ async def test_flow_user_invalid(hass: HomeAssistant):
 async def test_flow_reauth(hass: HomeAssistant):
     """Test reauth flow."""
     mocked_hole = _create_mocked_hole(has_data=False)
-    entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_DATA_DEFAULTS)
+    entry = MockConfigEntry(domain=pi_hole.DOMAIN, data=CONFIG_DATA_DEFAULTS)
     entry.add_to_hass(hass)
     with _patch_init_hole(mocked_hole), _patch_config_flow_hole(mocked_hole):
         assert not await hass.config_entries.async_setup(entry.entry_id)

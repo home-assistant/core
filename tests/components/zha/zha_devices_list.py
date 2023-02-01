@@ -2245,8 +2245,6 @@ DEVICES = [
             "sensor.lumi_lumi_plug_maus01_rms_voltage",
             "sensor.lumi_lumi_plug_maus01_ac_frequency",
             "sensor.lumi_lumi_plug_maus01_power_factor",
-            "sensor.lumi_lumi_plug_maus01_analoginput",
-            "sensor.lumi_lumi_plug_maus01_analoginput_2",
             "binary_sensor.lumi_lumi_plug_maus01_binaryinput",
             "switch.lumi_lumi_plug_maus01_switch",
             "sensor.lumi_lumi_plug_maus01_rssi",
@@ -2308,16 +2306,6 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["basic"],
                 DEV_SIG_ENT_MAP_CLASS: "LQISensor",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_lqi",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-2-12"): {
-                DEV_SIG_CHANNELS: ["analog_input"],
-                DEV_SIG_ENT_MAP_CLASS: "AnalogInput",
-                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_analoginput",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-3-12"): {
-                DEV_SIG_CHANNELS: ["analog_input"],
-                DEV_SIG_ENT_MAP_CLASS: "AnalogInput",
-                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_analoginput_2",
             },
             ("binary_sensor", "00:11:22:33:44:55:66:77-100-15"): {
                 DEV_SIG_CHANNELS: ["binary_input"],

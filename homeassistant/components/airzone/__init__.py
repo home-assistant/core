@@ -19,7 +19,12 @@ from homeassistant.helpers import (
 from .const import DOMAIN
 from .coordinator import AirzoneUpdateCoordinator
 
-PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.CLIMATE, Platform.SENSOR]
+PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.SELECT,
+    Platform.SENSOR,
+]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +45,7 @@ async def _async_migrate_unique_ids(
         entity_unique_id = entity_entry.unique_id
 
         if entity_unique_id.startswith(entry_id):
-            new_unique_id = f"{unique_id}{entity_unique_id[len(entry_id):]}"
+            new_unique_id = f"{unique_id}{entity_unique_id.removeprefix(entry_id)}"
             _LOGGER.debug(
                 "Migrating unique_id from [%s] to [%s]",
                 entity_unique_id,

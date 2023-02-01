@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 from ondilo import OndiloError
 
@@ -28,6 +29,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
+from .api import OndiloClient
 from .const import DOMAIN
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
@@ -91,9 +93,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Ondilo ICO sensors."""
 
-    api = hass.data[DOMAIN][entry.entry_id]
+    api: OndiloClient = hass.data[DOMAIN][entry.entry_id]
 
-    async def async_update_data():
+    async def async_update_data() -> list[dict[str, Any]]:
         """Fetch data from API endpoint.
 
         This is the place to pre-process the data to lookup tables
@@ -132,12 +134,14 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class OndiloICO(CoordinatorEntity, SensorEntity):
+class OndiloICO(
+    CoordinatorEntity[DataUpdateCoordinator[list[dict[str, Any]]]], SensorEntity
+):
     """Representation of a Sensor."""
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[list[dict[str, Any]]],
         poolidx: int,
         description: SensorEntityDescription,
     ) -> None:

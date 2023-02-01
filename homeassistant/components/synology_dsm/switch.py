@@ -87,9 +87,7 @@ class SynoDSMSurveillanceHomeModeToggle(
             "SynoDSMSurveillanceHomeModeToggle.turn_on(%s)",
             self._api.information.serial,
         )
-        await self.hass.async_add_executor_job(
-            self._api.dsm.surveillance_station.set_home_mode, True
-        )
+        await self._api.dsm.surveillance_station.set_home_mode(True)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -98,9 +96,7 @@ class SynoDSMSurveillanceHomeModeToggle(
             "SynoDSMSurveillanceHomeModeToggle.turn_off(%s)",
             self._api.information.serial,
         )
-        await self.hass.async_add_executor_job(
-            self._api.dsm.surveillance_station.set_home_mode, False
-        )
+        await self._api.dsm.surveillance_station.set_home_mode(False)
         await self.coordinator.async_request_refresh()
 
     @property

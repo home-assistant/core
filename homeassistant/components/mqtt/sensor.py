@@ -114,7 +114,8 @@ PLATFORM_SCHEMA_MODERN = vol.All(
     validate_options,
 )
 
-# Configuring MQTT Sensors under the sensor platform key was deprecated in HA Core 2022.6
+# Configuring MQTT Sensors under the sensor platform key was deprecated in
+# HA Core 2022.6
 PLATFORM_SCHEMA = vol.All(
     warn_for_legacy_schema(sensor.DOMAIN),
 )
@@ -131,7 +132,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT sensor through configuration.yaml and dynamically through MQTT discovery."""
+    """Set up MQTT sensor through YAML and through MQTT discovery."""
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -153,7 +154,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
     """Representation of a sensor that can be updated using MQTT."""
 
     _entity_id_format = ENTITY_ID_FORMAT
-    _attr_last_reset = None
+    _attr_last_reset: datetime | None = None
     _attributes_extra_blocked = MQTT_SENSOR_ATTRIBUTES_BLOCKED
     _expire_after: int | None
     _expired: bool | None
@@ -248,7 +249,8 @@ class MqttSensor(MqttEntity, RestoreSensor):
         def _update_state(msg: ReceiveMessage) -> None:
             # auto-expire enabled?
             if self._expire_after is not None and self._expire_after > 0:
-                # When self._expire_after is set, and we receive a message, assume device is not expired since it has to be to receive the message
+                # When self._expire_after is set, and we receive a message, assume
+                # device is not expired since it has to be to receive the message
                 self._expired = False
 
                 # Reset old trigger

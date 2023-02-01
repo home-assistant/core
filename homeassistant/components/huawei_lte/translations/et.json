@@ -1,8 +1,10 @@
 {
     "config": {
         "abort": {
-            "not_huawei_lte": "Pole Huawei LTE seade",
-            "reauth_successful": "Taastuvastamine \u00f5nnestus"
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "already_in_progress": "Seadistamine on juba k\u00e4imas",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus",
+            "unsupported_device": "Seadet ei toetata"
         },
         "error": {
             "connection_timeout": "\u00dchenduse ajal\u00f5pp",

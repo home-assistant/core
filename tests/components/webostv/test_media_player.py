@@ -4,6 +4,7 @@ from datetime import timedelta
 from http import HTTPStatus
 from unittest.mock import Mock
 
+from aiowebostv import WebOsTvPairError
 import pytest
 
 from homeassistant.components import automation
@@ -37,6 +38,7 @@ from homeassistant.components.webostv.media_player import (
     SUPPORT_WEBOSTV,
     SUPPORT_WEBOSTV_VOLUME,
 )
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     ATTR_COMMAND,
     ATTR_DEVICE_CLASS,
@@ -763,3 +765,28 @@ async def test_get_image_https(
     content = await resp.read()
 
     assert content == b"https_image"
+
+
+async def test_reauth_reconnect(hass, client, monkeypatch):
+    """Test reauth flow triggered by reconnect."""
+    entry = await setup_webostv(hass)
+    monkeypatch.setattr(client, "is_connected", Mock(return_value=False))
+    monkeypatch.setattr(client, "connect", Mock(side_effect=WebOsTvPairError))
+
+    assert entry.state == ConfigEntryState.LOADED
+
+    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=20))
+    await hass.async_block_till_done()
+
+    assert entry.state == ConfigEntryState.LOADED
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    flow = flows[0]
+    assert flow.get("step_id") == "reauth_confirm"
+    assert flow.get("handler") == DOMAIN
+
+    assert "context" in flow
+    assert flow["context"].get("source") == SOURCE_REAUTH
+    assert flow["context"].get("entry_id") == entry.entry_id

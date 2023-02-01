@@ -34,7 +34,6 @@ async def test_full_user_flow_implementation(
 
     assert result.get("step_id") == "user"
     assert result.get("type") == FlowResultType.FORM
-    assert "flow_id" in result
 
     with patch(
         "homeassistant.components.modern_forms.async_setup_entry",
@@ -82,7 +81,6 @@ async def test_full_zeroconf_flow_implementation(
     assert result.get("description_placeholders") == {CONF_NAME: "example"}
     assert result.get("step_id") == "zeroconf_confirm"
     assert result.get("type") == FlowResultType.FORM
-    assert "flow_id" in result
 
     flow = flows[0]
     assert "context" in flow

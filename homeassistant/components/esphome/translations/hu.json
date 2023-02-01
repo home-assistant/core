@@ -4,7 +4,8 @@
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
             "already_in_progress": "A be\u00e1ll\u00edt\u00e1si folyamat m\u00e1r el lett kezdve",
             "mdns_missing_mac": "Hi\u00e1nyz\u00f3 MAC-c\u00edm az MDNS-tulajdons\u00e1gokban.",
-            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt."
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt.",
+            "service_received": "Szolg\u00e1ltat\u00e1s meg\u00e9rkezett"
         },
         "error": {
             "connection_error": "Nem lehet csatlakozni az ESP-hez. K\u00e9rem, gy\u0151z\u0151dj\u00f6n meg r\u00f3la, hogy a YAML konfigur\u00e1ci\u00f3 tartalmaz egy \"api:\" sort.",
@@ -28,13 +29,13 @@
                 "data": {
                     "noise_psk": "Titkos\u00edt\u00e1si kulcs"
                 },
-                "description": "K\u00e9rem, adja meg a bekonfigur\u00e1lt titkos\u00edt\u00e1si kulcsot: {name}"
+                "description": "K\u00e9rem, adja meg a {name} titkos\u00edt\u00e1si kulcs\u00e1t, amit az ESPHome Dashboardon vagy az eszk\u00f6z konfigur\u00e1ci\u00f3j\u00e1ban tal\u00e1l."
             },
             "reauth_confirm": {
                 "data": {
                     "noise_psk": "Titkos\u00edt\u00e1si kulcs"
                 },
-                "description": "{name} ESPHome v\u00e9gpont aktiv\u00e1lta az adat\u00e1tviteli titkos\u00edt\u00e1st vagy megv\u00e1ltoztatta a titkos\u00edt\u00e1si kulcsot. K\u00e9rem, adja meg az aktu\u00e1lis titkos\u00edt\u00e1si kulcsot."
+                "description": "Az ESPHome {name} eszk\u00f6z\u00f6n be lett \u00e1ll\u00edtva az adat\u00e1tviteli titkos\u00edt\u00e1s, vagy meg lett v\u00e1ltoztatva a titkos\u00edt\u00e1si kulcs. K\u00e9rem, adja meg az \u00e9rv\u00e9nyes kulcsot. Ezt az ESPHome Dashboardon vagy az eszk\u00f6z konfigur\u00e1ci\u00f3j\u00e1ban tal\u00e1lja meg."
             },
             "user": {
                 "data": {
@@ -48,7 +49,7 @@
     "issues": {
         "ble_firmware_outdated": {
             "description": "A Bluetooth megb\u00edzhat\u00f3s\u00e1g\u00e1nak \u00e9s teljes\u00edtm\u00e9ny\u00e9nek jav\u00edt\u00e1sa \u00e9rdek\u00e9ben javasoljuk {name} v\u00e9gpont friss\u00edt\u00e9s\u00e9t az ESPHome 2022.11.0 vagy \u00fajabb verzi\u00f3ra.",
-            "title": "{name} v\u00e9gpont friss\u00edt\u00e9se ESPHome 2022.11.0 vagy \u00fajabb verzi\u00f3j\u00e1val"
+            "title": "Friss\u00edtse a {name} v\u00e9gpontot ESPHome {version} vagy \u00fajabb verzi\u00f3j\u00e1val"
         }
     }
 }
