@@ -205,7 +205,6 @@ async def async_setup_entry(
                         key="plan_electricity_standing_charge",
                         name="OVO Electricity Standing Charge",
                         device_class=SensorDeviceClass.MONETARY,
-                        state_class=SensorStateClass.MEASUREMENT,
                         native_unit_of_measurement=coordinator.data.plan.electricity.standing_charge.currency_unit,
                         value=lambda data: data.plan.electricity.standing_charge.amount
                         if data.plan is not None
@@ -223,7 +222,6 @@ async def async_setup_entry(
                             key=f"plan_electricity_rate_{key}",
                             name=f"OVO Electricity Rate - {rate.name[0].upper() + rate.name[1:]}",
                             device_class=SensorDeviceClass.MONETARY,
-                            state_class=SensorStateClass.MEASUREMENT,
                             native_unit_of_measurement=rate.unit_rate.currency_unit,
                             value=lambda data, index=index: get_electricity_unit_rate_amount(
                                 data, index
@@ -240,7 +238,6 @@ async def async_setup_entry(
                         key="plan_gas_standing_charge",
                         name="OVO Gas Standing Charge",
                         device_class=SensorDeviceClass.MONETARY,
-                        state_class=SensorStateClass.MEASUREMENT,
                         native_unit_of_measurement=coordinator.data.plan.gas.standing_charge.currency_unit,
                         value=lambda data: data.plan.gas.standing_charge.amount
                         if data.plan is not None
@@ -258,7 +255,6 @@ async def async_setup_entry(
                             key=f"plan_gas_rate_{key}",
                             name=f"OVO Gas Rate - {rate.name[0].upper() + rate.name[1:]}",
                             device_class=SensorDeviceClass.MONETARY,
-                            state_class=SensorStateClass.MEASUREMENT,
                             native_unit_of_measurement=rate.unit_rate.currency_unit,
                             value=lambda data, index=index: get_gas_unit_rate_amount(
                                 data, index
