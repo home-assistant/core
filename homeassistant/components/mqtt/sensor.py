@@ -272,24 +272,19 @@ class MqttSensor(MqttEntity, RestoreSensor):
             payload = self._template(msg.payload, PayloadSentinel.DEFAULT)
             if payload is PayloadSentinel.DEFAULT:
                 return
-            if self.device_class not in {
-                SensorDeviceClass.DATE,
-                SensorDeviceClass.TIMESTAMP,
-            }:
-                new_value = str(payload)
-                if self.device_class is not None and new_value == "":
-                    _LOGGER.debug(
-                        "Ignore empty state for numeric value '%s' from '%s'",
-                        msg.payload,
-                        msg.topic,
-                    )
-                else:
-                    if new_value == PAYLOAD_NONE:
-                        self._attr_native_value = None
-                    else:
-                        self._attr_native_value = new_value
+            if (new_value := str(payload)) == PAYLOAD_NONE:
+                self._attr_native_value = None
                 return
-            if (payload_datetime := dt_util.parse_datetime(str(payload))) is None:
+            if self._numeric_state_expected:
+                if new_value == "":
+                    _LOGGER.debug("Ignore empty state from '%s'", msg.topic)
+                else:
+                    self._attr_native_value = new_value
+                return
+            if self.device_class is None:
+                self._attr_native_value = new_value
+                return
+            if (payload_datetime := dt_util.parse_datetime(new_value)) is None:
                 _LOGGER.warning(
                     "Invalid state message '%s' from '%s'", msg.payload, msg.topic
                 )
