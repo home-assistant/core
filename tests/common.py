@@ -380,20 +380,33 @@ def async_mock_intent(hass, intent_typ):
 
 @callback
 def async_fire_mqtt_message(
-    hass: HomeAssistant, topic: str, payload: Any, qos: int = 0, retain: bool = False
+    hass: HomeAssistant,
+    topic: str,
+    payload: bytes | str,
+    qos: int = 0,
+    retain: bool = False,
 ) -> None:
     """Fire the MQTT message."""
     # Local import to avoid processing MQTT modules when running a testcase
     # which does not use MQTT.
+
     # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components.mqtt.models import ReceiveMessage
+    from paho.mqtt.client import MQTTMessage
+
+    # pylint: disable-next=import-outside-toplevel
+    from homeassistant.components.mqtt.models import MqttData
 
     if isinstance(payload, str):
         payload = payload.encode("utf-8")
-    msg = ReceiveMessage(topic, payload, qos, retain)
-    # Note that msg is of type paho.mqtt.client.MQTTMessage
-    # we mock the MQTT broker using the ReceiveMessage class
-    hass.data["mqtt"].client._mqtt_handle_message(msg)
+
+    msg = MQTTMessage(topic=topic.encode("utf-8"))
+    msg.payload = payload
+    msg.qos = qos
+    msg.retain = retain
+
+    mqtt_data: MqttData = hass.data["mqtt"]
+    assert mqtt_data.client
+    mqtt_data.client._mqtt_handle_message(msg)
 
 
 fire_mqtt_message = threadsafe_callback_factory(async_fire_mqtt_message)
