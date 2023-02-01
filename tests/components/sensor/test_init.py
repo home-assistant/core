@@ -1684,4 +1684,4 @@ async def test_numeric_state_expected_helper(
     state = hass.states.get(entity0.entity_id)
     assert state is not None
 
-    assert entity0.numeric_state_expected == is_numeric
+    assert entity0._numeric_state_expected == is_numeric
