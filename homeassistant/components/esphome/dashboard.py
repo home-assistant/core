@@ -95,7 +95,8 @@ class ESPHomeDashboard(DataUpdateCoordinator[dict[str, ConfiguredDevice]]):
 
         esphome_version: str = next(iter(self.data.values()))["current_version"]
 
-        return AwesomeVersion(esphome_version) >= AwesomeVersion("2023.2.0-dev")
+        # There is no January release
+        return AwesomeVersion(esphome_version) > AwesomeVersion("2023.1.0")
 
     async def _async_update_data(self) -> dict:
         """Fetch device data."""
