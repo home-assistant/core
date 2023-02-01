@@ -281,7 +281,9 @@ async def _create_script_entities(
     return entities
 
 
-async def _async_process_config(hass, config, component) -> None:
+async def _async_process_config(
+    hass: HomeAssistant, config: ConfigType, component: EntityComponent[ScriptEntity]
+) -> None:
     """Process script configuration."""
     entities = []
 
