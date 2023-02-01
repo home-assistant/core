@@ -274,12 +274,12 @@ async def async_setup_entry(
 class OVOEnergySensor(OVOEnergyDeviceEntity, SensorEntity):
     """Define a OVO Energy sensor."""
 
-    coordinator: DataUpdateCoordinator[DataUpdateCoordinator[OVODailyUsage]]
+    coordinator: DataUpdateCoordinator[OVOCoordinatorData]
     entity_description: OVOEnergySensorEntityDescription
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[OVODailyUsage],
+        coordinator: DataUpdateCoordinator[OVOCoordinatorData],
         description: OVOEnergySensorEntityDescription,
         client: OVOEnergy,
     ) -> None:

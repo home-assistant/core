@@ -77,7 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 plan=await client.get_plan(),
             )
 
-    coordinator = DataUpdateCoordinator[OVODailyUsage](
+    coordinator = DataUpdateCoordinator[OVOCoordinatorData](
         hass,
         _LOGGER,
         # Name of the data. For logging purposes.
@@ -112,12 +112,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class OVOEnergyEntity(CoordinatorEntity[DataUpdateCoordinator[OVODailyUsage]]):
+class OVOEnergyEntity(CoordinatorEntity[DataUpdateCoordinator[OVOCoordinatorData]]):
     """Defines a base OVO Energy entity."""
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[OVODailyUsage],
+        coordinator: DataUpdateCoordinator[OVOCoordinatorData],
         client: OVOEnergy,
     ) -> None:
         """Initialize the OVO Energy entity."""
