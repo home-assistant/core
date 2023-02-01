@@ -1,7 +1,7 @@
 """Test ESPHome dashboard features."""
 from unittest.mock import patch
 
-from aioesphomeapi import DeviceInfo
+from aioesphomeapi import DeviceInfo, InvalidAuthAPIError
 
 from homeassistant.components.esphome import CONF_NOISE_PSK, dashboard
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
@@ -31,7 +31,10 @@ async def test_new_dashboard_fix_reauth(
     hass, mock_client, mock_config_entry, mock_dashboard
 ):
     """Test config entries waiting for reauth are triggered."""
-    mock_client.device_info.return_value = DeviceInfo(uses_password=False, name="test")
+    mock_client.device_info.side_effect = (
+        InvalidAuthAPIError,
+        DeviceInfo(uses_password=False, name="test"),
+    )
 
     with patch(
         "homeassistant.components.esphome.dashboard.ESPHomeDashboardAPI.get_encryption_key",
@@ -70,3 +73,29 @@ async def test_new_dashboard_fix_reauth(
     assert len(mock_get_encryption_key.mock_calls) == 1
     assert len(mock_setup.mock_calls) == 1
     assert mock_config_entry.data[CONF_NOISE_PSK] == VALID_NOISE_PSK
+
+
+async def test_dashboard_supports_update(hass, mock_dashboard):
+    """Test dashboard supports update."""
+    dash = dashboard.async_get_dashboard(hass)
+
+    # No data
+    assert not dash.supports_update
+
+    # supported version
+    mock_dashboard["configured"].append(
+        {
+            "name": "test",
+            "configuration": "test.yaml",
+            "current_version": "2023.2.0-dev",
+        }
+    )
+    await dash.async_refresh()
+
+    assert dash.supports_update
+
+    # unsupported version
+    mock_dashboard["configured"][0]["current_version"] = "2023.1.0"
+    await dash.async_refresh()
+
+    assert not dash.supports_update

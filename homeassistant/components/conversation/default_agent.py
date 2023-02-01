@@ -11,7 +11,7 @@ import re
 from typing import IO, Any
 
 from hassil.intents import Intents, ResponseType, SlotList, TextSlotList
-from hassil.recognize import recognize
+from hassil.recognize import RecognizeResult, recognize_all
 from hassil.util import merge_dict
 from home_assistant_intents import get_intents
 import yaml
@@ -128,7 +128,10 @@ class DefaultAgent(AbstractConversationAgent):
         }
 
         result = await self.hass.async_add_executor_job(
-            recognize, user_input.text, lang_intents.intents, slot_lists
+            self._recognize,
+            user_input,
+            lang_intents,
+            slot_lists,
         )
         if result is None:
             _LOGGER.debug("No intent was matched for '%s'", user_input.text)
@@ -196,6 +199,26 @@ class DefaultAgent(AbstractConversationAgent):
         return ConversationResult(
             response=intent_response, conversation_id=conversation_id
         )
+
+    def _recognize(
+        self,
+        user_input: ConversationInput,
+        lang_intents: LanguageIntents,
+        slot_lists: dict[str, SlotList],
+    ) -> RecognizeResult | None:
+        """Search intents for a match to user input."""
+        # Prioritize matches with entity names above area names
+        maybe_result: RecognizeResult | None = None
+        for result in recognize_all(
+            user_input.text, lang_intents.intents, slot_lists=slot_lists
+        ):
+            if "name" in result.entities:
+                return result
+
+            # Keep looking in case an entity has the same name
+            maybe_result = result
+
+        return maybe_result
 
     async def async_reload(self, language: str | None = None):
         """Clear cached intents for a language."""
@@ -373,19 +396,19 @@ class DefaultAgent(AbstractConversationAgent):
         if self._names_list is not None:
             return self._names_list
         states = self.hass.states.async_all()
-        registry = entity_registry.async_get(self.hass)
+        entities = entity_registry.async_get(self.hass)
         names = []
         for state in states:
             context = {"domain": state.domain}
 
-            entry = registry.async_get(state.entity_id)
-            if entry is not None:
-                if entry.entity_category:
+            entity = entities.async_get(state.entity_id)
+            if entity is not None:
+                if entity.entity_category:
                     # Skip configuration/diagnostic entities
                     continue
 
-                if entry.aliases:
-                    for alias in entry.aliases:
+                if entity.aliases:
+                    for alias in entity.aliases:
                         names.append((alias, state.entity_id, context))
 
             # Default name
