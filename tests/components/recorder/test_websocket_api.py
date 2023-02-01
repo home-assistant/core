@@ -17,6 +17,7 @@ from homeassistant.components.recorder.statistics import (
     get_metadata,
     list_statistic_ids,
 )
+from homeassistant.components.sensor.const import ATTR_NUMERICAL_VALUE
 from homeassistant.helpers import recorder as recorder_helper
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -131,7 +132,11 @@ async def test_statistics_during_period(recorder_mock, hass, hass_ws_client):
     hass.config.units = US_CUSTOMARY_SYSTEM
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
-    hass.states.async_set("sensor.test", 10, attributes=POWER_SENSOR_KW_ATTRIBUTES)
+    hass.states.async_set(
+        "sensor.test",
+        "",
+        attributes=POWER_SENSOR_KW_ATTRIBUTES | {ATTR_NUMERICAL_VALUE: 10},
+    )
     await async_wait_recording_done(hass)
 
     do_adhoc_statistics(hass, start=now)
@@ -892,7 +897,9 @@ async def test_statistics_during_period_unit_conversion(
 
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
-    hass.states.async_set("sensor.test", state, attributes=attributes)
+    hass.states.async_set(
+        "sensor.test", "", attributes=attributes | {ATTR_NUMERICAL_VALUE: state}
+    )
     await async_wait_recording_done(hass)
 
     do_adhoc_statistics(hass, start=now)
@@ -983,8 +990,12 @@ async def test_sum_statistics_during_period_unit_conversion(
 
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
-    hass.states.async_set("sensor.test", 0, attributes=attributes)
-    hass.states.async_set("sensor.test", state, attributes=attributes)
+    hass.states.async_set(
+        "sensor.test", "", attributes=attributes | {ATTR_NUMERICAL_VALUE: 0}
+    )
+    hass.states.async_set(
+        "sensor.test", "", attributes=attributes | {ATTR_NUMERICAL_VALUE: state}
+    )
     await async_wait_recording_done(hass)
 
     do_adhoc_statistics(hass, start=now)
@@ -1112,7 +1123,11 @@ async def test_statistics_during_period_in_the_past(
     past = now - timedelta(days=3)
 
     with freeze_time(past):
-        hass.states.async_set("sensor.test", 10, attributes=POWER_SENSOR_KW_ATTRIBUTES)
+        hass.states.async_set(
+            "sensor.test",
+            "",
+            attributes=POWER_SENSOR_KW_ATTRIBUTES | {ATTR_NUMERICAL_VALUE: 10},
+        )
         await async_wait_recording_done(hass)
 
     sensor_state = hass.states.get("sensor.test")
@@ -1340,7 +1355,9 @@ async def test_list_statistic_ids(
     assert response["success"]
     assert response["result"] == []
 
-    hass.states.async_set("sensor.test", 10, attributes=attributes)
+    hass.states.async_set(
+        "sensor.test", "", attributes=attributes | {ATTR_NUMERICAL_VALUE: 10}
+    )
     await async_wait_recording_done(hass)
 
     await client.send_json({"id": 2, "type": "recorder/list_statistic_ids"})
@@ -1503,7 +1520,9 @@ async def test_list_statistic_ids_unit_change(
     assert response["success"]
     assert response["result"] == []
 
-    hass.states.async_set("sensor.test", 10, attributes=attributes)
+    hass.states.async_set(
+        "sensor.test", "", attributes=attributes | {ATTR_NUMERICAL_VALUE: 10}
+    )
     await async_wait_recording_done(hass)
 
     do_adhoc_statistics(hass, start=now)
@@ -1526,7 +1545,9 @@ async def test_list_statistic_ids_unit_change(
     ]
 
     # Change the state unit
-    hass.states.async_set("sensor.test", 10, attributes=attributes2)
+    hass.states.async_set(
+        "sensor.test", "", attributes=attributes2 | {ATTR_NUMERICAL_VALUE: 10}
+    )
 
     await client.send_json({"id": 3, "type": "recorder/list_statistic_ids"})
     response = await client.receive_json()
@@ -1579,9 +1600,15 @@ async def test_clear_statistics(recorder_mock, hass, hass_ws_client):
     hass.config.units = units
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
-    hass.states.async_set("sensor.test1", state, attributes=attributes)
-    hass.states.async_set("sensor.test2", state * 2, attributes=attributes)
-    hass.states.async_set("sensor.test3", state * 3, attributes=attributes)
+    hass.states.async_set(
+        "sensor.test1", "", attributes=attributes | {ATTR_NUMERICAL_VALUE: state}
+    )
+    hass.states.async_set(
+        "sensor.test2", "", attributes=attributes | {ATTR_NUMERICAL_VALUE: state * 2}
+    )
+    hass.states.async_set(
+        "sensor.test3", "", attributes=attributes | {ATTR_NUMERICAL_VALUE: state * 3}
+    )
     await async_wait_recording_done(hass)
 
     do_adhoc_statistics(hass, start=now)
@@ -1704,7 +1731,9 @@ async def test_update_statistics_metadata(
     hass.config.units = units
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
-    hass.states.async_set("sensor.test", state, attributes=attributes)
+    hass.states.async_set(
+        "sensor.test", "", attributes=attributes | {ATTR_NUMERICAL_VALUE: state}
+    )
     await async_wait_recording_done(hass)
 
     do_adhoc_statistics(hass, period="hourly", start=now)
@@ -1795,7 +1824,9 @@ async def test_change_statistics_unit(recorder_mock, hass, hass_ws_client):
     hass.config.units = units
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
-    hass.states.async_set("sensor.test", state, attributes=attributes)
+    hass.states.async_set(
+        "sensor.test", "", attributes=attributes | {ATTR_NUMERICAL_VALUE: state}
+    )
     await async_wait_recording_done(hass)
 
     do_adhoc_statistics(hass, period="hourly", start=now)
@@ -1968,7 +1999,9 @@ async def test_change_statistics_unit_errors(
     hass.config.units = units
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
-    hass.states.async_set("sensor.test", state, attributes=attributes)
+    hass.states.async_set(
+        "sensor.test", "", attributes=attributes | {ATTR_NUMERICAL_VALUE: state}
+    )
     await async_wait_recording_done(hass)
 
     do_adhoc_statistics(hass, period="hourly", start=now)
@@ -2311,10 +2344,14 @@ async def test_get_statistics_metadata(
         }
     ]
 
-    hass.states.async_set("sensor.test", 10, attributes=attributes)
+    hass.states.async_set(
+        "sensor.test", "", attributes=attributes | {ATTR_NUMERICAL_VALUE: 10}
+    )
     await async_wait_recording_done(hass)
 
-    hass.states.async_set("sensor.test2", 10, attributes=attributes)
+    hass.states.async_set(
+        "sensor.test2", "", attributes=attributes | {ATTR_NUMERICAL_VALUE: 10}
+    )
     await async_wait_recording_done(hass)
 
     await client.send_json(

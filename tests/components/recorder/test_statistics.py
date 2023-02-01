@@ -55,7 +55,9 @@ def test_compile_hourly_statistics(hass_recorder):
     instance = recorder.get_instance(hass)
     setup_component(hass, "sensor", {})
     zero, four, states = record_states(hass)
-    hist = history.get_significant_states(hass, zero, four)
+    hist = history.get_significant_states(
+        hass, zero, four, significant_changes_only=False
+    )
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     # Should not fail if there is nothing there yet
@@ -316,7 +318,9 @@ def test_rename_entity(hass_recorder):
     hass.block_till_done()
 
     zero, four, states = record_states(hass)
-    hist = history.get_significant_states(hass, zero, four)
+    hist = history.get_significant_states(
+        hass, zero, four, significant_changes_only=False
+    )
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     for kwargs in ({}, {"statistic_ids": ["sensor.test1"]}):
@@ -382,7 +386,9 @@ def test_rename_entity_collision(hass_recorder, caplog):
     hass.block_till_done()
 
     zero, four, states = record_states(hass)
-    hist = history.get_significant_states(hass, zero, four)
+    hist = history.get_significant_states(
+        hass, zero, four, significant_changes_only=False
+    )
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     for kwargs in ({}, {"statistic_ids": ["sensor.test1"]}):
@@ -447,7 +453,9 @@ def test_statistics_duplicated(hass_recorder, caplog):
     hass = hass_recorder()
     setup_component(hass, "sensor", {})
     zero, four, states = record_states(hass)
-    hist = history.get_significant_states(hass, zero, four)
+    hist = history.get_significant_states(
+        hass, zero, four, significant_changes_only=False
+    )
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     wait_recording_done(hass)
@@ -1709,6 +1717,14 @@ def record_states(hass):
         wait_recording_done(hass)
         return hass.states.get(entity_id)
 
+    def set_sensor_state(entity_id, numerical_value, attributes):
+        """Set the state."""
+        hass.states.set(
+            entity_id, "", attributes={**attributes, "numerical_value": numerical_value}
+        )
+        wait_recording_done(hass)
+        return hass.states.get(entity_id)
+
     zero = dt_util.utcnow()
     one = zero + timedelta(seconds=1 * 5)
     two = one + timedelta(seconds=15 * 5)
@@ -1725,25 +1741,25 @@ def record_states(hass):
         states[mp].append(
             set_state(mp, "YouTube", attributes={"media_title": str(sentinel.mt2)})
         )
-        states[sns1].append(set_state(sns1, "10", attributes=sns1_attr))
-        states[sns2].append(set_state(sns2, "10", attributes=sns2_attr))
-        states[sns3].append(set_state(sns3, "10", attributes=sns3_attr))
-        states[sns4].append(set_state(sns4, "10", attributes=sns4_attr))
+        states[sns1].append(set_sensor_state(sns1, 10, attributes=sns1_attr))
+        states[sns2].append(set_sensor_state(sns2, 10, attributes=sns2_attr))
+        states[sns3].append(set_sensor_state(sns3, 10, attributes=sns3_attr))
+        states[sns4].append(set_sensor_state(sns4, 10, attributes=sns4_attr))
 
     with patch(
         "homeassistant.components.recorder.core.dt_util.utcnow", return_value=two
     ):
-        states[sns1].append(set_state(sns1, "15", attributes=sns1_attr))
-        states[sns2].append(set_state(sns2, "15", attributes=sns2_attr))
-        states[sns3].append(set_state(sns3, "15", attributes=sns3_attr))
-        states[sns4].append(set_state(sns4, "15", attributes=sns4_attr))
+        states[sns1].append(set_sensor_state(sns1, 15, attributes=sns1_attr))
+        states[sns2].append(set_sensor_state(sns2, 15, attributes=sns2_attr))
+        states[sns3].append(set_sensor_state(sns3, 15, attributes=sns3_attr))
+        states[sns4].append(set_sensor_state(sns4, 15, attributes=sns4_attr))
 
     with patch(
         "homeassistant.components.recorder.core.dt_util.utcnow", return_value=three
     ):
-        states[sns1].append(set_state(sns1, "20", attributes=sns1_attr))
-        states[sns2].append(set_state(sns2, "20", attributes=sns2_attr))
-        states[sns3].append(set_state(sns3, "20", attributes=sns3_attr))
-        states[sns4].append(set_state(sns4, "20", attributes=sns4_attr))
+        states[sns1].append(set_sensor_state(sns1, 20, attributes=sns1_attr))
+        states[sns2].append(set_sensor_state(sns2, 20, attributes=sns2_attr))
+        states[sns3].append(set_sensor_state(sns3, 20, attributes=sns3_attr))
+        states[sns4].append(set_sensor_state(sns4, 20, attributes=sns4_attr))
 
     return zero, four, states

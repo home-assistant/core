@@ -6,7 +6,6 @@ from collections.abc import Iterable, MutableMapping
 import datetime
 import itertools
 import logging
-import math
 from typing import Any
 
 from sqlalchemy.orm.session import Session
@@ -37,6 +36,7 @@ from homeassistant.util import dt as dt_util
 
 from . import (
     ATTR_LAST_RESET,
+    ATTR_NUMERICAL_VALUE,
     ATTR_OPTIONS,
     ATTR_STATE_CLASS,
     DOMAIN,
@@ -142,14 +142,6 @@ def _equivalent_units(units: set[str | None]) -> bool:
     return len(units) == 1
 
 
-def _parse_float(state: str) -> float:
-    """Parse a float string, throw on inf or nan."""
-    fstate = float(state)
-    if math.isnan(fstate) or math.isinf(fstate):
-        raise ValueError
-    return fstate
-
-
 def _normalize_states(
     hass: HomeAssistant,
     session: Session,
@@ -163,9 +155,7 @@ def _normalize_states(
 
     fstates: list[tuple[float, State]] = []
     for state in entity_history:
-        try:
-            fstate = _parse_float(state.state)
-        except (ValueError, TypeError):  # TypeError to guard for NULL state in DB
+        if (fstate := state.attributes.get(ATTR_NUMERICAL_VALUE)) is None:
             continue
         fstates.append((fstate, state))
 
@@ -298,7 +288,7 @@ def warn_dip(
             ),
             entity_id,
             f"from integration {domain} " if domain else "",
-            state.state,
+            state.attributes[ATTR_NUMERICAL_VALUE],
             previous_fstate,
             state.last_updated.isoformat(),
             _suggest_report_issue(hass, entity_id),
@@ -319,7 +309,7 @@ def warn_negative(hass: HomeAssistant, entity_id: str, state: State) -> None:
             ),
             entity_id,
             f"from integration {domain} " if domain else "",
-            state.state,
+            state.attributes[ATTR_NUMERICAL_VALUE],
             state.last_updated.isoformat(),
             _suggest_report_issue(hass, entity_id),
         )
@@ -424,6 +414,7 @@ def _compile_statistics(  # noqa: C901
             start - datetime.timedelta.resolution,
             end,
             entity_ids=entities_significant_history,
+            significant_changes_only=False,
         )
         history_list = {**history_list, **_history_list}
     # If there are no recent state changes, the sensor's state may already be pruned
