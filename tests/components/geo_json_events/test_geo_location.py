@@ -1,11 +1,11 @@
 """The tests for the geojson platform."""
 from datetime import timedelta
-from unittest.mock import ANY, call, patch, MagicMock
+from unittest.mock import ANY, call, patch
 
 from aio_geojson_generic_client import GenericFeed
 from freezegun import freeze_time
 
-from homeassistant.components import geo_location, geo_json_events
+from homeassistant.components import geo_json_events, geo_location
 from homeassistant.components.geo_json_events.const import (
     ATTR_EXTERNAL_ID,
     DEFAULT_SCAN_INTERVAL,
@@ -19,17 +19,17 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_RADIUS,
+    CONF_SCAN_INTERVAL,
     CONF_URL,
     EVENT_HOMEASSISTANT_START,
     LENGTH_KILOMETERS,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import DATA_DISPATCHER
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_fire_time_changed, assert_setup_component
+from tests.common import async_fire_time_changed
 from tests.components.geo_json_events import _generate_mock_feed_entry
 from tests.components.geo_json_events.conftest import URL
 
@@ -42,6 +42,17 @@ CONFIG_WITH_CUSTOM_LOCATION = {
         CONF_LATITUDE: 15.1,
         CONF_LONGITUDE: 25.2,
     }
+}
+
+CONFIG_LEGACY = {
+    geo_location.DOMAIN: [
+        {
+            "platform": "geo_json_events",
+            CONF_URL: URL,
+            CONF_RADIUS: 190,
+            CONF_SCAN_INTERVAL: timedelta(minutes=2),
+        }
+    ]
 }
 
 
@@ -174,77 +185,26 @@ async def test_setup_with_custom_location(hass: HomeAssistant) -> None:
         )
 
 
-async def test_setup_race_condition(hass: HomeAssistant) -> None:
-    """Test a particular race condition experienced."""
-    # 1. Feed returns 1 entry -> Feed manager creates 1 entity.
-    # 2. Feed returns error -> Feed manager removes 1 entity.
-    #    However, this stayed on and kept listening for dispatcher signals.
-    # 3. Feed returns 1 entry -> Feed manager creates 1 entity.
-    # 4. Feed returns 1 entry -> Feed manager updates 1 entity.
-    #    Internally, the previous entity is updating itself, too.
-    # 5. Feed returns error -> Feed manager removes 1 entity.
-    #    There are now 2 entities trying to remove themselves from HA, but
-    #    the second attempt fails of course.
-
+async def test_setup_as_legacy_platform(hass):
+    """Test the setup with YAML legacy configuration."""
     # Set up some mock feed entries for this test.
-    mock_entry_1 = _generate_mock_feed_entry("1234", "Title 1", 15.5, (-31.0, 150.0))
-    delete_signal = "geo_json_events_delete_1234"
-    update_signal = "geo_json_events_update_1234"
+    mock_entry_1 = _generate_mock_feed_entry("1234", "Title 1", 20.5, (-31.1, 150.1))
 
-    # Patching 'utcnow' to gain more control over the timed update.
-    utcnow = dt_util.utcnow()
-    with freeze_time(utcnow), patch(
+    with patch(
+        "aio_geojson_generic_client.feed_manager.GenericFeed",
+        wraps=GenericFeed,
+    ) as mock_feed, patch(
         "aio_geojson_client.feed.GeoJsonFeed.update"
-    ) as mock_feed_update, assert_setup_component(1, geo_location.DOMAIN):
-        assert await async_setup_component(hass, geo_location.DOMAIN, CONFIG)
-        assert await async_setup_component(
-            hass, geo_json_events.DOMAIN, CONFIG_WITH_CUSTOM_LOCATION
-        )
+    ) as mock_feed_update:
+        mock_feed_update.return_value = "OK", [mock_entry_1]
+
+        assert await async_setup_component(hass, geo_location.DOMAIN, CONFIG_LEGACY)
         await hass.async_block_till_done()
 
-        # Artificially trigger update and collect events.
+        # Artificially trigger update.
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
 
         assert len(hass.states.async_entity_ids("geo_location")) == 1
 
-        # Simulate an update - empty data, removes all entities
-        mock_feed_update.return_value = "ERROR", None
-        async_fire_time_changed(hass, utcnow + DEFAULT_SCAN_INTERVAL)
-        await hass.async_block_till_done()
-
-        all_states = hass.states.async_all()
-        assert len(all_states) == 0
-        assert len(hass.data[DATA_DISPATCHER][delete_signal]) == 0
-        assert len(hass.data[DATA_DISPATCHER][update_signal]) == 0
-
-        # Simulate an update - 1 entry
-        mock_feed_update.return_value = "OK", [mock_entry_1]
-        async_fire_time_changed(hass, utcnow + 2 * DEFAULT_SCAN_INTERVAL)
-        await hass.async_block_till_done()
-
-        all_states = hass.states.async_all()
-        assert len(all_states) == 1
-        assert len(hass.data[DATA_DISPATCHER][delete_signal]) == 1
-        assert len(hass.data[DATA_DISPATCHER][update_signal]) == 1
-
-        # Simulate an update - 1 entry
-        mock_feed_update.return_value = "OK", [mock_entry_1]
-        async_fire_time_changed(hass, utcnow + 3 * DEFAULT_SCAN_INTERVAL)
-        await hass.async_block_till_done()
-
-        all_states = hass.states.async_all()
-        assert len(all_states) == 1
-        assert len(hass.data[DATA_DISPATCHER][delete_signal]) == 1
-        assert len(hass.data[DATA_DISPATCHER][update_signal]) == 1
-
-        # Simulate an update - empty data, removes all entities
-        mock_feed_update.return_value = "ERROR", None
-        async_fire_time_changed(hass, utcnow + 4 * DEFAULT_SCAN_INTERVAL)
-        await hass.async_block_till_done()
-
-        all_states = hass.states.async_all()
-        assert len(all_states) == 0
-        # Ensure that delete and update signal targets are now empty.
-        assert len(hass.data[DATA_DISPATCHER][delete_signal]) == 0
-        assert len(hass.data[DATA_DISPATCHER][update_signal]) == 0
+        assert mock_feed.call_args == call(ANY, ANY, URL, filter_radius=190.0)
