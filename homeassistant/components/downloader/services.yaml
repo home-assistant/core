@@ -27,3 +27,11 @@ download_file:
       default: false
       selector:
         boolean:
+    timeout:
+      name: Timeout
+      description: Timeout in seconds for http call
+      default: 10
+      selector:
+        number:
+          min: 10
+          max: 60

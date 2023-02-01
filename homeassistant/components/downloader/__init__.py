@@ -19,6 +19,7 @@ ATTR_FILENAME = "filename"
 ATTR_SUBDIR = "subdir"
 ATTR_URL = "url"
 ATTR_OVERWRITE = "overwrite"
+ATTR_TIMEOUT = "timeout"
 
 CONF_DOWNLOAD_DIR = "download_dir"
 
@@ -34,6 +35,7 @@ SERVICE_DOWNLOAD_FILE_SCHEMA = vol.Schema(
         vol.Optional(ATTR_SUBDIR): cv.string,
         vol.Optional(ATTR_FILENAME): cv.string,
         vol.Optional(ATTR_OVERWRITE, default=False): cv.boolean,
+        vol.Optional(ATTR_TIMEOUT, default=10): cv.positive_int
     }
 )
 
@@ -72,13 +74,15 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
                 overwrite = service.data.get(ATTR_OVERWRITE)
 
+                timeout = service.data.get(ATTR_TIMEOUT)
+
                 if subdir:
                     # Check the path
                     raise_if_invalid_path(subdir)
 
                 final_path = None
 
-                req = requests.get(url, stream=True, timeout=10)
+                req = requests.get(url, stream=True, timeout=timeout)
 
                 if req.status_code != HTTPStatus.OK:
                     _LOGGER.warning(
