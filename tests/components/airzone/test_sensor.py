@@ -20,7 +20,7 @@ async def test_airzone_create_sensors(
 
     # Zones
     state = hass.states.get("sensor.despacho_temperature")
-    assert state.state == "21.2"
+    assert state.state == "21.20"
 
     state = hass.states.get("sensor.despacho_humidity")
     assert state.state == "36"

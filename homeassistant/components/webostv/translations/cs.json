@@ -31,8 +31,7 @@
     },
     "options": {
         "error": {
-            "cannot_retrieve": "Nelze na\u010d\u00edst seznam zdroj\u016f. Zkontrolujte, zda je za\u0159\u00edzen\u00ed zapnut\u00e9",
-            "script_not_found": "Skript nebyl nalezen"
+            "cannot_retrieve": "Nelze na\u010d\u00edst seznam zdroj\u016f. Zkontrolujte, zda je za\u0159\u00edzen\u00ed zapnut\u00e9"
         },
         "step": {
             "init": {

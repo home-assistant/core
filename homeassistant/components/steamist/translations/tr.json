@@ -14,7 +14,7 @@
         "flow_title": "{name} ({ipaddress})",
         "step": {
             "discovery_confirm": {
-                "description": "{name} ( {ipaddress} ) kurulumunu yapmak istiyor musunuz?"
+                "description": "{name} ( {ipaddress} ) kurmak istiyor musunuz?"
             },
             "pick_device": {
                 "data": {

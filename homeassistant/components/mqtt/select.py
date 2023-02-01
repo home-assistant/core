@@ -48,7 +48,6 @@ _LOGGER = logging.getLogger(__name__)
 CONF_OPTIONS = "options"
 
 DEFAULT_NAME = "MQTT Select"
-DEFAULT_OPTIMISTIC = False
 
 MQTT_SELECT_ATTRIBUTES_BLOCKED = frozenset(
     {
@@ -61,7 +60,6 @@ PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
     {
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         vol.Required(CONF_OPTIONS): cv.ensure_list,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     },
@@ -80,7 +78,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT select through configuration.yaml and dynamically through MQTT discovery."""
+    """Set up MQTT select through YAML and through MQTT discovery."""
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )

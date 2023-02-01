@@ -183,10 +183,7 @@ def _normalize_states(
         # We have seen this sensor before, use the unit from metadata
         statistics_unit = old_metadata["unit_of_measurement"]
 
-    if (
-        not statistics_unit
-        or statistics_unit not in statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER
-    ):
+    if statistics_unit not in statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER:
         # The unit used by this sensor doesn't support unit conversion
 
         all_units = _get_units(fstates)
@@ -507,9 +504,19 @@ def _compile_statistics(  # noqa: C901
         # Make calculations
         stat: StatisticData = {"start": start}
         if "max" in wanted_statistics[entity_id]:
-            stat["max"] = max(*itertools.islice(zip(*fstates), 1))  # type: ignore[typeddict-item]
+            stat["max"] = max(
+                *itertools.islice(
+                    zip(*fstates),  # type: ignore[typeddict-item]
+                    1,
+                )
+            )
         if "min" in wanted_statistics[entity_id]:
-            stat["min"] = min(*itertools.islice(zip(*fstates), 1))  # type: ignore[typeddict-item]
+            stat["min"] = min(
+                *itertools.islice(
+                    zip(*fstates),  # type: ignore[typeddict-item]
+                    1,
+                )
+            )
 
         if "mean" in wanted_statistics[entity_id]:
             stat["mean"] = _time_weighted_average(fstates, start, end)
@@ -519,7 +526,8 @@ def _compile_statistics(  # noqa: C901
             new_state = old_state = None
             _sum = 0.0
             if entity_id in last_stats:
-                # We have compiled history for this sensor before, use that as a starting point
+                # We have compiled history for this sensor before,
+                # use that as a starting point.
                 last_reset = old_last_reset = last_stats[entity_id][0]["last_reset"]
                 if old_last_reset is not None:
                     last_reset = old_last_reset = old_last_reset.isoformat()
@@ -710,7 +718,8 @@ def validate_statistics(
                     )
             elif state_unit not in converter.VALID_UNITS:
                 # The state unit can't be converted to the unit in metadata
-                valid_units = ", ".join(sorted(converter.VALID_UNITS))
+                valid_units = (unit or "<None>" for unit in converter.VALID_UNITS)
+                valid_units_str = ", ".join(sorted(valid_units))
                 validation_result[entity_id].append(
                     statistics.ValidationIssue(
                         "units_changed",
@@ -718,7 +727,7 @@ def validate_statistics(
                             "statistic_id": entity_id,
                             "state_unit": state_unit,
                             "metadata_unit": metadata_unit,
-                            "supported_unit": valid_units,
+                            "supported_unit": valid_units_str,
                         },
                     )
                 )

@@ -114,7 +114,8 @@
                     "method": "Metoda",
                     "password": "Has\u0142o",
                     "resource": "Zas\u00f3b",
-                    "timeout": "Limit czasu"
+                    "timeout": "Limit czasu",
+                    "username": "Nazwa u\u017cytkownika"
                 },
                 "data_description": {
                     "authentication": "Typ uwierzytelniania HTTP. Podstawowy lub digest.",

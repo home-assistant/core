@@ -14,6 +14,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import NukiEntity
 from .const import (
@@ -35,7 +36,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Nuki lock platform."""
     data = hass.data[NUKI_DOMAIN][entry.entry_id]
-    coordinator = data[DATA_COORDINATOR]
+    coordinator: DataUpdateCoordinator[None] = data[DATA_COORDINATOR]
 
     entities: list[NukiDeviceEntity] = [
         NukiLockEntity(coordinator, lock) for lock in data[DATA_LOCKS]
@@ -66,12 +67,8 @@ async def async_setup_entry(
 class NukiDeviceEntity(NukiEntity, LockEntity, ABC):
     """Representation of a Nuki device."""
 
+    _attr_has_entity_name = True
     _attr_supported_features = LockEntityFeature.OPEN
-
-    @property
-    def name(self) -> str | None:
-        """Return the name of the lock."""
-        return self._nuki_device.name
 
     @property
     def unique_id(self) -> str | None:

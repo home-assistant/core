@@ -6,11 +6,9 @@
         },
         "error": {
             "cannot_connect": "Failed to connect",
-            "file_not_found": "The specified `.knxkeys` file was not found in the path config/.storage/knx/",
             "invalid_backbone_key": "Invalid backbone key. 32 hexadecimal numbers expected.",
             "invalid_individual_address": "Value does not match pattern for KNX individual address.\n'area.line.device'",
             "invalid_ip_address": "Invalid IPv4 address.",
-            "invalid_signature": "The password to decrypt the `.knxkeys` file is wrong.",
             "keyfile_invalid_signature": "The password to decrypt the `.knxkeys` file is wrong.",
             "keyfile_no_backbone_key": "The `.knxkeys` file does not contain a backbone key for secure routing.",
             "keyfile_no_tunnel_for_host": "The `.knxkeys` file does not contain credentials for host `{host}`.",
@@ -125,11 +123,9 @@
     "options": {
         "error": {
             "cannot_connect": "Failed to connect",
-            "file_not_found": "The specified `.knxkeys` file was not found in the path config/.storage/knx/",
             "invalid_backbone_key": "Invalid backbone key. 32 hexadecimal numbers expected.",
             "invalid_individual_address": "Value does not match pattern for KNX individual address.\n'area.line.device'",
             "invalid_ip_address": "Invalid IPv4 address.",
-            "invalid_signature": "The password to decrypt the `.knxkeys` file is wrong.",
             "keyfile_invalid_signature": "The password to decrypt the `.knxkeys` file is wrong.",
             "keyfile_no_backbone_key": "The `.knxkeys` file does not contain a backbone key for secure routing.",
             "keyfile_no_tunnel_for_host": "The `.knxkeys` file does not contain credentials for host `{host}`.",

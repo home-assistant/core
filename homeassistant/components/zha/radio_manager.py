@@ -11,7 +11,7 @@ from typing import Any
 import voluptuous as vol
 from zigpy.application import ControllerApplication
 import zigpy.backups
-from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
+from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH, CONF_NWK_BACKUP_ENABLED
 from zigpy.exceptions import NetworkNotFormed
 
 from homeassistant import config_entries
@@ -126,6 +126,7 @@ class ZhaRadioManager:
 
         app_config[CONF_DATABASE] = database_path
         app_config[CONF_DEVICE] = self.device_settings
+        app_config[CONF_NWK_BACKUP_ENABLED] = False
         app_config = self.radio_type.controller.SCHEMA(app_config)
 
         app = await self.radio_type.controller.new(
@@ -206,11 +207,12 @@ class ZhaRadioManager:
 
             # The list of backups will always exist
             self.backups = app.backups.backups.copy()
+            self.backups.sort(reverse=True, key=lambda b: b.backup_time)
 
         return backup
 
     async def async_form_network(self) -> None:
-        """Form a brand new network."""
+        """Form a brand-new network."""
         async with self._connect_zigpy_app() as app:
             await app.form_network()
 
@@ -273,7 +275,7 @@ class ZhaMultiPANMigrationHelper:
     """Helper class for automatic migration when upgrading the firmware of a radio.
 
     This class is currently only intended to be used when changing the firmware on the
-    radio used in the Home Assistant Sky Connect USB stick and the Home Asssistant Yellow
+    radio used in the Home Assistant SkyConnect USB stick and the Home Assistant Yellow
     from Zigbee only firmware to firmware supporting both Zigbee and Thread.
     """
 

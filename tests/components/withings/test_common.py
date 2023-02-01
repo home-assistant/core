@@ -163,7 +163,6 @@ async def test_data_manager_webhook_subscription(
         WebhookConfig(id="1234", url="http://localhost/api/webhook/1234", enabled=True),
     )
 
-    # pylint: disable=protected-access
     data_manager._notify_subscribe_delay = datetime.timedelta(seconds=0)
     data_manager._notify_unsubscribe_delay = datetime.timedelta(seconds=0)
 

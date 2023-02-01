@@ -114,7 +114,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             sw_version=str(product_info.firmware_version),
         )
 
-    if isinstance(connection, NibeGW):
+    if hasattr(connection, "PRODUCT_INFO_EVENT") and hasattr(connection, "subscribe"):
         connection.subscribe(connection.PRODUCT_INFO_EVENT, _on_product_info)
     else:
         reg.async_update_device(device_id=device_entry.id, model=heatpump.model.name)

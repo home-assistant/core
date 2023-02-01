@@ -48,7 +48,6 @@
             "carbon_monoxide": "{entity_name} sa men\u00ed koncentr\u00e1cia oxidu uho\u013enat\u00e9ho",
             "current": "{entity_name} pr\u00fad sa zmen\u00ed",
             "data_rate": "Pri zmene r\u00fdchlosti prenosu d\u00e1t {entity_name}",
-            "data_size": "Pri zmene ve\u013ekosti \u00fadajov {entity_name}",
             "distance": "Pri zmene vzdialenosti {entity_name}",
             "energy": "Pri zmene energie {entity_name}",
             "frequency": "Pri zmene frekvencie {entity_name}",

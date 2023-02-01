@@ -143,7 +143,7 @@ class SynoDSMCamera(SynologyDSMBaseEntity[SynologyDSMCameraUpdateCoordinator], C
         self._listen_source_updates()
         await super().async_added_to_hass()
 
-    def camera_image(
+    async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return bytes of camera image."""
@@ -154,7 +154,7 @@ class SynoDSMCamera(SynologyDSMBaseEntity[SynologyDSMCameraUpdateCoordinator], C
         if not self.available:
             return None
         try:
-            return self._api.surveillance_station.get_camera_image(self.entity_description.key, self.snapshot_quality)  # type: ignore[no-any-return]
+            return await self._api.surveillance_station.get_camera_image(self.entity_description.key, self.snapshot_quality)  # type: ignore[no-any-return]
         except (
             SynologyDSMAPIErrorException,
             SynologyDSMRequestException,
@@ -178,22 +178,22 @@ class SynoDSMCamera(SynologyDSMBaseEntity[SynologyDSMCameraUpdateCoordinator], C
 
         return self.camera_data.live_view.rtsp  # type: ignore[no-any-return]
 
-    def enable_motion_detection(self) -> None:
+    async def async_enable_motion_detection(self) -> None:
         """Enable motion detection in the camera."""
         _LOGGER.debug(
             "SynoDSMCamera.enable_motion_detection(%s)",
             self.camera_data.name,
         )
-        self._api.surveillance_station.enable_motion_detection(
+        await self._api.surveillance_station.enable_motion_detection(
             self.entity_description.key
         )
 
-    def disable_motion_detection(self) -> None:
+    async def async_disable_motion_detection(self) -> None:
         """Disable motion detection in camera."""
         _LOGGER.debug(
             "SynoDSMCamera.disable_motion_detection(%s)",
             self.camera_data.name,
         )
-        self._api.surveillance_station.disable_motion_detection(
+        await self._api.surveillance_station.disable_motion_detection(
             self.entity_description.key
         )

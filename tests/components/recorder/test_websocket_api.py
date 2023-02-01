@@ -1,5 +1,5 @@
 """The tests for sensor recorder platform."""
-# pylint: disable=protected-access,invalid-name
+# pylint: disable=invalid-name
 import datetime
 from datetime import timedelta
 from statistics import fmean
@@ -1690,7 +1690,7 @@ async def test_clear_statistics(recorder_mock, hass, hass_ws_client):
 
 @pytest.mark.parametrize(
     "new_unit, new_unit_class, new_display_unit",
-    [("dogs", None, "dogs"), (None, None, None), ("W", "power", "kW")],
+    [("dogs", None, "dogs"), (None, "unitless", None), ("W", "power", "kW")],
 )
 async def test_update_statistics_metadata(
     recorder_mock, hass, hass_ws_client, new_unit, new_unit_class, new_display_unit
@@ -2033,7 +2033,7 @@ async def test_recorder_info(recorder_mock, hass, hass_ws_client):
     assert response["success"]
     assert response["result"] == {
         "backlog": 0,
-        "max_backlog": 40000,
+        "max_backlog": 65000,
         "migration_in_progress": False,
         "migration_is_live": False,
         "recording": True,
@@ -2986,7 +2986,7 @@ async def test_adjust_sum_statistics_gas(
         ("m³", "m³", "volume", 1, ("ft³", "m³"), ("Wh", "kWh", "MWh", "cats", None)),
         ("ft³", "ft³", "volume", 1, ("ft³", "m³"), ("Wh", "kWh", "MWh", "cats", None)),
         ("dogs", "dogs", None, 1, ("dogs",), ("cats", None)),
-        (None, None, None, 1, (None,), ("cats",)),
+        (None, None, "unitless", 1, (None,), ("cats",)),
     ),
 )
 async def test_adjust_sum_statistics_errors(

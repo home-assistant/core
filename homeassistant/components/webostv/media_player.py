@@ -9,11 +9,10 @@ from functools import wraps
 from http import HTTPStatus
 import logging
 from ssl import SSLContext
-from typing import Any, TypeVar, cast
+from typing import Any, Concatenate, ParamSpec, TypeVar, cast
 
 from aiowebostv import WebOsClient, WebOsTvPairError
 import async_timeout
-from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant import util
 from homeassistant.components.media_player import (
@@ -39,7 +38,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.trigger import PluggableAction
 
-from . import WebOsClientWrapper
+from . import update_client_key
 from .const import (
     ATTR_PAYLOAD,
     ATTR_SOUND_OUTPUT,
@@ -74,18 +73,11 @@ SCAN_INTERVAL = timedelta(seconds=10)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the LG webOS Smart TV platform."""
-    unique_id = config_entry.unique_id
-    assert unique_id
-    name = config_entry.title
-    sources = config_entry.options.get(CONF_SOURCES)
-    wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id]
-
-    async_add_entities([LgWebOSMediaPlayerEntity(wrapper, name, sources, unique_id)])
+    client = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id]
+    async_add_entities([LgWebOSMediaPlayerEntity(entry, client)])
 
 
 _T = TypeVar("_T", bound="LgWebOSMediaPlayerEntity")
@@ -124,20 +116,14 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
 
     _attr_device_class = MediaPlayerDeviceClass.TV
 
-    def __init__(
-        self,
-        wrapper: WebOsClientWrapper,
-        name: str,
-        sources: list[str] | None,
-        unique_id: str,
-    ) -> None:
+    def __init__(self, entry: ConfigEntry, client: WebOsClient) -> None:
         """Initialize the webos device."""
-        self._wrapper = wrapper
-        self._client: WebOsClient = wrapper.client
+        self._entry = entry
+        self._client = client
         self._attr_assumed_state = True
-        self._attr_name = name
-        self._attr_unique_id = unique_id
-        self._sources = sources
+        self._attr_name = entry.title
+        self._attr_unique_id = entry.unique_id
+        self._sources = entry.options.get(CONF_SOURCES)
 
         # Assume that the TV is not paused
         self._paused = False
@@ -328,7 +314,12 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
             return
 
         with suppress(*WEBOSTV_EXCEPTIONS, WebOsTvPairError):
-            await self._client.connect()
+            try:
+                await self._client.connect()
+            except WebOsTvPairError:
+                self._entry.async_start_reauth(self.hass)
+            else:
+                update_client_key(self.hass, self._entry, self._client)
 
     @property
     def supported_features(self) -> MediaPlayerEntityFeature:

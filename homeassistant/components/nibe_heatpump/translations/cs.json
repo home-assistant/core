@@ -1,6 +1,7 @@
 {
     "config": {
         "error": {
+            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba",
             "url": "Zadan\u00e1 adresa URL nen\u00ed spr\u00e1vn\u011b zad\u00e1na ani podporov\u00e1na"
         },
         "step": {

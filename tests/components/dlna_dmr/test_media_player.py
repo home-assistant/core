@@ -674,7 +674,9 @@ async def test_play_media_stopped(
         {
             ATTR_ENTITY_ID: mock_entity_id,
             mp_const.ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-            mp_const.ATTR_MEDIA_CONTENT_ID: "http://198.51.100.20:8200/MediaItems/17621.mp3",
+            mp_const.ATTR_MEDIA_CONTENT_ID: (
+                "http://198.51.100.20:8200/MediaItems/17621.mp3"
+            ),
             mp_const.ATTR_MEDIA_ENQUEUE: False,
         },
         blocking=True,
@@ -706,7 +708,9 @@ async def test_play_media_playing(
         {
             ATTR_ENTITY_ID: mock_entity_id,
             mp_const.ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-            mp_const.ATTR_MEDIA_CONTENT_ID: "http://198.51.100.20:8200/MediaItems/17621.mp3",
+            mp_const.ATTR_MEDIA_CONTENT_ID: (
+                "http://198.51.100.20:8200/MediaItems/17621.mp3"
+            ),
             mp_const.ATTR_MEDIA_ENQUEUE: False,
         },
         blocking=True,
@@ -739,7 +743,9 @@ async def test_play_media_no_autoplay(
         {
             ATTR_ENTITY_ID: mock_entity_id,
             mp_const.ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-            mp_const.ATTR_MEDIA_CONTENT_ID: "http://198.51.100.20:8200/MediaItems/17621.mp3",
+            mp_const.ATTR_MEDIA_CONTENT_ID: (
+                "http://198.51.100.20:8200/MediaItems/17621.mp3"
+            ),
             mp_const.ATTR_MEDIA_ENQUEUE: False,
             mp_const.ATTR_MEDIA_EXTRA: {"autoplay": False},
         },
@@ -770,7 +776,9 @@ async def test_play_media_metadata(
         {
             ATTR_ENTITY_ID: mock_entity_id,
             mp_const.ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-            mp_const.ATTR_MEDIA_CONTENT_ID: "http://198.51.100.20:8200/MediaItems/17621.mp3",
+            mp_const.ATTR_MEDIA_CONTENT_ID: (
+                "http://198.51.100.20:8200/MediaItems/17621.mp3"
+            ),
             mp_const.ATTR_MEDIA_ENQUEUE: False,
             mp_const.ATTR_MEDIA_EXTRA: {
                 "title": "Mock song",
@@ -800,7 +808,9 @@ async def test_play_media_metadata(
         {
             ATTR_ENTITY_ID: mock_entity_id,
             mp_const.ATTR_MEDIA_CONTENT_TYPE: MediaType.TVSHOW,
-            mp_const.ATTR_MEDIA_CONTENT_ID: "http://198.51.100.20:8200/MediaItems/123.mkv",
+            mp_const.ATTR_MEDIA_CONTENT_ID: (
+                "http://198.51.100.20:8200/MediaItems/123.mkv"
+            ),
             mp_const.ATTR_MEDIA_ENQUEUE: False,
             mp_const.ATTR_MEDIA_EXTRA: {
                 "title": "Mock show",
@@ -833,7 +843,9 @@ async def test_play_media_local_source(
         {
             ATTR_ENTITY_ID: mock_entity_id,
             mp_const.ATTR_MEDIA_CONTENT_TYPE: "video/mp4",
-            mp_const.ATTR_MEDIA_CONTENT_ID: "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4",
+            mp_const.ATTR_MEDIA_CONTENT_ID: (
+                "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4"
+            ),
         },
         blocking=True,
     )
@@ -888,7 +900,9 @@ async def test_play_media_didl_metadata(
             {
                 ATTR_ENTITY_ID: mock_entity_id,
                 mp_const.ATTR_MEDIA_CONTENT_TYPE: "video/mp4",
-                mp_const.ATTR_MEDIA_CONTENT_ID: "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4",
+                mp_const.ATTR_MEDIA_CONTENT_ID: (
+                    "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4"
+                ),
             },
             blocking=True,
         )
@@ -1011,7 +1025,9 @@ async def test_browse_media(
         "title": "Epic Sax Guy 10 Hours.mp4",
         "media_class": "video",
         "media_content_type": "video/mp4",
-        "media_content_id": "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4",
+        "media_content_id": (
+            "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4"
+        ),
         "can_play": True,
         "can_expand": False,
         "thumbnail": None,
@@ -1104,7 +1120,9 @@ async def test_browse_media_unfiltered(
         "title": "Epic Sax Guy 10 Hours.mp4",
         "media_class": "video",
         "media_content_type": "video/mp4",
-        "media_content_id": "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4",
+        "media_content_id": (
+            "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4"
+        ),
         "can_play": True,
         "can_expand": False,
         "thumbnail": None,
@@ -1280,7 +1298,9 @@ async def test_unavailable_device(
             mp_const.SERVICE_PLAY_MEDIA,
             {
                 mp_const.ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-                mp_const.ATTR_MEDIA_CONTENT_ID: "http://198.51.100.20:8200/MediaItems/17621.mp3",
+                mp_const.ATTR_MEDIA_CONTENT_ID: (
+                    "http://198.51.100.20:8200/MediaItems/17621.mp3"
+                ),
                 mp_const.ATTR_MEDIA_ENQUEUE: False,
             },
         ),

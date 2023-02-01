@@ -367,7 +367,7 @@ class PurpleAirOptionsFlowHandler(config_entries.OptionsFlow):
 
         options = deepcopy({**self.config_entry.options})
         options[CONF_SENSOR_INDICES].append(sensor_index)
-        return self.async_create_entry(title="", data=options)
+        return self.async_create_entry(data=options)
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -436,4 +436,4 @@ class PurpleAirOptionsFlowHandler(config_entries.OptionsFlow):
         options = deepcopy({**self.config_entry.options})
         options[CONF_SENSOR_INDICES].remove(removed_sensor_index)
 
-        return self.async_create_entry(title="", data=options)
+        return self.async_create_entry(data=options)

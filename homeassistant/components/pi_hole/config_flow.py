@@ -23,7 +23,6 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
-    CONF_STATISTICS_ONLY,
     DEFAULT_LOCATION,
     DEFAULT_NAME,
     DEFAULT_SSL,
@@ -121,42 +120,6 @@ class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
-        """Handle a flow initiated by import."""
-
-        host = user_input[CONF_HOST]
-        name = user_input[CONF_NAME]
-        location = user_input[CONF_LOCATION]
-        tls = user_input[CONF_SSL]
-        verify_tls = user_input[CONF_VERIFY_SSL]
-        endpoint = f"{host}/{location}"
-
-        if await self._async_endpoint_existed(endpoint):
-            return self.async_abort(reason="already_configured")
-
-        try:
-            await self._async_try_connect_legacy(host, location, tls, verify_tls)
-        except HoleError as ex:
-            _LOGGER.debug("Connection failed: %s", ex)
-            _LOGGER.error("Failed to import: %s", ex)
-            return self.async_abort(reason="cannot_connect")
-        self._config = {
-            CONF_HOST: host,
-            CONF_NAME: name,
-            CONF_LOCATION: location,
-            CONF_SSL: tls,
-            CONF_VERIFY_SSL: verify_tls,
-        }
-        api_key = user_input.get(CONF_API_KEY)
-        return self.async_create_entry(
-            title=name,
-            data={
-                **self._config,
-                CONF_STATISTICS_ONLY: api_key is None,
-                CONF_API_KEY: api_key,
-            },
-        )
-
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
         self._config = dict(entry_data)
@@ -208,17 +171,3 @@ class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if not isinstance(pi_hole.data, dict):
             return {CONF_API_KEY: "invalid_auth"}
         return {}
-
-    async def _async_endpoint_existed(self, endpoint: str) -> bool:
-        existing_endpoints = [
-            f"{entry.data.get(CONF_HOST)}/{entry.data.get(CONF_LOCATION)}"
-            for entry in self._async_current_entries()
-        ]
-        return endpoint in existing_endpoints
-
-    async def _async_try_connect_legacy(
-        self, host: str, location: str, tls: bool, verify_tls: bool
-    ) -> None:
-        session = async_get_clientsession(self.hass, verify_tls)
-        pi_hole = Hole(host, session, location=location, tls=tls)
-        await pi_hole.get_data()

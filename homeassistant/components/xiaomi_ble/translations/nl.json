@@ -20,9 +20,15 @@
                 "description": "Er is de laatste minuut geen aankondigingsbericht van dit apparaat ontvangen, dus we weten niet zeker of dit apparaat encryptie gebruikt of niet. Dit kan zijn omdat het apparaat een trage aankodigings interval heeft. Bevestig om dit apparaat hoe dan ook toe te voegen, dan zal wanneer binnenkort een aankodiging wordt ontvangen worden gevraagd om de `bindkey` als dat nodig is."
             },
             "get_encryption_key_4_5": {
+                "data": {
+                    "bindkey": "Bindkey"
+                },
                 "description": "De sensorgegevens van de sensor zijn versleuteld. Om te ontcijferen is een hexadecimale sleutel van 32 tekens nodig."
             },
             "get_encryption_key_legacy": {
+                "data": {
+                    "bindkey": "Bindkey"
+                },
                 "description": "De sensorgegevens van de sensor zijn versleuteld. Om te ontcijferen is een hexadecimale sleutel van 24 tekens nodig."
             },
             "user": {

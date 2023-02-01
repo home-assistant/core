@@ -13,7 +13,7 @@
             "stream_no_route_to_host": "Tidak dapat menemukan host saat mencoba menyambung ke streaming",
             "stream_not_permitted": "Operasi tidak diizinkan saat mencoba menyambung ke streaming. Apakah protokol transportasi RTSP salah?",
             "template_error": "Kesalahan saat merender templat. Tinjau log untuk info lebih lanjut.",
-            "timeout": "Tenggang waktu habis saat memuat URL",
+            "timeout": "Tenggang waktu pemuatan URL habis",
             "unable_still_load": "Tidak dapat memuat gambar yang valid dari URL gambar diam (mis. host yang tidak valid, URL, atau kegagalan autentikasi). Tinjau log untuk info lebih lanjut.",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
@@ -52,7 +52,7 @@
             "stream_no_route_to_host": "Tidak dapat menemukan host saat mencoba menyambung ke streaming",
             "stream_not_permitted": "Operasi tidak diizinkan saat mencoba menyambung ke streaming. Apakah protokol transportasi RTSP salah?",
             "template_error": "Kesalahan saat merender templat. Tinjau log untuk info lebih lanjut.",
-            "timeout": "Tenggang waktu habis saat memuat URL",
+            "timeout": "Tenggang waktu pemuatan URL habis",
             "unable_still_load": "Tidak dapat memuat gambar yang valid dari URL gambar diam (mis. host yang tidak valid, URL, atau kegagalan autentikasi). Tinjau log untuk info lebih lanjut.",
             "unknown": "Kesalahan yang tidak diharapkan"
         },

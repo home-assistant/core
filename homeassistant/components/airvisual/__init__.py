@@ -61,7 +61,6 @@ DOMAIN_AIRVISUAL_PRO = "airvisual_pro"
 PLATFORMS = [Platform.SENSOR]
 
 DEFAULT_ATTRIBUTION = "Data provided by AirVisual"
-DEFAULT_NODE_PRO_UPDATE_INTERVAL = timedelta(minutes=1)
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
@@ -267,8 +266,12 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
                     DOMAIN,
-                    context={"source": source},
-                    data={CONF_API_KEY: entry.data[CONF_API_KEY], **geography},
+                    context={"source": SOURCE_IMPORT},
+                    data={
+                        "import_source": source,
+                        CONF_API_KEY: entry.data[CONF_API_KEY],
+                        **geography,
+                    },
                 )
             )
 

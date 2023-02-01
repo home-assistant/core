@@ -300,8 +300,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
     @spotify_exception_handler
     def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
         """Play media."""
-        if media_type.startswith(MEDIA_PLAYER_PREFIX):
-            media_type = media_type[len(MEDIA_PLAYER_PREFIX) :]
+        media_type = media_type.removeprefix(MEDIA_PLAYER_PREFIX)
 
         kwargs = {}
 

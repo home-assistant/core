@@ -4,7 +4,8 @@
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
             "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
             "mdns_missing_mac": "Fehlende MAC-Adresse in MDNS-Eigenschaften.",
-            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich",
+            "service_received": "Dienst erhalten"
         },
         "error": {
             "connection_error": "Keine Verbindung zum ESP m\u00f6glich. Achte darauf, dass deine YAML-Datei eine Zeile 'api:' enth\u00e4lt.",
@@ -28,13 +29,13 @@
                 "data": {
                     "noise_psk": "Verschl\u00fcsselungsschl\u00fcssel"
                 },
-                "description": "Bitte gib den Verschl\u00fcsselungsschl\u00fcssel ein, den du in deiner Konfiguration f\u00fcr {name} festgelegt hast."
+                "description": "Bitte gib den Verschl\u00fcsselungsschl\u00fcssel f\u00fcr {name} ein. Du findest ihn im ESPHome Dashboard oder in deiner Ger\u00e4tekonfiguration."
             },
             "reauth_confirm": {
                 "data": {
                     "noise_psk": "Verschl\u00fcsselungsschl\u00fcssel"
                 },
-                "description": "Das ESPHome-Ger\u00e4t {name} hat die Transportverschl\u00fcsselung aktiviert oder den Verschl\u00fcsselungscode ge\u00e4ndert. Bitte gib den aktualisierten Schl\u00fcssel ein."
+                "description": "Das ESPHome-Ger\u00e4t {name} hat die Transportverschl\u00fcsselung aktiviert oder den Verschl\u00fcsselungsschl\u00fcssel ge\u00e4ndert. Bitte gib den aktualisierten Schl\u00fcssel ein. Du findest ihn im ESPHome Dashboard oder in deiner Ger\u00e4tekonfiguration."
             },
             "user": {
                 "data": {

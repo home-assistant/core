@@ -31,6 +31,28 @@
         }
     },
     "entity": {
+        "select": {
+            "horizontalswing": {
+                "state": {
+                    "fixedcenter": "Pevn\u00fd stred",
+                    "fixedcenterleft": "Pevn\u00fd stred v\u013eavo",
+                    "fixedcenterright": "Pevn\u00fd stred vpravo",
+                    "fixedleft": "Pevn\u00e9 v\u013eavo",
+                    "fixedleftright": "Pevn\u00e9 v\u013eavo vpravo",
+                    "fixedright": "Pevn\u00e9 vpravo",
+                    "rangecenter": "Stred rozsahu",
+                    "rangefull": "Rozsah pln\u00fd",
+                    "stopped": "Zastaven\u00e9"
+                }
+            },
+            "light": {
+                "state": {
+                    "dim": "Dim",
+                    "off": "Vypnut\u00e9",
+                    "on": "Zapnut\u00e9"
+                }
+            }
+        },
         "sensor": {
             "sensitivity": {
                 "state": {

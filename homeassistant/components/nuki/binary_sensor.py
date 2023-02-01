@@ -9,6 +9,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import NukiEntity
 from .const import ATTR_NUKI_ID, DATA_COORDINATOR, DATA_LOCKS, DOMAIN as NUKI_DOMAIN
@@ -19,7 +20,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Nuki lock binary sensor."""
     data = hass.data[NUKI_DOMAIN][entry.entry_id]
-    coordinator = data[DATA_COORDINATOR]
+    coordinator: DataUpdateCoordinator[None] = data[DATA_COORDINATOR]
 
     entities = []
 
@@ -33,12 +34,9 @@ async def async_setup_entry(
 class NukiDoorsensorEntity(NukiEntity, BinarySensorEntity):
     """Representation of a Nuki Lock Doorsensor."""
 
+    _attr_has_entity_name = True
+    _attr_name = "Door sensor"
     _attr_device_class = BinarySensorDeviceClass.DOOR
-
-    @property
-    def name(self):
-        """Return the name of the lock."""
-        return self._nuki_device.name
 
     @property
     def unique_id(self) -> str:

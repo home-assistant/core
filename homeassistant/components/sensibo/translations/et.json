@@ -31,6 +31,28 @@
         }
     },
     "entity": {
+        "select": {
+            "horizontalswing": {
+                "state": {
+                    "fixedcenter": "Keskele",
+                    "fixedcenterleft": "Keskele ja vasakule",
+                    "fixedcenterright": "Keskele ja paremale",
+                    "fixedleft": "Vasakule",
+                    "fixedleftright": "Vasakule ja paremale",
+                    "fixedright": "Paremale",
+                    "rangecenter": "Keskmine osa",
+                    "rangefull": "T\u00e4isulatus",
+                    "stopped": "Peatatud"
+                }
+            },
+            "light": {
+                "state": {
+                    "dim": "H\u00e4mar",
+                    "off": "V\u00e4ljas",
+                    "on": "Sees"
+                }
+            }
+        },
         "sensor": {
             "sensitivity": {
                 "state": {

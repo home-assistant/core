@@ -73,8 +73,23 @@ class ZWaveMeCover(ZWaveMeEntity, CoverEntity):
         """Return current position of cover.
 
         None is unknown, 0 is closed, 100 is fully open.
+
+        Allow small calibration errors (some devices after a long time become not well calibrated)
         """
-        if self.device.level == 99:  # Scale max value
+        if self.device.level > 95:
             return 100
 
         return self.device.level
+
+    @property
+    def is_closed(self) -> bool | None:
+        """Return true if cover is closed.
+
+        None is unknown.
+
+        Allow small calibration errors (some devices after a long time become not well calibrated)
+        """
+        if self.device.level is None:
+            return None
+
+        return self.device.level < 5

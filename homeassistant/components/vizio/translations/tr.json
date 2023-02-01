@@ -3,7 +3,7 @@
         "abort": {
             "already_configured_device": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
             "cannot_connect": "Ba\u011flanma hatas\u0131",
-            "updated_entry": "Bu giri\u015f zaten kuruldu ancak konfig\u00fcrasyonda tan\u0131mlanan ad, uygulamalar ve/veya se\u00e7enekler daha \u00f6nce i\u00e7e aktar\u0131lan konfig\u00fcrasyonla e\u015fle\u015fmiyor, bu nedenle konfig\u00fcrasyon giri\u015fi buna g\u00f6re g\u00fcncellendi."
+            "updated_entry": "Bu giri\u015f zaten ayarlanm\u0131\u015f ancak yap\u0131land\u0131rmada tan\u0131mlanan ad, uygulamalar ve/veya se\u00e7enekler daha \u00f6nce i\u00e7e aktar\u0131lan yap\u0131land\u0131rmayla e\u015fle\u015fmiyor, bu nedenle yap\u0131land\u0131rma giri\u015fi buna g\u00f6re g\u00fcncellendi."
         },
         "error": {
             "cannot_connect": "Ba\u011flanma hatas\u0131",

@@ -12,11 +12,7 @@ from typing import TYPE_CHECKING, Any, Final
 from bleak import BleakClient, BleakError
 from bleak.backends.client import BaseBleakClient, get_platform_client_backend_type
 from bleak.backends.device import BLEDevice
-from bleak.backends.scanner import (
-    AdvertisementData,
-    AdvertisementDataCallback,
-    BaseBleakScanner,
-)
+from bleak.backends.scanner import AdvertisementDataCallback, BaseBleakScanner
 from bleak_retry_connector import (
     NO_RSSI_VALUE,
     ble_device_description,
@@ -28,7 +24,7 @@ from homeassistant.core import CALLBACK_TYPE, callback as hass_callback
 from homeassistant.helpers.frame import report
 
 from . import models
-from .base_scanner import BaseHaScanner
+from .base_scanner import BaseHaScanner, BluetoothScannerDevice
 
 FILTER_UUIDS: Final = "UUIDs"
 _LOGGER = logging.getLogger(__name__)
@@ -119,10 +115,11 @@ class HaBleakScannerWrapper(BaseBleakScanner):
     def register_detection_callback(
         self, callback: AdvertisementDataCallback | None
     ) -> None:
-        """Register a callback that is called when a device is discovered or has a property changed.
+        """Register a detection callback.
 
-        This method takes the callback and registers it with the long running
-        scanner.
+        The callback is called when a device is discovered or has a property changed.
+
+        This method takes the callback and registers it with the long running sscanner.
         """
         self._advertisement_data_callback = callback
         self._setup_detection_callback()
@@ -148,13 +145,13 @@ class HaBleakScannerWrapper(BaseBleakScanner):
 
 
 def _rssi_sorter_with_connection_failure_penalty(
-    scanner_device_advertisement_data: tuple[
-        BaseHaScanner, BLEDevice, AdvertisementData
-    ],
+    device: BluetoothScannerDevice,
     connection_failure_count: dict[BaseHaScanner, int],
     rssi_diff: int,
 ) -> float:
-    """Get a sorted list of scanner, device, advertisement data adjusting for previous connection failures.
+    """Get a sorted list of scanner, device, advertisement data.
+
+    Adjusting for previous connection failures.
 
     When a connection fails, we want to try the next best adapter so we
     apply a penalty to the RSSI value to make it less likely to be chosen
@@ -165,9 +162,8 @@ def _rssi_sorter_with_connection_failure_penalty(
     best adapter twice before moving on to the next best adapter since
     the first failure may be a transient service resolution issue.
     """
-    scanner, _, advertisement_data = scanner_device_advertisement_data
-    base_rssi = advertisement_data.rssi or NO_RSSI_VALUE
-    if connect_failures := connection_failure_count.get(scanner):
+    base_rssi = device.advertisement.rssi or NO_RSSI_VALUE
+    if connect_failures := connection_failure_count.get(device.scanner):
         if connect_failures > 1 and not rssi_diff:
             rssi_diff = 1
         return base_rssi - (rssi_diff * connect_failures * 0.51)
@@ -227,7 +223,10 @@ class HaBleakClientWrapper(BleakClient):
         """Set the disconnect callback."""
         self.__disconnected_callback = callback
         if self._backend:
-            self._backend.set_disconnected_callback(callback, **kwargs)  # type: ignore[arg-type]
+            self._backend.set_disconnected_callback(
+                callback,  # type: ignore[arg-type]
+                **kwargs,
+            )
 
     async def connect(self, **kwargs: Any) -> bool:
         """Connect to the specified GATT server."""
@@ -294,15 +293,10 @@ class HaBleakClientWrapper(BleakClient):
         that has a free connection slot.
         """
         address = self.__address
-        scanner_device_advertisement_datas = manager.async_get_scanner_discovered_devices_and_advertisement_data_by_address(
-            address, True
-        )
-        sorted_scanner_device_advertisement_datas = sorted(
-            scanner_device_advertisement_datas,
-            key=lambda scanner_device_advertisement_data: scanner_device_advertisement_data[
-                2
-            ].rssi
-            or NO_RSSI_VALUE,
+        devices = manager.async_scanner_devices_by_address(self.__address, True)
+        sorted_devices = sorted(
+            devices,
+            key=lambda device: device.advertisement.rssi or NO_RSSI_VALUE,
             reverse=True,
         )
 
@@ -310,31 +304,28 @@ class HaBleakClientWrapper(BleakClient):
         # to prefer the adapter/scanner with the less failures so
         # we don't keep trying to connect with an adapter
         # that is failing
-        if (
-            self.__connect_failures
-            and len(sorted_scanner_device_advertisement_datas) > 1
-        ):
+        if self.__connect_failures and len(sorted_devices) > 1:
             # We use the rssi diff between to the top two
             # to adjust the rssi sorter so that each failure
             # will reduce the rssi sorter by the diff amount
             rssi_diff = (
-                sorted_scanner_device_advertisement_datas[0][2].rssi
-                - sorted_scanner_device_advertisement_datas[1][2].rssi
+                sorted_devices[0].advertisement.rssi
+                - sorted_devices[1].advertisement.rssi
             )
             adjusted_rssi_sorter = partial(
                 _rssi_sorter_with_connection_failure_penalty,
                 connection_failure_count=self.__connect_failures,
                 rssi_diff=rssi_diff,
             )
-            sorted_scanner_device_advertisement_datas = sorted(
-                scanner_device_advertisement_datas,
+            sorted_devices = sorted(
+                devices,
                 key=adjusted_rssi_sorter,
                 reverse=True,
             )
 
-        for (scanner, ble_device, _) in sorted_scanner_device_advertisement_datas:
+        for device in sorted_devices:
             if backend := self._async_get_backend_for_ble_device(
-                manager, scanner, ble_device
+                manager, device.scanner, device.ble_device
             ):
                 return backend
 

@@ -1,5 +1,5 @@
 """Test component/platform setup."""
-# pylint: disable=protected-access
+
 import asyncio
 import datetime
 import threading

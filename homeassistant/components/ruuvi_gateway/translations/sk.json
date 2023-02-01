@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u00da\u010det je u\u017e nakonfigurovan\u00fd"
+        },
+        "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "invalid_auth": "Neplatn\u00e9 overenie",
+            "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hostite\u013e (IP adresa alebo n\u00e1zov DNS)",
+                    "token": "Bearer token (konfigurovan\u00fd po\u010das nastavenia br\u00e1ny)"
+                }
+            }
+        }
+    }
+}

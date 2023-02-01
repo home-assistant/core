@@ -2,7 +2,7 @@
   "domain": "generic",
   "name": "Generic Camera",
   "config_flow": true,
-  "requirements": ["ha-av==10.0.0", "pillow==9.3.0"],
+  "requirements": ["ha-av==10.0.0", "pillow==9.4.0"],
   "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/generic",
   "codeowners": ["@davet2001"],

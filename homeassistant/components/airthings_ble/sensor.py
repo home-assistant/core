@@ -154,7 +154,7 @@ class AirthingsSensor(
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[AirthingsDevice],
         airthings_device: AirthingsDevice,
         entity_description: SensorEntityDescription,
     ) -> None:

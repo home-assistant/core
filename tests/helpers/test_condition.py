@@ -3280,18 +3280,16 @@ async def test_trigger(hass):
 async def test_platform_async_validate_condition_config(hass):
     """Test platform.async_validate_condition_config will be called if it exists."""
     config = {CONF_DEVICE_ID: "test", CONF_DOMAIN: "test", CONF_CONDITION: "device"}
-    platform = AsyncMock()
     with patch(
-        "homeassistant.components.device_automation.condition.async_get_device_automation_platform",
-        return_value=platform,
-    ):
-        platform.async_validate_condition_config.return_value = config
+        "homeassistant.components.device_automation.condition.async_validate_condition_config",
+        AsyncMock(),
+    ) as device_automation_validate_condition_mock:
         await condition.async_validate_condition_config(hass, config)
-        platform.async_validate_condition_config.assert_awaited()
+        device_automation_validate_condition_mock.assert_awaited()
 
 
 async def test_disabled_condition(hass: HomeAssistant) -> None:
-    """Test a disabled condition always passes."""
+    """Test a disabled condition returns none."""
     config = {
         "enabled": False,
         "condition": "state",
@@ -3303,8 +3301,138 @@ async def test_disabled_condition(hass: HomeAssistant) -> None:
     test = await condition.async_from_config(hass, config)
 
     hass.states.async_set("binary_sensor.test", "on")
-    assert test(hass)
+    assert test(hass) is None
 
     # Still passses, condition is not enabled
     hass.states.async_set("binary_sensor.test", "off")
+    assert test(hass) is None
+
+
+async def test_and_condition_with_disabled_condition(hass):
+    """Test the 'and' condition with one of the conditions disabled."""
+    config = {
+        "alias": "And Condition",
+        "condition": "and",
+        "conditions": [
+            {
+                "enabled": False,
+                "condition": "state",
+                "entity_id": "sensor.temperature",
+                "state": "100",
+            },
+            {
+                "condition": "numeric_state",
+                "entity_id": "sensor.temperature",
+                "below": 110,
+            },
+        ],
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+
+    hass.states.async_set("sensor.temperature", 120)
+    assert not test(hass)
+    assert_condition_trace(
+        {
+            "": [{"result": {"result": False}}],
+            "conditions/0": [{"result": {"result": None}}],
+            "conditions/1": [{"result": {"result": False}}],
+            "conditions/1/entity_id/0": [
+                {
+                    "result": {
+                        "result": False,
+                        "wanted_state_below": 110.0,
+                        "state": 120.0,
+                    }
+                }
+            ],
+        }
+    )
+
+    hass.states.async_set("sensor.temperature", 105)
     assert test(hass)
+    assert_condition_trace(
+        {
+            "": [{"result": {"result": True}}],
+            "conditions/0": [{"result": {"result": None}}],
+            "conditions/1": [{"result": {"result": True}}],
+            "conditions/1/entity_id/0": [{"result": {"result": True, "state": 105.0}}],
+        }
+    )
+
+    hass.states.async_set("sensor.temperature", 100)
+    assert test(hass)
+    assert_condition_trace(
+        {
+            "": [{"result": {"result": True}}],
+            "conditions/0": [{"result": {"result": None}}],
+            "conditions/1": [{"result": {"result": True}}],
+            "conditions/1/entity_id/0": [{"result": {"result": True, "state": 100.0}}],
+        }
+    )
+
+
+async def test_or_condition_with_disabled_condition(hass):
+    """Test the 'or' condition with one of the conditions disabled."""
+    config = {
+        "alias": "Or Condition",
+        "condition": "or",
+        "conditions": [
+            {
+                "enabled": False,
+                "condition": "state",
+                "entity_id": "sensor.temperature",
+                "state": "100",
+            },
+            {
+                "condition": "numeric_state",
+                "entity_id": "sensor.temperature",
+                "below": 110,
+            },
+        ],
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+
+    hass.states.async_set("sensor.temperature", 120)
+    assert not test(hass)
+    assert_condition_trace(
+        {
+            "": [{"result": {"result": False}}],
+            "conditions/0": [{"result": {"result": None}}],
+            "conditions/1": [{"result": {"result": False}}],
+            "conditions/1/entity_id/0": [
+                {
+                    "result": {
+                        "result": False,
+                        "state": 120.0,
+                        "wanted_state_below": 110.0,
+                    }
+                }
+            ],
+        }
+    )
+
+    hass.states.async_set("sensor.temperature", 105)
+    assert test(hass)
+    assert_condition_trace(
+        {
+            "": [{"result": {"result": True}}],
+            "conditions/0": [{"result": {"result": None}}],
+            "conditions/1": [{"result": {"result": True}}],
+            "conditions/1/entity_id/0": [{"result": {"result": True, "state": 105.0}}],
+        }
+    )
+
+    hass.states.async_set("sensor.temperature", 100)
+    assert test(hass)
+    assert_condition_trace(
+        {
+            "": [{"result": {"result": True}}],
+            "conditions/0": [{"result": {"result": None}}],
+            "conditions/1": [{"result": {"result": True}}],
+            "conditions/1/entity_id/0": [{"result": {"result": True, "state": 100.0}}],
+        }
+    )

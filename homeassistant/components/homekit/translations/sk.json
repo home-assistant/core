@@ -5,7 +5,7 @@
         },
         "step": {
             "pairing": {
-                "description": "Na dokon\u010denie p\u00e1rovania postupujte pod\u013ea pokynov v \u010dasti \u201eUpozornenia\u201c v \u010dasti \u201eP\u00e1rovanie HomeKit\u201c.",
+                "description": "Na dokon\u010denie p\u00e1rovania postupujte pod\u013ea pokynov v \u010dasti \u201dUpozornenia\u201d v \u010dasti \u201dP\u00e1rovanie HomeKit\u201d.",
                 "title": "P\u00e1rovanie HomeKit"
             },
             "user": {
@@ -44,14 +44,14 @@
                 "data": {
                     "entities": "Entity"
                 },
-                "description": "V\u0161etky entity \u201e{domains}\u201c bud\u00fa zahrnut\u00e9 okrem vyl\u00fa\u010den\u00fdch ent\u00edt a kategorizovan\u00fdch ent\u00edt.",
+                "description": "V\u0161etky entity \u201d{domains}\u201d bud\u00fa zahrnut\u00e9 okrem vyl\u00fa\u010den\u00fdch ent\u00edt a kategorizovan\u00fdch ent\u00edt.",
                 "title": "Vyberte entity, ktor\u00e9 chcete vyl\u00fa\u010di\u0165"
             },
             "include": {
                 "data": {
                     "entities": "Entity"
                 },
-                "description": "V\u0161etky entity \u201e{domains}\u201c bud\u00fa zahrnut\u00e9, pokia\u013e nevyberiete konkr\u00e9tne entity.",
+                "description": "V\u0161etky entity \u201d{domains}\u201d bud\u00fa zahrnut\u00e9, pokia\u013e nevyberiete konkr\u00e9tne entity.",
                 "title": "Vyberte entity, ktor\u00e9 chcete zahrn\u00fa\u0165"
             },
             "init": {
@@ -60,7 +60,7 @@
                     "include_exclude_mode": "Re\u017eim za\u010dlenenia",
                     "mode": "Re\u017eim HomeKit"
                 },
-                "description": "HomeKit je mo\u017en\u00e9 nakonfigurova\u0165 tak, aby vystavil bridge alebo jedno pr\u00edslu\u0161enstvo. V re\u017eime pr\u00edslu\u0161enstva je mo\u017en\u00e9 pou\u017ei\u0165 iba jednu entitu. Pre spr\u00e1vne fungovanie prehr\u00e1va\u010dov m\u00e9di\u00ed s triedou telev\u00edznych zariaden\u00ed sa vy\u017eaduje re\u017eim pr\u00edslu\u0161enstva. Subjekty v \u010dasti \u201eDom\u00e9ny na zahrnutie\u201c bud\u00fa zahrnut\u00e9 do HomeKitu. Na nasleduj\u00facej obrazovke si budete m\u00f4c\u0165 vybra\u0165, ktor\u00e9 entity chcete zahrn\u00fa\u0165 alebo vyl\u00fa\u010di\u0165 z tohto zoznamu.",
+                "description": "HomeKit je mo\u017en\u00e9 nakonfigurova\u0165 tak, aby vystavil bridge alebo jedno pr\u00edslu\u0161enstvo. V re\u017eime pr\u00edslu\u0161enstva je mo\u017en\u00e9 pou\u017ei\u0165 iba jednu entitu. Pre spr\u00e1vne fungovanie prehr\u00e1va\u010dov m\u00e9di\u00ed s triedou telev\u00edznych zariaden\u00ed sa vy\u017eaduje re\u017eim pr\u00edslu\u0161enstva. Subjekty v \u010dasti \u201dDom\u00e9ny na zahrnutie\u201d bud\u00fa zahrnut\u00e9 do HomeKitu. Na nasleduj\u00facej obrazovke si budete m\u00f4c\u0165 vybra\u0165, ktor\u00e9 entity chcete zahrn\u00fa\u0165 alebo vyl\u00fa\u010di\u0165 z tohto zoznamu.",
                 "title": "Vyberte re\u017eim a dom\u00e9ny."
             },
             "yaml": {

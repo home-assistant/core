@@ -483,7 +483,7 @@ async def test_dhcp_invalid_option(hass):
         ("requested_addr", "192.168.208.55"),
         ("server_id", "192.168.208.1"),
         ("param_req_list", [1, 3, 28, 6]),
-        ("hostname"),
+        "hostname",
     ]
 
     async_handle_dhcp_packet = await _async_get_handle_dhcp_packet(
