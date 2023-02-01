@@ -66,8 +66,6 @@ class WallboxControlButton(CoordinatorEntity, ButtonEntity):
         if data[STATUS] == OFFLINE:
             return
 
-        # service_data = init_service_data({"device_name": self._device_id})
-
         if data[CAR_STATUS] == CarStatus.CAR_CHARGING:
             # car status is 2 - stop charging
             await self._charger_controller.stop_charging(
