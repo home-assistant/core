@@ -42,7 +42,7 @@ from .const import (
     OVERKIZ_UNIT_TO_HA,
 )
 from .coordinator import OverkizDataUpdateCoordinator
-from .entity import OverkizDescriptiveEntity, OverkizDeviceClass, OverkizEntity
+from .entity import OverkizDescriptiveEntity, OverkizEntity
 
 
 def _unit_of_measurement(device: Device, default: str) -> str | None:
@@ -117,7 +117,9 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         key=OverkizState.CORE_V40_WATER_VOLUME_ESTIMATION,
         name="Water volume estimation at 40 °C",
         icon="mdi:water",
-        native_unit_of_measurement_fn=lambda d: _unit_of_measurement(d, UnitOfVolume.LITERS),
+        native_unit_of_measurement_fn=lambda d: _unit_of_measurement(
+            d, UnitOfVolume.LITERS
+        ),
         device_class=SensorDeviceClass.VOLUME,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
@@ -126,7 +128,9 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         key=OverkizState.CORE_WATER_CONSUMPTION,
         name="Water consumption",
         icon="mdi:water",
-        native_unit_of_measurement_fn=lambda d: _unit_of_measurement(d, UnitOfVolume.LITERS),
+        native_unit_of_measurement_fn=lambda d: _unit_of_measurement(
+            d, UnitOfVolume.LITERS
+        ),
         device_class=SensorDeviceClass.VOLUME,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -134,7 +138,9 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         key=OverkizState.IO_OUTLET_ENGINE,
         name="Outlet engine",
         icon="mdi:fan-chevron-down",
-        native_unit_of_measurement_fn=lambda d: _unit_of_measurement(d, UnitOfVolume.LITERS),
+        native_unit_of_measurement_fn=lambda d: _unit_of_measurement(
+            d, UnitOfVolume.LITERS
+        ),
         device_class=SensorDeviceClass.VOLUME,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -152,14 +158,18 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         name="Room temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement_fn=lambda d: _unit_of_measurement(d, UnitOfTemperature.CELSIUS),
+        native_unit_of_measurement_fn=lambda d: _unit_of_measurement(
+            d, UnitOfTemperature.CELSIUS
+        ),
     ),
     OverkizSensorDescription(
         key=OverkizState.IO_MIDDLE_WATER_TEMPERATURE,
         name="Middle water temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement_fn=lambda d: _unit_of_measurement(d, UnitOfTemperature.CELSIUS),
+        native_unit_of_measurement_fn=lambda d: _unit_of_measurement(
+            d, UnitOfTemperature.CELSIUS
+        ),
     ),
     OverkizSensorDescription(
         key=OverkizState.CORE_FOSSIL_ENERGY_CONSUMPTION,
@@ -319,21 +329,27 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         key=OverkizState.CORE_WEATHER_STATUS,
         name="Weather status",
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement_fn=lambda d: _unit_of_measurement(d, UnitOfTemperature.CELSIUS),
+        native_unit_of_measurement_fn=lambda d: _unit_of_measurement(
+            d, UnitOfTemperature.CELSIUS
+        ),
         state_class=SensorStateClass.MEASUREMENT,
     ),
     OverkizSensorDescription(
         key=OverkizState.CORE_MINIMUM_TEMPERATURE,
         name="Minimum temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement_fn=lambda d: _unit_of_measurement(d, UnitOfTemperature.CELSIUS),
+        native_unit_of_measurement_fn=lambda d: _unit_of_measurement(
+            d, UnitOfTemperature.CELSIUS
+        ),
         state_class=SensorStateClass.MEASUREMENT,
     ),
     OverkizSensorDescription(
         key=OverkizState.CORE_MAXIMUM_TEMPERATURE,
         name="Maximum temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement_fn=lambda d: _unit_of_measurement(d, UnitOfTemperature.CELSIUS),
+        native_unit_of_measurement_fn=lambda d: _unit_of_measurement(
+            d, UnitOfTemperature.CELSIUS
+        ),
         state_class=SensorStateClass.MEASUREMENT,
     ),
     # AirSensor/COSensor
@@ -396,7 +412,9 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         key=OverkizState.CORE_PRIORITY_LOCK_TIMER,
         name="Priority lock timer",
         icon="mdi:lock-clock",
-        native_unit_of_measurement_fn=lambda d: _unit_of_measurement(d, UnitOfTime.SECONDS),
+        native_unit_of_measurement_fn=lambda d: _unit_of_measurement(
+            d, UnitOfTime.SECONDS
+        ),
         entity_registry_enabled_default=False,
     ),
     OverkizSensorDescription(
@@ -425,13 +443,17 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         name="Heat pump operating time",
         device_class=SensorDeviceClass.DURATION,
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement_fn=lambda d: _unit_of_measurement(d, UnitOfTime.SECONDS),
+        native_unit_of_measurement_fn=lambda d: _unit_of_measurement(
+            d, UnitOfTime.SECONDS
+        ),
     ),
     OverkizSensorDescription(
         key=OverkizState.IO_ELECTRIC_BOOSTER_OPERATING_TIME,
         name="Electric booster operating time",
         device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement_fn=lambda d: _unit_of_measurement(d, UnitOfTime.SECONDS),
+        native_unit_of_measurement_fn=lambda d: _unit_of_measurement(
+            d, UnitOfTime.SECONDS
+        ),
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # Cover
