@@ -121,7 +121,7 @@ OVERKIZ_STATE_TO_TRANSLATION: dict[str, str] = {
 OVERKIZ_UNIT_TO_HA: dict[str, str] = {
     MeasuredValueType.ABSOLUTE_VALUE: "",
     MeasuredValueType.ANGLE_IN_DEGREES: DEGREE,
-    MeasuredValueType.ANGULAR_SPEED_IN_DEGREES_PER_SECOND: f"{DEGREE}/s",
+    MeasuredValueType.ANGULAR_SPEED_IN_DEGREES_PER_SECOND: f"{DEGREE}/{UnitOfTime.SECONDS}",
     MeasuredValueType.ELECTRICAL_ENERGY_IN_KWH: UnitOfEnergy.KILO_WATT_HOUR,
     MeasuredValueType.ELECTRICAL_ENERGY_IN_WH: UnitOfEnergy.WATT_HOUR,
     MeasuredValueType.ELECTRICAL_POWER_IN_KW: UnitOfPower.KILO_WATT,
