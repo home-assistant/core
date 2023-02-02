@@ -249,15 +249,9 @@ class ReolinkHost:
         self.webhook_id = f"{DOMAIN}_{self.unique_id.replace(':', '')}_ONVIF"
         event_id = self.webhook_id
 
-        try:
-            webhook.async_register(
-                self._hass, DOMAIN, event_id, event_id, self.handle_webhook
-            )
-        except ValueError:
-            webhook.async_unregister(self._hass, event_id)
-            webhook.async_register(
-                self._hass, DOMAIN, event_id, event_id, self.handle_webhook
-            )
+        webhook.async_register(
+            self._hass, DOMAIN, event_id, event_id, self.handle_webhook
+        )
 
         try:
             base_url = get_url(self._hass, prefer_external=False)
