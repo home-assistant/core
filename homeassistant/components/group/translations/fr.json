@@ -51,6 +51,19 @@
                 },
                 "title": "Ajouter un groupe"
             },
+            "sensor": {
+                "data": {
+                    "device_class": "Classe d'appareil",
+                    "entities": "Membres",
+                    "hide_members": "Cacher les membres",
+                    "ignore_non_numeric": "Ignorer les donn\u00e9es non num\u00e9riques",
+                    "name": "Nom",
+                    "state_class": "Classe d'\u00e9tat",
+                    "type": "Type",
+                    "unit_of_measurement": "Unit\u00e9 de mesure"
+                },
+                "title": "Ajouter un groupe"
+            },
             "switch": {
                 "data": {
                     "entities": "Membres",
@@ -68,6 +81,7 @@
                     "light": "Groupe de lumi\u00e8res",
                     "lock": "Groupe de verrous",
                     "media_player": "Groupe de lecteurs multim\u00e9dia",
+                    "sensor": "Groupe de capteurs",
                     "switch": "Groupe d'interrupteurs"
                 },
                 "title": "Ajouter un groupe"
@@ -114,6 +128,11 @@
                 "data": {
                     "entities": "Membres",
                     "hide_members": "Cacher les membres"
+                }
+            },
+            "sensor": {
+                "data": {
+                    "device_class": "Classe d'appareil"
                 }
             },
             "switch": {

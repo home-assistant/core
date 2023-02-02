@@ -4,13 +4,13 @@
             "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado"
         },
         "error": {
-            "cannot_connect": "Falhou ao conectar",
-            "timeout_connect": "Timeout establishing connection"
+            "cannot_connect": "Falha ao conectar",
+            "timeout_connect": "Tempo limite para estabelecer conex\u00e3o atingido"
         },
         "step": {
             "user": {
                 "data": {
-                    "host": "Host",
+                    "host": "Nome do host",
                     "password": "Senha"
                 },
                 "description": "Insira as informa\u00e7\u00f5es do m\u00f3dulo WiFi LNK para o seu dispositivo Rain Bird.",
