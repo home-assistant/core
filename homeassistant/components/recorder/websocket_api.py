@@ -15,13 +15,18 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import JSON_DUMP
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
+    DataRateConverter,
     DistanceConverter,
+    ElectricCurrentConverter,
+    ElectricPotentialConverter,
     EnergyConverter,
+    InformationConverter,
     MassConverter,
     PowerConverter,
     PressureConverter,
     SpeedConverter,
     TemperatureConverter,
+    UnitlessRatioConverter,
     VolumeConverter,
 )
 
@@ -95,13 +100,20 @@ def _ws_get_statistic_during_period(
         ),
         vol.Optional("units"): vol.Schema(
             {
+                vol.Optional("data_rate"): vol.In(DataRateConverter.VALID_UNITS),
                 vol.Optional("distance"): vol.In(DistanceConverter.VALID_UNITS),
+                vol.Optional("electric_current"): vol.In(
+                    ElectricCurrentConverter.VALID_UNITS
+                ),
+                vol.Optional("voltage"): vol.In(ElectricPotentialConverter.VALID_UNITS),
                 vol.Optional("energy"): vol.In(EnergyConverter.VALID_UNITS),
+                vol.Optional("information"): vol.In(InformationConverter.VALID_UNITS),
                 vol.Optional("mass"): vol.In(MassConverter.VALID_UNITS),
                 vol.Optional("power"): vol.In(PowerConverter.VALID_UNITS),
                 vol.Optional("pressure"): vol.In(PressureConverter.VALID_UNITS),
                 vol.Optional("speed"): vol.In(SpeedConverter.VALID_UNITS),
                 vol.Optional("temperature"): vol.In(TemperatureConverter.VALID_UNITS),
+                vol.Optional("unitless"): vol.In(UnitlessRatioConverter.VALID_UNITS),
                 vol.Optional("volume"): vol.In(VolumeConverter.VALID_UNITS),
             }
         ),
