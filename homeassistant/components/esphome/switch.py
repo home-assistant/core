@@ -1,11 +1,12 @@
 """Support for ESPHome switches."""
 from __future__ import annotations
 
+from contextlib import suppress
 from typing import Any
 
 from aioesphomeapi import SwitchInfo, SwitchState
 
-from homeassistant.components.switch import DEVICE_CLASSES, SwitchEntity
+from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -43,11 +44,11 @@ class EsphomeSwitch(EsphomeEntity[SwitchInfo, SwitchState], SwitchEntity):
         return self._state.state
 
     @property
-    def device_class(self) -> str | None:
+    def device_class(self) -> SwitchDeviceClass | None:
         """Return the class of this device."""
-        if self._static_info.device_class not in DEVICE_CLASSES:
-            return None
-        return self._static_info.device_class
+        with suppress(ValueError):
+            return SwitchDeviceClass(self._static_info.device_class)
+        return None
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""

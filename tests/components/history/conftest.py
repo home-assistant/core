@@ -27,4 +27,4 @@ def hass_history(hass_recorder):
     )
     assert setup_component(hass, history.DOMAIN, config)
 
-    yield hass
+    return hass

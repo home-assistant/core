@@ -16,7 +16,7 @@
         "flow_title": "{name}",
         "step": {
             "confirm": {
-                "description": "Vuoi iniziare la configurazione?"
+                "description": "Vuoi avviare la configurazione?"
             },
             "import_turn_on": {
                 "description": "Accendi il dispositivo e fai clic su Invia per continuare la migrazione"

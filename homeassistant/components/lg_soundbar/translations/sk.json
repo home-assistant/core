@@ -1,8 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
-            "existing_instance_updated": "Aktualizovan\u00e1 existuj\u00faca konfigur\u00e1cia."
+            "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9"
+        },
+        "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "no_data": "Zariadenie nevr\u00e1tilo \u017eiadne po\u017eadovan\u00e9 \u00fadaje k z\u00e1znamu."
         },
         "step": {
             "user": {

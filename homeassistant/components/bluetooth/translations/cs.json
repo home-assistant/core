@@ -5,9 +5,6 @@
             "bluetooth_confirm": {
                 "description": "Chcete nastavit {name}?"
             },
-            "enable_bluetooth": {
-                "description": "Chcete nastavit Bluetooth?"
-            },
             "single_adapter": {
                 "description": "Chcete nastavit Bluetooth adapt\u00e9r {name}?"
             },

@@ -3,17 +3,12 @@
         "abort": {
             "already_configured": "L'account \u00e8 gi\u00e0 configurato",
             "invalid_auth": "Autenticazione non valida",
-            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente",
-            "unknown": "Errore imprevisto"
-        },
-        "create_entry": {
-            "default": "Per impostare le opzioni avanzate, consultare la [Documentazione Life360]({docs_url})."
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
         },
         "error": {
             "already_configured": "L'account \u00e8 gi\u00e0 configurato",
             "cannot_connect": "Impossibile connettersi",
             "invalid_auth": "Autenticazione non valida",
-            "invalid_username": "Nome utente non valido",
             "unknown": "Errore imprevisto"
         },
         "step": {
@@ -28,7 +23,6 @@
                     "password": "Password",
                     "username": "Nome utente"
                 },
-                "description": "Per impostare le opzioni avanzate, vedere [Documentazione di Life360]({docs_url}).\n\u00c8 consigliabile eseguire questa operazione prima di aggiungere gli account.",
                 "title": "Configura l'account Life360"
             }
         }

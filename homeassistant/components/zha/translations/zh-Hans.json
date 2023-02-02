@@ -5,31 +5,6 @@
         },
         "error": {
             "cannot_connect": "\u65e0\u6cd5\u8fde\u63a5\u5230 ZHA \u8bbe\u5907\u3002"
-        },
-        "step": {
-            "pick_radio": {
-                "data": {
-                    "radio_type": "\u65e0\u7ebf\u7535\u7c7b\u578b"
-                },
-                "description": "\u8bf7\u9009\u62e9 Zigbee \u65e0\u7ebf\u7535\u7c7b\u578b",
-                "title": "\u65e0\u7ebf\u7535\u7c7b\u578b"
-            },
-            "port_config": {
-                "data": {
-                    "baudrate": "\u6ce2\u7279\u7387",
-                    "flow_control": "\u6570\u636e\u6d41\u63a7\u5236",
-                    "path": "\u4e32\u884c\u8bbe\u5907\u8def\u5f84"
-                },
-                "description": "\u8f93\u5165\u7aef\u53e3\u7684\u7279\u5b9a\u8bbe\u7f6e",
-                "title": "\u8bbe\u7f6e"
-            },
-            "user": {
-                "data": {
-                    "path": "\u4e32\u884c\u8bbe\u5907\u8def\u5f84"
-                },
-                "description": "\u9009\u62e9 Zigbee \u7684\u4e32\u884c\u7aef\u53e3",
-                "title": "ZHA"
-            }
         }
     },
     "device_automation": {

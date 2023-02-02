@@ -17,14 +17,5 @@
                 }
             }
         }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "devices": "Zahrnout za\u0159\u00edzen\u00ed"
-                }
-            }
-        }
     }
 }

@@ -11,13 +11,6 @@
             "validate_verification_code": "Tuvastuskoodi kinnitamine nurjus. Vali usaldusseade ja proovi uuesti"
         },
         "step": {
-            "reauth": {
-                "data": {
-                    "password": "Salas\u00f5na"
-                },
-                "description": "Varem sisestatud salas\u00f5na kasutajale {username} ei t\u00f6\u00f6ta enam. Selle sidumise kasutamise j\u00e4tkamiseks v\u00e4rskenda oma salas\u00f5na.",
-                "title": "iCloudi tuvastusandmed"
-            },
             "reauth_confirm": {
                 "data": {
                     "password": "Salas\u00f5na"

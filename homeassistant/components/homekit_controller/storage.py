@@ -61,11 +61,15 @@ class EntityMapStorage:
         config_num: int,
         accessories: list[Any],
         broadcast_key: str | None = None,
+        state_num: int | None = None,
     ) -> Pairing:
         """Create a new pairing cache."""
         _LOGGER.debug("Creating or updating entity map for %s", homekit_id)
         data = Pairing(
-            config_num=config_num, accessories=accessories, broadcast_key=broadcast_key
+            config_num=config_num,
+            accessories=accessories,
+            broadcast_key=broadcast_key,
+            state_num=state_num,
         )
         self.storage_data[homekit_id] = data
         self._async_schedule_save()

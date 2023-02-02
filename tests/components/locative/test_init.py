@@ -12,8 +12,6 @@ from homeassistant.config import async_process_ha_core_config
 from homeassistant.helpers.dispatcher import DATA_DISPATCHER
 from homeassistant.setup import async_setup_component
 
-# pylint: disable=redefined-outer-name
-
 
 @pytest.fixture(autouse=True)
 def mock_dev_track(mock_device_tracker_conf):
@@ -21,7 +19,7 @@ def mock_dev_track(mock_device_tracker_conf):
 
 
 @pytest.fixture
-async def locative_client(loop, hass, hass_client):
+async def locative_client(event_loop, hass, hass_client):
     """Locative mock client."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()

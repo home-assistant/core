@@ -41,25 +41,12 @@
                 },
                 "title": "P\u0159epsat adresu IEEE r\u00e1dia"
             },
-            "pick_radio": {
-                "description": "Vyberte typ sv\u00e9ho r\u00e1dia Zigbee"
-            },
-            "port_config": {
-                "data": {
-                    "baudrate": "rychlost portu"
-                },
-                "title": "Nastaven\u00ed"
-            },
             "upload_manual_backup": {
                 "data": {
                     "uploaded_backup_file": "Nahr\u00e1t soubor"
                 },
                 "description": "Obnovit nastaven\u00ed s\u00edt\u011b z nahran\u00e9ho z\u00e1lo\u017en\u00edho souboru JSON. Soubor m\u016f\u017eete st\u00e1hnout z jin\u00e9 instalace ZHA v **Nastaven\u00ed s\u00edt\u011b** nebo pou\u017eijte soubor `coordinator_backup.json` z integrace Zigbee2MQTT.",
                 "title": "Nahr\u00e1t ru\u010dn\u00ed z\u00e1lohu"
-            },
-            "user": {
-                "description": "Vyberte s\u00e9riov\u00fd port pro r\u00e1dio Zigbee",
-                "title": "ZHA"
             }
         }
     },
@@ -154,6 +141,9 @@
                     "overwrite_coordinator_ieee": "Trvale nahradit IEEE adresu r\u00e1dia"
                 },
                 "title": "P\u0159epsat adresu IEEE r\u00e1dia"
+            },
+            "prompt_migrate_or_reconfigure": {
+                "description": "P\u0159ech\u00e1z\u00edte na nov\u00e9 r\u00e1dio nebo m\u011bn\u00edte konfiguraci st\u00e1vaj\u00edc\u00edho r\u00e1dia?"
             },
             "upload_manual_backup": {
                 "data": {

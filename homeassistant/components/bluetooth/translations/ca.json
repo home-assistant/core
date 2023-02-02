@@ -9,9 +9,6 @@
             "bluetooth_confirm": {
                 "description": "Vols configurar {name}?"
             },
-            "enable_bluetooth": {
-                "description": "Vols configurar Bluetooth?"
-            },
             "multiple_adapters": {
                 "data": {
                     "adapter": "Adaptador"
@@ -39,10 +36,8 @@
         "step": {
             "init": {
                 "data": {
-                    "adapter": "Adaptador Bluetooth a utilitzar per escanejar",
                     "passive": "Escaneig passiu"
-                },
-                "description": "L'escolta passiva necessita BlueZ 5.63 o posterior i les funcions experimentals activades."
+                }
             }
         }
     }

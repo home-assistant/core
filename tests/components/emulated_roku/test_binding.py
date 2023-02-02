@@ -25,7 +25,7 @@ async def test_events_fired_properly(hass):
     roku_event_handler = None
 
     def instantiate(
-        loop,
+        event_loop,
         handler,
         roku_usn,
         host_ip,

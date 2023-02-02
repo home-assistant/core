@@ -11,13 +11,6 @@
             "validate_verification_code": "Do\u011frulama kodunuz do\u011frulanamad\u0131, tekrar deneyin"
         },
         "step": {
-            "reauth": {
-                "data": {
-                    "password": "Parola"
-                },
-                "description": "{username} i\u00e7in \u00f6nceden girdi\u011finiz \u015fifreniz art\u0131k \u00e7al\u0131\u015fm\u0131yor. Bu entegrasyonu kullanmaya devam etmek i\u00e7in \u015fifrenizi g\u00fcncelleyin.",
-                "title": "Entegrasyonu Yeniden Do\u011frula"
-            },
             "reauth_confirm": {
                 "data": {
                     "password": "Parola"

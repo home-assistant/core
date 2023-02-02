@@ -22,5 +22,10 @@
                 }
             }
         }
+    },
+    "issues": {
+        "removed_yaml": {
+            "title": "Konfigurace Pushover YAML byla odstran\u011bna"
+        }
     }
 }

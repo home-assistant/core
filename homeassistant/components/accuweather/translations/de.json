@@ -22,13 +22,24 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "pressure_tendency": {
+                "state": {
+                    "falling": "Fallend",
+                    "rising": "Steigend",
+                    "steady": "Stetig"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
-            "user": {
+            "init": {
                 "data": {
                     "forecast": "Wettervorhersage"
                 },
-                "description": "Aufgrund der Einschr\u00e4nkungen der kostenlosen Version des AccuWeather-API-Schl\u00fcssels werden bei aktivierter Wettervorhersage Datenaktualisierungen alle 80 Minuten statt alle 40 Minuten durchgef\u00fchrt."
+                "description": "Aufgrund der Einschr\u00e4nkungen der kostenlosen Version des AccuWeather API-Schl\u00fcssels werden bei aktivierter Wettervorhersage Datenaktualisierungen alle 80 Minuten statt alle 40 Minuten durchgef\u00fchrt."
             }
         }
     },

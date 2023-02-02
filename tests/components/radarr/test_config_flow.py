@@ -1,18 +1,17 @@
 """Test Radarr config flow."""
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 from aiopyarr import exceptions
 
 from homeassistant import data_entry_flow
 from homeassistant.components.radarr.const import DEFAULT_NAME, DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_SOURCE, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 
 from . import (
     API_KEY,
     CONF_DATA,
-    CONF_IMPORT_DATA,
     MOCK_REAUTH_INPUT,
     MOCK_USER_INPUT,
     URL,
@@ -23,50 +22,7 @@ from . import (
     setup_integration,
 )
 
-from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
-
-
-def _patch_setup():
-    return patch("homeassistant.components.radarr.async_setup_entry")
-
-
-async def test_flow_import(hass: HomeAssistant):
-    """Test import step."""
-    with patch(
-        "homeassistant.components.radarr.config_flow.RadarrClient.async_get_system_status",
-        return_value=AsyncMock(),
-    ), _patch_setup():
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=CONF_IMPORT_DATA,
-        )
-
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == DEFAULT_NAME
-        assert result["data"] == CONF_DATA | {
-            CONF_URL: "http://192.168.1.189:7887/test"
-        }
-        assert result["data"][CONF_URL] == "http://192.168.1.189:7887/test"
-
-
-async def test_flow_import_already_configured(hass: HomeAssistant):
-    """Test import step already configured."""
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT)
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.radarr.config_flow.RadarrClient.async_get_system_status",
-        return_value=AsyncMock(),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=CONF_IMPORT_DATA,
-        )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-        assert result["reason"] == "already_configured"
 
 
 async def test_show_user_form(hass: HomeAssistant) -> None:

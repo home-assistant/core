@@ -24,10 +24,6 @@
                 "description": "Anna neile andmetele ainulaadne profiilinimi. Tavaliselt on see eelmises etapis valitud profiili nimi.",
                 "title": "Kasutaja profiil."
             },
-            "reauth": {
-                "description": "Withingi andmete jsaamiseks tuleb kasutaja {profile} taastuvastada.",
-                "title": "Taastuvasta sidumine"
-            },
             "reauth_confirm": {
                 "description": "Profiil \"{profile}\" tuleb uuesti tuvastada, et j\u00e4tkata Withingsi andmete saamist.",
                 "title": "Taastuvasta sidumine"

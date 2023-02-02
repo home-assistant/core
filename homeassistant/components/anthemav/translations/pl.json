@@ -15,11 +15,5 @@
                 }
             }
         }
-    },
-    "issues": {
-        "deprecated_yaml": {
-            "description": "Konfiguracja Anthem A/V Receivers przy u\u017cyciu YAML zostanie usuni\u0119ta. \n\nTwoja istniej\u0105ca konfiguracja YAML zosta\u0142a automatycznie zaimportowana do interfejsu u\u017cytkownika. \n\nUsu\u0144 konfiguracj\u0119 YAML z pliku configuration.yaml i uruchom ponownie Home Assistanta, aby rozwi\u0105za\u0107 ten problem.",
-            "title": "Konfiguracja YAML dla Anthem A/V Receivers zostanie usuni\u0119ta"
-        }
     }
 }

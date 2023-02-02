@@ -23,11 +23,5 @@
                 }
             }
         }
-    },
-    "issues": {
-        "deprecated_yaml": {
-            "description": "Se ha eliminado la configuraci\u00f3n de Open Exchange Rates mediante YAML. \n\nElimina la configuraci\u00f3n YAML de Open Exchange Rates de tu archivo configuration.yaml y reinicia Home Assistant para solucionar este problema.",
-            "title": "Se ha eliminado la configuraci\u00f3n YAML de Open Exchange Rates"
-        }
     }
 }

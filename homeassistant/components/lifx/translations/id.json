@@ -3,19 +3,15 @@
         "abort": {
             "already_configured": "Perangkat sudah dikonfigurasi",
             "already_in_progress": "Alur konfigurasi sedang berlangsung",
-            "no_devices_found": "Tidak ada perangkat yang ditemukan di jaringan",
-            "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan."
+            "no_devices_found": "Tidak ada perangkat yang ditemukan di jaringan"
         },
         "error": {
             "cannot_connect": "Gagal terhubung"
         },
-        "flow_title": "{label} ({host}) {serial}",
+        "flow_title": "{label} ({group})",
         "step": {
-            "confirm": {
-                "description": "Ingin menyiapkan LIFX?"
-            },
             "discovery_confirm": {
-                "description": "Ingin menyiapkan {label} ({host}) {serial}?"
+                "description": "Ingin menyiapkan {label} ({group})?"
             },
             "pick_device": {
                 "data": {

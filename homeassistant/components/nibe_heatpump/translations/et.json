@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
-        },
         "error": {
             "address": "M\u00e4\u00e4ratud vale kaugaadress. Aadress peab olema IP-aadress v\u00f5i lahendatav hostinimi.",
             "address_in_use": "Valitud kuulamisport on selles s\u00fcsteemis juba kasutusel.",
@@ -41,18 +38,6 @@
                 "description": "Enne seadistamist veendu, et:\n - NibeGW seade on \u00fchendatud soojuspumbaga.\n - MODBUS40 lisaseade on soojuspumba konfiguratsioonis lubatud.\n - Pump ei ole MODBUS40 lisaseadme puudumise t\u00f5ttu h\u00e4ireolekusse l\u00e4inud."
             },
             "user": {
-                "data": {
-                    "ip_address": "Kaug-IP-aadress",
-                    "listening_port": "Kohalik kuulamisport",
-                    "remote_read_port": "Kauglugemise port",
-                    "remote_write_port": "Kaugkirjutusport"
-                },
-                "data_description": {
-                    "ip_address": "NibeGW-\u00fcksuse aadress. Seade peaks olema seadistatud staatilise aadressiga.",
-                    "listening_port": "Selle s\u00fcsteemi kohalik port kuhu NibeGW seade on seadistatud andmeid saatma.",
-                    "remote_read_port": "Port, mille kaudu NibeGW-\u00fcksus loeb lugemisp\u00e4ringuid.",
-                    "remote_write_port": "Port, mille kaudu NibeGW-\u00fcksus kuulab kirjutamisp\u00e4ringuid."
-                },
                 "description": "Vali pumbaga \u00fchendamise viis. \u00dcldiselt vajavad F-seeria pumbad Nibe GW kohandatud tarvikut, S-seeria pumbal on aga sisseehitatud Modbusi tugi.",
                 "menu_options": {
                     "modbus": "Modbus",

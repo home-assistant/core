@@ -1,5 +1,5 @@
 """The tests for sensor recorder platform."""
-# pylint: disable=protected-access,invalid-name
+# pylint: disable=invalid-name
 import datetime
 from datetime import timedelta
 from statistics import fmean
@@ -8,7 +8,6 @@ from unittest.mock import ANY, patch
 
 from freezegun import freeze_time
 import pytest
-from pytest import approx
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder.db_schema import Statistics, StatisticsShortTerm
@@ -169,9 +168,9 @@ async def test_statistics_during_period(recorder_mock, hass, hass_ws_client):
             {
                 "start": int(now.timestamp() * 1000),
                 "end": int((now + timedelta(minutes=5)).timestamp() * 1000),
-                "mean": approx(10),
-                "min": approx(10),
-                "max": approx(10),
+                "mean": pytest.approx(10),
+                "min": pytest.approx(10),
+                "max": pytest.approx(10),
                 "last_reset": None,
                 "state": None,
                 "sum": None,
@@ -196,7 +195,7 @@ async def test_statistics_during_period(recorder_mock, hass, hass_ws_client):
             {
                 "start": int(now.timestamp() * 1000),
                 "end": int((now + timedelta(minutes=5)).timestamp() * 1000),
-                "mean": approx(10),
+                "mean": pytest.approx(10),
             }
         ]
     }
@@ -918,9 +917,9 @@ async def test_statistics_during_period_unit_conversion(
             {
                 "start": int(now.timestamp() * 1000),
                 "end": int((now + timedelta(minutes=5)).timestamp() * 1000),
-                "mean": approx(value),
-                "min": approx(value),
-                "max": approx(value),
+                "mean": pytest.approx(value),
+                "min": pytest.approx(value),
+                "max": pytest.approx(value),
                 "last_reset": None,
                 "state": None,
                 "sum": None,
@@ -946,9 +945,9 @@ async def test_statistics_during_period_unit_conversion(
             {
                 "start": int(now.timestamp() * 1000),
                 "end": int((now + timedelta(minutes=5)).timestamp() * 1000),
-                "mean": approx(converted_value),
-                "min": approx(converted_value),
-                "max": approx(converted_value),
+                "mean": pytest.approx(converted_value),
+                "min": pytest.approx(converted_value),
+                "max": pytest.approx(converted_value),
                 "last_reset": None,
                 "state": None,
                 "sum": None,
@@ -1014,8 +1013,8 @@ async def test_sum_statistics_during_period_unit_conversion(
                 "min": None,
                 "max": None,
                 "last_reset": None,
-                "state": approx(value),
-                "sum": approx(value),
+                "state": pytest.approx(value),
+                "sum": pytest.approx(value),
             }
         ]
     }
@@ -1042,8 +1041,8 @@ async def test_sum_statistics_during_period_unit_conversion(
                 "min": None,
                 "max": None,
                 "last_reset": None,
-                "state": approx(converted_value),
-                "sum": approx(converted_value),
+                "state": pytest.approx(converted_value),
+                "sum": pytest.approx(converted_value),
             }
         ]
     }
@@ -1169,9 +1168,9 @@ async def test_statistics_during_period_in_the_past(
             {
                 "start": int(stats_start.timestamp() * 1000),
                 "end": int((stats_start + timedelta(minutes=5)).timestamp() * 1000),
-                "mean": approx(10),
-                "min": approx(10),
-                "max": approx(10),
+                "mean": pytest.approx(10),
+                "min": pytest.approx(10),
+                "max": pytest.approx(10),
                 "last_reset": None,
                 "state": None,
                 "sum": None,
@@ -1196,9 +1195,9 @@ async def test_statistics_during_period_in_the_past(
             {
                 "start": int(start_of_day.timestamp() * 1000),
                 "end": int((start_of_day + timedelta(days=1)).timestamp() * 1000),
-                "mean": approx(10),
-                "min": approx(10),
-                "max": approx(10),
+                "mean": pytest.approx(10),
+                "min": pytest.approx(10),
+                "max": pytest.approx(10),
                 "last_reset": None,
                 "state": None,
                 "sum": None,
@@ -1350,6 +1349,7 @@ async def test_list_statistic_ids(
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
+            "display_unit_of_measurement": display_unit,
             "has_mean": has_mean,
             "has_sum": has_sum,
             "name": None,
@@ -1371,6 +1371,7 @@ async def test_list_statistic_ids(
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
+            "display_unit_of_measurement": display_unit,
             "has_mean": has_mean,
             "has_sum": has_sum,
             "name": None,
@@ -1395,6 +1396,7 @@ async def test_list_statistic_ids(
         assert response["result"] == [
             {
                 "statistic_id": "sensor.test",
+                "display_unit_of_measurement": display_unit,
                 "has_mean": has_mean,
                 "has_sum": has_sum,
                 "name": None,
@@ -1415,6 +1417,7 @@ async def test_list_statistic_ids(
         assert response["result"] == [
             {
                 "statistic_id": "sensor.test",
+                "display_unit_of_measurement": display_unit,
                 "has_mean": has_mean,
                 "has_sum": has_sum,
                 "name": None,
@@ -1425,6 +1428,121 @@ async def test_list_statistic_ids(
         ]
     else:
         assert response["result"] == []
+
+
+@pytest.mark.parametrize(
+    "attributes, attributes2, display_unit, statistics_unit, unit_class",
+    [
+        (
+            DISTANCE_SENSOR_M_ATTRIBUTES,
+            DISTANCE_SENSOR_FT_ATTRIBUTES,
+            "ft",
+            "m",
+            "distance",
+        ),
+        (
+            ENERGY_SENSOR_WH_ATTRIBUTES,
+            ENERGY_SENSOR_KWH_ATTRIBUTES,
+            "kWh",
+            "Wh",
+            "energy",
+        ),
+        (GAS_SENSOR_FT3_ATTRIBUTES, GAS_SENSOR_M3_ATTRIBUTES, "m³", "ft³", "volume"),
+        (POWER_SENSOR_KW_ATTRIBUTES, POWER_SENSOR_W_ATTRIBUTES, "W", "kW", "power"),
+        (
+            PRESSURE_SENSOR_HPA_ATTRIBUTES,
+            PRESSURE_SENSOR_PA_ATTRIBUTES,
+            "Pa",
+            "hPa",
+            "pressure",
+        ),
+        (
+            SPEED_SENSOR_KPH_ATTRIBUTES,
+            SPEED_SENSOR_MPH_ATTRIBUTES,
+            "mph",
+            "km/h",
+            "speed",
+        ),
+        (
+            TEMPERATURE_SENSOR_C_ATTRIBUTES,
+            TEMPERATURE_SENSOR_F_ATTRIBUTES,
+            "°F",
+            "°C",
+            "temperature",
+        ),
+        (
+            VOLUME_SENSOR_FT3_ATTRIBUTES,
+            VOLUME_SENSOR_M3_ATTRIBUTES,
+            "m³",
+            "ft³",
+            "volume",
+        ),
+    ],
+)
+async def test_list_statistic_ids_unit_change(
+    recorder_mock,
+    hass,
+    hass_ws_client,
+    attributes,
+    attributes2,
+    display_unit,
+    statistics_unit,
+    unit_class,
+):
+    """Test list_statistic_ids."""
+    now = dt_util.utcnow()
+    has_mean = attributes["state_class"] == "measurement"
+    has_sum = not has_mean
+
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+
+    client = await hass_ws_client()
+    await client.send_json({"id": 1, "type": "recorder/list_statistic_ids"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == []
+
+    hass.states.async_set("sensor.test", 10, attributes=attributes)
+    await async_wait_recording_done(hass)
+
+    do_adhoc_statistics(hass, start=now)
+    await async_recorder_block_till_done(hass)
+
+    await client.send_json({"id": 2, "type": "recorder/list_statistic_ids"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == [
+        {
+            "statistic_id": "sensor.test",
+            "display_unit_of_measurement": statistics_unit,
+            "has_mean": has_mean,
+            "has_sum": has_sum,
+            "name": None,
+            "source": "recorder",
+            "statistics_unit_of_measurement": statistics_unit,
+            "unit_class": unit_class,
+        }
+    ]
+
+    # Change the state unit
+    hass.states.async_set("sensor.test", 10, attributes=attributes2)
+
+    await client.send_json({"id": 3, "type": "recorder/list_statistic_ids"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == [
+        {
+            "statistic_id": "sensor.test",
+            "display_unit_of_measurement": display_unit,
+            "has_mean": has_mean,
+            "has_sum": has_sum,
+            "name": None,
+            "source": "recorder",
+            "statistics_unit_of_measurement": statistics_unit,
+            "unit_class": unit_class,
+        }
+    ]
 
 
 async def test_validate_statistics(recorder_mock, hass, hass_ws_client):
@@ -1485,9 +1603,9 @@ async def test_clear_statistics(recorder_mock, hass, hass_ws_client):
             {
                 "start": int(now.timestamp() * 1000),
                 "end": int((now + timedelta(minutes=5)).timestamp() * 1000),
-                "mean": approx(value),
-                "min": approx(value),
-                "max": approx(value),
+                "mean": pytest.approx(value),
+                "min": pytest.approx(value),
+                "max": pytest.approx(value),
                 "last_reset": None,
                 "state": None,
                 "sum": None,
@@ -1497,9 +1615,9 @@ async def test_clear_statistics(recorder_mock, hass, hass_ws_client):
             {
                 "start": int(now.timestamp() * 1000),
                 "end": int((now + timedelta(minutes=5)).timestamp() * 1000),
-                "mean": approx(value * 2),
-                "min": approx(value * 2),
-                "max": approx(value * 2),
+                "mean": pytest.approx(value * 2),
+                "min": pytest.approx(value * 2),
+                "max": pytest.approx(value * 2),
                 "last_reset": None,
                 "state": None,
                 "sum": None,
@@ -1509,9 +1627,9 @@ async def test_clear_statistics(recorder_mock, hass, hass_ws_client):
             {
                 "start": int(now.timestamp() * 1000),
                 "end": int((now + timedelta(minutes=5)).timestamp() * 1000),
-                "mean": approx(value * 3),
-                "min": approx(value * 3),
-                "max": approx(value * 3),
+                "mean": pytest.approx(value * 3),
+                "min": pytest.approx(value * 3),
+                "max": pytest.approx(value * 3),
                 "last_reset": None,
                 "state": None,
                 "sum": None,
@@ -1570,10 +1688,11 @@ async def test_clear_statistics(recorder_mock, hass, hass_ws_client):
 
 
 @pytest.mark.parametrize(
-    "new_unit, new_unit_class", [("dogs", None), (None, None), ("W", "power")]
+    "new_unit, new_unit_class, new_display_unit",
+    [("dogs", None, "dogs"), (None, "unitless", None), ("W", "power", "kW")],
 )
 async def test_update_statistics_metadata(
-    recorder_mock, hass, hass_ws_client, new_unit, new_unit_class
+    recorder_mock, hass, hass_ws_client, new_unit, new_unit_class, new_display_unit
 ):
     """Test removing statistics."""
     now = dt_util.utcnow()
@@ -1599,6 +1718,7 @@ async def test_update_statistics_metadata(
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
+            "display_unit_of_measurement": "kW",
             "has_mean": True,
             "has_sum": False,
             "name": None,
@@ -1626,6 +1746,7 @@ async def test_update_statistics_metadata(
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
+            "display_unit_of_measurement": new_display_unit,
             "has_mean": True,
             "has_sum": False,
             "name": None,
@@ -1688,6 +1809,7 @@ async def test_change_statistics_unit(recorder_mock, hass, hass_ws_client):
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
+            "display_unit_of_measurement": "kW",
             "has_mean": True,
             "has_sum": False,
             "name": None,
@@ -1742,6 +1864,7 @@ async def test_change_statistics_unit(recorder_mock, hass, hass_ws_client):
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
+            "display_unit_of_measurement": "kW",
             "has_mean": True,
             "has_sum": False,
             "name": None,
@@ -1793,6 +1916,7 @@ async def test_change_statistics_unit_errors(
     expected_statistic_ids = [
         {
             "statistic_id": "sensor.test",
+            "display_unit_of_measurement": "kW",
             "has_mean": True,
             "has_sum": False,
             "name": None,
@@ -1908,7 +2032,7 @@ async def test_recorder_info(recorder_mock, hass, hass_ws_client):
     assert response["success"]
     assert response["result"] == {
         "backlog": 0,
-        "max_backlog": 40000,
+        "max_backlog": 65000,
         "migration_in_progress": False,
         "migration_is_live": False,
         "recording": True,
@@ -2177,6 +2301,7 @@ async def test_get_statistics_metadata(
     assert response["result"] == [
         {
             "statistic_id": "test:total_gas",
+            "display_unit_of_measurement": unit,
             "has_mean": has_mean,
             "has_sum": has_sum,
             "name": "Total imported energy",
@@ -2204,6 +2329,7 @@ async def test_get_statistics_metadata(
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
+            "display_unit_of_measurement": attributes["unit_of_measurement"],
             "has_mean": has_mean,
             "has_sum": has_sum,
             "name": None,
@@ -2231,6 +2357,7 @@ async def test_get_statistics_metadata(
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
+            "display_unit_of_measurement": attributes["unit_of_measurement"],
             "has_mean": has_mean,
             "has_sum": has_sum,
             "name": None,
@@ -2306,8 +2433,8 @@ async def test_import_statistics(
                 "mean": None,
                 "min": None,
                 "last_reset": None,
-                "state": approx(0.0),
-                "sum": approx(2.0),
+                "state": pytest.approx(0.0),
+                "sum": pytest.approx(2.0),
             },
             {
                 "start": period2,
@@ -2316,14 +2443,15 @@ async def test_import_statistics(
                 "mean": None,
                 "min": None,
                 "last_reset": None,
-                "state": approx(1.0),
-                "sum": approx(3.0),
+                "state": pytest.approx(1.0),
+                "sum": pytest.approx(3.0),
             },
         ]
     }
     statistic_ids = list_statistic_ids(hass)  # TODO
     assert statistic_ids == [
         {
+            "display_unit_of_measurement": "kWh",
             "has_mean": False,
             "has_sum": True,
             "statistic_id": statistic_id,
@@ -2363,8 +2491,8 @@ async def test_import_statistics(
                 "mean": None,
                 "min": None,
                 "last_reset": None,
-                "state": approx(1.0),
-                "sum": approx(3.0),
+                "state": pytest.approx(1.0),
+                "sum": pytest.approx(3.0),
             },
         ]
     }
@@ -2400,8 +2528,8 @@ async def test_import_statistics(
                 "mean": None,
                 "min": None,
                 "last_reset": None,
-                "state": approx(5.0),
-                "sum": approx(6.0),
+                "state": pytest.approx(5.0),
+                "sum": pytest.approx(6.0),
             },
             {
                 "start": period2,
@@ -2410,8 +2538,8 @@ async def test_import_statistics(
                 "mean": None,
                 "min": None,
                 "last_reset": None,
-                "state": approx(1.0),
-                "sum": approx(3.0),
+                "state": pytest.approx(1.0),
+                "sum": pytest.approx(3.0),
             },
         ]
     }
@@ -2446,12 +2574,12 @@ async def test_import_statistics(
             {
                 "start": period1,
                 "end": period1 + timedelta(hours=1),
-                "max": approx(1.0),
-                "mean": approx(2.0),
-                "min": approx(3.0),
+                "max": pytest.approx(1.0),
+                "mean": pytest.approx(2.0),
+                "min": pytest.approx(3.0),
                 "last_reset": None,
-                "state": approx(4.0),
-                "sum": approx(5.0),
+                "state": pytest.approx(4.0),
+                "sum": pytest.approx(5.0),
             },
             {
                 "start": period2,
@@ -2460,8 +2588,8 @@ async def test_import_statistics(
                 "mean": None,
                 "min": None,
                 "last_reset": None,
-                "state": approx(1.0),
-                "sum": approx(3.0),
+                "state": pytest.approx(1.0),
+                "sum": pytest.approx(3.0),
             },
         ]
     }
@@ -2532,8 +2660,8 @@ async def test_adjust_sum_statistics_energy(
                 "mean": None,
                 "min": None,
                 "last_reset": None,
-                "state": approx(0.0),
-                "sum": approx(2.0),
+                "state": pytest.approx(0.0),
+                "sum": pytest.approx(2.0),
             },
             {
                 "start": period2,
@@ -2542,14 +2670,15 @@ async def test_adjust_sum_statistics_energy(
                 "mean": None,
                 "min": None,
                 "last_reset": None,
-                "state": approx(1.0),
-                "sum": approx(3.0),
+                "state": pytest.approx(1.0),
+                "sum": pytest.approx(3.0),
             },
         ]
     }
     statistic_ids = list_statistic_ids(hass)  # TODO
     assert statistic_ids == [
         {
+            "display_unit_of_measurement": "kWh",
             "has_mean": False,
             "has_sum": True,
             "statistic_id": statistic_id,
@@ -2595,12 +2724,12 @@ async def test_adjust_sum_statistics_energy(
             {
                 "start": period1,
                 "end": period1 + timedelta(hours=1),
-                "max": approx(None),
-                "mean": approx(None),
-                "min": approx(None),
+                "max": pytest.approx(None),
+                "mean": pytest.approx(None),
+                "min": pytest.approx(None),
                 "last_reset": None,
-                "state": approx(0.0),
-                "sum": approx(2.0),
+                "state": pytest.approx(0.0),
+                "sum": pytest.approx(2.0),
             },
             {
                 "start": period2,
@@ -2609,8 +2738,8 @@ async def test_adjust_sum_statistics_energy(
                 "mean": None,
                 "min": None,
                 "last_reset": None,
-                "state": approx(1.0),
-                "sum": approx(1003.0),
+                "state": pytest.approx(1.0),
+                "sum": pytest.approx(1003.0),
             },
         ]
     }
@@ -2636,12 +2765,12 @@ async def test_adjust_sum_statistics_energy(
             {
                 "start": period1,
                 "end": period1 + timedelta(hours=1),
-                "max": approx(None),
-                "mean": approx(None),
-                "min": approx(None),
+                "max": pytest.approx(None),
+                "mean": pytest.approx(None),
+                "min": pytest.approx(None),
                 "last_reset": None,
-                "state": approx(0.0),
-                "sum": approx(2.0),
+                "state": pytest.approx(0.0),
+                "sum": pytest.approx(2.0),
             },
             {
                 "start": period2,
@@ -2650,8 +2779,8 @@ async def test_adjust_sum_statistics_energy(
                 "mean": None,
                 "min": None,
                 "last_reset": None,
-                "state": approx(1.0),
-                "sum": approx(3003.0),
+                "state": pytest.approx(1.0),
+                "sum": pytest.approx(3003.0),
             },
         ]
     }
@@ -2722,8 +2851,8 @@ async def test_adjust_sum_statistics_gas(
                 "mean": None,
                 "min": None,
                 "last_reset": None,
-                "state": approx(0.0),
-                "sum": approx(2.0),
+                "state": pytest.approx(0.0),
+                "sum": pytest.approx(2.0),
             },
             {
                 "start": period2,
@@ -2732,14 +2861,15 @@ async def test_adjust_sum_statistics_gas(
                 "mean": None,
                 "min": None,
                 "last_reset": None,
-                "state": approx(1.0),
-                "sum": approx(3.0),
+                "state": pytest.approx(1.0),
+                "sum": pytest.approx(3.0),
             },
         ]
     }
     statistic_ids = list_statistic_ids(hass)  # TODO
     assert statistic_ids == [
         {
+            "display_unit_of_measurement": "m³",
             "has_mean": False,
             "has_sum": True,
             "statistic_id": statistic_id,
@@ -2785,12 +2915,12 @@ async def test_adjust_sum_statistics_gas(
             {
                 "start": period1,
                 "end": period1 + timedelta(hours=1),
-                "max": approx(None),
-                "mean": approx(None),
-                "min": approx(None),
+                "max": pytest.approx(None),
+                "mean": pytest.approx(None),
+                "min": pytest.approx(None),
                 "last_reset": None,
-                "state": approx(0.0),
-                "sum": approx(2.0),
+                "state": pytest.approx(0.0),
+                "sum": pytest.approx(2.0),
             },
             {
                 "start": period2,
@@ -2799,8 +2929,8 @@ async def test_adjust_sum_statistics_gas(
                 "mean": None,
                 "min": None,
                 "last_reset": None,
-                "state": approx(1.0),
-                "sum": approx(1003.0),
+                "state": pytest.approx(1.0),
+                "sum": pytest.approx(1003.0),
             },
         ]
     }
@@ -2826,12 +2956,12 @@ async def test_adjust_sum_statistics_gas(
             {
                 "start": period1,
                 "end": period1 + timedelta(hours=1),
-                "max": approx(None),
-                "mean": approx(None),
-                "min": approx(None),
+                "max": pytest.approx(None),
+                "mean": pytest.approx(None),
+                "min": pytest.approx(None),
                 "last_reset": None,
-                "state": approx(0.0),
-                "sum": approx(2.0),
+                "state": pytest.approx(0.0),
+                "sum": pytest.approx(2.0),
             },
             {
                 "start": period2,
@@ -2840,8 +2970,8 @@ async def test_adjust_sum_statistics_gas(
                 "mean": None,
                 "min": None,
                 "last_reset": None,
-                "state": approx(1.0),
-                "sum": approx(1004),
+                "state": pytest.approx(1.0),
+                "sum": pytest.approx(1004),
             },
         ]
     }
@@ -2855,7 +2985,7 @@ async def test_adjust_sum_statistics_gas(
         ("m³", "m³", "volume", 1, ("ft³", "m³"), ("Wh", "kWh", "MWh", "cats", None)),
         ("ft³", "ft³", "volume", 1, ("ft³", "m³"), ("Wh", "kWh", "MWh", "cats", None)),
         ("dogs", "dogs", None, 1, ("dogs",), ("cats", None)),
-        (None, None, None, 1, (None,), ("cats",)),
+        (None, None, "unitless", 1, (None,), ("cats",)),
     ),
 )
 async def test_adjust_sum_statistics_errors(
@@ -2927,8 +3057,8 @@ async def test_adjust_sum_statistics_errors(
                 "mean": None,
                 "min": None,
                 "last_reset": None,
-                "state": approx(0.0 * factor),
-                "sum": approx(2.0 * factor),
+                "state": pytest.approx(0.0 * factor),
+                "sum": pytest.approx(2.0 * factor),
             },
             {
                 "start": period2,
@@ -2937,8 +3067,8 @@ async def test_adjust_sum_statistics_errors(
                 "mean": None,
                 "min": None,
                 "last_reset": None,
-                "state": approx(1.0 * factor),
-                "sum": approx(3.0 * factor),
+                "state": pytest.approx(1.0 * factor),
+                "sum": pytest.approx(3.0 * factor),
             },
         ]
     }
@@ -2946,6 +3076,7 @@ async def test_adjust_sum_statistics_errors(
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
         {
+            "display_unit_of_measurement": state_unit,
             "has_mean": False,
             "has_sum": True,
             "statistic_id": statistic_id,

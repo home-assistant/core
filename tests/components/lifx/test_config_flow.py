@@ -11,6 +11,8 @@ from homeassistant.components.lifx.const import CONF_SERIAL
 from homeassistant.const import CONF_DEVICE, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from . import (
     DEFAULT_ENTRY_TITLE,
@@ -19,9 +21,11 @@ from . import (
     MAC_ADDRESS,
     MODULE,
     SERIAL,
+    _mocked_bulb,
     _mocked_failing_bulb,
     _mocked_relay,
     _patch_config_flow_try_connect,
+    _patch_device,
     _patch_discovery,
 )
 
@@ -523,3 +527,41 @@ async def test_refuse_relays(hass: HomeAssistant):
         await hass.async_block_till_done()
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_suggested_area(hass: HomeAssistant) -> None:
+    """Test suggested area is populated from lifx group label."""
+
+    class MockLifxCommandGetGroup:
+        """Mock the get_group method that gets the group name from the bulb."""
+
+        def __init__(self, bulb, **kwargs):
+            """Init command."""
+            self.bulb = bulb
+            self.lifx_group = kwargs.get("lifx_group")
+
+        def __call__(self, *args, **kwargs):
+            """Call command."""
+            self.bulb.group = self.lifx_group
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "1.2.3.4"}, unique_id=SERIAL
+    )
+    config_entry.add_to_hass(hass)
+    bulb = _mocked_bulb()
+    bulb.group = None
+    bulb.get_group = MockLifxCommandGetGroup(bulb, lifx_group="My LIFX Group")
+
+    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
+        device=bulb
+    ), _patch_device(device=bulb):
+        await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_registry = er.async_get(hass)
+    entity_id = "light.my_bulb"
+    entity = entity_registry.async_get(entity_id)
+
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get(entity.device_id)
+    assert device.suggested_area == "My LIFX Group"

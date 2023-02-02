@@ -7,15 +7,6 @@
             "cannot_connect": "Feeler beim verbannen",
             "invalid_auth": "Ong\u00eblteg Authentifikatioun",
             "unknown": "Onerwaarte Feeler"
-        },
-        "step": {
-            "user": {
-                "data": {
-                    "password": "Passwuert",
-                    "pin": "PIN Code",
-                    "username": "Benotzernumm"
-                }
-            }
         }
     },
     "options": {
@@ -29,8 +20,8 @@
             },
             "init": {
                 "data": {
-                    "code_arm_required": "Pin Code n\u00e9ideg fir unzeschalten",
-                    "code_disarm_required": "Pin Code n\u00e9ideg fir auszeschalten"
+                    "code_arm_required": "PIN-Code fir ze Entsp\u00e4re virginn",
+                    "code_disarm_required": "PIN-Code fir ze Entsp\u00e4re virginn"
                 },
                 "title": "Optioune konfigur\u00e9ieren"
             },

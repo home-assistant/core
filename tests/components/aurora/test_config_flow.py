@@ -110,5 +110,4 @@ async def test_option_flow(hass):
     )
 
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == ""
     assert result["data"]["forecast_threshold"] == 65

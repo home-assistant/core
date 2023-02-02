@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "already_configured": "Perangkat sudah dikonfigurasi"
-        },
         "error": {
             "cannot_connect": "Gagal terhubung",
             "unknown": "Kesalahan yang tidak diharapkan"

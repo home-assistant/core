@@ -7,10 +7,11 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME, DATA_GIGABYTES
+from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME, UnitOfInformation
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -30,7 +31,8 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_CURRENT_BANDWIDTH_USED,
         name="Current Bandwidth Used",
-        native_unit_of_measurement=DATA_GIGABYTES,
+        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:chart-histogram",
     ),
     SensorEntityDescription(

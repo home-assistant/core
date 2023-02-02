@@ -8,8 +8,9 @@ from homeassistant.setup import async_setup_component
 
 
 @pytest.fixture
-def mock_http_client(loop, hass, hass_client):
+def mock_http_client(event_loop, hass, hass_client):
     """Set up test fixture."""
+    loop = event_loop
     config = {
         "rss_feed_template": {
             "testfeed": {

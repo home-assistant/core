@@ -109,7 +109,7 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """
         if user_input:
 
-            if CONF_MANUAL_INPUT == user_input[CONF_HOST]:
+            if user_input[CONF_HOST] == CONF_MANUAL_INPUT:
                 return await self.async_step_configure()
 
             for device in self.devices:
@@ -213,7 +213,10 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         raise fault
 
                     LOGGER.debug(
-                        "Couldn't get network interfaces from ONVIF deivice '%s'. Error: %s",
+                        (
+                            "Couldn't get network interfaces from ONVIF deivice '%s'."
+                            " Error: %s"
+                        ),
                         self.onvif_config[CONF_NAME],
                         fault,
                     )

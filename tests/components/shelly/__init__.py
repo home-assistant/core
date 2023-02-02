@@ -18,7 +18,7 @@ from homeassistant.components.shelly.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.helpers.entity_registry import async_get
 from homeassistant.util import dt
 
@@ -78,11 +78,9 @@ def inject_rpc_device_event(
     mock_rpc_device.mock_event()
 
 
-async def mock_rest_update(hass: HomeAssistant):
+async def mock_rest_update(hass: HomeAssistant, seconds=REST_SENSORS_UPDATE_INTERVAL):
     """Move time to create REST sensors update event."""
-    async_fire_time_changed(
-        hass, dt.utcnow() + timedelta(seconds=REST_SENSORS_UPDATE_INTERVAL)
-    )
+    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=seconds))
     await hass.async_block_till_done()
 
 
@@ -120,10 +118,5 @@ def register_device(device_reg, config_entry: ConfigEntry):
     """Register Shelly device."""
     device_reg.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={
-            (
-                device_registry.CONNECTION_NETWORK_MAC,
-                device_registry.format_mac(MOCK_MAC),
-            )
-        },
+        connections={(CONNECTION_NETWORK_MAC, format_mac(MOCK_MAC))},
     )

@@ -11,7 +11,6 @@ import pytest
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
-    BaseHaScanner,
     BluetoothChange,
     BluetoothScanningMode,
     BluetoothServiceInfo,
@@ -45,6 +44,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from . import (
+    FakeScanner,
     _get_manager,
     async_setup_with_default_adapter,
     generate_advertisement_data,
@@ -492,7 +492,9 @@ async def test_discovery_match_by_name_connectable_false(
         qingping_adv = generate_advertisement_data(
             local_name="Qingping Motion & Light",
             service_data={
-                "0000fdcd-0000-1000-8000-00805f9b34fb": b"H\x12\xcd\xd5`4-X\x08\x04\x01\xe8\x00\x00\x0f\x01{"
+                "0000fdcd-0000-1000-8000-00805f9b34fb": (
+                    b"H\x12\xcd\xd5`4-X\x08\x04\x01\xe8\x00\x00\x0f\x01{"
+                )
             },
         )
 
@@ -508,7 +510,9 @@ async def test_discovery_match_by_name_connectable_false(
         qingping_adv_with_better_rssi = generate_advertisement_data(
             local_name="Qingping Motion & Light",
             service_data={
-                "0000fdcd-0000-1000-8000-00805f9b34fb": b"H\x12\xcd\xd5`4-X\x08\x04\x01\xe8\x00\x00\x0f\x02{"
+                "0000fdcd-0000-1000-8000-00805f9b34fb": (
+                    b"H\x12\xcd\xd5`4-X\x08\x04\x01\xe8\x00\x00\x0f\x02{"
+                )
             },
             rssi=-30,
         )
@@ -832,7 +836,9 @@ async def test_discovery_match_by_service_data_uuid_when_format_changes(
         qingping_format_adv = generate_advertisement_data(
             local_name="Qingping Temp RH M",
             service_data={
-                "0000fdcd-0000-1000-8000-00805f9b34fb": b"\x08\x16\xa7%\x144-X\x01\x04\xdb\x00\xa6\x01\x02\x01d"
+                "0000fdcd-0000-1000-8000-00805f9b34fb": (
+                    b"\x08\x16\xa7%\x144-X\x01\x04\xdb\x00\xa6\x01\x02\x01d"
+                )
             },
         )
         # 1st discovery should not generate a flow because the
@@ -2649,7 +2655,7 @@ async def test_getting_the_scanner_returns_the_wrapped_instance(hass, enable_blu
 
 async def test_scanner_count_connectable(hass, enable_bluetooth):
     """Test getting the connectable scanner count."""
-    scanner = BaseHaScanner(hass, "any", "any")
+    scanner = FakeScanner(hass, "any", "any")
     cancel = bluetooth.async_register_scanner(hass, scanner, False)
     assert bluetooth.async_scanner_count(hass, connectable=True) == 1
     cancel()
@@ -2657,7 +2663,7 @@ async def test_scanner_count_connectable(hass, enable_bluetooth):
 
 async def test_scanner_count(hass, enable_bluetooth):
     """Test getting the connectable and non-connectable scanner count."""
-    scanner = BaseHaScanner(hass, "any", "any")
+    scanner = FakeScanner(hass, "any", "any")
     cancel = bluetooth.async_register_scanner(hass, scanner, False)
     assert bluetooth.async_scanner_count(hass, connectable=False) == 2
     cancel()

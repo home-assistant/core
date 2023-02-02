@@ -2,7 +2,8 @@
 
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.components.shelly.const import SLEEP_PERIOD_MULTIPLIER
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import State
 from homeassistant.helpers.entity_registry import async_get
 
@@ -66,6 +67,29 @@ async def test_block_rest_binary_sensor(hass, mock_block_device, monkeypatch):
     assert hass.states.get(entity_id).state == STATE_ON
 
 
+async def test_block_rest_binary_sensor_connected_battery_devices(
+    hass, mock_block_device, monkeypatch
+):
+    """Test block REST binary sensor for connected battery devices."""
+    entity_id = register_entity(hass, BINARY_SENSOR_DOMAIN, "test_name_cloud", "cloud")
+    monkeypatch.setitem(mock_block_device.status, "cloud", {"connected": False})
+    monkeypatch.setitem(mock_block_device.settings["device"], "type", "SHMOS-01")
+    monkeypatch.setitem(mock_block_device.settings["coiot"], "update_period", 3600)
+    await init_integration(hass, 1, model="SHMOS-01")
+
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    monkeypatch.setitem(mock_block_device.status["cloud"], "connected", True)
+
+    # Verify no update on fast intervals
+    await mock_rest_update(hass)
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    # Verify update on slow intervals
+    await mock_rest_update(hass, seconds=SLEEP_PERIOD_MULTIPLIER * 3600)
+    assert hass.states.get(entity_id).state == STATE_ON
+
+
 async def test_block_sleeping_binary_sensor(hass, mock_block_device, monkeypatch):
     """Test block sleeping binary sensor."""
     entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_motion"
@@ -101,6 +125,29 @@ async def test_block_restored_sleeping_binary_sensor(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_ON
+
+    # Make device online
+    monkeypatch.setattr(mock_block_device, "initialized", True)
+    mock_block_device.mock_update()
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+
+async def test_block_restored_sleeping_binary_sensor_no_last_state(
+    hass, mock_block_device, device_reg, monkeypatch
+):
+    """Test block restored sleeping binary sensor missing last state."""
+    entry = await init_integration(hass, 1, sleep_period=1000, skip_setup=True)
+    register_device(device_reg, entry)
+    entity_id = register_entity(
+        hass, BINARY_SENSOR_DOMAIN, "test_name_motion", "sensor_0-motion", entry
+    )
+    monkeypatch.setattr(mock_block_device, "initialized", False)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
     # Make device online
     monkeypatch.setattr(mock_block_device, "initialized", True)
@@ -181,6 +228,31 @@ async def test_rpc_restored_sleeping_binary_sensor(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_ON
+
+    # Make device online
+    monkeypatch.setattr(mock_rpc_device, "initialized", True)
+    mock_rpc_device.mock_update()
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+
+async def test_rpc_restored_sleeping_binary_sensor_no_last_state(
+    hass, mock_rpc_device, device_reg, monkeypatch
+):
+    """Test RPC restored sleeping binary sensor missing last state."""
+    entry = await init_integration(hass, 2, sleep_period=1000, skip_setup=True)
+    register_device(device_reg, entry)
+    entity_id = register_entity(
+        hass, BINARY_SENSOR_DOMAIN, "test_name_cloud", "cloud-cloud", entry
+    )
+
+    monkeypatch.setattr(mock_rpc_device, "initialized", False)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
     # Make device online
     monkeypatch.setattr(mock_rpc_device, "initialized", True)

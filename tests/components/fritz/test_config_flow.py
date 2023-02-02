@@ -2,7 +2,12 @@
 import dataclasses
 from unittest.mock import patch
 
-from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
+from fritzconnection.core.exceptions import (
+    FritzAuthorizationError,
+    FritzConnectionException,
+    FritzSecurityError,
+)
+import pytest
 
 from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
@@ -13,6 +18,7 @@ from homeassistant.components.fritz.const import (
     ERROR_AUTH_INVALID,
     ERROR_CANNOT_CONNECT,
     ERROR_UNKNOWN,
+    FRITZ_AUTH_EXCEPTIONS,
 )
 from homeassistant.components.ssdp import ATTR_UPNP_UDN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_SSDP, SOURCE_USER
@@ -120,7 +126,11 @@ async def test_user_already_configured(
         assert result["errors"]["base"] == "already_configured"
 
 
-async def test_exception_security(hass: HomeAssistant, mock_get_source_ip):
+@pytest.mark.parametrize(
+    "error",
+    FRITZ_AUTH_EXCEPTIONS,
+)
+async def test_exception_security(hass: HomeAssistant, mock_get_source_ip, error):
     """Test starting a flow by user with invalid credentials."""
 
     result = await hass.config_entries.flow.async_init(
@@ -131,7 +141,7 @@ async def test_exception_security(hass: HomeAssistant, mock_get_source_ip):
 
     with patch(
         "homeassistant.components.fritz.config_flow.FritzConnection",
-        side_effect=FritzSecurityError,
+        side_effect=error,
     ):
 
         result = await hass.config_entries.flow.async_configure(
@@ -239,8 +249,16 @@ async def test_reauth_successful(
     assert mock_setup_entry.called
 
 
+@pytest.mark.parametrize(
+    "side_effect,error",
+    [
+        (FritzAuthorizationError, ERROR_AUTH_INVALID),
+        (FritzConnectionException, ERROR_CANNOT_CONNECT),
+        (FritzSecurityError, ERROR_AUTH_INVALID),
+    ],
+)
 async def test_reauth_not_successful(
-    hass: HomeAssistant, fc_class_mock, mock_get_source_ip
+    hass: HomeAssistant, fc_class_mock, mock_get_source_ip, side_effect, error
 ):
     """Test starting a reauthentication flow but no connection found."""
 
@@ -249,7 +267,7 @@ async def test_reauth_not_successful(
 
     with patch(
         "homeassistant.components.fritz.config_flow.FritzConnection",
-        side_effect=FritzConnectionException,
+        side_effect=side_effect,
     ):
 
         result = await hass.config_entries.flow.async_init(
@@ -271,7 +289,7 @@ async def test_reauth_not_successful(
 
         assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
-        assert result["errors"]["base"] == "cannot_connect"
+        assert result["errors"]["base"] == error
 
 
 async def test_ssdp_already_configured(

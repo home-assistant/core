@@ -33,16 +33,6 @@
             }
         }
     },
-    "issues": {
-        "deprecated_yaml": {
-            "description": "La configuraci\u00f3 de Google Calentdar mitjan\u00e7ant YAML s'eliminar\u00e0 de Home Assistant a la versi\u00f3 2022.9. \n\nLa configuraci\u00f3 existent de credencials d'aplicaci\u00f3 OAuth i d'acc\u00e9s s'ha importat autom\u00e0ticament a la interf\u00edcie d'usuari. Elimina la configuraci\u00f3 YAML corresponent del fitxer configuration.yaml i reinicia Home Assistant per solucionar aquest problema.",
-            "title": "La configuraci\u00f3 YAML de Google Calendar est\u00e0 sent eliminada"
-        },
-        "removed_track_new_yaml": {
-            "description": "Has desactivat el seguiment d'entitats de Google Calendar a configuration.yaml, que ja no \u00e9s compatible. Per desactivar les entitats descobertes recentment, a partir d'ara, has de canviar manualment les opcions de sistema de la integraci\u00f3 a trav\u00e9s de la interf\u00edcie d'usuari. Elimina la configuraci\u00f3 'track_new' de configuration.yaml i reinicia Home Assistant per solucionar aquest problema.",
-            "title": "El seguiment d'entitats de Google Calendar ha canviat"
-        }
-    },
     "options": {
         "step": {
             "init": {

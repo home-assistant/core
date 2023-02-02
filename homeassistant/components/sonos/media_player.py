@@ -21,6 +21,7 @@ from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_MEDIA_ENQUEUE,
     BrowseMedia,
+    MediaPlayerDeviceClass,
     MediaPlayerEnqueue,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
@@ -205,6 +206,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         | MediaPlayerEntityFeature.VOLUME_SET
     )
     _attr_media_content_type = MediaType.MUSIC
+    _attr_device_class = MediaPlayerDeviceClass.SPEAKER
 
     def __init__(self, speaker: SonosSpeaker) -> None:
         """Initialize the media player entity."""
@@ -323,7 +325,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     @property
     def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
-        return int(self.media.position) if self.media.position else None
+        return self.media.position
 
     @property
     def media_position_updated_at(self) -> datetime.datetime | None:

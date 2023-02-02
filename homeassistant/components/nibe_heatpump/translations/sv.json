@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "already_configured": "Enheten \u00e4r redan konfigurerad"
-        },
         "error": {
             "address": "Ogiltig fj\u00e4rr-IP-adress har angetts. Adressen m\u00e5ste vara en IPv4-adress.",
             "address_in_use": "Den valda lyssningsporten anv\u00e4nds redan p\u00e5 detta system.",
@@ -12,12 +9,21 @@
             "write": "Fel vid skrivbeg\u00e4ran till pumpen. Verifiera din `Fj\u00e4rrskrivport` eller `Fj\u00e4rr-IP-adress`."
         },
         "step": {
-            "user": {
+            "modbus": {
                 "data": {
-                    "ip_address": "Fj\u00e4rr IP-adress",
-                    "listening_port": "Lokal lyssningsport",
-                    "remote_read_port": "Port f\u00f6r fj\u00e4rravl\u00e4sning",
-                    "remote_write_port": "Port f\u00f6r fj\u00e4rrskrivning"
+                    "modbus_url": "Modbus URL",
+                    "model": "Modell av v\u00e4rmepump"
+                }
+            },
+            "nibegw": {
+                "data": {
+                    "model": "Modell av v\u00e4rmepump"
+                }
+            },
+            "user": {
+                "menu_options": {
+                    "modbus": "Modbus",
+                    "nibegw": "NibeGW"
                 }
             }
         }

@@ -259,9 +259,10 @@ class SnmpSwitch(SwitchEntity):
 
     async def async_update(self) -> None:
         """Update the state."""
-        errindication, errstatus, errindex, restable = await getCmd(
+        get_result = await getCmd(
             *self._request_args, ObjectType(ObjectIdentity(self._baseoid))
         )
+        errindication, errstatus, errindex, restable = await get_result
 
         if errindication:
             _LOGGER.error("SNMP error: %s", errindication)

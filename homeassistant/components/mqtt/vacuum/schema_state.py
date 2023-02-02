@@ -154,7 +154,8 @@ PLATFORM_SCHEMA_STATE_MODERN = (
     .extend(MQTT_VACUUM_SCHEMA.schema)
 )
 
-# Configuring MQTT Vacuums under the vacuum platform key is deprecated in HA Core 2022.6
+# Configuring MQTT Vacuums under the vacuum platform key was deprecated in
+# HA Core 2022.6
 PLATFORM_SCHEMA_STATE = vol.All(
     cv.PLATFORM_SCHEMA.extend(PLATFORM_SCHEMA_STATE_MODERN.schema),
     warn_for_legacy_schema(VACUUM_DOMAIN),
@@ -180,6 +181,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
     _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_VACUUM_ATTRIBUTES_BLOCKED
 
+    _command_topic: str | None
     _set_fan_speed_topic: str | None
     _send_command_topic: str | None
     _payloads: dict[str, str | None]

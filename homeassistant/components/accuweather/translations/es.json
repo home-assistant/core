@@ -4,7 +4,7 @@
             "single_instance_allowed": "Ya est\u00e1 configurado. Solo es posible una \u00fanica configuraci\u00f3n."
         },
         "create_entry": {
-            "default": "Algunos sensores no est\u00e1n habilitados de forma predeterminada. Puedes habilitarlos en el registro de la entidad despu\u00e9s de la configuraci\u00f3n de la integraci\u00f3n.\nEl pron\u00f3stico del tiempo no est\u00e1 habilitado de forma predeterminada. Puedes habilitarlo en las opciones de integraci\u00f3n."
+            "default": "Algunos sensores no est\u00e1n habilitados de forma predeterminada. Puedes habilitarlos en el registro de la entidad despu\u00e9s de la configuraci\u00f3n de la integraci\u00f3n.\nLa previsi\u00f3n meteorol\u00f3gica no est\u00e1 habilitada de forma predeterminada. Puedes habilitarla en las opciones de integraci\u00f3n."
         },
         "error": {
             "cannot_connect": "No se pudo conectar",
@@ -22,13 +22,24 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "pressure_tendency": {
+                "state": {
+                    "falling": "Descendente",
+                    "rising": "Creciente",
+                    "steady": "Estable"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
-            "user": {
+            "init": {
                 "data": {
-                    "forecast": "Pron\u00f3stico del tiempo"
+                    "forecast": "Previsi\u00f3n meteorol\u00f3gica"
                 },
-                "description": "Debido a las limitaciones de la versi\u00f3n gratuita de la clave API de AccuWeather, cuando habilitas el pron\u00f3stico del tiempo, las actualizaciones de datos se realizar\u00e1n cada 80 minutos en lugar de cada 40 minutos."
+                "description": "Debido a las limitaciones de la versi\u00f3n gratuita de la clave API de AccuWeather, cuando habilitas la previsi\u00f3n meteorol\u00f3gica, las actualizaciones de datos se realizar\u00e1n cada 80 minutos en lugar de cada 40 minutos."
             }
         }
     },

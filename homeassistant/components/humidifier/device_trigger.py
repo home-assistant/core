@@ -87,7 +87,9 @@ async def async_attach_trigger(
         numeric_state_config = {
             numeric_state_trigger.CONF_PLATFORM: "numeric_state",
             numeric_state_trigger.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
-            numeric_state_trigger.CONF_VALUE_TEMPLATE: "{{ state.attributes.humidity }}",
+            numeric_state_trigger.CONF_VALUE_TEMPLATE: (
+                "{{ state.attributes.humidity }}"
+            ),
         }
 
         if CONF_ABOVE in config:

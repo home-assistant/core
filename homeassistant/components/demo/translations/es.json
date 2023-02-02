@@ -1,4 +1,57 @@
 {
+    "entity": {
+        "climate": {
+            "ubercool": {
+                "state_attributes": {
+                    "fan_mode": {
+                        "state": {
+                            "auto_high": "Alto autom\u00e1tico",
+                            "auto_low": "Bajo autom\u00e1tico",
+                            "on_high": "En alto",
+                            "on_low": "En bajo"
+                        }
+                    },
+                    "swing_mode": {
+                        "state": {
+                            "1": "1",
+                            "2": "2",
+                            "3": "3",
+                            "auto": "Autom\u00e1tico",
+                            "off": "Apagado"
+                        }
+                    }
+                }
+            }
+        },
+        "select": {
+            "speed": {
+                "state": {
+                    "light_speed": "Velocidad de la luz",
+                    "ludicrous_speed": "Velocidad ludicrous",
+                    "ridiculous_speed": "Velocidad rid\u00edcula"
+                }
+            }
+        },
+        "sensor": {
+            "thermostat_mode": {
+                "state": {
+                    "away": "Ausente",
+                    "comfort": "Confort",
+                    "eco": "Eco",
+                    "sleep": "Dormir"
+                }
+            }
+        },
+        "vacuum": {
+            "model_s": {
+                "state_attributes": {
+                    "cleaned_area": {
+                        "name": "\u00c1rea Limpiada"
+                    }
+                }
+            }
+        }
+    },
     "issues": {
         "bad_psu": {
             "fix_flow": {
@@ -10,6 +63,14 @@
                 }
             },
             "title": "La fuente de alimentaci\u00f3n no es estable."
+        },
+        "cold_tea": {
+            "fix_flow": {
+                "abort": {
+                    "not_tea_time": "No se puede volver a calentar el t\u00e9 en este momento"
+                }
+            },
+            "title": "El t\u00e9 est\u00e1 fr\u00edo"
         },
         "out_of_blinker_fluid": {
             "fix_flow": {

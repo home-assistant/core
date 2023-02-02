@@ -18,14 +18,6 @@
                     "state": "Kanton"
                 }
             },
-            "node_pro": {
-                "data": {
-                    "ip_address": "Host",
-                    "password": "Passwuert"
-                },
-                "description": "Pers\u00e9inlech Airvisual Unit\u00e9it iwwerwaachen. Passwuert kann vum UI vum Apparat ausgelies ginn.",
-                "title": "Airvisual Node/Pro ariichten"
-            },
             "reauth_confirm": {
                 "data": {
                     "api_key": "API Schl\u00ebssel"

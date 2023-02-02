@@ -15,11 +15,5 @@
                 }
             }
         }
-    },
-    "issues": {
-        "deprecated_yaml": {
-            "description": "Konfigurering av Anthem A/V-mottakere ved hjelp av YAML blir fjernet. \n\n Din eksisterende YAML-konfigurasjon har blitt importert til brukergrensesnittet automatisk. \n\n Fjern Anthem A/V Receivers YAML-konfigurasjonen fra configuration.yaml-filen og start Home Assistant p\u00e5 nytt for \u00e5 fikse dette problemet.",
-            "title": "Anthem A/V-mottakernes YAML-konfigurasjon blir fjernet"
-        }
     }
 }

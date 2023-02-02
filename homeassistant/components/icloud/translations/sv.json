@@ -11,13 +11,6 @@
             "validate_verification_code": "Det gick inte att verifiera verifieringskoden, v\u00e4lj en betrodd enhet och starta verifieringen igen"
         },
         "step": {
-            "reauth": {
-                "data": {
-                    "password": "L\u00f6senord"
-                },
-                "description": "Ditt tidigare angivna l\u00f6senord f\u00f6r {username} fungerar inte l\u00e4ngre. Uppdatera ditt l\u00f6senord f\u00f6r att forts\u00e4tta anv\u00e4nda denna integration.",
-                "title": "\u00c5terautenticera integration"
-            },
             "reauth_confirm": {
                 "data": {
                     "password": "L\u00f6senord"

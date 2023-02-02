@@ -4,13 +4,18 @@
             "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9"
         },
         "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
             "invalid_auth": "Neplatn\u00e9 overenie"
         },
         "step": {
             "user": {
                 "data": {
+                    "mjpeg_url": "MJPEG URL",
                     "name": "N\u00e1zov",
-                    "password": "Heslo"
+                    "password": "Heslo",
+                    "still_image_url": "Adresa URL statick\u00e9ho obr\u00e1zka",
+                    "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno",
+                    "verify_ssl": "Overi\u0165 SSL certifik\u00e1t"
                 }
             }
         }
@@ -18,13 +23,18 @@
     "options": {
         "error": {
             "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
             "invalid_auth": "Neplatn\u00e9 overenie"
         },
         "step": {
             "init": {
                 "data": {
+                    "mjpeg_url": "MJPEG URL",
                     "name": "N\u00e1zov",
-                    "password": "Heslo"
+                    "password": "Heslo",
+                    "still_image_url": "Adresa URL statick\u00e9ho obr\u00e1zka",
+                    "username": "Pou\u017e\u00edvate\u013esk\u00e9 meno",
+                    "verify_ssl": "Overi\u0165 SSL certifik\u00e1t"
                 }
             }
         }

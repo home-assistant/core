@@ -3,19 +3,15 @@
         "abort": {
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
             "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
-            "no_devices_found": "Nessun dispositivo trovato sulla rete",
-            "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
+            "no_devices_found": "Nessun dispositivo trovato sulla rete"
         },
         "error": {
             "cannot_connect": "Impossibile connettersi"
         },
-        "flow_title": "{label} ({host}) {serial}",
+        "flow_title": "{label} ({group})",
         "step": {
-            "confirm": {
-                "description": "Vuoi configurare LIFX?"
-            },
             "discovery_confirm": {
-                "description": "Vuoi configurare {label} ({host}) {serial}?"
+                "description": "Vuoi configurare {label} ({group})?"
             },
             "pick_device": {
                 "data": {

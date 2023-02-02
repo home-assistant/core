@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Umiestnenie u\u017e je nakonfigurovan\u00e9",
+            "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
+        },
+        "error": {
+            "empty": "\u017diadny v\u00fdsledok pri h\u013eadan\u00ed mesta: skontrolujte pole mesta"
+        },
+        "step": {
+            "cities": {
+                "data": {
+                    "city": "Mesto"
+                },
+                "description": "Vyberte si svoje mesto zo zoznamu"
+            },
+            "user": {
+                "data": {
+                    "city": "Mesto"
+                },
+                "description": "Zadajte po\u0161tov\u00e9 smerovacie \u010d\u00edslo (len pre Franc\u00fazsko, odpor\u00fa\u010dan\u00e9) alebo n\u00e1zov mesta"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "mode": "Re\u017eim predpovede"
+                }
+            }
+        }
+    }
+}

@@ -1,5 +1,9 @@
 {
     "issues": {
+        "country_not_configured": {
+            "description": "Nessuna nazione \u00e8 stata configurata, aggiornare la configurazione facendo clic sul pulsante \"Ulteriori informazioni\" in basso.",
+            "title": "La nazione non \u00e8 stata configurata"
+        },
         "historic_currency": {
             "description": "La valuta {currency} non \u00e8 pi\u00f9 in uso, riconfigura la configurazione della valuta.",
             "title": "La valuta configurata non \u00e8 pi\u00f9 in uso"

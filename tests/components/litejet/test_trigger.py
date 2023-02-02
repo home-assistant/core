@@ -113,12 +113,12 @@ async def test_held_more_than_short(hass, calls, mock_litejet):
         {
             "platform": "litejet",
             "number": ENTITY_OTHER_SWITCH_NUMBER,
-            "held_more_than": {"milliseconds": "200"},
+            "held_more_than": {"milliseconds": "2000"},
         },
     )
 
     await simulate_press(hass, mock_litejet, ENTITY_OTHER_SWITCH_NUMBER)
-    await simulate_time(hass, mock_litejet, timedelta(seconds=0.1))
+    await simulate_time(hass, mock_litejet, timedelta(seconds=1))
     await simulate_release(hass, mock_litejet, ENTITY_OTHER_SWITCH_NUMBER)
     assert len(calls) == 0
 
@@ -130,13 +130,13 @@ async def test_held_more_than_long(hass, calls, mock_litejet):
         {
             "platform": "litejet",
             "number": ENTITY_OTHER_SWITCH_NUMBER,
-            "held_more_than": {"milliseconds": "200"},
+            "held_more_than": {"milliseconds": "2000"},
         },
     )
 
     await simulate_press(hass, mock_litejet, ENTITY_OTHER_SWITCH_NUMBER)
     assert len(calls) == 0
-    await simulate_time(hass, mock_litejet, timedelta(seconds=0.3))
+    await simulate_time(hass, mock_litejet, timedelta(seconds=3))
     assert len(calls) == 1
     assert calls[0].data["id"] == 0
     await simulate_release(hass, mock_litejet, ENTITY_OTHER_SWITCH_NUMBER)
@@ -150,12 +150,12 @@ async def test_held_less_than_short(hass, calls, mock_litejet):
         {
             "platform": "litejet",
             "number": ENTITY_OTHER_SWITCH_NUMBER,
-            "held_less_than": {"milliseconds": "200"},
+            "held_less_than": {"milliseconds": "2000"},
         },
     )
 
     await simulate_press(hass, mock_litejet, ENTITY_OTHER_SWITCH_NUMBER)
-    await simulate_time(hass, mock_litejet, timedelta(seconds=0.1))
+    await simulate_time(hass, mock_litejet, timedelta(seconds=1))
     assert len(calls) == 0
     await simulate_release(hass, mock_litejet, ENTITY_OTHER_SWITCH_NUMBER)
     assert len(calls) == 1
@@ -169,13 +169,13 @@ async def test_held_less_than_long(hass, calls, mock_litejet):
         {
             "platform": "litejet",
             "number": ENTITY_OTHER_SWITCH_NUMBER,
-            "held_less_than": {"milliseconds": "200"},
+            "held_less_than": {"milliseconds": "2000"},
         },
     )
 
     await simulate_press(hass, mock_litejet, ENTITY_OTHER_SWITCH_NUMBER)
     assert len(calls) == 0
-    await simulate_time(hass, mock_litejet, timedelta(seconds=0.3))
+    await simulate_time(hass, mock_litejet, timedelta(seconds=3))
     assert len(calls) == 0
     await simulate_release(hass, mock_litejet, ENTITY_OTHER_SWITCH_NUMBER)
     assert len(calls) == 0
@@ -188,13 +188,13 @@ async def test_held_in_range_short(hass, calls, mock_litejet):
         {
             "platform": "litejet",
             "number": ENTITY_OTHER_SWITCH_NUMBER,
-            "held_more_than": {"milliseconds": "100"},
-            "held_less_than": {"milliseconds": "300"},
+            "held_more_than": {"milliseconds": "1000"},
+            "held_less_than": {"milliseconds": "3000"},
         },
     )
 
     await simulate_press(hass, mock_litejet, ENTITY_OTHER_SWITCH_NUMBER)
-    await simulate_time(hass, mock_litejet, timedelta(seconds=0.05))
+    await simulate_time(hass, mock_litejet, timedelta(seconds=0.5))
     await simulate_release(hass, mock_litejet, ENTITY_OTHER_SWITCH_NUMBER)
     assert len(calls) == 0
 
@@ -206,14 +206,14 @@ async def test_held_in_range_just_right(hass, calls, mock_litejet):
         {
             "platform": "litejet",
             "number": ENTITY_OTHER_SWITCH_NUMBER,
-            "held_more_than": {"milliseconds": "100"},
-            "held_less_than": {"milliseconds": "300"},
+            "held_more_than": {"milliseconds": "1000"},
+            "held_less_than": {"milliseconds": "3000"},
         },
     )
 
     await simulate_press(hass, mock_litejet, ENTITY_OTHER_SWITCH_NUMBER)
     assert len(calls) == 0
-    await simulate_time(hass, mock_litejet, timedelta(seconds=0.2))
+    await simulate_time(hass, mock_litejet, timedelta(seconds=2))
     assert len(calls) == 0
     await simulate_release(hass, mock_litejet, ENTITY_OTHER_SWITCH_NUMBER)
     assert len(calls) == 1
@@ -227,14 +227,14 @@ async def test_held_in_range_long(hass, calls, mock_litejet):
         {
             "platform": "litejet",
             "number": ENTITY_OTHER_SWITCH_NUMBER,
-            "held_more_than": {"milliseconds": "100"},
-            "held_less_than": {"milliseconds": "300"},
+            "held_more_than": {"milliseconds": "1000"},
+            "held_less_than": {"milliseconds": "3000"},
         },
     )
 
     await simulate_press(hass, mock_litejet, ENTITY_OTHER_SWITCH_NUMBER)
     assert len(calls) == 0
-    await simulate_time(hass, mock_litejet, timedelta(seconds=0.4))
+    await simulate_time(hass, mock_litejet, timedelta(seconds=4))
     assert len(calls) == 0
     await simulate_release(hass, mock_litejet, ENTITY_OTHER_SWITCH_NUMBER)
     assert len(calls) == 0
@@ -247,8 +247,8 @@ async def test_reload(hass, calls, mock_litejet):
         {
             "platform": "litejet",
             "number": ENTITY_OTHER_SWITCH_NUMBER,
-            "held_more_than": {"milliseconds": "100"},
-            "held_less_than": {"milliseconds": "300"},
+            "held_more_than": {"milliseconds": "1000"},
+            "held_less_than": {"milliseconds": "3000"},
         },
     )
 
@@ -260,7 +260,7 @@ async def test_reload(hass, calls, mock_litejet):
                 "trigger": {
                     "platform": "litejet",
                     "number": ENTITY_OTHER_SWITCH_NUMBER,
-                    "held_more_than": {"milliseconds": "1000"},
+                    "held_more_than": {"milliseconds": "10000"},
                 },
                 "action": {"service": "test.automation"},
             }
@@ -275,7 +275,7 @@ async def test_reload(hass, calls, mock_litejet):
 
     await simulate_press(hass, mock_litejet, ENTITY_OTHER_SWITCH_NUMBER)
     assert len(calls) == 0
-    await simulate_time(hass, mock_litejet, timedelta(seconds=0.5))
+    await simulate_time(hass, mock_litejet, timedelta(seconds=5))
     assert len(calls) == 0
-    await simulate_time(hass, mock_litejet, timedelta(seconds=1.25))
+    await simulate_time(hass, mock_litejet, timedelta(seconds=12.5))
     assert len(calls) == 1

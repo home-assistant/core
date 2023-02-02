@@ -20,8 +20,8 @@
                     "password": "Passord",
                     "username": "Brukernavn"
                 },
-                "description": "Oppdaget FRITZ!Box: {name} \n\n Konfigurer FRITZ!Box-verkt\u00f8y for \u00e5 kontrollere {name}",
-                "title": "Sett opp FRITZ!Box verkt\u00f8y"
+                "description": "Oppdaget FRITZ!Box: {name} \n\n Konfigurer FRITZ!Box Tools for \u00e5 kontrollere {name}",
+                "title": "Sett opp FRITZ!Box Tools"
             },
             "reauth_confirm": {
                 "data": {
@@ -38,8 +38,8 @@
                     "port": "Port",
                     "username": "Brukernavn"
                 },
-                "description": "Sett opp FRITZ!Box verkt\u00f8y for \u00e5 kontrollere fritz! Boksen.\nMinimum n\u00f8dvendig: brukernavn, passord.",
-                "title": "Sett opp FRITZ!Box verkt\u00f8y"
+                "description": "Sett opp FRITZ!Box Tools for \u00e5 kontrollere FRITZ!Boxen.\n Minimum n\u00f8dvendig: brukernavn, passord.",
+                "title": "Sett opp FRITZ!Box Tools"
             }
         }
     },

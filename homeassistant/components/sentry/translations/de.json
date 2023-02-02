@@ -25,8 +25,8 @@
                     "event_third_party_packages": "Senden von Ereignissen aus Drittanbieterpaketen",
                     "logging_event_level": "Der Log-Level, f\u00fcr den Sentry ein Ereignis registrieren wird",
                     "logging_level": "Der Log-Level, f\u00fcr den Sentry Protokolle als Breadcrums aufzeichnen wird",
-                    "tracing": "Aktivieren des Leistungs-Tracings",
-                    "tracing_sample_rate": "Tracing Abtastrate; zwischen 0,0 und 1,0 (1,0 = 100 %)"
+                    "tracing": "Aktivieren der Leistungsverfolgung",
+                    "tracing_sample_rate": "R\u00fcckverfolgung Abtastrate; zwischen 0,0 und 1,0 (1,0 = 100 %)"
                 }
             }
         }

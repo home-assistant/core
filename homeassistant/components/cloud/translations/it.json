@@ -1,4 +1,19 @@
 {
+    "issues": {
+        "legacy_subscription": {
+            "fix_flow": {
+                "abort": {
+                    "operation_took_too_long": "L'operazione ha richiesto troppo tempo. Riprova pi\u00f9 tardi."
+                },
+                "step": {
+                    "confirm_change_plan": {
+                        "description": "Abbiamo recentemente aggiornato il nostro sistema di abbonamento. Per continuare a utilizzare Home Assistant Cloud \u00e8 necessario approvare una volta la modifica in PayPal. \n\nQuesto richieder\u00e0 1 minuto e non aumenter\u00e0 il prezzo."
+                    }
+                }
+            },
+            "title": "Abbonamento precedente rilevato"
+        }
+    },
     "system_health": {
         "info": {
             "alexa_enabled": "Alexa abilitato",

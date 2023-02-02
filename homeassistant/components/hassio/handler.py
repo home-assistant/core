@@ -267,7 +267,7 @@ class HassIO:
     def is_connected(self):
         """Return true if it connected to Hass.io supervisor.
 
-        This method return a coroutine.
+        This method returns a coroutine.
         """
         return self.send_command("/supervisor/ping", method="get", timeout=15)
 
@@ -275,7 +275,7 @@ class HassIO:
     def get_info(self):
         """Return generic Supervisor information.
 
-        This method return a coroutine.
+        This method returns a coroutine.
         """
         return self.send_command("/info", method="get")
 
@@ -283,7 +283,7 @@ class HassIO:
     def get_host_info(self):
         """Return data for Host.
 
-        This method return a coroutine.
+        This method returns a coroutine.
         """
         return self.send_command("/host/info", method="get")
 
@@ -291,7 +291,7 @@ class HassIO:
     def get_os_info(self):
         """Return data for the OS.
 
-        This method return a coroutine.
+        This method returns a coroutine.
         """
         return self.send_command("/os/info", method="get")
 
@@ -315,7 +315,7 @@ class HassIO:
     def get_addon_info(self, addon):
         """Return data for a Add-on.
 
-        This method return a coroutine.
+        This method returns a coroutine.
         """
         return self.send_command(f"/addons/{addon}/info", method="get")
 
@@ -340,7 +340,7 @@ class HassIO:
     def get_store(self):
         """Return data from the store.
 
-        This method return a coroutine.
+        This method returns a coroutine.
         """
         return self.send_command("/store", method="get")
 
@@ -348,7 +348,7 @@ class HassIO:
     def get_ingress_panels(self):
         """Return data for Add-on ingress panels.
 
-        This method return a coroutine.
+        This method returns a coroutine.
         """
         return self.send_command("/ingress/panels", method="get")
 
@@ -356,7 +356,7 @@ class HassIO:
     def restart_homeassistant(self):
         """Restart Home-Assistant container.
 
-        This method return a coroutine.
+        This method returns a coroutine.
         """
         return self.send_command("/homeassistant/restart")
 
@@ -364,7 +364,7 @@ class HassIO:
     def stop_homeassistant(self):
         """Stop Home-Assistant container.
 
-        This method return a coroutine.
+        This method returns a coroutine.
         """
         return self.send_command("/homeassistant/stop")
 
@@ -372,7 +372,7 @@ class HassIO:
     def refresh_updates(self):
         """Refresh available updates.
 
-        This method return a coroutine.
+        This method returns a coroutine.
         """
         return self.send_command("/refresh_updates", timeout=None)
 
@@ -380,7 +380,7 @@ class HassIO:
     def retrieve_discovery_messages(self):
         """Return all discovery data from Hass.io API.
 
-        This method return a coroutine.
+        This method returns a coroutine.
         """
         return self.send_command("/discovery", method="get", timeout=60)
 
@@ -388,7 +388,7 @@ class HassIO:
     def get_discovery_message(self, uuid):
         """Return a single discovery data message.
 
-        This method return a coroutine.
+        This method returns a coroutine.
         """
         return self.send_command(f"/discovery/{uuid}", method="get")
 
@@ -396,7 +396,7 @@ class HassIO:
     def get_resolution_info(self):
         """Return data for Supervisor resolution center.
 
-        This method return a coroutine.
+        This method returns a coroutine.
         """
         return self.send_command("/resolution/info", method="get")
 
@@ -414,7 +414,8 @@ class HassIO:
         if http_config.get(CONF_SERVER_HOST) is not None:
             options["watchdog"] = False
             _LOGGER.warning(
-                "Found incompatible HTTP option 'server_host'. Watchdog feature disabled"
+                "Found incompatible HTTP option 'server_host'. Watchdog feature"
+                " disabled"
             )
 
         return await self.send_command("/homeassistant/options", payload=options)
@@ -423,7 +424,7 @@ class HassIO:
     def update_hass_timezone(self, timezone):
         """Update Home-Assistant timezone data on Hass.io.
 
-        This method return a coroutine.
+        This method returns a coroutine.
         """
         return self.send_command("/supervisor/options", payload={"timezone": timezone})
 
@@ -431,7 +432,7 @@ class HassIO:
     def update_diagnostics(self, diagnostics: bool):
         """Update Supervisor diagnostics setting.
 
-        This method return a coroutine.
+        This method returns a coroutine.
         """
         return self.send_command(
             "/supervisor/options", payload={"diagnostics": diagnostics}
@@ -455,7 +456,9 @@ class HassIO:
                 f"http://{self._ip}{command}",
                 json=payload,
                 headers={
-                    aiohttp.hdrs.AUTHORIZATION: f"Bearer {os.environ.get('SUPERVISOR_TOKEN', '')}"
+                    aiohttp.hdrs.AUTHORIZATION: (
+                        f"Bearer {os.environ.get('SUPERVISOR_TOKEN', '')}"
+                    )
                 },
                 timeout=aiohttp.ClientTimeout(total=timeout),
             )

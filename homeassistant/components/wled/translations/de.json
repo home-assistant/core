@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
             "cannot_connect": "Verbindung fehlgeschlagen",
-            "cct_unsupported": "Dieses WLED-Ger\u00e4t verwendet CCT-Kan\u00e4le, die von dieser Integration nicht unterst\u00fctzt werden."
+            "cct_unsupported": "Dieses WLED-Ger\u00e4t verwendet CCT Kan\u00e4le, die von dieser Integration nicht unterst\u00fctzt werden."
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen"
@@ -19,6 +19,17 @@
             "zeroconf_confirm": {
                 "description": "M\u00f6chtest du die WLED mit dem Namen `{name}` zu Home Assistant hinzuf\u00fcgen?",
                 "title": "WLED-Ger\u00e4t entdeckt"
+            }
+        }
+    },
+    "entity": {
+        "select": {
+            "live_override": {
+                "state": {
+                    "0": "Aus",
+                    "1": "An",
+                    "2": "Bis zum Neustart des Ger\u00e4ts"
+                }
             }
         }
     },

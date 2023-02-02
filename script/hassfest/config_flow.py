@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import pathlib
+from typing import Any
 
 from .brand import validate as validate_brands
 from .model import Brand, Config, Integration
@@ -11,7 +12,7 @@ from .serializer import format_python_namespace
 UNIQUE_ID_IGNORE = {"huawei_lte", "mqtt", "adguard"}
 
 
-def _validate_integration(config: Config, integration: Integration):
+def _validate_integration(config: Config, integration: Integration) -> None:
     """Validate config flow of an integration."""
     config_flow_file = integration.path / "config_flow.py"
 
@@ -60,17 +61,16 @@ def _validate_integration(config: Config, integration: Integration):
     )
 
 
-def _generate_and_validate(integrations: dict[str, Integration], config: Config):
+def _generate_and_validate(integrations: dict[str, Integration], config: Config) -> str:
     """Validate and generate config flow data."""
-    domains = {
+    domains: dict[str, list[str]] = {
         "integration": [],
         "helper": [],
     }
 
     for domain in sorted(integrations):
         integration = integrations[domain]
-
-        if not integration.manifest or not integration.config_flow:
+        if not integration.config_flow:
             continue
 
         _validate_integration(config, integration)
@@ -84,9 +84,9 @@ def _generate_and_validate(integrations: dict[str, Integration], config: Config)
 
 
 def _populate_brand_integrations(
-    integration_data: dict,
+    integration_data: dict[str, Any],
     integrations: dict[str, Integration],
-    brand_metadata: dict,
+    brand_metadata: dict[str, Any],
     sub_integrations: list[str],
 ) -> None:
     """Add referenced integrations to a brand's metadata."""
@@ -99,7 +99,7 @@ def _populate_brand_integrations(
             "system",
         ):
             continue
-        metadata = {
+        metadata: dict[str, Any] = {
             "integration_type": integration.integration_type,
         }
         # Always set the config_flow key to avoid breaking the frontend
@@ -119,11 +119,13 @@ def _populate_brand_integrations(
 
 
 def _generate_integrations(
-    brands: dict[str, Brand], integrations: dict[str, Integration], config: Config
-):
+    brands: dict[str, Brand],
+    integrations: dict[str, Integration],
+    config: Config,
+) -> str:
     """Generate integrations data."""
 
-    result = {
+    result: dict[str, Any] = {
         "integration": {},
         "helper": {},
         "translated_name": set(),
@@ -147,14 +149,14 @@ def _generate_integrations(
     primary_domains = {
         domain
         for domain, integration in integrations.items()
-        if integration.manifest and domain not in brand_integration_domains
+        if domain not in brand_integration_domains
     }
     # Add all brands to the set
     primary_domains |= set(brands)
 
     # Generate the config flow index
     for domain in sorted(primary_domains):
-        metadata = {}
+        metadata: dict[str, Any] = {}
 
         if brand := brands.get(domain):
             metadata["name"] = brand.name
@@ -199,7 +201,7 @@ def _generate_integrations(
     )
 
 
-def validate(integrations: dict[str, Integration], config: Config):
+def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Validate config flow file."""
     config_flow_path = config.root / "homeassistant/generated/config_flows.py"
     integrations_path = config.root / "homeassistant/generated/integrations.json"
@@ -233,7 +235,7 @@ def validate(integrations: dict[str, Integration], config: Config):
             )
 
 
-def generate(integrations: dict[str, Integration], config: Config):
+def generate(integrations: dict[str, Integration], config: Config) -> None:
     """Generate config flow file."""
     config_flow_path = config.root / "homeassistant/generated/config_flows.py"
     integrations_path = config.root / "homeassistant/generated/integrations.json"

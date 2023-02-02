@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Kontoen er allerede konfigurert",
             "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
         "error": {

@@ -5,11 +5,6 @@
         },
         "error": {
             "cannot_connect": "Povezivanje nije uspjelo"
-        },
-        "step": {
-            "user": {
-                "title": "ZHA"
-            }
         }
     },
     "options": {

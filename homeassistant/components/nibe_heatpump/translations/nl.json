@@ -1,10 +1,14 @@
 {
     "config": {
-        "abort": {
-            "already_configured": "Apparaat is al geconfigureerd"
-        },
         "error": {
             "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "user": {
+                "menu_options": {
+                    "nibegw": "NibeGW"
+                }
+            }
         }
     }
 }

@@ -4,8 +4,11 @@ from __future__ import annotations
 import asyncio
 from collections.abc import AsyncGenerator, Callable, Generator
 from contextlib import asynccontextmanager
+import datetime
 import functools
-from json import JSONDecoder, loads
+import gc
+import itertools
+from json import JSONDecoder
 import logging
 import sqlite3
 import ssl
@@ -13,8 +16,7 @@ import threading
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
-from aiohttp import client
-from aiohttp.pytest_plugin import AiohttpClient
+from aiohttp import ClientWebSocketResponse, client
 from aiohttp.test_utils import (
     BaseTestServer,
     TestClient,
@@ -32,7 +34,6 @@ from homeassistant import core as ha, loader, runner, util
 from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
 from homeassistant.auth.models import Credentials
 from homeassistant.auth.providers import homeassistant, legacy_api_password
-from homeassistant.components import mqtt, recorder
 from homeassistant.components.network.models import Adapter, IPv4ConfiguredAddress
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
@@ -42,16 +43,22 @@ from homeassistant.components.websocket_api.auth import (
 from homeassistant.components.websocket_api.http import URL
 from homeassistant.const import HASSIO_USER_NAME
 from homeassistant.core import CoreState, HomeAssistant
-from homeassistant.helpers import config_entry_oauth2_flow, recorder as recorder_helper
+from homeassistant.helpers import (
+    config_entry_oauth2_flow,
+    event,
+    recorder as recorder_helper,
+)
+from homeassistant.helpers.json import json_loads
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, location
 
-from tests.ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
+from .ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
+from .typing import ClientSessionGenerator, WebSocketGenerator
 
 pytest.register_assert_rewrite("tests.common")
 
-from tests.common import (  # noqa: E402, isort:skip
+from .common import (  # noqa: E402, isort:skip
     CLIENT_ID,
     INSTANCES,
     MockConfigEntry,
@@ -61,22 +68,25 @@ from tests.common import (  # noqa: E402, isort:skip
     async_test_home_assistant,
     get_test_home_assistant,
     init_recorder_component,
-    mock_storage as mock_storage,
+    mock_storage,
 )
-from tests.test_util.aiohttp import mock_aiohttp_client  # noqa: E402, isort:skip
-from tests.components.recorder.common import (  # noqa: E402, isort:skip
-    async_recorder_block_till_done,
-)
+from .test_util.aiohttp import mock_aiohttp_client  # noqa: E402, isort:skip
 
 
 _LOGGER = logging.getLogger(__name__)
 
-logging.basicConfig(level=logging.DEBUG)
-logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
-
 asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))
 # Disable fixtures overriding our beautiful policy
 asyncio.set_event_loop_policy = lambda policy: None
+
+
+def _utcnow():
+    """Make utcnow patchable by freezegun."""
+    return datetime.datetime.now(datetime.timezone.utc)
+
+
+dt_util.utcnow = _utcnow
+event.time_tracker_utcnow = _utcnow
 
 
 def pytest_addoption(parser):
@@ -89,6 +99,11 @@ def pytest_configure(config):
     config.addinivalue_line(
         "markers", "no_fail_on_log_exception: mark test to not fail on logged exception"
     )
+    if config.getoption("verbose") > 0:
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.INFO)
+    logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
 
 
 def pytest_runtest_setup():
@@ -186,12 +201,34 @@ location.async_detect_location_info = check_real(location.async_detect_location_
 util.get_local_ip = lambda: "127.0.0.1"
 
 
+@pytest.fixture(name="caplog")
+def caplog_fixture(caplog):
+    """Set log level to debug for tests using the caplog fixture."""
+    caplog.set_level(logging.DEBUG)
+    return caplog
+
+
+@pytest.fixture(autouse=True, scope="module")
+def garbage_collection():
+    """Run garbage collection at known locations.
+
+    This is to mimic the behavior of pytest-aiohttp, and is
+    required to avoid warnings during garbage collection from
+    spilling over into next test case. We run it per module which
+    handles the most common cases and let each module override
+    to run per test case if needed.
+    """
+    gc.collect()
+
+
 @pytest.fixture(autouse=True)
-def verify_cleanup():
+def verify_cleanup(event_loop: asyncio.AbstractEventLoop):
     """Verify that the test has cleaned up resources correctly."""
     threads_before = frozenset(threading.enumerate())
-
+    tasks_before = asyncio.all_tasks(event_loop)
     yield
+
+    event_loop.run_until_complete(event_loop.shutdown_default_executor())
 
     if len(INSTANCES) >= 2:
         count = len(INSTANCES)
@@ -199,9 +236,26 @@ def verify_cleanup():
             inst.stop()
         pytest.exit(f"Detected non stopped instances ({count}), aborting test run")
 
+    # Warn and clean-up lingering tasks and timers
+    # before moving on to the next test.
+    tasks = asyncio.all_tasks(event_loop) - tasks_before
+    for task in tasks:
+        _LOGGER.warning("Linger task after test %r", task)
+        task.cancel()
+    if tasks:
+        event_loop.run_until_complete(asyncio.wait(tasks))
+
+    for handle in event_loop._scheduled:
+        if not handle.cancelled():
+            _LOGGER.warning("Lingering timer after test %r", handle)
+            handle.cancel()
+
+    # Verify no threads where left behind.
     threads = frozenset(threading.enumerate()) - threads_before
     for thread in threads:
-        assert isinstance(thread, threading._DummyThread)
+        assert isinstance(thread, threading._DummyThread) or thread.name.startswith(
+            "waitpid-"
+        )
 
 
 @pytest.fixture(autouse=True)
@@ -247,7 +301,7 @@ class CoalescingResponse(client.ClientWebSocketResponse):
     async def receive_json(
         self,
         *,
-        loads: JSONDecoder = loads,
+        loads: JSONDecoder = json_loads,
         timeout: float | None = None,
     ) -> Any:
         """receive_json or from buffer."""
@@ -277,8 +331,8 @@ def aiohttp_client_cls():
 
 @pytest.fixture
 def aiohttp_client(
-    loop: asyncio.AbstractEventLoop,
-) -> Generator[AiohttpClient, None, None]:
+    event_loop: asyncio.AbstractEventLoop,
+) -> Generator[ClientSessionGenerator, None, None]:
     """Override the default aiohttp_client since 3.x does not support aiohttp_client_cls.
 
     Remove this when upgrading to 4.x as aiohttp_client_cls
@@ -288,6 +342,7 @@ def aiohttp_client(
     aiohttp_client(server, **kwargs)
     aiohttp_client(raw_server, **kwargs)
     """
+    loop = event_loop
     clients = []
 
     async def go(
@@ -312,7 +367,7 @@ def aiohttp_client(
         elif isinstance(__param, BaseTestServer):
             client = TestClient(__param, loop=loop, **kwargs)
         else:
-            raise ValueError("Unknown argument type: %r" % type(__param))
+            raise TypeError("Unknown argument type: %r" % type(__param))
 
         await client.start_server()
         clients.append(client)
@@ -334,9 +389,10 @@ def hass_fixture_setup():
 
 
 @pytest.fixture
-def hass(hass_fixture_setup, loop, load_registries, hass_storage, request):
+def hass(hass_fixture_setup, event_loop, load_registries, hass_storage, request):
     """Fixture to provide a test instance of Home Assistant."""
 
+    loop = event_loop
     hass_fixture_setup.append(True)
 
     orig_tz = dt_util.DEFAULT_TIME_ZONE
@@ -381,7 +437,7 @@ def hass(hass_fixture_setup, loop, load_registries, hass_storage, request):
 
 
 @pytest.fixture
-async def stop_hass():
+async def stop_hass(event_loop):
     """Make sure all hass are stopped."""
     orig_hass = ha.HomeAssistant
 
@@ -402,6 +458,7 @@ async def stop_hass():
         with patch.object(hass_inst.loop, "stop"):
             await hass_inst.async_block_till_done()
             await hass_inst.async_stop(force=True)
+            await event_loop.shutdown_default_executor()
 
 
 @pytest.fixture
@@ -427,8 +484,10 @@ def mock_device_tracker_conf():
         devices.append(entity)
 
     with patch(
-        "homeassistant.components.device_tracker.legacy"
-        ".DeviceTracker.async_update_config",
+        (
+            "homeassistant.components.device_tracker.legacy"
+            ".DeviceTracker.async_update_config"
+        ),
         side_effect=mock_update_config,
     ), patch(
         "homeassistant.components.device_tracker.legacy.async_load_config",
@@ -548,10 +607,15 @@ def local_auth(hass):
 
 
 @pytest.fixture
-def hass_client(hass, aiohttp_client, hass_access_token, socket_enabled):
+def hass_client(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    hass_access_token: str,
+    socket_enabled: None,
+) -> ClientSessionGenerator:
     """Return an authenticated HTTP client."""
 
-    async def auth_client():
+    async def auth_client() -> TestClient:
         """Return an authenticated client."""
         return await aiohttp_client(
             hass.http.app, headers={"Authorization": f"Bearer {hass_access_token}"}
@@ -561,10 +625,14 @@ def hass_client(hass, aiohttp_client, hass_access_token, socket_enabled):
 
 
 @pytest.fixture
-def hass_client_no_auth(hass, aiohttp_client, socket_enabled):
+def hass_client_no_auth(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    socket_enabled: None,
+) -> ClientSessionGenerator:
     """Return an unauthenticated HTTP client."""
 
-    async def client():
+    async def client() -> TestClient:
         """Return an authenticated client."""
         return await aiohttp_client(hass.http.app)
 
@@ -579,7 +647,7 @@ def current_request():
             "GET",
             "/some/request",
             headers={"Host": "example.com"},
-            sslcontext=ssl.SSLContext(ssl.PROTOCOL_TLS),
+            sslcontext=ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT),
         )
         mock_request_context.get.return_value = mocked_request
         yield mock_request_context
@@ -596,10 +664,17 @@ def current_request_with_host(current_request):
 
 
 @pytest.fixture
-def hass_ws_client(aiohttp_client, hass_access_token, hass, socket_enabled):
+def hass_ws_client(
+    aiohttp_client: ClientSessionGenerator,
+    hass_access_token: str | None,
+    hass: HomeAssistant,
+    socket_enabled: None,
+) -> WebSocketGenerator:
     """Websocket client fixture connected to websocket server."""
 
-    async def create_client(hass=hass, access_token=hass_access_token):
+    async def create_client(
+        hass: HomeAssistant = hass, access_token: str | None = hass_access_token
+    ) -> ClientWebSocketResponse:
         """Create a websocket client."""
         assert await async_setup_component(hass, "websocket_api", {})
         client = await aiohttp_client(hass.http.app)
@@ -697,6 +772,10 @@ async def mqtt_mock(
 @asynccontextmanager
 async def _mqtt_mock_entry(hass, mqtt_client_mock, mqtt_config_entry_data):
     """Fixture to mock a delayed setup of the MQTT config entry."""
+    # Local import to avoid processing MQTT modules when running a testcase
+    # which does not use MQTT.
+    from homeassistant.components import mqtt
+
     if mqtt_config_entry_data is None:
         mqtt_config_entry_data = {
             mqtt.CONF_BROKER: "mock-broker",
@@ -861,6 +940,16 @@ def enable_statistics():
 
 
 @pytest.fixture
+def enable_statistics_table_validation():
+    """Fixture to control enabling of recorder's statistics table validation.
+
+    To enable statistics table validation, tests can be marked with:
+    @pytest.mark.parametrize("enable_statistics_table_validation", [True])
+    """
+    return False
+
+
+@pytest.fixture
 def enable_nightly_purge():
     """Fixture to control enabling of recorder's nightly purge job.
 
@@ -902,14 +991,24 @@ def hass_recorder(
     recorder_db_url,
     enable_nightly_purge,
     enable_statistics,
+    enable_statistics_table_validation,
     hass_storage,
 ):
     """Home Assistant fixture with in-memory recorder."""
+    # Local import to avoid processing recorder and SQLite modules when running a
+    # testcase which does not use the recorder.
+    from homeassistant.components import recorder
+
     original_tz = dt_util.DEFAULT_TIME_ZONE
 
     hass = get_test_home_assistant()
     nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
     stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None
+    stats_validate = (
+        recorder.statistics.validate_db_schema
+        if enable_statistics_table_validation
+        else itertools.repeat(set())
+    )
     with patch(
         "homeassistant.components.recorder.Recorder.async_nightly_tasks",
         side_effect=nightly,
@@ -917,6 +1016,10 @@ def hass_recorder(
     ), patch(
         "homeassistant.components.recorder.Recorder.async_periodic_statistics",
         side_effect=stats,
+        autospec=True,
+    ), patch(
+        "homeassistant.components.recorder.migration.statistics_validate_db_schema",
+        side_effect=stats_validate,
         autospec=True,
     ):
 
@@ -937,6 +1040,10 @@ def hass_recorder(
 
 async def _async_init_recorder_component(hass, add_config=None, db_url=None):
     """Initialize the recorder asynchronously."""
+    # Local import to avoid processing recorder and SQLite modules when running a
+    # testcase which does not use the recorder.
+    from homeassistant.components import recorder
+
     config = dict(add_config) if add_config else {}
     if recorder.CONF_DB_URL not in config:
         config[recorder.CONF_DB_URL] = db_url
@@ -962,12 +1069,24 @@ async def async_setup_recorder_instance(
     hass_fixture_setup,
     enable_nightly_purge,
     enable_statistics,
+    enable_statistics_table_validation,
 ) -> AsyncGenerator[SetupRecorderInstanceT, None]:
     """Yield callable to setup recorder instance."""
     assert not hass_fixture_setup
 
+    # Local import to avoid processing recorder and SQLite modules when running a
+    # testcase which does not use the recorder.
+    from homeassistant.components import recorder
+
+    from .components.recorder.common import async_recorder_block_till_done
+
     nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
     stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None
+    stats_validate = (
+        recorder.statistics.validate_db_schema
+        if enable_statistics_table_validation
+        else itertools.repeat(set())
+    )
     with patch(
         "homeassistant.components.recorder.Recorder.async_nightly_tasks",
         side_effect=nightly,
@@ -975,6 +1094,10 @@ async def async_setup_recorder_instance(
     ), patch(
         "homeassistant.components.recorder.Recorder.async_periodic_statistics",
         side_effect=stats,
+        autospec=True,
+    ), patch(
+        "homeassistant.components.recorder.migration.statistics_validate_db_schema",
+        side_effect=stats_validate,
         autospec=True,
     ):
 
@@ -996,7 +1119,7 @@ async def async_setup_recorder_instance(
 @pytest.fixture
 async def recorder_mock(recorder_config, async_setup_recorder_instance, hass):
     """Fixture with in-memory recorder."""
-    yield await async_setup_recorder_instance(hass, recorder_config)
+    return await async_setup_recorder_instance(hass, recorder_config)
 
 
 @pytest.fixture
@@ -1035,6 +1158,9 @@ async def mock_enable_bluetooth(
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
+    yield
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
 
 
 @pytest.fixture(name="mock_bluetooth_adapters")
@@ -1050,6 +1176,10 @@ def mock_bluetooth_adapters():
                 "hw_version": "usb:v1D6Bp0246d053F",
                 "passive_scan": False,
                 "sw_version": "homeassistant",
+                "manufacturer": "ACME",
+                "product": "Bluetooth Adapter 5.0",
+                "product_id": "aa01",
+                "vendor_id": "cc01",
             },
         },
     ):

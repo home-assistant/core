@@ -1,11 +1,19 @@
 {
     "config": {
         "abort": {
+            "already_configured": "O dispositivo j\u00e1 est\u00e1 configurado",
+            "authorize_url_timeout": "Excedido o tempo limite para gerar um URL de autoriza\u00e7\u00e3o",
             "invalid_discovery_info": "Informa\u00e7\u00f5es de descoberta inv\u00e1lidas recebidas",
             "link_local_address": "Endere\u00e7os locais de link n\u00e3o s\u00e3o suportados",
             "missing_configuration": "A integra\u00e7\u00e3o LaMetric n\u00e3o est\u00e1 configurada. Por favor, siga a documenta\u00e7\u00e3o.",
             "no_devices": "O usu\u00e1rio autorizado n\u00e3o possui dispositivos LaMetric",
-            "reauth_successful": "Reautentica\u00e7\u00e3o bem sucedida"
+            "no_url_available": "Nenhum URL est\u00e1 dispon\u00edvel. Para obter informa\u00e7\u00f5es sobre esse erro, [consulte a sec\u00e7\u00e3o de ajuda]({docs_url})",
+            "reauth_successful": "Reautentica\u00e7\u00e3o bem sucedida",
+            "unknown": "Erro inesperado"
+        },
+        "error": {
+            "cannot_connect": "A liga\u00e7\u00e3o falhou",
+            "unknown": "Erro inesperado"
         },
         "step": {
             "choice_enter_manual_or_fetch_cloud": {
@@ -16,10 +24,17 @@
                 }
             },
             "manual_entry": {
+                "data": {
+                    "api_key": "Chave da API",
+                    "host": "Endere\u00e7o"
+                },
                 "data_description": {
                     "api_key": "Voc\u00ea pode encontrar essa chave de API em [p\u00e1gina de dispositivos em sua conta de desenvolvedor LaMetric](https://developer.lametric.com/user/devices).",
                     "host": "O endere\u00e7o IP ou nome de host do seu LaMetric TIME em sua rede."
                 }
+            },
+            "pick_implementation": {
+                "title": "Escolha o m\u00e9todo de autentica\u00e7\u00e3o"
             },
             "user_cloud_select_device": {
                 "data": {

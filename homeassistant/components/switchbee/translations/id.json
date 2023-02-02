@@ -13,19 +13,9 @@
                 "data": {
                     "host": "Host",
                     "password": "Kata Sandi",
-                    "switch_as_light": "Inisialisasi sakelar sebagai entitas lampu",
                     "username": "Nama Pengguna"
                 },
                 "description": "Siapkan integrasi SwitchBee dengan Home Assistant."
-            }
-        }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "devices": "Perangkat yang disertakan"
-                }
             }
         }
     }

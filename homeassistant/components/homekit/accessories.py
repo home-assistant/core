@@ -35,8 +35,7 @@ from homeassistant.const import (
     PERCENTAGE,
     STATE_ON,
     STATE_UNAVAILABLE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
     __version__,
 )
 from homeassistant.core import (
@@ -115,8 +114,10 @@ def get_accessory(  # noqa: C901
     """Take state and return an accessory object if supported."""
     if not aid:
         _LOGGER.warning(
-            'The entity "%s" is not supported, since it '
-            "generates an invalid aid, please change it",
+            (
+                'The entity "%s" is not supported, since it '
+                "generates an invalid aid, please change it"
+            ),
             state.entity_id,
         )
         return None
@@ -184,8 +185,8 @@ def get_accessory(  # noqa: C901
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
         if device_class == SensorDeviceClass.TEMPERATURE or unit in (
-            TEMP_CELSIUS,
-            TEMP_FAHRENHEIT,
+            UnitOfTemperature.CELSIUS,
+            UnitOfTemperature.FAHRENHEIT,
         ):
             a_type = "TemperatureSensor"
         elif device_class == SensorDeviceClass.HUMIDITY and unit == PERCENTAGE:
@@ -213,7 +214,7 @@ def get_accessory(  # noqa: C901
             a_type = "CarbonMonoxideSensor"
         elif device_class == SensorDeviceClass.CO2 or "co2" in state.entity_id:
             a_type = "CarbonDioxideSensor"
-        elif device_class == SensorDeviceClass.ILLUMINANCE or unit in ("lm", LIGHT_LUX):
+        elif device_class == SensorDeviceClass.ILLUMINANCE or unit == LIGHT_LUX:
             a_type = "LightSensor"
 
     elif state.domain == "switch":
@@ -667,6 +668,7 @@ class HomeIIDManager(IIDManager):  # type: ignore[misc]
             )
         if iid in self.objs:
             raise RuntimeError(
-                f"Cannot assign IID {iid} to {obj} as it is already in use by: {self.objs[iid]}"
+                f"Cannot assign IID {iid} to {obj} as it is already in use by:"
+                f" {self.objs[iid]}"
             )
         return iid

@@ -27,13 +27,9 @@
         }
     },
     "issues": {
-        "deprecated_yaml": {
-            "description": "La configuraci\u00f3 de Radarr mitjan\u00e7ant YAML s'eliminar\u00e0 de Home Assistant.\n\nLa configuraci\u00f3 YAML existent s'ha importat autom\u00e0ticament a la interf\u00edcie d'usuari.\n\nElimina la configuraci\u00f3 YAML de Radarr del fitxer configuration.yaml i reinicia Home Assistant per solucionar aquest problema.",
-            "title": "La configuraci\u00f3 YAML de Radarr est\u00e0 sent eliminada"
-        },
-        "removed_attributes": {
-            "description": "Per precauci\u00f3, s'han fet alguns canvis importants en el sensor recompte de pel\u00b7l\u00edcules.\n\nAquest sensor pot causar problemes amb bases de dades molt grans. Si encara vols utilitzar-lo, pots fer-ho. \n\nEls noms de pel\u00b7l\u00edcules ja no s'inclouen com a atributs al sensor pel\u00b7l\u00edcules. \n\nPropers s'ha eliminat. S'ha modernitzat com a elements de calendari. L'espai del disc ara es divideix en diferents sensors, un per a cada carpeta. \n\nL'estat i les comandes s'han eliminat perqu\u00e8 no sembla que tinguin un valor real per a les automatitzacions.",
-            "title": "Canvis a la integraci\u00f3 Radarr"
+        "removed_yaml": {
+            "description": "La configuraci\u00f3 de Radarr mitjan\u00e7ant YAML s'ha eliminat de Home Assistant.\n\nHome Assistant ja no utilitza la configuraci\u00f3 YAML existent.\n\nElimina la configuraci\u00f3 YAML corresponent del fitxer configuration.yaml i reinicia Home Assistant per solucionar aquest problema.",
+            "title": "La configuraci\u00f3 YAML de Radarr s'ha eliminat"
         }
     },
     "options": {

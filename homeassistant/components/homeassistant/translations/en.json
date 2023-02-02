@@ -1,5 +1,9 @@
 {
     "issues": {
+        "country_not_configured": {
+            "description": "No country has been configured, please update the configuration by clicking on the \"learn more\" button below.",
+            "title": "The country has not been configured"
+        },
         "historic_currency": {
             "description": "The currency {currency} is no longer in use, please reconfigure the currency configuration.",
             "title": "The configured currency is no longer in use"

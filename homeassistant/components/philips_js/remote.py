@@ -1,4 +1,6 @@
 """Remote control support for Apple TV."""
+from __future__ import annotations
+
 import asyncio
 from collections.abc import Iterable
 from typing import Any
@@ -58,6 +60,8 @@ class PhilipsTVRemote(CoordinatorEntity[PhilipsTVDataUpdateCoordinator], RemoteE
 
     async def async_added_to_hass(self) -> None:
         """Handle being added to hass."""
+        await super().async_added_to_hass()
+
         if (entry := self.registry_entry) and entry.device_id:
             self.async_on_remove(
                 self._turn_on.async_register(
@@ -66,7 +70,7 @@ class PhilipsTVRemote(CoordinatorEntity[PhilipsTVDataUpdateCoordinator], RemoteE
             )
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return true if device is on."""
         return bool(
             self._tv.on and (self._tv.powerstate == "On" or self._tv.powerstate is None)

@@ -30,7 +30,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 import homeassistant.core as ha
 from homeassistant.core import DOMAIN as HASS_DOMAIN, CoreState, State, callback
@@ -572,7 +572,7 @@ def _setup_switch(hass, is_on):
 @pytest.fixture
 async def setup_comp_3(hass):
     """Initialize components."""
-    hass.config.temperature_unit = TEMP_CELSIUS
+    hass.config.temperature_unit = UnitOfTemperature.CELSIUS
     assert await async_setup_component(
         hass,
         DOMAIN,
@@ -717,7 +717,7 @@ async def test_no_state_change_when_operation_mode_off_2(hass, setup_comp_3):
 @pytest.fixture
 async def setup_comp_4(hass):
     """Initialize components."""
-    hass.config.temperature_unit = TEMP_CELSIUS
+    hass.config.temperature_unit = UnitOfTemperature.CELSIUS
     assert await async_setup_component(
         hass,
         DOMAIN,
@@ -823,7 +823,7 @@ async def test_mode_change_ac_trigger_on_not_long_enough(hass, setup_comp_4):
 @pytest.fixture
 async def setup_comp_5(hass):
     """Initialize components."""
-    hass.config.temperature_unit = TEMP_CELSIUS
+    hass.config.temperature_unit = UnitOfTemperature.CELSIUS
     assert await async_setup_component(
         hass,
         DOMAIN,
@@ -929,7 +929,7 @@ async def test_mode_change_ac_trigger_on_not_long_enough_2(hass, setup_comp_5):
 @pytest.fixture
 async def setup_comp_6(hass):
     """Initialize components."""
-    hass.config.temperature_unit = TEMP_CELSIUS
+    hass.config.temperature_unit = UnitOfTemperature.CELSIUS
     assert await async_setup_component(
         hass,
         DOMAIN,
@@ -1034,7 +1034,7 @@ async def test_mode_change_heater_trigger_on_not_long_enough(hass, setup_comp_6)
 @pytest.fixture
 async def setup_comp_7(hass):
     """Initialize components."""
-    hass.config.temperature_unit = TEMP_CELSIUS
+    hass.config.temperature_unit = UnitOfTemperature.CELSIUS
     assert await async_setup_component(
         hass,
         DOMAIN,
@@ -1107,7 +1107,7 @@ async def test_temp_change_ac_trigger_off_long_enough_3(hass, setup_comp_7):
 @pytest.fixture
 async def setup_comp_8(hass):
     """Initialize components."""
-    hass.config.temperature_unit = TEMP_CELSIUS
+    hass.config.temperature_unit = UnitOfTemperature.CELSIUS
     assert await async_setup_component(
         hass,
         DOMAIN,

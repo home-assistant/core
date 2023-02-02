@@ -34,7 +34,8 @@ class ZWaveMeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         placeholders = {
             "local_token": "/112f7a4a-0051-cc2b-3b61-1898181b9950",
             "find_token": "0481effe8a5c6f757b455babb678dc0e764feae279/112f7a4a-0051-cc2b-3b61-1898181b9950",
-            "local_url": "192.168.1.39:8083",
+            "local_url": "ws://192.168.1.39:8083",
+            "add_on_url": "ws://127.0.0.1:8083",
             "find_url": "wss://find.z-wave.me",
             "remote_url": "wss://87.250.250.242:8083",
         }

@@ -10,8 +10,8 @@
         "flow_title": "{name}",
         "step": {
             "confirm": {
-                "description": "Vil du konfigurere {name} ({host})?",
-                "title": "Konfigurer SiteSage Emonitor"
+                "description": "Vil du sette opp {name} ( {host} )?",
+                "title": "Sett opp SiteSage Emonitor"
             },
             "user": {
                 "data": {

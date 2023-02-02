@@ -21,6 +21,7 @@ SUPPORTED_BATTERY_SENSOR_TYPES = [
     DeviceTypes.CARBON_MONOXIDE,
     DeviceTypes.ENTRY,
     DeviceTypes.GLASS_BREAK,
+    DeviceTypes.KEYPAD,
     DeviceTypes.LEAK,
     DeviceTypes.LOCK_KEYPAD,
     DeviceTypes.MOTION,
@@ -77,7 +78,7 @@ class TriggeredBinarySensor(SimpliSafeEntity, BinarySensorEntity):
         simplisafe: SimpliSafe,
         system: SystemV3,
         sensor: SensorV3,
-        device_class: str,
+        device_class: BinarySensorDeviceClass,
     ) -> None:
         """Initialize."""
         super().__init__(simplisafe, system, device=sensor)

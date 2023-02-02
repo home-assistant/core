@@ -312,51 +312,6 @@ def test_properties():
 
 
 @pytest.mark.parametrize(
-    "unit_system, expected_flag",
-    [
-        (METRIC_SYSTEM, True),
-        (IMPERIAL_SYSTEM, False),
-    ],
-)
-def test_is_metric(
-    caplog: pytest.LogCaptureFixture, unit_system: UnitSystem, expected_flag: bool
-):
-    """Test the is metric flag."""
-    assert unit_system.is_metric == expected_flag
-    assert (
-        "Detected code that accesses the `is_metric` property of the unit system."
-        in caplog.text
-    )
-
-
-@pytest.mark.parametrize(
-    "unit_system, expected_name, expected_private_name",
-    [
-        (METRIC_SYSTEM, _CONF_UNIT_SYSTEM_METRIC, _CONF_UNIT_SYSTEM_METRIC),
-        (IMPERIAL_SYSTEM, _CONF_UNIT_SYSTEM_IMPERIAL, _CONF_UNIT_SYSTEM_US_CUSTOMARY),
-        (
-            US_CUSTOMARY_SYSTEM,
-            _CONF_UNIT_SYSTEM_IMPERIAL,
-            _CONF_UNIT_SYSTEM_US_CUSTOMARY,
-        ),
-    ],
-)
-def test_deprecated_name(
-    caplog: pytest.LogCaptureFixture,
-    unit_system: UnitSystem,
-    expected_name: str,
-    expected_private_name: str,
-) -> None:
-    """Test the name is deprecated."""
-    assert unit_system.name == expected_name
-    assert unit_system._name == expected_private_name
-    assert (
-        "Detected code that accesses the `name` property of the unit system."
-        in caplog.text
-    )
-
-
-@pytest.mark.parametrize(
     "key, expected_system",
     [
         (_CONF_UNIT_SYSTEM_METRIC, METRIC_SYSTEM),
@@ -380,6 +335,24 @@ def test_get_unit_system_invalid(key: str) -> None:
 @pytest.mark.parametrize(
     "device_class, original_unit, state_unit",
     (
+        # Test atmospheric pressure
+        (
+            SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+            UnitOfPressure.PSI,
+            UnitOfPressure.HPA,
+        ),
+        (
+            SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+            UnitOfPressure.BAR,
+            UnitOfPressure.HPA,
+        ),
+        (
+            SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+            UnitOfPressure.INHG,
+            UnitOfPressure.HPA,
+        ),
+        (SensorDeviceClass.ATMOSPHERIC_PRESSURE, UnitOfPressure.HPA, None),
+        (SensorDeviceClass.ATMOSPHERIC_PRESSURE, "very_much", None),
         # Test distance conversion
         (SensorDeviceClass.DISTANCE, UnitOfLength.FEET, UnitOfLength.METERS),
         (SensorDeviceClass.DISTANCE, UnitOfLength.INCHES, UnitOfLength.MILLIMETERS),
@@ -391,6 +364,10 @@ def test_get_unit_system_invalid(key: str) -> None:
         (SensorDeviceClass.GAS, UnitOfVolume.CUBIC_FEET, UnitOfVolume.CUBIC_METERS),
         (SensorDeviceClass.GAS, UnitOfVolume.CUBIC_METERS, None),
         (SensorDeviceClass.GAS, "very_much", None),
+        # Test pressure conversion
+        (SensorDeviceClass.PRESSURE, UnitOfPressure.PSI, UnitOfPressure.KPA),
+        (SensorDeviceClass.PRESSURE, UnitOfPressure.BAR, None),
+        (SensorDeviceClass.PRESSURE, "very_much", None),
         # Test speed conversion
         (
             SensorDeviceClass.SPEED,
@@ -435,6 +412,24 @@ def test_get_metric_converted_unit_(
 @pytest.mark.parametrize(
     "device_class, original_unit, state_unit",
     (
+        # Test atmospheric pressure
+        (
+            SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+            UnitOfPressure.PSI,
+            UnitOfPressure.INHG,
+        ),
+        (
+            SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+            UnitOfPressure.BAR,
+            UnitOfPressure.INHG,
+        ),
+        (
+            SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+            UnitOfPressure.HPA,
+            UnitOfPressure.INHG,
+        ),
+        (SensorDeviceClass.ATMOSPHERIC_PRESSURE, UnitOfPressure.INHG, None),
+        (SensorDeviceClass.ATMOSPHERIC_PRESSURE, "very_much", None),
         # Test distance conversion
         (SensorDeviceClass.DISTANCE, UnitOfLength.CENTIMETERS, UnitOfLength.INCHES),
         (SensorDeviceClass.DISTANCE, UnitOfLength.KILOMETERS, UnitOfLength.MILES),
@@ -446,6 +441,10 @@ def test_get_metric_converted_unit_(
         (SensorDeviceClass.GAS, UnitOfVolume.CUBIC_METERS, UnitOfVolume.CUBIC_FEET),
         (SensorDeviceClass.GAS, UnitOfVolume.CUBIC_FEET, None),
         (SensorDeviceClass.GAS, "very_much", None),
+        # Test pressure conversion
+        (SensorDeviceClass.PRESSURE, UnitOfPressure.BAR, UnitOfPressure.PSI),
+        (SensorDeviceClass.PRESSURE, UnitOfPressure.PSI, None),
+        (SensorDeviceClass.PRESSURE, "very_much", None),
         # Test speed conversion
         (
             SensorDeviceClass.SPEED,

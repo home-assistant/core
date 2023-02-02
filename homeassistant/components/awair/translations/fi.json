@@ -5,11 +5,6 @@
                 "data": {
                     "email": "S\u00e4hk\u00f6posti"
                 }
-            },
-            "local": {
-                "data": {
-                    "host": "IP Osoite"
-                }
             }
         }
     }

@@ -15,7 +15,7 @@
                 "data": {
                     "usb_path": "Percorso del dispositivo USB"
                 },
-                "description": "Seleziona la porta seriale della chiavetta USB Crownstone. \n\nCerca un dispositivo con VID 10C4 e PID EA60.",
+                "description": "Seleziona la porta seriale del dongle USB Crownstone o seleziona \"Non utilizzare USB\" se non desideri configurare un dongle USB.\n\nCerca un dispositivo con VID 10C4 e PID EA60.",
                 "title": "Configurazione della chiavetta USB Crownstone"
             },
             "usb_manual_config": {

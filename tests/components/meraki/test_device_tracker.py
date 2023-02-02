@@ -15,8 +15,9 @@ from homeassistant.setup import async_setup_component
 
 
 @pytest.fixture
-def meraki_client(loop, hass, hass_client):
+def meraki_client(event_loop, hass, hass_client):
     """Meraki mock client."""
+    loop = event_loop
     assert loop.run_until_complete(
         async_setup_component(
             hass,
@@ -31,7 +32,7 @@ def meraki_client(loop, hass, hass_client):
         )
     )
 
-    yield loop.run_until_complete(hass_client())
+    return loop.run_until_complete(hass_client())
 
 
 async def test_invalid_or_missing_data(mock_device_tracker_conf, meraki_client):

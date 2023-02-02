@@ -1,5 +1,5 @@
 """The tests for the Home Assistant API component."""
-# pylint: disable=protected-access
+
 from http import HTTPStatus
 import json
 from unittest.mock import patch
@@ -30,8 +30,9 @@ async def test_api_list_state_entities(hass, mock_api_client):
     assert resp.status == HTTPStatus.OK
     json = await resp.json()
 
-    remote_data = [ha.State.from_dict(item) for item in json]
-    assert remote_data == hass.states.async_all()
+    remote_data = [ha.State.from_dict(item).as_dict() for item in json]
+    local_data = [state.as_dict() for state in hass.states.async_all()]
+    assert remote_data == local_data
 
 
 async def test_api_get_state(hass, mock_api_client):
@@ -327,35 +328,35 @@ async def test_stream(hass, mock_api_client):
     """Test the stream."""
     listen_count = _listen_count(hass)
 
-    resp = await mock_api_client.get(const.URL_API_STREAM)
-    assert resp.status == HTTPStatus.OK
-    assert listen_count + 1 == _listen_count(hass)
+    async with mock_api_client.get(const.URL_API_STREAM) as resp:
+        assert resp.status == HTTPStatus.OK
+        assert listen_count + 1 == _listen_count(hass)
 
-    hass.bus.async_fire("test_event")
+        hass.bus.async_fire("test_event")
 
-    data = await _stream_next_event(resp.content)
+        data = await _stream_next_event(resp.content)
 
-    assert data["event_type"] == "test_event"
+        assert data["event_type"] == "test_event"
 
 
 async def test_stream_with_restricted(hass, mock_api_client):
     """Test the stream with restrictions."""
     listen_count = _listen_count(hass)
 
-    resp = await mock_api_client.get(
+    async with mock_api_client.get(
         f"{const.URL_API_STREAM}?restrict=test_event1,test_event3"
-    )
-    assert resp.status == HTTPStatus.OK
-    assert listen_count + 1 == _listen_count(hass)
+    ) as resp:
+        assert resp.status == HTTPStatus.OK
+        assert listen_count + 1 == _listen_count(hass)
 
-    hass.bus.async_fire("test_event1")
-    data = await _stream_next_event(resp.content)
-    assert data["event_type"] == "test_event1"
+        hass.bus.async_fire("test_event1")
+        data = await _stream_next_event(resp.content)
+        assert data["event_type"] == "test_event1"
 
-    hass.bus.async_fire("test_event2")
-    hass.bus.async_fire("test_event3")
-    data = await _stream_next_event(resp.content)
-    assert data["event_type"] == "test_event3"
+        hass.bus.async_fire("test_event2")
+        hass.bus.async_fire("test_event3")
+        data = await _stream_next_event(resp.content)
+        assert data["event_type"] == "test_event3"
 
 
 async def _stream_next_event(stream):

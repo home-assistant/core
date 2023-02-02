@@ -1,4 +1,57 @@
 {
+    "entity": {
+        "climate": {
+            "ubercool": {
+                "state_attributes": {
+                    "fan_mode": {
+                        "state": {
+                            "auto_high": "Automaatne k\u00f5rge",
+                            "auto_low": "Automaatne madal",
+                            "on_high": "K\u00f5rge",
+                            "on_low": "Madal"
+                        }
+                    },
+                    "swing_mode": {
+                        "state": {
+                            "1": "1",
+                            "2": "2",
+                            "3": "3",
+                            "auto": "Auto",
+                            "off": "V\u00e4ljas"
+                        }
+                    }
+                }
+            }
+        },
+        "select": {
+            "speed": {
+                "state": {
+                    "light_speed": "Valguse kiirus",
+                    "ludicrous_speed": "Meeletu kiirus",
+                    "ridiculous_speed": "Naeruv\u00e4\u00e4rne kiirus"
+                }
+            }
+        },
+        "sensor": {
+            "thermostat_mode": {
+                "state": {
+                    "away": "Eemal",
+                    "comfort": "Mugav",
+                    "eco": "\u00d6ko",
+                    "sleep": "Uneaeg"
+                }
+            }
+        },
+        "vacuum": {
+            "model_s": {
+                "state_attributes": {
+                    "cleaned_area": {
+                        "name": "Puhastatud ala"
+                    }
+                }
+            }
+        }
+    },
     "issues": {
         "bad_psu": {
             "fix_flow": {
@@ -10,6 +63,14 @@
                 }
             },
             "title": "Toiteallikas ei ole stabiilne"
+        },
+        "cold_tea": {
+            "fix_flow": {
+                "abort": {
+                    "not_tea_time": "Teed ei saa praegu uuesti soojendada."
+                }
+            },
+            "title": "Tee on k\u00fclm"
         },
         "out_of_blinker_fluid": {
             "fix_flow": {

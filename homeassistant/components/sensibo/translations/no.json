@@ -29,5 +29,44 @@
                 }
             }
         }
+    },
+    "entity": {
+        "select": {
+            "horizontalswing": {
+                "state": {
+                    "fixedcenter": "Fast senter",
+                    "fixedcenterleft": "Fast midt venstre",
+                    "fixedcenterright": "Fast midt h\u00f8yre",
+                    "fixedleft": "Fast venstre",
+                    "fixedleftright": "Fast venstre h\u00f8yre",
+                    "fixedright": "Rettet til h\u00f8yre",
+                    "rangecenter": "Rekkeviddesenter",
+                    "rangefull": "Rekkevidde fullt",
+                    "stopped": "Stoppet"
+                }
+            },
+            "light": {
+                "state": {
+                    "dim": "Dim",
+                    "off": "Av",
+                    "on": "P\u00e5"
+                }
+            }
+        },
+        "sensor": {
+            "sensitivity": {
+                "state": {
+                    "n": "Normal",
+                    "s": "F\u00f8lsom"
+                }
+            },
+            "smart_type": {
+                "state": {
+                    "feelslike": "F\u00f8les som",
+                    "humidity": "Fuktighet",
+                    "temperature": "Temperatur"
+                }
+            }
+        }
     }
 }

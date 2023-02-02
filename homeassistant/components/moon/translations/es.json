@@ -9,6 +9,22 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "phase": {
+                "state": {
+                    "first_quarter": "Cuarto creciente",
+                    "full_moon": "Luna llena",
+                    "last_quarter": "Cuarto menguante",
+                    "new_moon": "Luna nueva",
+                    "waning_crescent": "Luna menguante",
+                    "waning_gibbous": "Gibosa menguante",
+                    "waxing_crescent": "Nueva visible",
+                    "waxing_gibbous": "Gibosa creciente"
+                }
+            }
+        }
+    },
     "issues": {
         "removed_yaml": {
             "description": "Se ha eliminado la configuraci\u00f3n de Moon mediante YAML. \n\nHome Assistant no utiliza tu configuraci\u00f3n YAML existente. \n\nElimina la configuraci\u00f3n YAML de tu archivo configuration.yaml y reinicia Home Assistant para solucionar este problema.",

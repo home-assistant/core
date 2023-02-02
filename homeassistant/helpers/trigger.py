@@ -78,7 +78,13 @@ class PluggableActionsEntry:
     """Holder to keep track of all plugs and actions for a given trigger."""
 
     plugs: set[PluggableAction] = field(default_factory=set)
-    actions: dict[object, tuple[HassJob, dict[str, Any]]] = field(default_factory=dict)
+    actions: dict[
+        object,
+        tuple[
+            HassJob[[dict[str, Any], Context | None], Coroutine[Any, Any, None]],
+            dict[str, Any],
+        ],
+    ] = field(default_factory=dict)
 
 
 class PluggableAction:
@@ -121,7 +127,10 @@ class PluggableAction:
         action: TriggerActionType,
         variables: dict[str, Any],
     ) -> CALLBACK_TYPE:
-        """Attach an action to a trigger entry. Existing or future plugs registered will be attached."""
+        """Attach an action to a trigger entry.
+
+        Existing or future plugs registered will be attached.
+        """
         reg = PluggableAction.async_get_registry(hass)
         key = tuple(sorted(trigger.items()))
         entry = reg[key]
@@ -157,7 +166,10 @@ class PluggableAction:
 
         @callback
         def _remove() -> None:
-            """Remove plug from registration, and clean up entry if there are no actions or plugs registered."""
+            """Remove plug from registration.
+
+            Clean up entry if there are no actions or plugs registered.
+            """
             assert self._entry
             self._entry.plugs.remove(self)
             if not self._entry.actions and not self._entry.plugs:

@@ -28,15 +28,5 @@
                 "description": "Kunci API dapat diambil secara otomatis jika kredensial login tidak diatur dalam aplikasi.\nKunci API Anda dapat ditemukan di Settings > General di antarmuka web Lidarr."
             }
         }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "max_records": "Jumlah data maksimum untuk ditampilkan pada wanted dan queue",
-                    "upcoming_days": "Jumlah hari yang akan datang untuk ditampilkan pada kalender"
-                }
-            }
-        }
     }
 }

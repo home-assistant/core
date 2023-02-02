@@ -85,7 +85,7 @@
             "options_misc": {
                 "data": {
                     "api_host": "API-Host-URL \u00fcberschreiben",
-                    "blink": "LED Panel blinkt beim senden von Status\u00e4nderungen",
+                    "blink": "LED Panel blinkt beim Senden von Status\u00e4nderungen",
                     "discovery": "Reagieren auf Suchanfragen in deinem Netzwerk",
                     "override_api_host": "\u00dcberschreibe die Standard-Host-Panel-URL der Home Assistant-API"
                 },

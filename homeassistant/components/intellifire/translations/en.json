@@ -19,7 +19,7 @@
                 }
             },
             "dhcp_confirm": {
-                "description": "Do you want to setup {host}\nSerial: {serial}?"
+                "description": "Do you want to set up {host}\nSerial: {serial}?"
             },
             "manual_device_entry": {
                 "data": {

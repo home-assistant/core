@@ -1,10 +1,13 @@
 {
     "config": {
         "abort": {
-            "not_irobot_device": "O dispositivo descoberto n\u00e3o \u00e9 um iRobot"
+            "already_configured": "O dispositivo j\u00e1 est\u00e1 configurado",
+            "cannot_connect": "A liga\u00e7\u00e3o falhou",
+            "not_irobot_device": "O dispositivo descoberto n\u00e3o \u00e9 um iRobot",
+            "short_blid": "O BLID est\u00e1 incompleto"
         },
         "error": {
-            "cannot_connect": "Falha na liga\u00e7\u00e3o"
+            "cannot_connect": "A liga\u00e7\u00e3o falhou"
         },
         "flow_title": "{name} ({host})",
         "step": {
@@ -16,18 +19,22 @@
                 "data": {
                     "password": "Palavra-passe"
                 },
-                "description": "A palavra-passe n\u00e3o p\u00f4de ser obtida automaticamente a partir do dispositivo. Por favor, garanta que a app iRobot Home n\u00e3o est\u00e1 aberta em nenhum dispositivo enquanto tenta obter a palavra-passe. Siga os passos descritos na documenta\u00e7\u00e3o em: {auth_help_url}."
+                "description": "A palavra-passe n\u00e3o p\u00f4de ser obtida automaticamente a partir do dispositivo. Por favor, garanta que a app iRobot Home n\u00e3o est\u00e1 aberta em nenhum dispositivo enquanto tenta obter a palavra-passe. Siga os passos descritos na documenta\u00e7\u00e3o em: {auth_help_url}.",
+                "title": "Introduza a Palavra-Passe"
             },
             "manual": {
                 "data": {
-                    "host": "Anfitri\u00e3o"
-                }
+                    "host": "Endere\u00e7o"
+                },
+                "description": "Nenhum dispositivo Roomba ou Braava foi encontrado na rede.",
+                "title": "Ligar manualmente ao dispositivo"
             },
             "user": {
                 "data": {
-                    "host": "Servidor"
+                    "host": "Endere\u00e7o"
                 },
-                "title": "Conectar ao dispositivo"
+                "description": "Selecione um Roomba ou Braava.",
+                "title": "Ligar automaticamente ao dispositivo"
             }
         }
     },

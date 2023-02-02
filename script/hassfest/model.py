@@ -1,44 +1,43 @@
 """Models for manifest validator."""
 from __future__ import annotations
 
+from dataclasses import dataclass, field
 import json
 import pathlib
 from typing import Any
 
-import attr
 
-
-@attr.s
+@dataclass
 class Error:
     """Error validating an integration."""
 
-    plugin: str = attr.ib()
-    error: str = attr.ib()
-    fixable: bool = attr.ib(default=False)
+    plugin: str
+    error: str
+    fixable: bool = False
 
     def __str__(self) -> str:
         """Represent error as string."""
         return f"[{self.plugin.upper()}] {self.error}"
 
 
-@attr.s
+@dataclass
 class Config:
     """Config for the run."""
 
-    specific_integrations: pathlib.Path | None = attr.ib()
-    root: pathlib.Path = attr.ib()
-    action: str = attr.ib()
-    requirements: bool = attr.ib()
-    errors: list[Error] = attr.ib(factory=list)
-    cache: dict[str, Any] = attr.ib(factory=dict)
-    plugins: set[str] = attr.ib(factory=set)
+    specific_integrations: list[pathlib.Path] | None
+    root: pathlib.Path
+    action: str
+    requirements: bool
+    errors: list[Error] = field(default_factory=list)
+    cache: dict[str, Any] = field(default_factory=dict)
+    plugins: set[str] = field(default_factory=set)
 
     def add_error(self, *args: Any, **kwargs: Any) -> None:
         """Add an error."""
         self.errors.append(Error(*args, **kwargs))
 
 
-@attr.s
+@dataclass
 class Brand:
     """Represent a brand in our validator."""
 
@@ -54,8 +53,8 @@ class Brand:
 
         return brands
 
-    path: pathlib.Path = attr.ib()
-    _brand: dict[str, Any] | None = attr.ib(default=None)
+    path: pathlib.Path
+    _brand: dict[str, Any] | None = None
 
     @property
     def brand(self) -> dict[str, Any]:
@@ -100,7 +99,7 @@ class Brand:
         self._brand = brand
 
 
-@attr.s
+@dataclass
 class Integration:
     """Represent an integration in our validator."""
 
@@ -129,11 +128,11 @@ class Integration:
 
         return integrations
 
-    path: pathlib.Path = attr.ib()
-    _manifest: dict[str, Any] | None = attr.ib(default=None)
-    errors: list[Error] = attr.ib(factory=list)
-    warnings: list[Error] = attr.ib(factory=list)
-    translated_name: bool = attr.ib(default=False)
+    path: pathlib.Path
+    _manifest: dict[str, Any] | None = None
+    errors: list[Error] = field(default_factory=list)
+    warnings: list[Error] = field(default_factory=list)
+    translated_name: bool = False
 
     @property
     def manifest(self) -> dict[str, Any]:

@@ -15,11 +15,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import (
-    CONF_MONITORED_VARIABLES,
-    CONF_NAME,
-    DATA_RATE_MEGABITS_PER_SECOND,
-)
+from homeassistant.const import CONF_MONITORED_VARIABLES, CONF_NAME, UnitOfDataRate
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -39,26 +35,30 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="down_max_bandwidth",
         name="Maximum Download Bandwidth",
-        native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
         icon="mdi:download",
     ),
     SensorEntityDescription(
         key="up_max_bandwidth",
         name="Maximum Upload Bandwidth",
-        native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
         icon="mdi:upload",
     ),
     SensorEntityDescription(
         key="current_down_bandwidth",
         name="Currently Used Download Bandwidth",
-        native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:download",
     ),
     SensorEntityDescription(
         key="current_up_bandwidth",
         name="Currently Used Upload Bandwidth",
-        native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:upload",
     ),

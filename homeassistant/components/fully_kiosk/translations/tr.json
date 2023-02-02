@@ -5,7 +5,6 @@
         },
         "error": {
             "cannot_connect": "Ba\u011flanma hatas\u0131",
-            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
             "unknown": "Beklenmeyen hata"
         },
         "step": {

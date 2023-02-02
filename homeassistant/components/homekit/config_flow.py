@@ -667,7 +667,9 @@ def _async_get_matching_entities(
     """Fetch all entities or entities in the given domains."""
     ent_reg = entity_registry.async_get(hass)
     return {
-        state.entity_id: f"{state.attributes.get(ATTR_FRIENDLY_NAME, state.entity_id)} ({state.entity_id})"
+        state.entity_id: (
+            f"{state.attributes.get(ATTR_FRIENDLY_NAME, state.entity_id)} ({state.entity_id})"
+        )
         for state in sorted(
             hass.states.async_all(domains and set(domains)),
             key=lambda item: item.entity_id,

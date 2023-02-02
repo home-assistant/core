@@ -19,8 +19,7 @@
             "init": {
                 "data": {
                     "power": "\u5951\u7d04\u96fb\u529b (kW)",
-                    "power_p3": "\u8c37\u9593(valley period) P3 (kW)\u306e\u5951\u7d04\u96fb\u529b",
-                    "tariff": "\u5730\u57df\u5225\u9069\u7528\u95a2\u7a0e(Applicable tariff)"
+                    "power_p3": "\u8c37\u9593(valley period) P3 (kW)\u306e\u5951\u7d04\u96fb\u529b"
                 }
             }
         }

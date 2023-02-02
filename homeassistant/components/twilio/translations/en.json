@@ -10,7 +10,7 @@
         },
         "step": {
             "user": {
-                "description": "Do you want to start set up?",
+                "description": "Do you want to start setup?",
                 "title": "Set up the Twilio Webhook"
             }
         }

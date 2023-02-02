@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "Device is already configured",
             "already_in_progress": "Configuration flow is already in progress",
-            "incomplete_info": "Incomplete information to setup device, no host or token supplied.",
+            "incomplete_info": "Incomplete information to set up device, no host or token supplied.",
             "not_xiaomi_miio": "Device is not (yet) supported by Xiaomi Miio.",
             "reauth_successful": "Re-authentication was successful",
             "unknown": "Unexpected error"
@@ -13,7 +13,7 @@
             "cloud_credentials_incomplete": "Cloud credentials incomplete, please fill in username, password and country",
             "cloud_login_error": "Could not login to Xiaomi Miio Cloud, check the credentials.",
             "cloud_no_devices": "No devices found in this Xiaomi Miio cloud account.",
-            "unknown_device": "The device model is not known, not able to setup the device using config flow.",
+            "unknown_device": "The device model is not known, not able to set up the device using config flow.",
             "wrong_token": "Checksum error, wrong token"
         },
         "flow_title": "{name}",
@@ -47,7 +47,32 @@
                 "data": {
                     "select_device": "Miio device"
                 },
-                "description": "Select the Xiaomi Miio device to setup."
+                "description": "Select the Xiaomi Miio device to set up."
+            }
+        }
+    },
+    "entity": {
+        "select": {
+            "display_orientation": {
+                "state": {
+                    "forward": "Forward",
+                    "left": "Left",
+                    "right": "Right"
+                }
+            },
+            "led_brightness": {
+                "state": {
+                    "bright": "Bright",
+                    "dim": "Dim",
+                    "off": "Off"
+                }
+            },
+            "ptc_level": {
+                "state": {
+                    "high": "High",
+                    "low": "Low",
+                    "medium": "Medium"
+                }
             }
         }
     },

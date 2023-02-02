@@ -1,5 +1,9 @@
 {
     "issues": {
+        "country_not_configured": {
+            "description": "\u017baden kraj nie zosta\u0142 skonfigurowany, zaktualizuj konfiguracj\u0119, klikaj\u0105c przycisk \u201eDowiedz si\u0119 wi\u0119cej\u201d poni\u017cej.",
+            "title": "Kraj nie zosta\u0142 skonfigurowany"
+        },
         "historic_currency": {
             "description": "Waluta {currency} nie jest ju\u017c u\u017cywana. Zmie\u0144 konfiguracj\u0119 waluty.",
             "title": "Skonfigurowana waluta nie jest ju\u017c u\u017cywana"

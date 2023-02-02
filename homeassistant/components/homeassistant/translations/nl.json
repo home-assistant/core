@@ -1,4 +1,10 @@
 {
+    "issues": {
+        "python_version": {
+            "description": "Ondersteuning om Home Assistant met de huidige Python (versie {current_python_version}) gaat vervallen en zal vervalleen in Home Assistant {breaks_in_ha_version}. Werk de Python software bij naar minimaal versie {required_python_version} om te voorkomen dat je Home Assistant instantie niet meer goed werkt.",
+            "title": "Ondersteuning voor Python {current_python_version} gaat vervallen"
+        }
+    },
     "system_health": {
         "info": {
             "arch": "CPU-architectuur",

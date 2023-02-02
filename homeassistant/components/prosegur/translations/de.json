@@ -12,7 +12,7 @@
         "step": {
             "reauth_confirm": {
                 "data": {
-                    "description": "Authentifiziere dich erneut mit deinem Prosegur-Konto.",
+                    "description": "Authentifiziere dich erneut mit deinem Prosegur Konto.",
                     "password": "Passwort",
                     "username": "Benutzername"
                 }

@@ -13,19 +13,9 @@
                 "data": {
                     "host": "Sunucu",
                     "password": "Parola",
-                    "switch_as_light": "Anahtarlar\u0131 \u0131\u015f\u0131k varl\u0131klar\u0131 olarak ba\u015flat",
                     "username": "Kullan\u0131c\u0131 Ad\u0131"
                 },
                 "description": "Home Assistant ile SwitchBee entegrasyonunu kurun."
-            }
-        }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "devices": "Dahil edilecek cihazlar"
-                }
             }
         }
     }

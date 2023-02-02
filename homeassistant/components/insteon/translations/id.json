@@ -80,11 +80,18 @@
                 },
                 "description": "Ubah informasi koneksi Insteon Hub. Anda harus memulai ulang Home Assistant setelah melakukan perubahan ini. Ini tidak mengubah konfigurasi Hub itu sendiri. Untuk mengubah konfigurasi di Hub, gunakan aplikasi Hub."
             },
+            "change_plm_config": {
+                "data": {
+                    "device": "Jalur Perangkat USB"
+                },
+                "description": "Ubah informasi koneksi Insteon PLM. Anda harus memulai ulang Home Assistant setelah melakukan perubahan ini. Ini tidak mengubah konfigurasi PLM itu sendiri."
+            },
             "init": {
                 "data": {
                     "add_override": "Tambahkan penimpaan nilai perangkat.",
                     "add_x10": "Tambahkan perangkat X10.",
                     "change_hub_config": "Ubah konfigurasi Hub.",
+                    "change_plm_config": "Ubah konfigurasi PLM.",
                     "remove_override": "Hapus penimpaan nilai perangkat.",
                     "remove_x10": "Hapus perangkat X10."
                 }

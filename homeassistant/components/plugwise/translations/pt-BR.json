@@ -7,14 +7,14 @@
         "error": {
             "cannot_connect": "Falha ao conectar",
             "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida",
-            "invalid_setup": "Adicione seu Adam em vez de sua Anna, consulte a documenta\u00e7\u00e3o de integra\u00e7\u00e3o do Home Assistant Plugwise para obter mais informa\u00e7\u00f5es",
-            "unknown": "Erro inesperado"
+            "invalid_setup": "Adicione seu Adam em vez de sua Anna, veja a documenta\u00e7\u00e3o",
+            "response_error": "Dados XML inv\u00e1lidos ou indica\u00e7\u00e3o de erro recebido",
+            "unknown": "Erro inesperado",
+            "unsupported": "Dispositivo com firmware n\u00e3o suportado"
         },
-        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
-                    "flow_type": "Tipo de conex\u00e3o",
                     "host": "Endere\u00e7o IP",
                     "password": "ID do Smile",
                     "port": "Porta",
@@ -22,26 +22,42 @@
                 },
                 "description": "Por favor, insira",
                 "title": "Conecte-se ao Smile"
-            },
-            "user_gateway": {
-                "data": {
-                    "host": "Endere\u00e7o IP",
-                    "password": "ID do Smile",
-                    "port": "Porta",
-                    "username": "Nome de usu\u00e1rio Smile"
-                },
-                "description": "Por favor, insira",
-                "title": "Conecte-se ao Smile"
             }
         }
     },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "scan_interval": "Intervalo de escaneamento (segundos)"
-                },
-                "description": "Ajustar as op\u00e7\u00f5es Plugwise"
+    "entity": {
+        "climate": {
+            "plugwise": {
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "asleep": "Noite",
+                            "away": "Fora",
+                            "home": "Casa",
+                            "no_frost": "Anti-geada",
+                            "vacation": "F\u00e9rias"
+                        }
+                    }
+                }
+            }
+        },
+        "select": {
+            "dhw_mode": {
+                "state": {
+                    "auto": "Auto",
+                    "boost": "Impulso",
+                    "comfort": "Conforto",
+                    "off": "Desligado"
+                }
+            },
+            "regulation_mode": {
+                "state": {
+                    "bleeding_cold": "Sangramento frio",
+                    "bleeding_hot": "Sangramento quente",
+                    "cooling": "Resfriamento",
+                    "heating": "Aquecimento",
+                    "off": "Desligado"
+                }
             }
         }
     }

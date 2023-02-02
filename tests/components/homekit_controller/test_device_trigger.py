@@ -6,6 +6,7 @@ import pytest
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.homekit_controller.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -19,7 +20,6 @@ from tests.common import (
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
-# pylint: disable=redefined-outer-name
 @pytest.fixture
 def calls(hass):
     """Track calls to a mock service."""
@@ -281,6 +281,132 @@ async def test_handle_events(hass, utcnow, calls):
             ]
         },
     )
+
+    # Make sure first automation (only) fires for single press
+    helper.pairing.testing.update_named_service(
+        "Button 1", {CharacteristicsTypes.INPUT_EVENT: 0}
+    )
+
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data["some"] == "device - button1 - single_press - 0"
+
+    # Make sure automation doesn't trigger for long press
+    helper.pairing.testing.update_named_service(
+        "Button 1", {CharacteristicsTypes.INPUT_EVENT: 1}
+    )
+
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    # Make sure automation doesn't trigger for double press
+    helper.pairing.testing.update_named_service(
+        "Button 1", {CharacteristicsTypes.INPUT_EVENT: 2}
+    )
+
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    # Make sure second automation fires for long press
+    helper.pairing.testing.update_named_service(
+        "Button 2", {CharacteristicsTypes.INPUT_EVENT: 2}
+    )
+
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+    assert calls[1].data["some"] == "device - button2 - long_press - 0"
+
+    # Turn the automations off
+    await hass.services.async_call(
+        "automation",
+        "turn_off",
+        {"entity_id": "automation.long_press"},
+        blocking=True,
+    )
+
+    await hass.services.async_call(
+        "automation",
+        "turn_off",
+        {"entity_id": "automation.single_press"},
+        blocking=True,
+    )
+
+    # Make sure event no longer fires
+    helper.pairing.testing.update_named_service(
+        "Button 2", {CharacteristicsTypes.INPUT_EVENT: 2}
+    )
+
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+
+
+async def test_handle_events_late_setup(hass, utcnow, calls):
+    """Test that events are handled when setup happens after startup."""
+    helper = await setup_test_component(hass, create_remote)
+
+    entity_registry = er.async_get(hass)
+    entry = entity_registry.async_get("sensor.testdevice_battery")
+
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get(entry.device_id)
+
+    await hass.config_entries.async_unload(helper.config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert helper.config_entry.state == ConfigEntryState.NOT_LOADED
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "alias": "single_press",
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device.id,
+                        "type": "button1",
+                        "subtype": "single_press",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": (
+                                "{{ trigger.platform}} - "
+                                "{{ trigger.type }} - {{ trigger.subtype }} - "
+                                "{{ trigger.id }}"
+                            )
+                        },
+                    },
+                },
+                {
+                    "alias": "long_press",
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device.id,
+                        "type": "button2",
+                        "subtype": "long_press",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": (
+                                "{{ trigger.platform}} - "
+                                "{{ trigger.type }} - {{ trigger.subtype }} - "
+                                "{{ trigger.id }}"
+                            )
+                        },
+                    },
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    await hass.config_entries.async_setup(helper.config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert helper.config_entry.state == ConfigEntryState.LOADED
 
     # Make sure first automation (only) fires for single press
     helper.pairing.testing.update_named_service(

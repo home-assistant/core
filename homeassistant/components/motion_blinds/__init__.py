@@ -71,8 +71,8 @@ class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
         except (timeout, ParseException):
             # let the error be logged and handled by the motionblinds library
             return {ATTR_AVAILABLE: False}
-        else:
-            return {ATTR_AVAILABLE: True}
+
+        return {ATTR_AVAILABLE: True}
 
     def update_blind(self, blind):
         """Fetch data from a blind."""
@@ -84,8 +84,8 @@ class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
         except (timeout, ParseException):
             # let the error be logged and handled by the motionblinds library
             return {ATTR_AVAILABLE: False}
-        else:
-            return {ATTR_AVAILABLE: True}
+
+        return {ATTR_AVAILABLE: True}
 
     async def _async_update_data(self):
         """Fetch the latest data from the gateway and blinds."""
@@ -135,8 +135,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 data = {**entry.data, CONF_INTERFACE: working_interface}
                 hass.config_entries.async_update_entry(entry, data=data)
                 _LOGGER.debug(
-                    "Motion Blinds interface updated from %s to %s, "
-                    "this should only occur after a network change",
+                    (
+                        "Motion Blinds interface updated from %s to %s, "
+                        "this should only occur after a network change"
+                    ),
                     multicast_interface,
                     working_interface,
                 )

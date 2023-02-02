@@ -139,7 +139,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Handle a clear cache service call."""
         # clear the cache
         with suppress(FileNotFoundError):
-            if call.data[CONF_ADDRESS]:
+            if CONF_ADDRESS in call.data and call.data[CONF_ADDRESS]:
                 await hass.async_add_executor_job(
                     os.unlink,
                     hass.config.path(
@@ -194,3 +194,21 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         shutil.rmtree,
         hass.config.path(STORAGE_DIR, f"velbuscache-{entry.entry_id}"),
     )
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    _LOGGER.debug("Migrating from version %s", config_entry.version)
+    cache_path = hass.config.path(STORAGE_DIR, f"velbuscache-{config_entry.entry_id}/")
+    if config_entry.version == 1:
+        # This is the config entry migration for adding the new program selection
+        # clean the velbusCache
+        if os.path.isdir(cache_path):
+            await hass.async_add_executor_job(shutil.rmtree, cache_path)
+        # set the new version
+        config_entry.version = 2
+        # update the entry
+        hass.config_entries.async_update_entry(config_entry)
+
+    _LOGGER.debug("Migration to version %s successful", config_entry.version)
+    return True

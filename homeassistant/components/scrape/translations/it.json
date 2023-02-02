@@ -3,34 +3,47 @@
         "abort": {
             "already_configured": "L'account \u00e8 gi\u00e0 configurato"
         },
+        "error": {
+            "resource_error": "Impossibile aggiornare i dati rest. Verificare la configurazione"
+        },
         "step": {
-            "user": {
+            "sensor": {
                 "data": {
                     "attribute": "Attributo",
-                    "authentication": "Autenticazione",
                     "device_class": "Classe del dispositivo",
-                    "headers": "Intestazioni",
                     "index": "Indice",
                     "name": "Nome",
-                    "password": "Password",
-                    "resource": "Risorsa",
                     "select": "Seleziona",
-                    "state_class": "Classe di Stato",
+                    "state_class": "Classe di stato",
                     "unit_of_measurement": "Unit\u00e0 di misura",
-                    "username": "Nome utente",
-                    "value_template": "Modello di valore",
-                    "verify_ssl": "Verifica il certificato SSL"
+                    "value_template": "Modello di valore"
                 },
                 "data_description": {
                     "attribute": "Ottieni il valore di un attributo sull'etichetta selezionata",
-                    "authentication": "Tipo di autenticazione HTTP. basic o digest",
                     "device_class": "Il tipo/classe del sensore per impostare l'icona nel frontend",
-                    "headers": "Intestazioni da utilizzare per la richiesta web",
-                    "index": "Definisce quale degli elementi restituiti dal selettore CSS utilizzare",
-                    "resource": "L'URL del sito Web che contiene il valore",
+                    "index": "Definisce quale utilizzare degli elementi restituiti dal selettore CSS ",
                     "select": "Definisce quale etichetta cercare. Controlla i selettori CSS di Beautifulsoup per i dettagli",
                     "state_class": "La state_class del sensore",
-                    "value_template": "Definisce un modello per ottenere lo stato del sensore",
+                    "unit_of_measurement": "Scegli l'unit\u00e0 di misura della temperatura o crearne una tua",
+                    "value_template": "Definisce un modello per ottenere lo stato del sensore"
+                }
+            },
+            "user": {
+                "data": {
+                    "authentication": "Seleziona il metodo di autenticazione",
+                    "headers": "Intestazioni",
+                    "method": "Metodo",
+                    "password": "Password",
+                    "resource": "Risorsa",
+                    "timeout": "Tempo scaduto",
+                    "username": "Nome utente",
+                    "verify_ssl": "Verifica il certificato SSL"
+                },
+                "data_description": {
+                    "authentication": "Tipo di autenticazione HTTP. basic o digest",
+                    "headers": "Intestazioni da utilizzare per la richiesta web",
+                    "resource": "L'URL del sito Web che contiene il valore",
+                    "timeout": "Tiempo scaduto per la connessione al sito web",
                     "verify_ssl": "Abilita/disabilita la verifica del certificato SSL/TLS, ad esempio se \u00e8 autofirmato"
                 }
             }
@@ -44,33 +57,72 @@
     },
     "options": {
         "step": {
-            "init": {
+            "add_sensor": {
                 "data": {
                     "attribute": "Attributo",
-                    "authentication": "Autenticazione",
                     "device_class": "Classe del dispositivo",
-                    "headers": "Intestazioni",
                     "index": "Indice",
                     "name": "Nome",
-                    "password": "Password",
-                    "resource": "Risorsa",
                     "select": "Seleziona",
-                    "state_class": "Classe di Stato",
+                    "state_class": "Classe di stato",
                     "unit_of_measurement": "Unit\u00e0 di misura",
-                    "username": "Nome utente",
-                    "value_template": "Modello di valore",
-                    "verify_ssl": "Verifica il certificato SSL"
+                    "value_template": "Modello di valore"
                 },
                 "data_description": {
                     "attribute": "Ottieni il valore di un attributo sull'etichetta selezionata",
-                    "authentication": "Tipo di autenticazione HTTP. basic o digest",
                     "device_class": "Il tipo/classe del sensore per impostare l'icona nel frontend",
-                    "headers": "Intestazioni da utilizzare per la richiesta web",
-                    "index": "Definisce quale degli elementi restituiti dal selettore CSS utilizzare",
-                    "resource": "L'URL del sito Web che contiene il valore",
+                    "index": "Definisce quale utilizzare degli elementi restituiti dal selettore CSS ",
                     "select": "Definisce quale etichetta cercare. Controlla i selettori CSS di Beautifulsoup per i dettagli",
                     "state_class": "La state_class del sensore",
-                    "value_template": "Definisce un modello per ottenere lo stato del sensore",
+                    "unit_of_measurement": "Scegli l'unit\u00e0 di misura della temperatura o crearne una tua",
+                    "value_template": "Definisce un modello per ottenere lo stato del sensore"
+                }
+            },
+            "edit_sensor": {
+                "data": {
+                    "attribute": "Attributo",
+                    "device_class": "Classe del dispositivo",
+                    "index": "Indice",
+                    "name": "Nome",
+                    "select": "Seleziona",
+                    "state_class": "Classe di stato",
+                    "unit_of_measurement": "Unit\u00e0 di misura",
+                    "value_template": "Modello di valore"
+                },
+                "data_description": {
+                    "attribute": "Ottieni il valore di un attributo sull'etichetta selezionata",
+                    "device_class": "Il tipo/classe del sensore per impostare l'icona nel frontend",
+                    "index": "Definisce quale utilizzare degli elementi restituiti dal selettore CSS ",
+                    "select": "Definisce quale etichetta cercare. Controlla i selettori CSS di Beautifulsoup per i dettagli",
+                    "state_class": "La state_class del sensore",
+                    "unit_of_measurement": "Scegli l'unit\u00e0 di misura della temperatura o crearne una tua",
+                    "value_template": "Definisce un modello per ottenere lo stato del sensore"
+                }
+            },
+            "init": {
+                "menu_options": {
+                    "add_sensor": "Aggiungi sensore",
+                    "remove_sensor": "Rimuovi il sensore",
+                    "resource": "Configura risorsa",
+                    "select_edit_sensor": "Configura sensore"
+                }
+            },
+            "resource": {
+                "data": {
+                    "authentication": "Seleziona il metodo di autenticazione",
+                    "headers": "Intestazioni",
+                    "method": "Metodo",
+                    "password": "Password",
+                    "resource": "Risorsa",
+                    "timeout": "Tempo scaduto",
+                    "username": "Nome utente",
+                    "verify_ssl": "Verifica il certificato SSL"
+                },
+                "data_description": {
+                    "authentication": "Tipo di autenticazione HTTP. basic o digest",
+                    "headers": "Intestazioni da utilizzare per la richiesta web",
+                    "resource": "L'URL del sito Web che contiene il valore",
+                    "timeout": "Tiempo scaduto per la connessione al sito web",
                     "verify_ssl": "Abilita/disabilita la verifica del certificato SSL/TLS, ad esempio se \u00e8 autofirmato"
                 }
             }

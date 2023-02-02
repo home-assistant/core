@@ -9,11 +9,18 @@
             "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
         },
         "step": {
-            "user": {
+            "cloud": {
                 "data": {
                     "password": "\ube44\ubc00\ubc88\ud638",
                     "pin": "PIN \ucf54\ub4dc",
                     "username": "\uc0ac\uc6a9\uc790 \uc774\ub984"
+                }
+            },
+            "local": {
+                "data": {
+                    "host": "\ud638\uc2a4\ud2b8",
+                    "pin": "PIN \ucf54\ub4dc",
+                    "port": "\ud3ec\ud2b8"
                 }
             }
         }

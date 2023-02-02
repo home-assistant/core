@@ -11,6 +11,18 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "season": {
+                "state": {
+                    "autumn": "Oto\u00f1o",
+                    "spring": "Primavera",
+                    "summer": "Verano",
+                    "winter": "Invierno"
+                }
+            }
+        }
+    },
     "issues": {
         "removed_yaml": {
             "description": "Se ha eliminado la configuraci\u00f3n de Season mediante YAML. \n\nHome Assistant no utiliza tu configuraci\u00f3n YAML existente. \n\nElimina la configuraci\u00f3n YAML de tu archivo configuration.yaml y reinicia Home Assistant para solucionar este problema.",

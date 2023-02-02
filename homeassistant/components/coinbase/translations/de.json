@@ -21,12 +21,6 @@
             }
         }
     },
-    "issues": {
-        "removed_yaml": {
-            "description": "Die Konfiguration von Coinbase mit YAML wurde entfernt. \n\nDeine vorhandene YAML-Konfiguration wird von Home Assistant nicht verwendet. \n\nEntferne die YAML-Konfiguration aus deiner configuration.yaml-Datei und starte Home Assistant neu, um dieses Problem zu beheben.",
-            "title": "Die Coinbase YAML-Konfiguration wurde entfernt"
-        }
-    },
     "options": {
         "error": {
             "currency_unavailable": "Eine oder mehrere der angeforderten W\u00e4hrungssalden werden von deiner Coinbase-API nicht bereitgestellt.",
@@ -36,12 +30,12 @@
         "step": {
             "init": {
                 "data": {
-                    "account_balance_currencies": "Zu meldende Wallet-Guthaben.",
+                    "account_balance_currencies": "Zu meldendes Wallet-Guthaben.",
                     "exchange_base": "Basisw\u00e4hrung f\u00fcr Wechselkurssensoren.",
                     "exchange_rate_currencies": "Zu meldende Wechselkurse.",
                     "exchnage_rate_precision": "Anzahl der Dezimalstellen f\u00fcr Wechselkurse."
                 },
-                "description": "Coinbase-Optionen anpassen"
+                "description": "Coinbase Optionen anpassen"
             }
         }
     }

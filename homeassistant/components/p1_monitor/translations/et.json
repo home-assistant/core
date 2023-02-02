@@ -6,8 +6,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Host",
-                    "name": "Nimi"
+                    "host": "Host"
                 },
                 "data_description": {
                     "host": "P1 Monitori paigalduse IP-aadress v\u00f5i hostinimi."

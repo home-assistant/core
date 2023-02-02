@@ -7,9 +7,8 @@ from datetime import timedelta
 from enum import IntFlag
 import functools as ft
 import logging
-from typing import Any, TypeVar, final
+from typing import Any, ParamSpec, TypeVar, final
 
-from typing_extensions import ParamSpec
 import voluptuous as vol
 
 from homeassistant.backports.enum import StrEnum
@@ -218,7 +217,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class CoverEntityDescription(EntityDescription):
     """A class that describes cover entities."""
 
-    device_class: CoverDeviceClass | str | None = None
+    device_class: CoverDeviceClass | None = None
 
 
 class CoverEntity(Entity):
@@ -227,7 +226,7 @@ class CoverEntity(Entity):
     entity_description: CoverEntityDescription
     _attr_current_cover_position: int | None = None
     _attr_current_cover_tilt_position: int | None = None
-    _attr_device_class: CoverDeviceClass | str | None
+    _attr_device_class: CoverDeviceClass | None
     _attr_is_closed: bool | None
     _attr_is_closing: bool | None = None
     _attr_is_opening: bool | None = None
@@ -253,7 +252,7 @@ class CoverEntity(Entity):
         return self._attr_current_cover_tilt_position
 
     @property
-    def device_class(self) -> CoverDeviceClass | str | None:
+    def device_class(self) -> CoverDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
             return self._attr_device_class

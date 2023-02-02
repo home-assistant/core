@@ -28,16 +28,6 @@
                 }
             },
             "title": "De {deprecated_service}-service wordt verwijderd"
-        },
-        "replaced_old_entity": {
-            "fix_flow": {
-                "step": {
-                    "confirm": {
-                        "title": "De {old_entity_id}-entiteit wordt verwijderd"
-                    }
-                }
-            },
-            "title": "De {old_entity_id}-entiteit wordt verwijderd"
         }
     }
 }

@@ -1,0 +1,10 @@
+{
+    "state": {
+        "_": {
+            "idle": "nieaktywny",
+            "off": "potwierdzony",
+            "on": "aktywny"
+        }
+    },
+    "title": "Alert"
+}

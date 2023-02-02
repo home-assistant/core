@@ -29,6 +29,7 @@ from homeassistant.components.sensor import (
 from homeassistant.components.switch import (
     DEVICE_CLASSES_SCHEMA as SWITCH_DEVICE_CLASSES_SCHEMA,
 )
+from homeassistant.components.text import TextMode
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ENTITY_CATEGORY,
@@ -73,7 +74,8 @@ def dpt_subclass_validator(dpt_base_class: type[DPTBase]) -> Callable[[Any], str
         ):
             return value
         raise vol.Invalid(
-            f"type '{value}' is not a valid DPT identifier for {dpt_base_class.__name__}."
+            f"type '{value}' is not a valid DPT identifier for"
+            f" {dpt_base_class.__name__}."
         )
 
     return dpt_value_validator
@@ -93,8 +95,9 @@ def ga_validator(value: Any) -> str | int:
         except CouldNotParseAddress:
             pass
     raise vol.Invalid(
-        f"value '{value}' is not a valid KNX group address '<main>/<middle>/<sub>', '<main>/<sub>' "
-        "or '<free>' (eg.'1/2/3', '9/234', '123'), nor xknx internal address 'i-<string>'."
+        f"value '{value}' is not a valid KNX group address '<main>/<middle>/<sub>',"
+        " '<main>/<sub>' or '<free>' (eg.'1/2/3', '9/234', '123'), nor xknx internal"
+        " address 'i-<string>'."
     )
 
 
@@ -103,7 +106,10 @@ ga_list_validator = vol.All(cv.ensure_list, [ga_validator])
 ia_validator = vol.Any(
     vol.All(str, str.strip, cv.matches_regex(IndividualAddress.ADDRESS_RE.pattern)),
     vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
-    msg="value does not match pattern for KNX individual address '<area>.<line>.<device>' (eg.'1.1.100')",
+    msg=(
+        "value does not match pattern for KNX individual address"
+        " '<area>.<line>.<device>' (eg.'1.1.100')"
+    ),
 )
 
 
@@ -119,7 +125,8 @@ def ip_v4_validator(value: Any, multicast: bool | None = None) -> str:
         raise vol.Invalid(f"value '{value}' is not a valid IPv4 address: {ex}") from ex
     if multicast is not None and address.is_multicast != multicast:
         raise vol.Invalid(
-            f"value '{value}' is not a valid IPv4 {'multicast' if multicast else 'unicast'} address"
+            f"value '{value}' is not a valid IPv4"
+            f" {'multicast' if multicast else 'unicast'} address"
         )
     return str(address)
 
@@ -134,7 +141,7 @@ def number_limit_sub_validator(entity_config: OrderedDict) -> OrderedDict:
 
     if dpt_class is None:
         raise vol.Invalid(f"'type: {value_type}' is not a valid numeric sensor type.")
-    # Inifinity is not supported by Home Assistant frontend so user defined
+    # Infinity is not supported by Home Assistant frontend so user defined
     # config is required if if xknx DPTNumeric subclass defines it as limit.
     if min_config is None and dpt_class.value_min == float("-inf"):
         raise vol.Invalid(f"'min' key required for value type '{value_type}'")
@@ -432,14 +439,18 @@ class ClimateSchema(KNXPlatformSchema):
                 vol.Inclusive(
                     CONF_SETPOINT_SHIFT_ADDRESS,
                     "setpoint_shift",
-                    msg="'setpoint_shift_address' and 'setpoint_shift_state_address' "
-                    "are required for setpoint_shift configuration",
+                    msg=(
+                        "'setpoint_shift_address' and 'setpoint_shift_state_address' "
+                        "are required for setpoint_shift configuration"
+                    ),
                 ): ga_list_validator,
                 vol.Inclusive(
                     CONF_SETPOINT_SHIFT_STATE_ADDRESS,
                     "setpoint_shift",
-                    msg="'setpoint_shift_address' and 'setpoint_shift_state_address' "
-                    "are required for setpoint_shift configuration",
+                    msg=(
+                        "'setpoint_shift_address' and 'setpoint_shift_state_address' "
+                        "are required for setpoint_shift configuration"
+                    ),
                 ): ga_list_validator,
                 vol.Optional(CONF_SETPOINT_SHIFT_MODE): vol.Maybe(
                     vol.All(vol.Upper, cv.enum(SetpointShiftMode))
@@ -508,7 +519,10 @@ class CoverSchema(KNXPlatformSchema):
             {
                 vol.Required(
                     vol.Any(CONF_MOVE_LONG_ADDRESS, CONF_POSITION_ADDRESS),
-                    msg=f"At least one of '{CONF_MOVE_LONG_ADDRESS}' or '{CONF_POSITION_ADDRESS}' is required.",
+                    msg=(
+                        f"At least one of '{CONF_MOVE_LONG_ADDRESS}' or"
+                        f" '{CONF_POSITION_ADDRESS}' is required."
+                    ),
                 ): object,
             },
             extra=vol.ALLOW_EXTRA,
@@ -547,6 +561,7 @@ class ExposeSchema(KNXPlatformSchema):
     CONF_KNX_EXPOSE_TYPE = CONF_TYPE
     CONF_KNX_EXPOSE_ATTRIBUTE = "attribute"
     CONF_KNX_EXPOSE_BINARY = "binary"
+    CONF_KNX_EXPOSE_COOLDOWN = "cooldown"
     CONF_KNX_EXPOSE_DEFAULT = "default"
     EXPOSE_TIME_TYPES: Final = [
         "time",
@@ -564,6 +579,8 @@ class ExposeSchema(KNXPlatformSchema):
     )
     EXPOSE_SENSOR_SCHEMA = vol.Schema(
         {
+            vol.Optional(CONF_KNX_EXPOSE_COOLDOWN, default=0): cv.positive_float,
+            vol.Optional(CONF_RESPOND_TO_READ, default=True): cv.boolean,
             vol.Required(CONF_KNX_EXPOSE_TYPE): vol.Any(
                 CONF_KNX_EXPOSE_BINARY, sensor_type_validator
             ),
@@ -668,17 +685,26 @@ class LightSchema(KNXPlatformSchema):
                     vol.Inclusive(
                         CONF_RED,
                         "individual_colors",
-                        msg="'red', 'green' and 'blue' are required for individual colors configuration",
+                        msg=(
+                            "'red', 'green' and 'blue' are required for individual"
+                            " colors configuration"
+                        ),
                     ): INDIVIDUAL_COLOR_SCHEMA,
                     vol.Inclusive(
                         CONF_GREEN,
                         "individual_colors",
-                        msg="'red', 'green' and 'blue' are required for individual colors configuration",
+                        msg=(
+                            "'red', 'green' and 'blue' are required for individual"
+                            " colors configuration"
+                        ),
                     ): INDIVIDUAL_COLOR_SCHEMA,
                     vol.Inclusive(
                         CONF_BLUE,
                         "individual_colors",
-                        msg="'red', 'green' and 'blue' are required for individual colors configuration",
+                        msg=(
+                            "'red', 'green' and 'blue' are required for individual"
+                            " colors configuration"
+                        ),
                     ): INDIVIDUAL_COLOR_SCHEMA,
                     vol.Optional(CONF_WHITE): INDIVIDUAL_COLOR_SCHEMA,
                 },
@@ -882,6 +908,26 @@ class SwitchSchema(KNXPlatformSchema):
             vol.Required(KNX_ADDRESS): ga_list_validator,
             vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,
             vol.Optional(CONF_DEVICE_CLASS): SWITCH_DEVICE_CLASSES_SCHEMA,
+            vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
+        }
+    )
+
+
+class TextSchema(KNXPlatformSchema):
+    """Voluptuous schema for KNX text."""
+
+    PLATFORM = Platform.TEXT
+
+    DEFAULT_NAME = "KNX Text"
+
+    ENTITY_SCHEMA = vol.Schema(
+        {
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_RESPOND_TO_READ, default=False): cv.boolean,
+            vol.Optional(CONF_TYPE, default="latin_1"): string_type_validator,
+            vol.Optional(CONF_MODE, default=TextMode.TEXT): vol.Coerce(TextMode),
+            vol.Required(KNX_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,
             vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
         }
     )

@@ -17,14 +17,5 @@
                 }
             }
         }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "devices": "\u542b\u3081\u308b\u30c7\u30d0\u30a4\u30b9"
-                }
-            }
-        }
     }
 }

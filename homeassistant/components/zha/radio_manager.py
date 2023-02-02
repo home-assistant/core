@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+from contextlib import suppress
 import copy
 import logging
 import os
@@ -11,10 +12,11 @@ from typing import Any
 import voluptuous as vol
 from zigpy.application import ControllerApplication
 import zigpy.backups
-from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
+from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH, CONF_NWK_BACKUP_ENABLED
 from zigpy.exceptions import NetworkNotFormed
 
 from homeassistant import config_entries
+from homeassistant.components import usb
 from homeassistant.core import HomeAssistant
 
 from .core.const import (
@@ -53,7 +55,12 @@ HARDWARE_DISCOVERY_SCHEMA = vol.Schema(
 HARDWARE_MIGRATION_SCHEMA = vol.Schema(
     {
         vol.Required("new_discovery_info"): HARDWARE_DISCOVERY_SCHEMA,
-        vol.Required("old_discovery_info"): HARDWARE_DISCOVERY_SCHEMA,
+        vol.Required("old_discovery_info"): vol.Schema(
+            {
+                vol.Exclusive("hw", "discovery"): HARDWARE_DISCOVERY_SCHEMA,
+                vol.Exclusive("usb", "discovery"): usb.UsbServiceInfo,
+            }
+        ),
     }
 )
 
@@ -120,6 +127,7 @@ class ZhaRadioManager:
 
         app_config[CONF_DATABASE] = database_path
         app_config[CONF_DEVICE] = self.device_settings
+        app_config[CONF_NWK_BACKUP_ENABLED] = False
         app_config = self.radio_type.controller.SCHEMA(app_config)
 
         app = await self.radio_type.controller.new(
@@ -200,11 +208,12 @@ class ZhaRadioManager:
 
             # The list of backups will always exist
             self.backups = app.backups.backups.copy()
+            self.backups.sort(reverse=True, key=lambda b: b.backup_time)
 
         return backup
 
     async def async_form_network(self) -> None:
-        """Form a brand new network."""
+        """Form a brand-new network."""
         async with self._connect_zigpy_app() as app:
             await app.form_network()
 
@@ -267,7 +276,7 @@ class ZhaMultiPANMigrationHelper:
     """Helper class for automatic migration when upgrading the firmware of a radio.
 
     This class is currently only intended to be used when changing the firmware on the
-    radio used in the Home Assistant Sky Connect USB stick and the Home Asssistant Yellow
+    radio used in the Home Assistant SkyConnect USB stick and the Home Assistant Yellow
     from Zigbee only firmware to firmware supporting both Zigbee and Thread.
     """
 
@@ -297,36 +306,34 @@ class ZhaMultiPANMigrationHelper:
         new_radio_type = ZhaRadioManager.parse_radio_type(
             migration_data["new_discovery_info"]["radio_type"]
         )
-        old_radio_type = ZhaRadioManager.parse_radio_type(
-            migration_data["old_discovery_info"]["radio_type"]
-        )
 
         new_device_settings = new_radio_type.controller.SCHEMA_DEVICE(
             migration_data["new_discovery_info"]["port"]
         )
-        old_device_settings = old_radio_type.controller.SCHEMA_DEVICE(
-            migration_data["old_discovery_info"]["port"]
-        )
 
-        if (
-            self._config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
-            != old_device_settings[CONF_DEVICE_PATH]
-        ):
+        if "hw" in migration_data["old_discovery_info"]:
+            old_device_path = migration_data["old_discovery_info"]["hw"]["port"]["path"]
+        else:  # usb
+            device = migration_data["old_discovery_info"]["usb"].device
+            old_device_path = await self._hass.async_add_executor_job(
+                usb.get_serial_by_id, device
+            )
+
+        if self._config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH] != old_device_path:
             # ZHA is using another radio, do nothing
             return False
 
-        try:
+        # OperationNotAllowed: ZHA is not running
+        with suppress(config_entries.OperationNotAllowed):
             await self._hass.config_entries.async_unload(self._config_entry.entry_id)
-        except config_entries.OperationNotAllowed:
-            # ZHA is not running
-            pass
 
         # Temporarily connect to the old radio to read its settings
+        config_entry_data = self._config_entry.data
         old_radio_mgr = ZhaRadioManager()
         old_radio_mgr.hass = self._hass
-        old_radio_mgr.radio_type = old_radio_type
-        old_radio_mgr.device_path = old_device_settings[CONF_DEVICE_PATH]
-        old_radio_mgr.device_settings = old_device_settings
+        old_radio_mgr.device_path = config_entry_data[CONF_DEVICE][CONF_DEVICE_PATH]
+        old_radio_mgr.device_settings = config_entry_data[CONF_DEVICE]
+        old_radio_mgr.radio_type = RadioType[config_entry_data[CONF_RADIO_TYPE]]
         backup = await old_radio_mgr.async_load_network_settings(create_backup=True)
 
         # Then configure the radio manager for the new radio to use the new settings
@@ -375,8 +382,6 @@ class ZhaMultiPANMigrationHelper:
         _LOGGER.debug("Restored backup after %s retries", retry)
 
         # Launch ZHA again
-        try:
+        # OperationNotAllowed: ZHA is not unloaded
+        with suppress(config_entries.OperationNotAllowed):
             await self._hass.config_entries.async_setup(self._config_entry.entry_id)
-        except config_entries.OperationNotAllowed:
-            # ZHA is not unloaded
-            pass

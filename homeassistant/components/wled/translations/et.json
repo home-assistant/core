@@ -22,6 +22,17 @@
             }
         }
     },
+    "entity": {
+        "select": {
+            "live_override": {
+                "state": {
+                    "0": "V\u00e4ljas",
+                    "1": "Sees",
+                    "2": "Kuni seade taask\u00e4ivitub"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {

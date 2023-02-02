@@ -10,7 +10,7 @@
         "step": {
             "user": {
                 "data": {
-                    "title": "Setup Syncthing integrasjon",
+                    "title": "Sett opp Syncthing-integrasjon",
                     "token": "Token",
                     "url": "URL",
                     "verify_ssl": "Verifisere SSL-sertifikat"

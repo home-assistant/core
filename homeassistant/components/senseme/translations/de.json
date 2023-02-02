@@ -11,7 +11,7 @@
         "flow_title": "{name} - {model} ({host})",
         "step": {
             "discovery_confirm": {
-                "description": "M\u00f6chtest du {name} - {model} ( {host} ) einrichten?"
+                "description": "M\u00f6chtest du {name} - {model} ({host}) einrichten?"
             },
             "manual": {
                 "data": {
@@ -23,7 +23,7 @@
                 "data": {
                     "device": "Ger\u00e4t"
                 },
-                "description": "W\u00e4hle ein Ger\u00e4t aus, oder w\u00e4hle \"IP-Adresse\", um eine IP-Adresse manuell einzugeben."
+                "description": "W\u00e4hle ein Ger\u00e4t aus oder w\u00e4hle \"IP-Adresse\", um eine IP-Adresse manuell einzugeben."
             }
         }
     }

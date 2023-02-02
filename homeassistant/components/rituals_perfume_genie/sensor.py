@@ -106,7 +106,6 @@ class DiffuserBatterySensor(DiffuserEntity, SensorEntity):
 class DiffuserWifiSensor(DiffuserEntity, SensorEntity):
     """Representation of a diffuser wifi sensor."""
 
-    _attr_device_class = SensorDeviceClass.SIGNAL_STRENGTH
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 

@@ -14,7 +14,7 @@
             "authentication_error": "Codice HomeKit errato. Per favore, controllate e riprovate.",
             "insecure_setup_code": "Il codice di installazione richiesto non \u00e8 sicuro a causa della sua natura banale. Questo accessorio non soddisfa i requisiti di sicurezza di base.",
             "max_peers_error": "Il dispositivo ha rifiutato di aggiungere l'abbinamento in quanto non dispone di una memoria libera per esso.",
-            "pairing_failed": "Si \u00e8 verificato un errore non gestito durante il tentativo di abbinamento con questo dispositivo. Potrebbe trattarsi di un errore temporaneo o il dispositivo potrebbe non essere attualmente supportato.",
+            "pairing_failed": "Si \u00e8 verificato un errore non gestito durante il tentativo di associazione con questo dispositivo. Potrebbe trattarsi di un errore temporaneo o il dispositivo potrebbe non essere attualmente supportato: {error}",
             "unable_to_pair": "Impossibile abbinare, riprova.",
             "unknown_error": "Il dispositivo ha riportato un errore sconosciuto. L'abbinamento non \u00e8 riuscito."
         },
@@ -67,6 +67,40 @@
             "double_press": "\"{subtype}\" premuto due volte",
             "long_press": "\"{subtype}\" premuto e tenuto premuto",
             "single_press": "\"{subtype}\" premuto"
+        }
+    },
+    "entity": {
+        "select": {
+            "ecobee_mode": {
+                "state": {
+                    "away": "Lontano",
+                    "home": "Casa",
+                    "sleep": "Sonno"
+                }
+            }
+        },
+        "sensor": {
+            "thread_node_capabilities": {
+                "state": {
+                    "border_router_capable": "Compatibile con router di confine",
+                    "full": "Dispositivo finale completo",
+                    "minimal": "Dispositivo finale minimo",
+                    "none": "Nessuno",
+                    "router_eligible": "Dispositivo finale idoneo per il router",
+                    "sleepy": "Dispositivo finale sonnolento"
+                }
+            },
+            "thread_status": {
+                "state": {
+                    "border_router": "Router di confine",
+                    "child": "Figlio",
+                    "detached": "Indipendente",
+                    "disabled": "Disabilitato",
+                    "joining": "In unione",
+                    "leader": "Capo",
+                    "router": "Router"
+                }
+            }
         }
     },
     "title": "Controller HomeKit"

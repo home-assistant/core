@@ -4,9 +4,15 @@
             "already_configured": "Conta j\u00e1 configurada"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Palavra-passe"
+                },
+                "title": "Reautenticar integra\u00e7\u00e3o"
+            },
             "user": {
                 "data": {
-                    "email": "Email",
+                    "email": "",
                     "password": "Palavra-passe"
                 }
             }

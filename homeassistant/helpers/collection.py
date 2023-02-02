@@ -7,7 +7,7 @@ from collections.abc import Awaitable, Callable, Coroutine, Iterable
 from dataclasses import dataclass
 from itertools import groupby
 import logging
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -211,7 +211,7 @@ class YamlCollection(ObservableCollection):
             await self.notify_changes(change_sets)
 
 
-class StorageCollection(ObservableCollection):
+class StorageCollection(ObservableCollection, ABC):
     """Offer a CRUD interface on top of JSON storage."""
 
     def __init__(
@@ -238,7 +238,7 @@ class StorageCollection(ObservableCollection):
 
     async def _async_load_data(self) -> dict | None:
         """Load the data."""
-        return cast(Optional[dict], await self.store.async_load())
+        return cast(dict | None, await self.store.async_load())
 
     async def async_load(self) -> None:
         """Load the storage Manager."""

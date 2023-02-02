@@ -19,20 +19,8 @@ from homeassistant.components.here_travel_time.const import (
     TRAVEL_MODE_CAR,
     TRAVEL_MODE_PUBLIC,
 )
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_MODE,
-    CONF_NAME,
-    CONF_UNIT_SYSTEM,
-    CONF_UNIT_SYSTEM_IMPERIAL,
-    CONF_UNIT_SYSTEM_METRIC,
-)
+from homeassistant.const import CONF_API_KEY, CONF_MODE, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.util.unit_system import (
-    METRIC_SYSTEM,
-    US_CUSTOMARY_SYSTEM,
-    UnitSystem,
-)
 
 from .const import (
     API_KEY,
@@ -98,7 +86,6 @@ async def option_init_result_fixture(hass: HomeAssistant) -> data_entry_flow.Flo
         flow["flow_id"],
         user_input={
             CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
-            CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
         },
     )
     return result
@@ -229,21 +216,11 @@ async def test_step_destination_coordinates(
 
 
 @pytest.mark.usefixtures("valid_response")
-@pytest.mark.parametrize(
-    "unit_system, expected_unit_option",
-    [
-        (METRIC_SYSTEM, CONF_UNIT_SYSTEM_METRIC),
-        (US_CUSTOMARY_SYSTEM, CONF_UNIT_SYSTEM_IMPERIAL),
-    ],
-)
 async def test_step_destination_entity(
     hass: HomeAssistant,
     origin_step_result: data_entry_flow.FlowResult,
-    unit_system: UnitSystem,
-    expected_unit_option: str,
 ) -> None:
     """Test the origin coordinates step."""
-    hass.config.units = unit_system
     menu_result = await hass.config_entries.flow.async_configure(
         origin_step_result["flow_id"], {"next_step_id": "destination_entity"}
     )
@@ -264,7 +241,6 @@ async def test_step_destination_entity(
         CONF_MODE: TRAVEL_MODE_CAR,
     }
     assert entry.options == {
-        CONF_UNIT_SYSTEM: expected_unit_option,
         CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
         CONF_ARRIVAL_TIME: None,
         CONF_DEPARTURE_TIME: None,
@@ -340,7 +316,6 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         result["flow_id"],
         user_input={
             CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
-            CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
         },
     )
 
@@ -366,7 +341,6 @@ async def test_options_flow_arrival_time_step(
     assert time_selector_result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.options == {
-        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
         CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
         CONF_ARRIVAL_TIME: "08:00:00",
     }
@@ -391,7 +365,6 @@ async def test_options_flow_departure_time_step(
     assert time_selector_result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.options == {
-        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
         CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
         CONF_DEPARTURE_TIME: "08:00:00",
     }
@@ -409,6 +382,5 @@ async def test_options_flow_no_time_step(
     assert menu_result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.options == {
-        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
         CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
     }

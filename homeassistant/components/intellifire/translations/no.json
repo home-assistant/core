@@ -19,7 +19,7 @@
                 }
             },
             "dhcp_confirm": {
-                "description": "Vil du konfigurere {host}\n Serienummer: {serial} ?"
+                "description": "Vil du sette opp {host}\n Serie: {serial} ?"
             },
             "manual_device_entry": {
                 "data": {

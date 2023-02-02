@@ -14,8 +14,8 @@
             "is_closing": "{entity_name} wird geschlossen",
             "is_open": "{entity_name} ist offen",
             "is_opening": "{entity_name} wird ge\u00f6ffnet",
-            "is_position": "Die Aktuelle Position von {entity_name} ist",
-            "is_tilt_position": "Die Aktuelle Neigungsposition von {entity_name} ist"
+            "is_position": "Die aktuelle Position von {entity_name} ist",
+            "is_tilt_position": "Die aktuelle Neigungsposition von {entity_name} ist"
         },
         "trigger_type": {
             "closed": "{entity_name} geschlossen",

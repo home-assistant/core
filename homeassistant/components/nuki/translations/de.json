@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
             "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
         },
         "error": {
@@ -13,7 +14,7 @@
                 "data": {
                     "token": "Zugangstoken"
                 },
-                "description": "Die Nuki-Integration muss sich bei deiner Bridge neu authentifizieren.",
+                "description": "Die Nuki Integration muss sich bei deiner Bridge neu authentifizieren.",
                 "title": "Integration erneut authentifizieren"
             },
             "user": {

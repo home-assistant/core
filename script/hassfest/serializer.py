@@ -5,6 +5,7 @@ from collections.abc import Collection, Iterable, Mapping
 from typing import Any
 
 import black
+from black.mode import Mode
 
 DEFAULT_GENERATOR = "script.hassfest"
 
@@ -13,17 +14,19 @@ def _wrap_items(
     items: Iterable[str],
     opener: str,
     closer: str,
-    sort=False,
+    sort: bool = False,
 ) -> str:
     """Wrap pre-formatted Python reprs in braces, optionally sorting them."""
     # The trailing comma is imperative so Black doesn't format some items
     # on one line and some on multiple.
     if sort:
         items = sorted(items)
-    return f"{opener}{','.join(items)},{closer}"
+
+    joined_items = ", ".join(items)
+    return f"{opener}{joined_items}{',' if joined_items else ''}{closer}"
 
 
-def _mapping_to_str(data: Mapping) -> str:
+def _mapping_to_str(data: Mapping[Any, Any]) -> str:
     """Return a string representation of a mapping."""
     return _wrap_items(
         (f"{to_string(key)}:{to_string(value)}" for key, value in data.items()),
@@ -34,7 +37,10 @@ def _mapping_to_str(data: Mapping) -> str:
 
 
 def _collection_to_str(
-    data: Collection, opener: str = "[", closer: str = "]", sort=False
+    data: Collection[Any],
+    opener: str = "[",
+    closer: str = "]",
+    sort: bool = False,
 ) -> str:
     """Return a string representation of a collection."""
     items = (to_string(value) for value in data)
@@ -66,7 +72,7 @@ To update, run python3 -m {generator}
 
 {content}
 """
-    return black.format_str(content.strip(), mode=black.Mode())
+    return black.format_str(content.strip(), mode=Mode())
 
 
 def format_python_namespace(

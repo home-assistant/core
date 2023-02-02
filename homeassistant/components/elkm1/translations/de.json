@@ -22,7 +22,7 @@
                     "temperature_unit": "Die von ElkM1 verwendete Temperatureinheit.",
                     "username": "Benutzername"
                 },
-                "description": "Verbinde dich mit dem ermittelten System: {mac_address} ( {host} )",
+                "description": "Verbinde dich mit dem ermittelten System: {mac_address} ({host})",
                 "title": "Stelle eine Verbindung zur Elk-M1-Steuerung her"
             },
             "manual_connection": {

@@ -12,6 +12,7 @@
             "bad_client_key": "Nieprawid\u0142owy klucz prywatny, upewnij si\u0119, \u017ce zakodowany plik PEM jest dostarczony bez has\u0142a",
             "bad_discovery_prefix": "Nieprawid\u0142owy prefiks wykrywania",
             "bad_will": "Nieprawid\u0142owy temat \"will\"",
+            "bad_ws_headers": "Podaj prawid\u0142owe nag\u0142\u00f3wki HTTP jako obiekt JSON",
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "invalid_inclusion": "Certyfikat klienta i klucz prywatny musz\u0105 by\u0107 skonfigurowane razem"
         },
@@ -24,7 +25,6 @@
                     "client_cert": "Prze\u015blij plik certyfikatu klienta",
                     "client_id": "Identyfikator klienta (pozostaw puste, aby wygenerowa\u0107 losowo)",
                     "client_key": "Prze\u015blij plik klucza prywatnego",
-                    "discovery": "W\u0142\u0105cz wykrywanie",
                     "keepalive": "Czas pomi\u0119dzy wys\u0142aniem wiadomo\u015bci \"keep alive\"",
                     "password": "Has\u0142o",
                     "port": "Port",
@@ -32,7 +32,10 @@
                     "set_ca_cert": "Sprawdzanie certyfikatu brokera",
                     "set_client_cert": "U\u017cyj certyfikatu klienta",
                     "tls_insecure": "Ignoruj sprawdzanie certyfikatu brokera",
-                    "username": "Nazwa u\u017cytkownika"
+                    "transport": "MQTT transport",
+                    "username": "Nazwa u\u017cytkownika",
+                    "ws_headers": "Nag\u0142\u00f3wki WebSocket w formacie JSON",
+                    "ws_path": "\u015acie\u017cka WebSocket"
                 },
                 "description": "Wprowad\u017a informacje o po\u0142\u0105czeniu po\u015brednika MQTT."
             },
@@ -86,6 +89,7 @@
             "bad_client_key": "Nieprawid\u0142owy klucz prywatny, upewnij si\u0119, \u017ce zakodowany plik PEM jest dostarczony bez has\u0142a",
             "bad_discovery_prefix": "Nieprawid\u0142owy prefiks wykrywania",
             "bad_will": "Nieprawid\u0142owy temat \"will\"",
+            "bad_ws_headers": "Podaj prawid\u0142owe nag\u0142\u00f3wki HTTP jako obiekt JSON",
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "invalid_inclusion": "Certyfikat klienta i klucz prywatny musz\u0105 by\u0107 skonfigurowane razem"
         },
@@ -105,7 +109,10 @@
                     "set_ca_cert": "Sprawdzanie certyfikatu brokera",
                     "set_client_cert": "U\u017cyj certyfikatu klienta",
                     "tls_insecure": "Ignoruj sprawdzanie certyfikatu brokera",
-                    "username": "Nazwa u\u017cytkownika"
+                    "transport": "MQTT transport",
+                    "username": "Nazwa u\u017cytkownika",
+                    "ws_headers": "Nag\u0142\u00f3wki WebSocket w formacie JSON",
+                    "ws_path": "\u015acie\u017cka WebSocket"
                 },
                 "description": "Wprowad\u017a informacje o po\u0142\u0105czeniu po\u015brednika MQTT.",
                 "title": "Opcje brokera"
@@ -127,6 +134,15 @@
                 },
                 "description": "Wykrywanie - je\u015bli wykrywanie jest w\u0142\u0105czone (zalecane), Home Assistant automatycznie wykryje urz\u0105dzenia i encje, kt\u00f3re publikuj\u0105 swoj\u0105 konfiguracj\u0119 w brokerze MQTT. Je\u015bli wykrywanie jest wy\u0142\u0105czone, ca\u0142\u0105 konfiguracj\u0119 nale\u017cy wykona\u0107 r\u0119cznie.\nPrefiks wykrywania - prefiks od kt\u00f3rego zaczyna\u0107 ma si\u0119 temat automatycznego wykrywania.\nWiadomo\u015b\u0107 Birth - wiadomo\u015b\u0107 Birth zostanie wys\u0142ana za ka\u017cdym razem, gdy Home Assistant (ponownie) po\u0142\u0105czy si\u0119 z brokerem MQTT.\nWiadomo\u015b\u0107 Will - wiadomo\u015b\u0107 Will b\u0119dzie wysy\u0142ana za ka\u017cdym razem, gdy Home Assistant utraci po\u0142\u0105czenie z brokerem, zar\u00f3wno w przypadku czystego (np. wy\u0142\u0105czenie Home Assistanta), jak i w przypadku nieczystego roz\u0142\u0105czenia (np. zawieszenie Home Assistanta lub utrata po\u0142\u0105czenia sieciowego).",
                 "title": "Opcje MQTT"
+            }
+        }
+    },
+    "selector": {
+        "set_ca_cert": {
+            "options": {
+                "auto": "Automatyczny",
+                "custom": "R\u0119czny",
+                "off": "Brak"
             }
         }
     }

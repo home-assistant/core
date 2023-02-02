@@ -1,18 +1,9 @@
 {
     "config": {
         "step": {
-            "user": {
+            "password": {
                 "data": {
                     "password": "Palavra-passe"
-                }
-            }
-        }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "update_time": "Tempo entre actualiza\u00e7\u00f5es (segundos)"
                 }
             }
         }

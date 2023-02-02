@@ -10,7 +10,6 @@
             "missing_configuration": "Osis pole seadistatud. Vaata dokumentatsiooni.",
             "no_url_available": "URL pole saadaval. Selle t\u00f5rke kohta teabe saamiseks vaata [spikrijaotis]({docs_url})",
             "reauth_successful": "Taastuvastamine \u00f5nnestus",
-            "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine.",
             "unknown_authorize_url_generation": "Tundmatu viga tuvastamise URL-i loomisel."
         },
         "create_entry": {
@@ -26,13 +25,6 @@
             "wrong_project_id": "Sisesta kehtiv pilveprojekti ID (leitud seadme juurdep\u00e4\u00e4su projekti ID)"
         },
         "step": {
-            "auth": {
-                "data": {
-                    "code": "Juurdep\u00e4\u00e4sut\u00f5end"
-                },
-                "description": "Oma Google'i konto sidumiseks vali [autoriseeri oma konto]({url}).\n\nP\u00e4rast autoriseerimist kopeeri ja aseta allpool esitatud Auth Token'i kood.",
-                "title": "Google'i konto linkimine"
-            },
             "auth_upgrade": {
                 "description": "Google on app Authi turvalisuse parandamiseks tauninud ja pead tegutsema, luues uusi rakenduse mandaate.\n\nAva [dokumentatsioon]({more_info_url}), mida j\u00e4rgida, kuna j\u00e4rgmised juhised juhendavad teid nest-seadmetele juurdep\u00e4\u00e4su taastamiseks vajalike juhiste kaudu.",
                 "title": "Nest: App Auth Deprecation"

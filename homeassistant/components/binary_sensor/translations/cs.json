@@ -31,6 +31,7 @@
             "is_not_plugged_in": "{entity_name} je odpojeno",
             "is_not_powered": "{entity_name} nen\u00ed nap\u00e1jeno",
             "is_not_present": "{entity_name} nen\u00ed p\u0159\u00edtomno",
+            "is_not_running": "{entity_name} nen\u00ed spu\u0161t\u011bno",
             "is_not_unsafe": "{entity_name} je bezpe\u010dno",
             "is_occupied": "{entity_name} je obsazeno",
             "is_off": "{entity_name} je vypnuto",
@@ -40,6 +41,7 @@
             "is_powered": "{entity_name} nap\u00e1jeno",
             "is_present": "{entity_name} p\u0159\u00edtomno",
             "is_problem": "{entity_name} detekuje probl\u00e9m",
+            "is_running": "{entity_name} je spu\u0161t\u011bno",
             "is_smoke": "{entity_name} detekuje kou\u0159",
             "is_sound": "{entity_name} detekuje zvuk",
             "is_unsafe": "{entity_name} nen\u00ed bezpe\u010dno",
@@ -79,6 +81,7 @@
             "not_plugged_in": "{entity_name} odpojeno",
             "not_powered": "{entity_name} nen\u00ed nap\u00e1jeno",
             "not_present": "{entity_name} nep\u0159\u00edtomno",
+            "not_running": "{entity_name} u\u017e neb\u011b\u017e\u00ed",
             "not_tampered": "{entity_name} p\u0159estalo detekovat neopr\u00e1vn\u011bnou manipulaci",
             "not_unsafe": "{entity_name} bezpe\u010dno",
             "occupied": "{entity_name} obsazeno",
@@ -87,6 +90,7 @@
             "powered": "{entity_name} nap\u00e1jeno",
             "present": "{entity_name} p\u0159\u00edtomno",
             "problem": "{entity_name} za\u010dalo detekovat probl\u00e9m",
+            "running": "{entity_name} spu\u0161t\u011bno",
             "smoke": "{entity_name} za\u010dalo detekovat kou\u0159",
             "sound": "{entity_name} za\u010dalo detekovat zvuk",
             "tampered": "{entity_name} za\u010dalo detekovat neopr\u00e1vn\u011bnou manipulaci",
@@ -181,6 +185,10 @@
         "problem": {
             "off": "V po\u0159\u00e1dku",
             "on": "Probl\u00e9m"
+        },
+        "running": {
+            "off": "Nen\u00ed spu\u0161t\u011bno",
+            "on": "Spu\u0161t\u011bno"
         },
         "safety": {
             "off": "Zaji\u0161t\u011bno",

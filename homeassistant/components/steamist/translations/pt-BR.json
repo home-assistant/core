@@ -14,7 +14,7 @@
         "flow_title": "{name} ({ipaddress})",
         "step": {
             "discovery_confirm": {
-                "description": "Deseja configurar {name} ( {ipaddress} )?"
+                "description": "Deseja configurar {name} ({ipaddress})?"
             },
             "pick_device": {
                 "data": {

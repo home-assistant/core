@@ -8,10 +8,11 @@
             "bad_birth": "Ugyldig f\u00f8dselsemne",
             "bad_certificate": "CA-sertifikatet er ugyldig",
             "bad_client_cert": "Ugyldig klientsertifikat, s\u00f8rg for at en PEM-kodet fil leveres",
-            "bad_client_cert_key": "Klientsertifikat og privat er ikke noe gyldig par",
+            "bad_client_cert_key": "Klientsertifikat og privat n\u00f8kkel er ikke et gyldig par",
             "bad_client_key": "Ugyldig privat n\u00f8kkel, s\u00f8rg for at en PEM-kodet fil leveres uten passord",
             "bad_discovery_prefix": "Ugyldig oppdagelsesprefiks",
             "bad_will": "Ugyldig viljeemne",
+            "bad_ws_headers": "Oppgi gyldige HTTP-hoder som et JSON-objekt",
             "cannot_connect": "Tilkobling mislyktes",
             "invalid_inclusion": "Klientsertifikatet og den private n\u00f8kkelen m\u00e5 konfigureres sammen"
         },
@@ -24,7 +25,6 @@
                     "client_cert": "Last opp klientsertifikatfil",
                     "client_id": "Klient-ID (la st\u00e5 tomt til tilfeldig generert)",
                     "client_key": "Last opp privat n\u00f8kkelfil",
-                    "discovery": "Aktiver oppdagelse",
                     "keepalive": "Tiden mellom sending hold levende meldinger",
                     "password": "Passord",
                     "port": "Port",
@@ -32,7 +32,10 @@
                     "set_ca_cert": "Validering av meglersertifikat",
                     "set_client_cert": "Bruk et klientsertifikat",
                     "tls_insecure": "Ignorer validering av meglersertifikat",
-                    "username": "Brukernavn"
+                    "transport": "MQTT transport",
+                    "username": "Brukernavn",
+                    "ws_headers": "WebSocket-hoder i JSON-format",
+                    "ws_path": "WebSocket-bane"
                 },
                 "description": "Vennligst fyll ut tilkoblingsinformasjonen for din MQTT megler."
             },
@@ -82,10 +85,11 @@
             "bad_birth": "Ugyldig f\u00f8dselsemne",
             "bad_certificate": "CA-sertifikatet er ugyldig",
             "bad_client_cert": "Ugyldig klientsertifikat, s\u00f8rg for at en PEM-kodet fil leveres",
-            "bad_client_cert_key": "Klientsertifikat og privat er ikke noe gyldig par",
+            "bad_client_cert_key": "Klientsertifikat og privat n\u00f8kkel er ikke et gyldig par",
             "bad_client_key": "Ugyldig privat n\u00f8kkel, s\u00f8rg for at en PEM-kodet fil leveres uten passord",
             "bad_discovery_prefix": "Ugyldig oppdagelsesprefiks",
             "bad_will": "Ugyldig viljeemne",
+            "bad_ws_headers": "Oppgi gyldige HTTP-hoder som et JSON-objekt",
             "cannot_connect": "Tilkobling mislyktes",
             "invalid_inclusion": "Klientsertifikatet og den private n\u00f8kkelen m\u00e5 konfigureres sammen"
         },
@@ -105,7 +109,10 @@
                     "set_ca_cert": "Validering av meglersertifikat",
                     "set_client_cert": "Bruk et klientsertifikat",
                     "tls_insecure": "Ignorer validering av meglersertifikat",
-                    "username": "Brukernavn"
+                    "transport": "MQTT transport",
+                    "username": "Brukernavn",
+                    "ws_headers": "WebSocket-hoder i JSON-format",
+                    "ws_path": "WebSocket-bane"
                 },
                 "description": "Vennligst fyll ut tilkoblingsinformasjonen for din MQTT megler.",
                 "title": "Megleralternativer"
@@ -127,6 +134,15 @@
                 },
                 "description": "Oppdagelse - Hvis oppdagelse er aktivert (anbefalt), vil Home Assistant automatisk oppdage enheter og enheter som publiserer konfigurasjonen deres p\u00e5 MQTT-megleren. Hvis oppdagelse er deaktivert, m\u00e5 all konfigurasjon gj\u00f8res manuelt.\n Oppdagelsesprefiks - Prefikset et konfigurasjonsemne for automatisk oppdagelse m\u00e5 starte med.\n F\u00f8dselsmelding - F\u00f8dselsmeldingen vil bli sendt hver gang Home Assistant (gjen)kobler til MQTT-megleren.\n Viljemelding - Viljemeldingen vil bli sendt hver gang Home Assistant mister forbindelsen til megleren, b\u00e5de i tilfelle en rengj\u00f8ring (f.eks. Home Assistant sl\u00e5r av) og i tilfelle en urent (f.eks. Home Assistant krasjer eller mister nettverksforbindelsen) koble fra.",
                 "title": "MQTT-alternativer"
+            }
+        }
+    },
+    "selector": {
+        "set_ca_cert": {
+            "options": {
+                "auto": "Auto",
+                "custom": "Tilpasset",
+                "off": "Av"
             }
         }
     }

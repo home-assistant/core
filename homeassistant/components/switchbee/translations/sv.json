@@ -13,19 +13,9 @@
                 "data": {
                     "host": "V\u00e4rd",
                     "password": "L\u00f6senord",
-                    "switch_as_light": "Initiera omkopplare som ljusenheter",
                     "username": "Anv\u00e4ndarnamn"
                 },
                 "description": "Konfigurera SwitchBee-integrationen med Home Assistant."
-            }
-        }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "devices": "Enheter att inkludera"
-                }
             }
         }
     }

@@ -5,7 +5,7 @@
         },
         "step": {
             "pairing": {
-                "description": "For \u00e5 fullf\u00f8re sammenkoblingen ved \u00e5 f\u00f8lge instruksjonene i \"Varsler\" under \"Sammenkobling av HomeKit\".",
+                "description": "For \u00e5 fullf\u00f8re sammenkoblingen, f\u00f8lg instruksjonene i \"Varsler\" under \"HomeKit-paring\".",
                 "title": "Koble sammen HomeKit"
             },
             "user": {

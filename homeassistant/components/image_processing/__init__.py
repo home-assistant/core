@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import Any, Final, TypedDict, final
@@ -21,7 +22,7 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import make_entity_service_schema
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -119,20 +120,49 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+@dataclass
+class ImageProcessingEntityDescription(EntityDescription):
+    """A class that describes sensor entities."""
+
+    device_class: ImageProcessingDeviceClass | None = None
+    camera_entity: str | None = None
+    confidence: float | None = None
+
+
 class ImageProcessingEntity(Entity):
     """Base entity class for image processing."""
 
-    _attr_device_class: ImageProcessingDeviceClass | str | None
+    entity_description: ImageProcessingEntityDescription
+    _attr_device_class: ImageProcessingDeviceClass | None
+    _attr_camera_entity: str | None
+    _attr_confidence: float | None
     timeout = DEFAULT_TIMEOUT
 
     @property
     def camera_entity(self) -> str | None:
         """Return camera entity id from process pictures."""
+        if hasattr(self, "_attr_camera_entity"):
+            return self._attr_camera_entity
+        if hasattr(self, "entity_description"):
+            return self.entity_description.camera_entity
         return None
 
     @property
     def confidence(self) -> float | None:
-        """Return minimum confidence for do some things."""
+        """Return minimum confidence to do some things."""
+        if hasattr(self, "_attr_confidence"):
+            return self._attr_confidence
+        if hasattr(self, "entity_description"):
+            return self.entity_description.confidence
+        return None
+
+    @property
+    def device_class(self) -> ImageProcessingDeviceClass | None:
+        """Return the class of this entity."""
+        if hasattr(self, "_attr_device_class"):
+            return self._attr_device_class
+        if hasattr(self, "entity_description"):
+            return self.entity_description.device_class
         return None
 
     def process_image(self, image: bytes) -> None:

@@ -21,7 +21,7 @@
                 "description": "\u6709\u5169\u7a2e\u4e0d\u540c\u65b9\u6cd5\u53ef\u4ee5\u5c07 LaMetric \u88dd\u7f6e\u6574\u5408\u9032 Home Assistant\u3002\n\n\u53ef\u4ee5\u81ea\u884c\u8f38\u5165 API \u6b0a\u6756\u8207\u5168\u90e8\u88dd\u7f6e\u8cc7\u8a0a\uff0c\u6216\u8005 Home Asssistant \u53ef\u4ee5\u7531  LaMetric.com \u5e33\u865f\u9032\u884c\u532f\u5165\u3002",
                 "menu_options": {
                     "manual_entry": "\u624b\u52d5\u8f38\u5165",
-                    "pick_implementation": "\u7531 LaMetric.com \u532f\u5165\uff08\u5efa\u8b70\uff09"
+                    "pick_implementation": "\u7531 LaMetric.com \u532f\u5165\uff08\u63a8\u85a6\uff09"
                 }
             },
             "manual_entry": {
@@ -40,6 +40,16 @@
             "user_cloud_select_device": {
                 "data": {
                     "device": "\u9078\u64c7\u6240\u8981\u65b0\u589e\u7684 LaMetric \u88dd\u7f6e"
+                }
+            }
+        }
+    },
+    "entity": {
+        "select": {
+            "brightness_mode": {
+                "state": {
+                    "auto": "\u81ea\u52d5",
+                    "manual": "\u624b\u52d5"
                 }
             }
         }

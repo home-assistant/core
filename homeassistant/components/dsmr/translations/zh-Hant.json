@@ -40,6 +40,16 @@
             }
         }
     },
+    "entity": {
+        "sensor": {
+            "electricity_tariff": {
+                "state": {
+                    "low": "\u4f4e",
+                    "normal": "\u6b63\u5e38"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {

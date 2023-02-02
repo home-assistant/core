@@ -61,7 +61,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     load_coroutines: list[Coroutine[Any, Any, None]] = []
     for resource_config in scrape_config:
         rest = create_rest_data_from_config(hass, resource_config)
-        scan_interval: timedelta = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+        scan_interval: timedelta = resource_config.get(
+            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+        )
         coordinator = ScrapeCoordinator(hass, rest, scan_interval)
 
         sensors: list[ConfigType] = resource_config.get(SENSOR_DOMAIN, [])

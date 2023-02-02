@@ -64,7 +64,7 @@ CLIENT_SECRET = "client-secret"
 @pytest.fixture(name="calendar_access_role")
 def test_calendar_access_role() -> str:
     """Default access role to use for test_api_calendar in tests."""
-    return "reader"
+    return "owner"
 
 
 @pytest.fixture
@@ -121,7 +121,9 @@ def mock_calendars_yaml(
     calendars_config: list[dict[str, Any]],
 ) -> Generator[Mock, None, None]:
     """Fixture that prepares the google_calendars.yaml mocks."""
-    mocked_open_function = mock_open(read_data=yaml.dump(calendars_config))
+    mocked_open_function = mock_open(
+        read_data=yaml.dump(calendars_config) if calendars_config else None
+    )
     with patch("homeassistant.components.google.open", mocked_open_function):
         yield mocked_open_function
 

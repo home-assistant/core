@@ -7,9 +7,17 @@
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
         },
         "step": {
+            "discovered_connection": {
+                "data": {
+                    "host": "Hostitel",
+                    "id": "ID syst\u00e9mu",
+                    "port": "Port"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Hostitel",
+                    "id": "ID syst\u00e9mu",
                     "port": "Port"
                 }
             }

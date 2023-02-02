@@ -37,7 +37,6 @@
         "step": {
             "init": {
                 "data": {
-                    "scan_interval": "Oppdateringsintervall",
                     "show_on_map": "Vis stasjoner p\u00e5 kart",
                     "stations": "Stasjoner"
                 },

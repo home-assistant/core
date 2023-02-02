@@ -21,10 +21,11 @@ from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_UNAVAILABLE
 from homeassistant.core import State
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import init_integration, register_device, register_entity
 
-from tests.common import mock_restore_cache
+from tests.common import mock_restore_cache, mock_restore_cache_with_extra_data
 
 SENSOR_BLOCK_ID = 3
 DEVICE_BLOCK_ID = 4
@@ -190,19 +191,25 @@ async def test_block_restored_climate(hass, mock_block_device, device_reg, monke
         "sensor_0",
         entry,
     )
-    mock_restore_cache(hass, [State(entity_id, HVACMode.HEAT)])
+    attrs = {"current_temperature": 20.5, "temperature": 4.0}
+    extra_data = {"last_target_temp": 22.0}
+    mock_restore_cache_with_extra_data(
+        hass, ((State(entity_id, HVACMode.OFF, attributes=attrs), extra_data),)
+    )
 
     monkeypatch.setattr(mock_block_device, "initialized", False)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).state == HVACMode.HEAT
+    assert hass.states.get(entity_id).state == HVACMode.OFF
+    assert hass.states.get(entity_id).attributes.get("temperature") == 4.0
 
     # Partial update, should not change state
     mock_block_device.mock_update()
     await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).state == HVACMode.HEAT
+    assert hass.states.get(entity_id).state == HVACMode.OFF
+    assert hass.states.get(entity_id).attributes.get("temperature") == 4.0
 
     # Make device online
     monkeypatch.setattr(mock_block_device, "initialized", True)
@@ -210,6 +217,91 @@ async def test_block_restored_climate(hass, mock_block_device, device_reg, monke
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == HVACMode.OFF
+    assert hass.states.get(entity_id).attributes.get("temperature") == 4.0
+
+    # Test set hvac mode heat, target temp should be set to last target temp (22)
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
+        blocking=True,
+    )
+    mock_block_device.http_request.assert_called_once_with(
+        "get", "thermostat/0", {"target_t_enabled": 1, "target_t": 22.0}
+    )
+
+    monkeypatch.setattr(mock_block_device.blocks[SENSOR_BLOCK_ID], "targetTemp", 22.0)
+    mock_block_device.mock_update()
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == HVACMode.HEAT
+    assert hass.states.get(entity_id).attributes.get("temperature") == 22.0
+
+
+async def test_block_restored_climate_us_customery(
+    hass, mock_block_device, device_reg, monkeypatch
+):
+    """Test block restored climate with US CUSTOMATY unit system."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    monkeypatch.delattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "targetTemp")
+    monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "valveError", 0)
+    entry = await init_integration(hass, 1, sleep_period=1000, skip_setup=True)
+    register_device(device_reg, entry)
+    entity_id = register_entity(
+        hass,
+        CLIMATE_DOMAIN,
+        "test_name",
+        "sensor_0",
+        entry,
+    )
+    attrs = {"current_temperature": 67, "temperature": 39}
+    extra_data = {"last_target_temp": 10.0}
+    mock_restore_cache_with_extra_data(
+        hass, ((State(entity_id, HVACMode.OFF, attributes=attrs), extra_data),)
+    )
+
+    monkeypatch.setattr(mock_block_device, "initialized", False)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == HVACMode.OFF
+    assert hass.states.get(entity_id).attributes.get("temperature") == 39
+    assert hass.states.get(entity_id).attributes.get("current_temperature") == 67
+
+    # Partial update, should not change state
+    mock_block_device.mock_update()
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == HVACMode.OFF
+    assert hass.states.get(entity_id).attributes.get("temperature") == 39
+    assert hass.states.get(entity_id).attributes.get("current_temperature") == 67
+
+    # Make device online
+    monkeypatch.setattr(mock_block_device, "initialized", True)
+    monkeypatch.setattr(mock_block_device.blocks[SENSOR_BLOCK_ID], "targetTemp", 4.0)
+    monkeypatch.setattr(mock_block_device.blocks[SENSOR_BLOCK_ID], "temp", 18.2)
+    mock_block_device.mock_update()
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == HVACMode.OFF
+    assert hass.states.get(entity_id).attributes.get("temperature") == 39
+    assert hass.states.get(entity_id).attributes.get("current_temperature") == 65
+
+    # Test set hvac mode heat, target temp should be set to last target temp (10.0/50)
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
+        blocking=True,
+    )
+    mock_block_device.http_request.assert_called_once_with(
+        "get", "thermostat/0", {"target_t_enabled": 1, "target_t": 10.0}
+    )
+
+    monkeypatch.setattr(mock_block_device.blocks[SENSOR_BLOCK_ID], "targetTemp", 10.0)
+    mock_block_device.mock_update()
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == HVACMode.HEAT
+    assert hass.states.get(entity_id).attributes.get("temperature") == 50
 
 
 async def test_block_restored_climate_unavailable(

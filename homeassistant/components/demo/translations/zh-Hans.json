@@ -1,4 +1,14 @@
 {
+    "issues": {
+        "cold_tea": {
+            "fix_flow": {
+                "abort": {
+                    "not_tea_time": "\u76ee\u524d\u65e0\u6cd5\u91cd\u65b0\u52a0\u70ed\u8336"
+                }
+            },
+            "title": "\u8336\u51c9\u4e86"
+        }
+    },
     "options": {
         "step": {
             "options_1": {

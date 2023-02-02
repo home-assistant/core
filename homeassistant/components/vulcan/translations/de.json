@@ -4,7 +4,7 @@
             "all_student_already_configured": "Alle Sch\u00fcler wurden bereits hinzugef\u00fcgt.",
             "already_configured": "Dieser Sch\u00fcler wurde bereits hinzugef\u00fcgt.",
             "no_matching_entries": "Keine \u00fcbereinstimmenden Eintr\u00e4ge gefunden, bitte verwende ein anderes Konto oder entferne die Integration mit veraltetem Sch\u00fcler.",
-            "reauth_successful": "Reauth erfolgreich"
+            "reauth_successful": "Reauthentifizierung erfolgreich"
         },
         "error": {
             "cannot_connect": "Verbindungsfehler - Bitte \u00fcberpr\u00fcfe deine Internetverbindung",
@@ -28,7 +28,7 @@
                     "region": "Symbol",
                     "token": "Token"
                 },
-                "description": "Melde dich bei deinem Vulcan-Konto \u00fcber die Registrierungsseite der mobilen App an."
+                "description": "Melde dich bei deinem Vulcan Konto \u00fcber die Registrierungsseite der mobilen App an."
             },
             "reauth_confirm": {
                 "data": {
@@ -36,7 +36,7 @@
                     "region": "Symbol",
                     "token": "Token"
                 },
-                "description": "Melde dich bei deinem Vulcan-Konto \u00fcber die Registrierungsseite der mobilen App an."
+                "description": "Melde dich bei deinem Vulcan Konto \u00fcber die Registrierungsseite der mobilen App an."
             },
             "select_saved_credentials": {
                 "data": {
@@ -48,7 +48,7 @@
                 "data": {
                     "student_name": "Sch\u00fcler ausw\u00e4hlen"
                 },
-                "description": "W\u00e4hle Sch\u00fcler aus, Du kannst weitere Sch\u00fcler hinzuf\u00fcgen, indem du die Integration erneut hinzuf\u00fcgst."
+                "description": "W\u00e4hle Sch\u00fcler aus, du kannst weitere Sch\u00fcler hinzuf\u00fcgen, indem du die Integration erneut hinzuf\u00fcgst."
             }
         }
     }

@@ -15,7 +15,7 @@
                 "title": "Scegli il metodo di autenticazione"
             },
             "reauth_confirm": {
-                "title": "Vuoi iniziare la configurazione?"
+                "title": "Vuoi avviare la configurazione?"
             }
         }
     }

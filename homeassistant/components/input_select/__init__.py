@@ -73,7 +73,10 @@ def _remove_duplicates(options: list[str], name: str | None) -> list[str]:
     # Reject YAML configured input_select with duplicates from 2022.6
     if len(unique_options) != len(options):
         _LOGGER.warning(
-            "Input select '%s' with options %s had duplicated options, the duplicates have been removed",
+            (
+                "Input select '%s' with options %s had duplicated options, the"
+                " duplicates have been removed"
+            ),
             name or "<unnamed>",
             options,
         )

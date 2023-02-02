@@ -1,5 +1,5 @@
 """Class to hold remote accessories."""
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 import logging
 
 from pyhap.const import CATEGORY_TELEVISION
@@ -18,7 +18,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.core import callback
+from homeassistant.core import State, callback
 
 from .accessories import TYPES, HomeAccessory
 from .const import (
@@ -75,7 +75,7 @@ REMOTE_KEYS = {
 }
 
 
-class RemoteInputSelectAccessory(HomeAccessory):
+class RemoteInputSelectAccessory(HomeAccessory, ABC):
     """Generate a InputSelect accessory."""
 
     def __init__(
@@ -96,7 +96,7 @@ class RemoteInputSelectAccessory(HomeAccessory):
         self.sources = []
         self.support_select_source = False
         if features & required_feature:
-            sources = state.attributes.get(source_list_key, [])
+            sources = self._get_ordered_source_list_from_state(state)
             if len(sources) > MAXIMUM_SOURCES:
                 _LOGGER.warning(
                     "%s: Reached maximum number of sources (%s)",
@@ -143,6 +143,21 @@ class RemoteInputSelectAccessory(HomeAccessory):
             serv_input.configure_char(CHAR_CURRENT_VISIBILITY_STATE, value=False)
             _LOGGER.debug("%s: Added source %s", self.entity_id, source)
 
+    def _get_ordered_source_list_from_state(self, state: State) -> list[str]:
+        """Return ordered source list while preserving order with duplicates removed.
+
+        Some integrations have duplicate sources in the source list
+        which will make the source list conflict as HomeKit requires
+        unique source names.
+        """
+        seen = set()
+        sources: list[str] = []
+        for source in state.attributes.get(self.source_list_key, []):
+            if source not in seen:
+                sources.append(source)
+            seen.add(source)
+        return sources
+
     @abstractmethod
     def set_on_off(self, value):
         """Move switch state to value if call came from HomeKit."""
@@ -169,7 +184,7 @@ class RemoteInputSelectAccessory(HomeAccessory):
             self.char_input_source.set_value(index)
             return
 
-        possible_sources = new_state.attributes.get(self.source_list_key, [])
+        possible_sources = self._get_ordered_source_list_from_state(new_state)
         if source in possible_sources:
             index = possible_sources.index(source)
             if index >= MAXIMUM_SOURCES:

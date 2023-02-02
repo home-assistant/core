@@ -43,7 +43,7 @@ SUPPORT_XBOX = (
     | MediaPlayerEntityFeature.PLAY_MEDIA
 )
 
-XBOX_STATE_MAP = {
+XBOX_STATE_MAP: dict[PlaybackState | PowerState, MediaPlayerState | None] = {
     PlaybackState.Playing: MediaPlayerState.PLAYING,
     PlaybackState.Paused: MediaPlayerState.PAUSED,
     PowerState.On: MediaPlayerState.ON,
@@ -99,7 +99,7 @@ class XboxMediaPlayer(CoordinatorEntity[XboxUpdateCoordinator], MediaPlayerEntit
         return self.coordinator.data.consoles[self._console.id]
 
     @property
-    def state(self):
+    def state(self) -> MediaPlayerState | None:
         """State of the player."""
         status = self.data.status
         if status.playback_state in XBOX_STATE_MAP:

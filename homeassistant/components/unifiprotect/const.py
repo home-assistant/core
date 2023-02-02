@@ -7,6 +7,7 @@ from homeassistant.const import Platform
 DOMAIN = "unifiprotect"
 
 ATTR_EVENT_SCORE = "event_score"
+ATTR_EVENT_ID = "event_id"
 ATTR_WIDTH = "width"
 ATTR_HEIGHT = "height"
 ATTR_FPS = "fps"
@@ -47,7 +48,10 @@ DEVICES_WITH_ENTITIES = DEVICES_THAT_ADOPT | {ModelType.NVR}
 DEVICES_FOR_SUBSCRIBE = DEVICES_WITH_ENTITIES | {ModelType.EVENT}
 
 MIN_REQUIRED_PROTECT_V = Version("1.20.0")
-OUTDATED_LOG_MESSAGE = "You are running v%s of UniFi Protect. Minimum required version is v%s. Please upgrade UniFi Protect and then retry"
+OUTDATED_LOG_MESSAGE = (
+    "You are running v%s of UniFi Protect. Minimum required version is v%s. Please"
+    " upgrade UniFi Protect and then retry"
+)
 
 TYPE_EMPTY_VALUE = ""
 
@@ -62,6 +66,7 @@ PLATFORMS = [
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.TEXT,
 ]
 
 DISPATCH_ADD = "add_device"
