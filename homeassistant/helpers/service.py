@@ -613,7 +613,6 @@ async def entity_service_call(  # noqa: C901
         for platform in platforms:
             platform_entities = []
             for entity in platform.entities.values():
-
                 if entity.entity_id not in all_referenced:
                     continue
 

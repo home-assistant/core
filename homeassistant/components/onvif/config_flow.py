@@ -108,7 +108,6 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         If no device is found allow user to manually input configuration.
         """
         if user_input:
-
             if user_input[CONF_HOST] == CONF_MANUAL_INPUT:
                 return await self.async_step_configure()
 

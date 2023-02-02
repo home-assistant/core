@@ -338,7 +338,6 @@ def retryable_req(
     def decorator(func):
         @functools.wraps(func)
         async def wrapper(channel, *args, **kwargs):
-
             exceptions = (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError)
             try_count, errors = 1, []
             for delay in itertools.chain(delays, [None]):
