@@ -124,6 +124,8 @@ MOCK_BLOCKS = [
         sensor_ids={"powerFactor": 0.98},
         channel="0",
         powerFactor=0.98,
+        targetTemp=4,
+        temp=22.1,
         description="emeter_0",
         type="emeter",
     ),
