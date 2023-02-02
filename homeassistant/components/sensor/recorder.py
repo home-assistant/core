@@ -676,7 +676,9 @@ def validate_statistics(
 
     for state in sensor_states:
         entity_id = state.entity_id
-        state_class = try_parse_enum(SensorStateClass, state.attributes.get(ATTR_STATE_CLASS))
+        state_class = try_parse_enum(
+            SensorStateClass, state.attributes.get(ATTR_STATE_CLASS)
+        )
         state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
         if metadata := metadatas.get(entity_id):
