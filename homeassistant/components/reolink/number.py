@@ -1,0 +1,121 @@
+"""This component provides support for Reolink number entities."""
+from __future__ import annotations
+
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Any
+
+from reolink_aio.api import Host
+)
+
+from homeassistant.components.number import (
+    NumberEntity,
+    NumberEntityDescription,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from . import ReolinkData
+from .const import DOMAIN
+from .entity import ReolinkCoordinatorEntity
+
+
+@dataclass
+class ReolinkNumberEntityDescriptionMixin:
+    """Mixin values for Reolink number entities."""
+
+    value: Callable[[Host, int | None], bool]
+    min_value: Callable[[Host, int | None], float]
+    max_value: Callable[[Host, int | None], float]
+    method: Callable[[Host, int | None, float], Any]
+
+
+@dataclass
+class ReolinkNumberEntityDescription(
+    NumberEntityDescription, ReolinkNumberEntityDescriptionMixin
+):
+    """A class that describes number entities."""
+
+    supported: Callable[[Host, int | None], bool] = lambda api, ch: True
+
+
+NUMBER_ENTITIES = (
+    ReolinkNumberEntityDescription(
+        key="zoom",
+        name="Zoom",
+        icon="mdi:magnify",
+        native_step=1,
+        min_value=lambda api, ch: api.zoom_range(ch)["zoom"]["pos"]["min"],
+        max_value=lambda api, ch: api.zoom_range(ch)["zoom"]["pos"]["max"],
+        supported=lambda api, ch: api.zoom_supported(ch),
+        value=lambda api, ch: api.get_zoom(ch),
+        method=lambda api, ch, value: api.set_zoom(ch, value),
+    ),
+    ReolinkNumberEntityDescription(
+        key="focus",
+        name="Focus",
+        icon="mdi:focus-field",
+        native_step=1,
+        min_value=lambda api, ch: api.zoom_range(ch)["focus"]["pos"]["min"],
+        max_value=lambda api, ch: api.zoom_range(ch)["focus"]["pos"]["max"],
+        supported=lambda api, ch: api.zoom_supported(ch),
+        value=lambda api, ch: api.get_zoom(ch),
+        method=lambda api, ch, value: api.set_zoom(ch, value),
+    ),
+)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up a Reolink number entities."""
+    reolink_data: ReolinkData = hass.data[DOMAIN][config_entry.entry_id]
+
+    entities: list[ReolinkNumberEntity] = []
+    for channel in reolink_data.host.api.channels:
+        entities.extend(
+            [
+                ReolinkNumberEntity(reolink_data, channel, entity_description)
+                for entity_description in NUMBER_ENTITIES
+                if entity_description.supported(reolink_data.host.api, channel)
+            ]
+        )
+
+    async_add_entities(entities)
+
+
+class ReolinkNumberEntity(ReolinkCoordinatorEntity, NumberEntity):
+    """Base number entity class for Reolink IP cameras."""
+
+    _attr_has_entity_name = True
+    entity_description: ReolinkNumberEntityDescription
+
+    def __init__(
+        self,
+        reolink_data: ReolinkData,
+        channel: int,
+        entity_description: ReolinkNumberEntityDescription,
+    ) -> None:
+        """Initialize Reolink number entity."""
+        super().__init__(reolink_data, channel)
+        self.entity_description = entity_description
+
+        self._attr_native_min_value = self.entity_description.min_value(self._host.api, self._channel)
+        self._attr_native_max_value = self.entity_description.max_value(self._host.api, self._channel)
+
+        self._attr_unique_id = (
+            f"{self._host.unique_id}_{self._channel}_{entity_description.key}"
+        )
+
+    @property
+    def native_value(self) -> float:
+        """State of the number entity."""
+        return self.entity_description.value(self._host.api, self._channel)
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Update the current value."""
+        await self.entity_description.method(self._host.api, self._channel, value)
+

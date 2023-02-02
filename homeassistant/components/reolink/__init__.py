@@ -23,7 +23,7 @@ from .host import ReolinkHost
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.CAMERA]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.CAMERA, Platform.NUMBER]
 DEVICE_UPDATE_INTERVAL = 60
 
 
