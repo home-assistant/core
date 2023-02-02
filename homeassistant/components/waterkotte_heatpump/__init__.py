@@ -1,15 +1,53 @@
 """The Waterkotte Heatpump integration."""
 from __future__ import annotations
 
-from pywaterkotte.ecotouch import Ecotouch
+from datetime import timedelta
+import logging
+from typing import Any
+
+from pywaterkotte.ecotouch import Ecotouch, TagData
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 
+_LOGGER = logging.getLogger(__name__)
+
 PLATFORMS: list[Platform] = [Platform.SENSOR]
+
+UPDATE_INTERVAL = 10
+
+
+class EcotouchCoordinator(DataUpdateCoordinator[dict[TagData, Any]]):
+    """heatpump coordinator."""
+
+    def __init__(self, heatpump: Ecotouch, hass: HomeAssistant) -> None:
+        """init coordinator."""
+        self._heatpump = heatpump
+
+        self.alltags: set[TagData] = set()
+
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_interval=timedelta(seconds=UPDATE_INTERVAL),
+        )
+
+    async def _async_update_data(self) -> dict[TagData, Any]:
+        """Fetch the latest data from the source."""
+        tag_list = list(self.alltags)
+        return await self.hass.async_add_executor_job(
+            self._heatpump.read_values, tag_list
+        )
+
+    def get_tag_value(self, tag: TagData) -> StateType:
+        """return a tag value."""
+        return self.data.get(tag, None)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -23,7 +61,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         heatpump.login, entry.data["username"], entry.data["password"]
     )
 
-    hass.data[DOMAIN][entry.entry_id] = heatpump
+    coordinator = EcotouchCoordinator(heatpump, hass)
+
+    await coordinator.async_config_entry_first_refresh()
+
+    hass.data[DOMAIN][entry.entry_id] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
