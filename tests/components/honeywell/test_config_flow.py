@@ -2,7 +2,7 @@
 import asyncio
 from unittest.mock import MagicMock, patch
 
-import AIOSomecomfort
+import aiosomecomfort as AIOSomecomfort
 import pytest
 
 from homeassistant import data_entry_flow

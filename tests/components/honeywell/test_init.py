@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock, create_autospec
 
-import AIOSomecomfort
+import aiosomecomfort as AIOSomecomfort
 
 from homeassistant.components.honeywell.const import (
     CONF_COOL_AWAY_TEMPERATURE,

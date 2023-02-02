@@ -1,7 +1,7 @@
 """Test the Whirlpool Sixth Sense climate domain."""
 from unittest.mock import MagicMock
 
-import AIOSomecomfort
+import aiosomecomfort as AIOSomecomfort
 
 from homeassistant.components.climate import (
     ATTR_AUX_HEAT,

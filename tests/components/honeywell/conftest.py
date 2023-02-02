@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, create_autospec, patch
 
-import AIOSomecomfort
+import aiosomecomfort as AIOSomecomfort
 import pytest
 
 from homeassistant.components.honeywell.const import (
