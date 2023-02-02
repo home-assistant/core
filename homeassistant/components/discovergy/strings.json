@@ -33,8 +33,7 @@
     "step": {
       "init": {
         "data": {
-          "time_between_update": "Minimum time between entity updates [s]",
-          "precision": "Number of decimal places"
+          "time_between_update": "Minimum time between entity updates [s]"
         }
       }
     }

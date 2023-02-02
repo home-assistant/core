@@ -1,4 +1,6 @@
 """Provide info to system health."""
+from pydiscovergy.const import API_BASE
+
 from homeassistant.components import system_health
 from homeassistant.core import HomeAssistant, callback
 
@@ -15,6 +17,6 @@ async def system_health_info(hass):
     """Get info for the info page."""
     return {
         "api_endpoint_reachable": system_health.async_check_can_reach_url(
-            hass, "https://api.discovergy.com"
+            hass, API_BASE
         )
     }

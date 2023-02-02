@@ -36,9 +36,7 @@ from homeassistant.helpers.update_coordinator import (
 
 from . import DiscovergyData
 from .const import (
-    CONF_PRECISION,
     CONF_TIME_BETWEEN_UPDATE,
-    DEFAULT_PRECISION,
     DEFAULT_TIME_BETWEEN_UPDATE,
     DOMAIN,
     MANUFACTURER,
@@ -77,6 +75,7 @@ ELECTRICITY_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
         key="power",
         name="Total power",
         native_unit_of_measurement=UnitOfPower.WATT,
+        native_precision=3,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -84,6 +83,7 @@ ELECTRICITY_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
         key="power1",
         name="Phase 1 power",
         native_unit_of_measurement=UnitOfPower.WATT,
+        native_precision=3,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
@@ -93,6 +93,7 @@ ELECTRICITY_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
         key="power2",
         name="Phase 2 power",
         native_unit_of_measurement=UnitOfPower.WATT,
+        native_precision=3,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
@@ -102,6 +103,7 @@ ELECTRICITY_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
         key="power3",
         name="Phase 3 power",
         native_unit_of_measurement=UnitOfPower.WATT,
+        native_precision=3,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
@@ -112,6 +114,7 @@ ELECTRICITY_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
         key="phase1Voltage",
         name="Phase 1 voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        native_precision=1,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
@@ -120,6 +123,7 @@ ELECTRICITY_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
         key="phase2Voltage",
         name="Phase 2 voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        native_precision=1,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
@@ -128,6 +132,7 @@ ELECTRICITY_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
         key="phase3Voltage",
         name="Phase 3 voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        native_precision=1,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
@@ -137,6 +142,7 @@ ELECTRICITY_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
         key="energy",
         name="Total consumption",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        native_precision=4,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         scale=10000000000,
@@ -145,6 +151,7 @@ ELECTRICITY_SENSORS: tuple[DiscovergySensorEntityDescription, ...] = (
         key="energyOut",
         name="Total production",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        native_precision=4,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         scale=10000000000,
@@ -196,7 +203,6 @@ async def async_setup_entry(
     min_time_between_updates = timedelta(
         seconds=entry.options.get(CONF_TIME_BETWEEN_UPDATE, DEFAULT_TIME_BETWEEN_UPDATE)
     )
-    precision = entry.options.get(CONF_PRECISION, DEFAULT_PRECISION)
 
     entities = []
     for meter in meters:
@@ -225,9 +231,7 @@ async def async_setup_entry(
                 for key in keys:
                     if key in coordinator.data.values:
                         entities.append(
-                            DiscovergySensor(
-                                key, description, meter, coordinator, precision
-                            )
+                            DiscovergySensor(key, description, meter, coordinator)
                         )
 
     async_add_entities(entities, False)
@@ -238,7 +242,6 @@ class DiscovergySensor(CoordinatorEntity, SensorEntity):
 
     entity_description: DiscovergySensorEntityDescription
     data_key: str
-    precision: int
     _attr_has_entity_name = True
 
     def __init__(
@@ -247,13 +250,11 @@ class DiscovergySensor(CoordinatorEntity, SensorEntity):
         description: DiscovergySensorEntityDescription,
         meter: Meter,
         coordinator: DataUpdateCoordinator,
-        precision: int,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
 
         self.data_key = data_key
-        self.precision = precision
 
         self.entity_description = description
         self._attr_name = f"{description.name}"
@@ -268,7 +269,6 @@ class DiscovergySensor(CoordinatorEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the sensor state."""
-        return round(
-            self.coordinator.data.values[self.data_key] / self.entity_description.scale,
-            self.precision,
+        return float(
+            self.coordinator.data.values[self.data_key] / self.entity_description.scale
         )

@@ -19,9 +19,7 @@ from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import (
     APP_NAME,
-    CONF_PRECISION,
     CONF_TIME_BETWEEN_UPDATE,
-    DEFAULT_PRECISION,
     DEFAULT_TIME_BETWEEN_UPDATE,
     DOMAIN,
 )
@@ -158,12 +156,6 @@ class DiscovergyOptionsFlowHandler(config_entries.OptionsFlow):
             step_id="init",
             data_schema=vol.Schema(
                 {
-                    vol.Optional(
-                        CONF_PRECISION,
-                        default=self.config_entry.options.get(
-                            CONF_PRECISION, DEFAULT_PRECISION
-                        ),
-                    ): vol.All(vol.Coerce(int), vol.Range(min=0)),
                     vol.Optional(
                         CONF_TIME_BETWEEN_UPDATE,
                         default=self.config_entry.options.get(
