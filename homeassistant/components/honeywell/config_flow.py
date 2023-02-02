@@ -5,7 +5,7 @@ import asyncio
 from collections.abc import Mapping
 from typing import Any
 
-import AIOSomecomfort
+import aiosomecomfort as AIOSomecomfort
 import voluptuous as vol
 
 from homeassistant import config_entries

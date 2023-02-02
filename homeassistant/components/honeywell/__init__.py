@@ -2,7 +2,7 @@
 import asyncio
 from dataclasses import dataclass
 
-import AIOSomecomfort
+import aiosomecomfort as AIOSomecomfort
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform

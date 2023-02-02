@@ -4,7 +4,7 @@ from __future__ import annotations
 import datetime
 from typing import Any
 
-import AIOSomecomfort
+import aiosomecomfort as AIOSomecomfort
 
 from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
