@@ -9,10 +9,7 @@ import logging
 
 from aiohttp import ClientConnectorError
 import async_timeout
-from reolink_aio.exceptions import (
-    CredentialsInvalidError,
-    ReolinkError,
-)
+from reolink_aio.exceptions import CredentialsInvalidError, ReolinkError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform

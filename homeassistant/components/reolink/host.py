@@ -216,7 +216,12 @@ class ReolinkHost:
             return
 
         timer = self._api.renewtimer
-        _LOGGER.debug("Host %s:%s should renew subscription in: %i seconds", self._api.host, self._api.port, timer)
+        _LOGGER.debug(
+            "Host %s:%s should renew subscription in: %i seconds",
+            self._api.host,
+            self._api.port,
+            timer,
+        )
         if timer > SUBSCRIPTION_RENEW_THRESHOLD:
             return
 
