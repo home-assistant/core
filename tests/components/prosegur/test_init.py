@@ -64,7 +64,6 @@ async def test_unload_entry(hass, aioclient_mock):
         "homeassistant.components.prosegur.config_flow.Installation.retrieve",
         return_value=install,
     ):
-
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()

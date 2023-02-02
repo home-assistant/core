@@ -13,7 +13,7 @@ from sqlalchemy import (
     JSON,
     BigInteger,
     Boolean,
-    ColumnElement,
+    Column,
     DateTime,
     Float,
     ForeignKey,
@@ -27,9 +27,8 @@ from sqlalchemy import (
     type_coerce,
 )
 from sqlalchemy.dialects import mysql, oracle, postgresql, sqlite
-from sqlalchemy.engine.interfaces import Dialect
-from sqlalchemy.orm import DeclarativeBase, Mapped, aliased, mapped_column, relationship
-from sqlalchemy.orm.query import RowReturningQuery
+from sqlalchemy.ext.declarative import declared_attr
+from sqlalchemy.orm import aliased, declarative_base, relationship
 from sqlalchemy.orm.session import Session
 
 from homeassistant.const import (
@@ -52,12 +51,9 @@ import homeassistant.util.dt as dt_util
 from .const import ALL_DOMAIN_EXCLUDE_ATTRS, SupportedDialect
 from .models import StatisticData, StatisticMetaData, process_timestamp
 
-
 # SQLAlchemy Schema
 # pylint: disable=invalid-name
-class Base(DeclarativeBase):
-    """Base class for tables."""
-
+Base = declarative_base()
 
 SCHEMA_VERSION = 33
 
@@ -105,7 +101,7 @@ EVENTS_CONTEXT_ID_INDEX = "ix_events_context_id"
 STATES_CONTEXT_ID_INDEX = "ix_states_context_id"
 
 
-class FAST_PYSQLITE_DATETIME(sqlite.DATETIME):
+class FAST_PYSQLITE_DATETIME(sqlite.DATETIME):  # type: ignore[misc]
     """Use ciso8601 to parse datetimes instead of sqlalchemy built-in regex."""
 
     def result_processor(self, dialect, coltype):  # type: ignore[no-untyped-def]
@@ -114,19 +110,19 @@ class FAST_PYSQLITE_DATETIME(sqlite.DATETIME):
 
 
 JSON_VARIANT_CAST = Text().with_variant(
-    postgresql.JSON(none_as_null=True), "postgresql"  # type: ignore[no-untyped-call]
+    postgresql.JSON(none_as_null=True), "postgresql"
 )
 JSONB_VARIANT_CAST = Text().with_variant(
-    postgresql.JSONB(none_as_null=True), "postgresql"  # type: ignore[no-untyped-call]
+    postgresql.JSONB(none_as_null=True), "postgresql"
 )
 DATETIME_TYPE = (
     DateTime(timezone=True)
-    .with_variant(mysql.DATETIME(timezone=True, fsp=6), "mysql")  # type: ignore[no-untyped-call]
-    .with_variant(FAST_PYSQLITE_DATETIME(), "sqlite")  # type: ignore[no-untyped-call]
+    .with_variant(mysql.DATETIME(timezone=True, fsp=6), "mysql")
+    .with_variant(FAST_PYSQLITE_DATETIME(), "sqlite")
 )
 DOUBLE_TYPE = (
     Float()
-    .with_variant(mysql.DOUBLE(asdecimal=False), "mysql")  # type: ignore[no-untyped-call]
+    .with_variant(mysql.DOUBLE(asdecimal=False), "mysql")
     .with_variant(oracle.DOUBLE_PRECISION(), "oracle")
     .with_variant(postgresql.DOUBLE_PRECISION(), "postgresql")
 )
@@ -134,10 +130,10 @@ DOUBLE_TYPE = (
 TIMESTAMP_TYPE = DOUBLE_TYPE
 
 
-class JSONLiteral(JSON):
+class JSONLiteral(JSON):  # type: ignore[misc]
     """Teach SA how to literalize json."""
 
-    def literal_processor(self, dialect: Dialect) -> Callable[[Any], str]:
+    def literal_processor(self, dialect: str) -> Callable[[Any], str]:
         """Processor to convert a value to JSON."""
 
         def process(value: Any) -> str:
@@ -151,7 +147,7 @@ EVENT_ORIGIN_ORDER = [EventOrigin.local, EventOrigin.remote]
 EVENT_ORIGIN_TO_IDX = {origin: idx for idx, origin in enumerate(EVENT_ORIGIN_ORDER)}
 
 
-class Events(Base):
+class Events(Base):  # type: ignore[misc,valid-type]
     """Event history data."""
 
     __table_args__ = (
@@ -161,32 +157,18 @@ class Events(Base):
         {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
     )
     __tablename__ = TABLE_EVENTS
-    event_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
-    event_type: Mapped[str | None] = mapped_column(String(MAX_LENGTH_EVENT_EVENT_TYPE))
-    event_data: Mapped[str | None] = mapped_column(
-        Text().with_variant(mysql.LONGTEXT, "mysql")
-    )
-    origin: Mapped[str | None] = mapped_column(
-        String(MAX_LENGTH_EVENT_ORIGIN)
-    )  # no longer used for new rows
-    origin_idx: Mapped[int | None] = mapped_column(SmallInteger)
-    time_fired: Mapped[datetime | None] = mapped_column(
-        DATETIME_TYPE
-    )  # no longer used for new rows
-    time_fired_ts: Mapped[float | None] = mapped_column(TIMESTAMP_TYPE, index=True)
-    context_id: Mapped[str | None] = mapped_column(
-        String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True
-    )
-    context_user_id: Mapped[str | None] = mapped_column(
-        String(MAX_LENGTH_EVENT_CONTEXT_ID)
-    )
-    context_parent_id: Mapped[str | None] = mapped_column(
-        String(MAX_LENGTH_EVENT_CONTEXT_ID)
-    )
-    data_id: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("event_data.data_id"), index=True
-    )
-    event_data_rel: Mapped[EventData | None] = relationship("EventData")
+    event_id = Column(Integer, Identity(), primary_key=True)
+    event_type = Column(String(MAX_LENGTH_EVENT_EVENT_TYPE))
+    event_data = Column(Text().with_variant(mysql.LONGTEXT, "mysql"))
+    origin = Column(String(MAX_LENGTH_EVENT_ORIGIN))  # no longer used for new rows
+    origin_idx = Column(SmallInteger)
+    time_fired = Column(DATETIME_TYPE)  # no longer used for new rows
+    time_fired_ts = Column(TIMESTAMP_TYPE, index=True)
+    context_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
+    context_user_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID))
+    context_parent_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID))
+    data_id = Column(Integer, ForeignKey("event_data.data_id"), index=True)
+    event_data_rel = relationship("EventData")
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
@@ -198,15 +180,12 @@ class Events(Base):
         )
 
     @property
-    def _time_fired_isotime(self) -> str | None:
+    def _time_fired_isotime(self) -> str:
         """Return time_fired as an isotime string."""
-        date_time: datetime | None
         if self.time_fired_ts is not None:
             date_time = dt_util.utc_from_timestamp(self.time_fired_ts)
         else:
             date_time = process_timestamp(self.time_fired)
-        if date_time is None:
-            return None
         return date_time.isoformat(sep=" ", timespec="seconds")
 
     @staticmethod
@@ -232,12 +211,12 @@ class Events(Base):
         )
         try:
             return Event(
-                self.event_type or "",
+                self.event_type,
                 json_loads(self.event_data) if self.event_data else {},
                 EventOrigin(self.origin)
                 if self.origin
-                else EVENT_ORIGIN_ORDER[self.origin_idx or 0],
-                dt_util.utc_from_timestamp(self.time_fired_ts or 0),
+                else EVENT_ORIGIN_ORDER[self.origin_idx],
+                dt_util.utc_from_timestamp(self.time_fired_ts),
                 context=context,
             )
         except JSON_DECODE_EXCEPTIONS:
@@ -246,19 +225,17 @@ class Events(Base):
             return None
 
 
-class EventData(Base):
+class EventData(Base):  # type: ignore[misc,valid-type]
     """Event data history."""
 
     __table_args__ = (
         {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
     )
     __tablename__ = TABLE_EVENT_DATA
-    data_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
-    hash: Mapped[int | None] = mapped_column(BigInteger, index=True)
+    data_id = Column(Integer, Identity(), primary_key=True)
+    hash = Column(BigInteger, index=True)
     # Note that this is not named attributes to avoid confusion with the states table
-    shared_data: Mapped[str | None] = mapped_column(
-        Text().with_variant(mysql.LONGTEXT, "mysql")
-    )
+    shared_data = Column(Text().with_variant(mysql.LONGTEXT, "mysql"))
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
@@ -283,18 +260,15 @@ class EventData(Base):
         return cast(int, fnv1a_32(shared_data_bytes))
 
     def to_native(self) -> dict[str, Any]:
-        """Convert to an event data dictionary."""
-        shared_data = self.shared_data
-        if shared_data is None:
-            return {}
+        """Convert to an HA state object."""
         try:
-            return cast(dict[str, Any], json_loads(shared_data))
+            return cast(dict[str, Any], json_loads(self.shared_data))
         except JSON_DECODE_EXCEPTIONS:
             _LOGGER.exception("Error converting row to event data: %s", self)
             return {}
 
 
-class States(Base):
+class States(Base):  # type: ignore[misc,valid-type]
     """State change history."""
 
     __table_args__ = (
@@ -304,45 +278,29 @@ class States(Base):
         {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
     )
     __tablename__ = TABLE_STATES
-    state_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
-    entity_id: Mapped[str | None] = mapped_column(String(MAX_LENGTH_STATE_ENTITY_ID))
-    state: Mapped[str | None] = mapped_column(String(MAX_LENGTH_STATE_STATE))
-    attributes: Mapped[str | None] = mapped_column(
+    state_id = Column(Integer, Identity(), primary_key=True)
+    entity_id = Column(String(MAX_LENGTH_STATE_ENTITY_ID))
+    state = Column(String(MAX_LENGTH_STATE_STATE))
+    attributes = Column(
         Text().with_variant(mysql.LONGTEXT, "mysql")
     )  # no longer used for new rows
-    event_id: Mapped[int | None] = mapped_column(  # no longer used for new rows
+    event_id = Column(  # no longer used for new rows
         Integer, ForeignKey("events.event_id", ondelete="CASCADE"), index=True
     )
-    last_changed: Mapped[datetime | None] = mapped_column(
-        DATETIME_TYPE
-    )  # no longer used for new rows
-    last_changed_ts: Mapped[float | None] = mapped_column(TIMESTAMP_TYPE)
-    last_updated: Mapped[datetime | None] = mapped_column(
-        DATETIME_TYPE
-    )  # no longer used for new rows
-    last_updated_ts: Mapped[float | None] = mapped_column(
-        TIMESTAMP_TYPE, default=time.time, index=True
-    )
-    old_state_id: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("states.state_id"), index=True
-    )
-    attributes_id: Mapped[int | None] = mapped_column(
+    last_changed = Column(DATETIME_TYPE)  # no longer used for new rows
+    last_changed_ts = Column(TIMESTAMP_TYPE)
+    last_updated = Column(DATETIME_TYPE)  # no longer used for new rows
+    last_updated_ts = Column(TIMESTAMP_TYPE, default=time.time, index=True)
+    old_state_id = Column(Integer, ForeignKey("states.state_id"), index=True)
+    attributes_id = Column(
         Integer, ForeignKey("state_attributes.attributes_id"), index=True
     )
-    context_id: Mapped[str | None] = mapped_column(
-        String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True
-    )
-    context_user_id: Mapped[str | None] = mapped_column(
-        String(MAX_LENGTH_EVENT_CONTEXT_ID)
-    )
-    context_parent_id: Mapped[str | None] = mapped_column(
-        String(MAX_LENGTH_EVENT_CONTEXT_ID)
-    )
-    origin_idx: Mapped[int | None] = mapped_column(
-        SmallInteger
-    )  # 0 is local, 1 is remote
-    old_state: Mapped[States | None] = relationship("States", remote_side=[state_id])
-    state_attributes: Mapped[StateAttributes | None] = relationship("StateAttributes")
+    context_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
+    context_user_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID))
+    context_parent_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID))
+    origin_idx = Column(SmallInteger)  # 0 is local, 1 is remote
+    old_state = relationship("States", remote_side=[state_id])
+    state_attributes = relationship("StateAttributes")
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
@@ -354,15 +312,12 @@ class States(Base):
         )
 
     @property
-    def _last_updated_isotime(self) -> str | None:
+    def _last_updated_isotime(self) -> str:
         """Return last_updated as an isotime string."""
-        date_time: datetime | None
         if self.last_updated_ts is not None:
             date_time = dt_util.utc_from_timestamp(self.last_updated_ts)
         else:
             date_time = process_timestamp(self.last_updated)
-        if date_time is None:
-            return None
         return date_time.isoformat(sep=" ", timespec="seconds")
 
     @staticmethod
@@ -417,8 +372,8 @@ class States(Base):
             last_updated = dt_util.utc_from_timestamp(self.last_updated_ts or 0)
             last_changed = dt_util.utc_from_timestamp(self.last_changed_ts or 0)
         return State(
-            self.entity_id or "",
-            self.state,  # type: ignore[arg-type]
+            self.entity_id,
+            self.state,
             # Join the state_attributes table on attributes_id to get the attributes
             # for newer states
             attrs,
@@ -429,19 +384,17 @@ class States(Base):
         )
 
 
-class StateAttributes(Base):
+class StateAttributes(Base):  # type: ignore[misc,valid-type]
     """State attribute change history."""
 
     __table_args__ = (
         {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
     )
     __tablename__ = TABLE_STATE_ATTRIBUTES
-    attributes_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
-    hash: Mapped[int | None] = mapped_column(BigInteger, index=True)
+    attributes_id = Column(Integer, Identity(), primary_key=True)
+    hash = Column(BigInteger, index=True)
     # Note that this is not named attributes to avoid confusion with the states table
-    shared_attrs: Mapped[str | None] = mapped_column(
-        Text().with_variant(mysql.LONGTEXT, "mysql")
-    )
+    shared_attrs = Column(Text().with_variant(mysql.LONGTEXT, "mysql"))
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
@@ -473,10 +426,9 @@ class StateAttributes(Base):
             _LOGGER.warning(
                 "State attributes for %s exceed maximum size of %s bytes. "
                 "This can cause database performance issues; Attributes "
-                "will not be stored: %s",
+                "will not be stored",
                 state.entity_id,
                 MAX_STATE_ATTRS_BYTES,
-                state.attributes,
             )
             return b"{}"
         return bytes_result
@@ -487,12 +439,9 @@ class StateAttributes(Base):
         return cast(int, fnv1a_32(shared_attrs_bytes))
 
     def to_native(self) -> dict[str, Any]:
-        """Convert to a state attributes dictionary."""
-        shared_attrs = self.shared_attrs
-        if shared_attrs is None:
-            return {}
+        """Convert to an HA state object."""
         try:
-            return cast(dict[str, Any], json_loads(shared_attrs))
+            return cast(dict[str, Any], json_loads(self.shared_attrs))
         except JSON_DECODE_EXCEPTIONS:
             # When json_loads fails
             _LOGGER.exception("Error converting row to state attributes: %s", self)
@@ -502,22 +451,25 @@ class StateAttributes(Base):
 class StatisticsBase:
     """Statistics base class."""
 
-    id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
-    created: Mapped[datetime] = mapped_column(DATETIME_TYPE, default=dt_util.utcnow)
-    metadata_id: Mapped[int | None] = mapped_column(
-        Integer,
-        ForeignKey(f"{TABLE_STATISTICS_META}.id", ondelete="CASCADE"),
-        index=True,
-    )
-    start: Mapped[datetime | None] = mapped_column(DATETIME_TYPE, index=True)
-    mean: Mapped[float | None] = mapped_column(DOUBLE_TYPE)
-    min: Mapped[float | None] = mapped_column(DOUBLE_TYPE)
-    max: Mapped[float | None] = mapped_column(DOUBLE_TYPE)
-    last_reset: Mapped[datetime | None] = mapped_column(DATETIME_TYPE)
-    state: Mapped[float | None] = mapped_column(DOUBLE_TYPE)
-    sum: Mapped[float | None] = mapped_column(DOUBLE_TYPE)
+    id = Column(Integer, Identity(), primary_key=True)
+    created = Column(DATETIME_TYPE, default=dt_util.utcnow)
 
-    duration: timedelta
+    @declared_attr  # type: ignore[misc]
+    def metadata_id(self) -> Column:
+        """Define the metadata_id column for sub classes."""
+        return Column(
+            Integer,
+            ForeignKey(f"{TABLE_STATISTICS_META}.id", ondelete="CASCADE"),
+            index=True,
+        )
+
+    start = Column(DATETIME_TYPE, index=True)
+    mean = Column(DOUBLE_TYPE)
+    min = Column(DOUBLE_TYPE)
+    max = Column(DOUBLE_TYPE)
+    last_reset = Column(DATETIME_TYPE)
+    state = Column(DOUBLE_TYPE)
+    sum = Column(DOUBLE_TYPE)
 
     @classmethod
     def from_stats(
@@ -530,7 +482,7 @@ class StatisticsBase:
         )
 
 
-class Statistics(Base, StatisticsBase):
+class Statistics(Base, StatisticsBase):  # type: ignore[misc,valid-type]
     """Long term statistics."""
 
     duration = timedelta(hours=1)
@@ -542,7 +494,7 @@ class Statistics(Base, StatisticsBase):
     __tablename__ = TABLE_STATISTICS
 
 
-class StatisticsShortTerm(Base, StatisticsBase):
+class StatisticsShortTerm(Base, StatisticsBase):  # type: ignore[misc,valid-type]
     """Short term statistics."""
 
     duration = timedelta(minutes=5)
@@ -559,22 +511,20 @@ class StatisticsShortTerm(Base, StatisticsBase):
     __tablename__ = TABLE_STATISTICS_SHORT_TERM
 
 
-class StatisticsMeta(Base):
+class StatisticsMeta(Base):  # type: ignore[misc,valid-type]
     """Statistics meta data."""
 
     __table_args__ = (
         {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
     )
     __tablename__ = TABLE_STATISTICS_META
-    id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
-    statistic_id: Mapped[str | None] = mapped_column(
-        String(255), index=True, unique=True
-    )
-    source: Mapped[str | None] = mapped_column(String(32))
-    unit_of_measurement: Mapped[str | None] = mapped_column(String(255))
-    has_mean: Mapped[bool | None] = mapped_column(Boolean)
-    has_sum: Mapped[bool | None] = mapped_column(Boolean)
-    name: Mapped[str | None] = mapped_column(String(255))
+    id = Column(Integer, Identity(), primary_key=True)
+    statistic_id = Column(String(255), index=True, unique=True)
+    source = Column(String(32))
+    unit_of_measurement = Column(String(255))
+    has_mean = Column(Boolean)
+    has_sum = Column(Boolean)
+    name = Column(String(255))
 
     @staticmethod
     def from_meta(meta: StatisticMetaData) -> StatisticsMeta:
@@ -582,16 +532,16 @@ class StatisticsMeta(Base):
         return StatisticsMeta(**meta)
 
 
-class RecorderRuns(Base):
+class RecorderRuns(Base):  # type: ignore[misc,valid-type]
     """Representation of recorder run."""
 
     __table_args__ = (Index("ix_recorder_runs_start_end", "start", "end"),)
     __tablename__ = TABLE_RECORDER_RUNS
-    run_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
-    start: Mapped[datetime] = mapped_column(DATETIME_TYPE, default=dt_util.utcnow)
-    end: Mapped[datetime | None] = mapped_column(DATETIME_TYPE)
-    closed_incorrect: Mapped[bool] = mapped_column(Boolean, default=False)
-    created: Mapped[datetime] = mapped_column(DATETIME_TYPE, default=dt_util.utcnow)
+    run_id = Column(Integer, Identity(), primary_key=True)
+    start = Column(DATETIME_TYPE, default=dt_util.utcnow)
+    end = Column(DATETIME_TYPE)
+    closed_incorrect = Column(Boolean, default=False)
+    created = Column(DATETIME_TYPE, default=dt_util.utcnow)
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
@@ -615,9 +565,9 @@ class RecorderRuns(Base):
 
         assert session is not None, "RecorderRuns need to be persisted"
 
-        query: RowReturningQuery[tuple[str]] = session.query(distinct(States.entity_id))
-
-        query = query.filter(States.last_updated >= self.start)
+        query = session.query(distinct(States.entity_id)).filter(
+            States.last_updated >= self.start
+        )
 
         if point_in_time is not None:
             query = query.filter(States.last_updated < point_in_time)
@@ -631,13 +581,13 @@ class RecorderRuns(Base):
         return self
 
 
-class SchemaChanges(Base):
+class SchemaChanges(Base):  # type: ignore[misc,valid-type]
     """Representation of schema version changes."""
 
     __tablename__ = TABLE_SCHEMA_CHANGES
-    change_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
-    schema_version: Mapped[int | None] = mapped_column(Integer)
-    changed: Mapped[datetime] = mapped_column(DATETIME_TYPE, default=dt_util.utcnow)
+    change_id = Column(Integer, Identity(), primary_key=True)
+    schema_version = Column(Integer)
+    changed = Column(DATETIME_TYPE, default=dt_util.utcnow)
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
@@ -649,12 +599,12 @@ class SchemaChanges(Base):
         )
 
 
-class StatisticsRuns(Base):
+class StatisticsRuns(Base):  # type: ignore[misc,valid-type]
     """Representation of statistics run."""
 
     __tablename__ = TABLE_STATISTICS_RUNS
-    run_id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True)
-    start: Mapped[datetime] = mapped_column(DATETIME_TYPE, index=True)
+    run_id = Column(Integer, Identity(), primary_key=True)
+    start = Column(DATETIME_TYPE, index=True)
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
@@ -678,7 +628,7 @@ OLD_FORMAT_ATTRS_JSON = type_coerce(
     States.attributes.cast(JSON_VARIANT_CAST), JSON(none_as_null=True)
 )
 
-ENTITY_ID_IN_EVENT: ColumnElement = EVENT_DATA_JSON["entity_id"]
-OLD_ENTITY_ID_IN_EVENT: ColumnElement = OLD_FORMAT_EVENT_DATA_JSON["entity_id"]
-DEVICE_ID_IN_EVENT: ColumnElement = EVENT_DATA_JSON["device_id"]
+ENTITY_ID_IN_EVENT: Column = EVENT_DATA_JSON["entity_id"]
+OLD_ENTITY_ID_IN_EVENT: Column = OLD_FORMAT_EVENT_DATA_JSON["entity_id"]
+DEVICE_ID_IN_EVENT: Column = EVENT_DATA_JSON["device_id"]
 OLD_STATE = aliased(States, name="old_state")

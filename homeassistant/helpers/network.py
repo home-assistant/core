@@ -140,7 +140,6 @@ def get_url(
 
     # Try finding an URL in the order specified
     for url_type in order:
-
         if allow_internal and url_type == TYPE_URL_INTERNAL:
             with suppress(NoURLAvailableError):
                 return _get_internal_url(

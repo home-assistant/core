@@ -249,7 +249,10 @@ CLIMATE_SCHEMA = vol.All(
 
 COVERS_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
     {
-        vol.Optional(CONF_INPUT_TYPE, default=CALL_TYPE_REGISTER_HOLDING,): vol.In(
+        vol.Optional(
+            CONF_INPUT_TYPE,
+            default=CALL_TYPE_REGISTER_HOLDING,
+        ): vol.In(
             [
                 CALL_TYPE_REGISTER_HOLDING,
                 CALL_TYPE_COIL,

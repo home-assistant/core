@@ -125,7 +125,6 @@ class MutexPool(StaticPool):
         MutexPool.pool_lock.release()
 
     def _do_get(self) -> Any:
-
         if DEBUG_MUTEX_POOL_TRACE:
             trace = traceback.extract_stack()
             trace_msg = "".join(traceback.format_list(trace[:-1]))
