@@ -75,7 +75,6 @@ async def test_update_interval(hass):
         "homeassistant.components.accuweather.AccuWeather.async_get_current_conditions",
         return_value=current,
     ) as mock_current:
-
         assert mock_current.call_count == 0
 
         async_fire_time_changed(hass, future)
@@ -101,7 +100,6 @@ async def test_update_interval_forecast(hass):
         "homeassistant.components.accuweather.AccuWeather.async_get_forecast",
         return_value=forecast,
     ) as mock_forecast:
-
         assert mock_current.call_count == 0
         assert mock_forecast.call_count == 0
 

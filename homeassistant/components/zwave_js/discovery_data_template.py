@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 import logging
-from typing import Any, Union, cast
+from typing import Any, cast
 
 from zwave_js_server.const import CommandClass
 from zwave_js_server.const.command_class.meter import (
@@ -497,7 +497,7 @@ class ConfigurableFanValueMappingDataTemplate(
     ) -> dict[str, ZwaveConfigurationValue | None]:
         """Resolve helper class data for a discovered value."""
         zwave_value = cast(
-            Union[ZwaveConfigurationValue, None],
+            ZwaveConfigurationValue | None,
             self._get_value_from_id(value.node, self.configuration_option),
         )
         return {"configuration_value": zwave_value}

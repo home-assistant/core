@@ -6,11 +6,9 @@
         },
         "error": {
             "cannot_connect": "Gagal terhubung",
-            "file_not_found": "File `.knxkeys` yang ditentukan tidak ditemukan di jalur config/.storage/knx/",
             "invalid_backbone_key": "Kunci backbone tidak valid. Diharapkan 32 angka heksadesimal.",
             "invalid_individual_address": "Nilai tidak cocok dengan pola untuk alamat individual KNX.\n'area.line.device'",
             "invalid_ip_address": "Alamat IPv4 tidak valid",
-            "invalid_signature": "Kata sandi untuk mendekripsi file `.knxkeys` salah.",
             "keyfile_invalid_signature": "Kata sandi untuk mendekripsi file `.knxkeys` salah.",
             "keyfile_no_backbone_key": "File `.knxkeys` tidak berisi kunci backbone untuk perutean yang aman.",
             "keyfile_no_tunnel_for_host": "File `.knxkeys` tidak berisi kredensial untuk host `{host}`.",
@@ -125,11 +123,9 @@
     "options": {
         "error": {
             "cannot_connect": "Gagal terhubung",
-            "file_not_found": "File `.knxkeys` yang ditentukan tidak ditemukan di jalur config/.storage/knx/",
             "invalid_backbone_key": "Kunci backbone tidak valid. Diharapkan 32 angka heksadesimal.",
             "invalid_individual_address": "Nilai tidak cocok dengan pola untuk alamat individual KNX.\n'area.line.device'",
             "invalid_ip_address": "Alamat IPv4 tidak valid",
-            "invalid_signature": "Kata sandi untuk mendekripsi file `.knxkeys` salah.",
             "keyfile_invalid_signature": "Kata sandi untuk mendekripsi file `.knxkeys` salah.",
             "keyfile_no_backbone_key": "File `.knxkeys` tidak berisi kunci backbone untuk perutean yang aman.",
             "keyfile_no_tunnel_for_host": "File `.knxkeys` tidak berisi kredensial untuk host `{host}`.",

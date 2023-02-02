@@ -19,5 +19,17 @@
                 "description": "Configurer MusicCast pour l'int\u00e9grer \u00e0 Home Assistant."
             }
         }
+    },
+    "entity": {
+        "select": {
+            "zone_sleep": {
+                "state": {
+                    "120_min": "120 minutes",
+                    "30_min": "30 minutes",
+                    "60_min": "60 minutes",
+                    "90_min": "90 minutes"
+                }
+            }
+        }
     }
 }

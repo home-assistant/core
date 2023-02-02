@@ -29,16 +29,9 @@
                     "name": "Name",
                     "port": "Port",
                     "ssl": "Verwendet ein SSL-Zertifikat",
-                    "statistics_only": "Nur Statistiken",
                     "verify_ssl": "SSL-Zertifikat \u00fcberpr\u00fcfen"
                 }
             }
-        }
-    },
-    "issues": {
-        "deprecated_yaml": {
-            "description": "Die Konfiguration von PI-Hole mittels YAML wird entfernt.\n\nDeine bestehende YAML-Konfiguration wurde automatisch in die Benutzeroberfl\u00e4che importiert.\n\nEntferne die PI-Hole YAML-Konfiguration aus deiner configuration.yaml-Datei und starte den Home Assistant neu, um dieses Problem zu beheben.",
-            "title": "Die PI-Hole YAML-Konfiguration wird entfernt"
         }
     }
 }

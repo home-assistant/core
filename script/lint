@@ -16,6 +16,10 @@ echo "================"
 echo "LINT with flake8"
 echo "================"
 pre-commit run flake8 --files $files
+echo "=============="
+echo "LINT with ruff"
+echo "=============="
+pre-commit run ruff --files $files
 echo "================"
 echo "LINT with pylint"
 echo "================"

@@ -22,6 +22,10 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from .const import CALL_SERVICE, FIRE_EVENT, REGISTER_CLEARTEXT, RENDER_TEMPLATE, UPDATE
 
 from tests.common import async_capture_events, async_mock_service
+from tests.components.conversation.conftest import mock_agent
+
+# To avoid autoflake8 removing the import
+mock_agent = mock_agent
 
 
 def encrypt_payload(secret_key, payload, encode_json=True):
@@ -974,3 +978,122 @@ async def test_reregister_sensor(hass, create_registrations, webhook_client):
     assert reg_resp.status == HTTPStatus.CREATED
     entry = ent_reg.async_get("sensor.test_1_battery_state")
     assert entry.disabled_by is None
+
+    reg_resp = await webhook_client.post(
+        webhook_url,
+        json={
+            "type": "register_sensor",
+            "data": {
+                "name": "New Name 2",
+                "state": 100,
+                "type": "sensor",
+                "unique_id": "abcd",
+                "state_class": None,
+                "device_class": None,
+                "entity_category": None,
+                "icon": None,
+                "unit_of_measurement": None,
+            },
+        },
+    )
+
+    assert reg_resp.status == HTTPStatus.CREATED
+    entry = ent_reg.async_get("sensor.test_1_battery_state")
+    assert entry.original_name == "Test 1 New Name 2"
+    assert entry.device_class is None
+    assert entry.unit_of_measurement is None
+    assert entry.entity_category is None
+    assert entry.original_icon is None
+
+
+async def test_webhook_handle_conversation_process(
+    hass, create_registrations, webhook_client, mock_agent
+):
+    """Test that we can converse."""
+    webhook_client.server.app.router._frozen = False
+
+    resp = await webhook_client.post(
+        "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),
+        json={
+            "type": "conversation_process",
+            "data": {
+                "text": "Turn the kitchen light off",
+            },
+        },
+    )
+
+    assert resp.status == HTTPStatus.OK
+    json = await resp.json()
+    assert json == {
+        "response": {
+            "response_type": "action_done",
+            "card": {},
+            "speech": {
+                "plain": {
+                    "extra_data": None,
+                    "speech": "Test response",
+                }
+            },
+            "language": hass.config.language,
+            "data": {
+                "targets": [],
+                "success": [],
+                "failed": [],
+            },
+        },
+        "conversation_id": None,
+    }
+
+
+async def test_sending_sensor_state(hass, create_registrations, webhook_client, caplog):
+    """Test that we can register and send sensor state as number and None."""
+    webhook_id = create_registrations[1]["webhook_id"]
+    webhook_url = f"/api/webhook/{webhook_id}"
+
+    reg_resp = await webhook_client.post(
+        webhook_url,
+        json={
+            "type": "register_sensor",
+            "data": {
+                "name": "Battery State",
+                "state": 100,
+                "type": "sensor",
+                "unique_id": "abcd",
+            },
+        },
+    )
+
+    assert reg_resp.status == HTTPStatus.CREATED
+
+    ent_reg = er.async_get(hass)
+    entry = ent_reg.async_get("sensor.test_1_battery_state")
+    assert entry.original_name == "Test 1 Battery State"
+    assert entry.device_class is None
+    assert entry.unit_of_measurement is None
+    assert entry.entity_category is None
+    assert entry.original_icon == "mdi:cellphone"
+    assert entry.disabled_by is None
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_1_battery_state")
+    assert state is not None
+    assert state.state == "100"
+
+    reg_resp = await webhook_client.post(
+        webhook_url,
+        json={
+            "type": "update_sensor_states",
+            "data": {
+                "state": 50.0000,
+                "type": "sensor",
+                "unique_id": "abcd",
+            },
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_1_battery_state")
+    assert state is not None
+    assert state.state == "50.0"

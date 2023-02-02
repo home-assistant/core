@@ -58,13 +58,9 @@
             },
             "zone_sleep": {
                 "state": {
-                    "120 min": "120 perc",
                     "120_min": "120 perc",
-                    "30 min": "30 perc",
                     "30_min": "30 perc",
-                    "60 min": "60 perc",
                     "60_min": "60 perc",
-                    "90 min": "90 perc",
                     "90_min": "90 perc",
                     "off": "Ki"
                 }

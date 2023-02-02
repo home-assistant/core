@@ -1968,6 +1968,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             base_class="BaseNotificationService",
             matches=[
                 TypeHintMatch(
+                    function_name="targets",
+                    return_type=["dict[str, Any]", None],
+                ),
+                TypeHintMatch(
                     function_name="send_message",
                     arg_types={1: "str"},
                     kwargs_type="Any",

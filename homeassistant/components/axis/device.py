@@ -145,7 +145,7 @@ class AxisNetworkDevice:
 
         if self.available != (status == Signal.PLAYING):
             self.available = not self.available
-            async_dispatcher_send(self.hass, self.signal_reachable, True)
+            async_dispatcher_send(self.hass, self.signal_reachable)
 
     @staticmethod
     async def async_new_address_callback(

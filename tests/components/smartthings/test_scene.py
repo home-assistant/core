@@ -37,7 +37,6 @@ async def test_scene_activate(hass, scene):
     assert state.attributes["icon"] == scene.icon
     assert state.attributes["color"] == scene.color
     assert state.attributes["location_id"] == scene.location_id
-    # pylint: disable=protected-access
     assert scene.execute.call_count == 1  # type: ignore
 
 

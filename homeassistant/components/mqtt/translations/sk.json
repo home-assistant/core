@@ -66,7 +66,7 @@
             "button_quadruple_press": "\"{subtype}\" \u0161tvorn\u00e1sobne kliknut\u00e9",
             "button_quintuple_press": "\"{subtype}\" p\u00e4\u0165n\u00e1sobne kliknut\u00e9",
             "button_short_press": "\"{subtype}\" stla\u010den\u00e9",
-            "button_short_release": "\u201c{subtype}\u201c uvo\u013enen\u00e9",
+            "button_short_release": "\"{subtype}\" uvo\u013enen\u00e9",
             "button_triple_press": "\"{subtype}\" trojn\u00e1sobne kliknut\u00e9"
         }
     },
@@ -134,6 +134,15 @@
                 },
                 "description": "Zis\u0165ovanie \u2013 ak je zis\u0165ovanie povolen\u00e9 (odpor\u00fa\u010da sa), Home Assistant automaticky objav\u00ed zariadenia a entity, ktor\u00e9 zverej\u0148uj\u00fa svoju konfigur\u00e1ciu na brokerovi MQTT. Ak je zis\u0165ovanie zak\u00e1zan\u00e9, v\u0161etky konfigur\u00e1cie sa musia vykona\u0165 manu\u00e1lne.\nPredpona zis\u0165ovania \u2013 Predpona, ktorou mus\u00ed za\u010d\u00edna\u0165 t\u00e9ma konfigur\u00e1cie automatick\u00e9ho zis\u0165ovania.\nSpr\u00e1va birth \u2013 Spr\u00e1va birth sa odo\u0161le pri ka\u017edom (op\u00e4tovnom) pripojen\u00ed dom\u00e1ceho asistenta k makl\u00e9rovi MQTT.\nWill message - Spr\u00e1va will bude odoslan\u00e1 v\u017edy, ke\u010f Home Assistant strat\u00ed spojenie s brokerom, a to ako v pr\u00edpade vy\u010distenia (napr. vypnutie Home Assistant), tak aj v pr\u00edpade ne\u010dist\u00e9ho stavu (napr. Home Assistant zlyh\u00e1 alebo strat\u00ed pripojenie k sieti) odpoji\u0165.",
                 "title": "MQTT mo\u017enosti"
+            }
+        }
+    },
+    "selector": {
+        "set_ca_cert": {
+            "options": {
+                "auto": "Auto",
+                "custom": "Vlastn\u00e9",
+                "off": "Vypnut\u00e9"
             }
         }
     }

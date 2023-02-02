@@ -346,7 +346,7 @@ def async_enable_logging(
 
     if not log_no_color:
         try:
-            # pylint: disable=import-outside-toplevel
+            # pylint: disable-next=import-outside-toplevel
             from colorlog import ColoredFormatter
 
             # basicConfig must be called after importing colorlog in order to
@@ -406,7 +406,6 @@ def async_enable_logging(
     if (err_path_exists and os.access(err_log_path, os.W_OK)) or (
         not err_path_exists and os.access(err_dir, os.W_OK)
     ):
-
         err_handler: (
             logging.handlers.RotatingFileHandler
             | logging.handlers.TimedRotatingFileHandler

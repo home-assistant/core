@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
             "cannot_connect": "Konnte keine Verbindung zum Controller mit URL {base_url} herstellen"
         },
         "step": {

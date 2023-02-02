@@ -25,7 +25,7 @@
                 "title": "U\u017e\u00edvate\u013esk\u00fd profil."
             },
             "reauth_confirm": {
-                "description": "Ak chcete na\u010falej dost\u00e1va\u0165 \u00fadaje Withings, profil \u201e{profile}\u201c sa mus\u00ed znova overi\u0165.",
+                "description": "Ak chcete na\u010falej dost\u00e1va\u0165 \u00fadaje Withings, profil \"{profile}\" sa mus\u00ed znova overi\u0165.",
                 "title": "Znova overi\u0165 integr\u00e1ciu"
             }
         }
