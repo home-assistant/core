@@ -8,7 +8,6 @@ import voluptuous as vol
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
-    OptionsFlow,
     OptionsFlowWithConfigEntry,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -100,7 +99,7 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+    def async_get_options_flow(config_entry: ConfigEntry) -> OnewireOptionsFlowHandler:
         """Get the options flow for this handler."""
         return OnewireOptionsFlowHandler(config_entry)
 
@@ -151,8 +150,8 @@ class OnewireOptionsFlowHandler(OptionsFlowWithConfigEntry):
                 # Reset all options
                 return self.async_create_entry(title="", data={})
 
-            selected_devices: list[str] = user_input.get(
-                INPUT_ENTRY_DEVICE_SELECTION, []
+            selected_devices: list[str] = (
+                user_input.get(INPUT_ENTRY_DEVICE_SELECTION) or []
             )
             if selected_devices:
                 self.devices_to_configure = {
