@@ -1535,6 +1535,9 @@ pyvizio==0.1.57
 # homeassistant.components.volumio
 pyvolumio==0.1.5
 
+# homeassistant.components.waterkotte_heatpump
+pywaterkotte==0.0.1
+
 # homeassistant.components.html5
 pywebpush==1.9.2
 

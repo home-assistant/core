@@ -476,6 +476,7 @@ FLOWS = {
         "volvooncall",
         "vulcan",
         "wallbox",
+        "waterkotte_heatpump",
         "watttime",
         "waze_travel_time",
         "webostv",

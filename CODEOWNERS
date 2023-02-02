@@ -1315,6 +1315,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/waqi/ @andrey-git
 /homeassistant/components/water_heater/ @home-assistant/core
 /tests/components/water_heater/ @home-assistant/core
+/homeassistant/components/waterkotte_heatpump/ @chboland
+/tests/components/waterkotte_heatpump/ @chboland
 /homeassistant/components/watson_tts/ @rutkai
 /homeassistant/components/watttime/ @bachya
 /tests/components/watttime/ @bachya
