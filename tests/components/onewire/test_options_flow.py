@@ -13,6 +13,8 @@ from homeassistant.data_entry_flow import FlowResultType
 from . import setup_owproxy_mock_devices
 from .const import MOCK_OWPROXY_DEVICES
 
+from tests.common import mock_device_registry
+
 
 class FakeDevice:
     """Mock Class for mocking DeviceEntry."""
@@ -133,15 +135,15 @@ async def test_user_options_set_multiple(
     )
 
     # Initialize onewire hub
+    device_registry = mock_device_registry(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     # Verify that first config step comes back with a selection list of all the 28-family devices
-    with patch(
-        "homeassistant.helpers.device_registry.DeviceRegistry.async_get_device",
-        return_value=FakeDevice(),
-    ):
-        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    for entry in device_registry.devices.values():
+        if config_entry.entry_id in entry.config_entries:
+            device_registry.async_update_device(entry.id, name_by_user="Given Name")
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["data_schema"].schema["device_selection"].options == {
         "Given Name (28.111111111111)": False,
         "Given Name (28.222222222222)": False,
