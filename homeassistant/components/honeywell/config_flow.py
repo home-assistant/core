@@ -5,7 +5,7 @@ import asyncio
 from collections.abc import Mapping
 from typing import Any
 
-import aiosomecomfort as AIOSomecomfort
+import aiosomecomfort
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -56,12 +56,12 @@ class HoneywellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     username=data[CONF_USERNAME], password=data[CONF_PASSWORD]
                 )
 
-            except AIOSomecomfort.AuthError:
+            except aiosomecomfort.AuthError:
                 errors["base"] = "invalid_auth"
 
             except (
-                AIOSomecomfort.ConnectionError,
-                AIOSomecomfort.ConnectionTimeout,
+                aiosomecomfort.ConnectionError,
+                aiosomecomfort.ConnectionTimeout,
                 asyncio.TimeoutError,
             ):
                 errors["base"] = "cannot_connect"
@@ -89,11 +89,11 @@ class HoneywellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 await self.is_valid(**user_input)
-            except AIOSomecomfort.AuthError:
+            except aiosomecomfort.AuthError:
                 errors["base"] = "invalid_auth"
             except (
-                AIOSomecomfort.ConnectionError,
-                AIOSomecomfort.ConnectionTimeout,
+                aiosomecomfort.ConnectionError,
+                aiosomecomfort.ConnectionTimeout,
                 asyncio.TimeoutError,
             ):
                 errors["base"] = "cannot_connect"
@@ -114,7 +114,7 @@ class HoneywellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def is_valid(self, **kwargs) -> bool:
         """Check if login credentials are valid."""
-        client = AIOSomecomfort.AIOSomeComfort(
+        client = aiosomecomfort.AIOSomeComfort(
             kwargs[CONF_USERNAME],
             kwargs[CONF_PASSWORD],
             session=async_get_clientsession(self.hass),
