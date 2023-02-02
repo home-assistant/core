@@ -7,7 +7,11 @@ from typing import Any
 
 from reolink_aio.api import Host
 
-from homeassistant.components.number import NumberEntity, NumberEntityDescription
+from homeassistant.components.number import (
+    NumberEntity,
+    NumberEntityDescription,
+    NumberMode,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -33,6 +37,7 @@ class ReolinkNumberEntityDescription(
 ):
     """A class that describes number entities."""
 
+    mode: NumberMode = NumberMode.AUTO
     supported: Callable[[Host, int | None], bool] = lambda api, ch: True
 
 
@@ -41,23 +46,25 @@ NUMBER_ENTITIES = (
         key="zoom",
         name="Zoom",
         icon="mdi:magnify",
+        mode=NumberMode.SLIDER,
         native_step=1,
         get_min_value=lambda api, ch: api.zoom_range(ch)["zoom"]["pos"]["min"],
         get_max_value=lambda api, ch: api.zoom_range(ch)["zoom"]["pos"]["max"],
         supported=lambda api, ch: api.zoom_supported(ch),
         value=lambda api, ch: api.get_zoom(ch),
-        method=lambda api, ch, value: api.set_zoom(ch, value),
+        method=lambda api, ch, value: api.set_zoom(ch, int(value)),
     ),
     ReolinkNumberEntityDescription(
         key="focus",
         name="Focus",
         icon="mdi:focus-field",
+        mode=NumberMode.SLIDER,
         native_step=1,
         get_min_value=lambda api, ch: api.zoom_range(ch)["focus"]["pos"]["min"],
         get_max_value=lambda api, ch: api.zoom_range(ch)["focus"]["pos"]["max"],
         supported=lambda api, ch: api.zoom_supported(ch),
-        value=lambda api, ch: api.get_zoom(ch),
-        method=lambda api, ch, value: api.set_zoom(ch, value),
+        value=lambda api, ch: api.get_focus(ch),
+        method=lambda api, ch, value: api.set_zoom(ch, int(value)),
     ),
 )
 
@@ -105,7 +112,7 @@ class ReolinkNumberEntity(ReolinkCoordinatorEntity, NumberEntity):
         self._attr_native_max_value = self.entity_description.get_max_value(
             self._host.api, self._channel
         )
-
+        self._attr_mode = entity_description.mode
         self._attr_unique_id = (
             f"{self._host.unique_id}_{self._channel}_{entity_description.key}"
         )
