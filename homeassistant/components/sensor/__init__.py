@@ -70,6 +70,7 @@ from .const import (  # noqa: F401
     DEVICE_CLASSES,
     DEVICE_CLASSES_SCHEMA,
     DOMAIN,
+    NON_NUMERIC_DEVICE_CLASSES,
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL,
     STATE_CLASS_TOTAL_INCREASING,
@@ -245,6 +246,20 @@ class SensorEntity(Entity):
         if hasattr(self, "entity_description"):
             return self.entity_description.device_class
         return None
+
+    @final
+    @property
+    def _numeric_state_expected(self) -> bool:
+        """Return true if the sensor must be numeric."""
+        if (
+            self.state_class is not None
+            or self.native_unit_of_measurement is not None
+            or self.native_precision is not None
+        ):
+            return True
+        # Sensors with custom device classes are not considered numeric
+        device_class = try_parse_enum(SensorDeviceClass, self.device_class)
+        return not (device_class is None or device_class in NON_NUMERIC_DEVICE_CLASSES)
 
     @property
     def options(self) -> list[str] | None:
@@ -471,15 +486,7 @@ class SensorEntity(Entity):
 
         # Sensors with device classes indicating a non-numeric value
         # should not have a unit of measurement
-        if (
-            device_class
-            in {
-                SensorDeviceClass.DATE,
-                SensorDeviceClass.ENUM,
-                SensorDeviceClass.TIMESTAMP,
-            }
-            and unit_of_measurement
-        ):
+        if device_class in NON_NUMERIC_DEVICE_CLASSES and unit_of_measurement:
             raise ValueError(
                 f"Sensor {self.entity_id} has a unit of measurement and thus "
                 "indicating it has a numeric value; however, it has the "
@@ -570,12 +577,7 @@ class SensorEntity(Entity):
 
         # If the sensor has neither a device class, a state class, a unit of measurement
         # nor a precision then there are no further checks or conversions
-        if (
-            not device_class
-            and not state_class
-            and not unit_of_measurement
-            and precision is None
-        ):
+        if not self._numeric_state_expected:
             return value
 
         # From here on a numerical value is expected
