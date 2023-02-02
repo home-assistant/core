@@ -29,7 +29,7 @@ async def async_validate_connection(host: str, port: int) -> dict[str, str]:
     """Validate if a connection to Wall Pad can be established."""
     errors = {}
 
-    client = ImazuClient(host, port, lambda x: _LOGGER.debug(x.hex()))
+    client = ImazuClient(host, port)
     if not await client.async_connect():
         errors["base"] = "cannot_connect"
     client.disconnect()
@@ -46,9 +46,6 @@ class WallPadConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=CONFIG_SCHEMA)
 

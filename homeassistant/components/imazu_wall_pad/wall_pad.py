@@ -3,7 +3,6 @@ from datetime import timedelta
 import logging
 from typing import Generic, TypeVar
 
-from wp_imazu.client import ImazuClient
 from wp_imazu.packet import ImazuPacket
 
 from homeassistant.const import Platform
@@ -13,6 +12,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.restore_state import RestoredExtraData, RestoreEntity
 from homeassistant.util import Throttle
 
+from . import ImazuGateway
 from .const import (
     ATTR_DEVICE,
     ATTR_ROOM_ID,
@@ -38,17 +38,17 @@ class WallPadDevice(Generic[T], RestoreEntity):
 
     _attr_should_poll = True
 
-    def __init__(self, client: ImazuClient, platform: Platform, packet: T) -> None:
+    def __init__(self, gateway: ImazuGateway, platform: Platform, packet: T) -> None:
         """Initialize the instance."""
-        self.client = client
+        self.gateway = gateway
         self.packet = packet
         self.entity_id = (
             f"{str(platform.value)}."
-            f"{BRAND_NAME}_{host_to_last(self.client.host)}_"
+            f"{BRAND_NAME}_{host_to_last(self.gateway.host)}_"
             f"{self.packet.name.lower()}_{packet.room_id}_{packet.sub_id}"
         )
         self._attr_unique_id = (
-            f"{BRAND_NAME}_{host_to_last(self.client.host)}_{self.packet.device_id}"
+            f"{BRAND_NAME}_{host_to_last(self.gateway.host)}_{self.packet.device_id}"
         )
         self._attr_name = (
             f"{BRAND_NAME} {packet.name} {packet.room_id}-{packet.sub_id}".title()
@@ -59,7 +59,7 @@ class WallPadDevice(Generic[T], RestoreEntity):
             model=MODEL,
             name=f"{BRAND_NAME} {packet.name} {packet.room_id}".title(),
             sw_version=SW_VERSION,
-            via_device=(DOMAIN, self.client.host),
+            via_device=(DOMAIN, self.gateway.host),
         )
         self._attr_extra_state_attributes = {
             ATTR_DEVICE: self.packet.device.name,
@@ -70,11 +70,11 @@ class WallPadDevice(Generic[T], RestoreEntity):
     @property
     def available(self):
         """Return True if device is available."""
-        return self.client.connected and self.packet.state
+        return self.gateway.connected and self.packet.state
 
     async def async_send_packet(self, packet: bytes):
         """Send a packet to the client."""
-        await self.client.async_send_wait(packet)
+        await self.gateway.async_send_wait(packet)
 
     async def async_added_to_hass(self) -> None:
         """Register state update callback."""
@@ -82,7 +82,7 @@ class WallPadDevice(Generic[T], RestoreEntity):
         @callback
         def async_update_packet(packet: ImazuPacket) -> None:
             """Handle packet updates."""
-            if not self.available or self.packet.state == packet.state:
+            if self.packet.state == packet.state:
                 return
             self.packet = packet
             self.async_write_ha_state()
@@ -90,7 +90,7 @@ class WallPadDevice(Generic[T], RestoreEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{DOMAIN}_{self.client.host}_{self.packet.device_id}",
+                f"{DOMAIN}_{self.gateway.host}_{self.packet.device_id}",
                 async_update_packet,
             )
         )
@@ -104,4 +104,4 @@ class WallPadDevice(Generic[T], RestoreEntity):
     async def async_update(self) -> None:
         """Update device."""
         make_packet = self.packet.make_scan()
-        await self.client.async_send(make_packet)
+        await self.gateway.async_send(make_packet)

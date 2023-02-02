@@ -10,12 +10,12 @@ from .gateway import ImazuGateway
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Imazu Wall Pad from a config entry."""
     gateway = ImazuGateway(hass, entry)
+    await gateway.async_load_entity_registry()
 
     if not await gateway.async_connect():
         await gateway.async_close()
         return False
 
-    await gateway.async_load_entity_registry()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = gateway
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

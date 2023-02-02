@@ -35,14 +35,15 @@ async def async_setup_entry(
 
     @callback
     def async_add_entity(data: EntityData):
-        if data.device:
-            return
-
         if isinstance(data.packet, LightPacket):
-            data.device = WPLight(gateway.client, Platform.LIGHT, data.packet)
+            data.device = WPLight(gateway, Platform.LIGHT, data.packet)
 
         if data.device:
             async_add_entities([data.device])
+
+    entities = gateway.get_platform_entities(Platform.LIGHT)
+    for data in entities:
+        async_add_entity(data)
 
     config_entry.async_on_unload(
         async_dispatcher_connect(
@@ -50,9 +51,9 @@ async def async_setup_entry(
         )
     )
 
-    if not gateway.add_platform_entities(Platform.LIGHT):
+    if len(entities) == 0:
         for packet in SCAN_LIGHT_PACKETS:
-            await gateway.client.async_send(bytes.fromhex(packet))
+            await gateway.async_send(bytes.fromhex(packet))
 
 
 class WPLight(WallPadDevice[LightPacket], LightEntity):
@@ -61,9 +62,6 @@ class WPLight(WallPadDevice[LightPacket], LightEntity):
     @property
     def is_on(self) -> bool:
         """Return true if light is on."""
-        if not self.available:
-            return False
-
         return self.packet.state["power"] == LightPacket.Power.ON
 
     async def async_turn_on(self, **kwargs: Any) -> None:

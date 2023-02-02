@@ -2631,7 +2631,7 @@ wled==0.15.0
 wolf_smartset==0.1.11
 
 # homeassistant.components.imazu_wall_pad
-wp-imazu==0.0.31
+wp-imazu==0.0.34
 
 # homeassistant.components.xbox
 xbox-webapi==2.0.11
