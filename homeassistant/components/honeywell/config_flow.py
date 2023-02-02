@@ -67,7 +67,6 @@ class HoneywellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
 
             else:
-
                 self.hass.config_entries.async_update_entry(
                     self.entry,
                     data={

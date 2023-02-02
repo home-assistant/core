@@ -268,7 +268,6 @@ async def _create_script_entities(
     entities: list[ScriptEntity] = []
 
     for script_config in script_configs:
-
         entity = ScriptEntity(
             hass,
             script_config.key,

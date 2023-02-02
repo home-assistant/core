@@ -78,7 +78,6 @@ async def test_confirmable_notification(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.mobile_app.device_action.async_call_action_from_config"
     ) as mock_call_action:
-
         # Trigger script
         await hass.services.async_call(script.DOMAIN, "confirm", context=context)
 

@@ -428,7 +428,6 @@ class NestFlowHandler(
                 _LOGGER.error("Error creating subscription: %s", err)
                 errors[CONF_CLOUD_PROJECT_ID] = "subscriber_error"
             if not errors:
-
                 try:
                     device_manager = await subscriber.async_get_device_manager()
                 except ApiException as err:

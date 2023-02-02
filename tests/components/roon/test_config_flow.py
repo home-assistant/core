@@ -81,7 +81,6 @@ async def test_successful_discovery_and_auth(hass):
         "homeassistant.components.roon.async_setup_entry",
         return_value=True,
     ):
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -120,7 +119,6 @@ async def test_unsuccessful_discovery_user_form_and_auth(hass):
         "homeassistant.components.roon.async_setup_entry",
         return_value=True,
     ):
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -165,7 +163,6 @@ async def test_duplicate_config(hass):
         "homeassistant.components.roon.config_flow.RoonDiscovery",
         return_value=RoonDiscoveryFailedMock(),
     ):
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -207,7 +204,6 @@ async def test_successful_discovery_no_auth(hass):
         "homeassistant.components.roon.async_setup_entry",
         return_value=True,
     ):
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -239,7 +235,6 @@ async def test_unexpected_exception(hass):
         "homeassistant.components.roon.async_setup_entry",
         return_value=True,
     ):
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )

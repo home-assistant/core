@@ -71,7 +71,6 @@ class SwitchBeeLightEntity(SwitchBeeDeviceEntity[SwitchBeeDimmer], LightEntity):
         super()._handle_coordinator_update()
 
     def _update_attrs_from_coordinator(self) -> None:
-
         coordinator_device = self._get_coordinator_device()
         brightness = coordinator_device.brightness
 
