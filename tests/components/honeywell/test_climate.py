@@ -867,7 +867,7 @@ async def test_service_calls_auto_mode(
     )
 
     device.set_hold_cool.assert_called_once_with(True)
-    device.set_hold_heat.assert_not_called()
+    device.set_hold_heat.assert_called_once_with(True)
 
     reset_mock(device)
 
@@ -882,7 +882,7 @@ async def test_service_calls_auto_mode(
         blocking=True,
     )
     device.set_hold_cool.assert_called_once_with(True)
-    device.set_hold_heat.assert_not_called()
+    device.set_hold_heat.assert_called_once_with(True)
 
     reset_mock(device)
     device.set_setpoint_heat.side_effect = None
