@@ -159,7 +159,7 @@ DEVICE_ENTITY: dict[
         subscribe_attributes=(
             clusters.OnOff.Attributes.OnOff,
             clusters.LevelControl.Attributes.CurrentLevel,
-            clusters.ColorControl,
+            clusters.ColorControl.Attributes.ColorTemperatureMireds,
         ),
     ),
     device_types.ExtendedColorLight: MatterLightEntityDescriptionFactory(
@@ -167,7 +167,10 @@ DEVICE_ENTITY: dict[
         subscribe_attributes=(
             clusters.OnOff.Attributes.OnOff,
             clusters.LevelControl.Attributes.CurrentLevel,
-            clusters.ColorControl,
+            clusters.ColorControl.Attributes.ColorMode,
+            clusters.ColorControl.Attributes.CurrentX,
+            clusters.ColorControl.Attributes.CurrentY,
+            clusters.ColorControl.Attributes.ColorTemperatureMireds,
         ),
     ),
 }
