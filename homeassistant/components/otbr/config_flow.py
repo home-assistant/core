@@ -1,6 +1,8 @@
 """Config flow for the Open Thread Border Router integration."""
 from __future__ import annotations
 
+import logging
+
 import python_otbr_api
 import voluptuous as vol
 
@@ -11,6 +13,8 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -53,6 +57,18 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
 
         config = discovery_info.config
         url = f"http://{config['host']}:{config['port']}"
+
+        api = python_otbr_api.OTBR(url, async_get_clientsession(self.hass), 10)
+        try:
+            if await api.get_active_dataset_tlvs() is None:
+                await api.async_create_active_dataset(
+                    python_otbr_api.OperationalDataSet(network_name="home-assistant")
+                )
+                await api.async_set_enabled(True)
+        except python_otbr_api.OTBRError as exc:
+            _LOGGER.warning("Failed to communicate with OTBR@%s: %s", url, exc)
+            return self.async_abort(reason="unknown")
+
         await self.async_set_unique_id(DOMAIN)
         return self.async_create_entry(
             title="Open Thread Border Router",
