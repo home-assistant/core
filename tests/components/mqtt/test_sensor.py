@@ -92,6 +92,7 @@ async def test_setting_sensor_value_via_mqtt_message(
                     "name": "test",
                     "state_topic": "test-topic",
                     "unit_of_measurement": "fav unit",
+                    "precision": 1,
                 }
             }
         },
@@ -99,10 +100,10 @@ async def test_setting_sensor_value_via_mqtt_message(
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
 
-    async_fire_mqtt_message(hass, "test-topic", "100")
+    async_fire_mqtt_message(hass, "test-topic", "100.22")
     state = hass.states.get("sensor.test")
 
-    assert state.state == "100"
+    assert state.state == "100.2"
     assert state.attributes.get("unit_of_measurement") == "fav unit"
 
 
