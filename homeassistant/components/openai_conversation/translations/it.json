@@ -1,0 +1,14 @@
+{
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "model": "Modello di completamento",
+                    "prompt": "Modello di prompt",
+                    "temperature": "Temperatura",
+                    "top_p": "Top P"
+                }
+            }
+        }
+    }
+}
