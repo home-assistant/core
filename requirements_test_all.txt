@@ -254,7 +254,7 @@ aioskybell==22.7.0
 aioslimproto==2.1.1
 
 # homeassistant.components.honeywell
-aiosomecomfort==0.0.3
+aiosomecomfort==0.0.6
 
 # homeassistant.components.steamist
 aiosteamist==0.3.2
@@ -690,7 +690,7 @@ hole==0.8.0
 holidays==0.18.0
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230201.0
+home-assistant-frontend==20230202.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.1.31
@@ -1051,7 +1051,7 @@ py-melissa-climate==2.1.4
 py-nightscout==1.2.2
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==2.0.2
+py-synologydsm-api==2.1.1
 
 # homeassistant.components.seventeentrack
 py17track==2021.12.2
