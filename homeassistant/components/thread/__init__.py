@@ -6,6 +6,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
+from .dataset_store import async_load as async_load_dataset_store
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -16,6 +17,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 DOMAIN, context={"source": SOURCE_IMPORT}
             )
         )
+    hass.data[DOMAIN] = {}
+    await async_load_dataset_store(hass)
     return True
 
 
