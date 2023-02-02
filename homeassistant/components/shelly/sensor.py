@@ -165,8 +165,9 @@ SENSORS: Final = {
     ("device", "energy"): BlockSensorDescription(
         key="device|energy",
         name="Energy",
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        value=lambda value: value / 60 / 1000,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        value=lambda value: value / 60,
         native_precision=2,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -174,8 +175,8 @@ SENSORS: Final = {
     ("emeter", "energy"): BlockSensorDescription(
         key="emeter|energy",
         name="Energy",
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        value=lambda value: value / 1000,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         native_precision=2,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -184,8 +185,8 @@ SENSORS: Final = {
     ("emeter", "energyReturned"): BlockSensorDescription(
         key="emeter|energyReturned",
         name="Energy returned",
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        value=lambda value: value / 1000,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         native_precision=2,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -194,8 +195,9 @@ SENSORS: Final = {
     ("light", "energy"): BlockSensorDescription(
         key="light|energy",
         name="Energy",
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        value=lambda value: value / 60 / 1000,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        value=lambda value: value / 60,
         native_precision=2,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -204,8 +206,9 @@ SENSORS: Final = {
     ("relay", "energy"): BlockSensorDescription(
         key="relay|energy",
         name="Energy",
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        value=lambda value: value / 60 / 1000,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        value=lambda value: value / 60,
         native_precision=2,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -213,8 +216,9 @@ SENSORS: Final = {
     ("roller", "rollerEnergy"): BlockSensorDescription(
         key="roller|rollerEnergy",
         name="Energy",
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        value=lambda value: value / 60 / 1000,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        value=lambda value: value / 60,
         native_precision=2,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -468,8 +472,9 @@ RPC_SENSORS: Final = {
         key="switch",
         sub_key="aenergy",
         name="Energy",
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        value=lambda status, _: status["total"] / 1000,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        value=lambda status, _: status["total"],
         native_precision=2,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -707,6 +712,9 @@ class BlockSensor(ShellyBlockAttributeEntity, SensorEntity):
         super().__init__(coordinator, block, attribute, description)
 
         self._attr_native_unit_of_measurement = description.native_unit_of_measurement
+        self._attr_suggested_unit_of_measurement = (
+            description.suggested_unit_of_measurement
+        )
         self._attr_native_precision = description.native_precision
 
     @property

@@ -6,6 +6,7 @@ from homeassistant.const import (
     PERCENTAGE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    UnitOfEnergy,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.entity_registry import async_get
@@ -39,6 +40,17 @@ async def test_block_sensor(
     mock_block_device.mock_update()
 
     assert hass.states.get(entity_id).state == "60.1"
+
+
+async def test_energy_sensor(hass: HomeAssistant, mock_block_device) -> None:
+    """Test energy sensor."""
+    entity_id = f"{SENSOR_DOMAIN}.test_name_channel_1_energy"
+    await init_integration(hass, 1)
+
+    state = hass.states.get(entity_id)
+    assert state.state == "20.57613"
+    # suggested unit is KWh
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
 
 
 async def test_power_factory_unit_migration(
