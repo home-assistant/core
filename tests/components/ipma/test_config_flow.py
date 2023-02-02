@@ -89,7 +89,6 @@ async def test_flow_entry_created_from_user_input():
         "async_entries",
         return_value=[],
     ) as config_entries:
-
         result = await flow.async_step_user(user_input=test_data)
 
         assert result["type"] == "create_entry"
@@ -116,7 +115,6 @@ async def test_flow_entry_config_entry_already_exists():
     ) as config_form, patch.object(
         flow.hass.config_entries, "async_entries", return_value={"home": test_data}
     ) as config_entries:
-
         await flow.async_step_user(user_input=test_data)
 
         assert len(config_form.mock_calls) == 1
