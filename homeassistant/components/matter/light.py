@@ -139,15 +139,11 @@ class MatterLight(MatterEntity, LightEntity):
             # 4: Supports Color Temperature (Mandatory if extended color model is supported)
 
             # Fix this in the library as getting the ColorControl cluster is not working
-            # self._device_type_instance.get_cluster(clusters.ColorControl)
-            class ColorControl:
-                """ColorControl cluster testing class."""
-
-                featureMap = 25
-
-            colorcontrol = ColorControl  # Enables HS for testing purposes
-            if colorcontrol.featureMap & (1 << 0):
-                self._attr_supported_color_modes.add(ColorMode.HS)
+            if feature_map := self.get_matter_attribute(
+                clusters.ColorControl.Attributes.FeatureMap
+            ):
+                if feature_map.value & (1 << 0):
+                    self._attr_supported_color_modes.add(ColorMode.HS)
 
         supports_color_temperature = self._supports_color_temperature()
 
@@ -295,6 +291,7 @@ DEVICE_ENTITY: dict[
             clusters.ColorControl.Attributes.CurrentX,
             clusters.ColorControl.Attributes.CurrentY,
             clusters.ColorControl.Attributes.ColorTemperatureMireds,
+            clusters.ColorControl.Attributes.FeatureMap,
         ),
     ),
 }
