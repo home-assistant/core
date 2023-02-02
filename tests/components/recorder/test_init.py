@@ -214,7 +214,11 @@ async def test_saving_state(recorder_mock, hass: HomeAssistant):
 
     with session_scope(hass=hass) as session:
         db_states = []
-        for db_state, db_state_attributes in session.query(States, StateAttributes):
+        for db_state, db_state_attributes in session.query(
+            States, StateAttributes
+        ).outerjoin(
+            StateAttributes, States.attributes_id == StateAttributes.attributes_id
+        ):
             db_states.append(db_state)
             state = db_state.to_native()
             state.attributes = db_state_attributes.to_native()
@@ -248,7 +252,11 @@ async def test_saving_state_with_nul(
 
     with session_scope(hass=hass) as session:
         db_states = []
-        for db_state, db_state_attributes in session.query(States, StateAttributes):
+        for db_state, db_state_attributes in session.query(
+            States, StateAttributes
+        ).outerjoin(
+            StateAttributes, States.attributes_id == StateAttributes.attributes_id
+        ):
             db_states.append(db_state)
             state = db_state.to_native()
             state.attributes = db_state_attributes.to_native()
