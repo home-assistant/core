@@ -2918,8 +2918,7 @@ async def test_if(
 async def test_if_disabled(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test if action."""
-    events = async_capture_events(hass, "test_event")
+    """Test if action with a disabled condition."""
     sequence = cv.SCRIPT_SCHEMA(
         {
             "if": {
