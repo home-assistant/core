@@ -426,10 +426,9 @@ class StateAttributes(Base):  # type: ignore[misc,valid-type]
             _LOGGER.warning(
                 "State attributes for %s exceed maximum size of %s bytes. "
                 "This can cause database performance issues; Attributes "
-                "will not be stored: %s",
+                "will not be stored",
                 state.entity_id,
                 MAX_STATE_ATTRS_BYTES,
-                state.attributes,
             )
             return b"{}"
         return bytes_result
