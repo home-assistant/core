@@ -75,6 +75,7 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
         PrusaLinkSensorEntityDescription[PrinterInfo](
             key="printer.telemetry.temp-nozzle",
             name="Nozzle Temperature",
+            icon="mdi:printer-3d-nozzle-heat",
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
@@ -86,6 +87,7 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
         PrusaLinkSensorEntityDescription[JobInfo](
             key="job.progress",
             name="Progress",
+            icon="mdi:progress-clock",
             native_unit_of_measurement=PERCENTAGE,
             value_fn=lambda data: cast(float, data["progress"]["completion"]) * 100,
             available_fn=lambda data: data.get("progress") is not None,
@@ -101,6 +103,7 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
             key="job.start",
             name="Print Start",
             device_class=SensorDeviceClass.TIMESTAMP,
+            icon="mdi:clock-start",
             value_fn=ignore_variance(
                 lambda data: (
                     utcnow() - timedelta(seconds=data["progress"]["printTime"])
@@ -112,6 +115,7 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
         PrusaLinkSensorEntityDescription[JobInfo](
             key="job.finish",
             name="Print Finish",
+            icon="mdi:clock-end",
             device_class=SensorDeviceClass.TIMESTAMP,
             value_fn=ignore_variance(
                 lambda data: (
