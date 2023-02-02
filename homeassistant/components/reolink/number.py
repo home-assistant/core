@@ -6,12 +6,8 @@ from dataclasses import dataclass
 from typing import Any
 
 from reolink_aio.api import Host
-)
 
-from homeassistant.components.number import (
-    NumberEntity,
-    NumberEntityDescription,
-)
+from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -26,8 +22,8 @@ class ReolinkNumberEntityDescriptionMixin:
     """Mixin values for Reolink number entities."""
 
     value: Callable[[Host, int | None], bool]
-    min_value: Callable[[Host, int | None], float]
-    max_value: Callable[[Host, int | None], float]
+    get_min_value: Callable[[Host, int | None], float]
+    get_max_value: Callable[[Host, int | None], float]
     method: Callable[[Host, int | None, float], Any]
 
 
@@ -46,8 +42,8 @@ NUMBER_ENTITIES = (
         name="Zoom",
         icon="mdi:magnify",
         native_step=1,
-        min_value=lambda api, ch: api.zoom_range(ch)["zoom"]["pos"]["min"],
-        max_value=lambda api, ch: api.zoom_range(ch)["zoom"]["pos"]["max"],
+        get_min_value=lambda api, ch: api.zoom_range(ch)["zoom"]["pos"]["min"],
+        get_max_value=lambda api, ch: api.zoom_range(ch)["zoom"]["pos"]["max"],
         supported=lambda api, ch: api.zoom_supported(ch),
         value=lambda api, ch: api.get_zoom(ch),
         method=lambda api, ch, value: api.set_zoom(ch, value),
@@ -57,8 +53,8 @@ NUMBER_ENTITIES = (
         name="Focus",
         icon="mdi:focus-field",
         native_step=1,
-        min_value=lambda api, ch: api.zoom_range(ch)["focus"]["pos"]["min"],
-        max_value=lambda api, ch: api.zoom_range(ch)["focus"]["pos"]["max"],
+        get_min_value=lambda api, ch: api.zoom_range(ch)["focus"]["pos"]["min"],
+        get_max_value=lambda api, ch: api.zoom_range(ch)["focus"]["pos"]["max"],
         supported=lambda api, ch: api.zoom_supported(ch),
         value=lambda api, ch: api.get_zoom(ch),
         method=lambda api, ch, value: api.set_zoom(ch, value),
@@ -103,8 +99,12 @@ class ReolinkNumberEntity(ReolinkCoordinatorEntity, NumberEntity):
         super().__init__(reolink_data, channel)
         self.entity_description = entity_description
 
-        self._attr_native_min_value = self.entity_description.min_value(self._host.api, self._channel)
-        self._attr_native_max_value = self.entity_description.max_value(self._host.api, self._channel)
+        self._attr_native_min_value = self.entity_description.get_min_value(
+            self._host.api, self._channel
+        )
+        self._attr_native_max_value = self.entity_description.get_max_value(
+            self._host.api, self._channel
+        )
 
         self._attr_unique_id = (
             f"{self._host.unique_id}_{self._channel}_{entity_description.key}"
@@ -118,4 +118,3 @@ class ReolinkNumberEntity(ReolinkCoordinatorEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         await self.entity_description.method(self._host.api, self._channel, value)
-
