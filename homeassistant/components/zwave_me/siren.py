@@ -1,7 +1,11 @@
 """Representation of a sirenBinary."""
 from typing import Any
 
-from homeassistant.components.siren import SirenEntity
+from homeassistant.components.siren import (
+    SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
+    SirenEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -40,6 +44,11 @@ async def async_setup_entry(
 
 class ZWaveMeSiren(ZWaveMeEntity, SirenEntity):
     """Representation of a ZWaveMe siren."""
+
+    def __init__(self, controller, device):
+        """Initialize the device."""
+        super().__init__(controller, device)
+        self._attr_supported_features = SUPPORT_TURN_ON | SUPPORT_TURN_OFF
 
     @property
     def is_on(self) -> bool:
