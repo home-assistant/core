@@ -2,7 +2,6 @@
 from unittest.mock import create_autospec, patch
 
 import aiosomecomfort
-import pytest
 
 from homeassistant.components.honeywell.const import (
     CONF_COOL_AWAY_TEMPERATURE,
