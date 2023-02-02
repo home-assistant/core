@@ -25,6 +25,10 @@ class TestWorkdaySetup:
             "binary_sensor": {"platform": "workday", "add_holidays": ["2020-02-24"]}
         }
 
+        self.config_nocountry_province = {
+            "binary_sensor": {"platform": "workday", "province": "OOPS"}
+        }
+
         self.config_province = {
             "binary_sensor": {"platform": "workday", "country": "DE", "province": "BW"}
         }
@@ -141,6 +145,14 @@ class TestWorkdaySetup:
 
         entity = self.hass.states.get("binary_sensor.workday_sensor")
         assert entity is not None
+
+    def test_setup_component_nocountry_province(self):
+        """Set up workday component with no country but a province specified, which is not allowed."""
+        with assert_setup_component(1, "binary_sensor"):
+            setup_component(self.hass, "binary_sensor", self.config_nocountry_province)
+
+        entity = self.hass.states.get("binary_sensor.workday_sensor")
+        assert entity is None
 
     # Freeze time to a workday - Mar 15th, 2017
     @patch(FUNCTION_PATH, return_value=date(2017, 3, 15))
