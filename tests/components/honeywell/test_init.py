@@ -87,7 +87,7 @@ async def test_login_error(
     hass: HomeAssistant, client: MagicMock, config_entry: MagicMock
 ) -> None:
     """Test login errors from API."""
-    client.login.side_effect = AIOSomecomfort.AuthError
+    client.login.side_effect = aiosomecomfort.AuthError
     await init_integration(hass, config_entry)
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
@@ -96,7 +96,7 @@ async def test_connection_error(
     hass: HomeAssistant, client: MagicMock, config_entry: MagicMock
 ) -> None:
     """Test Connection errors from API."""
-    client.login.side_effect = AIOSomecomfort.ConnectionError
+    client.login.side_effect = aiosomecomfort.ConnectionError
     await init_integration(hass, config_entry)
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 

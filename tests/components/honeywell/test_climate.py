@@ -1,7 +1,7 @@
 """Test the Whirlpool Sixth Sense climate domain."""
 from unittest.mock import MagicMock
 
-import aiosomecomfort as AIOSomecomfort
+import aiosomecomfort
 
 from homeassistant.components.climate import (
     ATTR_AUX_HEAT,
@@ -319,7 +319,7 @@ async def test_service_calls_off_mode(
     device.set_setpoint_heat.assert_called_with(77)
 
     device.set_setpoint_heat.reset_mock()
-    device.set_setpoint_heat.side_effect = AIOSomecomfort.SomeComfortError
+    device.set_setpoint_heat.side_effect = aiosomecomfort.SomeComfortError
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
@@ -358,7 +358,7 @@ async def test_service_calls_off_mode(
     device.set_hold_heat.assert_not_called()
 
     reset_mock(device)
-    device.set_setpoint_heat.side_effect = AIOSomecomfort.SomeComfortError
+    device.set_setpoint_heat.side_effect = aiosomecomfort.SomeComfortError
 
     device.raw_ui_data["StatusHeat"] = 2
     device.raw_ui_data["StatusCool"] = 2
@@ -402,7 +402,7 @@ async def test_service_calls_off_mode(
     device.set_hold_cool.assert_called_once_with(False)
 
     reset_mock(device)
-    device.set_hold_cool.side_effect = AIOSomecomfort.SomeComfortError
+    device.set_hold_cool.side_effect = aiosomecomfort.SomeComfortError
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -429,7 +429,7 @@ async def test_service_calls_off_mode(
     device.set_hold_cool.assert_not_called()
 
     reset_mock(device)
-    device.set_hold_heat.side_effect = AIOSomecomfort.SomeComfortError
+    device.set_hold_heat.side_effect = aiosomecomfort.SomeComfortError
     device.raw_ui_data["StatusHeat"] = 2
     device.raw_ui_data["StatusCool"] = 2
 
@@ -484,7 +484,7 @@ async def test_service_calls_cool_mode(
     device.set_setpoint_heat.assert_called_with(77)
 
     device.set_setpoint_cool.reset_mock()
-    device.set_setpoint_cool.side_effect = AIOSomecomfort.SomeComfortError
+    device.set_setpoint_cool.side_effect = aiosomecomfort.SomeComfortError
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
@@ -512,7 +512,7 @@ async def test_service_calls_cool_mode(
     device.set_setpoint_heat.assert_not_called()
 
     reset_mock(device)
-    device.set_setpoint_cool.side_effect = AIOSomecomfort.SomeComfortError
+    device.set_setpoint_cool.side_effect = aiosomecomfort.SomeComfortError
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -541,7 +541,7 @@ async def test_service_calls_cool_mode(
     device.set_hold_heat.assert_not_called()
 
     reset_mock(device)
-    device.set_setpoint_cool.side_effect = AIOSomecomfort.SomeComfortError
+    device.set_setpoint_cool.side_effect = aiosomecomfort.SomeComfortError
 
     device.raw_ui_data["StatusHeat"] = 2
     device.raw_ui_data["StatusCool"] = 2
@@ -567,7 +567,7 @@ async def test_service_calls_cool_mode(
     device.set_hold_cool.assert_called_once_with(False)
 
     reset_mock(device)
-    device.set_hold_cool.side_effect = AIOSomecomfort.SomeComfortError
+    device.set_hold_cool.side_effect = aiosomecomfort.SomeComfortError
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -594,7 +594,7 @@ async def test_service_calls_cool_mode(
     device.set_hold_heat.assert_not_called()
 
     reset_mock(device)
-    device.set_hold_cool.side_effect = AIOSomecomfort.SomeComfortError
+    device.set_hold_cool.side_effect = aiosomecomfort.SomeComfortError
 
     device.raw_ui_data["StatusHeat"] = 2
     device.raw_ui_data["StatusCool"] = 2
@@ -635,7 +635,7 @@ async def test_service_calls_heat_mode(
     device.set_setpoint_heat.assert_called_once_with(59)
     device.set_setpoint_heat.reset_mock()
 
-    device.set_setpoint_heat.side_effect = AIOSomecomfort.SomeComfortError
+    device.set_setpoint_heat.side_effect = aiosomecomfort.SomeComfortError
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -660,7 +660,7 @@ async def test_service_calls_heat_mode(
     device.set_setpoint_heat.assert_called_with(77)
 
     device.set_setpoint_heat.reset_mock()
-    device.set_setpoint_heat.side_effect = AIOSomecomfort.SomeComfortError
+    device.set_setpoint_heat.side_effect = aiosomecomfort.SomeComfortError
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
@@ -689,7 +689,7 @@ async def test_service_calls_heat_mode(
     device.set_hold_cool.assert_not_called()
 
     reset_mock(device)
-    device.set_setpoint_heat.side_effect = AIOSomecomfort.SomeComfortError
+    device.set_setpoint_heat.side_effect = aiosomecomfort.SomeComfortError
 
     device.raw_ui_data["StatusHeat"] = 2
     device.raw_ui_data["StatusCool"] = 2
@@ -717,7 +717,7 @@ async def test_service_calls_heat_mode(
     device.set_setpoint_cool.assert_not_called()
 
     reset_mock(device)
-    device.set_setpoint_heat.side_effect = AIOSomecomfort.SomeComfortError
+    device.set_setpoint_heat.side_effect = aiosomecomfort.SomeComfortError
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -744,7 +744,7 @@ async def test_service_calls_heat_mode(
 
     device.set_hold_heat.reset_mock()
     device.set_hold_cool.reset_mock()
-    device.set_hold_heat.side_effect = AIOSomecomfort.SomeComfortError
+    device.set_hold_heat.side_effect = aiosomecomfort.SomeComfortError
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -770,7 +770,7 @@ async def test_service_calls_heat_mode(
     device.set_hold_cool.assert_not_called()
 
     reset_mock(device)
-    device.set_hold_heat.side_effect = AIOSomecomfort.SomeComfortError
+    device.set_hold_heat.side_effect = aiosomecomfort.SomeComfortError
 
     device.raw_ui_data["StatusHeat"] = 2
     device.raw_ui_data["StatusCool"] = 2
@@ -828,8 +828,8 @@ async def test_service_calls_auto_mode(
 
     device.set_setpoint_cool.reset_mock()
     device.set_setpoint_heat.reset_mock()
-    device.set_setpoint_cool.side_effect = AIOSomecomfort.SomeComfortError
-    device.set_setpoint_heat.side_effect = AIOSomecomfort.SomeComfortError
+    device.set_setpoint_cool.side_effect = aiosomecomfort.SomeComfortError
+    device.set_setpoint_heat.side_effect = aiosomecomfort.SomeComfortError
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -841,8 +841,8 @@ async def test_service_calls_auto_mode(
 
     device.set_setpoint_heat.reset_mock()
     device.set_setpoint_cool.reset_mock()
-    device.set_setpoint_heat.side_effect = AIOSomecomfort.SomeComfortError
-    device.set_setpoint_cool.side_effect = AIOSomecomfort.SomeComfortError
+    device.set_setpoint_heat.side_effect = aiosomecomfort.SomeComfortError
+    device.set_setpoint_cool.side_effect = aiosomecomfort.SomeComfortError
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
@@ -871,7 +871,7 @@ async def test_service_calls_auto_mode(
 
     reset_mock(device)
 
-    device.set_setpoint_heat.side_effect = AIOSomecomfort.SomeComfortError
+    device.set_setpoint_heat.side_effect = aiosomecomfort.SomeComfortError
     device.raw_ui_data["StatusHeat"] = 2
     device.raw_ui_data["StatusCool"] = 2
 
@@ -913,7 +913,7 @@ async def test_service_calls_auto_mode(
     device.set_hold_cool.assert_called_once_with(False)
 
     reset_mock(device)
-    device.set_hold_cool.side_effect = AIOSomecomfort.SomeComfortError
+    device.set_hold_cool.side_effect = aiosomecomfort.SomeComfortError
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -940,7 +940,7 @@ async def test_service_calls_auto_mode(
     device.set_hold_heat.assert_not_called()
 
     reset_mock(device)
-    device.set_hold_cool.side_effect = AIOSomecomfort.SomeComfortError
+    device.set_hold_cool.side_effect = aiosomecomfort.SomeComfortError
     device.raw_ui_data["StatusHeat"] = 2
     device.raw_ui_data["StatusCool"] = 2
 
@@ -965,8 +965,8 @@ async def test_async_update_errors(
 
     await init_integration(hass, config_entry)
 
-    device.refresh.side_effect = AIOSomecomfort.device.SomeComfortError
-    client.login.side_effect = AIOSomecomfort.device.SomeComfortError
+    device.refresh.side_effect = aiosomecomfort.device.SomeComfortError
+    client.login.side_effect = aiosomecomfort.device.SomeComfortError
     async_fire_time_changed(
         hass,
         utcnow() + SCAN_INTERVAL,
