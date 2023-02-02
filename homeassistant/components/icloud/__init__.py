@@ -8,7 +8,6 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.storage import Store
 from homeassistant.util import slugify
@@ -155,7 +154,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     icloud_account = account
 
         if icloud_account is None:
-            raise HomeAssistantError(
+            raise ValueError(
                 f"No iCloud account with username or name {account_identifier}"
             )
         return icloud_account

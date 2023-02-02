@@ -429,7 +429,8 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator[None]):
                     self.fritz_hosts.get_mesh_topology
                 )
             ):
-                raise HomeAssistantError("Mesh supported but empty topology reported")
+                # pylint: disable=broad-exception-raised
+                raise Exception("Mesh supported but empty topology reported")
         except FritzActionError:
             self.mesh_role = MeshRoles.SLAVE
             # Avoid duplicating device trackers

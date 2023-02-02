@@ -18,7 +18,7 @@ from homeassistant.components.zone import async_active_zone
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_USERNAME
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.helpers.storage import Store
@@ -324,7 +324,7 @@ class IcloudAccount:
             if slugify(device.name.replace(" ", "", 99)) == name_slug:
                 result.append(device)
         if not result:
-            raise HomeAssistantError(f"No device with name {name}")
+            raise ValueError(f"No device with name {name}")
         return result
 
     @property
