@@ -95,7 +95,7 @@ async def async_setup_entry(
         entities_by_address[node.address] = entity
 
     # Handle some special child node cases for Insteon Devices
-    for (node, device_class, device_type, device_info) in child_nodes:
+    for node, device_class, device_type, device_info in child_nodes:
         subnode_id = int(node.address.split(" ")[-1], 16)
         # Handle Insteon Thermostats
         if device_type is not None and device_type.startswith(TYPE_CATEGORY_CLIMATE):

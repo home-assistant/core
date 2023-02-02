@@ -134,7 +134,6 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         "homeassistant.components.honeywell.async_setup_entry",
         return_value=True,
     ):
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={

@@ -162,7 +162,11 @@ async def test_setup(hass, mock_async_zeroconf):
         ],
         "_Volumio._tcp.local.": [{"domain": "volumio"}],
     }
-    with patch.dict(zc_gen.ZEROCONF, mock_zc, clear=True,), patch.object(
+    with patch.dict(
+        zc_gen.ZEROCONF,
+        mock_zc,
+        clear=True,
+    ), patch.object(
         hass.config_entries.flow, "async_init"
     ) as mock_config_flow, patch.object(
         zeroconf, "HaAsyncServiceBrowser", side_effect=service_update_mock
@@ -535,7 +539,11 @@ async def test_homekit_match_partial_space(hass, mock_async_zeroconf):
         zc_gen.ZEROCONF,
         {"_hap._tcp.local.": [{"domain": "homekit_controller"}]},
         clear=True,
-    ), patch.dict(zc_gen.HOMEKIT, {"LIFX": "lifx"}, clear=True,), patch.object(
+    ), patch.dict(
+        zc_gen.HOMEKIT,
+        {"LIFX": "lifx"},
+        clear=True,
+    ), patch.object(
         hass.config_entries.flow, "async_init"
     ) as mock_config_flow, patch.object(
         zeroconf,
@@ -656,7 +664,11 @@ async def test_homekit_match_full(hass, mock_async_zeroconf):
         zc_gen.ZEROCONF,
         {"_hap._udp.local.": [{"domain": "homekit_controller"}]},
         clear=True,
-    ), patch.dict(zc_gen.HOMEKIT, {"BSB002": "hue"}, clear=True,), patch.object(
+    ), patch.dict(
+        zc_gen.HOMEKIT,
+        {"BSB002": "hue"},
+        clear=True,
+    ), patch.object(
         hass.config_entries.flow, "async_init"
     ) as mock_config_flow, patch.object(
         zeroconf,
@@ -779,7 +791,11 @@ async def test_homekit_controller_still_discovered_unpaired_for_cloud(
         zc_gen.ZEROCONF,
         {"_hap._udp.local.": [{"domain": "homekit_controller"}]},
         clear=True,
-    ), patch.dict(zc_gen.HOMEKIT, {"Rachio": "rachio"}, clear=True,), patch.object(
+    ), patch.dict(
+        zc_gen.HOMEKIT,
+        {"Rachio": "rachio"},
+        clear=True,
+    ), patch.object(
         hass.config_entries.flow, "async_init"
     ) as mock_config_flow, patch.object(
         zeroconf,

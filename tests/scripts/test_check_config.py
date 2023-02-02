@@ -107,7 +107,6 @@ def test_secrets(mock_is_file, event_loop):
     }
 
     with patch_yaml_files(files):
-
         res = check_config.check(get_test_config_dir(), True)
 
         assert res["except"] == {}
