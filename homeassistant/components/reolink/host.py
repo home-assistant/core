@@ -9,7 +9,7 @@ from typing import Any
 import aiohttp
 from aiohttp.web import Request
 from reolink_aio.api import Host
-from reolink_aio.exceptions import ReolinkError
+from reolink_aio.exceptions import ReolinkError, SubscriptionError
 
 from homeassistant.components import webhook
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
@@ -76,7 +76,6 @@ class ReolinkHost:
             raise ReolinkSetupException("Could not get mac address")
 
         if not self._api.is_admin:
-            await self.stop()
             raise UserNotAdmin(
                 f"User '{self._api.username}' has authorization level "
                 f"'{self._api.user_level}', only admin users can change camera settings"
@@ -182,22 +181,19 @@ class ReolinkHost:
             )
             return
 
-        if await self._api.subscribe(self._webhook_url):
-            _LOGGER.debug(
-                "Host %s: subscribed successfully to webhook %s",
-                self._api.host,
-                self._webhook_url,
-            )
-        else:
-            raise ReolinkWebhookException(
-                f"Host {self._api.host}: webhook subscription failed"
-            )
+        await self._api.subscribe(self._webhook_url)
+
+        _LOGGER.debug(
+            "Host %s: subscribed successfully to webhook %s",
+            self._api.host,
+            self._webhook_url,
+        )
 
     async def renew(self) -> None:
         """Renew the subscription of motion events (lease time is 15 minutes)."""
         try:
             await self._renew()
-        except ReolinkWebhookException as err:
+        except SubscriptionError as err:
             if not self._lost_subscription:
                 self._lost_subscription = True
                 _LOGGER.error(
@@ -220,25 +216,33 @@ class ReolinkHost:
             return
 
         timer = self._api.renewtimer
+        _LOGGER.debug(
+            "Host %s:%s should renew subscription in: %i seconds",
+            self._api.host,
+            self._api.port,
+            timer,
+        )
         if timer > SUBSCRIPTION_RENEW_THRESHOLD:
             return
 
         if timer > 0:
-            if await self._api.renew():
+            try:
+                await self._api.renew()
+            except SubscriptionError as err:
+                _LOGGER.debug(
+                    "Host %s: error renewing Reolink subscription, "
+                    "trying to subscribe again: %s",
+                    self._api.host,
+                    err,
+                )
+            else:
                 _LOGGER.debug(
                     "Host %s successfully renewed Reolink subscription", self._api.host
                 )
                 return
-            _LOGGER.debug(
-                "Host %s: error renewing Reolink subscription, "
-                "trying to subscribe again",
-                self._api.host,
-            )
 
-        if not await self._api.subscribe(self._webhook_url):
-            raise ReolinkWebhookException(
-                f"Host {self._api.host}: webhook re-subscription failed"
-            )
+        await self._api.subscribe(self._webhook_url)
+
         _LOGGER.debug(
             "Host %s: Reolink re-subscription successful after it was expired",
             self._api.host,
