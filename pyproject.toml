@@ -161,11 +161,11 @@ good-names = [
 # wrong-import-order - isort guards this
 # consider-using-f-string - str.format sometimes more readable
 # ---
-# Enable once current issues are fixed:
-# consider-using-namedtuple-or-dataclass (Pylint CodeStyle extension)
-# consider-using-assignment-expr (Pylint CodeStyle extension)
+# Pylint CodeStyle plugin
+# consider-using-namedtuple-or-dataclass - too opinionated
+# consider-using-assignment-expr - decision to use := better left to devs
 # ---
-# Temporary for the Python 3.10 update
+# Temporary for the Python 3.10 update, remove with mypy v1.0
 # consider-alternative-union-syntax
 disable = [
     "format",
@@ -212,9 +212,9 @@ expected-line-ending-format = "LF"
 
 [tool.pylint.EXCEPTIONS]
 overgeneral-exceptions = [
-    "BaseException",
-    "Exception",
-    "HomeAssistantError",
+    "builtins.BaseException",
+    "builtins.Exception",
+    # "homeassistant.exceptions.HomeAssistantError",  # too many issues
 ]
 
 [tool.pylint.TYPING]
