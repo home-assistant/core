@@ -146,7 +146,9 @@ async def _async_get_handle_dhcp_packet(hass, integration_matchers):
         async_handle_dhcp_packet = _async_handle_dhcp_packet
         return MagicMock()
 
-    with patch("homeassistant.components.dhcp._verify_l2socket_setup",), patch(
+    with patch(
+        "homeassistant.components.dhcp._verify_l2socket_setup",
+    ), patch(
         "scapy.arch.common.compile_filter"
     ), patch("scapy.sendrecv.AsyncSniffer", _mock_sniffer):
         await dhcp_watcher.async_start()

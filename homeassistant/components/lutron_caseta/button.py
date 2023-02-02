@@ -29,7 +29,6 @@ async def async_setup_entry(
     entities: list[LutronCasetaButton] = []
 
     for device in button_devices.values():
-
         parent_keypad = keypads[device["parent_device"]]
         parent_device_info = parent_keypad["device_info"]
 
