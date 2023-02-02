@@ -1355,7 +1355,7 @@ def async_call_later(
     @callback
     def run_action(job: HassJob[[datetime], Coroutine[Any, Any, None] | None]) -> None:
         """Call the action."""
-        hass.async_run_hass_job(job, dt_util.utcnow())
+        hass.async_run_hass_job(job, time_tracker_utcnow())
 
     job = action if isinstance(action, HassJob) else HassJob(action)
     cancel_callback = hass.loop.call_later(delay, run_action, job)

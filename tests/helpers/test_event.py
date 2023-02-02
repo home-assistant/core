@@ -1,13 +1,14 @@
 """Test event helpers."""
 
 import asyncio
+from collections.abc import Callable
 import contextlib
 from datetime import date, datetime, timedelta
-import typing
 from unittest.mock import patch
 
 from astral import LocationInfo
 import astral.sun
+import async_timeout
 from freezegun import freeze_time
 import jinja2
 import pytest
@@ -45,7 +46,7 @@ from homeassistant.helpers.template import Template, result_as_boolean
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, async_fire_time_changed_exact
 
 DEFAULT_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE
 
@@ -4049,83 +4050,87 @@ async def test_periodic_task_leaving_dst_2(hass, freezer):
 
 async def test_call_later(hass):
     """Test calling an action later."""
-
     future = asyncio.get_running_loop().create_future()
-    scheduletime = dt_util.now()
-    delay = 0.25
+    delay = 5
     delay_tolerance = 0.1
+    scheduleutctime = dt_util.utcnow()
 
-    def action(__now: datetime):
-        result = __now > scheduletime + timedelta(seconds=delay)
-        result &= __now < scheduletime + timedelta(seconds=delay + delay_tolerance)
-        future.set_result(result)
+    def action(__utcnow: datetime):
+        _currentdelay = __utcnow.timestamp() - scheduleutctime.timestamp()
+        future.set_result(delay < _currentdelay < (delay + delay_tolerance))
 
     async_call_later(hass, delay, action)
 
-    assert await asyncio.wait_for(future, delay + delay_tolerance)
+    async_fire_time_changed_exact(hass, dt_util.utcnow() + timedelta(seconds=delay))
+
+    async with async_timeout.timeout(delay + delay_tolerance):
+        assert await future, "callback was called but the delay was wrong"
 
 
 async def test_async_call_later(hass):
     """Test calling an action later."""
-
     future = asyncio.get_running_loop().create_future()
-    scheduletime = dt_util.now()
-    delay = 0.5
+    delay = 5
     delay_tolerance = 0.1
+    scheduleutctime = dt_util.utcnow()
 
-    def action(__now: datetime):
-        result = __now > scheduletime + timedelta(seconds=delay)
-        result &= __now < scheduletime + timedelta(seconds=delay + delay_tolerance)
-        future.set_result(result)
+    def action(__utcnow: datetime):
+        _currentdelay = __utcnow.timestamp() - scheduleutctime.timestamp()
+        future.set_result(delay < _currentdelay < (delay + delay_tolerance))
 
     remove = async_call_later(hass, delay, action)
 
-    assert await asyncio.wait_for(future, delay + delay_tolerance)
-    assert isinstance(remove, typing.Callable)
+    async_fire_time_changed_exact(hass, dt_util.utcnow() + timedelta(seconds=delay))
+
+    async with async_timeout.timeout(delay + delay_tolerance):
+        assert await future, "callback was called but the delay was wrong"
+    assert isinstance(remove, Callable)
     remove()
 
 
 async def test_async_call_later_timedelta(hass):
     """Test calling an action later with a timedelta."""
-
     future = asyncio.get_running_loop().create_future()
-    scheduletime = dt_util.now()
-    delay = 0.35
+    delay = 5
     delay_tolerance = 0.1
+    scheduleutctime = dt_util.utcnow()
 
-    def action(__now: datetime):
-        result = __now > scheduletime + timedelta(seconds=delay)
-        result &= __now < scheduletime + timedelta(seconds=delay + delay_tolerance)
-        future.set_result(result)
+    def action(__utcnow: datetime):
+        _currentdelay = __utcnow.timestamp() - scheduleutctime.timestamp()
+        future.set_result(delay < _currentdelay < (delay + delay_tolerance))
 
     remove = async_call_later(hass, timedelta(seconds=delay), action)
 
-    assert await asyncio.wait_for(future, delay + delay_tolerance)
-    assert isinstance(remove, typing.Callable)
+    async_fire_time_changed_exact(hass, dt_util.utcnow() + timedelta(seconds=delay))
+
+    async with async_timeout.timeout(delay + delay_tolerance):
+        assert await future, "callback was called but the delay was wrong"
+    assert isinstance(remove, Callable)
     remove()
 
 
 async def test_async_call_later_cancel(hass):
     """Test canceling a call_later action."""
-
     future = asyncio.get_running_loop().create_future()
-    dt_util.now()
     delay = 0.25
     delay_tolerance = 0.1
 
     def action(__now: datetime):
         future.set_result(False)
 
-    remove = async_call_later(hass, timedelta(seconds=delay), action)
-    # wait just a bit..
-    await asyncio.sleep(0.05)
-    # and remove before delay
+    remove = async_call_later(hass, delay, action)
+    # fast forward time a bit..
+    async_fire_time_changed_exact(
+        hass, dt_util.utcnow() + timedelta(seconds=delay - delay_tolerance)
+    )
+    # and remove before firing
     remove()
+    # fast forward time beyond scheduled
+    async_fire_time_changed_exact(hass, dt_util.utcnow() + timedelta(seconds=delay))
 
     with contextlib.suppress(asyncio.TimeoutError):
-        assert await asyncio.wait_for(
-            future, delay + delay_tolerance
-        ), "callback not canceled"
+        async with async_timeout.timeout(delay + delay_tolerance):
+            assert await future, "callback not canceled"
 
 
 async def test_track_state_change_event_chain_multple_entity(hass):
