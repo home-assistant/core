@@ -318,6 +318,7 @@ class DeviceBroker:
 
     def connect(self):
         """Connect handlers/listeners for device/lifecycle events."""
+
         # Setup interval to regenerate the refresh token on a periodic basis.
         # Tokens expire in 30 days and once expired, cannot be recovered.
         async def regenerate_refresh_token(now):

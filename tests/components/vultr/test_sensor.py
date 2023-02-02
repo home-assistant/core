@@ -51,7 +51,6 @@ def test_sensor(hass: HomeAssistant):
     tested = 0
 
     for device in hass_devices:
-
         # Test pre update
         if device.subscription == "576965":
             assert device.name == vultr.DEFAULT_NAME
@@ -74,7 +73,6 @@ def test_sensor(hass: HomeAssistant):
                 tested += 1
 
         elif device.unit_of_measurement == "US$":  # Test Pending Charges
-
             if device.subscription == "576965":  # Default 'Vultr {} {}'
                 assert device.name == "Vultr my new server Pending Charges"
                 assert device.icon == "mdi:currency-usd"

@@ -23,7 +23,7 @@
             },
             "reauth_confirm": {
                 "data": {
-                    "host": "Host"
+                    "host": "Nome do host"
                 },
                 "description": "A integra\u00e7\u00e3o bosch_shc precisa re-autenticar sua conta",
                 "title": "Reautenticar Integra\u00e7\u00e3o"

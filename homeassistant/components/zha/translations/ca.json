@@ -198,7 +198,7 @@
                 "title": "Desconnecta la r\u00e0dio antiga"
             },
             "intent_migrate": {
-                "description": "La r\u00e0dio antiga es restablir\u00e0 de f\u00e0brica. Si utilitzes un adaptador de Z-Wave i Zigbee combinat com el HUSBZB-1, nom\u00e9s restablir\u00e0 la part del Zigbee. \n\nVols continuar?",
+                "description": "Abans de connectar la r\u00e0dio nova, cal restablir de f\u00e0brica la r\u00e0dio antiga. Es realitzar\u00e0 una c\u00f2pia de seguretat autom\u00e0ticament. Si utilitzes un adaptador combinat de Z-Wave i Zigbee com el HUSBZB-1, nom\u00e9s es restablir\u00e0 la part de Zigbee.\n\n*Nota: si est\u00e0s migrant des d'un **ConBee/RaspBee**, assegura't que est\u00e0 executant el microprogramari `0x26720700` o un de m\u00e9s recent! Si no ho est\u00e0, \u00e9s possible que alguns dispositius no funcionin despr\u00e9s de la migraci\u00f3 tret que s'apaguin i s'engeguin de nou.*\n\nVols continuar?",
                 "title": "Migra a una nova r\u00e0dio"
             },
             "manual_pick_radio_type": {

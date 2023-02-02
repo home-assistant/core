@@ -92,7 +92,7 @@ class MockFixFlow(RepairsFlow):
         assert self.issue_id in EXPECTED_DATA
         assert self.data == EXPECTED_DATA[self.issue_id]
 
-        return await (self.async_step_custom_step())
+        return await self.async_step_custom_step()
 
     async def async_step_custom_step(
         self, user_input: dict[str, str] | None = None
