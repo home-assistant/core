@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import Enum
 from functools import partial
 from typing import Any
 
@@ -22,6 +23,23 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .entity import MatterEntity, MatterEntityDescriptionBaseClass
 from .helpers import get_matter
 from .util import renormalize
+
+
+class MatterColorMode(Enum):
+    """Matter color mode."""
+
+    HUE_SATURATION = 0
+    XY = 1
+    COLOR_TEMPERATURE = 2
+
+
+class MatterEnhancedColorMode(Enum):
+    """Matter enhanced color mode."""
+
+    HUE_SATURATION = 0
+    XY = 1
+    COLOR_TEMPERATURE = 2
+    ENHANCED_HUE_SATURATION = 3
 
 
 async def async_setup_entry(
