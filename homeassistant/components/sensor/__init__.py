@@ -259,7 +259,7 @@ class SensorEntity(Entity):
             return True
         # Sensors with custom device classes are not considered numeric
         device_class = try_parse_enum(SensorDeviceClass, self.device_class)
-        return not (device_class is None or device_class in NON_NUMERIC_DEVICE_CLASSES)
+        return device_class not in {None, *NON_NUMERIC_DEVICE_CLASSES}
 
     @property
     def options(self) -> list[str] | None:
