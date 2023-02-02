@@ -12,6 +12,8 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
+from . import init_integration
+
 from tests.common import MockConfigEntry
 
 MIGRATE_OPTIONS_KEYS = {CONF_COOL_AWAY_TEMPERATURE, CONF_HEAT_AWAY_TEMPERATURE}
@@ -27,7 +29,6 @@ async def test_setup_entry(hass: HomeAssistant, config_entry: MockConfigEntry) -
     assert hass.states.async_entity_ids_count() == 1
 
 
-@patch("homeassistant.components.honeywell.UPDATE_LOOP_SLEEP_TIME", 0)
 async def test_setup_multiple_thermostats(
     hass: HomeAssistant, config_entry: MockConfigEntry, location, another_device
 ) -> None:
@@ -40,7 +41,6 @@ async def test_setup_multiple_thermostats(
     assert hass.states.async_entity_ids_count() == 2
 
 
-@patch("homeassistant.components.honeywell.UPDATE_LOOP_SLEEP_TIME", 0)
 async def test_setup_multiple_thermostats_with_same_deviceid(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
@@ -81,3 +81,30 @@ async def test_away_temps_migration(hass: HomeAssistant) -> None:
         CONF_COOL_AWAY_TEMPERATURE: 1,
         CONF_HEAT_AWAY_TEMPERATURE: 2,
     }
+
+
+async def test_login_error(
+    hass: HomeAssistant, client: MagicMock, config_entry: MagicMock
+) -> None:
+    """Test login errors from API."""
+    client.login.side_effect = AIOSomecomfort.AuthError
+    await init_integration(hass, config_entry)
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_connection_error(
+    hass: HomeAssistant, client: MagicMock, config_entry: MagicMock
+) -> None:
+    """Test Connection errors from API."""
+    client.login.side_effect = AIOSomecomfort.ConnectionError
+    await init_integration(hass, config_entry)
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_no_devices(
+    hass: HomeAssistant, client: MagicMock, config_entry: MagicMock
+) -> None:
+    """Test no devices from API."""
+    client.locations_by_id = {}
+    await init_integration(hass, config_entry)
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
