@@ -21,7 +21,7 @@ def setup_platform(
     devs = []
 
     # Add Lutron Switches
-    for (area_name, device) in hass.data[LUTRON_DEVICES]["switch"]:
+    for area_name, device in hass.data[LUTRON_DEVICES]["switch"]:
         dev = LutronSwitch(area_name, device, hass.data[LUTRON_CONTROLLER])
         devs.append(dev)
 

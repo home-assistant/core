@@ -34,7 +34,7 @@ def create_mock_api_discovery(aioclient_mock, bridges):
         URL_NUPNP,
         json=[{"internalipaddress": host, "id": id} for (host, id) in bridges],
     )
-    for (host, bridge_id) in bridges:
+    for host, bridge_id in bridges:
         aioclient_mock.get(
             f"http://{host}/api/config",
             json={"bridgeid": bridge_id},

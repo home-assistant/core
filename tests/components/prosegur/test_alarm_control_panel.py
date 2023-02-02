@@ -73,7 +73,6 @@ async def test_connection_error(hass, mock_auth):
     install.status = Status.ARMED
 
     with patch("pyprosegur.installation.Installation.retrieve", return_value=install):
-
         await setup_platform(hass)
 
         await hass.async_block_till_done()
@@ -81,7 +80,6 @@ async def test_connection_error(hass, mock_auth):
     with patch(
         "pyprosegur.installation.Installation.retrieve", side_effect=ConnectionError
     ):
-
         await entity_component.async_update_entity(hass, PROSEGUR_ALARM_ENTITY)
 
         state = hass.states.get(PROSEGUR_ALARM_ENTITY)

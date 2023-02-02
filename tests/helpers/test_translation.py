@@ -42,7 +42,11 @@ async def test_component_translation_path(hass, enable_custom_integrations):
     )
     assert await async_setup_component(hass, "test_package", {"test_package"})
 
-    (int_test, int_test_embedded, int_test_package,) = await asyncio.gather(
+    (
+        int_test,
+        int_test_embedded,
+        int_test_package,
+    ) = await asyncio.gather(
         async_get_integration(hass, "test"),
         async_get_integration(hass, "test_embedded"),
         async_get_integration(hass, "test_package"),

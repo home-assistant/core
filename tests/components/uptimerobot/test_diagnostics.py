@@ -33,7 +33,6 @@ async def test_entry_diagnostics(
             data=MOCK_UPTIMEROBOT_ACCOUNT,
         ),
     ):
-
         result = await get_diagnostics_for_config_entry(
             hass,
             hass_client,
@@ -68,7 +67,6 @@ async def test_entry_diagnostics_exception(
         "pyuptimerobot.UptimeRobot.async_get_account_details",
         side_effect=UptimeRobotException("Test exception"),
     ):
-
         result = await get_diagnostics_for_config_entry(
             hass,
             hass_client,

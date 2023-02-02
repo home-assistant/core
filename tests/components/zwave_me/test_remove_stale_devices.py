@@ -55,7 +55,10 @@ async def test_remove_stale_devices(
         connections={("mac", "12:34:56:AB:CD:EF")},
         identifiers={("zwave_me", f"{config_entry.unique_id}-{identifier}")},
     )
-    with patch("zwave_me_ws.ZWaveMe.get_connection", mock_connection,), patch(
+    with patch(
+        "zwave_me_ws.ZWaveMe.get_connection",
+        mock_connection,
+    ), patch(
         "homeassistant.components.zwave_me.async_setup_platforms",
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)

@@ -334,7 +334,6 @@ class HoneywellUSThermostat(ClimateEntity):
             _LOGGER.error("Can not get system mode")
             return
         try:
-
             # Set permanent hold
             # and Set temperature
             if mode in COOLING_MODES:

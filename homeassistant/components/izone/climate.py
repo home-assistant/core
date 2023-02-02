@@ -173,6 +173,7 @@ class ControllerDevice(ClimateEntity):
 
     async def async_added_to_hass(self) -> None:
         """Call on adding to hass."""
+
         # Register for connect/disconnect/update events
         @callback
         def controller_disconnected(ctrl: Controller, ex: Exception) -> None:
@@ -290,7 +291,7 @@ class ControllerDevice(ClimateEntity):
             return HVACMode.OFF
         if (mode := self._controller.mode) == Controller.Mode.FREE_AIR:
             return HVACMode.FAN_ONLY
-        for (key, value) in self._state_to_pizone.items():
+        for key, value in self._state_to_pizone.items():
             if value == mode:
                 return key
         assert False, "Should be unreachable"
@@ -527,7 +528,7 @@ class ZoneDevice(ClimateEntity):
     def hvac_mode(self) -> HVACMode | None:
         """Return current operation ie. heat, cool, idle."""
         mode = self._zone.mode
-        for (key, value) in self._state_to_pizone.items():
+        for key, value in self._state_to_pizone.items():
             if value == mode:
                 return key
         return None
