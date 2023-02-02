@@ -26,7 +26,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 
 from .const import CONF_DEVICE_ID, DEFAULT_ARGUMENTS, DEFAULT_PORT, DOMAIN, LOGGER
 from .device import get_device
@@ -45,7 +45,7 @@ def wsdiscovery() -> list[Service]:
     return services
 
 
-async def async_discovery(hass) -> list[dict[str, Any]]:
+async def async_discovery(hass: HomeAssistant) -> list[dict[str, Any]]:
     """Return if there are devices that can be discovered."""
     LOGGER.debug("Starting ONVIF discovery")
     services = await hass.async_add_executor_job(wsdiscovery)
