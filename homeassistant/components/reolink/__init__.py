@@ -9,14 +9,7 @@ import logging
 
 from aiohttp import ClientConnectorError
 import async_timeout
-from reolink_aio.exceptions import (
-    ApiError,
-    InvalidContentTypeError,
-    LoginError,
-    NoDataError,
-    ReolinkError,
-    UnexpectedDataError,
-)
+from reolink_aio.exceptions import CredentialsInvalidError, ReolinkError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
@@ -48,17 +41,14 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     try:
         await host.async_init()
-    except UserNotAdmin as err:
+    except (UserNotAdmin, CredentialsInvalidError) as err:
+        await host.stop()
         raise ConfigEntryAuthFailed(err) from err
     except (
         ClientConnectorError,
         asyncio.TimeoutError,
-        ApiError,
-        InvalidContentTypeError,
-        LoginError,
-        NoDataError,
         ReolinkException,
-        UnexpectedDataError,
+        ReolinkError,
     ) as err:
         await host.stop()
         raise ConfigEntryNotReady(

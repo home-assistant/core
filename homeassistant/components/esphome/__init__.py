@@ -646,9 +646,10 @@ async def platform_async_setup_entry(
         # Add entities to Home Assistant
         async_add_entities(add_entities)
 
-    signal = f"esphome_{entry.entry_id}_on_list"
     entry_data.cleanup_callbacks.append(
-        async_dispatcher_connect(hass, signal, async_list_entities)
+        async_dispatcher_connect(
+            hass, entry_data.signal_static_info_updated, async_list_entities
+        )
     )
 
 

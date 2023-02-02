@@ -23,7 +23,7 @@
             "fix_flow": {
                 "step": {
                     "confirm": {
-                        "description": "Rain Bird-tjenesten `rainbird.set_rain_delay` blir fjernet og erstattet av en Nummer-enhet for \u00e5 administrere regnforsinkelsen. Eventuelle eksisterende automatiseringer eller skript m\u00e5 oppdateres for \u00e5 bruke `number.set_value` med et m\u00e5l p\u00e5 ` {alternate_target} ` i stedet.",
+                        "description": "Rain Bird-tjenesten `rainbird.set_rain_delay` blir fjernet og erstattet av en Nummer-entitet for \u00e5 administrere regnforsinkelsen. Eventuelle eksisterende automatiseringer eller skript m\u00e5 oppdateres for \u00e5 bruke `number.set_value` med et m\u00e5l p\u00e5 ` {alternate_target} ` i stedet.",
                         "title": "Rain Bird Rain Delay Service blir fjernet"
                     }
                 }

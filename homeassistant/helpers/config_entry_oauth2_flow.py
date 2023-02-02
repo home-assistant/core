@@ -13,7 +13,7 @@ from collections.abc import Awaitable, Callable
 import logging
 import secrets
 import time
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 from aiohttp import client, web
 import async_timeout
@@ -541,7 +541,7 @@ def _encode_jwt(hass: HomeAssistant, data: dict) -> str:
 @callback
 def _decode_jwt(hass: HomeAssistant, encoded: str) -> dict | None:
     """JWT encode data."""
-    secret = cast(Optional[str], hass.data.get(DATA_JWT_SECRET))
+    secret: str | None = hass.data.get(DATA_JWT_SECRET)
 
     if secret is None:
         return None

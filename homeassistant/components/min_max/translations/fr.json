@@ -30,5 +30,18 @@
             }
         }
     },
+    "selector": {
+        "type": {
+            "options": {
+                "last": "Mise \u00e0 jour la plus r\u00e9cente",
+                "max": "Maximum",
+                "mean": "Moyenne",
+                "median": "M\u00e9diane",
+                "min": "Minimum",
+                "range": "\u00c9tendue",
+                "sum": "Somme"
+            }
+        }
+    },
     "title": "Capteur de valeur minimale, maximale, moyenne ou m\u00e9diane"
 }

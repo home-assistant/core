@@ -180,7 +180,7 @@ class SonosSpeaker:
             (f"{SONOS_VANISHED}-{self.soco.uid}", self.async_vanished),
         )
 
-        for (signal, target) in dispatch_pairs:
+        for signal, target in dispatch_pairs:
             entry.async_on_unload(
                 async_dispatcher_connect(
                     self.hass,
