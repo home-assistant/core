@@ -20,6 +20,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .const import LOGGER
 from .entity import MatterEntity, MatterEntityDescriptionBaseClass
 from .helpers import get_matter
 from .util import renormalize
@@ -28,18 +29,16 @@ from .util import renormalize
 class MatterColorMode(Enum):
     """Matter color mode."""
 
-    HUE_SATURATION = 0
+    HS = 0
     XY = 1
-    COLOR_TEMPERATURE = 2
+    COLOR_TEMP = 2
 
 
-class MatterEnhancedColorMode(Enum):
-    """Matter enhanced color mode."""
-
-    HUE_SATURATION = 0
-    XY = 1
-    COLOR_TEMPERATURE = 2
-    ENHANCED_HUE_SATURATION = 3
+COLOR_MODE_MAP = {
+    MatterColorMode.HS: ColorMode.HS,
+    MatterColorMode.XY: ColorMode.XY,
+    MatterColorMode.COLOR_TEMP: ColorMode.COLOR_TEMP,
+}
 
 
 async def async_setup_entry(
@@ -61,6 +60,20 @@ class MatterLight(MatterEntity, LightEntity):
         """Return if device supports brightness."""
         return (
             clusters.LevelControl.Attributes.CurrentLevel
+            in self.entity_description.subscribe_attributes
+        )
+
+    def _supports_color_temperature(self) -> bool:
+        """Return if device supports color temperature."""
+        return (
+            clusters.ColorControl.Attributes.ColorTemperatureMireds
+            in self.entity_description.subscribe_attributes
+        )
+
+    def _supports_color(self) -> bool:
+        """Return if device supports color."""
+        return (
+            clusters.ColorControl.Attributes.ColorMode
             in self.entity_description.subscribe_attributes
         )
 
@@ -107,10 +120,101 @@ class MatterLight(MatterEntity, LightEntity):
     @callback
     def _update_from_device(self) -> None:
         """Update from device."""
+
+        supports_color = self._supports_color()
+
+        if self._attr_supported_color_modes is None and supports_color:
+            self._attr_supported_color_modes = {
+                ColorMode.XY,
+                ColorMode.COLOR_TEMP,
+                ColorMode.BRIGHTNESS,
+            }
+
+            # Adds HS if supported
+            # Feature map:
+            # 0: Supports Hue and Saturation (Optional if extended color model is supported)
+            # 1: Supports Enhanced Hue and Saturation (Optional if extended color model is supported)
+            # 2: Supports Color Loop
+            # 3: Supports XY Color (Mandatory if extended color model is supported)
+            # 4: Supports Color Temperature (Mandatory if extended color model is supported)
+
+            # Fix this in the library as getting the ColorControl cluster is not working
+            # self._device_type_instance.get_cluster(clusters.ColorControl)
+            class ColorControl:
+                """ColorControl cluster testing class."""
+
+                featureMap = 25
+
+            colorcontrol = ColorControl  # Enables HS for testing purposes
+            if colorcontrol.featureMap & (1 << 0):
+                self._attr_supported_color_modes.add(ColorMode.HS)
+
+        supports_color_temperature = self._supports_color_temperature()
+
+        if self._attr_supported_color_modes is None and supports_color_temperature:
+            self._attr_supported_color_modes = {
+                ColorMode.COLOR_TEMP,
+                ColorMode.BRIGHTNESS,
+            }
+
         supports_brigthness = self._supports_brightness()
 
         if self._attr_supported_color_modes is None and supports_brigthness:
             self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+
+        LOGGER.debug(
+            "Supported color modes: %s for %s",
+            self._attr_supported_color_modes,
+            self._device_type_instance,
+        )
+
+        if supports_color:
+            color_mode = self.get_matter_attribute(
+                clusters.ColorControl.Attributes.ColorMode
+            )
+
+            assert color_mode is not None
+
+            self._attr_color_mode = COLOR_MODE_MAP[MatterColorMode(color_mode.value)]
+            LOGGER.info(
+                "Color mode: %s for %s",
+                self._attr_color_mode,
+                self._device_type_instance,
+            )
+
+            if self._attr_color_mode == ColorMode.HS:
+                hue = self.get_matter_attribute(
+                    clusters.ColorControl.Attributes.CurrentHue
+                )
+
+                saturation = self.get_matter_attribute(
+                    clusters.ColorControl.Attributes.CurrentSaturation
+                )
+
+                assert hue is not None
+                assert saturation is not None
+
+                self._attr_hs_color = (hue.value, saturation.value)
+            else:
+                xy_color = (
+                    self.get_matter_attribute(
+                        clusters.ColorControl.Attributes.CurrentX
+                    ),
+                    self.get_matter_attribute(
+                        clusters.ColorControl.Attributes.CurrentY
+                    ),
+                )
+
+                assert xy_color[0] is not None
+                assert xy_color[1] is not None
+
+                self._attr_xy_color = (xy_color[0].value, xy_color[1].value)
+
+        if supports_color_temperature:
+            if color_temp := self.get_matter_attribute(
+                clusters.ColorControl.Attributes.ColorTemperatureMireds
+            ):
+                self._attr_color_temp = color_temp.value
 
         if attr := self.get_matter_attribute(clusters.OnOff.Attributes.OnOff):
             self._attr_is_on = attr.value
@@ -186,6 +290,8 @@ DEVICE_ENTITY: dict[
             clusters.OnOff.Attributes.OnOff,
             clusters.LevelControl.Attributes.CurrentLevel,
             clusters.ColorControl.Attributes.ColorMode,
+            clusters.ColorControl.Attributes.CurrentHue,
+            clusters.ColorControl.Attributes.CurrentSaturation,
             clusters.ColorControl.Attributes.CurrentX,
             clusters.ColorControl.Attributes.CurrentY,
             clusters.ColorControl.Attributes.ColorTemperatureMireds,
