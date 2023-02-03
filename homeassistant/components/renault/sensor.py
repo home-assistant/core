@@ -257,7 +257,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         device_class=SensorDeviceClass.ENERGY,
         name="Battery available energy",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
     ),
     RenaultSensorEntityDescription(
         key="battery_temperature",
