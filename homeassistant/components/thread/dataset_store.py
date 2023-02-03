@@ -36,6 +36,21 @@ class DatasetEntry:
         """Return the dataset in dict format."""
         return tlv_parser.parse_tlv(self.tlv)
 
+    @property
+    def extended_pan_id(self) -> str | None:
+        """Return extended PAN ID as a hex string."""
+        return self.dataset.get(tlv_parser.MeshcopTLVType.EXTPANID)
+
+    @property
+    def network_name(self) -> str | None:
+        """Return network name as a string."""
+        return self.dataset.get(tlv_parser.MeshcopTLVType.NETWORKNAME)
+
+    @property
+    def pan_id(self) -> str | None:
+        """Return PAN ID as a hex string."""
+        return self.dataset.get(tlv_parser.MeshcopTLVType.PANID)
+
     def to_json(self) -> dict[str, Any]:
         """Return a JSON serializable representation for storage."""
         return {
@@ -77,6 +92,11 @@ class DatasetStore:
         self.datasets[entry.id] = entry
         self.async_schedule_save()
 
+    @callback
+    def async_get(self, dataset_id: str) -> DatasetEntry | None:
+        """Get dataset by id."""
+        return self.datasets.get(dataset_id)
+
     async def async_load(self) -> None:
         """Load the datasets."""
         data = await self._store.async_load()
@@ -110,7 +130,7 @@ class DatasetStore:
 
 
 @singleton(DATA_STORE)
-async def _async_get_store(hass: HomeAssistant) -> DatasetStore:
+async def async_get_store(hass: HomeAssistant) -> DatasetStore:
     """Get the dataset store."""
     store = DatasetStore(hass)
     await store.async_load()
@@ -119,5 +139,5 @@ async def _async_get_store(hass: HomeAssistant) -> DatasetStore:
 
 async def async_add_dataset(hass: HomeAssistant, source: str, tlv: str) -> None:
     """Add a dataset."""
-    store = await _async_get_store(hass)
+    store = await async_get_store(hass)
     store.async_add(source, tlv)

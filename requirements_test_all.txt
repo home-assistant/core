@@ -343,7 +343,7 @@ aurorapy==0.2.7
 axis==46
 
 # homeassistant.components.azure_event_hub
-azure-eventhub==5.7.0
+azure-eventhub==5.11.1
 
 # homeassistant.components.homekit
 base36==0.1.1
@@ -488,6 +488,9 @@ dynalite_devices==0.1.47
 
 # homeassistant.components.rainforest_eagle
 eagle100==0.1.1
+
+# homeassistant.components.easyenergy
+easyenergy==0.1.2
 
 # homeassistant.components.elgato
 elgato==3.0.0
@@ -1051,7 +1054,7 @@ py-melissa-climate==2.1.4
 py-nightscout==1.2.2
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==2.1.1
+py-synologydsm-api==2.1.2
 
 # homeassistant.components.seventeentrack
 py17track==2021.12.2
@@ -1791,7 +1794,7 @@ ultraheat-api==0.5.1
 unifi-discovery==1.1.7
 
 # homeassistant.components.upb
-upb_lib==0.4.12
+upb_lib==0.5.3
 
 # homeassistant.components.upcloud
 upcloud-api==2.0.0
@@ -1904,7 +1907,7 @@ zamg==0.2.2
 zeroconf==0.47.1
 
 # homeassistant.components.zeversolar
-zeversolar==0.2.0
+zeversolar==0.3.0
 
 # homeassistant.components.zha
 zha-quirks==0.0.92
