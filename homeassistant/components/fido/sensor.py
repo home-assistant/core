@@ -1,5 +1,4 @@
-"""
-Support for Fido.
+"""Support for Fido.
 
 Get data from 'Usage Summary' page:
 https://www.fido.ca/pages/#/my-account/wireless

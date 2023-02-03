@@ -63,8 +63,7 @@ def frame_image_data(frame_i, total_frames):
 
 
 def generate_video(encoder, container_format, duration):
-    """
-    Generate a test video.
+    """Generate a test video.
 
     See: http://docs.mikeboers.com/pyav/develop/cookbook/numpy.html
     """

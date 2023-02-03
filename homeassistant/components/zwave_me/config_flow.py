@@ -86,8 +86,7 @@ class ZWaveMeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> FlowResult:
-        """
-        Handle a discovered Z-Wave accessory - get url to pass into user step.
+        """Handle a discovered Z-Wave accessory - get url to pass into user step.
 
         This flow is triggered by the discovery component.
         """
