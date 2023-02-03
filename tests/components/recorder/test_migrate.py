@@ -345,6 +345,10 @@ async def test_schema_migrate(hass, start_version, live):
         wraps=_instrument_apply_update,
     ), patch(
         "homeassistant.components.recorder.Recorder._schedule_compile_missing_statistics",
+    ), patch(
+        "homeassistant.components.recorder.Recorder._process_state_changed_event_into_session",
+    ), patch(
+        "homeassistant.components.recorder.Recorder._process_non_state_changed_event_into_session",
     ):
         recorder_helper.async_initialize_recorder(hass)
         hass.async_create_task(

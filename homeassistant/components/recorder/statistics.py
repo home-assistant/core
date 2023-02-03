@@ -418,7 +418,17 @@ def _find_duplicates(
         .subquery()
     )
     query = (
-        session.query(table)
+        session.query(
+            table.id,
+            table.metadata_id,
+            table.start,
+            table.mean,
+            table.min,
+            table.max,
+            table.last_reset,
+            table.state,
+            table.sum,
+        )
         .outerjoin(
             subquery,
             (subquery.c.metadata_id == table.metadata_id)
@@ -441,13 +451,23 @@ def _find_duplicates(
     def columns_to_dict(duplicate: type[Statistics | StatisticsShortTerm]) -> dict:
         """Convert a SQLAlchemy row to dict."""
         dict_ = {}
-        for key in duplicate.__mapper__.c.keys():
+        for key in (
+            "id",
+            "metadata_id",
+            "start",
+            "mean",
+            "min",
+            "max",
+            "last_reset",
+            "state",
+            "sum",
+        ):
             dict_[key] = getattr(duplicate, key)
         return dict_
 
     def compare_statistic_rows(row1: dict, row2: dict) -> bool:
         """Compare two statistics rows, ignoring id and created."""
-        ignore_keys = {"id", "created", "created_ts"}
+        ignore_keys = {"id"}
         keys1 = set(row1).difference(ignore_keys)
         keys2 = set(row2).difference(ignore_keys)
         return keys1 == keys2 and all(row1[k] == row2[k] for k in keys1)

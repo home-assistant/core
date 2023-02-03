@@ -280,13 +280,21 @@ def _drop_index(
             "Finished dropping index %s from table %s", index_name, table_name
         )
     else:
-        if index_name in ("ix_states_entity_id", "ix_states_context_parent_id"):
+        if index_name in (
+            "ix_states_entity_id",
+            "ix_states_context_parent_id",
+            "ix_statistics_short_term_statistic_id_start",
+            "ix_statistics_statistic_id_start",
+        ):
             # ix_states_context_parent_id was only there on nightly so we do not want
             # to generate log noise or issues about it.
             #
             # ix_states_entity_id was only there for users who upgraded from schema
             # version 8 or earlier. Newer installs will not have it so we do not
             # want to generate log noise or issues about it.
+            #
+            # ix_statistics_short_term_statistic_id_start and ix_statistics_statistic_id_start
+            # were only there for users who upgraded from schema version 23 or earlier.
             return
 
         _LOGGER.warning(
@@ -757,35 +765,11 @@ def _apply_update(  # noqa: C901
         # Add name column to StatisticsMeta
         _add_columns(session_maker, "statistics_meta", ["name VARCHAR(255)"])
     elif new_version == 24:
-        # Recreate statistics indices to block duplicated statistics
-        _drop_index(session_maker, "statistics", "ix_statistics_statistic_id_start")
-        _drop_index(
-            session_maker,
-            "statistics_short_term",
-            "ix_statistics_short_term_statistic_id_start",
-        )
-        try:
-            _create_index(
-                session_maker, "statistics", "ix_statistics_statistic_id_start"
-            )
-            _create_index(
-                session_maker,
-                "statistics_short_term",
-                "ix_statistics_short_term_statistic_id_start",
-            )
-        except DatabaseError:
-            # There may be duplicated statistics entries, delete duplicated statistics
-            # and try again
-            with session_scope(session=session_maker()) as session:
-                delete_statistics_duplicates(hass, session)
-            _create_index(
-                session_maker, "statistics", "ix_statistics_statistic_id_start"
-            )
-            _create_index(
-                session_maker,
-                "statistics_short_term",
-                "ix_statistics_short_term_statistic_id_start",
-            )
+        # There may be duplicated statistics entries, delete duplicated statistics
+        # and try again
+        _LOGGER.debug("Deleting duplicated statistics entries")
+        with session_scope(session=session_maker()) as session:
+            delete_statistics_duplicates(hass, session)
     elif new_version == 25:
         _add_columns(session_maker, "states", [f"attributes_id {big_int}"])
         _create_index(session_maker, "states", "ix_states_attributes_id")
