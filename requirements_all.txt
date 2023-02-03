@@ -398,7 +398,7 @@ aurorapy==0.2.7
 axis==46
 
 # homeassistant.components.azure_event_hub
-azure-eventhub==5.7.0
+azure-eventhub==5.11.1
 
 # homeassistant.components.azure_service_bus
 azure-servicebus==7.8.0
@@ -623,6 +623,9 @@ dynalite_devices==0.1.47
 
 # homeassistant.components.rainforest_eagle
 eagle100==0.1.1
+
+# homeassistant.components.easyenergy
+easyenergy==0.1.2
 
 # homeassistant.components.ebusd
 ebusdpy==0.0.17
@@ -1442,7 +1445,7 @@ py-schluter==0.1.7
 py-sucks==0.9.8
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==2.1.1
+py-synologydsm-api==2.1.2
 
 # homeassistant.components.zabbix
 py-zabbix==1.1.7
@@ -2545,7 +2548,7 @@ unifi-discovery==1.1.7
 unifiled==0.11
 
 # homeassistant.components.upb
-upb_lib==0.4.12
+upb_lib==0.5.3
 
 # homeassistant.components.upcloud
 upcloud-api==2.0.0
@@ -2614,7 +2617,7 @@ webexteamssdk==1.1.1
 whirlpool-sixth-sense==0.18.2
 
 # homeassistant.components.whois
-whois==0.9.23
+whois==0.9.27
 
 # homeassistant.components.wiffi
 wiffi==1.1.0
@@ -2691,7 +2694,7 @@ zengge==0.2
 zeroconf==0.47.1
 
 # homeassistant.components.zeversolar
-zeversolar==0.2.0
+zeversolar==0.3.0
 
 # homeassistant.components.zha
 zha-quirks==0.0.92

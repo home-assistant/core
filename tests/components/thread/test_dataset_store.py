@@ -5,13 +5,9 @@ from python_otbr_api.tlv_parser import TLVError
 from homeassistant.components.thread import dataset_store
 from homeassistant.core import HomeAssistant
 
-from tests.common import flush_store
+from . import DATASET_1, DATASET_2, DATASET_3
 
-DATASET_1 = (
-    "0E080000000000010000000300000F35060004001FFFE0020811111111222222220708FDAD70BF"
-    "E5AA15DD051000112233445566778899AABBCCDDEEFF030E4F70656E54687265616444656D6F01"
-    "0212340410445F2B5CA6F2A93A55CE570A70EFEECB0C0402A0F7F8"
-)
+from tests.common import flush_store
 
 # Same as DATASET_1, but PAN ID moved to the end
 DATASET_1_REORDERED = (
@@ -20,25 +16,13 @@ DATASET_1_REORDERED = (
     "10445F2B5CA6F2A93A55CE570A70EFEECB0C0402A0F7F801021234"
 )
 
-DATASET_2 = (
-    "0E080000000000010000000300000F35060004001FFFE0020811111111222222220708FDAD70BF"
-    "E5AA15DD051000112233445566778899AABBCCDDEEFF030E486f6d65417373697374616e742101"
-    "0212340410445F2B5CA6F2A93A55CE570A70EFEECB0C0402A0F7F8"
-)
-
-DATASET_3 = (
-    "0E080000000000010000000300000F35060004001FFFE0020811111111222222220708FDAD70BF"
-    "E5AA15DD051000112233445566778899AABBCCDDEEFF030E7ef09f90a3f09f90a5f09f90a47e01"
-    "0212340410445F2B5CA6F2A93A55CE570A70EFEECB0C0402A0F7F8"
-)
-
 
 async def test_add_invalid_dataset(hass: HomeAssistant) -> None:
     """Test adding an invalid dataset."""
     with pytest.raises(TLVError, match="unknown type 222"):
         await dataset_store.async_add_dataset(hass, "source", "DEADBEEF")
 
-    store = await dataset_store._async_get_store(hass)
+    store = await dataset_store.async_get_store(hass)
     assert len(store.datasets) == 0
 
 
@@ -46,7 +30,7 @@ async def test_add_dataset_twice(hass: HomeAssistant) -> None:
     """Test adding dataset twice does nothing."""
     await dataset_store.async_add_dataset(hass, "source", DATASET_1)
 
-    store = await dataset_store._async_get_store(hass)
+    store = await dataset_store.async_get_store(hass)
     assert len(store.datasets) == 1
     created = list(store.datasets.values())[0].created
 
@@ -59,13 +43,52 @@ async def test_add_dataset_reordered(hass: HomeAssistant) -> None:
     """Test adding dataset with keys in a different order does nothing."""
     await dataset_store.async_add_dataset(hass, "source", DATASET_1)
 
-    store = await dataset_store._async_get_store(hass)
+    store = await dataset_store.async_get_store(hass)
     assert len(store.datasets) == 1
     created = list(store.datasets.values())[0].created
 
     await dataset_store.async_add_dataset(hass, "new_source", DATASET_1_REORDERED)
     assert len(store.datasets) == 1
     assert list(store.datasets.values())[0].created == created
+
+
+async def test_dataset_properties(hass: HomeAssistant) -> None:
+    """Test dataset entry properties."""
+    datasets = [
+        {"source": "Google", "tlv": DATASET_1},
+        {"source": "Multipan", "tlv": DATASET_2},
+        {"source": "🎅", "tlv": DATASET_3},
+    ]
+
+    for dataset in datasets:
+        await dataset_store.async_add_dataset(hass, dataset["source"], dataset["tlv"])
+
+    store = await dataset_store.async_get_store(hass)
+    for dataset in store.datasets.values():
+        if dataset.source == "Google":
+            dataset_1 = dataset
+        if dataset.source == "Multipan":
+            dataset_2 = dataset
+        if dataset.source == "🎅":
+            dataset_3 = dataset
+
+    dataset = store.async_get(dataset_1.id)
+    assert dataset == dataset_1
+    assert dataset.extended_pan_id == "1111111122222222"
+    assert dataset.network_name == "OpenThreadDemo"
+    assert dataset.pan_id == "1234"
+
+    dataset = store.async_get(dataset_2.id)
+    assert dataset == dataset_2
+    assert dataset.extended_pan_id == "1111111122222222"
+    assert dataset.network_name == "HomeAssistant!"
+    assert dataset.pan_id == "1234"
+
+    dataset = store.async_get(dataset_3.id)
+    assert dataset == dataset_3
+    assert dataset.extended_pan_id == "1111111122222222"
+    assert dataset.network_name == "~🐣🐥🐤~"
+    assert dataset.pan_id == "1234"
 
 
 async def test_load_datasets(hass: HomeAssistant) -> None:
@@ -86,7 +109,7 @@ async def test_load_datasets(hass: HomeAssistant) -> None:
         },
     ]
 
-    store1 = await dataset_store._async_get_store(hass)
+    store1 = await dataset_store.async_get_store(hass)
     for dataset in datasets:
         store1.async_add(dataset["source"], dataset["tlv"])
     assert len(store1.datasets) == 3
@@ -153,5 +176,5 @@ async def test_loading_datasets_from_storage(hass: HomeAssistant, hass_storage) 
         },
     }
 
-    store = await dataset_store._async_get_store(hass)
+    store = await dataset_store.async_get_store(hass)
     assert len(store.datasets) == 3
