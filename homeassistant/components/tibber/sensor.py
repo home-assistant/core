@@ -191,13 +191,13 @@ RT_SENSORS: tuple[SensorEntityDescription, ...] = (
         key="accumulatedReward",
         name="accumulated reward",
         device_class=SensorDeviceClass.MONETARY,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
         key="accumulatedCost",
         name="accumulated cost",
         device_class=SensorDeviceClass.MONETARY,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
         key="powerFactor",
@@ -213,7 +213,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         key="month_cost",
         name="Monthly cost",
         device_class=SensorDeviceClass.MONETARY,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
         key="peak_hour",

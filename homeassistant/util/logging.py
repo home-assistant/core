@@ -123,14 +123,14 @@ def log_exception(format_err: Callable[..., Any], *args: Any) -> None:
 def catch_log_exception(
     func: Callable[..., Coroutine[Any, Any, Any]], format_err: Callable[..., Any]
 ) -> Callable[..., Coroutine[Any, Any, None]]:
-    """Overload for Coroutine that returns a Coroutine."""
+    ...
 
 
 @overload
 def catch_log_exception(
     func: Callable[..., Any], format_err: Callable[..., Any]
 ) -> Callable[..., None] | Callable[..., Coroutine[Any, Any, None]]:
-    """Overload for a callback that returns a callback."""
+    ...
 
 
 def catch_log_exception(
