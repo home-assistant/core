@@ -43,7 +43,10 @@ from zwave_js_server.model.node.firmware import (
     NodeFirmwareUpdateProgress,
     NodeFirmwareUpdateResult,
 )
-from zwave_js_server.model.utils import async_parse_qr_code_string
+from zwave_js_server.model.utils import (
+    async_parse_qr_code_string,
+    async_try_parse_dsk_from_qr_code_string,
+)
 from zwave_js_server.util.node import async_set_config_parameter
 
 from homeassistant.components import websocket_api
@@ -396,6 +399,9 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_unprovision_smart_start_node)
     websocket_api.async_register_command(hass, websocket_get_provisioning_entries)
     websocket_api.async_register_command(hass, websocket_parse_qr_code_string)
+    websocket_api.async_register_command(
+        hass, websocket_try_parse_dsk_from_qr_code_string
+    )
     websocket_api.async_register_command(hass, websocket_supports_feature)
     websocket_api.async_register_command(hass, websocket_stop_inclusion)
     websocket_api.async_register_command(hass, websocket_stop_exclusion)
@@ -978,6 +984,32 @@ async def websocket_parse_qr_code_string(
         client, msg[QR_CODE_STRING]
     )
     connection.send_result(msg[ID], dataclasses.asdict(qr_provisioning_information))
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/try_parse_dsk_from_qr_code_string",
+        vol.Required(ENTRY_ID): str,
+        vol.Required(QR_CODE_STRING): QR_CODE_STRING_SCHEMA,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_entry
+async def websocket_try_parse_dsk_from_qr_code_string(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    entry: ConfigEntry,
+    client: Client,
+    driver: Driver,
+) -> None:
+    """Try to parse a DSK string from a QR code."""
+    connection.send_result(
+        msg[ID],
+        await async_try_parse_dsk_from_qr_code_string(client, msg[QR_CODE_STRING]),
+    )
 
 
 @websocket_api.require_admin
