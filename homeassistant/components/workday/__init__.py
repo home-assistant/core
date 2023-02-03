@@ -55,7 +55,7 @@ DATE_VALIDATOR = HolidayBase()
 
 WORKDAY_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_COUNTRY): valid_country,
+        vol.Required(CONF_COUNTRY): valid_country,
         vol.Optional(CONF_EXCLUDES, default=DEFAULT_EXCLUDES): vol.All(
             cv.ensure_list, [vol.In(ALLOWED_DAYS)]
         ),
