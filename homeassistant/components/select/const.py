@@ -6,6 +6,7 @@ ATTR_CYCLE = "cycle"
 ATTR_OPTIONS = "options"
 ATTR_OPTION = "option"
 
+CONF_CYCLE = "cycle"
 CONF_OPTION = "option"
 
 SERVICE_SELECT_FIRST = "select_first"
