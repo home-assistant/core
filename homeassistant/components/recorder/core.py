@@ -730,7 +730,8 @@ class Recorder(threading.Thread):
                 " upgrade. Do not power down or restart the system until the upgrade"
                 " completes. Integrations that read the database, such as logbook,"
                 " history, and statistics may return inconsistent results until the "
-                " upgrade completes."
+                " upgrade completes. This notification will be automatically dismissed"
+                " when the upgrade completes."
             ),
             "Database upgrade in progress",
             "recorder_database_migration",
