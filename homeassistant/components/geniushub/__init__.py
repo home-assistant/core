@@ -174,7 +174,9 @@ def setup_service_functions(hass: HomeAssistant, broker):
 class GeniusBroker:
     """Container for geniushub client and data."""
 
-    def __init__(self, hass, client, hub_uid) -> None:
+    def __init__(
+        self, hass: HomeAssistant, client: GeniusHub, hub_uid: str | None
+    ) -> None:
         """Initialize the geniushub client."""
         self.hass = hass
         self.client = client
@@ -182,7 +184,7 @@ class GeniusBroker:
         self._connect_error = False
 
     @property
-    def hub_uid(self) -> int:
+    def hub_uid(self) -> str:
         """Return the Hub UID (MAC address)."""
         return self._hub_uid if self._hub_uid is not None else self.client.uid
 
