@@ -12,7 +12,7 @@ from collections.abc import Callable
 from contextlib import suppress
 from datetime import datetime
 import functools as ft
-from typing import Any, cast
+from typing import Any
 
 from homeassistant.const import ATTR_ENTITY_PICTURE, ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant, ServiceCall, callback as async_callback
@@ -135,7 +135,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 def _get_requests(hass: HomeAssistant) -> dict[str, Configurator]:
     """Return typed configurator_requests data."""
-    return hass.data[DATA_REQUESTS]
+    return hass.data[DATA_REQUESTS]  # type: ignore[no-any-return]
 
 
 class Configurator:
@@ -233,12 +233,12 @@ class Configurator:
 
     async def async_handle_service_call(self, call: ServiceCall) -> None:
         """Handle a configure service call."""
-        request_id = call.data.get(ATTR_CONFIGURE_ID)
+        request_id: str | None = call.data.get(ATTR_CONFIGURE_ID)
 
-        if not self._validate_request_id(request_id):
+        if not request_id or not self._validate_request_id(request_id):
             return
 
-        _, _, callback = self._requests[cast(str, request_id)]
+        _, _, callback = self._requests[request_id]
 
         # field validation goes here?
         if callback and (
@@ -251,6 +251,6 @@ class Configurator:
         self._cur_id += 1
         return f"{id(self)}-{self._cur_id}"
 
-    def _validate_request_id(self, request_id) -> bool:
+    def _validate_request_id(self, request_id: str) -> bool:
         """Validate that the request belongs to this instance."""
         return request_id in self._requests
