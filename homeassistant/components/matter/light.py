@@ -11,6 +11,9 @@ from matter_server.common.models import device_types
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP,
+    ATTR_HS_COLOR,
+    ATTR_XY_COLOR,
     ColorMode,
     LightEntity,
     LightEntityDescription,
@@ -77,13 +80,59 @@ class MatterLight(MatterEntity, LightEntity):
             in self.entity_description.subscribe_attributes
         )
 
+    async def send_device_command(self, command: Any) -> None:
+        """Send device command."""
+        await self.matter_client.send_device_command(
+            node_id=self._device_type_instance.node.node_id,
+            endpoint=self._device_type_instance.endpoint,
+            command=command,
+        )
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn light on."""
-        if ATTR_BRIGHTNESS not in kwargs or not self._supports_brightness():
+
+        hs_color = kwargs.get(ATTR_HS_COLOR)
+        xy_color = kwargs.get(ATTR_XY_COLOR)
+        color_temp = kwargs.get(ATTR_COLOR_TEMP)
+        brightness = kwargs.get(ATTR_BRIGHTNESS)
+
+        if hs_color is not None:
+            LOGGER.info("Setting hs color to %s", hs_color)
             await self.matter_client.send_device_command(
                 node_id=self._device_type_instance.node.node_id,
                 endpoint=self._device_type_instance.endpoint,
-                command=clusters.OnOff.Commands.On(),
+                command=clusters.ColorControl.Commands.MoveToHueAndSaturation(
+                    hue=round(hs_color[0]),
+                    saturation=round(hs_color[1]),
+                    # It's required in TLV. We don't implement transition time yet.
+                    transitionTime=0,
+                ),
+            )
+        elif xy_color is not None:
+            LOGGER.info("Setting xy color to %s", xy_color)
+            await self.matter_client.send_device_command(
+                node_id=self._device_type_instance.node.node_id,
+                endpoint=self._device_type_instance.endpoint,
+                command=clusters.ColorControl.Commands.MoveToColor(
+                    colorX=round(xy_color[0]),
+                    colorY=round(xy_color[1]),
+                    # It's required in TLV. We don't implement transition time yet.
+                    transitionTime=0,
+                ),
+            )
+        elif color_temp is not None:
+            LOGGER.info("Setting color temp to %s", color_temp)
+            await self.send_device_command(
+                clusters.ColorControl.Commands.MoveToColorTemperature(
+                    colorTemperature=color_temp,
+                    # It's required in TLV. We don't implement transition time yet.
+                    transitionTime=0,
+                )
+            )
+
+        if not brightness or not self._supports_brightness():
+            await self.send_device_command(
+                clusters.OnOff.Commands.On(),
             )
             return
 
@@ -99,10 +148,8 @@ class MatterLight(MatterEntity, LightEntity):
             )
         )
 
-        await self.matter_client.send_device_command(
-            node_id=self._device_type_instance.node.node_id,
-            endpoint=self._device_type_instance.endpoint,
-            command=clusters.LevelControl.Commands.MoveToLevelWithOnOff(
+        await self.send_device_command(
+            clusters.LevelControl.Commands.MoveToLevelWithOnOff(
                 level=level,
                 # It's required in TLV. We don't implement transition time yet.
                 transitionTime=0,
@@ -134,15 +181,13 @@ class MatterLight(MatterEntity, LightEntity):
             # Feature map:
             # 0: Supports Hue and Saturation (Optional if extended color model is supported)
             # 1: Supports Enhanced Hue and Saturation (Optional if extended color model is supported)
-            # 2: Supports Color Loop
+            # 2: Supports Color Loop (Optional if extended color model is supported)
             # 3: Supports XY Color (Mandatory if extended color model is supported)
             # 4: Supports Color Temperature (Mandatory if extended color model is supported)
-
-            # Fix this in the library as getting the ColorControl cluster is not working
-            if feature_map := self.get_matter_attribute(
-                clusters.ColorControl.Attributes.FeatureMap
+            if colorcontrol := self._device_type_instance.get_cluster(
+                clusters.ColorControl
             ):
-                if feature_map.value & (1 << 0):
+                if colorcontrol.featureMap & (1 << 0):
                     self._attr_supported_color_modes.add(ColorMode.HS)
 
         supports_color_temperature = self._supports_color_temperature()
@@ -291,7 +336,6 @@ DEVICE_ENTITY: dict[
             clusters.ColorControl.Attributes.CurrentX,
             clusters.ColorControl.Attributes.CurrentY,
             clusters.ColorControl.Attributes.ColorTemperatureMireds,
-            clusters.ColorControl.Attributes.FeatureMap,
         ),
     ),
 }
