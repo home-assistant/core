@@ -279,7 +279,7 @@ class ReolinkHost:
                 "please configure a local http adress under "
                 "settings->system->network->Home Assistant URL->local network, "
                 "current adress: %s",
-                self._webhook_url
+                self._webhook_url,
             )
 
         _LOGGER.debug("Registered webhook: %s", event_id)
