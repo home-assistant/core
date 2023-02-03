@@ -34,6 +34,10 @@ from zwave_js_server.model.controller import (
     ProvisioningEntry,
     QRProvisioningInformation,
 )
+from zwave_js_server.model.controller.firmware import (
+    ControllerFirmwareUpdateProgress,
+    ControllerFirmwareUpdateResult,
+)
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.firmware import FirmwareUpdateData
 from zwave_js_server.model.log_config import LogConfig
@@ -368,6 +372,7 @@ def async_handle_failed_command(orig_func: Callable) -> Callable:
 
 def node_status(node: Node) -> dict[str, Any]:
     """Get node status."""
+    assert node.client.driver
     return {
         "node_id": node.node_id,
         "is_routing": node.is_routing,
@@ -377,6 +382,7 @@ def node_status(node: Node) -> dict[str, Any]:
         "zwave_plus_version": node.zwave_plus_version,
         "highest_security_class": node.highest_security_class,
         "is_controller_node": node.is_controller_node,
+        "is_primary_controller_node": node.client.driver.controller.own_node == node,
     }
 
 
@@ -430,7 +436,7 @@ def async_register_api(hass: HomeAssistant) -> None:
         hass, websocket_subscribe_firmware_update_status
     )
     websocket_api.async_register_command(
-        hass, websocket_get_firmware_update_capabilities
+        hass, websocket_get_node_firmware_update_capabilities
     )
     websocket_api.async_register_command(
         hass, websocket_is_any_ota_firmware_update_in_progress
@@ -1942,6 +1948,19 @@ def _get_node_firmware_update_progress_dict(
     }
 
 
+def _get_controller_firmware_update_progress_dict(
+    progress: ControllerFirmwareUpdateProgress,
+) -> dict[str, int | float]:
+    """Get a dictionary of a controller's firmware update progress."""
+    return {
+        "current_file": 1,
+        "total_files": 1,
+        "sent_fragments": progress.sent_fragments,
+        "total_fragments": progress.total_fragments,
+        "progress": progress.progress,
+    }
+
+
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
@@ -1959,6 +1978,9 @@ async def websocket_subscribe_firmware_update_status(
 ) -> None:
     """Subscribe to the status of a firmware update."""
 
+    assert node.client.driver
+    controller = node.client.driver.controller
+
     @callback
     def async_cleanup() -> None:
         """Remove signal listeners."""
@@ -1966,7 +1988,7 @@ async def websocket_subscribe_firmware_update_status(
             unsub()
 
     @callback
-    def forward_progress(event: dict) -> None:
+    def forward_node_progress(event: dict) -> None:
         progress: NodeFirmwareUpdateProgress = event["firmware_update_progress"]
         connection.send_message(
             websocket_api.event_message(
@@ -1979,7 +2001,7 @@ async def websocket_subscribe_firmware_update_status(
         )
 
     @callback
-    def forward_finished(event: dict) -> None:
+    def forward_node_finished(event: dict) -> None:
         finished: NodeFirmwareUpdateResult = event["firmware_update_finished"]
         connection.send_message(
             websocket_api.event_message(
@@ -1994,21 +2016,69 @@ async def websocket_subscribe_firmware_update_status(
             )
         )
 
-    msg[DATA_UNSUBSCRIBE] = unsubs = [
-        node.on("firmware update progress", forward_progress),
-        node.on("firmware update finished", forward_finished),
-    ]
+    @callback
+    def forward_controller_progress(event: dict) -> None:
+        progress: ControllerFirmwareUpdateProgress = event["firmware_update_progress"]
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID],
+                {
+                    "event": event["event"],
+                    **_get_controller_firmware_update_progress_dict(progress),
+                },
+            )
+        )
+
+    @callback
+    def forward_controller_finished(event: dict) -> None:
+        finished: ControllerFirmwareUpdateResult = event["firmware_update_finished"]
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID],
+                {
+                    "event": event["event"],
+                    "status": finished.status,
+                    "success": finished.success,
+                },
+            )
+        )
+
+    if controller.own_node == node:
+        msg[DATA_UNSUBSCRIBE] = unsubs = [
+            controller.on("firmware update progress", forward_controller_progress),
+            controller.on("firmware update finished", forward_controller_finished),
+        ]
+    else:
+        msg[DATA_UNSUBSCRIBE] = unsubs = [
+            node.on("firmware update progress", forward_node_progress),
+            node.on("firmware update finished", forward_node_finished),
+        ]
     connection.subscriptions[msg["id"]] = async_cleanup
 
-    progress = node.firmware_update_progress
     connection.send_result(msg[ID])
-    if progress:
+    if controller.own_node == node and (
+        controller_progress := controller.firmware_update_progress
+    ):
         connection.send_message(
             websocket_api.event_message(
                 msg[ID],
                 {
                     "event": "firmware update progress",
-                    **_get_node_firmware_update_progress_dict(progress),
+                    **_get_controller_firmware_update_progress_dict(
+                        controller_progress
+                    ),
+                },
+            )
+        )
+    elif controller.own_node != node and (
+        node_progress := node.firmware_update_progress
+    ):
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID],
+                {
+                    "event": "firmware update progress",
+                    **_get_node_firmware_update_progress_dict(node_progress),
                 },
             )
         )
@@ -2017,14 +2087,14 @@ async def websocket_subscribe_firmware_update_status(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/get_firmware_update_capabilities",
+        vol.Required(TYPE): "zwave_js/get_node_firmware_update_capabilities",
         vol.Required(DEVICE_ID): str,
     }
 )
 @websocket_api.async_response
 @async_handle_failed_command
 @async_get_node
-async def websocket_get_firmware_update_capabilities(
+async def websocket_get_node_firmware_update_capabilities(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],

@@ -3594,10 +3594,10 @@ async def test_is_node_firmware_update_in_progress(
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
-async def test_subscribe_firmware_update_status(
+async def test_subscribe_node_firmware_update_status(
     hass, multisensor_6, integration, client, hass_ws_client
 ):
-    """Test the subscribe_firmware_update_status websocket command."""
+    """Test the subscribe_firmware_update_status websocket command for a node."""
     ws_client = await hass_ws_client(hass)
     device = get_device(hass, multisensor_6)
 
@@ -3668,10 +3668,10 @@ async def test_subscribe_firmware_update_status(
     }
 
 
-async def test_subscribe_firmware_update_status_initial_value(
+async def test_subscribe_node_firmware_update_status_initial_value(
     hass, multisensor_6, client, integration, hass_ws_client
 ):
-    """Test subscribe_firmware_update_status websocket command with in progress update."""
+    """Test subscribe_firmware_update_status cmd with in progress update for node."""
     ws_client = await hass_ws_client(hass)
     device = get_device(hass, multisensor_6)
 
@@ -3694,6 +3694,121 @@ async def test_subscribe_firmware_update_status_initial_value(
         },
     )
     multisensor_6.receive_event(event)
+
+    client.async_send_command_no_wait.return_value = {}
+
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "zwave_js/subscribe_firmware_update_status",
+            DEVICE_ID: device.id,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None
+
+    msg = await ws_client.receive_json()
+    assert msg["event"] == {
+        "event": "firmware update progress",
+        "current_file": 1,
+        "total_files": 1,
+        "sent_fragments": 1,
+        "total_fragments": 10,
+        "progress": 10.0,
+    }
+
+
+async def test_subscribe_controller_firmware_update_status(
+    hass, integration, client, hass_ws_client
+):
+    """Test the subscribe_firmware_update_status websocket command for a node."""
+    ws_client = await hass_ws_client(hass)
+    device = get_device(hass, client.driver.controller.nodes[1])
+
+    client.async_send_command_no_wait.return_value = {}
+
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "zwave_js/subscribe_firmware_update_status",
+            DEVICE_ID: device.id,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None
+
+    event = Event(
+        type="firmware update progress",
+        data={
+            "source": "controller",
+            "event": "firmware update progress",
+            "progress": {
+                "sentFragments": 1,
+                "totalFragments": 10,
+                "progress": 10.0,
+            },
+        },
+    )
+    client.driver.controller.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"] == {
+        "event": "firmware update progress",
+        "current_file": 1,
+        "total_files": 1,
+        "sent_fragments": 1,
+        "total_fragments": 10,
+        "progress": 10.0,
+    }
+
+    event = Event(
+        type="firmware update finished",
+        data={
+            "source": "controller",
+            "event": "firmware update finished",
+            "result": {
+                "status": 255,
+                "success": True,
+            },
+        },
+    )
+    client.driver.controller.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"] == {
+        "event": "firmware update finished",
+        "status": 255,
+        "success": True,
+    }
+
+
+async def test_subscribe_controller_firmware_update_status_initial_value(
+    hass, client, integration, hass_ws_client
+):
+    """Test subscribe_firmware_update_status cmd with in progress update for node."""
+    ws_client = await hass_ws_client(hass)
+    device = get_device(hass, client.driver.controller.nodes[1])
+
+    assert client.driver.controller.firmware_update_progress is None
+
+    # Send a firmware update progress event before the WS command
+    event = Event(
+        type="firmware update progress",
+        data={
+            "source": "controller",
+            "event": "firmware update progress",
+            "progress": {
+                "sentFragments": 1,
+                "totalFragments": 10,
+                "progress": 10.0,
+            },
+        },
+    )
+    client.driver.controller.receive_event(event)
 
     client.async_send_command_no_wait.return_value = {}
 
@@ -3757,10 +3872,10 @@ async def test_subscribe_firmware_update_status_failures(
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
-async def test_get_firmware_update_capabilities(
+async def test_get_node_firmware_update_capabilities(
     hass, client, multisensor_6, integration, hass_ws_client
 ):
-    """Test that the get_firmware_update_capabilities WS API call works."""
+    """Test that the get_node_firmware_update_capabilities WS API call works."""
     entry = integration
     ws_client = await hass_ws_client(hass)
     device = get_device(hass, multisensor_6)
@@ -3776,7 +3891,7 @@ async def test_get_firmware_update_capabilities(
     await ws_client.send_json(
         {
             ID: 1,
-            TYPE: "zwave_js/get_firmware_update_capabilities",
+            TYPE: "zwave_js/get_node_firmware_update_capabilities",
             DEVICE_ID: device.id,
         }
     )
@@ -3802,7 +3917,7 @@ async def test_get_firmware_update_capabilities(
         await ws_client.send_json(
             {
                 ID: 2,
-                TYPE: "zwave_js/get_firmware_update_capabilities",
+                TYPE: "zwave_js/get_node_firmware_update_capabilities",
                 DEVICE_ID: device.id,
             }
         )
@@ -3819,7 +3934,7 @@ async def test_get_firmware_update_capabilities(
     await ws_client.send_json(
         {
             ID: 3,
-            TYPE: "zwave_js/get_firmware_update_capabilities",
+            TYPE: "zwave_js/get_node_firmware_update_capabilities",
             DEVICE_ID: device.id,
         }
     )
@@ -3832,7 +3947,7 @@ async def test_get_firmware_update_capabilities(
     await ws_client.send_json(
         {
             ID: 4,
-            TYPE: "zwave_js/get_firmware_update_capabilities",
+            TYPE: "zwave_js/get_node_firmware_update_capabilities",
             DEVICE_ID: "fake_device",
         }
     )
