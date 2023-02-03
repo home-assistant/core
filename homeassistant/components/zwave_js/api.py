@@ -374,6 +374,10 @@ def node_status(node: Node) -> dict[str, Any]:
         "zwave_plus_version": node.zwave_plus_version,
         "highest_security_class": node.highest_security_class,
         "is_controller_node": node.is_controller_node,
+        "has_firmware_update_cc": any(
+            CommandClass.FIRMWARE_UPDATE_MD.value == cc.id
+            for cc in node.command_classes
+        ),
     }
 
 
