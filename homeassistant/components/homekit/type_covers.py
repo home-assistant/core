@@ -338,6 +338,7 @@ class Door(OpeningDevice):
             *args, category=CATEGORY_DOOR, service=SERV_DOOR
         )
 
+
 @TYPES.register("Window")
 class Window(OpeningDevice):
     """Generate a Window accessory for a cover entity with WINDOW device class.

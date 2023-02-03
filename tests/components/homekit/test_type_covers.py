@@ -178,7 +178,7 @@ async def test_door_instantiate_set_position(hass, hk_driver, events):
     assert acc.char_current_position.value == 50
     assert acc.char_target_position.value == 50
     assert acc.char_position_state.value == 2
-    
+
 
 async def test_windowcovering_set_cover_position(hass, hk_driver, events):
     """Test if accessory and HA are updated accordingly."""
