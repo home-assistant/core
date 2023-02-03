@@ -273,6 +273,15 @@ class ReolinkHost:
         webhook_path = webhook.async_generate_path(event_id)
         self._webhook_url = f"{base_url}{webhook_path}"
 
+        if base_url.startswith("https"):
+            _LOGGER.warning(
+                "Reolink products can not push motion events to a https adress (SSL), "
+                "please configure a local http adress under "
+                "settings->system->network->Home Assistant URL->local network, "
+                "current adress: %s",
+                self._webhook_url
+            )
+
         _LOGGER.debug("Registered webhook: %s", event_id)
 
     async def unregister_webhook(self):
