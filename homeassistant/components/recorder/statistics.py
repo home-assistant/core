@@ -430,7 +430,7 @@ def _find_duplicates(
     )
     duplicates = execute(query)
     original_as_dict = {}
-    start_ts = None
+    start = None
     metadata_id = None
     duplicate_ids: list[int] = []
     non_identical_duplicates_as_dict: list[dict] = []
@@ -453,9 +453,9 @@ def _find_duplicates(
         return keys1 == keys2 and all(row1[k] == row2[k] for k in keys1)
 
     for duplicate in duplicates:
-        if start_ts != duplicate.start_ts or metadata_id != duplicate.metadata_id:
+        if start != duplicate.start or metadata_id != duplicate.metadata_id:
             original_as_dict = columns_to_dict(duplicate)
-            start_ts = duplicate.start_ts
+            start = duplicate.start
             metadata_id = duplicate.metadata_id
             continue
         duplicate_as_dict = columns_to_dict(duplicate)
@@ -663,7 +663,7 @@ def _compile_hourly_statistics(session: Session, start: datetime) -> None:
             if metadata_id in summary:
                 summary[metadata_id].update(
                     {
-                        "last_reset": datetime_to_timestamp_or_none(last_reset_ts),
+                        "last_reset": timestamp_to_datetime_or_none(last_reset_ts),
                         "state": state,
                         "sum": _sum,
                     }
@@ -671,7 +671,7 @@ def _compile_hourly_statistics(session: Session, start: datetime) -> None:
             else:
                 summary[metadata_id] = {
                     "start": start_time,
-                    "last_reset": datetime_to_timestamp_or_none(last_reset_ts),
+                    "last_reset": timestamp_to_datetime_or_none(last_reset_ts),
                     "state": state,
                     "sum": _sum,
                 }
