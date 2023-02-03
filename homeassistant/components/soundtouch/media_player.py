@@ -345,7 +345,7 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         """
         Remove slave(s) from and existing zone (multi-room).
 
-        Zone must already exist and slaves array can not be empty.
+        Zone must already exist and slaves array cannot be empty.
         Note: If removing last slave, the zone will be deleted and you'll have
         to create a new one. You will not be able to add a new slave anymore
 
@@ -370,7 +370,7 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         """
         Add slave(s) to and existing zone (multi-room).
 
-        Zone must already exist and slaves array can not be empty.
+        Zone must already exist and slaves array cannot be empty.
 
         :param slaves:slaves to add
 

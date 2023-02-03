@@ -168,7 +168,7 @@ class BuienradarCam(Camera):
 
         # get lock, check iff loading, await notification if loading
         async with self._condition:
-            # can not be tested - mocked http response returns immediately
+            # cannot be tested - mocked http response returns immediately
             if self._loading:
                 _LOGGER.debug("already loading - waiting for notification")
                 await self._condition.wait()
