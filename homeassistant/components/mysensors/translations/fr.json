@@ -83,5 +83,17 @@
                 "description": "Choisissez la m\u00e9thode de connexion \u00e0 la passerelle"
             }
         }
+    },
+    "issues": {
+        "deprecated_entity": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "title": "L'entit\u00e9 {deprecated_entity} sera supprim\u00e9e"
+                    }
+                }
+            },
+            "title": "L'entit\u00e9 {deprecated_entity} sera supprim\u00e9e"
+        }
     }
 }

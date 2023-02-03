@@ -537,6 +537,15 @@ async def test_custom_unit(
             "29.921",  # Native precision is 3
             "1013.24",  # One digit of precision removed when converting
         ),
+        (
+            SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+            UnitOfPressure.INHG,
+            UnitOfPressure.HPA,
+            -0.0001,
+            3,
+            "0.000",  # Native precision is 3
+            "0.00",  # One digit of precision removed when converting
+        ),
     ],
 )
 async def test_native_precision_scaling(
@@ -593,6 +602,14 @@ async def test_native_precision_scaling(
             1000.0,
             "1000.000",
             "1000.0000",
+        ),
+        (
+            SensorDeviceClass.DISTANCE,
+            UnitOfLength.KILOMETERS,
+            1,
+            -0.04,
+            "-0.040",
+            "0.0",  # Make sure minus is dropped
         ),
     ],
 )
@@ -1623,3 +1640,48 @@ async def test_device_classes_with_invalid_state_class(
         "is using state class 'INVALID!' which is impossible considering device "
         f"class ('{device_class}') it is using"
     ) in caplog.text
+
+
+@pytest.mark.parametrize(
+    "device_class,state_class,native_unit_of_measurement,native_precision,is_numeric",
+    [
+        (SensorDeviceClass.ENUM, None, None, None, False),
+        (SensorDeviceClass.DATE, None, None, None, False),
+        (SensorDeviceClass.TIMESTAMP, None, None, None, False),
+        ("custom", None, None, None, False),
+        (SensorDeviceClass.POWER, None, "V", None, True),
+        (None, SensorStateClass.MEASUREMENT, None, None, True),
+        (None, None, PERCENTAGE, None, True),
+        (None, None, None, None, False),
+    ],
+)
+async def test_numeric_state_expected_helper(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+    device_class: SensorDeviceClass | None,
+    state_class: SensorStateClass | None,
+    native_unit_of_measurement: str | None,
+    native_precision: int | None,
+    is_numeric: bool,
+) -> None:
+    """Test numeric_state_expected helper."""
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test",
+        native_value=None,
+        device_class=device_class,
+        state_class=state_class,
+        native_unit_of_measurement=native_unit_of_measurement,
+        native_precision=native_precision,
+    )
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    entity0 = platform.ENTITIES["0"]
+    state = hass.states.get(entity0.entity_id)
+    assert state is not None
+
+    assert entity0._numeric_state_expected == is_numeric

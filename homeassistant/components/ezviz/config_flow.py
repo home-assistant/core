@@ -182,7 +182,6 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-
             if user_input[CONF_URL] == CONF_CUSTOMIZE:
                 self.context["data"] = {
                     CONF_USERNAME: user_input[CONF_USERNAME],

@@ -1,7 +1,6 @@
 """Support for Abode Security System binary sensors."""
 from __future__ import annotations
 
-from contextlib import suppress
 from typing import cast
 
 from jaraco.abode.devices.sensor import BinarySensor as ABBinarySensor
@@ -14,6 +13,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.enum import try_parse_enum
 
 from . import AbodeDevice, AbodeSystem
 from .const import DOMAIN
@@ -54,6 +54,4 @@ class AbodeBinarySensor(AbodeDevice, BinarySensorEntity):
         """Return the class of the binary sensor."""
         if self._device.get_value("is_window") == "1":
             return BinarySensorDeviceClass.WINDOW
-        with suppress(ValueError):
-            return BinarySensorDeviceClass(cast(str, self._device.generic_type))
-        return None
+        return try_parse_enum(BinarySensorDeviceClass, self._device.generic_type)

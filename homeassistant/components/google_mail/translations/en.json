@@ -12,7 +12,8 @@
             "oauth_error": "Received invalid token data.",
             "reauth_successful": "Re-authentication was successful",
             "timeout_connect": "Timeout establishing connection",
-            "unknown": "Unexpected error"
+            "unknown": "Unexpected error",
+            "wrong_account": "Wrong account: Please authenticate with {email}."
         },
         "create_entry": {
             "default": "Successfully authenticated"

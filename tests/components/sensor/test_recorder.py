@@ -34,6 +34,8 @@ from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from tests.common import async_fire_time_changed
 from tests.components.recorder.common import (
+    assert_dict_of_states_equal_without_context_and_last_changed,
+    assert_multiple_states_equal_without_context_and_last_changed,
     async_recorder_block_till_done,
     async_wait_recording_done,
     do_adhoc_statistics,
@@ -139,7 +141,7 @@ def test_compile_hourly_statistics(
     }
     four, states = record_states(hass, zero, "sensor.test1", attributes)
     hist = history.get_significant_states(hass, zero, four)
-    assert dict(states) == dict(hist)
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     do_adhoc_statistics(hass, start=zero)
     wait_recording_done(hass)
@@ -201,7 +203,7 @@ def test_compile_hourly_statistics_purged_state_changes(
     }
     four, states = record_states(hass, zero, "sensor.test1", attributes)
     hist = history.get_significant_states(hass, zero, four)
-    assert dict(states) == dict(hist)
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     mean = min = max = float(hist["sensor.test1"][-1].state)
 
@@ -282,7 +284,7 @@ def test_compile_hourly_statistics_wrong_unit(hass_recorder, caplog, attributes)
     states = {**states, **_states}
 
     hist = history.get_significant_states(hass, zero, four)
-    assert dict(states) == dict(hist)
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     do_adhoc_statistics(hass, start=zero)
     wait_recording_done(hass)
@@ -474,7 +476,9 @@ async def test_compile_hourly_sum_statistics_amount(
     hist = history.get_significant_states(
         hass, period0 - timedelta.resolution, eight + timedelta.resolution
     )
-    assert dict(states)["sensor.test1"] == dict(hist)["sensor.test1"]
+    assert_multiple_states_equal_without_context_and_last_changed(
+        dict(states)["sensor.test1"], dict(hist)["sensor.test1"]
+    )
 
     do_adhoc_statistics(hass, start=period0)
     await async_wait_recording_done(hass)
@@ -667,7 +671,9 @@ def test_compile_hourly_sum_statistics_amount_reset_every_state_change(
         two + timedelta.resolution,
         significant_changes_only=False,
     )
-    assert dict(states)["sensor.test1"] == dict(hist)["sensor.test1"]
+    assert_multiple_states_equal_without_context_and_last_changed(
+        dict(states)["sensor.test1"], dict(hist)["sensor.test1"]
+    )
 
     do_adhoc_statistics(hass, start=zero)
     do_adhoc_statistics(hass, start=zero + timedelta(minutes=5))
@@ -765,7 +771,9 @@ def test_compile_hourly_sum_statistics_amount_invalid_last_reset(
         one + timedelta.resolution,
         significant_changes_only=False,
     )
-    assert dict(states)["sensor.test1"] == dict(hist)["sensor.test1"]
+    assert_multiple_states_equal_without_context_and_last_changed(
+        dict(states)["sensor.test1"], dict(hist)["sensor.test1"]
+    )
 
     do_adhoc_statistics(hass, start=zero)
     wait_recording_done(hass)
@@ -849,7 +857,9 @@ def test_compile_hourly_sum_statistics_nan_inf_state(
         one + timedelta.resolution,
         significant_changes_only=False,
     )
-    assert dict(states)["sensor.test1"] == dict(hist)["sensor.test1"]
+    assert_multiple_states_equal_without_context_and_last_changed(
+        dict(states)["sensor.test1"], dict(hist)["sensor.test1"]
+    )
 
     do_adhoc_statistics(hass, start=zero)
     wait_recording_done(hass)
@@ -978,7 +988,9 @@ def test_compile_hourly_sum_statistics_negative_state(
         one + timedelta.resolution,
         significant_changes_only=False,
     )
-    assert dict(states)[entity_id] == dict(hist)[entity_id]
+    assert_multiple_states_equal_without_context_and_last_changed(
+        dict(states)[entity_id], dict(hist)[entity_id]
+    )
 
     do_adhoc_statistics(hass, start=zero)
     wait_recording_done(hass)
@@ -1060,7 +1072,9 @@ def test_compile_hourly_sum_statistics_total_no_reset(
     hist = history.get_significant_states(
         hass, period0 - timedelta.resolution, eight + timedelta.resolution
     )
-    assert dict(states)["sensor.test1"] == dict(hist)["sensor.test1"]
+    assert_multiple_states_equal_without_context_and_last_changed(
+        dict(states)["sensor.test1"], dict(hist)["sensor.test1"]
+    )
 
     do_adhoc_statistics(hass, start=period0)
     wait_recording_done(hass)
@@ -1160,7 +1174,9 @@ def test_compile_hourly_sum_statistics_total_increasing(
     hist = history.get_significant_states(
         hass, period0 - timedelta.resolution, eight + timedelta.resolution
     )
-    assert dict(states)["sensor.test1"] == dict(hist)["sensor.test1"]
+    assert_multiple_states_equal_without_context_and_last_changed(
+        dict(states)["sensor.test1"], dict(hist)["sensor.test1"]
+    )
 
     do_adhoc_statistics(hass, start=period0)
     wait_recording_done(hass)
@@ -1258,7 +1274,9 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
     hist = history.get_significant_states(
         hass, period0 - timedelta.resolution, eight + timedelta.resolution
     )
-    assert dict(states)["sensor.test1"] == dict(hist)["sensor.test1"]
+    assert_multiple_states_equal_without_context_and_last_changed(
+        dict(states)["sensor.test1"], dict(hist)["sensor.test1"]
+    )
 
     do_adhoc_statistics(hass, start=period0)
     wait_recording_done(hass)
@@ -1363,7 +1381,9 @@ def test_compile_hourly_energy_statistics_unsupported(hass_recorder, caplog):
     hist = history.get_significant_states(
         hass, period0 - timedelta.resolution, eight + timedelta.resolution
     )
-    assert dict(states)["sensor.test1"] == dict(hist)["sensor.test1"]
+    assert_multiple_states_equal_without_context_and_last_changed(
+        dict(states)["sensor.test1"], dict(hist)["sensor.test1"]
+    )
 
     do_adhoc_statistics(hass, start=period0)
     wait_recording_done(hass)
@@ -1453,7 +1473,9 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
     hist = history.get_significant_states(
         hass, period0 - timedelta.resolution, eight + timedelta.resolution
     )
-    assert dict(states)["sensor.test1"] == dict(hist)["sensor.test1"]
+    assert_multiple_states_equal_without_context_and_last_changed(
+        dict(states)["sensor.test1"], dict(hist)["sensor.test1"]
+    )
 
     do_adhoc_statistics(hass, start=period0)
     wait_recording_done(hass)
@@ -1635,7 +1657,7 @@ def test_compile_hourly_statistics_unchanged(
     }
     four, states = record_states(hass, zero, "sensor.test1", attributes)
     hist = history.get_significant_states(hass, zero, four)
-    assert dict(states) == dict(hist)
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     do_adhoc_statistics(hass, start=four)
     wait_recording_done(hass)
@@ -1667,7 +1689,7 @@ def test_compile_hourly_statistics_partially_unavailable(hass_recorder, caplog):
         hass, zero, "sensor.test1", TEMPERATURE_SENSOR_ATTRIBUTES
     )
     hist = history.get_significant_states(hass, zero, four)
-    assert dict(states) == dict(hist)
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     do_adhoc_statistics(hass, start=zero)
     wait_recording_done(hass)
@@ -1736,7 +1758,7 @@ def test_compile_hourly_statistics_unavailable(
     _, _states = record_states(hass, zero, "sensor.test2", attributes)
     states = {**states, **_states}
     hist = history.get_significant_states(hass, zero, four)
-    assert dict(states) == dict(hist)
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     do_adhoc_statistics(hass, start=four)
     wait_recording_done(hass)
@@ -1944,7 +1966,7 @@ def test_compile_hourly_statistics_changing_units_1(
     )
     states["sensor.test1"] += _states["sensor.test1"]
     hist = history.get_significant_states(hass, zero, four)
-    assert dict(states) == dict(hist)
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     do_adhoc_statistics(hass, start=zero)
     wait_recording_done(hass)
@@ -2054,7 +2076,7 @@ def test_compile_hourly_statistics_changing_units_2(
     )
     states["sensor.test1"] += _states["sensor.test1"]
     hist = history.get_significant_states(hass, zero, four)
-    assert dict(states) == dict(hist)
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     do_adhoc_statistics(hass, start=zero + timedelta(seconds=30 * 5))
     wait_recording_done(hass)
@@ -2122,7 +2144,7 @@ def test_compile_hourly_statistics_changing_units_3(
     )
     states["sensor.test1"] += _states["sensor.test1"]
     hist = history.get_significant_states(hass, zero, four)
-    assert dict(states) == dict(hist)
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     do_adhoc_statistics(hass, start=zero)
     wait_recording_done(hass)
@@ -2270,7 +2292,7 @@ def test_compile_hourly_statistics_convert_units_1(
     )
     states["sensor.test1"] += _states["sensor.test1"]
     hist = history.get_significant_states(hass, zero, four)
-    assert dict(states) == dict(hist)
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
     do_adhoc_statistics(hass, start=zero + timedelta(minutes=10))
     wait_recording_done(hass)
     assert "The unit of sensor.test1 is changing" not in caplog.text
@@ -2362,7 +2384,7 @@ def test_compile_hourly_statistics_equivalent_units_1(
     )
     states["sensor.test1"] += _states["sensor.test1"]
     hist = history.get_significant_states(hass, zero, four)
-    assert dict(states) == dict(hist)
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     do_adhoc_statistics(hass, start=zero)
     wait_recording_done(hass)
@@ -2476,7 +2498,7 @@ def test_compile_hourly_statistics_equivalent_units_2(
     )
     states["sensor.test1"] += _states["sensor.test1"]
     hist = history.get_significant_states(hass, zero, four)
-    assert dict(states) == dict(hist)
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     do_adhoc_statistics(hass, start=zero + timedelta(seconds=30 * 5))
     wait_recording_done(hass)
@@ -2591,7 +2613,7 @@ def test_compile_hourly_statistics_changing_device_class_1(
     )
     states["sensor.test1"] += _states["sensor.test1"]
     hist = history.get_significant_states(hass, zero, four)
-    assert dict(states) == dict(hist)
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     # Run statistics again, additional statistics is generated
     do_adhoc_statistics(hass, start=zero + timedelta(minutes=10))
@@ -2646,7 +2668,7 @@ def test_compile_hourly_statistics_changing_device_class_1(
     )
     states["sensor.test1"] += _states["sensor.test1"]
     hist = history.get_significant_states(hass, zero, four)
-    assert dict(states) == dict(hist)
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     # Run statistics again, additional statistics is generated
     do_adhoc_statistics(hass, start=zero + timedelta(minutes=20))
@@ -2781,7 +2803,7 @@ def test_compile_hourly_statistics_changing_device_class_2(
     )
     states["sensor.test1"] += _states["sensor.test1"]
     hist = history.get_significant_states(hass, zero, four)
-    assert dict(states) == dict(hist)
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     # Run statistics again, additional statistics is generated
     do_adhoc_statistics(hass, start=zero + timedelta(minutes=10))
@@ -2897,7 +2919,7 @@ def test_compile_hourly_statistics_changing_state_class(
     four, _states = record_states(hass, period1, "sensor.test1", attributes_2)
     states["sensor.test1"] += _states["sensor.test1"]
     hist = history.get_significant_states(hass, period0, four)
-    assert dict(states) == dict(hist)
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     do_adhoc_statistics(hass, start=period1)
     wait_recording_done(hass)
@@ -3083,7 +3105,7 @@ def test_compile_statistics_hourly_daily_monthly_summary(hass_recorder, caplog):
     hist = history.get_significant_states(
         hass, zero - timedelta.resolution, four, significant_changes_only=False
     )
-    assert dict(states) == dict(hist)
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
     wait_recording_done(hass)
 
     # Generate 5-minute statistics for two hours
