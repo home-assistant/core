@@ -10,7 +10,6 @@
             "invalid_auth": "Password authentication failed",
             "invalid_host": "Invalid hostname or IP address"
         },
-        "flow_title": "{name}",
         "step": {
             "reauth_confirm": {
                 "data": {
