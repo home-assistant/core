@@ -1109,6 +1109,9 @@ def _migrate_statistics_columns_to_timestamp(
                         "cast(substr(last_reset,-7) AS FLOAT);"
                     )
                 )
+            with session_scope(session=session_maker()) as session:  # noqa: SIM117
+                with contextlib.suppress(SQLAlchemyError):
+                    session.connection().execute(text(f"DROP index ix_{table}_start;"))
     elif engine.dialect.name == SupportedDialect.MYSQL:
         # With MySQL we do this in chunks to avoid hitting the `innodb_buffer_pool_size` limit
         # We also need to do this in a loop since we can't be sure that we have
@@ -1131,6 +1134,11 @@ def _migrate_statistics_columns_to_timestamp(
                             "LIMIT 250000;"
                         )
                     )
+            with session_scope(session=session_maker()) as session:  # noqa: SIM117
+                with contextlib.suppress(SQLAlchemyError):
+                    session.connection().execute(
+                        text(f"DROP index ix_{table}_start on {table};")
+                    )
     elif engine.dialect.name == SupportedDialect.POSTGRESQL:
         # With Postgresql we do this in chunks to avoid using too much memory
         # We also need to do this in a loop since we can't be sure that we have
@@ -1150,6 +1158,9 @@ def _migrate_statistics_columns_to_timestamp(
                             " );"
                         )
                     )
+            with session_scope(session=session_maker()) as session:  # noqa: SIM117
+                with contextlib.suppress(SQLAlchemyError):
+                    session.connection().execute(text(f"DROP index ix_{table}_start;"))
 
 
 def _initialize_database(session: Session) -> bool:
