@@ -365,6 +365,7 @@ def async_handle_failed_command(orig_func: Callable) -> Callable:
 
 def node_status(node: Node) -> dict[str, Any]:
     """Get node status."""
+    assert node.client.driver
     return {
         "node_id": node.node_id,
         "is_routing": node.is_routing,
@@ -374,6 +375,7 @@ def node_status(node: Node) -> dict[str, Any]:
         "zwave_plus_version": node.zwave_plus_version,
         "highest_security_class": node.highest_security_class,
         "is_controller_node": node.is_controller_node,
+        "is_primary_controller_node": node.client.driver.controller.own_node == node,
     }
 
 
