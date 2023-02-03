@@ -334,9 +334,7 @@ class Door(OpeningDevice):
 
     def __init__(self, *args):
         """Initialize a Door accessory object."""
-        super().__init__(
-            *args, category=CATEGORY_DOOR, service=SERV_DOOR
-        )
+        super().__init__(*args, category=CATEGORY_DOOR, service=SERV_DOOR)
 
 
 @TYPES.register("Window")
