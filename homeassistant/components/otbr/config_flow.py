@@ -61,10 +61,10 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
         api = python_otbr_api.OTBR(url, async_get_clientsession(self.hass), 10)
         try:
             if await api.get_active_dataset_tlvs() is None:
-                await api.async_create_active_dataset(
+                await api.create_active_dataset(
                     python_otbr_api.OperationalDataSet(network_name="home-assistant")
                 )
-                await api.async_set_enabled(True)
+                await api.set_enabled(True)
         except python_otbr_api.OTBRError as exc:
             _LOGGER.warning("Failed to communicate with OTBR@%s: %s", url, exc)
             return self.async_abort(reason="unknown")

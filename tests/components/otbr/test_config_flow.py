@@ -135,7 +135,7 @@ async def test_hassio_discovery_flow_router_not_setup(
 
     assert aioclient_mock.mock_calls[-1][0] == "POST"
     assert aioclient_mock.mock_calls[-1][1].path == "/node/state"
-    assert aioclient_mock.mock_calls[-1][2] == '"enabled"'
+    assert aioclient_mock.mock_calls[-1][2] == "enabled"
 
     expected_data = {
         "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
