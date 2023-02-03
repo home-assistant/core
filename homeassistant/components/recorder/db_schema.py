@@ -518,7 +518,12 @@ class Statistics(Base, StatisticsBase):  # type: ignore[misc,valid-type]
 
     __table_args__ = (
         # Used for fetching statistics for a certain entity at a specific time
-        Index("ix_statistics_statistic_id_start", "metadata_id", "start", unique=True),
+        Index(
+            "ix_statistics_statistic_id_start_ts",
+            "metadata_id",
+            "start_ts",
+            unique=True,
+        ),
     )
     __tablename__ = TABLE_STATISTICS
 
@@ -531,9 +536,9 @@ class StatisticsShortTerm(Base, StatisticsBase):  # type: ignore[misc,valid-type
     __table_args__ = (
         # Used for fetching statistics for a certain entity at a specific time
         Index(
-            "ix_statistics_short_term_statistic_id_start",
+            "ix_statistics_short_term_statistic_id_start_ts",
             "metadata_id",
-            "start",
+            "start_ts",
             unique=True,
         ),
     )
