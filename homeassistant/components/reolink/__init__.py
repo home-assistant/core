@@ -80,7 +80,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         update_interval=timedelta(seconds=DEVICE_UPDATE_INTERVAL),
     )
     # Fetch initial data so we have data when entities subscribe
-    await coordinator_device_config_update.async_config_entry_first_refresh()
+    try:
+        await coordinator_device_config_update.async_config_entry_first_refresh()
+    except ConfigEntryNotReady:
+        await host.stop()
+        raise
 
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = ReolinkData(
         host=host,
