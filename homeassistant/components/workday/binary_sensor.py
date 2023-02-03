@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from datetime import date, timedelta
 import logging
-from typing import Any
 
 import holidays
 from holidays import DateLike, HolidayBase
@@ -19,6 +18,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt
+
+from . import valid_country
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,24 +39,6 @@ DEFAULT_WORKDAYS = ["mon", "tue", "wed", "thu", "fri"]
 DEFAULT_EXCLUDES = ["sat", "sun", "holiday"]
 DEFAULT_NAME = "Workday Sensor"
 DEFAULT_OFFSET = 0
-
-
-def valid_country(value: Any) -> str:
-    """Validate that the given country is supported."""
-    value = cv.string(value)
-    all_supported_countries = holidays.list_supported_countries()
-
-    try:
-        raw_value = value.encode("utf-8")
-    except UnicodeError as err:
-        raise vol.Invalid(
-            "The country name or the abbreviation must be a valid UTF-8 string."
-        ) from err
-    if not raw_value:
-        raise vol.Invalid("Country name or the abbreviation must not be empty.")
-    if value not in all_supported_countries:
-        raise vol.Invalid("Country is not supported.")
-    return value
 
 
 PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
