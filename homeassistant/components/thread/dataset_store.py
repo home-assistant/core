@@ -9,7 +9,6 @@ from typing import Any, cast
 from python_otbr_api import tlv_parser
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util, ulid as ulid_util
@@ -36,21 +35,6 @@ class DatasetEntry:
     def dataset(self) -> dict[tlv_parser.MeshcopTLVType, str]:
         """Return the dataset in dict format."""
         return tlv_parser.parse_tlv(self.tlv)
-
-    @property
-    def extended_pan_id(self) -> str | None:
-        """Return extended PAN ID as a hex string."""
-        return self.dataset.get(tlv_parser.MeshcopTLVType.EXTPANID)
-
-    @property
-    def network_name(self) -> str | None:
-        """Return network name as a string."""
-        return self.dataset.get(tlv_parser.MeshcopTLVType.NETWORKNAME)
-
-    @property
-    def pan_id(self) -> str | None:
-        """Return PAN ID as a hex string."""
-        return self.dataset.get(tlv_parser.MeshcopTLVType.PANID)
 
     def to_json(self) -> dict[str, Any]:
         """Return a JSON serializable representation for storage."""
@@ -92,20 +76,6 @@ class DatasetStore:
         entry = DatasetEntry(preferred=preferred, source=source, tlv=tlv)
         self.datasets[entry.id] = entry
         self.async_schedule_save()
-
-    @callback
-    def async_delete(self, dataset_id: str) -> None:
-        """Delete dataset."""
-        dataset = self.datasets[dataset_id]
-        if dataset.preferred:
-            raise HomeAssistantError("attempt to remove preferred dataset")
-        del self.datasets[dataset_id]
-        self.async_schedule_save()
-
-    @callback
-    def async_get(self, dataset_id: str) -> DatasetEntry | None:
-        """Get dataset by id."""
-        return self.datasets.get(dataset_id)
 
     async def async_load(self) -> None:
         """Load the datasets."""
@@ -151,32 +121,3 @@ async def async_add_dataset(hass: HomeAssistant, source: str, tlv: str) -> None:
     """Add a dataset."""
     store = await _async_get_store(hass)
     store.async_add(source, tlv)
-
-
-async def async_delete_dataset(hass: HomeAssistant, dataset_id: str) -> None:
-    """Delete a dataset."""
-    store = await _async_get_store(hass)
-    store.async_delete(dataset_id)
-
-
-async def async_get_dataset(
-    hass: HomeAssistant, dataset_id: str
-) -> DatasetEntry | None:
-    """Get a dataset."""
-    store = await _async_get_store(hass)
-    return store.async_get(dataset_id)
-
-
-async def async_get_preferred_dataset(hass: HomeAssistant) -> DatasetEntry | None:
-    """Get the preferred dataset."""
-    store = await _async_get_store(hass)
-    for dataset in store.datasets.values():
-        if dataset.preferred:
-            return dataset
-    return None
-
-
-async def async_list_datasets(hass: HomeAssistant) -> list[DatasetEntry]:
-    """Get a dataset."""
-    store = await _async_get_store(hass)
-    return list(store.datasets.values())

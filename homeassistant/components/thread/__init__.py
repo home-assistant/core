@@ -6,21 +6,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
-from .dataset_store import (
-    DatasetEntry,
-    async_add_dataset,
-    async_delete_dataset,
-    async_get_dataset,
-    async_list_datasets,
-)
+from .dataset_store import DatasetEntry, async_add_dataset
 
 __all__ = [
     "DOMAIN",
     "DatasetEntry",
     "async_add_dataset",
-    "async_delete_dataset",
-    "async_get_dataset",
-    "async_list_datasets",
 ]
 
 
