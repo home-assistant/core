@@ -89,9 +89,7 @@ def _utcnow():
 dt_util.utcnow = _utcnow
 event.time_tracker_utcnow = _utcnow
 
-MqttMockType = Callable[
-    ..., Coroutine[Any, Any, Callable[..., Coroutine[Any, Any, MagicMock]]]
-]
+MqttMockType = Callable[..., Coroutine[Any, Any, MagicMock]]
 
 
 def pytest_addoption(parser):
