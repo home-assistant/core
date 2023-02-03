@@ -481,6 +481,7 @@ RPC_SENSORS: Final = {
         value=lambda status, _: round(float(status) / 1000, 2),
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
     ),
     "b_total_act_energy": RpcSensorDescription(
         key="emdata",
@@ -490,6 +491,7 @@ RPC_SENSORS: Final = {
         value=lambda status, _: round(float(status) / 1000, 2),
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
     ),
     "c_total_act_energy": RpcSensorDescription(
         key="emdata",
@@ -499,6 +501,7 @@ RPC_SENSORS: Final = {
         value=lambda status, _: round(float(status) / 1000, 2),
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
     ),
     "total_act_ret": RpcSensorDescription(
         key="emdata",
@@ -517,6 +520,7 @@ RPC_SENSORS: Final = {
         value=lambda status, _: round(float(status) / 1000, 2),
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
     ),
     "b_total_act_ret_energy": RpcSensorDescription(
         key="emdata",
@@ -526,6 +530,7 @@ RPC_SENSORS: Final = {
         value=lambda status, _: round(float(status) / 1000, 2),
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
     ),
     "c_total_act_ret_energy": RpcSensorDescription(
         key="emdata",
@@ -535,6 +540,7 @@ RPC_SENSORS: Final = {
         value=lambda status, _: round(float(status) / 1000, 2),
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
     ),
     "temperature": RpcSensorDescription(
         key="switch",
