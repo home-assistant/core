@@ -638,10 +638,8 @@ class Recorder(threading.Thread):
             else:
                 persistent_notification.create(
                     self.hass,
-                    (
-                        "The database migration failed, check [the logs](/config/logs)."
-                        "Database Migration Failed"
-                    ),
+                    "The database migration failed, check [the logs](/config/logs).",
+                    "Database Migration Failed",
                     "recorder_database_migration",
                 )
                 self.hass.add_job(self.async_set_db_ready)
@@ -730,8 +728,9 @@ class Recorder(threading.Thread):
             (
                 "System performance will temporarily degrade during the database"
                 " upgrade. Do not power down or restart the system until the upgrade"
-                " completes. Integrations that read the database, such as logbook and"
-                " history, may return inconsistent results until the upgrade completes."
+                " completes. Integrations that read the database, such as logbook,"
+                " history, and statistics may return inconsistent results until the "
+                " upgrade completes."
             ),
             "Database upgrade in progress",
             "recorder_database_migration",
