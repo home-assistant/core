@@ -65,9 +65,9 @@ class HomematicipCloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if authtoken:
                 _LOGGER.info("Write config entry for HomematicIP Cloud")
                 return self.async_create_entry(
-                    title=self.auth.config.get(HMIPC_HAPID),
+                    title=self.auth.config[HMIPC_HAPID],
                     data={
-                        HMIPC_HAPID: self.auth.config.get(HMIPC_HAPID),
+                        HMIPC_HAPID: self.auth.config[HMIPC_HAPID],
                         HMIPC_AUTHTOKEN: authtoken,
                         HMIPC_NAME: self.auth.config.get(HMIPC_NAME),
                     },
