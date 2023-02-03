@@ -35,25 +35,28 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    heatpump = Ecotouch(data["host"])
+
+    def get_heatpump() -> Ecotouch:
+        heatpump = Ecotouch(data["host"])
+        heatpump.login(data["username"], data["password"])
+        return heatpump
 
     try:
-        await hass.async_add_executor_job(
-            heatpump.login, data["username"], data["password"]
+        heatpump = await hass.async_add_executor_job(get_heatpump)
+        hp_type = await hass.async_add_executor_job(
+            heatpump.read_value, EcotouchTags.HEATPUMP_TYPE
         )
+
+        series = await hass.async_add_executor_job(
+            heatpump.decode_heatpump_series, hp_type
+        )
+        # Return info that you want to store in the config entry.
+        return {"title": f"{series}"}
+
     except ConnectionException as exc:
         raise CannotConnect(ConnectionException) from exc
     except AuthenticationException as status_exception:
         raise InvalidAuth(status_exception) from status_exception
-
-    hp_type = await hass.async_add_executor_job(
-        heatpump.read_value, EcotouchTags.HEATPUMP_TYPE
-    )
-
-    series = await hass.async_add_executor_job(heatpump.decode_heatpump_series, hp_type)
-
-    # Return info that you want to store in the config entry.
-    return {"title": f"{series}"}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

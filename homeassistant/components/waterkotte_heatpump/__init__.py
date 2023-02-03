@@ -49,16 +49,24 @@ class EcotouchCoordinator(DataUpdateCoordinator[dict[TagData, Any]]):
         """return a tag value."""
         return self.data.get(tag, None)
 
+    @property
+    def heatpump(self) -> Ecotouch:
+        """heatpump api."""
+        return self._heatpump
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Waterkotte Heatpump from a config entry."""
 
     hass.data.setdefault(DOMAIN, {})
 
-    heatpump = Ecotouch(entry.data.get("host"))
+    def create_heatpump_instance(username: str, password: str) -> Ecotouch:
+        heatpump = Ecotouch(entry.data.get("host"))
+        heatpump.login(username, password)
+        return heatpump
 
-    await hass.async_add_executor_job(
-        heatpump.login, entry.data["username"], entry.data["password"]
+    heatpump = await hass.async_add_executor_job(
+        create_heatpump_instance, entry.data["username"], entry.data["password"]
     )
 
     coordinator = EcotouchCoordinator(heatpump, hass)

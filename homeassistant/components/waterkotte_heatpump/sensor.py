@@ -19,11 +19,46 @@ from .entity import EcotouchEntity
 SENSOR_DESCRIPTIONS = {
     EcotouchTags.TEMPERATURE_WATER: SensorEntityDescription(
         key="water_temperature",
-        name="water temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         icon="mdi:water-thermometer",
         native_unit_of_measurement=EcotouchTags.TEMPERATURE_WATER.unit,
-    )
+    ),
+    EcotouchTags.TEMPERATURE_OUTSIDE: SensorEntityDescription(
+        key="outside_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        icon="mdi:sun-thermometer-outline",
+        native_unit_of_measurement=EcotouchTags.TEMPERATURE_OUTSIDE.unit,
+    ),
+    EcotouchTags.TEMPERATURE_OUTSIDE_1H: SensorEntityDescription(
+        key="outside_temperature_1h",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        icon="mdi:sun-thermometer-outline",
+        native_unit_of_measurement=EcotouchTags.TEMPERATURE_OUTSIDE_1H.unit,
+    ),
+    EcotouchTags.TEMPERATURE_OUTSIDE_24H: SensorEntityDescription(
+        key="outside_temperature_24h",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        icon="mdi:sun-thermometer-outline",
+        native_unit_of_measurement=EcotouchTags.TEMPERATURE_OUTSIDE_24H.unit,
+    ),
+    EcotouchTags.TEMPERATURE_SOURCE_IN: SensorEntityDescription(
+        key="source_in_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        icon="mdi:thermometer-water",
+        native_unit_of_measurement=EcotouchTags.TEMPERATURE_SOURCE_IN.unit,
+    ),
+    EcotouchTags.TEMPERATURE_SOURCE_OUT: SensorEntityDescription(
+        key="source_out_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        icon="mdi:thermometer-water",
+        native_unit_of_measurement=EcotouchTags.TEMPERATURE_SOURCE_OUT.unit,
+    ),
+    EcotouchTags.ELECTRICAL_POWER: SensorEntityDescription(
+        key="electrical_power",
+        device_class=SensorDeviceClass.POWER,
+        icon="mdi:lightning-bolt",
+        native_unit_of_measurement=EcotouchTags.ELECTRICAL_POWER.unit,
+    ),
 }
 
 
@@ -33,15 +68,20 @@ async def async_setup_entry(
     """Create waterkotte_heatpump sensor entities."""
     coordinator: EcotouchCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    device_info = DeviceInfo(
-        identifiers={(DOMAIN, "00404366")},
-        name="heatpump",
-        manufacturer="Waterkotte GmbH",
-        model="EcoTouch DS 5027 Ai",
-        sw_version="1.2.3",
-        hw_version="13",
-        configuration_url=f'http://{entry.data.get("host")}',
-    )
+    def get_device_info() -> DeviceInfo:
+        heatpump_type = coordinator.heatpump.read_value(EcotouchTags.HEATPUMP_TYPE)
+        serial_nr = coordinator.heatpump.read_value(EcotouchTags.SERIAL_NUMBER)
+        return DeviceInfo(
+            identifiers={(DOMAIN, f"{serial_nr:08d}")},
+            name="heatpump",
+            manufacturer="Waterkotte GmbH",
+            model=coordinator.heatpump.decode_heatpump_series(heatpump_type),
+            sw_version="1.2.3",
+            hw_version="13",
+            configuration_url=f'http://{entry.data.get("host")}',
+        )
+
+    device_info = await hass.async_add_executor_job(get_device_info)
 
     entities = [
         EcotouchSensor(entry, coordinator, tag, sensor_config, device_info)
