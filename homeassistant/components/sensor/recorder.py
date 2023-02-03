@@ -226,7 +226,7 @@ def _normalize_states(
                 hass.data[WARN_UNSUPPORTED_UNIT].add(entity_id)
                 _LOGGER.warning(
                     (
-                        "The unit of %s (%s) can not be converted to the unit of"
+                        "The unit of %s (%s) cannot be converted to the unit of"
                         " previously compiled statistics (%s). Generation of long term"
                         " statistics will be suppressed unless the unit changes back to"
                         " %s or a compatible unit. Go to %s to fix this"
@@ -477,7 +477,7 @@ def _compile_statistics(  # noqa: C901
                     hass.data[WARN_UNSTABLE_UNIT].add(entity_id)
                     _LOGGER.warning(
                         (
-                            "The unit of %s (%s) can not be converted to the unit of"
+                            "The unit of %s (%s) cannot be converted to the unit of"
                             " previously compiled statistics (%s). Generation of long"
                             " term statistics will be suppressed unless the unit"
                             " changes back to %s or a compatible unit. Go to %s to fix"

@@ -310,7 +310,7 @@ class GeniusZone(GeniusEntity):
         # pylint: disable=protected-access
         if mode == "footprint" and not self._zone._has_pir:
             raise TypeError(
-                f"'{self.entity_id}' can not support footprint mode (it has no PIR)"
+                f"'{self.entity_id}' cannot support footprint mode (it has no PIR)"
             )
 
         await self._zone.set_mode(mode)
