@@ -1,8 +1,10 @@
 """The Southern Company integration."""
 from __future__ import annotations
 
+from southern_company_api.parser import SouthernCompanyAPI
+
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
@@ -15,8 +17,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Southern Company from a config entry."""
 
     hass.data.setdefault(DOMAIN, {})
-    # TO-DO 2. Validate the API connection (and authentication)
-    # hass.data[DOMAIN][entry.entry_id] = SouthernCompanyAPI()
+    hass.data[DOMAIN][entry.entry_id] = SouthernCompanyAPI(
+        entry.data[CONF_USERNAME],
+        entry.data[CONF_PASSWORD],
+    )
+    await hass.data[DOMAIN][entry.entry_id].authenticate()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
