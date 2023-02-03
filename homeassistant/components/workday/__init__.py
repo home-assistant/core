@@ -50,7 +50,7 @@ def valid_country(value: Any) -> str:
     return value
 
 
-DATE_VALIDATOR = HolidayBase()
+DATE_VALIDATOR = HolidayBase().__keytransform__
 
 
 WORKDAY_SCHEMA = vol.Schema(
@@ -66,10 +66,10 @@ WORKDAY_SCHEMA = vol.Schema(
             cv.ensure_list, [vol.In(ALLOWED_DAYS)]
         ),
         vol.Optional(CONF_ADD_HOLIDAYS, default=[]): vol.All(
-            cv.ensure_list, [DATE_VALIDATOR.__keytransform__]
+            cv.ensure_list, [DATE_VALIDATOR]
         ),
         vol.Optional(CONF_REMOVE_HOLIDAYS, default=[]): vol.All(
-            cv.ensure_list, [DATE_VALIDATOR.__keytransform__]
+            cv.ensure_list, [DATE_VALIDATOR]
         ),
     }
 )
