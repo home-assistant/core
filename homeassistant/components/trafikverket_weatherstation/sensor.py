@@ -68,6 +68,7 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         name="Precipitation type",
         icon="mdi:weather-snowy-rainy",
         entity_registry_enabled_default=False,
+        translation_key="precipitation",
     ),
     TrafikverketSensorEntityDescription(
         key="wind_direction",
@@ -82,6 +83,7 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         api_key="winddirectiontext",
         name="Wind direction text",
         icon="mdi:flag-triangle",
+        translation_key="wind_direction_text",
     ),
     TrafikverketSensorEntityDescription(
         key="wind_speed",
@@ -125,6 +127,7 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         name="Precipitation name",
         icon="mdi:weather-pouring",
         entity_registry_enabled_default=False,
+        translation_key="precipitation_amountname",
     ),
     TrafikverketSensorEntityDescription(
         key="measure_time",
