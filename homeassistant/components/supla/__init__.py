@@ -63,7 +63,6 @@ async def async_setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
     session = async_get_clientsession(hass)
 
     for server_conf in server_confs:
-
         server_address = server_conf[CONF_SERVER]
 
         server = SuplaAPI(server_address, server_conf[CONF_ACCESS_TOKEN], session)

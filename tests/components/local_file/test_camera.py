@@ -145,7 +145,6 @@ async def test_update_file_path(hass):
         "homeassistant.components.local_file.camera.mimetypes.guess_type",
         mock.Mock(return_value=(None, None)),
     ):
-
         camera_1 = {"platform": "local_file", "file_path": "mock/path.jpg"}
         camera_2 = {
             "platform": "local_file",

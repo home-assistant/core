@@ -279,7 +279,7 @@ async def async_start(  # noqa: C901
     mqtt_data.last_discovery = time.time()
     mqtt_integrations = await async_get_mqtt(hass)
 
-    for (integration, topics) in mqtt_integrations.items():
+    for integration, topics in mqtt_integrations.items():
 
         async def async_integration_message_received(
             integration: str, msg: ReceiveMessage
