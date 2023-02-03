@@ -148,7 +148,7 @@ class OnewireOptionsFlowHandler(OptionsFlowWithConfigEntry):
         if user_input is not None:
             if user_input.get(INPUT_ENTRY_CLEAR_OPTIONS):
                 # Reset all options
-                return self.async_create_entry(title="", data={})
+                return self.async_create_entry(data={})
 
             selected_devices: list[str] = (
                 user_input.get(INPUT_ENTRY_DEVICE_SELECTION) or []
@@ -193,7 +193,7 @@ class OnewireOptionsFlowHandler(OptionsFlowWithConfigEntry):
             self._update_device_options(user_input)
             if self.devices_to_configure:
                 return await self.async_step_configure_device(user_input=None)
-            return self.async_create_entry(title="", data=self.options)
+            return self.async_create_entry(data=self.options)
 
         self.current_device, onewire_id = self.devices_to_configure.popitem()
         data_schema = vol.Schema(
