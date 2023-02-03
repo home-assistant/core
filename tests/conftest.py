@@ -89,6 +89,10 @@ def _utcnow():
 dt_util.utcnow = _utcnow
 event.time_tracker_utcnow = _utcnow
 
+AsyncMockType = Callable[
+    ..., Coroutine[Any, Any, Callable[..., Coroutine[Any, Any, MagicMock]]]
+]
+
 
 def pytest_addoption(parser):
     """Register custom pytest options."""
@@ -352,7 +356,6 @@ def aiohttp_client(
         server_kwargs: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> TestClient:
-
         if isinstance(__param, Callable) and not isinstance(  # type: ignore[arg-type]
             __param, (Application, BaseTestServer)
         ):
@@ -767,7 +770,7 @@ async def mqtt_mock(
     mqtt_client_mock: MagicMock,
     mqtt_config_entry_data: dict[str, Any] | None,
     mqtt_mock_entry_no_yaml_config: Callable[..., Coroutine[Any, Any, MagicMock]],
-) -> MagicMock:
+) -> AsyncGenerator[MagicMock, None]:
     """Fixture to mock MQTT component."""
     return await mqtt_mock_entry_no_yaml_config()
 
@@ -802,7 +805,9 @@ async def _mqtt_mock_entry(
     real_mqtt_instance = None
     mock_mqtt_instance = None
 
-    async def _setup_mqtt_entry(setup_entry):
+    async def _setup_mqtt_entry(
+        setup_entry: Callable[[HomeAssistant, ConfigEntry], Coroutine[Any, Any, bool]]
+    ) -> MagicMock:
         """Set up the MQTT config entry."""
         assert await setup_entry(hass, entry)
 
@@ -819,7 +824,7 @@ async def _mqtt_mock_entry(
 
         return mock_mqtt_instance
 
-    def create_mock_mqtt(*args, **kwargs):
+    def create_mock_mqtt(*args, **kwargs) -> MagicMock:
         """Create a mock based on mqtt.MQTT."""
         nonlocal mock_mqtt_instance
         nonlocal real_mqtt_instance
@@ -840,10 +845,7 @@ async def mqtt_mock_entry_no_yaml_config(
     hass: HomeAssistant,
     mqtt_client_mock: MagicMock,
     mqtt_config_entry_data: dict[str, Any] | None,
-) -> AsyncGenerator[
-    Callable[..., Coroutine[Any, Any, Callable[..., Coroutine[Any, Any, MagicMock]]]],
-    None,
-]:
+) -> AsyncGenerator[AsyncMockType, None,]:
     """Set up an MQTT config entry without MQTT yaml config."""
 
     async def _async_setup_config_entry(
@@ -869,10 +871,7 @@ async def mqtt_mock_entry_with_yaml_config(
     hass: HomeAssistant,
     mqtt_client_mock: MagicMock,
     mqtt_config_entry_data: dict[str, Any] | None,
-) -> AsyncGenerator[
-    Callable[..., Coroutine[Any, Any, Callable[..., Coroutine[Any, Any, MagicMock]]]],
-    None,
-]:
+) -> AsyncGenerator[AsyncMockType, None,]:
     """Set up an MQTT config entry with MQTT yaml config."""
 
     async def _async_do_not_setup_config_entry(
