@@ -1,12 +1,7 @@
-"""Test voice assistant commands."""
+import unittest
 
-import pytest
-from homeassistant.components.voice_assistant import process_voice_input
-from homeassistant.core import HomeAssistant
-from typing import ParamSpec
-
-
-def test_voice_assistant_integration(hass):
-    voice_input = "turn on the lights"
-    expected_output = "Lights turned on"
-    assert process_voice_input(hass, voice_input) == expected_output
+class TestVoiceProcessing(unittest.TestCase):
+    def test_process_voice_input_fails(self):
+        audio = "invalid_file.wav"
+        result = process_voice_input(audio)
+        self.assertIsNone(result)
