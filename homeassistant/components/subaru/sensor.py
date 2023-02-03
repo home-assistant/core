@@ -268,7 +268,8 @@ async def _async_migrate_entries(
     all_sensors.extend(API_GEN_2_SENSORS)
     all_sensors.extend(SAFETY_SENSORS)
 
-    # Old unique_id is (previously title-cased) sensor name (e.g. "VIN_Avg Fuel Consumption")
+    # Old unique_id is (previously title-cased) sensor name
+    # (e.g. "VIN_Avg Fuel Consumption")
     replacements = {str(s.name).upper(): s.key for s in all_sensors}
 
     @callback
