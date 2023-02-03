@@ -276,12 +276,12 @@ class ReolinkHost:
 
         if base_url.startswith("https"):
             ir.async_create_issue(
-                hass,
+                self._hass,
                 DOMAIN,
                 "https_webhook",
                 breaks_in_ha_version="2023.2.0",
                 is_fixable=False,
-                severity=IssueSeverity.WARNING,
+                severity=ir.IssueSeverity.WARNING,
                 translation_key="https_webhook",
             )
 
