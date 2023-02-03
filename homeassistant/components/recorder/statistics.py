@@ -2528,6 +2528,8 @@ def cleanup_statistics_timestamp_migration(instance: Recorder) -> bool:
     Returns False if there are more rows to update.
     Returns True if all rows have been updated.
     """
+    from .migration import _drop_index  # pylint: disable=import-outside-toplevel
+
     engine = instance.engine
     assert engine is not None
     if engine.dialect.name == SupportedDialect.SQLITE:
@@ -2538,6 +2540,7 @@ def cleanup_statistics_timestamp_migration(instance: Recorder) -> bool:
                         f"update {table} set start = NULL, created = NULL, last_reset = NULL;"
                     )
                 )
+            _drop_index(instance.get_session, table, f"ix_{table}_start")
     elif engine.dialect.name == SupportedDialect.MYSQL:
         for table in STATISTICS_TABLES:
             with session_scope(session=instance.get_session()) as session:
@@ -2553,6 +2556,7 @@ def cleanup_statistics_timestamp_migration(instance: Recorder) -> bool:
                     # We have more rows to update so return False
                     # to indicate we need to run again
                     return False
+            _drop_index(instance.get_session, table, f"ix_{table}_start")
     elif engine.dialect.name == SupportedDialect.POSTGRESQL:
         for table in STATISTICS_TABLES:
             with session_scope(session=instance.get_session()) as session:
@@ -2569,6 +2573,7 @@ def cleanup_statistics_timestamp_migration(instance: Recorder) -> bool:
                     # We have more rows to update so return False
                     # to indicate we need to run again
                     return False
+            _drop_index(instance.get_session, table, f"ix_{table}_start")
 
     # We have no more rows to update so return True
     # to indicate we are done
