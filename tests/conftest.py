@@ -89,7 +89,7 @@ def _utcnow():
 dt_util.utcnow = _utcnow
 event.time_tracker_utcnow = _utcnow
 
-AsyncMockType = Callable[
+MqttMockType = Callable[
     ..., Coroutine[Any, Any, Callable[..., Coroutine[Any, Any, MagicMock]]]
 ]
 
@@ -845,7 +845,7 @@ async def mqtt_mock_entry_no_yaml_config(
     hass: HomeAssistant,
     mqtt_client_mock: MagicMock,
     mqtt_config_entry_data: dict[str, Any] | None,
-) -> AsyncGenerator[AsyncMockType, None,]:
+) -> AsyncGenerator[MqttMockType, None,]:
     """Set up an MQTT config entry without MQTT yaml config."""
 
     async def _async_setup_config_entry(
@@ -871,7 +871,7 @@ async def mqtt_mock_entry_with_yaml_config(
     hass: HomeAssistant,
     mqtt_client_mock: MagicMock,
     mqtt_config_entry_data: dict[str, Any] | None,
-) -> AsyncGenerator[AsyncMockType, None,]:
+) -> AsyncGenerator[MqttMockType, None,]:
     """Set up an MQTT config entry with MQTT yaml config."""
 
     async def _async_do_not_setup_config_entry(
