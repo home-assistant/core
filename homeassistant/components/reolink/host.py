@@ -275,10 +275,10 @@ class ReolinkHost:
 
         if base_url.startswith("https"):
             _LOGGER.warning(
-                "Reolink products can not push motion events to a https adress (SSL), "
-                "please configure a local http adress under "
+                "Reolink products can not push motion events to a HTTPS address (SSL), "
+                "please configure a local HTTP address under "
                 "settings->system->network->Home Assistant URL->local network, "
-                "current adress: %s",
+                "current address: %s",
                 self._webhook_url,
             )
 
