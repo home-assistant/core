@@ -1944,7 +1944,7 @@ def test_compile_hourly_statistics_changing_units_1(
 ):
     """Test compiling hourly statistics where units change from one hour to the next.
 
-    This tests the case where the recorder can not convert between the units.
+    This tests the case where the recorder cannot convert between the units.
     """
     zero = dt_util.utcnow()
     hass = hass_recorder()
@@ -1970,7 +1970,7 @@ def test_compile_hourly_statistics_changing_units_1(
 
     do_adhoc_statistics(hass, start=zero)
     wait_recording_done(hass)
-    assert "can not be converted to the unit of previously" not in caplog.text
+    assert "cannot be converted to the unit of previously" not in caplog.text
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
         {
@@ -2003,7 +2003,7 @@ def test_compile_hourly_statistics_changing_units_1(
     do_adhoc_statistics(hass, start=zero + timedelta(minutes=10))
     wait_recording_done(hass)
     assert (
-        f"The unit of sensor.test1 ({state_unit2}) can not be converted to the unit of "
+        f"The unit of sensor.test1 ({state_unit2}) cannot be converted to the unit of "
         f"previously compiled statistics ({state_unit})" in caplog.text
     )
     statistic_ids = list_statistic_ids(hass)
@@ -2388,7 +2388,7 @@ def test_compile_hourly_statistics_equivalent_units_1(
 
     do_adhoc_statistics(hass, start=zero)
     wait_recording_done(hass)
-    assert "can not be converted to the unit of previously" not in caplog.text
+    assert "cannot be converted to the unit of previously" not in caplog.text
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
         {
@@ -3472,7 +3472,7 @@ async def test_validate_unit_change_convertible(
     """Test validate_statistics.
 
     This tests what happens if a sensor is first recorded in a unit which supports unit
-    conversion, and the unit is then changed to a unit which can and can not be
+    conversion, and the unit is then changed to a unit which can and cannot be
     converted to the original unit.
 
     The test also asserts that the sensor's device class is ignored.
@@ -3671,7 +3671,7 @@ async def test_validate_statistics_unit_change_no_device_class(
     """Test validate_statistics.
 
     This tests what happens if a sensor is first recorded in a unit which supports unit
-    conversion, and the unit is then changed to a unit which can and can not be
+    conversion, and the unit is then changed to a unit which can and cannot be
     converted to the original unit.
     """
     id = 1
