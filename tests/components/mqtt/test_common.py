@@ -26,6 +26,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, async_fire_mqtt_message, mock_registry
+from tests.conftest import MqttMockType
 
 DEFAULT_CONFIG_DEVICE_INFO_ID = {
     "identifiers": ["helloworld"],
@@ -55,7 +56,7 @@ DISCOVERY_COUNT = len(MQTT)
 
 
 async def help_test_availability_when_connection_lost(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config, domain, config
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockType, domain, config
 ) -> None:
     """Test availability after MQTT disconnection."""
     assert await async_setup_component(hass, mqtt.DOMAIN, config)
@@ -74,7 +75,7 @@ async def help_test_availability_when_connection_lost(
 
 
 async def help_test_availability_without_topic(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config, domain, config
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockType, domain, config
 ) -> None:
     """Test availability without defined availability topic."""
     assert "availability_topic" not in config[mqtt.DOMAIN][domain]
@@ -88,7 +89,7 @@ async def help_test_availability_without_topic(
 
 async def help_test_default_availability_payload(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config,
+    mqtt_mock_entry_with_yaml_config: MqttMockType,
     domain,
     config,
     no_assumed_state=False,
@@ -139,7 +140,7 @@ async def help_test_default_availability_payload(
 
 async def help_test_default_availability_list_payload(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config,
+    mqtt_mock_entry_with_yaml_config: MqttMockType,
     domain,
     config,
     no_assumed_state=False,
@@ -205,7 +206,7 @@ async def help_test_default_availability_list_payload(
 
 async def help_test_default_availability_list_payload_all(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config,
+    mqtt_mock_entry_with_yaml_config: MqttMockType,
     domain,
     config,
     no_assumed_state=False,
@@ -273,7 +274,7 @@ async def help_test_default_availability_list_payload_all(
 
 async def help_test_default_availability_list_payload_any(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config,
+    mqtt_mock_entry_with_yaml_config: MqttMockType,
     domain,
     config,
     no_assumed_state=False,
@@ -366,7 +367,7 @@ async def help_test_default_availability_list_single(
 
 async def help_test_custom_availability_payload(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config,
+    mqtt_mock_entry_with_yaml_config: MqttMockType,
     domain,
     config,
     no_assumed_state=False,
@@ -419,7 +420,7 @@ async def help_test_custom_availability_payload(
 
 async def help_test_discovery_update_availability(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config,
+    mqtt_mock_entry_no_yaml_config: MqttMockType,
     domain,
     config,
     no_assumed_state=False,
@@ -499,7 +500,7 @@ async def help_test_discovery_update_availability(
 
 
 async def help_test_setting_attribute_via_mqtt_json_message(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config, domain, config
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockType, domain, config
 ) -> None:
     """Test the setting of attribute via MQTT with JSON payload.
 
@@ -524,7 +525,7 @@ async def help_test_setting_attribute_via_mqtt_json_message(
 
 async def help_test_setting_blocked_attribute_via_mqtt_json_message(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config,
+    mqtt_mock_entry_no_yaml_config: MqttMockType,
     domain,
     config,
     extra_blocked_attributes,
@@ -556,7 +557,7 @@ async def help_test_setting_blocked_attribute_via_mqtt_json_message(
 
 
 async def help_test_setting_attribute_with_template(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config, domain, config
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockType, domain, config
 ) -> None:
     """Test the setting of attribute via MQTT with JSON payload.
 
@@ -587,7 +588,11 @@ async def help_test_setting_attribute_with_template(
 
 
 async def help_test_update_with_json_attrs_not_dict(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config, caplog, domain, config
+    hass: HomeAssistant,
+    mqtt_mock_entry_with_yaml_config: MqttMockType,
+    caplog,
+    domain,
+    config,
 ) -> None:
     """Test attributes get extracted from a JSON result.
 
@@ -612,7 +617,11 @@ async def help_test_update_with_json_attrs_not_dict(
 
 
 async def help_test_update_with_json_attrs_bad_json(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config, caplog, domain, config
+    hass: HomeAssistant,
+    mqtt_mock_entry_with_yaml_config: MqttMockType,
+    caplog,
+    domain,
+    config,
 ) -> None:
     """Test JSON validation of attributes.
 
@@ -637,7 +646,11 @@ async def help_test_update_with_json_attrs_bad_json(
 
 
 async def help_test_discovery_update_attr(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config, caplog, domain, config
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config: MqttMockType,
+    caplog,
+    domain,
+    config,
 ) -> None:
     """Test update of discovered MQTTAttributes.
 
@@ -674,7 +687,7 @@ async def help_test_discovery_update_attr(
 
 
 async def help_test_unique_id(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config, domain, config
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config: MqttMockType, domain, config
 ) -> None:
     """Test unique id option only creates one entity per unique_id."""
     assert await async_setup_component(hass, mqtt.DOMAIN, config)
@@ -684,7 +697,11 @@ async def help_test_unique_id(
 
 
 async def help_test_discovery_removal(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config, caplog, domain, data
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config: MqttMockType,
+    caplog,
+    domain,
+    data,
 ) -> None:
     """Test removal of discovered component.
 
@@ -707,7 +724,7 @@ async def help_test_discovery_removal(
 
 async def help_test_discovery_update(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config,
+    mqtt_mock_entry_no_yaml_config: MqttMockType,
     caplog,
     domain,
     discovery_config1,
@@ -772,7 +789,7 @@ async def help_test_discovery_update(
 
 async def help_test_discovery_update_unchanged(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config,
+    mqtt_mock_entry_no_yaml_config: MqttMockType,
     caplog,
     domain,
     data1,
@@ -797,7 +814,12 @@ async def help_test_discovery_update_unchanged(
 
 
 async def help_test_discovery_broken(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config, caplog, domain, data1, data2
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config: MqttMockType,
+    caplog,
+    domain,
+    data1,
+    data2,
 ) -> None:
     """Test handling of bad discovery message."""
     await mqtt_mock_entry_no_yaml_config()
@@ -819,7 +841,7 @@ async def help_test_discovery_broken(
 
 async def help_test_encoding_subscribable_topics(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config,
+    mqtt_mock_entry_with_yaml_config: MqttMockType,
     caplog,
     domain,
     config,
@@ -952,7 +974,7 @@ async def help_test_encoding_subscribable_topics(
 
 
 async def help_test_entity_device_info_with_identifier(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config, domain, config
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockType, domain, config
 ) -> None:
     """Test device registry integration.
 
@@ -983,7 +1005,7 @@ async def help_test_entity_device_info_with_identifier(
 
 
 async def help_test_entity_device_info_with_connection(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config, domain, config
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockType, domain, config
 ) -> None:
     """Test device registry integration.
 
@@ -1016,7 +1038,7 @@ async def help_test_entity_device_info_with_connection(
 
 
 async def help_test_entity_device_info_remove(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config, domain, config
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockType, domain, config
 ) -> None:
     """Test device registry remove."""
     await mqtt_mock_entry_no_yaml_config()
@@ -1045,7 +1067,7 @@ async def help_test_entity_device_info_remove(
 
 
 async def help_test_entity_device_info_update(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config, domain, config
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockType, domain, config
 ) -> None:
     """Test device registry update.
 
@@ -1078,7 +1100,11 @@ async def help_test_entity_device_info_update(
 
 
 async def help_test_entity_id_update_subscriptions(
-    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config, domain, config, topics=None
+    hass: HomeAssistant,
+    mqtt_mock_entry_with_yaml_config: MqttMockType,
+    domain,
+    config,
+    topics=None,
 ) -> None:
     """Test MQTT subscriptions are managed when entity_id is updated."""
     # Add unique_id to config
@@ -1121,7 +1147,11 @@ async def help_test_entity_id_update_subscriptions(
 
 
 async def help_test_entity_id_update_discovery_update(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config, domain, config, topic=None
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config: MqttMockType,
+    domain,
+    config,
+    topic=None,
 ) -> None:
     """Test MQTT discovery update after entity_id is updated."""
     # Add unique_id to config
@@ -1163,7 +1193,7 @@ async def help_test_entity_id_update_discovery_update(
 
 
 async def help_test_entity_debug_info(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config, domain, config
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockType, domain, config
 ) -> None:
     """Test debug_info.
 
@@ -1201,7 +1231,7 @@ async def help_test_entity_debug_info(
 
 
 async def help_test_entity_debug_info_max_messages(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config, domain, config
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockType, domain, config
 ) -> None:
     """Test debug_info message overflow.
 
@@ -1257,7 +1287,7 @@ async def help_test_entity_debug_info_max_messages(
 
 async def help_test_entity_debug_info_message(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config,
+    mqtt_mock_entry_no_yaml_config: MqttMockType,
     domain,
     config,
     service,
@@ -1368,7 +1398,7 @@ async def help_test_entity_debug_info_message(
 
 
 async def help_test_entity_debug_info_remove(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config, domain, config
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockType, domain, config
 ) -> None:
     """Test debug_info.
 
@@ -1415,7 +1445,7 @@ async def help_test_entity_debug_info_remove(
 
 
 async def help_test_entity_debug_info_update_entity_id(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config, domain, config
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockType, domain, config
 ) -> None:
     """Test debug_info.
 
@@ -1473,7 +1503,7 @@ async def help_test_entity_debug_info_update_entity_id(
 
 
 async def help_test_entity_disabled_by_default(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config, domain, config
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockType, domain, config
 ) -> None:
     """Test device registry remove."""
     await mqtt_mock_entry_no_yaml_config()
@@ -1512,7 +1542,7 @@ async def help_test_entity_disabled_by_default(
 
 
 async def help_test_entity_category(
-    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config, domain, config
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config: MqttMockType, domain, config
 ) -> None:
     """Test device registry remove."""
     await mqtt_mock_entry_no_yaml_config()
@@ -1557,7 +1587,7 @@ async def help_test_entity_category(
 
 async def help_test_publishing_with_custom_encoding(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config,
+    mqtt_mock_entry_with_yaml_config: MqttMockType,
     caplog,
     domain,
     config,
@@ -1715,7 +1745,7 @@ async def help_test_entry_reload_with_new_config(
 
 async def help_test_reloadable(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config,
+    mqtt_mock_entry_with_yaml_config: MqttMockType,
     caplog,
     tmp_path,
     domain,
@@ -1806,7 +1836,7 @@ async def help_test_unload_config_entry(
 
 async def help_test_unload_config_entry_with_platform(
     hass: HomeAssistant,
-    mqtt_mock_entry_with_yaml_config,
+    mqtt_mock_entry_with_yaml_config: MqttMockType,
     tmp_path,
     domain,
     config,
