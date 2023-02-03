@@ -991,7 +991,7 @@ async def websocket_parse_qr_code_string(
     {
         vol.Required(TYPE): "zwave_js/try_parse_dsk_from_qr_code_string",
         vol.Required(ENTRY_ID): str,
-        vol.Required(QR_CODE_STRING): QR_CODE_STRING_SCHEMA,
+        vol.Required(QR_CODE_STRING): str,
     }
 )
 @websocket_api.async_response
