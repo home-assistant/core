@@ -6,7 +6,22 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
-from .dataset_store import async_load as async_load_dataset_store
+from .dataset_store import (
+    DatasetEntry,
+    async_add_dataset,
+    async_delete_dataset,
+    async_get_dataset,
+    async_list_datasets,
+)
+
+__all__ = [
+    "DOMAIN",
+    "DatasetEntry",
+    "async_add_dataset",
+    "async_delete_dataset",
+    "async_get_dataset",
+    "async_list_datasets",
+]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -18,7 +33,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
         )
     hass.data[DOMAIN] = {}
-    await async_load_dataset_store(hass)
     return True
 
 

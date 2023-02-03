@@ -3,17 +3,18 @@ from __future__ import annotations
 
 import dataclasses
 from datetime import datetime
+from functools import cached_property
 from typing import Any, cast
+
+from python_otbr_api import tlv_parser
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.storage import Store
-from homeassistant.util import dt as dt_util, uuid as uuid_util
+from homeassistant.util import dt as dt_util, ulid as ulid_util
 
-from . import tlv_parser
-from .const import DOMAIN
-
-DATA_STORE = "datasets"
+DATA_STORE = "thread.datasets"
 STORAGE_KEY = "thread.datasets"
 STORAGE_VERSION_MAJOR = 1
 STORAGE_VERSION_MINOR = 1
@@ -29,25 +30,27 @@ class DatasetEntry:
     tlv: str
 
     created: datetime = dataclasses.field(default_factory=dt_util.utcnow)
-    id: str = dataclasses.field(default_factory=uuid_util.random_uuid_hex)
+    id: str = dataclasses.field(default_factory=ulid_util.ulid)
+
+    @cached_property
+    def dataset(self) -> dict[tlv_parser.MeshcopTLVType, str]:
+        """Return the dataset in dict format."""
+        return tlv_parser.parse_tlv(self.tlv)
 
     @property
     def extended_pan_id(self) -> str | None:
         """Return extended PAN ID as a hex string."""
-        dataset = tlv_parser.parse_tlv(self.tlv)
-        return dataset.get(tlv_parser.MeshcopTLVType.EXTPANID)
+        return self.dataset.get(tlv_parser.MeshcopTLVType.EXTPANID)
 
     @property
     def network_name(self) -> str | None:
         """Return network name as a string."""
-        dataset = tlv_parser.parse_tlv(self.tlv)
-        return dataset.get(tlv_parser.MeshcopTLVType.NETWORKNAME)
+        return self.dataset.get(tlv_parser.MeshcopTLVType.NETWORKNAME)
 
     @property
     def pan_id(self) -> str | None:
         """Return PAN ID as a hex string."""
-        dataset = tlv_parser.parse_tlv(self.tlv)
-        return dataset.get(tlv_parser.MeshcopTLVType.PANID)
+        return self.dataset.get(tlv_parser.MeshcopTLVType.PANID)
 
     def to_json(self) -> dict[str, Any]:
         """Return a JSON serializable representation for storage."""
@@ -79,22 +82,21 @@ class DatasetStore:
     def async_add(self, source: str, tlv: str) -> None:
         """Add dataset, does nothing if it already exists."""
         # Make sure the tlv is valid
-        tlv_parser.parse_tlv(tlv)
+        dataset = tlv_parser.parse_tlv(tlv)
         # Bail out if the dataset already exists
-        if any(dataset for dataset in self.datasets.values() if dataset.tlv == tlv):
+        if any(entry for entry in self.datasets.values() if entry.dataset == dataset):
             return
 
         # Set to preferred if this is the first dataset
         preferred = not bool(self.datasets)
-        dataset = DatasetEntry(preferred=preferred, source=source, tlv=tlv)
-        self.datasets[dataset.id] = dataset
+        entry = DatasetEntry(preferred=preferred, source=source, tlv=tlv)
+        self.datasets[entry.id] = entry
         self.async_schedule_save()
 
     @callback
     def async_delete(self, dataset_id: str) -> None:
         """Delete dataset."""
-        if not (dataset := self.datasets.get(dataset_id)):
-            return
+        dataset = self.datasets[dataset_id]
         if dataset.preferred:
             raise HomeAssistantError("attempt to remove preferred dataset")
         del self.datasets[dataset_id]
@@ -111,7 +113,7 @@ class DatasetStore:
 
         datasets: dict[str, DatasetEntry] = {}
 
-        if isinstance(data, dict):
+        if data is not None:
             for dataset in data["datasets"]:
                 created = cast(datetime, dt_util.parse_datetime(dataset["created"]))
                 datasets[dataset["id"]] = DatasetEntry(
@@ -137,14 +139,44 @@ class DatasetStore:
         return data
 
 
-@callback
-def async_get(hass: HomeAssistant) -> DatasetStore:
+@singleton(DATA_STORE)
+async def _async_get_store(hass: HomeAssistant) -> DatasetStore:
     """Get the dataset store."""
-    return cast(DatasetStore, hass.data[DOMAIN][DATA_STORE])
+    store = DatasetStore(hass)
+    await store.async_load()
+    return store
 
 
-async def async_load(hass: HomeAssistant) -> None:
-    """Load dataset store."""
-    assert DATA_STORE not in hass.data[DOMAIN]
-    hass.data[DOMAIN][DATA_STORE] = DatasetStore(hass)
-    await hass.data[DOMAIN][DATA_STORE].async_load()
+async def async_add_dataset(hass: HomeAssistant, source: str, tlv: str) -> None:
+    """Add a dataset."""
+    store = await _async_get_store(hass)
+    store.async_add(source, tlv)
+
+
+async def async_delete_dataset(hass: HomeAssistant, dataset_id: str) -> None:
+    """Delete a dataset."""
+    store = await _async_get_store(hass)
+    store.async_delete(dataset_id)
+
+
+async def async_get_dataset(
+    hass: HomeAssistant, dataset_id: str
+) -> DatasetEntry | None:
+    """Get a dataset."""
+    store = await _async_get_store(hass)
+    return store.async_get(dataset_id)
+
+
+async def async_get_preferred_dataset(hass: HomeAssistant) -> DatasetEntry | None:
+    """Get the preferred dataset."""
+    store = await _async_get_store(hass)
+    for dataset in store.datasets.values():
+        if dataset.preferred:
+            return dataset
+    return None
+
+
+async def async_list_datasets(hass: HomeAssistant) -> list[DatasetEntry]:
+    """Get a dataset."""
+    store = await _async_get_store(hass)
+    return list(store.datasets.values())

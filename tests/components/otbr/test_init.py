@@ -9,20 +9,13 @@ from homeassistant.components import otbr
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from . import BASE_URL
+from . import BASE_URL, CONFIG_ENTRY_DATA, DATASET
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-CONFIG_ENTRY_DATA = {"url": "http://core-silabs-multiprotocol:8081"}
-DATASET = bytes.fromhex(
-    "0E080000000000010000000300001035060004001FFFE00208F642646DA209B1C00708FDF57B5A"
-    "0FE2AAF60510DE98B5BA1A528FEE049D4B4B01835375030D4F70656E5468726561642048410102"
-    "25A40410F5DD18371BFD29E1A601EF6FFAD94C030C0402A0F7F8"
-)
 
-
-async def test_import_dataset(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker):
+async def test_import_dataset(hass: HomeAssistant):
     """Test the active dataset is imported at setup."""
 
     config_entry = MockConfigEntry(
@@ -40,6 +33,22 @@ async def test_import_dataset(hass: HomeAssistant, aioclient_mock: AiohttpClient
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     mock_add.assert_called_once_with(config_entry.title, DATASET.hex())
+
+
+async def test_config_entry_not_ready(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+):
+    """Test raising ConfigEntryNotReady ."""
+
+    config_entry = MockConfigEntry(
+        data=CONFIG_ENTRY_DATA,
+        domain=otbr.DOMAIN,
+        options={},
+        title="My OTBR",
+    )
+    config_entry.add_to_hass(hass)
+    aioclient_mock.get(f"{BASE_URL}/node/dataset/active", status=HTTPStatus.CREATED)
+    assert not await hass.config_entries.async_setup(config_entry.entry_id)
 
 
 async def test_remove_entry(

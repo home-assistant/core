@@ -8,9 +8,7 @@ from typing import Any, Concatenate, ParamSpec, TypeVar
 
 import python_otbr_api
 
-from homeassistant.components.thread.dataset_store import (
-    async_get as async_get_dataset_store,
-)
+from homeassistant.components.thread import async_add_dataset
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
@@ -68,7 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except HomeAssistantError as err:
         raise ConfigEntryNotReady from err
     if dataset:
-        async_get_dataset_store(hass).async_add(entry.title, dataset.hex())
+        await async_add_dataset(hass, entry.title, dataset.hex())
 
     hass.data[DOMAIN] = otbrdata
 
