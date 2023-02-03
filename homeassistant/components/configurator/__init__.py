@@ -6,10 +6,13 @@ This will return a request id that has to be used for future calls.
 A callback has to be provided to `request_config` which will be called when
 the user has submitted configuration information.
 """
+from __future__ import annotations
+
+from collections.abc import Callable
 from contextlib import suppress
 from datetime import datetime
 import functools as ft
-from typing import Any
+from typing import Any, cast
 
 from homeassistant.const import ATTR_ENTITY_PICTURE, ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant, ServiceCall, callback as async_callback
@@ -40,29 +43,31 @@ SERVICE_CONFIGURE = "configure"
 STATE_CONFIGURE = "configure"
 STATE_CONFIGURED = "configured"
 
+ConfiguratorCallback = Callable[[list[dict[str, str]]], None]
+
 
 @bind_hass
 @async_callback
 def async_request_config(
-    hass,
-    name,
-    callback=None,
-    description=None,
-    description_image=None,
-    submit_caption=None,
-    fields=None,
-    link_name=None,
-    link_url=None,
-    entity_picture=None,
+    hass: HomeAssistant,
+    name: str,
+    callback: ConfiguratorCallback | None = None,
+    description: str | None = None,
+    description_image: str | None = None,
+    submit_caption: str | None = None,
+    fields: list[dict[str, str]] | None = None,
+    link_name: str | None = None,
+    link_url: str | None = None,
+    entity_picture: str | None = None,
 ) -> str:
     """Create a new request for configuration.
 
     Will return an ID to be used for sequent calls.
     """
-    if link_name is not None and link_url is not None:
+    if description and link_name is not None and link_url is not None:
         description += f"\n\n[{link_name}]({link_url})"
 
-    if description_image is not None:
+    if description and description_image is not None:
         description += f"\n\n![Description image]({description_image})"
 
     if (instance := hass.data.get(_KEY_INSTANCE)) is None:
@@ -135,14 +140,22 @@ class Configurator:
         """Initialize the configurator."""
         self.hass = hass
         self._cur_id = 0
-        self._requests = {}
+        self._requests: dict[
+            str, tuple[str, list[dict[str, str]], ConfiguratorCallback | None]
+        ] = {}
         hass.services.async_register(
             DOMAIN, SERVICE_CONFIGURE, self.async_handle_service_call
         )
 
     @async_callback
     def async_request_config(
-        self, name, callback, description, submit_caption, fields, entity_picture
+        self,
+        name: str,
+        callback: ConfiguratorCallback | None,
+        description: str | None,
+        submit_caption: str | None,
+        fields: list[dict[str, str]] | None,
+        entity_picture: str | None,
     ) -> str:
         """Set up a request for configuration."""
         entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, name, hass=self.hass)
@@ -219,7 +232,7 @@ class Configurator:
         if not self._validate_request_id(request_id):
             return
 
-        _, _, callback = self._requests[request_id]
+        _, _, callback = self._requests[cast(str, request_id)]
 
         # field validation goes here?
         if callback:
