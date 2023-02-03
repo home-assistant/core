@@ -270,7 +270,6 @@ ignore = [
     "D406",  # Section name should end with a newline
     "D407",  # Section name underlining
     "D411",  # Missing blank line before section
-    "D418",  # Function decorated with `@overload` shouldn't contain a docstring
     "E501",  # line too long
     "E713",  # Test for membership should be 'not in'
     "E731",  # do not assign a lambda expression, use a def
