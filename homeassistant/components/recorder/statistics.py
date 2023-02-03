@@ -2311,7 +2311,6 @@ def _validate_db_schema(
     hass: HomeAssistant, instance: Recorder, session_maker: Callable[[], Session]
 ) -> set[str]:
     """Do some basic checks for common schema errors caused by manual migration."""
-    # TODO: Convert start_ts, created_ts, last_reset_ts
     schema_errors: set[str] = set()
 
     # Wrong precision is only an issue for MySQL / MariaDB / PostgreSQL
