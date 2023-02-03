@@ -78,10 +78,10 @@ async def async_setup_entry(
     reolink_data: ReolinkData = hass.data[DOMAIN][config_entry.entry_id]
 
     async_add_entities(
-       ReolinkNumberEntity(reolink_data, channel, entity_description)
-       for entity_description in NUMBER_ENTITIES
-       for channel in reolink_data.host.api.channels
-       if entity_description.supported(reolink_data.host.api, channel)
+        ReolinkNumberEntity(reolink_data, channel, entity_description)
+        for entity_description in NUMBER_ENTITIES
+        for channel in reolink_data.host.api.channels
+        if entity_description.supported(reolink_data.host.api, channel)
     )
 
 
