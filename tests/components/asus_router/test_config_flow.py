@@ -219,7 +219,6 @@ async def test_step_user(hass: HomeAssistant):
     """Test complete user configuration."""
 
     with patch_bridge(), PATCH_GET_HOST:
-
         # Pass the first step as if device was successfully found
         flow = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -253,7 +252,6 @@ async def test_step_find_fail(hass: HomeAssistant):
         "homeassistant.components.asus_router.config_flow.socket.gethostbyname",
         side_effect=gaierror,
     ):
-
         # Fail on resolving hostname
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -280,7 +278,6 @@ async def test_step_credentials_fail(hass: HomeAssistant, side_effect, error):
     """Test failing on the `credentials` step when not being able to connect to the device."""
 
     with patch_bridge(side_effect=side_effect), PATCH_GET_HOST:
-
         # Pass the first step as if device was successfully found
         flow = await hass.config_entries.flow.async_init(
             DOMAIN,
