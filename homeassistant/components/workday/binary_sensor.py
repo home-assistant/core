@@ -87,6 +87,9 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Workday sensor."""
+    if discovery_info:
+        config = discovery_info
+
     add_holidays: list[DateLike] = config[CONF_ADD_HOLIDAYS]
     remove_holidays: list[str] = config[CONF_REMOVE_HOLIDAYS]
     country: str = config[CONF_COUNTRY]

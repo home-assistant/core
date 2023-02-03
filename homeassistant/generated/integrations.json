@@ -6163,12 +6163,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "workday": {
-      "name": "Workday",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
-    },
     "worldclock": {
       "name": "Worldclock",
       "integration_type": "hub",
@@ -6514,6 +6508,12 @@
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "workday": {
+      "name": "Workday",
+      "integration_type": "helper",
+      "config_flow": false,
+      "iot_class": "local_polling"
     }
   },
   "translated_name": [
