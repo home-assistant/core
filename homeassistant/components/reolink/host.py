@@ -14,6 +14,7 @@ from reolink_aio.exceptions import ReolinkError, SubscriptionError
 from homeassistant.components import webhook
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.network import NoURLAvailableError, get_url
@@ -274,12 +275,14 @@ class ReolinkHost:
         self._webhook_url = f"{base_url}{webhook_path}"
 
         if base_url.startswith("https"):
-            _LOGGER.warning(
-                "Reolink products can not push motion events to a HTTPS address (SSL), "
-                "please configure a local HTTP address under "
-                "settings->system->network->Home Assistant URL->local network, "
-                "current address: %s",
-                self._webhook_url,
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                "https_webhook",
+                breaks_in_ha_version="2023.2.0",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="https_webhook",
             )
 
         _LOGGER.debug("Registered webhook: %s", event_id)
