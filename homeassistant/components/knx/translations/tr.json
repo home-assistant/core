@@ -6,11 +6,9 @@
         },
         "error": {
             "cannot_connect": "Ba\u011flanma hatas\u0131",
-            "file_not_found": "Belirtilen `.knxkeys` dosyas\u0131 config/.storage/knx/ yolunda bulunamad\u0131",
             "invalid_backbone_key": "Ge\u00e7ersiz omurga anahtar\u0131. 32 onalt\u0131l\u0131k say\u0131 bekleniyor.",
             "invalid_individual_address": "De\u011fer, KNX bireysel adresi i\u00e7in modelle e\u015fle\u015fmiyor.\n 'alan.hat.cihaz'",
             "invalid_ip_address": "Ge\u00e7ersiz IPv4 adresi.",
-            "invalid_signature": "`.knxkeys` dosyas\u0131n\u0131n \u015fifresini \u00e7\u00f6zmek i\u00e7in \u015fifre yanl\u0131\u015f.",
             "keyfile_invalid_signature": "\".knxkeys\" dosyas\u0131n\u0131n \u015fifresini \u00e7\u00f6zmek i\u00e7in kullan\u0131lan parola yanl\u0131\u015f.",
             "keyfile_no_backbone_key": "\".knxkeys\" dosyas\u0131, g\u00fcvenli y\u00f6nlendirme i\u00e7in bir omurga anahtar\u0131 i\u00e7ermez.",
             "keyfile_no_tunnel_for_host": "\".knxkeys\" dosyas\u0131, \" {host} \" ana bilgisayar\u0131 i\u00e7in kimlik bilgileri i\u00e7ermiyor.",
@@ -125,11 +123,9 @@
     "options": {
         "error": {
             "cannot_connect": "Ba\u011flanma hatas\u0131",
-            "file_not_found": "Belirtilen `.knxkeys` dosyas\u0131 config/.storage/knx/ yolunda bulunamad\u0131",
             "invalid_backbone_key": "Ge\u00e7ersiz omurga anahtar\u0131. 32 onalt\u0131l\u0131k say\u0131 bekleniyor.",
             "invalid_individual_address": "De\u011fer, KNX bireysel adresi i\u00e7in modelle e\u015fle\u015fmiyor.\n 'alan.hat.cihaz'",
             "invalid_ip_address": "Ge\u00e7ersiz IPv4 adresi.",
-            "invalid_signature": "`.knxkeys` dosyas\u0131n\u0131n \u015fifresini \u00e7\u00f6zmek i\u00e7in \u015fifre yanl\u0131\u015f.",
             "keyfile_invalid_signature": "\".knxkeys\" dosyas\u0131n\u0131n \u015fifresini \u00e7\u00f6zmek i\u00e7in kullan\u0131lan parola yanl\u0131\u015f.",
             "keyfile_no_backbone_key": "\".knxkeys\" dosyas\u0131, g\u00fcvenli y\u00f6nlendirme i\u00e7in bir omurga anahtar\u0131 i\u00e7ermez.",
             "keyfile_no_tunnel_for_host": "\".knxkeys\" dosyas\u0131, \" {host} \" ana bilgisayar\u0131 i\u00e7in kimlik bilgileri i\u00e7ermiyor.",

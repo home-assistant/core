@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
     PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     Platform,
     UnitOfApparentPower,
     UnitOfElectricCurrent,
@@ -184,12 +185,6 @@ class Sensor(ZhaEntity, SensorEntity):
         return round(float(value * self._multiplier) / self._divisor)
 
 
-@MULTI_MATCH(
-    channel_names=CHANNEL_ANALOG_INPUT,
-    manufacturers="LUMI",
-    models={"lumi.plug", "lumi.plug.maus01", "lumi.plug.mmeu01"},
-    stop_on_match_group=CHANNEL_ANALOG_INPUT,
-)
 @MULTI_MATCH(
     channel_names=CHANNEL_ANALOG_INPUT,
     manufacturers="Digi",
@@ -516,7 +511,7 @@ class PolledSmartEnergySummation(SmartEnergySummation):
     models={"ZLinky_TIC"},
 )
 class Tier1SmartEnergySummation(
-    SmartEnergySummation, id_suffix="tier1_summation_delivered"
+    PolledSmartEnergySummation, id_suffix="tier1_summation_delivered"
 ):
     """Tier 1 Smart Energy Metering summation sensor."""
 
@@ -529,7 +524,7 @@ class Tier1SmartEnergySummation(
     models={"ZLinky_TIC"},
 )
 class Tier2SmartEnergySummation(
-    SmartEnergySummation, id_suffix="tier2_summation_delivered"
+    PolledSmartEnergySummation, id_suffix="tier2_summation_delivered"
 ):
     """Tier 2 Smart Energy Metering summation sensor."""
 
@@ -542,7 +537,7 @@ class Tier2SmartEnergySummation(
     models={"ZLinky_TIC"},
 )
 class Tier3SmartEnergySummation(
-    SmartEnergySummation, id_suffix="tier3_summation_delivered"
+    PolledSmartEnergySummation, id_suffix="tier3_summation_delivered"
 ):
     """Tier 3 Smart Energy Metering summation sensor."""
 
@@ -555,7 +550,7 @@ class Tier3SmartEnergySummation(
     models={"ZLinky_TIC"},
 )
 class Tier4SmartEnergySummation(
-    SmartEnergySummation, id_suffix="tier4_summation_delivered"
+    PolledSmartEnergySummation, id_suffix="tier4_summation_delivered"
 ):
     """Tier 4 Smart Energy Metering summation sensor."""
 
@@ -568,7 +563,7 @@ class Tier4SmartEnergySummation(
     models={"ZLinky_TIC"},
 )
 class Tier5SmartEnergySummation(
-    SmartEnergySummation, id_suffix="tier5_summation_delivered"
+    PolledSmartEnergySummation, id_suffix="tier5_summation_delivered"
 ):
     """Tier 5 Smart Energy Metering summation sensor."""
 
@@ -581,7 +576,7 @@ class Tier5SmartEnergySummation(
     models={"ZLinky_TIC"},
 )
 class Tier6SmartEnergySummation(
-    SmartEnergySummation, id_suffix="tier6_summation_delivered"
+    PolledSmartEnergySummation, id_suffix="tier6_summation_delivered"
 ):
     """Tier 6 Smart Energy Metering summation sensor."""
 
@@ -834,6 +829,8 @@ class RSSISensor(Sensor, id_suffix="rssi"):
     """RSSI sensor for a device."""
 
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _attr_device_class: SensorDeviceClass | None = SensorDeviceClass.SIGNAL_STRENGTH
+    _attr_native_unit_of_measurement: str | None = SIGNAL_STRENGTH_DECIBELS_MILLIWATT
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_entity_registry_enabled_default = False
     _attr_should_poll = True  # BaseZhaEntity defaults to False
@@ -868,6 +865,8 @@ class LQISensor(RSSISensor, id_suffix="lqi"):
     """LQI sensor for a device."""
 
     _attr_name: str = "LQI"
+    _attr_device_class = None
+    _attr_native_unit_of_measurement = None
 
 
 @MULTI_MATCH(

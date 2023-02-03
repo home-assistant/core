@@ -30,14 +30,6 @@
                 "description": "Gunakan API cloud AirVisual untuk memantau kota/negara bagian/negara.",
                 "title": "Konfigurasikan Lokasi Geografi"
             },
-            "node_pro": {
-                "data": {
-                    "ip_address": "Host",
-                    "password": "Kata Sandi"
-                },
-                "description": "Pantau unit AirVisual pribadi. Kata sandi dapat diambil dari antarmuka unit.",
-                "title": "Konfigurasikan AirVisual Node/Pro"
-            },
             "reauth_confirm": {
                 "data": {
                     "api_key": "Kunci API"

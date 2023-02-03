@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Akun sudah dikonfigurasi"
+        },
         "error": {
             "cannot_connect": "Gagal terhubung",
             "invalid_auth": "Autentikasi tidak valid",
@@ -50,11 +53,8 @@
             "whirlpool_tank": {
                 "state": {
                     "100": "100%",
-                    "100%": "100%",
                     "25": "25%",
-                    "25%": "25%",
                     "50": "50%",
-                    "50%": "50%",
                     "active": "Aktif",
                     "empty": "Kosong",
                     "unknown": "Tidak Dikenal"

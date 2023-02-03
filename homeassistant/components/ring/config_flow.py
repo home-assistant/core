@@ -1,5 +1,6 @@
 """Config flow for Ring integration."""
 import logging
+from typing import Any
 
 from oauthlib.oauth2 import AccessDeniedError, MissingTokenError
 from ring_doorbell import Auth
@@ -38,7 +39,7 @@ class RingConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    user_pass = None
+    user_pass: dict[str, Any] = {}
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""

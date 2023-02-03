@@ -3,7 +3,9 @@
         "abort": {
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
             "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
-            "error_pairing": "Collegato a TV webOS LG, ma non accoppiato"
+            "error_pairing": "Collegato a TV webOS LG, ma non accoppiato",
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente",
+            "reauth_unsuccessful": "La riautenticazione non \u00e8 andata a buon fine, accendi la TV e riprova."
         },
         "error": {
             "cannot_connect": "Impossibile connettersi, accendi la TV o controlla l'indirizzo IP"
@@ -13,6 +15,10 @@
             "pairing": {
                 "description": "Fai clic su Invia e accetta la richiesta di associazione sulla TV. \n\n ![Immagine](/static/images/config_webos.png)",
                 "title": "Accoppiamento webOS TV"
+            },
+            "reauth_confirm": {
+                "description": "Fare clic su Invia e accettare la richiesta di abbinamento sulla TV. \n\n![Immagine](/static/images/config_webos.png)",
+                "title": "Abbinamento TV webOS"
             },
             "user": {
                 "data": {
@@ -31,8 +37,7 @@
     },
     "options": {
         "error": {
-            "cannot_retrieve": "Impossibile recuperare l'elenco delle sorgenti. Assicurati che il dispositivo sia acceso",
-            "script_not_found": "Script non trovato"
+            "cannot_retrieve": "Impossibile recuperare l'elenco delle sorgenti. Assicurati che il dispositivo sia acceso"
         },
         "step": {
             "init": {

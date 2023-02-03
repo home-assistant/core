@@ -128,11 +128,13 @@ class TwitchSensor(SensorEntity):
             elif "status" in subs and subs["status"] == 404:
                 self._attr_extra_state_attributes[ATTR_SUBSCRIPTION] = False
             elif "error" in subs:
-                raise Exception(
-                    f"Error response on check_user_subscription: {subs['error']}"
+                _LOGGER.error(
+                    "Error response on check_user_subscription: %s", subs["error"]
                 )
+                return
             else:
-                raise Exception("Unknown error response on check_user_subscription")
+                _LOGGER.error("Unknown error response on check_user_subscription")
+                return
 
             follows = self._client.get_users_follows(
                 from_id=user, to_id=self.unique_id

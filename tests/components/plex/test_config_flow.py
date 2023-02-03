@@ -832,11 +832,10 @@ async def test_client_request_missing(hass):
 
     with patch("plexauth.PlexAuth.initiate_auth"), patch(
         "plexauth.PlexAuth.token", return_value=None
-    ):
-        with pytest.raises(RuntimeError):
-            result = await hass.config_entries.flow.async_configure(
-                result["flow_id"], user_input={}
-            )
+    ), pytest.raises(RuntimeError):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
 
 
 async def test_client_header_issues(hass, current_request_with_host):
@@ -855,8 +854,9 @@ async def test_client_header_issues(hass, current_request_with_host):
         "plexauth.PlexAuth.token", return_value=None
     ), patch(
         "homeassistant.components.http.current_request.get", return_value=MockRequest()
+    ), pytest.raises(
+        RuntimeError
     ):
-        with pytest.raises(RuntimeError):
-            result = await hass.config_entries.flow.async_configure(
-                result["flow_id"], user_input={}
-            )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )

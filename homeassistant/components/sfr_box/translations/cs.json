@@ -1,9 +1,4 @@
 {
-    "config": {
-        "error": {
-            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
-        }
-    },
     "entity": {
         "sensor": {
             "line_status": {

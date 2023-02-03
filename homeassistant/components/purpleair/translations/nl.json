@@ -52,6 +52,18 @@
                 "data": {
                     "sensor_index": "Sensor"
                 }
+            },
+            "init": {
+                "menu_options": {
+                    "add_sensor": "Sensor toevoegen",
+                    "remove_sensor": "Sensor verwijderen"
+                }
+            },
+            "remove_sensor": {
+                "data": {
+                    "sensor_device_id": "Sensornaam"
+                },
+                "title": "Sensor verwijderen"
             }
         }
     }

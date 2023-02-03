@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "no_mac_address": "Die MAC-Adresse fehlt im Zeroconf-Eintrag",
             "reauth_successful": "Die erneute Authentifizierung war erfolgreich",
             "reconfigure_successful": "Die Neukonfiguration war erfolgreich"
         },

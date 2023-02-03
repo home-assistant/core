@@ -29,19 +29,6 @@
             }
         }
     },
-    "issues": {
-        "deprecated_key": {
-            "fix_flow": {
-                "step": {
-                    "confirm": {
-                        "description": "Bu hizmeti kullanan t\u00fcm otomasyonlar\u0131 veya komut dosyalar\u0131n\u0131 g\u00fcncelleyin ve ad anahtar\u0131n\u0131 entry_id anahtar\u0131yla de\u011fi\u015ftirin.",
-                        "title": "\u0130letim hizmetlerindeki ad anahtar\u0131 kald\u0131r\u0131l\u0131yor"
-                    }
-                }
-            },
-            "title": "\u0130letim hizmetlerindeki ad anahtar\u0131 kald\u0131r\u0131l\u0131yor"
-        }
-    },
     "options": {
         "step": {
             "init": {

@@ -1,5 +1,5 @@
 """The tests for the Script component."""
-# pylint: disable=protected-access
+
 import asyncio
 from contextlib import contextmanager
 from datetime import timedelta
@@ -2915,6 +2915,45 @@ async def test_if(
     assert_action_trace(expected_trace)
 
 
+async def test_if_disabled(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test if action with a disabled condition."""
+    sequence = cv.SCRIPT_SCHEMA(
+        {
+            "if": {
+                "alias": "if condition",
+                "condition": "template",
+                "value_template": "{{ var == 1 }}",
+                "enabled": "false",
+            },
+            "then": {
+                "alias": "if then",
+                "event": "test_event",
+                "event_data": {"if": "then"},
+            },
+            "else": {
+                "alias": "if else",
+                "event": "test_event",
+                "event_data": {"if": "else"},
+            },
+        }
+    )
+
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    expected_trace = {
+        "0": [{"result": {"choice": "then"}}],
+        "0/if": [{"result": {"result": True}}],
+        "0/if/condition/0": [{"result": {"result": None}}],
+        "0/then/0": [{"result": {"event": "test_event", "event_data": {"if": "then"}}}],
+    }
+    assert_action_trace(expected_trace)
+
+
 async def test_if_condition_validation(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -3049,8 +3088,8 @@ async def test_parallel(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
     assert events[1].data["what"] == "world"
 
     assert (
-        "Test Name: Parallel action at step 1: Sequential group: Executing step Waiting for trigger"
-        in caplog.text
+        "Test Name: Parallel action at step 1: Sequential group: Executing step Waiting"
+        " for trigger" in caplog.text
     )
     assert (
         "Parallel action at step 1: parallel 2: Executing step Don't wait at all"
@@ -3659,7 +3698,10 @@ async def test_referenced_devices(hass):
                 {
                     "choose": [
                         {
-                            "conditions": "{{ is_device_attr('choice-2-cond-dev-id', 'model', 'blah') }}",
+                            "conditions": (
+                                "{{ is_device_attr('choice-2-cond-dev-id', 'model',"
+                                " 'blah') }}"
+                            ),
                             "sequence": [
                                 {
                                     "service": "test.script",
@@ -4401,7 +4443,7 @@ async def test_validate_action_config(hass):
                 hass, validated_config[action_type]
             )
         except vol.Invalid as err:
-            assert False, f"{action_type} config invalid: {err}"
+            pytest.fail(f"{action_type} config invalid: {err}")
 
     # Verify non-static actions have validated
     for action_type, paths_to_templates in expected_templates.items():
@@ -4427,7 +4469,9 @@ async def test_embedded_wait_for_trigger_in_automation(hass):
                         "while": [
                             {
                                 "condition": "template",
-                                "value_template": '{{ is_state("test.value1", "trigger-while") }}',
+                                "value_template": (
+                                    '{{ is_state("test.value1", "trigger-while") }}'
+                                ),
                             }
                         ],
                         "sequence": [
@@ -4436,7 +4480,10 @@ async def test_embedded_wait_for_trigger_in_automation(hass):
                                 "wait_for_trigger": [
                                     {
                                         "platform": "template",
-                                        "value_template": '{{ is_state("test.value2", "trigger-wait") }}',
+                                        "value_template": (
+                                            '{{ is_state("test.value2",'
+                                            ' "trigger-wait") }}'
+                                        ),
                                     }
                                 ]
                             },
@@ -4633,14 +4680,12 @@ async def test_breakpoints_2(hass):
 async def test_platform_async_validate_action_config(hass):
     """Test platform.async_validate_action_config will be called if it exists."""
     config = {CONF_DEVICE_ID: "test", CONF_DOMAIN: "test"}
-    platform = AsyncMock()
     with patch(
-        "homeassistant.components.device_automation.action.async_get_device_automation_platform",
-        return_value=platform,
-    ):
-        platform.async_validate_action_config.return_value = config
+        "homeassistant.components.device_automation.action.async_validate_action_config",
+        return_value=AsyncMock(),
+    ) as device_automation_validate_action_mock:
         await script.async_validate_action_config(hass, config)
-        platform.async_validate_action_config.assert_awaited()
+        device_automation_validate_action_mock.assert_awaited()
 
 
 async def test_stop_action(hass, caplog):

@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "no_mac_address": "A MAC-c\u00edm hi\u00e1nyzik a zeroconf rekordb\u00f3l",
             "reauth_successful": "Az ism\u00e9telt hiteles\u00edt\u00e9s sikeres volt",
             "reconfigure_successful": "Az \u00fajrakonfigur\u00e1l\u00e1s sikeres"
         },

@@ -61,7 +61,7 @@ async def async_setup_entry(
                 for _, _, _, kwh, _ in hourly_usage:
                     previous_daily_usage += float(kwh)
                 return previous_daily_usage
-        except (TimeoutError) as timeout_err:
+        except TimeoutError as timeout_err:
             raise UpdateFailed("Timeout communicating with API") from timeout_err
         except (ConnectError, HTTPError, Timeout, ValueError, TypeError) as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err

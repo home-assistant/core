@@ -30,14 +30,6 @@
                 "description": "AirVisual \ud074\ub77c\uc6b0\ub4dc API\ub97c \uc0ac\uc6a9\ud558\uc5ec \ub3c4\uc2dc/\uc8fc/\uad6d\uac00\ub97c \ubaa8\ub2c8\ud130\ub9c1\ud569\ub2c8\ub2e4.",
                 "title": "\uc9c0\ub9ac\uc801 \uc704\uce58 \uad6c\uc131\ud558\uae30"
             },
-            "node_pro": {
-                "data": {
-                    "ip_address": "\ud638\uc2a4\ud2b8",
-                    "password": "\ube44\ubc00\ubc88\ud638"
-                },
-                "description": "\uc0ac\uc6a9\uc790\uc758 AirVisual \uae30\uae30\ub97c \ubaa8\ub2c8\ud130\ub9c1\ud569\ub2c8\ub2e4. \uae30\uae30\uc758 UI \uc5d0\uc11c \ube44\ubc00\ubc88\ud638\ub97c \ucc3e\uc744 \uc218 \uc788\uc2b5\ub2c8\ub2e4.",
-                "title": "AirVisual Node/Pro \uad6c\uc131\ud558\uae30"
-            },
             "reauth_confirm": {
                 "data": {
                     "api_key": "API \ud0a4"
