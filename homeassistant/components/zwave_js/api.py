@@ -484,7 +484,9 @@ async def websocket_network_status(
             "type": controller.controller_type,
             "own_node_id": controller.own_node_id,
             "is_primary": controller.is_primary,
-            "is_using_home_id_from_other_network": controller.is_using_home_id_from_other_network,
+            "is_using_home_id_from_other_network": (
+                controller.is_using_home_id_from_other_network
+            ),
             "is_sis_present": controller.is_SIS_present,
             "was_real_primary": controller.was_real_primary,
             "is_suc": controller.is_suc,
