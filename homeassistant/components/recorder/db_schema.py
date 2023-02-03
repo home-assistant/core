@@ -456,7 +456,8 @@ class StatisticsBase:
     """Statistics base class."""
 
     id = Column(Integer, Identity(), primary_key=True)
-    created = Column(DATETIME_TYPE, default=dt_util.utcnow)
+    created = Column(DATETIME_TYPE, default=dt_util.utcnow)  # No longer used
+    created_ts = Column(TIMESTAMP_TYPE)
 
     @declared_attr  # type: ignore[misc]
     def metadata_id(self) -> Column:
@@ -467,11 +468,13 @@ class StatisticsBase:
             index=True,
         )
 
-    start = Column(DATETIME_TYPE, index=True)
+    start = Column(DATETIME_TYPE, index=True)  # No longer used
+    start_ts = Column(TIMESTAMP_TYPE, index=True)
     mean = Column(DOUBLE_TYPE)
     min = Column(DOUBLE_TYPE)
     max = Column(DOUBLE_TYPE)
-    last_reset = Column(DATETIME_TYPE)
+    last_reset = Column(DATETIME_TYPE)  # No longer used
+    last_reset_ts = Column(TIMESTAMP_TYPE)
     state = Column(DOUBLE_TYPE)
     sum = Column(DOUBLE_TYPE)
 

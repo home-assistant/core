@@ -66,7 +66,7 @@ from .db_schema import (
     StatisticsRuns,
     StatisticsShortTerm,
 )
-from .models import StatisticData, StatisticMetaData, StatisticResult, process_timestamp
+from .models import StatisticData, StatisticMetaData, StatisticResult
 from .util import (
     execute,
     execute_stmt_lambda_element,
@@ -80,22 +80,22 @@ if TYPE_CHECKING:
 
 QUERY_STATISTICS = [
     Statistics.metadata_id,
-    Statistics.start,
+    Statistics.start_ts,
     Statistics.mean,
     Statistics.min,
     Statistics.max,
-    Statistics.last_reset,
+    Statistics.last_reset_ts,
     Statistics.state,
     Statistics.sum,
 ]
 
 QUERY_STATISTICS_SHORT_TERM = [
     StatisticsShortTerm.metadata_id,
-    StatisticsShortTerm.start,
+    StatisticsShortTerm.start_ts,
     StatisticsShortTerm.mean,
     StatisticsShortTerm.min,
     StatisticsShortTerm.max,
-    StatisticsShortTerm.last_reset,
+    StatisticsShortTerm.last_reset_ts,
     StatisticsShortTerm.state,
     StatisticsShortTerm.sum,
 ]
@@ -109,14 +109,14 @@ QUERY_STATISTICS_SUMMARY_MEAN = [
 
 QUERY_STATISTICS_SUMMARY_SUM = [
     StatisticsShortTerm.metadata_id,
-    StatisticsShortTerm.start,
-    StatisticsShortTerm.last_reset,
+    StatisticsShortTerm.start_ts,
+    StatisticsShortTerm.last_reset_ts,
     StatisticsShortTerm.state,
     StatisticsShortTerm.sum,
     func.row_number()
     .over(
         partition_by=StatisticsShortTerm.metadata_id,
-        order_by=StatisticsShortTerm.start.desc(),
+        order_by=StatisticsShortTerm.start_ts.desc(),
     )
     .label("rownum"),
 ]
@@ -407,11 +407,11 @@ def _find_duplicates(
     """Find duplicated statistics."""
     subquery = (
         session.query(
-            table.start,
+            table.start_ts,
             table.metadata_id,
             literal_column("1").label("is_duplicate"),
         )
-        .group_by(table.metadata_id, table.start)
+        .group_by(table.metadata_id, table.start_ts)
         .having(func.count() > 1)
         .subquery()
     )
@@ -420,15 +420,15 @@ def _find_duplicates(
         .outerjoin(
             subquery,
             (subquery.c.metadata_id == table.metadata_id)
-            & (subquery.c.start == table.start),
+            & (subquery.c.start_ts == table.start_ts),
         )
         .filter(subquery.c.is_duplicate == 1)
-        .order_by(table.metadata_id, table.start, table.id.desc())
+        .order_by(table.metadata_id, table.start_ts, table.id.desc())
         .limit(1000 * MAX_ROWS_TO_PURGE)
     )
     duplicates = execute(query)
     original_as_dict = {}
-    start = None
+    start_ts = None
     metadata_id = None
     duplicate_ids: list[int] = []
     non_identical_duplicates_as_dict: list[dict] = []
@@ -445,15 +445,15 @@ def _find_duplicates(
 
     def compare_statistic_rows(row1: dict, row2: dict) -> bool:
         """Compare two statistics rows, ignoring id and created."""
-        ignore_keys = ["id", "created"]
+        ignore_keys = {"id", "created", "created_ts"}
         keys1 = set(row1).difference(ignore_keys)
         keys2 = set(row2).difference(ignore_keys)
         return keys1 == keys2 and all(row1[k] == row2[k] for k in keys1)
 
     for duplicate in duplicates:
-        if start != duplicate.start or metadata_id != duplicate.metadata_id:
+        if start_ts != duplicate.start_ts or metadata_id != duplicate.metadata_id:
             original_as_dict = columns_to_dict(duplicate)
-            start = duplicate.start
+            start_ts = duplicate.start_ts
             metadata_id = duplicate.metadata_id
             continue
         duplicate_as_dict = columns_to_dict(duplicate)
@@ -602,13 +602,13 @@ def delete_statistics_meta_duplicates(session: Session) -> None:
 
 
 def _compile_hourly_statistics_summary_mean_stmt(
-    start_time: datetime, end_time: datetime
+    start_time_ts: float, end_time_ts: float
 ) -> StatementLambdaElement:
     """Generate the summary mean statement for hourly statistics."""
     return lambda_stmt(
         lambda: select(*QUERY_STATISTICS_SUMMARY_MEAN)
-        .filter(StatisticsShortTerm.start >= start_time)
-        .filter(StatisticsShortTerm.start < end_time)
+        .filter(StatisticsShortTerm.start_ts >= start_time_ts)
+        .filter(StatisticsShortTerm.start_ts < end_time_ts)
         .group_by(StatisticsShortTerm.metadata_id)
         .order_by(StatisticsShortTerm.metadata_id)
     )
@@ -622,11 +622,13 @@ def _compile_hourly_statistics(session: Session, start: datetime) -> None:
     - sum is taken from the last 5-minute entry during the hour
     """
     start_time = start.replace(minute=0)
+    start_time_ts = start_time.timestamp()
     end_time = start_time + timedelta(hours=1)
+    end_time_ts = end_time.timestamp()
 
     # Compute last hour's average, min, max
     summary: dict[str, StatisticData] = {}
-    stmt = _compile_hourly_statistics_summary_mean_stmt(start_time, end_time)
+    stmt = _compile_hourly_statistics_summary_mean_stmt(start_time_ts, end_time_ts)
     stats = execute_stmt_lambda_element(session, stmt)
 
     if stats:
@@ -642,8 +644,8 @@ def _compile_hourly_statistics(session: Session, start: datetime) -> None:
     # Get last hour's last sum
     subquery = (
         session.query(*QUERY_STATISTICS_SUMMARY_SUM)
-        .filter(StatisticsShortTerm.start >= bindparam("start_time"))
-        .filter(StatisticsShortTerm.start < bindparam("end_time"))
+        .filter(StatisticsShortTerm.start_ts >= bindparam("start_time_ts"))
+        .filter(StatisticsShortTerm.start_ts < bindparam("end_time_ts"))
         .subquery()
     )
     query = (
@@ -651,15 +653,15 @@ def _compile_hourly_statistics(session: Session, start: datetime) -> None:
         .filter(subquery.c.rownum == 1)
         .order_by(subquery.c.metadata_id)
     )
-    stats = execute(query.params(start_time=start_time, end_time=end_time))
+    stats = execute(query.params(start_time_ts=start_time_ts, end_time_ts=end_time_ts))
 
     if stats:
         for stat in stats:
-            metadata_id, start, last_reset, state, _sum, _ = stat
+            metadata_id, start, last_reset_ts, state, _sum, _ = stat
             if metadata_id in summary:
                 summary[metadata_id].update(
                     {
-                        "last_reset": process_timestamp(last_reset),
+                        "last_reset": dt_util.utc_from_timestamp(last_reset_ts),
                         "state": state,
                         "sum": _sum,
                     }
@@ -667,7 +669,7 @@ def _compile_hourly_statistics(session: Session, start: datetime) -> None:
             else:
                 summary[metadata_id] = {
                     "start": start_time,
-                    "last_reset": process_timestamp(last_reset),
+                    "last_reset": dt_util.utc_from_timestamp(last_reset_ts),
                     "state": state,
                     "sum": _sum,
                 }
@@ -750,9 +752,10 @@ def _adjust_sum_statistics(
     adj: float,
 ) -> None:
     """Adjust statistics in the database."""
+    start_time_ts = start_time.timestamp()
     try:
         session.query(table).filter_by(metadata_id=metadata_id).filter(
-            table.start >= start_time
+            table.start_ts >= start_time_ts
         ).update(
             {
                 table.sum: table.sum + adj,
@@ -1140,10 +1143,10 @@ def _statistics_during_period_stmt(
 
     This prepares a lambda_stmt query, so we don't insert the parameters yet.
     """
-
-    columns = [table.metadata_id, table.start]
+    start_time_ts = start_time.timestamp()
+    columns = [table.metadata_id, table.start_ts]
     if "last_reset" in types:
-        columns.append(table.last_reset)
+        columns.append(table.last_reset_ts)
     if "max" in types:
         columns.append(table.max)
     if "mean" in types:
@@ -1155,12 +1158,13 @@ def _statistics_during_period_stmt(
     if "sum" in types:
         columns.append(table.sum)
 
-    stmt = lambda_stmt(lambda: select(columns).filter(table.start >= start_time))
+    stmt = lambda_stmt(lambda: select(columns).filter(table.start_ts >= start_time_ts))
     if end_time is not None:
-        stmt += lambda q: q.filter(table.start < end_time)
+        end_time_ts = end_time.timestamp()
+        stmt += lambda q: q.filter(table.start_ts < end_time_ts)
     if metadata_ids:
         stmt += lambda q: q.filter(table.metadata_id.in_(metadata_ids))
-    stmt += lambda q: q.order_by(table.metadata_id, table.start)
+    stmt += lambda q: q.order_by(table.metadata_id, table.start_ts)
     return stmt
 
 
@@ -1185,9 +1189,11 @@ def _get_max_mean_min_statistic_in_sub_period(
         columns.append(func.min(table.min))
     stmt = lambda_stmt(lambda: select(columns).filter(table.metadata_id == metadata_id))
     if start_time is not None:
-        stmt += lambda q: q.filter(table.start >= start_time)
+        start_time_ts = start_time.timestamp()
+        stmt += lambda q: q.filter(table.start_ts >= start_time_ts)
     if end_time is not None:
-        stmt += lambda q: q.filter(table.start < end_time)
+        end_time_ts = end_time.timestamp()
+        stmt += lambda q: q.filter(table.start_ts < end_time_ts)
     stats = execute_stmt_lambda_element(session, stmt)
     if "max" in types and stats and (new_max := stats[0].max) is not None:
         old_max = result.get("max")
@@ -1274,13 +1280,13 @@ def _first_statistic(
 ) -> datetime | None:
     """Return the data of the oldest statistic row for a given metadata id."""
     stmt = lambda_stmt(
-        lambda: select(table.start)
+        lambda: select(table.start_ts)
         .filter(table.metadata_id == metadata_id)
-        .order_by(table.start.asc())
+        .order_by(table.start_ts.asc())
         .limit(1)
     )
     if stats := execute_stmt_lambda_element(session, stmt):
-        return process_timestamp(stats[0].start)  # type: ignore[no-any-return]
+        return dt_util.utc_from_timestamp(stats[0].start_ts)
     return None
 
 
@@ -1306,7 +1312,7 @@ def _get_oldest_sum_statistic(
             lambda: select(table.sum)
             .filter(table.metadata_id == metadata_id)
             .filter(table.sum.is_not(None))
-            .order_by(table.start.asc())
+            .order_by(table.start_ts.asc())
             .limit(1)
         )
         if start_time is not None:
@@ -1317,7 +1323,8 @@ def _get_oldest_sum_statistic(
             else:
                 period = start_time.replace(minute=0, second=0, microsecond=0)
             prev_period = period - table.duration
-            stmt += lambda q: q.filter(table.start >= prev_period)
+            prev_period_ts = prev_period.timestamp()
+            stmt += lambda q: q.filter(table.start_ts >= prev_period_ts)
         stats = execute_stmt_lambda_element(session, stmt)
         return stats[0].sum if stats else None
 
@@ -1391,13 +1398,15 @@ def _get_newest_sum_statistic(
             )
             .filter(table.metadata_id == metadata_id)
             .filter(table.sum.is_not(None))
-            .order_by(table.start.desc())
+            .order_by(table.start_ts.desc())
             .limit(1)
         )
         if start_time is not None:
-            stmt += lambda q: q.filter(table.start >= start_time)
+            start_time_ts = start_time.timestamp()
+            stmt += lambda q: q.filter(table.start_ts >= start_time_ts)
         if end_time is not None:
-            stmt += lambda q: q.filter(table.start < end_time)
+            end_time_ts = end_time.timestamp()
+            stmt += lambda q: q.filter(table.start_ts < end_time_ts)
         stats = execute_stmt_lambda_element(session, stmt)
 
         return stats[0].sum if stats else None
@@ -1675,7 +1684,7 @@ def _get_last_statistics_stmt(
     return lambda_stmt(
         lambda: select(*QUERY_STATISTICS)
         .filter_by(metadata_id=metadata_id)
-        .order_by(Statistics.metadata_id, Statistics.start.desc())
+        .order_by(Statistics.metadata_id, Statistics.start_ts.desc())
         .limit(number_of_stats)
     )
 
@@ -1691,7 +1700,7 @@ def _get_last_statistics_short_term_stmt(
     return lambda_stmt(
         lambda: select(*QUERY_STATISTICS_SHORT_TERM)
         .filter_by(metadata_id=metadata_id)
-        .order_by(StatisticsShortTerm.metadata_id, StatisticsShortTerm.start.desc())
+        .order_by(StatisticsShortTerm.metadata_id, StatisticsShortTerm.start_ts.desc())
         .limit(number_of_stats)
     )
 
@@ -1767,7 +1776,7 @@ def _generate_most_recent_statistic_row(metadata_ids: list[int]) -> Subquery:
     return (
         select(
             StatisticsShortTerm.metadata_id,
-            func.max(StatisticsShortTerm.start).label("start_max"),
+            func.max(StatisticsShortTerm.start_ts).label("start_max"),
         )
         .where(StatisticsShortTerm.metadata_id.in_(metadata_ids))
         .group_by(StatisticsShortTerm.metadata_id)
@@ -1786,7 +1795,7 @@ def _latest_short_term_statistics_stmt(
             StatisticsShortTerm.metadata_id  # pylint: disable=comparison-with-callable
             == most_recent_statistic_row.c.metadata_id
         )
-        & (StatisticsShortTerm.start == most_recent_statistic_row.c.start_max),
+        & (StatisticsShortTerm.start_ts == most_recent_statistic_row.c.start_max),
     )
     return stmt
 
@@ -1837,9 +1846,9 @@ def _statistics_at_time(
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> list | None:
     """Return last known statistics, earlier than start_time, for the metadata_ids."""
-    columns = [table.metadata_id, table.start]
+    columns = [table.metadata_id, table.start_ts]
     if "last_reset" in types:
-        columns.append(table.last_reset)
+        columns.append(table.last_reset_ts)
     if "max" in types:
         columns.append(table.max)
     if "mean" in types:
@@ -1852,10 +1861,11 @@ def _statistics_at_time(
         columns.append(table.sum)
 
     stmt = lambda_stmt(lambda: select(columns))
+    start_time_ts = start_time.timestamp()
 
     most_recent_statistic_ids = (
         lambda_stmt(lambda: select(func.max(table.id).label("max_id")))
-        .filter(table.start < start_time)
+        .filter(table.start_ts < start_time_ts)
         .filter(table.metadata_id.in_(metadata_ids))
         .group_by(table.metadata_id)
         .subquery()
@@ -1900,7 +1910,7 @@ def _sorted_statistics_to_dict(
         stats,
         lambda stat: stat.metadata_id,  # type: ignore[no-any-return]
     ):
-        first_start_time = process_timestamp(next(group).start)
+        first_start_time = dt_util.utc_from_timestamp(next(group).start_ts)
         if start_time and first_start_time > start_time:
             need_stat_at_start_time.add(meta_id)
 
@@ -1929,9 +1939,9 @@ def _sorted_statistics_to_dict(
             convert = no_conversion
         ent_results = result[meta_id]
         for db_state in chain(stats_at_start_time.get(meta_id, ()), group):
-            start = process_timestamp(db_state.start)
+            start = dt_util.utc_from_timestamp(db_state.start_ts)
             end = start + table.duration
-            row = {
+            row: dict[str, Any] = {
                 "start": start,
                 "end": end,
             }
@@ -1942,7 +1952,7 @@ def _sorted_statistics_to_dict(
             if "max" in types:
                 row["max"] = convert(db_state.max)
             if "last_reset" in types:
-                row["last_reset"] = process_timestamp(db_state.last_reset)
+                row["last_reset"] = dt_util.utc_from_timestamp(db_state.last_reset_ts)
             if "state" in types:
                 row["state"] = convert(db_state.state)
             if "sum" in types:
@@ -1971,9 +1981,10 @@ def _statistics_exists(
     start: datetime,
 ) -> int | None:
     """Return id if a statistics entry already exists."""
+    start_ts = start.timestamp()
     result = (
         session.query(table.id)
-        .filter((table.metadata_id == metadata_id) & (table.start == start))
+        .filter((table.metadata_id == metadata_id) & (table.start_ts == start_ts))
         .first()
     )
     return result["id"] if result else None
@@ -2294,6 +2305,7 @@ def _validate_db_schema(
     hass: HomeAssistant, instance: Recorder, session_maker: Callable[[], Session]
 ) -> set[str]:
     """Do some basic checks for common schema errors caused by manual migration."""
+    # TODO: Convert start_ts, created_ts, last_reset_ts
     schema_errors: set[str] = set()
 
     # Wrong precision is only an issue for MySQL / MariaDB / PostgreSQL
