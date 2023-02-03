@@ -28,6 +28,7 @@ from zwave_js_server.model.controller import (
     ProvisioningEntry,
     QRProvisioningInformation,
 )
+from zwave_js_server.model.controller.firmware import ControllerFirmwareUpdateData
 from zwave_js_server.model.node import Node
 from zwave_js_server.model.node.firmware import NodeFirmwareUpdateData
 
@@ -84,7 +85,7 @@ from tests.common import MockUser
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
-def get_device(hass, node):
+def get_device(hass: HomeAssistant, node):
     """Get device ID for a node."""
     dev_reg = dr.async_get(hass)
     device_id = get_device_id(node.client.driver, node)
@@ -2905,7 +2906,9 @@ async def test_firmware_upload_view(
     device = get_device(hass, multisensor_6)
     with patch(
         "homeassistant.components.zwave_js.api.update_firmware",
-    ) as mock_cmd, patch.dict(
+    ) as mock_node_cmd, patch(
+        "homeassistant.components.zwave_js.api.controller_firmware_update_otw",
+    ) as mock_controller_cmd, patch.dict(
         "homeassistant.components.zwave_js.api.USER_AGENT",
         {"HomeAssistant": "0.0.0"},
     ):
@@ -2913,11 +2916,40 @@ async def test_firmware_upload_view(
             f"/api/zwave_js/firmware/upload/{device.id}",
             data={"file": firmware_file},
         )
-        assert mock_cmd.call_args[0][1:3] == (
+        mock_controller_cmd.assert_not_called()
+        assert mock_node_cmd.call_args[0][1:3] == (
             multisensor_6,
             [NodeFirmwareUpdateData("file", bytes(10))],
         )
-        assert mock_cmd.call_args[1] == {
+        assert mock_node_cmd.call_args[1] == {
+            "additional_user_agent_components": {"HomeAssistant": "0.0.0"},
+        }
+        assert json.loads(await resp.text()) is None
+
+
+async def test_firmware_upload_view_controller(
+    hass, client, integration, hass_client: ClientSessionGenerator, firmware_file
+) -> None:
+    """Test the HTTP firmware upload view for a controller."""
+    hass_client = await hass_client()
+    device = get_device(hass, client.driver.controller.nodes[1])
+    with patch(
+        "homeassistant.components.zwave_js.api.update_firmware",
+    ) as mock_node_cmd, patch(
+        "homeassistant.components.zwave_js.api.controller_firmware_update_otw",
+    ) as mock_controller_cmd, patch.dict(
+        "homeassistant.components.zwave_js.api.USER_AGENT",
+        {"HomeAssistant": "0.0.0"},
+    ):
+        resp = await hass_client.post(
+            f"/api/zwave_js/firmware/upload/{device.id}",
+            data={"file": firmware_file},
+        )
+        mock_node_cmd.assert_not_called()
+        assert mock_controller_cmd.call_args[0][1:2] == (
+            ControllerFirmwareUpdateData("file", bytes(10)),
+        )
+        assert mock_controller_cmd.call_args[1] == {
             "additional_user_agent_components": {"HomeAssistant": "0.0.0"},
         }
         assert json.loads(await resp.text()) is None
