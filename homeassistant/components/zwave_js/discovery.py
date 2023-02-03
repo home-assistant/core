@@ -198,8 +198,7 @@ def get_config_parameter_discovery_schema(
     property_key_name: set[str | None] | None = None,
     **kwargs: Any,
 ) -> ZWaveDiscoverySchema:
-    """
-    Return a discovery schema for a config parameter.
+    """Return a discovery schema for a config parameter.
 
     Supports all keyword arguments to ZWaveValueDiscoverySchema except platform, hint,
     and primary_value.

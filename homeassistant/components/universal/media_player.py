@@ -354,8 +354,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
 
     @property
     def entity_picture(self):
-        """
-        Return image of the media playing.
+        """Return image of the media playing.
 
         The universal media player doesn't use the parent class logic, since
         the url is coming from child entity pictures which have already been

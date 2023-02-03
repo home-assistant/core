@@ -2141,8 +2141,7 @@ async def assert_automation_condition_trace(hass_ws_client, automation_id, expec
 
 
 async def test_if_action_before_sunrise_no_offset(hass, hass_ws_client, calls):
-    """
-    Test if action was before sunrise.
+    """Test if action was before sunrise.
 
     Before sunrise is true from midnight until sunset, local time.
     """
@@ -2211,8 +2210,7 @@ async def test_if_action_before_sunrise_no_offset(hass, hass_ws_client, calls):
 
 
 async def test_if_action_after_sunrise_no_offset(hass, hass_ws_client, calls):
-    """
-    Test if action was after sunrise.
+    """Test if action was after sunrise.
 
     After sunrise is true from sunrise until midnight, local time.
     """
@@ -2281,8 +2279,7 @@ async def test_if_action_after_sunrise_no_offset(hass, hass_ws_client, calls):
 
 
 async def test_if_action_before_sunrise_with_offset(hass, hass_ws_client, calls):
-    """
-    Test if action was before sunrise with offset.
+    """Test if action was before sunrise with offset.
 
     Before sunrise is true from midnight until sunset, local time.
     """
@@ -2403,8 +2400,7 @@ async def test_if_action_before_sunrise_with_offset(hass, hass_ws_client, calls)
 
 
 async def test_if_action_before_sunset_with_offset(hass, hass_ws_client, calls):
-    """
-    Test if action was before sunset with offset.
+    """Test if action was before sunset with offset.
 
     Before sunset is true from midnight until sunset, local time.
     """
@@ -2525,8 +2521,7 @@ async def test_if_action_before_sunset_with_offset(hass, hass_ws_client, calls):
 
 
 async def test_if_action_after_sunrise_with_offset(hass, hass_ws_client, calls):
-    """
-    Test if action was after sunrise with offset.
+    """Test if action was after sunrise with offset.
 
     After sunrise is true from sunrise until midnight, local time.
     """
@@ -2671,8 +2666,7 @@ async def test_if_action_after_sunrise_with_offset(hass, hass_ws_client, calls):
 
 
 async def test_if_action_after_sunset_with_offset(hass, hass_ws_client, calls):
-    """
-    Test if action was after sunset with offset.
+    """Test if action was after sunset with offset.
 
     After sunset is true from sunset until midnight, local time.
     """
@@ -2745,8 +2739,7 @@ async def test_if_action_after_sunset_with_offset(hass, hass_ws_client, calls):
 
 
 async def test_if_action_after_and_before_during(hass, hass_ws_client, calls):
-    """
-    Test if action was after sunrise and before sunset.
+    """Test if action was after sunrise and before sunset.
 
     This is true from sunrise until sunset.
     """
@@ -2847,8 +2840,7 @@ async def test_if_action_after_and_before_during(hass, hass_ws_client, calls):
 
 
 async def test_if_action_before_or_after_during(hass, hass_ws_client, calls):
-    """
-    Test if action was before sunrise or after sunset.
+    """Test if action was before sunrise or after sunset.
 
     This is true from midnight until sunrise and from sunset until midnight
     """
@@ -2969,8 +2961,7 @@ async def test_if_action_before_or_after_during(hass, hass_ws_client, calls):
 
 
 async def test_if_action_before_sunrise_no_offset_kotzebue(hass, hass_ws_client, calls):
-    """
-    Test if action was before sunrise.
+    """Test if action was before sunrise.
 
     Local timezone: Alaska time
     Location: Kotzebue, which has a very skewed local timezone with sunrise
@@ -3045,8 +3036,7 @@ async def test_if_action_before_sunrise_no_offset_kotzebue(hass, hass_ws_client,
 
 
 async def test_if_action_after_sunrise_no_offset_kotzebue(hass, hass_ws_client, calls):
-    """
-    Test if action was after sunrise.
+    """Test if action was after sunrise.
 
     Local timezone: Alaska time
     Location: Kotzebue, which has a very skewed local timezone with sunrise
@@ -3121,8 +3111,7 @@ async def test_if_action_after_sunrise_no_offset_kotzebue(hass, hass_ws_client, 
 
 
 async def test_if_action_before_sunset_no_offset_kotzebue(hass, hass_ws_client, calls):
-    """
-    Test if action was before sunrise.
+    """Test if action was before sunrise.
 
     Local timezone: Alaska time
     Location: Kotzebue, which has a very skewed local timezone with sunrise
@@ -3197,8 +3186,7 @@ async def test_if_action_before_sunset_no_offset_kotzebue(hass, hass_ws_client, 
 
 
 async def test_if_action_after_sunset_no_offset_kotzebue(hass, hass_ws_client, calls):
-    """
-    Test if action was after sunrise.
+    """Test if action was after sunrise.
 
     Local timezone: Alaska time
     Location: Kotzebue, which has a very skewed local timezone with sunrise

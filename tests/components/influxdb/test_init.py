@@ -1658,8 +1658,7 @@ async def test_connection_failure_on_startup(
 async def test_invalid_inputs_error(
     hass, caplog, mock_client, config_ext, get_write_api, get_mock_call, test_exception
 ):
-    """
-    Test the event listener when influx returns invalid inputs on write.
+    """Test the event listener when influx returns invalid inputs on write.
 
     The difference in error handling in this case is that we do not sleep
     and try again, if an input is invalid it is logged and dropped.
