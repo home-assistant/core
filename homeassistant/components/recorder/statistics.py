@@ -65,6 +65,8 @@ from .db_schema import (
     StatisticsMeta,
     StatisticsRuns,
     StatisticsShortTerm,
+    datetime_to_timestamp_or_none,
+    timestamp_to_datetime_or_none,
 )
 from .models import StatisticData, StatisticMetaData, StatisticResult
 from .util import (
@@ -407,11 +409,11 @@ def _find_duplicates(
     """Find duplicated statistics."""
     subquery = (
         session.query(
-            table.start_ts,
+            table.start,
             table.metadata_id,
             literal_column("1").label("is_duplicate"),
         )
-        .group_by(table.metadata_id, table.start_ts)
+        .group_by(table.metadata_id, table.start)
         .having(func.count() > 1)
         .subquery()
     )
@@ -420,10 +422,10 @@ def _find_duplicates(
         .outerjoin(
             subquery,
             (subquery.c.metadata_id == table.metadata_id)
-            & (subquery.c.start_ts == table.start_ts),
+            & (subquery.c.start == table.start),
         )
         .filter(subquery.c.is_duplicate == 1)
-        .order_by(table.metadata_id, table.start_ts, table.id.desc())
+        .order_by(table.metadata_id, table.start, table.id.desc())
         .limit(1000 * MAX_ROWS_TO_PURGE)
     )
     duplicates = execute(query)
@@ -661,7 +663,7 @@ def _compile_hourly_statistics(session: Session, start: datetime) -> None:
             if metadata_id in summary:
                 summary[metadata_id].update(
                     {
-                        "last_reset": dt_util.utc_from_timestamp(last_reset_ts),
+                        "last_reset": datetime_to_timestamp_or_none(last_reset_ts),
                         "state": state,
                         "sum": _sum,
                     }
@@ -669,7 +671,7 @@ def _compile_hourly_statistics(session: Session, start: datetime) -> None:
             else:
                 summary[metadata_id] = {
                     "start": start_time,
-                    "last_reset": dt_util.utc_from_timestamp(last_reset_ts),
+                    "last_reset": datetime_to_timestamp_or_none(last_reset_ts),
                     "state": state,
                     "sum": _sum,
                 }
@@ -799,7 +801,9 @@ def _update_statistics(
                 table.mean: statistic.get("mean"),
                 table.min: statistic.get("min"),
                 table.max: statistic.get("max"),
-                table.last_reset: statistic.get("last_reset"),
+                table.last_reset_ts: datetime_to_timestamp_or_none(
+                    statistic.get("last_reset")
+                ),
                 table.state: statistic.get("state"),
                 table.sum: statistic.get("sum"),
             },
@@ -1952,7 +1956,9 @@ def _sorted_statistics_to_dict(
             if "max" in types:
                 row["max"] = convert(db_state.max)
             if "last_reset" in types:
-                row["last_reset"] = dt_util.utc_from_timestamp(db_state.last_reset_ts)
+                row["last_reset"] = timestamp_to_datetime_or_none(
+                    db_state.last_reset_ts
+                )
             if "state" in types:
                 row["state"] = convert(db_state.state)
             if "sum" in types:

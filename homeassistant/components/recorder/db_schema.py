@@ -456,8 +456,8 @@ class StatisticsBase:
     """Statistics base class."""
 
     id = Column(Integer, Identity(), primary_key=True)
-    created = Column(DATETIME_TYPE, default=dt_util.utcnow)  # No longer used
-    created_ts = Column(TIMESTAMP_TYPE)
+    created = Column(DATETIME_TYPE)  # No longer used
+    created_ts = Column(TIMESTAMP_TYPE, default=time.time)
 
     @declared_attr  # type: ignore[misc]
     def metadata_id(self) -> Column:
@@ -483,10 +483,32 @@ class StatisticsBase:
         cls: type[_StatisticsBaseSelfT], metadata_id: int, stats: StatisticData
     ) -> _StatisticsBaseSelfT:
         """Create object from a statistics."""
-        return cls(  # type: ignore[call-arg,misc]
+        return cls(  # type: ignore[call-arg]
             metadata_id=metadata_id,
-            **stats,
+            start=None,
+            start_ts=dt_util.utc_to_timestamp(stats["start"]),
+            mean=stats.get("mean"),
+            min=stats.get("min"),
+            max=stats.get("max"),
+            last_reset=None,
+            last_reset_ts=datetime_to_timestamp_or_none(stats.get("last_reset")),
+            state=stats.get("state"),
+            sum=stats.get("sum"),
         )
+
+
+def datetime_to_timestamp_or_none(dt: datetime | None) -> float | None:
+    """Convert a datetime to a timestamp."""
+    if dt is None:
+        return None
+    return dt_util.utc_to_timestamp(dt)
+
+
+def timestamp_to_datetime_or_none(ts: float | None) -> datetime | None:
+    """Convert a timestamp to a datetime."""
+    if not ts:
+        return None
+    return dt_util.utc_from_timestamp(ts)
 
 
 class Statistics(Base, StatisticsBase):  # type: ignore[misc,valid-type]
