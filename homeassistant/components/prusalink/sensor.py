@@ -75,7 +75,6 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
         PrusaLinkSensorEntityDescription[PrinterInfo](
             key="printer.telemetry.temp-nozzle",
             name="Nozzle Temperature",
-            icon="mdi:printer-3d-nozzle-heat",
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
