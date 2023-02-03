@@ -80,7 +80,7 @@ def async_request_config(
     if DATA_REQUESTS not in hass.data:
         hass.data[DATA_REQUESTS] = {}
 
-    hass.data[DATA_REQUESTS][request_id] = instance
+    _get_requests(hass)[request_id] = instance
 
     return request_id
 
@@ -98,10 +98,10 @@ def request_config(hass: HomeAssistant, *args: Any, **kwargs: Any) -> str:
 
 @bind_hass
 @async_callback
-def async_notify_errors(hass, request_id, error):
+def async_notify_errors(hass: HomeAssistant, request_id: str, error: str) -> None:
     """Add errors to a config request."""
     with suppress(KeyError):  # If request_id does not exist
-        hass.data[DATA_REQUESTS][request_id].async_notify_errors(request_id, error)
+        _get_requests(hass)[request_id].async_notify_errors(request_id, error)
 
 
 @bind_hass
@@ -117,7 +117,7 @@ def notify_errors(hass: HomeAssistant, request_id: str, error: str) -> None:
 def async_request_done(hass: HomeAssistant, request_id: str) -> None:
     """Mark a configuration request as done."""
     with suppress(KeyError):  # If request_id does not exist
-        hass.data[DATA_REQUESTS].pop(request_id).async_request_done(request_id)
+        _get_requests(hass).pop(request_id).async_request_done(request_id)
 
 
 @bind_hass
@@ -133,10 +133,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+def _get_requests(hass: HomeAssistant) -> dict[str, Configurator]:
+    """Return typed configurator_requests data."""
+    return hass.data[DATA_REQUESTS]
+
+
 class Configurator:
     """The class to keep track of current configuration requests."""
 
-    def __init__(self, hass):
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the configurator."""
         self.hass = hass
         self._cur_id = 0
@@ -190,14 +195,15 @@ class Configurator:
         return request_id
 
     @async_callback
-    def async_notify_errors(self, request_id, error):
+    def async_notify_errors(self, request_id: str, error: str) -> None:
         """Update the state with errors."""
         if not self._validate_request_id(request_id):
             return
 
         entity_id = self._requests[request_id][0]
 
-        state = self.hass.states.get(entity_id)
+        if (state := self.hass.states.get(entity_id)) is None:
+            return
 
         new_data = dict(state.attributes)
         new_data[ATTR_ERRORS] = error
@@ -205,7 +211,7 @@ class Configurator:
         self.hass.states.async_set(entity_id, STATE_CONFIGURE, new_data)
 
     @async_callback
-    def async_request_done(self, request_id):
+    def async_request_done(self, request_id: str) -> None:
         """Remove the configuration request."""
         if not self._validate_request_id(request_id):
             return
@@ -219,7 +225,7 @@ class Configurator:
         self.hass.states.async_set(entity_id, STATE_CONFIGURED)
 
         @async_callback
-        def deferred_remove(now: datetime):
+        def deferred_remove(now: datetime) -> None:
             """Remove the request state."""
             self.hass.states.async_remove(entity_id)
 
@@ -236,13 +242,15 @@ class Configurator:
 
         # field validation goes here?
         if callback:
-            await self.hass.async_add_job(callback, call.data.get(ATTR_FIELDS, {}))
+            fields = call.data.get(ATTR_FIELDS, {})
+            if job := self.hass.async_add_job(callback, fields):
+                await job
 
-    def _generate_unique_id(self):
+    def _generate_unique_id(self) -> str:
         """Generate a unique configurator ID."""
         self._cur_id += 1
         return f"{id(self)}-{self._cur_id}"
 
-    def _validate_request_id(self, request_id):
+    def _validate_request_id(self, request_id) -> bool:
         """Validate that the request belongs to this instance."""
         return request_id in self._requests
