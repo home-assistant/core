@@ -36,8 +36,12 @@ from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
+    DataRateConverter,
     DistanceConverter,
+    ElectricCurrentConverter,
+    ElectricPotentialConverter,
     EnergyConverter,
+    InformationConverter,
     MassConverter,
     PowerConverter,
     PressureConverter,
@@ -128,8 +132,15 @@ QUERY_STATISTIC_META = [
 
 
 STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
+    **{unit: DataRateConverter for unit in DataRateConverter.VALID_UNITS},
     **{unit: DistanceConverter for unit in DistanceConverter.VALID_UNITS},
+    **{unit: ElectricCurrentConverter for unit in ElectricCurrentConverter.VALID_UNITS},
+    **{
+        unit: ElectricPotentialConverter
+        for unit in ElectricPotentialConverter.VALID_UNITS
+    },
     **{unit: EnergyConverter for unit in EnergyConverter.VALID_UNITS},
+    **{unit: InformationConverter for unit in InformationConverter.VALID_UNITS},
     **{unit: MassConverter for unit in MassConverter.VALID_UNITS},
     **{unit: PowerConverter for unit in PowerConverter.VALID_UNITS},
     **{unit: PressureConverter for unit in PressureConverter.VALID_UNITS},
