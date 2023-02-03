@@ -207,8 +207,7 @@ class VacuumCoordinatorData:
 
 @dataclass(init=False, frozen=True)
 class VacuumCoordinatorDataAttributes:
-    """
-    A class that holds attribute names for VacuumCoordinatorData.
+    """A class that holds attribute names for VacuumCoordinatorData.
 
     These attributes can be used in methods like `getattr` when a generic solutions is
     needed.
