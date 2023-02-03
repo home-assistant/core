@@ -241,10 +241,10 @@ class Configurator:
         _, _, callback = self._requests[cast(str, request_id)]
 
         # field validation goes here?
-        if callback:
-            fields = call.data.get(ATTR_FIELDS, {})
-            if job := self.hass.async_add_job(callback, fields):
-                await job
+        if callback and (
+            job := self.hass.async_add_job(callback, call.data.get(ATTR_FIELDS, {}))
+        ):
+            await job
 
     def _generate_unique_id(self) -> str:
         """Generate a unique configurator ID."""
