@@ -43,6 +43,7 @@ from homeassistant.util.unit_conversion import (
     EnergyConverter,
     InformationConverter,
     MassConverter,
+    PowerConverter,
     PressureConverter,
     SpeedConverter,
     TemperatureConverter,
@@ -379,6 +380,12 @@ class SensorDeviceClass(StrEnum):
     """
 
 
+NON_NUMERIC_DEVICE_CLASSES = {
+    SensorDeviceClass.DATE,
+    SensorDeviceClass.ENUM,
+    SensorDeviceClass.TIMESTAMP,
+}
+
 DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(SensorDeviceClass))
 
 # DEVICE_CLASSES is deprecated as of 2021.12
@@ -423,6 +430,7 @@ UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] =
     SensorDeviceClass.DISTANCE: DistanceConverter,
     SensorDeviceClass.ENERGY: EnergyConverter,
     SensorDeviceClass.GAS: VolumeConverter,
+    SensorDeviceClass.POWER: PowerConverter,
     SensorDeviceClass.POWER_FACTOR: UnitlessRatioConverter,
     SensorDeviceClass.PRECIPITATION: DistanceConverter,
     SensorDeviceClass.PRECIPITATION_INTENSITY: SpeedConverter,
@@ -535,10 +543,7 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass | None]
     SensorDeviceClass.PM25: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.POWER_FACTOR: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.POWER: {SensorStateClass.MEASUREMENT},
-    SensorDeviceClass.PRECIPITATION: {
-        SensorStateClass.TOTAL,
-        SensorStateClass.TOTAL_INCREASING,
-    },
+    SensorDeviceClass.PRECIPITATION: set(SensorStateClass),
     SensorDeviceClass.PRECIPITATION_INTENSITY: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.PRESSURE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.REACTIVE_POWER: {SensorStateClass.MEASUREMENT},

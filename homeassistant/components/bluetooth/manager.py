@@ -209,6 +209,20 @@ class BluetoothManager:
             self._bluetooth_adapters, self.storage
         )
         self.async_setup_unavailable_tracking()
+        seen: set[str] = set()
+        for address, service_info in itertools.chain(
+            self._connectable_history.items(), self._all_history.items()
+        ):
+            if address in seen:
+                continue
+            seen.add(address)
+            for domain in self._integration_matcher.match_domains(service_info):
+                discovery_flow.async_create_flow(
+                    self.hass,
+                    domain,
+                    {"source": config_entries.SOURCE_BLUETOOTH},
+                    service_info,
+                )
 
     @hass_callback
     def async_stop(self, event: Event) -> None:

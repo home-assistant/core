@@ -106,7 +106,7 @@
                 "name": "Horn\u00ed c\u00edlov\u00e1 teplota"
             },
             "target_temp_low": {
-                "name": "Doln\u00ed c\u00edlov\u00e1 teplota"
+                "name": "Spodn\u00ed c\u00edlov\u00e1 teplota"
             },
             "target_temp_step": {
                 "name": "Krok c\u00edlov\u00e9 teploty"

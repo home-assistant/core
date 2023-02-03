@@ -22,6 +22,7 @@
                 "description": "Scegli le impostazioni di rete per la tua radio.",
                 "menu_options": {
                     "choose_automatic_backup": "Ripristina un backup automatico",
+                    "form_initial_network": "Crea una rete",
                     "form_new_network": "Cancella le impostazioni di rete e crea una nuova rete",
                     "reuse_settings": "Mantieni le impostazioni della rete radio",
                     "upload_manual_backup": "Carica un backup manuale"
@@ -174,6 +175,7 @@
                 "description": "Scegli le impostazioni di rete per la tua radio.",
                 "menu_options": {
                     "choose_automatic_backup": "Ripristina un backup automatico",
+                    "form_initial_network": "Crea una rete",
                     "form_new_network": "Cancella le impostazioni di rete e crea una nuova rete",
                     "reuse_settings": "Mantieni le impostazioni della rete radio",
                     "upload_manual_backup": "Carica un backup manuale"
@@ -192,11 +194,11 @@
                 "title": "Riconfigura ZHA"
             },
             "instruct_unplug": {
-                "description": "La tua vecchia radio \u00e8 stata ripristinata. Se l'hardware non \u00e8 pi\u00f9 necessario, ora \u00e8 possibile scollegarlo.",
+                "description": "La vecchia radio \u00e8 stata resettata.  Se l'hardware non \u00e8 pi\u00f9 necessario, \u00e8 possibile scollegarlo.\n\nOra \u00e8 possibile collegare la nuova radio.",
                 "title": "Scollega la tua vecchia radio"
             },
             "intent_migrate": {
-                "description": "La tua vecchia radio verr\u00e0 ripristinata alle impostazioni di fabbrica. Se stai usando un adattatore combinato Z-Wave e Zigbee come HUSBZB-1, questo ripristiner\u00e0 solo la parte Zigbee. \n\nVuoi continuare?",
+                "description": "Prima di collegare la nuova radio, \u00e8 necessario ripristinare la vecchia radio. Verr\u00e0 eseguito un backup automatico. Se si utilizza un adattatore combinato Z-Wave e Zigbee come HUSBZB-1, questo ripristiner\u00e0 solo la parte Zigbee. \n\n*Nota: se stai eseguendo la migrazione da un **ConBee/RaspBee**, assicurati che sia in esecuzione il firmware `0x26720700` o successivo! In caso contrario, alcuni dispositivi potrebbero non essere controllabili dopo la migrazione finch\u00e9 non vengono spenti e riaccesi.* \n\nVuoi continuare?",
                 "title": "Migra a una nuova radio"
             },
             "manual_pick_radio_type": {

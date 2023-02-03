@@ -214,14 +214,18 @@ async def test_saving_state(recorder_mock, hass: HomeAssistant):
 
     with session_scope(hass=hass) as session:
         db_states = []
-        for db_state, db_state_attributes in session.query(States, StateAttributes):
+        for db_state, db_state_attributes in session.query(
+            States, StateAttributes
+        ).outerjoin(
+            StateAttributes, States.attributes_id == StateAttributes.attributes_id
+        ):
             db_states.append(db_state)
             state = db_state.to_native()
             state.attributes = db_state_attributes.to_native()
         assert len(db_states) == 1
         assert db_states[0].event_id is None
 
-    assert state == _state_with_context(hass, entity_id)
+    assert state.as_dict() == _state_with_context(hass, entity_id).as_dict()
 
 
 @pytest.mark.parametrize(
@@ -248,7 +252,11 @@ async def test_saving_state_with_nul(
 
     with session_scope(hass=hass) as session:
         db_states = []
-        for db_state, db_state_attributes in session.query(States, StateAttributes):
+        for db_state, db_state_attributes in session.query(
+            States, StateAttributes
+        ).outerjoin(
+            StateAttributes, States.attributes_id == StateAttributes.attributes_id
+        ):
             db_states.append(db_state)
             state = db_state.to_native()
             state.attributes = db_state_attributes.to_native()
@@ -257,7 +265,7 @@ async def test_saving_state_with_nul(
 
     expected = _state_with_context(hass, entity_id)
     expected.attributes = expected_attributes
-    assert state == expected
+    assert state.as_dict() == expected.as_dict()
 
 
 async def test_saving_many_states(
@@ -547,7 +555,7 @@ def test_saving_state_include_domains(hass_recorder):
     hass = hass_recorder({"include": {"domains": "test2"}})
     states = _add_entities(hass, ["test.recorder", "test2.recorder"])
     assert len(states) == 1
-    assert _state_with_context(hass, "test2.recorder") == states[0]
+    assert _state_with_context(hass, "test2.recorder").as_dict() == states[0].as_dict()
 
 
 def test_saving_state_include_domains_globs(hass_recorder):
@@ -559,8 +567,11 @@ def test_saving_state_include_domains_globs(hass_recorder):
         hass, ["test.recorder", "test2.recorder", "test3.included_entity"]
     )
     assert len(states) == 2
-    assert _state_with_context(hass, "test2.recorder") == states[0]
-    assert _state_with_context(hass, "test3.included_entity") == states[1]
+    assert _state_with_context(hass, "test2.recorder").as_dict() == states[0].as_dict()
+    assert (
+        _state_with_context(hass, "test3.included_entity").as_dict()
+        == states[1].as_dict()
+    )
 
 
 def test_saving_state_incl_entities(hass_recorder):
@@ -568,7 +579,7 @@ def test_saving_state_incl_entities(hass_recorder):
     hass = hass_recorder({"include": {"entities": "test2.recorder"}})
     states = _add_entities(hass, ["test.recorder", "test2.recorder"])
     assert len(states) == 1
-    assert _state_with_context(hass, "test2.recorder") == states[0]
+    assert _state_with_context(hass, "test2.recorder").as_dict() == states[0].as_dict()
 
 
 def test_saving_event_exclude_event_type(hass_recorder):
@@ -597,7 +608,7 @@ def test_saving_state_exclude_domains(hass_recorder):
     hass = hass_recorder({"exclude": {"domains": "test"}})
     states = _add_entities(hass, ["test.recorder", "test2.recorder"])
     assert len(states) == 1
-    assert _state_with_context(hass, "test2.recorder") == states[0]
+    assert _state_with_context(hass, "test2.recorder").as_dict() == states[0].as_dict()
 
 
 def test_saving_state_exclude_domains_globs(hass_recorder):
@@ -609,7 +620,7 @@ def test_saving_state_exclude_domains_globs(hass_recorder):
         hass, ["test.recorder", "test2.recorder", "test2.excluded_entity"]
     )
     assert len(states) == 1
-    assert _state_with_context(hass, "test2.recorder") == states[0]
+    assert _state_with_context(hass, "test2.recorder").as_dict() == states[0].as_dict()
 
 
 def test_saving_state_exclude_entities(hass_recorder):
@@ -617,7 +628,7 @@ def test_saving_state_exclude_entities(hass_recorder):
     hass = hass_recorder({"exclude": {"entities": "test.recorder"}})
     states = _add_entities(hass, ["test.recorder", "test2.recorder"])
     assert len(states) == 1
-    assert _state_with_context(hass, "test2.recorder") == states[0]
+    assert _state_with_context(hass, "test2.recorder").as_dict() == states[0].as_dict()
 
 
 def test_saving_state_exclude_domain_include_entity(hass_recorder):
@@ -650,7 +661,7 @@ def test_saving_state_include_domain_exclude_entity(hass_recorder):
     )
     states = _add_entities(hass, ["test.recorder", "test2.recorder", "test.ok"])
     assert len(states) == 1
-    assert _state_with_context(hass, "test.ok") == states[0]
+    assert _state_with_context(hass, "test.ok").as_dict() == states[0].as_dict()
     assert _state_with_context(hass, "test.ok").state == "state2"
 
 
@@ -666,7 +677,7 @@ def test_saving_state_include_domain_glob_exclude_entity(hass_recorder):
         hass, ["test.recorder", "test2.recorder", "test.ok", "test2.included_entity"]
     )
     assert len(states) == 1
-    assert _state_with_context(hass, "test.ok") == states[0]
+    assert _state_with_context(hass, "test.ok").as_dict() == states[0].as_dict()
     assert _state_with_context(hass, "test.ok").state == "state2"
 
 
@@ -689,6 +700,33 @@ def test_saving_state_and_removing_entity(hass, hass_recorder):
         assert states[1].state == STATE_UNLOCKED
         assert states[2].entity_id == entity_id
         assert states[2].state is None
+
+
+def test_saving_state_with_oversized_attributes(hass_recorder, caplog):
+    """Test saving states is limited to 16KiB of JSON encoded attributes."""
+    hass = hass_recorder()
+    massive_dict = {"a": "b" * 16384}
+    attributes = {"test_attr": 5, "test_attr_10": "nice"}
+    hass.states.set("switch.sane", "on", attributes)
+    hass.states.set("switch.too_big", "on", massive_dict)
+    wait_recording_done(hass)
+    states = []
+
+    with session_scope(hass=hass) as session:
+        for state, state_attributes in session.query(States, StateAttributes).outerjoin(
+            StateAttributes, States.attributes_id == StateAttributes.attributes_id
+        ):
+            native_state = state.to_native()
+            native_state.attributes = state_attributes.to_native()
+            states.append(native_state)
+
+    assert "switch.too_big" in caplog.text
+
+    assert len(states) == 2
+    assert _state_with_context(hass, "switch.sane").as_dict() == states[0].as_dict()
+    assert states[1].state == "on"
+    assert states[1].entity_id == "switch.too_big"
+    assert states[1].attributes == {}
 
 
 def test_recorder_setup_failure(hass):
@@ -1314,7 +1352,10 @@ def test_service_disable_states_not_recording(hass, hass_recorder):
         db_states = list(session.query(States))
         assert len(db_states) == 1
         assert db_states[0].event_id is None
-        assert db_states[0].to_native() == _state_with_context(hass, "test.two")
+        assert (
+            db_states[0].to_native().as_dict()
+            == _state_with_context(hass, "test.two").as_dict()
+        )
 
 
 def test_service_disable_run_information_recorded(tmpdir):

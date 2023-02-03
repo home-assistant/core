@@ -1,6 +1,7 @@
 """Support for Xiaomi Miio."""
 from __future__ import annotations
 
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -226,7 +227,9 @@ class VacuumCoordinatorDataAttributes:
     fan_speeds_reverse: str = "fan_speeds_reverse"
 
 
-def _async_update_data_vacuum(hass, device: RoborockVacuum):
+def _async_update_data_vacuum(
+    hass: HomeAssistant, device: RoborockVacuum
+) -> Callable[[], Coroutine[Any, Any, VacuumCoordinatorData]]:
     def update() -> VacuumCoordinatorData:
         timer = []
 
@@ -254,10 +257,10 @@ def _async_update_data_vacuum(hass, device: RoborockVacuum):
 
         return data
 
-    async def update_async():
+    async def update_async() -> VacuumCoordinatorData:
         """Fetch data from the device using async_add_executor_job."""
 
-        async def execute_update():
+        async def execute_update() -> VacuumCoordinatorData:
             async with async_timeout.timeout(POLLING_TIMEOUT_SEC):
                 state = await hass.async_add_executor_job(update)
                 _LOGGER.debug("Got new vacuum state: %s", state)

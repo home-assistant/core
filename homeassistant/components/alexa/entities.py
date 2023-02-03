@@ -1,6 +1,7 @@
 """Alexa entity adapters."""
 from __future__ import annotations
 
+from collections.abc import Generator, Iterable
 import logging
 from typing import TYPE_CHECKING
 
@@ -291,14 +292,14 @@ class AlexaEntity:
         """Return the Alexa API entity id."""
         return generate_alexa_id(self.entity.entity_id)
 
-    def display_categories(self):
+    def display_categories(self) -> list[str] | None:
         """Return a list of display categories."""
         entity_conf = self.config.entity_config.get(self.entity.entity_id, {})
         if CONF_DISPLAY_CATEGORIES in entity_conf:
             return [entity_conf[CONF_DISPLAY_CATEGORIES]]
         return self.default_display_categories()
 
-    def default_display_categories(self):
+    def default_display_categories(self) -> list[str] | None:
         """Return a list of default display categories.
 
         This can be overridden by the user in the Home Assistant configuration.
@@ -307,7 +308,7 @@ class AlexaEntity:
         """
         raise NotImplementedError
 
-    def interfaces(self) -> list[AlexaCapability]:
+    def interfaces(self) -> Iterable[AlexaCapability]:
         """Return a list of supported interfaces.
 
         Used for discovery. The list should contain AlexaInterface instances.
@@ -360,7 +361,9 @@ class AlexaEntity:
 
 
 @callback
-def async_get_entities(hass, config) -> list[AlexaEntity]:
+def async_get_entities(
+    hass: HomeAssistant, config: AbstractConfig
+) -> list[AlexaEntity]:
     """Return all entities that are supported by Alexa."""
     entities = []
     for state in hass.states.async_all():
@@ -389,19 +392,19 @@ class GenericCapabilities(AlexaEntity):
     The choice of last resort.
     """
 
-    def default_display_categories(self):
+    def default_display_categories(self) -> list[str]:
         """Return the display categories for this entity."""
         if self.entity.domain == automation.DOMAIN:
             return [DisplayCategory.ACTIVITY_TRIGGER]
 
         return [DisplayCategory.OTHER]
 
-    def interfaces(self):
+    def interfaces(self) -> list[AlexaCapability]:
         """Yield the supported interfaces."""
         return [
             AlexaPowerController(self.entity),
             AlexaEndpointHealth(self.hass, self.entity),
-            Alexa(self.hass),
+            Alexa(self.entity),
         ]
 
 
@@ -410,7 +413,7 @@ class GenericCapabilities(AlexaEntity):
 class SwitchCapabilities(AlexaEntity):
     """Class to represent Switch capabilities."""
 
-    def default_display_categories(self):
+    def default_display_categories(self) -> list[str]:
         """Return the display categories for this entity."""
         if self.entity.domain == input_boolean.DOMAIN:
             return [DisplayCategory.OTHER]
@@ -421,13 +424,13 @@ class SwitchCapabilities(AlexaEntity):
 
         return [DisplayCategory.SWITCH]
 
-    def interfaces(self):
+    def interfaces(self) -> list[AlexaCapability]:
         """Yield the supported interfaces."""
         return [
             AlexaPowerController(self.entity),
             AlexaContactSensor(self.hass, self.entity),
             AlexaEndpointHealth(self.hass, self.entity),
-            Alexa(self.hass),
+            Alexa(self.entity),
         ]
 
 
@@ -436,17 +439,17 @@ class SwitchCapabilities(AlexaEntity):
 class ButtonCapabilities(AlexaEntity):
     """Class to represent Button capabilities."""
 
-    def default_display_categories(self):
+    def default_display_categories(self) -> list[str]:
         """Return the display categories for this entity."""
         return [DisplayCategory.ACTIVITY_TRIGGER]
 
-    def interfaces(self):
+    def interfaces(self) -> list[AlexaCapability]:
         """Yield the supported interfaces."""
         return [
             AlexaSceneController(self.entity, supports_deactivation=False),
             AlexaEventDetectionSensor(self.hass, self.entity),
             AlexaEndpointHealth(self.hass, self.entity),
-            Alexa(self.hass),
+            Alexa(self.entity),
         ]
 
 
@@ -454,11 +457,11 @@ class ButtonCapabilities(AlexaEntity):
 class ClimateCapabilities(AlexaEntity):
     """Class to represent Climate capabilities."""
 
-    def default_display_categories(self):
+    def default_display_categories(self) -> list[str]:
         """Return the display categories for this entity."""
         return [DisplayCategory.THERMOSTAT]
 
-    def interfaces(self):
+    def interfaces(self) -> Generator[AlexaCapability, None, None]:
         """Yield the supported interfaces."""
         # If we support two modes, one being off, we allow turning on too.
         if climate.HVACMode.OFF in self.entity.attributes.get(
@@ -469,14 +472,14 @@ class ClimateCapabilities(AlexaEntity):
         yield AlexaThermostatController(self.hass, self.entity)
         yield AlexaTemperatureSensor(self.hass, self.entity)
         yield AlexaEndpointHealth(self.hass, self.entity)
-        yield Alexa(self.hass)
+        yield Alexa(self.entity)
 
 
 @ENTITY_ADAPTERS.register(cover.DOMAIN)
 class CoverCapabilities(AlexaEntity):
     """Class to represent Cover capabilities."""
 
-    def default_display_categories(self):
+    def default_display_categories(self) -> list[str]:
         """Return the display categories for this entity."""
         device_class = self.entity.attributes.get(ATTR_DEVICE_CLASS)
         if device_class in (cover.CoverDeviceClass.GARAGE, cover.CoverDeviceClass.GATE):
@@ -498,7 +501,7 @@ class CoverCapabilities(AlexaEntity):
 
         return [DisplayCategory.OTHER]
 
-    def interfaces(self):
+    def interfaces(self) -> Generator[AlexaCapability, None, None]:
         """Yield the supported interfaces."""
         device_class = self.entity.attributes.get(ATTR_DEVICE_CLASS)
         if device_class not in (
@@ -521,18 +524,18 @@ class CoverCapabilities(AlexaEntity):
         if supported & cover.CoverEntityFeature.SET_TILT_POSITION:
             yield AlexaRangeController(self.entity, instance=f"{cover.DOMAIN}.tilt")
         yield AlexaEndpointHealth(self.hass, self.entity)
-        yield Alexa(self.hass)
+        yield Alexa(self.entity)
 
 
 @ENTITY_ADAPTERS.register(light.DOMAIN)
 class LightCapabilities(AlexaEntity):
     """Class to represent Light capabilities."""
 
-    def default_display_categories(self):
+    def default_display_categories(self) -> list[str]:
         """Return the display categories for this entity."""
         return [DisplayCategory.LIGHT]
 
-    def interfaces(self):
+    def interfaces(self) -> Generator[AlexaCapability, None, None]:
         """Yield the supported interfaces."""
         yield AlexaPowerController(self.entity)
 
@@ -545,18 +548,18 @@ class LightCapabilities(AlexaEntity):
             yield AlexaColorTemperatureController(self.entity)
 
         yield AlexaEndpointHealth(self.hass, self.entity)
-        yield Alexa(self.hass)
+        yield Alexa(self.entity)
 
 
 @ENTITY_ADAPTERS.register(fan.DOMAIN)
 class FanCapabilities(AlexaEntity):
     """Class to represent Fan capabilities."""
 
-    def default_display_categories(self):
+    def default_display_categories(self) -> list[str]:
         """Return the display categories for this entity."""
         return [DisplayCategory.FAN]
 
-    def interfaces(self):
+    def interfaces(self) -> Generator[AlexaCapability, None, None]:
         """Yield the supported interfaces."""
         yield AlexaPowerController(self.entity)
         force_range_controller = True
@@ -588,18 +591,18 @@ class FanCapabilities(AlexaEntity):
             )
 
         yield AlexaEndpointHealth(self.hass, self.entity)
-        yield Alexa(self.hass)
+        yield Alexa(self.entity)
 
 
 @ENTITY_ADAPTERS.register(humidifier.DOMAIN)
 class HumidifierCapabilities(AlexaEntity):
     """Class to represent Humidifier capabilities."""
 
-    def default_display_categories(self):
+    def default_display_categories(self) -> list[str]:
         """Return the display categories for this entity."""
         return [DisplayCategory.OTHER]
 
-    def interfaces(self):
+    def interfaces(self) -> Generator[AlexaCapability, None, None]:
         """Yield the supported interfaces."""
         yield AlexaPowerController(self.entity)
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
@@ -612,23 +615,23 @@ class HumidifierCapabilities(AlexaEntity):
         )
 
         yield AlexaEndpointHealth(self.hass, self.entity)
-        yield Alexa(self.hass)
+        yield Alexa(self.entity)
 
 
 @ENTITY_ADAPTERS.register(lock.DOMAIN)
 class LockCapabilities(AlexaEntity):
     """Class to represent Lock capabilities."""
 
-    def default_display_categories(self):
+    def default_display_categories(self) -> list[str]:
         """Return the display categories for this entity."""
         return [DisplayCategory.SMARTLOCK]
 
-    def interfaces(self):
+    def interfaces(self) -> list[AlexaCapability]:
         """Yield the supported interfaces."""
         return [
             AlexaLockController(self.entity),
             AlexaEndpointHealth(self.hass, self.entity),
-            Alexa(self.hass),
+            Alexa(self.entity),
         ]
 
 
@@ -636,7 +639,7 @@ class LockCapabilities(AlexaEntity):
 class MediaPlayerCapabilities(AlexaEntity):
     """Class to represent MediaPlayer capabilities."""
 
-    def default_display_categories(self):
+    def default_display_categories(self) -> list[str]:
         """Return the display categories for this entity."""
         device_class = self.entity.attributes.get(ATTR_DEVICE_CLASS)
         if device_class == media_player.MediaPlayerDeviceClass.SPEAKER:
@@ -644,7 +647,7 @@ class MediaPlayerCapabilities(AlexaEntity):
 
         return [DisplayCategory.TV]
 
-    def interfaces(self):
+    def interfaces(self) -> Generator[AlexaCapability, None, None]:
         """Yield the supported interfaces."""
         yield AlexaPowerController(self.entity)
 
@@ -694,7 +697,7 @@ class MediaPlayerCapabilities(AlexaEntity):
                 yield AlexaEqualizerController(self.entity)
 
         yield AlexaEndpointHealth(self.hass, self.entity)
-        yield Alexa(self.hass)
+        yield Alexa(self.entity)
 
 
 @ENTITY_ADAPTERS.register(scene.DOMAIN)
@@ -708,15 +711,15 @@ class SceneCapabilities(AlexaEntity):
             return f"{description} (Scene)"
         return description
 
-    def default_display_categories(self):
+    def default_display_categories(self) -> list[str]:
         """Return the display categories for this entity."""
         return [DisplayCategory.SCENE_TRIGGER]
 
-    def interfaces(self):
+    def interfaces(self) -> list[AlexaCapability]:
         """Yield the supported interfaces."""
         return [
             AlexaSceneController(self.entity, supports_deactivation=False),
-            Alexa(self.hass),
+            Alexa(self.entity),
         ]
 
 
@@ -724,15 +727,15 @@ class SceneCapabilities(AlexaEntity):
 class ScriptCapabilities(AlexaEntity):
     """Class to represent Script capabilities."""
 
-    def default_display_categories(self):
+    def default_display_categories(self) -> list[str]:
         """Return the display categories for this entity."""
         return [DisplayCategory.ACTIVITY_TRIGGER]
 
-    def interfaces(self):
+    def interfaces(self) -> list[AlexaCapability]:
         """Yield the supported interfaces."""
         return [
             AlexaSceneController(self.entity, supports_deactivation=True),
-            Alexa(self.hass),
+            Alexa(self.entity),
         ]
 
 
@@ -740,13 +743,13 @@ class ScriptCapabilities(AlexaEntity):
 class SensorCapabilities(AlexaEntity):
     """Class to represent Sensor capabilities."""
 
-    def default_display_categories(self):
+    def default_display_categories(self) -> list[str]:
         """Return the display categories for this entity."""
         # although there are other kinds of sensors, all but temperature
         # sensors are currently ignored.
         return [DisplayCategory.TEMPERATURE_SENSOR]
 
-    def interfaces(self):
+    def interfaces(self) -> Generator[AlexaCapability, None, None]:
         """Yield the supported interfaces."""
         attrs = self.entity.attributes
         if attrs.get(ATTR_UNIT_OF_MEASUREMENT) in {
@@ -755,7 +758,7 @@ class SensorCapabilities(AlexaEntity):
         }:
             yield AlexaTemperatureSensor(self.hass, self.entity)
             yield AlexaEndpointHealth(self.hass, self.entity)
-            yield Alexa(self.hass)
+            yield Alexa(self.entity)
 
 
 @ENTITY_ADAPTERS.register(binary_sensor.DOMAIN)
@@ -766,7 +769,7 @@ class BinarySensorCapabilities(AlexaEntity):
     TYPE_MOTION = "motion"
     TYPE_PRESENCE = "presence"
 
-    def default_display_categories(self):
+    def default_display_categories(self) -> list[str] | None:
         """Return the display categories for this entity."""
         sensor_type = self.get_type()
         if sensor_type is self.TYPE_CONTACT:
@@ -775,8 +778,9 @@ class BinarySensorCapabilities(AlexaEntity):
             return [DisplayCategory.MOTION_SENSOR]
         if sensor_type is self.TYPE_PRESENCE:
             return [DisplayCategory.CAMERA]
+        return None
 
-    def interfaces(self):
+    def interfaces(self) -> Generator[AlexaCapability, None, None]:
         """Yield the supported interfaces."""
         sensor_type = self.get_type()
         if sensor_type is self.TYPE_CONTACT:
@@ -799,9 +803,9 @@ class BinarySensorCapabilities(AlexaEntity):
                 yield AlexaEventDetectionSensor(self.hass, self.entity)
 
         yield AlexaEndpointHealth(self.hass, self.entity)
-        yield Alexa(self.hass)
+        yield Alexa(self.entity)
 
-    def get_type(self):
+    def get_type(self) -> str | None:
         """Return the type of binary sensor."""
         attrs = self.entity.attributes
         if attrs.get(ATTR_DEVICE_CLASS) in (
@@ -821,36 +825,38 @@ class BinarySensorCapabilities(AlexaEntity):
         ):
             return self.TYPE_PRESENCE
 
+        return None
+
 
 @ENTITY_ADAPTERS.register(alarm_control_panel.DOMAIN)
 class AlarmControlPanelCapabilities(AlexaEntity):
     """Class to represent Alarm capabilities."""
 
-    def default_display_categories(self):
+    def default_display_categories(self) -> list[str]:
         """Return the display categories for this entity."""
         return [DisplayCategory.SECURITY_PANEL]
 
-    def interfaces(self):
+    def interfaces(self) -> Generator[AlexaCapability, None, None]:
         """Yield the supported interfaces."""
         if not self.entity.attributes.get("code_arm_required"):
             yield AlexaSecurityPanelController(self.hass, self.entity)
             yield AlexaEndpointHealth(self.hass, self.entity)
-            yield Alexa(self.hass)
+            yield Alexa(self.entity)
 
 
 @ENTITY_ADAPTERS.register(image_processing.DOMAIN)
 class ImageProcessingCapabilities(AlexaEntity):
     """Class to represent image_processing capabilities."""
 
-    def default_display_categories(self):
+    def default_display_categories(self) -> list[str]:
         """Return the display categories for this entity."""
         return [DisplayCategory.CAMERA]
 
-    def interfaces(self):
+    def interfaces(self) -> Generator[AlexaCapability, None, None]:
         """Yield the supported interfaces."""
         yield AlexaEventDetectionSensor(self.hass, self.entity)
         yield AlexaEndpointHealth(self.hass, self.entity)
-        yield Alexa(self.hass)
+        yield Alexa(self.entity)
 
 
 @ENTITY_ADAPTERS.register(input_number.DOMAIN)
@@ -858,27 +864,27 @@ class ImageProcessingCapabilities(AlexaEntity):
 class InputNumberCapabilities(AlexaEntity):
     """Class to represent number and input_number capabilities."""
 
-    def default_display_categories(self):
+    def default_display_categories(self) -> list[str]:
         """Return the display categories for this entity."""
         return [DisplayCategory.OTHER]
 
-    def interfaces(self):
+    def interfaces(self) -> Generator[AlexaCapability, None, None]:
         """Yield the supported interfaces."""
         domain = self.entity.domain
         yield AlexaRangeController(self.entity, instance=f"{domain}.value")
         yield AlexaEndpointHealth(self.hass, self.entity)
-        yield Alexa(self.hass)
+        yield Alexa(self.entity)
 
 
 @ENTITY_ADAPTERS.register(timer.DOMAIN)
 class TimerCapabilities(AlexaEntity):
     """Class to represent Timer capabilities."""
 
-    def default_display_categories(self):
+    def default_display_categories(self) -> list[str]:
         """Return the display categories for this entity."""
         return [DisplayCategory.OTHER]
 
-    def interfaces(self):
+    def interfaces(self) -> Generator[AlexaCapability, None, None]:
         """Yield the supported interfaces."""
         yield AlexaTimeHoldController(self.entity, allow_remote_resume=True)
         yield AlexaPowerController(self.entity)
@@ -889,11 +895,11 @@ class TimerCapabilities(AlexaEntity):
 class VacuumCapabilities(AlexaEntity):
     """Class to represent vacuum capabilities."""
 
-    def default_display_categories(self):
+    def default_display_categories(self) -> list[str]:
         """Return the display categories for this entity."""
         return [DisplayCategory.VACUUM_CLEANER]
 
-    def interfaces(self):
+    def interfaces(self) -> Generator[AlexaCapability, None, None]:
         """Yield the supported interfaces."""
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if (
@@ -917,18 +923,18 @@ class VacuumCapabilities(AlexaEntity):
             )
 
         yield AlexaEndpointHealth(self.hass, self.entity)
-        yield Alexa(self.hass)
+        yield Alexa(self.entity)
 
 
 @ENTITY_ADAPTERS.register(camera.DOMAIN)
 class CameraCapabilities(AlexaEntity):
     """Class to represent Camera capabilities."""
 
-    def default_display_categories(self):
+    def default_display_categories(self) -> list[str]:
         """Return the display categories for this entity."""
         return [DisplayCategory.CAMERA]
 
-    def interfaces(self):
+    def interfaces(self) -> Generator[AlexaCapability, None, None]:
         """Yield the supported interfaces."""
         if self._check_requirements():
             supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
@@ -936,9 +942,9 @@ class CameraCapabilities(AlexaEntity):
                 yield AlexaCameraStreamController(self.entity)
 
         yield AlexaEndpointHealth(self.hass, self.entity)
-        yield Alexa(self.hass)
+        yield Alexa(self.entity)
 
-    def _check_requirements(self):
+    def _check_requirements(self) -> bool:
         """Check the hass URL for HTTPS scheme."""
         if "stream" not in self.hass.config.components:
             _LOGGER.debug(

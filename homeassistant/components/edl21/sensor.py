@@ -292,7 +292,12 @@ class EDL21:
         "129-129:199.130.5*255",  # Iskraemeco: Public Key
     }
 
-    def __init__(self, hass, config, async_add_entities) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config: ConfigType,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
         """Initialize an EDL21 object."""
         self._registered_obis: set[tuple[str, str]] = set()
         self._hass = hass
@@ -301,7 +306,7 @@ class EDL21:
         self._proto = SmlProtocol(config[CONF_SERIAL_PORT])
         self._proto.add_listener(self.event, ["SmlGetListResponse"])
 
-    async def connect(self):
+    async def connect(self) -> None:
         """Connect to an EDL21 reader."""
         await self._proto.connect(self._hass.loop)
 
@@ -319,7 +324,7 @@ class EDL21:
             return
         electricity_id = electricity_id.replace(" ", "")
 
-        new_entities = []
+        new_entities: list[EDL21Entity] = []
         for telegram in message_body.get("valList", []):
             if not (obis := telegram.get("objName")):
                 continue
@@ -352,7 +357,7 @@ class EDL21:
         if new_entities:
             self._hass.loop.create_task(self.add_entities(new_entities))
 
-    async def add_entities(self, new_entities) -> None:
+    async def add_entities(self, new_entities: list[EDL21Entity]) -> None:
         """Migrate old unique IDs, then add entities to hass."""
         registry = er.async_get(self._hass)
 

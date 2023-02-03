@@ -2306,6 +2306,11 @@ async def test_recorder_is_far_behind(recorder_mock, hass, hass_ws_client, caplo
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
     assert msg["id"] == 7
     assert msg["type"] == "event"
+    assert msg["event"]["events"] == []
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
     assert msg["event"]["events"] == [
         {"domain": "test", "message": "1", "name": "device name", "when": ANY}
     ]

@@ -6,6 +6,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.sensor import async_update_suggested_units
 from homeassistant.config import async_check_ha_config_file
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
@@ -40,17 +41,18 @@ class CheckConfigView(HomeAssistantView):
 @websocket_api.websocket_command(
     {
         "type": "config/core/update",
-        vol.Optional("latitude"): cv.latitude,
-        vol.Optional("longitude"): cv.longitude,
+        vol.Optional("country"): cv.country,
+        vol.Optional("currency"): cv.currency,
         vol.Optional("elevation"): int,
-        vol.Optional("unit_system"): unit_system.validate_unit_system,
-        vol.Optional("location_name"): str,
-        vol.Optional("time_zone"): cv.time_zone,
         vol.Optional("external_url"): vol.Any(cv.url_no_path, None),
         vol.Optional("internal_url"): vol.Any(cv.url_no_path, None),
-        vol.Optional("currency"): cv.currency,
-        vol.Optional("country"): cv.country,
         vol.Optional("language"): cv.language,
+        vol.Optional("latitude"): cv.latitude,
+        vol.Optional("location_name"): str,
+        vol.Optional("longitude"): cv.longitude,
+        vol.Optional("time_zone"): cv.time_zone,
+        vol.Optional("update_units"): bool,
+        vol.Optional("unit_system"): unit_system.validate_unit_system,
     }
 )
 @websocket_api.async_response
@@ -64,8 +66,12 @@ async def websocket_update_config(
     data.pop("id")
     data.pop("type")
 
+    update_units = data.pop("update_units", False)
+
     try:
         await hass.config.async_update(**data)
+        if update_units:
+            async_update_suggested_units(hass)
         connection.send_result(msg["id"])
     except ValueError as err:
         connection.send_error(msg["id"], "invalid_info", str(err))

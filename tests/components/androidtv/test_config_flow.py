@@ -125,7 +125,6 @@ async def test_user_adbkey(hass):
         CONNECT_METHOD,
         return_value=(MockConfigDevice(), None),
     ), PATCH_ISFILE, PATCH_ACCESS, PATCH_SETUP_ENTRY as mock_setup_entry:
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER, "show_advanced_options": True},

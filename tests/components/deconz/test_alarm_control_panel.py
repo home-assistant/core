@@ -169,7 +169,6 @@ async def test_alarm_control_panel(hass, aioclient_mock, mock_deconz_websocket):
         AncillaryControlPanel.ARMING_NIGHT,
         AncillaryControlPanel.ARMING_STAY,
     }:
-
         event_changed_sensor = {
             "t": "event",
             "e": "changed",
@@ -188,7 +187,6 @@ async def test_alarm_control_panel(hass, aioclient_mock, mock_deconz_websocket):
         AncillaryControlPanel.ENTRY_DELAY,
         AncillaryControlPanel.EXIT_DELAY,
     }:
-
         event_changed_sensor = {
             "t": "event",
             "e": "changed",

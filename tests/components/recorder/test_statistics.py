@@ -16,6 +16,7 @@ from homeassistant.components.recorder.const import SQLITE_URL_PREFIX
 from homeassistant.components.recorder.db_schema import StatisticsShortTerm
 from homeassistant.components.recorder.models import process_timestamp
 from homeassistant.components.recorder.statistics import (
+    STATISTIC_UNIT_TO_UNIT_CONVERTER,
     _statistics_during_period_with_session,
     _update_or_add_metadata,
     async_add_external_statistics,
@@ -29,6 +30,7 @@ from homeassistant.components.recorder.statistics import (
     list_statistic_ids,
 )
 from homeassistant.components.recorder.util import session_scope
+from homeassistant.components.sensor import UNIT_CONVERTERS
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
@@ -37,6 +39,7 @@ from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 
 from .common import (
+    assert_dict_of_states_equal_without_context_and_last_changed,
     async_wait_recording_done,
     do_adhoc_statistics,
     statistics_during_period,
@@ -48,6 +51,15 @@ from tests.common import get_test_home_assistant, mock_registry
 ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
 
 
+def test_converters_align_with_sensor():
+    """Ensure STATISTIC_UNIT_TO_UNIT_CONVERTER is aligned with UNIT_CONVERTERS."""
+    for converter in UNIT_CONVERTERS.values():
+        assert converter in STATISTIC_UNIT_TO_UNIT_CONVERTER.values()
+
+    for converter in STATISTIC_UNIT_TO_UNIT_CONVERTER.values():
+        assert converter in UNIT_CONVERTERS.values()
+
+
 def test_compile_hourly_statistics(hass_recorder):
     """Test compiling hourly statistics."""
     hass = hass_recorder()
@@ -55,7 +67,7 @@ def test_compile_hourly_statistics(hass_recorder):
     setup_component(hass, "sensor", {})
     zero, four, states = record_states(hass)
     hist = history.get_significant_states(hass, zero, four)
-    assert dict(states) == dict(hist)
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     # Should not fail if there is nothing there yet
     stats = get_latest_short_term_statistics(
@@ -316,7 +328,7 @@ def test_rename_entity(hass_recorder):
 
     zero, four, states = record_states(hass)
     hist = history.get_significant_states(hass, zero, four)
-    assert dict(states) == dict(hist)
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     for kwargs in ({}, {"statistic_ids": ["sensor.test1"]}):
         stats = statistics_during_period(hass, zero, period="5minute", **kwargs)
@@ -382,7 +394,7 @@ def test_rename_entity_collision(hass_recorder, caplog):
 
     zero, four, states = record_states(hass)
     hist = history.get_significant_states(hass, zero, four)
-    assert dict(states) == dict(hist)
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     for kwargs in ({}, {"statistic_ids": ["sensor.test1"]}):
         stats = statistics_during_period(hass, zero, period="5minute", **kwargs)
@@ -447,7 +459,7 @@ def test_statistics_duplicated(hass_recorder, caplog):
     setup_component(hass, "sensor", {})
     zero, four, states = record_states(hass)
     hist = history.get_significant_states(hass, zero, four)
-    assert dict(states) == dict(hist)
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     wait_recording_done(hass)
     assert "Compiling statistics for" not in caplog.text
