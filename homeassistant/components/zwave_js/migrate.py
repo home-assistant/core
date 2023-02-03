@@ -36,8 +36,8 @@ class ValueID:
     def from_unique_id(unique_id: str) -> ValueID:
         """Get a ValueID from a unique ID.
 
-        This also works for Notification CC Binary Sensors which have their own unique ID
-        format.
+        This also works for Notification CC Binary Sensors which have their
+        own unique ID format.
         """
         return ValueID.from_string_id(unique_id.split(".")[1])
 

@@ -469,12 +469,15 @@ class TibberSensorRT(TibberSensor, CoordinatorEntity["TibberRtDataCoordinator"])
             "accumulatedConsumption",
             "accumulatedProduction",
         ):
-            # Value is reset to 0 at midnight, but not always strictly increasing due to hourly corrections
-            # If device is offline, last_reset should be updated when it comes back online if the value has decreased
+            # Value is reset to 0 at midnight, but not always strictly increasing
+            # due to hourly corrections.
+            # If device is offline, last_reset should be updated when it comes
+            # back online if the value has decreased
             ts_local = dt_util.parse_datetime(live_measurement["timestamp"])
             if ts_local is not None:
                 if self.last_reset is None or (
-                    state < 0.5 * self.native_value  # type: ignore[operator]  # native_value is float
+                    # native_value is float
+                    state < 0.5 * self.native_value  # type: ignore[operator]
                     and (
                         ts_local.hour == 0
                         or (ts_local - self.last_reset) > timedelta(hours=24)
