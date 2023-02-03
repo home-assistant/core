@@ -2,6 +2,7 @@
 import copy
 from datetime import datetime
 import json
+from typing import Any
 from unittest.mock import ANY, MagicMock, patch
 
 import yaml
@@ -54,27 +55,27 @@ DISCOVERY_COUNT = len(MQTT)
 
 
 async def help_test_availability_when_connection_lost(
-    hass, mqtt_mock_entry_with_yaml_config, domain, config
-):
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config, domain, config
+) -> None:
     """Test availability after MQTT disconnection."""
     assert await async_setup_component(hass, mqtt.DOMAIN, config)
     await hass.async_block_till_done()
     mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get(f"{domain}.test")
-    assert state.state != STATE_UNAVAILABLE
+    assert state and state.state != STATE_UNAVAILABLE
 
     mqtt_mock.connected = False
     async_dispatcher_send(hass, MQTT_DISCONNECTED)
     await hass.async_block_till_done()
 
     state = hass.states.get(f"{domain}.test")
-    assert state.state == STATE_UNAVAILABLE
+    assert state and state.state == STATE_UNAVAILABLE
 
 
 async def help_test_availability_without_topic(
-    hass, mqtt_mock_entry_with_yaml_config, domain, config
-):
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config, domain, config
+) -> None:
     """Test availability without defined availability topic."""
     assert "availability_topic" not in config[mqtt.DOMAIN][domain]
     assert await async_setup_component(hass, mqtt.DOMAIN, config)
@@ -82,18 +83,18 @@ async def help_test_availability_without_topic(
     await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get(f"{domain}.test")
-    assert state.state != STATE_UNAVAILABLE
+    assert state and state.state != STATE_UNAVAILABLE
 
 
 async def help_test_default_availability_payload(
-    hass,
+    hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config,
     domain,
     config,
     no_assumed_state=False,
     state_topic=None,
     state_message=None,
-):
+) -> None:
     """Test availability by default payload with defined topic.
 
     This is a test helper for the MqttAvailability mixin.
@@ -110,41 +111,41 @@ async def help_test_default_availability_payload(
     await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get(f"{domain}.test")
-    assert state.state == STATE_UNAVAILABLE
+    assert state and state.state == STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, "availability-topic", "online")
 
     state = hass.states.get(f"{domain}.test")
-    assert state.state != STATE_UNAVAILABLE
+    assert state and state.state != STATE_UNAVAILABLE
     if no_assumed_state:
         assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "availability-topic", "offline")
 
     state = hass.states.get(f"{domain}.test")
-    assert state.state == STATE_UNAVAILABLE
+    assert state and state.state == STATE_UNAVAILABLE
 
     if state_topic:
         async_fire_mqtt_message(hass, state_topic, state_message)
 
         state = hass.states.get(f"{domain}.test")
-        assert state.state == STATE_UNAVAILABLE
+        assert state and state.state == STATE_UNAVAILABLE
 
         async_fire_mqtt_message(hass, "availability-topic", "online")
 
         state = hass.states.get(f"{domain}.test")
-        assert state.state != STATE_UNAVAILABLE
+        assert state and state.state != STATE_UNAVAILABLE
 
 
 async def help_test_default_availability_list_payload(
-    hass,
+    hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config,
     domain,
     config,
     no_assumed_state=False,
     state_topic=None,
     state_message=None,
-):
+) -> None:
     """Test availability by default payload with defined topic.
 
     This is a test helper for the MqttAvailability mixin.
@@ -164,53 +165,53 @@ async def help_test_default_availability_list_payload(
     await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get(f"{domain}.test")
-    assert state.state == STATE_UNAVAILABLE
+    assert state and state.state == STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, "availability-topic1", "online")
 
     state = hass.states.get(f"{domain}.test")
-    assert state.state != STATE_UNAVAILABLE
+    assert state and state.state != STATE_UNAVAILABLE
     if no_assumed_state:
         assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "availability-topic1", "offline")
 
     state = hass.states.get(f"{domain}.test")
-    assert state.state == STATE_UNAVAILABLE
+    assert state and state.state == STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, "availability-topic2", "online")
 
     state = hass.states.get(f"{domain}.test")
-    assert state.state != STATE_UNAVAILABLE
+    assert state and state.state != STATE_UNAVAILABLE
     if no_assumed_state:
         assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "availability-topic2", "offline")
 
     state = hass.states.get(f"{domain}.test")
-    assert state.state == STATE_UNAVAILABLE
+    assert state and state.state == STATE_UNAVAILABLE
 
     if state_topic:
         async_fire_mqtt_message(hass, state_topic, state_message)
 
         state = hass.states.get(f"{domain}.test")
-        assert state.state == STATE_UNAVAILABLE
+        assert state and state.state == STATE_UNAVAILABLE
 
         async_fire_mqtt_message(hass, "availability-topic1", "online")
 
         state = hass.states.get(f"{domain}.test")
-        assert state.state != STATE_UNAVAILABLE
+        assert state and state.state != STATE_UNAVAILABLE
 
 
 async def help_test_default_availability_list_payload_all(
-    hass,
+    hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config,
     domain,
     config,
     no_assumed_state=False,
     state_topic=None,
     state_message=None,
-):
+) -> None:
     """Test availability by default payload with defined topic.
 
     This is a test helper for the MqttAvailability mixin.
@@ -231,54 +232,54 @@ async def help_test_default_availability_list_payload_all(
     await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get(f"{domain}.test")
-    assert state.state == STATE_UNAVAILABLE
+    assert state and state.state == STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, "availability-topic1", "online")
 
     state = hass.states.get(f"{domain}.test")
-    assert state.state == STATE_UNAVAILABLE
+    assert state and state.state == STATE_UNAVAILABLE
     if no_assumed_state:
         assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "availability-topic2", "online")
 
     state = hass.states.get(f"{domain}.test")
-    assert state.state != STATE_UNAVAILABLE
+    assert state and state.state != STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, "availability-topic2", "offline")
 
     state = hass.states.get(f"{domain}.test")
-    assert state.state == STATE_UNAVAILABLE
+    assert state and state.state == STATE_UNAVAILABLE
     if no_assumed_state:
         assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "availability-topic2", "online")
 
     state = hass.states.get(f"{domain}.test")
-    assert state.state != STATE_UNAVAILABLE
+    assert state and state.state != STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, "availability-topic1", "offline")
 
     state = hass.states.get(f"{domain}.test")
-    assert state.state == STATE_UNAVAILABLE
+    assert state and state.state == STATE_UNAVAILABLE
     if no_assumed_state:
         assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "availability-topic1", "online")
 
     state = hass.states.get(f"{domain}.test")
-    assert state.state != STATE_UNAVAILABLE
+    assert state and state.state != STATE_UNAVAILABLE
 
 
 async def help_test_default_availability_list_payload_any(
-    hass,
+    hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config,
     domain,
     config,
     no_assumed_state=False,
     state_topic=None,
     state_message=None,
-):
+) -> None:
     """Test availability by default payload with defined topic.
 
     This is a test helper for the MqttAvailability mixin.
@@ -299,49 +300,49 @@ async def help_test_default_availability_list_payload_any(
     await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get(f"{domain}.test")
-    assert state.state == STATE_UNAVAILABLE
+    assert state and state.state == STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, "availability-topic1", "online")
 
     state = hass.states.get(f"{domain}.test")
-    assert state.state != STATE_UNAVAILABLE
+    assert state and state.state != STATE_UNAVAILABLE
     if no_assumed_state:
         assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "availability-topic2", "online")
 
     state = hass.states.get(f"{domain}.test")
-    assert state.state != STATE_UNAVAILABLE
+    assert state and state.state != STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, "availability-topic2", "offline")
 
     state = hass.states.get(f"{domain}.test")
-    assert state.state != STATE_UNAVAILABLE
+    assert state and state.state != STATE_UNAVAILABLE
     if no_assumed_state:
         assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "availability-topic1", "offline")
 
     state = hass.states.get(f"{domain}.test")
-    assert state.state == STATE_UNAVAILABLE
+    assert state and state.state == STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, "availability-topic1", "online")
 
     state = hass.states.get(f"{domain}.test")
-    assert state.state != STATE_UNAVAILABLE
+    assert state and state.state != STATE_UNAVAILABLE
     if no_assumed_state:
         assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
 
 async def help_test_default_availability_list_single(
-    hass,
+    hass: HomeAssistant,
     caplog,
     domain,
     config,
     no_assumed_state=False,
     state_topic=None,
     state_message=None,
-):
+) -> None:
     """Test availability list and availability_topic are mutually exclusive.
 
     This is a test helper for the MqttAvailability mixin.
@@ -364,14 +365,14 @@ async def help_test_default_availability_list_single(
 
 
 async def help_test_custom_availability_payload(
-    hass,
+    hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config,
     domain,
     config,
     no_assumed_state=False,
     state_topic=None,
     state_message=None,
-):
+) -> None:
     """Test availability by custom payload with defined topic.
 
     This is a test helper for the MqttAvailability mixin.
@@ -390,41 +391,41 @@ async def help_test_custom_availability_payload(
     await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get(f"{domain}.test")
-    assert state.state == STATE_UNAVAILABLE
+    assert state and state.state == STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, "availability-topic", "good")
 
     state = hass.states.get(f"{domain}.test")
-    assert state.state != STATE_UNAVAILABLE
+    assert state and state.state != STATE_UNAVAILABLE
     if no_assumed_state:
         assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "availability-topic", "nogood")
 
     state = hass.states.get(f"{domain}.test")
-    assert state.state == STATE_UNAVAILABLE
+    assert state and state.state == STATE_UNAVAILABLE
 
     if state_topic:
         async_fire_mqtt_message(hass, state_topic, state_message)
 
         state = hass.states.get(f"{domain}.test")
-        assert state.state == STATE_UNAVAILABLE
+        assert state and state.state == STATE_UNAVAILABLE
 
         async_fire_mqtt_message(hass, "availability-topic", "good")
 
         state = hass.states.get(f"{domain}.test")
-        assert state.state != STATE_UNAVAILABLE
+        assert state and state.state != STATE_UNAVAILABLE
 
 
 async def help_test_discovery_update_availability(
-    hass,
+    hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config,
     domain,
     config,
     no_assumed_state=False,
     state_topic=None,
     state_message=None,
-):
+) -> None:
     """Test update of discovered MQTTAvailability.
 
     This is a test helper for the MQTTAvailability mixin.
@@ -448,15 +449,15 @@ async def help_test_discovery_update_availability(
     await hass.async_block_till_done()
 
     state = hass.states.get(f"{domain}.test")
-    assert state.state == STATE_UNAVAILABLE
+    assert state and state.state == STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, "availability-topic1", "online")
     state = hass.states.get(f"{domain}.test")
-    assert state.state != STATE_UNAVAILABLE
+    assert state and state.state != STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, "availability-topic1", "offline")
     state = hass.states.get(f"{domain}.test")
-    assert state.state == STATE_UNAVAILABLE
+    assert state and state.state == STATE_UNAVAILABLE
 
     # Change availability_topic
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data2)
@@ -465,17 +466,17 @@ async def help_test_discovery_update_availability(
     # Verify we are no longer subscribing to the old topic
     async_fire_mqtt_message(hass, "availability-topic1", "online")
     state = hass.states.get(f"{domain}.test")
-    assert state.state == STATE_UNAVAILABLE
+    assert state and state.state == STATE_UNAVAILABLE
 
     # Verify we are subscribing to the new topic
     async_fire_mqtt_message(hass, "availability-topic2", "online")
     state = hass.states.get(f"{domain}.test")
-    assert state.state != STATE_UNAVAILABLE
+    assert state and state.state != STATE_UNAVAILABLE
 
     # Verify we are subscribing to the new topic
     async_fire_mqtt_message(hass, "availability-topic3", "offline")
     state = hass.states.get(f"{domain}.test")
-    assert state.state == STATE_UNAVAILABLE
+    assert state and state.state == STATE_UNAVAILABLE
 
     # Change availability_topic
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data3)
@@ -484,22 +485,22 @@ async def help_test_discovery_update_availability(
     # Verify we are no longer subscribing to the old topic
     async_fire_mqtt_message(hass, "availability-topic2", "online")
     state = hass.states.get(f"{domain}.test")
-    assert state.state == STATE_UNAVAILABLE
+    assert state and state.state == STATE_UNAVAILABLE
 
     # Verify we are no longer subscribing to the old topic
     async_fire_mqtt_message(hass, "availability-topic3", "online")
     state = hass.states.get(f"{domain}.test")
-    assert state.state == STATE_UNAVAILABLE
+    assert state and state.state == STATE_UNAVAILABLE
 
     # Verify we are subscribing to the new topic
     async_fire_mqtt_message(hass, "availability-topic4", "online")
     state = hass.states.get(f"{domain}.test")
-    assert state.state != STATE_UNAVAILABLE
+    assert state and state.state != STATE_UNAVAILABLE
 
 
 async def help_test_setting_attribute_via_mqtt_json_message(
-    hass, mqtt_mock_entry_with_yaml_config, domain, config
-):
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config, domain, config
+) -> None:
     """Test the setting of attribute via MQTT with JSON payload.
 
     This is a test helper for the MqttAttributes mixin.
@@ -518,12 +519,16 @@ async def help_test_setting_attribute_via_mqtt_json_message(
     async_fire_mqtt_message(hass, "attr-topic", '{ "val": "100" }')
     state = hass.states.get(f"{domain}.test")
 
-    assert state.attributes.get("val") == "100"
+    assert state and state.attributes.get("val") == "100"
 
 
 async def help_test_setting_blocked_attribute_via_mqtt_json_message(
-    hass, mqtt_mock_entry_no_yaml_config, domain, config, extra_blocked_attributes
-):
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config,
+    domain,
+    config,
+    extra_blocked_attributes,
+) -> None:
     """Test the setting of blocked attribute via MQTT with JSON payload.
 
     This is a test helper for the MqttAttributes mixin.
@@ -542,17 +547,17 @@ async def help_test_setting_blocked_attribute_via_mqtt_json_message(
     for attr in MQTT_ATTRIBUTES_BLOCKED:
         async_fire_mqtt_message(hass, "attr-topic", json.dumps({attr: val}))
         state = hass.states.get(f"{domain}.test")
-        assert state.attributes.get(attr) != val
+        assert state and state.attributes.get(attr) != val
 
     for attr in extra_blocked_attributes:
         async_fire_mqtt_message(hass, "attr-topic", json.dumps({attr: val}))
         state = hass.states.get(f"{domain}.test")
-        assert state.attributes.get(attr) != val
+        assert state and state.attributes.get(attr) != val
 
 
 async def help_test_setting_attribute_with_template(
-    hass, mqtt_mock_entry_with_yaml_config, domain, config
-):
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config, domain, config
+) -> None:
     """Test the setting of attribute via MQTT with JSON payload.
 
     This is a test helper for the MqttAttributes mixin.
@@ -576,13 +581,14 @@ async def help_test_setting_attribute_with_template(
     )
     state = hass.states.get(f"{domain}.test")
 
+    assert state is not None
     assert state.attributes.get("Arm") == 0
     assert state.attributes.get("Time") == "22:18"
 
 
 async def help_test_update_with_json_attrs_not_dict(
-    hass, mqtt_mock_entry_with_yaml_config, caplog, domain, config
-):
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config, caplog, domain, config
+) -> None:
     """Test attributes get extracted from a JSON result.
 
     This is a test helper for the MqttAttributes mixin.
@@ -601,13 +607,13 @@ async def help_test_update_with_json_attrs_not_dict(
     async_fire_mqtt_message(hass, "attr-topic", '[ "list", "of", "things"]')
     state = hass.states.get(f"{domain}.test")
 
-    assert state.attributes.get("val") is None
+    assert state and state.attributes.get("val") is None
     assert "JSON result was not a dictionary" in caplog.text
 
 
 async def help_test_update_with_json_attrs_bad_json(
-    hass, mqtt_mock_entry_with_yaml_config, caplog, domain, config
-):
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config, caplog, domain, config
+) -> None:
     """Test JSON validation of attributes.
 
     This is a test helper for the MqttAttributes mixin.
@@ -626,13 +632,13 @@ async def help_test_update_with_json_attrs_bad_json(
     async_fire_mqtt_message(hass, "attr-topic", "This is not JSON")
 
     state = hass.states.get(f"{domain}.test")
-    assert state.attributes.get("val") is None
+    assert state and state.attributes.get("val") is None
     assert "Erroneous JSON: This is not JSON" in caplog.text
 
 
 async def help_test_discovery_update_attr(
-    hass, mqtt_mock_entry_no_yaml_config, caplog, domain, config
-):
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config, caplog, domain, config
+) -> None:
     """Test update of discovered MQTTAttributes.
 
     This is a test helper for the MqttAttributes mixin.
@@ -650,7 +656,7 @@ async def help_test_discovery_update_attr(
     await hass.async_block_till_done()
     async_fire_mqtt_message(hass, "attr-topic1", '{ "val": "100" }')
     state = hass.states.get(f"{domain}.test")
-    assert state.attributes.get("val") == "100"
+    assert state and state.attributes.get("val") == "100"
 
     # Change json_attributes_topic
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data2)
@@ -659,15 +665,17 @@ async def help_test_discovery_update_attr(
     # Verify we are no longer subscribing to the old topic
     async_fire_mqtt_message(hass, "attr-topic1", '{ "val": "50" }')
     state = hass.states.get(f"{domain}.test")
-    assert state.attributes.get("val") == "100"
+    assert state and state.attributes.get("val") == "100"
 
     # Verify we are subscribing to the new topic
     async_fire_mqtt_message(hass, "attr-topic2", '{ "val": "75" }')
     state = hass.states.get(f"{domain}.test")
-    assert state.attributes.get("val") == "75"
+    assert state and state.attributes.get("val") == "75"
 
 
-async def help_test_unique_id(hass, mqtt_mock_entry_with_yaml_config, domain, config):
+async def help_test_unique_id(
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config, domain, config
+) -> None:
     """Test unique id option only creates one entity per unique_id."""
     assert await async_setup_component(hass, mqtt.DOMAIN, config)
     await hass.async_block_till_done()
@@ -676,8 +684,8 @@ async def help_test_unique_id(hass, mqtt_mock_entry_with_yaml_config, domain, co
 
 
 async def help_test_discovery_removal(
-    hass, mqtt_mock_entry_no_yaml_config, caplog, domain, data
-):
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config, caplog, domain, data
+) -> None:
     """Test removal of discovered component.
 
     This is a test helper for the MqttDiscoveryUpdate mixin.
@@ -698,7 +706,7 @@ async def help_test_discovery_removal(
 
 
 async def help_test_discovery_update(
-    hass,
+    hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config,
     caplog,
     domain,
@@ -706,7 +714,7 @@ async def help_test_discovery_update(
     discovery_config2,
     state_data1=None,
     state_data2=None,
-):
+) -> None:
     """Test update of discovered component.
 
     This is a test helper for the MqttDiscoveryUpdate mixin.
@@ -732,6 +740,7 @@ async def help_test_discovery_update(
             for topic, data in mqtt_messages:
                 async_fire_mqtt_message(hass, topic, data)
             state = hass.states.get(f"{domain}.beer")
+            assert state is not None
             if expected_state:
                 assert state.state == expected_state
             if attributes:
@@ -750,6 +759,7 @@ async def help_test_discovery_update(
             for topic, data in mqtt_messages:
                 async_fire_mqtt_message(hass, topic, data)
             state = hass.states.get(f"{domain}.beer")
+            assert state is not None
             if expected_state:
                 assert state.state == expected_state
             if attributes:
@@ -761,8 +771,13 @@ async def help_test_discovery_update(
 
 
 async def help_test_discovery_update_unchanged(
-    hass, mqtt_mock_entry_no_yaml_config, caplog, domain, data1, discovery_update
-):
+    hass: HomeAssistant,
+    mqtt_mock_entry_no_yaml_config,
+    caplog,
+    domain,
+    data1,
+    discovery_update,
+) -> None:
     """Test update of discovered component without changes.
 
     This is a test helper for the MqttDiscoveryUpdate mixin.
@@ -782,8 +797,8 @@ async def help_test_discovery_update_unchanged(
 
 
 async def help_test_discovery_broken(
-    hass, mqtt_mock_entry_no_yaml_config, caplog, domain, data1, data2
-):
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config, caplog, domain, data1, data2
+) -> None:
     """Test handling of bad discovery message."""
     await mqtt_mock_entry_no_yaml_config()
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data1)
@@ -803,7 +818,7 @@ async def help_test_discovery_broken(
 
 
 async def help_test_encoding_subscribable_topics(
-    hass,
+    hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config,
     caplog,
     domain,
@@ -814,18 +829,18 @@ async def help_test_encoding_subscribable_topics(
     attribute_value=None,
     init_payload=None,
     skip_raw_test=False,
-):
+) -> None:
     """Test handling of incoming encoded payload."""
 
     async def _test_encoding(
-        hass,
+        hass: HomeAssistant,
         entity_id,
         topic,
         encoded_value,
         attribute,
         init_payload_topic,
         init_payload_value,
-    ):
+    ) -> Any:
         state = hass.states.get(entity_id)
 
         if init_payload_value:
@@ -839,6 +854,7 @@ async def help_test_encoding_subscribable_topics(
         await hass.async_block_till_done()
 
         state = hass.states.get(entity_id)
+        assert state is not None
 
         if attribute:
             return state.attributes.get(attribute)
@@ -936,8 +952,8 @@ async def help_test_encoding_subscribable_topics(
 
 
 async def help_test_entity_device_info_with_identifier(
-    hass, mqtt_mock_entry_no_yaml_config, domain, config
-):
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config, domain, config
+) -> None:
     """Test device registry integration.
 
     This is a test helper for the MqttDiscoveryUpdate mixin.
@@ -967,8 +983,8 @@ async def help_test_entity_device_info_with_identifier(
 
 
 async def help_test_entity_device_info_with_connection(
-    hass, mqtt_mock_entry_no_yaml_config, domain, config
-):
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config, domain, config
+) -> None:
     """Test device registry integration.
 
     This is a test helper for the MqttDiscoveryUpdate mixin.
@@ -1000,8 +1016,8 @@ async def help_test_entity_device_info_with_connection(
 
 
 async def help_test_entity_device_info_remove(
-    hass, mqtt_mock_entry_no_yaml_config, domain, config
-):
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config, domain, config
+) -> None:
     """Test device registry remove."""
     await mqtt_mock_entry_no_yaml_config()
     # Add device settings to config
@@ -1029,8 +1045,8 @@ async def help_test_entity_device_info_remove(
 
 
 async def help_test_entity_device_info_update(
-    hass, mqtt_mock_entry_no_yaml_config, domain, config
-):
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config, domain, config
+) -> None:
     """Test device registry update.
 
     This is a test helper for the MqttDiscoveryUpdate mixin.
@@ -1062,8 +1078,8 @@ async def help_test_entity_device_info_update(
 
 
 async def help_test_entity_id_update_subscriptions(
-    hass, mqtt_mock_entry_with_yaml_config, domain, config, topics=None
-):
+    hass: HomeAssistant, mqtt_mock_entry_with_yaml_config, domain, config, topics=None
+) -> None:
     """Test MQTT subscriptions are managed when entity_id is updated."""
     # Add unique_id to config
     config = copy.deepcopy(config)
@@ -1105,8 +1121,8 @@ async def help_test_entity_id_update_subscriptions(
 
 
 async def help_test_entity_id_update_discovery_update(
-    hass, mqtt_mock_entry_no_yaml_config, domain, config, topic=None
-):
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config, domain, config, topic=None
+) -> None:
     """Test MQTT discovery update after entity_id is updated."""
     # Add unique_id to config
     await mqtt_mock_entry_no_yaml_config()
@@ -1126,11 +1142,11 @@ async def help_test_entity_id_update_discovery_update(
 
     async_fire_mqtt_message(hass, topic, "online")
     state = hass.states.get(f"{domain}.test")
-    assert state.state != STATE_UNAVAILABLE
+    assert state and state.state != STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, topic, "offline")
     state = hass.states.get(f"{domain}.test")
-    assert state.state == STATE_UNAVAILABLE
+    assert state and state.state == STATE_UNAVAILABLE
 
     ent_registry.async_update_entity(f"{domain}.test", new_entity_id=f"{domain}.milk")
     await hass.async_block_till_done()
@@ -1143,12 +1159,12 @@ async def help_test_entity_id_update_discovery_update(
 
     async_fire_mqtt_message(hass, f"{topic}_2", "online")
     state = hass.states.get(f"{domain}.milk")
-    assert state.state != STATE_UNAVAILABLE
+    assert state and state.state != STATE_UNAVAILABLE
 
 
 async def help_test_entity_debug_info(
-    hass, mqtt_mock_entry_no_yaml_config, domain, config
-):
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config, domain, config
+) -> None:
     """Test debug_info.
 
     This is a test helper for MQTT debug_info.
@@ -1185,8 +1201,8 @@ async def help_test_entity_debug_info(
 
 
 async def help_test_entity_debug_info_max_messages(
-    hass, mqtt_mock_entry_no_yaml_config, domain, config
-):
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config, domain, config
+) -> None:
     """Test debug_info message overflow.
 
     This is a test helper for MQTT debug_info.
@@ -1240,7 +1256,7 @@ async def help_test_entity_debug_info_max_messages(
 
 
 async def help_test_entity_debug_info_message(
-    hass,
+    hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config,
     domain,
     config,
@@ -1250,7 +1266,7 @@ async def help_test_entity_debug_info_message(
     state_topic=_SENTINEL,
     state_payload=_SENTINEL,
     service_parameters=None,
-):
+) -> None:
     """Test debug_info.
 
     This is a test helper for MQTT debug_info.
@@ -1352,8 +1368,8 @@ async def help_test_entity_debug_info_message(
 
 
 async def help_test_entity_debug_info_remove(
-    hass, mqtt_mock_entry_no_yaml_config, domain, config
-):
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config, domain, config
+) -> None:
     """Test debug_info.
 
     This is a test helper for MQTT debug_info.
@@ -1399,8 +1415,8 @@ async def help_test_entity_debug_info_remove(
 
 
 async def help_test_entity_debug_info_update_entity_id(
-    hass, mqtt_mock_entry_no_yaml_config, domain, config
-):
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config, domain, config
+) -> None:
     """Test debug_info.
 
     This is a test helper for MQTT debug_info.
@@ -1457,8 +1473,8 @@ async def help_test_entity_debug_info_update_entity_id(
 
 
 async def help_test_entity_disabled_by_default(
-    hass, mqtt_mock_entry_no_yaml_config, domain, config
-):
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config, domain, config
+) -> None:
     """Test device registry remove."""
     await mqtt_mock_entry_no_yaml_config()
     # Add device settings to config
@@ -1475,7 +1491,7 @@ async def help_test_entity_disabled_by_default(
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla1/config", data)
     await hass.async_block_till_done()
     entity_id = ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, "veryunique1")
-    assert not hass.states.get(entity_id)
+    assert entity_id is not None and hass.states.get(entity_id) is None
     assert dev_registry.async_get_device({("mqtt", "helloworld")})
 
     # Discover an enabled entity, tied to the same device
@@ -1485,7 +1501,7 @@ async def help_test_entity_disabled_by_default(
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla2/config", data)
     await hass.async_block_till_done()
     entity_id = ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, "veryunique2")
-    assert hass.states.get(entity_id)
+    assert entity_id is not None and hass.states.get(entity_id) is not None
 
     # Remove the enabled entity, both entities and the device should be removed
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla2/config", "")
@@ -1496,8 +1512,8 @@ async def help_test_entity_disabled_by_default(
 
 
 async def help_test_entity_category(
-    hass, mqtt_mock_entry_no_yaml_config, domain, config
-):
+    hass: HomeAssistant, mqtt_mock_entry_no_yaml_config, domain, config
+) -> None:
     """Test device registry remove."""
     await mqtt_mock_entry_no_yaml_config()
     # Add device settings to config
@@ -1513,9 +1529,9 @@ async def help_test_entity_category(
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/{unique_id}/config", data)
     await hass.async_block_till_done()
     entity_id = ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, unique_id)
-    assert hass.states.get(entity_id)
+    assert entity_id is not None and hass.states.get(entity_id)
     entry = ent_registry.async_get(entity_id)
-    assert entry.entity_category is None
+    assert entry is not None and entry.entity_category is None
 
     # Discover an entity with entity category set to "config"
     unique_id = "veryunique2"
@@ -1525,9 +1541,9 @@ async def help_test_entity_category(
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/{unique_id}/config", data)
     await hass.async_block_till_done()
     entity_id = ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, unique_id)
-    assert hass.states.get(entity_id)
+    assert entity_id is not None and hass.states.get(entity_id)
     entry = ent_registry.async_get(entity_id)
-    assert entry.entity_category == "config"
+    assert entry is not None and entry.entity_category == "config"
 
     # Discover an entity with entity category set to "no_such_category"
     unique_id = "veryunique3"
@@ -1540,7 +1556,7 @@ async def help_test_entity_category(
 
 
 async def help_test_publishing_with_custom_encoding(
-    hass,
+    hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config,
     caplog,
     domain,
@@ -1552,10 +1568,10 @@ async def help_test_publishing_with_custom_encoding(
     template,
     tpl_par="value",
     tpl_output=None,
-):
+) -> None:
     """Test a service with publishing MQTT payload with different encoding."""
     # prepare config for tests
-    test_config = {
+    test_config: dict[str, dict[str, Any]] = {
         "test1": {"encoding": None, "cmd_tpl": False},
         "test2": {"encoding": "utf-16", "cmd_tpl": False},
         "test3": {"encoding": "", "cmd_tpl": False},
@@ -1565,7 +1581,7 @@ async def help_test_publishing_with_custom_encoding(
     setup_config = []
     service_data = {}
     for test_id, test_data in test_config.items():
-        test_config_setup = copy.deepcopy(config[mqtt.DOMAIN][domain])
+        test_config_setup: dict[str, Any] = copy.copy(config[mqtt.DOMAIN][domain])
         test_config_setup.update(
             {
                 topic: f"cmd/{test_id}",
@@ -1657,7 +1673,9 @@ async def help_test_publishing_with_custom_encoding(
     mqtt_mock.async_publish.reset_mock()
 
 
-async def help_test_reload_with_config(hass, caplog, tmp_path, config):
+async def help_test_reload_with_config(
+    hass: HomeAssistant, caplog, tmp_path, config
+) -> None:
     """Test reloading with supplied config."""
     new_yaml_config_file = tmp_path / "configuration.yaml"
     new_yaml_config = yaml.dump(config)
@@ -1674,7 +1692,9 @@ async def help_test_reload_with_config(hass, caplog, tmp_path, config):
         await hass.async_block_till_done()
 
 
-async def help_test_entry_reload_with_new_config(hass, tmp_path, new_config):
+async def help_test_entry_reload_with_new_config(
+    hass: HomeAssistant, tmp_path, new_config
+) -> None:
     """Test reloading with supplied config."""
     mqtt_config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     assert mqtt_config_entry.state is ConfigEntryState.LOADED
@@ -1694,8 +1714,13 @@ async def help_test_entry_reload_with_new_config(hass, tmp_path, new_config):
 
 
 async def help_test_reloadable(
-    hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path, domain, config
-):
+    hass: HomeAssistant,
+    mqtt_mock_entry_with_yaml_config,
+    caplog,
+    tmp_path,
+    domain,
+    config,
+) -> None:
     """Test reloading an MQTT platform."""
     config = copy.deepcopy(config[mqtt.DOMAIN][domain])
     # Create and test an old config of 2 entities based on the config supplied
@@ -1738,11 +1763,11 @@ async def help_test_reloadable(
     assert hass.states.get(f"{domain}.test_new_3")
 
 
-async def help_test_setup_manual_entity_from_yaml(hass, config):
+async def help_test_setup_manual_entity_from_yaml(hass: HomeAssistant, config) -> None:
     """Help to test setup from yaml through configuration entry."""
     calls = MagicMock()
 
-    async def mock_reload(hass):
+    async def mock_reload(hass) -> None:
         """Mock reload."""
         calls()
 
@@ -1761,7 +1786,9 @@ async def help_test_setup_manual_entity_from_yaml(hass, config):
         calls.assert_called_once()
 
 
-async def help_test_unload_config_entry(hass, tmp_path, newconfig):
+async def help_test_unload_config_entry(
+    hass: HomeAssistant, tmp_path, newconfig
+) -> None:
     """Test unloading the MQTT config entry."""
     mqtt_config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     assert mqtt_config_entry.state is ConfigEntryState.LOADED
@@ -1771,17 +1798,19 @@ async def help_test_unload_config_entry(hass, tmp_path, newconfig):
     new_yaml_config_file.write_text(new_yaml_config)
     with patch.object(hass_config, "YAML_CONFIG_FILE", new_yaml_config_file):
         assert await hass.config_entries.async_unload(mqtt_config_entry.entry_id)
-        assert mqtt_config_entry.state is ConfigEntryState.NOT_LOADED
+        # work-a-round mypy bug https://github.com/python/mypy/issues/9005#issuecomment-1280985006
+        updated_config_entry = mqtt_config_entry
+        assert updated_config_entry.state is ConfigEntryState.NOT_LOADED
         await hass.async_block_till_done()
 
 
 async def help_test_unload_config_entry_with_platform(
-    hass,
+    hass: HomeAssistant,
     mqtt_mock_entry_with_yaml_config,
     tmp_path,
     domain,
     config,
-):
+) -> None:
     """Test unloading the MQTT config entry with a specific platform domain."""
     # prepare setup through configuration.yaml
     config_setup = copy.deepcopy(config)
@@ -1830,4 +1859,4 @@ async def help_test_discovery_setup(
     )
     await hass.async_block_till_done()
     state = hass.states.get(f"{domain}.{name}")
-    assert state.state is not None
+    assert state and state.state is not None
