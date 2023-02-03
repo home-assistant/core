@@ -932,7 +932,7 @@ def post_schema_migration(
         # columns to be timestamps. In version 32 we need to wipe the old columns
         # since they are no longer used and take up a significant amount of space.
         _wipe_old_string_time_columns(instance.engine, instance.event_session)
-    if old_version < 34 <= new_version:
+    if old_version < 35 <= new_version:
         # In version 34 we migrated all the created, start, and last_reset
         # columns to be timestamps. In version 34 we need to wipe the old columns
         # since they are no longer used and take up a significant amount of space.
