@@ -900,7 +900,7 @@ def _apply_update(  # noqa: C901
     elif new_version == 35:
         # Migration is done in two steps to ensure we can start using
         # the new columns before we wipe the old ones.
-        _drop_index(session_maker, "statistics", "ix_statistics_short_term_start")
+        _drop_index(session_maker, "statistics", "ix_statistics_statistic_id_start")
         _drop_index(
             session_maker,
             "statistics_short_term",
@@ -1109,10 +1109,7 @@ def _migrate_statistics_columns_to_timestamp(
                         "cast(substr(last_reset,-7) AS FLOAT);"
                     )
                 )
-            with session_scope(session=session_maker()) as session:  # noqa: SIM117
-                with contextlib.suppress(SQLAlchemyError):
-                    session.connection().execute(text(f"DROP index ix_{table}_start;"))
-    elif engine.dialect.name == SupportedDialect.MYSQL:
+            _drop_index(session_maker, table, f"ix_{table}_start")
         # With MySQL we do this in chunks to avoid hitting the `innodb_buffer_pool_size` limit
         # We also need to do this in a loop since we can't be sure that we have
         # updated all rows in the table until the rowcount is 0
@@ -1134,11 +1131,7 @@ def _migrate_statistics_columns_to_timestamp(
                             "LIMIT 250000;"
                         )
                     )
-            with session_scope(session=session_maker()) as session:  # noqa: SIM117
-                with contextlib.suppress(SQLAlchemyError):
-                    session.connection().execute(
-                        text(f"DROP index ix_{table}_start on {table};")
-                    )
+            _drop_index(session_maker, table, f"ix_{table}_start")
     elif engine.dialect.name == SupportedDialect.POSTGRESQL:
         # With Postgresql we do this in chunks to avoid using too much memory
         # We also need to do this in a loop since we can't be sure that we have
@@ -1158,9 +1151,7 @@ def _migrate_statistics_columns_to_timestamp(
                             " );"
                         )
                     )
-            with session_scope(session=session_maker()) as session:  # noqa: SIM117
-                with contextlib.suppress(SQLAlchemyError):
-                    session.connection().execute(text(f"DROP index ix_{table}_start;"))
+            _drop_index(session_maker, table, f"ix_{table}_start")
 
 
 def _initialize_database(session: Session) -> bool:
