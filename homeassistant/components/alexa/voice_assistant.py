@@ -1,3 +1,6 @@
+import homeassistant.components.light
+import homeassistant.components.media_
+
 def trigger_action(hass, intent):
     """Triggers the appropriate action based on the identified intent."""
     if intent == "turn_on_lights":
