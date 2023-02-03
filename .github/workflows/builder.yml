@@ -10,7 +10,7 @@ on:
 
 env:
   BUILD_TYPE: core
-  DEFAULT_PYTHON: 3.9
+  DEFAULT_PYTHON: "3.10"
 
 jobs:
   init:

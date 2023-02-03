@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Layanan sudah dikonfigurasi"
+        },
         "step": {
             "user": {
                 "data": {

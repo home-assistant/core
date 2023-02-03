@@ -70,4 +70,4 @@ class BroadcastNotificationService(BaseNotificationService):
                 commands.append(
                     broadcast_commands(language_code)[1].format(message, target)
                 )
-        await async_send_text_commands(commands, self.hass)
+        await async_send_text_commands(self.hass, commands)

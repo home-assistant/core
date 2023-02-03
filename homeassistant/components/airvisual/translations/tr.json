@@ -30,14 +30,6 @@
                 "description": "Bir \u015fehri/eyalet/\u00fclkeyi izlemek i\u00e7in AirVisual bulut API'sini kullan\u0131n.",
                 "title": "Bir Co\u011frafyay\u0131 Yap\u0131land\u0131rma"
             },
-            "node_pro": {
-                "data": {
-                    "ip_address": "Sunucu",
-                    "password": "Parola"
-                },
-                "description": "Ki\u015fisel bir AirVisual \u00fcnitesini izleyin. Parola, \u00fcnitenin kullan\u0131c\u0131 aray\u00fcz\u00fcnden al\u0131nabilir.",
-                "title": "Bir AirVisual Node/Pro'yu yap\u0131land\u0131r\u0131n"
-            },
             "reauth_confirm": {
                 "data": {
                     "api_key": "API Anahtar\u0131"

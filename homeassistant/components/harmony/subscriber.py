@@ -2,11 +2,9 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 import logging
-
-# Issue with Python 3.9.0 and 3.9.1 with collections.abc.Callable
-# https://bugs.python.org/issue42965
-from typing import Any, Callable, NamedTuple, Optional
+from typing import Any, NamedTuple, Optional
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 

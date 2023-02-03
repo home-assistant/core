@@ -7,11 +7,6 @@
             "cannot_connect": "\u05d4\u05d4\u05ea\u05d7\u05d1\u05e8\u05d5\u05ea \u05e0\u05db\u05e9\u05dc\u05d4"
         },
         "step": {
-            "api_key": {
-                "data": {
-                    "api_key": "\u05de\u05e4\u05ea\u05d7 API"
-                }
-            },
             "user": {
                 "data": {
                     "api_key": "\u05de\u05e4\u05ea\u05d7 API",

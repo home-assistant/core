@@ -145,7 +145,7 @@ class AxisNetworkDevice:
 
         if self.available != (status == Signal.PLAYING):
             self.available = not self.available
-            async_dispatcher_send(self.hass, self.signal_reachable, True)
+            async_dispatcher_send(self.hass, self.signal_reachable)
 
     @staticmethod
     async def async_new_address_callback(
@@ -155,7 +155,7 @@ class AxisNetworkDevice:
 
         Called when config entry is updated.
         This is a static method because a class method (bound method),
-        can not be used with weak references.
+        cannot be used with weak references.
         """
         device: AxisNetworkDevice = hass.data[AXIS_DOMAIN][entry.entry_id]
         device.api.config.host = device.host

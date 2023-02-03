@@ -47,6 +47,10 @@
         }
     },
     "issues": {
+        "api_password_deprecated": {
+            "description": "Kata sandi API untuk ESPHome sudah tidak digunakan lagi dan penggunaan kunci enkripsi API lebih disarankan.\n\nHapus kata sandi API dan tambahkan kunci enkripsi ke perangkat ESPHome Anda untuk mengatasi masalah ini.",
+            "title": "Kata Sandi API tidak digunakan lagi pada {name}"
+        },
         "ble_firmware_outdated": {
             "description": "Untuk meningkatkan keandalan dan performa Bluetooth, kami sangat menyarankan untuk memperbarui {name} dengan ESPHome {version} atau yang lebih baru. Saat memperbarui perangkat ke ESPHome {version}, disarankan untuk menggunakan kabel serial, bukan pembaruan OTA, untuk memanfaatkan skema partisi yang baru.",
             "title": "Perbarui {name} dengan ESPHome {version} atau yang lebih baru"

@@ -28,16 +28,13 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
         entry: ConfigEntry,
         host: str,
     ) -> None:
-        """Initialize Update Coordinator."""
-
+        """Initialize update coordinator."""
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
         self.entry = entry
         self.api = HomeWizardEnergy(host, clientsession=async_get_clientsession(hass))
 
     async def _async_update_data(self) -> DeviceResponseEntry:
         """Fetch all device and sensor data from api."""
-
-        # Update all properties
         try:
             data = DeviceResponseEntry(
                 device=await self.api.device(),

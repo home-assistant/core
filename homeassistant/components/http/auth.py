@@ -99,7 +99,7 @@ def async_user_not_allowed_do_auth(
         return "No request available to validate local access"
 
     if "cloud" in hass.config.components:
-        # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel
         from hass_nabucasa import remote
 
         if remote.is_cloud_request.get():

@@ -1,5 +1,5 @@
 """Test the entity helper."""
-# pylint: disable=protected-access
+
 import asyncio
 import dataclasses
 from datetime import timedelta
@@ -484,7 +484,6 @@ async def test_async_parallel_updates_with_two(hass):
     await test_lock.acquire()
 
     try:
-
         ent_1.async_schedule_update_ha_state(True)
         ent_2.async_schedule_update_ha_state(True)
         ent_3.async_schedule_update_ha_state(True)

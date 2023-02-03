@@ -316,7 +316,12 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
     @property
     def _first_radiator_thermostat(
         self,
-    ) -> AsyncHeatingThermostat | AsyncHeatingThermostatCompact | AsyncHeatingThermostatEvo | None:
+    ) -> (
+        AsyncHeatingThermostat
+        | AsyncHeatingThermostatCompact
+        | AsyncHeatingThermostatEvo
+        | None
+    ):
         """Return the first radiator thermostat from the hmip heating group."""
         for device in self._device.devices:
             if isinstance(

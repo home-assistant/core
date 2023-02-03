@@ -111,5 +111,5 @@ class PhoneModemFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await api.test(dev_path)
         except EXCEPTIONS:
             return {"base": "cannot_connect"}
-        else:
-            return None
+
+        return None

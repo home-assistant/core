@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Kontoen er allerede konfigurert"
+        },
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning",
@@ -50,11 +53,8 @@
             "whirlpool_tank": {
                 "state": {
                     "100": "100 %",
-                    "100%": "100 %",
                     "25": "25 %",
-                    "25%": "25 %",
                     "50": "50 %",
-                    "50%": "50 %",
                     "active": "Aktiv",
                     "empty": "Tom",
                     "unknown": "Ukjent"

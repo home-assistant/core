@@ -1146,7 +1146,9 @@ async def test_state_unknown_attribute(hass):
                 {
                     "result": {
                         "result": False,
-                        "message": "attribute 'model' of entity sensor.door does not exist",
+                        "message": (
+                            "attribute 'model' of entity sensor.door does not exist"
+                        ),
                     }
                 }
             ],
@@ -1428,7 +1430,9 @@ async def test_numeric_state_known_non_matching(hass):
                 {
                     "result": {
                         "result": False,
-                        "message": "value 'unavailable' is non-numeric and treated as False",
+                        "message": (
+                            "value 'unavailable' is non-numeric and treated as False"
+                        ),
                     }
                 }
             ],
@@ -1446,7 +1450,9 @@ async def test_numeric_state_known_non_matching(hass):
                 {
                     "result": {
                         "result": False,
-                        "message": "value 'unknown' is non-numeric and treated as False",
+                        "message": (
+                            "value 'unknown' is non-numeric and treated as False"
+                        ),
                     }
                 }
             ],
@@ -1566,7 +1572,10 @@ async def test_numeric_state_unknown_attribute(hass):
                 {
                     "result": {
                         "result": False,
-                        "message": "attribute 'temperature' of entity sensor.temperature does not exist",
+                        "message": (
+                            "attribute 'temperature' of entity sensor.temperature does"
+                            " not exist"
+                        ),
                     }
                 }
             ],
@@ -3280,14 +3289,12 @@ async def test_trigger(hass):
 async def test_platform_async_validate_condition_config(hass):
     """Test platform.async_validate_condition_config will be called if it exists."""
     config = {CONF_DEVICE_ID: "test", CONF_DOMAIN: "test", CONF_CONDITION: "device"}
-    platform = AsyncMock()
     with patch(
-        "homeassistant.components.device_automation.condition.async_get_device_automation_platform",
-        return_value=platform,
-    ):
-        platform.async_validate_condition_config.return_value = config
+        "homeassistant.components.device_automation.condition.async_validate_condition_config",
+        AsyncMock(),
+    ) as device_automation_validate_condition_mock:
         await condition.async_validate_condition_config(hass, config)
-        platform.async_validate_condition_config.assert_awaited()
+        device_automation_validate_condition_mock.assert_awaited()
 
 
 async def test_disabled_condition(hass: HomeAssistant) -> None:

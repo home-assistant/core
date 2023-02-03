@@ -451,7 +451,6 @@ async def test_event_handler_dispatches_updated_devices(
     broker = smartthings.DeviceBroker(hass, config_entry, Mock(), Mock(), devices, [])
     broker.connect()
 
-    # pylint:disable=protected-access
     await broker._event_handler(request, None, None)
     await hass.async_block_till_done()
 
@@ -478,7 +477,6 @@ async def test_event_handler_ignores_other_installed_app(
     broker = smartthings.DeviceBroker(hass, config_entry, Mock(), Mock(), [device], [])
     broker.connect()
 
-    # pylint:disable=protected-access
     await broker._event_handler(request, None, None)
     await hass.async_block_till_done()
 
@@ -516,7 +514,6 @@ async def test_event_handler_fires_button_events(
     broker = smartthings.DeviceBroker(hass, config_entry, Mock(), Mock(), [device], [])
     broker.connect()
 
-    # pylint:disable=protected-access
     await broker._event_handler(request, None, None)
     await hass.async_block_till_done()
 

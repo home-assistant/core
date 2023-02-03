@@ -38,5 +38,10 @@
                 "description": "V\u00e1lasszon egy be\u00e1ll\u00edtand\u00f3 eszk\u00f6zt"
             }
         }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "motion_detected": "Mozg\u00e1s \u00e9szlelve"
+        }
     }
 }

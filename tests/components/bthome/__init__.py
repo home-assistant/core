@@ -29,7 +29,9 @@ TEMP_HUMI_ENCRYPTED_SERVICE_INFO = BluetoothServiceInfoBleak(
     rssi=-63,
     manufacturer_data={},
     service_data={
-        "0000181e-0000-1000-8000-00805f9b34fb": b'\xfb\xa45\xe4\xd3\xc3\x12\xfb\x00\x11"3W\xd9\n\x99'
+        "0000181e-0000-1000-8000-00805f9b34fb": (
+            b'\xfb\xa45\xe4\xd3\xc3\x12\xfb\x00\x11"3W\xd9\n\x99'
+        )
     },
     service_uuids=["0000181e-0000-1000-8000-00805f9b34fb"],
     source="local",
@@ -45,7 +47,9 @@ PRST_SERVICE_INFO = BluetoothServiceInfoBleak(
     rssi=-63,
     manufacturer_data={},
     service_data={
-        "0000181c-0000-1000-8000-00805f9b34fb": b'\x02\x14\x00\n"\x02\xdd\n\x02\x03{\x12\x02\x0c\n\x0b'
+        "0000181c-0000-1000-8000-00805f9b34fb": (
+            b'\x02\x14\x00\n"\x02\xdd\n\x02\x03{\x12\x02\x0c\n\x0b'
+        )
     },
     service_uuids=["0000181c-0000-1000-8000-00805f9b34fb"],
     source="local",

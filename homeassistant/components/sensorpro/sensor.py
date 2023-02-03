@@ -1,8 +1,6 @@
 """Support for SensorPro sensors."""
 from __future__ import annotations
 
-from typing import Optional, Union
-
 from sensorpro_ble import (
     SensorDeviceClass as SensorProSensorDeviceClass,
     SensorUpdate,
@@ -128,9 +126,7 @@ async def async_setup_entry(
 
 
 class SensorProBluetoothSensorEntity(
-    PassiveBluetoothProcessorEntity[
-        PassiveBluetoothDataProcessor[Optional[Union[float, int]]]
-    ],
+    PassiveBluetoothProcessorEntity[PassiveBluetoothDataProcessor[float | int | None]],
     SensorEntity,
 ):
     """Representation of a SensorPro sensor."""

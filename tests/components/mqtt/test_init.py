@@ -3062,3 +3062,16 @@ async def test_link_config_entry(hass, tmp_path, caplog):
     # reload manual configured items and assert again
     await help_test_reload_with_config(hass, caplog, tmp_path, config_manual)
     assert _check_entities() == 2
+
+
+@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SENSOR])
+@pytest.mark.parametrize(
+    "config_manual",
+    [
+        {"mqtt": {"sensor": []}},
+        {"mqtt": {"broker": "test"}},
+    ],
+)
+async def test_setup_manual_entity_from_yaml(hass: HomeAssistant, config_manual):
+    """Test setup with empty platform keys."""
+    await help_test_setup_manual_entity_from_yaml(hass, config_manual)
