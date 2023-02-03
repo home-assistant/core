@@ -9,6 +9,7 @@ from homeassistant.components.text import TextEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN
@@ -36,8 +37,9 @@ async def async_setup_entry(
 class CloudflareTextEntity(TextEntity):
     """Representation of a demo text entity."""
 
-    _attr_should_poll = False
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_icon = "mdi:dns"
+    _attr_should_poll = False
 
     def __init__(
         self,
