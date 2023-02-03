@@ -12,8 +12,16 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN as ADVANTAGE_AIR_DOMAIN
-from .entity import AdvantageAirAcEntity, AdvantageAirZoneEntity
+from .const import (
+    ADVANTAGE_AIR_THING_VALUE_CLOSE,
+    ADVANTAGE_AIR_THING_VALUE_OPEN,
+    DOMAIN as ADVANTAGE_AIR_DOMAIN,
+)
+from .entity import (
+    AdvantageAirAcEntity,
+    AdvantageAirThingEntity,
+    AdvantageAirZoneEntity,
+)
 
 PARALLEL_UPDATES = 0
 
@@ -38,6 +46,12 @@ async def async_setup_entry(
                 # Only add MyZone if it is available
                 if zone["type"] != 0:
                     entities.append(AdvantageAirZoneMyZone(instance, ac_key, zone_key))
+    if things := instance["coordinator"].data.get("myThings"):
+        for thing_key, thing in things["things"].items():
+            # Only add Garage Door Sensor when the module is set to Garage Door type
+            if thing["channelDipState"] == 3:
+                entities.append(AdvantageAirThingGarageSensor(instance, thing_key))
+
     async_add_entities(entities)
 
 
@@ -92,3 +106,30 @@ class AdvantageAirZoneMyZone(AdvantageAirZoneEntity, BinarySensorEntity):
     def is_on(self) -> bool:
         """Return if this zone is the myZone."""
         return self._zone["number"] == self._ac["myZone"]
+
+
+class AdvantageAirThingGarageSensor(AdvantageAirThingEntity, BinarySensorEntity):
+    """Advantage Air MyThings Garage Door Sensor."""
+
+    _attr_device_class = BinarySensorDeviceClass.GARAGE_DOOR
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(self, instance: dict[str, Any], thing_key: str) -> None:
+        """Initialize an Advantage Air Zone Vent Sensor."""
+        super().__init__(instance, thing_key)
+        self._attr_name = "Garage Door State"
+        self._attr_unique_id += "-state"
+
+    @property
+    def is_on(self) -> bool:
+        """Return if this zone is the myZone."""
+        return self._thing["value"] == ADVANTAGE_AIR_THING_VALUE_OPEN
+
+    @property
+    def icon(self) -> str:
+        """Return a representative icon."""
+        if self._thing["value"] == ADVANTAGE_AIR_THING_VALUE_CLOSE:
+            return "mdi:garage"
+        if self._thing["value"] == ADVANTAGE_AIR_THING_VALUE_OPEN:
+            return "mdi:garage-open"
+        return "mdi:garage-alert"

@@ -21,5 +21,6 @@ async def async_get_config_entry_diagnostics(
     # Return only the relevant children
     return {
         "aircons": data["aircons"],
+        "things": data["myThings"],
         "system": async_redact_data(data["system"], TO_REDACT),
     }

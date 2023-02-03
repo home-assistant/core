@@ -5,6 +5,7 @@ from json import loads
 from homeassistant.components.advantage_air.const import (
     ADVANTAGE_AIR_STATE_CLOSE,
     ADVANTAGE_AIR_STATE_OPEN,
+    ADVANTAGE_AIR_THING_VALUE_OPEN,
 )
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -19,6 +20,8 @@ from homeassistant.helpers import entity_registry as er
 
 from . import (
     TEST_SET_RESPONSE,
+    TEST_SET_THING_RESPONSE,
+    TEST_SET_THING_URL,
     TEST_SET_URL,
     TEST_SYSTEM_DATA,
     TEST_SYSTEM_URL,
@@ -36,6 +39,10 @@ async def test_cover_async_setup_entry(hass, aioclient_mock):
     aioclient_mock.get(
         TEST_SET_URL,
         text=TEST_SET_RESPONSE,
+    )
+    aioclient_mock.get(
+        TEST_SET_THING_URL,
+        text=TEST_SET_THING_RESPONSE,
     )
 
     await add_mock_config(hass)
@@ -144,3 +151,34 @@ async def test_cover_async_setup_entry(hass, aioclient_mock):
     data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
     assert data["ac2"]["zones"]["z01"]["state"] == ADVANTAGE_AIR_STATE_OPEN
     assert data["ac2"]["zones"]["z02"]["state"] == ADVANTAGE_AIR_STATE_OPEN
+
+    # Test controlling Garage Door Entity
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {
+            ATTR_ENTITY_ID: [
+                "cover.garage_door_a_garage_door",
+            ]
+        },
+        blocking=True,
+    )
+    assert len(aioclient_mock.mock_calls) == 15
+    data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
+    assert data["id"] == "200"
+    assert data["value"] == ADVANTAGE_AIR_THING_VALUE_OPEN
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {
+            ATTR_ENTITY_ID: [
+                "cover.garage_door_b_garage_door",
+            ]
+        },
+        blocking=True,
+    )
+    assert len(aioclient_mock.mock_calls) == 17
+    data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
+    assert data["id"] == "201"
+    assert data["value"] == ADVANTAGE_AIR_THING_VALUE_OPEN

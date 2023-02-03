@@ -7,6 +7,7 @@ from tests.common import MockConfigEntry, load_fixture
 
 TEST_SYSTEM_DATA = load_fixture("advantage_air/getSystemData.json")
 TEST_SET_RESPONSE = load_fixture("advantage_air/setAircon.json")
+TEST_SET_THING_RESPONSE = load_fixture("advantage_air/setThing.json")
 
 USER_INPUT = {
     CONF_IP_ADDRESS: "1.2.3.4",
@@ -17,6 +18,9 @@ TEST_SYSTEM_URL = (
     f"http://{USER_INPUT[CONF_IP_ADDRESS]}:{USER_INPUT[CONF_PORT]}/getSystemData"
 )
 TEST_SET_URL = f"http://{USER_INPUT[CONF_IP_ADDRESS]}:{USER_INPUT[CONF_PORT]}/setAircon"
+TEST_SET_THING_URL = (
+    f"http://{USER_INPUT[CONF_IP_ADDRESS]}:{USER_INPUT[CONF_PORT]}/setThing"
+)
 TEST_SET_LIGHT_URL = (
     f"http://{USER_INPUT[CONF_IP_ADDRESS]}:{USER_INPUT[CONF_PORT]}/setLight"
 )

@@ -54,3 +54,26 @@ class AdvantageAirZoneEntity(AdvantageAirAcEntity):
     @property
     def _zone(self) -> dict[str, Any]:
         return self.coordinator.data["aircons"][self.ac_key]["zones"][self.zone_key]
+
+
+class AdvantageAirThingEntity(AdvantageAirEntity):
+    """Parent class for Advantage Air Thing Entities."""
+
+    def __init__(self, instance: dict[str, Any], thing_key: str) -> None:
+        """Initialize common aspects of an Advantage Air thing entity."""
+        super().__init__(instance)
+        self.things = instance["things"]
+        self.thing_key: str = thing_key
+        self._attr_unique_id += f"-{thing_key}"
+
+        self._attr_device_info = DeviceInfo(
+            via_device=(DOMAIN, self.coordinator.data["system"]["rid"]),
+            identifiers={(DOMAIN, self._attr_unique_id)},
+            manufacturer="Advantage Air",
+            model=self.coordinator.data["system"]["sysType"],
+            name=self.coordinator.data["myThings"]["things"][self.thing_key]["name"],
+        )
+
+    @property
+    def _thing(self) -> dict[str, Any]:
+        return self.coordinator.data["myThings"]["things"][self.thing_key]

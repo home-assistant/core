@@ -160,6 +160,26 @@
       }
     }
   },
+  "myThings": {
+    "things": {
+      "200": {
+        "buttonType": "upDown",
+        "channelDipState": 3,
+        "dimPercent": 0,
+        "id": "200",
+        "name": "Garage Door A",
+        "value": 0
+      },
+      "201": {
+        "buttonType": "upDown",
+        "channelDipState": 3,
+        "dimPercent": 0,
+        "id": "201",
+        "name": "Garage Door B",
+        "value": 0
+      }
+    }
+  },
   "system": {
     "hasAircons": true,
     "hasLights": true,
