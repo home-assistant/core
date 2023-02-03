@@ -421,6 +421,7 @@ def _find_duplicates(
         session.query(
             table.id,
             table.metadata_id,
+            table.created,
             table.start,
             table.mean,
             table.min,
@@ -455,6 +456,7 @@ def _find_duplicates(
             "id",
             "metadata_id",
             "start",
+            "created",
             "mean",
             "min",
             "max",
@@ -467,7 +469,7 @@ def _find_duplicates(
 
     def compare_statistic_rows(row1: dict, row2: dict) -> bool:
         """Compare two statistics rows, ignoring id and created."""
-        ignore_keys = {"id"}
+        ignore_keys = {"id", "created"}
         keys1 = set(row1).difference(ignore_keys)
         keys2 = set(row2).difference(ignore_keys)
         return keys1 == keys2 and all(row1[k] == row2[k] for k in keys1)
