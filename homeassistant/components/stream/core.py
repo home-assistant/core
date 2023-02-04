@@ -146,8 +146,9 @@ class Segment:
         """Render the HLS playlist section for the Segment.
 
         The Segment may still be in progress.
-        This method stores intermediate data in hls_playlist_parts, hls_num_parts_rendered,
-        and hls_playlist_complete to avoid redoing work on subsequent calls.
+        This method stores intermediate data in hls_playlist_parts,
+        hls_num_parts_rendered, and hls_playlist_complete to avoid redoing
+        work on subsequent calls.
         """
         if self.hls_playlist_complete:
             return self.hls_playlist_template[0]
@@ -164,12 +165,14 @@ class Segment:
             ):
                 self.hls_playlist_parts.append(
                     f"#EXT-X-PART:DURATION={part.duration:.3f},URI="
-                    f'"./segment/{self.sequence}.{part_num}.m4s"{",INDEPENDENT=YES" if part.has_keyframe else ""}'
+                    f'"./segment/{self.sequence}.{part_num}.m4s"'
+                    f'{",INDEPENDENT=YES" if part.has_keyframe else ""}'
                 )
         if self.complete:
-            # Construct the final playlist_template. The placeholder will share a line with
-            # the first element to avoid an extra newline when we don't render any parts.
-            # Append an empty string to create a trailing newline when we do render parts
+            # Construct the final playlist_template. The placeholder will share a
+            # line with the first element to avoid an extra newline when we don't
+            # render any parts. Append an empty string to create a trailing newline
+            # when we do render parts
             self.hls_playlist_parts.append("")
             self.hls_playlist_template = (
                 [] if last_stream_id == self.stream_id else ["#EXT-X-DISCONTINUITY"]
@@ -204,9 +207,9 @@ class Segment:
         )
         if not add_hint:
             return playlist
-        # Preload hints help save round trips by informing the client about the next part.
-        # The next part will usually be in this segment but will be first part of the next
-        # segment if this segment is already complete.
+        # Preload hints help save round trips by informing the client about the
+        # next part. The next part will usually be in this segment but will be
+        # first part of the next segment if this segment is already complete.
         if self.complete:  # Next part belongs to next segment
             sequence = self.sequence + 1
             part_num = 0
@@ -434,7 +437,8 @@ class KeyFrameConverter:
     ) -> None:
         """Initialize."""
 
-        # Keep import here so that we can import stream integration without installing reqs
+        # Keep import here so that we can import stream integration
+        # without installingreqs
         # pylint: disable-next=import-outside-toplevel
         from homeassistant.components.camera.img_util import TurboJPEGSingleton
 
@@ -456,7 +460,8 @@ class KeyFrameConverter:
         if self._codec_context:
             return
 
-        # Keep import here so that we can import stream integration without installing reqs
+        # Keep import here so that we can import stream integration without
+        # installing reqs
         # pylint: disable-next=import-outside-toplevel
         from av import CodecContext
 
