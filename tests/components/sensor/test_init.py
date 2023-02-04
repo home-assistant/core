@@ -10,6 +10,7 @@ from pytest import approx
 
 from homeassistant.components.number import NumberDeviceClass
 from homeassistant.components.sensor import (
+    DEVICE_CLASS_STATE_CLASSES,
     DEVICE_CLASS_UNITS,
     SensorDeviceClass,
     SensorStateClass,
@@ -1637,7 +1638,12 @@ async def test_device_classes_with_invalid_state_class(
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
+    classes = DEVICE_CLASS_STATE_CLASSES.get(device_class, set())
+    one_of = ", ".join(f"'{value.value}'" for value in classes)
+    expected = f"None or one of {one_of}" if classes else "None"
+
     assert (
         "is using state class 'INVALID!' which is impossible considering device "
-        f"class ('{device_class}') it is using"
+        f"class ('{device_class}') it is using; "
+        f"expected {expected}"
     ) in caplog.text
