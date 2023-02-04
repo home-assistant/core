@@ -1,5 +1,4 @@
-"""
-Core components of Home Assistant.
+"""Core components of Home Assistant.
 
 Home Assistant is a Home Automation framework for observing the state
 of entities and react to changes.
@@ -813,11 +812,6 @@ class Event:
             id=ulid_util.ulid(dt_util.utc_to_timestamp(self.time_fired))
         )
 
-    def __hash__(self) -> int:
-        """Make hashable."""
-        # The only event type that shares context are the TIME_CHANGED
-        return hash((self.event_type, self.context.id, self.time_fired))
-
     def as_dict(self) -> dict[str, Any]:
         """Create a dict representation of this Event.
 
@@ -840,17 +834,6 @@ class Event:
             )
 
         return f"<Event {self.event_type}[{str(self.origin)[0]}]>"
-
-    def __eq__(self, other: Any) -> bool:
-        """Return the comparison."""
-        return (  # type: ignore[no-any-return]
-            self.__class__ == other.__class__
-            and self.event_type == other.event_type
-            and self.data == other.data
-            and self.origin == other.origin
-            and self.time_fired == other.time_fired
-            and self.context == other.context
-        )
 
 
 class _FilterableJob(NamedTuple):
@@ -1156,13 +1139,6 @@ class State:
         self._as_dict: ReadOnlyDict[str, Collection[Any]] | None = None
         self._as_compressed_state: dict[str, Any] | None = None
 
-    def __hash__(self) -> int:
-        """Make the state hashable.
-
-        State objects are effectively immutable.
-        """
-        return hash((id(self), self.last_updated))
-
     @property
     def name(self) -> str:
         """Name of this state."""
@@ -1272,16 +1248,6 @@ class State:
         """
         self.context = Context(
             self.context.user_id, self.context.parent_id, self.context.id
-        )
-
-    def __eq__(self, other: Any) -> bool:
-        """Return the comparison of the state."""
-        return (  # type: ignore[no-any-return]
-            self.__class__ == other.__class__
-            and self.entity_id == other.entity_id
-            and self.state == other.state
-            and self.attributes == other.attributes
-            and self.context == other.context
         )
 
     def __repr__(self) -> str:
@@ -1610,8 +1576,7 @@ class ServiceRegistry:
         service_func: Callable[[ServiceCall], Coroutine[Any, Any, None] | None],
         schema: vol.Schema | None = None,
     ) -> None:
-        """
-        Register a service.
+        """Register a service.
 
         Schema is called to coerce and validate the service data.
         """
@@ -1627,8 +1592,7 @@ class ServiceRegistry:
         service_func: Callable[[ServiceCall], Coroutine[Any, Any, None] | None],
         schema: vol.Schema | None = None,
     ) -> None:
-        """
-        Register a service.
+        """Register a service.
 
         Schema is called to coerce and validate the service data.
 
@@ -1685,8 +1649,7 @@ class ServiceRegistry:
         limit: float | None = SERVICE_CALL_LIMIT,
         target: dict[str, Any] | None = None,
     ) -> bool | None:
-        """
-        Call a service.
+        """Call a service.
 
         See description of async_call for details.
         """
@@ -1707,8 +1670,7 @@ class ServiceRegistry:
         limit: float | None = SERVICE_CALL_LIMIT,
         target: dict[str, Any] | None = None,
     ) -> bool | None:
-        """
-        Call a service.
+        """Call a service.
 
         Specify blocking=True to wait until service is executed.
         Waits a maximum of limit, which may be None for no timeout.

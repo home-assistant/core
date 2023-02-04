@@ -202,7 +202,9 @@ async def test_invalid_url_on_update(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    with patch("homeassistant.components.recorder",), patch(
+    with patch(
+        "homeassistant.components.recorder",
+    ), patch(
         "homeassistant.components.sql.sensor.sqlalchemy.engine.cursor.CursorResult",
         side_effect=SQLAlchemyError(
             "sqlite://homeassistant:hunter2@homeassistant.local"

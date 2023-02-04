@@ -2180,12 +2180,12 @@ async def test_recursive_automation_starting_script(
 
     # Fail if additional script modes are added to
     # make sure we cover all script modes in tests
-    assert SCRIPT_MODE_CHOICES == [
+    assert [
         SCRIPT_MODE_PARALLEL,
         SCRIPT_MODE_QUEUED,
         SCRIPT_MODE_RESTART,
         SCRIPT_MODE_SINGLE,
-    ]
+    ] == SCRIPT_MODE_CHOICES
 
     stop_scripts_at_shutdown_called = asyncio.Event()
     real_stop_scripts_at_shutdown = _async_stop_scripts_at_shutdown

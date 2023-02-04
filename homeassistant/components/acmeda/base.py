@@ -20,7 +20,7 @@ class AcmedaBase(entity.Entity):
         self.roller = roller
 
     async def async_remove_and_unregister(self) -> None:
-        """Unregister from entity and device registry and call entity remove function."""
+        """Unregister from registries and call entity remove function."""
         LOGGER.error("Removing %s %s", self.__class__.__name__, self.unique_id)
 
         ent_registry = er.async_get(self.hass)

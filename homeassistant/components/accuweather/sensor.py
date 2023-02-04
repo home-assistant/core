@@ -248,7 +248,8 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         metric_unit=UnitOfLength.METERS,
         us_customary_unit=UnitOfLength.FEET,
-        value_fn=lambda data, unit: round(cast(float, data[unit][ATTR_VALUE])),
+        value_fn=lambda data, unit: cast(float, data[unit][ATTR_VALUE]),
+        native_precision=0,
     ),
     AccuWeatherSensorDescription(
         key="CloudCover",
@@ -300,8 +301,10 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     ),
     AccuWeatherSensorDescription(
         key="PressureTendency",
+        device_class=SensorDeviceClass.ENUM,
         icon="mdi:gauge",
         name="Pressure tendency",
+        options=["falling", "rising", "steady"],
         translation_key="pressure_tendency",
         value_fn=lambda data, _: cast(str, data["LocalizedText"]).lower(),
     ),

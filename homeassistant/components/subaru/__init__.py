@@ -106,8 +106,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def refresh_subaru_data(config_entry, vehicle_info, controller):
-    """
-    Refresh local data with data fetched via Subaru API.
+    """Refresh local data with data fetched via Subaru API.
 
     Subaru API calls assume a server side vehicle context
     Data fetch/update must be done for each vehicle

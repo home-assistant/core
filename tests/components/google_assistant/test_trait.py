@@ -1035,8 +1035,7 @@ async def test_temperature_setting_climate_setpoint(hass):
 
 
 async def test_temperature_setting_climate_setpoint_auto(hass):
-    """
-    Test TemperatureSetting trait support for climate domain.
+    """Test TemperatureSetting trait support for climate domain.
 
     Setpoint in auto mode.
     """

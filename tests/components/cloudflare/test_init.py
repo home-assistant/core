@@ -99,7 +99,6 @@ async def test_integration_services(hass, cfupdate):
             True,
         ),
     ):
-
         await hass.services.async_call(
             DOMAIN,
             SERVICE_UPDATE_RECORDS,

@@ -1,5 +1,4 @@
-"""
-Provide a mock sensor platform.
+"""Provide a mock sensor platform.
 
 Call init before using it in your tests to ensure clean test data.
 """

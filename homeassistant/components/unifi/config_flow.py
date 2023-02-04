@@ -86,7 +86,6 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
         errors = {}
 
         if user_input is not None:
-
             self.config = {
                 CONF_HOST: user_input[CONF_HOST],
                 CONF_USERNAME: user_input[CONF_USERNAME],
@@ -148,7 +147,6 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
     ) -> FlowResult:
         """Select site to control."""
         if user_input is not None:
-
             unique_id = user_input[CONF_SITE_ID]
             self.config[CONF_SITE_ID] = self.site_ids[unique_id]
 

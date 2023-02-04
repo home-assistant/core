@@ -75,7 +75,6 @@ async def validate_input(
             options,
         )
         await rpc_device.shutdown()
-        assert rpc_device.shelly
 
         return {
             "title": rpc_device.name,

@@ -51,6 +51,8 @@
     "selector": {
         "ble_scanner_mode": {
             "options": {
+                "active": "\u0410\u043a\u0442\u0438\u0432\u043d\u043e",
+                "disabled": "\u0414\u0435\u0430\u043a\u0442\u0438\u0432\u0438\u0440\u0430\u043d\u043e",
                 "passive": "\u041f\u0430\u0441\u0438\u0432\u043d\u043e"
             }
         }
