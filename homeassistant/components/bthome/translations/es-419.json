@@ -1,0 +1,8 @@
+{
+    "config": {
+        "error": {
+            "decryption_failed": "La clave de enlace proporcionada no funcion\u00f3, los datos del sensor no se pudieron descifrar. Por favor rev\u00edsalo e int\u00e9ntalo de nuevo.",
+            "expected_32_characters": "Se esperaba un bindkey hexadecimal de 32 caracteres."
+        }
+    }
+}

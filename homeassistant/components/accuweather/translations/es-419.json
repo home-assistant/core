@@ -12,6 +12,27 @@
             "requests_exceeded": "Se super\u00f3 el n\u00famero permitido de solicitudes a la API de Accuweather. Tiene que esperar o cambiar la clave de API."
         }
     },
+    "entity": {
+        "sensor": {
+            "pressure_tendency": {
+                "state": {
+                    "falling": "Bajando",
+                    "rising": "Subiendo",
+                    "steady": "Estable"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "forecast": "Pron\u00f3stico del tiempo"
+                },
+                "description": "Debido a las limitaciones de la versi\u00f3n gratuita de la clave API de AccuWeather, cuando habilita el pron\u00f3stico del tiempo, las actualizaciones de datos se realizar\u00e1n cada 80 minutos en lugar de cada 40 minutos."
+            }
+        }
+    },
     "system_health": {
         "info": {
             "can_reach_server": "Llegar al servidor de AccuWeather",
