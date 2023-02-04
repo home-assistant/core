@@ -506,6 +506,7 @@ def setup_connection_for_dialect(
         execute_on_connection(dbapi_connection, "PRAGMA foreign_keys=ON")
 
     elif dialect_name == SupportedDialect.MYSQL:
+        supported_dialect = SupportedDialect.MYSQL
         execute_on_connection(dbapi_connection, "SET session wait_timeout=28800")
         if first_connection:
             result = query_on_connection(dbapi_connection, "SELECT VERSION()")
