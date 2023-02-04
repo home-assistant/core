@@ -10,3 +10,4 @@ class MeterSensor(Enum):
     TOTAL_CONSUMPTION = "last_read"
     FORECAST = "consumption_forecast"
     DAILY_CONSUMPTION = "daily_consumption"
+    MONTHLY_CONSUMPTION = "monthly_consumption"

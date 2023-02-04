@@ -52,6 +52,14 @@ async def async_setup_entry(
                 uid_suffix="consumption_today",
                 entry_id=config_entry.entry_id,
             ),
+            RymProSensor(
+                coordinator,
+                meter_id,
+                sensor=MeterSensor.MONTHLY_CONSUMPTION,
+                name="Consumption this month",
+                uid_suffix="consumption_this_month",
+                entry_id=config_entry.entry_id,
+            ),
         )
     )
 
