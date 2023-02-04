@@ -295,6 +295,17 @@ class XiaomiPlugConsumerConnected(BinarySensor):
     _attr_translation_key: str = "consumer_connected"
 
 
+@MULTI_MATCH(
+    cluster_handler_names="tuya_manufacturer",
+    quirk_classes={"zhaquirks.tuya.ts0601_trv.ZonnsmartTV01_ZG"},
+)
+class ZonnSmartWindowOpened(BinarySensor, id_suffix="window_dectection"):
+    """Sensor that display if the window is detected open or closed."""
+
+    SENSOR_ATTR = "window_detection"
+    _attr_name: str = "Window open"
+
+
 @MULTI_MATCH(cluster_handler_names="opple_cluster", models={"lumi.airrtc.agl001"})
 class AqaraThermostatWindowOpen(BinarySensor):
     """ZHA Aqara thermostat window open binary sensor."""

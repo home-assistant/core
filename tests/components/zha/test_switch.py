@@ -565,6 +565,119 @@ async def test_switch_configurable(
     await async_test_rejoin(hass, zigpy_device_tuya, [cluster], (0,))
 
 
+class TRVBoostQuirk(CustomDevice):
+    """Quirk TRV Boost function attribute."""
+
+    quirk_class = ("zhaquirks.tuya.ts0601_trv.ZonnsmartTV01_ZG",)
+
+    class TuyaManufCluster(CustomCluster, ManufacturerSpecificCluster):
+        """Tuya manufacturer specific cluster."""
+
+        cluster_id = 0xEF00
+        ep_attribute = "tuya_manufacturer"
+
+        attributes = {
+            0xEF01: ("boost_duration_seconds", t.uint32_t),
+        }
+
+        def __init__(self, *args, **kwargs):
+            """Initialize with task."""
+            super().__init__(*args, **kwargs)
+            self._attr_cache.update({0xEF01: 0})  # entity won't be created without this
+
+    replacement = {
+        ENDPOINTS: {
+            1: {
+                PROFILE_ID: zha.PROFILE_ID,
+                DEVICE_TYPE: zha.DeviceType.ON_OFF_SWITCH,
+                INPUT_CLUSTERS: [general.Basic.cluster_id, TuyaManufCluster],
+                OUTPUT_CLUSTERS: [],
+            },
+        }
+    }
+
+
+@pytest.fixture
+async def zigpy_device_tuya_trv(hass, zigpy_device_mock, zha_device_joined):
+    """Device tracker zigpy tuya device."""
+
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [general.Basic.cluster_id],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zha.DeviceType.ON_OFF_SWITCH,
+            }
+        },
+        manufacturer="_TZE200_hue3yfsn",
+        quirk=TRVBoostQuirk,
+    )
+
+    zha_device = await zha_device_joined(zigpy_device)
+    zha_device.available = True
+    await hass.async_block_till_done()
+    return zigpy_device
+
+
+async def test_switch_tuya_trv_boost(
+    hass: HomeAssistant, zha_device_joined_restored, zigpy_device_tuya_trv
+) -> None:
+    """Test TRV boost switch."""
+
+    zha_device = await zha_device_joined_restored(zigpy_device_tuya_trv)
+    cluster = zigpy_device_tuya_trv.endpoints.get(1).tuya_manufacturer
+    entity_id = await find_entity_id(Platform.SWITCH, zha_device, hass)
+    assert entity_id is not None
+
+    assert hass.states.get(entity_id).state == STATE_OFF
+    await async_enable_traffic(hass, [zha_device], enabled=False)
+    # test that the switch was created and that its state is unavailable
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    # allow traffic to flow through the gateway and device
+    await async_enable_traffic(hass, [zha_device])
+
+    # test that the state has changed from unavailable to off
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    # turn on at switch
+    await send_attributes_report(hass, cluster, {"boost_duration_seconds": 300})
+    assert hass.states.get(entity_id).state == STATE_ON
+
+    # turn off at switch
+    await send_attributes_report(hass, cluster, {"boost_duration_seconds": 0})
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    # turn on from HA
+    with patch(
+        "zigpy.zcl.Cluster.write_attributes",
+        return_value=mock_coro([zcl_f.Status.SUCCESS, zcl_f.Status.SUCCESS]),
+    ):
+        # turn on via UI
+        await hass.services.async_call(
+            SWITCH_DOMAIN, "turn_on", {"entity_id": entity_id}, blocking=True
+        )
+        assert len(cluster.write_attributes.mock_calls) == 1
+        assert cluster.write_attributes.call_args == call(
+            {"boost_duration_seconds": 300}
+        )
+
+    # turn off from HA
+    with patch(
+        "zigpy.zcl.Cluster.write_attributes",
+        return_value=mock_coro([zcl_f.Status.SUCCESS, zcl_f.Status.SUCCESS]),
+    ):
+        # turn off via UI
+        await hass.services.async_call(
+            SWITCH_DOMAIN, "turn_off", {"entity_id": entity_id}, blocking=True
+        )
+        assert len(cluster.write_attributes.mock_calls) == 2
+        assert cluster.write_attributes.call_args == call({"boost_duration_seconds": 0})
+
+    # test joining a new switch to the network and HA
+    await async_test_rejoin(hass, zigpy_device_tuya_trv, [cluster], (0,))
+
+
 async def test_switch_configurable_custom_on_off_values(
     hass: HomeAssistant, zha_device_joined_restored, zigpy_device_mock
 ) -> None:

@@ -774,8 +774,8 @@ class ZONNSMARTThermostat(Thermostat):
     3: HolidayModeTemp), but only one of them can be set.
     """
 
-    PRESET_HOLIDAY = "holiday"
-    PRESET_FROST = "frost protect"
+    PRESET_HOLIDAY = "Holiday"
+    PRESET_FROST = "Frost protect"
 
     def __init__(self, unique_id, zha_device, cluster_handlers, **kwargs):
         """Initialize ZHA Thermostat instance."""

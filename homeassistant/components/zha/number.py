@@ -996,6 +996,58 @@ class ThermostatLocalTempCalibration(ZHANumberConfigurationEntity):
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names="tuya_manufacturer",
+    quirk_classes={"zhaquirks.tuya.ts0601_trv.ZonnsmartTV01_ZG"},
+)
+class ZonnSmartTemperatureCalibration(
+    ZHANumberConfigurationEntity, id_suffix="temperature_calibration"
+):
+    """ZonnsSmart temperature offset configuration entity."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_native_min_value: float = -5
+    _attr_native_max_value: float = 5
+    _attr_native_step: float = 0.5
+    _zcl_attribute: str = "temperature_calibration"
+    _attr_name: str = "Temperature calibration offset"
+    _attr_icon: str = ICONS[0]
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Set the offset value."""
+        await super().async_set_native_value(value * 10.0)
+
+    @property
+    def native_value(self) -> float:
+        """Return the current offset value."""
+        return super().native_value / 10.0
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names="tuya_manufacturer",
+    quirk_classes={"zhaquirks.tuya.ts0601_trv.ZonnsmartTV01_ZG"},
+)
+class ZonnSmartWindowOpenTemperature(
+    ZHANumberConfigurationEntity, id_suffix="window_open_temp"
+):
+    """ZonnsSmart temperature offset configuration entity."""
+
+    _attr_native_min_value: float = 5
+    _attr_native_max_value: float = 30
+    _attr_native_step: float = 0.5
+    _zcl_attribute: str = "opened_window_temperature"
+    _attr_name: str = "Window open temperature"
+    _attr_icon: str = ICONS[0]
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Set the window open temperature value."""
+        await super().async_set_native_value(value * 10.0)
+
+    @property
+    def native_value(self) -> float:
+        """Return the current window open temperature value."""
+        return super().native_value / 10.0
+
+@CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     models={"TRVZB"},
     stop_on_match_group=CLUSTER_HANDLER_THERMOSTAT,

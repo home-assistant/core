@@ -219,7 +219,13 @@ class Endpoint:
         if self.device.status == DeviceStatus.INITIALIZED:
             return
 
+
         zha_data = get_zha_data(self.device.hass)
+
+        if platform not in zha_data.platforms:
+            # Don't register the entity if the platform doesn't exists
+            return
+
         zha_data.platforms[platform].append(
             (entity_class, (unique_id, self.device, cluster_handlers), kwargs or {})
         )
