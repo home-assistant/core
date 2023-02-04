@@ -19,7 +19,10 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
-    with patch("lacrosse_view.LaCrosse.login", return_value=True,), patch(
+    with patch(
+        "lacrosse_view.LaCrosse.login",
+        return_value=True,
+    ), patch(
         "lacrosse_view.LaCrosse.get_locations",
         return_value=[Location(id=1, name="Test")],
     ), patch(
@@ -189,7 +192,10 @@ async def test_already_configured_device(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
-    with patch("lacrosse_view.LaCrosse.login", return_value=True,), patch(
+    with patch(
+        "lacrosse_view.LaCrosse.login",
+        return_value=True,
+    ), patch(
         "lacrosse_view.LaCrosse.get_locations",
         return_value=[Location(id=1, name="Test")],
     ):

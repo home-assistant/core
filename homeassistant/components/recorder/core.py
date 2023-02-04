@@ -770,7 +770,7 @@ class Recorder(threading.Thread):
                     _LOGGER.warning(
                         "Database queue backlog reached more than 90% of maximum queue "
                         "length while waiting for backup to finish; recorder will now "
-                        "resume writing to database. The backup can not be trusted and "
+                        "resume writing to database. The backup cannot be trusted and "
                         "must be restarted"
                     )
                     task.queue_overflow = True
@@ -1044,6 +1044,8 @@ class Recorder(threading.Thread):
 
     async def async_block_till_done(self) -> None:
         """Async version of block_till_done."""
+        if self._queue.empty() and not self._event_session_has_pending_writes():
+            return
         event = asyncio.Event()
         self.queue_task(SynchronizeTask(event))
         await event.wait()

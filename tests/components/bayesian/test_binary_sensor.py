@@ -358,8 +358,7 @@ async def test_threshold(hass):
 
 
 async def test_multiple_observations(hass):
-    """
-    Test sensor with multiple observations of same entity.
+    """Test sensor with multiple observations of same entity.
 
     these entries should be labelled as 'multi_state' and negative observations ignored - as the outcome is not known to be binary.
     Before the merge of #67631 this practice was a common work-around for bayesian's ignoring of negative observations,

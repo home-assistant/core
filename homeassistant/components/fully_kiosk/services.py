@@ -31,8 +31,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         *args: list[str],
         **kwargs: dict[str, Any],
     ) -> None:
-        """
-        Execute a Fully service call.
+        """Execute a Fully service call.
 
         :param call: {ServiceCall} HA service call.
         :param fully_method: {Callable} A method of the FullyKiosk class.

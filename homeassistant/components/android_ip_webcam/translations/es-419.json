@@ -1,0 +1,8 @@
+{
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Se eliminar\u00e1 la configuraci\u00f3n de la c\u00e1mara web IP de Android mediante YAML. \n\n Su configuraci\u00f3n YAML existente se ha importado a la interfaz de usuario autom\u00e1ticamente. \n\n Elimine la configuraci\u00f3n YAML de la c\u00e1mara web IP de Android de su archivo configuration.yaml y reinicie Home Assistant para solucionar este problema.",
+            "title": "Se est\u00e1 eliminando la configuraci\u00f3n YAML de la c\u00e1mara web IP de Android"
+        }
+    }
+}

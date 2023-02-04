@@ -1,6 +1,8 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
             "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente",
             "unsupported_device": "Dispositivo non supportato"
         },

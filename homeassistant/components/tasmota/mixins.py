@@ -174,7 +174,8 @@ class TasmotaDiscoveryUpdate(TasmotaEntity):
                 # Unchanged payload: Ignore to avoid changing states
                 _LOGGER.debug("Ignoring unchanged update for: %s", self.entity_id)
 
-        # Set in case the entity has been removed and is re-added, for example when changing entity_id
+        # Set in case the entity has been removed and is re-added,
+        # for example when changing entity_id
         set_discovery_hash(self.hass, self._discovery_hash)
         self.async_on_remove(
             async_dispatcher_connect(

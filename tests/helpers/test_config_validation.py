@@ -751,8 +751,7 @@ def version(monkeypatch):
 
 
 def test_deprecated_with_no_optionals(caplog, schema):
-    """
-    Test deprecation behaves correctly when optional params are None.
+    """Test deprecation behaves correctly when optional params are None.
 
     Expected behavior:
         - Outputs the appropriate deprecation warning if key is detected
@@ -783,8 +782,7 @@ def test_deprecated_with_no_optionals(caplog, schema):
 
 
 def test_deprecated_or_removed_param_and_raise(caplog, schema):
-    """
-    Test removed or deprecation options and fail the config validation by raising an exception.
+    """Test removed or deprecation options and fail the config validation by raising an exception.
 
     Expected behavior:
         - Outputs the appropriate deprecation or removed from support error if key is detected
@@ -823,8 +821,7 @@ def test_deprecated_or_removed_param_and_raise(caplog, schema):
 
 
 def test_deprecated_with_replacement_key(caplog, schema):
-    """
-    Test deprecation behaves correctly when only a replacement key is provided.
+    """Test deprecation behaves correctly when only a replacement key is provided.
 
     Expected behavior:
         - Outputs the appropriate deprecation warning if key is detected
@@ -861,8 +858,7 @@ def test_deprecated_with_replacement_key(caplog, schema):
 
 
 def test_deprecated_with_default(caplog, schema):
-    """
-    Test deprecation behaves correctly with a default value.
+    """Test deprecation behaves correctly with a default value.
 
     This is likely a scenario that would never occur.
 
@@ -890,8 +886,7 @@ def test_deprecated_with_default(caplog, schema):
 
 
 def test_deprecated_with_replacement_key_and_default(caplog, schema):
-    """
-    Test deprecation with a replacement key and default.
+    """Test deprecation with a replacement key and default.
 
     Expected behavior:
         - Outputs the appropriate deprecation warning if key is detected

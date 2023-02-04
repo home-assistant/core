@@ -245,7 +245,7 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
                 derivative = new_derivative
             else:
                 derivative = Decimal(0)
-                for (start, end, value) in self._state_list:
+                for start, end, value in self._state_list:
                     weight = calculate_weight(start, end, new_state.last_updated)
                     derivative = derivative + (value * Decimal(weight))
 

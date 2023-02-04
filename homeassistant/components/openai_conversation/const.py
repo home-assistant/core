@@ -2,7 +2,6 @@
 
 DOMAIN = "openai_conversation"
 CONF_PROMPT = "prompt"
-DEFAULT_MODEL = "text-davinci-003"
 DEFAULT_PROMPT = """This smart home is controlled by Home Assistant.
 
 An overview of the areas and the devices in this smart home:
@@ -28,3 +27,11 @@ Now finish this conversation:
 
 Smart home: How can I assist?
 """
+CONF_MODEL = "model"
+DEFAULT_MODEL = "text-davinci-003"
+CONF_MAX_TOKENS = "max_tokens"
+DEFAULT_MAX_TOKENS = 150
+CONF_TOP_P = "top_p"
+DEFAULT_TOP_P = 1
+CONF_TEMPERATURE = "temperature"
+DEFAULT_TEMPERATURE = 0.5
