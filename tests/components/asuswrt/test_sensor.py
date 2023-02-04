@@ -254,10 +254,10 @@ async def test_sensors(
 
     assert hass.states.get(f"{device_tracker.DOMAIN}.test").state == STATE_HOME
     assert hass.states.get(f"{device_tracker.DOMAIN}.testtwo").state == STATE_HOME
-    assert hass.states.get(f"{sensor_prefix}_download_speed").state == "160.0"
-    assert hass.states.get(f"{sensor_prefix}_download").state == "60.0"
-    assert hass.states.get(f"{sensor_prefix}_upload_speed").state == "80.0"
-    assert hass.states.get(f"{sensor_prefix}_upload").state == "50.0"
+    assert hass.states.get(f"{sensor_prefix}_download_speed").state == "160.00"
+    assert hass.states.get(f"{sensor_prefix}_download").state == "60.00"
+    assert hass.states.get(f"{sensor_prefix}_upload_speed").state == "80.00"
+    assert hass.states.get(f"{sensor_prefix}_upload").state == "50.00"
     assert hass.states.get(f"{sensor_prefix}_devices_connected").state == "2"
 
     # remove first tracked device
