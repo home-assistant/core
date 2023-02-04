@@ -47,8 +47,7 @@ async def test_migration_creates_new_flow(hass, smartthings_mock, config_entry):
 async def test_unrecoverable_api_errors_create_new_flow(
     hass, config_entry, smartthings_mock
 ):
-    """
-    Test a new config flow is initiated when there are API errors.
+    """Test a new config flow is initiated when there are API errors.
 
     401 (unauthorized): Occurs when the access token is no longer valid.
     403 (forbidden/not found): Occurs when the app or installed app could

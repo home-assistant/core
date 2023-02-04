@@ -27,7 +27,7 @@ class HomematicipAuth:
 
     auth: AsyncAuth
 
-    def __init__(self, hass, config) -> None:
+    def __init__(self, hass: HomeAssistant, config: dict[str, str]) -> None:
         """Initialize HomematicIP Cloud client registration."""
         self.hass = hass
         self.config = config

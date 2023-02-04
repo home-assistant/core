@@ -494,8 +494,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     def play_media(  # noqa: C901
         self, media_type: str, media_id: str, **kwargs: Any
     ) -> None:
-        """
-        Send the play_media command to the media player.
+        """Send the play_media command to the media player.
 
         If media_id is a Plex payload, attempt Plex->Sonos playback.
 

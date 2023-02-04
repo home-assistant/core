@@ -822,7 +822,6 @@ async def test_ssdp_not_successful(hass: HomeAssistant) -> None:
         "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
         return_value=MOCK_DEVICE_INFO,
     ):
-
         # confirm to add the entry
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=MOCK_SSDP_DATA
@@ -851,7 +850,6 @@ async def test_ssdp_not_successful_2(hass: HomeAssistant) -> None:
         "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
         return_value=MOCK_DEVICE_INFO,
     ):
-
         # confirm to add the entry
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=MOCK_SSDP_DATA
@@ -874,7 +872,6 @@ async def test_ssdp_already_in_progress(hass: HomeAssistant) -> None:
         "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
         return_value=MOCK_DEVICE_INFO,
     ):
-
         # confirm to add the entry
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=MOCK_SSDP_DATA
@@ -897,7 +894,6 @@ async def test_ssdp_already_configured(hass: HomeAssistant) -> None:
         "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
         return_value=MOCK_DEVICE_INFO,
     ):
-
         # entry was added
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA

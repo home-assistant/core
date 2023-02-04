@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "not_supported": "Dispositivo no compatible"
+        }
+    }
+}

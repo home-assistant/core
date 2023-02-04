@@ -8,7 +8,7 @@ from typing import Any
 from unittest.mock import patch
 import urllib
 
-from aiohttp import ClientSession, ClientWebSocketResponse
+from aiohttp import ClientWebSocketResponse
 import pytest
 
 from homeassistant.components.local_calendar import LocalCalendarStore
@@ -20,6 +20,7 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import MockConfigEntry
+from tests.typing import ClientSessionGenerator
 
 CALENDAR_NAME = "Light Schedule"
 FRIENDLY_NAME = "Light schedule"
@@ -90,9 +91,7 @@ GetEventsFn = Callable[[str, str], Awaitable[dict[str, Any]]]
 
 
 @pytest.fixture(name="get_events")
-def get_events_fixture(
-    hass_client: Callable[..., Awaitable[ClientSession]]
-) -> GetEventsFn:
+def get_events_fixture(hass_client: ClientSessionGenerator) -> GetEventsFn:
     """Fetch calendar events from the HTTP API."""
 
     async def _fetch(start: str, end: str) -> None:

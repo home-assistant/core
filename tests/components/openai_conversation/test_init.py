@@ -4,8 +4,10 @@ from unittest.mock import patch
 from openai import error
 
 from homeassistant.components import conversation
-from homeassistant.core import Context
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import area_registry, device_registry, intent
+
+from tests.common import MockConfigEntry
 
 
 async def test_default_prompt(hass, mock_init_component):
@@ -107,19 +109,21 @@ async def test_error_handling(hass, mock_init_component):
     assert result.response.error_code == "unknown", result
 
 
-async def test_template_error(hass, mock_config_entry, mock_init_component):
+async def test_template_error(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test that template error handling works."""
-    options_flow = await hass.config_entries.options.async_init(
-        mock_config_entry.entry_id
-    )
-    await hass.config_entries.options.async_configure(
-        options_flow["flow_id"],
-        {
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={
             "prompt": "talk like a {% if True %}smarthome{% else %}pirate please.",
         },
     )
-    await hass.async_block_till_done()
-    with patch("openai.Completion.acreate"):
+    with patch(
+        "openai.Engine.list",
+    ), patch("openai.Completion.acreate"):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
         result = await conversation.async_converse(hass, "hello", None, Context())
 
     assert result.response.response_type == intent.IntentResponseType.ERROR, result
