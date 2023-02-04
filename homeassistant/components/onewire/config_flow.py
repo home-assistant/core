@@ -129,10 +129,10 @@ class OnewireOptionsFlowHandler(OptionsFlowWithConfigEntry):
         device_registry = dr.async_get(self.hass)
         self.configurable_devices = {
             self._get_device_friendly_name(device, device.name): device.name
-            for device in device_registry.devices.values()
-            if self.config_entry.entry_id in device.config_entries
-            and device.name
-            and device.name[0:2] in DEVICE_SUPPORT_OPTIONS
+            for device in dr.async_entries_for_config_entry(
+                device_registry, self.config_entry.entry_id
+            )
+            if device.name and device.name[0:2] in DEVICE_SUPPORT_OPTIONS
         }
 
         if not self.configurable_devices:
