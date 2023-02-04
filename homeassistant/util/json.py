@@ -29,25 +29,17 @@ class WriteError(HomeAssistantError):
     """Error writing the data."""
 
 
-def load_json(filename: str, default: list | dict | None = None) -> list | dict:
-    """Load JSON data from a file and return as dict or list.
-
-    Defaults to returning empty dict if file is not found.
-    """
-    try:
-        with open(filename, encoding="utf-8") as fdesc:
-            return orjson.loads(fdesc.read())  # type: ignore[no-any-return]
-    except FileNotFoundError:
-        # This is not a fatal error
-        _LOGGER.debug("JSON file not found: %s", filename)
-    except ValueError as error:
-        _LOGGER.exception("Could not parse JSON content: %s", filename)
-        raise HomeAssistantError(error) from error
-    except OSError as error:
-        _LOGGER.exception("JSON file reading failed: %s", filename)
-        raise HomeAssistantError(error) from error
-    return {} if default is None else default
-
+def load_json(filename: str) -> dict: 
+    """Load JSON data from a file and return as dict or list. 
+ 
+    Defaults to returning empty dict if file is not found. 
+    """ 
+    try: 
+        with open(filename, encoding="utf-8") as fdesc: 
+            return orjson.loads(fdesc.read()) 
+    except (FileNotFoundError, ValueError, OSError) as error: 
+        _LOGGER.debug("Failed to load JSON from file %s: %s", filename, error) 
+        raise HomeAssistantError(error) from  error
 
 def _orjson_default_encoder(data: Any) -> str:
     """JSON encoder that uses orjson with hass defaults."""
