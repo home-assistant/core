@@ -1456,8 +1456,7 @@ async def test_restore_will_turn_off_when_loaded_second(hass):
 
 
 async def test_restore_state_uncoherence_case(hass):
-    """
-    Test restore from a strange state.
+    """Test restore from a strange state.
 
     - Turn the generic thermostat off
     - Restart HA and restore state from DB
