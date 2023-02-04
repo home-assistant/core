@@ -15,8 +15,11 @@
             "user": {
                 "data": {
                     "organization": "Organizaci\u00f3n",
-                    "personal_access_token": "Token de acceso personal (PAT)"
-                }
+                    "personal_access_token": "Token de acceso personal (PAT)",
+                    "project": "Proyecto"
+                },
+                "description": "Configure una instancia de Azure DevOps para acceder a su proyecto. Solo se requiere un token de acceso personal para un proyecto privado.",
+                "title": "Agregar proyecto de Azure DevOps"
             }
         }
     }
