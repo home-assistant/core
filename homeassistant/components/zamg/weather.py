@@ -1,4 +1,4 @@
-"""Sensor for zamg the Austrian "Zentralanstalt für Meteorologie und Geodynamik" integration."""
+"""Sensor for the zamg integration."""
 from __future__ import annotations
 
 from homeassistant.components.weather import WeatherEntity

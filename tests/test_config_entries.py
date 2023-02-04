@@ -3555,7 +3555,6 @@ async def test_initializing_flows_canceled_on_shutdown(hass: HomeAssistant, mana
     with patch.dict(
         config_entries.HANDLERS, {"comp": MockFlowHandler, "test": MockFlowHandler}
     ):
-
         task = asyncio.create_task(
             manager.flow.async_init("test", context={"source": "reauth"})
         )

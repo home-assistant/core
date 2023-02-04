@@ -69,7 +69,10 @@ class DSMRSensor(SensorEntity):
         @callback
         def message_received(message):
             """Handle new MQTT messages."""
-            if self.entity_description.state is not None:
+            if message.payload == "":
+                self._attr_native_value = None
+            elif self.entity_description.state is not None:
+                # Perform optional additional parsing
                 self._attr_native_value = self.entity_description.state(message.payload)
             else:
                 self._attr_native_value = message.payload

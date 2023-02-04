@@ -213,11 +213,11 @@ class PlaatoCoordinator(DataUpdateCoordinator):
 
     def __init__(
         self,
-        hass,
-        auth_token,
+        hass: HomeAssistant,
+        auth_token: str,
         device_type: PlaatoDeviceType,
         update_interval: timedelta,
-    ):
+    ) -> None:
         """Initialize."""
         self.api = Plaato(auth_token=auth_token)
         self.hass = hass

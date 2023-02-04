@@ -1,9 +1,8 @@
 """Tests for the diagnostics data provided by the ESPHome integration."""
 
-from aiohttp import ClientSession
 import pytest
 
-from homeassistant.components.esphome import CONF_NOISE_PSK
+from homeassistant.components.esphome import CONF_DEVICE_NAME, CONF_NOISE_PSK
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 
@@ -11,11 +10,12 @@ from . import DASHBOARD_SLUG
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
 async def test_diagnostics(
     hass: HomeAssistant,
-    hass_client: ClientSession,
+    hass_client: ClientSessionGenerator,
     init_integration: MockConfigEntry,
     enable_bluetooth: pytest.fixture,
     mock_dashboard,
@@ -25,6 +25,7 @@ async def test_diagnostics(
 
     assert isinstance(result, dict)
     assert result["config"]["data"] == {
+        CONF_DEVICE_NAME: "test",
         CONF_HOST: "192.168.1.2",
         CONF_PORT: 6053,
         CONF_PASSWORD: "**REDACTED**",

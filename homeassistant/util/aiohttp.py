@@ -89,7 +89,7 @@ def serialize_response(response: web.Response) -> dict[str, Any]:
     elif isinstance(body, bytes):
         body_decoded = body.decode(response.charset or "utf-8")
     else:
-        raise ValueError("Unknown payload encoding")
+        raise TypeError("Unknown payload encoding")
 
     return {
         "status": response.status,

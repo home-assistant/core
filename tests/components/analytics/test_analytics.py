@@ -400,7 +400,6 @@ async def test_dev_url_error(hass, aioclient_mock, caplog):
     with patch(
         "homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION_DEV
     ):
-
         await analytics.send_analytics()
 
     payload = aioclient_mock.mock_calls[0]
@@ -420,7 +419,6 @@ async def test_nightly_endpoint(hass, aioclient_mock):
     with patch(
         "homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION_NIGHTLY
     ):
-
         await analytics.send_analytics()
 
     payload = aioclient_mock.mock_calls[0]

@@ -2915,6 +2915,45 @@ async def test_if(
     assert_action_trace(expected_trace)
 
 
+async def test_if_disabled(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test if action with a disabled condition."""
+    sequence = cv.SCRIPT_SCHEMA(
+        {
+            "if": {
+                "alias": "if condition",
+                "condition": "template",
+                "value_template": "{{ var == 1 }}",
+                "enabled": "false",
+            },
+            "then": {
+                "alias": "if then",
+                "event": "test_event",
+                "event_data": {"if": "then"},
+            },
+            "else": {
+                "alias": "if else",
+                "event": "test_event",
+                "event_data": {"if": "else"},
+            },
+        }
+    )
+
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    expected_trace = {
+        "0": [{"result": {"choice": "then"}}],
+        "0/if": [{"result": {"result": True}}],
+        "0/if/condition/0": [{"result": {"result": None}}],
+        "0/then/0": [{"result": {"event": "test_event", "event_data": {"if": "then"}}}],
+    }
+    assert_action_trace(expected_trace)
+
+
 async def test_if_condition_validation(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
