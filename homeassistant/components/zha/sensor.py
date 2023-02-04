@@ -707,8 +707,7 @@ class ThermostatChannelSensor(Sensor):
 
     @callback
     def async_set_state(self, *args, **kwargs) -> None:
-        """
-        Override from sensor.
+        """Override from sensor.
 
         Sensor doesn't care about the arguments,
         However async_attribute_updated from Thermostat from climate.py expects a single argument.
