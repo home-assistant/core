@@ -116,7 +116,6 @@ load-plugins = [
     "hass_enforce_type_hints",
     "hass_imports",
     "hass_logger",
-    "pylint_per_file_ignores",
 ]
 persistent = false
 extension-pkg-allow-list = [
