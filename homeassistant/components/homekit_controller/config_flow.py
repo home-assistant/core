@@ -91,8 +91,7 @@ def find_existing_host(
 
 
 def ensure_pin_format(pin: str, allow_insecure_setup_codes: Any = None) -> str:
-    """
-    Ensure a pin code is correctly formatted.
+    """Ensure a pin code is correctly formatted.
 
     Ensures a pin code is in the format 111-11-111. Handles codes with and without dashes.
 

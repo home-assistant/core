@@ -333,8 +333,7 @@ def test_returns_same_value_for_any_two_temperatures_above_40000():
 
 
 def test_should_return_pure_white_at_6600():
-    """
-    Function should return red=255, blue=255, green=255 when given 6600K.
+    """Function should return red=255, blue=255, green=255 when given 6600K.
 
     6600K is considered "pure white" light.
     This is just a rough estimate because the formula itself is a "best

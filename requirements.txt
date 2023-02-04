@@ -19,7 +19,7 @@ PyJWT==2.5.0
 cryptography==39.0.0
 pyOpenSSL==23.0.0
 orjson==3.8.5
-pip>=21.0,<22.4
+pip>=21.0,<23.1
 python-slugify==4.0.1
 pyyaml==6.0
 requests==2.28.1

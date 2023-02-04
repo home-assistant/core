@@ -93,7 +93,9 @@ DEVICE_CLASS = {
         zigpy.profiles.zha.DeviceType.ON_OFF_PLUG_IN_UNIT: Platform.SWITCH,
         zigpy.profiles.zha.DeviceType.SHADE: Platform.COVER,
         zigpy.profiles.zha.DeviceType.SMART_PLUG: Platform.SWITCH,
-        zigpy.profiles.zha.DeviceType.IAS_ANCILLARY_CONTROL: Platform.ALARM_CONTROL_PANEL,
+        zigpy.profiles.zha.DeviceType.IAS_ANCILLARY_CONTROL: (
+            Platform.ALARM_CONTROL_PANEL
+        ),
         zigpy.profiles.zha.DeviceType.IAS_WARNING_DEVICE: Platform.SIREN,
     },
     zigpy.profiles.zll.PROFILE_ID: {

@@ -458,8 +458,7 @@ class SourceManager:
         )
 
     def connect_update(self, hass, controller):
-        """
-        Connect listener for when sources change and signal player update.
+        """Connect listener for when sources change and signal player update.
 
         EVENT_SOURCES_CHANGED is often raised multiple times in response to a
         physical event therefore throttle it. Retrieving sources immediately
