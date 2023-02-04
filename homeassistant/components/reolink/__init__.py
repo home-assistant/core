@@ -23,7 +23,7 @@ from .host import ReolinkHost
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.CAMERA]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.CAMERA, Platform.NUMBER]
 DEVICE_UPDATE_INTERVAL = 60
 
 
@@ -82,9 +82,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     # Fetch initial data so we have data when entities subscribe
     try:
         await coordinator_device_config_update.async_config_entry_first_refresh()
-    except ConfigEntryNotReady as err:
+    except ConfigEntryNotReady:
         await host.stop()
-        raise err
+        raise
 
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = ReolinkData(
         host=host,

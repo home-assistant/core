@@ -104,11 +104,13 @@ class SwitchBeeLightEntity(SwitchBeeDeviceEntity[SwitchBeeDimmer], LightEntity):
             ) from exp
 
         if not isinstance(state, int):
-            # We just turned the light on, still don't know the last brightness known the Central Unit (yet)
-            # the brightness will be learned and updated in the next coordinator refresh
+            # We just turned the light on, still don't know the last brightness
+            # known the Central Unit (yet) the brightness will be learned
+            # and updated in the next coordinator refresh
             return
 
-        # update the coordinator data manually we already know the Central Unit brightness data for this light
+        # update the coordinator data manually we already know the Central Unit
+        # brightness data for this light
         self._get_coordinator_device().brightness = state
         self.coordinator.async_set_updated_data(self.coordinator.data)
 
