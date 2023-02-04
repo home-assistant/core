@@ -112,14 +112,16 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
 class SwitchBotBlindTiltEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
     """Representation of a Switchbot."""
 
-    _device: switchbot.SwitchbotCurtain
-    _attr_device_class = CoverDeviceClass.CURTAIN
+    _device: switchbot.SwitchbotBlindTilt
+    _attr_device_class = CoverDeviceClass.BLIND
     _attr_supported_features = (
         CoverEntityFeature.OPEN_TILT
         | CoverEntityFeature.CLOSE_TILT
         | CoverEntityFeature.STOP_TILT
         | CoverEntityFeature.SET_TILT_POSITION
     )
+    CLOSED_UP_THRESHOLD = 80
+    CLOSED_DOWN_THRESHOLD = 20
 
     def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
         """Initialize the Switchbot."""
@@ -137,6 +139,10 @@ class SwitchBotBlindTiltEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
             ATTR_CURRENT_TILT_POSITION
         )
         self._last_run_success = last_state.attributes.get("last_run_success")
+        if (_tilt := self._attr_current_cover_position) is not None:
+            self._attr_is_closed = (_tilt < self.CLOSED_DOWN_THRESHOLD) or (
+                _tilt > self.CLOSED_UP_THRESHOLD
+            )
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the tilt."""
@@ -170,5 +176,11 @@ class SwitchBotBlindTiltEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_current_cover_tilt_position = self.parsed_data["tilt"]
+        _tilt = self.parsed_data["tilt"]
+        self._attr_current_cover_tilt_position = _tilt
+        self._attr_is_closed = (_tilt < self.CLOSED_DOWN_THRESHOLD) or (
+            _tilt > self.CLOSED_UP_THRESHOLD
+        )
+        self._attr_is_opening = self.parsed_data["motionDirection"]["opening"]
+        self._attr_is_closing = self.parsed_data["motionDirection"]["closing"]
         self.async_write_ha_state()
