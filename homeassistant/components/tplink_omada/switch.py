@@ -44,7 +44,6 @@ async def async_setup_entry(
     for switch in [
         ns for ns in network_switches if ns.device_capabilities.supports_poe
     ]:
-
         coordinator = OmadaCoordinator[OmadaSwitchPortDetails](
             hass, omada_client, partial(poll_switch_state, network_switch=switch)
         )
