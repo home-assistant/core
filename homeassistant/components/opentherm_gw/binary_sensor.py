@@ -33,24 +33,12 @@ async def async_setup_entry(
     deprecated_sensors = []
     gw_dev = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][config_entry.data[CONF_ID]]
     ent_reg = er.async_get(hass)
-    for var, info in BINARY_SENSOR_INFO.items():
-        device_class = info[0]
-        friendly_name_format = info[1]
-        status_sources = info[2]
-
-        for source in status_sources:
-            sensors.append(
-                OpenThermBinarySensor(
-                    gw_dev,
-                    var,
-                    source,
-                    device_class,
-                    friendly_name_format,
-                )
-            )
+    for description in BINARY_SENSOR_INFO:
+        for source in description.status_sources:
+            sensors.append(OpenThermBinarySensor(gw_dev, source, description))
 
         old_style_entity_id = async_generate_entity_id(
-            ENTITY_ID_FORMAT, f"{var}_{gw_dev.gw_id}", hass=gw_dev.hass
+            ENTITY_ID_FORMAT, f"{description.key}_{gw_dev.gw_id}", hass=gw_dev.hass
         )
         old_ent = ent_reg.async_get(old_style_entity_id)
         if old_ent and old_ent.config_entry_id == config_entry.entry_id:
@@ -58,12 +46,7 @@ async def async_setup_entry(
                 ent_reg.async_remove(old_style_entity_id)
             else:
                 deprecated_sensors.append(
-                    DeprecatedOpenThermBinarySensor(
-                        gw_dev,
-                        var,
-                        device_class,
-                        friendly_name_format,
-                    )
+                    DeprecatedOpenThermBinarySensor(gw_dev, description)
                 )
 
     sensors.extend(deprecated_sensors)
@@ -87,8 +70,10 @@ class OpenThermBinarySensor(BinarySensorEntity):
 
     _attr_should_poll = False
 
-    def __init__(self, gw_dev, var, source, device_class, friendly_name_format):
+    def __init__(self, gw_dev, source, description):
         """Initialize the binary sensor."""
+        self.entity_description = description
+        var = description.key
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, f"{var}_{source}_{gw_dev.gw_id}", hass=gw_dev.hass
         )
@@ -96,7 +81,7 @@ class OpenThermBinarySensor(BinarySensorEntity):
         self._var = var
         self._source = source
         self._state = None
-        self._device_class = device_class
+        friendly_name_format = description.friendly_name_format
         if TRANSLATE_SOURCE[source] is not None:
             friendly_name_format = (
                 f"{friendly_name_format} ({TRANSLATE_SOURCE[source]})"
@@ -161,18 +146,15 @@ class OpenThermBinarySensor(BinarySensorEntity):
         """Return true if the binary sensor is on."""
         return self._state
 
-    @property
-    def device_class(self):
-        """Return the class of this device."""
-        return self._device_class
-
 
 class DeprecatedOpenThermBinarySensor(OpenThermBinarySensor):
     """Represent a deprecated OpenTherm Gateway Binary Sensor."""
 
     # pylint: disable=super-init-not-called
-    def __init__(self, gw_dev, var, device_class, friendly_name_format):
+    def __init__(self, gw_dev, description):
         """Initialize the binary sensor."""
+        self.entity_description = description
+        var = description.key
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, f"{var}_{gw_dev.gw_id}", hass=gw_dev.hass
         )
@@ -180,8 +162,7 @@ class DeprecatedOpenThermBinarySensor(OpenThermBinarySensor):
         self._var = var
         self._source = DEPRECATED_BINARY_SENSOR_SOURCE_LOOKUP[var]
         self._state = None
-        self._device_class = device_class
-        self._friendly_name = friendly_name_format.format(gw_dev.name)
+        self._friendly_name = description.friendly_name_format.format(gw_dev.name)
         self._unsub_updates = None
 
     @property

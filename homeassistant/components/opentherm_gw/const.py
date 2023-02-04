@@ -1,10 +1,15 @@
 """Constants for the opentherm_gw integration."""
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 import pyotgw.vars as gw_vars
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntityDescription,
+)
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
 from homeassistant.const import (
     PERCENTAGE,
     UnitOfPower,
@@ -51,490 +56,559 @@ TRANSLATE_SOURCE = {
     gw_vars.THERMOSTAT: "Thermostat",
 }
 
-BINARY_SENSOR_INFO: dict[str, list] = {
-    # [device_class, friendly_name format, [status source, ...]]
-    gw_vars.DATA_MASTER_CH_ENABLED: [
-        None,
+
+@dataclass
+class OpenThermEntityDescriptionMixin:
+    """Mixin for describing OpenTherm Gateway entities."""
+
+    key: str  # OpenTherm variable identifier
+    friendly_name_format: str
+    status_sources: list[str]
+
+
+@dataclass
+class OpenThermBinarySensorDescription(
+    BinarySensorEntityDescription, OpenThermEntityDescriptionMixin
+):
+    """Class describing OpenTherm Gateway binary sensor entities."""
+
+
+BINARY_SENSOR_INFO: list[OpenThermBinarySensorDescription] = [
+    OpenThermBinarySensorDescription(
+        gw_vars.DATA_MASTER_CH_ENABLED,
         "Thermostat Central Heating {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_MASTER_DHW_ENABLED: [
-        None,
+    ),
+    OpenThermBinarySensorDescription(
+        gw_vars.DATA_MASTER_DHW_ENABLED,
         "Thermostat Hot Water {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_MASTER_COOLING_ENABLED: [
-        None,
+    ),
+    OpenThermBinarySensorDescription(
+        gw_vars.DATA_MASTER_COOLING_ENABLED,
         "Thermostat Cooling {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_MASTER_OTC_ENABLED: [
-        None,
+    ),
+    OpenThermBinarySensorDescription(
+        gw_vars.DATA_MASTER_OTC_ENABLED,
         "Thermostat Outside Temperature Correction {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_MASTER_CH2_ENABLED: [
-        None,
+    ),
+    OpenThermBinarySensorDescription(
+        gw_vars.DATA_MASTER_CH2_ENABLED,
         "Thermostat Central Heating 2 {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_FAULT_IND: [
-        BinarySensorDeviceClass.PROBLEM,
+    ),
+    OpenThermBinarySensorDescription(
+        gw_vars.DATA_SLAVE_FAULT_IND,
         "Boiler Fault {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_CH_ACTIVE: [
-        BinarySensorDeviceClass.HEAT,
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    OpenThermBinarySensorDescription(
+        gw_vars.DATA_SLAVE_CH_ACTIVE,
         "Boiler Central Heating {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_DHW_ACTIVE: [
-        BinarySensorDeviceClass.HEAT,
+        device_class=BinarySensorDeviceClass.HEAT,
+    ),
+    OpenThermBinarySensorDescription(
+        gw_vars.DATA_SLAVE_DHW_ACTIVE,
         "Boiler Hot Water {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_FLAME_ON: [
-        BinarySensorDeviceClass.HEAT,
+        device_class=BinarySensorDeviceClass.HEAT,
+    ),
+    OpenThermBinarySensorDescription(
+        gw_vars.DATA_SLAVE_FLAME_ON,
         "Boiler Flame {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_COOLING_ACTIVE: [
-        BinarySensorDeviceClass.COLD,
+        device_class=BinarySensorDeviceClass.HEAT,
+    ),
+    OpenThermBinarySensorDescription(
+        gw_vars.DATA_SLAVE_COOLING_ACTIVE,
         "Boiler Cooling {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_CH2_ACTIVE: [
-        BinarySensorDeviceClass.HEAT,
+        device_class=BinarySensorDeviceClass.COLD,
+    ),
+    OpenThermBinarySensorDescription(
+        gw_vars.DATA_SLAVE_CH2_ACTIVE,
         "Boiler Central Heating 2 {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_DIAG_IND: [
-        BinarySensorDeviceClass.PROBLEM,
+        device_class=BinarySensorDeviceClass.HEAT,
+    ),
+    OpenThermBinarySensorDescription(
+        gw_vars.DATA_SLAVE_DIAG_IND,
         "Boiler Diagnostics {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_DHW_PRESENT: [
-        None,
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    OpenThermBinarySensorDescription(
+        gw_vars.DATA_SLAVE_DHW_PRESENT,
         "Boiler Hot Water Present {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_CONTROL_TYPE: [
-        None,
+    ),
+    OpenThermBinarySensorDescription(
+        gw_vars.DATA_SLAVE_CONTROL_TYPE,
         "Boiler Control Type {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_COOLING_SUPPORTED: [
-        None,
+    ),
+    OpenThermBinarySensorDescription(
+        gw_vars.DATA_SLAVE_COOLING_SUPPORTED,
         "Boiler Cooling Support {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_DHW_CONFIG: [
-        None,
+    ),
+    OpenThermBinarySensorDescription(
+        gw_vars.DATA_SLAVE_DHW_CONFIG,
         "Boiler Hot Water Configuration {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_MASTER_LOW_OFF_PUMP: [
-        None,
+    ),
+    OpenThermBinarySensorDescription(
+        gw_vars.DATA_SLAVE_MASTER_LOW_OFF_PUMP,
         "Boiler Pump Commands Support {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_CH2_PRESENT: [
-        None,
+    ),
+    OpenThermBinarySensorDescription(
+        gw_vars.DATA_SLAVE_CH2_PRESENT,
         "Boiler Central Heating 2 Present {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_SERVICE_REQ: [
-        BinarySensorDeviceClass.PROBLEM,
+    ),
+    OpenThermBinarySensorDescription(
+        gw_vars.DATA_SLAVE_SERVICE_REQ,
         "Boiler Service Required {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_REMOTE_RESET: [
-        None,
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    OpenThermBinarySensorDescription(
+        gw_vars.DATA_SLAVE_REMOTE_RESET,
         "Boiler Remote Reset Support {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_LOW_WATER_PRESS: [
-        BinarySensorDeviceClass.PROBLEM,
+    ),
+    OpenThermBinarySensorDescription(
+        gw_vars.DATA_SLAVE_LOW_WATER_PRESS,
         "Boiler Low Water Pressure {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_GAS_FAULT: [
-        BinarySensorDeviceClass.PROBLEM,
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    OpenThermBinarySensorDescription(
+        gw_vars.DATA_SLAVE_GAS_FAULT,
         "Boiler Gas Fault {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_AIR_PRESS_FAULT: [
-        BinarySensorDeviceClass.PROBLEM,
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    OpenThermBinarySensorDescription(
+        gw_vars.DATA_SLAVE_AIR_PRESS_FAULT,
         "Boiler Air Pressure Fault {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_WATER_OVERTEMP: [
-        BinarySensorDeviceClass.PROBLEM,
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    OpenThermBinarySensorDescription(
+        gw_vars.DATA_SLAVE_WATER_OVERTEMP,
         "Boiler Water Overtemperature {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_REMOTE_TRANSFER_DHW: [
-        None,
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    OpenThermBinarySensorDescription(
+        gw_vars.DATA_REMOTE_TRANSFER_DHW,
         "Remote Hot Water Setpoint Transfer Support {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_REMOTE_TRANSFER_MAX_CH: [
-        None,
+    ),
+    OpenThermBinarySensorDescription(
+        gw_vars.DATA_REMOTE_TRANSFER_MAX_CH,
         "Remote Maximum Central Heating Setpoint Write Support {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_REMOTE_RW_DHW: [
-        None,
+    ),
+    OpenThermBinarySensorDescription(
+        gw_vars.DATA_REMOTE_RW_DHW,
         "Remote Hot Water Setpoint Write Support {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_REMOTE_RW_MAX_CH: [
-        None,
+    ),
+    OpenThermBinarySensorDescription(
+        gw_vars.DATA_REMOTE_RW_MAX_CH,
         "Remote Central Heating Setpoint Write Support {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_ROVRD_MAN_PRIO: [
-        None,
+    ),
+    OpenThermBinarySensorDescription(
+        gw_vars.DATA_ROVRD_MAN_PRIO,
         "Remote Override Manual Change Priority {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_ROVRD_AUTO_PRIO: [
-        None,
+    ),
+    OpenThermBinarySensorDescription(
+        gw_vars.DATA_ROVRD_AUTO_PRIO,
         "Remote Override Program Change Priority {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.OTGW_GPIO_A_STATE: [None, "Gateway GPIO A {}", [gw_vars.OTGW]],
-    gw_vars.OTGW_GPIO_B_STATE: [None, "Gateway GPIO B {}", [gw_vars.OTGW]],
-    gw_vars.OTGW_IGNORE_TRANSITIONS: [
-        None,
-        "Gateway Ignore Transitions {}",
-        [gw_vars.OTGW],
-    ],
-    gw_vars.OTGW_OVRD_HB: [None, "Gateway Override High Byte {}", [gw_vars.OTGW]],
-}
+    ),
+    OpenThermBinarySensorDescription(
+        gw_vars.OTGW_GPIO_A_STATE, "Gateway GPIO A {}", [gw_vars.OTGW]
+    ),
+    OpenThermBinarySensorDescription(
+        gw_vars.OTGW_GPIO_B_STATE, "Gateway GPIO B {}", [gw_vars.OTGW]
+    ),
+    OpenThermBinarySensorDescription(
+        gw_vars.OTGW_IGNORE_TRANSITIONS, "Gateway Ignore Transitions {}", [gw_vars.OTGW]
+    ),
+    OpenThermBinarySensorDescription(
+        gw_vars.OTGW_OVRD_HB, "Gateway Override High Byte {}", [gw_vars.OTGW]
+    ),
+]
 
-SENSOR_INFO: dict[str, list] = {
-    # [device_class, unit, friendly_name, [status source, ...]]
-    gw_vars.DATA_CONTROL_SETPOINT: [
-        SensorDeviceClass.TEMPERATURE,
-        UnitOfTemperature.CELSIUS,
+
+@dataclass
+class OpenThermSensorDescription(
+    SensorEntityDescription, OpenThermEntityDescriptionMixin
+):
+    """Class describing OpenTherm Gateway sensor entities."""
+
+
+SENSOR_INFO: list[OpenThermSensorDescription] = [
+    OpenThermSensorDescription(
+        gw_vars.DATA_CONTROL_SETPOINT,
         "Control Setpoint {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_MASTER_MEMBERID: [
-        None,
-        None,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    OpenThermSensorDescription(
+        gw_vars.DATA_MASTER_MEMBERID,
         "Thermostat Member ID {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_MEMBERID: [
-        None,
-        None,
+    ),
+    OpenThermSensorDescription(
+        gw_vars.DATA_SLAVE_MEMBERID,
         "Boiler Member ID {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_OEM_FAULT: [
-        None,
-        None,
+    ),
+    OpenThermSensorDescription(
+        gw_vars.DATA_SLAVE_OEM_FAULT,
         "Boiler OEM Fault Code {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_COOLING_CONTROL: [
-        None,
-        PERCENTAGE,
+    ),
+    OpenThermSensorDescription(
+        gw_vars.DATA_COOLING_CONTROL,
         "Cooling Control Signal {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_CONTROL_SETPOINT_2: [
-        SensorDeviceClass.TEMPERATURE,
-        UnitOfTemperature.CELSIUS,
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    OpenThermSensorDescription(
+        gw_vars.DATA_CONTROL_SETPOINT_2,
         "Control Setpoint 2 {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_ROOM_SETPOINT_OVRD: [
-        SensorDeviceClass.TEMPERATURE,
-        UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    OpenThermSensorDescription(
+        gw_vars.DATA_ROOM_SETPOINT_OVRD,
         "Room Setpoint Override {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_MAX_RELATIVE_MOD: [
-        None,
-        PERCENTAGE,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    OpenThermSensorDescription(
+        gw_vars.DATA_SLAVE_MAX_RELATIVE_MOD,
         "Boiler Maximum Relative Modulation {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_MAX_CAPACITY: [
-        SensorDeviceClass.POWER,
-        UnitOfPower.KILO_WATT,
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    OpenThermSensorDescription(
+        gw_vars.DATA_SLAVE_MAX_CAPACITY,
         "Boiler Maximum Capacity {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_MIN_MOD_LEVEL: [
-        None,
-        PERCENTAGE,
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+    ),
+    OpenThermSensorDescription(
+        gw_vars.DATA_SLAVE_MIN_MOD_LEVEL,
         "Boiler Minimum Modulation Level {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_ROOM_SETPOINT: [
-        SensorDeviceClass.TEMPERATURE,
-        UnitOfTemperature.CELSIUS,
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    OpenThermSensorDescription(
+        gw_vars.DATA_ROOM_SETPOINT,
         "Room Setpoint {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_REL_MOD_LEVEL: [
-        None,
-        PERCENTAGE,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    OpenThermSensorDescription(
+        gw_vars.DATA_REL_MOD_LEVEL,
         "Relative Modulation Level {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_CH_WATER_PRESS: [
-        SensorDeviceClass.PRESSURE,
-        UnitOfPressure.BAR,
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    OpenThermSensorDescription(
+        gw_vars.DATA_CH_WATER_PRESS,
         "Central Heating Water Pressure {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_DHW_FLOW_RATE: [
-        None,
-        f"{UnitOfVolume.LITERS}/{UnitOfTime.MINUTES}",
+        device_class=SensorDeviceClass.PRESSURE,
+        native_unit_of_measurement=UnitOfPressure.BAR,
+    ),
+    OpenThermSensorDescription(
+        gw_vars.DATA_DHW_FLOW_RATE,
         "Hot Water Flow Rate {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_ROOM_SETPOINT_2: [
-        SensorDeviceClass.TEMPERATURE,
-        UnitOfTemperature.CELSIUS,
+        native_unit_of_measurement=f"{UnitOfVolume.LITERS}/{UnitOfTime.MINUTES}",
+    ),
+    OpenThermSensorDescription(
+        gw_vars.DATA_ROOM_SETPOINT_2,
         "Room Setpoint 2 {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_ROOM_TEMP: [
-        SensorDeviceClass.TEMPERATURE,
-        UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    OpenThermSensorDescription(
+        gw_vars.DATA_ROOM_TEMP,
         "Room Temperature {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_CH_WATER_TEMP: [
-        SensorDeviceClass.TEMPERATURE,
-        UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    OpenThermSensorDescription(
+        gw_vars.DATA_CH_WATER_TEMP,
         "Central Heating Water Temperature {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_DHW_TEMP: [
-        SensorDeviceClass.TEMPERATURE,
-        UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    OpenThermSensorDescription(
+        gw_vars.DATA_DHW_TEMP,
         "Hot Water Temperature {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_OUTSIDE_TEMP: [
-        SensorDeviceClass.TEMPERATURE,
-        UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    OpenThermSensorDescription(
+        gw_vars.DATA_OUTSIDE_TEMP,
         "Outside Temperature {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_RETURN_WATER_TEMP: [
-        SensorDeviceClass.TEMPERATURE,
-        UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    OpenThermSensorDescription(
+        gw_vars.DATA_RETURN_WATER_TEMP,
         "Return Water Temperature {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SOLAR_STORAGE_TEMP: [
-        SensorDeviceClass.TEMPERATURE,
-        UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    OpenThermSensorDescription(
+        gw_vars.DATA_SOLAR_STORAGE_TEMP,
         "Solar Storage Temperature {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SOLAR_COLL_TEMP: [
-        SensorDeviceClass.TEMPERATURE,
-        UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    OpenThermSensorDescription(
+        gw_vars.DATA_SOLAR_COLL_TEMP,
         "Solar Collector Temperature {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_CH_WATER_TEMP_2: [
-        SensorDeviceClass.TEMPERATURE,
-        UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    OpenThermSensorDescription(
+        gw_vars.DATA_CH_WATER_TEMP_2,
         "Central Heating 2 Water Temperature {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_DHW_TEMP_2: [
-        SensorDeviceClass.TEMPERATURE,
-        UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    OpenThermSensorDescription(
+        gw_vars.DATA_DHW_TEMP_2,
         "Hot Water 2 Temperature {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_EXHAUST_TEMP: [
-        SensorDeviceClass.TEMPERATURE,
-        UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    OpenThermSensorDescription(
+        gw_vars.DATA_EXHAUST_TEMP,
         "Exhaust Temperature {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_DHW_MAX_SETP: [
-        SensorDeviceClass.TEMPERATURE,
-        UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    OpenThermSensorDescription(
+        gw_vars.DATA_SLAVE_DHW_MAX_SETP,
         "Hot Water Maximum Setpoint {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_DHW_MIN_SETP: [
-        SensorDeviceClass.TEMPERATURE,
-        UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    OpenThermSensorDescription(
+        gw_vars.DATA_SLAVE_DHW_MIN_SETP,
         "Hot Water Minimum Setpoint {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_CH_MAX_SETP: [
-        SensorDeviceClass.TEMPERATURE,
-        UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    OpenThermSensorDescription(
+        gw_vars.DATA_SLAVE_CH_MAX_SETP,
         "Boiler Maximum Central Heating Setpoint {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_CH_MIN_SETP: [
-        SensorDeviceClass.TEMPERATURE,
-        UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    OpenThermSensorDescription(
+        gw_vars.DATA_SLAVE_CH_MIN_SETP,
         "Boiler Minimum Central Heating Setpoint {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_DHW_SETPOINT: [
-        SensorDeviceClass.TEMPERATURE,
-        UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    OpenThermSensorDescription(
+        gw_vars.DATA_DHW_SETPOINT,
         "Hot Water Setpoint {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_MAX_CH_SETPOINT: [
-        SensorDeviceClass.TEMPERATURE,
-        UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    OpenThermSensorDescription(
+        gw_vars.DATA_MAX_CH_SETPOINT,
         "Maximum Central Heating Setpoint {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_OEM_DIAG: [
-        None,
-        None,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    OpenThermSensorDescription(
+        gw_vars.DATA_OEM_DIAG,
         "OEM Diagnostic Code {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_TOTAL_BURNER_STARTS: [
-        None,
-        None,
+    ),
+    OpenThermSensorDescription(
+        gw_vars.DATA_TOTAL_BURNER_STARTS,
         "Total Burner Starts {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_CH_PUMP_STARTS: [
-        None,
-        None,
+    ),
+    OpenThermSensorDescription(
+        gw_vars.DATA_CH_PUMP_STARTS,
         "Central Heating Pump Starts {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_DHW_PUMP_STARTS: [
-        None,
-        None,
+    ),
+    OpenThermSensorDescription(
+        gw_vars.DATA_DHW_PUMP_STARTS,
         "Hot Water Pump Starts {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_DHW_BURNER_STARTS: [
-        None,
-        None,
+    ),
+    OpenThermSensorDescription(
+        gw_vars.DATA_DHW_BURNER_STARTS,
         "Hot Water Burner Starts {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_TOTAL_BURNER_HOURS: [
-        SensorDeviceClass.DURATION,
-        UnitOfTime.HOURS,
+    ),
+    OpenThermSensorDescription(
+        gw_vars.DATA_TOTAL_BURNER_HOURS,
         "Total Burner Hours {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_CH_PUMP_HOURS: [
-        SensorDeviceClass.DURATION,
-        UnitOfTime.HOURS,
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+    ),
+    OpenThermSensorDescription(
+        gw_vars.DATA_CH_PUMP_HOURS,
         "Central Heating Pump Hours {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_DHW_PUMP_HOURS: [
-        SensorDeviceClass.DURATION,
-        UnitOfTime.HOURS,
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+    ),
+    OpenThermSensorDescription(
+        gw_vars.DATA_DHW_PUMP_HOURS,
         "Hot Water Pump Hours {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_DHW_BURNER_HOURS: [
-        SensorDeviceClass.DURATION,
-        UnitOfTime.HOURS,
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+    ),
+    OpenThermSensorDescription(
+        gw_vars.DATA_DHW_BURNER_HOURS,
         "Hot Water Burner Hours {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_MASTER_OT_VERSION: [
-        None,
-        None,
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+    ),
+    OpenThermSensorDescription(
+        gw_vars.DATA_MASTER_OT_VERSION,
         "Thermostat OpenTherm Version {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_OT_VERSION: [
-        None,
-        None,
+    ),
+    OpenThermSensorDescription(
+        gw_vars.DATA_SLAVE_OT_VERSION,
         "Boiler OpenTherm Version {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_MASTER_PRODUCT_TYPE: [
-        None,
-        None,
+    ),
+    OpenThermSensorDescription(
+        gw_vars.DATA_MASTER_PRODUCT_TYPE,
         "Thermostat Product Type {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_MASTER_PRODUCT_VERSION: [
-        None,
-        None,
+    ),
+    OpenThermSensorDescription(
+        gw_vars.DATA_MASTER_PRODUCT_VERSION,
         "Thermostat Product Version {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_PRODUCT_TYPE: [
-        None,
-        None,
+    ),
+    OpenThermSensorDescription(
+        gw_vars.DATA_SLAVE_PRODUCT_TYPE,
         "Boiler Product Type {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_PRODUCT_VERSION: [
-        None,
-        None,
+    ),
+    OpenThermSensorDescription(
+        gw_vars.DATA_SLAVE_PRODUCT_VERSION,
         "Boiler Product Version {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.OTGW_MODE: [None, None, "Gateway/Monitor Mode {}", [gw_vars.OTGW]],
-    gw_vars.OTGW_DHW_OVRD: [
-        None,
-        None,
-        "Gateway Hot Water Override Mode {}",
-        [gw_vars.OTGW],
-    ],
-    gw_vars.OTGW_ABOUT: [None, None, "Gateway Firmware Version {}", [gw_vars.OTGW]],
-    gw_vars.OTGW_BUILD: [None, None, "Gateway Firmware Build {}", [gw_vars.OTGW]],
-    gw_vars.OTGW_CLOCKMHZ: [None, None, "Gateway Clock Speed {}", [gw_vars.OTGW]],
-    gw_vars.OTGW_LED_A: [None, None, "Gateway LED A Mode {}", [gw_vars.OTGW]],
-    gw_vars.OTGW_LED_B: [None, None, "Gateway LED B Mode {}", [gw_vars.OTGW]],
-    gw_vars.OTGW_LED_C: [None, None, "Gateway LED C Mode {}", [gw_vars.OTGW]],
-    gw_vars.OTGW_LED_D: [None, None, "Gateway LED D Mode {}", [gw_vars.OTGW]],
-    gw_vars.OTGW_LED_E: [None, None, "Gateway LED E Mode {}", [gw_vars.OTGW]],
-    gw_vars.OTGW_LED_F: [None, None, "Gateway LED F Mode {}", [gw_vars.OTGW]],
-    gw_vars.OTGW_GPIO_A: [None, None, "Gateway GPIO A Mode {}", [gw_vars.OTGW]],
-    gw_vars.OTGW_GPIO_B: [None, None, "Gateway GPIO B Mode {}", [gw_vars.OTGW]],
-    gw_vars.OTGW_SB_TEMP: [
-        SensorDeviceClass.TEMPERATURE,
-        UnitOfTemperature.CELSIUS,
+    ),
+    OpenThermSensorDescription(
+        gw_vars.OTGW_MODE, "Gateway/Monitor Mode {}", [gw_vars.OTGW]
+    ),
+    OpenThermSensorDescription(
+        gw_vars.OTGW_DHW_OVRD, "Gateway Hot Water Override Mode {}", [gw_vars.OTGW]
+    ),
+    OpenThermSensorDescription(
+        gw_vars.OTGW_ABOUT, "Gateway Firmware Version {}", [gw_vars.OTGW]
+    ),
+    OpenThermSensorDescription(
+        gw_vars.OTGW_BUILD, "Gateway Firmware Build {}", [gw_vars.OTGW]
+    ),
+    OpenThermSensorDescription(
+        gw_vars.OTGW_CLOCKMHZ, "Gateway Clock Speed {}", [gw_vars.OTGW]
+    ),
+    OpenThermSensorDescription(
+        gw_vars.OTGW_LED_A, "Gateway LED A Mode {}", [gw_vars.OTGW]
+    ),
+    OpenThermSensorDescription(
+        gw_vars.OTGW_LED_B, "Gateway LED B Mode {}", [gw_vars.OTGW]
+    ),
+    OpenThermSensorDescription(
+        gw_vars.OTGW_LED_C, "Gateway LED C Mode {}", [gw_vars.OTGW]
+    ),
+    OpenThermSensorDescription(
+        gw_vars.OTGW_LED_D, "Gateway LED D Mode {}", [gw_vars.OTGW]
+    ),
+    OpenThermSensorDescription(
+        gw_vars.OTGW_LED_E, "Gateway LED E Mode {}", [gw_vars.OTGW]
+    ),
+    OpenThermSensorDescription(
+        gw_vars.OTGW_LED_F, "Gateway LED F Mode {}", [gw_vars.OTGW]
+    ),
+    OpenThermSensorDescription(
+        gw_vars.OTGW_GPIO_A, "Gateway GPIO A Mode {}", [gw_vars.OTGW]
+    ),
+    OpenThermSensorDescription(
+        gw_vars.OTGW_GPIO_B, "Gateway GPIO B Mode {}", [gw_vars.OTGW]
+    ),
+    OpenThermSensorDescription(
+        gw_vars.OTGW_SB_TEMP,
         "Gateway Setback Temperature {}",
         [gw_vars.OTGW],
-    ],
-    gw_vars.OTGW_SETP_OVRD_MODE: [
-        None,
-        None,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    OpenThermSensorDescription(
+        gw_vars.OTGW_SETP_OVRD_MODE,
         "Gateway Room Setpoint Override Mode {}",
         [gw_vars.OTGW],
-    ],
-    gw_vars.OTGW_SMART_PWR: [None, None, "Gateway Smart Power Mode {}", [gw_vars.OTGW]],
-    gw_vars.OTGW_THRM_DETECT: [
-        None,
-        None,
-        "Gateway Thermostat Detection {}",
-        [gw_vars.OTGW],
-    ],
-    gw_vars.OTGW_VREF: [
-        None,
-        None,
-        "Gateway Reference Voltage Setting {}",
-        [gw_vars.OTGW],
-    ],
-}
+    ),
+    OpenThermSensorDescription(
+        gw_vars.OTGW_SMART_PWR, "Gateway Smart Power Mode {}", [gw_vars.OTGW]
+    ),
+    OpenThermSensorDescription(
+        gw_vars.OTGW_THRM_DETECT, "Gateway Thermostat Detection {}", [gw_vars.OTGW]
+    ),
+    OpenThermSensorDescription(
+        gw_vars.OTGW_VREF, "Gateway Reference Voltage Setting {}", [gw_vars.OTGW]
+    ),
+]
 
 DEPRECATED_BINARY_SENSOR_SOURCE_LOOKUP = {
     gw_vars.DATA_MASTER_CH_ENABLED: gw_vars.THERMOSTAT,

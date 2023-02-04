@@ -33,26 +33,12 @@ async def async_setup_entry(
     deprecated_sensors = []
     gw_dev = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][config_entry.data[CONF_ID]]
     ent_reg = er.async_get(hass)
-    for var, info in SENSOR_INFO.items():
-        device_class = info[0]
-        unit = info[1]
-        friendly_name_format = info[2]
-        status_sources = info[3]
-
-        for source in status_sources:
-            sensors.append(
-                OpenThermSensor(
-                    gw_dev,
-                    var,
-                    source,
-                    device_class,
-                    unit,
-                    friendly_name_format,
-                )
-            )
+    for description in SENSOR_INFO:
+        for source in description.status_sources:
+            sensors.append(OpenThermSensor(gw_dev, source, description))
 
         old_style_entity_id = async_generate_entity_id(
-            ENTITY_ID_FORMAT, f"{var}_{gw_dev.gw_id}", hass=gw_dev.hass
+            ENTITY_ID_FORMAT, f"{description.key}_{gw_dev.gw_id}", hass=gw_dev.hass
         )
         old_ent = ent_reg.async_get(old_style_entity_id)
         if old_ent and old_ent.config_entry_id == config_entry.entry_id:
@@ -60,13 +46,7 @@ async def async_setup_entry(
                 ent_reg.async_remove(old_style_entity_id)
             else:
                 deprecated_sensors.append(
-                    DeprecatedOpenThermSensor(
-                        gw_dev,
-                        var,
-                        device_class,
-                        unit,
-                        friendly_name_format,
-                    )
+                    DeprecatedOpenThermSensor(gw_dev, description)
                 )
 
     sensors.extend(deprecated_sensors)
@@ -90,8 +70,10 @@ class OpenThermSensor(SensorEntity):
 
     _attr_should_poll = False
 
-    def __init__(self, gw_dev, var, source, device_class, unit, friendly_name_format):
+    def __init__(self, gw_dev, source, description):
         """Initialize the OpenTherm Gateway sensor."""
+        self.entity_description = description
+        var = description.key
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, f"{var}_{source}_{gw_dev.gw_id}", hass=gw_dev.hass
         )
@@ -99,8 +81,7 @@ class OpenThermSensor(SensorEntity):
         self._var = var
         self._source = source
         self._value = None
-        self._device_class = device_class
-        self._unit = unit
+        friendly_name_format = description.friendly_name_format
         if TRANSLATE_SOURCE[source] is not None:
             friendly_name_format = (
                 f"{friendly_name_format} ({TRANSLATE_SOURCE[source]})"
@@ -161,27 +142,19 @@ class OpenThermSensor(SensorEntity):
         return f"{self._gateway.gw_id}-{self._source}-{self._var}"
 
     @property
-    def device_class(self):
-        """Return the device class."""
-        return self._device_class
-
-    @property
     def native_value(self):
         """Return the state of the device."""
         return self._value
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self._unit
 
 
 class DeprecatedOpenThermSensor(OpenThermSensor):
     """Represent a deprecated OpenTherm Gateway Sensor."""
 
     # pylint: disable=super-init-not-called
-    def __init__(self, gw_dev, var, device_class, unit, friendly_name_format):
+    def __init__(self, gw_dev, description):
         """Initialize the OpenTherm Gateway sensor."""
+        self.entity_description = description
+        var = description.key
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, f"{var}_{gw_dev.gw_id}", hass=gw_dev.hass
         )
@@ -189,9 +162,7 @@ class DeprecatedOpenThermSensor(OpenThermSensor):
         self._var = var
         self._source = DEPRECATED_SENSOR_SOURCE_LOOKUP[var]
         self._value = None
-        self._device_class = device_class
-        self._unit = unit
-        self._friendly_name = friendly_name_format.format(gw_dev.name)
+        self._friendly_name = description.friendly_name_format.format(gw_dev.name)
         self._unsub_updates = None
 
     @property
