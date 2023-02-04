@@ -445,7 +445,7 @@ class DatabaseOptimizer:
     """Properties of the database optimizer for the configured database engine."""
 
     # Some MariaDB versions have a bug that causes a slow query when using
-    # a range in a select statement with in IN clause.
+    # a range in a select statement with an IN clause.
     #
     # https://jira.mariadb.org/browse/MDEV-25020
     #
