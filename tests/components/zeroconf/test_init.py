@@ -3,7 +3,12 @@ from ipaddress import ip_address
 from typing import Any
 from unittest.mock import call, patch
 
-from zeroconf import InterfaceChoice, IPVersion, ServiceStateChange
+from zeroconf import (
+    BadTypeInNameException,
+    InterfaceChoice,
+    IPVersion,
+    ServiceStateChange,
+)
 from zeroconf.asyncio import AsyncServiceInfo
 
 from homeassistant.components import zeroconf
@@ -562,6 +567,37 @@ async def test_homekit_match_partial_space(hass, mock_async_zeroconf):
         "source": "zeroconf",
         "alternative_domain": "lifx",
     }
+
+
+async def test_device_with_invalid_name(hass, mock_async_zeroconf, caplog):
+    """Test we ignore devices with an invalid name."""
+    with patch.dict(
+        zc_gen.ZEROCONF,
+        {"_hap._tcp.local.": [{"domain": "homekit_controller"}]},
+        clear=True,
+    ), patch.dict(
+        zc_gen.HOMEKIT,
+        {"LIFX": "lifx"},
+        clear=True,
+    ), patch.object(
+        hass.config_entries.flow, "async_init"
+    ) as mock_config_flow, patch.object(
+        zeroconf,
+        "HaAsyncServiceBrowser",
+        side_effect=lambda *args, **kwargs: service_update_mock(
+            *args, **kwargs, limit_service="_hap._tcp.local."
+        ),
+    ) as mock_service_browser, patch(
+        "homeassistant.components.zeroconf.AsyncServiceInfo",
+        side_effect=BadTypeInNameException,
+    ):
+        assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    assert len(mock_service_browser.mock_calls) == 1
+    assert len(mock_config_flow.mock_calls) == 0
+    assert "Bad name in zeroconf record" in caplog.text
 
 
 async def test_homekit_match_partial_dash(hass, mock_async_zeroconf):
