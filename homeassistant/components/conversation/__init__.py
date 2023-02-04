@@ -378,4 +378,4 @@ class AgentManager:
         """Unset the agent."""
         if self.default_agent == agent_id:
             self.default_agent = AgentManager.HOME_ASSISTANT_AGENT
-        self._agents.pop(agent_id)
+        self._agents.pop(agent_id, None)
