@@ -449,7 +449,7 @@ def test_supported_pgsql(caplog, pgsql_version):
 
     assert "minimum supported version" not in caplog.text
     assert database_engine is not None
-    assert database_engine.optimizer.slow_select_in_with_distinct is True
+    assert database_engine.optimizer.slow_range_in_select is True
 
 
 @pytest.mark.parametrize(
@@ -532,7 +532,7 @@ def test_supported_sqlite(caplog, sqlite_version):
 
     assert "minimum supported version" not in caplog.text
     assert database_engine is not None
-    assert database_engine.optimizer.slow_select_in_with_distinct is False
+    assert database_engine.optimizer.slow_range_in_select is False
 
 
 @pytest.mark.parametrize(
@@ -619,7 +619,7 @@ async def test_issue_for_mariadb_with_MDEV_25020(
     assert issue.translation_placeholders == {"min_version": min_version}
 
     assert database_engine is not None
-    assert database_engine.optimizer.slow_select_in_with_distinct is True
+    assert database_engine.optimizer.slow_range_in_select is True
 
 
 @pytest.mark.parametrize(
@@ -671,7 +671,7 @@ async def test_no_issue_for_mariadb_with_MDEV_25020(hass, caplog, mysql_version)
     assert issue is None
 
     assert database_engine is not None
-    assert database_engine.optimizer.slow_select_in_with_distinct is False
+    assert database_engine.optimizer.slow_range_in_select is False
 
 
 def test_basic_sanity_check(hass_recorder, recorder_db_url):
