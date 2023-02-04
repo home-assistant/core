@@ -503,12 +503,15 @@ class SensorEntity(Entity):
             _LOGGER.warning(
                 "Entity %s (%s) is using state class '%s' which "
                 "is impossible considering device class ('%s') it is using; "
+                "expected %s%s; "
                 "Please update your configuration if your entity is manually "
                 "configured, otherwise %s",
                 self.entity_id,
                 type(self),
                 state_class,
                 device_class,
+                "None or one of " if classes else "None",
+                ", ".join(f"'{value.value}'" for value in classes),
                 report_issue,
             )
 
