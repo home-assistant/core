@@ -588,6 +588,8 @@ class SensorEntity(Entity):
                 unit_of_measurement,
             )
 
+            # If unit conversion is happening, and there's no rounding for display,
+            # do a best effort rounding here.
             if (
                 suggested_precision is None
                 and self._sensor_option_display_precision is None
