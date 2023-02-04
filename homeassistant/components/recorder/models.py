@@ -1,10 +1,12 @@
 """Models for Recorder."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 from typing import Any, Literal, TypedDict, overload
 
+from awesomeversion import AwesomeVersion
 from sqlalchemy.engine.row import Row
 
 from homeassistant.const import (
@@ -16,6 +18,8 @@ from homeassistant.const import (
 from homeassistant.core import Context, State
 from homeassistant.helpers.json import json_loads
 import homeassistant.util.dt as dt_util
+
+from .const import SupportedDialect
 
 # pylint: disable=invalid-name
 
@@ -425,3 +429,19 @@ class StatisticPeriod(TypedDict, total=False):
     calendar: CalendarStatisticPeriod
     fixed_period: FixedStatisticPeriod
     rolling_window: RollingWindowStatisticPeriod
+
+
+@dataclass
+class DatabaseEngine:
+    """Properties of the database engine."""
+
+    dialect: SupportedDialect
+    optimizer: DatabaseOptimizer
+    version: AwesomeVersion | None
+
+
+@dataclass
+class DatabaseOptimizer:
+    """Properties of the database optimizer for the configured database engine."""
+
+    slow_select_in_with_distinct: bool
