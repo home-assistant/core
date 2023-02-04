@@ -35,7 +35,6 @@ async def test_form(hass):
     ), patch(
         "switchbee.api.polling.CentralUnitPolling._login", return_value=None
     ):
-
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {

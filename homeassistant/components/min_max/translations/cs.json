@@ -12,7 +12,7 @@
                     "round_digits": "\u0158\u00edd\u00ed po\u010det desetinn\u00fdch m\u00edst ve v\u00fdstupu pokud je statistikou pr\u016fm\u011br, medi\u00e1n nebo sou\u010det."
                 },
                 "description": "Vytvo\u0159\u00ed senzor, kter\u00fd vypo\u010d\u00edt\u00e1 minimum, maximum, pr\u016fm\u011br nebo sou\u010det ze seznamu vstupn\u00edch senzor\u016f.",
-                "title": "Skombinujte stav n\u011bkolika senzor\u016f"
+                "title": "Kombinujte stav n\u011bkolika senzor\u016f"
             }
         }
     },
@@ -43,5 +43,5 @@
             }
         }
     },
-    "title": "Skombinujte stav n\u011bkolika senzor\u016f"
+    "title": "Kombinujte stav n\u011bkolika senzor\u016f"
 }

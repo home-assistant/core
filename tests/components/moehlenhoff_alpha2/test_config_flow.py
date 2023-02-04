@@ -60,7 +60,6 @@ async def test_form_duplicate_error(hass: HomeAssistant) -> None:
     assert config_entry.data["host"] == MOCK_BASE_HOST
 
     with patch("moehlenhoff_alpha2.Alpha2Base.update_data", mock_update_data):
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             data={"host": MOCK_BASE_HOST},

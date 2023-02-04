@@ -74,7 +74,8 @@ class ZWaveMeCover(ZWaveMeEntity, CoverEntity):
 
         None is unknown, 0 is closed, 100 is fully open.
 
-        Allow small calibration errors (some devices after a long time become not well calibrated)
+        Allow small calibration errors (some devices after a long time
+        become not well calibrated).
         """
         if self.device.level > 95:
             return 100
@@ -87,7 +88,8 @@ class ZWaveMeCover(ZWaveMeEntity, CoverEntity):
 
         None is unknown.
 
-        Allow small calibration errors (some devices after a long time become not well calibrated)
+        Allow small calibration errors (some devices after a long time
+        become not well calibrated).
         """
         if self.device.level is None:
             return None

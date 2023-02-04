@@ -256,8 +256,7 @@ class HomematicipNotificationLight(HomematicipGenericEntity, LightEntity):
 
 
 def _convert_color(color: tuple) -> RGBColorState:
-    """
-    Convert the given color to the reduced RGBColorState color.
+    """Convert the given color to the reduced RGBColorState color.
 
     RGBColorStat contains only 8 colors including white and black,
     so a conversion is required.

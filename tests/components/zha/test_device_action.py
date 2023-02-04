@@ -121,35 +121,31 @@ async def test_get_actions(hass, device_ias):
             "metadata": {},
         },
         {"domain": DOMAIN, "type": "warn", "device_id": reg_device.id, "metadata": {}},
-        {
-            "domain": Platform.SELECT,
-            "type": "select_option",
-            "device_id": reg_device.id,
-            "entity_id": "select.fakemanufacturer_fakemodel_default_siren_tone",
-            "metadata": {"secondary": True},
-        },
-        {
-            "domain": Platform.SELECT,
-            "type": "select_option",
-            "device_id": reg_device.id,
-            "entity_id": "select.fakemanufacturer_fakemodel_default_siren_level",
-            "metadata": {"secondary": True},
-        },
-        {
-            "domain": Platform.SELECT,
-            "type": "select_option",
-            "device_id": reg_device.id,
-            "entity_id": "select.fakemanufacturer_fakemodel_default_strobe_level",
-            "metadata": {"secondary": True},
-        },
-        {
-            "domain": Platform.SELECT,
-            "type": "select_option",
-            "device_id": reg_device.id,
-            "entity_id": "select.fakemanufacturer_fakemodel_default_strobe",
-            "metadata": {"secondary": True},
-        },
     ]
+    expected_actions.extend(
+        [
+            {
+                "domain": Platform.SELECT,
+                "type": action,
+                "device_id": reg_device.id,
+                "entity_id": entity_id,
+                "metadata": {"secondary": True},
+            }
+            for action in [
+                "select_first",
+                "select_last",
+                "select_next",
+                "select_option",
+                "select_previous",
+            ]
+            for entity_id in [
+                "select.fakemanufacturer_fakemodel_default_siren_level",
+                "select.fakemanufacturer_fakemodel_default_siren_tone",
+                "select.fakemanufacturer_fakemodel_default_strobe_level",
+                "select.fakemanufacturer_fakemodel_default_strobe",
+            ]
+        ]
+    )
 
     assert_lists_same(actions, expected_actions)
 

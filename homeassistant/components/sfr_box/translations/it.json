@@ -1,16 +1,32 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
         },
         "error": {
-            "cannot_connect": "Impossibile connettersi"
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_auth": "Autenticazione non valida"
         },
         "step": {
+            "auth": {
+                "data": {
+                    "password": "Password",
+                    "username": "Nome utente"
+                }
+            },
+            "choose_auth": {
+                "description": "L'impostazione delle credenziali abilita funzionalit\u00e0 aggiuntive.",
+                "menu_options": {
+                    "auth": "Impostare le credenziali (consigliato)",
+                    "skip_auth": "Salta l'autenticazione"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Host"
-                }
+                },
+                "description": "L'impostazione delle credenziali \u00e8 facoltativa, ma abilita funzionalit\u00e0 aggiuntive."
             }
         }
     },

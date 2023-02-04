@@ -1203,6 +1203,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "easyenergy": {
+      "name": "easyEnergy",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "ebox": {
       "name": "EBox",
       "integration_type": "hub",
@@ -4482,7 +4488,7 @@
       "name": "Reolink IP NVR/camera",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "local_polling"
+      "iot_class": "local_push"
     },
     "repetier": {
       "name": "Repetier-Server",

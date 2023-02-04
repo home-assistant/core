@@ -19,7 +19,6 @@ async def test_async_setup_raises_entry_not_ready(hass):
     with patch(
         "pyipma.location.Location.get", side_effect=IPMAException("API unavailable")
     ):
-
         config_entry = MockConfigEntry(
             domain=DOMAIN,
             title="Home",
