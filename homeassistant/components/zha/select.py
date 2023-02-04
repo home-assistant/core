@@ -496,6 +496,29 @@ class AqaraPetFeederMode(ZCLEnumSelectEntity, id_suffix="feeding_mode"):
     _attr_icon: str = "mdi:wrench-clock"
 
 
+class KeypadLockoutEnum(types.enum8):
+    """Often only the first 2 are implemented."""
+
+    Unlock = 0x00
+    Lock1 = 0x01
+    Lock2 = 0x02
+    Lock3 = 0x03
+    Lock4 = 0x04
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="thermostat_ui")
+class KeypadLockout(ZCLEnumSelectEntity, id_suffix="keypad_lockout"):
+    """Mandatory Attribute for this cluster.
+
+    often just a switch, but can be a select if need be.
+    """
+
+    _select_attr: str = "keypad_lockout"
+    _enum = KeypadLockoutEnum
+    _attr_name: str = "Keypad Lockout"
+    _attr_icon: str = "mdi:lock"
+
+
 class DanfossExerciseDayOfTheWeekEnum(types.enum8):
     """Day of the Week."""
 

@@ -971,18 +971,43 @@ class AqaraPetFeederWeightDispensed(Sensor, id_suffix="weight_dispensed"):
     _attr_icon: str = "mdi:weight-gram"
 
 
-@MULTI_MATCH(
-    channel_names=CHANNEL_THERMOSTAT,
-    models={"eTRV0100", "eTRV0101", "eTRV0103", "eT093WRO", "TRV001", "TRV003"},
-)
+@MULTI_MATCH(channel_names=CHANNEL_THERMOSTAT)
 class PiHeatingDemand(ThermostatChannelSensor, id_suffix="pi_heating_demand"):
-    """Sensor that displays the percentage of heating power used."""
+    """Sensor that displays the percentage of heating power used.
+
+    Optional Thermostat attribute
+    """
 
     SENSOR_ATTR = "pi_heating_demand"
     _attr_name: str = "Pi Heating Demand"
     _attr_icon: str = "mdi:radiator"
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+
+
+class SetpointChangeSourceEnum(types.enum8):
+    """The source of the setpoint change."""
+
+    Manual = 0x00
+    Schedule = 0x01
+    External = 0x02
+
+
+@MULTI_MATCH(channel_names=CHANNEL_THERMOSTAT)
+class SetpointChangeSource(ThermostatChannelSensor, id_suffix="setpoint_change_source"):
+    """Sensor that displays the source of the setpoint change.
+
+    Optional Thermostat attribute
+    """
+
+    SENSOR_ATTR = "setpoint_change_source"
+    _attr_name: str = "Setpoint Change Source"
+    _attr_icon: str = "mdi:thermostat"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def formatter(self, value: int) -> str:
+        """Use name of enum."""
+        return SetpointChangeSourceEnum(value).name
 
 
 class DanfossOpenWindowDetectionEnum(types.enum8):
@@ -1002,14 +1027,14 @@ class DanfossOpenWindowDetection(Sensor, id_suffix="open_window_detection"):
     Sensor that displays whether the TRV detects an open window using the temperature sensor.
     """
 
-    def formatter(self, value: int) -> str:
-        """Use name of enum."""
-        return DanfossOpenWindowDetectionEnum(value).name
-
     SENSOR_ATTR = "open_window_detection"
     _attr_name: str = "Open Window Detection"
     _attr_icon: str = "mdi:window-open"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.ENUM
+
+    def formatter(self, value: int) -> str:
+        """Use name of enum."""
+        return DanfossOpenWindowDetectionEnum(value).name
 
 
 @MULTI_MATCH(channel_names="danfoss_trv_cluster")
@@ -1025,22 +1050,27 @@ class DanfossLoadEstimate(Sensor, id_suffix="load_estimate"):
 class DanfossAdaptationRunStatus(Sensor, id_suffix="adaptation_run_status"):
     """Danfoss Proprietary attribute for showing the status of the adaptation run."""
 
-    def formatter(self, value: int) -> str:
-        """Bitmap."""
-        error_code_list = []
-
-        if value & 0x0001:
-            error_code_list.append("In Progress")
-        if value & 0x0002:
-            error_code_list.append("Run Successful")
-        if value & 0x0004:
-            error_code_list.append("Valve characteristic lost")
-
-        return ", ".join(error_code_list) if error_code_list else "Nothing"
-
     SENSOR_ATTR = "adaptation_run_status"
     _attr_name: str = "Adaptation Run Status"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def formatter(self, _value: int) -> str:
+        """Summary of all attributes."""
+        error_code_list = [
+            key for (key, elem) in self.extra_state_attributes.items() if elem
+        ]
+
+        return ", ".join(error_code_list) if error_code_list else "Nothing"
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Bitmap."""
+        value = self._channel.cluster.get("adaptation_run_status")
+        return {
+            "In Progress": bool(value & 0x0001),
+            "Run Successful": bool(value & 0x0002),
+            "Valve characteristic lost": bool(value & 0x0004),
+        }
 
 
 @MULTI_MATCH(channel_names="danfoss_trv_cluster")
@@ -1048,54 +1078,49 @@ class DanfossPreheatTime(Sensor, id_suffix="preheat_time"):
     """Danfoss Proprietary attribute for communicating the time when it starts pre-heating."""
 
     SENSOR_ATTR = "preheat_time"
-    _attr_name: str = "Preheat Time"
+    _attr_name: str = "Pre-heat Time"
     _attr_icon: str = "mdi:radiator"
+    _attr_entity_registry_enabled_default = False
 
 
 @MULTI_MATCH(channel_names="danfoss_trv_diagnostic_cluster")
 class DanfossSoftwareErrorCode(Sensor, id_suffix="sw_error_code"):
     """Danfoss Proprietary attribute for communicating the error code."""
 
-    def formatter(self, value: int) -> str:
-        """Bitmap."""
-        error_code_list = []
-
-        if value & 0x0001:
-            error_code_list.append("Top PCB sensor error")
-        if value & 0x0002:
-            error_code_list.append("Side PCB sensor error")
-        if value & 0x0004:
-            error_code_list.append("Non-volative Memory error")
-        if value & 0x0008:
-            error_code_list.append("Unknown HW error")
-
-        # 0x0010 = N/A
-        if value & 0x0020:
-            error_code_list.append("Motor error")
-        # 0x0040 = N/A
-        if value & 0x0080:
-            error_code_list.append("Invalid internal communication")
-
-        # 0x0100 = N/A
-        if value & 0x0200:
-            error_code_list.append("Invalid clock information")
-        # 0x0400 = N/A
-        if value & 0x0800:
-            error_code_list.append("Radio communication error")
-
-        if value & 0x1000:
-            error_code_list.append("Encoder Jammed")
-        if value & 0x2000:
-            error_code_list.append("Low Battery")
-        if value & 0x4000:
-            error_code_list.append("Critical Low Battery")
-        # 0x0400 = Reserved
-
-        return ", ".join(error_code_list) if error_code_list else "Nothing"
-
     SENSOR_ATTR = "sw_error_code"
     _attr_name: str = "Software Error Code"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def formatter(self, _value: int) -> str:
+        """Summary of all attributes."""
+        error_code_list = [
+            key for (key, elem) in self.extra_state_attributes.items() if elem
+        ]
+
+        return ", ".join(error_code_list) if error_code_list else "Nothing"
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Bitmap."""
+        value = self._channel.cluster.get("sw_error_code")
+        return {
+            "Top PCB sensor error": bool(value & 0x0001),
+            "Side PCB sensor error": bool(value & 0x0002),
+            "Non-volative Memory error": bool(value & 0x0004),
+            "Unknown HW error": bool(value & 0x0008),
+            # 0x0010 = N/A
+            "Motor error": bool(value & 0x0020),
+            # 0x0040 = N/A
+            "Invalid internal communication": bool(value & 0x0080),
+            # 0x0100 = N/A
+            "Invalid clock information": bool(value & 0x0200),
+            # 0x0400 = N/A
+            "Radio communication error": bool(value & 0x0800),
+            "Encoder Jammed": bool(value & 0x1000),
+            "Low Battery": bool(value & 0x2000),
+            "Critical Low Battery": bool(value & 0x4000),
+            # 0x8000 = Reserved
+        }
 
 
 @MULTI_MATCH(channel_names="danfoss_trv_diagnostic_cluster")

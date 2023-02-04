@@ -318,3 +318,5 @@ class ThermostatChannel(ZigbeeChannel):
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(hvac.UserInterface.cluster_id)
 class UserInterface(ZigbeeChannel):
     """User interface (thermostat) channel."""
+
+    ZCL_INIT_ATTRS = {"keypad_lockout": True}

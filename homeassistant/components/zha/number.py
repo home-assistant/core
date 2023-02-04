@@ -1,6 +1,7 @@
 """Support for ZHA AnalogOutput cluster."""
 from __future__ import annotations
 
+import ctypes
 import functools
 import logging
 from typing import TYPE_CHECKING, Any, TypeVar
@@ -23,6 +24,7 @@ from .core.const import (
     CHANNEL_COLOR,
     CHANNEL_INOVELLI,
     CHANNEL_LEVEL,
+    CHANNEL_THERMOSTAT,
     DATA_ZHA,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
@@ -867,6 +869,118 @@ class AqaraPetFeederPortionWeight(
     _attr_icon: str = "mdi:weight-gram"
 
 
+ZCL_TEMP = 100
+
+
+class ZCLTemperatureEntity(ZHANumberConfigurationEntity):
+    """Common Entity Class for ZCL Temperature input."""
+
+    _attr_native_unit_of_measurement: str = "°C"
+    _attr_mode: NumberMode = NumberMode.BOX
+    _attr_native_step: float = 0.01
+
+    @property
+    def native_value(self) -> float:
+        """Return the current value."""
+        return super().native_value / ZCL_TEMP
+
+    def async_set_native_value(self, value: float):
+        """Update the current value from HA."""
+        return super().async_set_native_value(int(value * ZCL_TEMP))
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_THERMOSTAT)
+class MaxHeatSetpointLimit(ZCLTemperatureEntity, id_suffix="max_heat_setpoint_limit"):
+    """Max Heat Setpoint setting on thermostats.
+
+    Optional Thermostat attribute
+    """
+
+    _zcl_attribute: str = "max_heat_setpoint_limit"
+    _attr_name: str = "Max Heat Setpoint Limit"
+    _attr_icon: str = "mdi:thermostat"
+
+    @property
+    def native_min_value(self) -> float:
+        """Return the minimum value."""
+        min_present_value = self._channel.cluster.get("min_heat_setpoint_limit")
+        if min_present_value is not None:
+            return min_present_value / ZCL_TEMP
+        # This is a 16bit signed integer, which has to be converted to a python integer
+        return ctypes.c_short(0x954D).value / ZCL_TEMP  # according to spec
+
+    @property
+    def native_max_value(self) -> float:
+        """Return the maximum value."""
+        max_present_value = self._channel.cluster.get("abs_max_heat_setpoint_limit")
+        if max_present_value is not None:
+            return max_present_value / ZCL_TEMP
+        return 0x7FFF / ZCL_TEMP  # according to spec
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_THERMOSTAT)
+class MinHeatSetpointLimit(ZCLTemperatureEntity, id_suffix="min_heat_setpoint_limit"):
+    """Min Heat Setpoint setting on thermostats.
+
+    Optional Thermostat attribute
+    """
+
+    _zcl_attribute: str = "min_heat_setpoint_limit"
+    _attr_name: str = "Min Heat Setpoint Limit"
+    _attr_icon: str = "mdi:thermostat"
+
+    @property
+    def native_min_value(self) -> float:
+        """Return the minimum value."""
+        min_present_value = self._channel.cluster.get("abs_min_heat_setpoint_limit")
+        if min_present_value is not None:
+            return min_present_value / ZCL_TEMP
+        # This is a 16bit signed integer, which has to be converted to a python integer
+        return ctypes.c_short(0x954D).value / ZCL_TEMP  # according to spec
+
+    @property
+    def native_max_value(self) -> float:
+        """Return the maximum value."""
+        max_present_value = self._channel.cluster.get("max_heat_setpoint_limit")
+        if max_present_value is not None:
+            return max_present_value / ZCL_TEMP
+        return 0x7FFF / ZCL_TEMP  # according to spec
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="danfoss_trv_cluster")
+class DanfossHeatingSetpointScheduled(
+    ZCLTemperatureEntity, id_suffix="occupied_heating_setpoint_scheduled"
+):
+    """Danfoss Has a slow and an aggressive setpoint change."""
+
+    _zcl_attribute: str = "occupied_heating_setpoint_scheduled"
+    _attr_name: str = "Occupied Heating Setpoint Scheduled"
+    _attr_entity_category: EntityCategory | None = None
+    _attr_icon: str = "mdi:thermostat"
+    _attr_native_step: float = 0.5
+
+    def __init__(
+        self,
+        unique_id: str,
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
+        **kwargs: Any,
+    ) -> None:
+        """Init this number configuration entity."""
+        super().__init__(unique_id, zha_device, channels, **kwargs)
+        self._thermostat = self._channel.cluster.endpoint.thermostat
+
+    @property
+    def native_min_value(self) -> float:
+        """Return the minimum value."""
+        return self._thermostat.get("min_heat_setpoint_limit") / ZCL_TEMP
+
+    @property
+    def native_max_value(self) -> float:
+        """Return the maximum value."""
+        return self._thermostat.get("max_heat_setpoint_limit") / ZCL_TEMP
+
+
 @CONFIG_DIAGNOSTIC_MATCH(channel_names="danfoss_trv_cluster")
 class DanfossExerciseTriggerTime(
     ZHANumberConfigurationEntity, id_suffix="exercise_trigger_time"
@@ -884,16 +998,14 @@ class DanfossExerciseTriggerTime(
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names="danfoss_trv_cluster")
 class DanfossExternalMeasuredRoomSensor(
-    ZHANumberConfigurationEntity, id_suffix="external_measured_room_sensor"
+    ZCLTemperatureEntity, id_suffix="external_measured_room_sensor"
 ):
     """Danfoss Proprietary Attribute to communicate the value of the external temperature sensor."""
 
     _zcl_attribute: str = "external_measured_room_sensor"
     _attr_name: str = "External Measured Room Sensor"
-    _attr_native_min_value: int = -8000
-    _attr_native_max_value: int = 3500
-    _attr_mode: NumberMode = NumberMode.BOX
-    _attr_native_unit_of_measurement: str = "centi-°C"  # 100th of a Celsius
+    _attr_native_min_value: float = -80
+    _attr_native_max_value: float = 35
     _attr_icon: str = "mdi:thermometer"
 
 
@@ -931,7 +1043,20 @@ class DanfossRegulationSetpointOffset(
 
     _zcl_attribute: str = "regulation_setpoint_offset"
     _attr_name: str = "Regulation Setpoint Offset"
-    _attr_native_min_value: int = -25
-    _attr_native_max_value: int = 25
     _attr_mode: NumberMode = NumberMode.BOX
+    _attr_native_unit_of_measurement: str = "°C"
     _attr_icon: str = "mdi:thermostat"
+    _attr_native_min_value: float = -2.5
+    _attr_native_max_value: float = 2.5
+    _attr_native_step: float = 0.1
+
+    OFFSET_RESOLUTION = 10
+
+    @property
+    def native_value(self) -> float:
+        """Return the current value."""
+        return super().native_value / self.OFFSET_RESOLUTION
+
+    def async_set_native_value(self, value: float):
+        """Update the current value from HA."""
+        return super().async_set_native_value(int(value * self.OFFSET_RESOLUTION))

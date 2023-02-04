@@ -483,18 +483,6 @@ class TuyaChildLockSwitch(ZHASwitchConfigurationEntity, id_suffix="child_lock"):
     _attr_icon: str = "mdi:account-lock"
 
 
-@CONFIG_DIAGNOSTIC_MATCH(channel_names="thermostat_ui")
-class KeypadLockout(ZHASwitchConfigurationEntity, id_suffix="keypad_lockout"):
-    """Mandatory Attribute for this cluster.
-
-    often just a switch, but can be a select if need be.
-    """
-
-    _zcl_attribute: str = "keypad_lockout"
-    _attr_name: str = "Keypad Lockout"
-    _attr_icon: str = "mdi:lock"
-
-
 @CONFIG_DIAGNOSTIC_MATCH(channel_names="danfoss_trv_cluster")
 class DanfossExternalOpenWindowDetected(
     ZHASwitchConfigurationEntity, id_suffix="external_open_window_detected"

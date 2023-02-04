@@ -228,3 +228,4 @@ class DanfossPreheatStatus(BinarySensor, id_suffix="preheat_status"):
 
     SENSOR_ATTR = "preheat_status"
     _attr_name: str = "Pre-heat Status"
+    _attr_entity_registry_enabled_default = False

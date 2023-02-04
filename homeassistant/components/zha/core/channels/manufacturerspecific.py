@@ -323,3 +323,55 @@ class IkeaAirPurifierChannel(ZigbeeChannel):
             self.async_send_signal(
                 f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", attrid, attr_name, value
             )
+
+
+@registries.CHANNEL_ONLY_CLUSTERS.register(registries.DANFOSS_TRV_CLUSTER)
+@registries.ZIGBEE_CHANNEL_REGISTRY.register(registries.DANFOSS_TRV_CLUSTER)
+class DanfossTRVChannel(ZigbeeChannel):
+    """TRV Channel class for the Danfoss TRV and derivatives."""
+
+    REPORT_CONFIG = (
+        AttrReportConfig(attr="open_window_detection", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(attr="heat_required", config=REPORT_CONFIG_ASAP),
+        AttrReportConfig(attr="mounting_mode_active", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(attr="load_estimate", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(attr="adaptation_run_status", config=REPORT_CONFIG_DEFAULT),
+    )
+
+    ZCL_INIT_ATTRS = {
+        "external_open_window_detected": True,
+        "window_open_feature": True,
+        "exercise_day_of_week": True,
+        "exercise_trigger_time": True,
+        "mounting_mode_control": True,
+        "orientation": True,
+        "external_measured_room_sensor": True,
+        "radiator_covered": True,
+        "heat_available": True,
+        "load_balancing_enable": True,
+        "load_room_mean": True,
+        "control_algorithm_scale_factor": True,
+        "regulation_setpoint_offset": True,
+        "adaptation_run_control": True,
+        "adaptation_run_settings": True,
+        "occupied_heating_setpoint_scheduled": True,
+    }
+
+
+@registries.CHANNEL_ONLY_CLUSTERS.register(registries.DANFOSS_TRV_DIAGNOSTIC_CLUSTER)
+@registries.ZIGBEE_CHANNEL_REGISTRY.register(registries.DANFOSS_TRV_INTERFACE_CLUSTER)
+class DanfossTRVInterfaceChannel(ZigbeeChannel):
+    """Interface Channel class for the Danfoss TRV and derivatives."""
+
+    ZCL_INIT_ATTRS = {"viewing_direction": True}
+
+
+@registries.CHANNEL_ONLY_CLUSTERS.register(registries.DANFOSS_TRV_DIAGNOSTIC_CLUSTER)
+@registries.ZIGBEE_CHANNEL_REGISTRY.register(registries.DANFOSS_TRV_DIAGNOSTIC_CLUSTER)
+class DanfossTRVDiagnosticChannel(ZigbeeChannel):
+    """Diagnostic Channel class for the Danfoss TRV and derivatives."""
+
+    REPORT_CONFIG = (
+        AttrReportConfig(attr="sw_error_code", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(attr="motor_step_counter", config=REPORT_CONFIG_DEFAULT),
+    )
