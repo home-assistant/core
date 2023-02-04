@@ -329,8 +329,7 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
             _LOGGER.warning("Source %s is not supported", source)
 
     def create_zone(self, slaves):
-        """
-        Create a zone (multi-room)  and play on selected devices.
+        """Create a zone (multi-room)  and play on selected devices.
 
         :param slaves: slaves on which to play
 
@@ -342,10 +341,9 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
             self._device.create_zone([slave.device for slave in slaves])
 
     def remove_zone_slave(self, slaves):
-        """
-        Remove slave(s) from and existing zone (multi-room).
+        """Remove slave(s) from and existing zone (multi-room).
 
-        Zone must already exist and slaves array can not be empty.
+        Zone must already exist and slaves array cannot be empty.
         Note: If removing last slave, the zone will be deleted and you'll have
         to create a new one. You will not be able to add a new slave anymore
 
@@ -367,10 +365,9 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
                     self._device.remove_zone_slave([slave.device])
 
     def add_zone_slave(self, slaves):
-        """
-        Add slave(s) to and existing zone (multi-room).
+        """Add slave(s) to and existing zone (multi-room).
 
-        Zone must already exist and slaves array can not be empty.
+        Zone must already exist and slaves array cannot be empty.
 
         :param slaves:slaves to add
 

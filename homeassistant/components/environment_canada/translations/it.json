@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Il servizio \u00e8 gi\u00e0 configurato"
+        },
         "error": {
             "bad_station_id": "L'ID stazione non \u00e8 valido, mancante o non \u00e8 presente nel database degli ID stazione",
             "cannot_connect": "Impossibile connettersi",

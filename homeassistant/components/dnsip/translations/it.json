@@ -14,6 +14,9 @@
         }
     },
     "options": {
+        "abort": {
+            "already_configured": "Il servizio \u00e8 gi\u00e0 configurato"
+        },
         "error": {
             "invalid_resolver": "Indirizzo IP non valido per il risolutore"
         },

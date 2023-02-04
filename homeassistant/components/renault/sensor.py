@@ -313,7 +313,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         icon="mdi:fuel",
         name="Fuel quantity",
         native_unit_of_measurement=UnitOfVolume.LITERS,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
         requires_fuel=True,
         value_lambda=_get_rounded_value,
     ),

@@ -244,7 +244,6 @@ class SensorGroup(GroupEntity, SensorEntity):
 
     _attr_available = False
     _attr_should_poll = False
-    _attr_icon = "mdi:calculator"
 
     def __init__(
         self,
@@ -351,6 +350,16 @@ class SensorGroup(GroupEntity, SensorEntity):
         if self._attr_device_class is not None:
             return self._attr_device_class
         return self.calc_device_class
+
+    @property
+    def icon(self) -> str | None:
+        """Return the icon.
+
+        Only override the icon if the device class is not set.
+        """
+        if not self.device_class:
+            return "mdi:calculator"
+        return None
 
     @property
     def state_class(self) -> SensorStateClass | str | None:

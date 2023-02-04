@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_UNITS,
     SensorDeviceClass,
     SensorStateClass,
+    async_update_suggested_units,
 )
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -1685,3 +1686,191 @@ async def test_numeric_state_expected_helper(
     assert state is not None
 
     assert entity0._numeric_state_expected == is_numeric
+
+
+@pytest.mark.parametrize(
+    "unit_system_1, unit_system_2, native_unit, automatic_unit_1, automatic_unit_2, suggested_unit, custom_unit, native_value, automatic_state_1, automatic_state_2, suggested_state, custom_state, device_class",
+    [
+        # Distance
+        (
+            US_CUSTOMARY_SYSTEM,
+            METRIC_SYSTEM,
+            UnitOfLength.KILOMETERS,
+            UnitOfLength.MILES,
+            UnitOfLength.KILOMETERS,
+            UnitOfLength.METERS,
+            UnitOfLength.YARDS,
+            1000,
+            "621",
+            "1000",
+            "1000000",
+            "1093613",
+            SensorDeviceClass.DISTANCE,
+        ),
+    ],
+)
+async def test_unit_conversion_update(
+    hass,
+    enable_custom_integrations,
+    unit_system_1,
+    unit_system_2,
+    native_unit,
+    automatic_unit_1,
+    automatic_unit_2,
+    suggested_unit,
+    custom_unit,
+    native_value,
+    automatic_state_1,
+    automatic_state_2,
+    suggested_state,
+    custom_state,
+    device_class,
+):
+    """Test suggested unit can be updated."""
+
+    hass.config.units = unit_system_1
+
+    entity_registry = er.async_get(hass)
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test 0",
+        device_class=device_class,
+        native_unit_of_measurement=native_unit,
+        native_value=str(native_value),
+        unique_id="very_unique",
+    )
+    entity0 = platform.ENTITIES["0"]
+
+    platform.ENTITIES["1"] = platform.MockSensor(
+        name="Test 1",
+        device_class=device_class,
+        native_unit_of_measurement=native_unit,
+        native_value=str(native_value),
+        unique_id="very_unique_1",
+    )
+    entity1 = platform.ENTITIES["1"]
+
+    platform.ENTITIES["2"] = platform.MockSensor(
+        name="Test 2",
+        device_class=device_class,
+        native_unit_of_measurement=native_unit,
+        native_value=str(native_value),
+        suggested_unit_of_measurement=suggested_unit,
+        unique_id="very_unique_2",
+    )
+    entity2 = platform.ENTITIES["2"]
+
+    platform.ENTITIES["3"] = platform.MockSensor(
+        name="Test 3",
+        device_class=device_class,
+        native_unit_of_measurement=native_unit,
+        native_value=str(native_value),
+        suggested_unit_of_measurement=suggested_unit,
+        unique_id="very_unique_3",
+    )
+    entity3 = platform.ENTITIES["3"]
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    # Registered entity -> Follow automatic unit conversion
+    state = hass.states.get(entity0.entity_id)
+    assert state.state == automatic_state_1
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == automatic_unit_1
+    # Assert the automatic unit conversion is stored in the registry
+    entry = entity_registry.async_get(entity0.entity_id)
+    assert entry.options == {
+        "sensor.private": {"suggested_unit_of_measurement": automatic_unit_1}
+    }
+
+    state = hass.states.get(entity1.entity_id)
+    assert state.state == automatic_state_1
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == automatic_unit_1
+    # Assert the automatic unit conversion is stored in the registry
+    entry = entity_registry.async_get(entity1.entity_id)
+    assert entry.options == {
+        "sensor.private": {"suggested_unit_of_measurement": automatic_unit_1}
+    }
+
+    # Registered entity with suggested unit
+    state = hass.states.get(entity2.entity_id)
+    assert state.state == suggested_state
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == suggested_unit
+    # Assert the suggested unit is stored in the registry
+    entry = entity_registry.async_get(entity2.entity_id)
+    assert entry.options == {
+        "sensor.private": {"suggested_unit_of_measurement": suggested_unit}
+    }
+
+    state = hass.states.get(entity3.entity_id)
+    assert state.state == suggested_state
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == suggested_unit
+    # Assert the suggested unit is stored in the registry
+    entry = entity_registry.async_get(entity3.entity_id)
+    assert entry.options == {
+        "sensor.private": {"suggested_unit_of_measurement": suggested_unit}
+    }
+
+    # Set a custom unit, this should have priority over the automatic unit conversion
+    entity_registry.async_update_entity_options(
+        entity0.entity_id, "sensor", {"unit_of_measurement": custom_unit}
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity0.entity_id)
+    assert state.state == custom_state
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == custom_unit
+
+    entity_registry.async_update_entity_options(
+        entity2.entity_id, "sensor", {"unit_of_measurement": custom_unit}
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity2.entity_id)
+    assert state.state == custom_state
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == custom_unit
+
+    # Change unit system, states and units should be unchanged
+    hass.config.units = unit_system_2
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity0.entity_id)
+    assert state.state == custom_state
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == custom_unit
+
+    state = hass.states.get(entity1.entity_id)
+    assert state.state == automatic_state_1
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == automatic_unit_1
+
+    state = hass.states.get(entity2.entity_id)
+    assert state.state == custom_state
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == custom_unit
+
+    state = hass.states.get(entity3.entity_id)
+    assert state.state == suggested_state
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == suggested_unit
+
+    # Update suggested unit
+    async_update_suggested_units(hass)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity0.entity_id)
+    assert state.state == custom_state
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == custom_unit
+
+    state = hass.states.get(entity1.entity_id)
+    assert state.state == automatic_state_2
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == automatic_unit_2
+
+    state = hass.states.get(entity2.entity_id)
+    assert state.state == custom_state
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == custom_unit
+
+    state = hass.states.get(entity3.entity_id)
+    assert state.state == suggested_state
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == suggested_unit
