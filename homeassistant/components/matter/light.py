@@ -81,11 +81,18 @@ class MatterLight(MatterEntity, LightEntity):
     def _supports_color_mode(self, color_feature: MatterColorControlFeatures) -> bool:
         """Return if device supports given color mode."""
 
-        color_control = self._device_type_instance.get_cluster(clusters.ColorControl)
-        if color_control is None:
+        if not self._supports_color():
             return False
 
-        return self._supports_feature(color_control.featureMap, color_feature)
+        feature_map = self._device_type_instance.node.get_attribute(
+            self._device_type_instance.endpoint,
+            clusters.ColorControl,
+            clusters.ColorControl.Attributes.FeatureMap,
+        )
+
+        assert isinstance(feature_map.value, int)
+
+        return self._supports_feature(int(feature_map.value), color_feature)
 
     def _supports_hs_color(self) -> bool:
         """Return if device supports hs color."""
