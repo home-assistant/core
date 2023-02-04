@@ -9,6 +9,8 @@ import os
 from types import MappingProxyType
 from typing import Any
 
+from pyownet import protocol
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -419,6 +421,17 @@ def get_entities(
                 override_key or description.key,
             )
             name = f"{device_id} {description.name}"
+            if family == "12":
+                # We need to check if there is TAI8570 plugged in
+                try:
+                    onewire_hub.owproxy.read(device_file)
+                except protocol.OwnetError as err:
+                    _LOGGER.debug(
+                        "Ignoring unreachable sensor %s",
+                        device_file,
+                        exc_info=err,
+                    )
+                    continue
             entities.append(
                 OneWireSensor(
                     description=description,

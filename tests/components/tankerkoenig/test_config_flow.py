@@ -146,7 +146,6 @@ async def test_exception_security(hass: HomeAssistant):
         "homeassistant.components.tankerkoenig.config_flow.getNearbyStations",
         side_effect=customException,
     ):
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MOCK_USER_DATA
         )

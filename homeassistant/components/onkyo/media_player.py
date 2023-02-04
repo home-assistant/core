@@ -355,8 +355,7 @@ class OnkyoDevice(MediaPlayerEntity):
         self.command("system-power standby")
 
     def set_volume_level(self, volume: float) -> None:
-        """
-        Set volume level, input is range 0..1.
+        """Set volume level, input is range 0..1.
 
         However full volume on the amp is usually far too loud so allow the user to specify the upper range
         with CONF_MAX_VOLUME.  we change as per max_volume set by user. This means that if max volume is 80 then full
@@ -523,8 +522,7 @@ class OnkyoDeviceZone(OnkyoDevice):
         self.command(f"zone{self._zone}.power=standby")
 
     def set_volume_level(self, volume: float) -> None:
-        """
-        Set volume level, input is range 0..1.
+        """Set volume level, input is range 0..1.
 
         However full volume on the amp is usually far too loud so allow the user to specify the upper range
         with CONF_MAX_VOLUME.  we change as per max_volume set by user. This means that if max volume is 80 then full

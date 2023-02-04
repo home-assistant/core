@@ -1,6 +1,6 @@
 """Test honeywell sensor."""
-from AIOSomecomfort.device import Device
-from AIOSomecomfort.location import Location
+from aiosomecomfort.device import Device
+from aiosomecomfort.location import Location
 import pytest
 
 from homeassistant.core import HomeAssistant

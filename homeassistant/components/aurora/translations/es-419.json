@@ -1,0 +1,12 @@
+{
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "threshold": "L\u00edmite (%)"
+                }
+            }
+        }
+    },
+    "title": "Sensor de auroras de la NOAA"
+}

@@ -1,5 +1,4 @@
-"""
-Support Legacy API password auth provider.
+"""Support Legacy API password auth provider.
 
 It will be removed when auth system production ready
 """
@@ -71,8 +70,7 @@ class LegacyApiPasswordAuthProvider(AuthProvider):
     async def async_user_meta_for_credentials(
         self, credentials: Credentials
     ) -> UserMeta:
-        """
-        Return info for the user.
+        """Return info for the user.
 
         Will be used to populate info when creating a new user.
         """

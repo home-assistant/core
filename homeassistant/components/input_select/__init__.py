@@ -6,10 +6,19 @@ from typing import Any, cast
 
 import voluptuous as vol
 
-from homeassistant.components.select import SelectEntity
+from homeassistant.components.select import (
+    ATTR_CYCLE,
+    ATTR_OPTION,
+    ATTR_OPTIONS,
+    SERVICE_SELECT_FIRST,
+    SERVICE_SELECT_LAST,
+    SERVICE_SELECT_NEXT,
+    SERVICE_SELECT_OPTION,
+    SERVICE_SELECT_PREVIOUS,
+    SelectEntity,
+)
 from homeassistant.const import (
     ATTR_EDITABLE,
-    ATTR_OPTION,
     CONF_ICON,
     CONF_ID,
     CONF_NAME,
@@ -35,14 +44,6 @@ DOMAIN = "input_select"
 CONF_INITIAL = "initial"
 CONF_OPTIONS = "options"
 
-ATTR_OPTIONS = "options"
-ATTR_CYCLE = "cycle"
-
-SERVICE_SELECT_OPTION = "select_option"
-SERVICE_SELECT_NEXT = "select_next"
-SERVICE_SELECT_PREVIOUS = "select_previous"
-SERVICE_SELECT_FIRST = "select_first"
-SERVICE_SELECT_LAST = "select_last"
 SERVICE_SET_OPTIONS = "set_options"
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
@@ -188,33 +189,33 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     component.async_register_entity_service(
-        SERVICE_SELECT_OPTION,
-        {vol.Required(ATTR_OPTION): cv.string},
-        "async_select_option",
-    )
-
-    component.async_register_entity_service(
-        SERVICE_SELECT_NEXT,
-        {vol.Optional(ATTR_CYCLE, default=True): bool},
-        "async_next",
-    )
-
-    component.async_register_entity_service(
-        SERVICE_SELECT_PREVIOUS,
-        {vol.Optional(ATTR_CYCLE, default=True): bool},
-        "async_previous",
-    )
-
-    component.async_register_entity_service(
         SERVICE_SELECT_FIRST,
         {},
-        callback(lambda entity, call: entity.async_select_index(0)),
+        InputSelect.async_first.__name__,
     )
 
     component.async_register_entity_service(
         SERVICE_SELECT_LAST,
         {},
-        callback(lambda entity, call: entity.async_select_index(-1)),
+        InputSelect.async_last.__name__,
+    )
+
+    component.async_register_entity_service(
+        SERVICE_SELECT_NEXT,
+        {vol.Optional(ATTR_CYCLE, default=True): bool},
+        InputSelect.async_next.__name__,
+    )
+
+    component.async_register_entity_service(
+        SERVICE_SELECT_OPTION,
+        {vol.Required(ATTR_OPTION): cv.string},
+        InputSelect.async_select_option.__name__,
+    )
+
+    component.async_register_entity_service(
+        SERVICE_SELECT_PREVIOUS,
+        {vol.Optional(ATTR_CYCLE, default=True): bool},
+        InputSelect.async_previous.__name__,
     )
 
     component.async_register_entity_service(
@@ -309,52 +310,6 @@ class InputSelect(collection.CollectionEntity, SelectEntity, RestoreEntity):
             return
         self._attr_current_option = option
         self.async_write_ha_state()
-
-    @callback
-    def async_select_index(self, idx: int) -> None:
-        """Select new option by index."""
-        new_index = idx % len(self.options)
-        self._attr_current_option = self.options[new_index]
-        self.async_write_ha_state()
-
-    @callback
-    def async_offset_index(self, offset: int, cycle: bool) -> None:
-        """Offset current index."""
-
-        current_index = (
-            self.options.index(self.current_option)
-            if self.current_option is not None
-            else 0
-        )
-
-        new_index = current_index + offset
-        if cycle:
-            new_index = new_index % len(self.options)
-        elif new_index < 0:
-            new_index = 0
-        elif new_index >= len(self.options):
-            new_index = len(self.options) - 1
-
-        self._attr_current_option = self.options[new_index]
-        self.async_write_ha_state()
-
-    @callback
-    def async_next(self, cycle: bool) -> None:
-        """Select next option."""
-        # If there is no current option, first item is the next
-        if self.current_option is None:
-            self.async_select_index(0)
-            return
-        self.async_offset_index(1, cycle)
-
-    @callback
-    def async_previous(self, cycle: bool) -> None:
-        """Select previous option."""
-        # If there is no current option, last item is the previous
-        if self.current_option is None:
-            self.async_select_index(-1)
-            return
-        self.async_offset_index(-1, cycle)
 
     async def async_set_options(self, options: list[str]) -> None:
         """Set options."""

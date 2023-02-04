@@ -99,7 +99,6 @@ async def test_step_user(hass: HomeAssistant) -> None:
     conf = {CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"}
 
     with patch("homeassistant.components.abode.config_flow.Abode"):
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=conf
         )

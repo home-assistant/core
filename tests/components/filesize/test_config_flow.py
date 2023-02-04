@@ -73,7 +73,9 @@ async def test_flow_fails_on_validation(hass: HomeAssistant) -> None:
 
     await async_create_file(hass, TEST_FILE)
 
-    with patch("homeassistant.components.filesize.config_flow.pathlib.Path",), patch(
+    with patch(
+        "homeassistant.components.filesize.config_flow.pathlib.Path",
+    ), patch(
         "homeassistant.components.filesize.async_setup_entry",
         return_value=True,
     ):
@@ -87,7 +89,9 @@ async def test_flow_fails_on_validation(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "not_allowed"}
 
     hass.config.allowlist_external_dirs = {TEST_DIR}
-    with patch("homeassistant.components.filesize.config_flow.pathlib.Path",), patch(
+    with patch(
+        "homeassistant.components.filesize.config_flow.pathlib.Path",
+    ), patch(
         "homeassistant.components.filesize.async_setup_entry",
         return_value=True,
     ):
