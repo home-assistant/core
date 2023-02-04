@@ -4,6 +4,7 @@ from __future__ import annotations
 from tplink_omada_client.exceptions import (
     ConnectionFailed,
     LoginFailed,
+    OmadaClientException,
     UnsupportedControllerVersion,
 )
 from tplink_omada_client.omadaclient import OmadaSite
@@ -33,11 +34,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f"Omada controller refused login attempt: {ex}"
         ) from ex
     except ConnectionFailed as ex:
-        raise ConfigEntryAuthFailed(
+        raise ConfigEntryNotReady(
             f"Omada controller could not be reached: {ex}"
         ) from ex
 
-    except Exception as ex:
+    except OmadaClientException as ex:
         raise ConfigEntryNotReady(
             f"Unexpected error connecting to Omada controller: {ex}"
         ) from ex

@@ -139,7 +139,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
         self._omada_opts = dict(entry_data)
-        return await self.async_step_reauth_confirm(dict(entry_data))
+        return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
@@ -157,12 +157,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 entry = self.hass.config_entries.async_get_entry(
                     self.context["entry_id"]
                 )
-                if entry is not None:
-                    self.hass.config_entries.async_update_entry(
-                        entry, data=self._omada_opts
-                    )
-                    await self.hass.config_entries.async_reload(entry.entry_id)
-                    return self.async_abort(reason="reauth_successful")
+                assert entry is not None
+                self.hass.config_entries.async_update_entry(
+                    entry, data=self._omada_opts
+                )
+                await self.hass.config_entries.async_reload(entry.entry_id)
+                return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="reauth_confirm",
@@ -191,7 +191,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except UnsupportedControllerVersion:
             errors["base"] = "unsupported_controller"
         except OmadaClientException as ex:
-            _LOGGER.exception("Unexpected API error: %s", ex)
+            _LOGGER.error("Unexpected API error: %s", ex)
             errors["base"] = "unknown"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
