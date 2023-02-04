@@ -444,4 +444,11 @@ class DatabaseEngine:
 class DatabaseOptimizer:
     """Properties of the database optimizer for the configured database engine."""
 
-    slow_select_in_with_distinct: bool
+    # Some MariaDB versions have a bug that causes a slow query when using
+    # a range in a select statement with in IN clause.
+    #
+    # https://jira.mariadb.org/browse/MDEV-25020
+    #
+    # Historically, we have applied this logic to PostgreSQL as well, but
+    # it may not be necessary. We should revisit this in the future.
+    slow_range_in_select: bool

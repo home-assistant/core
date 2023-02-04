@@ -467,10 +467,10 @@ def setup_connection_for_dialect(
 ) -> DatabaseEngine:
     """Execute statements needed for dialect connection."""
     version: AwesomeVersion | None = None
-    slow_select_in_with_distinct = True
+    slow_range_in_select = True
     if dialect_name == SupportedDialect.SQLITE:
         supported_dialect = SupportedDialect.SQLITE
-        slow_select_in_with_distinct = False
+        slow_range_in_select = False
         if first_connection:
             old_isolation = dbapi_connection.isolation_level
             dbapi_connection.isolation_level = None
@@ -537,7 +537,7 @@ def setup_connection_for_dialect(
                         version or version_string, "MySQL", MIN_VERSION_MYSQL
                     )
 
-        slow_select_in_with_distinct = bool(
+        slow_range_in_select = bool(
             not version
             or version < MARIADB_WITH_FIXED_IN_QUERIES_105
             or MARIA_DB_106 <= version < MARIADB_WITH_FIXED_IN_QUERIES_106
@@ -546,7 +546,12 @@ def setup_connection_for_dialect(
         )
     elif dialect_name == SupportedDialect.POSTGRESQL:
         supported_dialect = SupportedDialect.POSTGRESQL
-        slow_select_in_with_distinct = True
+        # Historically we have marked PostgreSQL as having slow range in select
+        # but this may not be true for all versions. We should investigate
+        # this further and remove this if possible in the future so we can use
+        # the simpler purge SQL query for _select_unused_attributes_ids
+        # and _select_unused_events_ids
+        slow_range_in_select = True
         if first_connection:
             # server_version_num was added in 2006
             result = query_on_connection(dbapi_connection, "SHOW server_version")
@@ -563,9 +568,7 @@ def setup_connection_for_dialect(
     return DatabaseEngine(
         dialect=supported_dialect,
         version=version,
-        optimizer=DatabaseOptimizer(
-            slow_select_in_with_distinct=slow_select_in_with_distinct
-        ),
+        optimizer=DatabaseOptimizer(slow_range_in_select=slow_range_in_select),
     )
 
 

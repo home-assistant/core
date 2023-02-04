@@ -270,7 +270,7 @@ def _select_unused_attributes_ids(
     if not attributes_ids:
         return set()
 
-    if not database_engine.optimizer.slow_select_in_with_distinct:
+    if not database_engine.optimizer.slow_range_in_select:
         #
         # SQLite has a superior query optimizer for the distinct query below as it uses
         # the covering index without having to examine the rows directly for both of the
@@ -356,7 +356,7 @@ def _select_unused_event_data_ids(
 
     # See _select_unused_attributes_ids for why this function
     # branches for non-sqlite databases.
-    if not database_engine.optimizer.slow_select_in_with_distinct:
+    if not database_engine.optimizer.slow_range_in_select:
         seen_ids = {
             state[0]
             for state in session.execute(
