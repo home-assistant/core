@@ -406,10 +406,10 @@ class ZeroconfDiscovery:
         """Process a zeroconf update."""
         try:
             async_service_info = AsyncServiceInfo(service_type, name)
-        except BadTypeInNameException:
+        except BadTypeInNameException as ex:
             # Some devices broadcast a name that is not a valid DNS name
             # This is a bug in the device firmware and we should ignore it
-            _LOGGER.debug("Bad name in zeroconf record: %s", name)
+            _LOGGER.debug("Bad name in zeroconf record: %s: %s", name, ex)
             return
         await async_service_info.async_request(zeroconf, 3000)
 
