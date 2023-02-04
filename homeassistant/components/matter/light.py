@@ -290,11 +290,11 @@ class MatterLight(MatterEntity, LightEntity):
         color_temp = kwargs.get(ATTR_COLOR_TEMP)
         brightness = kwargs.get(ATTR_BRIGHTNESS)
 
-        if hs_color is not None:
+        if hs_color is not None and self._supports_hs_color():
             await self._set_hs_color(hs_color)
-        elif xy_color is not None:
+        elif xy_color is not None and self._supports_xy_color():
             await self._set_xy_color(xy_color)
-        elif color_temp is not None:
+        elif color_temp is not None and self._supports_color_temperature():
             await self._set_color_temp(color_temp)
 
         if brightness is not None and self._supports_brightness():
