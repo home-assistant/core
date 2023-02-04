@@ -85,6 +85,7 @@ async def ws_list_datasets(
 
     store = await dataset_store.async_get_store(hass)
     result = []
+    preferred_dataset = store.preferred_dataset
     for dataset in store.datasets.values():
         result.append(
             {
@@ -93,7 +94,7 @@ async def ws_list_datasets(
                 "extended_pan_id": dataset.extended_pan_id,
                 "network_name": dataset.network_name,
                 "pan_id": dataset.pan_id,
-                "preferred": dataset.preferred,
+                "preferred": dataset.id == preferred_dataset,
                 "source": dataset.source,
             }
         )
