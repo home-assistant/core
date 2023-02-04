@@ -48,7 +48,7 @@ async def test_energy_sensor(hass: HomeAssistant, mock_block_device) -> None:
     await init_integration(hass, 1)
 
     state = hass.states.get(entity_id)
-    assert state.state == "20.57613"
+    assert state.state == "20576.1315"
     # suggested unit is KWh
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
 
@@ -70,7 +70,7 @@ async def test_power_factory_unit_migration(
     await init_integration(hass, 1)
 
     state = hass.states.get(entity_id)
-    assert state.state == "98"
+    assert state.state == "0.98"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
 
@@ -279,7 +279,7 @@ async def test_rpc_sensor_error(
     entity_id = f"{SENSOR_DOMAIN}.test_name_voltmeter"
     await init_integration(hass, 2)
 
-    assert hass.states.get(entity_id).state == "4.32"
+    assert hass.states.get(entity_id).state == "4.321"
 
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "voltmeter", "voltage", None)
     mock_rpc_device.mock_update()

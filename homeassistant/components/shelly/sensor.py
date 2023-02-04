@@ -56,7 +56,7 @@ from .utils import get_device_entry_gen, get_device_uptime
 class BlockSensorDescription(BlockEntityDescription, SensorEntityDescription):
     """Class to describe a BLOCK sensor."""
 
-    native_precision: int | None = None
+    suggested_display_precision: int | None = None
 
 
 @dataclass
@@ -84,7 +84,7 @@ SENSORS: Final = {
         key="device|deviceTemp",
         name="Device temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        native_precision=1,
+        suggested_display_precision=1,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
@@ -101,7 +101,7 @@ SENSORS: Final = {
         key="light|power",
         name="Power",
         native_unit_of_measurement=UnitOfPower.WATT,
-        native_precision=1,
+        suggested_display_precision=1,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
@@ -110,7 +110,7 @@ SENSORS: Final = {
         key="device|power",
         name="Power",
         native_unit_of_measurement=UnitOfPower.WATT,
-        native_precision=1,
+        suggested_display_precision=1,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -118,7 +118,7 @@ SENSORS: Final = {
         key="emeter|power",
         name="Power",
         native_unit_of_measurement=UnitOfPower.WATT,
-        native_precision=1,
+        suggested_display_precision=1,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -126,7 +126,7 @@ SENSORS: Final = {
         key="device|voltage",
         name="Voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        native_precision=1,
+        suggested_display_precision=1,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
@@ -135,14 +135,14 @@ SENSORS: Final = {
         key="emeter|voltage",
         name="Voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        native_precision=1,
+        suggested_display_precision=1,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ("emeter", "powerFactor"): BlockSensorDescription(
         key="emeter|powerFactor",
         name="Power factor",
-        native_precision=2,
+        suggested_display_precision=2,
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -150,7 +150,7 @@ SENSORS: Final = {
         key="relay|power",
         name="Power",
         native_unit_of_measurement=UnitOfPower.WATT,
-        native_precision=1,
+        suggested_display_precision=1,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -158,7 +158,7 @@ SENSORS: Final = {
         key="roller|rollerPower",
         name="Power",
         native_unit_of_measurement=UnitOfPower.WATT,
-        native_precision=1,
+        suggested_display_precision=1,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -168,7 +168,7 @@ SENSORS: Final = {
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda value: value / 60,
-        native_precision=2,
+        suggested_display_precision=2,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -177,7 +177,7 @@ SENSORS: Final = {
         name="Energy",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        native_precision=2,
+        suggested_display_precision=2,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         available=lambda block: cast(int, block.energy) != -1,
@@ -187,7 +187,7 @@ SENSORS: Final = {
         name="Energy returned",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        native_precision=2,
+        suggested_display_precision=2,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         available=lambda block: cast(int, block.energyReturned) != -1,
@@ -198,7 +198,7 @@ SENSORS: Final = {
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda value: value / 60,
-        native_precision=2,
+        suggested_display_precision=2,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
@@ -209,7 +209,7 @@ SENSORS: Final = {
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda value: value / 60,
-        native_precision=2,
+        suggested_display_precision=2,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -219,7 +219,7 @@ SENSORS: Final = {
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda value: value / 60,
-        native_precision=2,
+        suggested_display_precision=2,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -234,7 +234,7 @@ SENSORS: Final = {
         key="sensor|temp",
         name="Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        native_precision=1,
+        suggested_display_precision=1,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -243,7 +243,7 @@ SENSORS: Final = {
         key="sensor|extTemp",
         name="Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        native_precision=1,
+        suggested_display_precision=1,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         available=lambda block: cast(int, block.extTemp) != 999
@@ -253,7 +253,7 @@ SENSORS: Final = {
         key="sensor|humidity",
         name="Humidity",
         native_unit_of_measurement=PERCENTAGE,
-        native_precision=1,
+        suggested_display_precision=1,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
         available=lambda block: cast(int, block.humidity) != 999
@@ -280,7 +280,7 @@ SENSORS: Final = {
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:progress-wrench",
         value=lambda value: 100 - (value / 3600 / SHAIR_MAX_WORK_HOURS),
-        native_precision=1,
+        suggested_display_precision=1,
         extra_state_attributes=lambda block: {
             "Operational hours": round(cast(int, block.totalWorkTime) / 3600, 1)
         },
@@ -290,7 +290,7 @@ SENSORS: Final = {
         key="adc|adc",
         name="ADC",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        native_precision=2,
+        suggested_display_precision=2,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -409,7 +409,7 @@ RPC_SENSORS: Final = {
         name="Voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         value=lambda status, _: None if status is None else float(status),
-        native_precision=1,
+        suggested_display_precision=1,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
@@ -475,7 +475,7 @@ RPC_SENSORS: Final = {
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda status, _: status["total"],
-        native_precision=2,
+        suggested_display_precision=2,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -563,7 +563,7 @@ RPC_SENSORS: Final = {
         name="Device temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value=lambda status, _: status["tC"],
-        native_precision=1,
+        suggested_display_precision=1,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
@@ -575,7 +575,7 @@ RPC_SENSORS: Final = {
         sub_key="tC",
         name="Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        native_precision=1,
+        suggested_display_precision=1,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -605,7 +605,7 @@ RPC_SENSORS: Final = {
         sub_key="rh",
         name="Humidity",
         native_unit_of_measurement=PERCENTAGE,
-        native_precision=1,
+        suggested_display_precision=1,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -625,7 +625,7 @@ RPC_SENSORS: Final = {
         name="Voltmeter",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         value=lambda status, _: float(status),
-        native_precision=2,
+        suggested_display_precision=2,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         available=lambda status: status is not None,
@@ -715,7 +715,7 @@ class BlockSensor(ShellyBlockAttributeEntity, SensorEntity):
         self._attr_suggested_unit_of_measurement = (
             description.suggested_unit_of_measurement
         )
-        self._attr_native_precision = description.native_precision
+        self._attr_suggested_display_precision = description.suggested_display_precision
 
     @property
     def native_value(self) -> StateType:
@@ -745,9 +745,9 @@ class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
         return self.attribute_value
 
     @property
-    def native_precision(self) -> int | None:
+    def suggested_display_precision(self) -> int | None:
         """Return the precision of the sensor."""
-        return self.entity_description.native_precision
+        return self.entity_description.suggested_display_precision
 
 
 class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
@@ -767,7 +767,7 @@ class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
         """Initialize the sleeping sensor."""
         super().__init__(coordinator, block, attribute, description, entry, sensors)
 
-        self._attr_native_precision = description.native_precision
+        self._attr_suggested_display_precision = description.suggested_display_precision
 
     @property
     def native_value(self) -> StateType:
@@ -814,6 +814,6 @@ class RpcSleepingSensor(ShellySleepingRpcAttributeEntity, SensorEntity):
         return self.entity_description.native_unit_of_measurement
 
     @property
-    def native_precision(self) -> int | None:
+    def suggested_display_precision(self) -> int | None:
         """Return the precision of the sensor."""
-        return self.entity_description.native_precision
+        return self.entity_description.suggested_display_precision
