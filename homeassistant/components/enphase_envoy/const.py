@@ -26,7 +26,7 @@ SENSORS = (
         key="daily_production",
         name="Today's Energy Production",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
     ),
     SensorEntityDescription(
@@ -40,7 +40,7 @@ SENSORS = (
         key="lifetime_production",
         name="Lifetime Energy Production",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
     ),
     SensorEntityDescription(
@@ -54,7 +54,7 @@ SENSORS = (
         key="daily_consumption",
         name="Today's Energy Consumption",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
     ),
     SensorEntityDescription(
@@ -68,7 +68,7 @@ SENSORS = (
         key="lifetime_consumption",
         name="Lifetime Energy Consumption",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
     ),
 )
