@@ -1,6 +1,7 @@
 """Support for functionality to have conversations with Home Assistant."""
 from __future__ import annotations
 
+import asyncio
 import logging
 import re
 from typing import Any
@@ -307,6 +308,7 @@ class AgentManager:
         """Initialize the conversation agents."""
         self.hass = hass
         self._agents: dict[str, AbstractConversationAgent] = {}
+        self._default_agent_init_lock = asyncio.Lock()
 
     async def async_get_agent(
         self, agent_id: str | None = None
@@ -316,11 +318,18 @@ class AgentManager:
             agent_id = self.default_agent
 
         if agent_id == AgentManager.HOME_ASSISTANT_AGENT:
-            if self._builtin_agent is None:
+            if self._builtin_agent is not None:
+                return self._builtin_agent
+
+            async with self._default_agent_init_lock:
+                if self._builtin_agent is not None:
+                    return self._builtin_agent
+
                 self._builtin_agent = DefaultAgent(self.hass)
                 await self._builtin_agent.async_initialize(
                     self.hass.data.get(DATA_CONFIG)
                 )
+
             return self._builtin_agent
 
         return self._agents[agent_id]
