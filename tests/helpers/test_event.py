@@ -4076,7 +4076,7 @@ async def test_async_call_later(hass):
 
     def action(__utcnow: datetime):
         _currentdelay = __utcnow.timestamp() - scheduleutctime.timestamp()
-        future.set_result(delay < _currentdelay < (delay + delay_tolerance))
+        future.set_result(delay < _current_delay < (delay + delay_tolerance))
 
     remove = async_call_later(hass, delay, action)
 
@@ -4093,7 +4093,7 @@ async def test_async_call_later_timedelta(hass):
     future = asyncio.get_running_loop().create_future()
     delay = 5
     delay_tolerance = 0.1
-    scheduleutctime = dt_util.utcnow()
+    schedule_utctime = dt_util.utcnow()
 
     def action(__utcnow: datetime):
         _current_delay = __utcnow.timestamp() - schedule_utctime.timestamp()
