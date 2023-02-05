@@ -1,5 +1,8 @@
 """Common tradfri test fixtures."""
-from unittest.mock import Mock, PropertyMock, patch
+from __future__ import annotations
+
+from collections.abc import Generator
+from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
 import pytest
 
@@ -43,6 +46,7 @@ def mock_gateway_fixture():
         get_devices=get_devices,
         get_groups=get_groups,
         get_gateway_info=get_gateway_info,
+        mock_commands=[],
         mock_devices=[],
         mock_groups=[],
         mock_responses=[],
@@ -62,13 +66,14 @@ def mock_api_fixture(mock_gateway):
         # Store the data for "real" command objects.
         if hasattr(command, "_data") and not isinstance(command, Mock):
             mock_gateway.mock_responses.append(command._data)
+            mock_gateway.mock_commands.append(command)
         return command
 
     return api
 
 
 @pytest.fixture
-def mock_api_factory(mock_api):
+def mock_api_factory(mock_api) -> Generator[MagicMock, None, None]:
     """Mock pytradfri api factory."""
     with patch(f"{TRADFRI_PATH}.APIFactory", autospec=True) as factory:
         factory.init.return_value = factory.return_value
