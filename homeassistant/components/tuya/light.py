@@ -540,7 +540,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                 },
             ]
 
-        if (
+        elif (
             ATTR_BRIGHTNESS in kwargs
             and self.color_mode != ColorMode.HS
             and self._brightness
@@ -583,7 +583,8 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                 },
             ]
 
-        self._send_command(commands)
+        for command in commands:
+            self._send_command([command])
 
     def turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
