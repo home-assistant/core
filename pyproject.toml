@@ -276,6 +276,9 @@ ignore = [
 [tool.ruff.flake8-pytest-style]
 fixture-parentheses = false
 
+[tool.ruff.pyupgrade]
+keep-runtime-typing = true
+
 [tool.ruff.per-file-ignores]
 
 # TODO: these files have functions that are too complex, but flake8's and ruff's
