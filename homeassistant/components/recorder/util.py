@@ -469,7 +469,6 @@ def setup_connection_for_dialect(
     version: AwesomeVersion | None = None
     slow_range_in_select = True
     if dialect_name == SupportedDialect.SQLITE:
-        supported_dialect = SupportedDialect.SQLITE
         slow_range_in_select = False
         if first_connection:
             old_isolation = dbapi_connection.isolation_level
@@ -506,7 +505,6 @@ def setup_connection_for_dialect(
         execute_on_connection(dbapi_connection, "PRAGMA foreign_keys=ON")
 
     elif dialect_name == SupportedDialect.MYSQL:
-        supported_dialect = SupportedDialect.MYSQL
         execute_on_connection(dbapi_connection, "SET session wait_timeout=28800")
         if first_connection:
             result = query_on_connection(dbapi_connection, "SELECT VERSION()")
@@ -545,12 +543,11 @@ def setup_connection_for_dialect(
             or MARIA_DB_108 <= version < MARIADB_WITH_FIXED_IN_QUERIES_108
         )
     elif dialect_name == SupportedDialect.POSTGRESQL:
-        supported_dialect = SupportedDialect.POSTGRESQL
         # Historically we have marked PostgreSQL as having slow range in select
         # but this may not be true for all versions. We should investigate
-        # this further and remove this if possible in the future so we can use
-        # the simpler purge SQL query for _select_unused_attributes_ids
-        # and _select_unused_events_ids
+        # this further when we have more data and remove this if possible
+        # in the future so we can use the simpler purge SQL query for
+        # _select_unused_attributes_ids and _select_unused_events_ids
         slow_range_in_select = True
         if first_connection:
             # server_version_num was added in 2006
@@ -566,7 +563,7 @@ def setup_connection_for_dialect(
         _fail_unsupported_dialect(dialect_name)
 
     return DatabaseEngine(
-        dialect=supported_dialect,
+        dialect=SupportedDialect(dialect_name),
         version=version,
         optimizer=DatabaseOptimizer(slow_range_in_select=slow_range_in_select),
     )
