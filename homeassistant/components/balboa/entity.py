@@ -1,7 +1,7 @@
 """Balboa entities."""
 from __future__ import annotations
 
-from pybalboa import EVENT_UPDATE, SpaClient
+from pybalboa import EVENT_UPDATE, SpaClient, SpaControl
 
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import DeviceInfo, Entity
@@ -43,3 +43,21 @@ class BalboaEntity(BalboaBaseEntity):
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         self.async_on_remove(self._client.on(EVENT_UPDATE, self.async_write_ha_state))
+
+
+class BalboaControlEntity(BalboaBaseEntity):
+    """Balboa spa control entity."""
+
+    def __init__(self, control: SpaControl) -> None:
+        """Initialize the control."""
+        super().__init__(control.client, control.name)
+        self._control = control
+
+    @property
+    def available(self) -> bool:
+        """Return whether the entity is available or not."""
+        return self._client.connected
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        self.async_on_remove(self._control.on(EVENT_UPDATE, self.async_write_ha_state))

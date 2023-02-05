@@ -4,7 +4,8 @@ from __future__ import annotations
 from collections.abc import Callable, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pybalboa.enums import HeatMode
+from pybalboa import SpaControl
+from pybalboa.enums import HeatMode, OffLowHighState, OffOnState
 import pytest
 
 from homeassistant.core import HomeAssistant
@@ -57,5 +58,21 @@ def client_fixture() -> Generator[MagicMock, None, None]:
         client.heat_mode.set_state = AsyncMock()
         client.heat_mode.options = list(HeatMode)[:2]
         client.heat_state = 2
+
+        pump1 = MagicMock(SpaControl)
+        pump1.name = "Pump 1"
+        pump1.state = OffLowHighState.OFF
+        pump1.options = list(OffLowHighState)
+        pump1.client = client
+        pump1.on.side_effect = on
+        pump1.emit.side_effect = emit
+        pump2 = MagicMock(SpaControl)
+        pump2.name = "Pump 2"
+        pump2.state = OffOnState.OFF
+        pump2.options = list(OffOnState)
+        pump2.client = client
+        pump2.on.side_effect = on
+        pump2.emit.side_effect = emit
+        client.pumps = [pump1, pump2]
 
         yield client
