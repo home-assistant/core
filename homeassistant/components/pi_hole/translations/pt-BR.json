@@ -9,12 +9,17 @@
             "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida"
         },
         "step": {
+            "api_key": {
+                "data": {
+                    "api_key": "Chave da API"
+                }
+            },
             "reauth_confirm": {
                 "data": {
-                    "api_key": "Chave API"
+                    "api_key": "Chave da API"
                 },
                 "description": "Insira uma nova chave de API para o PI-Hole em {host}/{location}",
-                "title": "Reautentica\u00e7\u00e3o da integra\u00e7\u00e3o do PI-Hole"
+                "title": "PI-Hole Reautenticar Integra\u00e7\u00e3o"
             },
             "user": {
                 "data": {

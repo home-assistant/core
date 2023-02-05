@@ -3,6 +3,7 @@ blueprint:
   description: Turn on a light when motion is detected.
   domain: automation
   source_url: https://github.com/home-assistant/core/blob/dev/homeassistant/components/automation/blueprints/motion_light.yaml
+  author: Home Assistant
   input:
     motion_entity:
       name: Motion Sensor

@@ -68,5 +68,6 @@ def mock_litejet():
 
         mock_lj.start_time = dt_util.utcnow()
         mock_lj.last_delta = timedelta(0)
+        mock_lj.connected = True
 
         yield mock_lj

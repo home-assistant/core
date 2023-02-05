@@ -134,15 +134,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DATA_GROUP_MANAGER: group_manager,
         DATA_SOURCE_MANAGER: source_manager,
         Platform.MEDIA_PLAYER: players,
-        # Maps player_id to entity_id. Populated by the individual HeosMediaPlayer entities.
+        # Maps player_id to entity_id. Populated by the individual
+        # HeosMediaPlayer entities.
         DATA_ENTITY_ID_MAP: {},
     }
 
     services.register(hass, controller)
-
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     group_manager.connect_update()
     entry.async_on_unload(group_manager.disconnect_update)
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -251,11 +252,11 @@ class GroupManager:
         self.controller = controller
 
     def _get_entity_id_to_player_id_map(self) -> dict:
-        """Return a dictionary which maps all HeosMediaPlayer entity_ids to player_ids."""
+        """Return mapping of all HeosMediaPlayer entity_ids to player_ids."""
         return {v: k for k, v in self._hass.data[DOMAIN][DATA_ENTITY_ID_MAP].items()}
 
     async def async_get_group_membership(self):
-        """Return a dictionary which contains all group members for each player as entity_ids."""
+        """Return all group members for each player as entity_ids."""
         group_info_by_entity_id = {
             player_entity_id: []
             for player_entity_id in self._get_entity_id_to_player_id_map()
@@ -287,7 +288,7 @@ class GroupManager:
     async def async_join_players(
         self, leader_entity_id: str, member_entity_ids: list[str]
     ) -> None:
-        """Create a group with `leader_entity_id` as group leader and `member_entity_ids` as member players."""
+        """Create a group a group leader and member players."""
         entity_id_to_player_id_map = self._get_entity_id_to_player_id_map()
         leader_id = entity_id_to_player_id_map.get(leader_entity_id)
         if not leader_id:
@@ -458,8 +459,7 @@ class SourceManager:
         )
 
     def connect_update(self, hass, controller):
-        """
-        Connect listener for when sources change and signal player update.
+        """Connect listener for when sources change and signal player update.
 
         EVENT_SOURCES_CHANGED is often raised multiple times in response to a
         physical event therefore throttle it. Retrieving sources immediately

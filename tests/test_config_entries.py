@@ -29,7 +29,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.setup import async_set_domains_to_be_loaded, async_setup_component
 from homeassistant.util import dt
 
-from tests.common import (
+from .common import (
     MockConfigEntry,
     MockEntity,
     MockModule,
@@ -3555,7 +3555,6 @@ async def test_initializing_flows_canceled_on_shutdown(hass: HomeAssistant, mana
     with patch.dict(
         config_entries.HANDLERS, {"comp": MockFlowHandler, "test": MockFlowHandler}
     ):
-
         task = asyncio.create_task(
             manager.flow.async_init("test", context={"source": "reauth"})
         )

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator, Callable, Generator
+from collections.abc import AsyncGenerator, Callable, Coroutine, Generator
 from contextlib import asynccontextmanager
 import datetime
 import functools
@@ -16,8 +16,7 @@ import threading
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
-from aiohttp import client
-from aiohttp.pytest_plugin import AiohttpClient
+from aiohttp import ClientWebSocketResponse, client
 from aiohttp.test_utils import (
     BaseTestServer,
     TestClient,
@@ -42,6 +41,7 @@ from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH_REQUIRED,
 )
 from homeassistant.components.websocket_api.http import URL
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import HASSIO_USER_NAME
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import (
@@ -54,11 +54,12 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, location
 
-from tests.ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
+from .ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
+from .typing import ClientSessionGenerator, WebSocketGenerator
 
 pytest.register_assert_rewrite("tests.common")
 
-from tests.common import (  # noqa: E402, isort:skip
+from .common import (  # noqa: E402, isort:skip
     CLIENT_ID,
     INSTANCES,
     MockConfigEntry,
@@ -68,9 +69,9 @@ from tests.common import (  # noqa: E402, isort:skip
     async_test_home_assistant,
     get_test_home_assistant,
     init_recorder_component,
-    mock_storage as mock_storage,
+    mock_storage,
 )
-from tests.test_util.aiohttp import mock_aiohttp_client  # noqa: E402, isort:skip
+from .test_util.aiohttp import mock_aiohttp_client  # noqa: E402, isort:skip
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -87,6 +88,8 @@ def _utcnow():
 
 dt_util.utcnow = _utcnow
 event.time_tracker_utcnow = _utcnow
+
+MqttMockType = Callable[..., Coroutine[Any, Any, MagicMock]]
 
 
 def pytest_addoption(parser):
@@ -205,7 +208,7 @@ util.get_local_ip = lambda: "127.0.0.1"
 def caplog_fixture(caplog):
     """Set log level to debug for tests using the caplog fixture."""
     caplog.set_level(logging.DEBUG)
-    yield caplog
+    return caplog
 
 
 @pytest.fixture(autouse=True, scope="module")
@@ -332,7 +335,7 @@ def aiohttp_client_cls():
 @pytest.fixture
 def aiohttp_client(
     event_loop: asyncio.AbstractEventLoop,
-) -> Generator[AiohttpClient, None, None]:
+) -> Generator[ClientSessionGenerator, None, None]:
     """Override the default aiohttp_client since 3.x does not support aiohttp_client_cls.
 
     Remove this when upgrading to 4.x as aiohttp_client_cls
@@ -351,7 +354,6 @@ def aiohttp_client(
         server_kwargs: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> TestClient:
-
         if isinstance(__param, Callable) and not isinstance(  # type: ignore[arg-type]
             __param, (Application, BaseTestServer)
         ):
@@ -367,7 +369,7 @@ def aiohttp_client(
         elif isinstance(__param, BaseTestServer):
             client = TestClient(__param, loop=loop, **kwargs)
         else:
-            raise ValueError("Unknown argument type: %r" % type(__param))
+            raise TypeError("Unknown argument type: %r" % type(__param))
 
         await client.start_server()
         clients.append(client)
@@ -607,10 +609,15 @@ def local_auth(hass):
 
 
 @pytest.fixture
-def hass_client(hass, aiohttp_client, hass_access_token, socket_enabled):
+def hass_client(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    hass_access_token: str,
+    socket_enabled: None,
+) -> ClientSessionGenerator:
     """Return an authenticated HTTP client."""
 
-    async def auth_client():
+    async def auth_client() -> TestClient:
         """Return an authenticated client."""
         return await aiohttp_client(
             hass.http.app, headers={"Authorization": f"Bearer {hass_access_token}"}
@@ -620,10 +627,14 @@ def hass_client(hass, aiohttp_client, hass_access_token, socket_enabled):
 
 
 @pytest.fixture
-def hass_client_no_auth(hass, aiohttp_client, socket_enabled):
+def hass_client_no_auth(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    socket_enabled: None,
+) -> ClientSessionGenerator:
     """Return an unauthenticated HTTP client."""
 
-    async def client():
+    async def client() -> TestClient:
         """Return an authenticated client."""
         return await aiohttp_client(hass.http.app)
 
@@ -655,10 +666,17 @@ def current_request_with_host(current_request):
 
 
 @pytest.fixture
-def hass_ws_client(aiohttp_client, hass_access_token, hass, socket_enabled):
+def hass_ws_client(
+    aiohttp_client: ClientSessionGenerator,
+    hass_access_token: str | None,
+    hass: HomeAssistant,
+    socket_enabled: None,
+) -> WebSocketGenerator:
     """Websocket client fixture connected to websocket server."""
 
-    async def create_client(hass=hass, access_token=hass_access_token):
+    async def create_client(
+        hass: HomeAssistant = hass, access_token: str | None = hass_access_token
+    ) -> ClientWebSocketResponse:
         """Create a websocket client."""
         assert await async_setup_component(hass, "websocket_api", {})
         client = await aiohttp_client(hass.http.app)
@@ -694,24 +712,26 @@ def fail_on_log_exception(request, monkeypatch):
 
 
 @pytest.fixture
-def mqtt_config_entry_data():
+def mqtt_config_entry_data() -> dict[str, Any] | None:
     """Fixture to allow overriding MQTT config."""
     return None
 
 
 @pytest.fixture
-def mqtt_client_mock(hass):
+def mqtt_client_mock(hass: HomeAssistant) -> Generator[Any, MagicMock, None]:
     """Fixture to mock MQTT client."""
 
-    mid = 0
+    mid: int = 0
 
-    def get_mid():
+    def get_mid() -> int:
         nonlocal mid
         mid += 1
         return mid
 
     class FakeInfo:
-        def __init__(self, mid):
+        """Class to fake MQTT info."""
+
+        def __init__(self, mid: int) -> None:
             self.mid = mid
             self.rc = 0
 
@@ -744,17 +764,21 @@ def mqtt_client_mock(hass):
 
 @pytest.fixture
 async def mqtt_mock(
-    hass,
-    mqtt_client_mock,
-    mqtt_config_entry_data,
-    mqtt_mock_entry_no_yaml_config,
-):
+    hass: HomeAssistant,
+    mqtt_client_mock: MagicMock,
+    mqtt_config_entry_data: dict[str, Any] | None,
+    mqtt_mock_entry_no_yaml_config: Callable[..., Coroutine[Any, Any, MagicMock]],
+) -> AsyncGenerator[MagicMock, None]:
     """Fixture to mock MQTT component."""
     return await mqtt_mock_entry_no_yaml_config()
 
 
 @asynccontextmanager
-async def _mqtt_mock_entry(hass, mqtt_client_mock, mqtt_config_entry_data):
+async def _mqtt_mock_entry(
+    hass: HomeAssistant,
+    mqtt_client_mock: MagicMock,
+    mqtt_config_entry_data: dict[str, Any] | None,
+) -> AsyncGenerator[Callable[..., Coroutine[Any, Any, Any]], None]:
     """Fixture to mock a delayed setup of the MQTT config entry."""
     # Local import to avoid processing MQTT modules when running a testcase
     # which does not use MQTT.
@@ -779,7 +803,9 @@ async def _mqtt_mock_entry(hass, mqtt_client_mock, mqtt_config_entry_data):
     real_mqtt_instance = None
     mock_mqtt_instance = None
 
-    async def _setup_mqtt_entry(setup_entry):
+    async def _setup_mqtt_entry(
+        setup_entry: Callable[[HomeAssistant, ConfigEntry], Coroutine[Any, Any, bool]]
+    ) -> MagicMock:
         """Set up the MQTT config entry."""
         assert await setup_entry(hass, entry)
 
@@ -796,7 +822,7 @@ async def _mqtt_mock_entry(hass, mqtt_client_mock, mqtt_config_entry_data):
 
         return mock_mqtt_instance
 
-    def create_mock_mqtt(*args, **kwargs):
+    def create_mock_mqtt(*args, **kwargs) -> MagicMock:
         """Create a mock based on mqtt.MQTT."""
         nonlocal mock_mqtt_instance
         nonlocal real_mqtt_instance
@@ -814,17 +840,21 @@ async def _mqtt_mock_entry(hass, mqtt_client_mock, mqtt_config_entry_data):
 
 @pytest.fixture
 async def mqtt_mock_entry_no_yaml_config(
-    hass, mqtt_client_mock, mqtt_config_entry_data
-):
+    hass: HomeAssistant,
+    mqtt_client_mock: MagicMock,
+    mqtt_config_entry_data: dict[str, Any] | None,
+) -> AsyncGenerator[MqttMockType, None,]:
     """Set up an MQTT config entry without MQTT yaml config."""
 
-    async def _async_setup_config_entry(hass, entry):
+    async def _async_setup_config_entry(
+        hass: HomeAssistant, entry: ConfigEntry
+    ) -> bool:
         """Help set up the config entry."""
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         return True
 
-    async def _setup_mqtt_entry():
+    async def _setup_mqtt_entry() -> Callable[..., Coroutine[Any, Any, MagicMock]]:
         """Set up the MQTT config entry."""
         return await mqtt_mock_entry(_async_setup_config_entry)
 
@@ -836,15 +866,19 @@ async def mqtt_mock_entry_no_yaml_config(
 
 @pytest.fixture
 async def mqtt_mock_entry_with_yaml_config(
-    hass, mqtt_client_mock, mqtt_config_entry_data
-):
+    hass: HomeAssistant,
+    mqtt_client_mock: MagicMock,
+    mqtt_config_entry_data: dict[str, Any] | None,
+) -> AsyncGenerator[MqttMockType, None,]:
     """Set up an MQTT config entry with MQTT yaml config."""
 
-    async def _async_do_not_setup_config_entry(hass, entry):
+    async def _async_do_not_setup_config_entry(
+        hass: HomeAssistant, entry: ConfigEntry
+    ) -> bool:
         """Do nothing."""
         return True
 
-    async def _setup_mqtt_entry():
+    async def _setup_mqtt_entry() -> Callable[..., Coroutine[Any, Any, MagicMock]]:
         """Set up the MQTT config entry."""
         return await mqtt_mock_entry(_async_do_not_setup_config_entry)
 
@@ -1062,7 +1096,7 @@ async def async_setup_recorder_instance(
     # testcase which does not use the recorder.
     from homeassistant.components import recorder
 
-    from tests.components.recorder.common import async_recorder_block_till_done
+    from .components.recorder.common import async_recorder_block_till_done
 
     nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
     stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None
@@ -1103,7 +1137,7 @@ async def async_setup_recorder_instance(
 @pytest.fixture
 async def recorder_mock(recorder_config, async_setup_recorder_instance, hass):
     """Fixture with in-memory recorder."""
-    yield await async_setup_recorder_instance(hass, recorder_config)
+    return await async_setup_recorder_instance(hass, recorder_config)
 
 
 @pytest.fixture

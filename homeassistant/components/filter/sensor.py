@@ -507,7 +507,6 @@ class RangeFilter(Filter, SensorEntity):
         new_state_value = cast(float, new_state.state)
 
         if self._upper_bound is not None and new_state_value > self._upper_bound:
-
             self._stats_internal["erasures_up"] += 1
 
             _LOGGER.debug(
@@ -519,7 +518,6 @@ class RangeFilter(Filter, SensorEntity):
             new_state.state = self._upper_bound
 
         elif self._lower_bound is not None and new_state_value < self._lower_bound:
-
             self._stats_internal["erasures_low"] += 1
 
             _LOGGER.debug(
@@ -564,7 +562,6 @@ class OutlierFilter(Filter, SensorEntity):
             len(self.states) == self.states.maxlen
             and abs(new_state_value - median) > self._radius
         ):
-
             self._stats_internal["erasures"] += 1
 
             _LOGGER.debug(

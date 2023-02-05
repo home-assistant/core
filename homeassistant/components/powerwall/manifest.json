@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/powerwall",
   "requirements": ["tesla-powerwall==0.3.19"],
-  "codeowners": ["@bdraco", "@jrester"],
+  "codeowners": ["@bdraco", "@jrester", "@daniel-simpson"],
   "dhcp": [
     {
       "hostname": "1118431-*"

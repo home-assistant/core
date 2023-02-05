@@ -1,5 +1,4 @@
-"""
-Test for the SmartThings climate platform.
+"""Test for the SmartThings climate platform.
 
 The only mocking required is of the underlying SmartThings API object so
 real HTTP calls are not initiated during testing.

@@ -1,6 +1,7 @@
 """Test the Open Thread Border Router integration."""
 
 from http import HTTPStatus
+from unittest.mock import patch
 
 import pytest
 
@@ -8,15 +9,52 @@ from homeassistant.components import otbr
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from . import BASE_URL
+from . import BASE_URL, CONFIG_ENTRY_DATA, DATASET
 
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
+
+
+async def test_import_dataset(hass: HomeAssistant):
+    """Test the active dataset is imported at setup."""
+
+    config_entry = MockConfigEntry(
+        data=CONFIG_ENTRY_DATA,
+        domain=otbr.DOMAIN,
+        options={},
+        title="My OTBR",
+    )
+    config_entry.add_to_hass(hass)
+    with patch(
+        "python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=DATASET
+    ), patch(
+        "homeassistant.components.thread.dataset_store.DatasetStore.async_add"
+    ) as mock_add:
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    mock_add.assert_called_once_with(config_entry.title, DATASET.hex())
+
+
+async def test_config_entry_not_ready(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+):
+    """Test raising ConfigEntryNotReady ."""
+
+    config_entry = MockConfigEntry(
+        data=CONFIG_ENTRY_DATA,
+        domain=otbr.DOMAIN,
+        options={},
+        title="My OTBR",
+    )
+    config_entry.add_to_hass(hass)
+    aioclient_mock.get(f"{BASE_URL}/node/dataset/active", status=HTTPStatus.CREATED)
+    assert not await hass.config_entries.async_setup(config_entry.entry_id)
 
 
 async def test_remove_entry(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, otbr_config_entry
 ):
-    """Test async_get_thread_state."""
+    """Test async_get_active_dataset_tlvs after removing the config entry."""
 
     aioclient_mock.get(f"{BASE_URL}/node/dataset/active", text="0E")
 
@@ -80,7 +118,7 @@ async def test_get_active_dataset_tlvs_201(
 
     aioclient_mock.get(f"{BASE_URL}/node/dataset/active", status=HTTPStatus.CREATED)
     with pytest.raises(HomeAssistantError):
-        assert await otbr.async_get_active_dataset_tlvs(hass) is None
+        assert await otbr.async_get_active_dataset_tlvs(hass)
 
 
 async def test_get_active_dataset_tlvs_invalid(
@@ -90,4 +128,4 @@ async def test_get_active_dataset_tlvs_invalid(
 
     aioclient_mock.get(f"{BASE_URL}/node/dataset/active", text="unexpected")
     with pytest.raises(HomeAssistantError):
-        assert await otbr.async_get_active_dataset_tlvs(hass) is None
+        assert await otbr.async_get_active_dataset_tlvs(hass)

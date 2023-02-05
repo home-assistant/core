@@ -2,6 +2,7 @@
 from unittest.mock import Mock, patch
 
 import aprslib
+import pytest
 
 import homeassistant.components.aprs.device_tracker as device_tracker
 
@@ -57,7 +58,7 @@ def test_gps_accuracy_invalid_int():
 
     try:
         device_tracker.gps_accuracy(TEST_COORDS_NULL_ISLAND, level)
-        assert False, "No exception."
+        pytest.fail("No exception.")
     except ValueError:
         pass
 
@@ -68,7 +69,7 @@ def test_gps_accuracy_invalid_string():
 
     try:
         device_tracker.gps_accuracy(TEST_COORDS_NULL_ISLAND, level)
-        assert False, "No exception."
+        pytest.fail("No exception.")
     except ValueError:
         pass
 
@@ -79,7 +80,7 @@ def test_gps_accuracy_invalid_float():
 
     try:
         device_tracker.gps_accuracy(TEST_COORDS_NULL_ISLAND, level)
-        assert False, "No exception."
+        pytest.fail("No exception.")
     except ValueError:
         pass
 

@@ -43,18 +43,19 @@ from homeassistant.helpers.json import (
     JSON_DECODE_EXCEPTIONS,
     JSON_DUMP,
     json_bytes,
+    json_bytes_strip_null,
     json_loads,
 )
 import homeassistant.util.dt as dt_util
 
-from .const import ALL_DOMAIN_EXCLUDE_ATTRS
+from .const import ALL_DOMAIN_EXCLUDE_ATTRS, SupportedDialect
 from .models import StatisticData, StatisticMetaData, process_timestamp
 
 # SQLAlchemy Schema
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 32
+SCHEMA_VERSION = 33
 
 _StatisticsBaseSelfT = TypeVar("_StatisticsBaseSelfT", bound="StatisticsBase")
 
@@ -70,6 +71,9 @@ TABLE_STATISTICS = "statistics"
 TABLE_STATISTICS_META = "statistics_meta"
 TABLE_STATISTICS_RUNS = "statistics_runs"
 TABLE_STATISTICS_SHORT_TERM = "statistics_short_term"
+
+MAX_STATE_ATTRS_BYTES = 16384
+PSQL_DIALECT = SupportedDialect.POSTGRESQL
 
 ALL_TABLES = [
     TABLE_STATES,
@@ -242,17 +246,12 @@ class EventData(Base):  # type: ignore[misc,valid-type]
         )
 
     @staticmethod
-    def from_event(event: Event) -> EventData:
-        """Create object from an event."""
-        shared_data = json_bytes(event.data)
-        return EventData(
-            shared_data=shared_data.decode("utf-8"),
-            hash=EventData.hash_shared_data_bytes(shared_data),
-        )
-
-    @staticmethod
-    def shared_data_bytes_from_event(event: Event) -> bytes:
+    def shared_data_bytes_from_event(
+        event: Event, dialect: SupportedDialect | None
+    ) -> bytes:
         """Create shared_data from an event."""
+        if dialect == SupportedDialect.POSTGRESQL:
+            return json_bytes_strip_null(event.data)
         return json_bytes(event.data)
 
     @staticmethod
@@ -405,18 +404,10 @@ class StateAttributes(Base):  # type: ignore[misc,valid-type]
         )
 
     @staticmethod
-    def from_event(event: Event) -> StateAttributes:
-        """Create object from a state_changed event."""
-        state: State | None = event.data.get("new_state")
-        # None state means the state was removed from the state machine
-        attr_bytes = b"{}" if state is None else json_bytes(state.attributes)
-        dbstate = StateAttributes(shared_attrs=attr_bytes.decode("utf-8"))
-        dbstate.hash = StateAttributes.hash_shared_attrs_bytes(attr_bytes)
-        return dbstate
-
-    @staticmethod
     def shared_attrs_bytes_from_event(
-        event: Event, exclude_attrs_by_domain: dict[str, set[str]]
+        event: Event,
+        exclude_attrs_by_domain: dict[str, set[str]],
+        dialect: SupportedDialect | None,
     ) -> bytes:
         """Create shared_attrs from a state_changed event."""
         state: State | None = event.data.get("new_state")
@@ -427,9 +418,20 @@ class StateAttributes(Base):  # type: ignore[misc,valid-type]
         exclude_attrs = (
             exclude_attrs_by_domain.get(domain, set()) | ALL_DOMAIN_EXCLUDE_ATTRS
         )
-        return json_bytes(
+        encoder = json_bytes_strip_null if dialect == PSQL_DIALECT else json_bytes
+        bytes_result = encoder(
             {k: v for k, v in state.attributes.items() if k not in exclude_attrs}
         )
+        if len(bytes_result) > MAX_STATE_ATTRS_BYTES:
+            _LOGGER.warning(
+                "State attributes for %s exceed maximum size of %s bytes. "
+                "This can cause database performance issues; Attributes "
+                "will not be stored",
+                state.entity_id,
+                MAX_STATE_ATTRS_BYTES,
+            )
+            return b"{}"
+        return bytes_result
 
     @staticmethod
     def hash_shared_attrs_bytes(shared_attrs_bytes: bytes) -> int:

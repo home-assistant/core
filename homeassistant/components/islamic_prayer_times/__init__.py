@@ -26,10 +26,9 @@ CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the Islamic Prayer Component."""
     client = IslamicPrayerClient(hass, config_entry)
-
+    hass.data[DOMAIN] = client
     await client.async_setup()
 
-    hass.data.setdefault(DOMAIN, client)
     return True
 
 
@@ -155,7 +154,9 @@ class IslamicPrayerClient:
         await self.async_update()
         self.config_entry.add_update_listener(self.async_options_updated)
 
-        self.hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
+        await self.hass.config_entries.async_forward_entry_setups(
+            self.config_entry, PLATFORMS
+        )
 
         return True
 

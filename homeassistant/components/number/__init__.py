@@ -8,15 +8,14 @@ from datetime import timedelta
 import inspect
 import logging
 from math import ceil, floor
-from typing import Any, Final, final
+from typing import Any, final
 
 import voluptuous as vol
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_MODE, CONF_UNIT_OF_MEASUREMENT, UnitOfTemperature
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers.config_validation import (  # noqa: F401
+from homeassistant.helpers.config_validation import (
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
@@ -25,7 +24,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
+from .const import (  # noqa: F401
     ATTR_MAX,
     ATTR_MIN,
     ATTR_STEP,
@@ -33,31 +32,41 @@ from .const import (
     DEFAULT_MAX_VALUE,
     DEFAULT_MIN_VALUE,
     DEFAULT_STEP,
+    DEVICE_CLASSES_SCHEMA,
     DOMAIN,
     SERVICE_SET_VALUE,
     UNIT_CONVERTERS,
     NumberDeviceClass,
+    NumberMode,
 )
 from .websocket_api import async_setup as async_setup_ws_api
 
-SCAN_INTERVAL = timedelta(seconds=30)
+_LOGGER = logging.getLogger(__name__)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
-_LOGGER = logging.getLogger(__name__)
+SCAN_INTERVAL = timedelta(seconds=30)
 
-DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(NumberDeviceClass))
-
-
-class NumberMode(StrEnum):
-    """Modes for number entities."""
-
-    AUTO = "auto"
-    BOX = "box"
-    SLIDER = "slider"
-
+__all__ = [
+    "ATTR_MAX",
+    "ATTR_MIN",
+    "ATTR_STEP",
+    "ATTR_VALUE",
+    "DEFAULT_MAX_VALUE",
+    "DEFAULT_MIN_VALUE",
+    "DEFAULT_STEP",
+    "DOMAIN",
+    "PLATFORM_SCHEMA_BASE",
+    "PLATFORM_SCHEMA",
+    "NumberDeviceClass",
+    "NumberEntity",
+    "NumberEntityDescription",
+    "NumberExtraStoredData",
+    "NumberMode",
+    "RestoreNumber",
+]
 
 # mypy: disallow-any-generics
 

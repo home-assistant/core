@@ -158,12 +158,6 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
-    "almond": {
-      "name": "Almond",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_polling"
-    },
     "alpha_vantage": {
       "name": "Alpha Vantage",
       "integration_type": "hub",
@@ -1209,6 +1203,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "easyenergy": {
+      "name": "easyEnergy",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "ebox": {
       "name": "EBox",
       "integration_type": "hub",
@@ -1875,7 +1875,7 @@
     },
     "geo_json_events": {
       "name": "GeoJSON",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -2013,7 +2013,7 @@
           "name": "Google Domains"
         },
         "google_mail": {
-          "integration_type": "device",
+          "integration_type": "service",
           "config_flow": true,
           "iot_class": "cloud_polling",
           "name": "Google Mail"
@@ -3389,6 +3389,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "mopeka": {
+      "name": "Mopeka",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "motion_blinds": {
       "name": "Motion Blinds",
       "integration_type": "hub",
@@ -3830,6 +3836,12 @@
     },
     "open_meteo": {
       "name": "Open-Meteo",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
+    "openai_conversation": {
+      "name": "OpenAI Conversation",
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -4470,7 +4482,7 @@
       "name": "Reolink IP NVR/camera",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "local_polling"
+      "iot_class": "local_push"
     },
     "repetier": {
       "name": "Repetier-Server",
@@ -4636,6 +4648,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "rympro": {
+      "name": "Read Your Meter Pro",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "sabnzbd": {
       "name": "SABnzbd",
@@ -5569,6 +5587,12 @@
       "name": "Thomson",
       "integration_type": "hub",
       "config_flow": false,
+      "iot_class": "local_polling"
+    },
+    "thread": {
+      "name": "Thread",
+      "integration_type": "service",
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "tibber": {

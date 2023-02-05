@@ -70,10 +70,10 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Ping Binary sensor."""
-    host = config[CONF_HOST]
-    count = config[CONF_PING_COUNT]
-    name = config.get(CONF_NAME, f"{DEFAULT_NAME} {host}")
-    privileged = hass.data[DOMAIN][PING_PRIVS]
+    host: str = config[CONF_HOST]
+    count: int = config[CONF_PING_COUNT]
+    name: str = config.get(CONF_NAME, f"{DEFAULT_NAME} {host}")
+    privileged: bool | None = hass.data[DOMAIN][PING_PRIVS]
     ping_cls: type[PingDataSubProcess | PingDataICMPLib]
     if privileged is None:
         ping_cls = PingDataSubProcess
@@ -156,7 +156,7 @@ class PingBinarySensor(RestoreEntity, BinarySensorEntity):
 class PingData:
     """The base class for handling the data retrieval."""
 
-    def __init__(self, hass, host, count) -> None:
+    def __init__(self, hass: HomeAssistant, host: str, count: int) -> None:
         """Initialize the data object."""
         self.hass = hass
         self._ip_address = host
@@ -168,7 +168,9 @@ class PingData:
 class PingDataICMPLib(PingData):
     """The Class for handling the data retrieval using icmplib."""
 
-    def __init__(self, hass, host, count, privileged) -> None:
+    def __init__(
+        self, hass: HomeAssistant, host: str, count: int, privileged: bool | None
+    ) -> None:
         """Initialize the data object."""
         super().__init__(hass, host, count)
         self._privileged = privileged
@@ -203,7 +205,9 @@ class PingDataICMPLib(PingData):
 class PingDataSubProcess(PingData):
     """The Class for handling the data retrieval using the ping binary."""
 
-    def __init__(self, hass, host, count, privileged) -> None:
+    def __init__(
+        self, hass: HomeAssistant, host: str, count: int, privileged: bool | None
+    ) -> None:
         """Initialize the data object."""
         super().__init__(hass, host, count)
         self._ping_cmd = [

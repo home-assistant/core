@@ -132,9 +132,9 @@ WS_HEADERS_SELECTOR = TextSelector(
     TextSelectorConfig(type=TextSelectorType.TEXT, multiline=True)
 )
 CA_VERIFICATION_MODES = [
-    SelectOptionDict(value="off", label="Off"),
-    SelectOptionDict(value="auto", label="Auto"),
-    SelectOptionDict(value="custom", label="Custom"),
+    "off",
+    "auto",
+    "custom",
 ]
 BROKER_VERIFICATION_SELECTOR = SelectSelector(
     SelectSelectorConfig(
@@ -159,7 +159,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _hassio_discovery = None
+    _hassio_discovery: dict[str, Any] | None = None
 
     @staticmethod
     @callback

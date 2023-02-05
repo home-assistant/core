@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana"
+        },
         "error": {
             "bad_station_id": "Identyfikator stacji jest nieprawid\u0142owy, brakuje go lub nie mo\u017cna go znale\u017a\u0107 w bazie danych identyfikator\u00f3w stacji",
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",

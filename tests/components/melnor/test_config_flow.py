@@ -22,7 +22,6 @@ async def test_user_step_no_devices(hass):
     with patch_async_setup_entry() as mock_setup_entry, patch_async_discovered_service_info(
         []
     ):
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
@@ -38,7 +37,6 @@ async def test_user_step_discovered_devices(hass):
     """Test we properly handle device picking."""
 
     with patch_async_setup_entry() as mock_setup_entry, patch_async_discovered_service_info():
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
@@ -68,7 +66,6 @@ async def test_user_step_with_existing_device(hass):
     with patch_async_setup_entry() as mock_setup_entry, patch_async_discovered_service_info(
         [FAKE_SERVICE_INFO_1, FAKE_SERVICE_INFO_2]
     ):
-
         # Create the config flow
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -105,7 +102,6 @@ async def test_bluetooth_discovered(hass):
     """Test we short circuit to config entry creation."""
 
     with patch_async_setup_entry() as mock_setup_entry:
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_BLUETOOTH},
@@ -123,7 +119,6 @@ async def test_bluetooth_confirm(hass):
     """Test we short circuit to config entry creation."""
 
     with patch_async_setup_entry() as mock_setup_entry:
-
         # Create the config flow
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

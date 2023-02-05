@@ -280,7 +280,8 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
             CONF_HOST: self.host,
             CONF_METHOD: self.method,
             CONF_PORT: None,
-            # We need this high timeout because waiting for auth popup is just an open socket
+            # We need this high timeout because waiting for auth popup
+            # is just an open socket
             CONF_TIMEOUT: TIMEOUT_REQUEST,
         }
         try:
@@ -310,7 +311,8 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
                 LOGGER.debug("Create SamsungTVLegacyBridge for %s", self.host)
                 self._remote = Remote(self.config.copy())
             # This is only happening when the auth was switched to DENY
-            # A removed auth will lead to socket timeout because waiting for auth popup is just an open socket
+            # A removed auth will lead to socket timeout because waiting
+            # for auth popup is just an open socket
             except AccessDenied:
                 self._notify_reauth_callback()
                 raise
@@ -483,7 +485,8 @@ class SamsungTVWSBridge(
                 CONF_HOST: self.host,
                 CONF_METHOD: self.method,
                 CONF_PORT: self.port,
-                # We need this high timeout because waiting for auth popup is just an open socket
+                # We need this high timeout because waiting for auth popup
+                # is just an open socket
                 CONF_TIMEOUT: TIMEOUT_REQUEST,
             }
 

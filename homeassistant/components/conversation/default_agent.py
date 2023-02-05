@@ -8,23 +8,30 @@ from dataclasses import dataclass
 import logging
 from pathlib import Path
 import re
-from typing import Any
+from typing import IO, Any
 
-from hassil.intents import Intents, SlotList, TextSlotList
-from hassil.recognize import recognize
+from hassil.intents import Intents, ResponseType, SlotList, TextSlotList
+from hassil.recognize import RecognizeResult, recognize_all
 from hassil.util import merge_dict
 from home_assistant_intents import get_intents
 import yaml
 
 from homeassistant import core, setup
-from homeassistant.helpers import area_registry, entity_registry, intent
+from homeassistant.helpers import area_registry, entity_registry, intent, template
+from homeassistant.helpers.json import json_loads
 
-from .agent import AbstractConversationAgent, ConversationResult
+from .agent import AbstractConversationAgent, ConversationInput, ConversationResult
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+_DEFAULT_ERROR_TEXT = "Sorry, I couldn't understand that"
 
 REGEX_TYPE = type(re.compile(""))
+
+
+def json_load(fp: IO[str]) -> dict[str, Any]:
+    """Wrap json_loads for get_intents."""
+    return json_loads(fp.read())
 
 
 @dataclass
@@ -33,6 +40,8 @@ class LanguageIntents:
 
     intents: Intents
     intents_dict: dict[str, Any]
+    intent_responses: dict[str, Any]
+    error_responses: dict[str, Any]
     loaded_components: set[str]
 
 
@@ -62,6 +71,8 @@ class DefaultAgent(AbstractConversationAgent):
 
         # intent -> [sentences]
         self._config_intents: dict[str, Any] = {}
+        self._areas_list: TextSlotList | None = None
+        self._names_list: TextSlotList | None = None
 
     async def async_initialize(self, config_intents):
         """Initialize the default agent."""
@@ -72,16 +83,27 @@ class DefaultAgent(AbstractConversationAgent):
         if config_intents:
             self._config_intents = config_intents
 
-    async def async_process(
-        self,
-        text: str,
-        context: core.Context,
-        conversation_id: str | None = None,
-        language: str | None = None,
-    ) -> ConversationResult | None:
+        self.hass.bus.async_listen(
+            area_registry.EVENT_AREA_REGISTRY_UPDATED,
+            self._async_handle_area_registry_changed,
+            run_immediately=True,
+        )
+        self.hass.bus.async_listen(
+            entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
+            self._async_handle_entity_registry_changed,
+            run_immediately=True,
+        )
+        self.hass.bus.async_listen(
+            core.EVENT_STATE_CHANGED,
+            self._async_handle_state_changed,
+            run_immediately=True,
+        )
+
+    async def async_process(self, user_input: ConversationInput) -> ConversationResult:
         """Process a sentence."""
-        language = language or self.hass.config.language
+        language = user_input.language or self.hass.config.language
         lang_intents = self._lang_intents.get(language)
+        conversation_id = None  # Not supported
 
         # Reload intents if missing or new components
         if lang_intents is None or (
@@ -93,30 +115,110 @@ class DefaultAgent(AbstractConversationAgent):
         if lang_intents is None:
             # No intents loaded
             _LOGGER.warning("No intents were loaded for language: %s", language)
-            return None
+            return _make_error_result(
+                language,
+                intent.IntentResponseErrorCode.NO_INTENT_MATCH,
+                _DEFAULT_ERROR_TEXT,
+                conversation_id,
+            )
 
         slot_lists: dict[str, SlotList] = {
             "area": self._make_areas_list(),
             "name": self._make_names_list(),
         }
 
-        result = recognize(text, lang_intents.intents, slot_lists=slot_lists)
-        if result is None:
-            return None
-
-        intent_response = await intent.async_handle(
-            self.hass,
-            DOMAIN,
-            result.intent.name,
-            {entity.name: {"value": entity.value} for entity in result.entities_list},
-            text,
-            context,
-            language,
+        result = await self.hass.async_add_executor_job(
+            self._recognize,
+            user_input,
+            lang_intents,
+            slot_lists,
         )
+        if result is None:
+            _LOGGER.debug("No intent was matched for '%s'", user_input.text)
+            return _make_error_result(
+                language,
+                intent.IntentResponseErrorCode.NO_INTENT_MATCH,
+                self._get_error_text(ResponseType.NO_INTENT, lang_intents),
+                conversation_id,
+            )
+
+        try:
+            intent_response = await intent.async_handle(
+                self.hass,
+                DOMAIN,
+                result.intent.name,
+                {
+                    entity.name: {"value": entity.value}
+                    for entity in result.entities_list
+                },
+                user_input.text,
+                user_input.context,
+                language,
+            )
+        except intent.IntentHandleError:
+            _LOGGER.exception("Intent handling error")
+            return _make_error_result(
+                language,
+                intent.IntentResponseErrorCode.FAILED_TO_HANDLE,
+                self._get_error_text(ResponseType.HANDLE_ERROR, lang_intents),
+                conversation_id,
+            )
+        except intent.IntentUnexpectedError:
+            _LOGGER.exception("Unexpected intent error")
+            return _make_error_result(
+                language,
+                intent.IntentResponseErrorCode.UNKNOWN,
+                self._get_error_text(ResponseType.HANDLE_ERROR, lang_intents),
+                conversation_id,
+            )
+
+        if (
+            (not intent_response.speech)
+            and (intent_response.intent is not None)
+            and (response_key := result.response)
+        ):
+            # Use response template, if available
+            response_str = lang_intents.intent_responses.get(
+                result.intent.name, {}
+            ).get(response_key)
+            if response_str:
+                response_template = template.Template(response_str, self.hass)
+                speech = response_template.async_render(
+                    {
+                        "slots": {
+                            entity_name: entity_value.text or entity_value.value
+                            for entity_name, entity_value in result.entities.items()
+                        }
+                    }
+                )
+
+                # Normalize whitespace
+                speech = " ".join(speech.strip().split())
+                intent_response.async_set_speech(speech)
 
         return ConversationResult(
             response=intent_response, conversation_id=conversation_id
         )
+
+    def _recognize(
+        self,
+        user_input: ConversationInput,
+        lang_intents: LanguageIntents,
+        slot_lists: dict[str, SlotList],
+    ) -> RecognizeResult | None:
+        """Search intents for a match to user input."""
+        # Prioritize matches with entity names above area names
+        maybe_result: RecognizeResult | None = None
+        for result in recognize_all(
+            user_input.text, lang_intents.intents, slot_lists=slot_lists
+        ):
+            if "name" in result.entities:
+                return result
+
+            # Keep looking in case an entity has the same name
+            maybe_result = result
+
+        return maybe_result
 
     async def async_reload(self, language: str | None = None):
         """Clear cached intents for a language."""
@@ -139,13 +241,15 @@ class DefaultAgent(AbstractConversationAgent):
 
     async def async_get_or_load_intents(self, language: str) -> LanguageIntents | None:
         """Load all intents of a language with lock."""
+        hass_components = set(self.hass.config.components)
         async with self._lang_lock[language]:
             return await self.hass.async_add_executor_job(
-                self._get_or_load_intents,
-                language,
+                self._get_or_load_intents, language, hass_components
             )
 
-    def _get_or_load_intents(self, language: str) -> LanguageIntents | None:
+    def _get_or_load_intents(
+        self, language: str, hass_components: set[str]
+    ) -> LanguageIntents | None:
         """Load all intents for language (run inside executor)."""
         lang_intents = self._lang_intents.get(language)
 
@@ -158,7 +262,7 @@ class DefaultAgent(AbstractConversationAgent):
 
         # Check if any new components have been loaded
         intents_changed = False
-        for component in self.hass.config.components:
+        for component in hass_components:
             if component in loaded_components:
                 continue
 
@@ -168,7 +272,9 @@ class DefaultAgent(AbstractConversationAgent):
             # Check for intents for this component with the target language.
             # Try en-US, en, etc.
             for language_variation in _get_language_variations(language):
-                component_intents = get_intents(component, language_variation)
+                component_intents = get_intents(
+                    component, language_variation, json_load=json_load
+                )
                 if component_intents:
                     # Merge sentences into existing dictionary
                     merge_dict(intents_dict, component_intents)
@@ -230,16 +336,50 @@ class DefaultAgent(AbstractConversationAgent):
         # components with sentences are often being loaded.
         intents = Intents.from_dict(intents_dict)
 
+        # Load responses
+        responses_dict = intents_dict.get("responses", {})
+        intent_responses = responses_dict.get("intents", {})
+        error_responses = responses_dict.get("errors", {})
+
         if lang_intents is None:
-            lang_intents = LanguageIntents(intents, intents_dict, loaded_components)
+            lang_intents = LanguageIntents(
+                intents,
+                intents_dict,
+                intent_responses,
+                error_responses,
+                loaded_components,
+            )
             self._lang_intents[language] = lang_intents
         else:
             lang_intents.intents = intents
+            lang_intents.intent_responses = intent_responses
+            lang_intents.error_responses = error_responses
 
         return lang_intents
 
+    @core.callback
+    def _async_handle_area_registry_changed(self, event: core.Event) -> None:
+        """Clear area area cache when the area registry has changed."""
+        self._areas_list = None
+
+    @core.callback
+    def _async_handle_entity_registry_changed(self, event: core.Event) -> None:
+        """Clear names list cache when an entity changes aliases."""
+        if event.data["action"] == "update" and "aliases" not in event.data["changes"]:
+            return
+        self._names_list = None
+
+    @core.callback
+    def _async_handle_state_changed(self, event: core.Event) -> None:
+        """Clear names list cache when a state is added or removed from the state machine."""
+        if event.data.get("old_state") and event.data.get("new_state"):
+            return
+        self._names_list = None
+
     def _make_areas_list(self) -> TextSlotList:
         """Create slot list mapping area names/aliases to area ids."""
+        if self._areas_list is not None:
+            return self._areas_list
         registry = area_registry.async_get(self.hass)
         areas = []
         for entry in registry.async_list_areas():
@@ -248,25 +388,56 @@ class DefaultAgent(AbstractConversationAgent):
                 for alias in entry.aliases:
                     areas.append((alias, entry.id))
 
-        return TextSlotList.from_tuples(areas)
+        self._areas_list = TextSlotList.from_tuples(areas, allow_template=False)
+        return self._areas_list
 
     def _make_names_list(self) -> TextSlotList:
         """Create slot list mapping entity names/aliases to entity ids."""
+        if self._names_list is not None:
+            return self._names_list
         states = self.hass.states.async_all()
-        registry = entity_registry.async_get(self.hass)
+        entities = entity_registry.async_get(self.hass)
         names = []
         for state in states:
-            entry = registry.async_get(state.entity_id)
-            if entry is not None:
-                if entry.entity_category:
-                    # Skip configuration/diagnostic entities
+            context = {"domain": state.domain}
+
+            entity = entities.async_get(state.entity_id)
+            if entity is not None:
+                if entity.entity_category or entity.hidden:
+                    # Skip configuration/diagnostic/hidden entities
                     continue
 
-                if entry.aliases:
-                    for alias in entry.aliases:
-                        names.append((alias, state.entity_id))
+                if entity.aliases:
+                    for alias in entity.aliases:
+                        names.append((alias, state.entity_id, context))
 
-            # Default name
-            names.append((state.name, state.entity_id))
+                # Default name
+                names.append((state.name, state.entity_id, context))
 
-        return TextSlotList.from_tuples(names)
+            else:
+                # Default name
+                names.append((state.name, state.entity_id, context))
+
+        self._names_list = TextSlotList.from_tuples(names, allow_template=False)
+        return self._names_list
+
+    def _get_error_text(
+        self, response_type: ResponseType, lang_intents: LanguageIntents
+    ) -> str:
+        """Get response error text by type."""
+        response_key = response_type.value
+        response_str = lang_intents.error_responses.get(response_key)
+        return response_str or _DEFAULT_ERROR_TEXT
+
+
+def _make_error_result(
+    language: str,
+    error_code: intent.IntentResponseErrorCode,
+    response_text: str,
+    conversation_id: str | None = None,
+) -> ConversationResult:
+    """Create conversation result with error code and text."""
+    response = intent.IntentResponse(language=language)
+    response.async_set_error(error_code, response_text)
+
+    return ConversationResult(response, conversation_id)

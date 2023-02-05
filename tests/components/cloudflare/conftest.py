@@ -1,12 +1,12 @@
 """Define fixtures available for all tests."""
 from unittest.mock import patch
 
-from pytest import fixture
+import pytest
 
 from . import _get_mock_cfupdate
 
 
-@fixture
+@pytest.fixture
 def cfupdate(hass):
     """Mock the CloudflareUpdater for easier testing."""
     mock_cfupdate = _get_mock_cfupdate()
@@ -17,7 +17,7 @@ def cfupdate(hass):
         yield mock_api
 
 
-@fixture
+@pytest.fixture
 def cfupdate_flow(hass):
     """Mock the CloudflareUpdater for easier config flow testing."""
     mock_cfupdate = _get_mock_cfupdate()

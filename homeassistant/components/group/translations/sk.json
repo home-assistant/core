@@ -51,6 +51,21 @@
                 },
                 "title": "Prida\u0165 skupinu"
             },
+            "sensor": {
+                "data": {
+                    "device_class": "Trieda zariadenia",
+                    "entities": "\u010clenovia",
+                    "hide_members": "Skry\u0165 \u010dlenov",
+                    "ignore_non_numeric": "Ignorova\u0165 ne\u010d\u00edseln\u00e9 \u00fadaje",
+                    "name": "N\u00e1zov",
+                    "round_digits": "Zaokr\u00fahlenie hodnoty na po\u010det desatinn\u00fdch miest",
+                    "state_class": "Trieda stavu",
+                    "type": "Typ",
+                    "unit_of_measurement": "Jednotka merania"
+                },
+                "description": "Ak je povolen\u00e9 \"ignorova\u0165 ne\u010d\u00edseln\u00e9\", stav skupiny sa vypo\u010d\u00edta, ak m\u00e1 aspo\u0148 jeden \u010dlen \u010d\u00edseln\u00fa hodnotu. Ak je vypnut\u00e1 mo\u017enos\u0165 \u201eignorova\u0165 ne\u010d\u00edseln\u00e9\u201c, stav skupiny sa vypo\u010d\u00edta iba vtedy, ak maj\u00fa v\u0161etci \u010dlenovia skupiny \u010d\u00edseln\u00e9 hodnoty.",
+                "title": "Prida\u0165 skupinu"
+            },
             "switch": {
                 "data": {
                     "entities": "\u010clenovia",
@@ -68,6 +83,7 @@
                     "light": "Skupina osvetlenie",
                     "lock": "Skupina z\u00e1mok",
                     "media_player": "Skupina Media player",
+                    "sensor": "Skupina sn\u00edma\u010da",
                     "switch": "Skupina prep\u00edna\u010d"
                 },
                 "title": "Prida\u0165 skupinu"
@@ -115,6 +131,19 @@
                     "entities": "\u010clenovia",
                     "hide_members": "Skry\u0165 \u010dlenov"
                 }
+            },
+            "sensor": {
+                "data": {
+                    "device_class": "Trieda zariadenia",
+                    "entities": "\u010clenovia",
+                    "hide_members": "Skry\u0165 \u010dlenov",
+                    "ignore_non_numeric": "Ignorova\u0165 ne\u010d\u00edseln\u00e9 \u00fadaje",
+                    "round_digits": "Zaokr\u00fahlenie hodnoty na po\u010det desatinn\u00fdch miest",
+                    "state_class": "Trieda stavu",
+                    "type": "Typ",
+                    "unit_of_measurement": "Jednotka merania"
+                },
+                "description": "Ak je povolen\u00e9 \"ignorova\u0165 ne\u010d\u00edseln\u00e9\", stav skupiny sa vypo\u010d\u00edta, ak m\u00e1 aspo\u0148 jeden \u010dlen \u010d\u00edseln\u00fa hodnotu. Ak je vypnut\u00e1 mo\u017enos\u0165 \u201eignorova\u0165 ne\u010d\u00edseln\u00e9\u201c, stav skupiny sa vypo\u010d\u00edta iba vtedy, ak maj\u00fa v\u0161etci \u010dlenovia skupiny \u010d\u00edseln\u00e9 hodnoty."
             },
             "switch": {
                 "data": {
