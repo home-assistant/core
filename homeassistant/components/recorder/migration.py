@@ -1147,12 +1147,12 @@ def _migrate_statistics_columns_to_timestamp(
                 with session_scope(session=session_maker()) as session:
                     result = session.connection().execute(
                         text(
-                            "UPDATE {table} set start_ts="
+                            f"UPDATE {table} set start_ts="  # nosec
                             "(case when start is NULL then 0 else EXTRACT(EPOCH FROM start) end), "
                             "created_ts=EXTRACT(EPOCH FROM created), "
                             "last_reset_ts=EXTRACT(EPOCH FROM last_reset) "
                             "where id IN ( "
-                            "SELECT id FROM {table} where start_ts is NULL LIMIT 250000 "
+                            f"SELECT id FROM {table} where start_ts is NULL LIMIT 250000 "
                             " );"
                         )
                     )
