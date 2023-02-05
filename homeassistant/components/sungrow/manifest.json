@@ -3,12 +3,7 @@
   "name": "Sungrow",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/sungrow",
-  "requirements": ["sungrow-modbus-client==0.0.2"],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
-  "dependencies": [],
-  "after_dependencies": ["http"],
-  "codeowners": ["@DasBasti"],
+  "requirements": ["pysungrow==1.1.0"],
+  "codeowners": ["@DasBasti", "@02JanDal"],
   "iot_class": "local_polling"
 }

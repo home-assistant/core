@@ -1,13 +1,13 @@
 """Test the Sungrow Solar Energy config flow."""
 from unittest.mock import patch
 
+from pysungrow.definitions.devices.hybrid import sh10rt
+from pysungrow.definitions.variables.device import OutputType
+
 from homeassistant import config_entries
-from homeassistant.components.sungrow.config_flow import validate_input
 from homeassistant.components.sungrow.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from . import MockClient, MockClientNoConnection
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -19,7 +19,8 @@ async def test_form(hass: HomeAssistant) -> None:
     assert not result["errors"]
 
     with patch(
-        "homeassistant.components.sungrow.config_flow.Client", return_value=MockClient
+        "homeassistant.components.sungrow.config_flow.identify",
+        return_value=("A1234567890", sh10rt, OutputType.THREE_PHASE_3P4L, []),
     ), patch(
         "homeassistant.components.sungrow.async_setup_entry",
         return_value=True,
@@ -51,7 +52,8 @@ async def test_form_defaults(hass: HomeAssistant) -> None:
     assert not result["errors"]
 
     with patch(
-        "homeassistant.components.sungrow.config_flow.Client", return_value=MockClient
+        "homeassistant.components.sungrow.config_flow.identify",
+        return_value=("A1234567890", sh10rt, OutputType.THREE_PHASE_3P4L, []),
     ), patch(
         "homeassistant.components.sungrow.async_setup_entry",
         return_value=True,
@@ -66,9 +68,7 @@ async def test_form_defaults(hass: HomeAssistant) -> None:
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Sungrow A1234567890"
-    assert result2["data"] == {
-        "host": "1.1.1.1",
-    }
+    assert result2["data"] == {"host": "1.1.1.1", "port": 502}
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -79,8 +79,8 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.sungrow.config_flow.Client",
-        return_value=MockClientNoConnection,
+        "homeassistant.components.sungrow.config_flow.identify",
+        side_effect=ConnectionError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -91,13 +91,3 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
-
-
-async def test_validate_input(hass: HomeAssistant) -> None:
-    """Test Input validation with valid address."""
-    with patch(
-        "homeassistant.components.sungrow.config_flow.Client", return_value=MockClient
-    ):
-        result2 = await validate_input(hass, {"host": "1.1.1.1"})
-
-    assert result2["title"] == "Sungrow A1234567890"

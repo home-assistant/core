@@ -2049,6 +2049,9 @@ pystiebeleltron==0.0.1.dev2
 # homeassistant.components.suez_water
 pysuez==0.1.19
 
+# homeassistant.components.sungrow
+pysungrow==1.1.0
+
 # homeassistant.components.switchbee
 pyswitchbee==1.8.0
 

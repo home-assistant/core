@@ -1213,8 +1213,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/suez_water/ @ooii
 /homeassistant/components/sun/ @Swamp-Ig
 /tests/components/sun/ @Swamp-Ig
-/homeassistant/components/sungrow/ @DasBasti
-/tests/components/sungrow/ @DasBasti
+/homeassistant/components/sungrow/ @DasBasti @02JanDal
+/tests/components/sungrow/ @DasBasti @02JanDal
 /homeassistant/components/supla/ @mwegrzynek
 /homeassistant/components/surepetcare/ @benleb @danielhiversen
 /tests/components/surepetcare/ @benleb @danielhiversen

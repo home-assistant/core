@@ -1526,6 +1526,9 @@ pyspcwebgw==0.4.0
 # homeassistant.components.squeezebox
 pysqueezebox==0.6.3
 
+# homeassistant.components.sungrow
+pysungrow==1.1.0
+
 # homeassistant.components.switchbee
 pyswitchbee==1.8.0
 
