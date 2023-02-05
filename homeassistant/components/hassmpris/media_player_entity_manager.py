@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 import json
 import re
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 from hassmpris.proto import mpris_pb2
 import hassmpris_client
@@ -66,7 +66,7 @@ class HASSMPRISEntity(MediaPlayerEntity):
         client: hassmpris_client.AsyncMPRISClient,
         integration_id: str,
         player_id: str,
-        initial_state: Optional[MediaPlayerState],
+        initial_state: MediaPlayerState | None,
     ) -> None:
         """Initialize the entity.
 
