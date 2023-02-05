@@ -10,7 +10,11 @@ from tplink_omada_client.exceptions import (
 from tplink_omada_client.omadaclient import OmadaSite
 
 from homeassistant import config_entries
-from homeassistant.components.tplink_omada.config_flow import HubInfo
+from homeassistant.components.tplink_omada.config_flow import (
+    HubInfo,
+    _validate_input,
+    create_omada_client,
+)
 from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -311,3 +315,44 @@ async def test_async_step_reauth_invalid_auth(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result2["errors"] == {"base": "invalid_auth"}
+
+
+async def test_validate_input(hass: HomeAssistant) -> None:
+    """Test validate returns HubInfo."""
+
+    with patch(
+        "tplink_omada_client.omadaclient.OmadaClient", autospec=True
+    ) as mock_client, patch(
+        "homeassistant.components.tplink_omada.config_flow.create_omada_client",
+        return_value=mock_client,
+    ) as create_mock:
+        mock_client.login.return_value = "Id"
+        mock_client.get_controller_name.return_value = "Name"
+        mock_client.get_sites.return_value = [OmadaSite("x", "y")]
+        result = await _validate_input(hass, MOCK_USER_DATA)
+
+    create_mock.assert_awaited_once()
+    mock_client.login.assert_awaited_once()
+    mock_client.get_controller_name.assert_awaited_once()
+    mock_client.get_sites.assert_awaited_once()
+    assert result.controller_id == "Id"
+    assert result.name == "Name"
+    assert result.sites == [OmadaSite("x", "y")]
+
+
+async def test_create_omada_client_parses_args(hass: HomeAssistant) -> None:
+    """Test config arguments are passed to Omada client."""
+
+    with patch(
+        "homeassistant.components.tplink_omada.config_flow.OmadaClient", autospec=True
+    ) as mock_client, patch(
+        "homeassistant.components.tplink_omada.config_flow.async_get_clientsession",
+        return_value="ws",
+    ) as mock_clientsession:
+        result = await create_omada_client(hass, MOCK_USER_DATA)
+
+    assert result is not None
+    mock_client.assert_called_once_with(
+        "1.1.1.1", "test-username", "test-password", "ws"
+    )
+    mock_clientsession.assert_called_once_with(hass, verify_ssl=True)
