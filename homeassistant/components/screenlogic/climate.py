@@ -2,7 +2,7 @@
 import logging
 from typing import Any
 
-from screenlogicpy.const import DATA as SL_DATA, EQUIPMENT, HEAT_MODE
+from screenlogicpy.const import CODE, DATA as SL_DATA, EQUIPMENT, HEAT_MODE
 
 from homeassistant.components.climate import (
     ATTR_PRESET_MODE,
@@ -18,8 +18,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from . import ScreenlogicEntity
 from .const import DOMAIN
+from .entity import ScreenLogicPushEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,13 +42,13 @@ async def async_setup_entry(
     entities = []
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    for body in coordinator.data[SL_DATA.KEY_BODIES]:
+    for body in coordinator.gateway.get_data()[SL_DATA.KEY_BODIES]:
         entities.append(ScreenLogicClimate(coordinator, body))
 
     async_add_entities(entities)
 
 
-class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
+class ScreenLogicClimate(ScreenLogicPushEntity, ClimateEntity, RestoreEntity):
     """Represents a ScreenLogic climate entity."""
 
     _attr_has_entity_name = True
@@ -60,10 +60,13 @@ class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
 
     def __init__(self, coordinator, body):
         """Initialize a ScreenLogic climate entity."""
-        super().__init__(coordinator, body)
+        super().__init__(coordinator, body, CODE.STATUS_CHANGED)
         self._configured_heat_modes = []
         # Is solar listed as available equipment?
-        if self.coordinator.data["config"]["equipment_flags"] & EQUIPMENT.FLAG_SOLAR:
+        if (
+            self.coordinator.gateway.get_data()["config"]["equipment_flags"]
+            & EQUIPMENT.FLAG_SOLAR
+        ):
             self._configured_heat_modes.extend(
                 [HEAT_MODE.SOLAR, HEAT_MODE.SOLAR_PREFERRED]
             )
@@ -126,7 +129,7 @@ class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
         return HEAT_MODE.NAME_FOR_NUM[self.body["heat_mode"]["value"]]
 
     @property
-    def preset_modes(self):
+    def preset_modes(self) -> list[str]:
         """All available presets."""
         return [
             HEAT_MODE.NAME_FOR_NUM[mode_num] for mode_num in self._configured_heat_modes
@@ -206,4 +209,4 @@ class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
     @property
     def body(self):
         """Shortcut to access body data."""
-        return self.coordinator.data[SL_DATA.KEY_BODIES][self._data_key]
+        return self.coordinator.gateway.get_data()[SL_DATA.KEY_BODIES][self._data_key]
