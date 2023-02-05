@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 import json
 import re
-from typing import Any
+from typing import Any, Optional, cast
 
 from hassmpris.proto import mpris_pb2
 import hassmpris_client
@@ -13,21 +13,16 @@ from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    STATE_IDLE,
-    STATE_OFF,
-    STATE_PAUSED,
-    STATE_PLAYING,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
-from homeassistant.util.enum import intenum_to_string
+from homeassistant.util.enum import intflag_to_string
 
 from .const import ATTR_PLAYBACK_RATE, DOMAIN, LOGGER as _LOGGER
 
@@ -70,15 +65,15 @@ class HASSMPRISEntity(MediaPlayerEntity):
         client: hassmpris_client.AsyncMPRISClient,
         integration_id: str,
         player_id: str,
-        initial_state: str | None = None,
+        initial_state: Optional[MediaPlayerState],
     ) -> None:
-        """
-        Initialize the entity.
+        """Initialize the entity.
 
-        Parameters:
+        Arguments:
           client: the client to the remote agent
           integration_id: unique identifier of the integration
           player_id: the name / unique identifier of the player
+          initial_state: the (optional) initial state of the entity
         """
         super().__init__()
         self.client: hassmpris_client.AsyncMPRISClient | None = client
@@ -101,10 +96,9 @@ class HASSMPRISEntity(MediaPlayerEntity):
         self,
         client: hassmpris_client.AsyncMPRISClient,
     ):
-        """
-        Mark a player as available again.
+        """Mark a player as available again.
 
-        Parameters:
+        Arguments:
           client: the new client to use to talk to the agent
         """
         _LOGGER.debug("Marking %s as available", self.name)
@@ -181,7 +175,7 @@ class HASSMPRISEntity(MediaPlayerEntity):
 
     async def update_state(
         self,
-        new_state: str,
+        new_state: MediaPlayerState,
     ):
         """Update player state based on reports from the server."""
         if new_state == self._attr_state:
@@ -238,7 +232,7 @@ class HASSMPRISEntity(MediaPlayerEntity):
         feats = self._attr_supported_features
         if props.HasField("CanControl"):
             if not props.CanControl:
-                feats = 0
+                feats = cast(MediaPlayerEntityFeature, 0)
             else:
                 feats = SUPPORTED_MINIMAL
 
@@ -262,7 +256,7 @@ class HASSMPRISEntity(MediaPlayerEntity):
             _LOGGER.debug(
                 "%s: new feature bitfield: %s",
                 self.name,
-                intenum_to_string(feats, MediaPlayerEntityFeature),
+                intflag_to_string(feats, MediaPlayerEntityFeature),
             )
             self._attr_supported_features = feats
             update_state = True
@@ -278,14 +272,13 @@ class HASSMPRISEntity(MediaPlayerEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return entity specific state attributes."""
-        if self.state == STATE_OFF:
+        if self.state == MediaPlayerState.OFF:
             return {}
         return {ATTR_PLAYBACK_RATE: self._attr_playback_rate}
 
 
 class EntityManager:
-    """
-    The entity manager manages MPRIS media player entities.
+    """The entity manager manages MPRIS media player entities.
 
     This class is responsible for maintaining the known player entities
     in sync with the state as reported by the server, as well as keeping
@@ -299,13 +292,13 @@ class EntityManager:
         mpris_client: hassmpris_client.AsyncMPRISClient,
         async_add_entities: AddEntitiesCallback,
     ) -> None:
-        """
-        Initialize the entity manager.
+        """Initialize the entity manager.
 
-        Parameters:
+        Arguments:
           hass: the HomeAssistant singleton
           config_entry: the configuration entry associated with
                         this component (or integration?)
+          mpris_client: the MPRIS client endpoint object
           async_add_entities: callback to add entities async
         """
         self.hass = hass
@@ -396,11 +389,12 @@ class EntityManager:
         player_id: str,
         initially_off: bool = False,
     ) -> HASSMPRISEntity:
+        initial_state = MediaPlayerState.OFF if initially_off else None
         entity = HASSMPRISEntity(
             self.client,
             self.config_entry.entry_id,
             player_id,
-            **({"initial_state": STATE_OFF} if initially_off else {}),
+            initial_state,
         )
         _LOGGER.debug(
             "%X: adding player %s",
@@ -454,8 +448,7 @@ class EntityManager:
         ]
 
     async def _finish_initial_players_sync(self):
-        """
-        Sync know player and registry entry state.
+        """Sync know player and registry entry state.
 
         Called when the agent has sent us the full list of players it knows
         about, and we are ready to materialize players for entities in the
@@ -480,7 +473,6 @@ class EntityManager:
         `player` will be None if the directory of known players does not
         contain it.  Else it will be defined.
         """
-        print("syncing player presence", player_id)
 
         def is_first_instance() -> bool:
             return not bool(re.match(".* [(]\\d+[)]", player_id))
@@ -489,7 +481,7 @@ class EntityManager:
             player = self.players.get(player_id)
             if not player:
                 return True  # It is absent.
-            offstates = [STATE_OFF, STATE_UNKNOWN]
+            offstates = [MediaPlayerState.OFF, STATE_UNKNOWN]
             return player.state in offstates
 
         if is_first_instance():
@@ -508,7 +500,7 @@ class EntityManager:
                 # may have come back from reconnection, and .
                 off_playa = self.players.get(player_id)
                 if off_playa is not None:
-                    await off_playa.update_state(STATE_OFF)
+                    await off_playa.update_state(MediaPlayerState.OFF)
         else:
             # This is a second instance of a player.
             # E.g. `VLC media player`` is not a second instance,
@@ -564,14 +556,14 @@ class EntityManager:
     ):
         """Handle a single player update."""
         _LOGGER.debug("%X: Handling update: %s", id(self), discovery_data)
-        state = STATE_IDLE
+        state = MediaPlayerState.IDLE
         fire_status_update_observed = False
         table = {
-            mpris_pb2.PlayerStatus.GONE: STATE_OFF,
-            mpris_pb2.PlayerStatus.APPEARED: STATE_IDLE,
-            mpris_pb2.PlayerStatus.PLAYING: STATE_PLAYING,
-            mpris_pb2.PlayerStatus.PAUSED: STATE_PAUSED,
-            mpris_pb2.PlayerStatus.STOPPED: STATE_IDLE,
+            mpris_pb2.PlayerStatus.GONE: MediaPlayerState.OFF,
+            mpris_pb2.PlayerStatus.APPEARED: MediaPlayerState.IDLE,
+            mpris_pb2.PlayerStatus.PLAYING: MediaPlayerState.PLAYING,
+            mpris_pb2.PlayerStatus.PAUSED: MediaPlayerState.PAUSED,
+            mpris_pb2.PlayerStatus.STOPPED: MediaPlayerState.IDLE,
         }
         if discovery_data.status != mpris_pb2.PlayerStatus.UNKNOWN:
             state = table[discovery_data.status]

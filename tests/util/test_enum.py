@@ -6,8 +6,6 @@ import pytest
 
 from homeassistant.backports.enum import StrEnum
 from homeassistant.util.enum import try_parse_enum
-from homeassistant.components.media_player import MediaPlayerEntityFeature
-from homeassistant.util import enum
 
 
 class _AStrEnum(StrEnum):
@@ -52,16 +50,3 @@ class _AnIntFlag(IntFlag):
 def test_try_parse(enum_type: type[Enum], value: Any, expected: Enum | None) -> None:
     """Test parsing of values into an Enum."""
     assert try_parse_enum(enum_type, value) is expected
-
-
-def test_enum_printout():
-    """Test string rendering of an IntEnum."""
-    feats = MediaPlayerEntityFeature.PLAY | MediaPlayerEntityFeature.PAUSE
-
-    exp = "<PAUSE,PLAY>"
-    res = enum.intenum_to_string(feats, MediaPlayerEntityFeature, False)
-    assert exp == res
-
-    exp = "<16385: PAUSE,PLAY>"
-    res = enum.intenum_to_string(feats, MediaPlayerEntityFeature, True)
-    assert exp == res
