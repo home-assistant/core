@@ -19,7 +19,7 @@ from homeassistant.components.media_source import (
     Unresolvable,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 from .models import SynologyDSMData
@@ -29,13 +29,8 @@ async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
     """Set up Synology media source."""
     # Synology photos support only a single config entry
     entries = hass.config_entries.async_entries(DOMAIN)
-    return SynologyPhotosMediaSource(hass, entries)
-
-
-@callback
-def async_setup(hass: HomeAssistant) -> None:
-    """Set up local media source."""
     hass.http.register_view(SynologyDsmMediaView(hass))
+    return SynologyPhotosMediaSource(hass, entries)
 
 
 class SynologyPhotosMediaSource(MediaSource):
@@ -48,11 +43,6 @@ class SynologyPhotosMediaSource(MediaSource):
         super().__init__(DOMAIN)
         self.hass = hass
         self.entries = entries
-
-    @property
-    def diskstation(self) -> SynologyDSMData | None:
-        """Return the Synology dsm."""
-        return self.hass.data.get(DOMAIN)
 
     async def async_browse_media(
         self,
@@ -100,14 +90,12 @@ class SynologyPhotosMediaSource(MediaSource):
 
         if len(identifier_parts) == 1:
             # Get Albums
-            # The library works sync, and this expects async calls
             try:
                 albums = await diskstation.api.photos.get_albums()
             except SynologyDSMException:
                 return []
 
-            ret = []
-            ret.append(
+            ret = [
                 BrowseMediaSource(
                     domain=DOMAIN,
                     identifier=f"{item.identifier}/0",
@@ -117,7 +105,7 @@ class SynologyPhotosMediaSource(MediaSource):
                     can_play=False,
                     can_expand=True,
                 )
-            )
+            ]
             for album in albums:
                 ret.append(
                     BrowseMediaSource(
@@ -135,19 +123,21 @@ class SynologyPhotosMediaSource(MediaSource):
 
         # Request items of album
         # Get Items
-        # The library works sync, and this expects async calls
-        album = SynoPhotosAlbum
-        album.album_id = int(identifier_parts[1])
+        album = SynoPhotosAlbum(int(identifier_parts[1]), "", 0)
         try:
-            items = await diskstation.api.photos.get_items_from_album(album, 0, 1000)
+            album_items = await diskstation.api.photos.get_items_from_album(
+                album, 0, 1000
+            )
         except SynologyDSMException:
             return []
 
         ret = []
-        for items_item in items:
+        for items_item in album_items:
             mime_type, _ = mimetypes.guess_type(items_item.file_name)
             assert isinstance(mime_type, str)
             if mime_type.startswith("image/"):
+                # Force small small thumbnails
+                items_item.thumbnail_size = "sm"
                 ret.append(
                     BrowseMediaSource(
                         domain=DOMAIN,
@@ -158,10 +148,7 @@ class SynologyPhotosMediaSource(MediaSource):
                         can_play=True,
                         can_expand=False,
                         thumbnail=await self.async_get_thumbnail(
-                            items_item.thumbnail_cache_key,
-                            items_item.item_id,
-                            "sm",
-                            identifier_parts[0],
+                            items_item, diskstation
                         ),
                     )
                 )
@@ -174,23 +161,19 @@ class SynologyPhotosMediaSource(MediaSource):
         cache_key = parts[2]
         file_name = parts[3]
         mime_type, _ = mimetypes.guess_type(parts[3])
-        assert isinstance(mime_type, str)
+        if not isinstance(mime_type, str):
+            raise Unresolvable("No file extension")
         return PlayMedia(
             f"/synology_dsm/{unique_id}/{cache_key}/{file_name}", mime_type
         )
 
     async def async_get_thumbnail(
-        self, cache_key: str, image_id: str, size: str, diskstation_unique_id: str
+        self, item: SynoPhotosItem, diskstation: SynologyDSMData
     ) -> str:
         """Get thumbnail."""
         if not self.hass.data.get(DOMAIN):
             raise Unresolvable("Diskstation not initialized")
 
-        diskstation: SynologyDSMData = self.hass.data[DOMAIN][diskstation_unique_id]
-        item = SynoPhotosItem
-        item.thumbnail_cache_key = cache_key
-        item.item_id = image_id
-        item.thumbnail_size = size
         try:
             thumbnail = await diskstation.api.photos.get_item_thumbnail_url(item)
         except SynologyDSMException:
@@ -214,30 +197,22 @@ class SynologyDsmMediaView(http.HomeAssistantView):
         """Start a GET request."""
         if not self.hass.data.get(DOMAIN):
             raise web.HTTPNotFound()
-        parts = location.split("/")
-        cache_key = parts[0]
+        # location: {cache_key}/{filename}
+        cache_key, file_name = location.split("/")
         image_id = cache_key.split("_")[0]
-        mime_type, _ = mimetypes.guess_type(parts[1])
-        assert isinstance(mime_type, str)
+        file_extension = file_name.split(".")[-1]
+        mime_type, _ = mimetypes.guess_type(file_name)
+        if not isinstance(mime_type, str):
+            raise web.HTTPNotFound()
         diskstation: SynologyDSMData = self.hass.data[DOMAIN][source_dir_id]
-        file_parts = parts[1].split(".")
-        file_extension = file_parts[len(file_parts) - 1]
 
+        item = SynoPhotosItem(image_id, "", "", "", cache_key, "")
+        try:
+            image = await diskstation.api.photos.download_item(item)
+        except SynologyDSMException as exc:
+            raise web.HTTPNotFound() from exc
         with tempfile.NamedTemporaryFile(
-            suffix=f".{file_extension}", delete=False
+            mode="wb", suffix=f".{file_extension}", delete=False
         ) as temp:
-            # Close the tempfile and clear it
-            temp.seek(0)
-            temp.truncate()
-
-            item = SynoPhotosItem
-            item.thumbnail_cache_key = cache_key
-            item.item_id = image_id
-            try:
-                image = await diskstation.api.photos.download_item(item)
-            except SynologyDSMException as exc:
-                raise web.HTTPNotFound() from exc
-            fname = temp.name
             temp.write(image)
-            path = Path(fname)
-            return web.FileResponse(path)
+            return web.FileResponse(Path(temp.name))
