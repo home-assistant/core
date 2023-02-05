@@ -21,5 +21,17 @@
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "button_1_short_press": "Button_1 (short press)",
+      "button_1_long_press": "Button_1 (long press)",
+      "button_2_short_press": "Button_2 (short press)",
+      "button_2_long_press": "Button_2 (long press)",
+      "button_3_short_press": "Button_3 (short press)",
+      "button_3_long_press": "Button_3 (long press)",
+      "button_4_short_press": "Button_4 (short press)",
+      "button_4_long_press": "Button_4 (long press)"
+    }
   }
 }
