@@ -164,7 +164,6 @@ async def test_only_valid_components(
 async def test_correct_config_discovery(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockType,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test sending in correct JSON."""
     await mqtt_mock_entry_no_yaml_config()
@@ -186,7 +185,6 @@ async def test_correct_config_discovery(
 async def test_discover_fan(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockType,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test discovering an MQTT fan."""
     await mqtt_mock_entry_no_yaml_config()
@@ -232,7 +230,6 @@ async def test_discover_climate(
 async def test_discover_alarm_control_panel(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockType,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test discovering an MQTT alarm control panel component."""
     await mqtt_mock_entry_no_yaml_config()
@@ -402,7 +399,6 @@ async def test_discover_alarm_control_panel(
 async def test_discovery_with_object_id(
     hass: HomeAssistant,
     mqtt_mock_entry_no_yaml_config: MqttMockType,
-    caplog: pytest.LogCaptureFixture,
     topic: str,
     config: str,
     entity_id: str,
