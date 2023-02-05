@@ -38,5 +38,10 @@
                 "description": "W\u00e4hle ein Ger\u00e4t zum Einrichten aus"
             }
         }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "motion_detected": "Bewegung erkannt"
+        }
     }
 }

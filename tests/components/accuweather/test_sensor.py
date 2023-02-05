@@ -5,6 +5,7 @@ from unittest.mock import PropertyMock, patch
 
 from homeassistant.components.accuweather.const import ATTRIBUTION, DOMAIN
 from homeassistant.components.sensor import (
+    ATTR_OPTIONS,
     ATTR_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
@@ -43,7 +44,7 @@ async def test_sensor_without_forecast(hass):
 
     state = hass.states.get("sensor.home_cloud_ceiling")
     assert state
-    assert state.state == "3200"
+    assert state.state == "3200.0"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_ICON) == "mdi:weather-fog"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfLength.METERS
@@ -53,6 +54,7 @@ async def test_sensor_without_forecast(hass):
     entry = registry.async_get("sensor.home_cloud_ceiling")
     assert entry
     assert entry.unique_id == "0123456-ceiling"
+    assert entry.options["sensor"] == {"suggested_display_precision": 0}
 
     state = hass.states.get("sensor.home_precipitation")
     assert state
@@ -79,8 +81,9 @@ async def test_sensor_without_forecast(hass):
     assert state.state == "falling"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_ICON) == "mdi:gauge"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENUM
     assert state.attributes.get(ATTR_STATE_CLASS) is None
+    assert state.attributes.get(ATTR_OPTIONS) == ["falling", "rising", "steady"]
 
     entry = registry.async_get("sensor.home_pressure_tendency")
     assert entry
@@ -663,7 +666,7 @@ async def test_availability(hass):
     state = hass.states.get("sensor.home_cloud_ceiling")
     assert state
     assert state.state != STATE_UNAVAILABLE
-    assert state.state == "3200"
+    assert state.state == "3200.0"
 
     future = utcnow() + timedelta(minutes=60)
     with patch(
@@ -694,7 +697,7 @@ async def test_availability(hass):
         state = hass.states.get("sensor.home_cloud_ceiling")
         assert state
         assert state.state != STATE_UNAVAILABLE
-        assert state.state == "3200"
+        assert state.state == "3200.0"
 
 
 async def test_manual_update_entity(hass):
@@ -734,7 +737,7 @@ async def test_sensor_imperial_units(hass):
 
     state = hass.states.get("sensor.home_cloud_ceiling")
     assert state
-    assert state.state == "10500"
+    assert state.state == "10500.0"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_ICON) == "mdi:weather-fog"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfLength.FEET
@@ -747,7 +750,7 @@ async def test_state_update(hass):
     state = hass.states.get("sensor.home_cloud_ceiling")
     assert state
     assert state.state != STATE_UNAVAILABLE
-    assert state.state == "3200"
+    assert state.state == "3200.0"
 
     future = utcnow() + timedelta(minutes=60)
 

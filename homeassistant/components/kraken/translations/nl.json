@@ -9,6 +9,10 @@
         },
         "step": {
             "user": {
+                "data": {
+                    "one": "een",
+                    "other": "overige"
+                },
                 "description": "Wil je beginnen met instellen?"
             }
         }

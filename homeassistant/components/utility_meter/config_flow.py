@@ -35,15 +35,15 @@ from .const import (
 )
 
 METER_TYPES = [
-    selector.SelectOptionDict(value="none", label="No cycle"),
-    selector.SelectOptionDict(value=QUARTER_HOURLY, label="Every 15 minutes"),
-    selector.SelectOptionDict(value=HOURLY, label="Hourly"),
-    selector.SelectOptionDict(value=DAILY, label="Daily"),
-    selector.SelectOptionDict(value=WEEKLY, label="Weekly"),
-    selector.SelectOptionDict(value=MONTHLY, label="Monthly"),
-    selector.SelectOptionDict(value=BIMONTHLY, label="Every two months"),
-    selector.SelectOptionDict(value=QUARTERLY, label="Quarterly"),
-    selector.SelectOptionDict(value=YEARLY, label="Yearly"),
+    "none",
+    QUARTER_HOURLY,
+    HOURLY,
+    DAILY,
+    WEEKLY,
+    MONTHLY,
+    BIMONTHLY,
+    QUARTERLY,
+    YEARLY,
 ]
 
 
@@ -74,7 +74,9 @@ CONFIG_SCHEMA = vol.Schema(
             selector.EntitySelectorConfig(domain=SENSOR_DOMAIN),
         ),
         vol.Required(CONF_METER_TYPE): selector.SelectSelector(
-            selector.SelectSelectorConfig(options=METER_TYPES),
+            selector.SelectSelectorConfig(
+                options=METER_TYPES, translation_key=CONF_METER_TYPE
+            ),
         ),
         vol.Required(CONF_METER_OFFSET, default=0): selector.NumberSelector(
             selector.NumberSelectorConfig(

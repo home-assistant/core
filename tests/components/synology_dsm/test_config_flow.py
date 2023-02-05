@@ -65,7 +65,6 @@ from tests.common import MockConfigEntry
 def mock_controller_service():
     """Mock a successful service."""
     with patch("homeassistant.components.synology_dsm.config_flow.SynologyDSM") as dsm:
-
         dsm.login = AsyncMock(return_value=True)
         dsm.update = AsyncMock(return_value=True)
 
@@ -109,7 +108,6 @@ def mock_controller_service_2sa():
 def mock_controller_service_vdsm():
     """Mock a successful service."""
     with patch("homeassistant.components.synology_dsm.config_flow.SynologyDSM") as dsm:
-
         dsm.login = AsyncMock(return_value=True)
         dsm.update = AsyncMock(return_value=True)
 
@@ -131,7 +129,6 @@ def mock_controller_service_vdsm():
 def mock_controller_service_failed():
     """Mock a failed service."""
     with patch("homeassistant.components.synology_dsm.config_flow.SynologyDSM") as dsm:
-
         dsm.login = AsyncMock(return_value=True)
         dsm.update = AsyncMock(return_value=True)
 
@@ -333,7 +330,6 @@ async def test_reauth(hass: HomeAssistant, service: MagicMock):
         "homeassistant.config_entries.ConfigEntries.async_reload",
         return_value=True,
     ):
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={
@@ -412,7 +408,7 @@ async def test_login_failed(hass: HomeAssistant, service: MagicMock):
 async def test_connection_failed(hass: HomeAssistant, service: MagicMock):
     """Test when we have errors during connection."""
     service.return_value.login = Mock(
-        side_effect=SynologyDSMRequestException(IOError("arg"))
+        side_effect=SynologyDSMRequestException(OSError("arg"))
     )
 
     result = await hass.config_entries.flow.async_init(

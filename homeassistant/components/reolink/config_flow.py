@@ -9,10 +9,12 @@ from reolink_aio.exceptions import ApiError, CredentialsInvalidError, ReolinkErr
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import dhcp
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import format_mac
 
 from .const import CONF_PROTOCOL, CONF_USE_HTTPS, DOMAIN
 from .exceptions import ReolinkException, UserNotAdmin
@@ -87,6 +89,21 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_user()
         return self.async_show_form(step_id="reauth_confirm")
 
+    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
+        """Handle discovery via dhcp."""
+        mac_address = format_mac(discovery_info.macaddress)
+        await self.async_set_unique_id(mac_address)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
+
+        short_mac = mac_address[-8:].upper()
+        self.context["title_placeholders"] = {
+            "short_mac": short_mac,
+            "ip_address": discovery_info.ip,
+        }
+
+        self._host = discovery_info.ip
+        return await self.async_step_user()
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -95,6 +112,9 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         placeholders = {"error": ""}
 
         if user_input is not None:
+            if CONF_HOST not in user_input:
+                user_input[CONF_HOST] = self._host
+
             host = ReolinkHost(self.hass, user_input, DEFAULT_OPTIONS)
             try:
                 await host.async_init()
@@ -144,9 +164,14 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(CONF_USERNAME, default=self._username): str,
                 vol.Required(CONF_PASSWORD, default=self._password): str,
-                vol.Required(CONF_HOST, default=self._host): str,
             }
         )
+        if self._host is None or errors:
+            data_schema = data_schema.extend(
+                {
+                    vol.Required(CONF_HOST, default=self._host): str,
+                }
+            )
         if errors:
             data_schema = data_schema.extend(
                 {

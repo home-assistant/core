@@ -80,11 +80,18 @@
                 },
                 "description": "M\u00f3dos\u00edtsa az Insteon Hub csatlakoz\u00e1si adatait. A m\u00f3dos\u00edt\u00e1s elv\u00e9gz\u00e9se ut\u00e1n \u00fajra kell ind\u00edtania a Home Assistant alkalmaz\u00e1st. Ez nem v\u00e1ltoztatja meg a Hub konfigur\u00e1ci\u00f3j\u00e1t. A Hub konfigur\u00e1ci\u00f3j\u00e1nak m\u00f3dos\u00edt\u00e1s\u00e1hoz haszn\u00e1lja a Hub alkalmaz\u00e1st."
             },
+            "change_plm_config": {
+                "data": {
+                    "device": "USB eszk\u00f6z el\u00e9r\u00e9si \u00fat"
+                },
+                "description": "Az Insteon PLM kapcsolat adatainak m\u00f3dos\u00edt\u00e1sa. Elv\u00e9gz\u00e9s ut\u00e1n \u00fajra kell ind\u00edtani a Home Assistant-ot. Ez nem v\u00e1ltoztatja meg mag\u00e1nak a PLM-nek a konfigur\u00e1ci\u00f3j\u00e1t."
+            },
             "init": {
                 "data": {
                     "add_override": "Eszk\u00f6z-fel\u00fclb\u00edr\u00e1l\u00e1s hozz\u00e1ad\u00e1sa.",
                     "add_x10": "Adjon hozz\u00e1 egy X10 eszk\u00f6zt.",
                     "change_hub_config": "M\u00f3dos\u00edtsa a Hub konfigur\u00e1ci\u00f3j\u00e1t.",
+                    "change_plm_config": "A PLM konfigur\u00e1ci\u00f3 m\u00f3dos\u00edt\u00e1sa.",
                     "remove_override": "Egy eszk\u00f6z fel\u00fclb\u00edr\u00e1lat\u00e1nak elt\u00e1vol\u00edt\u00e1sa.",
                     "remove_x10": "T\u00e1vol\u00edtson el egy X10 eszk\u00f6zt."
                 }

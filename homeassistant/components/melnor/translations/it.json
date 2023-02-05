@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
             "no_devices_found": "Non ci sono dispositivi Melnor Bluetooth nelle vicinanze."
         },
         "step": {

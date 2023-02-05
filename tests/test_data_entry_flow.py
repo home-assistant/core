@@ -9,7 +9,7 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.core import HomeAssistant
 from homeassistant.util.decorator import Registry
 
-from tests.common import async_capture_events
+from .common import async_capture_events
 
 
 @pytest.fixture

@@ -68,15 +68,16 @@ def verify_connected(func: _WrapFuncType) -> _WrapFuncType:
         )
         if not disconnected_event:
             raise BleakError("Not connected")
-        task = asyncio.create_task(func(self, *args, **kwargs))
-        done, _ = await asyncio.wait(
-            (task, disconnected_event.wait()),
+        action_task = asyncio.create_task(func(self, *args, **kwargs))
+        disconnect_task = asyncio.create_task(disconnected_event.wait())
+        await asyncio.wait(
+            (action_task, disconnect_task),
             return_when=asyncio.FIRST_COMPLETED,
         )
-        if disconnected_event.is_set():
-            task.cancel()
+        if disconnect_task.done():
+            action_task.cancel()
             with contextlib.suppress(asyncio.CancelledError):
-                await task
+                await action_task
 
             raise BleakError(
                 f"{self._source_name}: "  # pylint: disable=protected-access
@@ -84,7 +85,7 @@ def verify_connected(func: _WrapFuncType) -> _WrapFuncType:
                 f" {self._ble_device.address}: "  # pylint: disable=protected-access
                 "Disconnected during operation"
             )
-        return next(iter(done)).result()
+        return action_task.result()
 
     return cast(_WrapFuncType, _async_wrap_bluetooth_connected_operation)
 

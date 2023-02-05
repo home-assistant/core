@@ -14,7 +14,7 @@
         "flow_title": "Bosch SHC: {name}",
         "step": {
             "confirm_discovery": {
-                "description": "Por favor, pulsa el bot\u00f3n frontal del Smart Home Controller de Bosch hasta que el LED empiece a parpadear.\n\u00bfPreparado para seguir configurando {model} @ {host} con Home Assistant?"
+                "description": "Smart Home Controller I: por favor, pulsa el bot\u00f3n frontal hasta que el LED comience a parpadear.\nSmart Home Controller II: pulsa el bot\u00f3n de funci\u00f3n brevemente. Las luces de la red y la nube comienzan a parpadear en naranja.\nEl dispositivo ya est\u00e1 listo para emparejarse. \n\n\u00bfPreparado para continuar configurando {model} @ {host} con Home Assistant?"
             },
             "credentials": {
                 "data": {
@@ -22,6 +22,9 @@
                 }
             },
             "reauth_confirm": {
+                "data": {
+                    "host": "Host"
+                },
                 "description": "La integraci\u00f3n bosch_shc necesita volver a autentificar tu cuenta",
                 "title": "Volver a autenticar la integraci\u00f3n"
             },

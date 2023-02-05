@@ -85,6 +85,17 @@
         }
     },
     "issues": {
+        "deprecated_entity": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Aktualizujte v\u0161etky automatiz\u00e1cie alebo skripty, ktor\u00e9 pou\u017e\u00edvaj\u00fa t\u00fato entitu vo volaniach slu\u017eby pomocou slu\u017eby `{deprecated_service}`, aby namiesto toho pou\u017e\u00edvali slu\u017ebu `{alternate_service}` s ID cie\u013eovej entity `{alternate_target}`.",
+                        "title": "Entita {deprecated_entity} bude odstr\u00e1nen\u00e1"
+                    }
+                }
+            },
+            "title": "Entita {deprecated_entity} bude odstr\u00e1nen\u00e1"
+        },
         "deprecated_service": {
             "fix_flow": {
                 "step": {

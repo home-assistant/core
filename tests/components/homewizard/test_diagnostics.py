@@ -1,16 +1,16 @@
 """Tests for diagnostics data."""
-from aiohttp import ClientSession
 
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
 async def test_diagnostics(
     hass: HomeAssistant,
-    hass_client: ClientSession,
+    hass_client: ClientSessionGenerator,
     init_integration: MockConfigEntry,
 ):
     """Test diagnostics."""
@@ -70,7 +70,7 @@ async def test_diagnostics(
                 "gas_unique_id": REDACTED,
                 "active_liter_lpm": 12.345,
                 "total_liter_m3": 1234.567,
-                "external_devices": [],
+                "external_devices": None,
             },
             "state": {"power_on": True, "switch_lock": False, "brightness": 255},
             "system": {"cloud_enabled": True},

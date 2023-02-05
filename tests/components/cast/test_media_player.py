@@ -1,5 +1,5 @@
 """The tests for the Cast Media player platform."""
-# pylint: disable=protected-access
+
 from __future__ import annotations
 
 import asyncio
@@ -1986,7 +1986,7 @@ async def test_entry_setup_single_config(hass: HomeAssistant):
     assert config_entry.data["uuid"] == ["bla"]
     assert config_entry.data["ignore_cec"] == ["cast1"]
 
-    assert pychromecast.IGNORE_CEC == ["cast1"]
+    assert ["cast1"] == pychromecast.IGNORE_CEC
 
 
 async def test_entry_setup_list_config(hass: HomeAssistant):
