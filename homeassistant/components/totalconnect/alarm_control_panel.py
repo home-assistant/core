@@ -1,8 +1,11 @@
 """Interfaces with TotalConnect alarm control panels."""
 from __future__ import annotations
 
+import logging
+
 from total_connect_client import ArmingHelper
 from total_connect_client.exceptions import BadResultCodeError, UsercodeInvalid
+import voluptuous as vol
 
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
@@ -19,7 +22,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_platform
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -27,8 +30,11 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import TotalConnectDataUpdateCoordinator
 from .const import DOMAIN
 
+_LOGGER = logging.getLogger(__name__)
+
 SERVICE_ALARM_ARM_AWAY_INSTANT = "arm_away_instant"
 SERVICE_ALARM_ARM_HOME_INSTANT = "arm_home_instant"
+SERVICE_BYPASS_ZONE = "bypass_zone"
 
 
 async def async_setup_entry(
@@ -66,6 +72,14 @@ async def async_setup_entry(
         SERVICE_ALARM_ARM_HOME_INSTANT,
         {},
         "async_alarm_arm_home_instant",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_BYPASS_ZONE,
+        {
+            vol.Required("zone_id"): cv.positive_int,
+        },
+        "async_bypass_zone",
     )
 
 
@@ -274,3 +288,32 @@ class TotalConnectAlarm(
     def _arm_away_instant(self, code=None):
         """Arm away instant synchronous."""
         ArmingHelper(self._partition).arm_away_instant()
+
+    async def async_bypass_zone(self, zone_id: int) -> None:
+        """Bypass the zone."""
+        try:
+            await self.hass.async_add_executor_job(self._bypass_zone, zone_id)
+        except UsercodeInvalid as error:
+            self.coordinator.config_entry.async_start_reauth(self.hass)
+            raise HomeAssistantError(
+                "TotalConnect usercode is invalid. Did not bypass zone."
+            ) from error
+        except BadResultCodeError as error:
+            raise HomeAssistantError(
+                f"TotalConnect failed to bypass zone {self.name}."
+            ) from error
+        await self.coordinator.async_request_refresh()
+
+    def _bypass_zone(self, zone_id: int | None = None) -> None:
+        """Bypass the zone synchronously."""
+        location = self.coordinator.client.locations[self._location_id]
+        if zone_id in location.zones:
+            if location.zones[zone_id].can_be_bypassed:
+                if not location.zones[zone_id].is_bypassed():
+                    location.zone_bypass(zone_id)
+            else:
+                _LOGGER.warning(
+                    "Attempted to bypass zone %s which cannot be bypassed", zone_id
+                )
+        else:
+            _LOGGER.warning("Attempted to bypass zone %s which does not exist", zone_id)
