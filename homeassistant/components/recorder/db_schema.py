@@ -49,7 +49,12 @@ from homeassistant.helpers.json import (
 import homeassistant.util.dt as dt_util
 
 from .const import ALL_DOMAIN_EXCLUDE_ATTRS, SupportedDialect
-from .models import StatisticData, StatisticMetaData, process_timestamp
+from .models import (
+    StatisticData,
+    StatisticMetaData,
+    datetime_to_timestamp_or_none,
+    process_timestamp,
+)
 
 # SQLAlchemy Schema
 # pylint: disable=invalid-name
@@ -495,20 +500,6 @@ class StatisticsBase:
             state=stats.get("state"),
             sum=stats.get("sum"),
         )
-
-
-def datetime_to_timestamp_or_none(dt: datetime | None) -> float | None:
-    """Convert a datetime to a timestamp."""
-    if dt is None:
-        return None
-    return dt_util.utc_to_timestamp(dt)
-
-
-def timestamp_to_datetime_or_none(ts: float | None) -> datetime | None:
-    """Convert a timestamp to a datetime."""
-    if not ts:
-        return None
-    return dt_util.utc_from_timestamp(ts)
 
 
 class Statistics(Base, StatisticsBase):  # type: ignore[misc,valid-type]

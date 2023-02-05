@@ -65,10 +65,14 @@ from .db_schema import (
     StatisticsMeta,
     StatisticsRuns,
     StatisticsShortTerm,
+)
+from .models import (
+    StatisticData,
+    StatisticMetaData,
+    StatisticResult,
     datetime_to_timestamp_or_none,
     timestamp_to_datetime_or_none,
 )
-from .models import StatisticData, StatisticMetaData, StatisticResult
 from .util import (
     execute,
     execute_stmt_lambda_element,
