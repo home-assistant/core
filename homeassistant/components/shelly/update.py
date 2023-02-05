@@ -9,6 +9,8 @@ from typing import Any, Final, cast
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 
 from homeassistant.components.update import (
+    ATTR_INSTALLED_VERSION,
+    ATTR_LATEST_VERSION,
     UpdateDeviceClass,
     UpdateEntity,
     UpdateEntityDescription,
@@ -27,6 +29,7 @@ from .entity import (
     RpcEntityDescription,
     ShellyRestAttributeEntity,
     ShellyRpcAttributeEntity,
+    ShellySleepingRpcAttributeEntity,
     async_setup_entry_rest,
     async_setup_entry_rpc,
 )
@@ -95,7 +98,6 @@ RPC_UPDATES: Final = {
         beta=False,
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=False,
     ),
     "fwupdate_beta": RpcUpdateDescription(
         name="Beta firmware update",
@@ -117,9 +119,19 @@ async def async_setup_entry(
 ) -> None:
     """Set up update entities for Shelly component."""
     if get_device_entry_gen(config_entry) == 2:
-        return async_setup_entry_rpc(
-            hass, config_entry, async_add_entities, RPC_UPDATES, RpcUpdateEntity
-        )
+        if config_entry.data[CONF_SLEEP_PERIOD]:
+            async_setup_entry_rpc(
+                hass,
+                config_entry,
+                async_add_entities,
+                RPC_UPDATES,
+                RpcSleepingUpdateEntity,
+            )
+        else:
+            async_setup_entry_rpc(
+                hass, config_entry, async_add_entities, RPC_UPDATES, RpcUpdateEntity
+            )
+        return
 
     if not config_entry.data[CONF_SLEEP_PERIOD]:
         async_setup_entry_rest(
@@ -268,3 +280,35 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
             self.coordinator.entry.async_start_reauth(self.hass)
         else:
             LOGGER.debug("OTA update call successful")
+
+
+class RpcSleepingUpdateEntity(ShellySleepingRpcAttributeEntity, UpdateEntity):
+    """Represent a RPC sleeping update entity."""
+
+    entity_description: RpcUpdateDescription
+
+    @property
+    def installed_version(self) -> str | None:
+        """Version currently in use."""
+        if self.coordinator.device.initialized:
+            return cast(str, self.coordinator.device.shelly["ver"])
+
+        if self.last_state is None:
+            return None
+
+        return self.last_state.attributes.get(ATTR_INSTALLED_VERSION)
+
+    @property
+    def latest_version(self) -> str | None:
+        """Latest version available for install."""
+        if self.coordinator.device.initialized:
+            new_version = self.entity_description.latest_version(self.sub_status)
+            if new_version:
+                return cast(str, new_version)
+
+            return self.installed_version
+
+        if self.last_state is None:
+            return None
+
+        return self.last_state.attributes.get(ATTR_LATEST_VERSION)

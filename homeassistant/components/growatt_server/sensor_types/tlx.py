@@ -1,5 +1,4 @@
-"""
-Growatt Sensor definitions for the TLX type.
+"""Growatt Sensor definitions for the TLX type.
 
 TLX Type is also shown on the UI as: "MIN/MIC/MOD/NEO"
 """

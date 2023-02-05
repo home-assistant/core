@@ -154,6 +154,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         has_entity_name=True,
+        entity_registry_enabled_default=False,
         allowed_fn=lambda controller, _: controller.option_allow_uptime_sensors,
         api_handler_fn=lambda api: api.clients,
         available_fn=lambda controller, obj_id: controller.available,

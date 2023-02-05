@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/zha",
   "requirements": [
-    "bellows==0.34.6",
+    "bellows==0.34.7",
     "pyserial==3.5",
     "pyserial-asyncio==0.6",
     "zha-quirks==0.0.92",

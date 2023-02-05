@@ -214,7 +214,11 @@ async def test_saving_state(recorder_mock, hass: HomeAssistant):
 
     with session_scope(hass=hass) as session:
         db_states = []
-        for db_state, db_state_attributes in session.query(States, StateAttributes):
+        for db_state, db_state_attributes in session.query(
+            States, StateAttributes
+        ).outerjoin(
+            StateAttributes, States.attributes_id == StateAttributes.attributes_id
+        ):
             db_states.append(db_state)
             state = db_state.to_native()
             state.attributes = db_state_attributes.to_native()
@@ -248,7 +252,11 @@ async def test_saving_state_with_nul(
 
     with session_scope(hass=hass) as session:
         db_states = []
-        for db_state, db_state_attributes in session.query(States, StateAttributes):
+        for db_state, db_state_attributes in session.query(
+            States, StateAttributes
+        ).outerjoin(
+            StateAttributes, States.attributes_id == StateAttributes.attributes_id
+        ):
             db_states.append(db_state)
             state = db_state.to_native()
             state.attributes = db_state_attributes.to_native()
@@ -692,6 +700,33 @@ def test_saving_state_and_removing_entity(hass, hass_recorder):
         assert states[1].state == STATE_UNLOCKED
         assert states[2].entity_id == entity_id
         assert states[2].state is None
+
+
+def test_saving_state_with_oversized_attributes(hass_recorder, caplog):
+    """Test saving states is limited to 16KiB of JSON encoded attributes."""
+    hass = hass_recorder()
+    massive_dict = {"a": "b" * 16384}
+    attributes = {"test_attr": 5, "test_attr_10": "nice"}
+    hass.states.set("switch.sane", "on", attributes)
+    hass.states.set("switch.too_big", "on", massive_dict)
+    wait_recording_done(hass)
+    states = []
+
+    with session_scope(hass=hass) as session:
+        for state, state_attributes in session.query(States, StateAttributes).outerjoin(
+            StateAttributes, States.attributes_id == StateAttributes.attributes_id
+        ):
+            native_state = state.to_native()
+            native_state.attributes = state_attributes.to_native()
+            states.append(native_state)
+
+    assert "switch.too_big" in caplog.text
+
+    assert len(states) == 2
+    assert _state_with_context(hass, "switch.sane").as_dict() == states[0].as_dict()
+    assert states[1].state == "on"
+    assert states[1].entity_id == "switch.too_big"
+    assert states[1].attributes == {}
 
 
 def test_recorder_setup_failure(hass):

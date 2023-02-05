@@ -188,7 +188,7 @@ def test_auth_code_store_requires_credentials(mock_credential):
     """Test we require credentials."""
     store, _retrieve = auth._create_auth_code_store()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         store(None, MockUser())
 
     store(None, mock_credential)

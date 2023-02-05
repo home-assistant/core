@@ -14,7 +14,7 @@ from sqlalchemy.sql.lambdas import StatementLambdaElement
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import history, util
-from homeassistant.components.recorder.const import SQLITE_URL_PREFIX
+from homeassistant.components.recorder.const import DOMAIN, SQLITE_URL_PREFIX
 from homeassistant.components.recorder.db_schema import RecorderRuns
 from homeassistant.components.recorder.models import UnsupportedDialect
 from homeassistant.components.recorder.util import (
@@ -25,6 +25,7 @@ from homeassistant.components.recorder.util import (
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.issue_registry import async_get as async_get_issue_registry
 from homeassistant.util import dt as dt_util
 
 from .common import corrupt_db_file, run_information_with_session, wait_recording_done
@@ -547,6 +548,118 @@ def test_warn_unsupported_dialect(caplog, dialect, message):
         )
 
     assert message in caplog.text
+
+
+@pytest.mark.parametrize(
+    "mysql_version,min_version",
+    [
+        (
+            "10.5.16-MariaDB",
+            "10.5.17",
+        ),
+        (
+            "10.6.8-MariaDB",
+            "10.6.9",
+        ),
+        (
+            "10.7.1-MariaDB",
+            "10.7.5",
+        ),
+        (
+            "10.8.0-MariaDB",
+            "10.8.4",
+        ),
+    ],
+)
+async def test_issue_for_mariadb_with_MDEV_25020(
+    hass, caplog, mysql_version, min_version
+):
+    """Test we create an issue for MariaDB versions affected.
+
+    See https://jira.mariadb.org/browse/MDEV-25020.
+    """
+    instance_mock = MagicMock()
+    instance_mock.hass = hass
+    execute_args = []
+    close_mock = MagicMock()
+
+    def execute_mock(statement):
+        nonlocal execute_args
+        execute_args.append(statement)
+
+    def fetchall_mock():
+        nonlocal execute_args
+        if execute_args[-1] == "SELECT VERSION()":
+            return [[mysql_version]]
+        return None
+
+    def _make_cursor_mock(*_):
+        return MagicMock(execute=execute_mock, close=close_mock, fetchall=fetchall_mock)
+
+    dbapi_connection = MagicMock(cursor=_make_cursor_mock)
+
+    await hass.async_add_executor_job(
+        util.setup_connection_for_dialect,
+        instance_mock,
+        "mysql",
+        dbapi_connection,
+        True,
+    )
+    await hass.async_block_till_done()
+
+    registry = async_get_issue_registry(hass)
+    issue = registry.async_get_issue(DOMAIN, "maria_db_range_index_regression")
+    assert issue is not None
+    assert issue.translation_placeholders == {"min_version": min_version}
+
+
+@pytest.mark.parametrize(
+    "mysql_version",
+    [
+        "10.5.17-MariaDB",
+        "10.6.9-MariaDB",
+        "10.7.5-MariaDB",
+        "10.8.4-MariaDB",
+        "10.9.1-MariaDB",
+    ],
+)
+async def test_no_issue_for_mariadb_with_MDEV_25020(hass, caplog, mysql_version):
+    """Test we do not create an issue for MariaDB versions not affected.
+
+    See https://jira.mariadb.org/browse/MDEV-25020.
+    """
+    instance_mock = MagicMock()
+    instance_mock.hass = hass
+    execute_args = []
+    close_mock = MagicMock()
+
+    def execute_mock(statement):
+        nonlocal execute_args
+        execute_args.append(statement)
+
+    def fetchall_mock():
+        nonlocal execute_args
+        if execute_args[-1] == "SELECT VERSION()":
+            return [[mysql_version]]
+        return None
+
+    def _make_cursor_mock(*_):
+        return MagicMock(execute=execute_mock, close=close_mock, fetchall=fetchall_mock)
+
+    dbapi_connection = MagicMock(cursor=_make_cursor_mock)
+
+    await hass.async_add_executor_job(
+        util.setup_connection_for_dialect,
+        instance_mock,
+        "mysql",
+        dbapi_connection,
+        True,
+    )
+    await hass.async_block_till_done()
+
+    registry = async_get_issue_registry(hass)
+    issue = registry.async_get_issue(DOMAIN, "maria_db_range_index_regression")
+    assert issue is None
 
 
 def test_basic_sanity_check(hass_recorder, recorder_db_url):

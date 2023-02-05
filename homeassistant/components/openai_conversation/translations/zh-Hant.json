@@ -15,5 +15,18 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "max_tokens": "\u56de\u61c9\u8fd4\u56de\u6700\u9ad8\u5bc6\u9470\u6578",
+                    "model": "\u5b8c\u6210\u6a21\u5f0f",
+                    "prompt": "\u63d0\u793a\u6a21\u677f",
+                    "temperature": "\u6eab\u5ea6",
+                    "top_p": "Top P"
+                }
+            }
+        }
     }
 }
