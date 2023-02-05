@@ -49,6 +49,7 @@ SERVICE_SET_OPERATION_MODE = "set_operation_mode"
 
 STATE_ECO = "eco"
 STATE_ELECTRIC = "electric"
+STATE_MANUAL = "manual"
 STATE_PERFORMANCE = "performance"
 STATE_HIGH_DEMAND = "high_demand"
 STATE_HEAT_PUMP = "heat_pump"
