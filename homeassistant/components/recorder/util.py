@@ -548,7 +548,6 @@ def setup_connection_for_dialect(
         # this further when we have more data and remove this if possible
         # in the future so we can use the simpler purge SQL query for
         # _select_unused_attributes_ids and _select_unused_events_ids
-        slow_range_in_select = True
         if first_connection:
             # server_version_num was added in 2006
             result = query_on_connection(dbapi_connection, "SHOW server_version")
