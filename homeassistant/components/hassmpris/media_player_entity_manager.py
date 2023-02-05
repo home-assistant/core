@@ -18,6 +18,7 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -137,41 +138,68 @@ class HASSMPRISEntity(MediaPlayerEntity):
         _LOGGER.debug("Will remove from hass: %s", self)
         self.client = None
 
+    def _check_available(self) -> hassmpris_client.AsyncMPRISClient:
+        if not self.client:
+            raise HomeAssistantError(
+                f"{self.device_info['name']} is not available",
+            )
+        return self.client
+
     async def async_media_play(self) -> None:
         """Begin playback."""
-        if self.client:
-            await self.client.play(self.player_id)
+        client = self._check_available()
+        try:
+            await client.play(self.player_id)
+        except Exception as exc:
+            raise HomeAssistantError("cannot play: %s" % exc) from exc
 
     async def async_media_pause(self) -> None:
         """Pause playback."""
-        if self.client:
-            await self.client.pause(self.player_id)
+        client = self._check_available()
+        try:
+            await client.pause(self.player_id)
+        except Exception as exc:
+            raise HomeAssistantError("cannot pause: %s" % exc) from exc
 
     async def async_media_stop(self) -> None:
         """Stop playback."""
-        if self.client:
-            await self.client.stop(self.player_id)
+        client = self._check_available()
+        try:
+            await client.stop(self.player_id)
+        except Exception as exc:
+            raise HomeAssistantError("cannot stop: %s" % exc) from exc
 
     async def async_media_next_track(self) -> None:
         """Skip to next track."""
-        if self.client:
-            await self.client.next(self.player_id)
+        client = self._check_available()
+        try:
+            await client.next(self.player_id)
+        except Exception as exc:
+            raise HomeAssistantError("cannot next: %s" % exc) from exc
 
     async def async_media_previous_track(self) -> None:
         """Skip to previous track."""
-        if self.client:
-            await self.client.previous(self.player_id)
+        client = self._check_available()
+        try:
+            await client.previous(self.player_id)
+        except Exception as exc:
+            raise HomeAssistantError("cannot previous: %s" % exc) from exc
 
     async def async_media_seek(self, position: float) -> None:
         """Send seek command."""
-        if self.client:
+        client = self._check_available()
+        try:
             trackid = self._metadata.get("mpris:trackid")
             if trackid:
-                await self.client.set_position(
+                await client.set_position(
                     self.player_id,
                     trackid,
                     position,
                 )
+            else:
+                raise ValueError("No current track ID to seek within")
+        except Exception as exc:
+            raise HomeAssistantError("cannot seek: %s" % exc) from exc
 
     async def update_state(
         self,
