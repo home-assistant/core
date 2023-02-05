@@ -414,7 +414,7 @@ class ReceiverZone:
         elif command == "preset":
             self.preset = (
                 value
-                if not (self.source is None) and self.source[0].lower() == "radio"
+                if self.source is not None and self.source[0].lower() == "radio"
                 else None
             )
         elif command == "listening-mode":
