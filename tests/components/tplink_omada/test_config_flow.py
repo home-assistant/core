@@ -15,6 +15,23 @@ from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from tests.common import MockConfigEntry
+
+MOCK_USER_DATA = {
+    "host": "1.1.1.1",
+    "verify_ssl": True,
+    "username": "test-username",
+    "password": "test-password",
+}
+
+MOCK_ENTRY_DATA = {
+    "host": "1.1.1.1",
+    "verify_ssl": True,
+    "site": "SiteId",
+    "username": "test-username",
+    "password": "test-password",
+}
+
 
 async def test_form_single_site(hass: HomeAssistant) -> None:
     """Test we get the form."""
@@ -29,31 +46,21 @@ async def test_form_single_site(hass: HomeAssistant) -> None:
         return_value=HubInfo(
             "omada_id", "OC200", [OmadaSite("Display Name", "SiteId")]
         ),
-    ), patch(
+    ) as mocked_validate, patch(
         "homeassistant.components.tplink_omada.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "verify_ssl": True,
-                "username": "test-username",
-                "password": "test-password",
-            },
+            MOCK_USER_DATA,
         )
         await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "OC200 (Display Name)"
-    assert result2["data"] == {
-        "host": "1.1.1.1",
-        "verify_ssl": True,
-        "site": "SiteId",
-        "username": "test-username",
-        "password": "test-password",
-    }
+    assert result2["data"] == MOCK_ENTRY_DATA
     assert len(mock_setup_entry.mock_calls) == 1
+    mocked_validate.assert_called_once_with(hass, MOCK_USER_DATA)
 
 
 async def test_form_multiple_sites(hass: HomeAssistant) -> None:
@@ -78,12 +85,7 @@ async def test_form_multiple_sites(hass: HomeAssistant) -> None:
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "verify_ssl": True,
-                "username": "test-username",
-                "password": "test-password",
-            },
+            MOCK_USER_DATA,
         )
         await hass.async_block_till_done()
 
@@ -126,12 +128,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "verify_ssl": False,
-                "username": "test-username",
-                "password": "test-password",
-            },
+            MOCK_USER_DATA,
         )
 
     assert result2["type"] == FlowResultType.FORM
@@ -150,12 +147,26 @@ async def test_form_api_error(hass: HomeAssistant) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "verify_ssl": False,
-                "username": "test-username",
-                "password": "test-password",
-            },
+            MOCK_USER_DATA,
+        )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "unknown"}
+
+
+async def test_form_generic_exception(hass: HomeAssistant) -> None:
+    """Test we handle unknown API error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.tplink_omada.config_flow._validate_input",
+        side_effect=Exception,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            MOCK_USER_DATA,
         )
 
     assert result2["type"] == FlowResultType.FORM
@@ -174,12 +185,7 @@ async def test_form_unsupported_controller(hass: HomeAssistant) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "verify_ssl": False,
-                "username": "test-username",
-                "password": "test-password",
-            },
+            MOCK_USER_DATA,
         )
 
     assert result2["type"] == FlowResultType.FORM
@@ -198,13 +204,110 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "verify_ssl": True,
-                "username": "test-username",
-                "password": "test-password",
-            },
+            MOCK_USER_DATA,
         )
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_no_sites(hass: HomeAssistant) -> None:
+    """Test we handle invalid auth."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.tplink_omada.config_flow._validate_input",
+        return_value=HubInfo("omada_id", "OC200", []),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            MOCK_USER_DATA,
+        )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "no_sites_found"}
+
+
+async def test_async_step_reauth_success(hass: HomeAssistant) -> None:
+    """Test reauth starts an interactive flow."""
+
+    mock_entry = MockConfigEntry(
+        domain="tplink_omada",
+        data=dict(MOCK_ENTRY_DATA),
+        unique_id="USERID",
+    )
+    mock_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": mock_entry.entry_id,
+        },
+        data=mock_entry.data,
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    with patch(
+        "homeassistant.components.tplink_omada.config_flow._validate_input",
+        return_value=HubInfo(
+            "omada_id", "OC200", [OmadaSite("Display Name", "SiteId")]
+        ),
+    ) as mocked_validate:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"username": "new_uname", "password": "new_passwd"}
+        )
+    await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.ABORT
+    assert result2["reason"] == "reauth_successful"
+    mocked_validate.assert_called_once_with(
+        hass,
+        {
+            "host": "1.1.1.1",
+            "verify_ssl": True,
+            "site": "SiteId",
+            "username": "new_uname",
+            "password": "new_passwd",
+        },
+    )
+
+
+async def test_async_step_reauth_invalid_auth(hass: HomeAssistant) -> None:
+    """Test reauth starts an interactive flow."""
+
+    mock_entry = MockConfigEntry(
+        domain="tplink_omada",
+        data=dict(MOCK_ENTRY_DATA),
+        unique_id="USERID",
+    )
+    mock_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": mock_entry.entry_id,
+        },
+        data=mock_entry.data,
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    with patch(
+        "homeassistant.components.tplink_omada.config_flow._validate_input",
+        side_effect=LoginFailed(-1000, "Invalid username/password"),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"username": "new_uname", "password": "new_passwd"}
+        )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result2["errors"] == {"base": "invalid_auth"}
