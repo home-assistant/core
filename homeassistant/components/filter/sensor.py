@@ -81,7 +81,7 @@ NAME_TEMPLATE = "{} filter"
 ICON = "mdi:chart-line-variant"
 
 FILTER_SCHEMA = vol.Schema(
-    {vol.Optional(CONF_FILTER_PRECISION, default=DEFAULT_PRECISION): vol.Coerce(int)}
+    {vol.Optional(CONF_FILTER_PRECISION, default=None): vol.Any(None, vol.Coerce(int))}
 )
 
 FILTER_OUTLIER_SCHEMA = FILTER_SCHEMA.extend(
@@ -662,9 +662,7 @@ class ThrottleFilter(Filter, SensorEntity):
 
     def __init__(self, window_size: int, precision: int, entity: str) -> None:
         """Initialize Filter."""
-        super().__init__(
-            FILTER_NAME_THROTTLE, window_size, precision=None, entity=entity
-        )
+        super().__init__(FILTER_NAME_THROTTLE, window_size, precision, entity=entity)
         self._only_numbers = False
 
     def _filter_state(self, new_state: FilterState) -> FilterState:
@@ -688,7 +686,7 @@ class TimeThrottleFilter(Filter, SensorEntity):
     def __init__(self, window_size: timedelta, precision: int, entity: str) -> None:
         """Initialize Filter."""
         super().__init__(
-            FILTER_NAME_TIME_THROTTLE, window_size, precision=None, entity=entity
+            FILTER_NAME_TIME_THROTTLE, window_size, precision, entity=entity
         )
         self._time_window = window_size
         self._last_emitted_at: datetime | None = None
