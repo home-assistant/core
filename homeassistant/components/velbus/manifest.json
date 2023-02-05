@@ -8,6 +8,13 @@
   "dependencies": ["usb"],
   "integration_type": "hub",
   "iot_class": "local_push",
+  "loggers": [
+    "homeassistant.components.velbus",
+    "velbus-parser",
+    "velbus-module",
+    "velbus-packet",
+    "velbus-protocol"
+  ],
   "usb": [
     {
       "vid": "10CF",
@@ -25,6 +32,5 @@
       "vid": "10CF",
       "pid": "0518"
     }
-  ],
-  "loggers": ["velbusaio"]
+  ]
 }
