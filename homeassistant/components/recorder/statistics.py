@@ -2528,8 +2528,6 @@ def cleanup_statistics_timestamp_migration(instance: Recorder) -> bool:
     Returns False if there are more rows to update.
     Returns True if all rows have been updated.
     """
-    from .migration import _drop_index  # pylint: disable=import-outside-toplevel
-
     engine = instance.engine
     assert engine is not None
     if engine.dialect.name == SupportedDialect.SQLITE:
@@ -2571,6 +2569,8 @@ def cleanup_statistics_timestamp_migration(instance: Recorder) -> bool:
                     # We have more rows to update so return False
                     # to indicate we need to run again
                     return False
+
+    from .migration import _drop_index  # pylint: disable=import-outside-toplevel
 
     for table in STATISTICS_TABLES:
         _drop_index(instance.get_session, table, f"ix_{table}_start")
