@@ -91,9 +91,8 @@ class SynologyPhotosMediaSource(MediaSource):
         self, item: MediaSourceItem
     ) -> list[BrowseMediaSource]:
         """Handle browsing different diskstations."""
-        ret = []
-
         if not item.identifier:
+            ret = []
             for entry in self.entries:
                 ret.append(
                     BrowseMediaSource(
@@ -154,23 +153,23 @@ class SynologyPhotosMediaSource(MediaSource):
             return []
 
         ret = []
-        for items_item in album_items:
-            mime_type, _ = mimetypes.guess_type(items_item.file_name)
+        for album_item in album_items:
+            mime_type, _ = mimetypes.guess_type(album_item.file_name)
             assert isinstance(mime_type, str)
             if mime_type.startswith("image/"):
                 # Force small small thumbnails
-                items_item.thumbnail_size = "sm"
+                album_item.thumbnail_size = "sm"
                 ret.append(
                     BrowseMediaSource(
                         domain=DOMAIN,
-                        identifier=f"{identifier.unique_id}/{identifier.album_id}/{items_item.thumbnail_cache_key}/{items_item.file_name}",
+                        identifier=f"{identifier.unique_id}/{identifier.album_id}/{album_item.thumbnail_cache_key}/{album_item.file_name}",
                         media_class=MediaClass.IMAGE,
                         media_content_type=mime_type,
-                        title=items_item.file_name,
+                        title=album_item.file_name,
                         can_play=True,
                         can_expand=False,
                         thumbnail=await self.async_get_thumbnail(
-                            items_item, diskstation
+                            album_item, diskstation
                         ),
                     )
                 )
@@ -181,7 +180,9 @@ class SynologyPhotosMediaSource(MediaSource):
         identifier = SynologyPhotosMediaSourceIdentifier(item.identifier)
         if identifier.album_id is None:
             raise Unresolvable("No album id")
-        mime_type, _ = mimetypes.guess_type(identifier.album_id)
+        if identifier.file_name is None:
+            raise Unresolvable("No file name")
+        mime_type, _ = mimetypes.guess_type(identifier.file_name)
         if not isinstance(mime_type, str):
             raise Unresolvable("No file extension")
         return PlayMedia(
