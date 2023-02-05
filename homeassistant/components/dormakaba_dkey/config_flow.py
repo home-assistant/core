@@ -93,7 +93,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except BleakError as err:
             _LOGGER.info("Could not connect to lock", exc_info=err)
             return self.async_show_progress_done(next_step_id="could_not_connect")
-        except Exception as err:
+        except Exception as err:  # pylint: disable=broad-except
             _LOGGER.error("Unknown error when connecting to lock", exc_info=err)
             return self.async_show_progress_done(next_step_id="could_not_connect")
         finally:
