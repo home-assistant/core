@@ -312,9 +312,6 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         self._attr_max_mireds = config.get(CONF_MAX_MIREDS, super().max_mireds)
         self._attr_effect_list = config.get(CONF_EFFECT_LIST)
 
-        if CONF_STATE_VALUE_TEMPLATE not in config and CONF_VALUE_TEMPLATE in config:
-            config[CONF_STATE_VALUE_TEMPLATE] = config[CONF_VALUE_TEMPLATE]
-
         topic: dict[str, str | None] = {
             key: config.get(key)
             for key in (
