@@ -105,6 +105,8 @@ async def _update_no_ip(
             body = await resp.text()
 
             if body.startswith("good") or body.startswith("nochg"):
+                _LOGGER.info(
+                    "Updating NO-IP success: %s", domain
                 return True
 
             _LOGGER.warning(
