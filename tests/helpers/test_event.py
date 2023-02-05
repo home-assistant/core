@@ -4055,6 +4055,7 @@ async def test_call_later(hass):
     delay_tolerance = 0.1
     schedule_utctime = dt_util.utcnow()
 
+    @callback
     def action(__utcnow: datetime):
         _current_delay = __utcnow.timestamp() - schedule_utctime.timestamp()
         future.set_result(delay < _current_delay < (delay + delay_tolerance))
@@ -4074,6 +4075,7 @@ async def test_async_call_later(hass):
     delay_tolerance = 0.1
     schedule_utctime = dt_util.utcnow()
 
+    @callback
     def action(__utcnow: datetime):
         _current_delay = __utcnow.timestamp() - schedule_utctime.timestamp()
         future.set_result(delay < _current_delay < (delay + delay_tolerance))
@@ -4095,6 +4097,7 @@ async def test_async_call_later_timedelta(hass):
     delay_tolerance = 0.1
     schedule_utctime = dt_util.utcnow()
 
+    @callback
     def action(__utcnow: datetime):
         _current_delay = __utcnow.timestamp() - schedule_utctime.timestamp()
         future.set_result(delay < _current_delay < (delay + delay_tolerance))
@@ -4115,6 +4118,7 @@ async def test_async_call_later_cancel(hass):
     delay = 0.25
     delay_tolerance = 0.1
 
+    @callback
     def action(__now: datetime):
         future.set_result(False)
 
