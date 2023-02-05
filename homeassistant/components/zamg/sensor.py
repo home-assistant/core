@@ -214,7 +214,7 @@ class ZamgSensor(CoordinatorEntity, SensorEntity):
             return self.coordinator.data[self.station_id][
                 self.entity_description.para_name
             ]["data"]
-        except (KeyError):
+        except KeyError:
             return None
 
     @property

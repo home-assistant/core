@@ -630,7 +630,6 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_sin
         "homeassistant.components.recorder.history.state_changes_during_period",
         _fake_states,
     ):
-
         with freeze_time(start_time):
             await async_setup_component(
                 hass,
@@ -730,7 +729,6 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_sin
         "homeassistant.components.recorder.history.state_changes_during_period",
         _fake_states,
     ):
-
         with freeze_time(start_time):
             await async_setup_component(
                 hass,
@@ -829,7 +827,6 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_mul
         "homeassistant.components.recorder.history.state_changes_during_period",
         _fake_states,
     ):
-
         with freeze_time(start_time):
             await async_setup_component(
                 hass,
@@ -967,7 +964,6 @@ async def test_does_not_work_into_the_future(recorder_mock, hass):
         "homeassistant.components.recorder.history.state_changes_during_period",
         _fake_states,
     ):
-
         with freeze_time(start_time):
             await async_setup_component(
                 hass,

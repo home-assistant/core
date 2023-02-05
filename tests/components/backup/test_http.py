@@ -27,7 +27,6 @@ async def test_downloading_backup(
         "homeassistant.components.backup.http.FileResponse",
         return_value=web.Response(text=""),
     ):
-
         resp = await client.get("/api/backup/download/abc123")
         assert resp.status == 200
 

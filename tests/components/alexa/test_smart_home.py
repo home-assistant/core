@@ -1522,7 +1522,10 @@ async def test_media_player_speaker(hass):
     )
     assert call.data["is_volume_muted"]
 
-    call, _, = await assert_request_calls_service(
+    (
+        call,
+        _,
+    ) = await assert_request_calls_service(
         "Alexa.Speaker",
         "SetMute",
         "media_player#test_speaker",
@@ -1571,7 +1574,10 @@ async def test_media_player_step_speaker(hass):
     )
     assert call.data["is_volume_muted"]
 
-    call, _, = await assert_request_calls_service(
+    (
+        call,
+        _,
+    ) = await assert_request_calls_service(
         "Alexa.StepSpeaker",
         "SetMute",
         "media_player#test_step_speaker",

@@ -170,7 +170,6 @@ async def test_duplicate_zeroconf(hass: HomeAssistant):
         "homeassistant.components.zwave_me.helpers.get_uuid",
         return_value="test_uuid",
     ):
-
         result: FlowResult = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},

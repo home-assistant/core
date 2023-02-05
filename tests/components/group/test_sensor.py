@@ -25,6 +25,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
+    ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
@@ -100,6 +101,7 @@ async def test_sensors(
     for key, value in attributes.items():
         assert state.attributes.get(key) == value
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.VOLUME
+    assert state.attributes.get(ATTR_ICON) is None
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "L"
 

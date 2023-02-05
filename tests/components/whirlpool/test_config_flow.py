@@ -198,7 +198,6 @@ async def test_no_appliances_flow(hass: HomeAssistant, region) -> None:
         "homeassistant.components.whirlpool.config_flow.AppliancesManager.fetch_appliances",
         return_value=True,
     ):
-
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             CONFIG_INPUT | {"region": region[0]},

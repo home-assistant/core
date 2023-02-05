@@ -433,7 +433,6 @@ async def test_user_setup_ignored_device(hass):
         "homeassistant.components.shelly.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
-
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"host": "1.1.1.1"},

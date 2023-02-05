@@ -219,7 +219,6 @@ async def test_form_errors(hass, error):
         "homeassistant.components.nam.NettigoAirMonitor.initialize",
         side_effect=exc,
     ):
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
