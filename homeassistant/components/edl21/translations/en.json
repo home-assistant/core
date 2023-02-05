@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Name",
+                    "serial_port": "Serial Port"
+                },
+                "title": "Add your EDL21 smart meter"
+            }
+        }
+    }
+}
