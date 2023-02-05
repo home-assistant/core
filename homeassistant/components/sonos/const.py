@@ -19,6 +19,8 @@ PLATFORMS = [
     Platform.SWITCH,
 ]
 
+SUB_FAIL_URL = "https://www.home-assistant.io/integrations/sonos/#network-requirements"
+
 SONOS_ARTIST = "artists"
 SONOS_ALBUM = "albums"
 SONOS_PLAYLISTS = "playlists"
