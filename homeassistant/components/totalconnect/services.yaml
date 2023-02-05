@@ -13,3 +13,11 @@ arm_home_instant:
     entity:
       integration: totalconnect
       domain: alarm_control_panel
+
+bypass_zone:
+  name: Bypass Zone
+  description: Bypass a security zone.
+  target:
+    entity:
+      integration: totalconnect
+      domain: alarm_control_panel
