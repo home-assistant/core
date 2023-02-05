@@ -110,7 +110,7 @@ def _register_new_account(
     url, frob = api.authenticate_desktop()
     _LOGGER.debug("Sent authentication request to server")
 
-    def register_account_callback(_):
+    def register_account_callback(fields: list[dict[str, str]]) -> None:
         """Call for register the configurator."""
         api.retrieve_token(frob)
         token = api.token

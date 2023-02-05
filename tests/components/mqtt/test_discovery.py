@@ -105,7 +105,6 @@ async def test_invalid_json(hass, mqtt_mock_entry_no_yaml_config, caplog):
     with patch(
         "homeassistant.components.mqtt.discovery.async_dispatcher_send"
     ) as mock_dispatcher_send:
-
         mock_dispatcher_send = AsyncMock(return_value=None)
 
         async_fire_mqtt_message(
@@ -122,7 +121,6 @@ async def test_only_valid_components(hass, mqtt_mock_entry_no_yaml_config, caplo
     with patch(
         "homeassistant.components.mqtt.discovery.async_dispatcher_send"
     ) as mock_dispatcher_send:
-
         invalid_component = "timer"
 
         mock_dispatcher_send = AsyncMock(return_value=None)

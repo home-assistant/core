@@ -38,8 +38,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def set_update_interval(instances_count: int, requests_remaining: int) -> timedelta:
-    """
-    Return data update interval.
+    """Return data update interval.
 
     The number of requests is reset at midnight UTC so we calculate the update
     interval based on number of minutes until midnight, the number of Airly instances

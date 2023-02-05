@@ -748,8 +748,7 @@ class MqttCover(MqttEntity, CoverEntity):
     def find_in_range_from_percent(
         self, percentage: float, range_type: str = TILT_PAYLOAD
     ) -> int:
-        """
-        Find the adjusted value for 0-100% within the specified range.
+        """Find the adjusted value for 0-100% within the specified range.
 
         if the range is 80-180 and the percentage is 90
         this method would determine the value to send on the topic

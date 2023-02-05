@@ -5,6 +5,7 @@ import asyncio
 from collections.abc import Mapping
 from datetime import timedelta
 import logging
+from typing import Any
 
 from haphilipsjs import AutenticationFailure, ConnectionFailure, PhilipsTV
 from haphilipsjs.typing import SystemType
@@ -81,7 +82,9 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
     config_entry: ConfigEntry
 
-    def __init__(self, hass, api: PhilipsTV, options: Mapping) -> None:
+    def __init__(
+        self, hass: HomeAssistant, api: PhilipsTV, options: Mapping[str, Any]
+    ) -> None:
         """Set up the coordinator."""
         self.api = api
         self.options = options
