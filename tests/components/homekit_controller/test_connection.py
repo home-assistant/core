@@ -89,8 +89,7 @@ DEVICE_MIGRATION_TESTS = [
 async def test_migrate_device_id_no_serial_skip_if_other_owner(
     hass: HomeAssistant, variant: DeviceMigrationTest
 ):
-    """
-    Don't migrate unrelated devices.
+    """Don't migrate unrelated devices.
 
     Create a device registry entry that needs migrate, but belongs to a different
     config entry. It should be ignored.
