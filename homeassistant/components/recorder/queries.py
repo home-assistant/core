@@ -45,7 +45,7 @@ def _state_attrs_exist(attr: int | None) -> Select:
     return select(func.min(States.attributes_id)).where(States.attributes_id == attr)
 
 
-def attributes_ids_exist_in_states_sqlite(
+def attributes_ids_exist_in_states_with_fast_in_distinct(
     attributes_ids: Iterable[int],
 ) -> StatementLambdaElement:
     """Find attributes ids that exist in the states table."""
@@ -268,7 +268,7 @@ def attributes_ids_exist_in_states(
     )
 
 
-def data_ids_exist_in_events_sqlite(
+def data_ids_exist_in_events_with_fast_in_distinct(
     data_ids: Iterable[int],
 ) -> StatementLambdaElement:
     """Find data ids that exist in the events table."""

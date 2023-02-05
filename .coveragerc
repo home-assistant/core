@@ -104,7 +104,6 @@ omit =
     homeassistant/components/baf/sensor.py
     homeassistant/components/baf/switch.py
     homeassistant/components/baidu/tts.py
-    homeassistant/components/balboa/__init__.py
     homeassistant/components/bbox/device_tracker.py
     homeassistant/components/bbox/sensor.py
     homeassistant/components/beewi_smartclim/sensor.py
@@ -967,6 +966,7 @@ omit =
     homeassistant/components/reolink/camera.py
     homeassistant/components/reolink/entity.py
     homeassistant/components/reolink/host.py
+    homeassistant/components/reolink/number.py
     homeassistant/components/repetier/__init__.py
     homeassistant/components/repetier/sensor.py
     homeassistant/components/rest/notify.py

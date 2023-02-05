@@ -403,16 +403,20 @@ class DefaultAgent(AbstractConversationAgent):
 
             entity = entities.async_get(state.entity_id)
             if entity is not None:
-                if entity.entity_category:
-                    # Skip configuration/diagnostic entities
+                if entity.entity_category or entity.hidden:
+                    # Skip configuration/diagnostic/hidden entities
                     continue
 
                 if entity.aliases:
                     for alias in entity.aliases:
                         names.append((alias, state.entity_id, context))
 
-            # Default name
-            names.append((state.name, state.entity_id, context))
+                # Default name
+                names.append((state.name, state.entity_id, context))
+
+            else:
+                # Default name
+                names.append((state.name, state.entity_id, context))
 
         self._names_list = TextSlotList.from_tuples(names, allow_template=False)
         return self._names_list
