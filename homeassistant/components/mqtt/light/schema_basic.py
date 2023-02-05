@@ -34,7 +34,6 @@ from homeassistant.const import (
     CONF_OPTIMISTIC,
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
-    CONF_VALUE_TEMPLATE,
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -234,8 +233,6 @@ PLATFORM_SCHEMA_BASIC = vol.All(
 )
 
 DISCOVERY_SCHEMA_BASIC = vol.All(
-    # CONF_VALUE_TEMPLATE is no longer supported, support was removed in 2022.2
-    cv.removed(CONF_VALUE_TEMPLATE),
     # CONF_WHITE_VALUE_* is no longer supported, support was removed in 2022.9
     cv.removed(CONF_WHITE_VALUE_COMMAND_TOPIC),
     cv.removed(CONF_WHITE_VALUE_SCALE),
@@ -245,8 +242,6 @@ DISCOVERY_SCHEMA_BASIC = vol.All(
 )
 
 PLATFORM_SCHEMA_MODERN_BASIC = vol.All(
-    # CONF_VALUE_TEMPLATE is no longer supported, support was removed in 2022.2
-    cv.removed(CONF_VALUE_TEMPLATE),
     # CONF_WHITE_VALUE_* is no longer supported, support was removed in 2022.9
     cv.removed(CONF_WHITE_VALUE_COMMAND_TOPIC),
     cv.removed(CONF_WHITE_VALUE_SCALE),
