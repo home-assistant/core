@@ -383,7 +383,7 @@ class FilterState:
         except ValueError:
             self.state = state.state
 
-    def set_precision(self, precision: int) -> None:
+    def set_precision(self, precision: int | None) -> None:
         """Set precision of Number based states."""
         if isinstance(self.state, Number) and precision is not None:
             value = round(float(self.state), precision)
@@ -414,7 +414,6 @@ class Filter:
     """Filter skeleton."""
 
     _default_precision: int | None = DEFAULT_PRECISION
-    _precision = None
 
     def __init__(
         self,
@@ -435,7 +434,9 @@ class Filter:
         else:
             self.states = deque(maxlen=0)
             self.window_unit = WINDOW_SIZE_UNIT_TIME
-        self.filter_precision = precision
+        self.filter_precision = (
+            precision if precision is not None else self._default_precision
+        )
         self._name = name
         self._entity = entity
         self._skip_processing = False
