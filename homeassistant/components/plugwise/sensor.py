@@ -303,8 +303,8 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="gas_consumed_interval",
         name="Gas consumed interval",
-        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
-        device_class=SensorDeviceClass.GAS,
+        icon="mdi:meter-gas",
+        native_unit_of_measurement="m³/h",
         state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
