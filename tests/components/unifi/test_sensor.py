@@ -193,6 +193,7 @@ async def test_uptime_sensors(
     hass,
     aioclient_mock,
     mock_unifi_websocket,
+    entity_registry_enabled_by_default,
     initial_uptime,
     event_uptime,
     new_uptime,
@@ -263,7 +264,9 @@ async def test_uptime_sensors(
     assert hass.states.get("sensor.client1_uptime") is None
 
 
-async def test_remove_sensors(hass, aioclient_mock, mock_unifi_websocket):
+async def test_remove_sensors(
+    hass, aioclient_mock, mock_unifi_websocket, entity_registry_enabled_by_default
+):
     """Verify removing of clients work as expected."""
     wired_client = {
         "hostname": "Wired client",
