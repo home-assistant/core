@@ -135,7 +135,7 @@ async def test_number_validator():
 
     try:
         number_validator("x15.1")
-    except (vol.Invalid):
+    except vol.Invalid:
         return
     pytest.fail("Number_validator not throwing exception")
 

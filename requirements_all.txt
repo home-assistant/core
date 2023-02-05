@@ -174,7 +174,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==2.4.4
+aiohomekit==2.4.6
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -1299,7 +1299,7 @@ openwrt-luci-rpc==1.1.11
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.oralb
-oralb-ble==0.17.1
+oralb-ble==0.17.2
 
 # homeassistant.components.oru
 oru==0.1.11
@@ -1442,7 +1442,7 @@ py-schluter==0.1.7
 py-sucks==0.9.8
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==2.1.1
+py-synologydsm-api==2.1.2
 
 # homeassistant.components.zabbix
 py-zabbix==1.1.7
@@ -1753,7 +1753,7 @@ pylitejet==0.5.0
 pylitterbot==2023.1.1
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.18.0
+pylutron-caseta==0.18.1
 
 # homeassistant.components.lutron
 pylutron==0.2.8
@@ -2227,7 +2227,7 @@ regenmaschine==2022.11.0
 renault-api==0.1.11
 
 # homeassistant.components.reolink
-reolink-aio==0.3.2
+reolink-aio==0.3.4
 
 # homeassistant.components.python_script
 restrictedpython==6.0
@@ -2321,7 +2321,7 @@ sensorpush-ble==1.5.2
 sentry-sdk==1.13.0
 
 # homeassistant.components.sfr_box
-sfrbox-api==0.0.5
+sfrbox-api==0.0.6
 
 # homeassistant.components.sharkiq
 sharkiq==0.0.1
@@ -2690,7 +2690,7 @@ zengge==0.2
 zeroconf==0.47.1
 
 # homeassistant.components.zeversolar
-zeversolar==0.2.0
+zeversolar==0.3.0
 
 # homeassistant.components.zha
 zha-quirks==0.0.92

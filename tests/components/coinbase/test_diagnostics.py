@@ -27,7 +27,6 @@ async def test_entry_diagnostics(hass, hass_client: ClientSession):
         "coinbase.wallet.client.Client.get_exchange_rates",
         return_value=mock_get_exchange_rates(),
     ):
-
         config_entry = await init_mock_coinbase(hass)
         await hass.async_block_till_done()
 
