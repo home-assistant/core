@@ -493,7 +493,7 @@ eagle100==0.1.1
 easyenergy==0.1.2
 
 # homeassistant.components.elgato
-elgato==3.0.0
+elgato==4.0.1
 
 # homeassistant.components.elkm1
 elkm1-lib==2.2.1
@@ -1107,7 +1107,7 @@ pyatv==0.10.3
 pyaussiebb==0.0.15
 
 # homeassistant.components.balboa
-pybalboa==0.13
+pybalboa==1.0.0
 
 # homeassistant.components.blackbird
 pyblackbird==0.5

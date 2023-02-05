@@ -634,7 +634,7 @@ ebusdpy==0.0.17
 ecoaliface==0.4.0
 
 # homeassistant.components.elgato
-elgato==3.0.0
+elgato==4.0.1
 
 # homeassistant.components.eliqonline
 eliqonline==1.2.2
@@ -1516,7 +1516,7 @@ pyatv==0.10.3
 pyaussiebb==0.0.15
 
 # homeassistant.components.balboa
-pybalboa==0.13
+pybalboa==1.0.0
 
 # homeassistant.components.bbox
 pybbox==0.0.5-alpha
