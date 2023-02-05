@@ -81,11 +81,7 @@ NAME_TEMPLATE = "{} filter"
 ICON = "mdi:chart-line-variant"
 
 FILTER_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_FILTER_PRECISION, default=DEFAULT_PRECISION): vol.Any(
-            None, vol.Coerce(int)
-        )
-    }
+    {vol.Optional(CONF_FILTER_PRECISION, default=None): vol.Any(None, vol.Coerce(int))}
 )
 
 FILTER_OUTLIER_SCHEMA = FILTER_SCHEMA.extend(
@@ -552,6 +548,7 @@ class OutlierFilter(Filter, SensorEntity):
 
         :param radius: band radius
         """
+        self._default_precision = DEFAULT_PRECISION
         super().__init__(FILTER_NAME_OUTLIER, window_size, precision, entity)
         self._radius = radius
         self._stats_internal: Counter = Counter()
@@ -589,6 +586,7 @@ class LowPassFilter(Filter, SensorEntity):
         self, window_size: int, precision: int, entity: str, time_constant: int
     ) -> None:
         """Initialize Filter."""
+        self._default_precision = DEFAULT_PRECISION
         super().__init__(FILTER_NAME_LOWPASS, window_size, precision, entity)
         self._time_constant = time_constant
 
@@ -626,6 +624,7 @@ class TimeSMAFilter(Filter, SensorEntity):
 
         :param type: type of algorithm used to connect discrete values
         """
+        self._default_precision = DEFAULT_PRECISION
         super().__init__(FILTER_NAME_TIME_SMA, window_size, precision, entity)
         self._time_window = window_size
         self.last_leak: FilterState | None = None
