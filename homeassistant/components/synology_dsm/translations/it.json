@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "no_mac_address": "L'indirizzo MAC non \u00e8 presente nel record di zeroconf",
             "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente",
             "reconfigure_successful": "La riconfigurazione \u00e8 andata a buon fine"
         },

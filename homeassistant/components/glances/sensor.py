@@ -262,7 +262,6 @@ async def async_setup_entry(
         if entity_id := ent_reg.async_get_entity_id(
             Platform.SENSOR, DOMAIN, old_unique_id
         ):
-
             ent_reg.async_update_entity(
                 entity_id, new_unique_id=f"{config_entry.entry_id}-{new_key}"
             )

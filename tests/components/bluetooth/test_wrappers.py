@@ -180,10 +180,10 @@ def _generate_scanners_with_fake_devices(hass):
         hass, "00:00:00:00:00:02", "hci1", new_info_callback, None, True
     )
 
-    for (device, adv_data) in hci0_device_advs.values():
+    for device, adv_data in hci0_device_advs.values():
         scanner_hci0.inject_advertisement(device, adv_data)
 
-    for (device, adv_data) in hci1_device_advs.values():
+    for device, adv_data in hci1_device_advs.values():
         scanner_hci1.inject_advertisement(device, adv_data)
 
     cancel_hci0 = manager.async_register_scanner(scanner_hci0, True, 2)
