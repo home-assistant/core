@@ -33,6 +33,28 @@ async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
     return SynologyPhotosMediaSource(hass, entries)
 
 
+class SynologyPhotosMediaSourceIdentifier:
+    """Synology Photos item identifier."""
+
+    def __init__(self, identifier: str) -> None:
+        """Split identifier into parts."""
+        parts = identifier.split("/")
+
+        self.unique_id = None
+        self.album_id = None
+        self.cache_key = None
+        self.file_name = None
+
+        if parts:
+            self.unique_id = parts[0]
+            if len(parts) > 1:
+                self.album_id = parts[1]
+            if len(parts) > 2:
+                self.cache_key = parts[2]
+            if len(parts) > 3:
+                self.file_name = parts[3]
+
+
 class SynologyPhotosMediaSource(MediaSource):
     """Provide Synology Photos as media sources."""
 
@@ -85,10 +107,10 @@ class SynologyPhotosMediaSource(MediaSource):
                     )
                 )
             return ret
-        identifier_parts = item.identifier.split("/")
-        diskstation: SynologyDSMData = self.hass.data[DOMAIN][identifier_parts[0]]
+        identifier = SynologyPhotosMediaSourceIdentifier(item.identifier)
+        diskstation: SynologyDSMData = self.hass.data[DOMAIN][identifier.unique_id]
 
-        if len(identifier_parts) == 1:
+        if identifier.album_id is None:
             # Get Albums
             try:
                 albums = await diskstation.api.photos.get_albums()
@@ -123,7 +145,7 @@ class SynologyPhotosMediaSource(MediaSource):
 
         # Request items of album
         # Get Items
-        album = SynoPhotosAlbum(int(identifier_parts[1]), "", 0)
+        album = SynoPhotosAlbum(int(identifier.album_id), "", 0)
         try:
             album_items = await diskstation.api.photos.get_items_from_album(
                 album, 0, 1000
@@ -141,7 +163,7 @@ class SynologyPhotosMediaSource(MediaSource):
                 ret.append(
                     BrowseMediaSource(
                         domain=DOMAIN,
-                        identifier=f"{identifier_parts[0]}/{identifier_parts[1]}/{items_item.thumbnail_cache_key}/{items_item.file_name}",
+                        identifier=f"{identifier.unique_id}/{identifier.album_id}/{items_item.thumbnail_cache_key}/{items_item.file_name}",
                         media_class=MediaClass.IMAGE,
                         media_content_type=mime_type,
                         title=items_item.file_name,
@@ -156,15 +178,15 @@ class SynologyPhotosMediaSource(MediaSource):
 
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
-        parts = item.identifier.split("/")
-        unique_id = parts[0]
-        cache_key = parts[2]
-        file_name = parts[3]
-        mime_type, _ = mimetypes.guess_type(parts[3])
+        identifier = SynologyPhotosMediaSourceIdentifier(item.identifier)
+        if identifier.album_id is None:
+            raise Unresolvable("No album id")
+        mime_type, _ = mimetypes.guess_type(identifier.album_id)
         if not isinstance(mime_type, str):
             raise Unresolvable("No file extension")
         return PlayMedia(
-            f"/synology_dsm/{unique_id}/{cache_key}/{file_name}", mime_type
+            f"/synology_dsm/{identifier.unique_id}/{identifier.cache_key}/{identifier.file_name}",
+            mime_type,
         )
 
     async def async_get_thumbnail(
