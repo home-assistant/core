@@ -464,7 +464,7 @@ def setup_connection_for_dialect(
     dialect_name: str,
     dbapi_connection: Any,
     first_connection: bool,
-) -> DatabaseEngine:
+) -> DatabaseEngine | None:
     """Execute statements needed for dialect connection."""
     version: AwesomeVersion | None = None
     slow_range_in_select = True
@@ -560,6 +560,9 @@ def setup_connection_for_dialect(
 
     else:
         _fail_unsupported_dialect(dialect_name)
+
+    if not first_connection:
+        return None
 
     return DatabaseEngine(
         dialect=SupportedDialect(dialect_name),

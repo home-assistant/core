@@ -230,7 +230,12 @@ def test_setup_connection_for_dialect_sqlite(sqlite_version):
 
     dbapi_connection = MagicMock(cursor=_make_cursor_mock)
 
-    util.setup_connection_for_dialect(instance_mock, "sqlite", dbapi_connection, True)
+    assert (
+        util.setup_connection_for_dialect(
+            instance_mock, "sqlite", dbapi_connection, True
+        )
+        is not None
+    )
 
     assert len(execute_args) == 5
     assert execute_args[0] == "PRAGMA journal_mode=WAL"
@@ -240,7 +245,12 @@ def test_setup_connection_for_dialect_sqlite(sqlite_version):
     assert execute_args[4] == "PRAGMA foreign_keys=ON"
 
     execute_args = []
-    util.setup_connection_for_dialect(instance_mock, "sqlite", dbapi_connection, False)
+    assert (
+        util.setup_connection_for_dialect(
+            instance_mock, "sqlite", dbapi_connection, False
+        )
+        is None
+    )
 
     assert len(execute_args) == 3
     assert execute_args[0] == "PRAGMA cache_size = -16384"
@@ -275,7 +285,12 @@ def test_setup_connection_for_dialect_sqlite_zero_commit_interval(
 
     dbapi_connection = MagicMock(cursor=_make_cursor_mock)
 
-    util.setup_connection_for_dialect(instance_mock, "sqlite", dbapi_connection, True)
+    assert (
+        util.setup_connection_for_dialect(
+            instance_mock, "sqlite", dbapi_connection, True
+        )
+        is not None
+    )
 
     assert len(execute_args) == 5
     assert execute_args[0] == "PRAGMA journal_mode=WAL"
@@ -285,7 +300,12 @@ def test_setup_connection_for_dialect_sqlite_zero_commit_interval(
     assert execute_args[4] == "PRAGMA foreign_keys=ON"
 
     execute_args = []
-    util.setup_connection_for_dialect(instance_mock, "sqlite", dbapi_connection, False)
+    assert (
+        util.setup_connection_for_dialect(
+            instance_mock, "sqlite", dbapi_connection, False
+        )
+        is None
+    )
 
     assert len(execute_args) == 3
     assert execute_args[0] == "PRAGMA cache_size = -16384"
