@@ -50,7 +50,7 @@ MAC_ADDR = "a1:b2:c3:d4:e5:f6"
 MOCK_BYTES_TOTAL = [60000000000, 50000000000]
 MOCK_CURRENT_TRANSFER_RATES = [20000000, 10000000]
 MOCK_LOAD_AVG = [1.1, 1.2, 1.3]
-MOCK_TEMPERATURES = {"2.4GHz": 40, "5.0GHz": 0, "CPU": 71.2}
+MOCK_TEMPERATURES = {"2.4GHz": 40.0, "5.0GHz": 0.0, "CPU": 71.2}
 MOCK_MAC_1 = "A1:B1:C1:D1:E1:F1"
 MOCK_MAC_2 = "A2:B2:C2:D2:E2:F2"
 MOCK_MAC_3 = "A3:B3:C3:D3:E3:F3"
@@ -254,10 +254,10 @@ async def test_sensors(
 
     assert hass.states.get(f"{device_tracker.DOMAIN}.test").state == STATE_HOME
     assert hass.states.get(f"{device_tracker.DOMAIN}.testtwo").state == STATE_HOME
-    assert hass.states.get(f"{sensor_prefix}_download_speed").state == "160.00"
-    assert hass.states.get(f"{sensor_prefix}_download").state == "60.00"
-    assert hass.states.get(f"{sensor_prefix}_upload_speed").state == "80.00"
-    assert hass.states.get(f"{sensor_prefix}_upload").state == "50.00"
+    assert hass.states.get(f"{sensor_prefix}_download_speed").state == "160.0"
+    assert hass.states.get(f"{sensor_prefix}_download").state == "60.0"
+    assert hass.states.get(f"{sensor_prefix}_upload_speed").state == "80.0"
+    assert hass.states.get(f"{sensor_prefix}_upload").state == "50.0"
     assert hass.states.get(f"{sensor_prefix}_devices_connected").state == "2"
 
     # remove first tracked device

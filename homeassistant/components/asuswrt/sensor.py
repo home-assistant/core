@@ -56,7 +56,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
         entity_registry_enabled_default=False,
-        native_precision=2,
+        suggested_display_precision=2,
         factor=125000,
     ),
     AsusWrtSensorEntityDescription(
@@ -67,7 +67,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
         entity_registry_enabled_default=False,
-        native_precision=2,
+        suggested_display_precision=2,
         factor=125000,
     ),
     AsusWrtSensorEntityDescription(
@@ -78,7 +78,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfInformation.GIGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_registry_enabled_default=False,
-        native_precision=2,
+        suggested_display_precision=2,
         factor=1000000000,
     ),
     AsusWrtSensorEntityDescription(
@@ -89,7 +89,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfInformation.GIGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_registry_enabled_default=False,
-        native_precision=2,
+        suggested_display_precision=2,
         factor=1000000000,
     ),
     AsusWrtSensorEntityDescription(
@@ -99,7 +99,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        native_precision=1,
+        suggested_display_precision=1,
     ),
     AsusWrtSensorEntityDescription(
         key=SENSORS_LOAD_AVG[1],
@@ -108,7 +108,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        native_precision=1,
+        suggested_display_precision=1,
     ),
     AsusWrtSensorEntityDescription(
         key=SENSORS_LOAD_AVG[2],
@@ -117,7 +117,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        native_precision=1,
+        suggested_display_precision=1,
     ),
     AsusWrtSensorEntityDescription(
         key=SENSORS_TEMPERATURES[0],
@@ -127,7 +127,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        native_precision=1,
+        suggested_display_precision=1,
     ),
     AsusWrtSensorEntityDescription(
         key=SENSORS_TEMPERATURES[1],
@@ -137,7 +137,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        native_precision=1,
+        suggested_display_precision=1,
     ),
     AsusWrtSensorEntityDescription(
         key=SENSORS_TEMPERATURES[2],
@@ -147,7 +147,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        native_precision=1,
+        suggested_display_precision=1,
     ),
 )
 
