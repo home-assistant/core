@@ -110,9 +110,9 @@ async def _setup(
     hass: HomeAssistant, sensors: list[str], config: dict[str, Any]
 ) -> State:
     """Set up entry and return entity state."""
-    with (
-        freeze_time(datetime(2021, 3, 6, 23, 59, 59, tzinfo=dt_util.UTC)) as frozen_time
-    ):
+    with freeze_time(
+        datetime(2021, 3, 6, 23, 59, 59, tzinfo=dt_util.UTC)
+    ) as frozen_time:
         data = _get_config_schema(hass, SOURCE_USER)(config)
         data[CONF_NAME] = DEFAULT_NAME
         config_entry = MockConfigEntry(
