@@ -831,6 +831,7 @@ def create_hue_success_response(
 def create_config_model(config: Config, request: web.Request) -> dict[str, Any]:
     """Create a config resource."""
     return {
+        "name": "HASS BRIDGE",
         "mac": "00:00:00:00:00:00",
         "swversion": "01003542",
         "apiversion": "1.17.0",
