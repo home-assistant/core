@@ -79,10 +79,12 @@ async def async_setup_platform(
     )
 
 
-def catch_request_errors() -> Callable[
-    [Callable[Concatenate[_OpenhomeDeviceT, _P], Awaitable[_R]]],
-    Callable[Concatenate[_OpenhomeDeviceT, _P], Coroutine[Any, Any, _R | None]],
-]:
+def catch_request_errors() -> (
+    Callable[
+        [Callable[Concatenate[_OpenhomeDeviceT, _P], Awaitable[_R]]],
+        Callable[Concatenate[_OpenhomeDeviceT, _P], Coroutine[Any, Any, _R | None]],
+    ]
+):
     """Catch asyncio.TimeoutError, aiohttp.ClientError, UpnpError errors."""
 
     def call_wrapper(
@@ -265,7 +267,7 @@ class OpenhomeDevice(MediaPlayerEntity):
                 await self._device.invoke_pin(pin)
             else:
                 _LOGGER.error("Pins service not supported")
-        except (UpnpError):
+        except UpnpError:
             _LOGGER.error("Error invoking pin %s", pin)
 
     @property

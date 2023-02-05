@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "invalid_unique_id": "Imposible determinar una identificaci\u00f3n \u00fanica v\u00e1lida para el dispositivo"
+        },
         "error": {
             "pwd_and_ssh": "Solo proporcione la contrase\u00f1a o el archivo de clave SSH",
             "pwd_or_ssh": "Proporcione la contrase\u00f1a o el archivo de clave SSH",

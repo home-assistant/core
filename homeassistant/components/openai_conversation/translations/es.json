@@ -15,5 +15,18 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "max_tokens": "M\u00e1ximo de tokens para devolver en respuesta",
+                    "model": "Modelo de finalizaci\u00f3n",
+                    "prompt": "Plantilla de solicitud",
+                    "temperature": "Temperatura",
+                    "top_p": "Top P"
+                }
+            }
+        }
     }
 }
