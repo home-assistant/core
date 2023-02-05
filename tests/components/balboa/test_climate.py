@@ -108,7 +108,7 @@ async def test_spa_hvac_modes(
     for heat_mode in list(HeatMode)[:2]:
         state = await _patch_spa_heatmode(hass, client, heat_mode)
         modes = state.attributes.get(ATTR_HVAC_MODES)
-        assert [HVACMode.HEAT, HVACMode.OFF] == modes
+        assert modes == [HVACMode.HEAT, HVACMode.OFF]
         assert state.state == HVAC_SETTINGS[heat_mode]
 
 
@@ -134,7 +134,7 @@ async def test_spa_preset_modes(
     state = hass.states.get(ENTITY_CLIMATE)
     assert state
     modes = state.attributes.get(ATTR_PRESET_MODES)
-    assert ["ready", "rest"] == modes
+    assert modes == ["ready", "rest"]
 
     # Put it in Ready and Rest
     modelist = ["ready", "rest"]

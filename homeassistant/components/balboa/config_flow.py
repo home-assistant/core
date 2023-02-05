@@ -9,7 +9,7 @@ from pybalboa.exceptions import SpaConnectionError
 import voluptuous as vol
 
 from homeassistant import exceptions
-from homeassistant.config_entries import CONN_CLASS_LOCAL_PUSH, ConfigEntry, ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
@@ -54,7 +54,6 @@ class BalboaSpaClientFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Balboa Spa Client config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = CONN_CLASS_LOCAL_PUSH
 
     _host: str | None
 

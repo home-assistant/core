@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from enum import IntEnum
-import math
 from typing import Any
 
 from pybalboa import SpaClient, SpaControl
@@ -71,7 +70,7 @@ class BalboaClimateEntity(BalboaEntity, ClimateEntity):
             self._blower = blower
             self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
             self._fan_mode_map = {opt.name.lower(): opt for opt in blower.options}
-            self._attr_fan_modes = list(self._fan_mode_map.keys())
+            self._attr_fan_modes = list(self._fan_mode_map)
 
     @property
     def hvac_mode(self) -> HVACMode | None:
@@ -127,20 +126,9 @@ class BalboaClimateEntity(BalboaEntity, ClimateEntity):
         """Return current preset mode."""
         return self._client.heat_mode.state.name.lower()
 
-    def same_unit(self) -> bool:
-        """Return True if the spa and HA temperature units are the same."""
-        unit = TEMPERATURE_UNIT_MAP[self._client.temperature_unit]
-        return unit == self.hass.config.units.temperature_unit
-
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set a new target temperature."""
-        temperature = kwargs[ATTR_TEMPERATURE]
-        if not self.same_unit():
-            if self._client.temperature_unit == TemperatureUnit.CELSIUS:
-                temperature = 0.5 * round(temperature / 0.5)
-            else:
-                temperature = math.floor(temperature + 0.5)
-        await self._client.set_temperature(temperature)
+        await self._client.set_temperature(kwargs[ATTR_TEMPERATURE])
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
