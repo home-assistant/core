@@ -4075,7 +4075,7 @@ async def test_async_call_later(hass):
     scheduleutctime = dt_util.utcnow()
 
     def action(__utcnow: datetime):
-        _currentdelay = __utcnow.timestamp() - scheduleutctime.timestamp()
+        _current_delay = __utcnow.timestamp() - schedule_utctime.timestamp()
         future.set_result(delay < _current_delay < (delay + delay_tolerance))
 
     remove = async_call_later(hass, delay, action)
