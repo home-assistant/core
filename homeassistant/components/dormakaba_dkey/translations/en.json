@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "invalid_code": "Invalid activaction code. An activaction code consist of 8 characters, separated by a dash, e.g. GBZT-HXC0.",
+            "unknown": "Unexpected error",
+            "wrong_code": "Wrong activaction code. Note that an activation code can only be used once."
+        },
+        "flow_title": "{name}",
+        "progress": {
+            "wait_for_bluetooth_connect": "Connecting..."
+        },
+        "step": {
+            "associate": {
+                "data": {
+                    "activation_code": "Activation code"
+                },
+                "description": "Provide an unused activation code.\n\nTo create an activation code, create a new key in the dKey admin app, then choose to share the key and share an activation code.\n\nMake sure to close the dKey admin app before proceeding."
+            },
+            "bluetooth_confirm": {
+                "description": "Do you want to set up {name}?"
+            },
+            "bluetooth_connect": {
+                "description": "Please wait while a connection with the lock is established"
+            },
+            "could_not_connect": {
+                "description": "Could not connect to the lock, do you want to try again?"
+            }
+        }
+    }
+}
