@@ -118,6 +118,35 @@ def _test_selector(
             (["abc123", "def456"],),
             ("abc123", None, ["abc123", None]),
         ),
+        (
+            {
+                "filter": {
+                    "integration": "zha",
+                    "manufacturer": "mock-manuf",
+                    "model": "mock-model",
+                }
+            },
+            ("abc123",),
+            (None,),
+        ),
+        (
+            {
+                "filter": [
+                    {
+                        "integration": "zha",
+                        "manufacturer": "mock-manuf",
+                        "model": "mock-model",
+                    },
+                    {
+                        "integration": "matter",
+                        "manufacturer": "other-mock-manuf",
+                        "model": "other-mock-model",
+                    },
+                ]
+            },
+            ("abc123",),
+            (None,),
+        ),
     ),
 )
 def test_device_selector_schema(schema, valid_selections, invalid_selections) -> None:
@@ -239,6 +268,16 @@ def test_entity_selector_schema(schema, valid_selections, invalid_selections) ->
         ),
         (
             {"device": {"integration": "demo", "model": "mock-model"}},
+            ("abc123",),
+            (None,),
+        ),
+        (
+            {
+                "device": [
+                    {"integration": "demo", "model": "mock-model"},
+                    {"integration": "other-demo", "model": "other-mock-model"},
+                ]
+            },
             ("abc123",),
             (None,),
         ),
@@ -408,6 +447,16 @@ def test_state_selector_schema(schema, valid_selections, invalid_selections) -> 
             (),
         ),
         ({"device": {"integration": "demo", "model": "mock-model"}}, (), ()),
+        (
+            {
+                "device": [
+                    {"integration": "demo", "model": "mock-model"},
+                    {"integration": "other-demo", "model": "other-mock-model"},
+                ],
+            },
+            (),
+            (),
+        ),
         (
             {
                 "entity": {"domain": "binary_sensor", "device_class": "motion"},

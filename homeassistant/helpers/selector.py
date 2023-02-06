@@ -99,7 +99,7 @@ class EntityFilterSelectorConfig(TypedDict, total=False):
     device_class: str | list[str]
 
 
-SINGLE_DEVICE_SELECTOR_CONFIG_SCHEMA = vol.Schema(
+DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
     {
         # Integration linked to it with a config entry
         vol.Optional("integration"): str,
@@ -115,13 +115,14 @@ SINGLE_DEVICE_SELECTOR_CONFIG_SCHEMA = vol.Schema(
 )
 
 
-class SingleDeviceSelectorConfig(TypedDict, total=False):
+class DeviceFilterSelectorConfig(TypedDict, total=False):
     """Class to represent a single device selector config."""
 
     integration: str
     manufacturer: str
     model: str
-    entity: EntityFilterSelectorConfig
+    entity: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
+    filter: DeviceFilterSelectorConfig | list[DeviceFilterSelectorConfig]
 
 
 class ActionSelectorConfig(TypedDict):
@@ -178,8 +179,8 @@ class AddonSelector(Selector[AddonSelectorConfig]):
 class AreaSelectorConfig(TypedDict, total=False):
     """Class to represent an area selector config."""
 
-    entity: EntityFilterSelectorConfig
-    device: SingleDeviceSelectorConfig
+    entity: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
+    device: DeviceFilterSelectorConfig | list[DeviceFilterSelectorConfig]
     multiple: bool
 
 
@@ -195,7 +196,10 @@ class AreaSelector(Selector[AreaSelectorConfig]):
                 ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA,
                 [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA],
             ),
-            vol.Optional("device"): SINGLE_DEVICE_SELECTOR_CONFIG_SCHEMA,
+            vol.Optional("device"): vol.Any(
+                DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA,
+                [DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA],
+            ),
             vol.Optional("multiple", default=False): cv.boolean,
         }
     )
@@ -404,7 +408,7 @@ class DeviceSelectorConfig(TypedDict, total=False):
     integration: str
     manufacturer: str
     model: str
-    entity: EntityFilterSelectorConfig
+    entity: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
     multiple: bool
 
 
@@ -414,8 +418,14 @@ class DeviceSelector(Selector[DeviceSelectorConfig]):
 
     selector_type = "device"
 
-    CONFIG_SCHEMA = SINGLE_DEVICE_SELECTOR_CONFIG_SCHEMA.extend(
-        {vol.Optional("multiple", default=False): cv.boolean}
+    CONFIG_SCHEMA = DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA.extend(
+        {
+            vol.Optional("multiple", default=False): cv.boolean,
+            vol.Optional("filter"): vol.Any(
+                DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA,
+                [DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA],
+            ),
+        },
     )
 
     def __init__(self, config: DeviceSelectorConfig | None = None) -> None:
@@ -793,8 +803,8 @@ class SelectSelector(Selector[SelectSelectorConfig]):
 class TargetSelectorConfig(TypedDict, total=False):
     """Class to represent a target selector config."""
 
-    entity: EntityFilterSelectorConfig
-    device: SingleDeviceSelectorConfig
+    entity: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
+    device: DeviceFilterSelectorConfig | list[DeviceFilterSelectorConfig]
 
 
 class StateSelectorConfig(TypedDict, total=False):
@@ -845,7 +855,10 @@ class TargetSelector(Selector[TargetSelectorConfig]):
                 ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA,
                 [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA],
             ),
-            vol.Optional("device"): SINGLE_DEVICE_SELECTOR_CONFIG_SCHEMA,
+            vol.Optional("device"): vol.Any(
+                DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA,
+                [DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA],
+            ),
         }
     )
 
