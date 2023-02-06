@@ -76,7 +76,6 @@ from .const import (
     DEFAULT_WS_PATH,
     DOMAIN,
     SUPPORTED_PROTOCOLS,
-    SUPPORTED_TRANSPORTS,
     TRANSPORT_TCP,
     TRANSPORT_WEBSOCKETS,
 )
@@ -119,6 +118,10 @@ PROTOCOL_SELECTOR = SelectSelector(
         mode=SelectSelectorMode.DROPDOWN,
     )
 )
+SUPPORTED_TRANSPORTS = [
+    SelectOptionDict(value=TRANSPORT_TCP, label="TCP"),
+    SelectOptionDict(value=TRANSPORT_WEBSOCKETS, label="WebSocket"),
+]
 TRANSPORT_SELECTOR = SelectSelector(
     SelectSelectorConfig(
         options=SUPPORTED_TRANSPORTS,
@@ -129,14 +132,15 @@ WS_HEADERS_SELECTOR = TextSelector(
     TextSelectorConfig(type=TextSelectorType.TEXT, multiline=True)
 )
 CA_VERIFICATION_MODES = [
-    SelectOptionDict(value="off", label="Off"),
-    SelectOptionDict(value="auto", label="Auto"),
-    SelectOptionDict(value="custom", label="Custom"),
+    "off",
+    "auto",
+    "custom",
 ]
 BROKER_VERIFICATION_SELECTOR = SelectSelector(
     SelectSelectorConfig(
         options=CA_VERIFICATION_MODES,
         mode=SelectSelectorMode.DROPDOWN,
+        translation_key=SET_CA_CERT,
     )
 )
 
@@ -155,7 +159,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _hassio_discovery = None
+    _hassio_discovery: dict[str, Any] | None = None
 
     @staticmethod
     @callback

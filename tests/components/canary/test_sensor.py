@@ -14,7 +14,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
@@ -53,7 +53,7 @@ async def test_sensors_pro(hass, canary) -> None:
         "home_dining_room_temperature": (
             "20_temperature",
             "21.12",
-            TEMP_CELSIUS,
+            UnitOfTemperature.CELSIUS,
             SensorDeviceClass.TEMPERATURE,
             None,
         ),
@@ -73,7 +73,7 @@ async def test_sensors_pro(hass, canary) -> None:
         ),
     }
 
-    for (sensor_id, data) in sensors.items():
+    for sensor_id, data in sensors.items():
         entity_entry = registry.async_get(f"sensor.{sensor_id}")
         assert entity_entry
         assert entity_entry.original_device_class == data[3]
@@ -192,7 +192,7 @@ async def test_sensors_flex(hass, canary) -> None:
         ),
     }
 
-    for (sensor_id, data) in sensors.items():
+    for sensor_id, data in sensors.items():
         entity_entry = registry.async_get(f"sensor.{sensor_id}")
         assert entity_entry
         assert entity_entry.original_device_class == data[3]

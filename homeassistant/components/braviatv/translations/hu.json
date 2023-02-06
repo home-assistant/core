@@ -4,8 +4,7 @@
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
             "no_ip_control": "Az IP-vez\u00e9rl\u00e9s le van tiltva a TV-n, vagy a TV nem t\u00e1mogatja.",
             "not_bravia_device": "A k\u00e9sz\u00fcl\u00e9k nem egy Bravia TV.",
-            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt.",
-            "reauth_unsuccessful": "Az \u00fajrahiteles\u00edt\u00e9s sikertelen volt, k\u00e9rem, t\u00e1vol\u00edtsa el az integr\u00e1ci\u00f3t, \u00e9s \u00e1ll\u00edtsa be \u00fajra."
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt."
         },
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
@@ -16,7 +15,6 @@
         "step": {
             "authorize": {
                 "data": {
-                    "pin": "PIN-k\u00f3d",
                     "use_psk": "PSK hiteles\u00edt\u00e9s haszn\u00e1lata"
                 },
                 "description": "Gy\u0151z\u0151dj\u00f6n meg r\u00f3la, hogy a \"T\u00e1voli vez\u00e9rl\u00e9s\" enged\u00e9lyezve van a TV-n, n\u00e9zze meg itt: \nBe\u00e1ll\u00edt\u00e1sok -> H\u00e1l\u00f3zat -> T\u00e1voli eszk\u00f6zbe\u00e1ll\u00edt\u00e1sok -> T\u00e1voli vez\u00e9rl\u00e9s\n(Settings -> Network -> Remote device settings -> Control remotely)\n\nK\u00e9t enged\u00e9lyez\u00e9si m\u00f3dszer l\u00e9tezik: PIN-k\u00f3d vagy PSK (Pre-Shared Key). \nA PSK-n kereszt\u00fcli enged\u00e9lyez\u00e9s aj\u00e1nlott, mivel stabilabb.",
@@ -36,13 +34,6 @@
                     "pin": "PSK"
                 },
                 "title": "Sony Bravia TV enged\u00e9lyez\u00e9se"
-            },
-            "reauth_confirm": {
-                "data": {
-                    "pin": "PIN-k\u00f3d",
-                    "use_psk": "PSK hiteles\u00edt\u00e9s haszn\u00e1lata"
-                },
-                "description": "\u00cdrja be a Sony Bravia TV -n l\u00e1that\u00f3 PIN -k\u00f3dot. \n\nHa a PIN -k\u00f3d nem jelenik meg, t\u00f6r\u00f6lje a Home Assistant regisztr\u00e1ci\u00f3j\u00e1t a t\u00e9v\u00e9n, az al\u00e1bbiak szerint: Be\u00e1ll\u00edt\u00e1sok - > H\u00e1l\u00f3zat - > T\u00e1voli eszk\u00f6z be\u00e1ll\u00edt\u00e1sai - > T\u00e1vol\u00edtsa el a t\u00e1voli eszk\u00f6z regisztr\u00e1ci\u00f3j\u00e1t.\n\nA PIN-k\u00f3d helyett haszn\u00e1lhat PSK-t (Pre-Shared-Key). A PSK egy felhaszn\u00e1l\u00f3 \u00e1ltal meghat\u00e1rozott titkos kulcs, amelyet a hozz\u00e1f\u00e9r\u00e9s ellen\u0151rz\u00e9s\u00e9re haszn\u00e1lnak. Ez a hiteles\u00edt\u00e9si m\u00f3dszer aj\u00e1nlott, mivel stabilabb. A PSK enged\u00e9lyez\u00e9s\u00e9hez a TV-n, l\u00e9pjen a k\u00f6vetkez\u0151 oldalra: Be\u00e1ll\u00edt\u00e1sok -> H\u00e1l\u00f3zat -> Otthoni h\u00e1l\u00f3zat be\u00e1ll\u00edt\u00e1sa -> IP-vez\u00e9rl\u00e9s. Ezut\u00e1n jel\u00f6lje be a \"PSK hiteles\u00edt\u00e9s haszn\u00e1lata\" jel\u00f6l\u0151n\u00e9gyzetet, \u00e9s adja meg a PSK-t a PIN-k\u00f3d helyett."
             },
             "user": {
                 "data": {

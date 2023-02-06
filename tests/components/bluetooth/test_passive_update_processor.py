@@ -15,6 +15,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.components.bluetooth import (
     DOMAIN,
+    FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
     BluetoothChange,
     BluetoothScanningMode,
     BluetoothServiceInfoBleak,
@@ -28,7 +29,7 @@ from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothProcessorEntity,
 )
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import CoreState, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.setup import async_setup_component
@@ -86,7 +87,7 @@ GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
     entity_descriptions={
         PassiveBluetoothEntityKey("temperature", None): SensorEntityDescription(
             key="temperature",
-            native_unit_of_measurement=TEMP_CELSIUS,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_class=SensorDeviceClass.TEMPERATURE,
         ),
         PassiveBluetoothEntityKey("pressure", None): SensorEntityDescription(
@@ -200,6 +201,8 @@ async def test_unavailable_after_no_data(
     hass, mock_bleak_scanner_start, mock_bluetooth_adapters
 ):
     """Test that the coordinator is unavailable after no data for a while."""
+    start_monotonic = time.monotonic()
+
     with patch(
         "bleak.BleakScanner.discovered_devices_and_advertisement_data",  # Must patch before we setup
         {"44:44:33:11:23:45": (MagicMock(address="44:44:33:11:23:45"), MagicMock())},
@@ -265,7 +268,12 @@ async def test_unavailable_after_no_data(
     assert len(mock_add_entities.mock_calls) == 1
     assert coordinator.available is True
     assert processor.available is True
-    with patch_all_discovered_devices([MagicMock(address="44:44:33:11:23:45")]):
+    monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
+
+    with patch(
+        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
+        return_value=monotonic_now,
+    ), patch_all_discovered_devices([MagicMock(address="44:44:33:11:23:45")]):
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
         )
@@ -279,7 +287,12 @@ async def test_unavailable_after_no_data(
     assert coordinator.available is True
     assert processor.available is True
 
-    with patch_all_discovered_devices([MagicMock(address="44:44:33:11:23:45")]):
+    monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 2
+
+    with patch(
+        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
+        return_value=monotonic_now,
+    ), patch_all_discovered_devices([MagicMock(address="44:44:33:11:23:45")]):
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
         )
@@ -466,7 +479,7 @@ async def test_bad_data_from_update_method(
     assert processor.available is True
 
     # We should go unavailable once we get bad data
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO_2, BluetoothChange.ADVERTISEMENT)
 
     assert processor.available is False
@@ -885,7 +898,7 @@ NO_DEVICES_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
         PassiveBluetoothEntityKey("temperature", None): SensorEntityDescription(
             key="temperature",
             name="Temperature",
-            native_unit_of_measurement=TEMP_CELSIUS,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_class=SensorDeviceClass.TEMPERATURE,
         ),
         PassiveBluetoothEntityKey("pressure", None): SensorEntityDescription(

@@ -61,10 +61,10 @@ WIRED_CONNECTION = (EventKey.WIRED_CLIENT_CONNECTED,)
 WIRELESS_CONNECTION = (
     EventKey.WIRELESS_CLIENT_CONNECTED,
     EventKey.WIRELESS_CLIENT_ROAM,
-    EventKey.WIRELESS_CLIENT_ROAMRADIO,
+    EventKey.WIRELESS_CLIENT_ROAM_RADIO,
     EventKey.WIRELESS_GUEST_CONNECTED,
     EventKey.WIRELESS_GUEST_ROAM,
-    EventKey.WIRELESS_GUEST_ROAMRADIO,
+    EventKey.WIRELESS_GUEST_ROAM_RADIO,
 )
 
 
@@ -272,7 +272,6 @@ class UniFiClientTracker(UniFiClientBase, ScannerEntity):
             self.client.last_updated == SOURCE_EVENT
             and not self._only_listen_to_data_source
         ):
-
             if (self.is_wired and self.client.event.key in WIRED_CONNECTION) or (
                 not self.is_wired and self.client.event.key in WIRELESS_CONNECTION
             ):

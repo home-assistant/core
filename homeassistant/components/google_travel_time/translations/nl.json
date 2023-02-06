@@ -28,6 +28,7 @@
                     "mode": "Reiswijze",
                     "time": "Tijd",
                     "time_type": "Tijd Type",
+                    "traffic_mode": "Verkeersmodus",
                     "transit_mode": "Vervoersmodus",
                     "transit_routing_preference": "Voorkeur vervoer route",
                     "units": "Eenheden"

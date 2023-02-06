@@ -1,6 +1,21 @@
 {
     "config": {
         "step": {
+            "manual_tunnel": {
+                "title": "\u041d\u0430\u043b\u0430\u0448\u0442\u0443\u0432\u0430\u043d\u043d\u044f \u0442\u0443\u043d\u0435\u043b\u044e"
+            },
+            "routing": {
+                "data": {
+                    "local_ip": "\u041b\u043e\u043a\u0430\u043b\u044c\u043d\u0438\u0439 IP Home Assistant"
+                },
+                "title": "\u041c\u0430\u0440\u0448\u0440\u0443\u0442\u0438\u0437\u0430\u0446\u0456\u044f"
+            },
+            "secure_routing_manual": {
+                "title": "\u0411\u0435\u0437\u043f\u0435\u0447\u043d\u0430 \u043c\u0430\u0440\u0448\u0440\u0443\u0442\u0438\u0437\u0430\u0446\u0456\u044f"
+            },
+            "secure_tunnel_manual": {
+                "title": "\u0411\u0435\u0437\u043f\u0435\u0447\u043d\u0435 \u0442\u0443\u043d\u0435\u043b\u044e\u0432\u0430\u043d\u043d\u044f"
+            },
             "tunnel": {
                 "title": "\u0422\u0443\u043d\u0435\u043b\u044c"
             }

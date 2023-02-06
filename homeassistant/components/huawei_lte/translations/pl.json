@@ -1,8 +1,10 @@
 {
     "config": {
         "abort": {
-            "not_huawei_lte": "To nie jest urz\u0105dzenie Huawei LTE",
-            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "already_in_progress": "Konfiguracja jest ju\u017c w toku",
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119",
+            "unsupported_device": "Nieobs\u0142ugiwane urz\u0105dzenie"
         },
         "error": {
             "connection_timeout": "Przekroczono limit czasu pr\u00f3by po\u0142\u0105czenia",

@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges."
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API kulcs"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "max_tokens": "A v\u00e1laszk\u00e9nt visszak\u00fcldhet\u0151 tokenek maxim\u00e1lis sz\u00e1ma",
+                    "model": "Teljes\u00edt\u00e9si modell",
+                    "prompt": "Prompt sablon",
+                    "temperature": "H\u0151m\u00e9rs\u00e9klet",
+                    "top_p": "Top P"
+                }
+            }
+        }
+    }
+}

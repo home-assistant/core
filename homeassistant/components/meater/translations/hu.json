@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "A fi\u00f3k m\u00e1r konfigur\u00e1lva van"
+        },
         "error": {
             "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
             "service_unavailable_error": "Az API jelenleg nem el\u00e9rhet\u0151, k\u00e9rem, pr\u00f3b\u00e1lja meg k\u00e9s\u0151bb \u00fajra.",

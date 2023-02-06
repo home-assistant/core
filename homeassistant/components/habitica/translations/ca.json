@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "El compte ja est\u00e0 configurat"
+        },
         "error": {
             "invalid_credentials": "Autenticaci\u00f3 inv\u00e0lida",
             "unknown": "Error inesperat"

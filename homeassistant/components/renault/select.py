@@ -75,7 +75,7 @@ class RenaultSelectEntity(
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        await self.vehicle.vehicle.set_charge_mode(option)
+        await self.vehicle.set_charge_mode(option)
 
 
 def _get_charge_mode_icon(entity: RenaultSelectEntity) -> str:

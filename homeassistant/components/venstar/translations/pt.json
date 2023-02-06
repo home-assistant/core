@@ -14,5 +14,17 @@
                 }
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "schedule_part": {
+                "state": {
+                    "day": "Dia",
+                    "inactive": "Inativo",
+                    "morning": "Manh\u00e3",
+                    "night": "Noite"
+                }
+            }
+        }
     }
 }

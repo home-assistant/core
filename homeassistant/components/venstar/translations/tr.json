@@ -19,5 +19,18 @@
                 "title": "Venstar Termostat'a ba\u011flan\u0131n"
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "schedule_part": {
+                "state": {
+                    "day": "G\u00fcn",
+                    "evening": "Ak\u015fam",
+                    "inactive": "Etkin de\u011fil",
+                    "morning": "Sabah",
+                    "night": "Gece"
+                }
+            }
+        }
     }
 }

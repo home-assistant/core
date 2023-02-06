@@ -5,6 +5,7 @@ from unittest.mock import PropertyMock, patch
 
 from homeassistant.components.accuweather.const import ATTRIBUTION, DOMAIN
 from homeassistant.components.sensor import (
+    ATTR_OPTIONS,
     ATTR_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
@@ -17,15 +18,14 @@ from homeassistant.const import (
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     CONCENTRATION_PARTS_PER_CUBIC_METER,
-    LENGTH_FEET,
-    LENGTH_METERS,
-    LENGTH_MILLIMETERS,
     PERCENTAGE,
-    SPEED_KILOMETERS_PER_HOUR,
     STATE_UNAVAILABLE,
-    TEMP_CELSIUS,
-    TIME_HOURS,
     UV_INDEX,
+    UnitOfLength,
+    UnitOfSpeed,
+    UnitOfTemperature,
+    UnitOfTime,
+    UnitOfVolumetricFlux,
 )
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -44,26 +44,33 @@ async def test_sensor_without_forecast(hass):
 
     state = hass.states.get("sensor.home_cloud_ceiling")
     assert state
-    assert state.state == "3200"
+    assert state.state == "3200.0"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_ICON) == "mdi:weather-fog"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == LENGTH_METERS
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfLength.METERS
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DISTANCE
 
     entry = registry.async_get("sensor.home_cloud_ceiling")
     assert entry
     assert entry.unique_id == "0123456-ceiling"
+    assert entry.options["sensor"] == {"suggested_display_precision": 0}
 
     state = hass.states.get("sensor.home_precipitation")
     assert state
     assert state.state == "0.0"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == LENGTH_MILLIMETERS
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR
+    )
     assert state.attributes.get(ATTR_ICON) is None
     assert state.attributes.get("type") is None
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PRECIPITATION
+    assert (
+        state.attributes.get(ATTR_DEVICE_CLASS)
+        == SensorDeviceClass.PRECIPITATION_INTENSITY
+    )
 
     entry = registry.async_get("sensor.home_precipitation")
     assert entry
@@ -74,8 +81,9 @@ async def test_sensor_without_forecast(hass):
     assert state.state == "falling"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_ICON) == "mdi:gauge"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENUM
     assert state.attributes.get(ATTR_STATE_CLASS) is None
+    assert state.attributes.get(ATTR_OPTIONS) == ["falling", "rising", "steady"]
 
     entry = registry.async_get("sensor.home_pressure_tendency")
     assert entry
@@ -86,7 +94,7 @@ async def test_sensor_without_forecast(hass):
     assert state
     assert state.state == "25.1"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TEMPERATURE
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
@@ -117,7 +125,7 @@ async def test_sensor_with_forecast(hass):
     assert state.state == "7.2"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_ICON) == "mdi:weather-partly-cloudy"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TIME_HOURS
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTime.HOURS
     assert state.attributes.get(ATTR_STATE_CLASS) is None
 
     entry = registry.async_get("sensor.home_hours_of_sun_0d")
@@ -128,7 +136,7 @@ async def test_sensor_with_forecast(hass):
     assert state
     assert state.state == "29.8"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TEMPERATURE
     assert state.attributes.get(ATTR_STATE_CLASS) is None
 
@@ -139,7 +147,7 @@ async def test_sensor_with_forecast(hass):
     assert state
     assert state.state == "15.1"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TEMPERATURE
     assert state.attributes.get(ATTR_STATE_CLASS) is None
 
@@ -363,7 +371,7 @@ async def test_sensor_enabled_without_forecast(hass):
     assert state
     assert state.state == "22.8"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TEMPERATURE
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
@@ -387,7 +395,7 @@ async def test_sensor_enabled_without_forecast(hass):
     assert state
     assert state.state == "16.2"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TEMPERATURE
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
@@ -399,7 +407,7 @@ async def test_sensor_enabled_without_forecast(hass):
     assert state
     assert state.state == "21.1"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TEMPERATURE
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
@@ -411,7 +419,7 @@ async def test_sensor_enabled_without_forecast(hass):
     assert state
     assert state.state == "18.6"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TEMPERATURE
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
@@ -423,7 +431,7 @@ async def test_sensor_enabled_without_forecast(hass):
     assert state
     assert state.state == "22.8"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TEMPERATURE
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
@@ -435,7 +443,10 @@ async def test_sensor_enabled_without_forecast(hass):
     assert state
     assert state.state == "20.3"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == SPEED_KILOMETERS_PER_HOUR
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfSpeed.KILOMETERS_PER_HOUR
+    )
     assert state.attributes.get(ATTR_ICON) is None
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.WIND_SPEED
@@ -448,7 +459,10 @@ async def test_sensor_enabled_without_forecast(hass):
     assert state
     assert state.state == "14.5"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == SPEED_KILOMETERS_PER_HOUR
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfSpeed.KILOMETERS_PER_HOUR
+    )
     assert state.attributes.get(ATTR_ICON) is None
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.WIND_SPEED
@@ -542,7 +556,7 @@ async def test_sensor_enabled_without_forecast(hass):
     assert state
     assert state.state == "28.0"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TEMPERATURE
     assert state.attributes.get(ATTR_STATE_CLASS) is None
 
@@ -554,7 +568,7 @@ async def test_sensor_enabled_without_forecast(hass):
     assert state
     assert state.state == "15.1"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TEMPERATURE
 
     entry = registry.async_get("sensor.home_realfeel_temperature_shade_min_0d")
@@ -581,7 +595,10 @@ async def test_sensor_enabled_without_forecast(hass):
     assert state
     assert state.state == "13.0"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == SPEED_KILOMETERS_PER_HOUR
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfSpeed.KILOMETERS_PER_HOUR
+    )
     assert state.attributes.get("direction") == "SSE"
     assert state.attributes.get(ATTR_ICON) is None
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.WIND_SPEED
@@ -594,7 +611,10 @@ async def test_sensor_enabled_without_forecast(hass):
     assert state
     assert state.state == "7.4"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == SPEED_KILOMETERS_PER_HOUR
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfSpeed.KILOMETERS_PER_HOUR
+    )
     assert state.attributes.get("direction") == "WNW"
     assert state.attributes.get(ATTR_ICON) is None
     assert state.attributes.get(ATTR_STATE_CLASS) is None
@@ -608,7 +628,10 @@ async def test_sensor_enabled_without_forecast(hass):
     assert state
     assert state.state == "29.6"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == SPEED_KILOMETERS_PER_HOUR
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfSpeed.KILOMETERS_PER_HOUR
+    )
     assert state.attributes.get("direction") == "S"
     assert state.attributes.get(ATTR_ICON) is None
     assert state.attributes.get(ATTR_STATE_CLASS) is None
@@ -622,7 +645,10 @@ async def test_sensor_enabled_without_forecast(hass):
     assert state
     assert state.state == "18.5"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == SPEED_KILOMETERS_PER_HOUR
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfSpeed.KILOMETERS_PER_HOUR
+    )
     assert state.attributes.get("direction") == "WSW"
     assert state.attributes.get(ATTR_ICON) is None
     assert state.attributes.get(ATTR_STATE_CLASS) is None
@@ -640,7 +666,7 @@ async def test_availability(hass):
     state = hass.states.get("sensor.home_cloud_ceiling")
     assert state
     assert state.state != STATE_UNAVAILABLE
-    assert state.state == "3200"
+    assert state.state == "3200.0"
 
     future = utcnow() + timedelta(minutes=60)
     with patch(
@@ -671,7 +697,7 @@ async def test_availability(hass):
         state = hass.states.get("sensor.home_cloud_ceiling")
         assert state
         assert state.state != STATE_UNAVAILABLE
-        assert state.state == "3200"
+        assert state.state == "3200.0"
 
 
 async def test_manual_update_entity(hass):
@@ -711,10 +737,10 @@ async def test_sensor_imperial_units(hass):
 
     state = hass.states.get("sensor.home_cloud_ceiling")
     assert state
-    assert state.state == "10500"
+    assert state.state == "10500.0"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_ICON) == "mdi:weather-fog"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == LENGTH_FEET
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfLength.FEET
 
 
 async def test_state_update(hass):
@@ -724,7 +750,7 @@ async def test_state_update(hass):
     state = hass.states.get("sensor.home_cloud_ceiling")
     assert state
     assert state.state != STATE_UNAVAILABLE
-    assert state.state == "3200"
+    assert state.state == "3200.0"
 
     future = utcnow() + timedelta(minutes=60)
 

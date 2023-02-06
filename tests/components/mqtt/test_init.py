@@ -21,8 +21,8 @@ from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
-    TEMP_CELSIUS,
     Platform,
+    UnitOfTemperature,
 )
 import homeassistant.core as ha
 from homeassistant.core import CoreState, HomeAssistant, callback
@@ -816,7 +816,7 @@ async def test_all_subscriptions_run_when_decode_fails(
     await mqtt.async_subscribe(hass, "test-topic", record_calls, encoding="ascii")
     await mqtt.async_subscribe(hass, "test-topic", record_calls)
 
-    async_fire_mqtt_message(hass, "test-topic", TEMP_CELSIUS)
+    async_fire_mqtt_message(hass, "test-topic", UnitOfTemperature.CELSIUS)
 
     await hass.async_block_till_done()
     assert len(calls) == 1
@@ -1197,8 +1197,7 @@ async def test_subscribe_special_characters(
 async def test_subscribe_same_topic(
     hass, mqtt_client_mock, mqtt_mock_entry_no_yaml_config
 ):
-    """
-    Test subscring to same topic twice and simulate retained messages.
+    """Test subscring to same topic twice and simulate retained messages.
 
     When subscribing to the same topic again, SUBSCRIBE must be sent to the broker again
     for it to resend any retained messages.
@@ -3062,3 +3061,16 @@ async def test_link_config_entry(hass, tmp_path, caplog):
     # reload manual configured items and assert again
     await help_test_reload_with_config(hass, caplog, tmp_path, config_manual)
     assert _check_entities() == 2
+
+
+@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SENSOR])
+@pytest.mark.parametrize(
+    "config_manual",
+    [
+        {"mqtt": {"sensor": []}},
+        {"mqtt": {"broker": "test"}},
+    ],
+)
+async def test_setup_manual_entity_from_yaml(hass: HomeAssistant, config_manual):
+    """Test setup with empty platform keys."""
+    await help_test_setup_manual_entity_from_yaml(hass, config_manual)

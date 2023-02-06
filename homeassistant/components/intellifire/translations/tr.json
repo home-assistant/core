@@ -19,7 +19,7 @@
                 }
             },
             "dhcp_confirm": {
-                "description": "Kurulumu yapmak  {host} ister misiniz?\nSeri No: {serial}?"
+                "description": "{host} kurmak istiyor musunuz?\n Seri: {serial} ?"
             },
             "manual_device_entry": {
                 "data": {

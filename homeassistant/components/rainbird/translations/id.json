@@ -1,0 +1,48 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "timeout_connect": "Tenggang waktu pembuatan koneksi habis"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Kata Sandi"
+                },
+                "description": "Masukkan informasi modul Wi-Fi LNK untuk perangkat Rain Bird Anda.",
+                "title": "Konfigurasi Rain Bird"
+            }
+        }
+    },
+    "issues": {
+        "deprecated_raindelay": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Layanan Rain Bird `rainbird.set_rain_delay` akan dihapus dan digantikan oleh entitas Bilangan untuk mengelola penundaan hujan. Otomasi atau skrip yang ada perlu diperbarui untuk menggunakan `number.set_value` dengan target `{alternate_target}` sebagai gantinya.",
+                        "title": "Layanan Rain Delay Rain Bird dalam proses penghapusan"
+                    }
+                }
+            },
+            "title": "Layanan Rain Delay Rain Bird dalam proses penghapusan"
+        },
+        "deprecated_yaml": {
+            "description": "Proses konfigurasi Rain Bird di configuration.yaml akan dihapus di Home Assistant 2023.4.\n\nKonfigurasi Anda telah diimpor ke antarmuka secara otomatis, namun waktu irigasi per zona default tidak lagi didukung. Hapus konfigurasi integrasi Rain Bird YAML dari file configuration.yaml Anda dan mulai ulang Home Assistant untuk memperbaiki masalah ini.",
+            "title": "Konfigurasi YAML Integrasi Raid Bird dalam proses penghapusan"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "duration": "Waktu irigasi default dalam menit"
+                },
+                "title": "Konfigurasi Rain Bird"
+            }
+        }
+    }
+}

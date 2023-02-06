@@ -7,6 +7,18 @@
         "error": {
             "cannot_connect": "Kan geen verbinding maken"
         },
-        "flow_title": "{name}"
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "station_id": "Station ID (standaard het dichtstbijzijnde station)"
+                }
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "title": "De ZAMG YAML-configuratie wordt verwijderd"
+        }
     }
 }

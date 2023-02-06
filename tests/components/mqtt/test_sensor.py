@@ -12,9 +12,8 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
     Platform,
+    UnitOfTemperature,
 )
 import homeassistant.core as ha
 from homeassistant.helpers import device_registry as dr
@@ -293,7 +292,6 @@ async def test_setting_sensor_value_via_mqtt_json_message(
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
-                    "unit_of_measurement": "fav unit",
                     "value_template": "{{ value_json.val }}",
                 }
             }
@@ -326,7 +324,6 @@ async def test_setting_sensor_value_via_mqtt_json_message_and_default_current_st
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
-                    "unit_of_measurement": "fav unit",
                     "value_template": "{{ value_json.val | is_defined }}-{{ value_json.par }}",
                 }
             }
@@ -1127,14 +1124,14 @@ async def test_cleanup_triggers_and_restoring_state(
     config1["expire_after"] = 30
     config1["state_topic"] = "test-topic1"
     config1["device_class"] = "temperature"
-    config1["unit_of_measurement"] = TEMP_FAHRENHEIT
+    config1["unit_of_measurement"] = UnitOfTemperature.FAHRENHEIT.value
 
     config2 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][domain])
     config2["name"] = "test2"
     config2["expire_after"] = 5
     config2["state_topic"] = "test-topic2"
     config2["device_class"] = "temperature"
-    config2["unit_of_measurement"] = TEMP_CELSIUS
+    config2["unit_of_measurement"] = UnitOfTemperature.CELSIUS.value
 
     freezer.move_to("2022-02-02 12:01:00+01:00")
 

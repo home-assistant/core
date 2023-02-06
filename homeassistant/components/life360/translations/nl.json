@@ -30,6 +30,13 @@
     "options": {
         "step": {
             "init": {
+                "data": {
+                    "driving": "Toon rijden als staat",
+                    "driving_speed": "Rijsnelheid",
+                    "limit_gps_acc": "Beperk de GPS-nauwkeurigheid",
+                    "max_gps_accuracy": "Maximale GPS-nauwkeurigheid (meters)",
+                    "set_drive_speed": "Rijsnelheidsdrempel instellen"
+                },
                 "title": "Accountinstellingen"
             }
         }

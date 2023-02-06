@@ -11,6 +11,12 @@
             "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Parola"
+                },
+                "description": "Kimlik do\u011frulama belirte\u00e7leri ge\u00e7ersiz oldu, bunlar\u0131 yeniden olu\u015fturmak i\u00e7in oturum a\u00e7\u0131n."
+            },
             "user": {
                 "data": {
                     "password": "Parola",

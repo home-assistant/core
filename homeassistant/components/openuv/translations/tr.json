@@ -1,12 +1,20 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Konum zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+            "already_configured": "Konum zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu"
         },
         "error": {
             "invalid_api_key": "Ge\u00e7ersiz API anahtar\u0131"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API Anahtar\u0131"
+                },
+                "description": "L\u00fctfen {latitude} , {longitude} i\u00e7in API anahtar\u0131n\u0131 yeniden girin.",
+                "title": "Entegrasyonu Yeniden Do\u011frula"
+            },
             "user": {
                 "data": {
                     "api_key": "API Anahtar\u0131",

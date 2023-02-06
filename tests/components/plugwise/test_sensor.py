@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
+from homeassistant.helpers.entity_registry import async_get
 
 from tests.common import MockConfigEntry
 
@@ -110,17 +111,20 @@ async def test_p1_3ph_dsmr_sensor_entities(
     assert state
     assert float(state.state) == 2080.0
 
+    entity_id = "sensor.p1_voltage_phase_one"
+    state = hass.states.get(entity_id)
+    assert not state
+
+    entity_registry = async_get(hass)
+    entity_registry.async_update_entity(entity_id=entity_id, disabled_by=None)
+    await hass.async_block_till_done()
+
+    await hass.config_entries.async_reload(init_integration.entry_id)
+    await hass.async_block_till_done()
+
     state = hass.states.get("sensor.p1_voltage_phase_one")
     assert state
     assert float(state.state) == 233.2
-
-    state = hass.states.get("sensor.p1_voltage_phase_two")
-    assert state
-    assert float(state.state) == 234.4
-
-    state = hass.states.get("sensor.p1_voltage_phase_three")
-    assert state
-    assert float(state.state) == 234.7
 
 
 async def test_stretch_sensor_entities(

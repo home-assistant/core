@@ -30,7 +30,6 @@ from homeassistant.util.dt import monotonic_time_coarse
 from . import models
 from .const import (
     CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
-    FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
     SCANNER_WATCHDOG_INTERVAL,
     SCANNER_WATCHDOG_TIMEOUT,
 )
@@ -207,13 +206,11 @@ class BaseHaRemoteScanner(BaseHaScanner):
         self._discovered_device_timestamps: dict[str, float] = {}
         self.connectable = connectable
         self._details: dict[str, str | HaBluetoothConnector] = {"source": scanner_id}
-        self._expire_seconds = FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
+        # Scanners only care about connectable devices. The manager
+        # will handle taking care of availability for non-connectable devices
+        self._expire_seconds = CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
         assert models.MANAGER is not None
         self._storage = models.MANAGER.storage
-        if connectable:
-            self._expire_seconds = (
-                CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
-            )
 
     @hass_callback
     def async_setup(self) -> CALLBACK_TYPE:
