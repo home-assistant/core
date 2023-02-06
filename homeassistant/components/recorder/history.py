@@ -518,7 +518,7 @@ def state_changes_during_period(
 
 
 def _get_last_state_changes_stmt(
-    schema_version: int, number_of_states: int, entity_id: str | None
+    schema_version: int, number_of_states: int, entity_id: str
 ) -> StatementLambdaElement:
     stmt, join_attributes = lambda_stmt_and_join_attributes(
         schema_version, False, include_last_changed=False
@@ -532,34 +532,30 @@ def _get_last_state_changes_stmt(
         stmt += lambda q: q.filter(
             (States.last_changed == States.last_updated) | States.last_changed.is_(None)
         )
-    if entity_id:
-        stmt += lambda q: q.filter(States.entity_id == entity_id)
+    stmt += lambda q: q.filter(States.entity_id == entity_id)
     if join_attributes:
         stmt += lambda q: q.outerjoin(
             StateAttributes, States.attributes_id == StateAttributes.attributes_id
         )
     if schema_version >= 31:
-        stmt += lambda q: q.order_by(
-            States.entity_id, States.last_updated_ts.desc()
-        ).limit(number_of_states)
+        stmt += lambda q: q.order_by(States.last_updated_ts.desc()).limit(
+            number_of_states
+        )
     else:
-        stmt += lambda q: q.order_by(
-            States.entity_id, States.last_updated.desc()
-        ).limit(number_of_states)
+        stmt += lambda q: q.order_by(States.last_updated.desc()).limit(number_of_states)
     return stmt
 
 
 def get_last_state_changes(
-    hass: HomeAssistant, number_of_states: int, entity_id: str | None
+    hass: HomeAssistant, number_of_states: int, entity_id: str
 ) -> MutableMapping[str, list[State]]:
     """Return the last number_of_states."""
-    start_time = dt_util.utcnow()
-    entity_id = entity_id.lower() if entity_id is not None else None
-    entity_ids = [entity_id] if entity_id is not None else None
+    entity_id_lower = entity_id.lower()
+    entity_ids = [entity_id_lower]
 
     with session_scope(hass=hass) as session:
         stmt = _get_last_state_changes_stmt(
-            _schema_version(hass), number_of_states, entity_id
+            _schema_version(hass), number_of_states, entity_id_lower
         )
         states = list(execute_stmt_lambda_element(session, stmt))
         return cast(
@@ -568,7 +564,7 @@ def get_last_state_changes(
                 hass,
                 session,
                 reversed(states),
-                start_time,
+                dt_util.utcnow(),
                 entity_ids,
                 include_start_time_state=False,
             ),
