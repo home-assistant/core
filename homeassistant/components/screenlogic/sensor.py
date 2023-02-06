@@ -101,7 +101,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entry."""
-    entities = list[ScreenLogicSensorEntity]()
+    entities: list[ScreenLogicSensorEntity] = []
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     equipment_flags = coordinator.gateway.get_data()[SL_DATA.KEY_CONFIG][
         "equipment_flags"
