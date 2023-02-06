@@ -24,6 +24,7 @@ async def async_setup_entry(
     coordinator: ScreenlogicDataUpdateCoordinator = hass.data[DOMAIN][
         config_entry.entry_id
     ]
+    circuits = coordinator.gateway_data[SL_DATA.KEY_CIRCUITS]
     async_add_entities(
         [
             ScreenLogicSwitch(
@@ -32,9 +33,7 @@ async def async_setup_entry(
                 CODE.STATUS_CHANGED,
                 circuit["name"] not in GENERIC_CIRCUIT_NAMES,
             )
-            for circuit_num, circuit in coordinator.gateway_data[
-                SL_DATA.KEY_CIRCUITS
-            ].items()
+            for circuit_num, circuit in circuits.items()
             if circuit["function"] not in LIGHT_CIRCUIT_FUNCTIONS
         ]
     )
