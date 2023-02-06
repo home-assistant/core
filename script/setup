@@ -25,7 +25,7 @@ script/bootstrap
 
 pre-commit install
 python3 -m pip install -e . --constraint homeassistant/package_constraints.txt --use-deprecated=legacy-resolver
-python -m script.translations develop --all
+python3 -m script.translations develop --all
 
 hass --script ensure_config -c config
 
