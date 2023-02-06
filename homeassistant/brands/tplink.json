@@ -1,0 +1,5 @@
+{
+  "domain": "tplink",
+  "name": "TP-Link",
+  "integrations": ["tplink", "tplink_omada", "tplink_lte"]
+}

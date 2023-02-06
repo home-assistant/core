@@ -74,6 +74,11 @@ jobs:
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
+      - name: Download Translations
+        run: python3 -m script.translations download
+        env:
+          LOKALISE_TOKEN: ${{ secrets.LOKALISE_TOKEN }}
+
       - name: Build package
         shell: bash
         run: |
@@ -202,6 +207,17 @@ jobs:
             --generic ${{ needs.init.outputs.version }}
         env:
           CAS_API_KEY: ${{ secrets.CAS_TOKEN }}
+
+      - name: Archive translations
+        shell: bash
+        run: find ./homeassistant/components/*/translations -name "*.json" | tar zcvf translations.tar.gz -T -
+
+      - name: Upload translations
+        uses: actions/upload-artifact@v3
+        with:
+          name: translations
+          path: translations.tar.gz
+          if-no-files-found: error
 
   build_machine:
     name: Build ${{ matrix.machine }} machine core image

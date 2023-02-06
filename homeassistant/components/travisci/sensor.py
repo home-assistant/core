@@ -141,7 +141,7 @@ class TravisCISensor(SensorEntity):
 
     def __init__(
         self, data, repo_name, user, branch, description: SensorEntityDescription
-    ):
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self._build = None
