@@ -34,6 +34,9 @@ async def async_setup_entry(
     coordinator: ScreenlogicDataUpdateCoordinator = hass.data[DOMAIN][
         config_entry.entry_id
     ]
+    gateway_data = coordinator.gateway_data
+    chemistry = gateway_data[SL_DATA.KEY_CHEMISTRY]
+    config = gateway_data[SL_DATA.KEY_CONFIG]
 
     # Generic binary sensor
     entities.append(
@@ -43,24 +46,19 @@ async def async_setup_entry(
     entities.extend(
         [
             ScreenlogicConfigBinarySensor(coordinator, cfg_sensor, CODE.STATUS_CHANGED)
-            for cfg_sensor in coordinator.gateway_data[SL_DATA.KEY_CONFIG]
+            for cfg_sensor in config
             if cfg_sensor in SUPPORTED_CONFIG_BINARY_SENSORS
         ]
     )
 
-    if (
-        coordinator.gateway_data[SL_DATA.KEY_CONFIG]["equipment_flags"]
-        & EQUIPMENT.FLAG_INTELLICHEM
-    ):
+    if config["equipment_flags"] & EQUIPMENT.FLAG_INTELLICHEM:
         # IntelliChem alarm sensors
         entities.extend(
             [
                 ScreenlogicChemistryAlarmBinarySensor(
                     coordinator, chem_alarm, CODE.CHEMISTRY_CHANGED
                 )
-                for chem_alarm in coordinator.gateway_data[SL_DATA.KEY_CHEMISTRY][
-                    SL_DATA.KEY_ALERTS
-                ]
+                for chem_alarm in chemistry[SL_DATA.KEY_ALERTS]
                 if not chem_alarm.startswith("_")
             ]
         )
@@ -71,17 +69,12 @@ async def async_setup_entry(
                 ScreenlogicChemistryNotificationBinarySensor(
                     coordinator, chem_notif, CODE.CHEMISTRY_CHANGED
                 )
-                for chem_notif in coordinator.gateway_data[SL_DATA.KEY_CHEMISTRY][
-                    SL_DATA.KEY_NOTIFICATIONS
-                ]
+                for chem_notif in chemistry[SL_DATA.KEY_NOTIFICATIONS]
                 if not chem_notif.startswith("_")
             ]
         )
 
-    if (
-        coordinator.gateway_data[SL_DATA.KEY_CONFIG]["equipment_flags"]
-        & EQUIPMENT.FLAG_CHLORINATOR
-    ):
+    if config["equipment_flags"] & EQUIPMENT.FLAG_CHLORINATOR:
         # SCG binary sensor
         entities.append(ScreenlogicSCGBinarySensor(coordinator, "scg_status"))
 
