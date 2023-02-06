@@ -632,7 +632,7 @@ googlemaps==2.5.1
 govee-ble==0.21.1
 
 # homeassistant.components.gree
-greeclimate==1.3.0
+greeclimate==1.4.1
 
 # homeassistant.components.greeneye_monitor
 greeneye_monitor==3.0.3
