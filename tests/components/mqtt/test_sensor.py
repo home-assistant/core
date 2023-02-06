@@ -103,7 +103,9 @@ async def test_setting_sensor_value_via_mqtt_message(
     async_fire_mqtt_message(hass, "test-topic", "100.22")
     state = hass.states.get("sensor.test")
 
-    assert state.state == "100.2"
+    # Rounding happens at the frontend
+    # the state should show the received value
+    assert state.state == "100.22"
     assert state.attributes.get("unit_of_measurement") == "fav unit"
 
 
