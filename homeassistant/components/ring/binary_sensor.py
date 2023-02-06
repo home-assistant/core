@@ -80,7 +80,7 @@ class RingBinarySensor(RingEntityMixin, BinarySensorEntity):
         ring,
         device,
         description: RingBinarySensorEntityDescription,
-    ):
+    ) -> None:
         """Initialize a sensor for Ring device."""
         super().__init__(config_entry_id, device)
         self.entity_description = description
