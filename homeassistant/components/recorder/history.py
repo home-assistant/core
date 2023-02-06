@@ -523,17 +523,33 @@ def _get_last_state_changes_stmt(
     stmt, join_attributes = lambda_stmt_and_join_attributes(
         schema_version, False, include_last_changed=False
     )
-    stmt += lambda q: q.filter(States.entity_id == entity_id)
+    if schema_version >= 31:
+        stmt += lambda q: q.where(
+            States.state_id
+            == (
+                select(States.state_id)
+                .filter(States.entity_id == entity_id)
+                .order_by(States.last_updated_ts.desc())
+                .limit(number_of_states)
+                .subquery()
+            ).c.state_id
+        )
+    else:
+        stmt += lambda q: q.where(
+            States.state_id
+            == (
+                select(States.state_id)
+                .filter(States.entity_id == entity_id)
+                .order_by(States.last_updated.desc())
+                .limit(number_of_states)
+                .subquery()
+            ).c.state_id
+        )
     if join_attributes:
         stmt += lambda q: q.outerjoin(
             StateAttributes, States.attributes_id == StateAttributes.attributes_id
         )
-    if schema_version >= 31:
-        stmt += lambda q: q.order_by(States.last_updated_ts.desc()).limit(
-            number_of_states
-        )
-    else:
-        stmt += lambda q: q.order_by(States.last_updated.desc()).limit(number_of_states)
+
     return stmt
 
 
