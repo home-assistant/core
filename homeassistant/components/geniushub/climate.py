@@ -81,7 +81,7 @@ class GeniusClimateZone(GeniusHeatingZone, ClimateEntity):
         if "_state" in self._zone.data:  # only for v3 API
             if not self._zone.data["_state"].get("bIsActive"):
                 return HVACAction.OFF
-            if self._zone.data["_state"].get("bOutRequestHeat"):
+            if self._zone.data["output"] == 1:
                 return HVACAction.HEATING
             return HVACAction.IDLE
         return None
