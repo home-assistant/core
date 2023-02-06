@@ -261,8 +261,7 @@ class ReolinkHost:
             try:
                 base_url = get_url(self._hass, prefer_external=True)
             except NoURLAvailableError as err:
-                webhook.async_unregister(self._hass, event_id)
-                self.webhook_id = None
+                self.unregister_webhook()
                 raise ReolinkWebhookException(
                     f"Error registering URL for webhook {event_id}: "
                     "HomeAssistant URL is not available"
