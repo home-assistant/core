@@ -1268,6 +1268,10 @@ omit =
     homeassistant/components/totalconnect/binary_sensor.py
     homeassistant/components/touchline/climate.py
     homeassistant/components/tplink_lte/*
+    homeassistant/components/tplink_omada/__init__.py
+    homeassistant/components/tplink_omada/coordinator.py
+    homeassistant/components/tplink_omada/entity.py
+    homeassistant/components/tplink_omada/switch.py
     homeassistant/components/traccar/device_tracker.py
     homeassistant/components/tractive/__init__.py
     homeassistant/components/tractive/binary_sensor.py
