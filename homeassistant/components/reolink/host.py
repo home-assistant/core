@@ -163,13 +163,13 @@ class ReolinkHost:
 
     async def stop(self, event=None):
         """Disconnect the API."""
-        await self.unregister_webhook()
+        self.unregister_webhook()
         await self.disconnect()
 
     async def subscribe(self) -> None:
         """Subscribe to motion events and register the webhook as a callback."""
         if self.webhook_id is None:
-            await self.register_webhook()
+            self.register_webhook()
 
         if self._api.subscribed:
             _LOGGER.debug(
@@ -246,7 +246,7 @@ class ReolinkHost:
             self._api.host,
         )
 
-    async def register_webhook(self) -> None:
+    def register_webhook(self) -> None:
         """Register the webhook for motion events."""
         self.webhook_id = f"{DOMAIN}_{self.unique_id.replace(':', '')}_ONVIF"
         event_id = self.webhook_id
@@ -273,7 +273,7 @@ class ReolinkHost:
 
         _LOGGER.debug("Registered webhook: %s", event_id)
 
-    async def unregister_webhook(self):
+    def unregister_webhook(self):
         """Unregister the webhook for motion events."""
         _LOGGER.debug("Unregistering webhook %s", self.webhook_id)
         webhook.async_unregister(self._hass, self.webhook_id)
