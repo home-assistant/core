@@ -55,7 +55,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, location
 
 from .ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
-from .typing import ClientSessionGenerator, MqttMockType, WebSocketGenerator
+from .typing import ClientSessionGenerator, MqttMockGenerator, WebSocketGenerator
 
 pytest.register_assert_rewrite("tests.common")
 
@@ -841,7 +841,7 @@ async def mqtt_mock_entry_no_yaml_config(
     hass: HomeAssistant,
     mqtt_client_mock: MagicMock,
     mqtt_config_entry_data: dict[str, Any] | None,
-) -> AsyncGenerator[MqttMockType, None,]:
+) -> AsyncGenerator[MqttMockGenerator, None,]:
     """Set up an MQTT config entry without MQTT yaml config."""
 
     async def _async_setup_config_entry(
@@ -867,7 +867,7 @@ async def mqtt_mock_entry_with_yaml_config(
     hass: HomeAssistant,
     mqtt_client_mock: MagicMock,
     mqtt_config_entry_data: dict[str, Any] | None,
-) -> AsyncGenerator[MqttMockType, None,]:
+) -> AsyncGenerator[MqttMockGenerator, None,]:
     """Set up an MQTT config entry with MQTT yaml config."""
 
     async def _async_do_not_setup_config_entry(

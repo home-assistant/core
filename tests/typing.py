@@ -9,5 +9,5 @@ from aiohttp import ClientWebSocketResponse
 from aiohttp.test_utils import TestClient
 
 ClientSessionGenerator = Callable[..., Coroutine[Any, Any, TestClient]]
-MqttMockType = Callable[..., Coroutine[Any, Any, MagicMock]]
+MqttMockGenerator = Callable[..., Coroutine[Any, Any, MagicMock]]
 WebSocketGenerator = Callable[..., Coroutine[Any, Any, ClientWebSocketResponse]]
