@@ -228,7 +228,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
         """(Re)Setup the entity."""
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_force_update = config[CONF_FORCE_UPDATE]
-        self._attr_native_precision = config.get(CONF_PRECISION)
+        self._attr_suggested_display_precision = config.get(CONF_PRECISION)
         self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
         self._attr_state_class = config.get(CONF_STATE_CLASS)
 
