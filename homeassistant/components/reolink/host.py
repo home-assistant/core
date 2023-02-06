@@ -68,6 +68,8 @@ class ReolinkHost:
 
     async def async_init(self) -> None:
         """Connect to Reolink host."""
+        self._api.expire_session()
+
         await self._api.get_host_data()
 
         if self._api.mac_address is None:
