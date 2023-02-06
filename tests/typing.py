@@ -9,5 +9,10 @@ from aiohttp import ClientWebSocketResponse
 from aiohttp.test_utils import TestClient
 
 ClientSessionGenerator = Callable[..., Coroutine[Any, Any, TestClient]]
-MqttMockGenerator = Callable[..., Coroutine[Any, Any, MagicMock]]
+MqttMockPahoClient = MagicMock
+"""MagicMock for `paho.mqtt.client.Client`"""
+MqttMockHAClient = MagicMock
+"""MagicMock for `homeassistant.components.mqtt.MQTT`."""
+MqttMockHAClientGenerator = Callable[..., Coroutine[Any, Any, MqttMockHAClient]]
+"""MagicMock generator for `homeassistant.components.mqtt.MQTT`."""
 WebSocketGenerator = Callable[..., Coroutine[Any, Any, ClientWebSocketResponse]]
