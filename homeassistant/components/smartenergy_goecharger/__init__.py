@@ -7,9 +7,6 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
-from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
-from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_NAME, CONF_SCAN_INTERVAL
@@ -26,7 +23,7 @@ from .const import (
     INIT_STATE,
     UNSUB_OPTIONS_UPDATE_LISTENER,
 )
-from .controller import ChargerController, ping_charger
+from .controller import ping_charger
 from .state import StateFetcher, init_state
 
 _LOGGER: logging.Logger = logging.getLogger(__name__)
@@ -36,10 +33,7 @@ MAX_UPDATE_INTERVAL: timedelta = timedelta(seconds=60000)
 DEFAULT_UPDATE_INTERVAL: timedelta = timedelta(seconds=10)
 
 PLATFORMS: list[str] = [
-    BUTTON_DOMAIN,
     SENSOR_DOMAIN,
-    NUMBER_DOMAIN,
-    SELECT_DOMAIN,
 ]
 
 # Configuration validation
@@ -128,9 +122,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     - setup of the API
     - coordinator
     - sensors
-    - buttons
-    - number inputs
-    - select inputs.
     """
     options = config_entry.options
     data = dict(config_entry.data)
@@ -224,22 +215,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.data[DOMAIN] = hass.data[DOMAIN] if DOMAIN in hass.data else {}
     domain_config: dict = config[DOMAIN] if DOMAIN in config else {}
-    charger_controller: ChargerController = ChargerController(hass)
-
-    # expose services for other integrations
-    hass.services.async_register(
-        DOMAIN, "start_charging", charger_controller.start_charging
-    )
-    hass.services.async_register(
-        DOMAIN, "stop_charging", charger_controller.stop_charging
-    )
-    hass.services.async_register(
-        DOMAIN, "change_charging_power", charger_controller.change_charging_power
-    )
-    hass.services.async_register(DOMAIN, "set_phase", charger_controller.set_phase)
-    hass.services.async_register(
-        DOMAIN, "set_transaction", charger_controller.set_transaction
-    )
 
     scan_interval: timedelta = DEFAULT_UPDATE_INTERVAL
     chargers_api: dict = _setup_apis(hass, config)

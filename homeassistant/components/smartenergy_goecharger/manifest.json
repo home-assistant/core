@@ -5,7 +5,7 @@
   "issue_tracker": "https://github.com/openkfw/smartenergy.goecharger/issues",
   "iot_class": "cloud_polling",
   "config_flow": true,
-  "dependencies": ["sensor", "button", "number", "select"],
+  "dependencies": ["sensor"],
   "codeowners": ["@openkfw"],
   "requirements": ["smart-energy.goecharger-api==0.3.1"]
 }
