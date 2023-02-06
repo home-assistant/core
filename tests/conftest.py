@@ -826,12 +826,12 @@ async def _mqtt_mock_entry(
 
         return mock_mqtt_instance
 
-    def create_mock_mqtt(*args, **kwargs) -> MagicMock:
+    def create_mock_mqtt(*args, **kwargs) -> MqttMockHAClient:
         """Create a mock based on mqtt.MQTT."""
         nonlocal mock_mqtt_instance
         nonlocal real_mqtt_instance
         real_mqtt_instance = real_mqtt(*args, **kwargs)
-        mock_mqtt_instance = MagicMock(
+        mock_mqtt_instance = MqttMockHAClient(
             return_value=real_mqtt_instance,
             spec_set=real_mqtt_instance,
             wraps=real_mqtt_instance,
@@ -858,7 +858,7 @@ async def mqtt_mock_entry_no_yaml_config(
         await hass.async_block_till_done()
         return True
 
-    async def _setup_mqtt_entry() -> Callable[..., Coroutine[Any, Any, MagicMock]]:
+    async def _setup_mqtt_entry() -> MqttMockHAClientGenerator:
         """Set up the MQTT config entry."""
         return await mqtt_mock_entry(_async_setup_config_entry)
 
@@ -882,7 +882,7 @@ async def mqtt_mock_entry_with_yaml_config(
         """Do nothing."""
         return True
 
-    async def _setup_mqtt_entry() -> Callable[..., Coroutine[Any, Any, MagicMock]]:
+    async def _setup_mqtt_entry() -> MqttMockHAClientGenerator:
         """Set up the MQTT config entry."""
         return await mqtt_mock_entry(_async_do_not_setup_config_entry)
 
