@@ -1,9 +1,0 @@
-{
-    "state": {
-        "wled__live_override": {
-            "0": "Desligado",
-            "1": "Ligado",
-            "2": "At\u00e9 que o dispositivo seja reiniciado"
-        }
-    }
-}

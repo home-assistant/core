@@ -405,8 +405,7 @@ async def test_discovery_does_not_ignore_non_homekit(hass, controller):
 
 
 async def test_discovery_broken_pairing_flag(hass, controller):
-    """
-    There is already a config entry for the pairing and its pairing flag is wrong in zeroconf.
+    """There is already a config entry for the pairing and its pairing flag is wrong in zeroconf.
 
     We have seen this particular implementation error in 2 different devices.
     """
