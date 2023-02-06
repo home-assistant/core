@@ -84,7 +84,10 @@ class ESPHomeUpdateEntity(CoordinatorEntity[ESPHomeDashboard], UpdateEntity):
                 (dr.CONNECTION_NETWORK_MAC, entry_data.device_info.mac_address)
             }
         )
-        if coordinator.supports_update:
+
+        # If the device has deep sleep, we can't assume we can install updates
+        # as the ESP will not be connectable (by design).
+        if coordinator.supports_update and not self._device_info.has_deep_sleep:
             self._attr_supported_features = UpdateEntityFeature.INSTALL
 
     @property
