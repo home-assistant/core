@@ -92,6 +92,7 @@ def _test_selector(
             (None,),
         ),
         ({"entity": {"device_class": "motion"}}, ("abc123",), (None,)),
+        ({"entity": {"device_class": ["motion", "temperature"]}}, ("abc123",), (None,)),
         (
             {
                 "integration": "zha",
@@ -126,6 +127,11 @@ def test_device_selector_schema(schema, valid_selections, invalid_selections) ->
             (None, "dog.abc123"),
         ),
         ({"device_class": "motion"}, ("sensor.abc123", FAKE_UUID), (None, "abc123")),
+        (
+            {"device_class": ["motion", "temperature"]},
+            ("sensor.abc123", FAKE_UUID),
+            (None, "abc123"),
+        ),
         (
             {"integration": "zha", "domain": "light"},
             ("light.abc123", FAKE_UUID),
