@@ -1038,7 +1038,7 @@ def _migrate_columns_to_timestamp(
                     text(
                         "UPDATE events set time_fired_ts="
                         "IF(time_fired is NULL,0,"
-                        "UNIX_TIMESTAMP(CONVERT_TZ(time_fired,'+00:00',@@global.time_zone))"
+                        "UNIX_TIMESTAMP(time_fired)"
                         ") "
                         "where time_fired_ts is NULL "
                         "LIMIT 250000;"
@@ -1051,10 +1051,10 @@ def _migrate_columns_to_timestamp(
                     text(
                         "UPDATE states set last_updated_ts="
                         "IF(last_updated is NULL,0,"
-                        "UNIX_TIMESTAMP(CONVERT_TZ(last_updated,'+00:00',@@global.time_zone)) "
+                        "UNIX_TIMESTAMP(last_updated) "
                         "), "
                         "last_changed_ts="
-                        "UNIX_TIMESTAMP(CONVERT_TZ(last_changed,'+00:00',@@global.time_zone)) "
+                        "UNIX_TIMESTAMP(last_changed) "
                         "where last_updated_ts is NULL "
                         "LIMIT 250000;"
                     )
@@ -1127,12 +1127,12 @@ def _migrate_statistics_columns_to_timestamp(
                         text(
                             f"UPDATE {table} set start_ts="
                             "IF(start is NULL,0,"
-                            "UNIX_TIMESTAMP(CONVERT_TZ(start,'+00:00',@@global.time_zone)) "
+                            "UNIX_TIMESTAMP(start) "
                             "), "
                             "created_ts="
-                            "UNIX_TIMESTAMP(CONVERT_TZ(created,'+00:00',@@global.time_zone)), "
+                            "UNIX_TIMESTAMP(created), "
                             "last_reset_ts="
-                            "UNIX_TIMESTAMP(CONVERT_TZ(last_reset,'+00:00',@@global.time_zone)) "
+                            "UNIX_TIMESTAMP(last_reset) "
                             "where start_ts is NULL "
                             "LIMIT 250000;"
                         )
