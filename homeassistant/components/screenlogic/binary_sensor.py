@@ -29,7 +29,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entry."""
-    entities = list[ScreenLogicBinarySensorEntity]()
+    entities: list[ScreenLogicBinarySensorEntity] = []
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     # Generic binary sensor
