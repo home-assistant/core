@@ -10,7 +10,8 @@
         "reveal": "always",
         "panel": "new"
       },
-      "problemMatcher": []
+      "problemMatcher": [],
+      "dependsOn": ["Compile translations"]
     },
     {
       "label": "Pytest",
@@ -145,16 +146,11 @@
       "label": "Compile translations",
       "detail": "In order to test changes to translation files, the translation strings must be compiled into Home Assistant's translation directories.",
       "type": "shell",
-      "command": "python3 -m script.translations develop --integration ${input:integrationName}",
+      "command": "python3 -m script.translations develop --all",
       "group": {
         "kind": "build",
         "isDefault": true
-      },
-      "presentation": {
-        "reveal": "always",
-        "panel": "new"
-      },
-      "problemMatcher": []
+      }
     }
   ],
   "inputs": [
