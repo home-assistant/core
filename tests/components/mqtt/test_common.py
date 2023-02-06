@@ -18,6 +18,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.generated.mqtt import MQTT
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -727,14 +728,14 @@ async def help_test_discovery_update(
     assert state.name == "Beer"
 
     if state_data1:
-        for (mqtt_messages, expected_state, attributes) in state_data1:
-            for (topic, data) in mqtt_messages:
+        for mqtt_messages, expected_state, attributes in state_data1:
+            for topic, data in mqtt_messages:
                 async_fire_mqtt_message(hass, topic, data)
             state = hass.states.get(f"{domain}.beer")
             if expected_state:
                 assert state.state == expected_state
             if attributes:
-                for (attr, value) in attributes:
+                for attr, value in attributes:
                     assert state.attributes.get(attr) == value
 
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", discovery_data2)
@@ -745,14 +746,14 @@ async def help_test_discovery_update(
     assert state.name == "Milk"
 
     if state_data2:
-        for (mqtt_messages, expected_state, attributes) in state_data2:
-            for (topic, data) in mqtt_messages:
+        for mqtt_messages, expected_state, attributes in state_data2:
+            for topic, data in mqtt_messages:
                 async_fire_mqtt_message(hass, topic, data)
             state = hass.states.get(f"{domain}.beer")
             if expected_state:
                 assert state.state == expected_state
             if attributes:
-                for (attr, value) in attributes:
+                for attr, value in attributes:
                     assert state.attributes.get(attr) == value
 
     state = hass.states.get(f"{domain}.milk")
@@ -1672,8 +1673,6 @@ async def help_test_reload_with_config(hass, caplog, tmp_path, config):
         )
         await hass.async_block_till_done()
 
-    assert "<Event event_mqtt_reloaded[L]>" in caplog.text
-
 
 async def help_test_entry_reload_with_new_config(hass, tmp_path, new_config):
     """Test reloading with supplied config."""
@@ -1820,3 +1819,15 @@ async def help_test_unload_config_entry_with_platform(
 
     discovery_setup_entity = hass.states.get(f"{domain}.discovery_setup")
     assert discovery_setup_entity is None
+
+
+async def help_test_discovery_setup(
+    hass: HomeAssistant, domain: str, discovery_data_payload: str, name: str
+) -> None:
+    """Test setting up an MQTT entity using discovery."""
+    async_fire_mqtt_message(
+        hass, f"homeassistant/{domain}/{name}/config", discovery_data_payload
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get(f"{domain}.{name}")
+    assert state.state is not None

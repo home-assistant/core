@@ -1,4 +1,5 @@
 """Test KNX expose."""
+from datetime import timedelta
 import time
 from unittest.mock import patch
 
@@ -6,8 +7,11 @@ from homeassistant.components.knx import CONF_KNX_EXPOSE, DOMAIN, KNX_ADDRESS
 from homeassistant.components.knx.schema import ExposeSchema
 from homeassistant.const import CONF_ATTRIBUTE, CONF_ENTITY_ID, CONF_TYPE
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt
 
 from .conftest import KNXTestKit
+
+from tests.common import async_fire_time_changed_exact
 
 
 async def test_binary_expose(hass: HomeAssistant, knx: KNXTestKit):
@@ -161,6 +165,37 @@ async def test_expose_string(hass: HomeAssistant, knx: KNXTestKit):
     await knx.assert_write(
         "1/1/8", (84, 104, 105, 115, 32, 105, 115, 32, 97, 32, 118, 101, 114, 121)
     )
+
+
+async def test_expose_cooldown(hass: HomeAssistant, knx: KNXTestKit):
+    """Test an expose with cooldown."""
+    cooldown_time = 2
+    entity_id = "fake.entity"
+    await knx.setup_integration(
+        {
+            CONF_KNX_EXPOSE: {
+                CONF_TYPE: "percentU8",
+                KNX_ADDRESS: "1/1/8",
+                CONF_ENTITY_ID: entity_id,
+                ExposeSchema.CONF_KNX_EXPOSE_COOLDOWN: cooldown_time,
+            }
+        },
+    )
+    assert not hass.states.async_all()
+    # Change state to 1
+    hass.states.async_set(entity_id, "1", {})
+    await knx.assert_write("1/1/8", (1,))
+    # Change state to 2 - skip because of cooldown
+    hass.states.async_set(entity_id, "2", {})
+    await knx.assert_no_telegram()
+
+    # Change state to 3
+    hass.states.async_set(entity_id, "3", {})
+    await knx.assert_no_telegram()
+    # Wait for cooldown to pass
+    async_fire_time_changed_exact(hass, dt.utcnow() + timedelta(seconds=cooldown_time))
+    await hass.async_block_till_done()
+    await knx.assert_write("1/1/8", (3,))
 
 
 async def test_expose_conversion_exception(hass: HomeAssistant, knx: KNXTestKit):

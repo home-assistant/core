@@ -48,7 +48,6 @@
             "carbon_monoxide": "Canvia la concentraci\u00f3 de mon\u00f2xid de carboni de {entity_name}",
             "current": "Canvia la intensitat de {entity_name}",
             "data_rate": "Canvia la taxa de dades de {entity_name}",
-            "data_size": "Canvia la mida de dades de {entity_name}",
             "distance": "Canvia la dist\u00e0ncia de {entity_name}",
             "energy": "Canvia l'energia de {entity_name}",
             "frequency": "Canvia la freq\u00fc\u00e8ncia de {entity_name}",

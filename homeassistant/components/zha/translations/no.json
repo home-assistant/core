@@ -22,6 +22,7 @@
                 "description": "Velg nettverksinnstillingene for radioen.",
                 "menu_options": {
                     "choose_automatic_backup": "Gjenopprette en automatisk sikkerhetskopiering",
+                    "form_initial_network": "Lag et nettverk",
                     "form_new_network": "Slett nettverksinnstillinger og opprett et nytt nettverk",
                     "reuse_settings": "Behold innstillingene for radionettverk",
                     "upload_manual_backup": "Last opp en manuell sikkerhetskopiering"
@@ -87,6 +88,7 @@
             "default_light_transition": "Standard lysovergangstid (sekunder)",
             "enable_identify_on_join": "Aktiver identifiseringseffekt n\u00e5r enheter blir med i nettverket",
             "enhanced_light_transition": "Aktiver forbedret lysfarge/temperaturovergang fra en off-tilstand",
+            "group_members_assume_state": "Gruppemedlemmer antar gruppestatus",
             "light_transitioning_flag": "Aktiver skyveknappen for forbedret lysstyrke under lysovergang",
             "title": "Globale alternativer"
         }
@@ -100,6 +102,7 @@
         },
         "trigger_subtype": {
             "both_buttons": "Begge knapper",
+            "button": "Knapp",
             "button_1": "F\u00f8rste knapp",
             "button_2": "Andre knapp",
             "button_3": "Tredje knapp",
@@ -131,22 +134,22 @@
             "device_shaken": "Enhet ristet",
             "device_slid": "Enheten skled \"{subtype}\"",
             "device_tilted": "Enheten skr\u00e5stilt",
-            "remote_button_alt_double_press": "\"{subtype}\"-knapp trykket p\u00e5 to ganger (vekslende modus)",
-            "remote_button_alt_long_press": "\"{subtype}\"-knapp holdt inne (vekslende modus)",
-            "remote_button_alt_long_release": "\"{subtype}\"-knapp sluppet etter langt trykk (vekslende modus)",
-            "remote_button_alt_quadruple_press": "\"{subtype}\"-knapp trykket p\u00e5 fire ganger (vekslende modus)",
-            "remote_button_alt_quintuple_press": "\"{subtype}\"-knapp trykket p\u00e5 fem ganger (vekslende modus)",
-            "remote_button_alt_short_press": "\"{subtype}\"-knapp trykket p\u00e5 (vekslende modus)",
-            "remote_button_alt_short_release": "\"{subtype}\"-knapp sluppet (vekslende modus)",
-            "remote_button_alt_triple_press": "\"{subtype}\"-knapp trykket p\u00e5 tre ganger (vekslende modus)",
-            "remote_button_double_press": "\"{subtype}\" knapp trykket p\u00e5 to ganger",
-            "remote_button_long_press": "\"{subtype}\"-knapp holdt inne",
-            "remote_button_long_release": "\"{subtype}\"-knapp sluppet etter langt trykk",
-            "remote_button_quadruple_press": "\"{subtype}\"-knapp trykket p\u00e5 fire ganger",
-            "remote_button_quintuple_press": "\"{subtype}\"-knapp trykket p\u00e5 fem ganger",
-            "remote_button_short_press": "\"{subtype}\"-knapp trykket p\u00e5",
-            "remote_button_short_release": "\"{subtype}\"-knapp sluppet",
-            "remote_button_triple_press": "\"{subtype}\"-knapp trykket p\u00e5 tre ganger"
+            "remote_button_alt_double_press": "\" {subtype} \" dobbeltklikket (alternativ modus)",
+            "remote_button_alt_long_press": "\" {subtype} \" kontinuerlig trykket (alternativ modus)",
+            "remote_button_alt_long_release": "\" {subtype} \" slippes etter lang trykk (alternativ modus)",
+            "remote_button_alt_quadruple_press": "\" {subtype} \" firedoblet klikk (alternativ modus)",
+            "remote_button_alt_quintuple_press": "\" {subtype} \" femdobbelt klikket (alternativ modus)",
+            "remote_button_alt_short_press": "\" {subtype} \" trykket (alternativ modus)",
+            "remote_button_alt_short_release": "\" {subtype} \" utgitt (alternativ modus)",
+            "remote_button_alt_triple_press": "\" {subtype} \" trippelklikket (alternativ modus)",
+            "remote_button_double_press": "\" {subtype} \" dobbeltklikket",
+            "remote_button_long_press": "\" {subtype} \" kontinuerlig trykket",
+            "remote_button_long_release": "\" {subtype} \" utgitt etter lang trykk",
+            "remote_button_quadruple_press": "\" {subtype} \" firedoblet klikk",
+            "remote_button_quintuple_press": "\" {subtype} \" femdobbelt klikket",
+            "remote_button_short_press": "\" {subtype} \" trykket",
+            "remote_button_short_release": "\" {subtype} \" utgitt",
+            "remote_button_triple_press": "\" {subtype} \" trippelklikket"
         }
     },
     "options": {
@@ -172,6 +175,7 @@
                 "description": "Velg nettverksinnstillingene for radioen.",
                 "menu_options": {
                     "choose_automatic_backup": "Gjenopprette en automatisk sikkerhetskopiering",
+                    "form_initial_network": "Lag et nettverk",
                     "form_new_network": "Slett nettverksinnstillinger og opprett et nytt nettverk",
                     "reuse_settings": "Behold innstillingene for radionettverk",
                     "upload_manual_backup": "Last opp en manuell sikkerhetskopiering"
@@ -190,11 +194,11 @@
                 "title": "Konfigurer ZHA p\u00e5 nytt"
             },
             "instruct_unplug": {
-                "description": "Den gamle radioen din er tilbakestilt. Hvis maskinvaren ikke lenger er n\u00f8dvendig, kan du n\u00e5 koble den fra.",
+                "description": "Den gamle radioen din er tilbakestilt. Hvis maskinvaren ikke lenger er n\u00f8dvendig, kan du n\u00e5 koble den fra. \n\n Du kan n\u00e5 koble til din nye radio.",
                 "title": "Koble fra den gamle radioen"
             },
             "intent_migrate": {
-                "description": "Den gamle radioen blir tilbakestilt til fabrikkstandard. Hvis du bruker en kombinert Z-Wave og Zigbee-adapter som HUSBZB-1, vil dette bare tilbakestille Zigbee-delen. \n\n \u00d8nsker du \u00e5 fortsette?",
+                "description": "F\u00f8r du kobler til den nye radioen, m\u00e5 den gamle radioen tilbakestilles. En automatisk sikkerhetskopiering vil bli utf\u00f8rt. Hvis du bruker en kombinert Z-Wave og Zigbee-adapter som HUSBZB-1, vil dette bare tilbakestille Zigbee-delen. \n\n *Merk: hvis du migrerer fra en **ConBee/RaspBee**, s\u00f8rg for at den kj\u00f8rer firmware `0x26720700` eller nyere! Ellers kan det hende at enkelte enheter ikke kan kontrolleres etter migrering f\u00f8r de sl\u00e5s av og p\u00e5.* \n\n \u00d8nsker du \u00e5 fortsette?",
                 "title": "Migrer til en ny radio"
             },
             "manual_pick_radio_type": {

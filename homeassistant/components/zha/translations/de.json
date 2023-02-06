@@ -22,6 +22,7 @@
                 "description": "W\u00e4hle die Netzwerkeinstellungen f\u00fcr dein Funkger\u00e4t.",
                 "menu_options": {
                     "choose_automatic_backup": "Wiederherstellung eines automatischen Backups",
+                    "form_initial_network": "Ein Netzwerk erstellen",
                     "form_new_network": "L\u00f6schen der Netzwerkeinstellungen und Aufbau eines neuen Netzwerks",
                     "reuse_settings": "Funknetzeinstellungen beibehalten",
                     "upload_manual_backup": "Manuelles Backup hochladen"
@@ -87,6 +88,7 @@
             "default_light_transition": "Standardlicht\u00fcbergangszeit (Sekunden)",
             "enable_identify_on_join": "Aktiviere den Identifikationseffekt, wenn Ger\u00e4te dem Netzwerk beitreten",
             "enhanced_light_transition": "Aktiviere einen verbesserten Lichtfarben-/Temperatur\u00fcbergang aus einem ausgeschalteten Zustand",
+            "group_members_assume_state": "Gruppenmitglieder nehmen den Status der Gruppe optimistisch an",
             "light_transitioning_flag": "Verbesserten Helligkeitsregler w\u00e4hrend des Licht\u00fcbergangs aktivieren",
             "title": "Globale Optionen"
         }
@@ -100,6 +102,7 @@
         },
         "trigger_subtype": {
             "both_buttons": "Beide Tasten",
+            "button": "Taste",
             "button_1": "Erste Taste",
             "button_2": "Zweite Taste",
             "button_3": "Dritte Taste",
@@ -131,22 +134,22 @@
             "device_shaken": "Ger\u00e4t ersch\u00fcttert",
             "device_slid": "Ger\u00e4t gerutscht \"{subtype}\"",
             "device_tilted": "Ger\u00e4t gekippt",
-            "remote_button_alt_double_press": "\"{subtype}\" Taste doppelt gedr\u00fcckt (Alternativer Modus)",
-            "remote_button_alt_long_press": "\"{subtype}\" Taste kontinuierlich gedr\u00fcckt (Alternativer Modus)",
-            "remote_button_alt_long_release": "\"{subtype}\" Taste nach langem Dr\u00fccken losgelassen (Alternativer Modus)",
-            "remote_button_alt_quadruple_press": "\"{subtype}\" Taste vierfach gedr\u00fcckt (Alternativer Modus)",
-            "remote_button_alt_quintuple_press": "\"{subtype}\" Taste f\u00fcnffach gedr\u00fcckt (Alternativer Modus)",
-            "remote_button_alt_short_press": "\"{subtype}\" Taste gedr\u00fcckt (Alternativer Modus)",
-            "remote_button_alt_short_release": "\"{subtype}\" Taste losgelassen (Alternativer Modus)",
-            "remote_button_alt_triple_press": "\"{subtype}\" Taste dreimal gedr\u00fcckt (Alternativer Modus)",
-            "remote_button_double_press": "\"{subtype}\" Taste doppelt angedr\u00fcckt",
-            "remote_button_long_press": "\"{subtype}\" Taste kontinuierlich gedr\u00fcckt",
-            "remote_button_long_release": "\"{subtype}\" Taste nach langem Dr\u00fccken losgelassen",
-            "remote_button_quadruple_press": "\"{subtype}\" Taste vierfach gedr\u00fcckt",
-            "remote_button_quintuple_press": "\"{subtype}\" Taste f\u00fcnffach gedr\u00fcckt",
-            "remote_button_short_press": "\"{subtype}\" Taste gedr\u00fcckt",
-            "remote_button_short_release": "\"{subtype}\" Taste losgelassen",
-            "remote_button_triple_press": "\"{subtype}\" Taste dreimal gedr\u00fcckt"
+            "remote_button_alt_double_press": "\"{subtype}\" doppelt gedr\u00fcckt (Alternativer Modus)",
+            "remote_button_alt_long_press": "\"{subtype}\" kontinuierlich gedr\u00fcckt (Alternativer Modus)",
+            "remote_button_alt_long_release": "\"{subtype}\" nach langem Dr\u00fccken losgelassen (Alternativer Modus)",
+            "remote_button_alt_quadruple_press": "\"{subtype}\" vierfach gedr\u00fcckt (Alternativer Modus)",
+            "remote_button_alt_quintuple_press": "\"{subtype}\" f\u00fcnffach gedr\u00fcckt (Alternativer Modus)",
+            "remote_button_alt_short_press": "\"{subtype}\" gedr\u00fcckt (Alternativer Modus)",
+            "remote_button_alt_short_release": "\"{subtype}\" losgelassen (Alternativer Modus)",
+            "remote_button_alt_triple_press": "\"{subtype}\" dreifach angeklickt (Alternativer Modus)",
+            "remote_button_double_press": "\"{subtype}\" doppelt angedr\u00fcckt",
+            "remote_button_long_press": "\"{subtype}\" kontinuierlich gedr\u00fcckt",
+            "remote_button_long_release": "\"{subtype}\" nach langem Dr\u00fccken losgelassen",
+            "remote_button_quadruple_press": "\"{subtype}\" vierfach gedr\u00fcckt",
+            "remote_button_quintuple_press": "\"{subtype}\" f\u00fcnffach gedr\u00fcckt",
+            "remote_button_short_press": "\"{subtype}\" gedr\u00fcckt",
+            "remote_button_short_release": "\"{subtype}\" losgelassen",
+            "remote_button_triple_press": "\"{subtype}\" dreimal gedr\u00fcckt"
         }
     },
     "options": {
@@ -172,6 +175,7 @@
                 "description": "W\u00e4hle die Netzwerkeinstellungen f\u00fcr dein Funkger\u00e4t.",
                 "menu_options": {
                     "choose_automatic_backup": "Wiederherstellung eines automatischen Backups",
+                    "form_initial_network": "Ein Netzwerk erstellen",
                     "form_new_network": "L\u00f6schen der Netzwerkeinstellungen und Aufbau eines neuen Netzwerks",
                     "reuse_settings": "Funknetzeinstellungen beibehalten",
                     "upload_manual_backup": "Manuelles Backup hochladen"
@@ -190,11 +194,11 @@
                 "title": "ZHA rekonfigurieren"
             },
             "instruct_unplug": {
-                "description": "Dein altes Funkger\u00e4t wurde zur\u00fcckgesetzt. Wenn die Hardware nicht mehr ben\u00f6tigt wird, kannst du es jetzt ausstecken.",
+                "description": "Ihr altes Radio wurde zur\u00fcckgesetzt. Wenn die Hardware nicht mehr ben\u00f6tigt wird, k\u00f6nnen Sie sie jetzt ausstecken. \n\nJetzt kannst du dein neues Radio anschlie\u00dfen.",
                 "title": "Stecke dein altes Funkger\u00e4t aus"
             },
             "intent_migrate": {
-                "description": "Dein altes Funkger\u00e4t wird auf die Werkseinstellungen zur\u00fcckgesetzt. Wenn du einen kombinierten Z-Wave- und Zigbee-Adapter wie den HUSBZB-1 verwendest, wird nur der Zigbee-Teil zur\u00fcckgesetzt.\n\nM\u00f6chtest du fortfahren?",
+                "description": "Bevor du dein neues Radio anschlie\u00dft, muss dein altes Radio zur\u00fcckgesetzt werden.  Es wird eine automatische Sicherung durchgef\u00fchrt.  Wenn du einen kombinierten Z-Wave- und Zigbee-Adapter wie den HUSBZB-1 verwendest, wird nur der Zigbee-Teil zur\u00fcckgesetzt.\n\n*Hinweis: Wenn du von einem **ConBee/RaspBee** migrierst, stelle sicher, dass dieser mit der Firmware `0x26720700` oder neuer l\u00e4uft! Andernfalls kann es sein, dass einige Ger\u00e4te nach der Migration nicht mehr steuerbar sind, bis die Stromversorgung unterbrochen wird.\n\nM\u00f6chtest du fortfahren?",
                 "title": "Umstellung auf ein neues Funkger\u00e4t"
             },
             "manual_pick_radio_type": {

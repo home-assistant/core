@@ -28,6 +28,14 @@
         }
     },
     "entity": {
+        "select": {
+            "light": {
+                "state": {
+                    "off": "\u0418\u0437\u043a\u043b.",
+                    "on": "\u0412\u043a\u043b."
+                }
+            }
+        },
         "sensor": {
             "smart_type": {
                 "state": {

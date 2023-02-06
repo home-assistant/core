@@ -8,14 +8,6 @@
             "invalid_api_key": "Vpisan neveljaven API klju\u010d"
         },
         "step": {
-            "node_pro": {
-                "data": {
-                    "ip_address": "IP naslov/ime gostitelja enote",
-                    "password": "Geslo enote"
-                },
-                "description": "Spremljajte osebno napravo AirVisual. Geslo je mogo\u010de pridobiti iz uporabni\u0161kega vmesnika enote.",
-                "title": "Konfigurirajte AirVisual Node/Pro"
-            },
             "user": {
                 "description": "Spremljajte kakovost zraka na zemljepisni lokaciji.",
                 "title": "Nastavite AirVisual"

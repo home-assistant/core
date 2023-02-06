@@ -379,7 +379,7 @@ async def test_light_without_brightness_can_be_turned_off(hass_hue, hue_client):
     assert len(turn_off_calls) == 1
     call = turn_off_calls[-1]
 
-    assert light.DOMAIN == call.domain
+    assert call.domain == light.DOMAIN
     assert call.service == SERVICE_TURN_OFF
     assert "light.no_brightness" in call.data[ATTR_ENTITY_ID]
 
@@ -421,7 +421,7 @@ async def test_light_without_brightness_can_be_turned_on(hass_hue, hue_client):
     assert len(turn_on_calls) == 1
     call = turn_on_calls[-1]
 
-    assert light.DOMAIN == call.domain
+    assert call.domain == light.DOMAIN
     assert call.service == SERVICE_TURN_ON
     assert "light.no_brightness" in call.data[ATTR_ENTITY_ID]
 
@@ -465,8 +465,9 @@ async def test_discover_full_state(hue_client):
 
     # Make sure array is correct size
     assert len(result_json) == 2
-    assert len(config_json) == 6
+    assert len(config_json) == 7
     assert len(lights_json) >= 1
+    assert "name" in config_json
 
     # Make sure the config wrapper added to the config is there
     assert "mac" in config_json
@@ -505,7 +506,8 @@ async def test_discover_config(hue_client):
     config_json = await result.json()
 
     # Make sure array is correct size
-    assert len(config_json) == 6
+    assert len(config_json) == 7
+    assert "name" in config_json
 
     # Make sure the config wrapper added to the config is there
     assert "mac" in config_json

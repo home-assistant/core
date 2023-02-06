@@ -34,7 +34,9 @@ def create_minio_client(
     endpoint: str, access_key: str, secret_key: str, secure: bool
 ) -> Minio:
     """Create Minio client."""
-    return Minio(endpoint, access_key, secret_key, secure)
+    return Minio(
+        endpoint=endpoint, access_key=access_key, secret_key=secret_key, secure=secure
+    )
 
 
 def get_minio_notification_response(
@@ -42,7 +44,7 @@ def get_minio_notification_response(
 ):
     """Start listening to minio events. Copied from minio-py."""
     query = {"prefix": prefix, "suffix": suffix, "events": events}
-    # pylint: disable=protected-access
+    # pylint: disable-next=protected-access
     return minio_client._url_open(
         "GET", bucket_name=bucket_name, query=query, preload_content=False
     )
@@ -157,7 +159,7 @@ class MinioEventThread(threading.Thread):
                     presigned_url = minio_client.presigned_get_object(bucket, key)
                 # Fail gracefully. If for whatever reason this stops working,
                 # it shouldn't prevent it from firing events.
-                # pylint: disable=broad-except
+                # pylint: disable-next=broad-except
                 except Exception as error:
                     _LOGGER.error("Failed to generate presigned url: %s", error)
 
@@ -185,8 +187,7 @@ class MinioEventThread(threading.Thread):
 
 
 def iterate_objects(event):
-    """
-    Iterate over file records of notification event.
+    """Iterate over file records of notification event.
 
     Most of the time it should still be only one record.
     """

@@ -83,7 +83,7 @@ async def test_home_assistant_stop(
     assert matter_client.disconnect.call_count == 1
 
 
-@pytest.mark.parametrize("error", [CannotConnect("Boom"), Exception("Boom")])
+@pytest.mark.parametrize("error", [CannotConnect(Exception("Boom")), Exception("Boom")])
 async def test_connect_failed(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -307,7 +307,7 @@ async def test_install_addon(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
-    assert addon_store_info.call_count == 2
+    assert addon_store_info.call_count == 3
     assert install_addon.call_count == 1
     assert install_addon.call_args == call(hass, "core_matter_server")
     assert start_addon.call_count == 1

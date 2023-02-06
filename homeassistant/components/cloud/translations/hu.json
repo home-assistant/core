@@ -3,7 +3,7 @@
         "legacy_subscription": {
             "fix_flow": {
                 "abort": {
-                    "operation_took_too_long": "A m\u0171velet t\u00fal sok\u00e1ig tartott. K\u00e9rj\u00fck, pr\u00f3b\u00e1lja meg k\u00e9s\u0151bb \u00fajra."
+                    "operation_took_too_long": "A m\u0171velet t\u00fal sok\u00e1ig tartott. K\u00e9rem, pr\u00f3b\u00e1lja meg k\u00e9s\u0151bb \u00fajra."
                 },
                 "step": {
                     "confirm_change_plan": {

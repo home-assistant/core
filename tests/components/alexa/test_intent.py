@@ -1,5 +1,5 @@
 """The tests for the Alexa component."""
-# pylint: disable=protected-access
+
 from http import HTTPStatus
 import json
 
@@ -193,7 +193,9 @@ async def test_intent_launch_request_not_configured(alexa_client):
             "new": True,
             "sessionId": SESSION_ID,
             "application": {
-                "applicationId": "amzn1.echo-sdk-ams.app.000000-d0ed-0000-ad00-000000d00000"
+                "applicationId": (
+                    "amzn1.echo-sdk-ams.app.000000-d0ed-0000-ad00-000000d00000"
+                ),
             },
             "attributes": {},
             "user": {"userId": "amzn1.account.AM3B00000000000000000000000"},

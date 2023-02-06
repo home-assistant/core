@@ -15,7 +15,7 @@
                     "name": "Jm\u00e9no",
                     "select": "Vybrat",
                     "state_class": "Trieda stavu",
-                    "unit_of_measurement": "Jednotka m\u011b\u0159en\u00ed",
+                    "unit_of_measurement": "M\u011brn\u00e1 jednotka",
                     "value_template": "\u0160ablona hodnoty"
                 },
                 "data_description": {
@@ -51,7 +51,7 @@
                     "index": "Index",
                     "select": "Vybrat",
                     "state_class": "Trieda stavu",
-                    "unit_of_measurement": "Jednotka m\u011b\u0159en\u00ed",
+                    "unit_of_measurement": "M\u011brn\u00e1 jednotka",
                     "value_template": "\u0160ablona hodnoty"
                 },
                 "data_description": {

@@ -25,7 +25,6 @@ async def test_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
 
     assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == SOURCE_USER
-    assert "flow_id" in result
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -68,7 +67,6 @@ async def test_options_flow_invalid_api(
 
     assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == "init"
-    assert "flow_id" in result
 
     result2 = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -101,7 +99,6 @@ async def test_options_flow(
 
     assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == "init"
-    assert "flow_id" in result
 
     # With the API key
     result2 = await hass.config_entries.options.async_configure(
@@ -142,7 +139,6 @@ async def test_options_flow_without_key(
 
     assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == "init"
-    assert "flow_id" in result
 
     # Without the API key
     result2 = await hass.config_entries.options.async_configure(

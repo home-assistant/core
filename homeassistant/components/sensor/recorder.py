@@ -34,24 +34,22 @@ from homeassistant.core import HomeAssistant, State, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import entity_sources
 from homeassistant.util import dt as dt_util
+from homeassistant.util.enum import try_parse_enum
 
-from . import (
+from .const import (
     ATTR_LAST_RESET,
     ATTR_OPTIONS,
     ATTR_STATE_CLASS,
     DOMAIN,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL,
-    STATE_CLASS_TOTAL_INCREASING,
-    STATE_CLASSES,
+    SensorStateClass,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_STATISTICS = {
-    STATE_CLASS_MEASUREMENT: {"mean", "min", "max"},
-    STATE_CLASS_TOTAL: {"sum"},
-    STATE_CLASS_TOTAL_INCREASING: {"sum"},
+    SensorStateClass.MEASUREMENT: {"mean", "min", "max"},
+    SensorStateClass.TOTAL: {"sum"},
+    SensorStateClass.TOTAL_INCREASING: {"sum"},
 }
 
 EQUIVALENT_UNITS = {
@@ -82,7 +80,7 @@ def _get_sensor_states(hass: HomeAssistant) -> list[State]:
     for state in all_sensors:
         if not is_entity_recorded(hass, state.entity_id):
             continue
-        if (state.attributes.get(ATTR_STATE_CLASS)) not in STATE_CLASSES:
+        if not try_parse_enum(SensorStateClass, state.attributes.get(ATTR_STATE_CLASS)):
             continue
         statistics_sensors.append(state)
 
@@ -183,10 +181,7 @@ def _normalize_states(
         # We have seen this sensor before, use the unit from metadata
         statistics_unit = old_metadata["unit_of_measurement"]
 
-    if (
-        not statistics_unit
-        or statistics_unit not in statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER
-    ):
+    if statistics_unit not in statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER:
         # The unit used by this sensor doesn't support unit conversion
 
         all_units = _get_units(fstates)
@@ -229,7 +224,7 @@ def _normalize_states(
                 hass.data[WARN_UNSUPPORTED_UNIT].add(entity_id)
                 _LOGGER.warning(
                     (
-                        "The unit of %s (%s) can not be converted to the unit of"
+                        "The unit of %s (%s) cannot be converted to the unit of"
                         " previously compiled statistics (%s). Generation of long term"
                         " statistics will be suppressed unless the unit changes back to"
                         " %s or a compatible unit. Go to %s to fix this"
@@ -480,7 +475,7 @@ def _compile_statistics(  # noqa: C901
                     hass.data[WARN_UNSTABLE_UNIT].add(entity_id)
                     _LOGGER.warning(
                         (
-                            "The unit of %s (%s) can not be converted to the unit of"
+                            "The unit of %s (%s) cannot be converted to the unit of"
                             " previously compiled statistics (%s). Generation of long"
                             " term statistics will be suppressed unless the unit"
                             " changes back to %s or a compatible unit. Go to %s to fix"
@@ -507,9 +502,19 @@ def _compile_statistics(  # noqa: C901
         # Make calculations
         stat: StatisticData = {"start": start}
         if "max" in wanted_statistics[entity_id]:
-            stat["max"] = max(*itertools.islice(zip(*fstates), 1))  # type: ignore[typeddict-item]
+            stat["max"] = max(
+                *itertools.islice(
+                    zip(*fstates),  # type: ignore[typeddict-item]
+                    1,
+                )
+            )
         if "min" in wanted_statistics[entity_id]:
-            stat["min"] = min(*itertools.islice(zip(*fstates), 1))  # type: ignore[typeddict-item]
+            stat["min"] = min(
+                *itertools.islice(
+                    zip(*fstates),  # type: ignore[typeddict-item]
+                    1,
+                )
+            )
 
         if "mean" in wanted_statistics[entity_id]:
             stat["mean"] = _time_weighted_average(fstates, start, end)
@@ -519,7 +524,8 @@ def _compile_statistics(  # noqa: C901
             new_state = old_state = None
             _sum = 0.0
             if entity_id in last_stats:
-                # We have compiled history for this sensor before, use that as a starting point
+                # We have compiled history for this sensor before,
+                # use that as a starting point.
                 last_reset = old_last_reset = last_stats[entity_id][0]["last_reset"]
                 if old_last_reset is not None:
                     last_reset = old_last_reset = old_last_reset.isoformat()
@@ -529,7 +535,7 @@ def _compile_statistics(  # noqa: C901
             for fstate, state in fstates:
                 reset = False
                 if (
-                    state_class != STATE_CLASS_TOTAL_INCREASING
+                    state_class != SensorStateClass.TOTAL_INCREASING
                     and (
                         last_reset := _last_reset_as_utc_isoformat(
                             state.attributes.get("last_reset"), entity_id
@@ -565,7 +571,7 @@ def _compile_statistics(  # noqa: C901
                         entity_id,
                         fstate,
                     )
-                elif state_class == STATE_CLASS_TOTAL_INCREASING:
+                elif state_class == SensorStateClass.TOTAL_INCREASING:
                     try:
                         if old_state is None or reset_detected(
                             hass, entity_id, fstate, new_state, state
@@ -640,7 +646,7 @@ def list_statistic_ids(
         if (
             "sum" in provided_statistics
             and ATTR_LAST_RESET not in state.attributes
-            and state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+            and state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
         ):
             continue
 
@@ -670,7 +676,9 @@ def validate_statistics(
 
     for state in sensor_states:
         entity_id = state.entity_id
-        state_class = state.attributes.get(ATTR_STATE_CLASS)
+        state_class = try_parse_enum(
+            SensorStateClass, state.attributes.get(ATTR_STATE_CLASS)
+        )
         state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
         if metadata := metadatas.get(entity_id):
@@ -683,7 +691,7 @@ def validate_statistics(
                     )
                 )
 
-            if state_class not in STATE_CLASSES:
+            if state_class is None:
                 # Sensor no longer has a valid state class
                 validation_result[entity_id].append(
                     statistics.ValidationIssue(
@@ -710,7 +718,8 @@ def validate_statistics(
                     )
             elif state_unit not in converter.VALID_UNITS:
                 # The state unit can't be converted to the unit in metadata
-                valid_units = ", ".join(sorted(converter.VALID_UNITS))
+                valid_units = (unit or "<None>" for unit in converter.VALID_UNITS)
+                valid_units_str = ", ".join(sorted(valid_units))
                 validation_result[entity_id].append(
                     statistics.ValidationIssue(
                         "units_changed",
@@ -718,11 +727,11 @@ def validate_statistics(
                             "statistic_id": entity_id,
                             "state_unit": state_unit,
                             "metadata_unit": metadata_unit,
-                            "supported_unit": valid_units,
+                            "supported_unit": valid_units_str,
                         },
                     )
                 )
-        elif state_class in STATE_CLASSES:
+        elif state_class is not None:
             if not is_entity_recorded(hass, state.entity_id):
                 # Sensor is not recorded
                 validation_result[entity_id].append(

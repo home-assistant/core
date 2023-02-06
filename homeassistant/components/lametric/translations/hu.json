@@ -5,7 +5,7 @@
             "authorize_url_timeout": "Id\u0151t\u00fall\u00e9p\u00e9s a hiteles\u00edt\u00e9si URL gener\u00e1l\u00e1sa sor\u00e1n.",
             "invalid_discovery_info": "\u00c9rv\u00e9nytelen felfedez\u00e9si inform\u00e1ci\u00f3 \u00e9rkezett",
             "link_local_address": "A linklocal c\u00edmek nem t\u00e1mogatottak",
-            "missing_configuration": "A LaMetric integr\u00e1ci\u00f3 nincs konfigur\u00e1lva. K\u00e9rj\u00fck, k\u00f6vesse a dokument\u00e1ci\u00f3t.",
+            "missing_configuration": "A LaMetric integr\u00e1ci\u00f3 nincs konfigur\u00e1lva. K\u00e9rem, k\u00f6vesse a dokument\u00e1ci\u00f3t.",
             "no_devices": "A jogosult felhaszn\u00e1l\u00f3 nem rendelkezik LaMetric-eszk\u00f6z\u00f6kkel",
             "no_url_available": "Nincs el\u00e9rhet\u0151 URL. A hib\u00e1r\u00f3l tov\u00e1bbi inform\u00e1ci\u00f3 [a s\u00fag\u00f3ban]({docs_url}) tal\u00e1lhat\u00f3.",
             "reauth_device_not_found": "Az \u00fajb\u00f3l hiteles\u00edteni k\u00edv\u00e1nt eszk\u00f6z nem tal\u00e1lhat\u00f3 ebben a LaMetric-fi\u00f3kban",
@@ -56,7 +56,7 @@
     },
     "issues": {
         "manual_migration": {
-            "description": "A LaMetric integr\u00e1ci\u00f3 moderniz\u00e1l\u00e1sra ker\u00fclt: A konfigur\u00e1l\u00e1s \u00e9s be\u00e1ll\u00edt\u00e1s mostant\u00f3l a felhaszn\u00e1l\u00f3i fel\u00fcleten kereszt\u00fcl t\u00f6rt\u00e9nik, \u00e9s a kommunik\u00e1ci\u00f3 mostant\u00f3l helyi.\n\nSajnos nincs lehet\u0151s\u00e9g automatikus migr\u00e1ci\u00f3s \u00fatvonalra, \u00edgy a LaMetric-et \u00fajra be kell \u00e1ll\u00edtania a Home Assistant seg\u00edts\u00e9g\u00e9vel. K\u00e9rj\u00fck, tekintse meg a Home Assistant LaMetric integr\u00e1ci\u00f3 dokument\u00e1ci\u00f3j\u00e1t a be\u00e1ll\u00edt\u00e1ssal kapcsolatban.\n\nA probl\u00e9ma megold\u00e1s\u00e1hoz t\u00e1vol\u00edtsa el a r\u00e9gi LaMetric YAML konfigur\u00e1ci\u00f3t a configuration.yaml f\u00e1jlb\u00f3l, \u00e9s ind\u00edtsa \u00fajra a Home Assistant-ot.",
+            "description": "A LaMetric integr\u00e1ci\u00f3 moderniz\u00e1l\u00e1sra ker\u00fclt: A konfigur\u00e1l\u00e1s \u00e9s be\u00e1ll\u00edt\u00e1s mostant\u00f3l a felhaszn\u00e1l\u00f3i fel\u00fcleten kereszt\u00fcl t\u00f6rt\u00e9nik, \u00e9s a kommunik\u00e1ci\u00f3 mostant\u00f3l helyi.\n\nSajnos nincs lehet\u0151s\u00e9g automatikus migr\u00e1ci\u00f3s \u00fatvonalra, \u00edgy a LaMetric-et \u00fajra be kell \u00e1ll\u00edtania a Home Assistant seg\u00edts\u00e9g\u00e9vel. K\u00e9rem, tekintse meg a Home Assistant LaMetric integr\u00e1ci\u00f3 dokument\u00e1ci\u00f3j\u00e1t a be\u00e1ll\u00edt\u00e1ssal kapcsolatban.\n\nA probl\u00e9ma megold\u00e1s\u00e1hoz t\u00e1vol\u00edtsa el a r\u00e9gi LaMetric YAML konfigur\u00e1ci\u00f3t a configuration.yaml f\u00e1jlb\u00f3l, \u00e9s ind\u00edtsa \u00fajra a Home Assistant-ot.",
             "title": "Manu\u00e1lis migr\u00e1ci\u00f3 sz\u00fcks\u00e9ges a LaMetric eset\u00e9ben"
         }
     }

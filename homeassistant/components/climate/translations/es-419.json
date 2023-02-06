@@ -25,5 +25,27 @@
             "off": "Desactivar"
         }
     },
+    "state_attributes": {
+        "_": {
+            "aux_heat": {
+                "name": "Calor auxiliar"
+            },
+            "current_humidity": {
+                "name": "Humedad actual"
+            },
+            "current_temperature": {
+                "name": "Temperatura actual"
+            },
+            "fan_mode": {
+                "name": "Modo del ventilador",
+                "state": {
+                    "auto": "Autom\u00e1tico",
+                    "diffuse": "Difuso",
+                    "focus": "Enfocar",
+                    "high": "Alto"
+                }
+            }
+        }
+    },
     "title": "Clima"
 }

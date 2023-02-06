@@ -211,6 +211,7 @@ class NestFlowHandler(
 
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> FlowResult:
         """Complete OAuth setup and finish pubsub or finish."""
+        _LOGGER.debug("Finishing post-oauth configuration")
         assert self.config_mode != ConfigMode.LEGACY, "Step only supported for SDM API"
         self._data.update(data)
         if self.source == SOURCE_REAUTH:
@@ -362,8 +363,8 @@ class NestFlowHandler(
     ) -> FlowResult:
         """Verify any last pre-requisites before sending user through OAuth flow."""
         if user_input is None and self._upgrade:
-            # During app auth upgrade we need the user to update their device access project
-            # before we redirect to the authentication flow.
+            # During app auth upgrade we need the user to update their device
+            # access project before we redirect to the authentication flow.
             return await self.async_step_device_project_upgrade()
         return await super().async_step_auth(user_input)
 
@@ -377,7 +378,7 @@ class NestFlowHandler(
         if not isinstance(
             self.flow_impl, config_entry_oauth2_flow.LocalOAuth2Implementation
         ):
-            raise ValueError(f"Unexpected OAuth implementation: {self.flow_impl}")
+            raise TypeError(f"Unexpected OAuth implementation: {self.flow_impl}")
         client_id = self.flow_impl.client_id
         return self.async_show_form(
             step_id="device_project_upgrade",
@@ -427,7 +428,6 @@ class NestFlowHandler(
                 _LOGGER.error("Error creating subscription: %s", err)
                 errors[CONF_CLOUD_PROJECT_ID] = "subscriber_error"
             if not errors:
-
                 try:
                     device_manager = await subscriber.async_get_device_manager()
                 except ApiException as err:
@@ -459,6 +459,7 @@ class NestFlowHandler(
 
     async def async_step_finish(self, data: dict[str, Any] | None = None) -> FlowResult:
         """Create an entry for the SDM flow."""
+        _LOGGER.debug("Creating/updating configuration entry")
         assert self.config_mode != ConfigMode.LEGACY, "Step only supported for SDM API"
         # Update existing config entry when in the reauth flow.
         if entry := self._async_reauth_entry():

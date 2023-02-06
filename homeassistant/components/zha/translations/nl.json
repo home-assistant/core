@@ -87,6 +87,7 @@
             "default_light_transition": "Standaard licht transitietijd (seconden)",
             "enable_identify_on_join": "Schakel het identificatie-effect in wanneer apparaten in het netwerk komen",
             "enhanced_light_transition": "Inschakelen geavanceerde light kleur/temperatuur transitie vanaf uitgeschakelde toestand",
+            "group_members_assume_state": "Groepsleden nemen de status van de groep aan",
             "light_transitioning_flag": "Inschakelen geavanceerde helderheid schuifregelaar gedurende de lichtovergang",
             "title": "Globale opties"
         }
@@ -100,6 +101,7 @@
         },
         "trigger_subtype": {
             "both_buttons": "Beide knoppen",
+            "button": "Drukknop",
             "button_1": "Eerste knop",
             "button_2": "Tweede knop",
             "button_3": "Derde knop",

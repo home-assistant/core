@@ -10,5 +10,17 @@
                 }
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "season": {
+                "state": {
+                    "autumn": "Automne",
+                    "spring": "Printemps",
+                    "summer": "\u00c9t\u00e9",
+                    "winter": "Hiver"
+                }
+            }
+        }
     }
 }

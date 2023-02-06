@@ -33,7 +33,6 @@ from .const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
     CONF_BLOCK_CLIENT,
-    CONF_CONTROLLER,
     CONF_DETECTION_TIME,
     CONF_DPI_RESTRICTIONS,
     CONF_IGNORE_WIRED_BUG,
@@ -87,7 +86,6 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
         errors = {}
 
         if user_input is not None:
-
             self.config = {
                 CONF_HOST: user_input[CONF_HOST],
                 CONF_USERNAME: user_input[CONF_USERNAME],
@@ -149,11 +147,8 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
     ) -> FlowResult:
         """Select site to control."""
         if user_input is not None:
-
             unique_id = user_input[CONF_SITE_ID]
             self.config[CONF_SITE_ID] = self.site_ids[unique_id]
-            # Backwards compatible config
-            self.config[CONF_CONTROLLER] = self.config.copy()
 
             config_entry = await self.async_set_unique_id(unique_id)
             abort_reason = "configuration_updated"

@@ -1,8 +1,7 @@
 """Support for Litter-Robot updates."""
 from __future__ import annotations
 
-from collections.abc import Callable
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import Any
 
 from pylitterbot import LitterRobot4
@@ -17,11 +16,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.start import async_at_start
 
 from .const import DOMAIN
 from .entity import LitterRobotEntity, LitterRobotHub
+
+SCAN_INTERVAL = timedelta(days=1)
 
 FIRMWARE_UPDATE_ENTITY = UpdateEntityDescription(
     key="firmware",
@@ -37,13 +36,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up Litter-Robot update platform."""
     hub: LitterRobotHub = hass.data[DOMAIN][entry.entry_id]
-    robots = hub.account.robots
     entities = [
         RobotUpdateEntity(robot=robot, hub=hub, description=FIRMWARE_UPDATE_ENTITY)
-        for robot in robots
+        for robot in hub.litter_robots()
         if isinstance(robot, LitterRobot4)
     ]
-    async_add_entities(entities)
+    async_add_entities(entities, True)
 
 
 class RobotUpdateEntity(LitterRobotEntity[LitterRobot4], UpdateEntity):
@@ -52,16 +50,6 @@ class RobotUpdateEntity(LitterRobotEntity[LitterRobot4], UpdateEntity):
     _attr_supported_features = (
         UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
     )
-
-    def __init__(
-        self,
-        robot: LitterRobot4,
-        hub: LitterRobotHub,
-        description: UpdateEntityDescription,
-    ) -> None:
-        """Initialize a Litter-Robot update entity."""
-        super().__init__(robot, hub, description)
-        self._poll_unsub: Callable[[], None] | None = None
 
     @property
     def installed_version(self) -> str:
@@ -73,39 +61,27 @@ class RobotUpdateEntity(LitterRobotEntity[LitterRobot4], UpdateEntity):
         """Update installation progress."""
         return self.robot.firmware_update_triggered
 
-    async def _async_update(self, _: HomeAssistant | datetime | None = None) -> None:
+    @property
+    def should_poll(self) -> bool:
+        """Set polling to True."""
+        return True
+
+    async def async_update(self) -> None:
         """Update the entity."""
-        self._poll_unsub = None
-
-        if await self.robot.has_firmware_update():
-            latest_version = await self.robot.get_latest_firmware()
-        else:
-            latest_version = self.installed_version
-
-        if self._attr_latest_version != self.installed_version:
+        # If the robot has a firmware update already in progress, checking for the
+        # latest firmware informs that an update has already been triggered, no
+        # firmware information is returned and we won't know the latest version.
+        if not self.robot.firmware_update_triggered:
+            latest_version = await self.robot.get_latest_firmware(True)
+            if not await self.robot.has_firmware_update():
+                latest_version = self.robot.firmware
             self._attr_latest_version = latest_version
-            self.async_write_ha_state()
-
-        self._poll_unsub = async_call_later(
-            self.hass, timedelta(days=1), self._async_update
-        )
-
-    async def async_added_to_hass(self) -> None:
-        """Set up a listener for the entity."""
-        await super().async_added_to_hass()
-        self.async_on_remove(async_at_start(self.hass, self._async_update))
 
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update."""
-        if await self.robot.has_firmware_update():
+        if await self.robot.has_firmware_update(True):
             if not await self.robot.update_firmware():
                 message = f"Unable to start firmware update on {self.robot.name}"
                 raise HomeAssistantError(message)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Call when entity will be removed."""
-        if self._poll_unsub:
-            self._poll_unsub()
-            self._poll_unsub = None

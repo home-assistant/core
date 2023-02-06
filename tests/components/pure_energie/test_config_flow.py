@@ -24,7 +24,6 @@ async def test_full_user_flow_implementation(
 
     assert result.get("step_id") == SOURCE_USER
     assert result.get("type") == FlowResultType.FORM
-    assert "flow_id" in result
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_HOST: "192.168.1.123"}
@@ -64,7 +63,6 @@ async def test_full_zeroconf_flow_implementationn(
     }
     assert result.get("step_id") == "zeroconf_confirm"
     assert result.get("type") == FlowResultType.FORM
-    assert "flow_id" in result
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}

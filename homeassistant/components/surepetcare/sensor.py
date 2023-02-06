@@ -29,7 +29,6 @@ async def async_setup_entry(
     coordinator: SurePetcareDataCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     for surepy_entity in coordinator.data.values():
-
         if surepy_entity.type in [
             EntityType.CAT_FLAP,
             EntityType.PET_FLAP,
@@ -96,7 +95,7 @@ class Felaqua(SurePetcareEntity, SensorEntity):
         """Initialize a Sure Petcare Felaqua sensor."""
         super().__init__(surepetcare_id, coordinator)
 
-        surepy_entity: SurepyFelaqua = coordinator.data[surepetcare_id]
+        surepy_entity = cast(SurepyFelaqua, coordinator.data[surepetcare_id])
 
         self._attr_name = self._device_name
         self._attr_unique_id = self._device_id

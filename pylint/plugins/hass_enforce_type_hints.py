@@ -18,14 +18,16 @@ if TYPE_CHECKING:
     # pre-commit should still work on out of date environments
     from astroid.typing import InferenceResult
 
+_COMMON_ARGUMENTS: dict[str, list[str]] = {
+    "hass": ["HomeAssistant", "HomeAssistant | None"]
+}
+_PLATFORMS: set[str] = {platform.value for platform in Platform}
+
 
 class _Special(Enum):
-    """Sentinel values"""
+    """Sentinel values."""
 
     UNDEFINED = 1
-
-
-_PLATFORMS: set[str] = {platform.value for platform in Platform}
 
 
 @dataclass
@@ -375,7 +377,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 0: "HomeAssistant",
                 1: "ConfigEntry",
             },
-            return_type=_Special.UNDEFINED,
+            return_type="Mapping[str, Any]",
         ),
         TypeHintMatch(
             function_name="async_get_device_diagnostics",
@@ -384,7 +386,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 1: "ConfigEntry",
                 2: "DeviceEntry",
             },
-            return_type=_Special.UNDEFINED,
+            return_type="Mapping[str, Any]",
         ),
     ],
     "notify": [
@@ -1441,7 +1443,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="set_humidity",
-                    arg_types={1: "str"},
+                    arg_types={1: "int"},
                     return_type=None,
                     has_async_counterpart=True,
                 ),
@@ -1967,6 +1969,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
         ClassTypeHintMatch(
             base_class="BaseNotificationService",
             matches=[
+                TypeHintMatch(
+                    function_name="targets",
+                    return_type=["dict[str, Any]", None],
+                ),
                 TypeHintMatch(
                     function_name="send_message",
                     arg_types={1: "str"},
@@ -2837,7 +2843,7 @@ def _has_valid_annotations(
 
 
 def _get_module_platform(module_name: str) -> str | None:
-    """Called when a Module node is visited."""
+    """Return the platform for the module name."""
     if not (module_match := _MODULE_REGEX.match(module_name)):
         # Ensure `homeassistant.components.<component>`
         # Or `homeassistant.components.<component>.<platform>`
@@ -2878,12 +2884,13 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
     )
 
     def __init__(self, linter: PyLinter | None = None) -> None:
+        """Initialize the HassTypeHintChecker."""
         super().__init__(linter)
         self._function_matchers: list[TypeHintMatch] = []
         self._class_matchers: list[ClassTypeHintMatch] = []
 
     def visit_module(self, node: nodes.Module) -> None:
-        """Called when a Module node is visited."""
+        """Populate matchers for a Module node."""
         self._function_matchers = []
         self._class_matchers = []
 
@@ -2906,8 +2913,18 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
 
         self._class_matchers.reverse()
 
+    def _ignore_function(
+        self, node: nodes.FunctionDef, annotations: list[nodes.NodeNG | None]
+    ) -> bool:
+        """Check if we can skip the function validation."""
+        return (
+            self.linter.config.ignore_missing_annotations
+            and node.returns is None
+            and not _has_valid_annotations(annotations)
+        )
+
     def visit_classdef(self, node: nodes.ClassDef) -> None:
-        """Called when a ClassDef node is visited."""
+        """Apply relevant type hint checks on a ClassDef node."""
         ancestor: nodes.ClassDef
         checked_class_methods: set[str] = set()
         ancestors = list(node.ancestors())  # cache result for inside loop
@@ -2927,34 +2944,55 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
         cached_methods: list[nodes.FunctionDef] = list(node.mymethods())
         for match in matches:
             for function_node in cached_methods:
-                if function_node.name in checked_class_methods:
+                if (
+                    function_node.name in checked_class_methods
+                    or not match.need_to_check_function(function_node)
+                ):
                     continue
-                if match.need_to_check_function(function_node):
-                    self._check_function(function_node, match)
-                    checked_class_methods.add(function_node.name)
+
+                annotations = _get_all_annotations(function_node)
+                if self._ignore_function(function_node, annotations):
+                    continue
+
+                self._check_function(function_node, match, annotations)
+                checked_class_methods.add(function_node.name)
 
     def visit_functiondef(self, node: nodes.FunctionDef) -> None:
-        """Called when a FunctionDef node is visited."""
+        """Apply relevant type hint checks on a FunctionDef node."""
+        annotations = _get_all_annotations(node)
+        if self._ignore_function(node, annotations):
+            return
+
+        # Check that common arguments are correctly typed.
+        for arg_name, expected_type in _COMMON_ARGUMENTS.items():
+            arg_node, annotation = _get_named_annotation(node, arg_name)
+            if arg_node and not _is_valid_type(expected_type, annotation):
+                self.add_message(
+                    "hass-argument-type",
+                    node=arg_node,
+                    args=(arg_name, expected_type, node.name),
+                )
+
+        # Check function matchers.
         for match in self._function_matchers:
             if not match.need_to_check_function(node) or node.is_method():
                 continue
-            self._check_function(node, match)
+            self._check_function(node, match, annotations)
 
     visit_asyncfunctiondef = visit_functiondef
 
-    def _check_function(self, node: nodes.FunctionDef, match: TypeHintMatch) -> None:
-        # Check that at least one argument is annotated.
-        annotations = _get_all_annotations(node)
-        if (
-            self.linter.config.ignore_missing_annotations
-            and node.returns is None
-            and not _has_valid_annotations(annotations)
-        ):
-            return
-
+    def _check_function(
+        self,
+        node: nodes.FunctionDef,
+        match: TypeHintMatch,
+        annotations: list[nodes.NodeNG | None],
+    ) -> None:
         # Check that all positional arguments are correctly annotated.
         if match.arg_types:
             for key, expected_type in match.arg_types.items():
+                if node.args.args[key].name in _COMMON_ARGUMENTS:
+                    # It has already been checked, avoid double-message
+                    continue
                 if not _is_valid_type(expected_type, annotations[key]):
                     self.add_message(
                         "hass-argument-type",
@@ -2965,6 +3003,9 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
         # Check that all keyword arguments are correctly annotated.
         if match.named_arg_types is not None:
             for arg_name, expected_type in match.named_arg_types.items():
+                if arg_name in _COMMON_ARGUMENTS:
+                    # It has already been checked, avoid double-message
+                    continue
                 arg_node, annotation = _get_named_annotation(node, arg_name)
                 if arg_node and not _is_valid_type(expected_type, annotation):
                     self.add_message(

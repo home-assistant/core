@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, cast
 
 import speedtest
 
@@ -69,7 +69,7 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.api.download()
         self.api.upload()
-        return self.api.results.dict()
+        return cast(dict[str, Any], self.api.results.dict())
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update Speedtest data."""

@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator, Callable, Generator
+from collections.abc import AsyncGenerator, Callable, Coroutine, Generator
 from contextlib import asynccontextmanager
+import datetime
 import functools
 import gc
 import itertools
-from json import JSONDecoder, loads
+from json import JSONDecoder
 import logging
 import sqlite3
 import ssl
@@ -15,8 +16,7 @@ import threading
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
-from aiohttp import client
-from aiohttp.pytest_plugin import AiohttpClient
+from aiohttp import ClientWebSocketResponse, client
 from aiohttp.test_utils import (
     BaseTestServer,
     TestClient,
@@ -34,7 +34,6 @@ from homeassistant import core as ha, loader, runner, util
 from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
 from homeassistant.auth.models import Credentials
 from homeassistant.auth.providers import homeassistant, legacy_api_password
-from homeassistant.components import mqtt, recorder
 from homeassistant.components.network.models import Adapter, IPv4ConfiguredAddress
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
@@ -42,18 +41,25 @@ from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH_REQUIRED,
 )
 from homeassistant.components.websocket_api.http import URL
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import HASSIO_USER_NAME
 from homeassistant.core import CoreState, HomeAssistant
-from homeassistant.helpers import config_entry_oauth2_flow, recorder as recorder_helper
+from homeassistant.helpers import (
+    config_entry_oauth2_flow,
+    event,
+    recorder as recorder_helper,
+)
+from homeassistant.helpers.json import json_loads
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, location
 
-from tests.ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
+from .ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
+from .typing import ClientSessionGenerator, WebSocketGenerator
 
 pytest.register_assert_rewrite("tests.common")
 
-from tests.common import (  # noqa: E402, isort:skip
+from .common import (  # noqa: E402, isort:skip
     CLIENT_ID,
     INSTANCES,
     MockConfigEntry,
@@ -63,22 +69,27 @@ from tests.common import (  # noqa: E402, isort:skip
     async_test_home_assistant,
     get_test_home_assistant,
     init_recorder_component,
-    mock_storage as mock_storage,
+    mock_storage,
 )
-from tests.test_util.aiohttp import mock_aiohttp_client  # noqa: E402, isort:skip
-from tests.components.recorder.common import (  # noqa: E402, isort:skip
-    async_recorder_block_till_done,
-)
+from .test_util.aiohttp import mock_aiohttp_client  # noqa: E402, isort:skip
 
 
 _LOGGER = logging.getLogger(__name__)
 
-logging.basicConfig(level=logging.DEBUG)
-logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
-
 asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))
 # Disable fixtures overriding our beautiful policy
 asyncio.set_event_loop_policy = lambda policy: None
+
+
+def _utcnow():
+    """Make utcnow patchable by freezegun."""
+    return datetime.datetime.now(datetime.timezone.utc)
+
+
+dt_util.utcnow = _utcnow
+event.time_tracker_utcnow = _utcnow
+
+MqttMockType = Callable[..., Coroutine[Any, Any, MagicMock]]
 
 
 def pytest_addoption(parser):
@@ -91,6 +102,11 @@ def pytest_configure(config):
     config.addinivalue_line(
         "markers", "no_fail_on_log_exception: mark test to not fail on logged exception"
     )
+    if config.getoption("verbose") > 0:
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.INFO)
+    logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
 
 
 def pytest_runtest_setup():
@@ -188,6 +204,26 @@ location.async_detect_location_info = check_real(location.async_detect_location_
 util.get_local_ip = lambda: "127.0.0.1"
 
 
+@pytest.fixture(name="caplog")
+def caplog_fixture(caplog):
+    """Set log level to debug for tests using the caplog fixture."""
+    caplog.set_level(logging.DEBUG)
+    return caplog
+
+
+@pytest.fixture(autouse=True, scope="module")
+def garbage_collection():
+    """Run garbage collection at known locations.
+
+    This is to mimic the behavior of pytest-aiohttp, and is
+    required to avoid warnings during garbage collection from
+    spilling over into next test case. We run it per module which
+    handles the most common cases and let each module override
+    to run per test case if needed.
+    """
+    gc.collect()
+
+
 @pytest.fixture(autouse=True)
 def verify_cleanup(event_loop: asyncio.AbstractEventLoop):
     """Verify that the test has cleaned up resources correctly."""
@@ -203,10 +239,6 @@ def verify_cleanup(event_loop: asyncio.AbstractEventLoop):
             inst.stop()
         pytest.exit(f"Detected non stopped instances ({count}), aborting test run")
 
-    threads = frozenset(threading.enumerate()) - threads_before
-    for thread in threads:
-        assert isinstance(thread, threading._DummyThread)
-
     # Warn and clean-up lingering tasks and timers
     # before moving on to the next test.
     tasks = asyncio.all_tasks(event_loop) - tasks_before
@@ -216,16 +248,17 @@ def verify_cleanup(event_loop: asyncio.AbstractEventLoop):
     if tasks:
         event_loop.run_until_complete(asyncio.wait(tasks))
 
-    for handle in event_loop._scheduled:  # pylint: disable=protected-access
+    for handle in event_loop._scheduled:
         if not handle.cancelled():
             _LOGGER.warning("Lingering timer after test %r", handle)
             handle.cancel()
 
-    # Make sure garbage collect run in same test as allocation
-    # this is to mimic the behavior of pytest-aiohttp, and is
-    # required to avoid warnings from spilling over into next
-    # test case.
-    gc.collect()
+    # Verify no threads where left behind.
+    threads = frozenset(threading.enumerate()) - threads_before
+    for thread in threads:
+        assert isinstance(thread, threading._DummyThread) or thread.name.startswith(
+            "waitpid-"
+        )
 
 
 @pytest.fixture(autouse=True)
@@ -271,7 +304,7 @@ class CoalescingResponse(client.ClientWebSocketResponse):
     async def receive_json(
         self,
         *,
-        loads: JSONDecoder = loads,
+        loads: JSONDecoder = json_loads,
         timeout: float | None = None,
     ) -> Any:
         """receive_json or from buffer."""
@@ -302,7 +335,7 @@ def aiohttp_client_cls():
 @pytest.fixture
 def aiohttp_client(
     event_loop: asyncio.AbstractEventLoop,
-) -> Generator[AiohttpClient, None, None]:
+) -> Generator[ClientSessionGenerator, None, None]:
     """Override the default aiohttp_client since 3.x does not support aiohttp_client_cls.
 
     Remove this when upgrading to 4.x as aiohttp_client_cls
@@ -321,7 +354,6 @@ def aiohttp_client(
         server_kwargs: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> TestClient:
-
         if isinstance(__param, Callable) and not isinstance(  # type: ignore[arg-type]
             __param, (Application, BaseTestServer)
         ):
@@ -337,7 +369,7 @@ def aiohttp_client(
         elif isinstance(__param, BaseTestServer):
             client = TestClient(__param, loop=loop, **kwargs)
         else:
-            raise ValueError("Unknown argument type: %r" % type(__param))
+            raise TypeError("Unknown argument type: %r" % type(__param))
 
         await client.start_server()
         clients.append(client)
@@ -454,8 +486,10 @@ def mock_device_tracker_conf():
         devices.append(entity)
 
     with patch(
-        "homeassistant.components.device_tracker.legacy"
-        ".DeviceTracker.async_update_config",
+        (
+            "homeassistant.components.device_tracker.legacy"
+            ".DeviceTracker.async_update_config"
+        ),
         side_effect=mock_update_config,
     ), patch(
         "homeassistant.components.device_tracker.legacy.async_load_config",
@@ -575,10 +609,15 @@ def local_auth(hass):
 
 
 @pytest.fixture
-def hass_client(hass, aiohttp_client, hass_access_token, socket_enabled):
+def hass_client(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    hass_access_token: str,
+    socket_enabled: None,
+) -> ClientSessionGenerator:
     """Return an authenticated HTTP client."""
 
-    async def auth_client():
+    async def auth_client() -> TestClient:
         """Return an authenticated client."""
         return await aiohttp_client(
             hass.http.app, headers={"Authorization": f"Bearer {hass_access_token}"}
@@ -588,10 +627,14 @@ def hass_client(hass, aiohttp_client, hass_access_token, socket_enabled):
 
 
 @pytest.fixture
-def hass_client_no_auth(hass, aiohttp_client, socket_enabled):
+def hass_client_no_auth(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    socket_enabled: None,
+) -> ClientSessionGenerator:
     """Return an unauthenticated HTTP client."""
 
-    async def client():
+    async def client() -> TestClient:
         """Return an authenticated client."""
         return await aiohttp_client(hass.http.app)
 
@@ -606,7 +649,7 @@ def current_request():
             "GET",
             "/some/request",
             headers={"Host": "example.com"},
-            sslcontext=ssl.SSLContext(ssl.PROTOCOL_TLS),
+            sslcontext=ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT),
         )
         mock_request_context.get.return_value = mocked_request
         yield mock_request_context
@@ -623,10 +666,17 @@ def current_request_with_host(current_request):
 
 
 @pytest.fixture
-def hass_ws_client(aiohttp_client, hass_access_token, hass, socket_enabled):
+def hass_ws_client(
+    aiohttp_client: ClientSessionGenerator,
+    hass_access_token: str | None,
+    hass: HomeAssistant,
+    socket_enabled: None,
+) -> WebSocketGenerator:
     """Websocket client fixture connected to websocket server."""
 
-    async def create_client(hass=hass, access_token=hass_access_token):
+    async def create_client(
+        hass: HomeAssistant = hass, access_token: str | None = hass_access_token
+    ) -> ClientWebSocketResponse:
         """Create a websocket client."""
         assert await async_setup_component(hass, "websocket_api", {})
         client = await aiohttp_client(hass.http.app)
@@ -662,24 +712,26 @@ def fail_on_log_exception(request, monkeypatch):
 
 
 @pytest.fixture
-def mqtt_config_entry_data():
+def mqtt_config_entry_data() -> dict[str, Any] | None:
     """Fixture to allow overriding MQTT config."""
     return None
 
 
 @pytest.fixture
-def mqtt_client_mock(hass):
+def mqtt_client_mock(hass: HomeAssistant) -> Generator[Any, MagicMock, None]:
     """Fixture to mock MQTT client."""
 
-    mid = 0
+    mid: int = 0
 
-    def get_mid():
+    def get_mid() -> int:
         nonlocal mid
         mid += 1
         return mid
 
     class FakeInfo:
-        def __init__(self, mid):
+        """Class to fake MQTT info."""
+
+        def __init__(self, mid: int) -> None:
             self.mid = mid
             self.rc = 0
 
@@ -712,18 +764,26 @@ def mqtt_client_mock(hass):
 
 @pytest.fixture
 async def mqtt_mock(
-    hass,
-    mqtt_client_mock,
-    mqtt_config_entry_data,
-    mqtt_mock_entry_no_yaml_config,
-):
+    hass: HomeAssistant,
+    mqtt_client_mock: MagicMock,
+    mqtt_config_entry_data: dict[str, Any] | None,
+    mqtt_mock_entry_no_yaml_config: Callable[..., Coroutine[Any, Any, MagicMock]],
+) -> AsyncGenerator[MagicMock, None]:
     """Fixture to mock MQTT component."""
     return await mqtt_mock_entry_no_yaml_config()
 
 
 @asynccontextmanager
-async def _mqtt_mock_entry(hass, mqtt_client_mock, mqtt_config_entry_data):
+async def _mqtt_mock_entry(
+    hass: HomeAssistant,
+    mqtt_client_mock: MagicMock,
+    mqtt_config_entry_data: dict[str, Any] | None,
+) -> AsyncGenerator[Callable[..., Coroutine[Any, Any, Any]], None]:
     """Fixture to mock a delayed setup of the MQTT config entry."""
+    # Local import to avoid processing MQTT modules when running a testcase
+    # which does not use MQTT.
+    from homeassistant.components import mqtt
+
     if mqtt_config_entry_data is None:
         mqtt_config_entry_data = {
             mqtt.CONF_BROKER: "mock-broker",
@@ -743,7 +803,9 @@ async def _mqtt_mock_entry(hass, mqtt_client_mock, mqtt_config_entry_data):
     real_mqtt_instance = None
     mock_mqtt_instance = None
 
-    async def _setup_mqtt_entry(setup_entry):
+    async def _setup_mqtt_entry(
+        setup_entry: Callable[[HomeAssistant, ConfigEntry], Coroutine[Any, Any, bool]]
+    ) -> MagicMock:
         """Set up the MQTT config entry."""
         assert await setup_entry(hass, entry)
 
@@ -760,7 +822,7 @@ async def _mqtt_mock_entry(hass, mqtt_client_mock, mqtt_config_entry_data):
 
         return mock_mqtt_instance
 
-    def create_mock_mqtt(*args, **kwargs):
+    def create_mock_mqtt(*args, **kwargs) -> MagicMock:
         """Create a mock based on mqtt.MQTT."""
         nonlocal mock_mqtt_instance
         nonlocal real_mqtt_instance
@@ -778,17 +840,21 @@ async def _mqtt_mock_entry(hass, mqtt_client_mock, mqtt_config_entry_data):
 
 @pytest.fixture
 async def mqtt_mock_entry_no_yaml_config(
-    hass, mqtt_client_mock, mqtt_config_entry_data
-):
+    hass: HomeAssistant,
+    mqtt_client_mock: MagicMock,
+    mqtt_config_entry_data: dict[str, Any] | None,
+) -> AsyncGenerator[MqttMockType, None,]:
     """Set up an MQTT config entry without MQTT yaml config."""
 
-    async def _async_setup_config_entry(hass, entry):
+    async def _async_setup_config_entry(
+        hass: HomeAssistant, entry: ConfigEntry
+    ) -> bool:
         """Help set up the config entry."""
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         return True
 
-    async def _setup_mqtt_entry():
+    async def _setup_mqtt_entry() -> Callable[..., Coroutine[Any, Any, MagicMock]]:
         """Set up the MQTT config entry."""
         return await mqtt_mock_entry(_async_setup_config_entry)
 
@@ -800,15 +866,19 @@ async def mqtt_mock_entry_no_yaml_config(
 
 @pytest.fixture
 async def mqtt_mock_entry_with_yaml_config(
-    hass, mqtt_client_mock, mqtt_config_entry_data
-):
+    hass: HomeAssistant,
+    mqtt_client_mock: MagicMock,
+    mqtt_config_entry_data: dict[str, Any] | None,
+) -> AsyncGenerator[MqttMockType, None,]:
     """Set up an MQTT config entry with MQTT yaml config."""
 
-    async def _async_do_not_setup_config_entry(hass, entry):
+    async def _async_do_not_setup_config_entry(
+        hass: HomeAssistant, entry: ConfigEntry
+    ) -> bool:
         """Do nothing."""
         return True
 
-    async def _setup_mqtt_entry():
+    async def _setup_mqtt_entry() -> Callable[..., Coroutine[Any, Any, MagicMock]]:
         """Set up the MQTT config entry."""
         return await mqtt_mock_entry(_async_do_not_setup_config_entry)
 
@@ -943,6 +1013,10 @@ def hass_recorder(
     hass_storage,
 ):
     """Home Assistant fixture with in-memory recorder."""
+    # Local import to avoid processing recorder and SQLite modules when running a
+    # testcase which does not use the recorder.
+    from homeassistant.components import recorder
+
     original_tz = dt_util.DEFAULT_TIME_ZONE
 
     hass = get_test_home_assistant()
@@ -984,6 +1058,10 @@ def hass_recorder(
 
 async def _async_init_recorder_component(hass, add_config=None, db_url=None):
     """Initialize the recorder asynchronously."""
+    # Local import to avoid processing recorder and SQLite modules when running a
+    # testcase which does not use the recorder.
+    from homeassistant.components import recorder
+
     config = dict(add_config) if add_config else {}
     if recorder.CONF_DB_URL not in config:
         config[recorder.CONF_DB_URL] = db_url
@@ -1013,6 +1091,12 @@ async def async_setup_recorder_instance(
 ) -> AsyncGenerator[SetupRecorderInstanceT, None]:
     """Yield callable to setup recorder instance."""
     assert not hass_fixture_setup
+
+    # Local import to avoid processing recorder and SQLite modules when running a
+    # testcase which does not use the recorder.
+    from homeassistant.components import recorder
+
+    from .components.recorder.common import async_recorder_block_till_done
 
     nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
     stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None
@@ -1053,7 +1137,7 @@ async def async_setup_recorder_instance(
 @pytest.fixture
 async def recorder_mock(recorder_config, async_setup_recorder_instance, hass):
     """Fixture with in-memory recorder."""
-    yield await async_setup_recorder_instance(hass, recorder_config)
+    return await async_setup_recorder_instance(hass, recorder_config)
 
 
 @pytest.fixture

@@ -13,8 +13,16 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
+CONFIG_INPUT = {
+    CONF_USERNAME: "test-username",
+    CONF_PASSWORD: "test-password",
+}
 
-async def test_form(hass):
+
+async def test_form(
+    hass: HomeAssistant,
+    region,
+) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -27,15 +35,20 @@ async def test_form(hass):
         "homeassistant.components.whirlpool.config_flow.Auth.is_access_token_valid",
         return_value=True,
     ), patch(
+        "homeassistant.components.whirlpool.config_flow.BackendSelector"
+    ) as mock_backend_selector, patch(
         "homeassistant.components.whirlpool.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry:
+    ) as mock_setup_entry, patch(
+        "homeassistant.components.whirlpool.config_flow.AppliancesManager.aircons",
+        return_value=["test"],
+    ), patch(
+        "homeassistant.components.whirlpool.config_flow.AppliancesManager.fetch_appliances",
+        return_value=True,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "username": "test-username",
-                "password": "test-password",
-            },
+            CONFIG_INPUT | {"region": region[0]},
         )
         await hass.async_block_till_done()
 
@@ -44,11 +57,13 @@ async def test_form(hass):
     assert result2["data"] == {
         "username": "test-username",
         "password": "test-password",
+        "region": region[0],
     }
     assert len(mock_setup_entry.mock_calls) == 1
+    mock_backend_selector.assert_called_once_with(region[2], region[1])
 
 
-async def test_form_invalid_auth(hass):
+async def test_form_invalid_auth(hass: HomeAssistant, region) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -59,16 +74,16 @@ async def test_form_invalid_auth(hass):
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
+            CONFIG_INPUT
+            | {
+                "region": region[0],
             },
         )
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_form_cannot_connect(hass):
+async def test_form_cannot_connect(hass: HomeAssistant, region) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -79,16 +94,16 @@ async def test_form_cannot_connect(hass):
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
+            CONFIG_INPUT
+            | {
+                "region": region[0],
             },
         )
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_auth_timeout(hass):
+async def test_form_auth_timeout(hass: HomeAssistant, region) -> None:
     """Test we handle auth timeout error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -99,16 +114,16 @@ async def test_form_auth_timeout(hass):
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
+            CONFIG_INPUT
+            | {
+                "region": region[0],
             },
         )
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_generic_auth_exception(hass):
+async def test_form_generic_auth_exception(hass: HomeAssistant, region) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -119,20 +134,20 @@ async def test_form_generic_auth_exception(hass):
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
+            CONFIG_INPUT
+            | {
+                "region": region[0],
             },
         )
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_form_already_configured(hass):
+async def test_form_already_configured(hass: HomeAssistant, region) -> None:
     """Test we handle cannot connect error."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"},
+        data=CONFIG_INPUT | {"region": region[0]},
         unique_id="test-username",
     )
     mock_entry.add_to_hass(hass)
@@ -147,12 +162,18 @@ async def test_form_already_configured(hass):
     with patch("homeassistant.components.whirlpool.config_flow.Auth.do_auth"), patch(
         "homeassistant.components.whirlpool.config_flow.Auth.is_access_token_valid",
         return_value=True,
+    ), patch(
+        "homeassistant.components.whirlpool.config_flow.AppliancesManager.aircons",
+        return_value=["test"],
+    ), patch(
+        "homeassistant.components.whirlpool.config_flow.AppliancesManager.fetch_appliances",
+        return_value=True,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
+            CONFIG_INPUT
+            | {
+                "region": region[0],
             },
         )
         await hass.async_block_till_done()
@@ -161,12 +182,37 @@ async def test_form_already_configured(hass):
     assert result2["reason"] == "already_configured"
 
 
-async def test_reauth_flow(hass: HomeAssistant) -> None:
-    """Test a successful reauth flow."""
+async def test_no_appliances_flow(hass: HomeAssistant, region) -> None:
+    """Test we get and error with no appliances."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
 
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == config_entries.SOURCE_USER
+
+    with patch("homeassistant.components.whirlpool.config_flow.Auth.do_auth"), patch(
+        "homeassistant.components.whirlpool.config_flow.Auth.is_access_token_valid",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.whirlpool.config_flow.AppliancesManager.fetch_appliances",
+        return_value=True,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            CONFIG_INPUT | {"region": region[0]},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "no_appliances"}
+
+
+async def test_reauth_flow(hass: HomeAssistant, region) -> None:
+    """Test a successful reauth flow."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"},
+        data=CONFIG_INPUT | {"region": region[0]},
         unique_id="test-username",
     )
     mock_entry.add_to_hass(hass)
@@ -178,7 +224,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
             "unique_id": mock_entry.unique_id,
             "entry_id": mock_entry.entry_id,
         },
-        data={"username": "test-username", "password": "new-password"},
+        data=CONFIG_INPUT | {"region": region[0]},
     )
 
     assert result["step_id"] == "reauth_confirm"
@@ -190,6 +236,12 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         return_value=True,
     ), patch("homeassistant.components.whirlpool.config_flow.Auth.do_auth"), patch(
         "homeassistant.components.whirlpool.config_flow.Auth.is_access_token_valid",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.whirlpool.config_flow.AppliancesManager.aircons",
+        return_value=["test"],
+    ), patch(
+        "homeassistant.components.whirlpool.config_flow.AppliancesManager.fetch_appliances",
         return_value=True,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -203,15 +255,16 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
     assert mock_entry.data == {
         CONF_USERNAME: "test-username",
         CONF_PASSWORD: "new-password",
+        "region": region[0],
     }
 
 
-async def test_reauth_flow_auth_error(hass: HomeAssistant) -> None:
+async def test_reauth_flow_auth_error(hass: HomeAssistant, region) -> None:
     """Test an authorization error reauth flow."""
 
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={"username": "test-username", "password": "test-password"},
+        data=CONFIG_INPUT | {"region": region[0]},
         unique_id="test-username",
     )
     mock_entry.add_to_hass(hass)
@@ -223,7 +276,11 @@ async def test_reauth_flow_auth_error(hass: HomeAssistant) -> None:
             "unique_id": mock_entry.unique_id,
             "entry_id": mock_entry.entry_id,
         },
-        data={"username": "test-username", "password": "new-password"},
+        data={
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "new-password",
+            "region": region[0],
+        },
     )
 
     assert result["step_id"] == "reauth_confirm"
@@ -246,12 +303,12 @@ async def test_reauth_flow_auth_error(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_reauth_flow_connnection_error(hass: HomeAssistant) -> None:
+async def test_reauth_flow_connnection_error(hass: HomeAssistant, region) -> None:
     """Test a connection error reauth flow."""
 
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={"username": "test-username", "password": "test-password"},
+        data=CONFIG_INPUT | {"region": region[0]},
         unique_id="test-username",
     )
     mock_entry.add_to_hass(hass)
@@ -263,7 +320,7 @@ async def test_reauth_flow_connnection_error(hass: HomeAssistant) -> None:
             "unique_id": mock_entry.unique_id,
             "entry_id": mock_entry.entry_id,
         },
-        data={CONF_USERNAME: "test-username", CONF_PASSWORD: "new-password"},
+        data=CONFIG_INPUT | {"region": region[0]},
     )
 
     assert result["step_id"] == "reauth_confirm"

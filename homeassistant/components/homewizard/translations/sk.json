@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_configured": "Zariadenie u\u017e je nakonfigurovan\u00e9",
-            "api_not_enabled": "Rozhranie API nie je povolen\u00e9. Povo\u013ete API v aplik\u00e1cii HomeWizard Energy v nastaveniach",
             "device_not_supported": "Toto zariadenie nie je podporovan\u00e9",
             "invalid_discovery_parameters": "Zisten\u00e1 nepodporovan\u00e1 verzia API",
             "reauth_successful": "Povolenie API bolo \u00faspe\u0161n\u00e9",

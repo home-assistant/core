@@ -185,10 +185,11 @@ class EntityCategory(StrEnum):
     - Not be included in indirect service calls to devices or areas
     """
 
-    # Config: An entity which allows changing the configuration of a device
+    # Config: An entity which allows changing the configuration of a device.
     CONFIG = "config"
 
-    # Diagnostic: An entity exposing some configuration parameter or diagnostics of a device
+    # Diagnostic: An entity exposing some configuration parameter,
+    # or diagnostics of a device.
     DIAGNOSTIC = "diagnostic"
 
 
@@ -198,13 +199,16 @@ ENTITY_CATEGORIES_SCHEMA: Final = vol.Coerce(EntityCategory)
 class EntityPlatformState(Enum):
     """The platform state of an entity."""
 
-    # Not Added: Not yet added to a platform, polling updates are written to the state machine
+    # Not Added: Not yet added to a platform, polling updates
+    # are written to the state machine.
     NOT_ADDED = auto()
 
-    # Added: Added to a platform, polling updates are written to the state machine
+    # Added: Added to a platform, polling updates
+    # are written to the state machine.
     ADDED = auto()
 
-    # Removed: Removed from a platform, polling updates are not written to the state machine
+    # Removed: Removed from a platform, polling updates
+    # are not written to the state machine.
     REMOVED = auto()
 
 
@@ -458,7 +462,10 @@ class Entity(ABC):
 
     @property
     def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
+        """Return if the entity should be enabled when first added.
+
+        This only applies when fist added to the entity registry.
+        """
         if hasattr(self, "_attr_entity_registry_enabled_default"):
             return self._attr_entity_registry_enabled_default
         if hasattr(self, "entity_description"):
@@ -467,7 +474,10 @@ class Entity(ABC):
 
     @property
     def entity_registry_visible_default(self) -> bool:
-        """Return if the entity should be visible when first added to the entity registry."""
+        """Return if the entity should be visible when first added.
+
+        This only applies when fist added to the entity registry.
+        """
         if hasattr(self, "_attr_entity_registry_visible_default"):
             return self._attr_entity_registry_visible_default
         if hasattr(self, "entity_description"):
@@ -579,7 +589,10 @@ class Entity(ABC):
                 self._disabled_reported = True
                 assert self.platform is not None
                 _LOGGER.warning(
-                    "Entity %s is incorrectly being triggered for updates while it is disabled. This is a bug in the %s integration",
+                    (
+                        "Entity %s is incorrectly being triggered for updates while it"
+                        " is disabled. This is a bug in the %s integration"
+                    ),
                     self.entity_id,
                     self.platform.platform_name,
                 )
@@ -767,7 +780,8 @@ class Entity(ABC):
         """Start adding an entity to a platform."""
         if self._platform_state == EntityPlatformState.ADDED:
             raise HomeAssistantError(
-                f"Entity {self.entity_id} cannot be added a second time to an entity platform"
+                f"Entity {self.entity_id} cannot be added a second time to an entity"
+                " platform"
             )
 
         self.hass = hass

@@ -66,7 +66,7 @@
                 "data": {
                     "housecode": "Codice casa (a - p)",
                     "platform": "Piattaforma",
-                    "steps": "Livelli del dimmer (solo per dispositivi luminosi, predefiniti 22)",
+                    "steps": "Livelli di attenuazione (solo per dispositivi luminosi, predefiniti 22)",
                     "unitcode": "Codice unit\u00e0 (1 - 16)"
                 },
                 "description": "Cambia la password di Insteon Hub."
@@ -80,11 +80,18 @@
                 },
                 "description": "Modifica le informazioni di connessione di Insteon Hub. \u00c8 necessario riavviare Home Assistant dopo aver apportato questa modifica. Ci\u00f2 non modifica la configurazione dell'Hub stesso. Per modificare la configurazione nell'Hub, utilizza l'app Hub."
             },
+            "change_plm_config": {
+                "data": {
+                    "device": "Percorso del dispositivo USB"
+                },
+                "description": "Modificare le informazioni di connessione di Insteon PLM. Devi riavviare Home Assistant dopo aver apportato questa modifica. Ci\u00f2 non modifica la configurazione del PLM stesso."
+            },
             "init": {
                 "data": {
                     "add_override": "Aggiungi una sostituzione del dispositivo.",
                     "add_x10": "Aggiungi un dispositivo X10.",
                     "change_hub_config": "Modifica la configurazione dell'hub.",
+                    "change_plm_config": "Modifica la configurazione PLM.",
                     "remove_override": "Rimuovere una sostituzione del dispositivo.",
                     "remove_x10": "Rimuovi un dispositivo X10."
                 }

@@ -1,5 +1,4 @@
-"""
-Core components of Home Assistant.
+"""Core components of Home Assistant.
 
 Home Assistant is a Home Automation framework for observing the state
 of entities and react to changes.
@@ -31,15 +30,13 @@ from typing import (
     Any,
     Generic,
     NamedTuple,
-    Optional,
+    ParamSpec,
     TypeVar,
-    Union,
     cast,
     overload,
 )
 from urllib.parse import urlparse
 
-from typing_extensions import ParamSpec
 import voluptuous as vol
 import yarl
 
@@ -50,6 +47,11 @@ from .const import (
     ATTR_FRIENDLY_NAME,
     ATTR_SERVICE,
     ATTR_SERVICE_DATA,
+    COMPRESSED_STATE_ATTRIBUTES,
+    COMPRESSED_STATE_CONTEXT,
+    COMPRESSED_STATE_LAST_CHANGED,
+    COMPRESSED_STATE_LAST_UPDATED,
+    COMPRESSED_STATE_STATE,
     EVENT_CALL_SERVICE,
     EVENT_CORE_CONFIG_UPDATE,
     EVENT_HOMEASSISTANT_CLOSE,
@@ -330,7 +332,7 @@ class HomeAssistant:
 
         await self.async_start()
         if attach_signals:
-            # pylint: disable=import-outside-toplevel
+            # pylint: disable-next=import-outside-toplevel
             from .helpers.signal import async_register_signal_handling
 
             async_register_signal_handling(self)
@@ -443,7 +445,7 @@ class HomeAssistant:
         # the type used for the cast. For history see:
         # https://github.com/home-assistant/core/pull/71960
         if TYPE_CHECKING:
-            target = cast(Callable[..., Union[Coroutine[Any, Any, _R], _R]], target)
+            target = cast(Callable[..., Coroutine[Any, Any, _R] | _R], target)
         return self.async_add_hass_job(HassJob(target), *args)
 
     @overload
@@ -621,7 +623,7 @@ class HomeAssistant:
         # the type used for the cast. For history see:
         # https://github.com/home-assistant/core/pull/71960
         if TYPE_CHECKING:
-            target = cast(Callable[..., Union[Coroutine[Any, Any, _R], _R]], target)
+            target = cast(Callable[..., Coroutine[Any, Any, _R] | _R], target)
         return self.async_run_hass_job(HassJob(target), *args)
 
     def block_till_done(self) -> None:
@@ -810,11 +812,6 @@ class Event:
             id=ulid_util.ulid(dt_util.utc_to_timestamp(self.time_fired))
         )
 
-    def __hash__(self) -> int:
-        """Make hashable."""
-        # The only event type that shares context are the TIME_CHANGED
-        return hash((self.event_type, self.context.id, self.time_fired))
-
     def as_dict(self) -> dict[str, Any]:
         """Create a dict representation of this Event.
 
@@ -837,17 +834,6 @@ class Event:
             )
 
         return f"<Event {self.event_type}[{str(self.origin)[0]}]>"
-
-    def __eq__(self, other: Any) -> bool:
-        """Return the comparison."""
-        return (  # type: ignore[no-any-return]
-            self.__class__ == other.__class__
-            and self.event_type == other.event_type
-            and self.data == other.data
-            and self.origin == other.origin
-            and self.time_fired == other.time_fired
-            and self.context == other.context
-        )
 
 
 class _FilterableJob(NamedTuple):
@@ -1115,6 +1101,7 @@ class State:
         "domain",
         "object_id",
         "_as_dict",
+        "_as_compressed_state",
     ]
 
     def __init__(
@@ -1150,13 +1137,7 @@ class State:
         self.context = context or Context()
         self.domain, self.object_id = split_entity_id(self.entity_id)
         self._as_dict: ReadOnlyDict[str, Collection[Any]] | None = None
-
-    def __hash__(self) -> int:
-        """Make the state hashable.
-
-        State objects are effectively immutable.
-        """
-        return hash((id(self), self.last_updated))
+        self._as_compressed_state: dict[str, Any] | None = None
 
     @property
     def name(self) -> str:
@@ -1190,6 +1171,33 @@ class State:
                 }
             )
         return self._as_dict
+
+    def as_compressed_state(self) -> dict[str, Any]:
+        """Build a compressed dict of a state for adds.
+
+        Omits the lu (last_updated) if it matches (lc) last_changed.
+
+        Sends c (context) as a string if it only contains an id.
+        """
+        if self._as_compressed_state:
+            return self._as_compressed_state
+        state_context = self.context
+        if state_context.parent_id is None and state_context.user_id is None:
+            context: dict[str, Any] | str = state_context.id
+        else:
+            context = state_context.as_dict()
+        compressed_state = {
+            COMPRESSED_STATE_STATE: self.state,
+            COMPRESSED_STATE_ATTRIBUTES: self.attributes,
+            COMPRESSED_STATE_CONTEXT: context,
+            COMPRESSED_STATE_LAST_CHANGED: dt_util.utc_to_timestamp(self.last_changed),
+        }
+        if self.last_changed != self.last_updated:
+            compressed_state[COMPRESSED_STATE_LAST_UPDATED] = dt_util.utc_to_timestamp(
+                self.last_updated
+            )
+        self._as_compressed_state = compressed_state
+        return compressed_state
 
     @classmethod
     def from_dict(cls: type[_StateT], json_dict: dict[str, Any]) -> _StateT | None:
@@ -1240,16 +1248,6 @@ class State:
         """
         self.context = Context(
             self.context.user_id, self.context.parent_id, self.context.id
-        )
-
-    def __eq__(self, other: Any) -> bool:
-        """Return the comparison of the state."""
-        return (  # type: ignore[no-any-return]
-            self.__class__ == other.__class__
-            and self.entity_id == other.entity_id
-            and self.state == other.state
-            and self.attributes == other.attributes
-            and self.context == other.context
         )
 
     def __repr__(self) -> str:
@@ -1578,8 +1576,7 @@ class ServiceRegistry:
         service_func: Callable[[ServiceCall], Coroutine[Any, Any, None] | None],
         schema: vol.Schema | None = None,
     ) -> None:
-        """
-        Register a service.
+        """Register a service.
 
         Schema is called to coerce and validate the service data.
         """
@@ -1595,8 +1592,7 @@ class ServiceRegistry:
         service_func: Callable[[ServiceCall], Coroutine[Any, Any, None] | None],
         schema: vol.Schema | None = None,
     ) -> None:
-        """
-        Register a service.
+        """Register a service.
 
         Schema is called to coerce and validate the service data.
 
@@ -1653,8 +1649,7 @@ class ServiceRegistry:
         limit: float | None = SERVICE_CALL_LIMIT,
         target: dict[str, Any] | None = None,
     ) -> bool | None:
-        """
-        Call a service.
+        """Call a service.
 
         See description of async_call for details.
         """
@@ -1675,8 +1670,7 @@ class ServiceRegistry:
         limit: float | None = SERVICE_CALL_LIMIT,
         target: dict[str, Any] | None = None,
     ) -> bool | None:
-        """
-        Call a service.
+        """Call a service.
 
         Specify blocking=True to wait until service is executed.
         Waits a maximum of limit, which may be None for no timeout.
@@ -1977,13 +1971,13 @@ class Config:
         if time_zone is not None:
             self.set_time_zone(time_zone)
         if external_url is not _UNDEF:
-            self.external_url = cast(Optional[str], external_url)
+            self.external_url = cast(str | None, external_url)
         if internal_url is not _UNDEF:
-            self.internal_url = cast(Optional[str], internal_url)
+            self.internal_url = cast(str | None, internal_url)
         if currency is not None:
             self.currency = currency
         if country is not _UNDEF:
-            self.country = cast(Optional[str], country)
+            self.country = cast(str | None, country)
         if language is not None:
             self.language = language
 
@@ -2007,8 +2001,8 @@ class Config:
         if not (data := await self._store.async_load()):
             return
 
-        # In 2021.9 we fixed validation to disallow a path (because that's never correct)
-        # but this data still lives in storage, so we print a warning.
+        # In 2021.9 we fixed validation to disallow a path (because that's never
+        # correct) but this data still lives in storage, so we print a warning.
         if data.get("external_url") and urlparse(data["external_url"]).path not in (
             "",
             "/",
@@ -2091,7 +2085,8 @@ class Config:
                 if data["unit_system_v2"] == _CONF_UNIT_SYSTEM_IMPERIAL:
                     data["unit_system_v2"] = _CONF_UNIT_SYSTEM_US_CUSTOMARY
             if old_major_version == 1 and old_minor_version < 3:
-                # In 1.3, we add the key "language", initialize it from the owner account
+                # In 1.3, we add the key "language", initialize it from the
+                # owner account.
                 data["language"] = "en"
                 try:
                     owner = await self.hass.auth.async_get_owner()

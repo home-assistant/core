@@ -22,7 +22,6 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
 
     assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == SOURCE_USER
-    assert "flow_id" in result
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -74,7 +73,9 @@ async def test_flow_fails_on_validation(hass: HomeAssistant) -> None:
 
     await async_create_file(hass, TEST_FILE)
 
-    with patch("homeassistant.components.filesize.config_flow.pathlib.Path",), patch(
+    with patch(
+        "homeassistant.components.filesize.config_flow.pathlib.Path",
+    ), patch(
         "homeassistant.components.filesize.async_setup_entry",
         return_value=True,
     ):
@@ -88,7 +89,9 @@ async def test_flow_fails_on_validation(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "not_allowed"}
 
     hass.config.allowlist_external_dirs = {TEST_DIR}
-    with patch("homeassistant.components.filesize.config_flow.pathlib.Path",), patch(
+    with patch(
+        "homeassistant.components.filesize.config_flow.pathlib.Path",
+    ), patch(
         "homeassistant.components.filesize.async_setup_entry",
         return_value=True,
     ):

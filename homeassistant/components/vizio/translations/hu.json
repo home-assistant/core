@@ -3,7 +3,7 @@
         "abort": {
             "already_configured_device": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
-            "updated_entry": "Ez a bejegyz\u00e9s m\u00e1r be van \u00e1ll\u00edtva, de a konfigur\u00e1ci\u00f3ban defini\u00e1lt n\u00e9v, appok \u00e9s/vagy be\u00e1ll\u00edt\u00e1sok nem egyeznek meg a kor\u00e1bban import\u00e1lt konfigur\u00e1ci\u00f3val, \u00edgy a konfigur\u00e1ci\u00f3s bejegyz\u00e9s ennek megfelel\u0151en friss\u00fclt."
+            "updated_entry": "Ez a bejegyz\u00e9s m\u00e1r be lett \u00e1ll\u00edtva, de a konfigur\u00e1ci\u00f3ban meghat\u00e1rozott n\u00e9v, alkalmaz\u00e1sok \u00e9s/vagy be\u00e1ll\u00edt\u00e1sok nem egyeznek a kor\u00e1bban import\u00e1lt konfigur\u00e1ci\u00f3val, ez\u00e9rt a konfigur\u00e1ci\u00f3s bejegyz\u00e9s ennek megfelel\u0151en friss\u00edt\u00e9sre ker\u00fclt."
         },
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",

@@ -191,13 +191,13 @@ RT_SENSORS: tuple[SensorEntityDescription, ...] = (
         key="accumulatedReward",
         name="accumulated reward",
         device_class=SensorDeviceClass.MONETARY,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
         key="accumulatedCost",
         name="accumulated cost",
         device_class=SensorDeviceClass.MONETARY,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
         key="powerFactor",
@@ -213,7 +213,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         key="month_cost",
         name="Monthly cost",
         device_class=SensorDeviceClass.MONETARY,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
         key="peak_hour",
@@ -469,12 +469,15 @@ class TibberSensorRT(TibberSensor, CoordinatorEntity["TibberRtDataCoordinator"])
             "accumulatedConsumption",
             "accumulatedProduction",
         ):
-            # Value is reset to 0 at midnight, but not always strictly increasing due to hourly corrections
-            # If device is offline, last_reset should be updated when it comes back online if the value has decreased
+            # Value is reset to 0 at midnight, but not always strictly increasing
+            # due to hourly corrections.
+            # If device is offline, last_reset should be updated when it comes
+            # back online if the value has decreased
             ts_local = dt_util.parse_datetime(live_measurement["timestamp"])
             if ts_local is not None:
                 if self.last_reset is None or (
-                    state < 0.5 * self.native_value  # type: ignore[operator]  # native_value is float
+                    # native_value is float
+                    state < 0.5 * self.native_value  # type: ignore[operator]
                     and (
                         ts_local.hour == 0
                         or (ts_local - self.last_reset) > timedelta(hours=24)
@@ -553,7 +556,7 @@ class TibberRtDataCoordinator(DataUpdateCoordinator):
         return self.data.get("data", {}).get("liveMeasurement")
 
 
-class TibberDataCoordinator(DataUpdateCoordinator):
+class TibberDataCoordinator(DataUpdateCoordinator[None]):
     """Handle Tibber data and insert statistics."""
 
     def __init__(self, hass: HomeAssistant, tibber_connection: tibber.Tibber) -> None:
