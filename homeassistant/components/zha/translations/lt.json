@@ -1,9 +1,0 @@
-{
-    "config_panel": {
-        "zha_alarm_options": {
-            "alarm_arm_requires_code": "U\u017erakinimui reikalingas kodas",
-            "alarm_master_code": "Signalizacijos valdymo pulto (-\u0173) pagrindinis kodas",
-            "title": "Signalizacijos valdymo pulto parinktys"
-        }
-    }
-}
