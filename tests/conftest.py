@@ -873,7 +873,7 @@ async def mqtt_mock_entry_with_yaml_config(
     hass: HomeAssistant,
     mqtt_client_mock: MqttMockPahoClient,
     mqtt_config_entry_data: dict[str, Any] | None,
-) -> AsyncGenerator[MqttMockHAClientGenerator, None,]:
+) -> AsyncGenerator[MqttMockHAClientGenerator, None]:
     """Set up an MQTT config entry with MQTT yaml config."""
 
     async def _async_do_not_setup_config_entry(
