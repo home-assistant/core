@@ -441,10 +441,7 @@ omit =
     homeassistant/components/harmony/remote.py
     homeassistant/components/harmony/util.py
     homeassistant/components/hassmpris/__init__.py
-    homeassistant/components/hassmpris/cert_data.py
-    homeassistant/components/hassmpris/const.py
     homeassistant/components/hassmpris/media_player.py
-    homeassistant/components/hassmpris/media_player_entity_manager.py
     homeassistant/components/hassmpris/models.py
     homeassistant/components/haveibeenpwned/sensor.py
     homeassistant/components/heatmiser/climate.py
