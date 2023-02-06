@@ -83,4 +83,3 @@ async def setup_config_entry_fixture(hass, config_entry, mock_aiopurpleair):
     """Define a fixture to set up purpleair."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    yield

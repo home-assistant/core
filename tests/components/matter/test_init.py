@@ -83,7 +83,7 @@ async def test_home_assistant_stop(
     assert matter_client.disconnect.call_count == 1
 
 
-@pytest.mark.parametrize("error", [CannotConnect("Boom"), Exception("Boom")])
+@pytest.mark.parametrize("error", [CannotConnect(Exception("Boom")), Exception("Boom")])
 async def test_connect_failed(
     hass: HomeAssistant,
     matter_client: MagicMock,

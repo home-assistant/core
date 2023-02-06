@@ -12,7 +12,8 @@ from devolo_plc_api.plcnet_api import LogicalNetwork
 
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
 
-IP = "1.1.1.1"
+IP = "192.0.2.1"
+IP_ALT = "192.0.2.2"
 
 CONNECTED_STATIONS = [
     ConnectedStationInfo(
@@ -29,6 +30,27 @@ NO_CONNECTED_STATIONS = []
 DISCOVERY_INFO = ZeroconfServiceInfo(
     host=IP,
     addresses=[IP],
+    port=14791,
+    hostname="test.local.",
+    type="_dvl-deviceapi._tcp.local.",
+    name="dLAN pro 1200+ WiFi ac._dvl-deviceapi._tcp.local.",
+    properties={
+        "Path": "abcdefghijkl/deviceapi",
+        "Version": "v0",
+        "Product": "dLAN pro 1200+ WiFi ac",
+        "Features": "reset,update,led,intmtg,wifi1",
+        "MT": "2730",
+        "SN": "1234567890",
+        "FirmwareVersion": "5.6.1",
+        "FirmwareDate": "2020-10-23",
+        "PS": "",
+        "PlcMacAddress": "AA:BB:CC:DD:EE:FF",
+    },
+)
+
+DISCOVERY_INFO_CHANGED = ZeroconfServiceInfo(
+    host=IP_ALT,
+    addresses=[IP_ALT],
     port=14791,
     hostname="test.local.",
     type="_dvl-deviceapi._tcp.local.",

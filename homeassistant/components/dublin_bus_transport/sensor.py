@@ -1,5 +1,4 @@
-"""
-Support for Dublin RTPI information from data.dublinked.ie.
+"""Support for Dublin RTPI information from data.dublinked.ie.
 
 For more info on the API see :
 https://data.gov.ie/dataset/real-time-passenger-information-rtpi-for-dublin-bus-bus-eireann-luas-and-irish-rail/resource/4b9f2c4f-6bf5-4958-a43a-f12dab04cf61

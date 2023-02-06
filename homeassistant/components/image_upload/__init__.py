@@ -200,7 +200,8 @@ class ImageServeView(HomeAssistantView):
 
         if not target_file.is_file():
             async with self.transform_lock:
-                # Another check in case another request already finished it while waiting
+                # Another check in case another request already
+                # finished it while waiting
                 if not target_file.is_file():
                     await hass.async_add_executor_job(
                         _generate_thumbnail,

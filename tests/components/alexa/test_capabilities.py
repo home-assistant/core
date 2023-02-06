@@ -412,7 +412,7 @@ async def test_report_fan_speed_state(hass):
 
 
 async def test_report_humidifier_humidity_state(hass):
-    """Test PercentageController, PowerLevelController reports humidifier humidity correctly."""
+    """Test PercentageController, PowerLevelController humidifier humidity reporting."""
     hass.states.async_set(
         "humidifier.dry",
         "on",
@@ -934,7 +934,10 @@ async def test_report_image_processing(hass):
 
 @pytest.mark.parametrize("domain", ["button", "input_button"])
 async def test_report_button_pressed(hass, domain):
-    """Test button presses report human presence detection events to trigger routines."""
+    """Test button presses report human presence detection events.
+
+    For use to trigger routines.
+    """
     hass.states.async_set(
         f"{domain}.test_button", "now", {"friendly_name": "Test button"}
     )

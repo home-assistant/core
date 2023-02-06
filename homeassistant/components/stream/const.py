@@ -31,7 +31,7 @@ EXT_X_START_LL_HLS = 2
 
 
 PACKETS_TO_WAIT_FOR_AUDIO = 20  # Some streams have an audio stream with no audio
-MAX_TIMESTAMP_GAP = 10000  # seconds - anything from 10 to 50000 is probably reasonable
+MAX_TIMESTAMP_GAP = 30  # seconds - anything from 10 to 50000 is probably reasonable
 
 MAX_MISSING_DTS = 6  # Number of packets missing DTS to allow
 SOURCE_TIMEOUT = 30  # Timeout for reading stream source

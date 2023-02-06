@@ -1146,7 +1146,9 @@ async def test_state_unknown_attribute(hass):
                 {
                     "result": {
                         "result": False,
-                        "message": "attribute 'model' of entity sensor.door does not exist",
+                        "message": (
+                            "attribute 'model' of entity sensor.door does not exist"
+                        ),
                     }
                 }
             ],
@@ -1428,7 +1430,9 @@ async def test_numeric_state_known_non_matching(hass):
                 {
                     "result": {
                         "result": False,
-                        "message": "value 'unavailable' is non-numeric and treated as False",
+                        "message": (
+                            "value 'unavailable' is non-numeric and treated as False"
+                        ),
                     }
                 }
             ],
@@ -1446,7 +1450,9 @@ async def test_numeric_state_known_non_matching(hass):
                 {
                     "result": {
                         "result": False,
-                        "message": "value 'unknown' is non-numeric and treated as False",
+                        "message": (
+                            "value 'unknown' is non-numeric and treated as False"
+                        ),
                     }
                 }
             ],
@@ -1566,7 +1572,10 @@ async def test_numeric_state_unknown_attribute(hass):
                 {
                     "result": {
                         "result": False,
-                        "message": "attribute 'temperature' of entity sensor.temperature does not exist",
+                        "message": (
+                            "attribute 'temperature' of entity sensor.temperature does"
+                            " not exist"
+                        ),
                     }
                 }
             ],
@@ -2132,8 +2141,7 @@ async def assert_automation_condition_trace(hass_ws_client, automation_id, expec
 
 
 async def test_if_action_before_sunrise_no_offset(hass, hass_ws_client, calls):
-    """
-    Test if action was before sunrise.
+    """Test if action was before sunrise.
 
     Before sunrise is true from midnight until sunset, local time.
     """
@@ -2202,8 +2210,7 @@ async def test_if_action_before_sunrise_no_offset(hass, hass_ws_client, calls):
 
 
 async def test_if_action_after_sunrise_no_offset(hass, hass_ws_client, calls):
-    """
-    Test if action was after sunrise.
+    """Test if action was after sunrise.
 
     After sunrise is true from sunrise until midnight, local time.
     """
@@ -2272,8 +2279,7 @@ async def test_if_action_after_sunrise_no_offset(hass, hass_ws_client, calls):
 
 
 async def test_if_action_before_sunrise_with_offset(hass, hass_ws_client, calls):
-    """
-    Test if action was before sunrise with offset.
+    """Test if action was before sunrise with offset.
 
     Before sunrise is true from midnight until sunset, local time.
     """
@@ -2394,8 +2400,7 @@ async def test_if_action_before_sunrise_with_offset(hass, hass_ws_client, calls)
 
 
 async def test_if_action_before_sunset_with_offset(hass, hass_ws_client, calls):
-    """
-    Test if action was before sunset with offset.
+    """Test if action was before sunset with offset.
 
     Before sunset is true from midnight until sunset, local time.
     """
@@ -2516,8 +2521,7 @@ async def test_if_action_before_sunset_with_offset(hass, hass_ws_client, calls):
 
 
 async def test_if_action_after_sunrise_with_offset(hass, hass_ws_client, calls):
-    """
-    Test if action was after sunrise with offset.
+    """Test if action was after sunrise with offset.
 
     After sunrise is true from sunrise until midnight, local time.
     """
@@ -2662,8 +2666,7 @@ async def test_if_action_after_sunrise_with_offset(hass, hass_ws_client, calls):
 
 
 async def test_if_action_after_sunset_with_offset(hass, hass_ws_client, calls):
-    """
-    Test if action was after sunset with offset.
+    """Test if action was after sunset with offset.
 
     After sunset is true from sunset until midnight, local time.
     """
@@ -2736,8 +2739,7 @@ async def test_if_action_after_sunset_with_offset(hass, hass_ws_client, calls):
 
 
 async def test_if_action_after_and_before_during(hass, hass_ws_client, calls):
-    """
-    Test if action was after sunrise and before sunset.
+    """Test if action was after sunrise and before sunset.
 
     This is true from sunrise until sunset.
     """
@@ -2838,8 +2840,7 @@ async def test_if_action_after_and_before_during(hass, hass_ws_client, calls):
 
 
 async def test_if_action_before_or_after_during(hass, hass_ws_client, calls):
-    """
-    Test if action was before sunrise or after sunset.
+    """Test if action was before sunrise or after sunset.
 
     This is true from midnight until sunrise and from sunset until midnight
     """
@@ -2960,8 +2961,7 @@ async def test_if_action_before_or_after_during(hass, hass_ws_client, calls):
 
 
 async def test_if_action_before_sunrise_no_offset_kotzebue(hass, hass_ws_client, calls):
-    """
-    Test if action was before sunrise.
+    """Test if action was before sunrise.
 
     Local timezone: Alaska time
     Location: Kotzebue, which has a very skewed local timezone with sunrise
@@ -3036,8 +3036,7 @@ async def test_if_action_before_sunrise_no_offset_kotzebue(hass, hass_ws_client,
 
 
 async def test_if_action_after_sunrise_no_offset_kotzebue(hass, hass_ws_client, calls):
-    """
-    Test if action was after sunrise.
+    """Test if action was after sunrise.
 
     Local timezone: Alaska time
     Location: Kotzebue, which has a very skewed local timezone with sunrise
@@ -3112,8 +3111,7 @@ async def test_if_action_after_sunrise_no_offset_kotzebue(hass, hass_ws_client, 
 
 
 async def test_if_action_before_sunset_no_offset_kotzebue(hass, hass_ws_client, calls):
-    """
-    Test if action was before sunrise.
+    """Test if action was before sunrise.
 
     Local timezone: Alaska time
     Location: Kotzebue, which has a very skewed local timezone with sunrise
@@ -3188,8 +3186,7 @@ async def test_if_action_before_sunset_no_offset_kotzebue(hass, hass_ws_client, 
 
 
 async def test_if_action_after_sunset_no_offset_kotzebue(hass, hass_ws_client, calls):
-    """
-    Test if action was after sunrise.
+    """Test if action was after sunrise.
 
     Local timezone: Alaska time
     Location: Kotzebue, which has a very skewed local timezone with sunrise
@@ -3280,14 +3277,12 @@ async def test_trigger(hass):
 async def test_platform_async_validate_condition_config(hass):
     """Test platform.async_validate_condition_config will be called if it exists."""
     config = {CONF_DEVICE_ID: "test", CONF_DOMAIN: "test", CONF_CONDITION: "device"}
-    platform = AsyncMock()
     with patch(
-        "homeassistant.components.device_automation.condition.async_get_device_automation_platform",
-        return_value=platform,
-    ):
-        platform.async_validate_condition_config.return_value = config
+        "homeassistant.components.device_automation.condition.async_validate_condition_config",
+        AsyncMock(),
+    ) as device_automation_validate_condition_mock:
         await condition.async_validate_condition_config(hass, config)
-        platform.async_validate_condition_config.assert_awaited()
+        device_automation_validate_condition_mock.assert_awaited()
 
 
 async def test_disabled_condition(hass: HomeAssistant) -> None:

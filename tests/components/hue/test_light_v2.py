@@ -369,7 +369,10 @@ async def test_grouped_lights(hass, mock_bridge_v2, v2_resources_test_data):
     assert test_entity.attributes["min_mireds"] == 153
     assert test_entity.attributes["max_mireds"] == 454
     assert test_entity.attributes["is_hue_group"] is True
-    assert test_entity.attributes["hue_scenes"] == {"Regular Test Scene"}
+    assert test_entity.attributes["hue_scenes"] == {
+        "Regular Test Scene",
+        "Smart Test Scene",
+    }
     assert test_entity.attributes["hue_type"] == "room"
     assert test_entity.attributes["lights"] == {
         "Hue on/off light",

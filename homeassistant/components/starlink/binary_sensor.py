@@ -59,6 +59,12 @@ class StarlinkBinarySensorEntity(StarlinkEntity, BinarySensorEntity):
 
 BINARY_SENSORS = [
     StarlinkBinarySensorEntityDescription(
+        key="update",
+        name="Update available",
+        device_class=BinarySensorDeviceClass.UPDATE,
+        value_fn=lambda data: data.alert["alert_install_pending"],
+    ),
+    StarlinkBinarySensorEntityDescription(
         key="roaming",
         name="Roaming mode",
         value_fn=lambda data: data.alert["alert_roaming"],

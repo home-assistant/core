@@ -170,11 +170,11 @@ async def test_state_digital(port, sensor):
     """Test the digital input."""
     port.model = "Input Digital"
     port.value = 0
-    assert mfi.STATE_OFF == sensor.state
+    assert sensor.state == mfi.STATE_OFF
     port.value = 1
-    assert mfi.STATE_ON == sensor.state
+    assert sensor.state == mfi.STATE_ON
     port.value = 2
-    assert mfi.STATE_ON == sensor.state
+    assert sensor.state == mfi.STATE_ON
 
 
 async def test_state_digits(port, sensor):
@@ -190,7 +190,7 @@ async def test_state_digits(port, sensor):
 async def test_state_uninitialized(port, sensor):
     """Test the state of uninitialized sensorfs."""
     type(port).tag = mock.PropertyMock(side_effect=ValueError)
-    assert mfi.STATE_OFF == sensor.state
+    assert sensor.state == mfi.STATE_OFF
 
 
 async def test_update(port, sensor):

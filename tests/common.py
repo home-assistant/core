@@ -140,7 +140,7 @@ def get_test_home_assistant():
 
     def run_loop():
         """Run event loop."""
-        # pylint: disable=protected-access
+
         loop._thread_ident = threading.get_ident()
         loop.run_forever()
         loop_stop_event.set()
@@ -166,7 +166,6 @@ def get_test_home_assistant():
     return hass
 
 
-# pylint: disable=protected-access
 async def async_test_home_assistant(event_loop, load_registries=True):
     """Return a Home Assistant object pointing at test config dir."""
     hass = HomeAssistant()
@@ -301,7 +300,10 @@ async def async_test_home_assistant(event_loop, load_registries=True):
     hass.config_entries = config_entries.ConfigEntries(
         hass,
         {
-            "_": "Not empty or else some bad checks for hass config in discovery.py breaks"
+            "_": (
+                "Not empty or else some bad checks for hass config in discovery.py"
+                " breaks"
+            )
         },
     )
 
@@ -377,16 +379,34 @@ def async_mock_intent(hass, intent_typ):
 
 
 @callback
-def async_fire_mqtt_message(hass, topic, payload, qos=0, retain=False):
+def async_fire_mqtt_message(
+    hass: HomeAssistant,
+    topic: str,
+    payload: bytes | str,
+    qos: int = 0,
+    retain: bool = False,
+) -> None:
     """Fire the MQTT message."""
     # Local import to avoid processing MQTT modules when running a testcase
     # which does not use MQTT.
-    from homeassistant.components.mqtt.models import ReceiveMessage
+
+    # pylint: disable-next=import-outside-toplevel
+    from paho.mqtt.client import MQTTMessage
+
+    # pylint: disable-next=import-outside-toplevel
+    from homeassistant.components.mqtt.models import MqttData
 
     if isinstance(payload, str):
         payload = payload.encode("utf-8")
-    msg = ReceiveMessage(topic, payload, qos, retain)
-    hass.data["mqtt"].client._mqtt_handle_message(msg)
+
+    msg = MQTTMessage(topic=topic.encode("utf-8"))
+    msg.payload = payload
+    msg.qos = qos
+    msg.retain = retain
+
+    mqtt_data: MqttData = hass.data["mqtt"]
+    assert mqtt_data.client
+    mqtt_data.client._mqtt_handle_message(msg)
 
 
 fire_mqtt_message = threadsafe_callback_factory(async_fire_mqtt_message)
@@ -1361,7 +1381,7 @@ ANY = _HA_ANY()
 def raise_contains_mocks(val: Any) -> None:
     """Raise for mocks."""
     if isinstance(val, Mock):
-        raise ValueError
+        raise TypeError
 
     if isinstance(val, dict):
         for dict_value in val.values():

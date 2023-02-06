@@ -6,7 +6,6 @@ from unittest.mock import AsyncMock, patch
 
 from pysensibo.model import SensiboData
 import pytest
-from pytest import MonkeyPatch
 
 from homeassistant.components.number import (
     ATTR_VALUE,
@@ -26,7 +25,7 @@ async def test_number(
     hass: HomeAssistant,
     entity_registry_enabled_by_default: AsyncMock,
     load_int: ConfigEntry,
-    monkeypatch: MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch,
     get_data: SensiboData,
 ) -> None:
     """Test the Sensibo number."""

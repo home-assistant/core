@@ -13,7 +13,7 @@ from homeassistant.components.shelly.const import (
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
-from homeassistant.helpers import device_registry
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.setup import async_setup_component
 
 from . import MOCK_MAC, init_integration
@@ -43,12 +43,7 @@ async def test_shared_device_mac(
     config_entry.add_to_hass(hass)
     device_reg.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={
-            (
-                device_registry.CONNECTION_NETWORK_MAC,
-                device_registry.format_mac(MOCK_MAC),
-            )
-        },
+        connections={(CONNECTION_NETWORK_MAC, format_mac(MOCK_MAC))},
     )
     await init_integration(hass, gen, sleep_period=1000)
     assert "will resume when device is online" in caplog.text
@@ -117,12 +112,7 @@ async def test_sleeping_block_device_online(
     config_entry.add_to_hass(hass)
     device_reg.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={
-            (
-                device_registry.CONNECTION_NETWORK_MAC,
-                device_registry.format_mac(MOCK_MAC),
-            )
-        },
+        connections={(CONNECTION_NETWORK_MAC, format_mac(MOCK_MAC))},
     )
 
     entry = await init_integration(hass, 1, sleep_period=entry_sleep)
@@ -194,7 +184,6 @@ async def test_entry_unload_not_connected(hass, mock_rpc_device, monkeypatch):
     with patch(
         "homeassistant.components.shelly.coordinator.async_stop_scanner"
     ) as mock_stop_scanner:
-
         entry = await init_integration(
             hass, 2, options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE}
         )
@@ -221,7 +210,6 @@ async def test_entry_unload_not_connected_but_we_think_we_are(
         "homeassistant.components.shelly.coordinator.async_stop_scanner",
         side_effect=DeviceConnectionError,
     ) as mock_stop_scanner:
-
         entry = await init_integration(
             hass, 2, options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE}
         )
