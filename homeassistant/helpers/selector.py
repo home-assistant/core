@@ -79,7 +79,7 @@ class Selector(Generic[_T]):
         return {"selector": {self.selector_type: self.config}}
 
 
-SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA = vol.Schema(
+ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
     {
         # Integration that provided the entity
         vol.Optional("integration"): str,
@@ -91,7 +91,7 @@ SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA = vol.Schema(
 )
 
 
-class SingleEntitySelectorConfig(TypedDict, total=False):
+class EntityFilterSelectorConfig(TypedDict, total=False):
     """Class to represent a single entity selector config."""
 
     integration: str
@@ -108,7 +108,9 @@ SINGLE_DEVICE_SELECTOR_CONFIG_SCHEMA = vol.Schema(
         # Model of device
         vol.Optional("model"): str,
         # Device has to contain entities matching this selector
-        vol.Optional("entity"): SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA,
+        vol.Optional("entity"): vol.Any(
+            ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA, [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA]
+        ),
     }
 )
 
@@ -119,7 +121,7 @@ class SingleDeviceSelectorConfig(TypedDict, total=False):
     integration: str
     manufacturer: str
     model: str
-    entity: SingleEntitySelectorConfig
+    entity: EntityFilterSelectorConfig
 
 
 class ActionSelectorConfig(TypedDict):
@@ -176,7 +178,7 @@ class AddonSelector(Selector[AddonSelectorConfig]):
 class AreaSelectorConfig(TypedDict, total=False):
     """Class to represent an area selector config."""
 
-    entity: SingleEntitySelectorConfig
+    entity: EntityFilterSelectorConfig
     device: SingleDeviceSelectorConfig
     multiple: bool
 
@@ -189,7 +191,10 @@ class AreaSelector(Selector[AreaSelectorConfig]):
 
     CONFIG_SCHEMA = vol.Schema(
         {
-            vol.Optional("entity"): SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA,
+            vol.Optional("entity"): vol.Any(
+                ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA,
+                [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA],
+            ),
             vol.Optional("device"): SINGLE_DEVICE_SELECTOR_CONFIG_SCHEMA,
             vol.Optional("multiple", default=False): cv.boolean,
         }
@@ -399,7 +404,7 @@ class DeviceSelectorConfig(TypedDict, total=False):
     integration: str
     manufacturer: str
     model: str
-    entity: SingleEntitySelectorConfig
+    entity: EntityFilterSelectorConfig
     multiple: bool
 
 
@@ -457,7 +462,7 @@ class DurationSelector(Selector[DurationSelectorConfig]):
         return cast(dict[str, float], data)
 
 
-class EntitySelectorConfig(SingleEntitySelectorConfig, total=False):
+class EntitySelectorConfig(EntityFilterSelectorConfig, total=False):
     """Class to represent an entity selector config."""
 
     exclude_entities: list[str]
@@ -471,11 +476,15 @@ class EntitySelector(Selector[EntitySelectorConfig]):
 
     selector_type = "entity"
 
-    CONFIG_SCHEMA = SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA.extend(
+    CONFIG_SCHEMA = ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA.extend(
         {
             vol.Optional("exclude_entities"): [str],
             vol.Optional("include_entities"): [str],
             vol.Optional("multiple", default=False): cv.boolean,
+            vol.Optional("filter"): vol.Any(
+                ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA,
+                [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA],
+            ),
         }
     )
 
@@ -784,7 +793,7 @@ class SelectSelector(Selector[SelectSelectorConfig]):
 class TargetSelectorConfig(TypedDict, total=False):
     """Class to represent a target selector config."""
 
-    entity: SingleEntitySelectorConfig
+    entity: EntityFilterSelectorConfig
     device: SingleDeviceSelectorConfig
 
 
@@ -832,7 +841,10 @@ class TargetSelector(Selector[TargetSelectorConfig]):
 
     CONFIG_SCHEMA = vol.Schema(
         {
-            vol.Optional("entity"): SINGLE_ENTITY_SELECTOR_CONFIG_SCHEMA,
+            vol.Optional("entity"): vol.Any(
+                ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA,
+                [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA],
+            ),
             vol.Optional("device"): SINGLE_DEVICE_SELECTOR_CONFIG_SCHEMA,
         }
     )

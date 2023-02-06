@@ -95,6 +95,16 @@ def _test_selector(
         ({"entity": {"device_class": ["motion", "temperature"]}}, ("abc123",), (None,)),
         (
             {
+                "entity": [
+                    {"domain": "light"},
+                    {"domain": "binary_sensor", "device_class": "motion"},
+                ]
+            },
+            ("abc123",),
+            (None,),
+        ),
+        (
+            {
                 "integration": "zha",
                 "manufacturer": "mock-manuf",
                 "model": "mock-model",
@@ -173,6 +183,21 @@ def test_device_selector_schema(schema, valid_selections, invalid_selections) ->
                 ["sensor.abc123", "sensor.ghi789"],
             ),
         ),
+        (
+            {"filter": {"domain": "light"}},
+            ("light.abc123", FAKE_UUID),
+            (None,),
+        ),
+        (
+            {
+                "filter": [
+                    {"domain": "light"},
+                    {"domain": "binary_sensor", "device_class": "motion"},
+                ]
+            },
+            ("light.abc123", "binary_sensor.abc123", FAKE_UUID),
+            (None,),
+        ),
     ),
 )
 def test_entity_selector_schema(schema, valid_selections, invalid_selections) -> None:
@@ -198,6 +223,16 @@ def test_entity_selector_schema(schema, valid_selections, invalid_selections) ->
                     "device_class": "motion",
                     "integration": "demo",
                 }
+            },
+            ("abc123",),
+            (None,),
+        ),
+        (
+            {
+                "entity": [
+                    {"domain": "light"},
+                    {"domain": "binary_sensor", "device_class": "motion"},
+                ]
             },
             ("abc123",),
             (None,),
@@ -351,6 +386,16 @@ def test_state_selector_schema(schema, valid_selections, invalid_selections) -> 
         ({"entity": {}}, (), ()),
         ({"entity": {"domain": "light"}}, (), ()),
         ({"entity": {"domain": "binary_sensor", "device_class": "motion"}}, (), ()),
+        (
+            {
+                "entity": [
+                    {"domain": "light"},
+                    {"domain": "binary_sensor", "device_class": "motion"},
+                ]
+            },
+            (),
+            (),
+        ),
         (
             {
                 "entity": {
