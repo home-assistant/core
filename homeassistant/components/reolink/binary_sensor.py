@@ -86,6 +86,7 @@ BINARY_SENSORS = (
         name="Visitor",
         icon="mdi:bell-ring-outline",
         icon_off="mdi:doorbell",
+        device_class=BinarySensorDeviceClass.OCCUPANCY,
         value=lambda api, ch: api.visitor_detected(ch),
         supported=lambda api, ch: api.is_doorbell_enabled(ch),
     ),
