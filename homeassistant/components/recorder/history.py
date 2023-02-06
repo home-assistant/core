@@ -523,15 +523,6 @@ def _get_last_state_changes_stmt(
     stmt, join_attributes = lambda_stmt_and_join_attributes(
         schema_version, False, include_last_changed=False
     )
-    if schema_version >= 31:
-        stmt += lambda q: q.filter(
-            (States.last_changed_ts == States.last_updated_ts)
-            | States.last_changed_ts.is_(None)
-        )
-    else:
-        stmt += lambda q: q.filter(
-            (States.last_changed == States.last_updated) | States.last_changed.is_(None)
-        )
     stmt += lambda q: q.filter(States.entity_id == entity_id)
     if join_attributes:
         stmt += lambda q: q.outerjoin(
