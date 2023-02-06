@@ -11,6 +11,7 @@ from typing import Any, final
 
 import voluptuous as vol
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CODE,
@@ -24,7 +25,7 @@ from homeassistant.const import (
     STATE_UNLOCKED,
     STATE_UNLOCKING,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -53,6 +54,7 @@ class LockEntityFeature(IntFlag):
     """Supported features of the lock entity."""
 
     OPEN = 1
+    DEFAULT_CODE = 2
 
 
 # The SUPPORT_OPEN constant is deprecated as of Home Assistant 2022.5.
@@ -60,6 +62,15 @@ class LockEntityFeature(IntFlag):
 SUPPORT_OPEN = 1
 
 PROP_TO_ATTR = {"changed_by": ATTR_CHANGED_BY, "code_format": ATTR_CODE_FORMAT}
+
+
+class _LockOperation(StrEnum):
+    """Supported lock service operations."""
+
+    LOCKING = "locking"
+    UNLOCKING = "unlocking"
+    OPENING = "opening"
+
 
 # mypy: disallow-any-generics
 
@@ -85,33 +96,43 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+@callback
+def _async_validate(
+    operation: _LockOperation, entity: LockEntity, service_call: ServiceCall
+) -> None:
+    """Validate the code form the service call."""
+    code: str | None = service_call.data.get(ATTR_CODE)
+    if (
+        code is not None
+        and entity.code_format_cmp
+        and not entity.code_format_cmp.match(code)
+    ):
+        raise ValueError(
+            f"Code '{code}' for {operation.value} {entity.name} "
+            f"doesn't match pattern {entity.code_format}"
+        )
+    if code is None and entity.supported_features & LockEntityFeature.DEFAULT_CODE:
+        raise ValueError(
+            f"A code for {operation.value} {entity.name} "
+            "is required, but no code was given"
+        )
+
+
 async def _async_lock(entity: LockEntity, service_call: ServiceCall) -> None:
     """Lock the lock."""
-    code: str = service_call.data.get(ATTR_CODE, "")
-    if entity.code_format_cmp and not entity.code_format_cmp.match(code):
-        raise ValueError(
-            f"Code '{code}' for locking {entity.name} doesn't match pattern {entity.code_format}"
-        )
+    _async_validate(_LockOperation.LOCKING, entity, service_call)
     await entity.async_lock(**service_call.data)
 
 
 async def _async_unlock(entity: LockEntity, service_call: ServiceCall) -> None:
     """Unlock the lock."""
-    code: str = service_call.data.get(ATTR_CODE, "")
-    if entity.code_format_cmp and not entity.code_format_cmp.match(code):
-        raise ValueError(
-            f"Code '{code}' for unlocking {entity.name} doesn't match pattern {entity.code_format}"
-        )
+    _async_validate(_LockOperation.UNLOCKING, entity, service_call)
     await entity.async_unlock(**service_call.data)
 
 
 async def _async_open(entity: LockEntity, service_call: ServiceCall) -> None:
     """Open the door latch."""
-    code: str = service_call.data.get(ATTR_CODE, "")
-    if entity.code_format_cmp and not entity.code_format_cmp.match(code):
-        raise ValueError(
-            f"Code '{code}' for opening {entity.name} doesn't match pattern {entity.code_format}"
-        )
+    _async_validate(_LockOperation.OPENING, entity, service_call)
     await entity.async_open(**service_call.data)
 
 
