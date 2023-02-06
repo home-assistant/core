@@ -21,8 +21,10 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
+from homeassistant.core import Context
 
-API_CLIENT_NAME = "homeassistant-homeassistant"
+# Entur API has ratelimiting per client ID. We therefore need a unique ID per install
+API_CLIENT_NAME = "homeassistant-{}".format(Context(user_id=user.id))
 
 CONF_STOP_IDS = "stop_ids"
 CONF_EXPAND_PLATFORMS = "expand_platforms"
