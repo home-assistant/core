@@ -34,7 +34,7 @@ class ScreenlogicEntity(CoordinatorEntity[ScreenlogicDataUpdateCoordinator]):
     @property
     def config_data(self):
         """Shortcut for config data."""
-        return self.gateway_data()[SL_DATA.KEY_CONFIG]
+        return self.gateway_data[SL_DATA.KEY_CONFIG]
 
     @property
     def gateway(self):
