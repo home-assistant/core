@@ -153,17 +153,17 @@ class RestSensor(RestEntity, TemplateSensor):
             self._attributes = {}
             if value:
                 try:
-                    json_dict: JsonValueType = json_loads(value)
+                    json_data: JsonValueType = json_loads(value)
                     if self._json_attrs_path is not None:
-                        json_dict = jsonpath(json_dict, self._json_attrs_path)
+                        json_data = jsonpath(json_data, self._json_attrs_path)
                     # jsonpath will always store the result in json_dict[0]
                     # so the next line happens to work exactly as needed to
                     # find the result
-                    if isinstance(json_dict, list):
-                        json_dict = json_dict[0]
-                    if isinstance(json_dict, dict):
+                    if isinstance(json_data, list):
+                        json_data = json_data[0]
+                    if isinstance(json_data, dict):
                         attrs = {
-                            k: json_dict[k] for k in self._json_attrs if k in json_dict
+                            k: json_data[k] for k in self._json_attrs if k in json_data
                         }
                         self._attributes = attrs
                     else:
