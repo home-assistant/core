@@ -740,7 +740,7 @@ class HomeKit:
             {
                 (BINARY_SENSOR_DOMAIN, BinarySensorDeviceClass.BATTERY_CHARGING),
                 (BINARY_SENSOR_DOMAIN, BinarySensorDeviceClass.MOTION),
-                (BINARY_SENSOR_DOMAIN, BinarySensorDeviceClass.OCCUPANCY),
+                (BINARY_SENSOR_DOMAIN, BinarySensorDeviceClass.DOOR_BELL),
                 (SENSOR_DOMAIN, SensorDeviceClass.BATTERY),
                 (SENSOR_DOMAIN, SensorDeviceClass.HUMIDITY),
             }
@@ -1031,7 +1031,7 @@ class HomeKit:
                     motion_binary_sensor_entity_id,
                 )
             doorbell_binary_sensor_entity_id = device_lookup[ent_reg_ent.device_id].get(
-                (BINARY_SENSOR_DOMAIN, BinarySensorDeviceClass.OCCUPANCY)
+                (BINARY_SENSOR_DOMAIN, BinarySensorDeviceClass.DOOR_BELL)
             )
             if doorbell_binary_sensor_entity_id:
                 self._config.setdefault(state.entity_id, {}).setdefault(

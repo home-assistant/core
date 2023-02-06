@@ -335,7 +335,7 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
     ProtectBinaryEventEntityDescription(
         key="doorbell",
         name="Doorbell",
-        device_class=BinarySensorDeviceClass.OCCUPANCY,
+        device_class=BinarySensorDeviceClass.DOOR_BELL,
         icon="mdi:doorbell-video",
         ufp_required_field="feature_flags.is_doorbell",
         ufp_value="is_ringing",

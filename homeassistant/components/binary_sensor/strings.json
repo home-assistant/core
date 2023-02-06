@@ -51,7 +51,9 @@
       "is_open": "{entity_name} is open",
       "is_not_open": "{entity_name} is closed",
       "is_on": "{entity_name} is on",
-      "is_off": "{entity_name} is off"
+      "is_off": "{entity_name} is off",
+      "is_pressed": "{entity_name} is pressed",
+      "is_not_pressed": "{entity_name} is not pressed"
     },
     "trigger_type": {
       "bat_low": "{entity_name} battery low",
@@ -103,7 +105,9 @@
       "opened": "{entity_name} opened",
       "not_opened": "{entity_name} closed",
       "turned_on": "{entity_name} turned on",
-      "turned_off": "{entity_name} turned off"
+      "turned_off": "{entity_name} turned off",
+      "pressed": "{entity_name} is pressed",
+      "not_pressed": "{entity_name} is no longer pressed"
     }
   },
   "state": {
@@ -126,6 +130,10 @@
     "connectivity": {
       "off": "[%key:common::state::disconnected%]",
       "on": "[%key:common::state::connected%]"
+    },
+    "door_bell": {
+      "pressed": "Pressed",
+      "not_pressed": "Not pressed"
     },
     "door": {
       "off": "[%key:common::state::closed%]",

@@ -68,7 +68,8 @@ CONF_VIBRATION = "vibration"
 CONF_NO_VIBRATION = "no_vibration"
 CONF_OPENED = "opened"
 CONF_NOT_OPENED = "not_opened"
-
+CONF_PRESSED = "pressed"
+CONF_NOT_PRESSED = "not_pressed"
 
 TURNED_ON = [
     CONF_BAT_LOW,
@@ -96,6 +97,7 @@ TURNED_ON = [
     CONF_VIBRATION,
     CONF_TAMPERED,
     CONF_TURNED_ON,
+    CONF_PRESSED,
 ]
 
 TURNED_OFF = [
@@ -123,6 +125,7 @@ TURNED_OFF = [
     CONF_NO_SOUND,
     CONF_NO_VIBRATION,
     CONF_TURNED_OFF,
+    CONF_NOT_PRESSED,
 ]
 
 
@@ -150,6 +153,10 @@ ENTITY_TRIGGERS = {
     BinarySensorDeviceClass.DOOR: [
         {CONF_TYPE: CONF_OPENED},
         {CONF_TYPE: CONF_NOT_OPENED},
+    ],
+    BinarySensorDeviceClass.DOOR_BELL: [
+        {CONF_TYPE: CONF_PRESSED},
+        {CONF_TYPE: CONF_NOT_PRESSED},
     ],
     BinarySensorDeviceClass.GARAGE_DOOR: [
         {CONF_TYPE: CONF_OPENED},

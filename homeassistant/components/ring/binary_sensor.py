@@ -37,7 +37,7 @@ BINARY_SENSOR_TYPES: tuple[RingBinarySensorEntityDescription, ...] = (
         key="ding",
         name="Ding",
         category=["doorbots", "authorized_doorbots"],
-        device_class=BinarySensorDeviceClass.OCCUPANCY,
+        device_class=BinarySensorDeviceClass.DOOR_BELL,
     ),
     RingBinarySensorEntityDescription(
         key="motion",

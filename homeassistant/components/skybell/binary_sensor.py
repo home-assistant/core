@@ -20,7 +20,7 @@ BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
         key="button",
         name="Button",
-        device_class=BinarySensorDeviceClass.OCCUPANCY,
+        device_class=BinarySensorDeviceClass.DOOR_BELL,
     ),
     BinarySensorEntityDescription(
         key="motion",

@@ -76,6 +76,8 @@ CONF_IS_VIBRATION = "is_vibration"
 CONF_IS_NO_VIBRATION = "is_no_vibration"
 CONF_IS_OPEN = "is_open"
 CONF_IS_NOT_OPEN = "is_not_open"
+CONF_IS_PRESSED = "is_pressed"
+CONF_IS_NOT_PRESSED = "is_not_pressed"
 
 IS_ON = [
     CONF_IS_BAT_LOW,
@@ -104,6 +106,7 @@ IS_ON = [
     CONF_IS_UNSAFE,
     CONF_IS_VIBRATION,
     CONF_IS_ON,
+    CONF_IS_PRESSED,
 ]
 
 IS_OFF = [
@@ -133,6 +136,7 @@ IS_OFF = [
     CONF_IS_NO_UPDATE,
     CONF_IS_NO_VIBRATION,
     CONF_IS_OFF,
+    CONF_IS_NOT_PRESSED,
 ]
 
 ENTITY_CONDITIONS = {
@@ -159,6 +163,10 @@ ENTITY_CONDITIONS = {
     BinarySensorDeviceClass.DOOR: [
         {CONF_TYPE: CONF_IS_OPEN},
         {CONF_TYPE: CONF_IS_NOT_OPEN},
+    ],
+    BinarySensorDeviceClass.DOOR_BELL: [
+        {CONF_TYPE: CONF_IS_PRESSED},
+        {CONF_TYPE: CONF_IS_NOT_PRESSED},
     ],
     BinarySensorDeviceClass.GARAGE_DOOR: [
         {CONF_TYPE: CONF_IS_OPEN},
