@@ -1,6 +1,7 @@
 """Config flow for Group integration."""
 from __future__ import annotations
 
+from collections import ChainMap
 from collections.abc import Callable, Coroutine, Mapping
 from functools import partial
 from typing import Any, cast
@@ -8,11 +9,12 @@ from typing import Any, cast
 import voluptuous as vol
 
 from homeassistant.const import CONF_ENTITIES, CONF_TYPE
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback, async_get_hass
 from homeassistant.helpers import entity_registry as er, selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
+    SchemaFlowError,
     SchemaFlowFormStep,
     SchemaFlowMenuStep,
     SchemaOptionsFlowHandler,
@@ -155,6 +157,35 @@ def set_group_type(
     return _set_group_type
 
 
+def import_sensor() -> (
+    Callable[
+        [SchemaCommonFlowHandler, dict[str, Any]], Coroutine[Any, Any, dict[str, Any]]
+    ]
+):
+    """Import sensor."""
+
+    async def _set_group_type(
+        handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Add group type to user input and test not imported."""
+        hass = async_get_hass()
+        entries = hass.config_entries.async_entries(DOMAIN)
+        match_dict = {"group_type": "sensor", **user_input}
+        for entry in entries:
+            if all(
+                item
+                in ChainMap(
+                    entry.options,
+                    entry.data,
+                ).items()
+                for item in match_dict.items()
+            ):
+                raise SchemaFlowError("already_configured")
+        return {"group_type": "sensor", **user_input}
+
+    return _set_group_type
+
+
 CONFIG_FLOW = {
     "user": SchemaFlowMenuStep(GROUP_TYPES),
     "binary_sensor": SchemaFlowFormStep(
@@ -188,6 +219,10 @@ CONFIG_FLOW = {
     "switch": SchemaFlowFormStep(
         basic_group_config_schema("switch"),
         validate_user_input=set_group_type("switch"),
+    ),
+    "import": SchemaFlowFormStep(
+        SENSOR_CONFIG_SCHEMA,
+        validate_user_input=import_sensor(),
     ),
 }
 

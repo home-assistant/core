@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
@@ -90,10 +90,20 @@ async def async_setup_entry(
         hass,
         DOMAIN,
         "deprecated_integration",
-        breaks_in_ha_version="2023.4.0",
+        breaks_in_ha_version="2023.5.0",
         is_fixable=False,
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_integration",
+    )
+
+    input_config = config_entry.options.copy()
+
+    await hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            "group",
+            context={"source": SOURCE_IMPORT},
+            data=input_config,
+        )
     )
 
     registry = er.async_get(hass)
