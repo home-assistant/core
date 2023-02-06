@@ -140,15 +140,14 @@ class ScreenLogicClimate(ScreenLogicPushEntity, ClimateEntity, RestoreEntity):
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             raise ValueError(f"Expected attribute {ATTR_TEMPERATURE}")
 
-        if await self.gateway.async_set_heat_temp(
+        if not await self.gateway.async_set_heat_temp(
             int(self._data_key), int(temperature)
         ):
-            await self._async_refresh()
-        else:
             raise HomeAssistantError(
                 f"Failed to set_temperature {temperature} on body"
                 f" {self.body['body_type']['value']}"
             )
+        _LOGGER.debug("Set temperature for body %s to %s", self._data_key, temperature)
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the operation mode."""
@@ -157,13 +156,12 @@ class ScreenLogicClimate(ScreenLogicPushEntity, ClimateEntity, RestoreEntity):
         else:
             mode = HEAT_MODE.NUM_FOR_NAME[self.preset_mode]
 
-        if await self.gateway.async_set_heat_mode(int(self._data_key), int(mode)):
-            await self._async_refresh()
-        else:
+        if not await self.gateway.async_set_heat_mode(int(self._data_key), int(mode)):
             raise HomeAssistantError(
                 f"Failed to set_hvac_mode {mode} on body"
                 f" {self.body['body_type']['value']}"
             )
+        _LOGGER.debug("Set hvac_mode on body %s to %s", self._data_key, mode)
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode."""
@@ -172,13 +170,12 @@ class ScreenLogicClimate(ScreenLogicPushEntity, ClimateEntity, RestoreEntity):
         if self.hvac_mode == HVACMode.OFF:
             return
 
-        if await self.gateway.async_set_heat_mode(int(self._data_key), int(mode)):
-            await self._async_refresh()
-        else:
+        if not await self.gateway.async_set_heat_mode(int(self._data_key), int(mode)):
             raise HomeAssistantError(
                 f"Failed to set_preset_mode {mode} on body"
                 f" {self.body['body_type']['value']}"
             )
+        _LOGGER.debug("Set preset_mode on body %s to %s", self._data_key, mode)
 
     async def async_added_to_hass(self) -> None:
         """Run when entity is about to be added."""
