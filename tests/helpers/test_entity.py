@@ -967,4 +967,4 @@ async def test_repr_using_stringify_state():
             raise ValueError("Boom")
 
     entity = MyEntity(entity_id="test.test", available=False)
-    assert str(entity) == "<Entity test.test: unavailable>"
+    assert str(entity) == "<entity test.test=unavailable>"
