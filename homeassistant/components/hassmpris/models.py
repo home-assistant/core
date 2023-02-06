@@ -7,7 +7,7 @@ from typing import Any
 
 import hassmpris_client
 
-from .media_player_entity_manager import EntityManager
+from .media_player import EntityManager
 
 
 @dataclass
