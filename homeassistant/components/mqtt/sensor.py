@@ -60,7 +60,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_EXPIRE_AFTER = "expire_after"
 CONF_LAST_RESET_TOPIC = "last_reset_topic"
 CONF_LAST_RESET_VALUE_TEMPLATE = "last_reset_value_template"
-CONF_PRECISION = "precision"
+CONF_SUGGESTED_DISPLAY_PRECISION = "suggested_display_precision"
 
 MQTT_SENSOR_ATTRIBUTES_BLOCKED = frozenset(
     {
@@ -105,7 +105,7 @@ _PLATFORM_SCHEMA_BASE = MQTT_RO_SCHEMA.extend(
         vol.Optional(CONF_LAST_RESET_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_LAST_RESET_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PRECISION): cv.positive_int,
+        vol.Optional(CONF_SUGGESTED_DISPLAY_PRECISION): cv.positive_int,
         vol.Optional(CONF_STATE_CLASS): vol.Any(STATE_CLASSES_SCHEMA, None),
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
@@ -228,7 +228,9 @@ class MqttSensor(MqttEntity, RestoreSensor):
         """(Re)Setup the entity."""
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_force_update = config[CONF_FORCE_UPDATE]
-        self._attr_suggested_display_precision = config.get(CONF_PRECISION)
+        self._attr_suggested_display_precision = config.get(
+            CONF_SUGGESTED_DISPLAY_PRECISION
+        )
         self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
         self._attr_state_class = config.get(CONF_STATE_CLASS)
 

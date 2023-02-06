@@ -92,7 +92,7 @@ async def test_setting_sensor_value_via_mqtt_message(
                     "name": "test",
                     "state_topic": "test-topic",
                     "unit_of_measurement": "fav unit",
-                    "precision": 1,
+                    "suggested_display_precision": 1,
                 }
             }
         },
