@@ -209,6 +209,11 @@ class ScreenLogicSensorEntity(ScreenlogicEntity, SensorEntity):
         return SL_STATE_TYPE_TO_HA_STATE_CLASS.get(state_type)
 
     @property
+    def options(self) -> list[str] | None:
+        """Return a set of possible options."""
+        return self.sensor.get("enum_options")
+
+    @property
     def native_value(self) -> str | int | float:
         """State of the sensor."""
         return self.sensor["value"]
