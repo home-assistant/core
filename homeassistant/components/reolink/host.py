@@ -68,8 +68,6 @@ class ReolinkHost:
 
     async def async_init(self) -> None:
         """Connect to Reolink host."""
-        self._api.expire_session()
-
         await self._api.get_host_data()
 
         if self._api.mac_address is None:
@@ -277,9 +275,8 @@ class ReolinkHost:
 
     async def unregister_webhook(self):
         """Unregister the webhook for motion events."""
-        if self.webhook_id:
-            _LOGGER.debug("Unregistering webhook %s", self.webhook_id)
-            webhook.async_unregister(self._hass, self.webhook_id)
+        _LOGGER.debug("Unregistering webhook %s", self.webhook_id)
+        webhook.async_unregister(self._hass, self.webhook_id)
         self.webhook_id = None
 
     async def handle_webhook(
