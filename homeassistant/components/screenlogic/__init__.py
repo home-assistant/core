@@ -112,10 +112,16 @@ async def async_get_connect_info(hass: HomeAssistant, entry: ConfigEntry):
 class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage the data update for the Screenlogic component."""
 
-    def __init__(self, hass, *, config_entry, gateway):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        *,
+        config_entry: ConfigEntry,
+        gateway: ScreenLogicGateway,
+    ) -> None:
         """Initialize the Screenlogic Data Update Coordinator."""
-        self.config_entry: ConfigEntry = config_entry
-        self.gateway: ScreenLogicGateway = gateway
+        self.config_entry = config_entry
+        self.gateway = gateway
 
         interval = timedelta(
             seconds=config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
