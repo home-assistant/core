@@ -22,7 +22,6 @@ _LOGGER = logging.getLogger(__name__)
 class EcobeeNumberEntityDescriptionBase:
     """Required values when describing Ecobee number entities."""
 
-    mode: str
     ecobee_setting_key: str
     set_fn: Callable[[EcobeeData, int, int], Awaitable]
 
@@ -37,7 +36,7 @@ class EcobeeNumberEntityDescription(
 VENTILATOR_NUMBERS = (
     EcobeeNumberEntityDescription(
         key="home",
-        mode="home",
+        name="home",
         ecobee_setting_key="ventilatorMinOnTimeHome",
         set_fn=lambda data, id, min_time: data.ecobee.set_ventilator_min_on_time_home(
             id, min_time
@@ -45,7 +44,7 @@ VENTILATOR_NUMBERS = (
     ),
     EcobeeNumberEntityDescription(
         key="away",
-        mode="away",
+        name="away",
         ecobee_setting_key="ventilatorMinOnTimeAway",
         set_fn=lambda data, id, min_time: data.ecobee.set_ventilator_min_on_time_away(
             id, min_time
@@ -90,9 +89,9 @@ class EcobeeVentilatorMinTime(EcobeeBaseEntity, NumberEntity):
         self.thermostat_index = thermostat_index
         self.ecobee_setting_key = description.ecobee_setting_key
         self.set_fn = description.set_fn
-        self._attr_name = f"Ventilator min time {description.mode}"
+        self._attr_name = f"Ventilator min time {description.name}"
         self._attr_unique_id = (
-            f'{self.thermostat["identifier"]}_ventilator_{description.mode}'
+            f'{self.thermostat["identifier"]}_ventilator_{description.key}'
         )
         self._attr_native_value = self.thermostat["settings"][
             description.ecobee_setting_key
