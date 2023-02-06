@@ -98,15 +98,14 @@ class ESPHomeUpdateEntity(CoordinatorEntity[ESPHomeDashboard], UpdateEntity):
 
     @property
     def available(self) -> bool:
-        """Return if update is available."""
-        if self._device_info.has_deep_sleep:
-            # During deep sleep the ESP will not be connectable (by design)
-            # For these cases, show it as available
-            return True
+        """Return if update is available.
 
+        During deep sleep the ESP will not be connectable (by design)
+        and thus, even when unavailable, we'll show it as available.
+        """
         return (
             super().available
-            and self._entry_data.available
+            and (self._entry_data.available or self._device_info.has_deep_sleep)
             and self._device_info.name in self.coordinator.data
         )
 
