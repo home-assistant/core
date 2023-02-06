@@ -142,7 +142,7 @@
                     "type": "T\u00edpus",
                     "unit_of_measurement": "M\u00e9rt\u00e9kegys\u00e9g"
                 },
-                "description": "Ha a \"nem numerikus ignor\u00e1l\u00e1sa\" enged\u00e9lyezve van, a csoport \u00e1llapot\u00e1t akkor sz\u00e1m\u00edtja ki a rendszer, ha legal\u00e1bb egy tagnak sz\u00e1m\u00e9rt\u00e9ke van. Ha ez le van tiltva, a csoport \u00e1llapot\u00e1t csak akkor sz\u00e1m\u00edtja ki a rendszer, ha minden csoporttag rendelkezik sz\u00e1m\u00e9rt\u00e9kekkel."
+                "description": "If \"ignore non-numeric\" is enabled, the group's state is calculated if at least one member has a numerical value. If \"ignore non-numeric\" is disabled, the group's state is calculated only if all group members have numerical values."
             },
             "switch": {
                 "data": {

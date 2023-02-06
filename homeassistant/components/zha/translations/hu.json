@@ -22,6 +22,7 @@
                 "description": "V\u00e1lassza ki a r\u00e1di\u00f3 h\u00e1l\u00f3zati be\u00e1ll\u00edt\u00e1sait.",
                 "menu_options": {
                     "choose_automatic_backup": "Automatikus biztons\u00e1gi ment\u00e9s vissza\u00e1ll\u00edt\u00e1sa",
+                    "form_initial_network": "H\u00e1l\u00f3zat l\u00e9trehoz\u00e1sa",
                     "form_new_network": "H\u00e1l\u00f3zati be\u00e1ll\u00edt\u00e1sok t\u00f6rl\u00e9se \u00e9s \u00faj h\u00e1l\u00f3zat l\u00e9trehoz\u00e1sa",
                     "reuse_settings": "R\u00e1di\u00f3h\u00e1l\u00f3zati be\u00e1ll\u00edt\u00e1sok megtart\u00e1sa",
                     "upload_manual_backup": "Manu\u00e1lis biztons\u00e1gi ment\u00e9s felt\u00f6lt\u00e9se"
@@ -174,6 +175,7 @@
                 "description": "V\u00e1lassza ki a r\u00e1di\u00f3 h\u00e1l\u00f3zati be\u00e1ll\u00edt\u00e1sait.",
                 "menu_options": {
                     "choose_automatic_backup": "Automatikus biztons\u00e1gi ment\u00e9s vissza\u00e1ll\u00edt\u00e1sa",
+                    "form_initial_network": "H\u00e1l\u00f3zat l\u00e9trehoz\u00e1sa",
                     "form_new_network": "H\u00e1l\u00f3zati be\u00e1ll\u00edt\u00e1sok t\u00f6rl\u00e9se \u00e9s \u00faj h\u00e1l\u00f3zat l\u00e9trehoz\u00e1sa",
                     "reuse_settings": "R\u00e1di\u00f3h\u00e1l\u00f3zati be\u00e1ll\u00edt\u00e1sok megtart\u00e1sa",
                     "upload_manual_backup": "Manu\u00e1lis biztons\u00e1gi ment\u00e9s felt\u00f6lt\u00e9se"
@@ -192,11 +194,11 @@
                 "title": "A ZHA \u00fajrakonfigur\u00e1l\u00e1sa"
             },
             "instruct_unplug": {
-                "description": "A r\u00e9gi r\u00e1di\u00f3t vissza lett \u00e1ll\u00edtva Ha a hardverre m\u00e1r nincs sz\u00fcks\u00e9g, most kih\u00fazhatja.",
+                "description": "A r\u00e9gi r\u00e1di\u00f3j\u00e1t vissza\u00e1ll\u00edtott\u00e1k.  Ha a hardverre m\u00e1r nincs sz\u00fcks\u00e9ge, most m\u00e1r kih\u00fazhatja.\n\nMost m\u00e1r csatlakoztathatja az \u00faj r\u00e1di\u00f3t.",
                 "title": "H\u00fazza ki a r\u00e9gi r\u00e1di\u00f3t"
             },
             "intent_migrate": {
-                "description": "A r\u00e9gi r\u00e1di\u00f3ja gy\u00e1ri alaphelyzetbe ker\u00fcl.  Ha kombin\u00e1lt Z-Wave \u00e9s Zigbee adaptert haszn\u00e1l, mint p\u00e9ld\u00e1ul a HUSBZB-1, akkor ez csak a Zigbee r\u00e9szt \u00e1ll\u00edtja vissza.\n\nSzeretn\u00e9 folytatni?",
+                "description": "Az \u00faj r\u00e1di\u00f3 csatlakoztat\u00e1sa el\u0151tt a r\u00e9gi r\u00e1di\u00f3t vissza kell \u00e1ll\u00edtani gy\u00e1ri \u00e1llapotba. Automatikus biztons\u00e1gi ment\u00e9s fog t\u00f6rt\u00e9nni. Ha olyan kombin\u00e1lt Z-Wave \u00e9s Zigbee adaptert haszn\u00e1l, mint a HUSBZB-1, akkor ez csak a Zigbee r\u00e9szt \u00e1ll\u00edtja vissza.\n\n*Figyelem: ha egy **ConBee/RaspBee**-r\u0151l migr\u00e1l, gy\u0151z\u0151dj\u00f6n meg r\u00f3la, hogy a \"0x26720700\" vagy \u00fajabb firmware fut rajta! Ellenkez\u0151 esetben el\u0151fordulhat, hogy n\u00e9h\u00e1ny eszk\u00f6z nem lesz vez\u00e9relhet\u0151 a migr\u00e1l\u00e1s ut\u00e1n, am\u00edg nem kapcsoljuk ki a t\u00e1pell\u00e1t\u00e1st.*.\n\nSzeretn\u00e9 folytatni?",
                 "title": "\u00daj r\u00e1di\u00f3ra val\u00f3 \u00e1tt\u00e9r\u00e9s"
             },
             "manual_pick_radio_type": {

@@ -12,7 +12,8 @@
             "oauth_error": "\u00c9rv\u00e9nytelen token adatok \u00e9rkeztek.",
             "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt.",
             "timeout_connect": "Id\u0151t\u00fall\u00e9p\u00e9s a kapcsolat l\u00e9trehoz\u00e1sa sor\u00e1n",
-            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt",
+            "wrong_account": "Hib\u00e1s fi\u00f3k, k\u00e9rem hiteles\u00edtse \u00fajra: {email}"
         },
         "create_entry": {
             "default": "Sikeres hiteles\u00edt\u00e9s"
