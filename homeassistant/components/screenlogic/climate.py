@@ -143,7 +143,9 @@ class ScreenLogicClimate(ScreenLogicPushEntity, ClimateEntity, RestoreEntity):
         if await self.gateway.async_set_heat_temp(
             int(self._data_key), int(temperature)
         ):
-            await self._async_refresh()
+            _LOGGER.debug(
+                "Set temperature for body %s to %s", self._data_key, temperature
+            )
         else:
             raise HomeAssistantError(
                 f"Failed to set_temperature {temperature} on body"
@@ -158,7 +160,7 @@ class ScreenLogicClimate(ScreenLogicPushEntity, ClimateEntity, RestoreEntity):
             mode = HEAT_MODE.NUM_FOR_NAME[self.preset_mode]
 
         if await self.gateway.async_set_heat_mode(int(self._data_key), int(mode)):
-            await self._async_refresh()
+            _LOGGER.debug("Set hvac_mode on body %s to %s", self._data_key, mode)
         else:
             raise HomeAssistantError(
                 f"Failed to set_hvac_mode {mode} on body"
@@ -173,7 +175,7 @@ class ScreenLogicClimate(ScreenLogicPushEntity, ClimateEntity, RestoreEntity):
             return
 
         if await self.gateway.async_set_heat_mode(int(self._data_key), int(mode)):
-            await self._async_refresh()
+            _LOGGER.debug("Set preset_mode on body %s to %s", self._data_key, mode)
         else:
             raise HomeAssistantError(
                 f"Failed to set_preset_mode {mode} on body"
