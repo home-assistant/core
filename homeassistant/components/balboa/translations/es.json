@@ -16,11 +16,26 @@
             }
         }
     },
+    "entity": {
+        "climate": {
+            "balboa": {
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "ready": "Listo",
+                            "ready_in_rest": "Listo en reposo",
+                            "rest": "Reposo"
+                        }
+                    }
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {
                 "data": {
-                    "sync_time": "Mant\u00e9n sincronizada la hora de tu Cliente Balboa Spa con Home Assistant"
+                    "sync_time": "Mant\u00e9n la hora de tu spa Balboa sincronizada con Home Assistant"
                 }
             }
         }

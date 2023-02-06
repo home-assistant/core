@@ -16,11 +16,26 @@
             }
         }
     },
+    "entity": {
+        "climate": {
+            "balboa": {
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "ready": "Pripraven\u00e9",
+                            "ready_in_rest": "Pripraven\u00e9 v pokoji",
+                            "rest": "Odpo\u010dinok"
+                        }
+                    }
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {
                 "data": {
-                    "sync_time": "Udr\u017eujte \u010das svojho klienta Balboa Spa synchronizovan\u00fd s Home Assistant"
+                    "sync_time": "Udr\u017eujte \u010das v\u00e1\u0161ho Balboa spa synchronizovan\u00fd s Home Assistant"
                 }
             }
         }

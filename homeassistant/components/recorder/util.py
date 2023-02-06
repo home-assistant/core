@@ -36,7 +36,13 @@ from .db_schema import (
     TABLES_TO_CHECK,
     RecorderRuns,
 )
-from .models import StatisticPeriod, UnsupportedDialect, process_timestamp
+from .models import (
+    DatabaseEngine,
+    DatabaseOptimizer,
+    StatisticPeriod,
+    UnsupportedDialect,
+    process_timestamp,
+)
 
 if TYPE_CHECKING:
     from . import Recorder
@@ -51,44 +57,33 @@ QUERY_RETRY_WAIT = 0.1
 SQLITE3_POSTFIXES = ["", "-wal", "-shm"]
 DEFAULT_YIELD_STATES_ROWS = 32768
 
+
 # Our minimum versions for each database
 #
 # Older MariaDB suffers https://jira.mariadb.org/browse/MDEV-25020
 # which is fixed in 10.5.17, 10.6.9, 10.7.5, 10.8.4
 #
-MIN_VERSION_MARIA_DB = AwesomeVersion(
-    "10.3.0", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
-)
-RECOMMENDED_MIN_VERSION_MARIA_DB = AwesomeVersion(
-    "10.5.17", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
-)
-MARIA_DB_106 = AwesomeVersion(
-    "10.6.0", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
-)
-RECOMMENDED_MIN_VERSION_MARIA_DB_106 = AwesomeVersion(
-    "10.6.9", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
-)
-MARIA_DB_107 = AwesomeVersion(
-    "10.7.0", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
-)
-RECOMMENDED_MIN_VERSION_MARIA_DB_107 = AwesomeVersion(
-    "10.7.5", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
-)
-MARIA_DB_108 = AwesomeVersion(
-    "10.8.0", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
-)
-RECOMMENDED_MIN_VERSION_MARIA_DB_108 = AwesomeVersion(
-    "10.8.4", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
-)
-MIN_VERSION_MYSQL = AwesomeVersion(
-    "8.0.0", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
-)
-MIN_VERSION_PGSQL = AwesomeVersion(
-    "12.0", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
-)
-MIN_VERSION_SQLITE = AwesomeVersion(
-    "3.31.0", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
-)
+def _simple_version(version: str) -> AwesomeVersion:
+    """Return a simple version."""
+    return AwesomeVersion(version, ensure_strategy=AwesomeVersionStrategy.SIMPLEVER)
+
+
+MIN_VERSION_MARIA_DB = _simple_version("10.3.0")
+RECOMMENDED_MIN_VERSION_MARIA_DB = _simple_version("10.5.17")
+MARIADB_WITH_FIXED_IN_QUERIES_105 = _simple_version("10.5.17")
+MARIA_DB_106 = _simple_version("10.6.0")
+MARIADB_WITH_FIXED_IN_QUERIES_106 = _simple_version("10.6.9")
+RECOMMENDED_MIN_VERSION_MARIA_DB_106 = _simple_version("10.6.9")
+MARIA_DB_107 = _simple_version("10.7.0")
+RECOMMENDED_MIN_VERSION_MARIA_DB_107 = _simple_version("10.7.5")
+MARIADB_WITH_FIXED_IN_QUERIES_107 = _simple_version("10.7.5")
+MARIA_DB_108 = _simple_version("10.8.0")
+RECOMMENDED_MIN_VERSION_MARIA_DB_108 = _simple_version("10.8.4")
+MARIADB_WITH_FIXED_IN_QUERIES_108 = _simple_version("10.8.4")
+MIN_VERSION_MYSQL = _simple_version("8.0.0")
+MIN_VERSION_PGSQL = _simple_version("12.0")
+MIN_VERSION_SQLITE = _simple_version("3.31.0")
+
 
 # This is the maximum time after the recorder ends the session
 # before we no longer consider startup to be a "restart" and we
@@ -469,10 +464,12 @@ def setup_connection_for_dialect(
     dialect_name: str,
     dbapi_connection: Any,
     first_connection: bool,
-) -> AwesomeVersion | None:
+) -> DatabaseEngine | None:
     """Execute statements needed for dialect connection."""
     version: AwesomeVersion | None = None
+    slow_range_in_select = True
     if dialect_name == SupportedDialect.SQLITE:
+        slow_range_in_select = False
         if first_connection:
             old_isolation = dbapi_connection.isolation_level
             dbapi_connection.isolation_level = None
@@ -538,7 +535,19 @@ def setup_connection_for_dialect(
                         version or version_string, "MySQL", MIN_VERSION_MYSQL
                     )
 
+        slow_range_in_select = bool(
+            not version
+            or version < MARIADB_WITH_FIXED_IN_QUERIES_105
+            or MARIA_DB_106 <= version < MARIADB_WITH_FIXED_IN_QUERIES_106
+            or MARIA_DB_107 <= version < MARIADB_WITH_FIXED_IN_QUERIES_107
+            or MARIA_DB_108 <= version < MARIADB_WITH_FIXED_IN_QUERIES_108
+        )
     elif dialect_name == SupportedDialect.POSTGRESQL:
+        # Historically we have marked PostgreSQL as having slow range in select
+        # but this may not be true for all versions. We should investigate
+        # this further when we have more data and remove this if possible
+        # in the future so we can use the simpler purge SQL query for
+        # _select_unused_attributes_ids and _select_unused_events_ids
         if first_connection:
             # server_version_num was added in 2006
             result = query_on_connection(dbapi_connection, "SHOW server_version")
@@ -552,7 +561,14 @@ def setup_connection_for_dialect(
     else:
         _fail_unsupported_dialect(dialect_name)
 
-    return version
+    if not first_connection:
+        return None
+
+    return DatabaseEngine(
+        dialect=SupportedDialect(dialect_name),
+        version=version,
+        optimizer=DatabaseOptimizer(slow_range_in_select=slow_range_in_select),
+    )
 
 
 def end_incomplete_runs(session: Session, start_time: datetime) -> None:
