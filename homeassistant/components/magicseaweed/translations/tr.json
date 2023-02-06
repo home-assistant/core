@@ -1,8 +1,0 @@
-{
-    "issues": {
-        "pending_removal": {
-            "description": "Magicseaweed entegrasyonu, Ev Asistan\u0131ndan kald\u0131r\u0131lmay\u0131 bekliyor ve Home Asistan\u0131 2023.3'ten itibaren kullan\u0131lamayacak. \n\n YAML yap\u0131land\u0131rmas\u0131n\u0131 configuration.yaml dosyan\u0131zdan kald\u0131r\u0131n ve bu sorunu \u00e7\u00f6zmek i\u00e7in Home Assistant'\u0131 yeniden ba\u015flat\u0131n.",
-            "title": "Magicseaweed entegrasyonu kald\u0131r\u0131l\u0131yor"
-        }
-    }
-}

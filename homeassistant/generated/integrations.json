@@ -5680,16 +5680,27 @@
       "iot_class": "local_polling"
     },
     "tplink": {
-      "name": "TP-Link Kasa Smart",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_polling"
-    },
-    "tplink_lte": {
-      "name": "TP-Link LTE",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
+      "name": "TP-Link",
+      "integrations": {
+        "tplink": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "TP-Link Kasa Smart"
+        },
+        "tplink_omada": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "TP-Link Omada"
+        },
+        "tplink_lte": {
+          "integration_type": "hub",
+          "config_flow": false,
+          "iot_class": "local_polling",
+          "name": "TP-Link LTE"
+        }
+      }
     },
     "traccar": {
       "name": "Traccar",
