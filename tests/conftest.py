@@ -55,7 +55,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, location
 
 from .ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
-from .typing import ClientSessionGenerator, WebSocketGenerator
+from .typing import ClientSessionGenerator, MqttMockType, WebSocketGenerator
 
 pytest.register_assert_rewrite("tests.common")
 
@@ -88,8 +88,6 @@ def _utcnow():
 
 dt_util.utcnow = _utcnow
 event.time_tracker_utcnow = _utcnow
-
-MqttMockType = Callable[..., Coroutine[Any, Any, MagicMock]]
 
 
 def pytest_addoption(parser):
@@ -718,7 +716,7 @@ def mqtt_config_entry_data() -> dict[str, Any] | None:
 
 
 @pytest.fixture
-def mqtt_client_mock(hass: HomeAssistant) -> Generator[Any, MagicMock, None]:
+def mqtt_client_mock(hass: HomeAssistant) -> Generator[MagicMock, None, None]:
     """Fixture to mock MQTT client."""
 
     mid: int = 0
