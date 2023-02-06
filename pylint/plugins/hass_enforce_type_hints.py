@@ -83,14 +83,13 @@ _TYPE_HINT_MATCHERS.update(
 
 _MODULE_REGEX: re.Pattern[str] = re.compile(r"^homeassistant\.components\.\w+(\.\w+)?$")
 
-_METHOD_MATCH: dict[str, list[TypeHintMatch]] = {
-    "__any_class__": [
-        TypeHintMatch(
-            function_name="__init__",
-            return_type=None,
-        ),
-    ]
-}
+_METHOD_MATCH: list[TypeHintMatch] = [
+    TypeHintMatch(
+        function_name="__init__",
+        return_type=None,
+    ),
+]
+
 _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
     "__init__": [
         TypeHintMatch(
@@ -2988,7 +2987,7 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
             self._check_function(node, match, annotations)
 
         # Check method matchers.
-        for match in _METHOD_MATCH["__any_class__"]:
+        for match in _METHOD_MATCH:
             if not match.need_to_check_function(node) or not node.is_method():
                 continue
             self._check_function(node, match, annotations)
