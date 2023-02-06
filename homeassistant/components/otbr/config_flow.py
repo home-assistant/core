@@ -7,6 +7,7 @@ import python_otbr_api
 import voluptuous as vol
 
 from homeassistant.components.hassio import HassioServiceInfo
+from homeassistant.components.thread import async_get_preferred_dataset
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_URL
 from homeassistant.data_entry_flow import FlowResult
@@ -61,9 +62,14 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
         api = python_otbr_api.OTBR(url, async_get_clientsession(self.hass), 10)
         try:
             if await api.get_active_dataset_tlvs() is None:
-                await api.create_active_dataset(
-                    python_otbr_api.OperationalDataSet(network_name="home-assistant")
-                )
+                if dataset := await async_get_preferred_dataset(self.hass):
+                    await api.set_active_dataset_tlvs(bytes.fromhex(dataset))
+                else:
+                    await api.create_active_dataset(
+                        python_otbr_api.OperationalDataSet(
+                            network_name="home-assistant"
+                        )
+                    )
                 await api.set_enabled(True)
         except python_otbr_api.OTBRError as exc:
             _LOGGER.warning("Failed to communicate with OTBR@%s: %s", url, exc)
