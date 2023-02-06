@@ -858,7 +858,7 @@ async def mqtt_mock_entry_no_yaml_config(
         await hass.async_block_till_done()
         return True
 
-    async def _setup_mqtt_entry() -> MqttMockHAClientGenerator:
+    async def _setup_mqtt_entry() -> MqttMockHAClient:
         """Set up the MQTT config entry."""
         return await mqtt_mock_entry(_async_setup_config_entry)
 
@@ -882,7 +882,7 @@ async def mqtt_mock_entry_with_yaml_config(
         """Do nothing."""
         return True
 
-    async def _setup_mqtt_entry() -> MqttMockHAClientGenerator:
+    async def _setup_mqtt_entry() -> MqttMockHAClient:
         """Set up the MQTT config entry."""
         return await mqtt_mock_entry(_async_do_not_setup_config_entry)
 
