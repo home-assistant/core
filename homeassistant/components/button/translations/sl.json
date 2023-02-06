@@ -1,8 +1,0 @@
-{
-    "device_automation": {
-        "trigger_type": {
-            "pressed": "{entity_name} je pritisnjena"
-        }
-    },
-    "title": "Gumb"
-}

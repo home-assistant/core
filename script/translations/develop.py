@@ -114,7 +114,7 @@ def run_single(translations, flattened_translations, integration):
 
     download.write_integration_translations()
 
-    print(f"Processed {integration}")
+    print(f"Generating translations for {integration}")
 
 
 def run():
@@ -126,6 +126,7 @@ def run():
     if args.all:
         for integration in translations["component"]:
             run_single(translations, flattened_translations, integration)
+        print("🌎 Generated translation files for all integrations")
         return 0
 
     if args.integration:
