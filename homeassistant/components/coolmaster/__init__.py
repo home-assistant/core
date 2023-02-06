@@ -22,7 +22,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
     coolmaster = CoolMasterNet(
-        host, port, swing_support=entry.data.get(CONF_SWING_SUPPORT, False)
+        host,
+        port,
+        read_timeout=1 if not entry.data.get(CONF_SWING_SUPPORT, False) else 5,
+        swing_support=entry.data.get(CONF_SWING_SUPPORT, False),
     )
     try:
         info = await coolmaster.info()
