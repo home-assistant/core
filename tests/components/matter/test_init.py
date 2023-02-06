@@ -633,3 +633,36 @@ async def test_remove_config_entry_device(
     assert not device_registry.async_get(device_entry.id)
     assert not entity_registry.async_get(entity_id)
     assert not hass.states.get(entity_id)
+
+
+async def test_remove_config_entry_device_no_node(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    integration: MockConfigEntry,
+    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
+) -> None:
+    """Test that a device can be removed ok without an existing node."""
+    assert await async_setup_component(hass, "config", {})
+    config_entry = integration
+    device_registry = dr.async_get(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={
+            (DOMAIN, "deviceid_00000000000004D2-0000000000000005-MatterNodeDevice")
+        },
+    )
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "config/device_registry/remove_config_entry",
+            "config_entry_id": config_entry.entry_id,
+            "device_id": device_entry.id,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    await hass.async_block_till_done()
+
+    assert not device_registry.async_get(device_entry.id)
