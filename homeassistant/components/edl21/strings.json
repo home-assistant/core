@@ -1,11 +1,14 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
     "step": {
       "user": {
         "title": "Add your EDL21 smart meter",
         "data": {
-          "name": "Name",
-          "serial_port": "Serial Port"
+          "name": "[%key:common::config_flow::data::name%]",
+          "serial_port": "[%key:common::config_flow::data::usb_path%]"
         }
       }
     }
