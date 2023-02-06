@@ -8,6 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import ScreenlogicDataUpdateCoordinator
 from .const import DOMAIN, LIGHT_CIRCUIT_FUNCTIONS
 from .entity import ScreenLogicCircuitEntity
 
@@ -20,7 +21,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: ScreenlogicDataUpdateCoordinator = hass.data[DOMAIN][
+        config_entry.entry_id
+    ]
     async_add_entities(
         [
             ScreenLogicLight(
@@ -29,7 +32,7 @@ async def async_setup_entry(
                 CODE.STATUS_CHANGED,
                 circuit["name"] not in GENERIC_CIRCUIT_NAMES,
             )
-            for circuit_num, circuit in coordinator.gateway.get_data()[
+            for circuit_num, circuit in coordinator.gateway_data[
                 SL_DATA.KEY_CIRCUITS
             ].items()
             if circuit["function"] in LIGHT_CIRCUIT_FUNCTIONS
