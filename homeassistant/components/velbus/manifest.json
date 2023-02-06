@@ -1,6 +1,12 @@
 {
   "domain": "velbus",
   "name": "Velbus",
+<<<<<<< HEAD
+=======
+  "documentation": "https://www.home-assistant.io/integrations/velbus",
+  "requirements": ["velbus-aio==2023.2.0"],
+  "config_flow": true,
+>>>>>>> 6bac31c331 (Bump velbusaio to 2023.2.0)
   "codeowners": ["@Cereal2nd", "@brefra"],
   "config_flow": true,
   "dependencies": ["usb"],
