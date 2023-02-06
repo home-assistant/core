@@ -17,6 +17,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPressure,
     UnitOfTemperature,
+    UnitOfTime,
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
@@ -304,7 +305,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         key="gas_consumed_interval",
         name="Gas consumed interval",
         icon="mdi:meter-gas",
-        native_unit_of_measurement=f"UnitOfVolume.CUBIC_METERS/UnitOfTime.HOURS",
+        native_unit_of_measurement=f"{UnitOfVolume.CUBIC_METERS}/{UnitOfTime.HOURS}",
         state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
