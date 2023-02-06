@@ -1,8 +1,0 @@
-{
-    "config": {
-        "abort": {
-            "already_configured": "Apparaat is al ingesteld",
-            "no_devices_found": "Er zijn geen Melnor Bluetooth-apparaten in de buurt."
-        }
-    }
-}

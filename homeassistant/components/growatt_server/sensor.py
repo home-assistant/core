@@ -142,7 +142,7 @@ class GrowattInverter(SensorEntity):
 
     def __init__(
         self, probe, name, unique_id, description: GrowattSensorEntityDescription
-    ):
+    ) -> None:
         """Initialize a PVOutput sensor."""
         self.probe = probe
         self.entity_description = description

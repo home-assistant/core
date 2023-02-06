@@ -1,68 +1,98 @@
 """Support for Balboa Spa binary sensors."""
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
+
+from pybalboa import SpaClient
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CIRC_PUMP, DOMAIN, FILTER
+from .const import DOMAIN
 from .entity import BalboaEntity
-
-FILTER_STATES = [
-    [False, False],  # self.FILTER_OFF
-    [True, False],  # self.FILTER_1
-    [False, True],  # self.FILTER_2
-    [True, True],  # self.FILTER_1_2
-]
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the spa's binary sensors."""
-    spa = hass.data[DOMAIN][entry.entry_id]
-    entities: list[BalboaSpaBinarySensor] = [
-        BalboaSpaFilter(entry, spa, FILTER, index) for index in range(1, 3)
+    spa: SpaClient = hass.data[DOMAIN][entry.entry_id]
+    entities = [
+        BalboaBinarySensorEntity(spa, description)
+        for description in BINARY_SENSOR_DESCRIPTIONS
     ]
-    if spa.have_circ_pump():
-        entities.append(BalboaSpaCircPump(entry, spa, CIRC_PUMP))
-
+    if spa.circulation_pump is not None:
+        entities.append(BalboaBinarySensorEntity(spa, CIRCULATION_PUMP_DESCRIPTION))
     async_add_entities(entities)
 
 
-class BalboaSpaBinarySensor(BalboaEntity, BinarySensorEntity):
+@dataclass
+class BalboaBinarySensorEntityDescriptionMixin:
+    """Mixin for required keys."""
+
+    is_on_fn: Callable[[SpaClient], bool]
+    on_off_icons: tuple[str, str]
+
+
+@dataclass
+class BalboaBinarySensorEntityDescription(
+    BinarySensorEntityDescription, BalboaBinarySensorEntityDescriptionMixin
+):
+    """A class that describes Balboa binary sensor entities."""
+
+
+FILTER_CYCLE_ICONS = ("mdi:sync", "mdi:sync-off")
+BINARY_SENSOR_DESCRIPTIONS = (
+    BalboaBinarySensorEntityDescription(
+        key="filter_cycle_1",
+        name="Filter1",
+        device_class=BinarySensorDeviceClass.RUNNING,
+        is_on_fn=lambda spa: spa.filter_cycle_1_running,
+        on_off_icons=FILTER_CYCLE_ICONS,
+    ),
+    BalboaBinarySensorEntityDescription(
+        key="filter_cycle_2",
+        name="Filter2",
+        device_class=BinarySensorDeviceClass.RUNNING,
+        is_on_fn=lambda spa: spa.filter_cycle_2_running,
+        on_off_icons=FILTER_CYCLE_ICONS,
+    ),
+)
+CIRCULATION_PUMP_DESCRIPTION = BalboaBinarySensorEntityDescription(
+    key="circulation_pump",
+    name="Circ Pump",
+    device_class=BinarySensorDeviceClass.RUNNING,
+    is_on_fn=lambda spa: (pump := spa.circulation_pump) is not None and pump.state > 0,
+    on_off_icons=("mdi:pump", "mdi:pump-off"),
+)
+
+
+class BalboaBinarySensorEntity(BalboaEntity, BinarySensorEntity):
     """Representation of a Balboa Spa binary sensor entity."""
 
-    _attr_device_class = BinarySensorDeviceClass.MOVING
+    entity_description: BalboaBinarySensorEntityDescription
 
-
-class BalboaSpaCircPump(BalboaSpaBinarySensor):
-    """Representation of a Balboa Spa circulation pump."""
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if the filter is on."""
-        return self._client.get_circ_pump()
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return "mdi:water-pump" if self.is_on else "mdi:water-pump-off"
-
-
-class BalboaSpaFilter(BalboaSpaBinarySensor):
-    """Representation of a Balboa Spa Filter."""
+    def __init__(
+        self, spa: SpaClient, description: BalboaBinarySensorEntityDescription
+    ) -> None:
+        """Initialize a Balboa binary sensor entity."""
+        super().__init__(spa, description.name)
+        self.entity_description = description
 
     @property
     def is_on(self) -> bool:
-        """Return true if the filter is on."""
-        return FILTER_STATES[self._client.get_filtermode()][self._num - 1]
+        """Return true if the binary sensor is on."""
+        return self.entity_description.is_on_fn(self._client)
 
     @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return "mdi:sync" if self.is_on else "mdi:sync-off"
+    def icon(self) -> str | None:
+        """Return the icon to use in the frontend, if any."""
+        icons = self.entity_description.on_off_icons
+        return icons[0] if self.is_on else icons[1]

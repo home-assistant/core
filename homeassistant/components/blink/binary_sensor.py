@@ -55,7 +55,9 @@ async def async_setup_entry(
 class BlinkBinarySensor(BinarySensorEntity):
     """Representation of a Blink binary sensor."""
 
-    def __init__(self, data, camera, description: BinarySensorEntityDescription):
+    def __init__(
+        self, data, camera, description: BinarySensorEntityDescription
+    ) -> None:
         """Initialize the sensor."""
         self.data = data
         self.entity_description = description

@@ -299,6 +299,7 @@ homeassistant.components.tile.*
 homeassistant.components.tilt_ble.*
 homeassistant.components.tolo.*
 homeassistant.components.tplink.*
+homeassistant.components.tplink_omada.*
 homeassistant.components.tractive.*
 homeassistant.components.tradfri.*
 homeassistant.components.trafikverket_ferry.*
