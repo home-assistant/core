@@ -11,7 +11,7 @@
         "panel": "new"
       },
       "problemMatcher": [],
-      "dependsOn": ["Compile translations"]
+      "dependsOn": ["Compile English translations"]
     },
     {
       "label": "Pytest",
@@ -143,7 +143,7 @@
       "problemMatcher": []
     },
     {
-      "label": "Compile translations",
+      "label": "Compile English translations",
       "detail": "In order to test changes to translation files, the translation strings must be compiled into Home Assistant's translation directories.",
       "type": "shell",
       "command": "python3 -m script.translations develop --all",

@@ -11,7 +11,7 @@
       "module": "homeassistant",
       "justMyCode": false,
       "args": ["--debug", "-c", "config"],
-      "preLaunchTask": "Compile translations"
+      "preLaunchTask": "Compile English translations"
     },
     {
       "name": "Home Assistant (skip pip)",
@@ -20,7 +20,7 @@
       "module": "homeassistant",
       "justMyCode": false,
       "args": ["--debug", "-c", "config", "--skip-pip"],
-      "preLaunchTask": "Compile translations"
+      "preLaunchTask": "Compile English translations"
     },
     {
       // Debug by attaching to local Home Asistant server using Remote Python Debugger.
