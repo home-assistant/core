@@ -5,7 +5,11 @@ from datetime import datetime
 import logging
 from typing import Any
 
-from homeassistant.components.sensor import CONF_STATE_CLASS, SensorEntity
+from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
+    RestoreSensor,
+    SensorEntity,
+)
 from homeassistant.const import (
     CONF_NAME,
     CONF_SENSORS,
@@ -14,7 +18,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -53,7 +56,7 @@ async def async_setup_platform(
     async_add_entities(sensors)
 
 
-class ModbusRegisterSensor(BaseStructPlatform, RestoreEntity, SensorEntity):
+class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
     """Modbus register sensor."""
 
     def __init__(
@@ -135,7 +138,7 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreEntity, SensorEntity):
 
 class SlaveSensor(
     CoordinatorEntity[DataUpdateCoordinator[list[int] | None]],
-    RestoreEntity,
+    RestoreSensor,
     SensorEntity,
 ):
     """Modbus slave register sensor."""
