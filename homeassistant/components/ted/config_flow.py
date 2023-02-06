@@ -22,11 +22,11 @@ from homeassistant.helpers.httpx_client import get_async_client
 from .const import (
     CONF_MTU_ENERGY_DAILY,
     CONF_MTU_ENERGY_MTD,
-    CONF_MTU_ENERGY_NOW,
+    CONF_MTU_POWER_NOW,
     CONF_MTU_POWER_VOLTAGE,
     CONF_SPYDER_ENERGY_DAILY,
     CONF_SPYDER_ENERGY_MTD,
-    CONF_SPYDER_ENERGY_NOW,
+    CONF_SPYDER_POWER_NOW,
     DOMAIN,
     OPTION_DEFAULTS,
 )
@@ -95,11 +95,11 @@ class TedOptionsFlowHandler(OptionsFlowWithConfigEntry):
             step_id="init",
             data_schema=vol.Schema(
                 {
-                    self.create_option_schema_field(CONF_SPYDER_ENERGY_NOW): bool,
+                    self.create_option_schema_field(CONF_SPYDER_POWER_NOW): bool,
                     self.create_option_schema_field(CONF_SPYDER_ENERGY_DAILY): bool,
                     self.create_option_schema_field(CONF_SPYDER_ENERGY_MTD): bool,
                     self.create_option_schema_field(CONF_MTU_POWER_VOLTAGE): bool,
-                    self.create_option_schema_field(CONF_MTU_ENERGY_NOW): bool,
+                    self.create_option_schema_field(CONF_MTU_POWER_NOW): bool,
                     self.create_option_schema_field(CONF_MTU_ENERGY_DAILY): bool,
                     self.create_option_schema_field(CONF_MTU_ENERGY_MTD): bool,
                 }

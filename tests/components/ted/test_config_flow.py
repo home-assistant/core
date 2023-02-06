@@ -9,11 +9,11 @@ from homeassistant.components.ted import DOMAIN
 from homeassistant.components.ted.const import (
     CONF_MTU_ENERGY_DAILY,
     CONF_MTU_ENERGY_MTD,
-    CONF_MTU_ENERGY_NOW,
+    CONF_MTU_POWER_NOW,
     CONF_MTU_POWER_VOLTAGE,
     CONF_SPYDER_ENERGY_DAILY,
     CONF_SPYDER_ENERGY_MTD,
-    CONF_SPYDER_ENERGY_NOW,
+    CONF_SPYDER_POWER_NOW,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -155,20 +155,20 @@ async def test_options_flow(hass):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            CONF_SPYDER_ENERGY_NOW: True,
+            CONF_SPYDER_POWER_NOW: True,
             CONF_SPYDER_ENERGY_DAILY: True,
             CONF_SPYDER_ENERGY_MTD: True,
             CONF_MTU_POWER_VOLTAGE: False,
-            CONF_MTU_ENERGY_NOW: False,
+            CONF_MTU_POWER_NOW: False,
             CONF_MTU_ENERGY_DAILY: False,
             CONF_MTU_ENERGY_MTD: False,
         },
     )
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert config_entry.options[CONF_SPYDER_ENERGY_NOW]
+    assert config_entry.options[CONF_SPYDER_POWER_NOW]
     assert config_entry.options[CONF_SPYDER_ENERGY_DAILY]
     assert config_entry.options[CONF_SPYDER_ENERGY_MTD]
     assert not config_entry.options[CONF_MTU_POWER_VOLTAGE]
-    assert not config_entry.options[CONF_MTU_ENERGY_NOW]
+    assert not config_entry.options[CONF_MTU_POWER_NOW]
     assert not config_entry.options[CONF_MTU_ENERGY_DAILY]
     assert not config_entry.options[CONF_MTU_ENERGY_MTD]

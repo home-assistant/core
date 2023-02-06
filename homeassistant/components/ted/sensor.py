@@ -1,4 +1,5 @@
 """Support gathering ted5000 and ted6000 information."""
+from datetime import datetime
 import logging
 
 from tedpy import MtuType, SystemType
@@ -22,10 +23,15 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
+from homeassistant.util import dt as dt_util
 
 from .const import COORDINATOR, DOMAIN, NAME, OPTION_DEFAULTS
 
 _LOGGER = logging.getLogger(__name__)
+
+SUFFIX_NOW = "_now"
+SUFFIX_DAILY = "_daily"
+SUFFIX_MTD = "_mtd"
 
 
 def build_sensor_descs(name: str, prefix: str, stype: str, is_net: bool):
@@ -36,21 +42,21 @@ def build_sensor_descs(name: str, prefix: str, stype: str, is_net: bool):
         total_state_class = SensorStateClass.TOTAL_INCREASING
     return [
         SensorEntityDescription(
-            key=f"{prefix}_now",
-            name=f"{name} Current {stype}",
+            key=prefix.replace("energy", "power") + SUFFIX_NOW,
+            name=f"{name} Current {stype.replace('Energy', 'Power')}",
             native_unit_of_measurement=UnitOfPower.WATT,
             state_class=SensorStateClass.MEASUREMENT,
             device_class=SensorDeviceClass.POWER,
         ),
         SensorEntityDescription(
-            key=f"{prefix}_daily",
+            key=prefix + SUFFIX_DAILY,
             name=f"{name} Today's {stype}",
             native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
             state_class=total_state_class,
             device_class=SensorDeviceClass.ENERGY,
         ),
         SensorEntityDescription(
-            key=f"{prefix}_mtd",
+            key=prefix + SUFFIX_MTD,
             name=f"{name} Month to Date {stype}",
             native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
             state_class=total_state_class,
@@ -168,6 +174,22 @@ class TedSensor(CoordinatorEntity, SensorEntity):
         """Return the state of the resources."""
         key, field = self.entity_description.key.split("_")
         return getattr(self.coordinator.data.get(key), field)
+
+    @property
+    def last_reset(self) -> datetime | None:
+        """Return the time when the sensor was last reset, if any."""
+        if self.entity_description.state_class == SensorStateClass.TOTAL:
+            if self.entity_description.key.endswith(SUFFIX_DAILY):
+                return dt_util.as_utc(
+                    dt_util.now().replace(hour=0, minute=0, second=0, microsecond=0)
+                )
+            if self.entity_description.key.endswith(SUFFIX_MTD):
+                return dt_util.as_utc(
+                    dt_util.now().replace(
+                        day=1, hour=0, minute=0, second=0, microsecond=0
+                    )
+                )
+        return None
 
 
 class TedBreakdownSensor(TedSensor):
