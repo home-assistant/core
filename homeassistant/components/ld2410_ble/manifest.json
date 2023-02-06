@@ -12,6 +12,11 @@
     },
     {
       "local_name": "HLK-LD2410_*"
+    },
+    {
+      "manufacturer_id": 256,
+      "manufacturer_data_start": [7, 1],
+      "service_uuid": "0000af30-0000-1000-8000-00805f9b34fb"
     }
   ],
   "integration_type": "device",
