@@ -1,4 +1,6 @@
 """Support for a ScreenLogic Sensor."""
+from typing import Any
+
 from screenlogicpy.const import (
     CHEM_DOSING_STATE,
     CODE,
@@ -28,6 +30,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import ScreenlogicDataUpdateCoordinator
 from .const import DOMAIN
 from .entity import ScreenlogicEntity, ScreenLogicPushEntity
 
@@ -102,13 +105,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up entry."""
     entities: list[ScreenLogicSensorEntity] = []
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
-    equipment_flags = coordinator.gateway.get_data()[SL_DATA.KEY_CONFIG][
-        "equipment_flags"
+    coordinator: ScreenlogicDataUpdateCoordinator = hass.data[DOMAIN][
+        config_entry.entry_id
     ]
+    equipment_flags = coordinator.gateway_data[SL_DATA.KEY_CONFIG]["equipment_flags"]
 
     # Generic push sensors
-    for sensor_name in coordinator.gateway.get_data()[SL_DATA.KEY_SENSORS]:
+    for sensor_name in coordinator.gateway_data[SL_DATA.KEY_SENSORS]:
         if sensor_name in SUPPORTED_BASIC_SENSORS:
             entities.append(
                 ScreenLogicStatusSensor(coordinator, sensor_name, CODE.STATUS_CHANGED)
@@ -126,9 +129,7 @@ async def async_setup_entry(
             )
 
     # Pump sensors
-    for pump_num, pump_data in coordinator.gateway.get_data()[
-        SL_DATA.KEY_PUMPS
-    ].items():
+    for pump_num, pump_data in coordinator.gateway_data[SL_DATA.KEY_PUMPS].items():
         if pump_data["data"] != 0 and "currentWatts" in pump_data:
             for pump_key in pump_data:
                 enabled = True
@@ -145,7 +146,7 @@ async def async_setup_entry(
 
     # IntelliChem sensors
     if equipment_flags & EQUIPMENT.FLAG_INTELLICHEM:
-        for chem_sensor_name in coordinator.gateway.get_data()[SL_DATA.KEY_CHEMISTRY]:
+        for chem_sensor_name in coordinator.gateway_data[SL_DATA.KEY_CHEMISTRY]:
             enabled = True
             if equipment_flags & EQUIPMENT.FLAG_CHLORINATOR:
                 if chem_sensor_name in ("salt_tds_ppm",):
@@ -162,7 +163,7 @@ async def async_setup_entry(
         entities.extend(
             [
                 ScreenLogicSCGSensor(coordinator, scg_sensor)
-                for scg_sensor in coordinator.gateway.get_data()[SL_DATA.KEY_SCG]
+                for scg_sensor in coordinator.gateway_data[SL_DATA.KEY_SCG]
                 if scg_sensor in SUPPORTED_SCG_SENSORS
             ]
         )
@@ -176,31 +177,31 @@ class ScreenLogicSensorEntity(ScreenlogicEntity, SensorEntity):
     _attr_has_entity_name = True
 
     @property
-    def name(self):
+    def name(self) -> str | None:
         """Name of the sensor."""
         return self.sensor["name"]
 
     @property
-    def native_unit_of_measurement(self):
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
         sl_unit = self.sensor.get("unit")
         return SL_UNIT_TO_HA_UNIT.get(sl_unit, sl_unit)
 
     @property
-    def device_class(self):
+    def device_class(self) -> SensorDeviceClass | None:
         """Device class of the sensor."""
         device_type = self.sensor.get("device_type")
         return SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS.get(device_type)
 
     @property
-    def entity_category(self):
+    def entity_category(self) -> EntityCategory | None:
         """Entity Category of the sensor."""
         return (
             None if self._data_key == "air_temperature" else EntityCategory.DIAGNOSTIC
         )
 
     @property
-    def state_class(self):
+    def state_class(self) -> SensorStateClass | None:
         """Return the state class of the sensor."""
         state_type = self.sensor.get("state_type")
         if self._data_key == "scg_super_chlor_timer":
@@ -208,14 +209,14 @@ class ScreenLogicSensorEntity(ScreenlogicEntity, SensorEntity):
         return SL_STATE_TYPE_TO_HA_STATE_CLASS.get(state_type)
 
     @property
-    def native_value(self):
+    def native_value(self) -> str | int | float:
         """State of the sensor."""
         return self.sensor["value"]
 
     @property
-    def sensor(self) -> dict:
+    def sensor(self) -> dict[str | int, Any]:
         """Shortcut to access the sensor data."""
-        return self.coordinator.gateway.get_data()[SL_DATA.KEY_SENSORS][self._data_key]
+        return self.gateway_data[SL_DATA.KEY_SENSORS][self._data_key]
 
 
 class ScreenLogicStatusSensor(ScreenLogicSensorEntity, ScreenLogicPushEntity):
@@ -232,11 +233,9 @@ class ScreenLogicPumpSensor(ScreenLogicSensorEntity):
         self._key = key
 
     @property
-    def sensor(self) -> dict:
+    def sensor(self) -> dict[str | int, Any]:
         """Shortcut to access the pump sensor data."""
-        return self.coordinator.gateway.get_data()[SL_DATA.KEY_PUMPS][self._pump_id][
-            self._key
-        ]
+        return self.gateway_data[SL_DATA.KEY_PUMPS][self._pump_id][self._key]
 
 
 class ScreenLogicChemistrySensor(ScreenLogicSensorEntity, ScreenLogicPushEntity):
@@ -248,7 +247,7 @@ class ScreenLogicChemistrySensor(ScreenLogicSensorEntity, ScreenLogicPushEntity)
         self._key = key
 
     @property
-    def native_value(self):
+    def native_value(self) -> str | int | float:
         """State of the sensor."""
         value = self.sensor["value"]
         if "dosing_state" in self._key:
@@ -256,15 +255,15 @@ class ScreenLogicChemistrySensor(ScreenLogicSensorEntity, ScreenLogicPushEntity)
         return (value - 1) if "supply" in self._data_key else value
 
     @property
-    def sensor(self) -> dict:
+    def sensor(self) -> dict[str | int, Any]:
         """Shortcut to access the pump sensor data."""
-        return self.coordinator.gateway.get_data()[SL_DATA.KEY_CHEMISTRY][self._key]
+        return self.gateway_data[SL_DATA.KEY_CHEMISTRY][self._key]
 
 
 class ScreenLogicSCGSensor(ScreenLogicSensorEntity):
     """Representation of ScreenLogic SCG sensor entity."""
 
     @property
-    def sensor(self) -> dict:
+    def sensor(self) -> dict[str | int, Any]:
         """Shortcut to access the pump sensor data."""
-        return self.coordinator.gateway.get_data()[SL_DATA.KEY_SCG][self._data_key]
+        return self.gateway_data[SL_DATA.KEY_SCG][self._data_key]

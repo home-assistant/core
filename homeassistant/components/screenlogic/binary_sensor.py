@@ -10,6 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import ScreenlogicDataUpdateCoordinator
 from .const import DOMAIN
 from .entity import ScreenlogicEntity, ScreenLogicPushEntity
 
@@ -30,7 +31,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up entry."""
     entities: list[ScreenLogicBinarySensorEntity] = []
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: ScreenlogicDataUpdateCoordinator = hass.data[DOMAIN][
+        config_entry.entry_id
+    ]
 
     # Generic binary sensor
     entities.append(
@@ -40,13 +43,13 @@ async def async_setup_entry(
     entities.extend(
         [
             ScreenlogicConfigBinarySensor(coordinator, cfg_sensor, CODE.STATUS_CHANGED)
-            for cfg_sensor in coordinator.gateway.get_data()[SL_DATA.KEY_CONFIG]
+            for cfg_sensor in coordinator.gateway_data[SL_DATA.KEY_CONFIG]
             if cfg_sensor in SUPPORTED_CONFIG_BINARY_SENSORS
         ]
     )
 
     if (
-        coordinator.gateway.get_data()[SL_DATA.KEY_CONFIG]["equipment_flags"]
+        coordinator.gateway_data[SL_DATA.KEY_CONFIG]["equipment_flags"]
         & EQUIPMENT.FLAG_INTELLICHEM
     ):
         # IntelliChem alarm sensors
@@ -55,7 +58,7 @@ async def async_setup_entry(
                 ScreenlogicChemistryAlarmBinarySensor(
                     coordinator, chem_alarm, CODE.CHEMISTRY_CHANGED
                 )
-                for chem_alarm in coordinator.gateway.get_data()[SL_DATA.KEY_CHEMISTRY][
+                for chem_alarm in coordinator.gateway_data[SL_DATA.KEY_CHEMISTRY][
                     SL_DATA.KEY_ALERTS
                 ]
                 if not chem_alarm.startswith("_")
@@ -68,7 +71,7 @@ async def async_setup_entry(
                 ScreenlogicChemistryNotificationBinarySensor(
                     coordinator, chem_notif, CODE.CHEMISTRY_CHANGED
                 )
-                for chem_notif in coordinator.gateway.get_data()[SL_DATA.KEY_CHEMISTRY][
+                for chem_notif in coordinator.gateway_data[SL_DATA.KEY_CHEMISTRY][
                     SL_DATA.KEY_NOTIFICATIONS
                 ]
                 if not chem_notif.startswith("_")
@@ -76,7 +79,7 @@ async def async_setup_entry(
         )
 
     if (
-        coordinator.gateway.get_data()[SL_DATA.KEY_CONFIG]["equipment_flags"]
+        coordinator.gateway_data[SL_DATA.KEY_CONFIG]["equipment_flags"]
         & EQUIPMENT.FLAG_CHLORINATOR
     ):
         # SCG binary sensor
@@ -110,7 +113,7 @@ class ScreenLogicBinarySensorEntity(ScreenlogicEntity, BinarySensorEntity):
     @property
     def sensor(self) -> dict:
         """Shortcut to access the sensor data."""
-        return self.coordinator.gateway.get_data()[SL_DATA.KEY_SENSORS][self._data_key]
+        return self.gateway_data[SL_DATA.KEY_SENSORS][self._data_key]
 
 
 class ScreenLogicStatusBinarySensor(
@@ -127,9 +130,9 @@ class ScreenlogicChemistryAlarmBinarySensor(
     @property
     def sensor(self) -> dict:
         """Shortcut to access the sensor data."""
-        return self.coordinator.gateway.get_data()[SL_DATA.KEY_CHEMISTRY][
-            SL_DATA.KEY_ALERTS
-        ][self._data_key]
+        return self.gateway_data[SL_DATA.KEY_CHEMISTRY][SL_DATA.KEY_ALERTS][
+            self._data_key
+        ]
 
 
 class ScreenlogicChemistryNotificationBinarySensor(
@@ -140,9 +143,9 @@ class ScreenlogicChemistryNotificationBinarySensor(
     @property
     def sensor(self) -> dict:
         """Shortcut to access the sensor data."""
-        return self.coordinator.gateway.get_data()[SL_DATA.KEY_CHEMISTRY][
-            SL_DATA.KEY_NOTIFICATIONS
-        ][self._data_key]
+        return self.gateway_data[SL_DATA.KEY_CHEMISTRY][SL_DATA.KEY_NOTIFICATIONS][
+            self._data_key
+        ]
 
 
 class ScreenlogicSCGBinarySensor(ScreenLogicBinarySensorEntity):
@@ -151,7 +154,7 @@ class ScreenlogicSCGBinarySensor(ScreenLogicBinarySensorEntity):
     @property
     def sensor(self) -> dict:
         """Shortcut to access the sensor data."""
-        return self.coordinator.gateway.get_data()[SL_DATA.KEY_SCG][self._data_key]
+        return self.gateway_data[SL_DATA.KEY_SCG][self._data_key]
 
 
 class ScreenlogicConfigBinarySensor(
@@ -162,4 +165,4 @@ class ScreenlogicConfigBinarySensor(
     @property
     def sensor(self) -> dict:
         """Shortcut to access the sensor data."""
-        return self.coordinator.gateway.get_data()[SL_DATA.KEY_CONFIG][self._data_key]
+        return self.gateway_data[SL_DATA.KEY_CONFIG][self._data_key]

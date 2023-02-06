@@ -18,6 +18,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
+from . import ScreenlogicDataUpdateCoordinator
 from .const import DOMAIN
 from .entity import ScreenLogicPushEntity
 
@@ -40,9 +41,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up entry."""
     entities = []
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: ScreenlogicDataUpdateCoordinator = hass.data[DOMAIN][
+        config_entry.entry_id
+    ]
 
-    for body in coordinator.gateway.get_data()[SL_DATA.KEY_BODIES]:
+    for body in coordinator.gateway_data[SL_DATA.KEY_BODIES]:
         entities.append(ScreenLogicClimate(coordinator, body))
 
     async_add_entities(entities)
@@ -63,10 +66,7 @@ class ScreenLogicClimate(ScreenLogicPushEntity, ClimateEntity, RestoreEntity):
         super().__init__(coordinator, body, CODE.STATUS_CHANGED)
         self._configured_heat_modes = []
         # Is solar listed as available equipment?
-        if (
-            self.coordinator.gateway.get_data()["config"]["equipment_flags"]
-            & EQUIPMENT.FLAG_SOLAR
-        ):
+        if self.gateway_data["config"]["equipment_flags"] & EQUIPMENT.FLAG_SOLAR:
             self._configured_heat_modes.extend(
                 [HEAT_MODE.SOLAR, HEAT_MODE.SOLAR_PREFERRED]
             )
@@ -209,4 +209,4 @@ class ScreenLogicClimate(ScreenLogicPushEntity, ClimateEntity, RestoreEntity):
     @property
     def body(self):
         """Shortcut to access body data."""
-        return self.coordinator.gateway.get_data()[SL_DATA.KEY_BODIES][self._data_key]
+        return self.gateway_data[SL_DATA.KEY_BODIES][self._data_key]

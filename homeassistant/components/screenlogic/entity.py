@@ -1,10 +1,12 @@
 """Base ScreenLogicEntity definitions."""
 import logging
+from typing import Any
 
 # from screenlogicpy import ScreenLogicError, ScreenLogicGateway
 from screenlogicpy.const import DATA as SL_DATA, EQUIPMENT, ON_OFF
 
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -21,12 +23,8 @@ class ScreenlogicEntity(CoordinatorEntity[ScreenlogicDataUpdateCoordinator]):
         """Initialize of the entity."""
         super().__init__(coordinator)
         self._data_key = data_key
-        self._enabled_default = enabled
-
-    @property
-    def entity_registry_enabled_default(self):
-        """Entity enabled by default."""
-        return self._enabled_default
+        self._attr_entity_registry_enabled_default = enabled
+        self._attr_unique_id = f"{self.mac}_{self._data_key}"
 
     @property
     def mac(self):
@@ -34,19 +32,19 @@ class ScreenlogicEntity(CoordinatorEntity[ScreenlogicDataUpdateCoordinator]):
         return self.coordinator.config_entry.unique_id
 
     @property
-    def unique_id(self):
-        """Entity Unique ID."""
-        return f"{self.mac}_{self._data_key}"
-
-    @property
     def config_data(self):
         """Shortcut for config data."""
-        return self.coordinator.gateway.get_data()[SL_DATA.KEY_CONFIG]
+        return self.gateway_data()[SL_DATA.KEY_CONFIG]
 
     @property
     def gateway(self):
         """Return the gateway."""
         return self.coordinator.gateway
+
+    @property
+    def gateway_data(self) -> dict[str | int, Any]:
+        """Return the gateway data."""
+        return self.gateway.get_data()
 
     @property
     def gateway_name(self):
@@ -100,10 +98,11 @@ class ScreenLogicPushEntity(ScreenlogicEntity):
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
 
-        unsub = await self.coordinator.gateway.async_subscribe_client(
-            self._async_data_updated, self._update_message_code
+        self.async_on_remove(
+            await self.gateway.async_subscribe_client(
+                self._async_data_updated, self._update_message_code
+            )
         )
-        self.async_on_remove(unsub)
 
 
 class ScreenLogicCircuitEntity(ScreenLogicPushEntity):
@@ -133,11 +132,11 @@ class ScreenLogicCircuitEntity(ScreenLogicPushEntity):
         if await self.gateway.async_set_circuit(self._data_key, circuit_value):
             _LOGGER.debug("Turn %s %s", self._data_key, circuit_value)
         else:
-            _LOGGER.warning(
-                "Failed to set_circuit %s %s", self._data_key, circuit_value
+            raise HomeAssistantError(
+                f"Failed to set_circuit {self._data_key} {circuit_value}"
             )
 
     @property
-    def circuit(self):
+    def circuit(self) -> dict[str | int, Any]:
         """Shortcut to access the circuit."""
-        return self.coordinator.gateway.get_data()[SL_DATA.KEY_CIRCUITS][self._data_key]
+        return self.gateway_data[SL_DATA.KEY_CIRCUITS][self._data_key]

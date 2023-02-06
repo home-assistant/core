@@ -1,6 +1,7 @@
 """The Screenlogic integration."""
 from datetime import timedelta
 import logging
+from typing import Any
 
 from screenlogicpy import ScreenLogicError, ScreenLogicGateway
 from screenlogicpy.const import (
@@ -113,9 +114,8 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass, *, config_entry, gateway):
         """Initialize the Screenlogic Data Update Coordinator."""
-        self.config_entry = config_entry
-        self.gateway = gateway
-        self.screenlogic_data = {}
+        self.config_entry: ConfigEntry = config_entry
+        self.gateway: ScreenLogicGateway = gateway
 
         interval = timedelta(
             seconds=config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
@@ -132,7 +132,12 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
             ),
         )
 
-    async def _data_update(self):
+    @property
+    def gateway_data(self) -> dict[str | int, Any]:
+        """Return the gateway data."""
+        return self.gateway.get_data()
+
+    async def _async_update_configured_data(self):
         """Update data sets based on equipment config."""
         equipment_flags = self.gateway.get_data()[SL_DATA.KEY_CONFIG]["equipment_flags"]
         if not self.gateway.is_client:
@@ -147,7 +152,7 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Fetch data from the Screenlogic gateway."""
         try:
-            await self._data_update()
+            await self._async_update_configured_data()
         except ScreenLogicError as error:
             _LOGGER.warning("Update error - attempting reconnect: %s", error)
             await self._async_reconnect_update_data()
@@ -165,7 +170,7 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
             connect_info = await async_get_connect_info(self.hass, self.config_entry)
             await self.gateway.async_connect(**connect_info)
 
-            await self._data_update()
+            await self._async_update_configured_data()
 
         except (ScreenLogicError, ScreenLogicWarning) as ex:
             raise UpdateFailed(ex) from ex
