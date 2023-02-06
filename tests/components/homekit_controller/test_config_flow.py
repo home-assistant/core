@@ -1134,7 +1134,7 @@ async def test_bluetooth_valid_device_discovery_unpaired(hass, controller):
 
     assert get_flow_context(hass, result) == {
         "source": config_entries.SOURCE_BLUETOOTH,
-        "unique_id": "AA:BB:CC:DD:EE:FF",
+        "unique_id": "00:00:00:00:00:00",
         "title_placeholders": {"name": "TestDevice", "category": "Other"},
     }
 
