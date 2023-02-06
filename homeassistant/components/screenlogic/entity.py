@@ -26,6 +26,22 @@ class ScreenlogicEntity(CoordinatorEntity[ScreenlogicDataUpdateCoordinator]):
         self._attr_entity_registry_enabled_default = enabled
         self._attr_unique_id = f"{self.mac}_{self._data_key}"
 
+        controller_type = self.config_data["controller_type"]
+        hardware_type = self.config_data["hardware_type"]
+        try:
+            equipment_model = EQUIPMENT.CONTROLLER_HARDWARE[controller_type][
+                hardware_type
+            ]
+        except KeyError:
+            equipment_model = f"Unknown Model C:{controller_type} H:{hardware_type}"
+        self._attr_device_info = DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, self.mac)},
+            manufacturer="Pentair",
+            model=equipment_model,
+            name=self.gateway_name,
+            sw_version=self.gateway.version,
+        )
+
     @property
     def mac(self):
         """Mac address."""
@@ -50,25 +66,6 @@ class ScreenlogicEntity(CoordinatorEntity[ScreenlogicDataUpdateCoordinator]):
     def gateway_name(self):
         """Return the configured name of the gateway."""
         return self.gateway.name
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information for the controller."""
-        controller_type = self.config_data["controller_type"]
-        hardware_type = self.config_data["hardware_type"]
-        try:
-            equipment_model = EQUIPMENT.CONTROLLER_HARDWARE[controller_type][
-                hardware_type
-            ]
-        except KeyError:
-            equipment_model = f"Unknown Model C:{controller_type} H:{hardware_type}"
-        return DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, self.mac)},
-            manufacturer="Pentair",
-            model=equipment_model,
-            name=self.gateway_name,
-            sw_version=self.gateway.version,
-        )
 
     async def _async_refresh(self):
         """Refresh the data from the gateway."""
@@ -129,12 +126,11 @@ class ScreenLogicCircuitEntity(ScreenLogicPushEntity):
         await self._async_set_circuit(ON_OFF.OFF)
 
     async def _async_set_circuit(self, circuit_value) -> None:
-        if await self.gateway.async_set_circuit(self._data_key, circuit_value):
-            _LOGGER.debug("Turn %s %s", self._data_key, circuit_value)
-        else:
+        if not await self.gateway.async_set_circuit(self._data_key, circuit_value):
             raise HomeAssistantError(
                 f"Failed to set_circuit {self._data_key} {circuit_value}"
             )
+        _LOGGER.debug("Turn %s %s", self._data_key, circuit_value)
 
     @property
     def circuit(self) -> dict[str | int, Any]:
