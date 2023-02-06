@@ -550,7 +550,10 @@ def _get_last_state_changes_stmt(
             StateAttributes, States.attributes_id == StateAttributes.attributes_id
         )
 
-    stmt += lambda q: q.order_by(States.last_updated.desc())
+    if schema_version >= 31:
+        stmt += lambda q: q.order_by(States.last_updated_ts.desc())
+    else:
+        stmt += lambda q: q.order_by(States.last_updated.desc())
     return stmt
 
 
