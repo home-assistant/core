@@ -2980,18 +2980,15 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
                     args=(arg_name, expected_type, node.name),
                 )
 
+        # Check method or function matchers.
         if node.is_method():
-            # Check method matchers.
-            for match in _METHOD_MATCH:
-                if not match.need_to_check_function(node):
-                    continue
-                self._check_function(node, match, annotations)
+            matchers = _METHOD_MATCH
         else:
-            # Check function matchers.
-            for match in self._function_matchers:
-                if not match.need_to_check_function(node):
-                    continue
-                self._check_function(node, match, annotations)
+            matchers = self._function_matchers
+        for match in matchers:
+            if not match.need_to_check_function(node):
+                continue
+            self._check_function(node, match, annotations)
 
     visit_asyncfunctiondef = visit_functiondef
 
