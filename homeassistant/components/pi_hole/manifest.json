@@ -2,7 +2,7 @@
   "domain": "pi_hole",
   "name": "Pi-hole",
   "documentation": "https://www.home-assistant.io/integrations/pi_hole",
-  "requirements": ["hole==0.7.0"],
+  "requirements": ["hole==0.8.0"],
   "codeowners": ["@johnluetke", "@shenxn"],
   "config_flow": true,
   "iot_class": "local_polling",

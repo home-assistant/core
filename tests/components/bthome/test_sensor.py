@@ -278,7 +278,9 @@ _LOGGER = logging.getLogger(__name__)
             None,
             [
                 {
-                    "sensor_entity": "sensor.test_device_18b2_volatile_organic_compounds",
+                    "sensor_entity": (
+                        "sensor.test_device_18b2_volatile_organic_compounds"
+                    ),
                     "friendly_name": "Test Device 18B2 Volatile Organic Compounds",
                     "unit_of_measurement": "µg/m³",
                     "state_class": "measurement",
@@ -630,7 +632,9 @@ async def test_v1_sensors(
             None,
             [
                 {
-                    "sensor_entity": "sensor.test_device_18b2_volatile_organic_compounds",
+                    "sensor_entity": (
+                        "sensor.test_device_18b2_volatile_organic_compounds"
+                    ),
                     "friendly_name": "Test Device 18B2 Volatile Organic Compounds",
                     "unit_of_measurement": "µg/m³",
                     "state_class": "measurement",

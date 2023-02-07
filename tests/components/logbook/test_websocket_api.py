@@ -47,7 +47,7 @@ from tests.components.recorder.common import (
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 def set_utc(hass):
     """Set timezone to UTC."""
     hass.config.set_time_zone("UTC")
@@ -1297,7 +1297,7 @@ async def test_subscribe_unsubscribe_logbook_stream(
             "context_entity_id": "automation.alarm",
             "context_event_type": "automation_triggered",
             "context_id": "ac5bd62de45711eaaeb351041eec8dd9",
-            "context_message": "triggered by state of " "binary_sensor.dog_food_ready",
+            "context_message": "triggered by state of binary_sensor.dog_food_ready",
             "context_name": "Mock automation",
             "context_source": "state of binary_sensor.dog_food_ready",
             "context_user_id": "b400facee45711eaa9308bfd3d19e474",
@@ -1311,7 +1311,7 @@ async def test_subscribe_unsubscribe_logbook_stream(
             "context_domain": "automation",
             "context_entity_id": "automation.alarm",
             "context_event_type": "automation_triggered",
-            "context_message": "triggered by state of " "binary_sensor.dog_food_ready",
+            "context_message": "triggered by state of binary_sensor.dog_food_ready",
             "context_name": "Mock automation",
             "context_source": "state of binary_sensor.dog_food_ready",
             "context_user_id": "b400facee45711eaa9308bfd3d19e474",
@@ -1323,7 +1323,7 @@ async def test_subscribe_unsubscribe_logbook_stream(
             "context_domain": "automation",
             "context_entity_id": "automation.alarm",
             "context_event_type": "automation_triggered",
-            "context_message": "triggered by state of " "binary_sensor.dog_food_ready",
+            "context_message": "triggered by state of binary_sensor.dog_food_ready",
             "context_name": "Mock automation",
             "context_source": "state of binary_sensor.dog_food_ready",
             "context_user_id": "b400facee45711eaa9308bfd3d19e474",
@@ -1817,6 +1817,7 @@ async def test_subscribe_unsubscribe_logbook_stream_device(
     assert msg["id"] == 7
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
+    await async_wait_recording_done(hass)
 
     # There are no answers to our initial query
     # so we get an empty reply. This is to ensure
@@ -1828,6 +1829,15 @@ async def test_subscribe_unsubscribe_logbook_stream_device(
     assert msg["id"] == 7
     assert msg["type"] == "event"
     assert msg["event"]["events"] == []
+    assert "partial" in msg["event"]
+    await async_wait_recording_done(hass)
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"]["events"] == []
+    assert "partial" not in msg["event"]
+    await async_wait_recording_done(hass)
 
     hass.states.async_set("binary_sensor.should_not_appear", STATE_ON)
     hass.states.async_set("binary_sensor.should_not_appear", STATE_OFF)
@@ -1942,6 +1952,14 @@ async def test_logbook_stream_match_multiple_entities(
     assert msg["id"] == 7
     assert msg["type"] == "event"
     assert msg["event"]["events"] == []
+    assert "partial" in msg["event"]
+    await async_wait_recording_done(hass)
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"]["events"] == []
+    assert "partial" not in msg["event"]
     await async_wait_recording_done(hass)
 
     hass.states.async_set("binary_sensor.should_not_appear", STATE_ON)
@@ -2284,6 +2302,11 @@ async def test_recorder_is_far_behind(recorder_mock, hass, hass_ws_client, caplo
 
     hass.bus.async_fire("mock_event", {"device_id": device.id, "message": "1"})
     await hass.async_block_till_done()
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"]["events"] == []
 
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
     assert msg["id"] == 7

@@ -64,7 +64,7 @@ class FirmwareEffect(IntEnum):
     FLAME = 3
 
 
-class LIFXUpdateCoordinator(DataUpdateCoordinator):
+class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
     """DataUpdateCoordinator to gather data for a specific lifx device."""
 
     def __init__(
@@ -358,7 +358,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
         return self.active_effect.value
 
 
-class LIFXSensorUpdateCoordinator(DataUpdateCoordinator):
+class LIFXSensorUpdateCoordinator(DataUpdateCoordinator[None]):
     """DataUpdateCoordinator to gather data for a specific lifx device."""
 
     def __init__(

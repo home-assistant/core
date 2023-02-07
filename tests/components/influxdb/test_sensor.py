@@ -245,7 +245,7 @@ async def test_minimal_config(hass, mock_client, config_ext, queries, set_query_
                         "unit_of_measurement": "unit",
                         "measurement": "measurement",
                         "where": "where",
-                        "value_template": "value",
+                        "value_template": "123",
                         "database": "db2",
                         "group_function": "fn",
                         "field": "field",

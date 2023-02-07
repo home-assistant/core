@@ -6,6 +6,7 @@ from datetime import timedelta
 from enum import IntFlag
 import functools as ft
 import logging
+import re
 from typing import Any, final
 
 import voluptuous as vol
@@ -23,7 +24,7 @@ from homeassistant.const import (
     STATE_UNLOCKED,
     STATE_UNLOCKING,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -72,16 +73,46 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await component.async_setup(config)
 
     component.async_register_entity_service(
-        SERVICE_UNLOCK, LOCK_SERVICE_SCHEMA, "async_unlock"
+        SERVICE_UNLOCK, LOCK_SERVICE_SCHEMA, _async_unlock
     )
     component.async_register_entity_service(
-        SERVICE_LOCK, LOCK_SERVICE_SCHEMA, "async_lock"
+        SERVICE_LOCK, LOCK_SERVICE_SCHEMA, _async_lock
     )
     component.async_register_entity_service(
-        SERVICE_OPEN, LOCK_SERVICE_SCHEMA, "async_open"
+        SERVICE_OPEN, LOCK_SERVICE_SCHEMA, _async_open, [LockEntityFeature.OPEN]
     )
 
     return True
+
+
+async def _async_lock(entity: LockEntity, service_call: ServiceCall) -> None:
+    """Lock the lock."""
+    code: str = service_call.data.get(ATTR_CODE, "")
+    if entity.code_format_cmp and not entity.code_format_cmp.match(code):
+        raise ValueError(
+            f"Code '{code}' for locking {entity.name} doesn't match pattern {entity.code_format}"
+        )
+    await entity.async_lock(**service_call.data)
+
+
+async def _async_unlock(entity: LockEntity, service_call: ServiceCall) -> None:
+    """Unlock the lock."""
+    code: str = service_call.data.get(ATTR_CODE, "")
+    if entity.code_format_cmp and not entity.code_format_cmp.match(code):
+        raise ValueError(
+            f"Code '{code}' for unlocking {entity.name} doesn't match pattern {entity.code_format}"
+        )
+    await entity.async_unlock(**service_call.data)
+
+
+async def _async_open(entity: LockEntity, service_call: ServiceCall) -> None:
+    """Open the door latch."""
+    code: str = service_call.data.get(ATTR_CODE, "")
+    if entity.code_format_cmp and not entity.code_format_cmp.match(code):
+        raise ValueError(
+            f"Code '{code}' for opening {entity.name} doesn't match pattern {entity.code_format}"
+        )
+    await entity.async_open(**service_call.data)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -113,6 +144,7 @@ class LockEntity(Entity):
     _attr_is_jammed: bool | None = None
     _attr_state: None = None
     _attr_supported_features: LockEntityFeature = LockEntityFeature(0)
+    __code_format_cmp: re.Pattern[str] | None = None
 
     @property
     def changed_by(self) -> str | None:
@@ -123,6 +155,20 @@ class LockEntity(Entity):
     def code_format(self) -> str | None:
         """Regex for code format or None if no code is required."""
         return self._attr_code_format
+
+    @property
+    @final
+    def code_format_cmp(self) -> re.Pattern[str] | None:
+        """Return a compiled code_format."""
+        if self.code_format is None:
+            self.__code_format_cmp = None
+            return None
+        if (
+            not self.__code_format_cmp
+            or self.code_format != self.__code_format_cmp.pattern
+        ):
+            self.__code_format_cmp = re.compile(self.code_format)
+        return self.__code_format_cmp
 
     @property
     def is_locked(self) -> bool | None:

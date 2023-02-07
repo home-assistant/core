@@ -1,5 +1,5 @@
 """Test the entity helper."""
-# pylint: disable=protected-access
+
 import asyncio
 import dataclasses
 from datetime import timedelta
@@ -29,13 +29,13 @@ from tests.common import (
 )
 
 
-def test_generate_entity_id_requires_hass_or_ids():
+def test_generate_entity_id_requires_hass_or_ids() -> None:
     """Ensure we require at least hass or current ids."""
     with pytest.raises(ValueError):
         entity.generate_entity_id("test.{}", "hello world")
 
 
-def test_generate_entity_id_given_keys():
+def test_generate_entity_id_given_keys() -> None:
     """Test generating an entity id given current ids."""
     assert (
         entity.generate_entity_id(
@@ -238,7 +238,7 @@ async def test_async_async_request_call_without_lock(hass):
         job1 = ent_1.async_request_call(ent_1.testhelper(1))
         job2 = ent_2.async_request_call(ent_2.testhelper(2))
 
-        await asyncio.wait([job1, job2])
+        await asyncio.gather(job1, job2)
         while True:
             if len(updates) >= 2:
                 break
@@ -484,7 +484,6 @@ async def test_async_parallel_updates_with_two(hass):
     await test_lock.acquire()
 
     try:
-
         ent_1.async_schedule_update_ha_state(True)
         ent_2.async_schedule_update_ha_state(True)
         ent_3.async_schedule_update_ha_state(True)
@@ -877,7 +876,7 @@ def test_entity_category_schema_error(value):
         schema(value)
 
 
-async def test_entity_description_fallback():
+async def test_entity_description_fallback() -> None:
     """Test entity description has same defaults as entity."""
     ent = entity.Entity()
     ent_with_description = entity.Entity()
@@ -954,3 +953,18 @@ async def test_translation_key(hass):
     )
     mock_entity2.entity_id = "hello.world"
     assert mock_entity2.translation_key == "from_entity_description"
+
+
+async def test_repr_using_stringify_state() -> None:
+    """Test that repr uses stringify state."""
+
+    class MyEntity(MockEntity):
+        """Mock entity."""
+
+        @property
+        def state(self):
+            """Return the state."""
+            raise ValueError("Boom")
+
+    entity = MyEntity(entity_id="test.test", available=False)
+    assert str(entity) == "<entity test.test=unavailable>"

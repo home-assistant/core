@@ -10,6 +10,7 @@ from homeassistant import core
 from homeassistant.helpers.json import (
     ExtendedJSONEncoder,
     JSONEncoder,
+    json_bytes_strip_null,
     json_dumps,
     json_dumps_sorted,
 )
@@ -75,7 +76,7 @@ def test_extended_json_encoder(hass):
     assert ha_json_enc.default(o) == {"__type": str(type(o)), "repr": repr(o)}
 
 
-def test_json_dumps_sorted():
+def test_json_dumps_sorted() -> None:
     """Test the json dumps sorted function."""
     data = {"c": 3, "a": 1, "b": 2}
     assert json_dumps_sorted(data) == json.dumps(
@@ -83,7 +84,7 @@ def test_json_dumps_sorted():
     )
 
 
-def test_json_dumps_float_subclass():
+def test_json_dumps_float_subclass() -> None:
     """Test the json dumps a float subclass."""
 
     class FloatSubclass(float):
@@ -92,7 +93,7 @@ def test_json_dumps_float_subclass():
     assert json_dumps({"c": FloatSubclass(1.2)}) == '{"c":1.2}'
 
 
-def test_json_dumps_tuple_subclass():
+def test_json_dumps_tuple_subclass() -> None:
     """Test the json dumps a tuple subclass."""
 
     tt = time.struct_time((1999, 3, 17, 32, 44, 55, 2, 76, 0))
@@ -100,7 +101,7 @@ def test_json_dumps_tuple_subclass():
     assert json_dumps(tt) == "[1999,3,17,32,44,55,2,76,0]"
 
 
-def test_json_dumps_named_tuple_subclass():
+def test_json_dumps_named_tuple_subclass() -> None:
     """Test the json dumps a tuple subclass."""
 
     class NamedTupleSubclass(NamedTuple):
@@ -113,8 +114,24 @@ def test_json_dumps_named_tuple_subclass():
     assert json_dumps(nts) == '["a"]'
 
 
-def test_json_dumps_rgb_color_subclass():
+def test_json_dumps_rgb_color_subclass() -> None:
     """Test the json dumps of RGBColor."""
     rgb = RGBColor(4, 2, 1)
 
     assert json_dumps(rgb) == "[4,2,1]"
+
+
+def test_json_bytes_strip_null() -> None:
+    """Test stripping nul from strings."""
+
+    assert json_bytes_strip_null("\0") == b'""'
+    assert json_bytes_strip_null("silly\0stuff") == b'"silly"'
+    assert json_bytes_strip_null(["one", "two\0", "three"]) == b'["one","two","three"]'
+    assert (
+        json_bytes_strip_null({"k1": "one", "k2": "two\0", "k3": "three"})
+        == b'{"k1":"one","k2":"two","k3":"three"}'
+    )
+    assert (
+        json_bytes_strip_null([[{"k1": {"k2": ["silly\0stuff"]}}]])
+        == b'[[{"k1":{"k2":["silly"]}}]]'
+    )

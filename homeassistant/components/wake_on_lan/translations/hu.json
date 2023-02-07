@@ -1,8 +1,0 @@
-{
-    "issues": {
-        "moved_yaml": {
-            "description": "A Wake-on-LAN yaml haszn\u00e1lat\u00e1val t\u00f6rt\u00e9n\u0151 konfigur\u00e1l\u00e1sa megsz\u0171nt.\n\nA megl\u00e9v\u0151 YAML-konfigur\u00e1ci\u00f3 a k\u00f6vetkez\u0151 k\u00e9t verzi\u00f3ban fog m\u0171k\u00f6dni.\n\nHelyezze \u00e1t a YAML-konfigur\u00e1ci\u00f3t az integr\u00e1ci\u00f3ba a dokument\u00e1ci\u00f3nak megfelel\u0151en.",
-            "title": "A Wake on Lan YAML konfigur\u00e1ci\u00f3 meg fog sz\u0171nni"
-        }
-    }
-}

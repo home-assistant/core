@@ -90,11 +90,11 @@ class EntityComponent(Generic[_EntityT]):
 
     @property
     def entities(self) -> Iterable[_EntityT]:
-        """
-        Return an iterable that returns all entities.
+        """Return an iterable that returns all entities.
 
-        As the underlying dicts may change when async context is lost, callers that
-        iterate over this asynchronously should make a copy using list() before iterating.
+        As the underlying dicts may change when async context is lost,
+        callers that iterate over this asynchronously should make a copy
+        using list() before iterating.
         """
         return chain.from_iterable(
             platform.entities.values()  # type: ignore[misc]
@@ -200,7 +200,7 @@ class EntityComponent(Generic[_EntityT]):
     def async_register_entity_service(
         self,
         name: str,
-        schema: dict[str, Any] | vol.Schema,
+        schema: dict[str | vol.Marker, Any] | vol.Schema,
         func: str | Callable[..., Any],
         required_features: list[int] | None = None,
     ) -> None:

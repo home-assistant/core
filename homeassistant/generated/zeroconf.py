@@ -152,6 +152,11 @@ ZEROCONF = {
             },
         },
     ],
+    "_bbxsrv._tcp.local.": [
+        {
+            "domain": "blebox",
+        },
+    ],
     "_bond._tcp.local.": [
         {
             "domain": "bond",
@@ -276,6 +281,12 @@ ZEROCONF = {
         {
             "domain": "shelly",
             "name": "shelly*",
+        },
+        {
+            "domain": "synology_dsm",
+            "properties": {
+                "vendor": "synology*",
+            },
         },
     ],
     "_hue._tcp.local.": [

@@ -725,7 +725,9 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class PlenticoreDataSensor(CoordinatorEntity, SensorEntity):
+class PlenticoreDataSensor(
+    CoordinatorEntity[ProcessDataUpdateCoordinator], SensorEntity
+):
     """Representation of a Plenticore data Sensor."""
 
     entity_description: PlenticoreSensorEntityDescription

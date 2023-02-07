@@ -536,6 +536,7 @@ async def test_abort_hassio_discovery_for_other_addon(
 async def test_usb_discovery(
     hass,
     supervisor,
+    addon_not_installed,
     install_addon,
     addon_options,
     get_addon_discovery_info,
@@ -1063,8 +1064,10 @@ async def test_addon_running(
 
 
 @pytest.mark.parametrize(
-    "discovery_info, discovery_info_side_effect, server_version_side_effect, "
-    "addon_info_side_effect, abort_reason",
+    (
+        "discovery_info, discovery_info_side_effect, server_version_side_effect, "
+        "addon_info_side_effect, abort_reason"
+    ),
     [
         (
             {"config": ADDON_DISCOVERY_INFO},
@@ -1742,7 +1745,10 @@ async def test_options_not_addon(hass, client, supervisor, integration):
 
 
 @pytest.mark.parametrize(
-    "discovery_info, entry_data, old_addon_options, new_addon_options, disconnect_calls",
+    (
+        "discovery_info, entry_data, old_addon_options, new_addon_options,"
+        " disconnect_calls"
+    ),
     [
         (
             {"config": ADDON_DISCOVERY_INFO},
@@ -1983,7 +1989,10 @@ async def different_device_server_version(*args):
 
 
 @pytest.mark.parametrize(
-    "discovery_info, entry_data, old_addon_options, new_addon_options, disconnect_calls, server_version_side_effect",
+    (
+        "discovery_info, entry_data, old_addon_options, new_addon_options,"
+        " disconnect_calls, server_version_side_effect"
+    ),
     [
         (
             {"config": ADDON_DISCOVERY_INFO},
@@ -2131,7 +2140,10 @@ async def test_options_different_device(
 
 
 @pytest.mark.parametrize(
-    "discovery_info, entry_data, old_addon_options, new_addon_options, disconnect_calls, restart_addon_side_effect",
+    (
+        "discovery_info, entry_data, old_addon_options, new_addon_options,"
+        " disconnect_calls, restart_addon_side_effect"
+    ),
     [
         (
             {"config": ADDON_DISCOVERY_INFO},
@@ -2280,7 +2292,10 @@ async def test_options_addon_restart_failed(
 
 
 @pytest.mark.parametrize(
-    "discovery_info, entry_data, old_addon_options, new_addon_options, disconnect_calls, server_version_side_effect",
+    (
+        "discovery_info, entry_data, old_addon_options, new_addon_options,"
+        " disconnect_calls, server_version_side_effect"
+    ),
     [
         (
             {"config": ADDON_DISCOVERY_INFO},
@@ -2364,7 +2379,10 @@ async def test_options_addon_running_server_info_failure(
 
 
 @pytest.mark.parametrize(
-    "discovery_info, entry_data, old_addon_options, new_addon_options, disconnect_calls",
+    (
+        "discovery_info, entry_data, old_addon_options, new_addon_options,"
+        " disconnect_calls"
+    ),
     [
         (
             {"config": ADDON_DISCOVERY_INFO},

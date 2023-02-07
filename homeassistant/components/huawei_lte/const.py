@@ -2,7 +2,7 @@
 
 DOMAIN = "huawei_lte"
 
-ATTR_UNIQUE_ID = "unique_id"
+ATTR_CONFIG_ENTRY_ID = "config_entry_id"
 
 CONF_MANUFACTURER = "manufacturer"
 CONF_TRACK_WIRED_CLIENTS = "track_wired_clients"

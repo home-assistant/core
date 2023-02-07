@@ -181,7 +181,8 @@ class ValueMappingZwaveFan(ZwaveFan):
                 return
 
         raise NotValidPresetModeError(
-            f"The preset_mode {preset_mode} is not a valid preset_mode: {self.preset_modes}"
+            f"The preset_mode {preset_mode} is not a valid preset_mode:"
+            f" {self.preset_modes}"
         )
 
     @property
@@ -284,8 +285,7 @@ class ValueMappingZwaveFan(ZwaveFan):
         return last_max_speed
 
     def zwave_speed_to_percentage(self, zwave_speed: int) -> int | None:
-        """
-        Convert a Zwave speed to a percentage.
+        """Convert a Zwave speed to a percentage.
 
         This method may return None if the device's value mapping doesn't cover
         the specified Z-Wave speed.

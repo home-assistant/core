@@ -87,7 +87,9 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class PlenticoreDataSelect(CoordinatorEntity, SelectEntity):
+class PlenticoreDataSelect(
+    CoordinatorEntity[SelectDataUpdateCoordinator], SelectEntity
+):
     """Representation of a Plenticore Select."""
 
     _attr_entity_category = EntityCategory.CONFIG

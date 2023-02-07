@@ -126,7 +126,7 @@ async def test_to_get_update(mock_sendline, mock_prompt, mock_login, mock_logout
     scanner = get_scanner(hass, conf_dict)
     # mock_sendline.side_effect = AssertionError("Test")
     mock_prompt.side_effect = AssertionError("Test")
-    devices = scanner._get_update()  # pylint: disable=protected-access
+    devices = scanner._get_update()
     assert devices is None
 
 
@@ -141,7 +141,7 @@ def test_bad_response_returns_none(hass):
     assert _response_to_json("{(}") == {}
 
 
-def test_config_error():
+def test_config_error() -> None:
     """Test for configuration errors."""
     with pytest.raises(vol.Invalid):
         PLATFORM_SCHEMA(

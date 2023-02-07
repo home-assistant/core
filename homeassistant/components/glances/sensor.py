@@ -196,6 +196,7 @@ SENSOR_TYPES: tuple[GlancesSensorEntityDescription, ...] = (
         type="sensors",
         name_suffix="Charge",
         native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
         icon="mdi:battery",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -261,7 +262,6 @@ async def async_setup_entry(
         if entity_id := ent_reg.async_get_entity_id(
             Platform.SENSOR, DOMAIN, old_unique_id
         ):
-
             ent_reg.async_update_entity(
                 entity_id, new_unique_id=f"{config_entry.entry_id}-{new_key}"
             )

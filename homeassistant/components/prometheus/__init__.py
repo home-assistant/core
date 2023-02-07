@@ -16,6 +16,7 @@ from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_LOW,
     HVACAction,
 )
+from homeassistant.components.cover import ATTR_POSITION, ATTR_TILT_POSITION
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.humidifier import ATTR_AVAILABLE_MODES, ATTR_HUMIDITY
 from homeassistant.const import (
@@ -28,7 +29,11 @@ from homeassistant.const import (
     CONTENT_TYPE_TEXT_PLAIN,
     EVENT_STATE_CHANGED,
     PERCENTAGE,
+    STATE_CLOSED,
+    STATE_CLOSING,
     STATE_ON,
+    STATE_OPEN,
+    STATE_OPENING,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     UnitOfTemperature,
@@ -229,10 +234,8 @@ class PrometheusMetrics:
                         sample.name,
                         entity_id,
                     )
-                    try:
+                    with suppress(KeyError):
                         metric.remove(*sample.labels.values())
-                    except KeyError:
-                        pass
 
     def _handle_attributes(self, state):
         for key, value in state.attributes.items():
@@ -370,6 +373,38 @@ class PrometheusMetrics:
         )
         value = self.state_as_number(state)
         metric.labels(**self._labels(state)).set(value)
+
+    def _handle_cover(self, state):
+        metric = self._metric(
+            "cover_state",
+            self.prometheus_cli.Gauge,
+            "State of the cover (0/1)",
+            ["state"],
+        )
+
+        cover_states = [STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING]
+        for cover_state in cover_states:
+            metric.labels(**dict(self._labels(state), state=cover_state)).set(
+                float(cover_state == state.state)
+            )
+
+        position = state.attributes.get(ATTR_POSITION)
+        if position is not None:
+            position_metric = self._metric(
+                "cover_position",
+                self.prometheus_cli.Gauge,
+                "Position of the cover (0-100)",
+            )
+            position_metric.labels(**self._labels(state)).set(float(position))
+
+        tilt_position = state.attributes.get(ATTR_TILT_POSITION)
+        if tilt_position is not None:
+            tilt_position_metric = self._metric(
+                "cover_tilt_position",
+                self.prometheus_cli.Gauge,
+                "Tilt Position of the cover (0-100)",
+            )
+            tilt_position_metric.labels(**self._labels(state)).set(float(tilt_position))
 
     def _handle_light(self, state):
         metric = self._metric(

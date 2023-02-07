@@ -28,7 +28,7 @@ DATA_HYDRAWISE = "hydrawise"
 DOMAIN = "hydrawise"
 DEFAULT_WATERING_TIME = 15
 
-SCAN_INTERVAL = timedelta(seconds=30)
+SCAN_INTERVAL = timedelta(seconds=120)
 
 SIGNAL_UPDATE_HYDRAWISE = "hydrawise_update"
 
@@ -89,7 +89,7 @@ class HydrawiseEntity(Entity):
 
     _attr_attribution = "Data provided by hydrawise.com"
 
-    def __init__(self, data, description: EntityDescription):
+    def __init__(self, data, description: EntityDescription) -> None:
         """Initialize the Hydrawise entity."""
         self.entity_description = description
         self.data = data

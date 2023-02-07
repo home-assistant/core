@@ -96,7 +96,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
-
             hub = Control4Validator(
                 user_input[CONF_HOST],
                 user_input[CONF_USERNAME],

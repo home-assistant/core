@@ -45,6 +45,7 @@ class ColorChannel(ZigbeeChannel):
         "color_capabilities": True,
         "color_loop_active": False,
         "start_up_color_temperature": True,
+        "options": True,
     }
 
     @cached_property
@@ -101,7 +102,10 @@ class ColorChannel(ZigbeeChannel):
         min_mireds = self.cluster.get("color_temp_physical_min", self.MIN_MIREDS)
         if min_mireds == 0:
             self.warning(
-                "[Min mireds is 0, setting to %s] Please open an issue on the quirks repo to have this device corrected",
+                (
+                    "[Min mireds is 0, setting to %s] Please open an issue on the"
+                    " quirks repo to have this device corrected"
+                ),
                 self.MIN_MIREDS,
             )
             min_mireds = self.MIN_MIREDS
@@ -113,7 +117,10 @@ class ColorChannel(ZigbeeChannel):
         max_mireds = self.cluster.get("color_temp_physical_max", self.MAX_MIREDS)
         if max_mireds == 0:
             self.warning(
-                "[Max mireds is 0, setting to %s] Please open an issue on the quirks repo to have this device corrected",
+                (
+                    "[Max mireds is 0, setting to %s] Please open an issue on the"
+                    " quirks repo to have this device corrected"
+                ),
                 self.MAX_MIREDS,
             )
             max_mireds = self.MAX_MIREDS
@@ -161,3 +168,13 @@ class ColorChannel(ZigbeeChannel):
             self.color_capabilities is not None
             and lighting.Color.ColorCapabilities.Color_loop in self.color_capabilities
         )
+
+    @property
+    def options(self) -> lighting.Color.Options:
+        """Return ZCL options of the channel."""
+        return lighting.Color.Options(self.cluster.get("options", 0))
+
+    @property
+    def execute_if_off_supported(self) -> bool:
+        """Return True if the channel can execute commands when off."""
+        return lighting.Color.Options.Execute_if_off in self.options

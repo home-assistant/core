@@ -56,7 +56,8 @@ class MatterSwitch(MatterEntity, SwitchEntity):
     @callback
     def _update_from_device(self) -> None:
         """Update from device."""
-        self._attr_is_on = self._device_type_instance.get_cluster(clusters.OnOff).onOff
+        cluster = self._device_type_instance.get_cluster(clusters.OnOff)
+        self._attr_is_on = cluster.onOff if cluster else None
 
 
 @dataclass

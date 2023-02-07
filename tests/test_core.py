@@ -1,7 +1,6 @@
 """Test to verify that Home Assistant core works."""
 from __future__ import annotations
 
-# pylint: disable=protected-access
 import array
 import asyncio
 from datetime import datetime, timedelta
@@ -44,12 +43,12 @@ import homeassistant.util.dt as dt_util
 from homeassistant.util.read_only_dict import ReadOnlyDict
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from tests.common import async_capture_events, async_mock_service
+from .common import async_capture_events, async_mock_service
 
 PST = dt_util.get_time_zone("America/Los_Angeles")
 
 
-def test_split_entity_id():
+def test_split_entity_id() -> None:
     """Test split_entity_id."""
     assert ha.split_entity_id("domain.object_id") == ("domain", "object_id")
     with pytest.raises(ValueError):
@@ -64,7 +63,7 @@ def test_split_entity_id():
         ha.split_entity_id(".empty_domain")
 
 
-def test_async_add_hass_job_schedule_callback():
+def test_async_add_hass_job_schedule_callback() -> None:
     """Test that we schedule coroutines and add jobs to the job pool."""
     hass = MagicMock()
     job = MagicMock()
@@ -75,7 +74,7 @@ def test_async_add_hass_job_schedule_callback():
     assert len(hass.add_job.mock_calls) == 0
 
 
-def test_async_add_hass_job_schedule_partial_callback():
+def test_async_add_hass_job_schedule_partial_callback() -> None:
     """Test that we schedule partial coros and add jobs to the job pool."""
     hass = MagicMock()
     job = MagicMock()
@@ -115,7 +114,7 @@ def test_async_add_hass_job_schedule_partial_coroutinefunction(event_loop):
     assert len(hass.add_job.mock_calls) == 0
 
 
-def test_async_add_job_add_hass_threaded_job_to_pool():
+def test_async_add_job_add_hass_threaded_job_to_pool() -> None:
     """Test that we schedule coroutines and add jobs to the job pool."""
     hass = MagicMock()
 
@@ -141,7 +140,7 @@ def test_async_create_task_schedule_coroutine(event_loop):
     assert len(hass.add_job.mock_calls) == 0
 
 
-def test_async_run_hass_job_calls_callback():
+def test_async_run_hass_job_calls_callback() -> None:
     """Test that the callback annotation is respected."""
     hass = MagicMock()
     calls = []
@@ -154,7 +153,7 @@ def test_async_run_hass_job_calls_callback():
     assert len(hass.async_add_job.mock_calls) == 0
 
 
-def test_async_run_hass_job_delegates_non_async():
+def test_async_run_hass_job_delegates_non_async() -> None:
     """Test that the callback annotation is respected."""
     hass = MagicMock()
     calls = []
@@ -323,7 +322,7 @@ async def test_add_job_with_none(hass):
         hass.async_add_job(None, "test_arg")
 
 
-def test_event_eq():
+def test_event_eq() -> None:
     """Test events."""
     now = dt_util.utcnow()
     data = {"some": "attr"}
@@ -332,10 +331,10 @@ def test_event_eq():
         ha.Event("some_type", data, time_fired=now, context=context) for _ in range(2)
     )
 
-    assert event1 == event2
+    assert event1.as_dict() == event2.as_dict()
 
 
-def test_event_repr():
+def test_event_repr() -> None:
     """Test that Event repr method works."""
     assert str(ha.Event("TestEvent")) == "<Event TestEvent[L]>"
 
@@ -345,7 +344,7 @@ def test_event_repr():
     )
 
 
-def test_event_as_dict():
+def test_event_as_dict() -> None:
     """Test an Event as dictionary."""
     event_type = "some_type"
     now = dt_util.utcnow()
@@ -368,7 +367,7 @@ def test_event_as_dict():
     assert event.as_dict() == expected
 
 
-def test_state_as_dict():
+def test_state_as_dict() -> None:
     """Test a State as dictionary."""
     last_time = datetime(1984, 12, 8, 12, 0, 0)
     state = ha.State(
@@ -398,6 +397,58 @@ def test_state_as_dict():
     # 2nd time to verify cache
     assert state.as_dict() == expected
     assert state.as_dict() is as_dict_1
+
+
+def test_state_as_compressed_state() -> None:
+    """Test a State as compressed state."""
+    last_time = datetime(1984, 12, 8, 12, 0, 0, tzinfo=dt_util.UTC)
+    state = ha.State(
+        "happy.happy",
+        "on",
+        {"pig": "dog"},
+        last_updated=last_time,
+        last_changed=last_time,
+    )
+    expected = {
+        "a": {"pig": "dog"},
+        "c": state.context.id,
+        "lc": last_time.timestamp(),
+        "s": "on",
+    }
+    as_compressed_state = state.as_compressed_state()
+    # We are not too concerned about these being ReadOnlyDict
+    # since we don't expect them to be called by external callers
+    assert as_compressed_state == expected
+    # 2nd time to verify cache
+    assert state.as_compressed_state() == expected
+    assert state.as_compressed_state() is as_compressed_state
+
+
+def test_state_as_compressed_state_unique_last_updated() -> None:
+    """Test a State as compressed state where last_changed is not last_updated."""
+    last_changed = datetime(1984, 12, 8, 11, 0, 0, tzinfo=dt_util.UTC)
+    last_updated = datetime(1984, 12, 8, 12, 0, 0, tzinfo=dt_util.UTC)
+    state = ha.State(
+        "happy.happy",
+        "on",
+        {"pig": "dog"},
+        last_updated=last_updated,
+        last_changed=last_changed,
+    )
+    expected = {
+        "a": {"pig": "dog"},
+        "c": state.context.id,
+        "lc": last_changed.timestamp(),
+        "lu": last_updated.timestamp(),
+        "s": "on",
+    }
+    as_compressed_state = state.as_compressed_state()
+    # We are not too concerned about these being ReadOnlyDict
+    # since we don't expect them to be called by external callers
+    assert as_compressed_state == expected
+    # 2nd time to verify cache
+    assert state.as_compressed_state() == expected
+    assert state.as_compressed_state() is as_compressed_state
 
 
 async def test_eventbus_add_remove_listener(hass):
@@ -597,7 +648,7 @@ async def test_eventbus_max_length_exceeded(hass):
     assert exc_info.value.value == long_evt_name
 
 
-def test_state_init():
+def test_state_init() -> None:
     """Test state.init."""
     with pytest.raises(InvalidEntityFormatError):
         ha.State("invalid_entity_format", "test_state")
@@ -606,38 +657,38 @@ def test_state_init():
         ha.State("domain.long_state", "t" * 256)
 
 
-def test_state_domain():
+def test_state_domain() -> None:
     """Test domain."""
     state = ha.State("some_domain.hello", "world")
     assert state.domain == "some_domain"
 
 
-def test_state_object_id():
+def test_state_object_id() -> None:
     """Test object ID."""
     state = ha.State("domain.hello", "world")
     assert state.object_id == "hello"
 
 
-def test_state_name_if_no_friendly_name_attr():
+def test_state_name_if_no_friendly_name_attr() -> None:
     """Test if there is no friendly name."""
     state = ha.State("domain.hello_world", "world")
     assert state.name == "hello world"
 
 
-def test_state_name_if_friendly_name_attr():
+def test_state_name_if_friendly_name_attr() -> None:
     """Test if there is a friendly name."""
     name = "Some Unique Name"
     state = ha.State("domain.hello_world", "world", {ATTR_FRIENDLY_NAME: name})
     assert state.name == name
 
 
-def test_state_dict_conversion():
+def test_state_dict_conversion() -> None:
     """Test conversion of dict."""
     state = ha.State("domain.hello", "world", {"some": "attr"})
-    assert state == ha.State.from_dict(state.as_dict())
+    assert state.as_dict() == ha.State.from_dict(state.as_dict()).as_dict()
 
 
-def test_state_dict_conversion_with_wrong_data():
+def test_state_dict_conversion_with_wrong_data() -> None:
     """Test conversion with wrong data."""
     assert ha.State.from_dict(None) is None
     assert ha.State.from_dict({"state": "yes"}) is None
@@ -654,7 +705,7 @@ def test_state_dict_conversion_with_wrong_data():
     assert wrong_context.context.id == "123"
 
 
-def test_state_repr():
+def test_state_repr() -> None:
     """Test state.repr."""
     assert (
         str(ha.State("happy.happy", "on", last_changed=datetime(1984, 12, 8, 12, 0, 0)))
@@ -670,8 +721,7 @@ def test_state_repr():
                 datetime(1984, 12, 8, 12, 0, 0),
             )
         )
-        == "<state happy.happy=on; brightness=144 @ "
-        "1984-12-08T12:00:00+00:00>"
+        == "<state happy.happy=on; brightness=144 @ 1984-12-08T12:00:00+00:00>"
     )
 
 
@@ -763,7 +813,7 @@ async def test_statemachine_force_update(hass):
     assert len(events) == 1
 
 
-def test_service_call_repr():
+def test_service_call_repr() -> None:
     """Test ServiceCall repr."""
     call = ha.ServiceCall("homeassistant", "start")
     assert str(call) == f"<ServiceCall homeassistant.start (c:{call.context.id})>"
@@ -925,7 +975,7 @@ async def test_serviceregistry_callback_service_raise_exception(hass):
     await hass.async_block_till_done()
 
 
-async def test_config_defaults():
+async def test_config_defaults() -> None:
     """Test config defaults."""
     hass = Mock()
     config = ha.Config(hass)
@@ -953,21 +1003,21 @@ async def test_config_defaults():
     assert config.language == "en"
 
 
-async def test_config_path_with_file():
+async def test_config_path_with_file() -> None:
     """Test get_config_path method."""
     config = ha.Config(None)
     config.config_dir = "/test/ha-config"
     assert config.path("test.conf") == "/test/ha-config/test.conf"
 
 
-async def test_config_path_with_dir_and_file():
+async def test_config_path_with_dir_and_file() -> None:
     """Test get_config_path method."""
     config = ha.Config(None)
     config.config_dir = "/test/ha-config"
     assert config.path("dir", "test.conf") == "/test/ha-config/dir/test.conf"
 
 
-async def test_config_as_dict():
+async def test_config_as_dict() -> None:
     """Test as dict."""
     config = ha.Config(None)
     config.config_dir = "/test/ha-config"
@@ -999,7 +1049,7 @@ async def test_config_as_dict():
     assert expected == config.as_dict()
 
 
-async def test_config_is_allowed_path():
+async def test_config_is_allowed_path() -> None:
     """Test is_allowed_path method."""
     config = ha.Config(None)
     with TemporaryDirectory() as tmp_dir:
@@ -1031,7 +1081,7 @@ async def test_config_is_allowed_path():
             config.is_allowed_path(None)
 
 
-async def test_config_is_allowed_external_url():
+async def test_config_is_allowed_external_url() -> None:
     """Test is_allowed_external_url method."""
     config = ha.Config(None)
     config.allowlist_external_urls = [
@@ -1128,7 +1178,12 @@ async def test_service_executed_with_subservices(hass):
         call2 = hass.services.async_call(
             "test", "inner", blocking=True, context=call.context
         )
-        await asyncio.wait([call1, call2])
+        await asyncio.wait(
+            [
+                hass.async_create_task(call1),
+                hass.async_create_task(call2),
+            ]
+        )
         calls.append(call)
 
     hass.services.async_register("test", "outer", handle_outer)
@@ -1161,7 +1216,7 @@ async def test_service_call_event_contains_original_data(hass):
     assert calls[0].context is context
 
 
-def test_context():
+def test_context() -> None:
     """Test context init."""
     c = ha.Context()
     assert c.user_id is None
@@ -1235,7 +1290,7 @@ async def test_cancel_service_task(hass, cancel_call):
     assert service_cancelled
 
 
-def test_valid_entity_id():
+def test_valid_entity_id() -> None:
     """Test valid entity ID."""
     for invalid in [
         "_light.kitchen",
@@ -1452,7 +1507,7 @@ async def test_async_entity_ids_count(hass):
     assert hass.states.async_entity_ids_count("light") == 3
 
 
-async def test_hassjob_forbid_coroutine():
+async def test_hassjob_forbid_coroutine() -> None:
     """Test hassjob forbids coroutines."""
 
     async def bla():

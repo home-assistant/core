@@ -5,7 +5,7 @@ from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 from unittest.mock import ANY, AsyncMock, Mock
 
-from aiohttp import ClientSession, ClientWebSocketResponse
+from aiohttp import ClientWebSocketResponse
 from freezegun import freeze_time
 import pytest
 import voluptuous as vol
@@ -19,6 +19,7 @@ from homeassistant.helpers import issue_registry
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_platform
+from tests.typing import ClientSessionGenerator
 
 DEFAULT_ISSUES = [
     {
@@ -92,14 +93,14 @@ class MockFixFlow(RepairsFlow):
         assert self.issue_id in EXPECTED_DATA
         assert self.data == EXPECTED_DATA[self.issue_id]
 
-        return await (self.async_step_custom_step())
+        return await self.async_step_custom_step()
 
     async def async_step_custom_step(
         self, user_input: dict[str, str] | None = None
     ) -> data_entry_flow.FlowResult:
         """Handle a custom_step step of a fix flow."""
         if user_input is not None:
-            return self.async_create_entry(title="", data={})
+            return self.async_create_entry(data={})
 
         return self.async_show_form(step_id="custom_step", data_schema=vol.Schema({}))
 
@@ -334,7 +335,6 @@ async def test_fix_issue(
         "description_placeholders": None,
         "flow_id": flow_id,
         "handler": domain,
-        "title": "",
         "type": "create_entry",
         "version": 1,
     }
@@ -510,7 +510,7 @@ async def test_list_issues(hass: HomeAssistant, hass_storage, hass_ws_client) ->
 
 async def test_fix_issue_aborted(
     hass: HomeAssistant,
-    hass_client: Callable[..., Awaitable[ClientSession]],
+    hass_client: ClientSessionGenerator,
     hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
 ) -> None:
     """Test we can fix an issue."""

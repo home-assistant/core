@@ -42,9 +42,11 @@ def cubic_feet_to_cubic_meter(cubic_feet: float) -> float:
 def convert(volume: float, from_unit: str, to_unit: str) -> float:
     """Convert a volume from one unit to another."""
     report(
-        "uses volume utility. This is deprecated since 2022.10 and will "
-        "stop working in Home Assistant 2023.4, it should be updated to use "
-        "unit_conversion.VolumeConverter instead",
+        (
+            "uses volume utility. This is deprecated since 2022.10 and will "
+            "stop working in Home Assistant 2023.4, it should be updated to use "
+            "unit_conversion.VolumeConverter instead"
+        ),
         error_if_core=False,
     )
     return VolumeConverter.convert(volume, from_unit, to_unit)

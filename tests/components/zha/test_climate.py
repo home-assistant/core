@@ -1,4 +1,4 @@
-"""Test zha climate."""
+"""Test ZHA climate."""
 from unittest.mock import patch
 
 import pytest
@@ -173,7 +173,7 @@ ZCL_ATTR_PLUG = {
 
 @pytest.fixture(autouse=True)
 def climate_platform_only():
-    """Only setup the climate and required base platforms to speed up tests."""
+    """Only set up the climate and required base platforms to speed up tests."""
     with patch(
         "homeassistant.components.zha.PLATFORMS",
         (
@@ -267,7 +267,7 @@ async def device_climate_zonnsmart(device_climate_mock):
     )
 
 
-def test_sequence_mappings():
+def test_sequence_mappings() -> None:
     """Test correct mapping between control sequence -> HVAC Mode -> Sysmode."""
 
     for hvac_modes in SEQ_OF_OPERATION.values():

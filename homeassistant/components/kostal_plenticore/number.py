@@ -1,12 +1,11 @@
 """Platform for Kostal Plenticore numbers."""
 from __future__ import annotations
 
-from abc import ABC
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
-from kostal.plenticore import SettingsData
+from pykoplenti import SettingsData
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -130,11 +129,12 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class PlenticoreDataNumber(CoordinatorEntity, NumberEntity, ABC):
+class PlenticoreDataNumber(
+    CoordinatorEntity[SettingDataUpdateCoordinator], NumberEntity
+):
     """Representation of a Kostal Plenticore Number entity."""
 
     entity_description: PlenticoreNumberEntityDescription
-    coordinator: SettingDataUpdateCoordinator
 
     def __init__(
         self,

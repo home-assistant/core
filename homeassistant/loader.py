@@ -1,5 +1,4 @@
-"""
-The methods for loading Home Assistant integrations.
+"""The methods for loading Home Assistant integrations.
 
 This module has quite some complex parts. I have tried to add as much
 documentation as possible to keep it understandable.
@@ -120,11 +119,11 @@ class USBMatcher(USBMatcherRequired, USBMatcherOptional):
 
 
 class Manifest(TypedDict, total=False):
-    """
-    Integration manifest.
+    """Integration manifest.
 
-    Note that none of the attributes are marked Optional here. However, some of them may be optional in manifest.json
-    in the sense that they can be omitted altogether. But when present, they should not have null values in it.
+    Note that none of the attributes are marked Optional here. However, some of
+    them may be optional in manifest.json in the sense that they can be omitted
+    altogether. But when present, they should not have null values in it.
     """
 
     name: str
@@ -228,7 +227,7 @@ async def async_get_config_flows(
     type_filter: Literal["device", "helper", "hub", "service"] | None = None,
 ) -> set[str]:
     """Return cached list of config flows."""
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from .generated.config_flows import FLOWS
 
     integrations = await async_get_custom_components(hass)
@@ -338,7 +337,9 @@ async def async_get_zeroconf(
     hass: HomeAssistant,
 ) -> dict[str, list[dict[str, str | dict[str, str]]]]:
     """Return cached list of zeroconf types."""
-    zeroconf: dict[str, list[dict[str, str | dict[str, str]]]] = ZEROCONF.copy()  # type: ignore[assignment]
+    zeroconf: dict[
+        str, list[dict[str, str | dict[str, str]]]
+    ] = ZEROCONF.copy()  # type: ignore[assignment]
 
     integrations = await async_get_custom_components(hass)
     for integration in integrations.values():
@@ -496,7 +497,8 @@ class Integration:
                     (
                         "The custom integration '%s' does not have a version key in the"
                         " manifest file and was blocked from loading. See"
-                        " https://developers.home-assistant.io/blog/2021/01/29/custom-integration-changes#versions"
+                        " https://developers.home-assistant.io"
+                        "/blog/2021/01/29/custom-integration-changes#versions"
                         " for more details"
                     ),
                     integration.domain,
@@ -518,7 +520,8 @@ class Integration:
                     (
                         "The custom integration '%s' does not have a valid version key"
                         " (%s) in the manifest file and was blocked from loading. See"
-                        " https://developers.home-assistant.io/blog/2021/01/29/custom-integration-changes#versions"
+                        " https://developers.home-assistant.io"
+                        "/blog/2021/01/29/custom-integration-changes#versions"
                         " for more details"
                     ),
                     integration.domain,
@@ -895,7 +898,9 @@ def _load_file(
     Async friendly.
     """
     with suppress(KeyError):
-        return hass.data[DATA_COMPONENTS][comp_or_platform]  # type: ignore[no-any-return]
+        return hass.data[DATA_COMPONENTS][  # type: ignore[no-any-return]
+            comp_or_platform
+        ]
 
     if (cache := hass.data.get(DATA_COMPONENTS)) is None:
         if not _async_mount_config_dir(hass):
