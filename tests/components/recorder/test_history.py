@@ -740,8 +740,8 @@ async def test_state_changes_during_period_query_during_migration_to_schema_25(
     recorder_db_url: str,
 ):
     """Test we can query data prior to schema 25 and during migration to schema 25."""
-    if recorder_db_url.startswith("mysql://"):
-        # This test doesn't run on MySQL / MariaDB; we can't drop table state_attributes
+    if recorder_db_url.startswith(("mysql://", "postgresql://")):
+        # This test doesn't run on MySQL / MariaDB / Postgresql; we can't drop table state_attributes
         return
 
     instance = await async_setup_recorder_instance(hass, {})
@@ -795,8 +795,8 @@ async def test_get_states_query_during_migration_to_schema_25(
     recorder_db_url: str,
 ):
     """Test we can query data prior to schema 25 and during migration to schema 25."""
-    if recorder_db_url.startswith("mysql://"):
-        # This test doesn't run on MySQL / MariaDB; we can't drop table state_attributes
+    if recorder_db_url.startswith(("mysql://", "postgresql://")):
+        # This test doesn't run on MySQL / MariaDB / Postgresql; we can't drop table state_attributes
         return
 
     instance = await async_setup_recorder_instance(hass, {})
