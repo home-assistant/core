@@ -53,11 +53,11 @@ jobs:
       core: ${{ steps.core.outputs.changes }}
       integrations_glob: ${{ steps.info.outputs.integrations_glob }}
       integrations: ${{ steps.integrations.outputs.changes }}
-      mariadb_groups: ${{ steps.info.outputs.mariadb_groups }}
       pre-commit_cache_key: ${{ steps.generate_pre-commit_cache_key.outputs.key }}
       python_cache_key: ${{ steps.generate_python_cache_key.outputs.key }}
-      python_versions: ${{ steps.info.outputs.python_versions }}
       requirements: ${{ steps.core.outputs.requirements }}
+      mariadb_groups: ${{ steps.info.outputs.mariadb_groups }}
+      python_versions: ${{ steps.info.outputs.python_versions }}
       test_full_suite: ${{ steps.info.outputs.test_full_suite }}
       test_group_count: ${{ steps.info.outputs.test_group_count }}
       test_groups: ${{ steps.info.outputs.test_groups }}
@@ -937,9 +937,8 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
-        mariadb-group: ${{ fromJson(needs.info.outputs.mariadb_groups) }}
     name: >-
-      Run tests Python ${{ matrix.python-version }} (${{ matrix.mariadb-group }})
+      Run tests Python ${{ matrix.python-version }} (mariadb)
     steps:
       - name: Install additional OS dependencies
         run: |
