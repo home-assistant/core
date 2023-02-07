@@ -38,7 +38,7 @@ from homeassistant.util import dt as dt_util
 
 from . import subscription
 from .config import MQTT_RO_SCHEMA
-from .const import CONF_ENCODING, CONF_QOS, CONF_STATE_TOPIC
+from .const import CONF_ENCODING, CONF_QOS, CONF_STATE_TOPIC, PAYLOAD_NONE
 from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
@@ -272,13 +272,19 @@ class MqttSensor(MqttEntity, RestoreSensor):
             payload = self._template(msg.payload, PayloadSentinel.DEFAULT)
             if payload is PayloadSentinel.DEFAULT:
                 return
-            if self.device_class not in {
-                SensorDeviceClass.DATE,
-                SensorDeviceClass.TIMESTAMP,
-            }:
-                self._attr_native_value = str(payload)
+            new_value = str(payload)
+            if self._numeric_state_expected:
+                if new_value == "":
+                    _LOGGER.debug("Ignore empty state from '%s'", msg.topic)
+                elif new_value == PAYLOAD_NONE:
+                    self._attr_native_value = None
+                else:
+                    self._attr_native_value = new_value
                 return
-            if (payload_datetime := dt_util.parse_datetime(str(payload))) is None:
+            if self.device_class is None:
+                self._attr_native_value = new_value
+                return
+            if (payload_datetime := dt_util.parse_datetime(new_value)) is None:
                 _LOGGER.warning(
                     "Invalid state message '%s' from '%s'", msg.payload, msg.topic
                 )
