@@ -57,6 +57,7 @@ jobs:
       python_cache_key: ${{ steps.generate_python_cache_key.outputs.key }}
       requirements: ${{ steps.core.outputs.requirements }}
       mariadb_groups: ${{ steps.info.outputs.mariadb_groups }}
+      postgresql_groups: ${{ steps.info.outputs.postgresql_groups }}
       python_versions: ${{ steps.info.outputs.python_versions }}
       test_full_suite: ${{ steps.info.outputs.test_full_suite }}
       test_group_count: ${{ steps.info.outputs.test_group_count }}
@@ -105,6 +106,7 @@ jobs:
           # Defaults
           integrations_glob=""
           mariadb_groups="[]"
+          postgresql_groups="[]"
           test_full_suite="true"
           test_groups="[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]"
           test_group_count=10
@@ -158,6 +160,8 @@ jobs:
           # Output & sent to GitHub Actions
           echo "mariadb_groups: ${mariadb_groups}"
           echo "mariadb_groups=${mariadb_groups}" >> $GITHUB_OUTPUT
+          echo "postgresql_groups: ${postgresql_groups}"
+          echo "postgresql_groups=${postgresql_groups}" >> $GITHUB_OUTPUT
           echo "python_versions: ${ALL_PYTHON_VERSIONS}"
           echo "python_versions=${ALL_PYTHON_VERSIONS}" >> $GITHUB_OUTPUT
           echo "test_full_suite: ${test_full_suite}"
@@ -1023,7 +1027,6 @@ jobs:
     if: |
       (github.event_name != 'push' || github.event.repository.full_name == 'home-assistant/core')
       && github.event.inputs.lint-only != 'true'
-      && needs.info.outputs.test_full_suite == 'true'
     needs:
       - info
       - base
@@ -1037,8 +1040,9 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
+        postgresql-group: ${{ fromJson(needs.info.outputs.postgresql_groups) }}
     name: >-
-      Run tests Python ${{ matrix.python-version }} (postgresql)
+      Run tests Python ${{ matrix.python-version }} (${{ matrix.postgresql-group }})
     steps:
       - name: Install additional OS dependencies
         run: |
