@@ -2779,7 +2779,9 @@ def _is_valid_type(
         return True
 
     # Attribute occurs when a namespace is used, eg. "core.HomeAssistant"
-    return isinstance(node, nodes.Attribute) and node.attrname == expected_type
+    return isinstance(node, nodes.Attribute) and (
+        node.attrname == expected_type or node.as_string() == expected_type
+    )
 
 
 def _is_valid_return_type(match: TypeHintMatch, node: nodes.NodeNG) -> bool:
