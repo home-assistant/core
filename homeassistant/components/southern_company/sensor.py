@@ -1,4 +1,4 @@
-"""Support for Tibber sensors."""
+"""Support for Southern Company sensors."""
 from __future__ import annotations
 
 import datetime
@@ -104,7 +104,7 @@ async def async_setup_entry(
 class SouthernCompanySensor(
     SensorEntity, CoordinatorEntity["SouthernCompanyCoordinator"]
 ):
-    """Representation of a Tibber sensor."""
+    """Representation of a Southern company sensor."""
 
     def __init__(
         self,
@@ -119,19 +119,12 @@ class SouthernCompanySensor(
 
         self._attr_unique_id = f"{self._account.number}_{self.entity_description.key}"
         self._attr_name = f"{entity_description.name}"
-        # if entity_description.key == "month_cost":
-        #     self._attr_native_unit_of_measurement = self._tibber_home.currency
 
         self._device_name = self._account.number
 
-    # @property
-    # def native_value(self) -> Any:
-    #     """Return the value of the sensor."""
-    #     return getattr(self._tibber_home, self.entity_description.key)
-
 
 class SouthernCompanyCoordinator(DataUpdateCoordinator[None]):
-    """Handle Tibber data and insert statistics."""
+    """Handle Southern company data and insert statistics."""
 
     def __init__(
         self,
@@ -152,7 +145,7 @@ class SouthernCompanyCoordinator(DataUpdateCoordinator[None]):
         await self._insert_statistics()
 
     async def _insert_statistics(self) -> None:
-        """Insert Tibber statistics."""
+        """Insert Southern Company statistics."""
         for account in await self._southern_company_connection.get_accounts():
             cost_statistic_id = (
                 f"{SOUTHERN_COMPANY_DOMAIN}:energy_" f"cost_" f"{account.number}"
@@ -165,15 +158,16 @@ class SouthernCompanyCoordinator(DataUpdateCoordinator[None]):
                 get_last_statistics, self.hass, 1, usage_statistic_id, True, {}
             )
             if not last_stats:
-                # First time we insert 5 years of data (if available)
+                # First time we insert 1 year of data (if available)
                 if self._southern_company_connection.jwt is not None:
                     hourly_data = await account.get_hourly_data(
-                        datetime.datetime.now() - timedelta(days=1825),
+                        datetime.datetime.now() - timedelta(days=365),
                         datetime.datetime.now(),
                         self._southern_company_connection.jwt,
                     )
                 else:
-                    raise Exception("TODO")
+                    # Needs exception
+                    pass
 
                 _cost_sum = 0.0
                 _usage_sum = 0.0
@@ -190,11 +184,13 @@ class SouthernCompanyCoordinator(DataUpdateCoordinator[None]):
                         self._southern_company_connection.jwt,
                     )
                 else:
-                    raise Exception("TODO")
+                    # Needs exception
+                    pass
 
                 from_time = hourly_data[0].time
                 if from_time is None:
                     continue
+                # This should be handled in the api
                 time_zone = pytz.timezone("America/New_York")
                 from_time = time_zone.localize(from_time)
 
@@ -227,7 +223,8 @@ class SouthernCompanyCoordinator(DataUpdateCoordinator[None]):
             usage_statistics = []
 
             for data in hourly_data:
-
+                if data.cost is None or data.usage is None:
+                    continue
                 from_time = data.time
                 time_zone = pytz.timezone("America/New_York")
                 from_time = time_zone.localize(from_time)
