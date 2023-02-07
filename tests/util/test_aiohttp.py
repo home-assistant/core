@@ -28,7 +28,7 @@ async def test_request_post_query() -> None:
     assert request.query == {"get": "true"}
 
 
-def test_serialize_text():
+def test_serialize_text() -> None:
     """Test serializing a text response."""
     response = web.Response(status=201, text="Hello")
     assert aiohttp.serialize_response(response) == {
@@ -38,7 +38,7 @@ def test_serialize_text():
     }
 
 
-def test_serialize_body_str():
+def test_serialize_body_str() -> None:
     """Test serializing a response with a str as body."""
     response = web.Response(status=201, body="Hello")
     assert aiohttp.serialize_response(response) == {
@@ -48,7 +48,7 @@ def test_serialize_body_str():
     }
 
 
-def test_serialize_body_None():
+def test_serialize_body_None() -> None:
     """Test serializing a response with a str as body."""
     response = web.Response(status=201, body=None)
     assert aiohttp.serialize_response(response) == {
@@ -58,7 +58,7 @@ def test_serialize_body_None():
     }
 
 
-def test_serialize_body_bytes():
+def test_serialize_body_bytes() -> None:
     """Test serializing a response with a str as body."""
     response = web.Response(status=201, body=b"Hello")
     assert aiohttp.serialize_response(response) == {
@@ -68,7 +68,7 @@ def test_serialize_body_bytes():
     }
 
 
-def test_serialize_json():
+def test_serialize_json() -> None:
     """Test serializing a JSON response."""
     response = web.json_response({"how": "what"})
     assert aiohttp.serialize_response(response) == {

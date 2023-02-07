@@ -51,7 +51,7 @@ from tests.common import get_test_home_assistant, mock_registry
 ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
 
 
-def test_converters_align_with_sensor():
+def test_converters_align_with_sensor() -> None:
     """Ensure STATISTIC_UNIT_TO_UNIT_CONVERTER is aligned with UNIT_CONVERTERS."""
     for converter in UNIT_CONVERTERS.values():
         assert converter in STATISTIC_UNIT_TO_UNIT_CONVERTER.values()

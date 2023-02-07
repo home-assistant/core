@@ -180,7 +180,7 @@ def test_check_loop_sync(caplog):
     assert "Detected blocking call inside the event loop" not in caplog.text
 
 
-def test_protect_loop_sync():
+def test_protect_loop_sync() -> None:
     """Test protect_loop calls check_loop."""
     func = Mock()
     with patch("homeassistant.util.async_.check_loop") as mock_check_loop:

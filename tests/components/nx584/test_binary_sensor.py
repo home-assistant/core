@@ -145,7 +145,7 @@ def test_nx584_sensor_setup_no_zones(hass):
     assert not add_entities.called
 
 
-def test_nx584_zone_sensor_normal():
+def test_nx584_zone_sensor_normal() -> None:
     """Test for the NX584 zone sensor."""
     zone = {"number": 1, "name": "foo", "state": True}
     sensor = nx584.NX584ZoneSensor(zone, "motion")
@@ -159,7 +159,7 @@ def test_nx584_zone_sensor_normal():
     assert not sensor.is_on
 
 
-def test_nx584_zone_sensor_bypassed():
+def test_nx584_zone_sensor_bypassed() -> None:
     """Test for the NX584 zone sensor."""
     zone = {"number": 1, "name": "foo", "state": True, "bypassed": True}
     sensor = nx584.NX584ZoneSensor(zone, "motion")
@@ -198,7 +198,7 @@ def test_nx584_watcher_process_zone_event_missing_zone(mock_update):
     assert not mock_update.called
 
 
-def test_nx584_watcher_run_with_zone_events():
+def test_nx584_watcher_run_with_zone_events() -> None:
     """Test the zone events."""
     empty_me = [1, 2]
 
