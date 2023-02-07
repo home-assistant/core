@@ -938,8 +938,9 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
+        mariadb-group: ${{ fromJson(needs.info.outputs.mariadb_groups) }}
     name: >-
-      Run tests Python ${{ matrix.python-version }} (mariadb)
+      Run tests Python ${{ matrix.python-version }} (${{ matrix.mariadb-group }})
     steps:
       - name: Install additional OS dependencies
         run: |
