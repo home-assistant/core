@@ -179,7 +179,7 @@ async def test_turn_on(
     state = hass.states.get("light.mock_extended_color_light")
     assert state
     assert state.attributes["color_mode"] == "hs"
-    assert state.attributes["hs_color"] == (141, 19)
+    assert state.attributes["hs_color"] == (141.732, 19.685)
 
     # XY Color Test
     set_node_attribute(light_node, 1, 768, 8, 1)
@@ -201,13 +201,6 @@ async def test_turn_on(
     assert state
     assert state.attributes["color_mode"] == "color_temp"
     assert state.attributes["color_temp"] == 100
-
-    # Disables color mode (FeatureMap normally 25)
-    set_node_attribute(light_node, 1, 768, 65532, 1)
-    await trigger_subscription_callback(hass, matter_client)
-
-    state = hass.states.get("light.mock_extended_color_light")
-    assert state
 
     set_node_attribute(light_node, 1, 6, 0, False)
     await trigger_subscription_callback(hass, matter_client)

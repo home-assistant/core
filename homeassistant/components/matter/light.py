@@ -26,9 +26,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import LOGGER
 from .entity import MatterEntity, MatterEntityDescriptionBaseClass
 from .helpers import get_matter
-from .util import renormalize
-
-XY_COLOR_FACTOR = 65536
+from .util import (
+    convert_to_hass_hs,
+    convert_to_hass_xy,
+    convert_to_matter_hs,
+    convert_to_matter_xy,
+    renormalize,
+)
 
 
 class MatterColorMode(Enum):
@@ -125,11 +129,13 @@ class MatterLight(MatterEntity, LightEntity):
     async def _set_xy_color(self, xy_color: tuple[float, float]) -> None:
         """Set xy color."""
 
-        LOGGER.debug("Setting xy color to %s", (xy_color))
+        hass_xy = convert_to_matter_xy(xy_color)
+
+        LOGGER.debug("Setting xy color to %s", hass_xy)
         await self.send_device_command(
             clusters.ColorControl.Commands.MoveToColor(
-                colorX=int(xy_color[0] * XY_COLOR_FACTOR),
-                colorY=int(xy_color[1] * XY_COLOR_FACTOR),
+                colorX=int(hass_xy[0]),
+                colorY=int(hass_xy[1]),
                 # It's required in TLV. We don't implement transition time yet.
                 transitionTime=0,
             )
@@ -138,15 +144,13 @@ class MatterLight(MatterEntity, LightEntity):
     async def _set_hs_color(self, hs_color: tuple[float, float]) -> None:
         """Set hs color."""
 
-        hue = int(hs_color[0] / 360 * 254)
-        saturation = int(renormalize(hs_color[1], (0, 100), (0, 254)))
+        matter_hs = convert_to_matter_hs(hs_color)
 
-        LOGGER.debug("Setting hs color to %s", (hue, saturation))
-
+        LOGGER.debug("Setting hs color to %s", matter_hs)
         await self.send_device_command(
             clusters.ColorControl.Commands.MoveToHueAndSaturation(
-                hue=hue,
-                saturation=saturation,
+                hue=int(matter_hs[0]),
+                saturation=int(matter_hs[1]),
                 # It's required in TLV. We don't implement transition time yet.
                 transitionTime=0,
             )
@@ -197,11 +201,7 @@ class MatterLight(MatterEntity, LightEntity):
         assert x_color is not None
         assert y_color is not None
 
-        xy_color = (
-            x_color.value / XY_COLOR_FACTOR,
-            y_color.value / XY_COLOR_FACTOR,
-        )
-
+        xy_color = convert_to_hass_xy((x_color.value, y_color.value))
         LOGGER.debug(
             "Got xy color %s for %s",
             xy_color,
@@ -222,18 +222,15 @@ class MatterLight(MatterEntity, LightEntity):
         assert hue is not None
         assert saturation is not None
 
-        hue_saturation = (
-            int(hue.value * 360 / 254),
-            int(renormalize(saturation.value, (0, 254), (0, 100))),
-        )
+        hs_color = convert_to_hass_hs((hue.value, saturation.value))
 
         LOGGER.debug(
             "Got hs color %s for %s",
-            hue_saturation,
+            hs_color,
             self._device_type_instance,
         )
 
-        return hue_saturation
+        return hs_color
 
     def _get_color_temperature(self) -> int:
         """Get color temperature from matter."""
