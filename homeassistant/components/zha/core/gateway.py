@@ -91,7 +91,7 @@ if TYPE_CHECKING:
     from ..entity import ZhaEntity
     from .channels.base import ZigbeeChannel
 
-    _LogFilterType = Filter | Callable[[LogRecord], int]
+    _LogFilterType = Filter | Callable[[LogRecord], bool]
 
 _LOGGER = logging.getLogger(__name__)
 
