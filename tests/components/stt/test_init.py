@@ -73,7 +73,7 @@ class TestProvider(Provider):
 
 
 @pytest.fixture
-def test_provider() -> None:
+def test_provider():
     """Test provider fixture."""
     return TestProvider()
 
