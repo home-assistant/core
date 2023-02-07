@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from contextlib import suppress
 import datetime as dt
 import json
 from typing import Any, cast
@@ -112,18 +113,14 @@ def handle_subscribe_events(
             ):
                 return
 
-            connection.send_message(
-                lambda: messages.cached_event_message(msg["id"], event)
-            )
+            connection.send_message(messages.cached_event_message(msg["id"], event))
 
     else:
 
         @callback
         def forward_events(event: Event) -> None:
             """Forward events to websocket."""
-            connection.send_message(
-                lambda: messages.cached_event_message(msg["id"], event)
-            )
+            connection.send_message(messages.cached_event_message(msg["id"], event))
 
     connection.subscriptions[msg["id"]] = hass.bus.async_listen(
         event_type, forward_events, run_immediately=True
@@ -262,11 +259,9 @@ def handle_get_states(
     # If we can't serialize, we'll filter out unserializable states
     serialized = []
     for state in states:
-        try:
+        # Error is already logged above
+        with suppress(ValueError, TypeError):
             serialized.append(JSON_DUMP(state))
-        except (ValueError, TypeError):
-            # Error is already logged above
-            pass
 
     # We now have partially serialized states. Craft some JSON.
     response2 = JSON_DUMP(messages.result_message(msg["id"], ["TO_REPLACE"]))
@@ -297,9 +292,7 @@ def handle_subscribe_entities(
         if entity_ids and event.data["entity_id"] not in entity_ids:
             return
 
-        connection.send_message(
-            lambda: messages.cached_state_diff_message(msg["id"], event)
-        )
+        connection.send_message(messages.cached_state_diff_message(msg["id"], event))
 
     # We must never await between sending the states and listening for
     # state changed events or we will introduce a race condition

@@ -290,24 +290,6 @@ class SetupEntity(Protocol):
         """Define setup_entities type."""
 
 
-async def async_get_platform_config_from_yaml(
-    hass: HomeAssistant,
-    platform_domain: str,
-    config_yaml: ConfigType | None = None,
-) -> list[ConfigType]:
-    """Return a list of validated configurations for the domain."""
-    platform_configs: Any | None
-    mqtt_data = get_mqtt_data(hass)
-    if config_yaml is None:
-        config_yaml = mqtt_data.config
-    if not config_yaml:
-        return []
-    if not (platform_configs := config_yaml.get(platform_domain)):
-        return []
-    assert isinstance(platform_configs, list)
-    return platform_configs
-
-
 async def async_setup_entry_helper(
     hass: HomeAssistant,
     domain: str,
@@ -359,14 +341,7 @@ async def async_setup_entry_helper(
             return
         if domain not in config_yaml:
             return
-        await asyncio.gather(
-            *[
-                async_setup(config)
-                for config in await async_get_platform_config_from_yaml(
-                    hass, domain, config_yaml
-                )
-            ]
-        )
+        await asyncio.gather(*[async_setup(config) for config in config_yaml[domain]])
 
     # discover manual configured MQTT items
     mqtt_data.reload_handlers[domain] = _async_setup_entities
@@ -744,8 +719,12 @@ class MqttDiscoveryDeviceUpdate(ABC):
                 self.log_name,
                 discovery_hash,
             )
-            await self.async_update(discovery_payload)
-        if not discovery_payload:
+            try:
+                await self.async_update(discovery_payload)
+            finally:
+                send_discovery_done(self.hass, self._discovery_data)
+            self._discovery_data[ATTR_DISCOVERY_PAYLOAD] = discovery_payload
+        elif not discovery_payload:
             # Unregister and clean up the current discovery instance
             stop_discovery_updates(
                 self.hass, self._discovery_data, self._remove_discovery_updated
@@ -796,6 +775,7 @@ class MqttDiscoveryDeviceUpdate(ABC):
                 self.hass, self._device_id, self._config_entry_id
             )
 
+    @abstractmethod
     async def async_update(self, discovery_data: MQTTDiscoveryPayload) -> None:
         """Handle the update of platform specific parts, extend to the platform."""
 
@@ -869,15 +849,19 @@ class MqttDiscoveryUpdate(Entity):
                 _LOGGER.info("Removing component: %s", self.entity_id)
                 self._cleanup_discovery_on_remove()
                 await _async_remove_state_and_registry_entry(self)
+                send_discovery_done(self.hass, self._discovery_data)
             elif self._discovery_update:
                 if old_payload != self._discovery_data[ATTR_DISCOVERY_PAYLOAD]:
                     # Non-empty, changed payload: Notify component
                     _LOGGER.info("Updating component: %s", self.entity_id)
-                    await self._discovery_update(payload)
+                    try:
+                        await self._discovery_update(payload)
+                    finally:
+                        send_discovery_done(self.hass, self._discovery_data)
                 else:
                     # Non-empty, unchanged payload: Ignore to avoid changing states
                     _LOGGER.debug("Ignoring unchanged update for: %s", self.entity_id)
-            send_discovery_done(self.hass, self._discovery_data)
+                    send_discovery_done(self.hass, self._discovery_data)
 
         if discovery_hash:
             assert self._discovery_data is not None

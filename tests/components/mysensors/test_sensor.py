@@ -55,6 +55,28 @@ async def test_gps_sensor(
     assert state.state == f"{new_coords},{altitude}"
 
 
+async def test_ir_transceiver(
+    hass: HomeAssistant,
+    ir_transceiver: Sensor,
+    receive_message: Callable[[str], None],
+) -> None:
+    """Test an ir transceiver."""
+    entity_id = "sensor.ir_transceiver_1_1"
+
+    state = hass.states.get(entity_id)
+
+    assert state
+    assert state.state == "test_code"
+
+    receive_message("1;1;1;0;50;new_code\n")
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+
+    assert state
+    assert state.state == "new_code"
+
+
 async def test_power_sensor(
     hass: HomeAssistant,
     power_sensor: Sensor,

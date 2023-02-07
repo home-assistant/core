@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from asyncio import gather
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from datetime import datetime, timedelta
 from http import HTTPStatus
 import logging
@@ -85,7 +85,7 @@ def _get_registry_entries(
 class AbstractConfig(ABC):
     """Hold the configuration for Google Assistant."""
 
-    _unsub_report_state = None
+    _unsub_report_state: Callable[[], None] | None = None
 
     def __init__(self, hass):
         """Initialize abstract config."""
@@ -289,7 +289,6 @@ class AbstractConfig(ABC):
             return
 
         for user_agent_id, _ in self._store.agent_user_ids.items():
-
             if (webhook_id := self.get_local_webhook_id(user_agent_id)) is None:
                 setup_successful = False
                 break

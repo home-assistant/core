@@ -11,8 +11,10 @@ import functools
 import logging
 from random import randint
 from types import MappingProxyType, MethodType
-from typing import TYPE_CHECKING, Any, Optional, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 import weakref
+
+from typing_extensions import Self
 
 from . import data_entry_flow, loader
 from .backports.enum import StrEnum
@@ -86,7 +88,6 @@ PATH_CONFIG = ".config_entries.json"
 
 SAVE_DELAY = 1
 
-_ConfigEntryStateSelfT = TypeVar("_ConfigEntryStateSelfT", bound="ConfigEntryState")
 _R = TypeVar("_R")
 
 
@@ -110,9 +111,7 @@ class ConfigEntryState(Enum):
 
     _recoverable: bool
 
-    def __new__(
-        cls: type[_ConfigEntryStateSelfT], value: str, recoverable: bool
-    ) -> _ConfigEntryStateSelfT:
+    def __new__(cls, value: str, recoverable: bool) -> Self:
         """Create new ConfigEntryState."""
         obj = object.__new__(cls)
         obj._value_ = value
@@ -1327,10 +1326,10 @@ class ConfigEntries:
         report(
             (
                 "called async_setup_platforms instead of awaiting"
-                " async_forward_entry_setups; this will fail in version 2022.12"
+                " async_forward_entry_setups; this will fail in version 2023.3"
             ),
             # Raise this to warning once all core integrations have been migrated
-            level=logging.DEBUG,
+            level=logging.WARNING,
             error_if_core=False,
         )
         for platform in platforms:
@@ -1437,7 +1436,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         if not self.context:
             return None
 
-        return cast(Optional[str], self.context.get("unique_id"))
+        return cast(str | None, self.context.get("unique_id"))
 
     @staticmethod
     @callback
@@ -1455,7 +1454,10 @@ class ConfigFlow(data_entry_flow.FlowHandler):
     def _async_abort_entries_match(
         self, match_dict: dict[str, Any] | None = None
     ) -> None:
-        """Abort if current entries match all data."""
+        """Abort if current entries match all data.
+
+        Requires `already_configured` in strings.json in user visible flows.
+        """
         if match_dict is None:
             match_dict = {}  # Match any entry
         for entry in self._async_current_entries(include_ignore=False):
@@ -1477,7 +1479,11 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         *,
         error: str = "already_configured",
     ) -> None:
-        """Abort if the unique ID is already configured."""
+        """Abort if the unique ID is already configured.
+
+        Requires strings.json entry corresponding to the `error` parameter
+        in user visible flows.
+        """
         if self.unique_id is None:
             return
 
@@ -1619,6 +1625,9 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         when the handler has no existing config entries.
 
         It ensures that the discovery can be ignored by the user.
+
+        Requires `already_configured` and `already_in_progress` in strings.json
+        in user visible flows.
         """
         if self.unique_id is not None:
             return

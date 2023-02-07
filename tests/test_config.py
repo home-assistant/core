@@ -1,5 +1,5 @@
 """Test config utils."""
-# pylint: disable=protected-access
+
 from collections import OrderedDict
 import contextlib
 import copy
@@ -40,7 +40,7 @@ from homeassistant.util.unit_system import (
 )
 from homeassistant.util.yaml import SECRET_YAML
 
-from tests.common import MockUser, get_test_config_dir, patch_yaml_files
+from .common import MockUser, get_test_config_dir, patch_yaml_files
 
 CONFIG_DIR = get_test_config_dir()
 YAML_PATH = os.path.join(CONFIG_DIR, config_util.YAML_CONFIG_FILE)
@@ -412,7 +412,7 @@ async def test_loading_configuration_from_storage(hass, hass_storage):
     assert hass.config.longitude == 13
     assert hass.config.elevation == 10
     assert hass.config.location_name == "Home"
-    assert hass.config.units.name == CONF_UNIT_SYSTEM_METRIC
+    assert hass.config.units is METRIC_SYSTEM
     assert hass.config.time_zone == "Europe/Copenhagen"
     assert hass.config.external_url == "https://www.example.com"
     assert hass.config.internal_url == "http://example.local"
@@ -446,7 +446,7 @@ async def test_loading_configuration_from_storage_with_yaml_only(hass, hass_stor
     assert hass.config.longitude == 13
     assert hass.config.elevation == 10
     assert hass.config.location_name == "Home"
-    assert hass.config.units.name == CONF_UNIT_SYSTEM_METRIC
+    assert hass.config.units is METRIC_SYSTEM
     assert hass.config.time_zone == "Europe/Copenhagen"
     assert len(hass.config.allowlist_external_dirs) == 3
     assert "/etc" in hass.config.allowlist_external_dirs
@@ -517,7 +517,7 @@ async def test_override_stored_configuration(hass, hass_storage):
     assert hass.config.longitude == 13
     assert hass.config.elevation == 10
     assert hass.config.location_name == "Home"
-    assert hass.config.units.name == CONF_UNIT_SYSTEM_METRIC
+    assert hass.config.units is METRIC_SYSTEM
     assert hass.config.time_zone == "Europe/Copenhagen"
     assert len(hass.config.allowlist_external_dirs) == 3
     assert "/etc" in hass.config.allowlist_external_dirs
@@ -550,7 +550,7 @@ async def test_loading_configuration(hass):
     assert hass.config.longitude == 50
     assert hass.config.elevation == 25
     assert hass.config.location_name == "Huis"
-    assert hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL
+    assert hass.config.units is US_CUSTOMARY_SYSTEM
     assert hass.config.time_zone == "America/New_York"
     assert hass.config.external_url == "https://www.example.com"
     assert hass.config.internal_url == "http://example.local"
@@ -754,7 +754,6 @@ async def test_async_hass_config_yaml_merge(merge_log_err, hass):
     assert len(conf["light"]) == 1
 
 
-# pylint: disable=redefined-outer-name
 @pytest.fixture
 def merge_log_err(hass):
     """Patch _merge_log_error from packages."""

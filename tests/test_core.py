@@ -1,7 +1,6 @@
 """Test to verify that Home Assistant core works."""
 from __future__ import annotations
 
-# pylint: disable=protected-access
 import array
 import asyncio
 from datetime import datetime, timedelta
@@ -44,7 +43,7 @@ import homeassistant.util.dt as dt_util
 from homeassistant.util.read_only_dict import ReadOnlyDict
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from tests.common import async_capture_events, async_mock_service
+from .common import async_capture_events, async_mock_service
 
 PST = dt_util.get_time_zone("America/Los_Angeles")
 
@@ -332,7 +331,7 @@ def test_event_eq():
         ha.Event("some_type", data, time_fired=now, context=context) for _ in range(2)
     )
 
-    assert event1 == event2
+    assert event1.as_dict() == event2.as_dict()
 
 
 def test_event_repr():
@@ -686,7 +685,7 @@ def test_state_name_if_friendly_name_attr():
 def test_state_dict_conversion():
     """Test conversion of dict."""
     state = ha.State("domain.hello", "world", {"some": "attr"})
-    assert state == ha.State.from_dict(state.as_dict())
+    assert state.as_dict() == ha.State.from_dict(state.as_dict()).as_dict()
 
 
 def test_state_dict_conversion_with_wrong_data():
@@ -976,7 +975,7 @@ async def test_serviceregistry_callback_service_raise_exception(hass):
     await hass.async_block_till_done()
 
 
-async def test_config_defaults():
+async def test_config_defaults() -> None:
     """Test config defaults."""
     hass = Mock()
     config = ha.Config(hass)
@@ -1004,21 +1003,21 @@ async def test_config_defaults():
     assert config.language == "en"
 
 
-async def test_config_path_with_file():
+async def test_config_path_with_file() -> None:
     """Test get_config_path method."""
     config = ha.Config(None)
     config.config_dir = "/test/ha-config"
     assert config.path("test.conf") == "/test/ha-config/test.conf"
 
 
-async def test_config_path_with_dir_and_file():
+async def test_config_path_with_dir_and_file() -> None:
     """Test get_config_path method."""
     config = ha.Config(None)
     config.config_dir = "/test/ha-config"
     assert config.path("dir", "test.conf") == "/test/ha-config/dir/test.conf"
 
 
-async def test_config_as_dict():
+async def test_config_as_dict() -> None:
     """Test as dict."""
     config = ha.Config(None)
     config.config_dir = "/test/ha-config"
@@ -1050,7 +1049,7 @@ async def test_config_as_dict():
     assert expected == config.as_dict()
 
 
-async def test_config_is_allowed_path():
+async def test_config_is_allowed_path() -> None:
     """Test is_allowed_path method."""
     config = ha.Config(None)
     with TemporaryDirectory() as tmp_dir:
@@ -1082,7 +1081,7 @@ async def test_config_is_allowed_path():
             config.is_allowed_path(None)
 
 
-async def test_config_is_allowed_external_url():
+async def test_config_is_allowed_external_url() -> None:
     """Test is_allowed_external_url method."""
     config = ha.Config(None)
     config.allowlist_external_urls = [
@@ -1508,7 +1507,7 @@ async def test_async_entity_ids_count(hass):
     assert hass.states.async_entity_ids_count("light") == 3
 
 
-async def test_hassjob_forbid_coroutine():
+async def test_hassjob_forbid_coroutine() -> None:
     """Test hassjob forbids coroutines."""
 
     async def bla():

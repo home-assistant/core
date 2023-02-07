@@ -226,6 +226,10 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "local_name": "HLK-LD2410B_*",
     },
     {
+        "domain": "ld2410_ble",
+        "local_name": "HLK-LD2410_*",
+    },
+    {
         "domain": "led_ble",
         "local_name": "LEDnet*",
     },
@@ -268,6 +272,24 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "connectable": False,
         "domain": "moat",
         "local_name": "Moat_S*",
+    },
+    {
+        "connectable": False,
+        "domain": "mopeka",
+        "manufacturer_data_start": [
+            3,
+        ],
+        "manufacturer_id": 89,
+        "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "connectable": False,
+        "domain": "mopeka",
+        "manufacturer_data_start": [
+            8,
+        ],
+        "manufacturer_id": 89,
+        "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb",
     },
     {
         "domain": "oralb",

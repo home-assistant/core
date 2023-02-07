@@ -17,6 +17,7 @@ from aioesphomeapi import (
     EntityInfo,
     EntityState,
     HomeassistantServiceCall,
+    InvalidAuthAPIError,
     InvalidEncryptionKeyAPIError,
     ReconnectLogic,
     RequiresEncryptionAPIError,
@@ -68,7 +69,7 @@ CONF_NOISE_PSK = "noise_psk"
 _LOGGER = logging.getLogger(__name__)
 _R = TypeVar("_R")
 
-STABLE_BLE_VERSION_STR = "2022.12.0"
+STABLE_BLE_VERSION_STR = "2022.12.4"
 STABLE_BLE_VERSION = AwesomeVersion(STABLE_BLE_VERSION_STR)
 PROJECT_URLS = {
     "esphome.bluetooth-proxy": "https://esphome.github.io/bluetooth-proxies/",
@@ -103,6 +104,30 @@ def _async_check_firmware_version(
         translation_placeholders={
             "name": device_info.name,
             "version": STABLE_BLE_VERSION_STR,
+        },
+    )
+
+
+@callback
+def _async_check_using_api_password(
+    hass: HomeAssistant, device_info: EsphomeDeviceInfo, has_password: bool
+) -> None:
+    """Create or delete an the api_password_deprecated issue."""
+    # ESPHome device_info.mac_address is the unique_id
+    issue = f"api_password_deprecated-{device_info.mac_address}"
+    if not has_password:
+        async_delete_issue(hass, DOMAIN, issue)
+        return
+    async_create_issue(
+        hass,
+        DOMAIN,
+        issue,
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        learn_more_url="https://esphome.io/components/api.html",
+        translation_key="api_password_deprecated",
+        translation_placeholders={
+            "name": device_info.name,
         },
     )
 
@@ -309,6 +334,7 @@ async def async_setup_entry(  # noqa: C901
             await cli.disconnect()
         else:
             _async_check_firmware_version(hass, device_info)
+            _async_check_using_api_password(hass, device_info, bool(password))
 
     async def on_disconnect() -> None:
         """Run disconnect callbacks on API disconnect."""
@@ -322,7 +348,14 @@ async def async_setup_entry(  # noqa: C901
 
     async def on_connect_error(err: Exception) -> None:
         """Start reauth flow if appropriate connect error type."""
-        if isinstance(err, (RequiresEncryptionAPIError, InvalidEncryptionKeyAPIError)):
+        if isinstance(
+            err,
+            (
+                RequiresEncryptionAPIError,
+                InvalidEncryptionKeyAPIError,
+                InvalidAuthAPIError,
+            ),
+        ):
             entry.async_start_reauth(hass)
 
     reconnect_logic = ReconnectLogic(
@@ -613,9 +646,10 @@ async def platform_async_setup_entry(
         # Add entities to Home Assistant
         async_add_entities(add_entities)
 
-    signal = f"esphome_{entry.entry_id}_on_list"
     entry_data.cleanup_callbacks.append(
-        async_dispatcher_connect(hass, signal, async_list_entities)
+        async_dispatcher_connect(
+            hass, entry_data.signal_static_info_updated, async_list_entities
+        )
     )
 
 

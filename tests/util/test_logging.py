@@ -24,7 +24,7 @@ def test_sensitive_data_filter():
     assert sensitive_record.msg == "******* log"
 
 
-async def test_logging_with_queue_handler():
+async def test_logging_with_queue_handler() -> None:
     """Test logging with HomeAssistantQueueHandler."""
 
     simple_queue = queue.SimpleQueue()  # type: ignore

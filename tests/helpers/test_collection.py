@@ -112,7 +112,7 @@ def test_id_manager():
     assert id_manager.generate_id("bla") == "bla"
 
 
-async def test_observable_collection():
+async def test_observable_collection() -> None:
     """Test observerable collection."""
     coll = collection.ObservableCollection(_LOGGER)
     assert coll.async_items() == []
@@ -127,7 +127,7 @@ async def test_observable_collection():
     assert changes[0] == ("mock_type", "mock_id", {"mock": "item"})
 
 
-async def test_yaml_collection():
+async def test_yaml_collection() -> None:
     """Test a YAML collection."""
     id_manager = collection.IDManager()
     coll = collection.YamlCollection(_LOGGER, id_manager)
@@ -171,7 +171,7 @@ async def test_yaml_collection():
     )
 
 
-async def test_yaml_collection_skipping_duplicate_ids():
+async def test_yaml_collection_skipping_duplicate_ids() -> None:
     """Test YAML collection skipping duplicate IDs."""
     id_manager = collection.IDManager()
     id_manager.add_collection({"existing": True})

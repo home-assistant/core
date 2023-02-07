@@ -7,6 +7,7 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
+from homeassistant.components.recorder.const import SupportedDialect
 from homeassistant.components.recorder.db_schema import (
     Base,
     EventData,
@@ -31,8 +32,9 @@ def test_from_event_to_db_event():
     """Test converting event to db event."""
     event = ha.Event("test_event", {"some_data": 15})
     db_event = Events.from_event(event)
-    db_event.event_data = EventData.from_event(event).shared_data
-    assert event == db_event.to_native()
+    dialect = SupportedDialect.MYSQL
+    db_event.event_data = EventData.shared_data_bytes_from_event(event, dialect)
+    assert event.as_dict() == db_event.to_native().as_dict()
 
 
 def test_from_event_to_db_state():
@@ -43,7 +45,7 @@ def test_from_event_to_db_state():
         {"entity_id": "sensor.temperature", "old_state": None, "new_state": state},
         context=state.context,
     )
-    assert state == States.from_event(event).to_native()
+    assert state.as_dict() == States.from_event(event).to_native().as_dict()
 
 
 def test_from_event_to_db_state_attributes():
@@ -55,7 +57,12 @@ def test_from_event_to_db_state_attributes():
         {"entity_id": "sensor.temperature", "old_state": None, "new_state": state},
         context=state.context,
     )
-    assert StateAttributes.from_event(event).to_native() == attrs
+    db_attrs = StateAttributes()
+    dialect = SupportedDialect.MYSQL
+    db_attrs.shared_attrs = StateAttributes.shared_attrs_bytes_from_event(
+        event, {}, dialect
+    )
+    assert db_attrs.to_native() == attrs
 
 
 def test_repr():
@@ -77,6 +84,40 @@ def test_repr():
     )
     assert "2016-07-09 11:00:00+00:00" in repr(States.from_event(event))
     assert "2016-07-09 11:00:00+00:00" in repr(Events.from_event(event))
+
+
+def test_states_repr_without_timestamp():
+    """Test repr for a state without last_updated_ts."""
+    fixed_time = datetime(2016, 7, 9, 11, 0, 0, tzinfo=dt.UTC, microsecond=432432)
+    states = States(
+        entity_id="sensor.temp",
+        attributes=None,
+        context_id=None,
+        context_user_id=None,
+        context_parent_id=None,
+        origin_idx=None,
+        last_updated=fixed_time,
+        last_changed=fixed_time,
+        last_updated_ts=None,
+        last_changed_ts=None,
+    )
+    assert "2016-07-09 11:00:00+00:00" in repr(states)
+
+
+def test_events_repr_without_timestamp():
+    """Test repr for an event without time_fired_ts."""
+    fixed_time = datetime(2016, 7, 9, 11, 0, 0, tzinfo=dt.UTC, microsecond=432432)
+    events = Events(
+        event_type="any",
+        event_data=None,
+        origin_idx=None,
+        time_fired=fixed_time,
+        time_fired_ts=None,
+        context_id=None,
+        context_user_id=None,
+        context_parent_id=None,
+    )
+    assert "2016-07-09 11:00:00+00:00" in repr(events)
 
 
 def test_handling_broken_json_state_attributes(caplog):
@@ -186,7 +227,7 @@ def test_states_from_native_invalid_entity_id():
     assert state.entity_id == "test.invalid__id"
 
 
-async def test_process_timestamp():
+async def test_process_timestamp() -> None:
     """Test processing time stamp to UTC."""
     datetime_with_tzinfo = datetime(2016, 7, 9, 11, 0, 0, tzinfo=dt.UTC)
     datetime_without_tzinfo = datetime(2016, 7, 9, 11, 0, 0)
@@ -215,7 +256,7 @@ async def test_process_timestamp():
     assert process_timestamp(None) is None
 
 
-async def test_process_timestamp_to_utc_isoformat():
+async def test_process_timestamp_to_utc_isoformat() -> None:
     """Test processing time stamp to UTC isoformat."""
     datetime_with_tzinfo = datetime(2016, 7, 9, 11, 0, 0, tzinfo=dt.UTC)
     datetime_without_tzinfo = datetime(2016, 7, 9, 11, 0, 0)
@@ -251,19 +292,20 @@ async def test_process_timestamp_to_utc_isoformat():
     assert process_timestamp_to_utc_isoformat(None) is None
 
 
-async def test_event_to_db_model():
+async def test_event_to_db_model() -> None:
     """Test we can round trip Event conversion."""
     event = ha.Event(
         "state_changed", {"some": "attr"}, ha.EventOrigin.local, dt_util.utcnow()
     )
     db_event = Events.from_event(event)
-    db_event.event_data = EventData.from_event(event).shared_data
+    dialect = SupportedDialect.MYSQL
+    db_event.event_data = EventData.shared_data_bytes_from_event(event, dialect)
     native = db_event.to_native()
-    assert native == event
+    assert native.as_dict() == event.as_dict()
 
     native = Events.from_event(event).to_native()
     event.data = {}
-    assert native == event
+    assert native.as_dict() == event.as_dict()
 
 
 async def test_lazy_state_handles_include_json(caplog):

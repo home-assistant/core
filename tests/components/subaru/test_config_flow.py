@@ -1,5 +1,4 @@
 """Tests for the Subaru component config flow."""
-# pylint: disable=redefined-outer-name
 from copy import deepcopy
 from unittest import mock
 from unittest.mock import PropertyMock, patch
@@ -258,7 +257,9 @@ async def test_pin_form_init(pin_form):
 
 async def test_pin_form_bad_pin_format(hass, pin_form):
     """Test we handle invalid pin."""
-    with patch(MOCK_API_TEST_PIN,) as mock_test_pin, patch(
+    with patch(
+        MOCK_API_TEST_PIN,
+    ) as mock_test_pin, patch(
         MOCK_API_UPDATE_SAVED_PIN,
         return_value=True,
     ) as mock_update_saved_pin:
@@ -273,7 +274,10 @@ async def test_pin_form_bad_pin_format(hass, pin_form):
 
 async def test_pin_form_success(hass, pin_form):
     """Test successful PIN entry."""
-    with patch(MOCK_API_TEST_PIN, return_value=True,) as mock_test_pin, patch(
+    with patch(
+        MOCK_API_TEST_PIN,
+        return_value=True,
+    ) as mock_test_pin, patch(
         MOCK_API_UPDATE_SAVED_PIN,
         return_value=True,
     ) as mock_update_saved_pin, patch(

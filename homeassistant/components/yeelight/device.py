@@ -117,8 +117,7 @@ class YeelightDevice:
 
     @property
     def is_nightlight_supported(self) -> bool:
-        """
-        Return true / false if nightlight is supported.
+        """Return true / false if nightlight is supported.
 
         Uses brightness as it appears to be supported in both ceiling and other lights.
         """

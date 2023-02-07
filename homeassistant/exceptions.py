@@ -207,7 +207,7 @@ class RequiredParameterMissing(HomeAssistantError):
 
 
 class DependencyError(HomeAssistantError):
-    """Raised when dependencies can not be setup."""
+    """Raised when dependencies cannot be setup."""
 
     def __init__(self, failed_dependencies: list[str]) -> None:
         """Initialize error."""

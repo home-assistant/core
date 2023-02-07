@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime
 import logging
-from typing import Any, Optional
+from typing import Any
 
 from homeassistant.components.sensor import CONF_STATE_CLASS, SensorEntity
 from homeassistant.const import (
@@ -134,7 +134,7 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreEntity, SensorEntity):
 
 
 class SlaveSensor(
-    CoordinatorEntity[DataUpdateCoordinator[Optional[list[int]]]],
+    CoordinatorEntity[DataUpdateCoordinator[list[int] | None]],
     RestoreEntity,
     SensorEntity,
 ):
