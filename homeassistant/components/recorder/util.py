@@ -533,13 +533,13 @@ def setup_connection_for_dialect(
                         version or version_string, "MySQL", MIN_VERSION_MYSQL
                     )
 
-        slow_range_in_select = bool(
-            not version
-            or version < MARIADB_WITH_FIXED_IN_QUERIES_105
-            or MARIA_DB_106 <= version < MARIADB_WITH_FIXED_IN_QUERIES_106
-            or MARIA_DB_107 <= version < MARIADB_WITH_FIXED_IN_QUERIES_107
-            or MARIA_DB_108 <= version < MARIADB_WITH_FIXED_IN_QUERIES_108
-        )
+            slow_range_in_select = bool(
+                not version
+                or version < MARIADB_WITH_FIXED_IN_QUERIES_105
+                or MARIA_DB_106 <= version < MARIADB_WITH_FIXED_IN_QUERIES_106
+                or MARIA_DB_107 <= version < MARIADB_WITH_FIXED_IN_QUERIES_107
+                or MARIA_DB_108 <= version < MARIADB_WITH_FIXED_IN_QUERIES_108
+            )
     elif dialect_name == SupportedDialect.POSTGRESQL:
         # Historically we have marked PostgreSQL as having slow range in select
         # but this may not be true for all versions. We should investigate
