@@ -118,7 +118,6 @@ SUPPORTED_BIN_SENS_CLASSES = ["moisture", "opening", "motion", "climate"]
 # (they can turn off, and report their state)
 ISY_GROUP_PLATFORM = Platform.SWITCH
 
-ISY_CONF_NETWORKING = "Networking Module"
 ISY_CONF_UUID = "uuid"
 ISY_CONF_NAME = "name"
 ISY_CONF_MODEL = "model"
