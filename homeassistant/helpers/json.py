@@ -10,7 +10,9 @@ import orjson
 JsonValueType = (
     dict[str, "JsonValueType"] | list["JsonValueType"] | str | int | float | bool | None
 )
-"""Data that can be returned by the standard JSON deserializing process."""
+"""Any data that can be returned by the standard JSON deserializing process."""
+JsonObjectType = dict[str, "JsonValueType"]
+"""Dictionary that can be returned by the standard JSON deserializing process."""
 
 JSON_ENCODE_EXCEPTIONS = (TypeError, ValueError)
 JSON_DECODE_EXCEPTIONS = (orjson.JSONDecodeError,)
@@ -140,6 +142,15 @@ def json_dumps_sorted(data: Any) -> str:
 
 json_loads: Callable[[bytes | bytearray | memoryview | str], JsonValueType]
 json_loads = orjson.loads
+"""Parse JSON data."""
+
+
+def json_loads_object(__obj: bytes | bytearray | memoryview | str) -> JsonObjectType:
+    """Parse JSON data and ensure result is a dictionary."""
+    value: JsonValueType = json_loads(__obj)
+    if type(value) is dict:  # pylint: disable=unidiomatic-typecheck
+        return value
+    raise ValueError()
 
 
 JSON_DUMP: Final = json_dumps
