@@ -94,7 +94,9 @@ async def test_recorder_system_health_crashed_recorder_runs_table(
     recorder_db_url: str,
 ):
     """Test recorder system health with crashed recorder runs table."""
-    if recorder_db_url.startswith("mysql://"):
+    if recorder_db_url.startswith("mysql://") or recorder_db_url.startswith(
+        "postgresql://"
+    ):
         # This test is specific for SQLite
         return
 
