@@ -227,11 +227,6 @@ _PLATFORM_SCHEMA_BASE = (
     .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema)
 )
 
-# The use of PLATFORM_SCHEMA was deprecated in HA Core 2022.6
-PLATFORM_SCHEMA_BASIC = vol.All(
-    cv.PLATFORM_SCHEMA.extend(_PLATFORM_SCHEMA_BASE.schema),
-)
-
 DISCOVERY_SCHEMA_BASIC = vol.All(
     # CONF_WHITE_VALUE_* is no longer supported, support was removed in 2022.9
     cv.removed(CONF_WHITE_VALUE_COMMAND_TOPIC),
