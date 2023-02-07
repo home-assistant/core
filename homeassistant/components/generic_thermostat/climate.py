@@ -308,6 +308,11 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
             self._hvac_mode = HVACMode.OFF
 
     @property
+    def capability_attributes(self) -> dict[str, Any] | None:
+        """Return the capability attributes."""
+        return {CONF_PRESETS[k]: v for (k, v) in self._presets.items()}
+
+    @property
     def precision(self):
         """Return the precision of the system."""
         if self._temp_precision is not None:
