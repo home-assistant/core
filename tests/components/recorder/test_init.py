@@ -567,10 +567,15 @@ def test_saving_state_include_domains_globs(hass_recorder):
         hass, ["test.recorder", "test2.recorder", "test3.included_entity"]
     )
     assert len(states) == 2
-    assert _state_with_context(hass, "test2.recorder").as_dict() == states[0].as_dict()
+    state_map = {state.entity_id: state for state in states}
+
+    assert (
+        _state_with_context(hass, "test2.recorder").as_dict()
+        == state_map["test2.recorder"].as_dict()
+    )
     assert (
         _state_with_context(hass, "test3.included_entity").as_dict()
-        == states[1].as_dict()
+        == state_map["test3.included_entity"].as_dict()
     )
 
 
@@ -1595,7 +1600,7 @@ async def test_database_lock_and_overflow(
 
 async def test_database_lock_timeout(recorder_mock, hass, recorder_db_url):
     """Test locking database timeout when recorder stopped."""
-    if recorder_db_url.startswith("mysql://"):
+    if recorder_db_url.startswith(("mysql://", "postgresql://")):
         # This test is specific for SQLite: Locking is not implemented for other engines
         return
 
@@ -1667,7 +1672,7 @@ async def test_database_connection_keep_alive_disabled_on_sqlite(
     recorder_db_url: str,
 ):
     """Test we do not do keep alive for sqlite."""
-    if recorder_db_url.startswith("mysql://"):
+    if recorder_db_url.startswith(("mysql://", "postgresql://")):
         # This test is specific for SQLite, keepalive runs on other engines
         return
 
