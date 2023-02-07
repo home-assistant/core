@@ -260,6 +260,28 @@ class MatterLight(MatterEntity, LightEntity):
 
         return int(color_temp.value)
 
+    def _get_brightness(self) -> int:
+        """Get brightness from matter."""
+
+        level_control = self._device_type_instance.get_cluster(clusters.LevelControl)
+
+        # We should not get here if brightness is not supported.
+        assert level_control is not None
+
+        LOGGER.debug(
+            "Got brightness %s for %s",
+            level_control.currentLevel,
+            self._device_type_instance,
+        )
+
+        return round(
+            renormalize(
+                level_control.currentLevel,
+                (level_control.minLevel, level_control.maxLevel),
+                (0, 255),
+            )
+        )
+
     def _get_color_mode(self) -> ColorMode:
         """Get color mode from matter."""
 
@@ -370,20 +392,7 @@ class MatterLight(MatterEntity, LightEntity):
             self._attr_is_on = attr.value
 
         if supports_brightness:
-            level_control = self._device_type_instance.get_cluster(
-                clusters.LevelControl
-            )
-            # We check above that the device supports brightness, ie level control.
-            assert level_control is not None
-
-            # Convert brightness to Home Assistant = 0..255
-            self._attr_brightness = round(
-                renormalize(
-                    level_control.currentLevel,
-                    (level_control.minLevel, level_control.maxLevel),
-                    (0, 255),
-                )
-            )
+            self._attr_brightness = self._get_brightness()
 
 
 @dataclass
