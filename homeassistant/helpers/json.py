@@ -11,7 +11,7 @@ JsonValueType = (
     dict[str, "JsonValueType"] | list["JsonValueType"] | str | int | float | bool | None
 )
 """Any data that can be returned by the standard JSON deserializing process."""
-JsonObjectType = dict[str, "JsonValueType"]
+JsonObjectType = dict[str, JsonValueType]
 """Dictionary that can be returned by the standard JSON deserializing process."""
 
 JSON_ENCODE_EXCEPTIONS = (TypeError, ValueError)
