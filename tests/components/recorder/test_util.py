@@ -44,8 +44,8 @@ def test_session_scope_not_setup(hass_recorder):
 
 def test_recorder_bad_commit(hass_recorder, recorder_db_url):
     """Bad _commit should retry 3 times."""
-    if recorder_db_url.startswith("mysql://"):
-        # This test is specific for SQLite: mysql does not raise an OperationalError
+    if recorder_db_url.startswith(("mysql://", "postgresql://")):
+        # This test is specific for SQLite: mysql/postgresql does not raise an OperationalError
         # which triggers retries for the bad query below, it raises ProgrammingError
         # on which we give up
         return
@@ -696,7 +696,7 @@ async def test_no_issue_for_mariadb_with_MDEV_25020(hass, caplog, mysql_version)
 
 def test_basic_sanity_check(hass_recorder, recorder_db_url):
     """Test the basic sanity checks with a missing table."""
-    if recorder_db_url.startswith("mysql://"):
+    if recorder_db_url.startswith(("mysql://", "postgresql://")):
         # This test is specific for SQLite
         return
 
@@ -714,7 +714,7 @@ def test_basic_sanity_check(hass_recorder, recorder_db_url):
 
 def test_combined_checks(hass_recorder, caplog, recorder_db_url):
     """Run Checks on the open database."""
-    if recorder_db_url.startswith("mysql://"):
+    if recorder_db_url.startswith(("mysql://", "postgresql://")):
         # This test is specific for SQLite
         return
 
@@ -797,7 +797,7 @@ def test_end_incomplete_runs(hass_recorder, caplog):
 
 def test_periodic_db_cleanups(hass_recorder, recorder_db_url):
     """Test periodic db cleanups."""
-    if recorder_db_url.startswith("mysql://"):
+    if recorder_db_url.startswith(("mysql://", "postgresql://")):
         # This test is specific for SQLite
         return
 
