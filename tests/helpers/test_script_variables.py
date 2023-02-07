@@ -4,7 +4,7 @@ import pytest
 from homeassistant.helpers import config_validation as cv, template
 
 
-async def test_static_vars():
+async def test_static_vars() -> None:
     """Test static vars."""
     orig = {"hello": "world"}
     var = cv.SCRIPT_VARIABLES_SCHEMA(orig)
@@ -13,7 +13,7 @@ async def test_static_vars():
     assert rendered == orig
 
 
-async def test_static_vars_run_args():
+async def test_static_vars_run_args() -> None:
     """Test static vars."""
     orig = {"hello": "world"}
     orig_copy = dict(orig)
@@ -24,7 +24,7 @@ async def test_static_vars_run_args():
     assert orig == orig_copy
 
 
-async def test_static_vars_no_default():
+async def test_static_vars_no_default() -> None:
     """Test static vars."""
     orig = {"hello": "world"}
     var = cv.SCRIPT_VARIABLES_SCHEMA(orig)
@@ -33,7 +33,7 @@ async def test_static_vars_no_default():
     assert rendered == orig
 
 
-async def test_static_vars_run_args_no_default():
+async def test_static_vars_run_args_no_default() -> None:
     """Test static vars."""
     orig = {"hello": "world"}
     orig_copy = dict(orig)

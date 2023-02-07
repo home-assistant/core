@@ -629,7 +629,7 @@ async def test_old_style_track_new_is_skipped(mock_device_tracker_conf, hass):
     assert mock_device_tracker_conf[0].track is False
 
 
-def test_see_schema_allowing_ios_calls():
+def test_see_schema_allowing_ios_calls() -> None:
     """Test SEE service schema allows extra keys.
 
     Temp work around because the iOS app sends incorrect data.
