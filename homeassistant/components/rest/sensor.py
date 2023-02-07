@@ -27,7 +27,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.json import json_dumps, json_loads
 from homeassistant.helpers.template_entity import TemplateSensor
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, JsonValueType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import async_get_config_and_coordinator, create_rest_data_from_config
 from .const import CONF_JSON_ATTRS, CONF_JSON_ATTRS_PATH, DEFAULT_SENSOR_NAME
@@ -126,7 +126,7 @@ class RestSensor(RestEntity, TemplateSensor):
         """Return the state attributes."""
         return self._attributes
 
-    def _update_from_rest_data(self) -> None:
+    def _update_from_rest_data(self):
         """Update state from the rest data."""
         value = self.rest.data
         _LOGGER.debug("Data fetched from resource: %s", value)
@@ -153,17 +153,17 @@ class RestSensor(RestEntity, TemplateSensor):
             self._attributes = {}
             if value:
                 try:
-                    json_data: JsonValueType = json_loads(value)
+                    json_dict = json_loads(value)
                     if self._json_attrs_path is not None:
-                        json_data = jsonpath(json_data, self._json_attrs_path)
+                        json_dict = jsonpath(json_dict, self._json_attrs_path)
                     # jsonpath will always store the result in json_dict[0]
                     # so the next line happens to work exactly as needed to
                     # find the result
-                    if isinstance(json_data, list):
-                        json_data = json_data[0]
-                    if isinstance(json_data, dict):
+                    if isinstance(json_dict, list):
+                        json_dict = json_dict[0]
+                    if isinstance(json_dict, dict):
                         attrs = {
-                            k: json_data[k] for k in self._json_attrs if k in json_data
+                            k: json_dict[k] for k in self._json_attrs if k in json_dict
                         }
                         self._attributes = attrs
                     else:

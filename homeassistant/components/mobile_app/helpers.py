@@ -5,7 +5,7 @@ from collections.abc import Callable, Mapping
 from http import HTTPStatus
 import json
 import logging
-from typing import Any
+from typing import Any, cast
 
 from aiohttp.web import Response, json_response
 from nacl.encoding import Base64Encoder, HexEncoder, RawEncoder
@@ -88,7 +88,7 @@ def _decrypt_payload_helper(
     msg_bytes = decrypt(ciphertext, key_bytes)
     message = json_loads(msg_bytes)
     _LOGGER.debug("Successfully decrypted mobile_app payload")
-    return message
+    return cast(dict[str, str], message)
 
 
 def _decrypt_payload(key: str | None, ciphertext: str) -> dict[str, str] | None:

@@ -245,7 +245,7 @@ class MqttSiren(MqttEntity, SirenEntity):
                 json_payload = {STATE: payload}
             else:
                 try:
-                    json_payload = json_loads(payload)
+                    json_payload = cast(dict[str, Any], json_loads(payload))
                     _LOGGER.debug(
                         (
                             "JSON payload detected after processing payload '%s' on"

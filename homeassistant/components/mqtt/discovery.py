@@ -7,7 +7,7 @@ import functools
 import logging
 import re
 import time
-from typing import Any
+from typing import Any, cast
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
@@ -126,7 +126,9 @@ async def async_start(  # noqa: C901
 
         if payload:
             try:
-                discovery_payload = MQTTDiscoveryPayload(json_loads(payload))
+                discovery_payload = MQTTDiscoveryPayload(
+                    cast(dict[str, Any], json_loads(payload))
+                )
             except ValueError:
                 _LOGGER.warning("Unable to parse JSON %s: '%s'", object_id, payload)
                 return

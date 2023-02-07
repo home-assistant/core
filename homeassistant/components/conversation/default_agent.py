@@ -8,7 +8,7 @@ from dataclasses import dataclass
 import logging
 from pathlib import Path
 import re
-from typing import IO, Any
+from typing import IO, Any, cast
 
 from hassil.intents import Intents, ResponseType, SlotList, TextSlotList
 from hassil.recognize import RecognizeResult, recognize_all
@@ -31,7 +31,7 @@ REGEX_TYPE = type(re.compile(""))
 
 def json_load(fp: IO[str]) -> dict[str, Any]:
     """Wrap json_loads for get_intents."""
-    return json_loads(fp.read())
+    return cast(dict[str, Any], json_loads(fp.read()))
 
 
 @dataclass

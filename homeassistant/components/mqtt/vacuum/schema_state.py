@@ -1,7 +1,7 @@
 """Support for a State MQTT vacuum."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -240,7 +240,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         @log_messages(self.hass, self.entity_id)
         def state_message_received(msg: ReceiveMessage) -> None:
             """Handle state MQTT message."""
-            payload: dict[str, Any] = json_loads(msg.payload)
+            payload = cast(dict[str, Any], json_loads(msg.payload))
             if STATE in payload and (
                 payload[STATE] in POSSIBLE_STATES or payload[STATE] is None
             ):
