@@ -16,7 +16,7 @@ from tests.common import SetupRecorderInstanceT, get_system_health_info
 
 async def test_recorder_system_health(recorder_mock, hass, recorder_db_url):
     """Test recorder system health."""
-    if recorder_db_url.startswith("mysql://"):
+    if recorder_db_url.startswith(("mysql://", "postgresql://")):
         # This test is specific for SQLite
         return
 
