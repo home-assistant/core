@@ -1027,6 +1027,8 @@ jobs:
     if: |
       (github.event_name != 'push' || github.event.repository.full_name == 'home-assistant/core')
       && github.event.inputs.lint-only != 'true'
+      && github.event.inputs.pylint-only != 'true'
+      && github.event.inputs.mypy-only != 'true'
     needs:
       - info
       - base
@@ -1123,6 +1125,7 @@ jobs:
     needs:
       - info
       - pytest
+      - pytest-mariadb
       - pytest-postgres
     steps:
       - name: Check out code from GitHub
