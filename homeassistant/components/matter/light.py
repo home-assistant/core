@@ -352,7 +352,9 @@ class MatterLight(MatterEntity, LightEntity):
             if supports_brightness:
                 supported_color_modes.add(ColorMode.BRIGHTNESS)
 
-            self._attr_supported_color_modes = supported_color_modes
+            self._attr_supported_color_modes = (
+                supported_color_modes if supported_color_modes else None
+            )
 
         LOGGER.debug(
             "Supported color modes: %s for %s",
