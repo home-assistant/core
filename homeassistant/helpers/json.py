@@ -1,10 +1,13 @@
 """Helpers to help with encoding Home Assistant objects in JSON."""
+from collections.abc import Callable
 import datetime
 import json
 from pathlib import Path
 from typing import Any, Final
 
 import orjson
+
+from .typing import JsonValueType
 
 JSON_ENCODE_EXCEPTIONS = (TypeError, ValueError)
 JSON_DECODE_EXCEPTIONS = (orjson.JSONDecodeError,)
@@ -132,6 +135,7 @@ def json_dumps_sorted(data: Any) -> str:
     ).decode("utf-8")
 
 
+json_loads: Callable[[bytes | bytearray | memoryview | str], JsonValueType]
 json_loads = orjson.loads
 
 
