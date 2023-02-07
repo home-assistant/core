@@ -469,90 +469,74 @@ def test_get_metric_converted_unit_(
     assert unit_system.get_converted_unit(device_class, original_unit) == state_unit
 
 
+UNCONVERTED_UNITS_METRIC_SYSTEM = {
+    SensorDeviceClass.ATMOSPHERIC_PRESSURE: (UnitOfPressure.HPA,),
+    SensorDeviceClass.DISTANCE: (
+        UnitOfLength.CENTIMETERS,
+        UnitOfLength.KILOMETERS,
+        UnitOfLength.METERS,
+        UnitOfLength.MILLIMETERS,
+    ),
+    SensorDeviceClass.GAS: (UnitOfVolume.CUBIC_METERS,),
+    SensorDeviceClass.PRECIPITATION: (
+        UnitOfLength.CENTIMETERS,
+        UnitOfLength.MILLIMETERS,
+    ),
+    SensorDeviceClass.PRECIPITATION_INTENSITY: (
+        UnitOfVolumetricFlux.MILLIMETERS_PER_DAY,
+        UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+    ),
+    SensorDeviceClass.PRESSURE: (
+        UnitOfPressure.BAR,
+        UnitOfPressure.CBAR,
+        UnitOfPressure.HPA,
+        UnitOfPressure.KPA,
+        UnitOfPressure.MBAR,
+        UnitOfPressure.MMHG,
+        UnitOfPressure.PA,
+    ),
+    SensorDeviceClass.SPEED: (
+        UnitOfSpeed.KILOMETERS_PER_HOUR,
+        UnitOfSpeed.KNOTS,
+        UnitOfSpeed.METERS_PER_SECOND,
+        UnitOfVolumetricFlux.MILLIMETERS_PER_DAY,
+        UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+    ),
+    SensorDeviceClass.VOLUME: (
+        UnitOfVolume.CUBIC_METERS,
+        UnitOfVolume.LITERS,
+        UnitOfVolume.MILLILITERS,
+    ),
+    SensorDeviceClass.WATER: (
+        UnitOfVolume.CUBIC_METERS,
+        UnitOfVolume.LITERS,
+    ),
+}
+
+
 @pytest.mark.parametrize(
-    "device_class, excluded_units",
+    "device_class",
     (
-        (
-            SensorDeviceClass.ATMOSPHERIC_PRESSURE,
-            (UnitOfPressure.HPA,),
-        ),
-        (
-            SensorDeviceClass.DISTANCE,
-            (
-                UnitOfLength.CENTIMETERS,
-                UnitOfLength.KILOMETERS,
-                UnitOfLength.METERS,
-                UnitOfLength.MILLIMETERS,
-            ),
-        ),
-        (
-            SensorDeviceClass.GAS,
-            (UnitOfVolume.CUBIC_METERS,),
-        ),
-        (
-            SensorDeviceClass.PRECIPITATION,
-            (
-                UnitOfLength.CENTIMETERS,
-                UnitOfLength.MILLIMETERS,
-            ),
-        ),
-        (
-            SensorDeviceClass.PRECIPITATION_INTENSITY,
-            (
-                UnitOfVolumetricFlux.MILLIMETERS_PER_DAY,
-                UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
-            ),
-        ),
-        (
-            SensorDeviceClass.PRESSURE,
-            (
-                UnitOfPressure.BAR,
-                UnitOfPressure.CBAR,
-                UnitOfPressure.HPA,
-                UnitOfPressure.KPA,
-                UnitOfPressure.MBAR,
-                UnitOfPressure.MMHG,
-                UnitOfPressure.PA,
-            ),
-        ),
-        (
-            SensorDeviceClass.SPEED,
-            (
-                UnitOfSpeed.KILOMETERS_PER_HOUR,
-                UnitOfSpeed.KNOTS,
-                UnitOfSpeed.METERS_PER_SECOND,
-                UnitOfVolumetricFlux.MILLIMETERS_PER_DAY,
-                UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
-            ),
-        ),
-        (
-            SensorDeviceClass.VOLUME,
-            (
-                UnitOfVolume.CUBIC_METERS,
-                UnitOfVolume.LITERS,
-                UnitOfVolume.MILLILITERS,
-            ),
-        ),
-        (
-            SensorDeviceClass.WATER,
-            (
-                UnitOfVolume.CUBIC_METERS,
-                UnitOfVolume.LITERS,
-            ),
-        ),
+        SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+        SensorDeviceClass.DISTANCE,
+        SensorDeviceClass.GAS,
+        SensorDeviceClass.PRECIPITATION,
+        SensorDeviceClass.PRECIPITATION_INTENSITY,
+        SensorDeviceClass.PRESSURE,
+        SensorDeviceClass.SPEED,
+        SensorDeviceClass.VOLUME,
+        SensorDeviceClass.WATER,
     ),
 )
-def test_metric_converted_units(
-    device_class: SensorDeviceClass, excluded_units: list
-) -> None:
+def test_metric_converted_units(device_class: SensorDeviceClass) -> None:
     """Test unit conversion rules are in place for all units."""
     unit_system = METRIC_SYSTEM
     # Make sure excluded_units is not stale
-    for unit in excluded_units:
+    for unit in UNCONVERTED_UNITS_METRIC_SYSTEM[device_class]:
         assert unit in DEVICE_CLASS_UNITS[device_class]
 
     for unit in DEVICE_CLASS_UNITS[device_class]:
-        if unit in excluded_units:
+        if unit in UNCONVERTED_UNITS_METRIC_SYSTEM[device_class]:
             assert (device_class, unit) not in unit_system._conversions
             continue
         assert (device_class, unit) in unit_system._conversions
@@ -685,86 +669,65 @@ def test_get_us_converted_unit(
     assert unit_system.get_converted_unit(device_class, original_unit) == state_unit
 
 
+UNCONVERTED_UNITS_US_SYSTEM = {
+    SensorDeviceClass.ATMOSPHERIC_PRESSURE: (UnitOfPressure.INHG,),
+    SensorDeviceClass.DISTANCE: (
+        UnitOfLength.FEET,
+        UnitOfLength.INCHES,
+        UnitOfLength.MILES,
+        UnitOfLength.YARDS,
+    ),
+    SensorDeviceClass.GAS: (UnitOfVolume.CENTUM_CUBIC_FEET, UnitOfVolume.CUBIC_FEET),
+    SensorDeviceClass.PRECIPITATION: (UnitOfLength.INCHES,),
+    SensorDeviceClass.PRECIPITATION_INTENSITY: (
+        UnitOfVolumetricFlux.INCHES_PER_DAY,
+        UnitOfVolumetricFlux.INCHES_PER_HOUR,
+    ),
+    SensorDeviceClass.PRESSURE: (UnitOfPressure.INHG, UnitOfPressure.PSI),
+    SensorDeviceClass.SPEED: (
+        UnitOfSpeed.FEET_PER_SECOND,
+        UnitOfSpeed.KNOTS,
+        UnitOfSpeed.MILES_PER_HOUR,
+        UnitOfVolumetricFlux.INCHES_PER_DAY,
+        UnitOfVolumetricFlux.INCHES_PER_HOUR,
+    ),
+    SensorDeviceClass.VOLUME: (
+        UnitOfVolume.CENTUM_CUBIC_FEET,
+        UnitOfVolume.CUBIC_FEET,
+        UnitOfVolume.FLUID_OUNCES,
+        UnitOfVolume.GALLONS,
+    ),
+    SensorDeviceClass.WATER: (
+        UnitOfVolume.CENTUM_CUBIC_FEET,
+        UnitOfVolume.CUBIC_FEET,
+        UnitOfVolume.GALLONS,
+    ),
+}
+
+
 @pytest.mark.parametrize(
-    "device_class, excluded_units",
+    "device_class",
     (
-        (
-            SensorDeviceClass.ATMOSPHERIC_PRESSURE,
-            (UnitOfPressure.INHG,),
-        ),
-        (
-            SensorDeviceClass.DISTANCE,
-            (
-                UnitOfLength.FEET,
-                UnitOfLength.INCHES,
-                UnitOfLength.MILES,
-                UnitOfLength.YARDS,
-            ),
-        ),
-        (
-            SensorDeviceClass.GAS,
-            (
-                UnitOfVolume.CENTUM_CUBIC_FEET,
-                UnitOfVolume.CUBIC_FEET,
-            ),
-        ),
-        (
-            SensorDeviceClass.PRECIPITATION,
-            (UnitOfLength.INCHES,),
-        ),
-        (
-            SensorDeviceClass.PRECIPITATION_INTENSITY,
-            (
-                UnitOfVolumetricFlux.INCHES_PER_DAY,
-                UnitOfVolumetricFlux.INCHES_PER_HOUR,
-            ),
-        ),
-        (
-            SensorDeviceClass.PRESSURE,
-            (
-                UnitOfPressure.INHG,
-                UnitOfPressure.PSI,
-            ),
-        ),
-        (
-            SensorDeviceClass.SPEED,
-            (
-                UnitOfSpeed.FEET_PER_SECOND,
-                UnitOfSpeed.KNOTS,
-                UnitOfSpeed.MILES_PER_HOUR,
-                UnitOfVolumetricFlux.INCHES_PER_DAY,
-                UnitOfVolumetricFlux.INCHES_PER_HOUR,
-            ),
-        ),
-        (
-            SensorDeviceClass.VOLUME,
-            (
-                UnitOfVolume.CENTUM_CUBIC_FEET,
-                UnitOfVolume.CUBIC_FEET,
-                UnitOfVolume.FLUID_OUNCES,
-                UnitOfVolume.GALLONS,
-            ),
-        ),
-        (
-            SensorDeviceClass.WATER,
-            (
-                UnitOfVolume.CENTUM_CUBIC_FEET,
-                UnitOfVolume.CUBIC_FEET,
-                UnitOfVolume.GALLONS,
-            ),
-        ),
+        SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+        SensorDeviceClass.DISTANCE,
+        SensorDeviceClass.GAS,
+        SensorDeviceClass.PRECIPITATION,
+        SensorDeviceClass.PRECIPITATION_INTENSITY,
+        SensorDeviceClass.PRESSURE,
+        SensorDeviceClass.SPEED,
+        SensorDeviceClass.VOLUME,
+        SensorDeviceClass.WATER,
     ),
 )
-def test_imperial_converted_units(
-    device_class: SensorDeviceClass, excluded_units: list
-) -> None:
+def test_imperial_converted_units(device_class: SensorDeviceClass) -> None:
     """Test unit conversion rules are in place for all units."""
     unit_system = US_CUSTOMARY_SYSTEM
     # Make sure excluded_units is not stale
-    for unit in excluded_units:
+    for unit in UNCONVERTED_UNITS_US_SYSTEM[device_class]:
         assert unit in DEVICE_CLASS_UNITS[device_class]
 
     for unit in DEVICE_CLASS_UNITS[device_class]:
-        if unit in excluded_units:
+        if unit in UNCONVERTED_UNITS_US_SYSTEM[device_class]:
+            assert (device_class, unit) not in unit_system._conversions
             continue
         assert (device_class, unit) in unit_system._conversions
