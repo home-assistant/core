@@ -20,7 +20,7 @@ def mock_config_flows():
         yield flows
 
 
-def test_recursive_flatten():
+def test_recursive_flatten() -> None:
     """Test the flatten function."""
     data = {"parent1": {"child1": "data1", "child2": "data2"}, "parent2": "data3"}
 

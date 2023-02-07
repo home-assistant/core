@@ -84,7 +84,7 @@ COMMUNITY_POST_INPUTS = {
 }
 
 
-def test_get_community_post_import_url():
+def test_get_community_post_import_url() -> None:
     """Test variations of generating import forum url."""
     assert (
         importer._get_community_post_import_url(
@@ -101,7 +101,7 @@ def test_get_community_post_import_url():
     )
 
 
-def test_get_github_import_url():
+def test_get_github_import_url() -> None:
     """Test getting github import url."""
     assert (
         importer._get_github_import_url(
@@ -128,7 +128,7 @@ def test_extract_blueprint_from_community_topic(community_post):
     assert imported_blueprint.blueprint.inputs == COMMUNITY_POST_INPUTS
 
 
-def test_extract_blueprint_from_community_topic_invalid_yaml():
+def test_extract_blueprint_from_community_topic_invalid_yaml() -> None:
     """Test extracting blueprint with invalid YAML."""
     with pytest.raises(HomeAssistantError):
         importer._extract_blueprint_from_community_topic(
@@ -143,7 +143,7 @@ def test_extract_blueprint_from_community_topic_invalid_yaml():
         )
 
 
-def test_extract_blueprint_from_community_topic_wrong_lang():
+def test_extract_blueprint_from_community_topic_wrong_lang() -> None:
     """Test extracting blueprint with invalid YAML."""
     with pytest.raises(importer.HomeAssistantError):
         assert importer._extract_blueprint_from_community_topic(

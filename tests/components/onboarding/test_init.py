@@ -37,7 +37,7 @@ async def test_setup_views_if_not_onboarded(hass):
     assert not onboarding.async_is_onboarded(hass)
 
 
-async def test_is_onboarded():
+async def test_is_onboarded() -> None:
     """Test the is onboarded function."""
     hass = Mock()
     hass.data = {}
@@ -51,7 +51,7 @@ async def test_is_onboarded():
     assert not onboarding.async_is_onboarded(hass)
 
 
-async def test_is_user_onboarded():
+async def test_is_user_onboarded() -> None:
     """Test the is onboarded function."""
     hass = Mock()
     hass.data = {}
