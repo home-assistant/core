@@ -13,6 +13,7 @@ from homeassistant.components.number import (
     NumberMode,
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 ENTITY_VOLUME = "number.volume"
@@ -28,13 +29,13 @@ async def setup_demo_number(hass):
     await hass.async_block_till_done()
 
 
-def test_setup_params(hass):
+def test_setup_params(hass: HomeAssistant) -> None:
     """Test the initial parameters."""
     state = hass.states.get(ENTITY_VOLUME)
     assert state.state == "42.0"
 
 
-def test_default_setup_params(hass):
+def test_default_setup_params(hass: HomeAssistant) -> None:
     """Test the setup with default parameters."""
     state = hass.states.get(ENTITY_VOLUME)
     assert state.attributes.get(ATTR_MIN) == 0.0

@@ -27,6 +27,7 @@ from homeassistant.components.recorder.db_schema import (
     States,
 )
 from homeassistant.components.recorder.util import session_scope
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import recorder as recorder_helper
 import homeassistant.util.dt as dt_util
 
@@ -369,7 +370,7 @@ async def test_schema_migrate(hass, start_version, live):
         assert recorder.util.async_migration_in_progress(hass) is not True
 
 
-def test_invalid_update(hass):
+def test_invalid_update(hass: HomeAssistant) -> None:
     """Test that an invalid new version raises an exception."""
     with pytest.raises(ValueError):
         migration._apply_update(hass, Mock(), Mock(), -1, 0)

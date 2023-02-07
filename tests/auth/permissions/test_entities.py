@@ -7,6 +7,7 @@ from homeassistant.auth.permissions.entities import (
     compile_entities,
 )
 from homeassistant.auth.permissions.models import PermissionLookup
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.entity_registry import RegistryEntry
 
@@ -149,7 +150,7 @@ def test_entities_all_control() -> None:
     assert compiled("switch.kitchen", "control") is True
 
 
-def test_entities_device_id_boolean(hass):
+def test_entities_device_id_boolean(hass: HomeAssistant) -> None:
     """Test entity ID policy applying control on device id."""
     entity_registry = mock_registry(
         hass,
@@ -189,7 +190,7 @@ def test_entities_areas_true() -> None:
     assert compiled("light.kitchen", "read") is True
 
 
-def test_entities_areas_area_true(hass):
+def test_entities_areas_area_true(hass: HomeAssistant) -> None:
     """Test entity ID policy for areas with specific area."""
     entity_registry = mock_registry(
         hass,
