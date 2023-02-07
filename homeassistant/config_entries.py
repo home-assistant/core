@@ -14,6 +14,8 @@ from types import MappingProxyType, MethodType
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 import weakref
 
+from typing_extensions import Self
+
 from . import data_entry_flow, loader
 from .backports.enum import StrEnum
 from .components import persistent_notification
@@ -86,7 +88,6 @@ PATH_CONFIG = ".config_entries.json"
 
 SAVE_DELAY = 1
 
-_ConfigEntryStateSelfT = TypeVar("_ConfigEntryStateSelfT", bound="ConfigEntryState")
 _R = TypeVar("_R")
 
 
@@ -110,9 +111,7 @@ class ConfigEntryState(Enum):
 
     _recoverable: bool
 
-    def __new__(
-        cls: type[_ConfigEntryStateSelfT], value: str, recoverable: bool
-    ) -> _ConfigEntryStateSelfT:
+    def __new__(cls, value: str, recoverable: bool) -> Self:
         """Create new ConfigEntryState."""
         obj = object.__new__(cls)
         obj._value_ = value
