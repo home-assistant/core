@@ -923,7 +923,7 @@ jobs:
     runs-on: ubuntu-20.04
     services:
       mariadb:
-        image: mariadb:10.9.3
+        image: ${{ matrix.mariadb-group }}
         ports:
           - 3306:3306
         env:
@@ -1024,7 +1024,7 @@ jobs:
     runs-on: ubuntu-20.04
     services:
       postgres:
-        image: postgres:15.0
+        image: ${{ matrix.postgresql-group }}
         ports:
           - 5432:5432
         env:
