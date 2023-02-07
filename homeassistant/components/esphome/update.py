@@ -53,7 +53,7 @@ async def async_setup_entry(
             unsub()  # type: ignore[unreachable]
 
         assert dashboard is not None
-        async_add_entities([ESPHomeUpdateEntity(entry.entry_id, entry_data, dashboard)])
+        async_add_entities([ESPHomeUpdateEntity(entry_data, dashboard)])
 
     if entry_data.available:
         await setup_update_entity()
@@ -72,12 +72,11 @@ class ESPHomeUpdateEntity(CoordinatorEntity[ESPHomeDashboard], UpdateEntity):
     _attr_name = "Firmware"
 
     def __init__(
-        self, entry_id: str, entry_data: RuntimeEntryData, coordinator: ESPHomeDashboard
+        self, entry_data: RuntimeEntryData, coordinator: ESPHomeDashboard
     ) -> None:
         """Initialize the update entity."""
         super().__init__(coordinator=coordinator)
         assert entry_data.device_info is not None
-        self._entry_id = entry_id
         self._entry_data = entry_data
         self._attr_unique_id = entry_data.device_info.mac_address
         self._attr_device_info = DeviceInfo(
@@ -153,7 +152,7 @@ class ESPHomeUpdateEntity(CoordinatorEntity[ESPHomeDashboard], UpdateEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"esphome_{self._entry_id}_on_device_update",
+                self._entry_data.signal_device_updated,
                 _on_device_update,
             )
         )
