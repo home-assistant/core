@@ -1733,13 +1733,18 @@ def record_states(hass):
         states[mp].append(
             set_state(mp, "idle", attributes={"media_title": str(sentinel.mt1)})
         )
-        states[mp].append(
-            set_state(mp, "YouTube", attributes={"media_title": str(sentinel.mt2)})
-        )
         states[sns1].append(set_state(sns1, "10", attributes=sns1_attr))
         states[sns2].append(set_state(sns2, "10", attributes=sns2_attr))
         states[sns3].append(set_state(sns3, "10", attributes=sns3_attr))
         states[sns4].append(set_state(sns4, "10", attributes=sns4_attr))
+
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow",
+        return_value=one + timedelta(microseconds=1),
+    ):
+        states[mp].append(
+            set_state(mp, "YouTube", attributes={"media_title": str(sentinel.mt2)})
+        )
 
     with patch(
         "homeassistant.components.recorder.core.dt_util.utcnow", return_value=two
