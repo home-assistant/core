@@ -953,3 +953,18 @@ async def test_translation_key(hass):
     )
     mock_entity2.entity_id = "hello.world"
     assert mock_entity2.translation_key == "from_entity_description"
+
+
+async def test_repr_using_stringify_state():
+    """Test that repr uses stringify state."""
+
+    class MyEntity(MockEntity):
+        """Mock entity."""
+
+        @property
+        def state(self):
+            """Return the state."""
+            raise ValueError("Boom")
+
+    entity = MyEntity(entity_id="test.test", available=False)
+    assert str(entity) == "<entity test.test=unavailable>"

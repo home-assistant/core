@@ -226,6 +226,10 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "local_name": "HLK-LD2410B_*",
     },
     {
+        "domain": "ld2410_ble",
+        "local_name": "HLK-LD2410_*",
+    },
+    {
         "domain": "led_ble",
         "local_name": "LEDnet*",
     },
