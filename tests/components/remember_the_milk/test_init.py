@@ -2,11 +2,12 @@
 from unittest.mock import Mock, mock_open, patch
 
 import homeassistant.components.remember_the_milk as rtm
+from homeassistant.core import HomeAssistant
 
 from .const import JSON_STRING, PROFILE, TOKEN
 
 
-def test_create_new(hass):
+def test_create_new(hass: HomeAssistant) -> None:
     """Test creating a new config file."""
     with patch("builtins.open", mock_open()), patch(
         "os.path.isfile", Mock(return_value=False)
@@ -16,7 +17,7 @@ def test_create_new(hass):
     assert config.get_token(PROFILE) == TOKEN
 
 
-def test_load_config(hass):
+def test_load_config(hass: HomeAssistant) -> None:
     """Test loading an existing token from the file."""
     with patch("builtins.open", mock_open(read_data=JSON_STRING)), patch(
         "os.path.isfile", Mock(return_value=True)
@@ -25,7 +26,7 @@ def test_load_config(hass):
     assert config.get_token(PROFILE) == TOKEN
 
 
-def test_invalid_data(hass):
+def test_invalid_data(hass: HomeAssistant) -> None:
     """Test starts with invalid data and should not raise an exception."""
     with patch("builtins.open", mock_open(read_data="random characters")), patch(
         "os.path.isfile", Mock(return_value=True)
@@ -34,7 +35,7 @@ def test_invalid_data(hass):
     assert config is not None
 
 
-def test_id_map(hass):
+def test_id_map(hass: HomeAssistant) -> None:
     """Test the hass to rtm task is mapping."""
     hass_id = "hass-id-1234"
     list_id = "mylist"
@@ -52,7 +53,7 @@ def test_id_map(hass):
         assert config.get_rtm_id(PROFILE, hass_id) is None
 
 
-def test_load_key_map(hass):
+def test_load_key_map(hass: HomeAssistant) -> None:
     """Test loading an existing key map from the file."""
     with patch("builtins.open", mock_open(read_data=JSON_STRING)), patch(
         "os.path.isfile", Mock(return_value=True)

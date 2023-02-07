@@ -1,6 +1,6 @@
 """Tests Home Assistant location helpers."""
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_LATITUDE, ATTR_LONGITUDE
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import location
 
 
@@ -101,7 +101,7 @@ async def test_coordinates_function_device_tracker_from_input_select(hass):
     )
 
 
-def test_coordinates_function_returns_none_on_recursion(hass):
+def test_coordinates_function_returns_none_on_recursion(hass: HomeAssistant) -> None:
     """Test coordinates function."""
     hass.states.async_set(
         "test.first",
@@ -120,7 +120,7 @@ async def test_coordinates_function_returns_state_if_no_coords(hass):
     assert location.find_coordinates(hass, "test.object") == "abc"
 
 
-def test_coordinates_function_returns_input_if_no_coords(hass):
+def test_coordinates_function_returns_input_if_no_coords(hass: HomeAssistant) -> None:
     """Test test_coordinates function."""
     assert location.find_coordinates(hass, "test.abc") == "test.abc"
     assert location.find_coordinates(hass, "abc") == "abc"
