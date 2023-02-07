@@ -6,6 +6,7 @@ import pytest
 import requests
 
 from homeassistant.components.nx584 import binary_sensor as nx584
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 DEFAULT_CONFIG = {
@@ -133,7 +134,7 @@ async def test_nx584_sensor_setup_version_too_old(hass):
 
 
 @pytest.mark.usefixtures("client")
-def test_nx584_sensor_setup_no_zones(hass):
+def test_nx584_sensor_setup_no_zones(hass: HomeAssistant) -> None:
     """Test the setup with no zones."""
     nx584_client.Client.return_value.list_zones.return_value = []
     add_entities = mock.MagicMock()

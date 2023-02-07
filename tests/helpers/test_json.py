@@ -6,7 +6,7 @@ from typing import NamedTuple
 
 import pytest
 
-from homeassistant import core
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.json import (
     ExtendedJSONEncoder,
     JSONEncoder,
@@ -22,7 +22,7 @@ from homeassistant.util.color import RGBColor
 def test_json_encoder(hass, encoder):
     """Test the JSON encoders."""
     ha_json_enc = encoder()
-    state = core.State("test.test", "hello")
+    state = State("test.test", "hello")
 
     # Test serializing a datetime
     now = dt_util.utcnow()
@@ -36,7 +36,7 @@ def test_json_encoder(hass, encoder):
     assert ha_json_enc.default(state) == state.as_dict()
 
 
-def test_json_encoder_raises(hass):
+def test_json_encoder_raises(hass: HomeAssistant) -> None:
     """Test the JSON encoder raises on unsupported types."""
     ha_json_enc = JSONEncoder()
 
@@ -45,7 +45,7 @@ def test_json_encoder_raises(hass):
         ha_json_enc.default(1)
 
 
-def test_extended_json_encoder(hass):
+def test_extended_json_encoder(hass: HomeAssistant) -> None:
     """Test the extended JSON encoder."""
     ha_json_enc = ExtendedJSONEncoder()
     # Test serializing a timedelta
