@@ -1,12 +1,10 @@
 """Tests for the Diagnostics integration."""
 from http import HTTPStatus
-from typing import Any
-
-from aiohttp.test_utils import TestClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.json import JsonObjectType
 from homeassistant.setup import async_setup_component
 
 from tests.typing import ClientSessionGenerator
@@ -16,7 +14,7 @@ async def _get_diagnostics_for_config_entry(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     config_entry: ConfigEntry,
-) -> dict[str, Any]:
+) -> JsonObjectType:
     """Return the diagnostics config entry for the specified domain."""
     assert await async_setup_component(hass, "diagnostics", {})
 
@@ -30,9 +28,9 @@ async def _get_diagnostics_for_config_entry(
 
 async def get_diagnostics_for_config_entry(
     hass: HomeAssistant,
-    hass_client: TestClientGenerator,
+    hass_client: ClientSessionGenerator,
     config_entry: ConfigEntry,
-) -> dict[str, Any]:
+) -> JsonObjectType:
     """Return the diagnostics config entry for the specified domain."""
     data = await _get_diagnostics_for_config_entry(hass, hass_client, config_entry)
     return data["data"]
@@ -40,10 +38,10 @@ async def get_diagnostics_for_config_entry(
 
 async def _get_diagnostics_for_device(
     hass: HomeAssistant,
-    hass_client: TestClientGenerator,
+    hass_client: ClientSessionGenerator,
     config_entry: ConfigEntry,
     device: DeviceEntry,
-) -> dict[str, Any]:
+) -> JsonObjectType:
     """Return the diagnostics for the specified device."""
     assert await async_setup_component(hass, "diagnostics", {})
 
@@ -57,10 +55,10 @@ async def _get_diagnostics_for_device(
 
 async def get_diagnostics_for_device(
     hass: HomeAssistant,
-    hass_client: TestClientGenerator,
+    hass_client: ClientSessionGenerator,
     config_entry: ConfigEntry,
     device: DeviceEntry,
-) -> dict[str, Any]:
+) -> JsonObjectType:
     """Return the diagnostics for the specified device."""
     data = await _get_diagnostics_for_device(hass, hass_client, config_entry, device)
     return data["data"]
