@@ -41,6 +41,7 @@ GENERAL_SETTINGS: Final[dict[str, str]] = {
     "follow_imports": "silent",
     # Enable some checks globally.
     "ignore_missing_imports": "true",
+    "local_partial_types": "true",
     "strict_equality": "true",
     "no_implicit_optional": "true",
     "warn_incomplete_stub": "true",
