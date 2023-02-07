@@ -3662,6 +3662,100 @@ def test_state_with_unit(hass: HomeAssistant) -> None:
     assert tpl.async_render() == ""
 
 
+def test_state_with_unit_and_rounding(hass: HomeAssistant) -> None:
+    """Test formatting the state rounded and with unit."""
+    entity_registry = er.async_get(hass)
+    entry = entity_registry.async_get_or_create(
+        "sensor", "test", "very_unique", suggested_object_id="test"
+    )
+    entity_registry.async_update_entity_options(
+        entry.entity_id,
+        "sensor",
+        {
+            "suggested_display_precision": 2,
+        },
+    )
+    assert entry.entity_id == "sensor.test"
+
+    hass.states.async_set("sensor.test", "23", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
+    hass.states.async_set("sensor.test2", "23", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
+
+    # state_with_unit property
+    tpl = template.Template("{{ states.sensor.test.state_with_unit }}", hass)
+    tpl2 = template.Template("{{ states.sensor.test2.state_with_unit }}", hass)
+
+    # AllStates.__call__ defaults
+    tpl3 = template.Template("{{ states('sensor.test') }}", hass)
+    tpl4 = template.Template("{{ states('sensor.test2') }}", hass)
+
+    assert tpl.async_render() == "23.00 beers"
+    assert tpl2.async_render() == "23 beers"
+    assert tpl3.async_render() == 23
+    assert tpl4.async_render() == 23
+
+    hass.states.async_set("sensor.test", "23.015", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
+    hass.states.async_set("sensor.test2", "23.015", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
+
+    assert tpl.async_render() == "23.02 beers"
+    assert tpl2.async_render() == "23.015 beers"
+    assert tpl3.async_render() == 23.015
+    assert tpl4.async_render() == 23.015
+
+
+@pytest.mark.parametrize(
+    ("rounded", "with_unit", "output1_1", "output1_2", "output2_1", "output2_2"),
+    [
+        (False, False, 23, 23.015, 23, 23.015),
+        (False, True, "23 beers", "23.015 beers", "23 beers", "23.015 beers"),
+        (True, False, 23.0, 23.02, 23, 23.015),
+        (True, True, "23.00 beers", "23.02 beers", "23 beers", "23.015 beers"),
+    ],
+)
+def test_state_with_unit_and_rounding_options(
+    hass: HomeAssistant,
+    rounded: str,
+    with_unit: str,
+    output1_1,
+    output1_2,
+    output2_1,
+    output2_2,
+) -> None:
+    """Test formatting the state rounded and with unit."""
+    entity_registry = er.async_get(hass)
+    entry = entity_registry.async_get_or_create(
+        "sensor", "test", "very_unique", suggested_object_id="test"
+    )
+    entity_registry.async_update_entity_options(
+        entry.entity_id,
+        "sensor",
+        {
+            "suggested_display_precision": 2,
+        },
+    )
+    assert entry.entity_id == "sensor.test"
+
+    hass.states.async_set("sensor.test", "23", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
+    hass.states.async_set("sensor.test2", "23", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
+
+    tpl = template.Template(
+        f"{{{{ states('sensor.test', rounded={rounded}, with_unit={with_unit}) }}}}",
+        hass,
+    )
+    tpl2 = template.Template(
+        f"{{{{ states('sensor.test2', rounded={rounded}, with_unit={with_unit}) }}}}",
+        hass,
+    )
+
+    assert tpl.async_render() == output1_1
+    assert tpl2.async_render() == output2_1
+
+    hass.states.async_set("sensor.test", "23.015", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
+    hass.states.async_set("sensor.test2", "23.015", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
+
+    assert tpl.async_render() == output1_2
+    assert tpl2.async_render() == output2_2
+
+
 def test_length_of_states(hass: HomeAssistant) -> None:
     """Test fetching the length of states."""
     hass.states.async_set("sensor.test", "23")

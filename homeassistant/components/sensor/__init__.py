@@ -833,8 +833,8 @@ def async_update_suggested_units(hass: HomeAssistant) -> None:
 
 
 @callback
-def async_state_with_unit(hass: HomeAssistant, entity_id: str, state: State) -> str:
-    """Return the state concatenated with the unit if available."""
+def async_rounded_state(hass: HomeAssistant, entity_id: str, state: State) -> str:
+    """Return the state rounded for presentation."""
 
     def display_precision() -> int | None:
         """Return the display precision."""
@@ -847,14 +847,14 @@ def async_state_with_unit(hass: HomeAssistant, entity_id: str, state: State) -> 
         return sensor_options.get("suggested_display_precision")
 
     value = state.state
-    precision = display_precision()
+    if (precision := display_precision()) is None:
+        return value
+
     with suppress(TypeError, ValueError):
-        numerical_value = int(value)
+        numerical_value = float(value)
         value = f"{numerical_value:.{precision}f}"
         # This can be replaced with adding the z option when we drop support for
         # Python 3.10
         value = NEGATIVE_ZERO_PATTERN.sub(r"\1", value)
 
-    unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-
-    return f"{value} {unit}" if unit else value
+    return value

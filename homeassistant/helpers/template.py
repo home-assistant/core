@@ -9,7 +9,7 @@ from collections.abc import Callable, Collection, Generator, Iterable
 from contextlib import contextmanager, suppress
 from contextvars import ContextVar
 from datetime import datetime, timedelta
-from functools import cache, cached_property, lru_cache, partial, wraps
+from functools import cache, lru_cache, partial, wraps
 import json
 import logging
 import math
@@ -733,12 +733,16 @@ class AllStates:
         self._collect_all_lifecycle()
         return self._hass.states.async_entity_ids_count()
 
-    def __call__(self, entity_id: str, with_unit: bool = False) -> str:
+    def __call__(
+        self, entity_id: str, rounded: bool = False, with_unit: bool = False
+    ) -> str:
         """Return the states."""
         state = _get_state(self._hass, entity_id)
         if state is None:
             return STATE_UNKNOWN
-        return state.state_with_unit if with_unit else state.state
+        if rounded or with_unit:
+            return state.format_state(rounded, with_unit)
+        return state.state
 
     def __repr__(self) -> str:
         """Representation of All States."""
@@ -885,21 +889,27 @@ class TemplateStateBase(State):
         self._collect_state()
         return self._state.name
 
-    @cached_property
+    @property
     def state_with_unit(self) -> str:
         """Return the state concatenated with the unit if available."""
+        return self.format_state(rounded=True, with_unit=True)
+
+    def format_state(self, rounded: bool, with_unit: bool) -> str:
+        """Return a formatted version of the state."""
         # Import here, not at top-level, to avoid circular import
         # pylint: disable-next=import-outside-toplevel
         from homeassistant.components.sensor import (
             DOMAIN as SENSOR_DOMAIN,
-            async_state_with_unit,
+            async_rounded_state,
         )
 
         self._collect_state()
         unit = self._state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        if split_entity_id(self._entity_id)[0] == SENSOR_DOMAIN:
-            return async_state_with_unit(self._hass, self._entity_id, self._state)
-        return f"{self._state.state} {unit}" if unit else self._state.state
+        if rounded and split_entity_id(self._entity_id)[0] == SENSOR_DOMAIN:
+            state = async_rounded_state(self._hass, self._entity_id, self._state)
+        else:
+            state = self._state.state
+        return f"{state} {unit}" if with_unit and unit else state
 
     def __eq__(self, other: Any) -> bool:
         """Ensure we collect on equality check."""
