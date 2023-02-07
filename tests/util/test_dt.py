@@ -524,7 +524,9 @@ def test_find_next_time_expression_day_before_dst_change_the_same_time() -> None
     )
 
 
-def test_find_next_time_expression_time_leave_dst_chicago_before_the_fold_30_s() -> None:
+def test_find_next_time_expression_time_leave_dst_chicago_before_the_fold_30_s() -> (
+    None
+):
     """Test leaving daylight saving time for find_next_time_expression_time 30s into the future."""
     tz = dt_util.get_time_zone("America/Chicago")
     dt_util.set_default_time_zone(tz)
@@ -547,7 +549,9 @@ def test_find_next_time_expression_time_leave_dst_chicago_before_the_fold_30_s()
     assert next_time.fold == 0
 
 
-def test_find_next_time_expression_time_leave_dst_chicago_before_the_fold_same_time() -> None:
+def test_find_next_time_expression_time_leave_dst_chicago_before_the_fold_same_time() -> (
+    None
+):
     """Test leaving daylight saving time for find_next_time_expression_time with the same time."""
     tz = dt_util.get_time_zone("America/Chicago")
     dt_util.set_default_time_zone(tz)
@@ -570,7 +574,9 @@ def test_find_next_time_expression_time_leave_dst_chicago_before_the_fold_same_t
     assert next_time.fold == 0
 
 
-def test_find_next_time_expression_time_leave_dst_chicago_into_the_fold_same_time() -> None:
+def test_find_next_time_expression_time_leave_dst_chicago_into_the_fold_same_time() -> (
+    None
+):
     """Test leaving daylight saving time for find_next_time_expression_time."""
     tz = dt_util.get_time_zone("America/Chicago")
     dt_util.set_default_time_zone(tz)
@@ -594,7 +600,9 @@ def test_find_next_time_expression_time_leave_dst_chicago_into_the_fold_same_tim
     )
 
 
-def test_find_next_time_expression_time_leave_dst_chicago_into_the_fold_ahead_1_hour_10_min() -> None:
+def test_find_next_time_expression_time_leave_dst_chicago_into_the_fold_ahead_1_hour_10_min() -> (
+    None
+):
     """Test leaving daylight saving time for find_next_time_expression_time."""
     tz = dt_util.get_time_zone("America/Chicago")
     dt_util.set_default_time_zone(tz)
@@ -620,7 +628,9 @@ def test_find_next_time_expression_time_leave_dst_chicago_into_the_fold_ahead_1_
     )
 
 
-def test_find_next_time_expression_time_leave_dst_chicago_inside_the_fold_ahead_10_min() -> None:
+def test_find_next_time_expression_time_leave_dst_chicago_inside_the_fold_ahead_10_min() -> (
+    None
+):
     """Test leaving daylight saving time for find_next_time_expression_time."""
     tz = dt_util.get_time_zone("America/Chicago")
     dt_util.set_default_time_zone(tz)
@@ -646,7 +656,9 @@ def test_find_next_time_expression_time_leave_dst_chicago_inside_the_fold_ahead_
     )
 
 
-def test_find_next_time_expression_time_leave_dst_chicago_past_the_fold_ahead_2_hour_10_min() -> None:
+def test_find_next_time_expression_time_leave_dst_chicago_past_the_fold_ahead_2_hour_10_min() -> (
+    None
+):
     """Test leaving daylight saving time for find_next_time_expression_time."""
     tz = dt_util.get_time_zone("America/Chicago")
     dt_util.set_default_time_zone(tz)
@@ -695,7 +707,9 @@ def test_find_next_time_expression_microseconds() -> None:
     assert time_after == datetime(2022, 5, 13, 1, 5, 10, tzinfo=dt_util.UTC)
 
 
-def test_find_next_time_expression_tenth_second_pattern_does_not_drift_entering_dst() -> None:
+def test_find_next_time_expression_tenth_second_pattern_does_not_drift_entering_dst() -> (
+    None
+):
     """Test finding next time expression tenth second pattern does not drift entering dst."""
     tz = dt_util.get_time_zone("America/Chicago")
     dt_util.set_default_time_zone(tz)
