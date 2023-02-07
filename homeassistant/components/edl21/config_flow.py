@@ -38,7 +38,3 @@ class EDL21ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
 
         return self.async_show_form(step_id="user", data_schema=vol.Schema(data_schema))
-
-    def is_valid(self, user_input) -> bool:
-        """Validate the user input."""
-        return True
