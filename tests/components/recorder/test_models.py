@@ -227,7 +227,7 @@ def test_states_from_native_invalid_entity_id():
     assert state.entity_id == "test.invalid__id"
 
 
-async def test_process_timestamp():
+async def test_process_timestamp() -> None:
     """Test processing time stamp to UTC."""
     datetime_with_tzinfo = datetime(2016, 7, 9, 11, 0, 0, tzinfo=dt.UTC)
     datetime_without_tzinfo = datetime(2016, 7, 9, 11, 0, 0)
@@ -256,7 +256,7 @@ async def test_process_timestamp():
     assert process_timestamp(None) is None
 
 
-async def test_process_timestamp_to_utc_isoformat():
+async def test_process_timestamp_to_utc_isoformat() -> None:
     """Test processing time stamp to UTC isoformat."""
     datetime_with_tzinfo = datetime(2016, 7, 9, 11, 0, 0, tzinfo=dt.UTC)
     datetime_without_tzinfo = datetime(2016, 7, 9, 11, 0, 0)
@@ -292,7 +292,7 @@ async def test_process_timestamp_to_utc_isoformat():
     assert process_timestamp_to_utc_isoformat(None) is None
 
 
-async def test_event_to_db_model():
+async def test_event_to_db_model() -> None:
     """Test we can round trip Event conversion."""
     event = ha.Event(
         "state_changed", {"some": "attr"}, ha.EventOrigin.local, dt_util.utcnow()

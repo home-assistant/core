@@ -112,7 +112,6 @@ init-hook = """\
 load-plugins = [
     "pylint.extensions.code_style",
     "pylint.extensions.typing",
-    "hass_constructor",
     "hass_enforce_type_hints",
     "hass_imports",
     "hass_logger",
@@ -164,9 +163,6 @@ good-names = [
 # Pylint CodeStyle plugin
 # consider-using-namedtuple-or-dataclass - too opinionated
 # consider-using-assignment-expr - decision to use := better left to devs
-# ---
-# Temporary for the Python 3.10 update, remove with mypy v1.0
-# consider-alternative-union-syntax
 disable = [
     "format",
     "abstract-method",
@@ -191,7 +187,6 @@ disable = [
     "consider-using-f-string",
     "consider-using-namedtuple-or-dataclass",
     "consider-using-assignment-expr",
-    "consider-alternative-union-syntax",
 ]
 enable = [
     #"useless-suppression",  # temporarily every now and then to clean them up
