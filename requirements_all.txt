@@ -2316,7 +2316,7 @@ sense_energy==0.11.1
 sensirion-ble==0.0.1
 
 # homeassistant.components.sensorpro
-sensorpro-ble==0.5.1
+sensorpro-ble==0.5.3
 
 # homeassistant.components.sensorpush
 sensorpush-ble==1.5.2
