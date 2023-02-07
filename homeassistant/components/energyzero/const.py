@@ -12,5 +12,6 @@ THRESHOLD_HOUR: Final = 14
 
 SERVICE_TYPE_DEVICE_NAMES = {
     "today_energy": "Energy market price",
+    "tomorrow_energy": "Energy market price of tomorrow",
     "today_gas": "Gas market price",
 }
