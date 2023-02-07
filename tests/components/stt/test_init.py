@@ -24,8 +24,8 @@ from tests.common import mock_platform
 from tests.typing import ClientSessionGenerator
 
 
-class TestProvider(Provider):
-    """Test provider."""
+class MockProvider(Provider):
+    """Mock provider."""
 
     fail_process_audio = False
 
@@ -74,17 +74,17 @@ class TestProvider(Provider):
         return SpeechResult("test", SpeechResultState.SUCCESS)
 
 
-@pytest.fixture(name="test_provider")
-def get_test_provider() -> TestProvider:
+@pytest.fixture
+def mock_provider() -> MockProvider:
     """Test provider fixture."""
-    return TestProvider()
+    return MockProvider()
 
 
 @pytest.fixture(autouse=True)
-async def mock_setup(hass: HomeAssistant, test_provider: TestProvider) -> None:
+async def mock_setup(hass: HomeAssistant, mock_provider: MockProvider) -> None:
     """Set up a test provider."""
     mock_platform(
-        hass, "test.stt", Mock(async_get_engine=AsyncMock(return_value=test_provider))
+        hass, "test.stt", Mock(async_get_engine=AsyncMock(return_value=mock_provider))
     )
     assert await async_setup_component(hass, "stt", {"stt": {"platform": "test"}})
 
@@ -170,6 +170,6 @@ async def test_metadata_errors(
     assert await response.text() == error
 
 
-async def test_get_provider(hass: HomeAssistant, test_provider: TestProvider) -> None:
+async def test_get_provider(hass: HomeAssistant, mock_provider: MockProvider) -> None:
     """Test we can get STT providers."""
-    assert test_provider == async_get_provider(hass, "test")
+    assert mock_provider == async_get_provider(hass, "test")
