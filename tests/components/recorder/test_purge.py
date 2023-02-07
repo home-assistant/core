@@ -140,7 +140,7 @@ async def test_purge_old_states_encouters_database_corruption(
     recorder_db_url: str,
 ):
     """Test database image image is malformed while deleting old states."""
-    if recorder_db_url.startswith("mysql://"):
+    if recorder_db_url.startswith(("mysql://", "postgresql://")):
         # This test is specific for SQLite, wiping the database on error only happens
         # with SQLite.
         return
