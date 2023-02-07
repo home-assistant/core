@@ -134,14 +134,14 @@ async def test_ensure_existing_files_is_not_overwritten(hass):
     assert content == ""
 
 
-def test_load_yaml_config_converts_empty_files_to_dict():
+def test_load_yaml_config_converts_empty_files_to_dict() -> None:
     """Test that loading an empty file returns an empty dict."""
     create_file(YAML_PATH)
 
     assert isinstance(config_util.load_yaml_config_file(YAML_PATH), dict)
 
 
-def test_load_yaml_config_raises_error_if_not_dict():
+def test_load_yaml_config_raises_error_if_not_dict() -> None:
     """Test error raised when YAML file is not a dict."""
     with open(YAML_PATH, "w") as fp:
         fp.write("5")
@@ -150,7 +150,7 @@ def test_load_yaml_config_raises_error_if_not_dict():
         config_util.load_yaml_config_file(YAML_PATH)
 
 
-def test_load_yaml_config_raises_error_if_malformed_yaml():
+def test_load_yaml_config_raises_error_if_malformed_yaml() -> None:
     """Test error raised if invalid YAML."""
     with open(YAML_PATH, "w") as fp:
         fp.write(":-")
@@ -159,7 +159,7 @@ def test_load_yaml_config_raises_error_if_malformed_yaml():
         config_util.load_yaml_config_file(YAML_PATH)
 
 
-def test_load_yaml_config_raises_error_if_unsafe_yaml():
+def test_load_yaml_config_raises_error_if_unsafe_yaml() -> None:
     """Test error raised if unsafe YAML."""
     with open(YAML_PATH, "w") as fp:
         fp.write("- !!python/object/apply:os.system []")
@@ -179,7 +179,7 @@ def test_load_yaml_config_raises_error_if_unsafe_yaml():
     assert len(system_mock.mock_calls) == 1
 
 
-def test_load_yaml_config_preserves_key_order():
+def test_load_yaml_config_preserves_key_order() -> None:
     """Test removal of library."""
     with open(YAML_PATH, "w") as fp:
         fp.write("hello: 2\n")
@@ -201,7 +201,7 @@ async def test_create_default_config_returns_none_if_write_error(hass):
     assert mock_print.called
 
 
-def test_core_config_schema():
+def test_core_config_schema() -> None:
     """Test core config schema."""
     for value in (
         {CONF_UNIT_SYSTEM: "K"},
@@ -249,7 +249,7 @@ def test_core_config_schema_internal_external_warning(caplog):
     assert "Invalid internal_url set" in caplog.text
 
 
-def test_customize_dict_schema():
+def test_customize_dict_schema() -> None:
     """Test basic customize config validation."""
     values = ({ATTR_FRIENDLY_NAME: None}, {ATTR_ASSUMED_STATE: "2"})
 
@@ -262,7 +262,7 @@ def test_customize_dict_schema():
     ) == {ATTR_FRIENDLY_NAME: "2", ATTR_ASSUMED_STATE: False}
 
 
-def test_customize_glob_is_ordered():
+def test_customize_glob_is_ordered() -> None:
     """Test that customize_glob preserves order."""
     conf = config_util.CORE_CONFIG_SCHEMA({"customize_glob": OrderedDict()})
     assert isinstance(conf["customize_glob"], OrderedDict)

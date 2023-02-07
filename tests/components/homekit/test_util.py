@@ -73,7 +73,7 @@ def _mock_socket(failure_attempts: int = 0) -> MagicMock:
     return mock_socket
 
 
-def test_validate_entity_config():
+def test_validate_entity_config() -> None:
     """Test validate entities."""
     configs = [
         None,
@@ -173,7 +173,7 @@ def test_validate_entity_config():
     }
 
 
-def test_validate_media_player_features():
+def test_validate_media_player_features() -> None:
     """Test validate modes for media players."""
     config = {}
     attrs = {ATTR_SUPPORTED_FEATURES: 20873}
@@ -187,7 +187,7 @@ def test_validate_media_player_features():
     assert validate_media_player_features(entity_state, config) is False
 
 
-def test_convert_to_float():
+def test_convert_to_float() -> None:
     """Test convert_to_float method."""
     assert convert_to_float(12) == 12
     assert convert_to_float(12.4) == 12.4
@@ -195,7 +195,7 @@ def test_convert_to_float():
     assert convert_to_float(None) is None
 
 
-def test_cleanup_name_for_homekit():
+def test_cleanup_name_for_homekit() -> None:
     """Ensure name sanitize works as expected."""
 
     assert cleanup_name_for_homekit("abc") == "abc"
@@ -208,19 +208,19 @@ def test_cleanup_name_for_homekit():
     assert cleanup_name_for_homekit("の日本_語文字セット") == "の日本 語文字セット"
 
 
-def test_temperature_to_homekit():
+def test_temperature_to_homekit() -> None:
     """Test temperature conversion from HA to HomeKit."""
     assert temperature_to_homekit(20.46, UnitOfTemperature.CELSIUS) == 20.5
     assert temperature_to_homekit(92.1, UnitOfTemperature.FAHRENHEIT) == 33.4
 
 
-def test_temperature_to_states():
+def test_temperature_to_states() -> None:
     """Test temperature conversion from HomeKit to HA."""
     assert temperature_to_states(20, UnitOfTemperature.CELSIUS) == 20.0
     assert temperature_to_states(20.2, UnitOfTemperature.FAHRENHEIT) == 68.5
 
 
-def test_density_to_air_quality():
+def test_density_to_air_quality() -> None:
     """Test map PM2.5 density to HomeKit AirQuality level."""
     assert density_to_air_quality(0) == 1
     assert density_to_air_quality(12) == 1

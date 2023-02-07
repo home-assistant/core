@@ -79,7 +79,7 @@ def test_create_api_message_defaults(hass):
     assert msg["endpoint"] is not request["directive"]["endpoint"]
 
 
-def test_create_api_message_special():
+def test_create_api_message_special() -> None:
     """Create an API message response of a request with non defaults."""
     request = get_new_request("Alexa.PowerController", "TurnOn")
     directive_header = request["directive"]["header"]
@@ -1508,10 +1508,7 @@ async def test_media_player_speaker(hass):
     )
     assert call.data["is_volume_muted"]
 
-    (
-        call,
-        _,
-    ) = await assert_request_calls_service(
+    (call, _,) = await assert_request_calls_service(
         "Alexa.Speaker",
         "SetMute",
         "media_player#test_speaker",
@@ -1561,10 +1558,7 @@ async def test_media_player_step_speaker(hass):
     )
     assert call.data["is_volume_muted"]
 
-    (
-        call,
-        _,
-    ) = await assert_request_calls_service(
+    (call, _,) = await assert_request_calls_service(
         "Alexa.StepSpeaker",
         "SetMute",
         "media_player#test_step_speaker",

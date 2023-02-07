@@ -11,7 +11,7 @@ from homeassistant.core import callback, is_callback
 import homeassistant.util.logging as logging_util
 
 
-def test_sensitive_data_filter():
+def test_sensitive_data_filter() -> None:
     """Test the logging sensitive data filter."""
     log_filter = logging_util.HideSensitiveDataFilter("mock_sensitive")
 
@@ -90,7 +90,7 @@ async def test_async_create_catching_coro(hass, caplog):
     assert "in test_async_create_catching_coro" in caplog.text
 
 
-def test_catch_log_exception():
+def test_catch_log_exception() -> None:
     """Test it is still a callback after wrapping including partial."""
 
     async def async_meth():
