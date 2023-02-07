@@ -31,33 +31,30 @@ _T = TypeVar(
 _R = TypeVar("_R")
 _P = ParamSpec("_P")
 
+_FuncType = Callable[Concatenate[_T, _P], _R]
+_ReturnFuncType = Callable[Concatenate[_T, _P], _R | None]
+
 
 @overload
 def soco_error(
     errorcodes: None = ...,
-) -> Callable[[Callable[Concatenate[_T, _P], _R]], Callable[Concatenate[_T, _P], _R]]:
+) -> Callable[[_FuncType[_T, _P, _R]], _FuncType[_T, _P, _R]]:
     ...
 
 
 @overload
 def soco_error(
     errorcodes: list[str],
-) -> Callable[
-    [Callable[Concatenate[_T, _P], _R]], Callable[Concatenate[_T, _P], _R | None]
-]:
+) -> Callable[[_FuncType[_T, _P, _R]], _ReturnFuncType[_T, _P, _R]]:
     ...
 
 
 def soco_error(
     errorcodes: list[str] | None = None,
-) -> Callable[
-    [Callable[Concatenate[_T, _P], _R]], Callable[Concatenate[_T, _P], _R | None]
-]:
+) -> Callable[[_FuncType[_T, _P, _R]], _ReturnFuncType[_T, _P, _R]]:
     """Filter out specified UPnP errors and raise exceptions for service calls."""
 
-    def decorator(
-        funct: Callable[Concatenate[_T, _P], _R]
-    ) -> Callable[Concatenate[_T, _P], _R | None]:
+    def decorator(funct: _FuncType[_T, _P, _R]) -> _ReturnFuncType[_T, _P, _R]:
         """Decorate functions."""
 
         def wrapper(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> _R | None:
