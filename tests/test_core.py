@@ -975,7 +975,7 @@ async def test_serviceregistry_callback_service_raise_exception(hass):
     await hass.async_block_till_done()
 
 
-async def test_config_defaults():
+async def test_config_defaults() -> None:
     """Test config defaults."""
     hass = Mock()
     config = ha.Config(hass)
@@ -1003,21 +1003,21 @@ async def test_config_defaults():
     assert config.language == "en"
 
 
-async def test_config_path_with_file():
+async def test_config_path_with_file() -> None:
     """Test get_config_path method."""
     config = ha.Config(None)
     config.config_dir = "/test/ha-config"
     assert config.path("test.conf") == "/test/ha-config/test.conf"
 
 
-async def test_config_path_with_dir_and_file():
+async def test_config_path_with_dir_and_file() -> None:
     """Test get_config_path method."""
     config = ha.Config(None)
     config.config_dir = "/test/ha-config"
     assert config.path("dir", "test.conf") == "/test/ha-config/dir/test.conf"
 
 
-async def test_config_as_dict():
+async def test_config_as_dict() -> None:
     """Test as dict."""
     config = ha.Config(None)
     config.config_dir = "/test/ha-config"
@@ -1049,7 +1049,7 @@ async def test_config_as_dict():
     assert expected == config.as_dict()
 
 
-async def test_config_is_allowed_path():
+async def test_config_is_allowed_path() -> None:
     """Test is_allowed_path method."""
     config = ha.Config(None)
     with TemporaryDirectory() as tmp_dir:
@@ -1081,7 +1081,7 @@ async def test_config_is_allowed_path():
             config.is_allowed_path(None)
 
 
-async def test_config_is_allowed_external_url():
+async def test_config_is_allowed_external_url() -> None:
     """Test is_allowed_external_url method."""
     config = ha.Config(None)
     config.allowlist_external_urls = [
@@ -1507,7 +1507,7 @@ async def test_async_entity_ids_count(hass):
     assert hass.states.async_entity_ids_count("light") == 3
 
 
-async def test_hassjob_forbid_coroutine():
+async def test_hassjob_forbid_coroutine() -> None:
     """Test hassjob forbids coroutines."""
 
     async def bla():

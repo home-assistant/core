@@ -346,7 +346,7 @@ async def test_port_is_available_skips_existing_entries(hass):
         async_find_next_available_port(hass, 65530)
 
 
-async def test_format_version():
+async def test_format_version() -> None:
     """Test format_version method."""
     assert format_version("soho+3.6.8+soho-release-rt120+10") == "3.6.8"
     assert format_version("undefined-undefined-1.6.8") == "1.6.8"
@@ -362,14 +362,14 @@ async def test_format_version():
     assert format_version("unknown") is None
 
 
-async def test_coerce_int():
+async def test_coerce_int() -> None:
     """Test coerce_int method."""
     assert coerce_int("1") == 1
     assert coerce_int("") == 0
     assert coerce_int(0) == 0
 
 
-async def test_accessory_friendly_name():
+async def test_accessory_friendly_name() -> None:
     """Test we provide a helpful friendly name."""
 
     accessory = Mock()
