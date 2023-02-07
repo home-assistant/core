@@ -301,6 +301,7 @@ async def test_discover_lights(hass, hue_client):
     await hass.async_block_till_done()
 
     result_json = await async_get_lights(hue_client)
+    assert "1" not in result_json.keys()
     devices = {val["uniqueid"] for val in result_json.values()}
     assert "00:2f:d2:31:ce:c5:55:cc-ee" not in devices  # light.ceiling_lights
 
@@ -308,8 +309,16 @@ async def test_discover_lights(hass, hue_client):
     hass.states.async_set("light.ceiling_lights", STATE_ON)
     await hass.async_block_till_done()
     result_json = await async_get_lights(hue_client)
-    devices = {val["uniqueid"] for val in result_json.values()}
-    assert "00:2f:d2:31:ce:c5:55:cc-ee" in devices  # light.ceiling_lights
+    device = result_json["1"]  # Test that light ID did not change
+    assert device["uniqueid"] == "00:2f:d2:31:ce:c5:55:cc-ee"  # light.ceiling_lights
+    assert device["state"][HUE_API_STATE_ON] is True
+
+    # Test that returned value is fresh and not cached
+    hass.states.async_set("light.ceiling_lights", STATE_OFF)
+    await hass.async_block_till_done()
+    result_json = await async_get_lights(hue_client)
+    device = result_json["1"]
+    assert device["state"][HUE_API_STATE_ON] is False
 
 
 async def test_light_without_brightness_supported(hass_hue, hue_client):
