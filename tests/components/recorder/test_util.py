@@ -16,7 +16,10 @@ from homeassistant.components import recorder
 from homeassistant.components.recorder import history, util
 from homeassistant.components.recorder.const import DOMAIN, SQLITE_URL_PREFIX
 from homeassistant.components.recorder.db_schema import RecorderRuns
-from homeassistant.components.recorder.models import UnsupportedDialect
+from homeassistant.components.recorder.models import (
+    UnsupportedDialect,
+    process_timestamp,
+)
 from homeassistant.components.recorder.util import (
     end_incomplete_runs,
     is_second_sunday,
@@ -780,17 +783,16 @@ def test_end_incomplete_runs(hass_recorder, caplog):
         assert run_info.closed_incorrect is False
 
         now = dt_util.utcnow()
-        now_without_tz = now.replace(tzinfo=None)
         end_incomplete_runs(session, now)
         run_info = run_information_with_session(session)
         assert run_info.closed_incorrect is True
-        assert run_info.end == now_without_tz
+        assert process_timestamp(run_info.end) == now
         session.flush()
 
         later = dt_util.utcnow()
         end_incomplete_runs(session, later)
         run_info = run_information_with_session(session)
-        assert run_info.end == now_without_tz
+        assert process_timestamp(run_info.end) == now
 
     assert "Ended unfinished session" in caplog.text
 
