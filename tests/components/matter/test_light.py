@@ -30,16 +30,6 @@ async def test_turn_on(
     light_node: MatterNode,
 ) -> None:
     """Test turning on a light."""
-    state = hass.states.get("light.mock_extended_color_light")
-    assert state
-    assert state.state == "on"
-
-    set_node_attribute(light_node, 1, 6, 0, False)
-    await trigger_subscription_callback(hass, matter_client)
-
-    state = hass.states.get("light.mock_extended_color_light")
-    assert state
-    assert state.state == "off"
 
     # OnOff test
     await hass.services.async_call(
@@ -175,6 +165,56 @@ async def test_turn_on(
         ]
     )
     matter_client.send_device_command.reset_mock()
+
+    state = hass.states.get("light.mock_extended_color_light")
+    assert state
+    assert state.state == "on"
+
+    # HS Color Test
+    set_node_attribute(light_node, 1, 768, 8, 0)
+    set_node_attribute(light_node, 1, 768, 1, 50)
+    set_node_attribute(light_node, 1, 768, 0, 100)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("light.mock_extended_color_light")
+    assert state
+    assert state.attributes["color_mode"] == "hs"
+    assert state.attributes["hs_color"] == (141, 19)
+
+    # XY Color Test
+    set_node_attribute(light_node, 1, 768, 8, 1)
+    set_node_attribute(light_node, 1, 768, 3, 50)
+    set_node_attribute(light_node, 1, 768, 4, 100)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("light.mock_extended_color_light")
+    assert state
+    assert state.attributes["color_mode"] == "xy"
+    assert state.attributes["xy_color"] == (0.0007630, 0.001526)
+
+    # Color Temperature Test
+    set_node_attribute(light_node, 1, 768, 8, 2)
+    set_node_attribute(light_node, 1, 768, 7, 100)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("light.mock_extended_color_light")
+    assert state
+    assert state.attributes["color_mode"] == "color_temp"
+    assert state.attributes["color_temp"] == 100
+
+    # Disables color mode (FeatureMap normally 25)
+    set_node_attribute(light_node, 1, 768, 65532, 1)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("light.mock_extended_color_light")
+    assert state
+
+    set_node_attribute(light_node, 1, 6, 0, False)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("light.mock_extended_color_light")
+    assert state
+    assert state.state == "off"
 
 
 async def test_turn_off(

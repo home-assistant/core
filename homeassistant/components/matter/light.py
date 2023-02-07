@@ -81,9 +81,6 @@ class MatterLight(MatterEntity, LightEntity):
     def _supports_color_mode(self, color_feature: MatterColorControlFeatures) -> bool:
         """Return if device supports given color mode."""
 
-        if not self._supports_color():
-            return False
-
         feature_map = self._device_type_instance.node.get_attribute(
             self._device_type_instance.endpoint,
             clusters.ColorControl,
@@ -103,11 +100,6 @@ class MatterLight(MatterEntity, LightEntity):
         """Return if device supports xy color."""
 
         return self._supports_color_mode(MatterColorControlFeatures.XY)
-
-    def _supports_color_loop(self) -> bool:
-        """Return if device supports color loop."""
-
-        return self._supports_color_mode(MatterColorControlFeatures.COLOR_LOOP)
 
     def _supports_color_temperature(self) -> bool:
         """Return if device supports color temperature."""
@@ -291,11 +283,7 @@ class MatterLight(MatterEntity, LightEntity):
 
         assert color_mode is not None
 
-        ha_color_mode = COLOR_MODE_MAP.get(MatterColorMode(color_mode.value))
-
-        if ha_color_mode is None:
-            LOGGER.warning("Unknown color mode %s", color_mode.value)
-            ha_color_mode = ColorMode.UNKNOWN
+        ha_color_mode = COLOR_MODE_MAP[MatterColorMode(color_mode.value)]
 
         LOGGER.debug(
             "Got color mode (%s) for %s", ha_color_mode, self._device_type_instance
@@ -319,12 +307,13 @@ class MatterLight(MatterEntity, LightEntity):
         color_temp = kwargs.get(ATTR_COLOR_TEMP)
         brightness = kwargs.get(ATTR_BRIGHTNESS)
 
-        if hs_color is not None and self._supports_hs_color():
-            await self._set_hs_color(hs_color)
-        elif xy_color is not None and self._supports_xy_color():
-            await self._set_xy_color(xy_color)
-        elif color_temp is not None and self._supports_color_temperature():
-            await self._set_color_temp(color_temp)
+        if self._supports_color():
+            if hs_color is not None and self._supports_hs_color():
+                await self._set_hs_color(hs_color)
+            elif xy_color is not None and self._supports_xy_color():
+                await self._set_xy_color(xy_color)
+            elif color_temp is not None and self._supports_color_temperature():
+                await self._set_color_temp(color_temp)
 
         if brightness is not None and self._supports_brightness():
             await self._set_brightness(brightness)
@@ -345,32 +334,25 @@ class MatterLight(MatterEntity, LightEntity):
         """Update from device."""
 
         supports_color = self._supports_color()
-
-        if self._attr_supported_color_modes is None and supports_color:
-            self._attr_supported_color_modes = {
-                ColorMode.XY,
-                ColorMode.COLOR_TEMP,
-                ColorMode.BRIGHTNESS,
-            }
-
-            if self._supports_hs_color():
-                LOGGER.debug(
-                    "Adding (HS) color mode for %s", self._device_type_instance
-                )
-                self._attr_supported_color_modes.add(ColorMode.HS)
-
-        supports_color_temperature = self._supports_color_temperature()
-
-        if self._attr_supported_color_modes is None and supports_color_temperature:
-            self._attr_supported_color_modes = {
-                ColorMode.COLOR_TEMP,
-                ColorMode.BRIGHTNESS,
-            }
-
+        supports_color_temperature = (
+            self._supports_color_temperature() if supports_color else False
+        )
         supports_brightness = self._supports_brightness()
 
-        if self._attr_supported_color_modes is None and supports_brightness:
-            self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+        if self._attr_supported_color_modes is None:
+            supported_color_modes = set()
+            if supports_color:
+                supported_color_modes.add(ColorMode.XY)
+                if self._supports_hs_color():
+                    supported_color_modes.add(ColorMode.HS)
+
+            if supports_color_temperature:
+                supported_color_modes.add(ColorMode.COLOR_TEMP)
+
+            if supports_brightness:
+                supported_color_modes.add(ColorMode.BRIGHTNESS)
+
+            self._attr_supported_color_modes = supported_color_modes
 
         LOGGER.debug(
             "Supported color modes: %s for %s",
