@@ -995,7 +995,7 @@ def recorder_config():
 def recorder_db_url(pytestconfig):
     """Prepare a default database for tests and return a connection URL."""
     db_url: str = pytestconfig.getoption("dburl")
-    if db_url.startswith("mysql://"):
+    if db_url.startswith(("postgresql://", "mysql://")):
         import sqlalchemy_utils
 
         def _ha_orm_quote(mixed, ident):
@@ -1012,6 +1012,8 @@ def recorder_db_url(pytestconfig):
             return dialect.preparer(dialect).quote(ident)
 
         sqlalchemy_utils.functions.database.quote = _ha_orm_quote
+    if db_url.startswith("mysql://"):
+        import sqlalchemy_utils
 
         charset = "utf8mb4' COLLATE = 'utf8mb4_unicode_ci"
         assert not sqlalchemy_utils.database_exists(db_url)
