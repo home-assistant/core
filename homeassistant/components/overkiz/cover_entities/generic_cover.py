@@ -129,9 +129,9 @@ class OverkizGenericCover(OverkizEntity, CoverEntity):
         return attr
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> CoverEntityFeature:
         """Flag supported features."""
-        supported_features = 0
+        supported_features = CoverEntityFeature(0)
 
         if self.executor.has_command(*COMMANDS_OPEN_TILT):
             supported_features |= CoverEntityFeature.OPEN_TILT

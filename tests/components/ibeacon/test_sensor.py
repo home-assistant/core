@@ -1,7 +1,6 @@
 """Test the ibeacon sensors."""
 
 
-from dataclasses import replace
 from datetime import timedelta
 
 import pytest
@@ -24,6 +23,7 @@ from . import (
     FEASY_BEACON_SERVICE_INFO_1,
     FEASY_BEACON_SERVICE_INFO_2,
     NO_NAME_BEACON_SERVICE_INFO,
+    bluetooth_service_info_replace as replace,
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed

@@ -13,8 +13,8 @@ import async_timeout
 from mysensors import BaseAsyncGateway, Message, Sensor, mysensors
 import voluptuous as vol
 
-from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
-from homeassistant.components.mqtt.models import (
+from homeassistant.components.mqtt import (
+    DOMAIN as MQTT_DOMAIN,
     ReceiveMessage as MQTTReceiveMessage,
     ReceivePayloadType,
 )
@@ -329,6 +329,6 @@ def _gw_callback_factory(
         if msg_handler is None:
             return
 
-        hass.async_create_task(msg_handler(hass, gateway_id, msg))
+        msg_handler(hass, gateway_id, msg)
 
     return mysensors_callback

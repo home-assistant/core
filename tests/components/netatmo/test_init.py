@@ -110,7 +110,7 @@ async def test_setup_component_with_config(hass, config_entry):
 
         await hass.async_block_till_done()
 
-        assert fake_post_hits == 8
+        assert fake_post_hits == 10
         mock_impl.assert_called_once()
         mock_webhook.assert_called_once()
 
@@ -304,7 +304,6 @@ async def test_setup_component_with_delay(hass, config_entry):
     ) as mock_post_api_request, patch(
         "homeassistant.components.netatmo.data_handler.PLATFORMS", ["light"]
     ):
-
         assert await async_setup_component(
             hass, "netatmo", {"netatmo": {"client_id": "123", "client_secret": "abc"}}
         )

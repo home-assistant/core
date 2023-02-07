@@ -1,5 +1,4 @@
-"""
-Support for Homekit buttons.
+"""Support for Homekit buttons.
 
 These are mostly used where a HomeKit accessory exposes additional non-standard
 characteristics that don't map to a Home Assistant feature.
@@ -84,7 +83,7 @@ async def async_setup_entry(
                 entity.old_unique_id, entity.unique_id, Platform.BUTTON
             )
 
-        async_add_entities(entities, True)
+        async_add_entities(entities)
         return True
 
     conn.add_char_factory(async_add_characteristic)

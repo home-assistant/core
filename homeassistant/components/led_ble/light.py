@@ -7,10 +7,12 @@ from led_ble import LEDBLE
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_EFFECT,
     ATTR_RGB_COLOR,
     ATTR_WHITE,
     ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -22,7 +24,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import DOMAIN
+from .const import DEFAULT_EFFECT_SPEED, DOMAIN
 from .models import LEDBLEData
 
 
@@ -41,6 +43,7 @@ class LEDBLEEntity(CoordinatorEntity, LightEntity):
 
     _attr_supported_color_modes = {ColorMode.RGB, ColorMode.WHITE}
     _attr_has_entity_name = True
+    _attr_supported_features = LightEntityFeature.EFFECT
 
     def __init__(
         self, coordinator: DataUpdateCoordinator, device: LEDBLE, name: str
@@ -51,7 +54,7 @@ class LEDBLEEntity(CoordinatorEntity, LightEntity):
         self._attr_unique_id = device.address
         self._attr_device_info = DeviceInfo(
             name=name,
-            model=hex(device.model_num),
+            model=f"{device.model_data.description} {hex(device.model_num)}",
             sw_version=hex(device.version_num),
             connections={(dr.CONNECTION_BLUETOOTH, device.address)},
         )
@@ -65,10 +68,23 @@ class LEDBLEEntity(CoordinatorEntity, LightEntity):
         self._attr_brightness = device.brightness
         self._attr_rgb_color = device.rgb_unscaled
         self._attr_is_on = device.on
+        self._attr_effect = device.effect
+        self._attr_effect_list = device.effect_list
+
+    async def _async_set_effect(self, effect: str, brightness: int) -> None:
+        """Set an effect."""
+        await self._device.async_set_effect(
+            effect,
+            self._device.speed or DEFAULT_EFFECT_SPEED,
+            round(brightness / 255 * 100),
+        )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS, self.brightness)
+        if effect := kwargs.get(ATTR_EFFECT):
+            await self._async_set_effect(effect, brightness)
+            return
         if ATTR_RGB_COLOR in kwargs:
             rgb = kwargs[ATTR_RGB_COLOR]
             await self._device.set_rgb(rgb, brightness)

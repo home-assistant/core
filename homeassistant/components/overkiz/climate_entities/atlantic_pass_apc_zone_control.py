@@ -4,7 +4,7 @@ from typing import cast
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
 from homeassistant.components.climate import ClimateEntity, HVACMode
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import UnitOfTemperature
 
 from ..entity import OverkizEntity
 
@@ -22,7 +22,7 @@ class AtlanticPassAPCZoneControl(OverkizEntity, ClimateEntity):
     """Representation of Atlantic Pass APC Zone Control."""
 
     _attr_hvac_modes = [*HVAC_MODE_TO_OVERKIZ]
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     @property
     def hvac_mode(self) -> str:

@@ -101,7 +101,7 @@ async def test_exception_bad_trigger(hass, calls, caplog):
         },
     )
     await hass.async_block_till_done()
-    assert "Invalid config for [automation]" in caplog.text
+    assert "Unnamed automation could not be validated" in caplog.text
 
 
 async def test_multiple_tags_and_devices_trigger(hass, tag_setup, calls):

@@ -74,7 +74,7 @@ async def ws_info(
 @websocket_api.async_response
 async def ws_subscribe_system_status(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
-):
+) -> None:
     """Subscribe to system status updates."""
 
     system_status: SystemStatus = hass.data[DOMAIN]["system_status"]

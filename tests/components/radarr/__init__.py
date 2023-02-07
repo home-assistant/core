@@ -7,10 +7,6 @@ from aiohttp.client_exceptions import ClientError
 from homeassistant.components.radarr.const import DOMAIN
 from homeassistant.const import (
     CONF_API_KEY,
-    CONF_HOST,
-    CONF_MONITORED_CONDITIONS,
-    CONF_PORT,
-    CONF_SSL,
     CONF_URL,
     CONF_VERIFY_SSL,
     CONTENT_TYPE_JSON,
@@ -30,15 +26,6 @@ MOCK_USER_INPUT = {
     CONF_URL: URL,
     CONF_API_KEY: API_KEY,
     CONF_VERIFY_SSL: False,
-}
-
-CONF_IMPORT_DATA = {
-    CONF_API_KEY: API_KEY,
-    CONF_HOST: "192.168.1.189",
-    CONF_MONITORED_CONDITIONS: ["Stream count"],
-    CONF_PORT: "7887",
-    "urlbase": "/test",
-    CONF_SSL: False,
 }
 
 CONF_DATA = {

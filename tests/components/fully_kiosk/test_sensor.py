@@ -74,7 +74,7 @@ async def test_sensors_sensors(
     state = hass.states.get("sensor.amazon_fire_internal_storage_free_space")
     assert state
     assert state.state == "11675.5"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DATA_SIZE
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Amazon Fire Internal storage free space"
@@ -89,7 +89,7 @@ async def test_sensors_sensors(
     state = hass.states.get("sensor.amazon_fire_internal_storage_total_space")
     assert state
     assert state.state == "12938.5"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DATA_SIZE
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Amazon Fire Internal storage total space"
@@ -104,7 +104,7 @@ async def test_sensors_sensors(
     state = hass.states.get("sensor.amazon_fire_free_memory")
     assert state
     assert state.state == "362.4"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DATA_SIZE
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Amazon Fire Free memory"
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
@@ -116,7 +116,7 @@ async def test_sensors_sensors(
     state = hass.states.get("sensor.amazon_fire_total_memory")
     assert state
     assert state.state == "1440.1"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DATA_SIZE
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Amazon Fire Total memory"
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 

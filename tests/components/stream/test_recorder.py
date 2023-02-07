@@ -14,7 +14,7 @@ from homeassistant.components.stream.const import (
     OUTPUT_IDLE_TIMEOUT,
     RECORDER_PROVIDER,
 )
-from homeassistant.components.stream.core import Part
+from homeassistant.components.stream.core import Orientation, Part
 from homeassistant.components.stream.fmp4utils import find_box
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
@@ -23,6 +23,7 @@ import homeassistant.util.dt as dt_util
 from .common import (
     DefaultSegment as Segment,
     assert_mp4_has_transform_matrix,
+    dynamic_stream_settings,
     generate_h264_video,
     remux_with_audio,
 )
@@ -56,7 +57,7 @@ async def test_record_stream(hass, filename, h264_video):
             worker_finished.set()
 
     with patch("homeassistant.components.stream.Stream", wraps=MockStream):
-        stream = create_stream(hass, h264_video, {})
+        stream = create_stream(hass, h264_video, {}, dynamic_stream_settings())
 
     with patch.object(hass.config, "is_allowed_path", return_value=True):
         make_recording = hass.async_create_task(stream.async_record(filename))
@@ -79,7 +80,7 @@ async def test_record_stream(hass, filename, h264_video):
 async def test_record_lookback(hass, filename, h264_video):
     """Exercise record with lookback."""
 
-    stream = create_stream(hass, h264_video, {})
+    stream = create_stream(hass, h264_video, {}, dynamic_stream_settings())
 
     # Start an HLS feed to enable lookback
     stream.add_provider(HLS_PROVIDER)
@@ -96,7 +97,7 @@ async def test_record_lookback(hass, filename, h264_video):
 async def test_record_path_not_allowed(hass, h264_video):
     """Test where the output path is not allowed by home assistant configuration."""
 
-    stream = create_stream(hass, h264_video, {})
+    stream = create_stream(hass, h264_video, {}, dynamic_stream_settings())
     with patch.object(
         hass.config, "is_allowed_path", return_value=False
     ), pytest.raises(HomeAssistantError):
@@ -146,7 +147,7 @@ async def test_recorder_discontinuity(hass, filename, h264_video):
     with patch.object(hass.config, "is_allowed_path", return_value=True), patch(
         "homeassistant.components.stream.Stream", wraps=MockStream
     ), patch("homeassistant.components.stream.recorder.RecorderOutput.recv"):
-        stream = create_stream(hass, "blank", {})
+        stream = create_stream(hass, "blank", {}, dynamic_stream_settings())
         make_recording = hass.async_create_task(stream.async_record(filename))
         await provider_ready.wait()
 
@@ -166,7 +167,7 @@ async def test_recorder_discontinuity(hass, filename, h264_video):
 async def test_recorder_no_segments(hass, filename):
     """Test recorder behavior with a stream failure which causes no segments."""
 
-    stream = create_stream(hass, BytesIO(), {})
+    stream = create_stream(hass, BytesIO(), {}, dynamic_stream_settings())
 
     # Run
     with patch.object(hass.config, "is_allowed_path", return_value=True):
@@ -198,8 +199,7 @@ async def test_record_stream_audio(
     expected_audio_streams,
     h264_mov_video,
 ):
-    """
-    Test treatment of different audio inputs.
+    """Test treatment of different audio inputs.
 
     Record stream output should have an audio channel when input has
     a valid codec and audio packets and no audio channel otherwise.
@@ -219,7 +219,7 @@ async def test_record_stream_audio(
             worker_finished.set()
 
     with patch("homeassistant.components.stream.Stream", wraps=MockStream):
-        stream = create_stream(hass, source, {})
+        stream = create_stream(hass, source, {}, dynamic_stream_settings())
 
     with patch.object(hass.config, "is_allowed_path", return_value=True):
         make_recording = hass.async_create_task(stream.async_record(filename))
@@ -252,7 +252,9 @@ async def test_record_stream_audio(
 
 async def test_recorder_log(hass, filename, caplog):
     """Test starting a stream to record logs the url without username and password."""
-    stream = create_stream(hass, "https://abcd:efgh@foo.bar", {})
+    stream = create_stream(
+        hass, "https://abcd:efgh@foo.bar", {}, dynamic_stream_settings()
+    )
     with patch.object(hass.config, "is_allowed_path", return_value=True):
         await stream.async_record(filename)
     assert "https://abcd:efgh@foo.bar" not in caplog.text
@@ -273,8 +275,8 @@ async def test_record_stream_rotate(hass, filename, h264_video):
             worker_finished.set()
 
     with patch("homeassistant.components.stream.Stream", wraps=MockStream):
-        stream = create_stream(hass, h264_video, {})
-        stream.orientation = 8
+        stream = create_stream(hass, h264_video, {}, dynamic_stream_settings())
+        stream.dynamic_stream_settings.orientation = Orientation.ROTATE_RIGHT
 
     with patch.object(hass.config, "is_allowed_path", return_value=True):
         make_recording = hass.async_create_task(stream.async_record(filename))
@@ -293,4 +295,6 @@ async def test_record_stream_rotate(hass, filename, h264_video):
     # Assert
     assert os.path.exists(filename)
     with open(filename, "rb") as rotated_mp4:
-        assert_mp4_has_transform_matrix(rotated_mp4.read(), stream.orientation)
+        assert_mp4_has_transform_matrix(
+            rotated_mp4.read(), stream.dynamic_stream_settings.orientation
+        )

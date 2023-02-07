@@ -5,10 +5,10 @@ from collections.abc import Awaitable, Callable, Coroutine
 from datetime import timedelta
 from functools import wraps
 import logging
-from typing import Any, TypeVar
+from typing import Any, Concatenate, ParamSpec, TypeVar
 
 from denonavr import DenonAVR
-from denonavr.const import POWER_ON
+from denonavr.const import POWER_ON, STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING
 from denonavr.exceptions import (
     AvrCommandError,
     AvrForbiddenError,
@@ -16,7 +16,6 @@ from denonavr.exceptions import (
     AvrTimoutError,
     DenonAvrError,
 )
-from typing_extensions import Concatenate, ParamSpec
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -78,6 +77,14 @@ _R = TypeVar("_R")
 _P = ParamSpec("_P")
 
 
+DENON_STATE_MAPPING = {
+    STATE_ON: MediaPlayerState.ON,
+    STATE_OFF: MediaPlayerState.OFF,
+    STATE_PLAYING: MediaPlayerState.PLAYING,
+    STATE_PAUSED: MediaPlayerState.PAUSED,
+}
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -132,8 +139,7 @@ async def async_setup_entry(
 def async_log_errors(
     func: Callable[Concatenate[_DenonDeviceT, _P], Awaitable[_R]],
 ) -> Callable[Concatenate[_DenonDeviceT, _P], Coroutine[Any, Any, _R | None]]:
-    """
-    Log errors occurred when calling a Denon AVR receiver.
+    """Log errors occurred when calling a Denon AVR receiver.
 
     Decorates methods of DenonDevice class.
     Declaration of staticmethod for this method is at the end of this class.
@@ -151,8 +157,10 @@ def async_log_errors(
             available = False
             if self.available:
                 _LOGGER.warning(
-                    "Timeout connecting to Denon AVR receiver at host %s. "
-                    "Device is unavailable",
+                    (
+                        "Timeout connecting to Denon AVR receiver at host %s. "
+                        "Device is unavailable"
+                    ),
                     self._receiver.host,
                 )
                 self._attr_available = False
@@ -160,8 +168,10 @@ def async_log_errors(
             available = False
             if self.available:
                 _LOGGER.warning(
-                    "Network error connecting to Denon AVR receiver at host %s. "
-                    "Device is unavailable",
+                    (
+                        "Network error connecting to Denon AVR receiver at host %s. "
+                        "Device is unavailable"
+                    ),
                     self._receiver.host,
                 )
                 self._attr_available = False
@@ -169,9 +179,11 @@ def async_log_errors(
             available = False
             if self.available:
                 _LOGGER.warning(
-                    "Denon AVR receiver at host %s responded with HTTP 403 error. "
-                    "Device is unavailable. Please consider power cycling your "
-                    "receiver",
+                    (
+                        "Denon AVR receiver at host %s responded with HTTP 403 error. "
+                        "Device is unavailable. Please consider power cycling your "
+                        "receiver"
+                    ),
                     self._receiver.host,
                 )
                 self._attr_available = False
@@ -243,9 +255,9 @@ class DenonDevice(MediaPlayerEntity):
             await self._receiver.async_update_audyssey()
 
     @property
-    def state(self):
+    def state(self) -> MediaPlayerState | None:
         """Return the state of the device."""
-        return self._receiver.state
+        return DENON_STATE_MAPPING.get(self._receiver.state)
 
     @property
     def source_list(self):
@@ -277,7 +289,7 @@ class DenonDevice(MediaPlayerEntity):
         return self._receiver.sound_mode
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         if self._receiver.input_func in self._receiver.netaudio_func_list:
             return self._supported_features_base | SUPPORT_MEDIA_MODES

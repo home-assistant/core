@@ -1,19 +1,22 @@
 """Provides tag scanning for MQTT."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import functools
 
 import voluptuous as vol
 
+from homeassistant.components import tag
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM, CONF_VALUE_TEMPLATE
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import subscription
 from .config import MQTT_BASE_SCHEMA
 from .const import ATTR_DISCOVERY_HASH, CONF_QOS, CONF_TOPIC
+from .discovery import MQTTDiscoveryPayload
 from .mixins import (
     MQTT_ENTITY_DEVICE_INFO_SCHEMA,
     MqttDiscoveryDeviceUpdate,
@@ -21,7 +24,7 @@ from .mixins import (
     send_discovery_done,
     update_device,
 )
-from .models import MqttValueTemplate, ReceiveMessage
+from .models import MqttValueTemplate, ReceiveMessage, ReceivePayloadType
 from .subscription import EntitySubscription
 from .util import get_mqtt_data, valid_subscribe_topic
 
@@ -41,7 +44,7 @@ PLATFORM_SCHEMA = MQTT_BASE_SCHEMA.extend(
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
-    """Set up MQTT device automation dynamically through MQTT discovery."""
+    """Set up MQTT tag scanner dynamically through MQTT discovery."""
 
     setup = functools.partial(_async_setup_tag, hass, config_entry=config_entry)
     await async_setup_entry_helper(hass, TAG, setup, PLATFORM_SCHEMA)
@@ -87,12 +90,14 @@ def async_has_tags(hass: HomeAssistant, device_id: str) -> bool:
 class MQTTTagScanner(MqttDiscoveryDeviceUpdate):
     """MQTT Tag scanner."""
 
+    _value_template: Callable[[ReceivePayloadType, str], ReceivePayloadType]
+
     def __init__(
         self,
         hass: HomeAssistant,
         config: ConfigType,
         device_id: str | None,
-        discovery_data: dict,
+        discovery_data: DiscoveryInfoType,
         config_entry: ConfigEntry,
     ) -> None:
         """Initialize."""
@@ -111,10 +116,10 @@ class MQTTTagScanner(MqttDiscoveryDeviceUpdate):
             self, hass, discovery_data, device_id, config_entry, LOG_NAME
         )
 
-    async def async_update(self, discovery_data: dict) -> None:
+    async def async_update(self, discovery_data: MQTTDiscoveryPayload) -> None:
         """Handle MQTT tag discovery updates."""
         # Update tag scanner
-        config = PLATFORM_SCHEMA(discovery_data)
+        config: DiscoveryInfoType = PLATFORM_SCHEMA(discovery_data)
         self._config = config
         self._value_template = MqttValueTemplate(
             config.get(CONF_VALUE_TEMPLATE),
@@ -127,14 +132,11 @@ class MQTTTagScanner(MqttDiscoveryDeviceUpdate):
         """Subscribe to MQTT topics."""
 
         async def tag_scanned(msg: ReceiveMessage) -> None:
-            tag_id = self._value_template(msg.payload, "").strip()
+            tag_id = str(self._value_template(msg.payload, "")).strip()
             if not tag_id:  # No output from template, ignore
                 return
 
-            # Importing tag via hass.components in case it is overridden
-            # in a custom_components (custom_components.tag)
-            tag = self.hass.components.tag
-            await tag.async_scan_tag(tag_id, self.device_id)
+            await tag.async_scan_tag(self.hass, tag_id, self.device_id)
 
         self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass,

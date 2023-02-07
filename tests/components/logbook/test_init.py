@@ -1,11 +1,11 @@
 """The tests for the logbook component."""
-# pylint: disable=protected-access,invalid-name
+# pylint: disable=invalid-name
 import asyncio
 import collections
+from collections.abc import Callable
 from datetime import datetime, timedelta
 from http import HTTPStatus
 import json
-from typing import Callable
 from unittest.mock import Mock, patch
 
 import pytest
@@ -16,7 +16,7 @@ from homeassistant.components.alexa.smart_home import EVENT_ALEXA_SMART_HOME
 from homeassistant.components.automation import EVENT_AUTOMATION_TRIGGERED
 from homeassistant.components.logbook.models import LazyEventPartialState
 from homeassistant.components.logbook.processor import EventProcessor
-from homeassistant.components.logbook.queries.common import PSUEDO_EVENT_STATE_CHANGED
+from homeassistant.components.logbook.queries.common import PSEUDO_EVENT_STATE_CHANGED
 from homeassistant.components.script import EVENT_SCRIPT_STARTED
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import (
@@ -64,7 +64,7 @@ async def hass_(recorder_mock, hass):
     return hass
 
 
-@pytest.fixture()
+@pytest.fixture
 def set_utc(hass):
     """Set timezone to UTC."""
     hass.config.set_time_zone("UTC")
@@ -313,16 +313,17 @@ def create_state_changed_event_from_old_new(
     row = collections.namedtuple(
         "Row",
         [
-            "event_type"
-            "event_data"
-            "time_fired"
-            "context_id"
-            "context_user_id"
-            "context_parent_id"
-            "state"
-            "entity_id"
-            "domain"
-            "attributes"
+            "event_type",
+            "event_data",
+            "time_fired",
+            "time_fired_ts",
+            "context_id",
+            "context_user_id",
+            "context_parent_id",
+            "state",
+            "entity_id",
+            "domain",
+            "attributes",
             "state_id",
             "old_state_id",
             "shared_attrs",
@@ -331,12 +332,13 @@ def create_state_changed_event_from_old_new(
         ],
     )
 
-    row.event_type = PSUEDO_EVENT_STATE_CHANGED
+    row.event_type = PSEUDO_EVENT_STATE_CHANGED
     row.event_data = "{}"
     row.shared_data = "{}"
     row.attributes = attributes_json
     row.shared_attrs = attributes_json
     row.time_fired = event_time_fired
+    row.time_fired_ts = dt_util.utc_to_timestamp(event_time_fired)
     row.state = new_state and new_state.get("state")
     row.entity_id = entity_id
     row.domain = entity_id and ha.split_entity_id(entity_id)[0]
@@ -489,7 +491,15 @@ async def test_logbook_describe_event(recorder_mock, hass, hass_client):
         await async_wait_recording_done(hass)
 
     client = await hass_client()
-    response = await client.get("/api/logbook")
+    # Today time 00:00:00
+    start = dt_util.utcnow().date()
+    start_date = datetime(start.year, start.month, start.day)
+
+    # Test today entries with filter by end_time
+    end_time = start + timedelta(hours=24)
+    response = await client.get(
+        f"/api/logbook/{start_date.isoformat()}?end_time={end_time}"
+    )
     results = await response.json()
     assert len(results) == 1
     event = results[0]
@@ -553,7 +563,15 @@ async def test_exclude_described_event(recorder_mock, hass, hass_client):
         await async_wait_recording_done(hass)
 
     client = await hass_client()
-    response = await client.get("/api/logbook")
+    # Today time 00:00:00
+    start = dt_util.utcnow().date()
+    start_date = datetime(start.year, start.month, start.day)
+
+    # Test today entries with filter by end_time
+    end_time = start + timedelta(hours=24)
+    response = await client.get(
+        f"/api/logbook/{start_date.isoformat()}?end_time={end_time}"
+    )
     results = await response.json()
     assert len(results) == 1
     event = results[0]

@@ -128,7 +128,6 @@ async def test_form_already_configured(hass, mock_config_entry):
     ), patch(
         "pysma.SMA.close_session", return_value=True
     ), _patch_async_setup_entry() as mock_setup_entry:
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             MOCK_USER_INPUT,

@@ -60,6 +60,8 @@ DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(UpdateDeviceClass))
 
 __all__ = [
     "ATTR_BACKUP",
+    "ATTR_INSTALLED_VERSION",
+    "ATTR_LATEST_VERSION",
     "ATTR_VERSION",
     "DEVICE_CLASSES_SCHEMA",
     "DOMAIN",
@@ -174,7 +176,7 @@ async def async_clear_skipped(entity: UpdateEntity, service_call: ServiceCall) -
 class UpdateEntityDescription(EntityDescription):
     """A class that describes update entities."""
 
-    device_class: UpdateDeviceClass | str | None = None
+    device_class: UpdateDeviceClass | None = None
     entity_category: EntityCategory | None = EntityCategory.CONFIG
 
 
@@ -184,13 +186,13 @@ class UpdateEntity(RestoreEntity):
     entity_description: UpdateEntityDescription
     _attr_auto_update: bool = False
     _attr_installed_version: str | None = None
-    _attr_device_class: UpdateDeviceClass | str | None
+    _attr_device_class: UpdateDeviceClass | None
     _attr_in_progress: bool | int = False
     _attr_latest_version: str | None = None
     _attr_release_summary: str | None = None
     _attr_release_url: str | None = None
     _attr_state: None = None
-    _attr_supported_features: int = 0
+    _attr_supported_features: UpdateEntityFeature = UpdateEntityFeature(0)
     _attr_title: str | None = None
     __skipped_version: str | None = None
     __in_progress: bool = False
@@ -206,7 +208,7 @@ class UpdateEntity(RestoreEntity):
         return self._attr_installed_version
 
     @property
-    def device_class(self) -> UpdateDeviceClass | str | None:
+    def device_class(self) -> UpdateDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
             return self._attr_device_class
@@ -270,7 +272,7 @@ class UpdateEntity(RestoreEntity):
         return self._attr_release_url
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> UpdateEntityFeature:
         """Flag supported features."""
         return self._attr_supported_features
 
@@ -326,16 +328,16 @@ class UpdateEntity(RestoreEntity):
     async def async_release_notes(self) -> str | None:
         """Return full release notes.
 
-        This is suitable for a long changelog that does not fit in the release_summary property.
-        The returned string can contain markdown.
+        This is suitable for a long changelog that does not fit in the release_summary
+        property. The returned string can contain markdown.
         """
         return await self.hass.async_add_executor_job(self.release_notes)
 
     def release_notes(self) -> str | None:
         """Return full release notes.
 
-        This is suitable for a long changelog that does not fit in the release_summary property.
-        The returned string can contain markdown.
+        This is suitable for a long changelog that does not fit in the release_summary
+        property. The returned string can contain markdown.
         """
         raise NotImplementedError()
 

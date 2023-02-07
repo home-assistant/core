@@ -18,4 +18,5 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
 
     data: ProtectData = hass.data[DOMAIN][config_entry.entry_id]
-    return cast(dict[str, Any], anonymize_data(data.api.bootstrap.unifi_dict()))
+    bootstrap = cast(dict[str, Any], anonymize_data(data.api.bootstrap.unifi_dict()))
+    return {"bootstrap": bootstrap, "options": dict(config_entry.options)}

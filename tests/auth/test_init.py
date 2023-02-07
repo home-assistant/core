@@ -28,7 +28,7 @@ from tests.common import (
 
 
 @pytest.fixture
-def mock_hass(loop):
+def mock_hass(event_loop):
     """Home Assistant mock with minimum amount of data set to make it work with auth."""
     hass = Mock()
     hass.config.skip_pip = True
@@ -352,7 +352,7 @@ async def test_saving_loading(hass, hass_storage):
             assert r_token.last_used_at is None
             assert r_token.last_used_ip is None
         else:
-            assert False, f"Unknown client_id: {r_token.client_id}"
+            pytest.fail(f"Unknown client_id: {r_token.client_id}")
 
 
 async def test_cannot_retrieve_expired_access_token(hass):

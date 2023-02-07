@@ -10,9 +10,13 @@ from pydeconz.models.sensor.presence import PresenceStatePresenceEvent
 
 from homeassistant.components.deconz.const import DOMAIN as DECONZ_DOMAIN
 from homeassistant.components.deconz.deconz_event import (
+    ATTR_DURATION,
+    ATTR_ROTATION,
     CONF_DECONZ_ALARM_EVENT,
     CONF_DECONZ_EVENT,
     CONF_DECONZ_PRESENCE_EVENT,
+    CONF_DECONZ_RELATIVE_ROTARY_EVENT,
+    RELATIVE_ROTARY_DECONZ_TO_EVENT,
 )
 from homeassistant.const import (
     CONF_DEVICE_ID,
@@ -507,6 +511,105 @@ async def test_deconz_presence_events(hass, aioclient_mock, mock_deconz_websocke
 
     states = hass.states.async_all()
     assert len(hass.states.async_all()) == 5
+    for state in states:
+        assert state.state == STATE_UNAVAILABLE
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 0
+
+
+async def test_deconz_relative_rotary_events(
+    hass, aioclient_mock, mock_deconz_websocket
+):
+    """Test successful creation of deconz relative rotary events."""
+    data = {
+        "sensors": {
+            "1": {
+                "config": {
+                    "battery": 100,
+                    "on": True,
+                    "reachable": True,
+                },
+                "etag": "463728970bdb7d04048fc4373654f45a",
+                "lastannounced": "2022-07-03T13:57:59Z",
+                "lastseen": "2022-07-03T14:02Z",
+                "manufacturername": "Signify Netherlands B.V.",
+                "modelid": "RDM002",
+                "name": "RDM002 44",
+                "state": {
+                    "expectedeventduration": 400,
+                    "expectedrotation": 75,
+                    "lastupdated": "2022-07-03T11:37:49.586",
+                    "rotaryevent": 2,
+                },
+                "swversion": "2.59.19",
+                "type": "ZHARelativeRotary",
+                "uniqueid": "xx:xx:xx:xx:xx:xx:xx:xx-14-fc00",
+            }
+        }
+    }
+    with patch.dict(DECONZ_WEB_REQUEST, data):
+        config_entry = await setup_deconz_integration(hass, aioclient_mock)
+
+    device_registry = dr.async_get(hass)
+
+    assert len(hass.states.async_all()) == 1
+    assert (
+        len(dr.async_entries_for_config_entry(device_registry, config_entry.entry_id))
+        == 3
+    )
+
+    device = device_registry.async_get_device(
+        identifiers={(DECONZ_DOMAIN, "xx:xx:xx:xx:xx:xx:xx:xx")}
+    )
+
+    captured_events = async_capture_events(hass, CONF_DECONZ_RELATIVE_ROTARY_EVENT)
+
+    for rotary_event, duration, rotation in ((1, 100, 50), (2, 200, -50)):
+        event_changed_sensor = {
+            "t": "event",
+            "e": "changed",
+            "r": "sensors",
+            "id": "1",
+            "state": {
+                "rotaryevent": rotary_event,
+                "expectedeventduration": duration,
+                "expectedrotation": rotation,
+            },
+        }
+        await mock_deconz_websocket(data=event_changed_sensor)
+        await hass.async_block_till_done()
+
+        assert len(captured_events) == 1
+        assert captured_events[0].data == {
+            CONF_ID: "rdm002_44",
+            CONF_UNIQUE_ID: "xx:xx:xx:xx:xx:xx:xx:xx",
+            CONF_DEVICE_ID: device.id,
+            CONF_EVENT: RELATIVE_ROTARY_DECONZ_TO_EVENT[rotary_event],
+            ATTR_DURATION: duration,
+            ATTR_ROTATION: rotation,
+        }
+        captured_events.clear()
+
+    # Unsupported relative rotary event
+
+    event_changed_sensor = {
+        "t": "event",
+        "e": "changed",
+        "r": "sensors",
+        "id": "1",
+        "name": "123",
+    }
+    await mock_deconz_websocket(data=event_changed_sensor)
+    await hass.async_block_till_done()
+
+    assert len(captured_events) == 0
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
+
+    states = hass.states.async_all()
+    assert len(hass.states.async_all()) == 1
     for state in states:
         assert state.state == STATE_UNAVAILABLE
 

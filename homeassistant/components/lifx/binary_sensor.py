@@ -12,8 +12,8 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, HEV_CYCLE_STATE
-from .coordinator import LIFXUpdateCoordinator
-from .entity import LIFXEntity
+from .coordinator import LIFXSensorUpdateCoordinator, LIFXUpdateCoordinator
+from .entity import LIFXSensorEntity
 from .util import lifx_features
 
 HEV_CYCLE_STATE_SENSOR = BinarySensorEntityDescription(
@@ -34,28 +34,28 @@ async def async_setup_entry(
         async_add_entities(
             [
                 LIFXHevCycleBinarySensorEntity(
-                    coordinator=coordinator, description=HEV_CYCLE_STATE_SENSOR
+                    coordinator=coordinator.sensor_coordinator,
+                    description=HEV_CYCLE_STATE_SENSOR,
                 )
             ]
         )
 
 
-class LIFXHevCycleBinarySensorEntity(LIFXEntity, BinarySensorEntity):
+class LIFXHevCycleBinarySensorEntity(LIFXSensorEntity, BinarySensorEntity):
     """LIFX HEV cycle state binary sensor."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: LIFXUpdateCoordinator,
+        coordinator: LIFXSensorUpdateCoordinator,
         description: BinarySensorEntityDescription,
     ) -> None:
         """Initialise the sensor."""
         super().__init__(coordinator)
-
         self.entity_description = description
         self._attr_name = description.name
-        self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
+        self._attr_unique_id = f"{coordinator.parent.serial_number}_{description.key}"
         self._async_update_attrs()
 
     @callback

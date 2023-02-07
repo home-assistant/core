@@ -1,10 +1,8 @@
 """Support for LG webOS Smart TV."""
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
 from contextlib import suppress
 import logging
-from typing import Any
 
 from aiowebostv import WebOsClient, WebOsTvPairError
 import voluptuous as vol
@@ -19,17 +17,10 @@ from homeassistant.const import (
     CONF_NAME,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import (
-    Context,
-    Event,
-    HassJob,
-    HomeAssistant,
-    ServiceCall,
-    callback,
-)
+from homeassistant.core import Event, HomeAssistant, ServiceCall
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.trigger import TriggerActionType
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -85,8 +76,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     host = entry.data[CONF_HOST]
     key = entry.data[CONF_CLIENT_SECRET]
 
-    wrapper = WebOsClientWrapper(host, client_key=key)
-    await wrapper.connect()
+    # Attempt a connection, but fail gracefully if tv is off for example.
+    client = WebOsClient(host, key)
+    with suppress(*WEBOSTV_EXCEPTIONS):
+        try:
+            await client.connect()
+        except WebOsTvPairError as err:
+            raise ConfigEntryAuthFailed(err) from err
+
+    # If pairing request accepted there will be no error
+    # Update the stored key without triggering reauth
+    update_client_key(hass, entry, client)
 
     async def async_service_handler(service: ServiceCall) -> None:
         method = SERVICE_TO_METHOD[service.service]
@@ -100,7 +100,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             DOMAIN, service, async_service_handler, schema=schema
         )
 
-    hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id] = wrapper
+    hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id] = client
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # set up notify platform, no entry support for notify component yet,
@@ -123,7 +123,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_on_stop(_event: Event) -> None:
         """Unregister callbacks and disconnect."""
-        await wrapper.shutdown()
+        client.clear_state_update_callbacks()
+        await client.disconnect()
 
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_on_stop)
@@ -148,6 +149,19 @@ async def async_control_connect(host: str, key: str | None) -> WebOsClient:
     return client
 
 
+def update_client_key(
+    hass: HomeAssistant, entry: ConfigEntry, client: WebOsClient
+) -> None:
+    """Check and update stored client key if key has changed."""
+    host = entry.data[CONF_HOST]
+    key = entry.data[CONF_CLIENT_SECRET]
+
+    if client.client_key != key:
+        _LOGGER.debug("Updating client key for host %s", host)
+        data = {CONF_HOST: host, CONF_CLIENT_SECRET: client.client_key}
+        hass.config_entries.async_update_entry(entry, data=data)
+
+
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
@@ -155,7 +169,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok:
         client = hass.data[DOMAIN][DATA_CONFIG_ENTRY].pop(entry.entry_id)
         await hass_notify.async_reload(hass, DOMAIN)
-        await client.shutdown()
+        client.clear_state_update_callbacks()
+        await client.disconnect()
 
     # unregister service calls, check if this is the last entry to unload
     if unload_ok and not hass.data[DOMAIN][DATA_CONFIG_ENTRY]:
@@ -163,63 +178,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.services.async_remove(DOMAIN, service)
 
     return unload_ok
-
-
-class PluggableAction:
-    """A pluggable action handler."""
-
-    def __init__(self) -> None:
-        """Initialize."""
-        self._actions: dict[
-            Callable[[], None],
-            tuple[HassJob[..., Coroutine[Any, Any, None]], dict[str, Any]],
-        ] = {}
-
-    def __bool__(self) -> bool:
-        """Return if we have something attached."""
-        return bool(self._actions)
-
-    @callback
-    def async_attach(
-        self, action: TriggerActionType, variables: dict[str, Any]
-    ) -> Callable[[], None]:
-        """Attach a device trigger for turn on."""
-
-        @callback
-        def _remove() -> None:
-            del self._actions[_remove]
-
-        job = HassJob(action)
-
-        self._actions[_remove] = (job, variables)
-
-        return _remove
-
-    @callback
-    def async_run(self, hass: HomeAssistant, context: Context | None = None) -> None:
-        """Run all turn on triggers."""
-        for job, variables in self._actions.values():
-            hass.async_run_hass_job(job, variables, context)
-
-
-class WebOsClientWrapper:
-    """Wrapper for a WebOS TV client with Home Assistant specific functions."""
-
-    def __init__(self, host: str, client_key: str) -> None:
-        """Set up the client."""
-        self.host = host
-        self.client_key = client_key
-        self.turn_on = PluggableAction()
-        self.client: WebOsClient | None = None
-
-    async def connect(self) -> None:
-        """Attempt a connection, but fail gracefully if tv is off for example."""
-        self.client = WebOsClient(self.host, self.client_key)
-        with suppress(*WEBOSTV_EXCEPTIONS, WebOsTvPairError):
-            await self.client.connect()
-
-    async def shutdown(self) -> None:
-        """Unregister callbacks and disconnect."""
-        assert self.client
-        self.client.clear_state_update_callbacks()
-        await self.client.disconnect()

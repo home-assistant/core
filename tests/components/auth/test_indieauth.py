@@ -106,7 +106,7 @@ def test_parse_url_path():
     assert indieauth._parse_url("http://ex.com").path == "/"
 
 
-async def test_verify_redirect_uri():
+async def test_verify_redirect_uri() -> None:
     """Test that we verify redirect uri correctly."""
     assert await indieauth.verify_redirect_uri(
         None, "http://ex.com", "http://ex.com/callback"
@@ -190,9 +190,19 @@ async def test_verify_redirect_uri_android_ios(client_id):
                 client_id,
                 "https://wear.googleapis.com/3p_auth/io.homeassistant.companion.android",
             )
+            assert await indieauth.verify_redirect_uri(
+                None,
+                client_id,
+                "https://wear.googleapis-cn.com/3p_auth/io.homeassistant.companion.android",
+            )
         else:
             assert not await indieauth.verify_redirect_uri(
                 None,
                 client_id,
                 "https://wear.googleapis.com/3p_auth/io.homeassistant.companion.android",
+            )
+            assert not await indieauth.verify_redirect_uri(
+                None,
+                client_id,
+                "https://wear.googleapis-cn.com/3p_auth/io.homeassistant.companion.android",
             )

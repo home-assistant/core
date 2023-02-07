@@ -21,6 +21,7 @@
       },
       "available": true,
       "binary_sensors": {
+        "cooling_enabled": true,
         "dhw_state": false,
         "heating_state": false,
         "compressor_state": false,
@@ -72,7 +73,6 @@
         "upper_bound": 30.0,
         "resolution": 0.1
       },
-      "available": true,
       "preset_modes": ["no_frost", "home", "away", "asleep", "vacation"],
       "active_preset": "home",
       "available_schedules": ["standaard"],

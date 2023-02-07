@@ -22,8 +22,8 @@ from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     AsyncSeeCallback,
     SourceType,
+    TrackerEntity,
 )
-from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_EVENT,
@@ -251,7 +251,11 @@ class TraccarScanner:
         """Update info from Traccar."""
         _LOGGER.debug("Updating device data")
         try:
-            (self._devices, self._positions, self._geofences,) = await asyncio.gather(
+            (
+                self._devices,
+                self._positions,
+                self._geofences,
+            ) = await asyncio.gather(
                 self._api.get_devices(),
                 self._api.get_positions(),
                 self._api.get_geofences(),

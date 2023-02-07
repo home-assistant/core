@@ -20,5 +20,6 @@
     { "macaddress": "D4A651*" },
     { "macaddress": "D81F12*" }
   ],
+  "integration_type": "hub",
   "loggers": ["tuya_iot"]
 }

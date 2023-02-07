@@ -48,6 +48,20 @@ BUTTONS = [
         entity_category=EntityCategory.CONFIG,
         press_fn=lambda api: api.app_previous(),
     ),
+    LaMetricButtonEntityDescription(
+        key="dismiss_current",
+        name="Dismiss current notification",
+        icon="mdi:bell-cancel",
+        entity_category=EntityCategory.CONFIG,
+        press_fn=lambda api: api.dismiss_current_notification(),
+    ),
+    LaMetricButtonEntityDescription(
+        key="dismiss_all",
+        name="Dismiss all notifications",
+        icon="mdi:bell-cancel",
+        entity_category=EntityCategory.CONFIG,
+        press_fn=lambda api: api.dismiss_all_notifications(),
+    ),
 ]
 
 

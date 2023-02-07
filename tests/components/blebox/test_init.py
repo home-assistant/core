@@ -7,7 +7,7 @@ import blebox_uniapi
 from homeassistant.components.blebox.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 
-from .conftest import mock_config, patch_product_identify
+from .conftest import mock_config, patch_product_identify, setup_product_mock
 
 
 async def test_setup_failure(hass, caplog):
@@ -44,7 +44,7 @@ async def test_setup_failure_on_connection(hass, caplog):
 
 async def test_unload_config_entry(hass):
     """Test that unloading works properly."""
-    patch_product_identify(None)
+    setup_product_mock("switches", [])
 
     entry = mock_config()
     entry.add_to_hass(hass)

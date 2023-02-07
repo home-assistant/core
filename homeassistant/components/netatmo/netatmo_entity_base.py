@@ -29,7 +29,7 @@ class NetatmoBase(Entity):
         self._device_name: str = ""
         self._id: str = ""
         self._model: str = ""
-        self._config_url: str = ""
+        self._config_url: str | None = None
         self._attr_name = None
         self._attr_unique_id = None
         self._attr_extra_state_attributes = {}
@@ -63,9 +63,11 @@ class NetatmoBase(Entity):
                     publisher["name"], signal_name, self.async_update_callback
                 )
 
-            for sub in self.data_handler.publisher[signal_name].subscriptions:
-                if sub is None:
-                    await self.data_handler.unsubscribe(signal_name, None)
+            if any(
+                sub is None
+                for sub in self.data_handler.publisher[signal_name].subscriptions
+            ):
+                await self.data_handler.unsubscribe(signal_name, None)
 
         registry = dr.async_get(self.hass)
         if device := registry.async_get_device({(DOMAIN, self._id)}):

@@ -13,12 +13,13 @@ from pytautulli import (
 )
 
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import DATA_KILOBITS, PERCENTAGE
+from homeassistant.const import PERCENTAGE, UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory, EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -101,7 +102,8 @@ SENSOR_TYPES: tuple[TautulliSensorEntityDescription, ...] = (
         key="total_bandwidth",
         name="Total bandwidth",
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=DATA_KILOBITS,
+        native_unit_of_measurement=UnitOfInformation.KILOBITS,
+        device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda home_stats, activity, _: cast(int, activity.total_bandwidth),
     ),
@@ -109,7 +111,8 @@ SENSOR_TYPES: tuple[TautulliSensorEntityDescription, ...] = (
         key="lan_bandwidth",
         name="LAN bandwidth",
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=DATA_KILOBITS,
+        native_unit_of_measurement=UnitOfInformation.KILOBITS,
+        device_class=SensorDeviceClass.DATA_SIZE,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda home_stats, activity, _: cast(int, activity.lan_bandwidth),
@@ -118,7 +121,8 @@ SENSOR_TYPES: tuple[TautulliSensorEntityDescription, ...] = (
         key="wan_bandwidth",
         name="WAN bandwidth",
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=DATA_KILOBITS,
+        native_unit_of_measurement=UnitOfInformation.KILOBITS,
+        device_class=SensorDeviceClass.DATA_SIZE,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda home_stats, activity, _: cast(int, activity.wan_bandwidth),

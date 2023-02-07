@@ -10,8 +10,6 @@ from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
-# pylint: disable=redefined-outer-name
-
 DEVICE_DATA = {"name": "Private Calendar", "device_id": "Private Calendar"}
 
 EVENTS = [
@@ -215,6 +213,47 @@ RRULE:FREQ=HOURLY;INTERVAL=1;COUNT=12
 END:VEVENT
 END:VCALENDAR
 """,
+    """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Global Corp.//CalDAV Client//EN
+BEGIN:VEVENT
+UID:14
+DTSTAMP:20151125T000000Z
+DTSTART:20151127T000000Z
+DTEND:20151127T003000Z
+RRULE:FREQ=HOURLY;INTERVAL=1;COUNT=12
+END:VEVENT
+END:VCALENDAR
+""",
+    """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Global Corp.//CalDAV Client//EN
+BEGIN:VTIMEZONE
+TZID:Europe/London
+BEGIN:STANDARD
+DTSTART:19961027T020000
+RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU
+TZNAME:GMT
+TZOFFSETFROM:+0100
+TZOFFSETTO:+0000
+END:STANDARD
+BEGIN:DAYLIGHT
+DTSTART:19810329T010000
+RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU
+TZNAME:BST
+TZOFFSETFROM:+0000
+TZOFFSETTO:+0100
+END:DAYLIGHT
+END:VTIMEZONE
+BEGIN:VEVENT
+UID:15
+DTSTAMP:20221125T000000Z
+DTSTART;TZID=Europe/London:20221127T000000
+DTEND;TZID=Europe/London:20221127T003000
+SUMMARY:Event with a provided Timezone
+END:VEVENT
+END:VCALENDAR
+""",
 ]
 
 CALDAV_CONFIG = {
@@ -310,12 +349,12 @@ def _mocked_dav_client(*names, calendars=None):
 
 
 def _mock_calendar(name):
+    calendar = Mock()
     events = []
     for idx, event in enumerate(EVENTS):
-        events.append(Event(None, "%d.ics" % idx, event, None, str(idx)))
+        events.append(Event(None, "%d.ics" % idx, event, calendar, str(idx)))
 
-    calendar = Mock()
-    calendar.date_search = MagicMock(return_value=events)
+    calendar.search = MagicMock(return_value=events)
     calendar.name = name
     return calendar
 
@@ -917,7 +956,7 @@ async def test_get_events(hass, calendar, get_api_events):
     await hass.async_block_till_done()
 
     events = await get_api_events("calendar.private")
-    assert len(events) == 14
+    assert len(events) == 16
     assert calendar.call
 
 
@@ -939,5 +978,8 @@ async def test_get_events_custom_calendars(hass, calendar, get_api_events):
             "summary": "This is a normal event",
             "location": "Hamburg",
             "description": "Surprisingly rainy",
+            "uid": None,
+            "recurrence_id": None,
+            "rrule": None,
         }
     ]

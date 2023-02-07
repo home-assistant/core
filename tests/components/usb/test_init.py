@@ -877,6 +877,35 @@ async def test_async_is_plugged_in(hass, hass_ws_client):
         assert usb.async_is_plugged_in(hass, matcher)
 
 
+@pytest.mark.parametrize(
+    "matcher",
+    [
+        {"vid": "abcd"},
+        {"pid": "123a"},
+        {"serial_number": "1234ABCD"},
+        {"manufacturer": "Some Manufacturer"},
+        {"description": "A description"},
+    ],
+)
+async def test_async_is_plugged_in_case_enforcement(hass, matcher):
+    """Test `async_is_plugged_in` throws an error when incorrect cases are used."""
+
+    new_usb = [{"domain": "test1", "vid": "ABCD"}]
+
+    with patch("pyudev.Context", side_effect=ImportError), patch(
+        "homeassistant.components.usb.async_get_usb", return_value=new_usb
+    ), patch("homeassistant.components.usb.comports", return_value=[]), patch.object(
+        hass.config_entries.flow, "async_init"
+    ):
+        assert await async_setup_component(hass, "usb", {"usb": {}})
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        with pytest.raises(ValueError):
+            usb.async_is_plugged_in(hass, matcher)
+
+
 async def test_web_socket_triggers_discovery_request_callbacks(hass, hass_ws_client):
     """Test the websocket call triggers a discovery request callback."""
     mock_callback = Mock()
@@ -907,3 +936,59 @@ async def test_web_socket_triggers_discovery_request_callbacks(hass, hass_ws_cli
         assert response["success"]
         await hass.async_block_till_done()
         assert len(mock_callback.mock_calls) == 1
+
+
+async def test_initial_scan_callback(hass, hass_ws_client):
+    """Test it's possible to register a callback when the initial scan is done."""
+    mock_callback_1 = Mock()
+    mock_callback_2 = Mock()
+
+    with patch("pyudev.Context", side_effect=ImportError), patch(
+        "homeassistant.components.usb.async_get_usb", return_value=[]
+    ), patch("homeassistant.components.usb.comports", return_value=[]), patch.object(
+        hass.config_entries.flow, "async_init"
+    ):
+        assert await async_setup_component(hass, "usb", {"usb": {}})
+        cancel_1 = usb.async_register_initial_scan_callback(hass, mock_callback_1)
+        assert len(mock_callback_1.mock_calls) == 0
+
+        await hass.async_block_till_done()
+        assert len(mock_callback_1.mock_calls) == 0
+
+        # This triggers the initial scan
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+        assert len(mock_callback_1.mock_calls) == 1
+
+        # A callback registered now should be called immediately. The old callback
+        # should not be called again
+        cancel_2 = usb.async_register_initial_scan_callback(hass, mock_callback_2)
+        assert len(mock_callback_1.mock_calls) == 1
+        assert len(mock_callback_2.mock_calls) == 1
+
+        # Calling the cancels should be allowed even if the callback has been called
+        cancel_1()
+        cancel_2()
+
+
+async def test_cancel_initial_scan_callback(hass, hass_ws_client):
+    """Test it's possible to cancel an initial scan callback."""
+    mock_callback = Mock()
+
+    with patch("pyudev.Context", side_effect=ImportError), patch(
+        "homeassistant.components.usb.async_get_usb", return_value=[]
+    ), patch("homeassistant.components.usb.comports", return_value=[]), patch.object(
+        hass.config_entries.flow, "async_init"
+    ):
+        assert await async_setup_component(hass, "usb", {"usb": {}})
+        cancel = usb.async_register_initial_scan_callback(hass, mock_callback)
+        assert len(mock_callback.mock_calls) == 0
+
+        await hass.async_block_till_done()
+        assert len(mock_callback.mock_calls) == 0
+        cancel()
+
+        # This triggers the initial scan
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+        assert len(mock_callback.mock_calls) == 0

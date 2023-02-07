@@ -396,7 +396,10 @@ async def test_config_invalid(
                 CONF_TOPIC_IN_PREFIX: "same1",
                 CONF_TOPIC_OUT_PREFIX: "same2",
             },
-            FlowResult(type="form", errors={CONF_TOPIC_IN_PREFIX: "duplicate_topic"}),
+            FlowResult(
+                type=FlowResultType.FORM,
+                errors={CONF_TOPIC_IN_PREFIX: "duplicate_topic"},
+            ),
         ),
         (
             {
@@ -412,7 +415,7 @@ async def test_config_invalid(
                 CONF_TOPIC_IN_PREFIX: "different3",
                 CONF_TOPIC_OUT_PREFIX: "different4",
             },
-            FlowResult(type="create_entry"),
+            FlowResult(type=FlowResultType.CREATE_ENTRY),
         ),
         (
             {
@@ -428,7 +431,10 @@ async def test_config_invalid(
                 CONF_TOPIC_IN_PREFIX: "same1",
                 CONF_TOPIC_OUT_PREFIX: "different4",
             },
-            FlowResult(type="form", errors={CONF_TOPIC_IN_PREFIX: "duplicate_topic"}),
+            FlowResult(
+                type=FlowResultType.FORM,
+                errors={CONF_TOPIC_IN_PREFIX: "duplicate_topic"},
+            ),
         ),
         (
             {
@@ -444,7 +450,10 @@ async def test_config_invalid(
                 CONF_TOPIC_IN_PREFIX: "different1",
                 CONF_TOPIC_OUT_PREFIX: "same1",
             },
-            FlowResult(type="form", errors={CONF_TOPIC_OUT_PREFIX: "duplicate_topic"}),
+            FlowResult(
+                type=FlowResultType.FORM,
+                errors={CONF_TOPIC_OUT_PREFIX: "duplicate_topic"},
+            ),
         ),
         (
             {
@@ -460,7 +469,10 @@ async def test_config_invalid(
                 CONF_TOPIC_IN_PREFIX: "same1",
                 CONF_TOPIC_OUT_PREFIX: "different1",
             },
-            FlowResult(type="form", errors={CONF_TOPIC_IN_PREFIX: "duplicate_topic"}),
+            FlowResult(
+                type=FlowResultType.FORM,
+                errors={CONF_TOPIC_IN_PREFIX: "duplicate_topic"},
+            ),
         ),
         (
             {
@@ -478,7 +490,8 @@ async def test_config_invalid(
                 CONF_VERSION: "2.3",
             },
             FlowResult(
-                type="form", errors={"persistence_file": "duplicate_persistence_file"}
+                type=FlowResultType.FORM,
+                errors={"persistence_file": "duplicate_persistence_file"},
             ),
         ),
         (
@@ -495,7 +508,7 @@ async def test_config_invalid(
                 CONF_TCP_PORT: 343,
                 CONF_VERSION: "2.3",
             },
-            FlowResult(type="create_entry"),
+            FlowResult(type=FlowResultType.CREATE_ENTRY),
         ),
         (
             {
@@ -510,7 +523,7 @@ async def test_config_invalid(
                 CONF_TCP_PORT: 343,
                 CONF_VERSION: "2.3",
             },
-            FlowResult(type="create_entry"),
+            FlowResult(type=FlowResultType.CREATE_ENTRY),
         ),
         (
             {
@@ -527,7 +540,7 @@ async def test_config_invalid(
                 CONF_TCP_PORT: 343,
                 CONF_VERSION: "2.3",
             },
-            FlowResult(type="form", errors={"base": "already_configured"}),
+            FlowResult(type=FlowResultType.FORM, errors={"base": "already_configured"}),
         ),
         (
             {
@@ -544,7 +557,7 @@ async def test_config_invalid(
                 CONF_TCP_PORT: 5003,
                 CONF_VERSION: "2.3",
             },
-            FlowResult(type="create_entry"),
+            FlowResult(type=FlowResultType.CREATE_ENTRY),
         ),
         (
             {
@@ -559,7 +572,7 @@ async def test_config_invalid(
                 CONF_TCP_PORT: 5003,
                 CONF_VERSION: "2.3",
             },
-            FlowResult(type="create_entry"),
+            FlowResult(type=FlowResultType.CREATE_ENTRY),
         ),
         (
             {
@@ -574,7 +587,7 @@ async def test_config_invalid(
                 CONF_VERSION: "2.3",
                 CONF_PERSISTENCE_FILE: "different2.json",
             },
-            FlowResult(type="form", errors={"base": "already_configured"}),
+            FlowResult(type=FlowResultType.FORM, errors={"base": "already_configured"}),
         ),
         (
             {
@@ -588,7 +601,7 @@ async def test_config_invalid(
                 CONF_DEVICE: "COM5",
                 CONF_VERSION: "2.3",
             },
-            FlowResult(type="create_entry"),
+            FlowResult(type=FlowResultType.CREATE_ENTRY),
         ),
         (
             {
@@ -605,7 +618,7 @@ async def test_config_invalid(
                 CONF_VERSION: "2.3",
                 CONF_PERSISTENCE_FILE: "different2.json",
             },
-            FlowResult(type="form", errors={"base": "already_configured"}),
+            FlowResult(type=FlowResultType.FORM, errors={"base": "already_configured"}),
         ),
         (
             {
@@ -623,7 +636,8 @@ async def test_config_invalid(
                 CONF_PERSISTENCE_FILE: "same.json",
             },
             FlowResult(
-                type="form", errors={"persistence_file": "duplicate_persistence_file"}
+                type=FlowResultType.FORM,
+                errors={"persistence_file": "duplicate_persistence_file"},
             ),
         ),
         (
@@ -640,7 +654,7 @@ async def test_config_invalid(
                 CONF_BAUD_RATE: 115200,
                 CONF_VERSION: "1.4",
             },
-            FlowResult(type="create_entry"),
+            FlowResult(type=FlowResultType.CREATE_ENTRY),
         ),
     ],
 )

@@ -39,7 +39,6 @@ from .test_common import (
     help_test_entity_id_update_subscriptions,
     help_test_reload_with_config,
     help_test_reloadable,
-    help_test_reloadable_late,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setup_manual_entity_from_yaml,
@@ -63,11 +62,6 @@ DEFAULT_CONFIG = {
         }
     }
 }
-
-# Test deprecated YAML configuration under the platform key
-# Scheduled to be removed in HA core 2022.12
-DEFAULT_CONFIG_LEGACY = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
-DEFAULT_CONFIG_LEGACY[binary_sensor.DOMAIN]["platform"] = mqtt.DOMAIN
 
 
 @pytest.fixture(autouse=True)
@@ -117,14 +111,15 @@ async def test_setting_sensor_value_expires(
     """Test the expiration of the value."""
     assert await async_setup_component(
         hass,
-        binary_sensor.DOMAIN,
+        mqtt.DOMAIN,
         {
-            binary_sensor.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "test-topic",
-                "expire_after": 4,
-                "force_update": True,
+            mqtt.DOMAIN: {
+                binary_sensor.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "test-topic",
+                    "expire_after": 4,
+                    "force_update": True,
+                }
             }
         },
     )
@@ -460,7 +455,7 @@ async def test_setting_sensor_value_via_mqtt_message_and_template_and_raw_state_
 
 
 async def test_setting_sensor_value_via_mqtt_message_empty_template(
-    hass, mqtt_mock_entry_with_yaml_config, caplog
+    hass, mqtt_mock_entry_with_yaml_config
 ):
     """Test the setting of the value via MQTT."""
     assert await async_setup_component(
@@ -487,7 +482,6 @@ async def test_setting_sensor_value_via_mqtt_message_empty_template(
     async_fire_mqtt_message(hass, "test-topic", "DEF")
     state = hass.states.get("binary_sensor.test")
     assert state.state == STATE_UNKNOWN
-    assert "Empty template output" in caplog.text
 
     async_fire_mqtt_message(hass, "test-topic", "ABC")
     state = hass.states.get("binary_sensor.test")
@@ -1016,15 +1010,6 @@ async def test_reloadable(hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_pa
     )
 
 
-# Test deprecated YAML configuration under the platform key
-# Scheduled to be removed in HA core 2022.12
-async def test_reloadable_late(hass, mqtt_client_mock, caplog, tmp_path):
-    """Test reloading the MQTT platform with late entry setup."""
-    domain = binary_sensor.DOMAIN
-    config = DEFAULT_CONFIG_LEGACY[domain]
-    await help_test_reloadable_late(hass, caplog, tmp_path, domain, config)
-
-
 @pytest.mark.parametrize(
     "payload1, state1, payload2, state2",
     [("ON", "on", "OFF", "off"), ("OFF", "off", "ON", "on")],
@@ -1074,13 +1059,6 @@ async def test_cleanup_triggers_and_restoring_state(
     await help_test_reload_with_config(
         hass, caplog, tmp_path, {mqtt.DOMAIN: {domain: [config1, config2]}}
     )
-    assert "Clean up expire after trigger for binary_sensor.test1" in caplog.text
-    assert "Clean up expire after trigger for binary_sensor.test2" not in caplog.text
-    assert (
-        "State recovered after reload for binary_sensor.test1, remaining time before expiring"
-        in caplog.text
-    )
-    assert "State recovered after reload for binary_sensor.test2" not in caplog.text
 
     state = hass.states.get("binary_sensor.test1")
     assert state.state == state1
@@ -1098,7 +1076,7 @@ async def test_cleanup_triggers_and_restoring_state(
 
 
 async def test_skip_restoring_state_with_over_due_expire_trigger(
-    hass, mqtt_mock_entry_with_yaml_config, caplog, freezer
+    hass, mqtt_mock_entry_with_yaml_config, freezer
 ):
     """Test restoring a state with over due expire timer."""
 
@@ -1121,7 +1099,8 @@ async def test_skip_restoring_state_with_over_due_expire_trigger(
     )
     await hass.async_block_till_done()
     await mqtt_mock_entry_with_yaml_config()
-    assert "Skip state recovery after reload for binary_sensor.test3" in caplog.text
+    state = hass.states.get("binary_sensor.test3")
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_setup_manual_entity_from_yaml(hass):
@@ -1138,16 +1117,3 @@ async def test_unload_entry(hass, mqtt_mock_entry_with_yaml_config, tmp_path):
     await help_test_unload_config_entry_with_platform(
         hass, mqtt_mock_entry_with_yaml_config, tmp_path, domain, config
     )
-
-
-# Test deprecated YAML configuration under the platform key
-# Scheduled to be removed in HA core 2022.12
-async def test_setup_with_legacy_schema(hass, mqtt_mock_entry_with_yaml_config):
-    """Test a setup with deprecated yaml platform schema."""
-    domain = binary_sensor.DOMAIN
-    config = copy.deepcopy(DEFAULT_CONFIG_LEGACY[domain])
-    config["name"] = "test"
-    assert await async_setup_component(hass, domain, {domain: config})
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
-    assert hass.states.get(f"{domain}.test") is not None

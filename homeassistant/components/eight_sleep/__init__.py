@@ -95,7 +95,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data[CONF_USERNAME],
         entry.data[CONF_PASSWORD],
         hass.config.time_zone,
-        async_get_clientsession(hass),
+        client_session=async_get_clientsession(hass),
     )
 
     # Authenticate, build sensors

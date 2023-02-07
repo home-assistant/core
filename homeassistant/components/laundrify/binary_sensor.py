@@ -25,7 +25,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors from a config entry created in the integrations UI."""
 
-    coordinator = hass.data[DOMAIN][config.entry_id]["coordinator"]
+    coordinator: LaundrifyUpdateCoordinator = hass.data[DOMAIN][config.entry_id][
+        "coordinator"
+    ]
 
     async_add_entities(
         LaundrifyPowerPlug(coordinator, device) for device in coordinator.data.values()
@@ -39,6 +41,7 @@ class LaundrifyPowerPlug(
 
     _attr_device_class = BinarySensorDeviceClass.RUNNING
     _attr_icon = "mdi:washing-machine"
+    _attr_unique_id: str
 
     def __init__(
         self, coordinator: LaundrifyUpdateCoordinator, device: LaundrifyDevice
@@ -63,7 +66,7 @@ class LaundrifyPowerPlug(
     def available(self) -> bool:
         """Check if the device is available."""
         return (
-            self.unique_id in self.coordinator.data
+            self._attr_unique_id in self.coordinator.data
             and self.coordinator.last_update_success
         )
 
@@ -80,5 +83,5 @@ class LaundrifyPowerPlug(
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._device = self.coordinator.data[self.unique_id]
+        self._device = self.coordinator.data[self._attr_unique_id]
         super()._handle_coordinator_update()

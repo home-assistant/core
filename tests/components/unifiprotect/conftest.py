@@ -1,5 +1,5 @@
 """Fixtures and test data for UniFi Protect methods."""
-# pylint: disable=protected-access
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -128,7 +128,7 @@ def mock_entry(
     """Mock ProtectApiClient for testing."""
 
     with _patch_discovery(no_device=True), patch(
-        "homeassistant.components.unifiprotect.ProtectApiClient"
+        "homeassistant.components.unifiprotect.utils.ProtectApiClient"
     ) as mock_api:
         ufp_config_entry.add_to_hass(hass)
 
@@ -214,6 +214,7 @@ def doorbell_fixture(camera: Camera, fixed_now: datetime):
     doorbell.feature_flags.has_lcd_screen = True
     doorbell.feature_flags.has_speaker = True
     doorbell.feature_flags.has_privacy_mask = True
+    doorbell.feature_flags.is_doorbell = True
     doorbell.feature_flags.has_chime = True
     doorbell.feature_flags.has_smart_detect = True
     doorbell.feature_flags.has_package_camera = True

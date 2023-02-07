@@ -6,6 +6,7 @@ from blinkpy.blinkpy import BlinkSetupError
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.blink import DOMAIN
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -148,7 +149,9 @@ async def test_form_2fa_invalid_key(hass):
     assert result2["type"] == "form"
     assert result2["step_id"] == "2fa"
 
-    with patch("homeassistant.components.blink.config_flow.Auth.startup",), patch(
+    with patch(
+        "homeassistant.components.blink.config_flow.Auth.startup",
+    ), patch(
         "homeassistant.components.blink.config_flow.Auth.check_key_required",
         return_value=False,
     ), patch(
@@ -254,7 +257,7 @@ async def test_reauth_shows_user_step(hass):
     assert result["step_id"] == "user"
 
 
-async def test_options_flow(hass):
+async def test_options_flow(hass: HomeAssistant) -> None:
     """Test config flow options."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -283,11 +286,16 @@ async def test_options_flow(hass):
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "simple_options"
 
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={"scan_interval": 5},
-    )
+    with patch("homeassistant.components.blink.Auth", return_value=mock_auth), patch(
+        "homeassistant.components.blink.Blink", return_value=mock_blink
+    ):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={"scan_interval": 5},
+        )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["data"] == {"scan_interval": 5}
-    assert mock_blink.refresh_rate == 5
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["data"] == {"scan_interval": 5}
+        await hass.async_block_till_done()
+
+        assert mock_blink.refresh_rate == 5

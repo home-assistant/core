@@ -21,7 +21,7 @@ SCAN_INTERVAL = timedelta(seconds=DEFAULT_SCAN_INTERVAL_SECONDS)
 _LOGGER = logging.getLogger(__name__)
 
 
-class BMWDataUpdateCoordinator(DataUpdateCoordinator):
+class BMWDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Class to manage fetching BMW data."""
 
     account: MyBMWAccount

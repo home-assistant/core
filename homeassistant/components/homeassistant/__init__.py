@@ -205,7 +205,7 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
         ]
 
         if tasks:
-            await asyncio.wait(tasks)
+            await asyncio.gather(*tasks)
 
     async_register_admin_service(
         hass, ha.DOMAIN, SERVICE_HOMEASSISTANT_STOP, async_handle_core_service

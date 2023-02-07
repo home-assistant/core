@@ -16,15 +16,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     AREA_SQUARE_METERS,
     CONCENTRATION_PARTS_PER_MILLION,
-    ELECTRIC_POTENTIAL_VOLT,
-    ENERGY_KILO_WATT_HOUR,
     LIGHT_LUX,
-    MASS_KILOGRAMS,
     PERCENTAGE,
-    POWER_WATT,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-    VOLUME_CUBIC_METERS,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfMass,
+    UnitOfPower,
+    UnitOfTemperature,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
@@ -87,7 +86,7 @@ CAPABILITY_TO_SENSORS: dict[str, list[Map]] = {
         Map(
             Attribute.bmi_measurement,
             "Body Mass Index",
-            f"{MASS_KILOGRAMS}/{AREA_SQUARE_METERS}",
+            f"{UnitOfMass.KILOGRAMS}/{AREA_SQUARE_METERS}",
             None,
             SensorStateClass.MEASUREMENT,
             None,
@@ -97,7 +96,7 @@ CAPABILITY_TO_SENSORS: dict[str, list[Map]] = {
         Map(
             Attribute.body_weight_measurement,
             "Body Weight",
-            MASS_KILOGRAMS,
+            UnitOfMass.KILOGRAMS,
             SensorDeviceClass.WEIGHT,
             SensorStateClass.MEASUREMENT,
             None,
@@ -198,7 +197,7 @@ CAPABILITY_TO_SENSORS: dict[str, list[Map]] = {
         Map(
             Attribute.energy,
             "Energy Meter",
-            ENERGY_KILO_WATT_HOUR,
+            UnitOfEnergy.KILO_WATT_HOUR,
             SensorDeviceClass.ENERGY,
             SensorStateClass.TOTAL_INCREASING,
             None,
@@ -228,7 +227,7 @@ CAPABILITY_TO_SENSORS: dict[str, list[Map]] = {
         Map(
             Attribute.gas_meter,
             "Gas Meter",
-            ENERGY_KILO_WATT_HOUR,
+            UnitOfEnergy.KILO_WATT_HOUR,
             SensorDeviceClass.ENERGY,
             SensorStateClass.MEASUREMENT,
             None,
@@ -247,8 +246,8 @@ CAPABILITY_TO_SENSORS: dict[str, list[Map]] = {
         Map(
             Attribute.gas_meter_volume,
             "Gas Meter Volume",
-            VOLUME_CUBIC_METERS,
-            SensorDeviceClass.VOLUME,
+            UnitOfVolume.CUBIC_METERS,
+            SensorDeviceClass.GAS,
             SensorStateClass.MEASUREMENT,
             None,
         ),
@@ -320,7 +319,7 @@ CAPABILITY_TO_SENSORS: dict[str, list[Map]] = {
         Map(
             Attribute.power,
             "Power Meter",
-            POWER_WATT,
+            UnitOfPower.WATT,
             SensorDeviceClass.POWER,
             SensorStateClass.MEASUREMENT,
             None,
@@ -506,7 +505,7 @@ CAPABILITY_TO_SENSORS: dict[str, list[Map]] = {
         Map(
             Attribute.voltage,
             "Voltage Measurement",
-            ELECTRIC_POTENTIAL_VOLT,
+            UnitOfElectricPotential.VOLT,
             SensorDeviceClass.VOLTAGE,
             SensorStateClass.MEASUREMENT,
             None,
@@ -536,7 +535,7 @@ CAPABILITY_TO_SENSORS: dict[str, list[Map]] = {
     ],
 }
 
-UNITS = {"C": TEMP_CELSIUS, "F": TEMP_FAHRENHEIT}
+UNITS = {"C": UnitOfTemperature.CELSIUS, "F": UnitOfTemperature.FAHRENHEIT}
 
 THREE_AXIS_NAMES = ["X Coordinate", "Y Coordinate", "Z Coordinate"]
 POWER_CONSUMPTION_REPORT_NAMES = [
@@ -745,8 +744,8 @@ class SmartThingsPowerConsumptionSensor(SmartThingsEntity, SensorEntity):
     def native_unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         if self.report_name == "power":
-            return POWER_WATT
-        return ENERGY_KILO_WATT_HOUR
+            return UnitOfPower.WATT
+        return UnitOfEnergy.KILO_WATT_HOUR
 
     @property
     def extra_state_attributes(self):

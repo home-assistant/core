@@ -800,7 +800,7 @@ async def websocket_device_cluster_commands(
 async def websocket_read_zigbee_cluster_attributes(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
-    """Read zigbee attribute for cluster on zha entity."""
+    """Read zigbee attribute for cluster on ZHA entity."""
     zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     ieee: EUI64 = msg[ATTR_IEEE]
     endpoint_id: int = msg[ATTR_ENDPOINT_ID]
@@ -821,7 +821,10 @@ async def websocket_read_zigbee_cluster_attributes(
             [attribute], allow_cache=False, only_cache=False, manufacturer=manufacturer
         )
     _LOGGER.debug(
-        "Read attribute for: %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s],",
+        (
+            "Read attribute for: %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s]"
+            " %s: [%s],"
+        ),
         ATTR_CLUSTER_ID,
         cluster_id,
         ATTR_CLUSTER_TYPE,
@@ -1090,11 +1093,17 @@ async def websocket_update_zha_configuration(
             ):
                 data_to_save[CUSTOM_CONFIGURATION][section].pop(entry)
             # remove entire section block if empty
-            if not data_to_save[CUSTOM_CONFIGURATION][section]:
+            if (
+                not data_to_save[CUSTOM_CONFIGURATION].get(section)
+                and section in data_to_save[CUSTOM_CONFIGURATION]
+            ):
                 data_to_save[CUSTOM_CONFIGURATION].pop(section)
 
     # remove entire custom_configuration block if empty
-    if not data_to_save[CUSTOM_CONFIGURATION]:
+    if (
+        not data_to_save.get(CUSTOM_CONFIGURATION)
+        and CUSTOM_CONFIGURATION in data_to_save
+    ):
         data_to_save.pop(CUSTOM_CONFIGURATION)
 
     _LOGGER.info(
@@ -1280,7 +1289,10 @@ def async_load_api(hass: HomeAssistant) -> None:
                 manufacturer=manufacturer,
             )
         _LOGGER.debug(
-            "Set attribute for: %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s]",
+            (
+                "Set attribute for: %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s:"
+                " [%s] %s: [%s]"
+            ),
             ATTR_CLUSTER_ID,
             cluster_id,
             ATTR_CLUSTER_TYPE,
@@ -1306,7 +1318,7 @@ def async_load_api(hass: HomeAssistant) -> None:
     )
 
     async def issue_zigbee_cluster_command(service: ServiceCall) -> None:
-        """Issue command on zigbee cluster on zha entity."""
+        """Issue command on zigbee cluster on ZHA entity."""
         ieee: EUI64 = service.data[ATTR_IEEE]
         endpoint_id: int = service.data[ATTR_ENDPOINT_ID]
         cluster_id: int = service.data[ATTR_CLUSTER_ID]
@@ -1332,7 +1344,10 @@ def async_load_api(hass: HomeAssistant) -> None:
                 manufacturer=manufacturer,
             )
             _LOGGER.debug(
-                "Issued command for: %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s]",
+                (
+                    "Issued command for: %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s]"
+                    " %s: [%s] %s: [%s] %s: [%s]"
+                ),
                 ATTR_CLUSTER_ID,
                 cluster_id,
                 ATTR_CLUSTER_TYPE,

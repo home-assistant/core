@@ -78,9 +78,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ):
             persistent_notification.async_create(
                 hass,
-                "Your Hue hub has a known security vulnerability ([CVE-2020-6007] "
-                "(https://cve.circl.lu/cve/CVE-2020-6007)). "
-                "Go to the Hue app and check for software updates.",
+                (
+                    "Your Hue hub has a known security vulnerability ([CVE-2020-6007] "
+                    "(https://cve.circl.lu/cve/CVE-2020-6007)). "
+                    "Go to the Hue app and check for software updates."
+                ),
                 "Signify Hue",
                 "hue_hub_firmware",
             )

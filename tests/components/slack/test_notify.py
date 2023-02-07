@@ -38,7 +38,7 @@ def filter_log_records(caplog: LogCaptureFixture) -> list[logging.LogRecord]:
     ]
 
 
-async def test_message_includes_default_emoji():
+async def test_message_includes_default_emoji() -> None:
     """Tests that default icon is used when no message icon is given."""
     mock_client = Mock()
     mock_client.chat_postMessage = AsyncMock()
@@ -55,7 +55,7 @@ async def test_message_includes_default_emoji():
     assert kwargs["icon_emoji"] == expected_icon
 
 
-async def test_message_emoji_overrides_default():
+async def test_message_emoji_overrides_default() -> None:
     """Tests that overriding the default icon emoji when sending a message works."""
     mock_client = Mock()
     mock_client.chat_postMessage = AsyncMock()
@@ -72,7 +72,7 @@ async def test_message_emoji_overrides_default():
     assert kwargs["icon_emoji"] == expected_icon
 
 
-async def test_message_includes_default_icon_url():
+async def test_message_includes_default_icon_url() -> None:
     """Tests that overriding the default icon url when sending a message works."""
     mock_client = Mock()
     mock_client.chat_postMessage = AsyncMock()
@@ -89,7 +89,7 @@ async def test_message_includes_default_icon_url():
     assert kwargs["icon_url"] == expected_icon
 
 
-async def test_message_icon_url_overrides_default():
+async def test_message_icon_url_overrides_default() -> None:
     """Tests that overriding the default icon url when sending a message works."""
     mock_client = Mock()
     mock_client.chat_postMessage = AsyncMock()

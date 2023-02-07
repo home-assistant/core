@@ -230,8 +230,7 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
 
     @property
     def current_cover_position(self) -> int | None:
-        """
-        Return current position of cover.
+        """Return current position of cover.
 
         None is unknown, 0 is open, 100 is closed.
         """
@@ -343,14 +342,20 @@ class MotionTiltDevice(MotionPositionDevice):
 
     @property
     def current_cover_tilt_position(self) -> int | None:
-        """
-        Return current angle of cover.
+        """Return current angle of cover.
 
         None is unknown, 0 is closed/minimum tilt, 100 is fully open/maximum tilt.
         """
         if self._blind.angle is None:
             return None
         return self._blind.angle * 100 / 180
+
+    @property
+    def is_closed(self) -> bool | None:
+        """Return if the cover is closed or not."""
+        if self._blind.position is None:
+            return None
+        return self._blind.position >= 95
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
@@ -380,7 +385,7 @@ class MotionTiltOnlyDevice(MotionTiltDevice):
     _restore_tilt = False
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> CoverEntityFeature:
         """Flag supported features."""
         supported_features = (
             CoverEntityFeature.OPEN_TILT
@@ -433,8 +438,7 @@ class MotionTDBUDevice(MotionPositionDevice):
 
     @property
     def current_cover_position(self) -> int | None:
-        """
-        Return current position of cover.
+        """Return current position of cover.
 
         None is unknown, 0 is open, 100 is closed.
         """

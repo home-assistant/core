@@ -7,7 +7,6 @@ import logging
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
-from aiohttp import ClientWebSocketResponse
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
@@ -31,6 +30,7 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, mock_platform
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 CLIENT_ID = "some-client-id"
 CLIENT_SECRET = "some-client-secret"
@@ -171,7 +171,9 @@ class OAuthFixture:
 
 @pytest.fixture
 async def oauth_fixture(
-    hass: HomeAssistant, hass_client_no_auth: Any, aioclient_mock: Any
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: Any,
 ) -> OAuthFixture:
     """Fixture for testing the OAuth flow."""
     return OAuthFixture(hass, hass_client_no_auth, aioclient_mock)
@@ -211,9 +213,7 @@ ClientFixture = Callable[[], Client]
 
 
 @pytest.fixture
-async def ws_client(
-    hass_ws_client: Callable[[...], ClientWebSocketResponse]
-) -> ClientFixture:
+async def ws_client(hass_ws_client: WebSocketGenerator) -> ClientFixture:
     """Fixture for creating the test websocket client."""
 
     async def create_client() -> Client:
@@ -795,3 +795,32 @@ async def test_remove_config_entry_without_app_credentials(
         "config_entry", {"config_entry_id": entries[0].entry_id}
     )
     assert "application_credential_id" not in result
+
+
+async def test_websocket_create_strips_whitespace(ws_client: ClientFixture):
+    """Test websocket create command with whitespace in the credentials."""
+    client = await ws_client()
+    result = await client.cmd_result(
+        "create",
+        {
+            CONF_DOMAIN: TEST_DOMAIN,
+            CONF_CLIENT_ID: f"  {CLIENT_ID}  ",
+            CONF_CLIENT_SECRET: f" {CLIENT_SECRET} ",
+        },
+    )
+    assert result == {
+        CONF_DOMAIN: TEST_DOMAIN,
+        CONF_CLIENT_ID: CLIENT_ID,
+        CONF_CLIENT_SECRET: CLIENT_SECRET,
+        "id": ID,
+    }
+
+    result = await client.cmd_result("list")
+    assert result == [
+        {
+            CONF_DOMAIN: TEST_DOMAIN,
+            CONF_CLIENT_ID: CLIENT_ID,
+            CONF_CLIENT_SECRET: CLIENT_SECRET,
+            "id": ID,
+        }
+    ]

@@ -1,0 +1,54 @@
+{
+  "version": 2,
+  "minor_version": 1,
+  "key": "homekit.8a47205bd97c07d7a908f10166ebe636.iids",
+  "data": {
+    "allocations": {
+      "1": {
+        "3E___": 1,
+        "3E__14_": 2,
+        "3E__20_": 3,
+        "3E__21_": 4,
+        "3E__23_": 5,
+        "3E__30_": 6,
+        "3E__52_": 7,
+        "A2___": 8,
+        "A2__37_": 9
+      },
+      "1973560704": {
+        "3E___": 1,
+        "3E__14_": 11,
+        "3E__20_": 12,
+        "3E__21_": 13,
+        "3E__23_": 14,
+        "3E__30_": 15,
+        "3E__52_": 16,
+        "3E__53_": 17,
+        "89_pressed-__": 18,
+        "89_pressed-_73_": 19,
+        "89_pressed-_23_": 20,
+        "89_pressed-_CB_": 21,
+        "CC_pressed-__": 22,
+        "CC_pressed-_CD_": 23,
+        "89_changed_states-__": 24,
+        "89_changed_states-_73_": 25,
+        "89_changed_states-_23_": 26,
+        "89_changed_states-_CB_": 27,
+        "CC_changed_states-__": 28,
+        "CC_changed_states-_CD_": 29,
+        "89_turned_off-__": 30,
+        "89_turned_off-_73_": 31,
+        "89_turned_off-_23_": 32,
+        "89_turned_off-_CB_": 33,
+        "CC_turned_off-__": 34,
+        "CC_turned_off-_CD_": 35,
+        "89_turned_on-__": 36,
+        "89_turned_on-_73_": 37,
+        "89_turned_on-_23_": 38,
+        "89_turned_on-_CB_": 39,
+        "CC_turned_on-__": 40,
+        "CC_turned_on-_CD_": 41
+      }
+    }
+  }
+}

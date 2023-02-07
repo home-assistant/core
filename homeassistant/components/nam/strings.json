@@ -37,5 +37,18 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reauth_unsuccessful": "Re-authentication was unsuccessful, please remove the integration and set it up again."
     }
+  },
+  "entity": {
+    "sensor": {
+      "caqi_level": {
+        "state": {
+          "very_low": "Very low",
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High",
+          "very_high": "Very high"
+        }
+      }
+    }
   }
 }

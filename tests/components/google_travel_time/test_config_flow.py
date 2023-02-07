@@ -141,7 +141,6 @@ async def test_malformed_api_key(hass):
             MOCK_CONFIG,
             {
                 CONF_MODE: "driving",
-                CONF_ARRIVAL_TIME: "test",
                 CONF_UNITS: UNITS_IMPERIAL,
             },
         )
@@ -198,7 +197,15 @@ async def test_options_flow(hass, mock_config):
 
 @pytest.mark.parametrize(
     "data,options",
-    [(MOCK_CONFIG, {})],
+    [
+        (
+            MOCK_CONFIG,
+            {
+                CONF_MODE: "driving",
+                CONF_UNITS: UNITS_IMPERIAL,
+            },
+        )
+    ],
 )
 @pytest.mark.usefixtures("validate_config_entry")
 async def test_options_flow_departure_time(hass, mock_config):

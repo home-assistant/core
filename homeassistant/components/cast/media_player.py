@@ -43,6 +43,7 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CAST_APP_ID_HOMEASSISTANT_LOVELACE,
+    CONF_UUID,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
@@ -59,7 +60,6 @@ from .const import (
     ADDED_CAST_DEVICES_KEY,
     CAST_MULTIZONE_MANAGER_KEY,
     CONF_IGNORE_CEC,
-    CONF_UUID,
     DOMAIN as CAST_DOMAIN,
     SIGNAL_CAST_DISCOVERED,
     SIGNAL_CAST_REMOVED,
@@ -375,7 +375,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
             tts_base_url = None
             url_description = ""
             if "tts" in self.hass.config.components:
-                # pylint: disable=[import-outside-toplevel]
+                # pylint: disable-next=[import-outside-toplevel]
                 from homeassistant.components import tts
 
                 with suppress(KeyError):  # base_url not configured
@@ -396,9 +396,11 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
                     url_description = f" from internal_url ({internal_url})"
 
             _LOGGER.error(
-                "Failed to cast media %s%s. Please make sure the URL is: "
-                "Reachable from the cast device and either a publicly resolvable "
-                "hostname or an IP address",
+                (
+                    "Failed to cast media %s%s. Please make sure the URL is: "
+                    "Reachable from the cast device and either a publicly resolvable "
+                    "hostname or an IP address"
+                ),
                 media_status.content_id,
                 url_description,
             )
@@ -474,8 +476,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
 
     # ========== Service Calls ==========
     def _media_controller(self):
-        """
-        Return media controller.
+        """Return media controller.
 
         First try from our own cast, then groups which our cast is a member in.
         """
@@ -751,8 +752,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         )
 
     def _media_status(self):
-        """
-        Return media status.
+        """Return media status.
 
         First try from our own cast, then groups which our cast is a member in.
         """
@@ -899,7 +899,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         return self._chromecast.app_display_name if self._chromecast else None
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         support = (
             MediaPlayerEntityFeature.PLAY_MEDIA

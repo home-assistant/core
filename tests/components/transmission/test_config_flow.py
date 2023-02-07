@@ -2,7 +2,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
-from transmissionrpc.error import TransmissionError
+from transmission_rpc.error import TransmissionError
 
 from homeassistant import config_entries
 from homeassistant.components import transmission
@@ -18,7 +18,7 @@ from tests.common import MockConfigEntry
 @pytest.fixture(autouse=True)
 def mock_api():
     """Mock an api."""
-    with patch("transmissionrpc.Client") as api:
+    with patch("transmission_rpc.Client") as api:
         yield api
 
 

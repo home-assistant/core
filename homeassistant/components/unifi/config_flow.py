@@ -33,18 +33,15 @@ from .const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
     CONF_BLOCK_CLIENT,
-    CONF_CONTROLLER,
     CONF_DETECTION_TIME,
     CONF_DPI_RESTRICTIONS,
     CONF_IGNORE_WIRED_BUG,
-    CONF_POE_CLIENTS,
     CONF_SITE_ID,
     CONF_SSID_FILTER,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
     CONF_TRACK_WIRED_CLIENTS,
     DEFAULT_DPI_RESTRICTIONS,
-    DEFAULT_POE_CLIENTS,
     DOMAIN as UNIFI_DOMAIN,
 )
 from .controller import UniFiController, get_unifi_controller
@@ -89,7 +86,6 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
         errors = {}
 
         if user_input is not None:
-
             self.config = {
                 CONF_HOST: user_input[CONF_HOST],
                 CONF_USERNAME: user_input[CONF_USERNAME],
@@ -151,11 +147,8 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
     ) -> FlowResult:
         """Select site to control."""
         if user_input is not None:
-
             unique_id = user_input[CONF_SITE_ID]
             self.config[CONF_SITE_ID] = self.site_ids[unique_id]
-            # Backwards compatible config
-            self.config[CONF_CONTROLLER] = self.config.copy()
 
             config_entry = await self.async_set_unique_id(unique_id)
             abort_reason = "configuration_updated"
@@ -396,10 +389,6 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Optional(
                         CONF_BLOCK_CLIENT, default=selected_clients_to_block
                     ): cv.multi_select(clients_to_block),
-                    vol.Optional(
-                        CONF_POE_CLIENTS,
-                        default=self.options.get(CONF_POE_CLIENTS, DEFAULT_POE_CLIENTS),
-                    ): bool,
                     vol.Optional(
                         CONF_DPI_RESTRICTIONS,
                         default=self.options.get(

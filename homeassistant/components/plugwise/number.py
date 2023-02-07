@@ -13,7 +13,7 @@ from homeassistant.components.number import (
     NumberMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -51,7 +51,7 @@ NUMBER_TYPES = (
         native_max_value_key="upper_bound",
         native_min_value_key="lower_bound",
         native_step_key="resolution",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         native_value_key="setpoint",
     ),
 )
@@ -71,7 +71,7 @@ async def async_setup_entry(
     entities: list[PlugwiseNumberEntity] = []
     for device_id, device in coordinator.data.devices.items():
         for description in NUMBER_TYPES:
-            if description.key in device:
+            if description.key in device and "setpoint" in device[description.key]:
                 entities.append(
                     PlugwiseNumberEntity(coordinator, device_id, description)
                 )

@@ -34,11 +34,8 @@ def config_schema_validate(withings_config) -> dict:
 
 def config_schema_assert_fail(withings_config) -> None:
     """Assert a schema config will fail."""
-    try:
+    with pytest.raises(vol.MultipleInvalid):
         config_schema_validate(withings_config)
-        assert False, "This line should not have run."
-    except vol.error.MultipleInvalid:
-        assert True
 
 
 def test_config_schema_basic_config() -> None:
@@ -177,6 +174,10 @@ async def test_set_config_unique_id(
             spec=DataUpdateCoordinator
         )
         data_manager.poll_data_update_coordinator.last_update_success = True
+        data_manager.subscription_update_coordinator = MagicMock(
+            spec=DataUpdateCoordinator
+        )
+        data_manager.subscription_update_coordinator.last_update_success = True
         mock.return_value = data_manager
         config_entry.add_to_hass(hass)
 

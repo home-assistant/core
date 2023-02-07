@@ -58,8 +58,7 @@ def _refresh_on_access_denied(func):
             return func(self, *args, **kwargs)
         except PermissionError:
             _LOGGER.warning(
-                "Invalid session detected."
-                " Trying to refresh session_id and re-run RPC"
+                "Invalid session detected. Trying to refresh session_id and re-run RPC"
             )
             self.ubus.connect()
 
@@ -69,8 +68,7 @@ def _refresh_on_access_denied(func):
 
 
 class UbusDeviceScanner(DeviceScanner):
-    """
-    This class queries a wireless router running OpenWrt firmware.
+    """This class queries a wireless router running OpenWrt firmware.
 
     Adapted from Tomato scanner.
     """

@@ -1,5 +1,5 @@
 """Test the UniFi Protect setup flow."""
-# pylint: disable=protected-access
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -72,7 +72,9 @@ async def test_setup_multiple(
     nvr.id
     ufp.api.get_nvr = AsyncMock(return_value=nvr)
 
-    with patch("homeassistant.components.unifiprotect.ProtectApiClient") as mock_api:
+    with patch(
+        "homeassistant.components.unifiprotect.utils.ProtectApiClient"
+    ) as mock_api:
         mock_config = MockConfigEntry(
             domain=DOMAIN,
             data={
@@ -194,7 +196,7 @@ async def test_setup_starts_discovery(
 ):
     """Test setting up will start discovery."""
     with _patch_discovery(), patch(
-        "homeassistant.components.unifiprotect.ProtectApiClient"
+        "homeassistant.components.unifiprotect.utils.ProtectApiClient"
     ) as mock_api:
         ufp_config_entry.add_to_hass(hass)
         mock_api.return_value = ufp_client

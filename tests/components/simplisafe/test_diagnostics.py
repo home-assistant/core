@@ -21,7 +21,7 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_simplisa
             "disabled_by": None,
         },
         "subscription_data": {
-            "system_123": {
+            "12345": {
                 "uid": REDACTED,
                 "sid": REDACTED,
                 "sStatus": 20,

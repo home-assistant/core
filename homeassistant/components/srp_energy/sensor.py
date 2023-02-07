@@ -11,7 +11,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENERGY_KILO_WATT_HOUR
+from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -61,7 +61,7 @@ async def async_setup_entry(
                 for _, _, _, kwh, _ in hourly_usage:
                     previous_daily_usage += float(kwh)
                 return previous_daily_usage
-        except (TimeoutError) as timeout_err:
+        except TimeoutError as timeout_err:
             raise UpdateFailed("Timeout communicating with API") from timeout_err
         except (ConnectError, HTTPError, Timeout, ValueError, TypeError) as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
@@ -91,7 +91,7 @@ class SrpEntity(SensorEntity):
         self._name = SENSOR_NAME
         self.type = SENSOR_TYPE
         self.coordinator = coordinator
-        self._unit_of_measurement = ENERGY_KILO_WATT_HOUR
+        self._unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
         self._state = None
 
     @property

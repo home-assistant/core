@@ -21,8 +21,8 @@
     "sortTitle": "string",
     "sizeOnDisk": 0,
     "overview": "string",
-    "inCinemas": "string",
-    "physicalRelease": "string",
+    "inCinemas": "2020-11-06T00:00:00Z",
+    "physicalRelease": "2019-03-19T00:00:00Z",
     "images": [
       {
         "coverType": "poster",
@@ -50,7 +50,7 @@
     "certification": "string",
     "genres": ["string"],
     "tags": [0],
-    "added": "string",
+    "added": "2018-12-28T05:56:49Z",
     "ratings": {
       "votes": 0,
       "value": 0

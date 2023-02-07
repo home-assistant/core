@@ -79,6 +79,7 @@ class IncidentsSensor(RestoreEntity, SensorEntity):
             "type",
             "responder_mode",
             "can_respond_until",
+            "task_ids",
         ):
             if data.get(value):
                 attr[value] = data[value]

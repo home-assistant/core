@@ -1,7 +1,0 @@
-{
-    "device_automation": {
-        "action_type": {
-            "select_option": "Alterar op\u00e7\u00e3o {entity_name}"
-        }
-    }
-}

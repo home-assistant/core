@@ -75,7 +75,7 @@ async def test_custom_encoder(hass):
             return "9"
 
     store = storage.Store(hass, MOCK_VERSION, MOCK_KEY, encoder=JSONEncoder)
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         await store.async_save(Mock())
     await store.async_save(object())
     data = await store.async_load()
@@ -394,13 +394,13 @@ async def test_migration(hass, hass_storage, store_v_1_2):
     }
     assert calls == 0
 
-    legacy_store = CustomStore(hass, 2, store_v_1_2.key, minor_version=1)
-    data = await legacy_store.async_load()
+    custom_store = CustomStore(hass, 2, store_v_1_2.key, minor_version=1)
+    data = await custom_store.async_load()
     assert calls == 1
     assert hass_storage[store_v_1_2.key]["data"] == data
 
-    await legacy_store.async_save(MOCK_DATA)
-    assert hass_storage[legacy_store.key] == {
+    # Assert the migrated data has been saved
+    assert hass_storage[custom_store.key] == {
         "key": MOCK_KEY,
         "version": 2,
         "minor_version": 1,
@@ -433,7 +433,7 @@ async def test_legacy_migration(hass, hass_storage, store_v_1_2):
     assert calls == 1
     assert hass_storage[store_v_1_2.key]["data"] == data
 
-    await legacy_store.async_save(MOCK_DATA)
+    # Assert the migrated data has been saved
     assert hass_storage[legacy_store.key] == {
         "key": MOCK_KEY,
         "version": 2,

@@ -4,7 +4,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.setup import async_setup_component
 
@@ -23,7 +23,9 @@ async def test_sensor_upper(hass):
     await hass.async_block_till_done()
 
     hass.states.async_set(
-        "sensor.test_monitored", 16, {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+        "sensor.test_monitored",
+        16,
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     await hass.async_block_till_done()
 
@@ -156,7 +158,9 @@ async def test_sensor_in_range_no_hysteresis(hass):
     await hass.async_block_till_done()
 
     hass.states.async_set(
-        "sensor.test_monitored", 16, {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+        "sensor.test_monitored",
+        16,
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     await hass.async_block_till_done()
 
@@ -205,7 +209,9 @@ async def test_sensor_in_range_with_hysteresis(hass):
     await hass.async_block_till_done()
 
     hass.states.async_set(
-        "sensor.test_monitored", 16, {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+        "sensor.test_monitored",
+        16,
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     await hass.async_block_till_done()
 
@@ -303,7 +309,9 @@ async def test_sensor_in_range_unknown_state(hass, caplog):
     await hass.async_block_till_done()
 
     hass.states.async_set(
-        "sensor.test_monitored", 16, {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+        "sensor.test_monitored",
+        16,
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     await hass.async_block_till_done()
 

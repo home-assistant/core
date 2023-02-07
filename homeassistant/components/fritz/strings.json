@@ -3,8 +3,8 @@
     "flow_title": "{name}",
     "step": {
       "confirm": {
-        "title": "Setup FRITZ!Box Tools",
-        "description": "Discovered FRITZ!Box: {name}\n\nSetup FRITZ!Box Tools to control your {name}",
+        "title": "Set up FRITZ!Box Tools",
+        "description": "Discovered FRITZ!Box: {name}\n\nSet up FRITZ!Box Tools to control your {name}",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
@@ -19,8 +19,8 @@
         }
       },
       "user": {
-        "title": "Setup FRITZ!Box Tools",
-        "description": "Setup FRITZ!Box Tools to control your FRITZ!Box.\nMinimum needed: username, password.",
+        "title": "Set up FRITZ!Box Tools",
+        "description": "Set up FRITZ!Box Tools to control your FRITZ!Box.\nMinimum needed: username, password.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",

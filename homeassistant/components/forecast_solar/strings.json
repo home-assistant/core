@@ -15,9 +15,12 @@
     }
   },
   "options": {
+    "error": {
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]"
+    },
     "step": {
       "init": {
-        "description": "These values allow tweaking the Solar.Forecast result. Please refer to the documentation if a field is unclear.",
+        "description": "These values allow tweaking the Forecast.Solar result. Please refer to the documentation if a field is unclear.",
         "data": {
           "api_key": "Forecast.Solar API Key (optional)",
           "azimuth": "Azimuth (360 degrees, 0 = North, 90 = East, 180 = South, 270 = West)",

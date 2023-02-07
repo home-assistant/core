@@ -1,10 +1,11 @@
 """Helpers for mobile_app."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from http import HTTPStatus
 import json
 import logging
+from typing import Any
 
 from aiohttp.web import Response, json_response
 from nacl.encoding import Base64Encoder, HexEncoder, RawEncoder
@@ -111,7 +112,7 @@ def _decrypt_payload_legacy(key: str | None, ciphertext: str) -> dict[str, str] 
     return _decrypt_payload_helper(key, ciphertext, get_key_bytes, RawEncoder)
 
 
-def registration_context(registration: dict) -> Context:
+def registration_context(registration: Mapping[str, Any]) -> Context:
     """Generate a context from a request."""
     return Context(user_id=registration[CONF_USER_ID])
 
@@ -173,11 +174,11 @@ def savable_state(hass: HomeAssistant) -> dict:
 
 
 def webhook_response(
-    data,
+    data: Any,
     *,
-    registration: dict,
+    registration: Mapping[str, Any],
     status: HTTPStatus = HTTPStatus.OK,
-    headers: dict | None = None,
+    headers: Mapping[str, str] | None = None,
 ) -> Response:
     """Return a encrypted response if registration supports it."""
     data = json.dumps(data, cls=JSONEncoder)

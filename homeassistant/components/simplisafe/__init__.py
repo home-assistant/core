@@ -139,22 +139,14 @@ VOLUME_MAP = {
     "off": Volume.OFF,
 }
 
-SERVICE_NAME_CLEAR_NOTIFICATIONS = "clear_notifications"
 SERVICE_NAME_REMOVE_PIN = "remove_pin"
 SERVICE_NAME_SET_PIN = "set_pin"
 SERVICE_NAME_SET_SYSTEM_PROPERTIES = "set_system_properties"
 
 SERVICES = (
-    SERVICE_NAME_CLEAR_NOTIFICATIONS,
     SERVICE_NAME_REMOVE_PIN,
     SERVICE_NAME_SET_PIN,
     SERVICE_NAME_SET_SYSTEM_PROPERTIES,
-)
-
-SERVICE_CLEAR_NOTIFICATIONS_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_DEVICE_ID): cv.string,
-    },
 )
 
 SERVICE_REMOVE_PIN_SCHEMA = vol.Schema(
@@ -245,11 +237,12 @@ def _async_get_system_for_service_call(
     ) is None:
         raise ValueError("No base station registered for alarm control panel")
 
-    [system_id] = [
+    [system_id_str] = [
         identity[1]
         for identity in base_station_device_entry.identifiers
         if identity[0] == DOMAIN
     ]
+    system_id = int(system_id_str)
 
     for entry_id in base_station_device_entry.config_entries:
         if (simplisafe := hass.data[DOMAIN].get(entry_id)) is None:
@@ -304,13 +297,28 @@ def _async_register_base_station(
 ) -> None:
     """Register a new bridge."""
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+
+    base_station = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, system.system_id)},
+        identifiers={(DOMAIN, str(system.system_id))},
         manufacturer="SimpliSafe",
         model=system.version,
         name=system.address,
     )
+
+    # Check for an old system ID format and remove it:
+    if old_base_station := device_registry.async_get_device(
+        {(DOMAIN, system.system_id)}  # type: ignore[arg-type]
+    ):
+        # Update the new base station with any properties the user might have configured
+        # on the old base station:
+        device_registry.async_update_device(
+            base_station.id,
+            area_id=old_base_station.area_id,
+            disabled_by=old_base_station.disabled_by,
+            name_by_user=old_base_station.name_by_user,
+        )
+        device_registry.async_remove_device(old_base_station.id)
 
 
 @callback
@@ -386,19 +394,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     @_verify_domain_control
     @extract_system
-    async def async_clear_notifications(call: ServiceCall, system: SystemType) -> None:
-        """Clear all active notifications."""
-        _async_log_deprecated_service_call(
-            hass,
-            call,
-            "button.press",
-            "button.alarm_control_panel_clear_notifications",
-            "2022.12.0",
-        )
-        await system.async_clear_notifications()
-
-    @_verify_domain_control
-    @extract_system
     async def async_remove_pin(call: ServiceCall, system: SystemType) -> None:
         """Remove a PIN."""
         await system.async_remove_pin(call.data[ATTR_PIN_LABEL_OR_VALUE])
@@ -423,11 +418,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     for service, method, schema in (
-        (
-            SERVICE_NAME_CLEAR_NOTIFICATIONS,
-            async_clear_notifications,
-            SERVICE_CLEAR_NOTIFICATIONS_SCHEMA,
-        ),
         (SERVICE_NAME_REMOVE_PIN, async_remove_pin, SERVICE_REMOVE_PIN_SCHEMA),
         (SERVICE_NAME_SET_PIN, async_set_pin, SERVICE_SET_PIN_SCHEMA),
         (
@@ -499,7 +489,7 @@ class SimpliSafe:
         self.systems: dict[int, SystemType] = {}
 
         # This will get filled in by async_init:
-        self.coordinator: DataUpdateCoordinator | None = None
+        self.coordinator: DataUpdateCoordinator[None] | None = None
 
     @callback
     def _async_process_new_notifications(self, system: SystemType) -> None:
@@ -702,7 +692,7 @@ class SimpliSafe:
                 raise UpdateFailed(f"SimpliSafe error while updating: {result}")
 
 
-class SimpliSafeEntity(CoordinatorEntity):
+class SimpliSafeEntity(CoordinatorEntity[DataUpdateCoordinator[None]]):
     """Define a base SimpliSafe entity."""
 
     _attr_has_entity_name = True
@@ -757,7 +747,7 @@ class SimpliSafeEntity(CoordinatorEntity):
             manufacturer="SimpliSafe",
             model=model,
             name=device_name,
-            via_device=(DOMAIN, system.system_id),
+            via_device=(DOMAIN, str(system.system_id)),
         )
 
         self._attr_unique_id = serial

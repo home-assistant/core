@@ -142,7 +142,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from error
     except plexapi.exceptions.Unauthorized as ex:
         raise ConfigEntryAuthFailed(
-            f"Token not accepted, please reauthenticate Plex server '{entry.data[CONF_SERVER]}'"
+            "Token not accepted, please reauthenticate Plex server"
+            f" '{entry.data[CONF_SERVER]}'"
         ) from ex
     except (
         plexapi.exceptions.BadRequest,
@@ -177,7 +178,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     def plex_websocket_callback(msgtype, data, error):
         """Handle callbacks from plexwebsocket library."""
         if msgtype == SIGNAL_CONNECTION_STATE:
-
             if data == STATE_CONNECTED:
                 _LOGGER.debug("Websocket to %s successful", entry.data[CONF_SERVER])
                 hass.async_create_task(plex_server.async_update_platforms())

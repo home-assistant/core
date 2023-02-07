@@ -38,6 +38,20 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # EasyBaby
+    # Undocumented, might have a wider use
+    "cn": (
+        SwitchEntityDescription(
+            key=DPCode.DISINFECTION,
+            name="Disinfection",
+            icon="mdi:bacteria",
+        ),
+        SwitchEntityDescription(
+            key=DPCode.WATER,
+            name="Water",
+            icon="mdi:water",
+        ),
+    ),
     # Smart Pet Feeder
     # https://developer.tuya.com/en/docs/iot/categorycwwsq?id=Kaiuz2b6vydld
     "cwwsq": (
@@ -140,6 +154,21 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             key=DPCode.SWITCH_6,
             name="Sleep Aid",
             icon="mdi:power-sleep",
+        ),
+    ),
+    # Two-way temperature and humidity switch
+    # "MOES Temperature and Humidity Smart Switch Module MS-103"
+    # Documentation not found
+    "wkcz": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_1,
+            name="Switch 1",
+            device_class=SwitchDeviceClass.OUTLET,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_2,
+            name="Switch 2",
+            device_class=SwitchDeviceClass.OUTLET,
         ),
     ),
     # Switch
@@ -281,6 +310,12 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
         SwitchEntityDescription(
             key=DPCode.SWITCH,
             name="Switch",
+            icon="mdi:power",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.START,
+            name="Start",
             icon="mdi:pot-steam",
             entity_category=EntityCategory.CONFIG,
         ),
@@ -536,6 +571,15 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             name="Open Window Detection",
             icon="mdi:window-open",
             entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    # SIREN: Siren (switch) with Temperature and humidity sensor
+    # https://developer.tuya.com/en/docs/iot/f?id=Kavck4sr3o5ek
+    "wsdcg": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH,
+            name="Switch",
+            device_class=SwitchDeviceClass.OUTLET,
         ),
     ),
     # Ceiling Light

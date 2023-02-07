@@ -22,7 +22,7 @@ async def test_async_setup_entry(recorder_mock, hass):
     await coordinator._async_update_data()
     await async_wait_recording_done(hass)
 
-    for (statistic_id, data, key) in (
+    for statistic_id, data, key in (
         ("tibber:energy_consumption_home_id", CONSUMPTION_DATA_1, "consumption"),
         ("tibber:energy_totalcost_home_id", CONSUMPTION_DATA_1, "totalCost"),
         ("tibber:energy_production_home_id", PRODUCTION_DATA_1, "production"),
@@ -35,7 +35,8 @@ async def test_async_setup_entry(recorder_mock, hass):
             None,
             [statistic_id],
             "hour",
-            True,
+            None,
+            {"start", "state", "mean", "min", "max", "last_reset", "sum"},
         )
 
         assert len(stats) == 1

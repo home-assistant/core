@@ -14,5 +14,6 @@
     }
   ],
   "dhcp": [{ "registered_devices": true }],
-  "quality_scale": "platinum"
+  "quality_scale": "platinum",
+  "integration_type": "device"
 }

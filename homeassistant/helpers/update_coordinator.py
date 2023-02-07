@@ -1,12 +1,14 @@
 """Helpers to help coordinate updates."""
 from __future__ import annotations
 
+from abc import abstractmethod
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Generator
 from datetime import datetime, timedelta
 import logging
+from random import randint
 from time import monotonic
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, Protocol, TypeVar
 import urllib.error
 
 import aiohttp
@@ -14,7 +16,11 @@ import requests
 
 from homeassistant import config_entries
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.util.dt import utcnow
 
 from . import entity, event
@@ -24,6 +30,9 @@ REQUEST_REFRESH_DEFAULT_COOLDOWN = 10
 REQUEST_REFRESH_DEFAULT_IMMEDIATE = True
 
 _T = TypeVar("_T")
+_BaseDataUpdateCoordinatorT = TypeVar(
+    "_BaseDataUpdateCoordinatorT", bound="BaseDataUpdateCoordinatorProtocol"
+)
 _DataUpdateCoordinatorT = TypeVar(
     "_DataUpdateCoordinatorT", bound="DataUpdateCoordinator[Any]"
 )
@@ -33,7 +42,17 @@ class UpdateFailed(Exception):
     """Raised when an update has failed."""
 
 
-class DataUpdateCoordinator(Generic[_T]):
+class BaseDataUpdateCoordinatorProtocol(Protocol):
+    """Base protocol type for DataUpdateCoordinator."""
+
+    @callback
+    def async_add_listener(
+        self, update_callback: CALLBACK_TYPE, context: Any = None
+    ) -> Callable[[], None]:
+        """Listen for data updates."""
+
+
+class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_T]):
     """Class to manage fetching data from single endpoint."""
 
     def __init__(
@@ -60,6 +79,12 @@ class DataUpdateCoordinator(Generic[_T]):
         # Set type to just T to remove annoying checks that data is not None
         # when it was already checked during setup.
         self.data: _T = None  # type: ignore[assignment]
+
+        # Pick a random microsecond to stagger the refreshes
+        # and avoid a thundering herd.
+        self._microsecond = randint(
+            event.RANDOM_MICROSECOND_MIN, event.RANDOM_MICROSECOND_MAX
+        )
 
         self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object | None]] = {}
         self._job = HassJob(self._handle_refresh_interval)
@@ -138,11 +163,17 @@ class DataUpdateCoordinator(Generic[_T]):
         # We _floor_ utcnow to create a schedule on a rounded second,
         # minimizing the time between the point and the real activation.
         # That way we obtain a constant update frequency,
-        # as long as the update process takes less than a second
+        # as long as the update process takes less than 500ms
+        #
+        # We do not align everything to happen at microsecond 0
+        # since it increases the risk of a thundering herd
+        # when multiple coordinators are scheduled to update at the same time.
+        #
+        # https://github.com/home-assistant/core/issues/82231
         self._unsub_refresh = event.async_track_point_in_utc_time(
             self.hass,
             self._job,
-            utcnow().replace(microsecond=0) + self.update_interval,
+            utcnow().replace(microsecond=self._microsecond) + self.update_interval,
         )
 
     async def _handle_refresh_interval(self, _now: datetime) -> None:
@@ -170,7 +201,9 @@ class DataUpdateCoordinator(Generic[_T]):
         fails. Additionally logging is handled by config entry setup
         to ensure that multiple retries do not cause log spam.
         """
-        await self._async_refresh(log_failures=False, raise_on_auth_failed=True)
+        await self._async_refresh(
+            log_failures=False, raise_on_auth_failed=True, raise_on_entry_error=True
+        )
         if self.last_update_success:
             return
         ex = ConfigEntryNotReady()
@@ -186,6 +219,7 @@ class DataUpdateCoordinator(Generic[_T]):
         log_failures: bool = True,
         raise_on_auth_failed: bool = False,
         scheduled: bool = False,
+        raise_on_entry_error: bool = False,
     ) -> None:
         """Refresh data."""
         if self._unsub_refresh:
@@ -236,6 +270,19 @@ class DataUpdateCoordinator(Generic[_T]):
                 if log_failures:
                     self.logger.error("Error fetching %s data: %s", self.name, err)
                 self.last_update_success = False
+
+        except ConfigEntryError as err:
+            self.last_exception = err
+            if self.last_update_success:
+                if log_failures:
+                    self.logger.error(
+                        "Config entry setup failed while fetching %s data: %s",
+                        self.name,
+                        err,
+                    )
+                self.last_update_success = False
+            if raise_on_entry_error:
+                raise
 
         except ConfigEntryAuthFailed as err:
             auth_failed = True
@@ -313,11 +360,11 @@ class DataUpdateCoordinator(Generic[_T]):
         self.async_update_listeners()
 
 
-class CoordinatorEntity(entity.Entity, Generic[_DataUpdateCoordinatorT]):
-    """A class for entities using DataUpdateCoordinator."""
+class BaseCoordinatorEntity(entity.Entity, Generic[_BaseDataUpdateCoordinatorT]):
+    """Base class for all Coordinator entities."""
 
     def __init__(
-        self, coordinator: _DataUpdateCoordinatorT, context: Any = None
+        self, coordinator: _BaseDataUpdateCoordinatorT, context: Any = None
     ) -> None:
         """Create the entity with a DataUpdateCoordinator."""
         self.coordinator = coordinator
@@ -327,11 +374,6 @@ class CoordinatorEntity(entity.Entity, Generic[_DataUpdateCoordinatorT]):
     def should_poll(self) -> bool:
         """No need to poll. Coordinator notifies entity of updates."""
         return False
-
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return self.coordinator.last_update_success
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
@@ -346,6 +388,33 @@ class CoordinatorEntity(entity.Entity, Generic[_DataUpdateCoordinatorT]):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self.async_write_ha_state()
+
+    @abstractmethod
+    async def async_update(self) -> None:
+        """Update the entity.
+
+        Only used by the generic entity update service.
+        """
+
+
+class CoordinatorEntity(BaseCoordinatorEntity[_DataUpdateCoordinatorT]):
+    """A class for entities using DataUpdateCoordinator."""
+
+    def __init__(
+        self, coordinator: _DataUpdateCoordinatorT, context: Any = None
+    ) -> None:
+        """Create the entity with a DataUpdateCoordinator.
+
+        Passthrough to BaseCoordinatorEntity.
+
+        Necessary to bind TypeVar to correct scope.
+        """
+        super().__init__(coordinator, context)
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self.coordinator.last_update_success
 
     async def async_update(self) -> None:
         """Update the entity.

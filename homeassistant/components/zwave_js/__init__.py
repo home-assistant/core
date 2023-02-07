@@ -20,6 +20,7 @@ from zwave_js_server.model.notification import (
 )
 from zwave_js_server.model.value import Value, ValueNotification
 
+from homeassistant.components.hassio import AddonError, AddonManager, AddonState
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_ID,
@@ -41,7 +42,7 @@ from homeassistant.helpers.issue_registry import (
 )
 from homeassistant.helpers.typing import UNDEFINED, ConfigType
 
-from .addon import AddonError, AddonManager, AddonState, get_addon_manager
+from .addon import get_addon_manager
 from .api import async_register_api
 from .const import (
     ATTR_ACKNOWLEDGED_FRAMES,
@@ -156,9 +157,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(f"Invalid server version: {err}") from err
     except (asyncio.TimeoutError, BaseZwaveJSServerError) as err:
         raise ConfigEntryNotReady(f"Failed to connect: {err}") from err
-    else:
-        async_delete_issue(hass, DOMAIN, "invalid_server_version")
-        LOGGER.info("Connected to Zwave JS Server")
+
+    async_delete_issue(hass, DOMAIN, "invalid_server_version")
+    LOGGER.info("Connected to Zwave JS Server")
 
     dev_reg = device_registry.async_get(hass)
     ent_reg = entity_registry.async_get(hass)
@@ -229,6 +230,7 @@ class DriverEvents:
     async def setup(self, driver: Driver) -> None:
         """Set up devices using the ready driver."""
         self.driver = driver
+        controller = driver.controller
 
         # If opt in preference hasn't been specified yet, we do nothing, otherwise
         # we apply the preference
@@ -243,7 +245,7 @@ class DriverEvents:
         )
         known_devices = [
             self.dev_reg.async_get_device({get_device_id(driver, node)})
-            for node in driver.controller.nodes.values()
+            for node in controller.nodes.values()
         ]
 
         # Devices that are in the device registry that are not known by the controller can be removed
@@ -251,17 +253,22 @@ class DriverEvents:
             if device not in known_devices:
                 self.dev_reg.async_remove_device(device.id)
 
-        # run discovery on all ready nodes
+        # run discovery on controller node
+        if controller.own_node:
+            await self.controller_events.async_on_node_added(controller.own_node)
+
+        # run discovery on all other ready nodes
         await asyncio.gather(
             *(
                 self.controller_events.async_on_node_added(node)
-                for node in driver.controller.nodes.values()
+                for node in controller.nodes.values()
+                if node != controller.own_node
             )
         )
 
         # listen for new nodes being added to the mesh
         self.config_entry.async_on_unload(
-            driver.controller.on(
+            controller.on(
                 "node added",
                 lambda event: self.hass.async_create_task(
                     self.controller_events.async_on_node_added(event["node"])
@@ -271,9 +278,7 @@ class DriverEvents:
         # listen for nodes being removed from the mesh
         # NOTE: This will not remove nodes that were removed when HA was not running
         self.config_entry.async_on_unload(
-            driver.controller.on(
-                "node removed", self.controller_events.async_on_node_removed
-            )
+            controller.on("node removed", self.controller_events.async_on_node_removed)
         )
 
     async def async_setup_platform(self, platform: Platform) -> None:
@@ -370,7 +375,11 @@ class ControllerEvents:
 
             async_dispatcher_send(
                 self.hass,
-                f"{DOMAIN}_{get_valueless_base_unique_id(self.driver_events.driver, node)}_remove_entity",
+                (
+                    f"{DOMAIN}_"
+                    f"{get_valueless_base_unique_id(self.driver_events.driver, node)}_"
+                    "remove_entity"
+                ),
             )
         else:
             self.remove_device(device)
@@ -382,6 +391,11 @@ class ControllerEvents:
         device_id = get_device_id(driver, node)
         device_id_ext = get_device_id_ext(driver, node)
         device = self.dev_reg.async_get_device({device_id})
+        via_device_id = None
+        controller = driver.controller
+        # Get the controller node device ID if this node is not the controller
+        if controller.own_node and controller.own_node != node:
+            via_device_id = get_device_id(driver, controller.own_node)
 
         # Replace the device if it can be determined that this node is not the
         # same product as it was previously.
@@ -407,6 +421,7 @@ class ControllerEvents:
             model=node.device_config.label,
             manufacturer=node.device_config.manufacturer,
             suggested_area=node.location if node.location else UNDEFINED,
+            via_device=via_device_id,
         )
 
         async_dispatcher_send(self.hass, EVENT_DEVICE_ADDED_TO_REGISTRY, device)
@@ -716,7 +731,7 @@ class NodeEvents:
 
         raw_value = value_ = value.value
         if value.metadata.states:
-            value_ = value.metadata.states.get(str(value), value_)
+            value_ = value.metadata.states.get(str(value_), value_)
 
         self.hass.bus.async_fire(
             ZWAVE_JS_VALUE_UPDATED_EVENT,
@@ -854,24 +869,24 @@ async def async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) ->
     s2_unauthenticated_key: str = entry.data.get(CONF_S2_UNAUTHENTICATED_KEY, "")
     addon_state = addon_info.state
 
+    addon_config = {
+        CONF_ADDON_DEVICE: usb_path,
+        CONF_ADDON_S0_LEGACY_KEY: s0_legacy_key,
+        CONF_ADDON_S2_ACCESS_CONTROL_KEY: s2_access_control_key,
+        CONF_ADDON_S2_AUTHENTICATED_KEY: s2_authenticated_key,
+        CONF_ADDON_S2_UNAUTHENTICATED_KEY: s2_unauthenticated_key,
+    }
+
     if addon_state == AddonState.NOT_INSTALLED:
         addon_manager.async_schedule_install_setup_addon(
-            usb_path,
-            s0_legacy_key,
-            s2_access_control_key,
-            s2_authenticated_key,
-            s2_unauthenticated_key,
+            addon_config,
             catch_error=True,
         )
         raise ConfigEntryNotReady
 
     if addon_state == AddonState.NOT_RUNNING:
         addon_manager.async_schedule_setup_addon(
-            usb_path,
-            s0_legacy_key,
-            s2_access_control_key,
-            s2_authenticated_key,
-            s2_unauthenticated_key,
+            addon_config,
             catch_error=True,
         )
         raise ConfigEntryNotReady

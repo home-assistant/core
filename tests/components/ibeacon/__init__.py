@@ -1,4 +1,6 @@
 """Tests for the ibeacon integration."""
+from typing import Any
+
 from bleak.backends.device import BLEDevice
 
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
@@ -58,7 +60,21 @@ BEACON_RANDOM_ADDRESS_SERVICE_INFO = BluetoothServiceInfo(
     service_uuids=[],
     source="local",
 )
-
+TESLA_TRANSIENT = BluetoothServiceInfo(
+    address="CC:CC:CC:CC:CC:CC",
+    rssi=-60,
+    name="S6da7c9389bd5452cC",
+    manufacturer_data={
+        76: b"\x02\x15t'\x8b\xda\xb6DE \x8f\x0cr\x0e\xaf\x05\x995\x00\x00[$\xc5"
+    },
+    service_data={},
+    service_uuids=[],
+    source="hci0",
+)
+TESLA_TRANSIENT_BLE_DEVICE = BLEDevice(
+    address="CC:CC:CC:CC:CC:CC",
+    name="S6da7c9389bd5452cC",
+)
 
 FEASY_BEACON_BLE_DEVICE = BLEDevice(
     address="AA:BB:CC:DD:EE:FF",
@@ -101,3 +117,18 @@ FEASY_BEACON_SERVICE_INFO_2 = BluetoothServiceInfo(
     ],
     source="local",
 )
+
+
+def bluetooth_service_info_replace(
+    info: BluetoothServiceInfo, **kwargs: Any
+) -> BluetoothServiceInfo:
+    """Replace attributes of a BluetoothServiceInfoBleak."""
+    return BluetoothServiceInfo(
+        address=kwargs.get("address", info.address),
+        name=kwargs.get("name", info.name),
+        rssi=kwargs.get("rssi", info.rssi),
+        manufacturer_data=kwargs.get("manufacturer_data", info.manufacturer_data),
+        service_data=kwargs.get("service_data", info.service_data),
+        service_uuids=kwargs.get("service_uuids", info.service_uuids),
+        source=kwargs.get("source", info.source),
+    )

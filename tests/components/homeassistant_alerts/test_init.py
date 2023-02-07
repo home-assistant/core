@@ -17,15 +17,11 @@ from tests.common import assert_lists_same, async_fire_time_changed, load_fixtur
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-def stub_alert(aioclient_mock, filename):
+def stub_alert(aioclient_mock, alert_id):
     """Stub an alert."""
     aioclient_mock.get(
-        f"https://alerts.home-assistant.io/alerts/{filename}",
-        text=f"""---
-title: Title for {filename}
----
-Content for {filename}
-""",
+        f"https://alerts.home-assistant.io/alerts/{alert_id}.json",
+        json={"title": f"Title for {alert_id}", "content": f"Content for {alert_id}"},
     )
 
 
@@ -36,52 +32,56 @@ async def setup_repairs(hass):
 
 
 @pytest.mark.parametrize(
-    "ha_version, expected_alerts",
+    "ha_version, supervisor_info, expected_alerts",
     (
         (
             "2022.7.0",
+            {"version": "2022.11.0"},
             [
-                ("aladdin_connect.markdown", "aladdin_connect"),
-                ("dark_sky.markdown", "darksky"),
-                ("hikvision.markdown", "hikvision"),
-                ("hikvision.markdown", "hikvisioncam"),
-                ("hive_us.markdown", "hive"),
-                ("homematicip_cloud.markdown", "homematicip_cloud"),
-                ("logi_circle.markdown", "logi_circle"),
-                ("neato.markdown", "neato"),
-                ("nest.markdown", "nest"),
-                ("senseme.markdown", "senseme"),
-                ("sochain.markdown", "sochain"),
+                ("aladdin_connect", "aladdin_connect"),
+                ("dark_sky", "darksky"),
+                ("hassio", "hassio"),
+                ("hikvision", "hikvision"),
+                ("hikvision", "hikvisioncam"),
+                ("hive_us", "hive"),
+                ("homematicip_cloud", "homematicip_cloud"),
+                ("logi_circle", "logi_circle"),
+                ("neato", "neato"),
+                ("nest", "nest"),
+                ("senseme", "senseme"),
+                ("sochain", "sochain"),
             ],
         ),
         (
             "2022.8.0",
+            {"version": "2022.11.1"},
             [
-                ("dark_sky.markdown", "darksky"),
-                ("hikvision.markdown", "hikvision"),
-                ("hikvision.markdown", "hikvisioncam"),
-                ("hive_us.markdown", "hive"),
-                ("homematicip_cloud.markdown", "homematicip_cloud"),
-                ("logi_circle.markdown", "logi_circle"),
-                ("neato.markdown", "neato"),
-                ("nest.markdown", "nest"),
-                ("senseme.markdown", "senseme"),
-                ("sochain.markdown", "sochain"),
+                ("dark_sky", "darksky"),
+                ("hikvision", "hikvision"),
+                ("hikvision", "hikvisioncam"),
+                ("hive_us", "hive"),
+                ("homematicip_cloud", "homematicip_cloud"),
+                ("logi_circle", "logi_circle"),
+                ("neato", "neato"),
+                ("nest", "nest"),
+                ("senseme", "senseme"),
+                ("sochain", "sochain"),
             ],
         ),
         (
             "2021.10.0",
+            None,
             [
-                ("aladdin_connect.markdown", "aladdin_connect"),
-                ("dark_sky.markdown", "darksky"),
-                ("hikvision.markdown", "hikvision"),
-                ("hikvision.markdown", "hikvisioncam"),
-                ("homematicip_cloud.markdown", "homematicip_cloud"),
-                ("logi_circle.markdown", "logi_circle"),
-                ("neato.markdown", "neato"),
-                ("nest.markdown", "nest"),
-                ("senseme.markdown", "senseme"),
-                ("sochain.markdown", "sochain"),
+                ("aladdin_connect", "aladdin_connect"),
+                ("dark_sky", "darksky"),
+                ("hikvision", "hikvision"),
+                ("hikvision", "hikvisioncam"),
+                ("homematicip_cloud", "homematicip_cloud"),
+                ("logi_circle", "logi_circle"),
+                ("neato", "neato"),
+                ("nest", "nest"),
+                ("senseme", "senseme"),
+                ("sochain", "sochain"),
             ],
         ),
     ),
@@ -91,6 +91,7 @@ async def test_alerts(
     hass_ws_client,
     aioclient_mock: AiohttpClientMocker,
     ha_version,
+    supervisor_info,
     expected_alerts,
 ) -> None:
     """Test creating issues based on alerts."""
@@ -119,9 +120,18 @@ async def test_alerts(
     for domain in activated_components:
         hass.config.components.add(domain)
 
+    if supervisor_info is not None:
+        hass.config.components.add("hassio")
+
     with patch(
         "homeassistant.components.homeassistant_alerts.__version__",
         ha_version,
+    ), patch(
+        "homeassistant.components.homeassistant_alerts.is_hassio",
+        return_value=supervisor_info is not None,
+    ), patch(
+        "homeassistant.components.homeassistant_alerts.get_supervisor_info",
+        return_value=supervisor_info,
     ):
         assert await async_setup_component(hass, DOMAIN, {})
 
@@ -139,17 +149,17 @@ async def test_alerts(
                 "domain": "homeassistant_alerts",
                 "ignored": False,
                 "is_fixable": False,
-                "issue_id": f"{alert}_{integration}",
+                "issue_id": f"{alert_id}.markdown_{integration}",
                 "issue_domain": integration,
                 "learn_more_url": None,
                 "severity": "warning",
                 "translation_key": "alert",
                 "translation_placeholders": {
-                    "title": f"Title for {alert}",
-                    "description": f"Content for {alert}",
+                    "title": f"Title for {alert_id}",
+                    "description": f"Content for {alert_id}",
                 },
             }
-            for alert, integration in expected_alerts
+            for alert_id, integration in expected_alerts
         ]
     }
 
@@ -161,15 +171,15 @@ async def test_alerts(
             "2022.7.0",
             "alerts_no_integrations.json",
             [
-                ("dark_sky.markdown", "darksky"),
+                ("dark_sky", "darksky"),
             ],
         ),
         (
             "2022.7.0",
             "alerts_no_package.json",
             [
-                ("dark_sky.markdown", "darksky"),
-                ("hikvision.markdown", "hikvision"),
+                ("dark_sky", "darksky"),
+                ("hikvision", "hikvision"),
             ],
         ),
     ),
@@ -190,7 +200,7 @@ async def test_bad_alerts(
         text=fixture_content,
     )
     for alert in json.loads(fixture_content):
-        stub_alert(aioclient_mock, alert["filename"])
+        stub_alert(aioclient_mock, alert["id"])
 
     activated_components = (
         "darksky",
@@ -220,17 +230,17 @@ async def test_bad_alerts(
                 "domain": "homeassistant_alerts",
                 "ignored": False,
                 "is_fixable": False,
-                "issue_id": f"{alert}_{integration}",
+                "issue_id": f"{alert_id}.markdown_{integration}",
                 "issue_domain": integration,
                 "learn_more_url": None,
                 "severity": "warning",
                 "translation_key": "alert",
                 "translation_placeholders": {
-                    "title": f"Title for {alert}",
-                    "description": f"Content for {alert}",
+                    "title": f"Title for {alert_id}",
+                    "description": f"Content for {alert_id}",
                 },
             }
-            for alert, integration in expected_alerts
+            for alert_id, integration in expected_alerts
         ]
     }
 
@@ -265,60 +275,60 @@ async def test_no_alerts(
             "2022.7.0",
             "alerts_1.json",
             [
-                ("aladdin_connect.markdown", "aladdin_connect"),
-                ("dark_sky.markdown", "darksky"),
-                ("hikvision.markdown", "hikvision"),
-                ("hikvision.markdown", "hikvisioncam"),
-                ("hive_us.markdown", "hive"),
-                ("homematicip_cloud.markdown", "homematicip_cloud"),
-                ("logi_circle.markdown", "logi_circle"),
-                ("neato.markdown", "neato"),
-                ("nest.markdown", "nest"),
-                ("senseme.markdown", "senseme"),
-                ("sochain.markdown", "sochain"),
+                ("aladdin_connect", "aladdin_connect"),
+                ("dark_sky", "darksky"),
+                ("hikvision", "hikvision"),
+                ("hikvision", "hikvisioncam"),
+                ("hive_us", "hive"),
+                ("homematicip_cloud", "homematicip_cloud"),
+                ("logi_circle", "logi_circle"),
+                ("neato", "neato"),
+                ("nest", "nest"),
+                ("senseme", "senseme"),
+                ("sochain", "sochain"),
             ],
             "alerts_2.json",
             [
-                ("dark_sky.markdown", "darksky"),
-                ("hikvision.markdown", "hikvision"),
-                ("hikvision.markdown", "hikvisioncam"),
-                ("hive_us.markdown", "hive"),
-                ("homematicip_cloud.markdown", "homematicip_cloud"),
-                ("logi_circle.markdown", "logi_circle"),
-                ("neato.markdown", "neato"),
-                ("nest.markdown", "nest"),
-                ("senseme.markdown", "senseme"),
-                ("sochain.markdown", "sochain"),
+                ("dark_sky", "darksky"),
+                ("hikvision", "hikvision"),
+                ("hikvision", "hikvisioncam"),
+                ("hive_us", "hive"),
+                ("homematicip_cloud", "homematicip_cloud"),
+                ("logi_circle", "logi_circle"),
+                ("neato", "neato"),
+                ("nest", "nest"),
+                ("senseme", "senseme"),
+                ("sochain", "sochain"),
             ],
         ),
         (
             "2022.7.0",
             "alerts_2.json",
             [
-                ("dark_sky.markdown", "darksky"),
-                ("hikvision.markdown", "hikvision"),
-                ("hikvision.markdown", "hikvisioncam"),
-                ("hive_us.markdown", "hive"),
-                ("homematicip_cloud.markdown", "homematicip_cloud"),
-                ("logi_circle.markdown", "logi_circle"),
-                ("neato.markdown", "neato"),
-                ("nest.markdown", "nest"),
-                ("senseme.markdown", "senseme"),
-                ("sochain.markdown", "sochain"),
+                ("dark_sky", "darksky"),
+                ("hikvision", "hikvision"),
+                ("hikvision", "hikvisioncam"),
+                ("hive_us", "hive"),
+                ("homematicip_cloud", "homematicip_cloud"),
+                ("logi_circle", "logi_circle"),
+                ("neato", "neato"),
+                ("nest", "nest"),
+                ("senseme", "senseme"),
+                ("sochain", "sochain"),
             ],
             "alerts_1.json",
             [
-                ("aladdin_connect.markdown", "aladdin_connect"),
-                ("dark_sky.markdown", "darksky"),
-                ("hikvision.markdown", "hikvision"),
-                ("hikvision.markdown", "hikvisioncam"),
-                ("hive_us.markdown", "hive"),
-                ("homematicip_cloud.markdown", "homematicip_cloud"),
-                ("logi_circle.markdown", "logi_circle"),
-                ("neato.markdown", "neato"),
-                ("nest.markdown", "nest"),
-                ("senseme.markdown", "senseme"),
-                ("sochain.markdown", "sochain"),
+                ("aladdin_connect", "aladdin_connect"),
+                ("dark_sky", "darksky"),
+                ("hikvision", "hikvision"),
+                ("hikvision", "hikvisioncam"),
+                ("hive_us", "hive"),
+                ("homematicip_cloud", "homematicip_cloud"),
+                ("logi_circle", "logi_circle"),
+                ("neato", "neato"),
+                ("nest", "nest"),
+                ("senseme", "senseme"),
+                ("sochain", "sochain"),
             ],
         ),
     ),
@@ -341,7 +351,7 @@ async def test_alerts_change(
         text=fixture_1_content,
     )
     for alert in json.loads(fixture_1_content):
-        stub_alert(aioclient_mock, alert["filename"])
+        stub_alert(aioclient_mock, alert["id"])
 
     activated_components = (
         "aladdin_connect",
@@ -382,17 +392,17 @@ async def test_alerts_change(
                 "domain": "homeassistant_alerts",
                 "ignored": False,
                 "is_fixable": False,
-                "issue_id": f"{alert}_{integration}",
+                "issue_id": f"{alert_id}.markdown_{integration}",
                 "issue_domain": integration,
                 "learn_more_url": None,
                 "severity": "warning",
                 "translation_key": "alert",
                 "translation_placeholders": {
-                    "title": f"Title for {alert}",
-                    "description": f"Content for {alert}",
+                    "title": f"Title for {alert_id}",
+                    "description": f"Content for {alert_id}",
                 },
             }
-            for alert, integration in expected_alerts_1
+            for alert_id, integration in expected_alerts_1
         ],
     )
 
@@ -403,7 +413,7 @@ async def test_alerts_change(
         text=fixture_2_content,
     )
     for alert in json.loads(fixture_2_content):
-        stub_alert(aioclient_mock, alert["filename"])
+        stub_alert(aioclient_mock, alert["id"])
 
     future = now + UPDATE_INTERVAL + timedelta(seconds=1)
     async_fire_time_changed(hass, future)
@@ -422,16 +432,16 @@ async def test_alerts_change(
                 "domain": "homeassistant_alerts",
                 "ignored": False,
                 "is_fixable": False,
-                "issue_id": f"{alert}_{integration}",
+                "issue_id": f"{alert_id}.markdown_{integration}",
                 "issue_domain": integration,
                 "learn_more_url": None,
                 "severity": "warning",
                 "translation_key": "alert",
                 "translation_placeholders": {
-                    "title": f"Title for {alert}",
-                    "description": f"Content for {alert}",
+                    "title": f"Title for {alert_id}",
+                    "description": f"Content for {alert_id}",
                 },
             }
-            for alert, integration in expected_alerts_2
+            for alert_id, integration in expected_alerts_2
         ],
     )

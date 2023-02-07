@@ -168,7 +168,11 @@ class WebhookView(HomeAssistantView):
     }
 )
 @callback
-def websocket_list(hass, connection, msg):
+def websocket_list(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Return a list of webhooks."""
     handlers = hass.data.setdefault(DOMAIN, {})
     result = [

@@ -9,15 +9,13 @@ from zwave_js_server.model.node import Node
 
 from homeassistant.components import automation
 from homeassistant.components.zwave_js import DOMAIN
+from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.components.zwave_js.trigger import async_validate_trigger_config
 from homeassistant.components.zwave_js.triggers.trigger_helpers import (
     async_bypass_dynamic_config_validation,
 )
 from homeassistant.const import SERVICE_RELOAD
-from homeassistant.helpers.device_registry import (
-    async_entries_for_config_entry,
-    async_get as async_get_dev_reg,
-)
+from homeassistant.helpers.device_registry import async_get as async_get_dev_reg
 from homeassistant.setup import async_setup_component
 
 from .common import SCHLAGE_BE469_LOCK_ENTITY
@@ -30,7 +28,10 @@ async def test_zwave_js_value_updated(hass, client, lock_schlage_be469, integrat
     trigger_type = f"{DOMAIN}.value_updated"
     node: Node = lock_schlage_be469
     dev_reg = async_get_dev_reg(hass)
-    device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
+    device = dev_reg.async_get_device(
+        {get_device_id(client.driver, lock_schlage_be469)}
+    )
+    assert device
 
     no_value_filter = async_capture_events(hass, "no_value_filter")
     single_from_value_filter = async_capture_events(hass, "single_from_value_filter")
@@ -385,12 +386,74 @@ async def test_zwave_js_value_updated_bypass_dynamic_validation_no_nodes(
     assert len(no_value_filter) == 0
 
 
+async def test_zwave_js_value_updated_bypass_dynamic_validation_no_driver(
+    hass, client, lock_schlage_be469, integration
+):
+    """Test zwave_js.value_updated trigger without driver."""
+    trigger_type = f"{DOMAIN}.value_updated"
+    node: Node = lock_schlage_be469
+    driver = client.driver
+    client.driver = None
+
+    no_value_filter = async_capture_events(hass, "no_value_filter")
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                # no value filter
+                {
+                    "trigger": {
+                        "platform": trigger_type,
+                        "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
+                        "command_class": CommandClass.DOOR_LOCK.value,
+                        "property": "latchStatus",
+                    },
+                    "action": {
+                        "event": "no_value_filter",
+                    },
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    client.driver = driver
+
+    # Test that no value filter is NOT triggered because automation failed setup
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Door Lock",
+                "commandClass": 98,
+                "endpoint": 0,
+                "property": "latchStatus",
+                "newValue": "boo",
+                "prevValue": "hiss",
+                "propertyName": "latchStatus",
+            },
+        },
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+
+    assert len(no_value_filter) == 0
+
+
 async def test_zwave_js_event(hass, client, lock_schlage_be469, integration):
     """Test for zwave_js.event automation trigger."""
     trigger_type = f"{DOMAIN}.event"
     node: Node = lock_schlage_be469
     dev_reg = async_get_dev_reg(hass)
-    device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
+    device = dev_reg.async_get_device(
+        {get_device_id(client.driver, lock_schlage_be469)}
+    )
+    assert device
 
     node_no_event_data_filter = async_capture_events(hass, "node_no_event_data_filter")
     node_event_data_filter = async_capture_events(hass, "node_event_data_filter")
@@ -933,7 +996,10 @@ async def test_zwave_js_trigger_config_entry_unloaded(
 ):
     """Test zwave_js triggers bypass dynamic validation when needed."""
     dev_reg = async_get_dev_reg(hass)
-    device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
+    device = dev_reg.async_get_device(
+        {get_device_id(client.driver, lock_schlage_be469)}
+    )
+    assert device
 
     # Test bypass check is False
     assert not async_bypass_dynamic_config_validation(

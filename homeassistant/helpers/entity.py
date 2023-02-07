@@ -144,7 +144,7 @@ def get_supported_features(hass: HomeAssistant, entity_id: str) -> int:
 
 
 def get_unit_of_measurement(hass: HomeAssistant, entity_id: str) -> str | None:
-    """Get unit of measurement class of an entity.
+    """Get unit of measurement of an entity.
 
     First try the statemachine, then entity registry.
     """
@@ -185,10 +185,11 @@ class EntityCategory(StrEnum):
     - Not be included in indirect service calls to devices or areas
     """
 
-    # Config: An entity which allows changing the configuration of a device
+    # Config: An entity which allows changing the configuration of a device.
     CONFIG = "config"
 
-    # Diagnostic: An entity exposing some configuration parameter or diagnostics of a device
+    # Diagnostic: An entity exposing some configuration parameter,
+    # or diagnostics of a device.
     DIAGNOSTIC = "diagnostic"
 
 
@@ -198,13 +199,16 @@ ENTITY_CATEGORIES_SCHEMA: Final = vol.Coerce(EntityCategory)
 class EntityPlatformState(Enum):
     """The platform state of an entity."""
 
-    # Not Added: Not yet added to a platform, polling updates are written to the state machine
+    # Not Added: Not yet added to a platform, polling updates
+    # are written to the state machine.
     NOT_ADDED = auto()
 
-    # Added: Added to a platform, polling updates are written to the state machine
+    # Added: Added to a platform, polling updates
+    # are written to the state machine.
     ADDED = auto()
 
-    # Removed: Removed from a platform, polling updates are not written to the state machine
+    # Removed: Removed from a platform, polling updates
+    # are not written to the state machine.
     REMOVED = auto()
 
 
@@ -223,6 +227,7 @@ class EntityDescription:
     icon: str | None = None
     has_entity_name: bool = False
     name: str | None = None
+    translation_key: str | None = None
     unit_of_measurement: str | None = None
 
 
@@ -290,6 +295,7 @@ class Entity(ABC):
     _attr_should_poll: bool = True
     _attr_state: StateType = STATE_UNKNOWN
     _attr_supported_features: int | None = None
+    _attr_translation_key: str | None
     _attr_unique_id: str | None = None
     _attr_unit_of_measurement: str | None
 
@@ -339,6 +345,18 @@ class Entity(ABC):
         is lowercase snake_case.
         """
         return self._attr_capability_attributes
+
+    def get_initial_entity_options(self) -> er.EntityOptionsType | None:
+        """Return initial entity options.
+
+        These will be stored in the entity registry the first time the entity is seen,
+        and then never updated.
+
+        Implemented by component base class, should not be extended by integrations.
+
+        Note: Not a property to avoid calculating unless needed.
+        """
+        return None
 
     @property
     def state_attributes(self) -> dict[str, Any] | None:
@@ -444,7 +462,10 @@ class Entity(ABC):
 
     @property
     def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
+        """Return if the entity should be enabled when first added.
+
+        This only applies when fist added to the entity registry.
+        """
         if hasattr(self, "_attr_entity_registry_enabled_default"):
             return self._attr_entity_registry_enabled_default
         if hasattr(self, "entity_description"):
@@ -453,7 +474,10 @@ class Entity(ABC):
 
     @property
     def entity_registry_visible_default(self) -> bool:
-        """Return if the entity should be visible when first added to the entity registry."""
+        """Return if the entity should be visible when first added.
+
+        This only applies when fist added to the entity registry.
+        """
         if hasattr(self, "_attr_entity_registry_visible_default"):
             return self._attr_entity_registry_visible_default
         if hasattr(self, "entity_description"):
@@ -472,6 +496,15 @@ class Entity(ABC):
             return self._attr_entity_category
         if hasattr(self, "entity_description"):
             return self.entity_description.entity_category
+        return None
+
+    @property
+    def translation_key(self) -> str | None:
+        """Return the translation key to translate the entity's states."""
+        if hasattr(self, "_attr_translation_key"):
+            return self._attr_translation_key
+        if hasattr(self, "entity_description"):
+            return self.entity_description.translation_key
         return None
 
     # DO NOT OVERWRITE
@@ -556,7 +589,10 @@ class Entity(ABC):
                 self._disabled_reported = True
                 assert self.platform is not None
                 _LOGGER.warning(
-                    "Entity %s is incorrectly being triggered for updates while it is disabled. This is a bug in the %s integration",
+                    (
+                        "Entity %s is incorrectly being triggered for updates while it"
+                        " is disabled. This is a bug in the %s integration"
+                    ),
                     self.entity_id,
                     self.platform.platform_name,
                 )
@@ -693,9 +729,9 @@ class Entity(ABC):
         try:
             task: asyncio.Future[None]
             if hasattr(self, "async_update"):
-                task = self.hass.async_create_task(self.async_update())  # type: ignore[attr-defined]
+                task = self.hass.async_create_task(self.async_update())
             elif hasattr(self, "update"):
-                task = self.hass.async_add_executor_job(self.update)  # type: ignore[attr-defined]
+                task = self.hass.async_add_executor_job(self.update)
             else:
                 return
 
@@ -744,7 +780,8 @@ class Entity(ABC):
         """Start adding an entity to a platform."""
         if self._platform_state == EntityPlatformState.ADDED:
             raise HomeAssistantError(
-                f"Entity {self.entity_id} cannot be added a second time to an entity platform"
+                f"Entity {self.entity_id} cannot be added a second time to an entity"
+                " platform"
             )
 
         self.hass = hass
@@ -920,7 +957,7 @@ class Entity(ABC):
 
     def __repr__(self) -> str:
         """Return the representation."""
-        return f"<Entity {self.name}: {self.state}>"
+        return f"<entity {self.entity_id}={self._stringify_state(self.available)}>"
 
     async def async_request_call(self, coro: Coroutine[Any, Any, Any]) -> None:
         """Process request batched."""

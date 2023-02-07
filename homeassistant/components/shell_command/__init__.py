@@ -43,7 +43,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             cache[cmd] = prog, args, args_compiled
         else:
             prog, args = cmd.split(" ", 1)
-            args_compiled = template.Template(args, hass)
+            args_compiled = template.Template(str(args), hass)
             cache[cmd] = prog, args, args_compiled
 
         if args_compiled:
@@ -91,7 +91,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 with suppress(TypeError):
                     process.kill()
                     # https://bugs.python.org/issue43884
-                    # pylint: disable=protected-access
+                    # pylint: disable-next=protected-access
                     process._transport.close()  # type: ignore[attr-defined]
                 del process
 

@@ -57,7 +57,11 @@ def _ensure_webhook_access(func):
         vol.Required("confirm_id"): str,
     }
 )
-def handle_push_notification_confirm(hass, connection, msg):
+def handle_push_notification_confirm(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Confirm receipt of a push notification."""
     channel: PushChannel | None = hass.data[DOMAIN][DATA_PUSH_CHANNEL].get(
         msg["webhook_id"]

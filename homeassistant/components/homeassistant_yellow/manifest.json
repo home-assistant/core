@@ -3,7 +3,7 @@
   "name": "Home Assistant Yellow",
   "config_flow": false,
   "documentation": "https://www.home-assistant.io/integrations/homeassistant_yellow",
-  "dependencies": ["hardware", "hassio"],
+  "dependencies": ["hardware", "hassio", "homeassistant_hardware"],
   "codeowners": ["@home-assistant/core"],
   "integration_type": "hardware"
 }

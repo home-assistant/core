@@ -4,7 +4,7 @@ from datetime import timedelta
 import time
 from unittest.mock import patch
 
-from bleak.backends.scanner import AdvertisementData, BLEDevice
+from bleak.backends.scanner import BLEDevice
 
 from homeassistant.components.bluetooth import (
     async_register_scanner,
@@ -14,14 +14,15 @@ from homeassistant.components.bluetooth.advertisement_tracker import (
     ADVERTISING_TIMES_NEEDED,
 )
 from homeassistant.components.bluetooth.const import (
+    FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
     SOURCE_LOCAL,
     UNAVAILABLE_TRACK_SECONDS,
 )
-from homeassistant.components.bluetooth.models import BaseHaScanner
 from homeassistant.core import callback
 from homeassistant.util import dt as dt_util
 
 from . import (
+    FakeScanner,
     generate_advertisement_data,
     inject_advertisement_with_time_and_source,
     inject_advertisement_with_time_and_source_connectable,
@@ -304,17 +305,7 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_adapter_c
     )
     switchbot_device_went_unavailable = False
 
-    class FakeScanner(BaseHaScanner):
-        """Fake scanner."""
-
-        @property
-        def discovered_devices_and_advertisement_data(
-            self,
-        ) -> dict[str, tuple[BLEDevice, AdvertisementData]]:
-            """Return a list of discovered devices."""
-            return {}
-
-    scanner = FakeScanner(hass, "new")
+    scanner = FakeScanner(hass, "new", "fake_adapter")
     cancel_scanner = async_register_scanner(hass, scanner, False)
 
     @callback
@@ -380,7 +371,21 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_adapter_c
         )
         await hass.async_block_till_done()
 
-    assert switchbot_device_went_unavailable is True
+    assert switchbot_device_went_unavailable is False
+
+    # Now that the scanner is gone we should go back to the stack default timeout
+    with patch(
+        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
+        return_value=monotonic_now + UNAVAILABLE_TRACK_SECONDS,
+    ):
+        async_fire_time_changed(
+            hass,
+            dt_util.utcnow()
+            + timedelta(seconds=FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS),
+        )
+        await hass.async_block_till_done()
+
+    assert switchbot_device_went_unavailable is False
 
     switchbot_device_unavailable_cancel()
 

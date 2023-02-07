@@ -7,5 +7,6 @@
   "dependencies": ["ffmpeg"],
   "codeowners": ["@tkdrob"],
   "iot_class": "cloud_polling",
-  "loggers": ["aioskybell"]
+  "loggers": ["aioskybell"],
+  "integration_type": "hub"
 }

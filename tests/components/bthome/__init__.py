@@ -29,7 +29,9 @@ TEMP_HUMI_ENCRYPTED_SERVICE_INFO = BluetoothServiceInfoBleak(
     rssi=-63,
     manufacturer_data={},
     service_data={
-        "0000181e-0000-1000-8000-00805f9b34fb": b'\xfb\xa45\xe4\xd3\xc3\x12\xfb\x00\x11"3W\xd9\n\x99'
+        "0000181e-0000-1000-8000-00805f9b34fb": (
+            b'\xfb\xa45\xe4\xd3\xc3\x12\xfb\x00\x11"3W\xd9\n\x99'
+        )
     },
     service_uuids=["0000181e-0000-1000-8000-00805f9b34fb"],
     source="local",
@@ -45,7 +47,9 @@ PRST_SERVICE_INFO = BluetoothServiceInfoBleak(
     rssi=-63,
     manufacturer_data={},
     service_data={
-        "0000181c-0000-1000-8000-00805f9b34fb": b'\x02\x14\x00\n"\x02\xdd\n\x02\x03{\x12\x02\x0c\n\x0b'
+        "0000181c-0000-1000-8000-00805f9b34fb": (
+            b'\x02\x14\x00\n"\x02\xdd\n\x02\x03{\x12\x02\x0c\n\x0b'
+        )
     },
     service_uuids=["0000181c-0000-1000-8000-00805f9b34fb"],
     source="local",
@@ -85,7 +89,7 @@ NOT_BTHOME_SERVICE_INFO = BluetoothServiceInfoBleak(
 )
 
 
-def make_advertisement(address: str, payload: bytes) -> BluetoothServiceInfoBleak:
+def make_bthome_v1_adv(address: str, payload: bytes) -> BluetoothServiceInfoBleak:
     """Make a dummy advertisement."""
     return BluetoothServiceInfoBleak(
         name="Test Device",
@@ -104,7 +108,7 @@ def make_advertisement(address: str, payload: bytes) -> BluetoothServiceInfoBlea
     )
 
 
-def make_encrypted_advertisement(
+def make_encrypted_bthome_v1_adv(
     address: str, payload: bytes
 ) -> BluetoothServiceInfoBleak:
     """Make a dummy encrypted advertisement."""
@@ -120,6 +124,25 @@ def make_encrypted_advertisement(
         service_uuids=["0000181e-0000-1000-8000-00805f9b34fb"],
         source="local",
         advertisement=generate_advertisement_data(local_name="ATC 8F80A5"),
+        time=0,
+        connectable=False,
+    )
+
+
+def make_bthome_v2_adv(address: str, payload: bytes) -> BluetoothServiceInfoBleak:
+    """Make a dummy advertisement."""
+    return BluetoothServiceInfoBleak(
+        name="Test Device",
+        address=address,
+        device=BLEDevice(address, None),
+        rssi=-56,
+        manufacturer_data={},
+        service_data={
+            "0000fcd2-0000-1000-8000-00805f9b34fb": payload,
+        },
+        service_uuids=["0000fcd2-0000-1000-8000-00805f9b34fb"],
+        source="local",
+        advertisement=generate_advertisement_data(local_name="Test Device"),
         time=0,
         connectable=False,
     )

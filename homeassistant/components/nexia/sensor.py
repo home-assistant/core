@@ -10,7 +10,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -86,11 +86,10 @@ async def async_setup_entry(
             )
         # Outdoor Temperature
         if thermostat.has_outdoor_temperature():
-            unit = (
-                TEMP_CELSIUS
-                if thermostat.get_unit() == UNIT_CELSIUS
-                else TEMP_FAHRENHEIT
-            )
+            if thermostat.get_unit() == UNIT_CELSIUS:
+                unit = UnitOfTemperature.CELSIUS
+            else:
+                unit = UnitOfTemperature.FAHRENHEIT
             entities.append(
                 NexiaThermostatSensor(
                     coordinator,
@@ -120,11 +119,10 @@ async def async_setup_entry(
         # Zone Sensors
         for zone_id in thermostat.get_zone_ids():
             zone = thermostat.get_zone_by_id(zone_id)
-            unit = (
-                TEMP_CELSIUS
-                if thermostat.get_unit() == UNIT_CELSIUS
-                else TEMP_FAHRENHEIT
-            )
+            if thermostat.get_unit() == UNIT_CELSIUS:
+                unit = UnitOfTemperature.CELSIUS
+            else:
+                unit = UnitOfTemperature.FAHRENHEIT
             # Temperature
             entities.append(
                 NexiaThermostatZoneSensor(

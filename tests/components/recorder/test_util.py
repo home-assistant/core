@@ -1,9 +1,10 @@
 """Test util methods."""
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import os
 import sqlite3
 from unittest.mock import MagicMock, Mock, patch
 
+from freezegun import freeze_time
 import pytest
 from sqlalchemy import text
 from sqlalchemy.engine.result import ChunkedIteratorResult
@@ -13,16 +14,18 @@ from sqlalchemy.sql.lambdas import StatementLambdaElement
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import history, util
-from homeassistant.components.recorder.const import SQLITE_URL_PREFIX
+from homeassistant.components.recorder.const import DOMAIN, SQLITE_URL_PREFIX
 from homeassistant.components.recorder.db_schema import RecorderRuns
 from homeassistant.components.recorder.models import UnsupportedDialect
 from homeassistant.components.recorder.util import (
     end_incomplete_runs,
     is_second_sunday,
+    resolve_period,
     session_scope,
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.issue_registry import async_get as async_get_issue_registry
 from homeassistant.util import dt as dt_util
 
 from .common import corrupt_db_file, run_information_with_session, wait_recording_done
@@ -35,9 +38,8 @@ def test_session_scope_not_setup(hass_recorder):
     hass = hass_recorder()
     with patch.object(
         util.get_instance(hass), "get_session", return_value=None
-    ), pytest.raises(RuntimeError):
-        with util.session_scope(hass=hass):
-            pass
+    ), pytest.raises(RuntimeError), util.session_scope(hass=hass):
+        pass
 
 
 def test_recorder_bad_commit(hass_recorder, recorder_db_url):
@@ -108,7 +110,7 @@ def test_validate_or_move_away_sqlite_database(hass, tmpdir, caplog):
 
 
 async def test_last_run_was_recently_clean(
-    loop, async_setup_recorder_instance: SetupRecorderInstanceT, tmp_path
+    event_loop, async_setup_recorder_instance: SetupRecorderInstanceT, tmp_path
 ):
     """Test we can check if the last recorder run was recently clean."""
     config = {
@@ -228,7 +230,12 @@ def test_setup_connection_for_dialect_sqlite(sqlite_version):
 
     dbapi_connection = MagicMock(cursor=_make_cursor_mock)
 
-    util.setup_connection_for_dialect(instance_mock, "sqlite", dbapi_connection, True)
+    assert (
+        util.setup_connection_for_dialect(
+            instance_mock, "sqlite", dbapi_connection, True
+        )
+        is not None
+    )
 
     assert len(execute_args) == 5
     assert execute_args[0] == "PRAGMA journal_mode=WAL"
@@ -238,7 +245,12 @@ def test_setup_connection_for_dialect_sqlite(sqlite_version):
     assert execute_args[4] == "PRAGMA foreign_keys=ON"
 
     execute_args = []
-    util.setup_connection_for_dialect(instance_mock, "sqlite", dbapi_connection, False)
+    assert (
+        util.setup_connection_for_dialect(
+            instance_mock, "sqlite", dbapi_connection, False
+        )
+        is None
+    )
 
     assert len(execute_args) == 3
     assert execute_args[0] == "PRAGMA cache_size = -16384"
@@ -273,7 +285,12 @@ def test_setup_connection_for_dialect_sqlite_zero_commit_interval(
 
     dbapi_connection = MagicMock(cursor=_make_cursor_mock)
 
-    util.setup_connection_for_dialect(instance_mock, "sqlite", dbapi_connection, True)
+    assert (
+        util.setup_connection_for_dialect(
+            instance_mock, "sqlite", dbapi_connection, True
+        )
+        is not None
+    )
 
     assert len(execute_args) == 5
     assert execute_args[0] == "PRAGMA journal_mode=WAL"
@@ -283,7 +300,12 @@ def test_setup_connection_for_dialect_sqlite_zero_commit_interval(
     assert execute_args[4] == "PRAGMA foreign_keys=ON"
 
     execute_args = []
-    util.setup_connection_for_dialect(instance_mock, "sqlite", dbapi_connection, False)
+    assert (
+        util.setup_connection_for_dialect(
+            instance_mock, "sqlite", dbapi_connection, False
+        )
+        is None
+    )
 
     assert len(execute_args) == 3
     assert execute_args[0] == "PRAGMA cache_size = -16384"
@@ -441,11 +463,13 @@ def test_supported_pgsql(caplog, pgsql_version):
 
     dbapi_connection = MagicMock(cursor=_make_cursor_mock)
 
-    util.setup_connection_for_dialect(
+    database_engine = util.setup_connection_for_dialect(
         instance_mock, "postgresql", dbapi_connection, True
     )
 
     assert "minimum supported version" not in caplog.text
+    assert database_engine is not None
+    assert database_engine.optimizer.slow_range_in_select is True
 
 
 @pytest.mark.parametrize(
@@ -522,9 +546,13 @@ def test_supported_sqlite(caplog, sqlite_version):
 
     dbapi_connection = MagicMock(cursor=_make_cursor_mock)
 
-    util.setup_connection_for_dialect(instance_mock, "sqlite", dbapi_connection, True)
+    database_engine = util.setup_connection_for_dialect(
+        instance_mock, "sqlite", dbapi_connection, True
+    )
 
     assert "minimum supported version" not in caplog.text
+    assert database_engine is not None
+    assert database_engine.optimizer.slow_range_in_select is False
 
 
 @pytest.mark.parametrize(
@@ -546,6 +574,124 @@ def test_warn_unsupported_dialect(caplog, dialect, message):
         )
 
     assert message in caplog.text
+
+
+@pytest.mark.parametrize(
+    "mysql_version,min_version",
+    [
+        (
+            "10.5.16-MariaDB",
+            "10.5.17",
+        ),
+        (
+            "10.6.8-MariaDB",
+            "10.6.9",
+        ),
+        (
+            "10.7.1-MariaDB",
+            "10.7.5",
+        ),
+        (
+            "10.8.0-MariaDB",
+            "10.8.4",
+        ),
+    ],
+)
+async def test_issue_for_mariadb_with_MDEV_25020(
+    hass, caplog, mysql_version, min_version
+):
+    """Test we create an issue for MariaDB versions affected.
+
+    See https://jira.mariadb.org/browse/MDEV-25020.
+    """
+    instance_mock = MagicMock()
+    instance_mock.hass = hass
+    execute_args = []
+    close_mock = MagicMock()
+
+    def execute_mock(statement):
+        nonlocal execute_args
+        execute_args.append(statement)
+
+    def fetchall_mock():
+        nonlocal execute_args
+        if execute_args[-1] == "SELECT VERSION()":
+            return [[mysql_version]]
+        return None
+
+    def _make_cursor_mock(*_):
+        return MagicMock(execute=execute_mock, close=close_mock, fetchall=fetchall_mock)
+
+    dbapi_connection = MagicMock(cursor=_make_cursor_mock)
+
+    database_engine = await hass.async_add_executor_job(
+        util.setup_connection_for_dialect,
+        instance_mock,
+        "mysql",
+        dbapi_connection,
+        True,
+    )
+    await hass.async_block_till_done()
+
+    registry = async_get_issue_registry(hass)
+    issue = registry.async_get_issue(DOMAIN, "maria_db_range_index_regression")
+    assert issue is not None
+    assert issue.translation_placeholders == {"min_version": min_version}
+
+    assert database_engine is not None
+    assert database_engine.optimizer.slow_range_in_select is True
+
+
+@pytest.mark.parametrize(
+    "mysql_version",
+    [
+        "10.5.17-MariaDB",
+        "10.6.9-MariaDB",
+        "10.7.5-MariaDB",
+        "10.8.4-MariaDB",
+        "10.9.1-MariaDB",
+    ],
+)
+async def test_no_issue_for_mariadb_with_MDEV_25020(hass, caplog, mysql_version):
+    """Test we do not create an issue for MariaDB versions not affected.
+
+    See https://jira.mariadb.org/browse/MDEV-25020.
+    """
+    instance_mock = MagicMock()
+    instance_mock.hass = hass
+    execute_args = []
+    close_mock = MagicMock()
+
+    def execute_mock(statement):
+        nonlocal execute_args
+        execute_args.append(statement)
+
+    def fetchall_mock():
+        nonlocal execute_args
+        if execute_args[-1] == "SELECT VERSION()":
+            return [[mysql_version]]
+        return None
+
+    def _make_cursor_mock(*_):
+        return MagicMock(execute=execute_mock, close=close_mock, fetchall=fetchall_mock)
+
+    dbapi_connection = MagicMock(cursor=_make_cursor_mock)
+
+    database_engine = await hass.async_add_executor_job(
+        util.setup_connection_for_dialect,
+        instance_mock,
+        "mysql",
+        dbapi_connection,
+        True,
+    )
+    await hass.async_block_till_done()
+
+    registry = async_get_issue_registry(hass)
+    issue = registry.async_get_issue(DOMAIN, "maria_db_range_index_regression")
+    assert issue is None
+
+    assert database_engine is not None
+    assert database_engine.optimizer.slow_range_in_select is False
 
 
 def test_basic_sanity_check(hass_recorder, recorder_db_url):
@@ -687,16 +833,15 @@ async def test_write_lock_db(
         with instance.engine.connect() as connection:
             connection.execute(text("DROP TABLE events;"))
 
-    with util.write_lock_db_sqlite(instance):
+    with util.write_lock_db_sqlite(instance), pytest.raises(OperationalError):
         # Database should be locked now, try writing SQL command
-        with pytest.raises(OperationalError):
-            # This needs to be called in another thread since
-            # the lock method is BEGIN IMMEDIATE and since we have
-            # a connection per thread with sqlite now, we cannot do it
-            # in the same thread as the one holding the lock since it
-            # would be allowed to proceed as the goal is to prevent
-            # all the other threads from accessing the database
-            await hass.async_add_executor_job(_drop_table)
+        # This needs to be called in another thread since
+        # the lock method is BEGIN IMMEDIATE and since we have
+        # a connection per thread with sqlite now, we cannot do it
+        # in the same thread as the one holding the lock since it
+        # would be allowed to proceed as the goal is to prevent
+        # all the other threads from accessing the database
+        await hass.async_add_executor_job(_drop_table)
 
 
 def test_is_second_sunday():
@@ -776,3 +921,80 @@ def test_execute_stmt_lambda_element(hass_recorder):
         with patch.object(session, "execute", MockExecutor):
             rows = util.execute_stmt_lambda_element(session, stmt, now, tomorrow)
             assert rows == ["mock_row"]
+
+
+@freeze_time(datetime(2022, 10, 21, 7, 25, tzinfo=timezone.utc))
+async def test_resolve_period(hass):
+    """Test statistic_during_period."""
+
+    now = dt_util.utcnow()
+
+    start_t, end_t = resolve_period({"calendar": {"period": "hour"}})
+    assert start_t.isoformat() == "2022-10-21T07:00:00+00:00"
+    assert end_t.isoformat() == "2022-10-21T08:00:00+00:00"
+
+    start_t, end_t = resolve_period({"calendar": {"period": "hour"}})
+    assert start_t.isoformat() == "2022-10-21T07:00:00+00:00"
+    assert end_t.isoformat() == "2022-10-21T08:00:00+00:00"
+
+    start_t, end_t = resolve_period({"calendar": {"period": "hour", "offset": -1}})
+    assert start_t.isoformat() == "2022-10-21T06:00:00+00:00"
+    assert end_t.isoformat() == "2022-10-21T07:00:00+00:00"
+
+    start_t, end_t = resolve_period({"calendar": {"period": "day"}})
+    assert start_t.isoformat() == "2022-10-21T07:00:00+00:00"
+    assert end_t.isoformat() == "2022-10-22T07:00:00+00:00"
+
+    start_t, end_t = resolve_period({"calendar": {"period": "day", "offset": -1}})
+    assert start_t.isoformat() == "2022-10-20T07:00:00+00:00"
+    assert end_t.isoformat() == "2022-10-21T07:00:00+00:00"
+
+    start_t, end_t = resolve_period({"calendar": {"period": "week"}})
+    assert start_t.isoformat() == "2022-10-17T07:00:00+00:00"
+    assert end_t.isoformat() == "2022-10-24T07:00:00+00:00"
+
+    start_t, end_t = resolve_period({"calendar": {"period": "week", "offset": -1}})
+    assert start_t.isoformat() == "2022-10-10T07:00:00+00:00"
+    assert end_t.isoformat() == "2022-10-17T07:00:00+00:00"
+
+    start_t, end_t = resolve_period({"calendar": {"period": "month"}})
+    assert start_t.isoformat() == "2022-10-01T07:00:00+00:00"
+    assert end_t.isoformat() == "2022-11-01T07:00:00+00:00"
+
+    start_t, end_t = resolve_period({"calendar": {"period": "month", "offset": -1}})
+    assert start_t.isoformat() == "2022-09-01T07:00:00+00:00"
+    assert end_t.isoformat() == "2022-10-01T07:00:00+00:00"
+
+    start_t, end_t = resolve_period({"calendar": {"period": "year"}})
+    assert start_t.isoformat() == "2022-01-01T08:00:00+00:00"
+    assert end_t.isoformat() == "2023-01-01T08:00:00+00:00"
+
+    start_t, end_t = resolve_period({"calendar": {"period": "year", "offset": -1}})
+    assert start_t.isoformat() == "2021-01-01T08:00:00+00:00"
+    assert end_t.isoformat() == "2022-01-01T08:00:00+00:00"
+
+    # Fixed period
+    assert resolve_period({}) == (None, None)
+
+    assert resolve_period({"fixed_period": {"end_time": now}}) == (None, now)
+
+    assert resolve_period({"fixed_period": {"start_time": now}}) == (now, None)
+
+    assert resolve_period({"fixed_period": {"end_time": now, "start_time": now}}) == (
+        now,
+        now,
+    )
+
+    # Rolling window
+    assert resolve_period(
+        {"rolling_window": {"duration": timedelta(hours=1, minutes=25)}}
+    ) == (now - timedelta(hours=1, minutes=25), now)
+
+    assert resolve_period(
+        {
+            "rolling_window": {
+                "duration": timedelta(hours=1),
+                "offset": timedelta(minutes=-25),
+            }
+        }
+    ) == (now - timedelta(hours=1, minutes=25), now - timedelta(minutes=25))
