@@ -2,7 +2,7 @@
 
 from homeassistant import data_entry_flow
 from homeassistant.components.edl21.const import CONF_SERIAL_PORT, DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_NAME
 
 from tests.common import MockConfigEntry
@@ -59,12 +59,27 @@ async def test_integration_already_exists(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_create_entry(hass):
+async def test_create_entry_by_user(hass):
     """Test that the user step works."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
+        data=VALID_CONFIG,
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["title"] == VALID_CONFIG.get(CONF_NAME)
+    assert result["data"][CONF_NAME] == VALID_CONFIG.get(CONF_NAME)
+    assert result["data"][CONF_SERIAL_PORT] == VALID_CONFIG.get(CONF_SERIAL_PORT)
+
+
+async def test_create_entry_by_import(hass):
+    """Test that the import step works."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
         data=VALID_CONFIG,
     )
 

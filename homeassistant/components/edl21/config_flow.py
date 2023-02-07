@@ -1,4 +1,6 @@
 """Config flow for EDL21 integration."""
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -12,6 +14,10 @@ class EDL21ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """EDL21 config flow."""
 
     VERSION = 1
+
+    async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
+        """Import a config entry from configuration.yaml."""
+        return await self.async_step_user(import_config)
 
     async def async_step_user(self, user_input=None) -> FlowResult:
         """Handle the user setup step."""
