@@ -1848,7 +1848,7 @@ async def help_test_setup_manual_entity_from_yaml(
     """Help to test setup from yaml through configuration entry."""
     calls = MagicMock()
 
-    async def mock_reload(hass) -> None:
+    async def mock_reload(hass: HomeAssistant) -> None:
         """Mock reload."""
         calls()
 
