@@ -7,8 +7,10 @@ from typing import Any
 
 from sml import SmlGetListResponse
 from sml.asyncio import SmlProtocol
+import voluptuous as vol
 
 from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -25,7 +27,7 @@ from homeassistant.const import (
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -39,6 +41,13 @@ from homeassistant.util.dt import utcnow
 from .const import CONF_SERIAL_PORT, DOMAIN, LOGGER, SIGNAL_EDL21_TELEGRAM
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_SERIAL_PORT): cv.string,
+        vol.Optional(CONF_NAME, default=""): cv.string,
+    },
+)
 
 # OBIS format: A-B:C.D.E*F
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
