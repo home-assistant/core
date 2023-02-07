@@ -7,6 +7,7 @@ from collections.abc import Awaitable, Callable, Collection, Mapping, Sequence
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 import functools as ft
+from functools import lru_cache
 from io import StringIO
 import json
 import logging
@@ -502,6 +503,7 @@ def get_fixture_path(filename: str, integration: str | None = None) -> pathlib.P
     )
 
 
+@lru_cache
 def load_fixture(filename: str, integration: str | None = None) -> str:
     """Load a fixture."""
     return get_fixture_path(filename, integration).read_text()

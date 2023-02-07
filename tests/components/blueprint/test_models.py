@@ -52,7 +52,7 @@ def domain_bps(hass):
     )
 
 
-def test_blueprint_model_init():
+def test_blueprint_model_init() -> None:
     """Test constructor validation."""
     with pytest.raises(errors.InvalidBlueprint):
         models.Blueprint({})
@@ -91,7 +91,7 @@ def test_blueprint_properties(blueprint_1):
     }
 
 
-def test_blueprint_update_metadata():
+def test_blueprint_update_metadata() -> None:
     """Test update metadata."""
     bp = models.Blueprint(
         {
@@ -106,7 +106,7 @@ def test_blueprint_update_metadata():
     assert bp.metadata["source_url"] == "http://bla.com"
 
 
-def test_blueprint_validate():
+def test_blueprint_validate() -> None:
     """Test validate blueprint."""
     assert (
         models.Blueprint(

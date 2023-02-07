@@ -536,13 +536,13 @@ def setup_connection_for_dialect(
                         version or version_string, "MySQL", MIN_VERSION_MYSQL
                     )
 
-        slow_range_in_select = bool(
-            not version
-            or version < MARIADB_WITH_FIXED_IN_QUERIES_105
-            or MARIA_DB_106 <= version < MARIADB_WITH_FIXED_IN_QUERIES_106
-            or MARIA_DB_107 <= version < MARIADB_WITH_FIXED_IN_QUERIES_107
-            or MARIA_DB_108 <= version < MARIADB_WITH_FIXED_IN_QUERIES_108
-        )
+            slow_range_in_select = bool(
+                not version
+                or version < MARIADB_WITH_FIXED_IN_QUERIES_105
+                or MARIA_DB_106 <= version < MARIADB_WITH_FIXED_IN_QUERIES_106
+                or MARIA_DB_107 <= version < MARIADB_WITH_FIXED_IN_QUERIES_107
+                or MARIA_DB_108 <= version < MARIADB_WITH_FIXED_IN_QUERIES_108
+            )
 
         # Ensure all times are using UTC to avoid issues with daylight savings
         execute_on_connection(dbapi_connection, "SET time_zone = '+00:00'")
@@ -586,20 +586,18 @@ def end_incomplete_runs(session: Session, start_time: datetime) -> None:
         session.add(run)
 
 
+_FuncType = Callable[Concatenate[_RecorderT, _P], bool]
+
+
 def retryable_database_job(
     description: str,
-) -> Callable[
-    [Callable[Concatenate[_RecorderT, _P], bool]],
-    Callable[Concatenate[_RecorderT, _P], bool],
-]:
+) -> Callable[[_FuncType[_RecorderT, _P]], _FuncType[_RecorderT, _P]]:
     """Try to execute a database job.
 
     The job should return True if it finished, and False if it needs to be rescheduled.
     """
 
-    def decorator(
-        job: Callable[Concatenate[_RecorderT, _P], bool]
-    ) -> Callable[Concatenate[_RecorderT, _P], bool]:
+    def decorator(job: _FuncType[_RecorderT, _P]) -> _FuncType[_RecorderT, _P]:
         @functools.wraps(job)
         def wrapper(instance: _RecorderT, *args: _P.args, **kwargs: _P.kwargs) -> bool:
             try:

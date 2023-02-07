@@ -80,7 +80,7 @@ def db_schema_30():
 
 
 @pytest.mark.usefixtures("hass_history")
-def test_setup():
+def test_setup() -> None:
     """Test setup method of history."""
     # Verification occurs in the fixture
 

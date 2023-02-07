@@ -756,7 +756,7 @@ async def test_not_discovered_by_observer_before_started_on_docker(hass, docker)
     assert len(mock_config_flow.mock_calls) == 0
 
 
-def test_get_serial_by_id_no_dir():
+def test_get_serial_by_id_no_dir() -> None:
     """Test serial by id conversion if there's no /dev/serial/by-id."""
     p1 = patch("os.path.isdir", MagicMock(return_value=False))
     p2 = patch("os.scandir")
@@ -767,7 +767,7 @@ def test_get_serial_by_id_no_dir():
         assert scan_mock.call_count == 0
 
 
-def test_get_serial_by_id():
+def test_get_serial_by_id() -> None:
     """Test serial by id conversion."""
     p1 = patch("os.path.isdir", MagicMock(return_value=True))
     p2 = patch("os.scandir")
@@ -803,7 +803,7 @@ def test_get_serial_by_id():
         assert scan_mock.call_count == 2
 
 
-def test_human_readable_device_name():
+def test_human_readable_device_name() -> None:
     """Test human readable device name includes the passed data."""
     name = usb.human_readable_device_name(
         "/dev/null",

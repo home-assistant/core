@@ -20,7 +20,7 @@ from homeassistant.helpers.entity import EntityCategory
 from .conftest import setup_platform
 
 
-async def test_mapping_integrity():
+async def test_mapping_integrity() -> None:
     """Test ensures the map dicts have proper integrity."""
     # Ensure every CAPABILITY_TO_ATTRIB key is in CAPABILITIES
     # Ensure every CAPABILITY_TO_ATTRIB value is in ATTRIB_TO_CLASS keys

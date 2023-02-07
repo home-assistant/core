@@ -5,7 +5,7 @@ from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
 import time
-from typing import Any, TypeVar, cast
+from typing import Any, cast
 
 import ciso8601
 from fnvhash import fnv1a_32
@@ -31,6 +31,7 @@ from sqlalchemy.engine.interfaces import Dialect
 from sqlalchemy.orm import DeclarativeBase, Mapped, aliased, mapped_column, relationship
 from sqlalchemy.orm.query import RowReturningQuery
 from sqlalchemy.orm.session import Session
+from typing_extensions import Self
 
 from homeassistant.const import (
     MAX_LENGTH_EVENT_CONTEXT_ID,
@@ -46,6 +47,7 @@ from homeassistant.helpers.json import (
     json_bytes,
     json_bytes_strip_null,
     json_loads,
+    json_loads_object,
 )
 import homeassistant.util.dt as dt_util
 
@@ -60,8 +62,6 @@ class Base(DeclarativeBase):
 
 
 SCHEMA_VERSION = 33
-
-_StatisticsBaseSelfT = TypeVar("_StatisticsBaseSelfT", bound="StatisticsBase")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -232,8 +232,8 @@ class Events(Base):
         )
         try:
             return Event(
-                self.event_type or "",
-                json_loads(self.event_data) if self.event_data else {},
+                self.event_type,
+                json_loads_object(self.event_data) if self.event_data else {},
                 EventOrigin(self.origin)
                 if self.origin
                 else EVENT_ORIGIN_ORDER[self.origin_idx or 0],
@@ -404,7 +404,7 @@ class States(Base):
             parent_id=self.context_parent_id,
         )
         try:
-            attrs = json_loads(self.attributes) if self.attributes else {}
+            attrs = json_loads_object(self.attributes) if self.attributes else {}
         except JSON_DECODE_EXCEPTIONS:
             # When json_loads fails
             _LOGGER.exception("Error converting row to state: %s", self)
@@ -519,9 +519,7 @@ class StatisticsBase:
     duration: timedelta
 
     @classmethod
-    def from_stats(
-        cls: type[_StatisticsBaseSelfT], metadata_id: int, stats: StatisticData
-    ) -> _StatisticsBaseSelfT:
+    def from_stats(cls, metadata_id: int, stats: StatisticData) -> Self:
         """Create object from a statistics."""
         return cls(  # type: ignore[call-arg,misc]
             metadata_id=metadata_id,
@@ -625,7 +623,7 @@ class RecorderRuns(Base):
 
         return [row[0] for row in query]
 
-    def to_native(self, validate_entity_id: bool = True) -> RecorderRuns:
+    def to_native(self, validate_entity_id: bool = True) -> Self:
         """Return self, native format is this model."""
         return self
 

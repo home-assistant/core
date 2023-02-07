@@ -7,6 +7,7 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import dhcp
 from homeassistant.components.vicare.const import DOMAIN
 from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 
 from . import ENTRY_CONFIG, MOCK_MAC
 
@@ -44,7 +45,7 @@ async def test_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_invalid_login(hass) -> None:
+async def test_invalid_login(hass: HomeAssistant) -> None:
     """Test a flow with an invalid Vicare login."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
