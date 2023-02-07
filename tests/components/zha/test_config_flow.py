@@ -1037,7 +1037,7 @@ async def test_hardware_invalid_data(hass, data):
     assert result["reason"] == "invalid_hardware_data"
 
 
-def test_allow_overwrite_ezsp_ieee():
+def test_allow_overwrite_ezsp_ieee() -> None:
     """Test modifying the backup to allow bellows to override the IEEE address."""
     backup = zigpy.backups.NetworkBackup()
     new_backup = radio_manager._allow_overwrite_ezsp_ieee(backup)
@@ -1046,7 +1046,7 @@ def test_allow_overwrite_ezsp_ieee():
     assert new_backup.network_info.stack_specific["ezsp"][EZSP_OVERWRITE_EUI64] is True
 
 
-def test_prevent_overwrite_ezsp_ieee():
+def test_prevent_overwrite_ezsp_ieee() -> None:
     """Test modifying the backup to prevent bellows from overriding the IEEE address."""
     backup = zigpy.backups.NetworkBackup()
     backup.network_info.stack_specific["ezsp"] = {EZSP_OVERWRITE_EUI64: True}
@@ -1342,7 +1342,7 @@ async def test_formation_strategy_restore_manual_backup_invalid_upload(
     assert result3["errors"]["base"] == "invalid_backup_json"
 
 
-def test_format_backup_choice():
+def test_format_backup_choice() -> None:
     """Test formatting zigpy NetworkBackup objects."""
     backup = zigpy.backups.NetworkBackup()
     backup.network_info.pan_id = zigpy.types.PanId(0x1234)

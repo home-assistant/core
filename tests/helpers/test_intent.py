@@ -140,7 +140,7 @@ async def test_match_device_area(hass):
     ) == [state1]
 
 
-def test_async_validate_slots():
+def test_async_validate_slots() -> None:
     """Test async_validate_slots of IntentHandler."""
     handler1 = MockIntentHandler({vol.Required("name"): cv.string})
 
