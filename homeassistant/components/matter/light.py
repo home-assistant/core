@@ -93,7 +93,7 @@ class MatterLight(MatterEntity, LightEntity):
 
         assert isinstance(feature_map.value, int)
 
-        return self._supports_feature(int(feature_map.value), color_feature)
+        return self._supports_feature(feature_map.value, color_feature)
 
     def _supports_hs_color(self) -> bool:
         """Return if device supports hs color."""
@@ -129,13 +129,13 @@ class MatterLight(MatterEntity, LightEntity):
     async def _set_xy_color(self, xy_color: tuple[float, float]) -> None:
         """Set xy color."""
 
-        hass_xy = convert_to_matter_xy(xy_color)
+        matter_xy = convert_to_matter_xy(xy_color)
 
-        LOGGER.debug("Setting xy color to %s", hass_xy)
+        LOGGER.debug("Setting xy color to %s", matter_xy)
         await self.send_device_command(
             clusters.ColorControl.Commands.MoveToColor(
-                colorX=int(hass_xy[0]),
-                colorY=int(hass_xy[1]),
+                colorX=int(matter_xy[0]),
+                colorY=int(matter_xy[1]),
                 # It's required in TLV. We don't implement transition time yet.
                 transitionTime=0,
             )
